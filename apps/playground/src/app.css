@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+:root {
+  --color-page: 237 241 238;
+  --color-surface: 255 255 255;
+  --color-text: 31 35 32;
+  --color-muted: 102 112 105;
+  --color-accent: 35 113 89;
+  --color-line: 210 218 213;
+  --radius-card: 16px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: rgb(var(--color-text));
+  background:
+    linear-gradient(135deg, rgba(35, 113, 89, 0.18), transparent 32%), rgb(var(--color-page));
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.tabora-root {
+  min-height: 100vh;
+  padding: 40px;
+}
+
+.loading {
+  display: grid;
+  min-height: 60vh;
+  place-items: center;
+  color: rgb(var(--color-muted));
+}
+
+.topbar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.search-bar {
+  display: grid;
+  grid-template-columns: 128px minmax(260px, 680px);
+  width: min(840px, 100%);
+  overflow: hidden;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 18px;
+  background: rgba(var(--color-surface), 0.88);
+  box-shadow: 0 18px 48px rgba(31, 35, 32, 0.12);
+}
+
+.search-provider,
+.search-input {
+  min-height: 56px;
+  border: 0;
+  background: transparent;
+  color: rgb(var(--color-text));
+  font: inherit;
+}
+
+.search-provider {
+  padding: 0 16px;
+  border-right: 1px solid rgb(var(--color-line));
+}
+
+.search-input {
+  padding: 0 18px;
+  outline: none;
+}
+
+.workbench-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.grid-item {
+  min-height: 150px;
+}
+
+.size-m {
+  grid-column: span 2;
+}
+
+.widget-card {
+  height: 100%;
+  padding: 20px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius-card);
+  background: rgba(var(--color-surface), 0.88);
+  box-shadow: 0 16px 36px rgba(31, 35, 32, 0.1);
+}
+
+.widget-card h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.widget-card p {
+  margin: 0;
+  color: rgb(var(--color-muted));
+}
+
+.quick-links {
+  display: flex;
+  gap: 10px;
+}
+
+.quick-links a {
+  color: rgb(var(--color-accent));
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .tabora-root {
+    padding: 20px;
+  }
+
+  .search-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .search-provider {
+    border-right: 0;
+    border-bottom: 1px solid rgb(var(--color-line));
+  }
+
+  .workbench-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .size-m {
+    grid-column: span 1;
+  }
+}
