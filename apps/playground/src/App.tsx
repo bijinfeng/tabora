@@ -36,6 +36,50 @@ function tokensForTheme(themeId: string): ThemeTokenSet {
   return themeId === "official.theme.dark" ? DARK_TOKENS : LIGHT_TOKENS
 }
 
+type BackgroundDef = { id: string; title: string; style: Record<string, string> }
+
+const BACKGROUNDS: BackgroundDef[] = [
+  {
+    id: "background.gradient-green",
+    title: "渐变绿",
+    style: {
+      background:
+        "linear-gradient(135deg, rgba(35, 113, 89, 0.18), transparent 32%), rgb(var(--color-page))",
+    },
+  },
+  {
+    id: "background.solid-page",
+    title: "纯色背景",
+    style: { background: "rgb(var(--color-page))" },
+  },
+  {
+    id: "background.gradient-blue",
+    title: "渐变蓝",
+    style: {
+      background:
+        "linear-gradient(160deg, rgba(66, 133, 244, 0.15), transparent 40%), rgb(var(--color-page))",
+    },
+  },
+  {
+    id: "background.gradient-purple",
+    title: "渐变紫",
+    style: {
+      background:
+        "linear-gradient(135deg, rgba(128, 90, 213, 0.15), transparent 35%), rgb(var(--color-page))",
+    },
+  },
+]
+
+const DEFAULT_BACKGROUND_ID = "background.gradient-green"
+
+function applyBackground(bgId: string) {
+  const bg = BACKGROUNDS.find((b) => b.id === bgId) ?? BACKGROUNDS[0]
+  if (!bg) return
+  for (const [prop, value] of Object.entries(bg.style)) {
+    ;(document.body.style as any)[prop] = value
+  }
+}
+
 function defaultWorkspace(): Workspace {
   return {
     id: "default",
@@ -111,6 +155,7 @@ export function App() {
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
   const [themeId, setThemeId] = createSignal("official.theme.light")
+  const [backgroundId, setBackgroundId] = createSignal(DEFAULT_BACKGROUND_ID)
   const kernel = createPluginKernel()
 
   const database = createTaboraDatabase()
@@ -129,6 +174,10 @@ export function App() {
     setThemeId(workspace.activeThemeId)
     applyThemeTokens(document.documentElement, tokensForTheme(workspace.activeThemeId))
 
+    const savedBg = workspace.activeBackgroundProviderId ?? DEFAULT_BACKGROUND_ID
+    setBackgroundId(savedBg)
+    applyBackground(savedBg)
+
     let loaded = await instanceRepo.getByRegion("mainGrid")
     if (loaded.length === 0) {
       loaded = defaultInstances().filter((i) => i.regionId === "mainGrid")
@@ -146,6 +195,16 @@ export function App() {
     applyThemeTokens(document.documentElement, tokensForTheme(newThemeId))
     setThemeId(newThemeId)
     workspace.activeThemeId = newThemeId
+    workspace.updatedAt = new Date().toISOString()
+    await workspaceRepo.save(workspace)
+  }
+
+  async function switchBackground(bgId: string) {
+    const workspace = await workspaceRepo.get("default")
+    if (!workspace) return
+    applyBackground(bgId)
+    setBackgroundId(bgId)
+    workspace.activeBackgroundProviderId = bgId
     workspace.updatedAt = new Date().toISOString()
     await workspaceRepo.save(workspace)
   }
@@ -228,6 +287,16 @@ export function App() {
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
         <div class="toolbar">
           <div class="toolbar-spacer" />
+          <select
+            class="bg-select"
+            value={backgroundId()}
+            onChange={(e) => switchBackground(e.currentTarget.value)}
+            aria-label="切换背景"
+          >
+            {BACKGROUNDS.map((b) => (
+              <option value={b.id}>{b.title}</option>
+            ))}
+          </select>
           <button
             class="theme-toggle"
             onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}

@@ -14,8 +14,6 @@ body {
   margin: 0;
   min-height: 100vh;
   color: rgb(var(--color-text));
-  background:
-    linear-gradient(135deg, rgba(35, 113, 89, 0.18), transparent 32%), rgb(var(--color-page));
   font-family:
     ui-sans-serif,
     system-ui,
@@ -72,6 +70,16 @@ body {
 
 .theme-toggle:hover {
   background: rgba(var(--color-accent), 0.1);
+}
+
+.bg-select {
+  padding: 6px 10px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgba(var(--color-surface), 0.6);
+  color: rgb(var(--color-text));
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .search-bar {
