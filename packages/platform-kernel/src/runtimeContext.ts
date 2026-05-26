@@ -6,10 +6,18 @@ export type RuntimeConfigScope =
   | { type: "instance"; instanceId: string }
   | { type: "workspace" }
 
+export type PluginUiBridge = {
+  openModal(viewId: string, props?: Record<string, unknown>): void
+  closeModal(): void
+  openFullscreen(viewId: string, props?: Record<string, unknown>): void
+  closeFullscreen(): void
+}
+
 export type PluginRuntimeContext = {
   pluginId: string
   events: EventBus
   registry: ExtensionRegistry
+  ui: PluginUiBridge
   logger: {
     warn(message: string): void
     error(message: string): void
@@ -36,6 +44,20 @@ export function createPluginRuntimeContext(options: {
     pluginId: options.pluginId,
     events: options.events,
     registry: options.registry,
+    ui: {
+      openModal(viewId, props) {
+        options.events.emit("ui.modal.open", { viewId, props })
+      },
+      closeModal() {
+        options.events.emit("ui.modal.close", null)
+      },
+      openFullscreen(viewId, props) {
+        options.events.emit("ui.fullscreen.open", { viewId, props })
+      },
+      closeFullscreen() {
+        options.events.emit("ui.fullscreen.close", null)
+      },
+    },
     logger: {
       warn(message) {
         console.warn(`[${options.pluginId}] ${message}`)

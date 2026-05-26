@@ -11,6 +11,7 @@ export type BuiltinPlugin = {
 
 export type PluginKernel = {
   registry: ReturnType<typeof createExtensionRegistry>
+  events: ReturnType<typeof createEventBus>
   discover(plugins: BuiltinPlugin[]): Promise<void>
   activateEnabledPlugins(): Promise<void>
 }
@@ -22,6 +23,7 @@ export function createPluginKernel(): PluginKernel {
 
   return {
     registry,
+    events,
     async discover(discoveredPlugins) {
       plugins.splice(0, plugins.length, ...discoveredPlugins)
     },

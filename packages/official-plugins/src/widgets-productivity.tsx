@@ -1,3 +1,4 @@
+import { createSignal, onMount } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { TodoCard } from "./widget-todo"
 import { WeatherCard } from "./widget-weather"
@@ -16,7 +17,52 @@ export function QuickLinksCard() {
 }
 
 export function NotesCard() {
-  return <p>今天先把插件内核跑通。</p>
+  const [text, setText] = createSignal("")
+
+  onMount(() => {
+    const saved = localStorage.getItem("notes-content")
+    if (saved) setText(saved)
+  })
+
+  function update(value: string) {
+    setText(value)
+    localStorage.setItem("notes-content", value)
+  }
+
+  return (
+    <textarea
+      class="notes-textarea"
+      value={text()}
+      onInput={(e) => update(e.currentTarget.value)}
+      placeholder="写点什么..."
+    />
+  )
+}
+
+export function NotesModal() {
+  const [text, setText] = createSignal("")
+
+  onMount(() => {
+    const saved = localStorage.getItem("notes-content")
+    if (saved) setText(saved)
+  })
+
+  function update(value: string) {
+    setText(value)
+    localStorage.setItem("notes-content", value)
+  }
+
+  return (
+    <div class="notes-modal">
+      <h3>便签</h3>
+      <textarea
+        class="notes-modal-textarea"
+        value={text()}
+        onInput={(e) => update(e.currentTarget.value)}
+        placeholder="尽情书写..."
+      />
+    </div>
+  )
 }
 
 export const officialWidgetsProductivity: BuiltinPlugin = {
@@ -67,7 +113,7 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
   activate(context) {
     context.registry.views.register("official.widgets.quick-links.card", QuickLinksCard)
     context.registry.views.register("official.widgets.notes.card", NotesCard)
-    context.registry.views.register("official.widgets.notes.modal", NotesCard)
+    context.registry.views.register("official.widgets.notes.modal", NotesModal)
     context.registry.views.register("official.widgets.todo.card", TodoCard)
     context.registry.views.register("official.widgets.weather.card", WeatherCard)
   },

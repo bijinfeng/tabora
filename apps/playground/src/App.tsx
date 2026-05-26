@@ -185,6 +185,10 @@ export function App() {
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
   const [themeId, setThemeId] = createSignal("official.theme.light")
   const [backgroundId, setBackgroundId] = createSignal(DEFAULT_BACKGROUND_ID)
+  const [modalViewId, setModalViewId] = createSignal<string | null>(null)
+  const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
+  const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
+  const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
   const kernel = createPluginKernel()
 
   const database = createTaboraDatabase()
@@ -217,6 +221,17 @@ export function App() {
     setInstances(loaded)
     setKernelReady(true)
   })
+
+  kernel.events.on("ui.modal.open", (payload: any) => {
+    setModalViewId(payload.viewId)
+    setModalProps(payload.props ?? {})
+  })
+  kernel.events.on("ui.modal.close", () => setModalViewId(null))
+  kernel.events.on("ui.fullscreen.open", (payload: any) => {
+    setFullscreenViewId(payload.viewId)
+    setFullscreenProps(payload.props ?? {})
+  })
+  kernel.events.on("ui.fullscreen.close", () => setFullscreenViewId(null))
 
   async function switchTheme(newThemeId: string) {
     const workspace = await workspaceRepo.get("default")
@@ -352,6 +367,23 @@ export function App() {
                     <div class="widget-header">
                       <h2>{widgetTitle(inst.contributionId)}</h2>
                       <div class="widget-actions">
+                        {(() => {
+                          const w = findWidgetContribution(inst.pluginId, inst.contributionId)
+                          const hasModal = !!w?.views.modal
+                          return hasModal ? (
+                            <button
+                              class="widget-expand-btn"
+                              onClick={() =>
+                                kernel.events.emit("ui.modal.open", {
+                                  viewId: w!.views.modal,
+                                  props: { instanceId: inst.id },
+                                })
+                              }
+                            >
+                              ⛶
+                            </button>
+                          ) : null
+                        })()}
                         <select
                           class="size-select"
                           value={inst.size ?? "M"}
@@ -375,6 +407,38 @@ export function App() {
             }}
           </For>
         </section>
+        <Show when={modalViewId()}>
+          <div class="modal-overlay" onClick={() => setModalViewId(null)}>
+            <div class="modal-container" onClick={(e) => e.stopPropagation()}>
+              <button class="modal-close" onClick={() => setModalViewId(null)}>
+                ×
+              </button>
+              <div class="modal-body">
+                {(() => {
+                  const viewId = modalViewId()
+                  if (!viewId) return null
+                  const View = kernel.registry.views.get(viewId) as SolidView
+                  return View(modalProps())
+                })()}
+              </div>
+            </div>
+          </div>
+        </Show>
+        <Show when={fullscreenViewId()}>
+          <div class="fullscreen-overlay">
+            <button class="fullscreen-close" onClick={() => setFullscreenViewId(null)}>
+              ×
+            </button>
+            <div class="fullscreen-body">
+              {(() => {
+                const viewId = fullscreenViewId()
+                if (!viewId) return null
+                const View = kernel.registry.views.get(viewId) as SolidView
+                return View(fullscreenProps())
+              })()}
+            </div>
+          </div>
+        </Show>
         <section class="add-widgets">
           <div class="add-widgets-bar">
             <span>添加卡片：</span>
