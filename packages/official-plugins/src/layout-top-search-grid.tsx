@@ -1,6 +1,6 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 
-export function TopSearchGridLayout(props: { topbar: unknown; mainGrid: unknown }) {
+export function TopSearchGridLayout(props: { topbar: any; mainGrid: any }) {
   return (
     <main class="workbench-shell">
       <section class="topbar-region">{props.topbar}</section>

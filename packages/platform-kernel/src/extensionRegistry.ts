@@ -1,4 +1,4 @@
-export type ViewComponent = (props: Record<string, unknown>) => unknown
+export type ViewComponent = (...args: any[]) => unknown
 
 export type ViewRegistry = {
   register(viewId: string, view: ViewComponent): void

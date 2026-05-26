@@ -45,7 +45,7 @@ export function createPluginRuntimeContext(options: {
       },
     },
     getConfig(scope) {
-      return config.get(keyFor(scope)) as unknown
+      return config.get(keyFor(scope)) as any
     },
     async setConfig(scope, value) {
       config.set(keyFor(scope), value)

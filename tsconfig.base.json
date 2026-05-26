@@ -10,14 +10,6 @@
     "exactOptionalPropertyTypes": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "paths": {
-      "@tabora/plugin-api": ["packages/plugin-api/src/index.ts"],
-      "@tabora/platform-kernel": ["packages/platform-kernel/src/index.ts"],
-      "@tabora/storage": ["packages/storage/src/index.ts"],
-      "@tabora/theme": ["packages/theme/src/index.ts"],
-      "@tabora/official-plugins": ["packages/official-plugins/src/index.ts"]
-    }
+    "allowSyntheticDefaultImports": true
   }
 }

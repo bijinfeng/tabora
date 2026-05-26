@@ -5,8 +5,13 @@ import { createTaboraDatabase } from "./database"
 import { createWorkspaceRepository } from "./workspaceRepository"
 
 describe("createWorkspaceRepository", () => {
-  beforeEach(async () => {
-    await indexedDB.deleteDatabase("tabora-test")
+  beforeEach(() => {
+    const request = indexedDB.deleteDatabase("tabora-test")
+    return new Promise<void>((resolve, reject) => {
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+      request.onblocked = () => resolve()
+    })
   })
 
   it("saves and loads a workspace", async () => {

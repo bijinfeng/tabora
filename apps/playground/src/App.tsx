@@ -1,4 +1,5 @@
 import { createSignal, For, Show } from "solid-js"
+import type { JSX } from "solid-js"
 import { officialPlugins } from "@tabora/official-plugins"
 import { createPluginKernel } from "@tabora/platform-kernel"
 import { applyThemeTokens } from "@tabora/theme"
@@ -9,6 +10,8 @@ type WorkbenchCard = {
   viewId: string
   size: "S" | "M" | "L" | "XL"
 }
+
+type SolidView = (...args: any[]) => JSX.Element
 
 const cards: WorkbenchCard[] = [
   {
@@ -38,7 +41,8 @@ export function App() {
     setKernelReady(true)
   })
 
-  const SearchView = () => kernel.registry.views.get("official.search.command-bar.view")
+  const SearchView = () =>
+    kernel.registry.views.get("official.search.command-bar.view") as SolidView
 
   return (
     <div class="tabora-root">
@@ -47,7 +51,7 @@ export function App() {
         <section class="workbench-grid">
           <For each={cards}>
             {(card) => {
-              const View = kernel.registry.views.get(card.viewId)
+              const View = kernel.registry.views.get(card.viewId) as SolidView
               return (
                 <div class={`grid-item size-${card.size.toLowerCase()}`} aria-label={card.title}>
                   {View({})}
