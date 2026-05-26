@@ -1,2 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Superpowers
 .superpowers/
 
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
