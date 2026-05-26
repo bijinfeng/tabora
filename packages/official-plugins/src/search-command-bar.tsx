@@ -1,4 +1,7 @@
+import { createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+
+const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
 
 export function SearchCommandBar() {
   const providers = [
@@ -9,28 +12,72 @@ export function SearchCommandBar() {
     { id: "github", title: "GitHub", url: "https://github.com/search?q={query}" },
   ]
 
-  function handleSubmit(event: Event) {
-    event.preventDefault()
-    const form = event.currentTarget as HTMLFormElement
-    const input = form.querySelector(".search-input") as HTMLInputElement
-    const select = form.querySelector(".search-provider") as HTMLSelectElement
-    const query = input.value.trim()
-    if (!query) return
-    const provider = providers[select.selectedIndex]
+  const [query, setQuery] = createSignal("")
+  const [focused, setFocused] = createSignal(false)
+
+  function doSearch(q: string) {
+    const provider = providers[0]
     if (!provider) return
-    const url = provider.url.replace("{query}", encodeURIComponent(query))
+    const url = provider.url.replace("{query}", encodeURIComponent(q.trim()))
     window.open(url, "_blank")
   }
 
+  function handleSubmit(event: Event) {
+    event.preventDefault()
+    const q = query().trim()
+    if (!q) return
+    doSearch(q)
+    setQuery("")
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      const q = query().trim()
+      if (q) {
+        doSearch(q)
+        setQuery("")
+      }
+    }
+  }
+
+  function handleTagClick(tag: string) {
+    setQuery(tag)
+    doSearch(tag)
+  }
+
+  const showSuggestions = () => focused() && query().length === 0
+
   return (
-    <form class="search-bar" onSubmit={handleSubmit}>
-      <select aria-label="搜索源" class="search-provider">
-        {providers.map((p) => (
-          <option value={p.id}>{p.title}</option>
-        ))}
-      </select>
-      <input class="search-input" placeholder="输入搜索内容" aria-label="搜索内容" />
-    </form>
+    <div class="search-wrapper">
+      <form class="search-bar" onSubmit={handleSubmit}>
+        <select aria-label="搜索源" class="search-provider">
+          <For each={providers}>{(p) => <option value={p.id}>{p.title}</option>}</For>
+        </select>
+        <input
+          class="search-input"
+          placeholder="输入搜索内容"
+          aria-label="搜索内容"
+          value={query()}
+          onInput={(e) => setQuery(e.currentTarget.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 200)}
+        />
+      </form>
+      <Show when={showSuggestions()}>
+        <div class="search-suggestions">
+          <span class="suggestions-label">快捷搜索：</span>
+          <For each={QUICK_TAGS}>
+            {(tag) => (
+              <button class="suggestion-tag" onClick={() => handleTagClick(tag)} type="button">
+                {tag}
+              </button>
+            )}
+          </For>
+        </div>
+      </Show>
+    </div>
   )
 }
 
@@ -48,7 +95,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
           id: "official.search.command-bar",
           title: "搜索栏",
           defaultProviderIds: ["official.search.google", "official.search.bing"],
-          supportsSuggestions: false,
+          supportsSuggestions: true,
           view: "official.search.command-bar.view",
         },
       ],

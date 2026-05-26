@@ -41,6 +41,42 @@ body {
   margin-bottom: 28px;
 }
 
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 840px;
+}
+
+.search-suggestions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 0 8px;
+  flex-wrap: wrap;
+}
+
+.suggestions-label {
+  font-size: 12px;
+  color: rgb(var(--color-muted));
+}
+
+.suggestion-tag {
+  padding: 4px 12px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 12px;
+  background: rgba(var(--color-surface), 0.7);
+  color: rgb(var(--color-text));
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.suggestion-tag:hover {
+  background: rgba(var(--color-accent), 0.1);
+  border-color: rgb(var(--color-accent));
+}
+
 .toolbar {
   display: flex;
   justify-content: flex-end;
