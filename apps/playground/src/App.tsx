@@ -189,6 +189,7 @@ export function App() {
   const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
+  const [dragId, setDragId] = createSignal<string | null>(null)
   const kernel = createPluginKernel()
 
   const database = createTaboraDatabase()
@@ -310,6 +311,31 @@ export function App() {
     setInstances((prev) => prev.map((i) => (i.id === instanceId ? updated : i)))
   }
 
+  function onDragStart(e: DragEvent, instanceId: string) {
+    setDragId(instanceId)
+    e.dataTransfer!.effectAllowed = "move"
+    e.dataTransfer!.setData("text/plain", instanceId)
+  }
+
+  function onDragOver(e: DragEvent) {
+    e.preventDefault()
+    e.dataTransfer!.dropEffect = "move"
+  }
+
+  function onDrop(e: DragEvent, targetId: string) {
+    e.preventDefault()
+    const sourceId = dragId()
+    if (!sourceId || sourceId === targetId) return
+    setDragId(null)
+    const list = [...instances()]
+    const fromIdx = list.findIndex((i) => i.id === sourceId)
+    const toIdx = list.findIndex((i) => i.id === targetId)
+    if (fromIdx === -1 || toIdx === -1) return
+    const [moved] = list.splice(fromIdx, 1)
+    list.splice(toIdx, 0, moved!)
+    setInstances(list)
+  }
+
   const availableWidgets = () => {
     const contributions: { id: string; title: string; defaultSize: WidgetSize }[] = []
     for (const plugin of officialPlugins) {
@@ -360,11 +386,19 @@ export function App() {
               return (
                 <div
                   class={`grid-item`}
+                  classList={{ dragging: dragId() === inst.id }}
                   style={{ "grid-column": `span ${span}` }}
                   aria-label={widgetTitle(inst.contributionId)}
+                  draggable="true"
+                  onDragStart={(e) => onDragStart(e, inst.id)}
+                  onDragOver={onDragOver}
+                  onDrop={(e) => onDrop(e, inst.id)}
                 >
                   <div class="widget-card">
                     <div class="widget-header">
+                      <span class="drag-handle" aria-hidden="true">
+                        ⠿
+                      </span>
                       <h2>{widgetTitle(inst.contributionId)}</h2>
                       <div class="widget-actions">
                         {(() => {
