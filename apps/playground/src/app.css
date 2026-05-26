@@ -248,6 +248,69 @@ body {
   border-color: rgb(var(--color-accent));
 }
 
+.plugin-manager {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.plugin-list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.plugin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(var(--color-line), 0.4);
+}
+
+.plugin-item:last-child {
+  border-bottom: none;
+}
+
+.plugin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.plugin-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgb(var(--color-text));
+}
+
+.plugin-id {
+  font-size: 11px;
+  color: rgb(var(--color-muted));
+  font-family: ui-monospace, monospace;
+}
+
+.plugin-extensions {
+  font-size: 12px;
+  color: rgb(var(--color-accent));
+}
+
+.plugin-status {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: rgba(var(--color-muted), 0.12);
+  color: rgb(var(--color-muted));
+}
+
+.plugin-status.enabled {
+  background: rgba(var(--color-accent), 0.12);
+  color: rgb(var(--color-accent));
+}
+
 .widget-body {
   flex: 1;
   padding: 12px 20px 20px;
