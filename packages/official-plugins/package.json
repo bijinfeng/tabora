@@ -1,0 +1,17 @@
+{
+  "name": "@tabora/official-plugins",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown src/index.ts --dts --exports",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@tabora/platform-kernel": "workspace:*",
+    "@tabora/plugin-api": "workspace:*",
+    "solid-js": "latest"
+  }
+}

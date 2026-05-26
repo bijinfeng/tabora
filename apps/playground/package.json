@@ -1,0 +1,25 @@
+{
+  "name": "@tabora/playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@kobalte/core": "latest",
+    "@tabora/official-plugins": "workspace:*",
+    "@tabora/platform-kernel": "workspace:*",
+    "@tabora/plugin-api": "workspace:*",
+    "@tabora/storage": "workspace:*",
+    "@tabora/theme": "workspace:*",
+    "lucide-solid": "latest",
+    "solid-js": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "vite": "latest",
+    "vite-plugin-solid": "latest"
+  }
+}

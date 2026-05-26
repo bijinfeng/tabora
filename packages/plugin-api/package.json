@@ -1,0 +1,15 @@
+{
+  "name": "@tabora/plugin-api",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown src/index.ts --dts --exports",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "zod": "latest"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@tabora/storage",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown src/index.ts --dts --exports",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@tabora/plugin-api": "workspace:*",
+    "dexie": "latest"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "latest"
+  }
+}

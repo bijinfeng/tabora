@@ -86,6 +86,7 @@ packages/
 ## Task 1: Create Vite+ Monorepo Scaffold
 
 **Files:**
+
 - Create: `package.json`
 - Create: `pnpm-workspace.yaml`
 - Create: `tsconfig.base.json`
@@ -427,6 +428,7 @@ git commit -m "chore: scaffold Tabora Vite+ workspace"
 ## Task 2: Define Plugin API Types And Manifest Validation
 
 **Files:**
+
 - Create: `packages/plugin-api/src/manifest.ts`
 - Create: `packages/plugin-api/src/workspace.ts`
 - Create: `packages/plugin-api/src/manifestSchema.ts`
@@ -857,6 +859,7 @@ git commit -m "feat: define plugin API manifest schema"
 ## Task 3: Build Registry, Event Bus, And Kernel Activation
 
 **Files:**
+
 - Create: `packages/platform-kernel/src/eventBus.ts`
 - Create: `packages/platform-kernel/src/eventBus.test.ts`
 - Create: `packages/platform-kernel/src/extensionRegistry.ts`
@@ -1201,6 +1204,7 @@ git commit -m "feat: add plugin kernel registry"
 ## Task 4: Add Workspace State, Size Mapping, And IndexedDB Repositories
 
 **Files:**
+
 - Create: `packages/storage/src/database.ts`
 - Create: `packages/storage/src/workspaceRepository.ts`
 - Create: `packages/storage/src/workspaceRepository.test.ts`
@@ -1337,6 +1341,7 @@ git commit -m "feat: add workspace persistence"
 ## Task 5: Add Theme Token Application
 
 **Files:**
+
 - Create: `packages/theme/src/applyThemeTokens.ts`
 - Create: `packages/theme/src/applyThemeTokens.test.ts`
 - Create: `packages/theme/src/index.ts`
@@ -1410,6 +1415,7 @@ git commit -m "feat: add theme token bridge"
 ## Task 6: Create Minimal Official Plugin Pack
 
 **Files:**
+
 - Create: `packages/official-plugins/src/theme-default-pack.ts`
 - Create: `packages/official-plugins/src/search-command-bar.tsx`
 - Create: `packages/official-plugins/src/layout-top-search-grid.tsx`
@@ -1529,7 +1535,13 @@ export const officialLayoutTopSearchGrid: BuiltinPlugin = {
           id: "official.layout.top-search-grid",
           title: "顶部搜索 + 网格工作台",
           regions: [
-            { id: "topbar", title: "顶部搜索区", accepts: ["search"], required: true, maxInstances: 1 },
+            {
+              id: "topbar",
+              title: "顶部搜索区",
+              accepts: ["search"],
+              required: true,
+              maxInstances: 1,
+            },
             { id: "mainGrid", title: "主网格", accepts: ["widget"], required: true },
           ],
           defaultRegions: {
@@ -1559,8 +1571,12 @@ export function QuickLinksCard() {
     <article class="widget-card">
       <h2>快捷入口</h2>
       <div class="quick-links">
-        <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
-        <a href="https://viteplus.dev" target="_blank" rel="noreferrer">Vite+</a>
+        <a href="https://github.com" target="_blank" rel="noreferrer">
+          GitHub
+        </a>
+        <a href="https://viteplus.dev" target="_blank" rel="noreferrer">
+          Vite+
+        </a>
       </div>
     </article>
   )
@@ -1655,6 +1671,7 @@ git commit -m "feat: add official plugin pack"
 ## Task 7: Render Plugin-Assembled Workbench In Solid Playground
 
 **Files:**
+
 - Create: `apps/playground/src/bootstrap.tsx`
 - Create: `apps/playground/src/App.tsx`
 - Create: `apps/playground/src/app.css`
@@ -1695,7 +1712,12 @@ type WorkbenchCard = {
 }
 
 const cards: WorkbenchCard[] = [
-  { id: "quick-links-1", title: "快捷入口", viewId: "official.widgets.quick-links.card", size: "M" },
+  {
+    id: "quick-links-1",
+    title: "快捷入口",
+    viewId: "official.widgets.quick-links.card",
+    size: "M",
+  },
   { id: "notes-1", title: "便签", viewId: "official.widgets.notes.card", size: "M" },
 ]
 
@@ -1722,9 +1744,7 @@ export function App() {
   return (
     <div class="tabora-root">
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
-        <header class="topbar">
-          {SearchView()({})}
-        </header>
+        <header class="topbar">{SearchView()({})}</header>
         <section class="workbench-grid">
           <For each={cards}>
             {(card) => {
@@ -1765,8 +1785,7 @@ body {
   min-height: 100vh;
   color: rgb(var(--color-text));
   background:
-    linear-gradient(135deg, rgba(35, 113, 89, 0.18), transparent 32%),
-    rgb(var(--color-page));
+    linear-gradient(135deg, rgba(35, 113, 89, 0.18), transparent 32%), rgb(var(--color-page));
   font-family:
     ui-sans-serif,
     system-ui,
@@ -1923,6 +1942,7 @@ git commit -m "feat: render plugin assembled playground"
 ## Task 8: Run Full Verification And Update Design Notes
 
 **Files:**
+
 - Modify: `docs/superpowers/specs/2026-05-26-plugin-workbench-new-tab-design.md`
 
 - [ ] **Step 1: Run static checks**
@@ -1970,7 +1990,6 @@ Expected: PASS.
 Append this section to `docs/superpowers/specs/2026-05-26-plugin-workbench-new-tab-design.md`:
 
 ```md
-
 ## 15. 第一阶段实现记录
 
 第一阶段选择先实现 `apps/playground`，不直接引入 WXT。这样可以先验证插件内核、官方插件装配、主题 token、工作台网格和本地持久化模型。

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tabora/plugin-api": ["packages/plugin-api/src/index.ts"],
+      "@tabora/platform-kernel": ["packages/platform-kernel/src/index.ts"],
+      "@tabora/storage": ["packages/storage/src/index.ts"],
+      "@tabora/theme": ["packages/theme/src/index.ts"],
+      "@tabora/official-plugins": ["packages/official-plugins/src/index.ts"]
+    }
+  }
+}

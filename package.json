@@ -1,0 +1,25 @@
+{
+  "name": "tabora",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev apps/playground",
+    "check": "vp check",
+    "test": "vp test",
+    "build": "vp run -r build",
+    "pack": "vp pack"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "latest",
+    "fake-indexeddb": "latest",
+    "happy-dom": "latest",
+    "tailwindcss": "latest",
+    "tsdown": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vite-plugin-solid": "latest",
+    "vite-plus": "latest",
+    "vitest": "latest"
+  },
+  "packageManager": "pnpm@10.0.0"
+}
