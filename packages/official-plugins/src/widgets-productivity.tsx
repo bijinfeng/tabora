@@ -2,27 +2,19 @@ import type { BuiltinPlugin } from "@tabora/platform-kernel"
 
 export function QuickLinksCard() {
   return (
-    <article class="widget-card">
-      <h2>快捷入口</h2>
-      <div class="quick-links">
-        <a href="https://github.com" target="_blank" rel="noreferrer">
-          GitHub
-        </a>
-        <a href="https://viteplus.dev" target="_blank" rel="noreferrer">
-          Vite+
-        </a>
-      </div>
-    </article>
+    <div class="quick-links">
+      <a href="https://github.com" target="_blank" rel="noreferrer">
+        GitHub
+      </a>
+      <a href="https://viteplus.dev" target="_blank" rel="noreferrer">
+        Vite+
+      </a>
+    </div>
   )
 }
 
 export function NotesCard() {
-  return (
-    <article class="widget-card">
-      <h2>便签</h2>
-      <p>今天先把插件内核跑通。</p>
-    </article>
-  )
+  return <p>今天先把插件内核跑通。</p>
 }
 
 export const officialWidgetsProductivity: BuiltinPlugin = {
