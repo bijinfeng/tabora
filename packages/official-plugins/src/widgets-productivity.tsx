@@ -1,4 +1,6 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { TodoCard } from "./widget-todo"
+import { WeatherCard } from "./widget-weather"
 
 export function QuickLinksCard() {
   return (
@@ -43,6 +45,22 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
           allowMultipleInstances: true,
           views: { card: "official.widgets.notes.card", modal: "official.widgets.notes.modal" },
         },
+        {
+          id: "todo",
+          title: "待办",
+          supportedSizes: ["S", "M", "L", "XL"],
+          defaultSize: "M",
+          allowMultipleInstances: true,
+          views: { card: "official.widgets.todo.card" },
+        },
+        {
+          id: "weather",
+          title: "天气",
+          supportedSizes: ["S", "M"],
+          defaultSize: "S",
+          allowMultipleInstances: true,
+          views: { card: "official.widgets.weather.card" },
+        },
       ],
     },
   },
@@ -50,5 +68,7 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
     context.registry.views.register("official.widgets.quick-links.card", QuickLinksCard)
     context.registry.views.register("official.widgets.notes.card", NotesCard)
     context.registry.views.register("official.widgets.notes.modal", NotesCard)
+    context.registry.views.register("official.widgets.todo.card", TodoCard)
+    context.registry.views.register("official.widgets.weather.card", WeatherCard)
   },
 }

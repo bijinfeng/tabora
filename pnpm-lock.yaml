@@ -84,6 +84,9 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../plugin-api
+      '@tabora/storage':
+        specifier: workspace:*
+        version: link:../storage
       solid-js:
         specifier: latest
         version: 1.9.13

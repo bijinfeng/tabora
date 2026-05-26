@@ -243,6 +243,159 @@ body {
   text-decoration: none;
 }
 
+.todo-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.todo-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.todo-input {
+  flex: 1;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 10px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.todo-input:focus {
+  border-color: rgb(var(--color-accent));
+}
+
+.todo-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 10px;
+  background: rgb(var(--color-accent));
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.todo-add-btn:hover {
+  opacity: 0.85;
+}
+
+.todo-list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(var(--color-line), 0.4);
+}
+
+.todo-item.done .todo-text {
+  text-decoration: line-through;
+  color: rgb(var(--color-muted));
+}
+
+.todo-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+}
+
+.todo-label input[type="checkbox"] {
+  accent-color: rgb(var(--color-accent));
+}
+
+.todo-text {
+  font-size: 14px;
+}
+
+.todo-del-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.todo-item:hover .todo-del-btn {
+  opacity: 1;
+}
+
+.todo-del-btn:hover {
+  color: #e53e3e;
+  background: rgba(229, 62, 62, 0.08);
+}
+
+.todo-footer {
+  padding-top: 8px;
+  font-size: 12px;
+  color: rgb(var(--color-muted));
+}
+
+.weather-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weather-icon {
+  font-size: 32px;
+}
+
+.weather-temp {
+  font-size: 28px;
+  font-weight: 600;
+  color: rgb(var(--color-text));
+}
+
+.weather-detail {
+  font-size: 14px;
+  color: rgb(var(--color-text));
+}
+
+.weather-extra {
+  font-size: 12px;
+  color: rgb(var(--color-muted));
+}
+
 @media (max-width: 760px) {
   .tabora-root {
     padding: 20px;
