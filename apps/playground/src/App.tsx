@@ -130,6 +130,18 @@ function defaultInstances(): PluginInstance[] {
       updatedAt: now,
     },
     {
+      id: "today-focus-1",
+      pluginId: "official.widgets.productivity",
+      contributionId: "today-focus",
+      extensionPoint: "widget",
+      regionId: "mainGrid",
+      enabled: true,
+      size: "M",
+      config: {},
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
       id: "quick-links-1",
       pluginId: "official.widgets.productivity",
       contributionId: "quick-links",
@@ -161,18 +173,6 @@ function defaultInstances(): PluginInstance[] {
       regionId: "mainGrid",
       enabled: true,
       size: "M",
-      config: {},
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "weather-1",
-      pluginId: "official.widgets.productivity",
-      contributionId: "weather",
-      extensionPoint: "widget",
-      regionId: "mainGrid",
-      enabled: true,
-      size: "S",
       config: {},
       createdAt: now,
       updatedAt: now,
@@ -461,7 +461,7 @@ export function App() {
                         instanceId={inst.id}
                         title={widgetTitle(inst.contributionId)}
                       >
-                        {View({})}
+                        {View({ instanceId: inst.id })}
                       </PluginViewBoundary>
                     </div>
                   </div>

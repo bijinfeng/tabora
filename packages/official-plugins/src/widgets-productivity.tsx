@@ -65,6 +65,57 @@ export function NotesModal() {
   )
 }
 
+type TodayFocusCardProps = {
+  instanceId?: string
+}
+
+export function TodayFocusCard(props: TodayFocusCardProps = {}) {
+  const [focus, setFocus] = createSignal("")
+  const [done, setDone] = createSignal(false)
+  const instanceId = () => props.instanceId ?? "default"
+  const contentKey = () => `today-focus:${instanceId()}:content`
+  const doneKey = () => `today-focus:${instanceId()}:done`
+
+  onMount(() => {
+    const saved = localStorage.getItem(contentKey())
+    const savedDone = localStorage.getItem(doneKey())
+    if (saved) setFocus(saved)
+    setDone(savedDone === "true")
+  })
+
+  function updateFocus(value: string) {
+    setFocus(value)
+    localStorage.setItem(contentKey(), value)
+  }
+
+  function updateDone(value: boolean) {
+    setDone(value)
+    localStorage.setItem(doneKey(), String(value))
+  }
+
+  return (
+    <div class="today-focus-widget">
+      <label class="today-focus-label">
+        <span>今天最重要的一件事</span>
+        <input
+          class="today-focus-input"
+          value={focus()}
+          onInput={(e) => updateFocus(e.currentTarget.value)}
+          placeholder="写下今日重点"
+        />
+      </label>
+      <label class="today-focus-done">
+        <input
+          type="checkbox"
+          checked={done()}
+          onChange={(e) => updateDone(e.currentTarget.checked)}
+        />
+        <span>{done() ? "已完成" : "尚未完成"}</span>
+      </label>
+    </div>
+  )
+}
+
 export const officialWidgetsProductivity: BuiltinPlugin = {
   enabled: true,
   manifest: {
@@ -75,6 +126,14 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
     engine: { platform: "^0.1.0" },
     contributes: {
       widgets: [
+        {
+          id: "today-focus",
+          title: "今日重点",
+          supportedSizes: ["S", "M", "L"],
+          defaultSize: "M",
+          allowMultipleInstances: true,
+          views: { card: "official.widgets.today-focus.card" },
+        },
         {
           id: "quick-links",
           title: "快捷入口",
@@ -111,6 +170,7 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
     },
   },
   activate(context) {
+    context.registry.views.register("official.widgets.today-focus.card", TodayFocusCard)
     context.registry.views.register("official.widgets.quick-links.card", QuickLinksCard)
     context.registry.views.register("official.widgets.notes.card", NotesCard)
     context.registry.views.register("official.widgets.notes.modal", NotesModal)
