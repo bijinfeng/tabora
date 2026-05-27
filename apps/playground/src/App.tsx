@@ -9,6 +9,7 @@ import {
   createTaboraDatabase,
   createWorkspaceRepository,
 } from "@tabora/storage"
+import { PluginViewBoundary } from "./PluginViewBoundary"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
 
 type SolidView = (...args: any[]) => JSX.Element
@@ -179,6 +180,10 @@ function findWidgetContribution(pluginId: string, contributionId: string) {
   return plugin?.manifest.contributes.widgets?.find((w) => w.id === contributionId)
 }
 
+function pluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
+  return typeof props.instanceId === "string" ? props.instanceId : fallback
+}
+
 export function App() {
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
@@ -232,6 +237,11 @@ export function App() {
     setFullscreenProps(payload.props ?? {})
   })
   kernel.events.on("ui.fullscreen.close", () => setFullscreenViewId(null))
+  kernel.events.on("host.external.open", (payload: any) => {
+    if (typeof payload.url === "string") {
+      window.open(payload.url, "_blank")
+    }
+  })
 
   async function switchTheme(newThemeId: string) {
     const workspace = await workspaceRepo.get("default")
@@ -448,7 +458,14 @@ export function App() {
                         </button>
                       </div>
                     </div>
-                    <div class="widget-body">{View({})}</div>
+                    <div class="widget-body">
+                      <PluginViewBoundary
+                        instanceId={inst.id}
+                        title={widgetTitle(inst.contributionId)}
+                      >
+                        {View({})}
+                      </PluginViewBoundary>
+                    </div>
                   </div>
                 </div>
               )
@@ -466,7 +483,12 @@ export function App() {
                   const viewId = modalViewId()
                   if (!viewId) return null
                   const View = kernel.registry.views.get(viewId) as SolidView
-                  return View(modalProps())
+                  const props = modalProps()
+                  return (
+                    <PluginViewBoundary instanceId={pluginBoundaryId(props, viewId)} title={viewId}>
+                      {View(props)}
+                    </PluginViewBoundary>
+                  )
                 })()}
               </div>
             </div>
@@ -482,7 +504,12 @@ export function App() {
                 const viewId = fullscreenViewId()
                 if (!viewId) return null
                 const View = kernel.registry.views.get(viewId) as SolidView
-                return View(fullscreenProps())
+                const props = fullscreenProps()
+                return (
+                  <PluginViewBoundary instanceId={pluginBoundaryId(props, viewId)} title={viewId}>
+                    {View(props)}
+                  </PluginViewBoundary>
+                )
               })()}
             </div>
           </div>

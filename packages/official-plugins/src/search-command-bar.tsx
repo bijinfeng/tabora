@@ -3,7 +3,11 @@ import type { BuiltinPlugin } from "@tabora/platform-kernel"
 
 const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
 
-export function SearchCommandBar() {
+type SearchCommandBarProps = {
+  openExternal?: (url: string) => void
+}
+
+export function SearchCommandBar(props: SearchCommandBarProps = {}) {
   const providers = [
     { id: "google", title: "Google", url: "https://www.google.com/search?q={query}" },
     { id: "bing", title: "Bing", url: "https://www.bing.com/search?q={query}" },
@@ -19,7 +23,7 @@ export function SearchCommandBar() {
     const provider = providers[0]
     if (!provider) return
     const url = provider.url.replace("{query}", encodeURIComponent(q.trim()))
-    window.open(url, "_blank")
+    props.openExternal?.(url)
   }
 
   function handleSubmit(event: Event) {
@@ -89,6 +93,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     version: "0.0.0",
     entry: "./search-command-bar",
     engine: { platform: "^0.1.0" },
+    permissions: [{ type: "external-open", hosts: ["*"] }],
     contributes: {
       searches: [
         {
@@ -102,6 +107,15 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     },
   },
   activate(context) {
-    context.registry.views.register("official.search.command-bar.view", SearchCommandBar)
+    context.registry.views.register(
+      "official.search.command-bar.view",
+      (props: SearchCommandBarProps = {}) =>
+        SearchCommandBar({
+          ...props,
+          openExternal: (url) => {
+            context.permissions.openExternal(url)
+          },
+        }),
+    )
   },
 }

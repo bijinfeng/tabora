@@ -753,3 +753,9 @@ Tailwind 和主题架构：
 第一阶段选择先实现 `apps/playground`，不直接引入 WXT。这样可以先验证插件内核、官方插件装配、主题 token、工作台网格和本地持久化模型。
 
 天气、RSS 和浏览器扩展壳在后续阶段接入。第一阶段的目标是让默认工作台完全通过官方插件包装配出来，并通过 `vp check`、`vp test`、`vp run -r build` 和 `vp build apps/playground` 验证。
+
+## 16. 第二阶段实现记录
+
+第二阶段补齐 MVP 安全闭环：插件视图渲染通过宿主边界隔离，单个插件实例失败时只显示该实例的失败回退，不拖垮工作台；外部 URL 打开能力通过运行时权限桥路由，插件只能请求 manifest / granted permissions 声明允许的 host。
+
+本阶段通过 `pnpm test`、`pnpm check` 和 `pnpm build` 验证。

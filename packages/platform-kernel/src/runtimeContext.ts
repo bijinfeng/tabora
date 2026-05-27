@@ -1,3 +1,4 @@
+import type { PluginPermission } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
 import type { ExtensionRegistry } from "./extensionRegistry"
 
@@ -13,11 +14,17 @@ export type PluginUiBridge = {
   closeFullscreen(): void
 }
 
+export type PermissionBridge = {
+  canOpenExternal(url: string): boolean
+  openExternal(url: string): boolean
+}
+
 export type PluginRuntimeContext = {
   pluginId: string
   events: EventBus
   registry: ExtensionRegistry
   ui: PluginUiBridge
+  permissions: PermissionBridge
   logger: {
     warn(message: string): void
     error(message: string): void
@@ -30,14 +37,32 @@ export function createPluginRuntimeContext(options: {
   pluginId: string
   events: EventBus
   registry: ExtensionRegistry
+  grantedPermissions?: PluginPermission[]
 }): PluginRuntimeContext {
   const config = new Map<string, unknown>()
+  const grantedPermissions = options.grantedPermissions ?? []
 
   function keyFor(scope: RuntimeConfigScope): string {
     if (scope.type === "instance") {
       return `instance:${scope.instanceId}`
     }
     return scope.type
+  }
+
+  function canOpenExternal(url: string): boolean {
+    let hostname: string
+    try {
+      hostname = new URL(url).hostname
+    } catch {
+      return false
+    }
+
+    return grantedPermissions.some((permission) => {
+      if (permission.type !== "external-open") {
+        return false
+      }
+      return permission.hosts.some((host) => host === "*" || host === hostname)
+    })
   }
 
   return {
@@ -56,6 +81,16 @@ export function createPluginRuntimeContext(options: {
       },
       closeFullscreen() {
         options.events.emit("ui.fullscreen.close", null)
+      },
+    },
+    permissions: {
+      canOpenExternal,
+      openExternal(url) {
+        if (!canOpenExternal(url)) {
+          return false
+        }
+        options.events.emit("host.external.open", { url })
+        return true
       },
     },
     logger: {

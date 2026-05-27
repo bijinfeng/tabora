@@ -98,7 +98,7 @@ packages/
 - Create: `packages/*/package.json`
 - Create: `packages/*/tsconfig.json`
 
-- [ ] **Step 1: Write workspace metadata**
+- [x] **Step 1: Write workspace metadata**
 
 Create `package.json`:
 
@@ -166,7 +166,7 @@ Create `tsconfig.base.json`:
 }
 ```
 
-- [ ] **Step 2: Write root Vite+ config**
+- [x] **Step 2: Write root Vite+ config**
 
 Create `vite.config.ts`:
 
@@ -208,7 +208,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Create playground app package**
+- [x] **Step 3: Create playground app package**
 
 Create `apps/playground/package.json`:
 
@@ -281,7 +281,7 @@ Create `apps/playground/index.html`:
 </html>
 ```
 
-- [ ] **Step 4: Create package metadata**
+- [x] **Step 4: Create package metadata**
 
 For `packages/plugin-api/package.json`:
 
@@ -398,7 +398,7 @@ For each package, create `tsconfig.json`:
 }
 ```
 
-- [ ] **Step 5: Install dependencies**
+- [x] **Step 5: Install dependencies**
 
 Run:
 
@@ -408,7 +408,7 @@ vp install
 
 Expected: lockfile is created and all workspace dependencies install successfully.
 
-- [ ] **Step 6: Run first workspace check**
+- [x] **Step 6: Run first workspace check**
 
 Run:
 
@@ -418,7 +418,7 @@ vp check
 
 Expected: FAIL because source entry files do not exist yet. The failure confirms the workspace is wired and ready for implementation tasks.
 
-- [ ] **Step 7: Commit scaffold**
+- [x] **Step 7: Commit scaffold**
 
 ```bash
 git add package.json pnpm-workspace.yaml tsconfig.base.json vite.config.ts apps packages
@@ -435,7 +435,7 @@ git commit -m "chore: scaffold Tabora Vite+ workspace"
 - Create: `packages/plugin-api/src/manifestSchema.test.ts`
 - Create: `packages/plugin-api/src/index.ts`
 
-- [ ] **Step 1: Write failing manifest schema tests**
+- [x] **Step 1: Write failing manifest schema tests**
 
 Create `packages/plugin-api/src/manifestSchema.test.ts`:
 
@@ -494,7 +494,7 @@ describe("pluginManifestSchema", () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -504,7 +504,7 @@ vp test packages/plugin-api/src/manifestSchema.test.ts
 
 Expected: FAIL with an import error for `./manifestSchema`.
 
-- [ ] **Step 3: Implement API types**
+- [x] **Step 3: Implement API types**
 
 Create `packages/plugin-api/src/manifest.ts`:
 
@@ -692,7 +692,7 @@ export type PluginRecord = {
 }
 ```
 
-- [ ] **Step 4: Implement manifest schema**
+- [x] **Step 4: Implement manifest schema**
 
 Create `packages/plugin-api/src/manifestSchema.ts`:
 
@@ -839,7 +839,7 @@ export * from "./manifestSchema"
 export * from "./workspace"
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run:
 
@@ -849,7 +849,7 @@ vp test packages/plugin-api/src/manifestSchema.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit Plugin API**
+- [x] **Step 6: Commit Plugin API**
 
 ```bash
 git add packages/plugin-api
@@ -869,7 +869,7 @@ git commit -m "feat: define plugin API manifest schema"
 - Create: `packages/platform-kernel/src/pluginKernel.test.ts`
 - Create: `packages/platform-kernel/src/index.ts`
 
-- [ ] **Step 1: Write failing event bus test**
+- [x] **Step 1: Write failing event bus test**
 
 Create `packages/platform-kernel/src/eventBus.test.ts`:
 
@@ -900,7 +900,7 @@ vp test packages/platform-kernel/src/eventBus.test.ts
 
 Expected: FAIL with an import error for `./eventBus`.
 
-- [ ] **Step 2: Implement event bus**
+- [x] **Step 2: Implement event bus**
 
 Create `packages/platform-kernel/src/eventBus.ts`:
 
@@ -942,7 +942,7 @@ vp test packages/platform-kernel/src/eventBus.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 3: Write failing registry test**
+- [x] **Step 3: Write failing registry test**
 
 Create `packages/platform-kernel/src/extensionRegistry.test.ts`:
 
@@ -976,7 +976,7 @@ vp test packages/platform-kernel/src/extensionRegistry.test.ts
 
 Expected: FAIL with an import error for `./extensionRegistry`.
 
-- [ ] **Step 4: Implement extension registry**
+- [x] **Step 4: Implement extension registry**
 
 Create `packages/platform-kernel/src/extensionRegistry.ts`:
 
@@ -1024,7 +1024,7 @@ vp test packages/platform-kernel/src/extensionRegistry.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 5: Write failing kernel activation test**
+- [x] **Step 5: Write failing kernel activation test**
 
 Create `packages/platform-kernel/src/pluginKernel.test.ts`:
 
@@ -1069,7 +1069,7 @@ vp test packages/platform-kernel/src/pluginKernel.test.ts
 
 Expected: FAIL with an import error for `./pluginKernel`.
 
-- [ ] **Step 6: Implement runtime context and plugin kernel**
+- [x] **Step 6: Implement runtime context and plugin kernel**
 
 Create `packages/platform-kernel/src/runtimeContext.ts`:
 
@@ -1194,7 +1194,7 @@ vp test packages/platform-kernel/src
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit kernel**
+- [x] **Step 7: Commit kernel**
 
 ```bash
 git add packages/platform-kernel
@@ -1210,7 +1210,7 @@ git commit -m "feat: add plugin kernel registry"
 - Create: `packages/storage/src/workspaceRepository.test.ts`
 - Create: `packages/storage/src/index.ts`
 
-- [ ] **Step 1: Write failing repository test**
+- [x] **Step 1: Write failing repository test**
 
 Create `packages/storage/src/workspaceRepository.test.ts`:
 
@@ -1254,7 +1254,7 @@ vp test packages/storage/src/workspaceRepository.test.ts
 
 Expected: FAIL with an import error for `./database`.
 
-- [ ] **Step 2: Implement Dexie database and repository**
+- [x] **Step 2: Implement Dexie database and repository**
 
 Create `packages/storage/src/database.ts`:
 
@@ -1331,7 +1331,7 @@ vp test packages/storage/src/workspaceRepository.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 3: Commit storage**
+- [x] **Step 3: Commit storage**
 
 ```bash
 git add packages/storage
@@ -1346,7 +1346,7 @@ git commit -m "feat: add workspace persistence"
 - Create: `packages/theme/src/applyThemeTokens.test.ts`
 - Create: `packages/theme/src/index.ts`
 
-- [ ] **Step 1: Write failing theme token test**
+- [x] **Step 1: Write failing theme token test**
 
 Create `packages/theme/src/applyThemeTokens.test.ts`:
 
@@ -1377,7 +1377,7 @@ vp test packages/theme/src/applyThemeTokens.test.ts
 
 Expected: FAIL with an import error for `./applyThemeTokens`.
 
-- [ ] **Step 2: Implement token application**
+- [x] **Step 2: Implement token application**
 
 Create `packages/theme/src/applyThemeTokens.ts`:
 
@@ -1405,7 +1405,7 @@ vp test packages/theme/src/applyThemeTokens.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 3: Commit theme package**
+- [x] **Step 3: Commit theme package**
 
 ```bash
 git add packages/theme
@@ -1422,7 +1422,7 @@ git commit -m "feat: add theme token bridge"
 - Create: `packages/official-plugins/src/widgets-productivity.tsx`
 - Create: `packages/official-plugins/src/index.ts`
 
-- [ ] **Step 1: Write official theme plugin**
+- [x] **Step 1: Write official theme plugin**
 
 Create `packages/official-plugins/src/theme-default-pack.ts`:
 
@@ -1459,7 +1459,7 @@ export const officialThemeDefaultPack: BuiltinPlugin = {
 }
 ```
 
-- [ ] **Step 2: Write official search plugin**
+- [x] **Step 2: Write official search plugin**
 
 Create `packages/official-plugins/src/search-command-bar.tsx`:
 
@@ -1505,7 +1505,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
 }
 ```
 
-- [ ] **Step 3: Write official layout plugin**
+- [x] **Step 3: Write official layout plugin**
 
 Create `packages/official-plugins/src/layout-top-search-grid.tsx`:
 
@@ -1559,7 +1559,7 @@ export const officialLayoutTopSearchGrid: BuiltinPlugin = {
 }
 ```
 
-- [ ] **Step 4: Write official widgets plugin**
+- [x] **Step 4: Write official widgets plugin**
 
 Create `packages/official-plugins/src/widgets-productivity.tsx`:
 
@@ -1628,7 +1628,7 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
 }
 ```
 
-- [ ] **Step 5: Export official plugins**
+- [x] **Step 5: Export official plugins**
 
 Create `packages/official-plugins/src/index.ts`:
 
@@ -1651,7 +1651,7 @@ export const officialPlugins = [
 ]
 ```
 
-- [ ] **Step 6: Run package tests**
+- [x] **Step 6: Run package tests**
 
 Run:
 
@@ -1661,7 +1661,7 @@ vp test packages/official-plugins/src
 
 Expected: PASS or "No test files found" depending on Vitest configuration. No TypeScript compile error should be reported by the next check.
 
-- [ ] **Step 7: Commit official plugins**
+- [x] **Step 7: Commit official plugins**
 
 ```bash
 git add packages/official-plugins
@@ -1676,7 +1676,7 @@ git commit -m "feat: add official plugin pack"
 - Create: `apps/playground/src/App.tsx`
 - Create: `apps/playground/src/app.css`
 
-- [ ] **Step 1: Write Solid bootstrap**
+- [x] **Step 1: Write Solid bootstrap**
 
 Create `apps/playground/src/bootstrap.tsx`:
 
@@ -1694,7 +1694,7 @@ if (!root) {
 render(() => <App />, root)
 ```
 
-- [ ] **Step 2: Render registered plugin views**
+- [x] **Step 2: Render registered plugin views**
 
 Create `apps/playground/src/App.tsx`:
 
@@ -1763,7 +1763,7 @@ export function App() {
 }
 ```
 
-- [ ] **Step 3: Add token-driven styling**
+- [x] **Step 3: Add token-driven styling**
 
 Create `apps/playground/src/app.css`:
 
@@ -1912,7 +1912,7 @@ body {
 }
 ```
 
-- [ ] **Step 4: Run playground dev server**
+- [x] **Step 4: Run playground dev server**
 
 Run:
 
@@ -1922,7 +1922,7 @@ vp dev apps/playground
 
 Expected: dev server starts and prints a local URL.
 
-- [ ] **Step 5: Verify app builds**
+- [x] **Step 5: Verify app builds**
 
 Run:
 
@@ -1932,7 +1932,7 @@ vp build apps/playground
 
 Expected: PASS and `apps/playground/dist` is created.
 
-- [ ] **Step 6: Commit playground**
+- [x] **Step 6: Commit playground**
 
 ```bash
 git add apps/playground
@@ -1945,7 +1945,7 @@ git commit -m "feat: render plugin assembled playground"
 
 - Modify: `docs/superpowers/specs/2026-05-26-plugin-workbench-new-tab-design.md`
 
-- [ ] **Step 1: Run static checks**
+- [x] **Step 1: Run static checks**
 
 Run:
 
@@ -1955,7 +1955,7 @@ vp check
 
 Expected: PASS. If formatting changes are applied, inspect them and include them in the verification commit.
 
-- [ ] **Step 2: Run all tests**
+- [x] **Step 2: Run all tests**
 
 Run:
 
@@ -1965,7 +1965,7 @@ vp test
 
 Expected: PASS.
 
-- [ ] **Step 3: Run workspace build**
+- [x] **Step 3: Run workspace build**
 
 Run:
 
@@ -1975,7 +1975,7 @@ vp run -r build
 
 Expected: PASS for all packages with `build` scripts.
 
-- [ ] **Step 4: Build playground**
+- [x] **Step 4: Build playground**
 
 Run:
 
@@ -1985,7 +1985,7 @@ vp build apps/playground
 
 Expected: PASS.
 
-- [ ] **Step 5: Add implementation note to design spec**
+- [x] **Step 5: Add implementation note to design spec**
 
 Append this section to `docs/superpowers/specs/2026-05-26-plugin-workbench-new-tab-design.md`:
 
@@ -1997,7 +1997,7 @@ Append this section to `docs/superpowers/specs/2026-05-26-plugin-workbench-new-t
 天气、RSS 和浏览器扩展壳在后续阶段接入。第一阶段的目标是让默认工作台完全通过官方插件包装配出来，并通过 `vp check`、`vp test`、`vp run -r build` 和 `vp build apps/playground` 验证。
 ```
 
-- [ ] **Step 6: Commit verification note**
+- [x] **Step 6: Commit verification note**
 
 ```bash
 git add docs/superpowers/specs/2026-05-26-plugin-workbench-new-tab-design.md
@@ -2010,3 +2010,21 @@ git commit -m "docs: record Tabora foundation implementation scope"
 - Deliberate exclusions: WXT, remote plugin market, sandbox runtime, pointer drag behavior, real weather network source, real RSS network source, modal/fullscreen host. These are not part of this first foundation plan.
 - Test coverage: every package with behavior has a failing test before implementation.
 - Verification commands: `vp check`, `vp test`, `vp run -r build`, and `vp build apps/playground`.
+
+## 2026-05-27 进度同步
+
+状态：已按当前 workspace 实现并验证。
+
+证据：
+
+- `git log --oneline --max-count=20` 显示本计划对应的实现提交，包括 `c4c64de chore: scaffold Tabora Vite+ workspace`、`c5af7ba feat: define plugin API manifest schema`、`cea6fa3 feat: add plugin kernel registry`、`3b93a45 feat: add workspace persistence`、`21b6fe0 feat: add theme token bridge and official plugin pack`、`6f5b959 feat: render plugin assembled playground` 和 `66051c7 docs: record Tabora foundation implementation scope`。
+- `pnpm check` 已通过：60 个文件格式正确，40 个文件无 warning、lint error 或 type error。
+- `pnpm test` 已通过：8 个测试文件通过，10 个测试通过。
+- `pnpm build` 已通过：workspace package build 和 playground production build 均成功完成。
+- `pnpm --filter @tabora/playground build` 已通过。
+- playground dev server 冒烟已通过：运行 `pnpm --filter @tabora/playground exec vite --host 127.0.0.1 --port 5173 --strictPort` 后，`http://127.0.0.1:5173/` 返回 HTTP 200。
+
+备注：
+
+- 当前实现已经超出本 MVP foundation 计划。新增的已跟踪文件包括 `apps/playground/src/workbenchGrid.ts`、`apps/playground/src/workbenchGrid.test.tsx`、背景 / 搜索 / 待办 / 天气 / 插件管理等额外官方插件，以及更多 storage repository。
+- 原计划引用根目录 `tsconfig.base.json`；实际 workspace 改为使用 `tooling/tsconfig` 下的共享 tsconfig package，各 package 的 `tsconfig.json` 继承该共享配置。

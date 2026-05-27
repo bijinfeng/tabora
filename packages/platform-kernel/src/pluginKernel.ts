@@ -36,6 +36,7 @@ export function createPluginKernel(): PluginKernel {
           pluginId: plugin.manifest.id,
           events,
           registry,
+          grantedPermissions: plugin.manifest.permissions ?? [],
         })
         await plugin.activate(context)
       }
