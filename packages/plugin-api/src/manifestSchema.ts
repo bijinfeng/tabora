@@ -61,6 +61,7 @@ export const pluginManifestSchema = z.object({
           id: z.string().min(1),
           title: z.string().min(1),
           preview: z.string().optional(),
+          view: z.string().min(1).optional(),
           regions: z.array(layoutRegionSchema).min(1),
           defaultRegions: z.record(z.string(), z.array(instanceRefSchema)),
           supportsResponsive: z.boolean(),

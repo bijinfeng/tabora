@@ -50,6 +50,7 @@ export type LayoutContribution = {
   id: string
   title: string
   preview?: string
+  view?: string
   regions: LayoutRegion[]
   defaultRegions: Record<string, PluginInstanceRef[]>
   supportsResponsive: boolean
