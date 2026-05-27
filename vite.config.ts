@@ -1,3 +1,4 @@
+import solid from "vite-plugin-solid"
 import { defineConfig } from "vite-plus"
 
 export default defineConfig({
@@ -33,6 +34,10 @@ export default defineConfig({
   },
   pack: {
     dts: true,
-    exports: true,
+    exports: {
+      devExports: true,
+    },
+    platform: "browser",
+    plugins: [solid()],
   },
 })

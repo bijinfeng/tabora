@@ -3,10 +3,17 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
-    "build": "tsdown src/index.ts --dts --exports",
+    "build": "vp pack src/index.ts",
     "test": "vitest"
   },
   "dependencies": {
@@ -16,6 +23,7 @@
     "solid-js": "catalog:ui"
   },
   "devDependencies": {
-    "@tabora/tsconfig": "workspace:*"
+    "@tabora/tsconfig": "workspace:*",
+    "vite-plugin-solid": "catalog:build"
   }
 }

@@ -8,7 +8,7 @@
     "staged": "vp staged",
     "test": "vp test",
     "build": "vp run -r build",
-    "pack": "vp pack",
+    "pack": "vp run -r build",
     "lint": "vp lint --type-aware --type-check",
     "lint:fix": "vp lint --type-aware --type-check --fix",
     "format": "vp fmt",

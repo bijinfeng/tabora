@@ -14,8 +14,26 @@ export function createInstanceRepository(database: TaboraDatabase): InstanceRepo
     getAll() {
       return database.pluginInstances.toArray()
     },
-    getByRegion(regionId) {
-      return database.pluginInstances.where("regionId").equals(regionId).toArray()
+    async getByRegion(regionId) {
+      const instances = await database.pluginInstances.where("regionId").equals(regionId).toArray()
+      return instances.sort((left, right) => {
+        const leftGrid = left.grid
+        const rightGrid = right.grid
+
+        if (!leftGrid && !rightGrid) {
+          return left.createdAt.localeCompare(right.createdAt)
+        }
+
+        if (!leftGrid) {
+          return 1
+        }
+
+        if (!rightGrid) {
+          return -1
+        }
+
+        return leftGrid.y - rightGrid.y || leftGrid.x - rightGrid.x
+      })
     },
     get(id) {
       return database.pluginInstances.get(id)

@@ -9,6 +9,7 @@ import {
   createTaboraDatabase,
   createWorkspaceRepository,
 } from "@tabora/storage"
+import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
 
 type SolidView = (...args: any[]) => JSX.Element
 
@@ -178,8 +179,6 @@ function findWidgetContribution(pluginId: string, contributionId: string) {
   return plugin?.manifest.contributes.widgets?.find((w) => w.id === contributionId)
 }
 
-const SIZE_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 4 }
-
 export function App() {
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
@@ -214,7 +213,7 @@ export function App() {
 
     let loaded = await instanceRepo.getByRegion("mainGrid")
     if (loaded.length === 0) {
-      loaded = defaultInstances().filter((i) => i.regionId === "mainGrid")
+      loaded = assignGridOrder(defaultInstances().filter((i) => i.regionId === "mainGrid"))
       for (const inst of loaded) {
         await instanceRepo.save(inst)
       }
@@ -274,10 +273,6 @@ export function App() {
     return contributionId
   }
 
-  function gridColumnSpan(size?: WidgetSize): number {
-    return SIZE_SPAN[size ?? "M"] ?? 2
-  }
-
   async function addWidget(contributionId: string) {
     const widget = findWidgetContribution("official.widgets.productivity", contributionId)
     if (!widget) return
@@ -294,8 +289,9 @@ export function App() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    await instanceRepo.save(inst)
-    setInstances((prev) => [...prev, inst])
+    const next = assignGridOrder([...instances(), inst])
+    await instanceRepo.save(next[next.length - 1]!)
+    setInstances(next)
   }
 
   async function removeWidget(instanceId: string) {
@@ -306,7 +302,15 @@ export function App() {
   async function changeWidgetSize(instanceId: string, newSize: WidgetSize) {
     const inst = instances().find((i) => i.id === instanceId)
     if (!inst) return
-    const updated: PluginInstance = { ...inst, size: newSize, updatedAt: new Date().toISOString() }
+    const updated: PluginInstance = {
+      ...inst,
+      size: newSize,
+      grid: {
+        ...(inst.grid ?? { x: 0, y: 0, rowSpan: 1 }),
+        colSpan: gridColumnSpan(newSize),
+      },
+      updatedAt: new Date().toISOString(),
+    }
     await instanceRepo.save(updated)
     setInstances((prev) => prev.map((i) => (i.id === instanceId ? updated : i)))
   }
@@ -322,6 +326,16 @@ export function App() {
     e.dataTransfer!.dropEffect = "move"
   }
 
+  async function persistGridOrder(orderedInstances: PluginInstance[]) {
+    const next = assignGridOrder(orderedInstances)
+
+    for (const instance of next) {
+      await instanceRepo.save(instance)
+    }
+
+    setInstances(next)
+  }
+
   function onDrop(e: DragEvent, targetId: string) {
     e.preventDefault()
     const sourceId = dragId()
@@ -333,7 +347,7 @@ export function App() {
     if (fromIdx === -1 || toIdx === -1) return
     const [moved] = list.splice(fromIdx, 1)
     list.splice(toIdx, 0, moved!)
-    setInstances(list)
+    void persistGridOrder(list)
   }
 
   const availableWidgets = () => {
