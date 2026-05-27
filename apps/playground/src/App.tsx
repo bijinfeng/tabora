@@ -86,9 +86,14 @@ function defaultWorkspace(): Workspace {
   return {
     id: "default",
     name: "默认工作区",
-    activeLayoutId: "official.layout.top-search-grid",
+    activeLayoutId: "official.layout.workbench-dashboard",
     activeThemeId: "official.theme.light",
     regions: {
+      rail: {
+        regionId: "rail",
+        accepts: ["layout"],
+        instances: [],
+      },
       topbar: {
         regionId: "topbar",
         accepts: ["search"],
@@ -98,10 +103,10 @@ function defaultWorkspace(): Workspace {
         regionId: "mainGrid",
         accepts: ["widget"],
         instances: [
+          { instanceId: "today-focus-1" },
           { instanceId: "quick-links-1" },
           { instanceId: "notes-1" },
           { instanceId: "todo-1" },
-          { instanceId: "weather-1" },
         ],
       },
     },
@@ -180,6 +185,14 @@ function findWidgetContribution(pluginId: string, contributionId: string) {
   return plugin?.manifest.contributes.widgets?.find((w) => w.id === contributionId)
 }
 
+function findLayoutContribution(layoutId: string) {
+  for (const plugin of officialPlugins) {
+    const layout = plugin.manifest.contributes.layouts?.find((item) => item.id === layoutId)
+    if (layout) return layout
+  }
+  return null
+}
+
 function pluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
   return typeof props.instanceId === "string" ? props.instanceId : fallback
 }
@@ -187,6 +200,7 @@ function pluginBoundaryId(props: Record<string, unknown>, fallback: string): str
 export function App() {
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
+  const [activeLayoutId, setActiveLayoutId] = createSignal("official.layout.workbench-dashboard")
   const [themeId, setThemeId] = createSignal("official.theme.light")
   const [backgroundId, setBackgroundId] = createSignal(DEFAULT_BACKGROUND_ID)
   const [modalViewId, setModalViewId] = createSignal<string | null>(null)
@@ -200,6 +214,12 @@ export function App() {
   const workspaceRepo = createWorkspaceRepository(database)
   const instanceRepo = createInstanceRepository(database)
 
+  function viewOrUndefined(viewId: string): SolidView | undefined {
+    return kernel.registry.views.has(viewId)
+      ? (kernel.registry.views.get(viewId) as SolidView)
+      : undefined
+  }
+
   void kernel.discover(officialPlugins).then(async () => {
     await kernel.activateEnabledPlugins()
 
@@ -209,6 +229,7 @@ export function App() {
       await workspaceRepo.save(workspace)
     }
 
+    setActiveLayoutId(workspace.activeLayoutId)
     setThemeId(workspace.activeThemeId)
     applyThemeTokens(document.documentElement, tokensForTheme(workspace.activeThemeId))
 
@@ -374,32 +395,9 @@ export function App() {
     return contributions
   }
 
-  const isDark = () => themeId() === "official.theme.dark"
-
-  return (
-    <div class="tabora-root">
-      <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
-        <div class="toolbar">
-          <div class="toolbar-spacer" />
-          <select
-            class="bg-select"
-            value={backgroundId()}
-            onChange={(e) => switchBackground(e.currentTarget.value)}
-            aria-label="切换背景"
-          >
-            {BACKGROUNDS.map((b) => (
-              <option value={b.id}>{b.title}</option>
-            ))}
-          </select>
-          <button
-            class="theme-toggle"
-            onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}
-            aria-label="切换主题"
-          >
-            {isDark() ? "☀" : "☾"}
-          </button>
-        </div>
-        <header class="topbar">{SearchView()({})}</header>
+  function renderMainGrid() {
+    return (
+      <>
         <section class="workbench-grid">
           <For each={instances()}>
             {(inst) => {
@@ -472,6 +470,80 @@ export function App() {
             }}
           </For>
         </section>
+        <section class="add-widgets">
+          <div class="add-widgets-bar">
+            <span>添加卡片：</span>
+            <For each={availableWidgets()}>
+              {(w) => (
+                <button class="add-widget-btn" onClick={() => addWidget(w.id)}>
+                  + {w.title}
+                </button>
+              )}
+            </For>
+          </div>
+        </section>
+      </>
+    )
+  }
+
+  function renderActiveLayout() {
+    const layout = findLayoutContribution(activeLayoutId())
+    const LayoutView = layout?.view ? viewOrUndefined(layout.view) : undefined
+    const rail = (
+      <nav class="workbench-rail" aria-label="工作台导航">
+        <button class="rail-action active" type="button" aria-label="主页" aria-current="page">
+          主页
+        </button>
+        <button class="rail-action" type="button" aria-label="添加卡片" disabled>
+          添加
+        </button>
+        <button class="rail-action" type="button" aria-label="插件" disabled>
+          插件
+        </button>
+        <button class="rail-action" type="button" aria-label="设置" disabled>
+          设置
+        </button>
+      </nav>
+    )
+    const topbar = <div class="topbar">{SearchView()({})}</div>
+    const mainGrid = renderMainGrid()
+
+    return LayoutView ? (
+      LayoutView({ rail, topbar, mainGrid })
+    ) : (
+      <>
+        {topbar}
+        {mainGrid}
+      </>
+    )
+  }
+
+  const isDark = () => themeId() === "official.theme.dark"
+
+  return (
+    <div class="tabora-root">
+      <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
+        <div class="toolbar">
+          <div class="toolbar-spacer" />
+          <select
+            class="bg-select"
+            value={backgroundId()}
+            onChange={(e) => switchBackground(e.currentTarget.value)}
+            aria-label="切换背景"
+          >
+            {BACKGROUNDS.map((b) => (
+              <option value={b.id}>{b.title}</option>
+            ))}
+          </select>
+          <button
+            class="theme-toggle"
+            onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}
+            aria-label="切换主题"
+          >
+            {isDark() ? "☀" : "☾"}
+          </button>
+        </div>
+        {renderActiveLayout()}
         <Show when={modalViewId()}>
           <div class="modal-overlay" onClick={() => setModalViewId(null)}>
             <div class="modal-container" onClick={(e) => e.stopPropagation()}>
@@ -514,18 +586,6 @@ export function App() {
             </div>
           </div>
         </Show>
-        <section class="add-widgets">
-          <div class="add-widgets-bar">
-            <span>添加卡片：</span>
-            <For each={availableWidgets()}>
-              {(w) => (
-                <button class="add-widget-btn" onClick={() => addWidget(w.id)}>
-                  + {w.title}
-                </button>
-              )}
-            </For>
-          </div>
-        </section>
       </Show>
     </div>
   )
