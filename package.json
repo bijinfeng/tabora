@@ -3,23 +3,33 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "vp config",
     "dev": "vp dev apps/playground",
-    "check": "vp check",
+    "staged": "vp staged",
     "test": "vp test",
     "build": "vp run -r build",
-    "pack": "vp pack"
+    "pack": "vp pack",
+    "lint": "vp lint --type-aware --type-check",
+    "lint:fix": "vp lint --type-aware --type-check --fix",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "check": "vp check",
+    "check:fix": "vp check --fix"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "latest",
-    "fake-indexeddb": "latest",
-    "happy-dom": "latest",
-    "tailwindcss": "latest",
-    "tsdown": "latest",
-    "typescript": "latest",
-    "vite": "latest",
-    "vite-plugin-solid": "latest",
-    "vite-plus": "latest",
-    "vitest": "latest"
+    "@tailwindcss/vite": "catalog:build",
+    "fake-indexeddb": "catalog:test",
+    "happy-dom": "catalog:test",
+    "tailwindcss": "catalog:build",
+    "tsdown": "catalog:build",
+    "typescript": "catalog:build",
+    "vite": "catalog:build",
+    "vite-plugin-solid": "catalog:build",
+    "vite-plus": "catalog:build",
+    "vitest": "catalog:test"
   },
-  "packageManager": "pnpm@10.0.0"
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@11.3.0"
 }

@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "@tabora/plugin-api": "workspace:*"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*"
   }
 }

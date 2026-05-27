@@ -8,18 +8,19 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@kobalte/core": "latest",
+    "@kobalte/core": "catalog:ui",
     "@tabora/official-plugins": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",
     "@tabora/theme": "workspace:*",
-    "lucide-solid": "latest",
-    "solid-js": "latest",
-    "zod": "latest"
+    "lucide-solid": "catalog:ui",
+    "solid-js": "catalog:ui",
+    "zod": "catalog:data"
   },
   "devDependencies": {
-    "vite": "latest",
-    "vite-plugin-solid": "latest"
+    "@tabora/tsconfig": "workspace:*",
+    "vite": "catalog:build",
+    "vite-plugin-solid": "catalog:build"
   }
 }

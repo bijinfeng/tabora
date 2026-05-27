@@ -1,3 +1,25 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - apps/*
+  - packages/*
+  - tooling/*
+
+catalogs:
+  build:
+    "@tailwindcss/vite": ^4.3.0
+    tailwindcss: ^4.3.0
+    tsdown: ^0.22.0
+    typescript: ^6.0.3
+    vite: ^8.0.14
+    vite-plugin-solid: ^2.11.12
+    vite-plus: ^0.1.22
+  data:
+    dexie: ^4.4.2
+    zod: ^4.4.3
+  test:
+    fake-indexeddb: ^6.2.5
+    happy-dom: ^20.9.0
+    vitest: ^4.1.7
+  ui:
+    "@kobalte/core": ^0.13.11
+    lucide-solid: ^1.16.0
+    solid-js: ^1.9.13

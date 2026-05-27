@@ -10,6 +10,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "zod": "latest"
+    "zod": "catalog:data"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*"
   }
 }

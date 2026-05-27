@@ -11,9 +11,10 @@
   },
   "dependencies": {
     "@tabora/plugin-api": "workspace:*",
-    "dexie": "latest"
+    "dexie": "catalog:data"
   },
   "devDependencies": {
-    "fake-indexeddb": "latest"
+    "@tabora/tsconfig": "workspace:*",
+    "fake-indexeddb": "catalog:test"
   }
 }

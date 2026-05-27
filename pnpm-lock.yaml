@@ -4,45 +4,96 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  build:
+    '@tailwindcss/vite':
+      specifier: ^4.3.0
+      version: 4.3.0
+    tailwindcss:
+      specifier: ^4.3.0
+      version: 4.3.0
+    tsdown:
+      specifier: ^0.22.0
+      version: 0.22.0
+    typescript:
+      specifier: ^6.0.3
+      version: 6.0.3
+    vite:
+      specifier: ^8.0.14
+      version: 8.0.14
+    vite-plugin-solid:
+      specifier: ^2.11.12
+      version: 2.11.12
+    vite-plus:
+      specifier: ^0.1.22
+      version: 0.1.22
+  data:
+    dexie:
+      specifier: ^4.4.2
+      version: 4.4.2
+    zod:
+      specifier: ^4.4.3
+      version: 4.4.3
+  test:
+    fake-indexeddb:
+      specifier: ^6.2.5
+      version: 6.2.5
+    happy-dom:
+      specifier: ^20.9.0
+      version: 20.9.0
+    vitest:
+      specifier: ^4.1.7
+      version: 4.1.7
+  ui:
+    '@kobalte/core':
+      specifier: ^0.13.11
+      version: 0.13.11
+    lucide-solid:
+      specifier: ^1.16.0
+      version: 1.16.0
+    solid-js:
+      specifier: ^1.9.13
+      version: 1.9.13
+
 importers:
 
   .:
     devDependencies:
       '@tailwindcss/vite':
-        specifier: latest
+        specifier: catalog:build
         version: 4.3.0(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
       fake-indexeddb:
-        specifier: latest
+        specifier: catalog:test
         version: 6.2.5
       happy-dom:
-        specifier: latest
+        specifier: catalog:test
         version: 20.9.0
       tailwindcss:
-        specifier: latest
+        specifier: catalog:build
         version: 4.3.0
       tsdown:
-        specifier: latest
+        specifier: catalog:build
         version: 0.22.0(typescript@6.0.3)
       typescript:
-        specifier: latest
+        specifier: catalog:build
         version: 6.0.3
       vite:
-        specifier: latest
+        specifier: catalog:build
         version: 8.0.14(@types/node@25.9.1)(jiti@2.7.0)
       vite-plugin-solid:
-        specifier: latest
+        specifier: catalog:build
         version: 2.11.12(solid-js@1.9.13)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
       vite-plus:
-        specifier: latest
+        specifier: catalog:build
         version: 0.1.22(@types/node@25.9.1)(happy-dom@20.9.0)(jiti@2.7.0)(typescript@6.0.3)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
       vitest:
-        specifier: latest
+        specifier: catalog:test
         version: 4.1.7(@types/node@25.9.1)(happy-dom@20.9.0)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
 
   apps/playground:
     dependencies:
       '@kobalte/core':
-        specifier: latest
+        specifier: catalog:ui
         version: 0.13.11(solid-js@1.9.13)
       '@tabora/official-plugins':
         specifier: workspace:*
@@ -60,20 +111,23 @@ importers:
         specifier: workspace:*
         version: link:../../packages/theme
       lucide-solid:
-        specifier: latest
+        specifier: catalog:ui
         version: 1.16.0(solid-js@1.9.13)
       solid-js:
-        specifier: latest
+        specifier: catalog:ui
         version: 1.9.13
       zod:
-        specifier: latest
+        specifier: catalog:data
         version: 4.4.3
     devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
       vite:
-        specifier: latest
+        specifier: catalog:build
         version: 8.0.14(@types/node@25.9.1)(jiti@2.7.0)
       vite-plugin-solid:
-        specifier: latest
+        specifier: catalog:build
         version: 2.11.12(solid-js@1.9.13)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
 
   packages/official-plugins:
@@ -88,20 +142,32 @@ importers:
         specifier: workspace:*
         version: link:../storage
       solid-js:
-        specifier: latest
+        specifier: catalog:ui
         version: 1.9.13
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
 
   packages/platform-kernel:
     dependencies:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../plugin-api
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
 
   packages/plugin-api:
     dependencies:
       zod:
-        specifier: latest
+        specifier: catalog:data
         version: 4.4.3
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
 
   packages/storage:
     dependencies:
@@ -109,11 +175,14 @@ importers:
         specifier: workspace:*
         version: link:../plugin-api
       dexie:
-        specifier: latest
+        specifier: catalog:data
         version: 4.4.2
     devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
       fake-indexeddb:
-        specifier: latest
+        specifier: catalog:test
         version: 6.2.5
 
   packages/theme:
@@ -121,6 +190,12 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../plugin-api
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+
+  tooling/tsconfig: {}
 
 packages:
 
@@ -264,8 +339,12 @@ packages:
   '@internationalized/number@3.6.6':
     resolution: {integrity: sha512-iFgmQaXHE0vytNfpLZWOC2mEJCBRzcUxt53Xf/yCXG93lRvqas237i3r7X4RKMwO3txiyZD4mQjKAByFv6UGSQ==}
 
-  '@jridgewell/gen-mapping@0.3.13':
-    resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
+  '@jridgewell/gen-mapping@0.3.12':
+    resolution: {integrity: sha512-OuLGC46TjB5BbN1dH8JULVVZY4WTdkF7tV9Ys6wLL1rubZnCMstOhNHueU5bLCrnRuDhKPDM4g6sw4Bel5Gzqg==}
+
+  '@jridgewell/gen-mapping@0.3.5':
+    resolution: {integrity: sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==}
+    engines: {node: '>=6.0.0'}
 
   '@jridgewell/remapping@2.3.5':
     resolution: {integrity: sha512-LI9u/+laYG4Ds1TDKSJW2YPrIlcVYOwi2fUC6xB43lueCjgxV4lffOCZCtYFiH6TNOX+tQKXx97T4IKHbhyHEQ==}
@@ -273,6 +352,19 @@ packages:
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
+
+  '@jridgewell/set-array@1.2.1':
+    resolution: {integrity: sha512-R8gLRTZeyp03ymzP/6Lil/28tGeGEzhx1q2k703KGWRAI1VdvPIXdG70VJc2pAMw3NA6JKL5hhFu1sJX0Mnn/A==}
+    engines: {node: '>=6.0.0'}
+
+  '@jridgewell/sourcemap-codec@1.4.10':
+    resolution: {integrity: sha512-Ht8wIW5v165atIX1p+JvKR5ONzUyF4Ac8DZIQ5kZs9zrb6M8SJNXpx1zn04rn65VjBMygRoMXcyYwNK0fT7bEg==}
+
+  '@jridgewell/sourcemap-codec@1.4.14':
+    resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
+
+  '@jridgewell/sourcemap-codec@1.5.0':
+    resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
@@ -698,8 +790,8 @@ packages:
     peerDependencies:
       solid-js: ^1.6.12
 
-  '@solid-primitives/map@0.4.13':
-    resolution: {integrity: sha512-B1zyFbsiTQvqPr+cuPCXO72sRuczG9Swncqk5P74NCGw1VE8qa/Ry9GlfI1e/VdeQYHjan+XkbE3rO2GW/qKew==}
+  '@solid-primitives/map@0.4.7':
+    resolution: {integrity: sha512-vT4JVtgk2t+K9rMd+SsFYSs38vYjdfAyMnwBF4rUMj/G1t9dewHf0Y9GhvFpVZ2fYj9/KYQYiC++I8abJNvOsw==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -746,8 +838,8 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@swc/helpers@0.5.22':
-    resolution: {integrity: sha512-/e2Ly3Docn9kYByap6TV4oquJ3wQuz3c+kC74riqtkwU9CwTMeuj6t2rW+bRr4pyOx/CYQM4wr0RgaKQwGEz0A==}
+  '@swc/helpers@0.5.21':
+    resolution: {integrity: sha512-jI/VAmtdjB/RnI8GTnokyX7Ug8c+g+ffD6QRLa6XQewtnGyukKkKSk3wLTM3b5cjt1jNh9x0jfVlagdN2gDKQg==}
 
   '@tailwindcss/node@4.3.0':
     resolution: {integrity: sha512-aFb4gUhFOgdh9AXo4IzBEOzBkkAxm9VigwDJnMIYv3lcfXCJVesNfbEaBl4BNgVRyid92AmdviqwBUBRKSeY3g==}
@@ -1149,8 +1241,8 @@ packages:
     resolution: {integrity: sha512-xYcDWrpELkFzz9SpZ3PlI6Eu6eD93Yf0WLDRxikGhWJ3MAir2SNZTIVCVZqZ/NUyx8AdMc2gT9C0gPiw18kG+A==}
     engines: {node: '>=10.13.0'}
 
-  entities@6.0.1:
-    resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
+  entities@4.4.0:
+    resolution: {integrity: sha512-oYp7156SP8LkeGD0GF85ad1X9Ai79WtRsZ2gxJqtBuzH+98YUV6jkHEKlZkMbcrjJjIVJNIDP/3WL9wQkoPbWA==}
     engines: {node: '>=0.12'}
 
   entities@7.0.1:
@@ -1365,8 +1457,8 @@ packages:
       oxlint-tsgolint:
         optional: true
 
-  parse5@7.3.0:
-    resolution: {integrity: sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==}
+  parse5@7.1.2:
+    resolution: {integrity: sha512-Czj1WaSVpaoj0wbhMzLmWD69anp2WH7FXMB9n1Sy8/ZFF9jolSQVMu1Ij5WIyGmcBmhk7EOndpO4mIpihVqAXw==}
 
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
@@ -1730,7 +1822,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.29.7
       '@babel/types': 7.29.7
-      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.31
       jsesc: 3.1.0
 
@@ -1738,7 +1830,7 @@ snapshots:
     dependencies:
       '@babel/parser': 8.0.0-rc.6
       '@babel/types': 8.0.0-rc.6
-      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.31
       '@types/jsesc': 2.5.1
       jsesc: 3.1.0
@@ -1871,30 +1963,44 @@ snapshots:
 
   '@internationalized/date@3.12.1':
     dependencies:
-      '@swc/helpers': 0.5.22
+      '@swc/helpers': 0.5.21
 
   '@internationalized/number@3.6.6':
     dependencies:
-      '@swc/helpers': 0.5.22
+      '@swc/helpers': 0.5.21
 
-  '@jridgewell/gen-mapping@0.3.13':
+  '@jridgewell/gen-mapping@0.3.12':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/trace-mapping': 0.3.31
+
+  '@jridgewell/gen-mapping@0.3.5':
+    dependencies:
+      '@jridgewell/set-array': 1.2.1
+      '@jridgewell/sourcemap-codec': 1.4.10
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/remapping@2.3.5':
     dependencies:
-      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/resolve-uri@3.1.2': {}
+
+  '@jridgewell/set-array@1.2.1': {}
+
+  '@jridgewell/sourcemap-codec@1.4.10': {}
+
+  '@jridgewell/sourcemap-codec@1.4.14': {}
+
+  '@jridgewell/sourcemap-codec@1.5.0': {}
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.4.14
 
   '@kobalte/core@0.13.11(solid-js@1.9.13)':
     dependencies:
@@ -1912,7 +2018,7 @@ snapshots:
     dependencies:
       '@solid-primitives/event-listener': 2.4.5(solid-js@1.9.13)
       '@solid-primitives/keyed': 1.5.3(solid-js@1.9.13)
-      '@solid-primitives/map': 0.4.13(solid-js@1.9.13)
+      '@solid-primitives/map': 0.4.7(solid-js@1.9.13)
       '@solid-primitives/media': 2.3.5(solid-js@1.9.13)
       '@solid-primitives/props': 3.2.3(solid-js@1.9.13)
       '@solid-primitives/refs': 1.1.3(solid-js@1.9.13)
@@ -2132,7 +2238,7 @@ snapshots:
     dependencies:
       solid-js: 1.9.13
 
-  '@solid-primitives/map@0.4.13(solid-js@1.9.13)':
+  '@solid-primitives/map@0.4.7(solid-js@1.9.13)':
     dependencies:
       '@solid-primitives/trigger': 1.2.3(solid-js@1.9.13)
       solid-js: 1.9.13
@@ -2184,7 +2290,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@swc/helpers@0.5.22':
+  '@swc/helpers@0.5.21':
     dependencies:
       tslib: 2.8.1
 
@@ -2438,7 +2544,7 @@ snapshots:
       '@babel/plugin-syntax-jsx': 7.29.7(@babel/core@7.29.7)
       '@babel/types': 7.29.7
       html-entities: 2.3.3
-      parse5: 7.3.0
+      parse5: 7.1.2
 
   babel-preset-solid@1.9.12(@babel/core@7.29.7)(solid-js@1.9.13):
     dependencies:
@@ -2490,7 +2596,7 @@ snapshots:
       graceful-fs: 4.2.11
       tapable: 2.3.3
 
-  entities@6.0.1: {}
+  entities@4.4.0: {}
 
   entities@7.0.1: {}
 
@@ -2682,9 +2788,9 @@ snapshots:
       '@oxlint/binding-win32-x64-msvc': 1.63.0
       oxlint-tsgolint: 0.22.1
 
-  parse5@7.3.0:
+  parse5@7.1.2:
     dependencies:
-      entities: 6.0.1
+      entities: 4.4.0
 
   pathe@2.0.3: {}
 

@@ -5,6 +5,9 @@ export default defineConfig({
     environment: "happy-dom",
     include: ["packages/**/*.test.ts", "packages/**/*.test.tsx", "apps/**/*.test.tsx"],
   },
+  staged: {
+    "*.{css,html,json,md,ts,tsx,yaml,yml}": "vp check --fix",
+  },
   lint: {
     plugins: ["typescript"],
     options: {
