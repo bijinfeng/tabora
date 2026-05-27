@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora Design System Preview</title>
+    <style>
+      :root {
+        --page: #f3f7f2;
+        --surface: #ffffff;
+        --surface-quiet: #f8fbf8;
+        --surface-hover: #edf5ee;
+        --text: #0d1f1b;
+        --muted: #5f6f69;
+        --line: #d9e3dc;
+        --accent: #0f7b68;
+        --accent-soft: #dff2ec;
+        --accent-strong: #095f51;
+        --warning: #a66a12;
+        --danger: #b94343;
+        --shadow: 0 18px 45px rgba(26, 48, 38, 0.1);
+        --radius-card: 14px;
+        --radius-control: 10px;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--text);
+        background: var(--page);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 20% 10%, rgba(223, 242, 236, 0.8), transparent 28rem),
+          linear-gradient(180deg, #f7faf6, var(--page));
+      }
+
+      .page {
+        max-width: 1420px;
+        margin: 0 auto;
+        padding: 32px;
+      }
+
+      .header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 24px;
+        align-items: start;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        font-size: 32px;
+        line-height: 1.15;
+        margin: 0 0 8px;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.7;
+        max-width: 760px;
+      }
+
+      .chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 280px 1fr 320px;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel,
+      .mock-app,
+      .card {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius-card);
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .section-title {
+        margin: 0 0 12px;
+        font-size: 14px;
+        color: var(--accent-strong);
+      }
+
+      .swatches {
+        display: grid;
+        gap: 10px;
+      }
+
+      .swatch {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .swatch-color {
+        width: 40px;
+        height: 32px;
+        border-radius: 9px;
+        border: 1px solid rgba(13, 31, 27, 0.12);
+      }
+
+      .swatch strong,
+      .type-row strong {
+        display: block;
+        font-size: 12px;
+      }
+
+      .swatch span,
+      .rule {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .rule-list {
+        display: grid;
+        gap: 9px;
+        margin-top: 16px;
+      }
+
+      .mock-app {
+        padding: 16px;
+        min-height: 670px;
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .browser-bar {
+        height: 32px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: -16px -16px 16px;
+        padding: 0 14px;
+      }
+
+      .traffic {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #c8d5cc;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 18px;
+        min-height: 600px;
+      }
+
+      .rail {
+        border-right: 1px solid var(--line);
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .rail-btn {
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: var(--surface);
+      }
+
+      .rail-btn.active {
+        background: var(--accent-soft);
+        border-color: #a7d7ca;
+        box-shadow: inset 0 0 0 1px rgba(15, 123, 104, 0.18);
+      }
+
+      .content {
+        min-width: 0;
+      }
+
+      .topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .brand {
+        font-weight: 700;
+        color: var(--accent-strong);
+      }
+
+      .icon-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .icon {
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .search {
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+        color: var(--muted);
+        margin-bottom: 16px;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .card {
+        box-shadow: none;
+        padding: 14px;
+        min-height: 132px;
+        background: var(--surface);
+      }
+
+      .card.wide {
+        grid-column: span 2;
+      }
+
+      .card.tall {
+        min-height: 210px;
+      }
+
+      .card h3 {
+        margin: 0 0 14px;
+        font-size: 14px;
+      }
+
+      .line {
+        height: 8px;
+        background: #dbe8df;
+        border-radius: 999px;
+        margin-bottom: 9px;
+      }
+
+      .line.accent {
+        background: var(--accent-soft);
+      }
+
+      .row {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 0 10px;
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+
+      .time {
+        color: var(--accent-strong);
+        font-weight: 700;
+      }
+
+      .component-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .button-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        height: 36px;
+        border-radius: var(--radius-control);
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--text);
+        padding: 0 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+
+      button.subtle {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        border-color: #bddfd6;
+      }
+
+      .field {
+        height: 42px;
+        border-radius: var(--radius-control);
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        height: 26px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: var(--surface-hover);
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .focus-ring {
+        outline: 3px solid rgba(15, 123, 104, 0.28);
+        border-color: var(--accent);
+      }
+
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .header {
+          grid-template-columns: 1fr;
+        }
+
+        .chips {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <div>
+          <h1>Tabora 设计体系预览</h1>
+          <p class="lead">
+            把浅绿灰底、克制边框、稳定模块、轻 rail
+            和命令搜索抽象成可实现的设计语言。目标是服务基础组件包、宿主容器和官方插件。
+          </p>
+        </div>
+        <div class="chips">
+          <span class="chip"><span class="dot"></span>安静专业</span>
+          <span class="chip"><span class="dot"></span>模块仪表盘</span>
+          <span class="chip"><span class="dot"></span>Token first</span>
+        </div>
+      </header>
+
+      <section class="grid">
+        <aside class="panel">
+          <h2 class="section-title">核心色彩</h2>
+          <div class="swatches">
+            <div class="swatch">
+              <div class="swatch-color" style="background: #f3f7f2"></div>
+              <div><strong>page</strong><span>#F3F7F2 低疲劳页面底色</span></div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-color" style="background: #ffffff"></div>
+              <div><strong>surface</strong><span>白色卡片与输入表面</span></div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-color" style="background: #0f7b68"></div>
+              <div><strong>accent</strong><span>只用于主操作和选中态</span></div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-color" style="background: #d9e3dc"></div>
+              <div><strong>line</strong><span>边框和分割，代替重阴影</span></div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-color" style="background: #0d1f1b"></div>
+              <div><strong>text</strong><span>高对比主文本</span></div>
+            </div>
+          </div>
+
+          <div class="rule-list">
+            <span class="rule">圆角：卡片 12-14px，控件 8-10px，避免过度软萌。</span>
+            <span class="rule">阴影：只用于浮层和顶级容器，卡片主要靠边框建立层级。</span>
+            <span class="rule">强调色：少量、明确，不把页面染成单一绿色。</span>
+          </div>
+        </aside>
+
+        <section class="mock-app">
+          <div class="browser-bar">
+            <span class="traffic"></span><span class="traffic"></span><span class="traffic"></span>
+          </div>
+          <div class="workspace">
+            <nav class="rail">
+              <div class="rail-btn active"></div>
+              <div class="rail-btn"></div>
+              <div class="rail-btn"></div>
+              <div class="rail-btn"></div>
+              <div style="flex: 1"></div>
+              <div class="rail-btn"></div>
+            </nav>
+
+            <div class="content">
+              <div class="topline">
+                <div class="brand">Today Workspace</div>
+                <div class="icon-row">
+                  <div class="icon"></div>
+                  <div class="icon"></div>
+                  <div class="icon"></div>
+                </div>
+              </div>
+              <div class="search">
+                <span>统一搜索：网页、工具、卡片内容、命令</span>
+                <span>⌘ K</span>
+              </div>
+              <div class="cards">
+                <div class="card wide">
+                  <h3>今日重点</h3>
+                  <div class="line accent"></div>
+                  <div class="line" style="width: 70%"></div>
+                  <div class="line" style="width: 48%"></div>
+                </div>
+                <div class="card wide">
+                  <h3>快捷启动</h3>
+                  <div class="line"></div>
+                  <div class="line" style="width: 55%"></div>
+                </div>
+                <div class="card">
+                  <h3>待办</h3>
+                  <div class="line accent" style="width: 80%"></div>
+                  <div class="line" style="width: 72%"></div>
+                  <div class="line" style="width: 54%"></div>
+                </div>
+                <div class="card">
+                  <h3>便签</h3>
+                  <div class="line"></div>
+                  <div class="line" style="width: 75%"></div>
+                  <div class="line" style="width: 58%"></div>
+                </div>
+                <div class="card">
+                  <h3>天气</h3>
+                  <div class="line" style="width: 44%"></div>
+                </div>
+                <div class="card">
+                  <h3>插件状态</h3>
+                  <div class="line accent" style="width: 76%"></div>
+                </div>
+                <div class="card wide tall">
+                  <h3>今天</h3>
+                  <div class="row">
+                    <span><span class="time">09:30</span> 整理产品方向</span>
+                  </div>
+                  <div class="row">
+                    <span><span class="time">11:00</span> 实现插件协议</span>
+                  </div>
+                  <div class="row">
+                    <span><span class="time">14:00</span> 评审设置中心</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <h2 class="section-title">组件语气</h2>
+          <div class="component-stack">
+            <div class="button-row">
+              <button class="primary">主操作</button>
+              <button class="subtle">次操作</button>
+              <button>普通</button>
+            </div>
+            <div class="field focus-ring">输入框 focus-visible</div>
+            <div class="field">选择器 / 搜索源</div>
+            <div class="button-row">
+              <span class="badge">enabled</span>
+              <span class="badge" style="color: var(--warning)">demo</span>
+              <span class="badge" style="color: var(--danger)">error</span>
+            </div>
+          </div>
+
+          <div class="rule-list">
+            <span class="rule">控件优先清晰可扫，不用营销式大按钮。</span>
+            <span class="rule">状态必须有 hover、pressed、disabled、focus-visible。</span>
+            <span class="rule">插件内容区用 @tabora/ui，宿主容器由 shell 提供。</span>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
