@@ -26,7 +26,7 @@
 
 补漏结论：
 
-- 技术方案需要把 `@tabora/ui` 标为 P0 待建，而不是当前已完成；当前仓库还没有 `packages/ui`。
+- `@tabora/ui` 已作为 MVP 基础组件包交付，位于 `packages/ui`；当前仓库已存在 `packages/ui`。
 - 插件协议需要从“通用 Solid view”收紧为按扩展点定义 props contract，避免后续第三方插件接入时出现隐式约定。
 - 插件生命周期需要显式建模：discover、validate、record、activate、register、render、suspend、disable、uninstall。
 - IndexedDB 方案需要补齐 schema version、migration、quota、eviction 和安全默认 workspace。
@@ -109,7 +109,7 @@ Playwright（未来 E2E 和视觉回归）
 UI 组件策略：
 
 - `@tabora/theme` 只负责 theme token 应用。
-- `@tabora/ui` 作为 P0 待建包，负责插件内容区基础组件，使用 theme token 和 CSS custom properties。
+- `@tabora/ui` 已交付，位于 `packages/ui`，负责插件内容区基础组件，使用 theme token 和 CSS custom properties。
 - 宿主级容器仍由 shell 提供，不进入 `@tabora/ui`。
 
 命令约定：
@@ -181,25 +181,17 @@ packages/
       plugin-manager.tsx
       plugin-manager-entry.ts
 
-tooling/
-  tsconfig/
-```
-
-P0 规划中但当前尚未落地的包：
-
-```txt
-packages/
   ui/
     src/
       index.ts
-      button.tsx
-      form.tsx
-      feedback.tsx
-      layout.tsx
       styles.css
-```
+      tokens.ts
+      primitives/
+      composites/
 
-`packages/ui` 进入 MVP 范围，但不能在实现完成前被文档描述为已完成。后续 agent 新建该包时，需要同步 `package.json`、`tsconfig.json`、build/test 脚本、exports、样式入口和官方插件迁移计划。
+tooling/
+  tsconfig/
+```
 
 ## 5. 总体架构
 
@@ -233,7 +225,7 @@ packages/
           │
           ▼
 ┌────────────────────────────────────────────┐
-│ packages/ui（P0 待建）                     │
+│ packages/ui                                │
 │ - 插件内容基础组件                         │
 │ - theme token 绑定                         │
 └────────────────────────────────────────────┘
@@ -391,7 +383,7 @@ eventLogs
 
 ### 6.6 `@tabora/ui`
 
-当前状态：P0 待建。PRD 和官方插件设计已把它列入 MVP 范围，但当前仓库尚未存在 `packages/ui`。在落地前，任何文档和任务都应把它称为“待建基础包”，不能称为“已完成”。
+当前状态：已交付。位于 `packages/ui`，依赖 `solid-js` + `@tabora/theme` + `@kobalte/core`，提供 17 个内容区基础控件（Button / IconButton / Input / Textarea / Select / Checkbox / Switch / SegmentedControl / Tabs / Tooltip / Field / Badge / InlineError / Spinner / EmptyState / ListRow / CardSection）。MVP 范围内官方插件（productivity、todo、search-command-bar、plugin-manager）已迁移到该包。
 
 职责：
 
@@ -1340,7 +1332,7 @@ pluginCrashReports
 | ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- |
 | playground shell 逻辑变重    | App.tsx 可能承担过多编排职责                                             | 后续拆出 workspace orchestration hooks / services          |
 | runtime config 仍是内存 Map  | `getConfig` / `setConfig` 还未接入持久化 repository                      | 接入 plugin config repository                              |
-| `@tabora/ui` 尚未落地        | PRD 已纳入 MVP，但当前仓库还没有 `packages/ui`                           | P0 新建基础组件包，并逐步迁移官方插件内容区控件            |
+| `@tabora/ui` 已交付          | 位于 `packages/ui`，基于 `@kobalte/core`，官方插件已迁移                 | 继续补齐组件测试和视觉回归覆盖                             |
 | 权限模型只实现 external-open | 其他权限仍是类型和设计                                                   | 分阶段实现 network、clipboard、local-file、workspace write |
 | 第三方插件不可信执行未解决   | MVP 不包含沙箱                                                           | V2 引入 sandbox runtime                                    |
 | E2E 覆盖仍需扩展             | 已引入 Vitest Browser Mode + Playwright provider，覆盖默认工作台关键路径 | 继续补齐主题/背景、settings host、权限路径和视觉回归       |
