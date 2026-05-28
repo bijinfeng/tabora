@@ -173,4 +173,27 @@
   .tabora-textarea[data-invalid] {
     border-color: rgb(var(--tabora-danger));
   }
+
+  .tabora-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .tabora-field-label {
+    font-size: 12px;
+    color: rgb(var(--color-muted));
+    display: inline-flex;
+    gap: 4px;
+  }
+  .tabora-field-required {
+    color: rgb(var(--tabora-danger));
+  }
+  .tabora-field-helper {
+    font-size: 11px;
+    color: rgb(var(--color-muted));
+  }
+  .tabora-field-error {
+    font-size: 11px;
+    color: rgb(var(--tabora-danger));
+  }
 }
