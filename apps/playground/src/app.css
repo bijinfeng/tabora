@@ -133,22 +133,6 @@ body {
   color: rgb(var(--color-muted));
 }
 
-.suggestion-tag {
-  padding: 4px 12px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 12px;
-  background: rgba(var(--color-surface), 0.7);
-  color: rgb(var(--color-text));
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.suggestion-tag:hover {
-  background: rgba(var(--color-accent), 0.1);
-  border-color: rgb(var(--color-accent));
-}
-
 .toolbar {
   display: flex;
   justify-content: flex-end;
@@ -199,25 +183,6 @@ body {
   border-radius: 18px;
   background: rgba(var(--color-surface), 0.88);
   box-shadow: 0 18px 48px rgba(31, 35, 32, 0.12);
-}
-
-.search-provider,
-.search-input {
-  min-height: 56px;
-  border: 0;
-  background: transparent;
-  color: rgb(var(--color-text));
-  font: inherit;
-}
-
-.search-provider {
-  padding: 0 16px;
-  border-right: 1px solid rgb(var(--color-line));
-}
-
-.search-input {
-  padding: 0 18px;
-  outline: none;
 }
 
 .workbench-grid {
@@ -328,46 +293,9 @@ body {
   color: rgb(var(--color-accent));
 }
 
-.notes-textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: rgb(var(--color-text));
-  font: inherit;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: none;
-  outline: none;
-}
-
-.notes-textarea::placeholder {
-  color: rgb(var(--color-muted));
-}
-
 .notes-modal h3 {
   margin: 0 0 16px;
   font-size: 20px;
-}
-
-.notes-modal-textarea {
-  width: 100%;
-  min-height: 300px;
-  padding: 16px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 12px;
-  background: rgba(var(--color-surface), 0.5);
-  color: rgb(var(--color-text));
-  font: inherit;
-  font-size: 15px;
-  line-height: 1.7;
-  resize: vertical;
-  outline: none;
-}
-
-.notes-modal-textarea:focus {
-  border-color: rgb(var(--color-accent));
 }
 
 .plugin-manager {
@@ -401,36 +329,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
-}
-
-.plugin-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: rgb(var(--color-text));
-}
-
-.plugin-id {
-  font-size: 11px;
-  color: rgb(var(--color-muted));
-  font-family: ui-monospace, monospace;
-}
-
-.plugin-extensions {
-  font-size: 12px;
-  color: rgb(var(--color-accent));
-}
-
-.plugin-status {
-  font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 10px;
-  background: rgba(var(--color-muted), 0.12);
-  color: rgb(var(--color-muted));
-}
-
-.plugin-status.enabled {
-  background: rgba(var(--color-accent), 0.12);
-  color: rgb(var(--color-accent));
 }
 
 .widget-body {
@@ -502,43 +400,6 @@ body {
   margin-bottom: 12px;
 }
 
-.todo-input {
-  flex: 1;
-  min-height: 36px;
-  padding: 6px 12px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 10px;
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-  font: inherit;
-  font-size: 14px;
-  outline: none;
-}
-
-.todo-input:focus {
-  border-color: rgb(var(--color-accent));
-}
-
-.todo-add-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 10px;
-  background: rgb(var(--color-accent));
-  color: #fff;
-  font-size: 20px;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.todo-add-btn:hover {
-  opacity: 0.85;
-}
-
 .todo-list {
   flex: 1;
   margin: 0;
@@ -554,53 +415,6 @@ body {
   justify-content: space-between;
   padding: 6px 0;
   border-bottom: 1px solid rgba(var(--color-line), 0.4);
-}
-
-.todo-item.done .todo-text {
-  text-decoration: line-through;
-  color: rgb(var(--color-muted));
-}
-
-.todo-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  cursor: pointer;
-}
-
-.todo-label input[type="checkbox"] {
-  accent-color: rgb(var(--color-accent));
-}
-
-.todo-text {
-  font-size: 14px;
-}
-
-.todo-del-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: rgb(var(--color-muted));
-  font-size: 14px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.todo-item:hover .todo-del-btn {
-  opacity: 1;
-}
-
-.todo-del-btn:hover {
-  color: #e53e3e;
-  background: rgba(229, 62, 62, 0.08);
 }
 
 .todo-footer {
@@ -767,11 +581,6 @@ body {
 
   .search-bar {
     grid-template-columns: 1fr;
-  }
-
-  .search-provider {
-    border-right: 0;
-    border-bottom: 1px solid rgb(var(--color-line));
   }
 
   .workbench-grid {
