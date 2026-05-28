@@ -2,17 +2,21 @@ import { createSignal, onMount } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { TodoCard } from "./widget-todo"
 import { WeatherCard } from "./widget-weather"
-import { Field, Input, Checkbox } from "@tabora/ui"
+import { Field, Input, Checkbox, ListRow } from "@tabora/ui"
+
+const QUICK_LINKS = [
+  { title: "GitHub", url: "https://github.com" },
+  { title: "Vite+", url: "https://viteplus.dev" },
+] as const
 
 export function QuickLinksCard() {
   return (
     <div class="quick-links">
-      <a href="https://github.com" target="_blank" rel="noreferrer">
-        GitHub
-      </a>
-      <a href="https://viteplus.dev" target="_blank" rel="noreferrer">
-        Vite+
-      </a>
+      {QUICK_LINKS.map((link) => (
+        <a class="quick-link-anchor" href={link.url} target="_blank" rel="noreferrer">
+          <ListRow primary={link.title} secondary={link.url} />
+        </a>
+      ))}
     </div>
   )
 }
