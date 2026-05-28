@@ -577,4 +577,34 @@
     align-items: center;
     gap: 6px;
   }
+
+  .tabora-card-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tabora-card-section[data-padded] {
+    padding: 4px 0;
+  }
+  .tabora-card-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .tabora-card-section-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--color-text));
+  }
+  .tabora-card-section-trailing {
+    display: inline-flex;
+    gap: 6px;
+  }
+  .tabora-card-section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
 }
