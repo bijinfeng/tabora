@@ -511,4 +511,24 @@
       animation: none;
     }
   }
+
+  .tabora-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .tabora-empty-state-title {
+    font-size: 13px;
+    color: rgb(var(--color-text));
+  }
+  .tabora-empty-state-desc {
+    font-size: 12px;
+    color: rgb(var(--color-muted));
+  }
+  .tabora-empty-state-action {
+    margin-top: 4px;
+  }
 }
