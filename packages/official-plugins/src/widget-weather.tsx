@@ -1,4 +1,5 @@
 import { createSignal, onMount } from "solid-js"
+import { Badge, CardSection } from "@tabora/ui"
 
 type WeatherData = {
   city: string
@@ -40,16 +41,16 @@ export function WeatherCard() {
 
   return (
     <div class="weather-widget">
-      <div class="weather-main">
-        <span class="weather-icon">{w.icon}</span>
-        <span class="weather-temp">{w.temp}°C</span>
-      </div>
-      <div class="weather-detail">
-        {w.city} · {w.condition}
-      </div>
-      <div class="weather-extra">
-        湿度 {w.humidity}% · 风速 {w.windSpeed}km/h
-      </div>
+      <CardSection title={w.city} trailing={<Badge variant="warning">demo</Badge>}>
+        <div class="weather-main">
+          <span class="weather-icon">{w.icon}</span>
+          <span class="weather-temp">{w.temp}°C</span>
+        </div>
+        <div class="weather-detail">{w.condition}</div>
+        <div class="weather-extra">
+          湿度 {w.humidity}% · 风速 {w.windSpeed}km/h
+        </div>
+      </CardSection>
     </div>
   )
 }
