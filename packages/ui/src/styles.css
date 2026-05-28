@@ -436,4 +436,16 @@
   .tabora-tabs-content {
     outline: none;
   }
+
+  .tabora-tooltip-trigger {
+    display: inline-flex;
+  }
+  .tabora-tooltip-content {
+    background: rgb(var(--color-text));
+    color: rgb(var(--color-surface));
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 1200;
+  }
 }
