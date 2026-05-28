@@ -484,4 +484,31 @@
     color: rgb(var(--tabora-danger));
     padding: 4px 0;
   }
+
+  .tabora-spinner {
+    display: inline-block;
+    border-radius: 50%;
+    border: 2px solid rgba(var(--color-line), 0.6);
+    border-top-color: rgb(var(--color-accent));
+    animation: tabora-spin 700ms linear infinite;
+  }
+  .tabora-spinner[data-size="sm"] {
+    width: 12px;
+    height: 12px;
+    border-width: 1.5px;
+  }
+  .tabora-spinner[data-size="md"] {
+    width: 16px;
+    height: 16px;
+  }
+  @keyframes tabora-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tabora-spinner {
+      animation: none;
+    }
+  }
 }
