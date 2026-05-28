@@ -1,3 +1,5 @@
 export * from "./tokens"
 export { Button, IconButton } from "./primitives/button"
 export type { ButtonProps, IconButtonProps, ButtonVariant, ButtonSize } from "./primitives/button"
+export { Input } from "./primitives/input"
+export type { InputProps, InputSize, InputType } from "./primitives/input"

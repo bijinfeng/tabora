@@ -109,4 +109,45 @@
     cursor: not-allowed;
     opacity: 0.55;
   }
+
+  .tabora-input {
+    display: block;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgb(var(--color-line));
+    background: rgb(var(--color-surface));
+    color: rgb(var(--color-text));
+    font: inherit;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+  .tabora-input[data-size="sm"] {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+  .tabora-input[data-size="md"] {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .tabora-input::placeholder {
+    color: rgb(var(--color-muted));
+  }
+  .tabora-input:hover:not([disabled]) {
+    border-color: rgb(var(--color-accent));
+  }
+  .tabora-input:focus {
+    outline: none;
+    border-color: rgb(var(--color-accent));
+    box-shadow: 0 0 0 3px rgba(var(--color-accent), 0.18);
+  }
+  .tabora-input[data-invalid] {
+    border-color: rgb(var(--tabora-danger));
+  }
+  .tabora-input[disabled] {
+    background: rgba(var(--color-line), 0.4);
+    cursor: not-allowed;
+  }
 }
