@@ -108,25 +108,17 @@ packages/
       plugin-manager.tsx
       plugin-manager-entry.ts
 
-tooling/
-  tsconfig/
-```
-
-P0 规划中但当前尚未落地：
-
-```txt
-packages/
   ui/
     src/
       index.ts
-      button.tsx
-      form.tsx
-      feedback.tsx
-      layout.tsx
       styles.css
-```
+      tokens.ts
+      primitives/
+      composites/
 
-`@tabora/ui` 已进入 MVP 范围，但当前仓库还没有 `packages/ui`。新建前不要把它当成已完成包；新建时需要同步 package、tsconfig、exports、styles 入口、测试和官方插件迁移。
+tooling/
+  tsconfig/
+```
 
 ## 技术栈和命令
 
@@ -204,12 +196,13 @@ workspace / instance / pluginData 要分层。插件业务数据不要混入 wor
 
 ### `@tabora/ui`
 
-P0 待建。目标是负责插件内容区基础组件，统一官方插件和未来第三方插件的控件视觉、状态和可访问性。
+已交付。位于 `packages/ui`，负责插件内容区基础组件，统一官方插件和未来第三方插件的控件视觉、状态和可访问性。基于 `@kobalte/core` 提供 a11y 底层。
 
 允许依赖：
 
-- `solid-js`
+- `solid-js`（catalog:ui）
 - `@tabora/theme`
+- `@kobalte/core`（catalog:ui）
 
 禁止依赖：
 
