@@ -7,6 +7,11 @@ export default defineConfig({
     environment: "happy-dom",
     include: ["packages/**/*.test.ts", "packages/**/*.test.tsx", "apps/**/*.test.tsx"],
     exclude: ["apps/**/*.e2e.test.tsx"],
+    server: {
+      deps: {
+        inline: [/@kobalte\//, /solid-prevent-scroll/, /@corvu\//, /solid-presence/, /solid-/],
+      },
+    },
   },
   staged: {
     "*.{css,html,json,md,ts,tsx,yaml,yml}": "vp check --fix",
