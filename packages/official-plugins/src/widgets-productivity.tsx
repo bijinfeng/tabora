@@ -2,7 +2,7 @@ import { createSignal, onMount } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { TodoCard } from "./widget-todo"
 import { WeatherCard } from "./widget-weather"
-import { Field, Input, Checkbox, ListRow } from "@tabora/ui"
+import { Field, Input, Checkbox, ListRow, Textarea } from "@tabora/ui"
 
 const QUICK_LINKS = [
   { title: "GitHub", url: "https://github.com" },
@@ -35,36 +35,35 @@ export function NotesCard() {
   }
 
   return (
-    <textarea
-      class="notes-textarea"
+    <Textarea
       value={text()}
-      onInput={(e) => update(e.currentTarget.value)}
+      onInput={update}
       placeholder="写点什么..."
+      aria-label="便签内容"
+      rows={4}
     />
   )
 }
 
 export function NotesModal() {
   const [text, setText] = createSignal("")
-
   onMount(() => {
     const saved = localStorage.getItem("notes-content")
     if (saved) setText(saved)
   })
-
   function update(value: string) {
     setText(value)
     localStorage.setItem("notes-content", value)
   }
-
   return (
     <div class="notes-modal">
       <h3>便签</h3>
-      <textarea
-        class="notes-modal-textarea"
+      <Textarea
         value={text()}
-        onInput={(e) => update(e.currentTarget.value)}
+        onInput={update}
         placeholder="尽情书写..."
+        aria-label="便签弹窗内容"
+        rows={12}
       />
     </div>
   )
