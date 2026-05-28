@@ -172,7 +172,7 @@ page
 
 ### 3.5 控件语言与 `@tabora/ui`
 
-MVP 应新增 `@tabora/ui` 作为官方插件和未来第三方插件的基础 UI 组件包。它的目标是统一插件内容区控件的视觉、状态、可访问性和 theme token 使用方式。
+`@tabora/ui` 已作为 MVP 基础组件包交付，目标是统一插件内容区控件的视觉、状态、可访问性和 theme token 使用方式。
 
 边界：
 
@@ -259,20 +259,20 @@ MVP 组件清单：
 
 ## 4. 官方插件矩阵
 
-| 插件 ID                               | 插件名称                   | 扩展点                                       | 默认启用 | 当前状态                             | 产品职责                                           |
-| ------------------------------------- | -------------------------- | -------------------------------------------- | -------- | ------------------------------------ | -------------------------------------------------- |
-| `official.theme.default-pack`         | Tabora Default Theme Pack  | `theme`                                      | 是       | 已实现基础 token                     | 提供明亮、暗色工作台主题                           |
-| `official.background.basic`           | Basic Background           | `background-provider`, `background-renderer` | 是       | 已实现基础 provider 和 renderer view | 提供基础背景源和 CSS 背景渲染能力                  |
-| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已开始由 layout contribution 驱动    | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
-| `official.search.command-bar`         | Tabora Command Search      | `search`                                     | 是       | 已实现基础 UI 和外部打开权限桥       | 提供命令搜索、搜索源选择和快捷建议                 |
-| `official.search-providers.basic`     | Basic Search Providers     | `search-provider`                            | 是       | 已实现基础搜索源声明                 | 提供 Google、Bing、百度、DuckDuckGo、GitHub 搜索源 |
-| `official.widgets.today-focus`        | Today Focus Widget         | `widget`                                     | 是       | MVP 新增                             | 提供今日重点，建立个人工作台心智                   |
-| `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 当前在 productivity 包内             | 提供快捷入口，验证外部打开和实例配置               |
-| `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 当前在 productivity 包内             | 提供便签和弹窗编辑，验证插件数据和 modal           |
-| `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 当前在 productivity 包内             | 提供待办列表，验证交互型 widget 和持久化           |
-| `official.widgets.weather`            | Weather Widget             | `widget`                                     | 可选     | 当前在 productivity 包内             | 提供天气摘要，MVP 可添加但不强制首屏默认           |
-| `official.plugin-manager`             | Plugin Manager             | `widget`, `settings-panel`                   | 是       | 已实现只读列表                       | 展示插件状态、贡献能力和权限摘要                   |
-| `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | MVP 需补齐轻量设置中心               | 聚合插件、外观、搜索等全局设置面板                 |
+| 插件 ID                               | 插件名称                   | 扩展点                                       | 默认启用 | 当前状态                                                 | 产品职责                                           |
+| ------------------------------------- | -------------------------- | -------------------------------------------- | -------- | -------------------------------------------------------- | -------------------------------------------------- |
+| `official.theme.default-pack`         | Tabora Default Theme Pack  | `theme`                                      | 是       | 已实现基础 token                                         | 提供明亮、暗色工作台主题                           |
+| `official.background.basic`           | Basic Background           | `background-provider`, `background-renderer` | 是       | 已实现基础 provider 和 renderer view                     | 提供基础背景源和 CSS 背景渲染能力                  |
+| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已开始由 layout contribution 驱动                        | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
+| `official.search.command-bar`         | Tabora Command Search      | `search`                                     | 是       | 已实现基础 UI 和外部打开权限桥；已使用 `@tabora/ui` 控件 | 提供命令搜索、搜索源选择和快捷建议                 |
+| `official.search-providers.basic`     | Basic Search Providers     | `search-provider`                            | 是       | 已实现基础搜索源声明                                     | 提供 Google、Bing、百度、DuckDuckGo、GitHub 搜索源 |
+| `official.widgets.today-focus`        | Today Focus Widget         | `widget`                                     | 是       | MVP 新增；已使用 `@tabora/ui` 控件                       | 提供今日重点，建立个人工作台心智                   |
+| `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件       | 提供快捷入口，验证外部打开和实例配置               |
+| `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件       | 提供便签和弹窗编辑，验证插件数据和 modal           |
+| `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件       | 提供待办列表，验证交互型 widget 和持久化           |
+| `official.widgets.weather`            | Weather Widget             | `widget`                                     | 可选     | 当前在 productivity 包内                                 | 提供天气摘要，MVP 可添加但不强制首屏默认           |
+| `official.plugin-manager`             | Plugin Manager             | `widget`, `settings-panel`                   | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                 | 展示插件状态、贡献能力和权限摘要                   |
+| `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | MVP 需补齐轻量设置中心                                   | 聚合插件、外观、搜索等全局设置面板                 |
 
 ## 5. 默认装配方案
 
