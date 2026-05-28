@@ -1,8 +1,9 @@
+import { CardSection, ListRow, Badge } from "@tabora/ui"
 import { officialPlugins } from "./index"
 
 export function PluginManagerCard() {
   return (
-    <div class="plugin-manager">
+    <CardSection title="官方插件">
       <ul class="plugin-list">
         {officialPlugins.map((plugin) => {
           const extensions: string[] = []
@@ -15,21 +16,26 @@ export function PluginManagerCard() {
           if (c.backgroundRenderers?.length) extensions.push("背景渲染")
           if (c.themes?.length) extensions.push("主题")
           if (c.settingsPanels?.length) extensions.push("设置")
-
           return (
             <li class="plugin-item">
-              <div class="plugin-info">
-                <span class="plugin-name">{plugin.manifest.name}</span>
-                <span class="plugin-id">{plugin.manifest.id}</span>
-                <span class="plugin-extensions">{extensions.join(" · ")}</span>
-              </div>
-              <span classList={{ "plugin-status": true, enabled: plugin.enabled }}>
-                {plugin.enabled ? "已启用" : "已禁用"}
-              </span>
+              <ListRow
+                primary={plugin.manifest.name}
+                secondary={
+                  <span>
+                    <span class="plugin-id-mono">{plugin.manifest.id}</span>
+                    {extensions.length > 0 ? <span> · {extensions.join(" · ")}</span> : null}
+                  </span>
+                }
+                trailing={
+                  <Badge variant={plugin.enabled ? "accent" : "neutral"}>
+                    {plugin.enabled ? "已启用" : "已禁用"}
+                  </Badge>
+                }
+              />
             </li>
           )
         })}
       </ul>
-    </div>
+    </CardSection>
   )
 }

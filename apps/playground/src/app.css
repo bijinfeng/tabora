@@ -791,3 +791,9 @@ body {
 .quick-link-anchor:hover {
   text-decoration: none;
 }
+
+.plugin-id-mono {
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  font-size: 0.75em;
+  color: rgb(var(--color-muted));
+}
