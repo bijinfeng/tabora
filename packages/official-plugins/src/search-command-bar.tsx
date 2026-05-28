@@ -1,26 +1,29 @@
 import { createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { Input, Select, Button } from "@tabora/ui"
 
 const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
 
+type ProviderId = "google" | "bing" | "baidu" | "duckduckgo" | "github"
+
+const PROVIDERS: { value: ProviderId; label: string; url: string }[] = [
+  { value: "google", label: "Google", url: "https://www.google.com/search?q={query}" },
+  { value: "bing", label: "Bing", url: "https://www.bing.com/search?q={query}" },
+  { value: "baidu", label: "百度", url: "https://www.baidu.com/s?wd={query}" },
+  { value: "duckduckgo", label: "DuckDuckGo", url: "https://duckduckgo.com/?q={query}" },
+  { value: "github", label: "GitHub", url: "https://github.com/search?q={query}" },
+]
 type SearchCommandBarProps = {
   openExternal?: (url: string) => void
 }
 
 export function SearchCommandBar(props: SearchCommandBarProps = {}) {
-  const providers = [
-    { id: "google", title: "Google", url: "https://www.google.com/search?q={query}" },
-    { id: "bing", title: "Bing", url: "https://www.bing.com/search?q={query}" },
-    { id: "baidu", title: "百度", url: "https://www.baidu.com/s?wd={query}" },
-    { id: "duckduckgo", title: "DuckDuckGo", url: "https://duckduckgo.com/?q={query}" },
-    { id: "github", title: "GitHub", url: "https://github.com/search?q={query}" },
-  ]
-
   const [query, setQuery] = createSignal("")
+  const [providerId, setProviderId] = createSignal<ProviderId>("google")
   const [focused, setFocused] = createSignal(false)
 
   function doSearch(q: string) {
-    const provider = providers[0]
+    const provider = PROVIDERS.find((p) => p.value === providerId())
     if (!provider) return
     const url = provider.url.replace("{query}", encodeURIComponent(q.trim()))
     props.openExternal?.(url)
@@ -51,32 +54,38 @@ export function SearchCommandBar(props: SearchCommandBarProps = {}) {
   }
 
   const showSuggestions = () => focused() && query().length === 0
-
   return (
     <div class="search-wrapper">
       <form class="search-bar" onSubmit={handleSubmit}>
-        <select aria-label="搜索源" class="search-provider">
-          <For each={providers}>{(p) => <option value={p.id}>{p.title}</option>}</For>
-        </select>
-        <input
-          class="search-input"
-          placeholder="输入搜索内容"
-          aria-label="搜索内容"
+        <Select<ProviderId>
+          value={providerId()}
+          options={PROVIDERS.map((p) => ({ value: p.value, label: p.label }))}
+          onChange={(v) => setProviderId(v)}
+          aria-label="搜索源"
+          size="sm"
+        />
+        <Input
           value={query()}
-          onInput={(e) => setQuery(e.currentTarget.value)}
+          onInput={setQuery}
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
+          placeholder="输入搜索内容"
+          aria-label="搜索内容"
+          type="search"
         />
+        <Button type="submit" variant="primary" size="sm">
+          搜索
+        </Button>
       </form>
       <Show when={showSuggestions()}>
         <div class="search-suggestions">
           <span class="suggestions-label">快捷搜索：</span>
           <For each={QUICK_TAGS}>
             {(tag) => (
-              <button class="suggestion-tag" onClick={() => handleTagClick(tag)} type="button">
+              <Button variant="ghost" size="sm" onClick={() => handleTagClick(tag)}>
                 {tag}
-              </button>
+              </Button>
             )}
           </For>
         </div>
