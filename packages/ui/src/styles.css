@@ -448,4 +448,34 @@
     font-size: 12px;
     z-index: 1200;
   }
+
+  .tabora-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tabora-badge[data-variant="neutral"] {
+    background: rgba(var(--color-line), 0.6);
+    color: rgb(var(--color-muted));
+  }
+  .tabora-badge[data-variant="accent"] {
+    background: rgba(var(--color-accent), 0.14);
+    color: rgb(var(--color-accent));
+  }
+  .tabora-badge[data-variant="success"] {
+    background: rgba(var(--color-accent), 0.18);
+    color: rgb(var(--color-accent));
+  }
+  .tabora-badge[data-variant="warning"] {
+    background: rgba(var(--tabora-danger), 0.1);
+    color: rgb(var(--tabora-danger));
+  }
+  .tabora-badge[data-variant="danger"] {
+    background: rgba(var(--tabora-danger), 0.16);
+    color: rgb(var(--tabora-danger));
+  }
 }
