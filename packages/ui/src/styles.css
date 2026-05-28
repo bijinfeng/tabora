@@ -478,4 +478,10 @@
     background: rgba(var(--tabora-danger), 0.16);
     color: rgb(var(--tabora-danger));
   }
+
+  .tabora-inline-error {
+    font-size: 12px;
+    color: rgb(var(--tabora-danger));
+    padding: 4px 0;
+  }
 }
