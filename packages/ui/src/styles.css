@@ -309,4 +309,52 @@
     font-size: 13px;
     color: rgb(var(--color-text));
   }
+
+  .tabora-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .tabora-switch[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .tabora-switch-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tabora-switch-control {
+    width: 32px;
+    height: 18px;
+    border-radius: 999px;
+    background: rgb(var(--color-line));
+    position: relative;
+    transition: background 150ms ease;
+  }
+  .tabora-switch[data-checked] .tabora-switch-control {
+    background: rgb(var(--color-accent));
+  }
+  .tabora-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgb(var(--color-surface));
+    transition: transform 150ms ease;
+  }
+  .tabora-switch[data-checked] .tabora-switch-thumb {
+    transform: translateX(14px);
+  }
+  .tabora-switch:focus-within .tabora-switch-control {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 2px;
+  }
+  .tabora-switch-label {
+    font-size: 13px;
+    color: rgb(var(--color-text));
+  }
 }
