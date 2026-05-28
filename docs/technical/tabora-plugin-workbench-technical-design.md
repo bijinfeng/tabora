@@ -93,7 +93,8 @@ Vite+ / vp
 Solid + TypeScript
 pnpm workspace
 Tailwind CSS v4 + CSS Variables
-Vitest via vp test
+Vitest via `pnpm test`
+Vitest Browser Mode + Playwright provider via `pnpm test:e2e`
 Oxlint / Oxfmt / tsgolint via vp check
 Vite Task via vp run
 tsdown via vp pack
@@ -116,6 +117,7 @@ UI 组件策略：
 ```bash
 pnpm check
 pnpm test
+pnpm test:e2e
 pnpm build
 pnpm --filter @tabora/playground build
 pnpm --filter @tabora/playground exec vite --host 127.0.0.1 --port 5173 --strictPort
@@ -1143,7 +1145,7 @@ MVP 官方插件可以通过 manifest 默认授权最小权限，但记录模型
 
 ### 15.2 集成测试
 
-当前通过 `pnpm test` 在 workspace 范围执行。
+当前通过 `pnpm test` 执行快速单元 / 集成测试。该命令显式枚举当前已落地的普通测试文件，并排除 `*.e2e.test.tsx`，避免真实浏览器测试混入日常反馈路径。
 
 重点覆盖：
 
@@ -1184,13 +1186,12 @@ MVP 官方插件可以通过 manifest 默认授权最小权限，但记录模型
 
 ### 15.6 E2E、可访问性和视觉回归
 
-建议后续补齐：
+当前 E2E 通过 `pnpm test:e2e` 执行，使用 `vitest.e2e.config.ts` 启用 Vitest Browser Mode、`@vitest/browser-playwright` provider 和本机 Chrome channel。`apps/playground/src/workbenchDashboard.e2e.test.tsx` 已覆盖默认工作台首屏、rail 添加入口、添加 widget、尺寸选项、notes modal、拖拽排序和移动端无横向滚动。
 
-- 默认工作台首屏渲染。
-- 轻 rail 主页、添加卡片、插件、设置入口。
-- 添加 widget。
-- 调整尺寸。
-- 拖拽排序。
+后续继续补齐：
+
+- 轻 rail 插件、设置入口。
+- 调整尺寸后持久化恢复。
 - 添加多张 widget 后验证主网格纵向滚动、无横向滚动、卡片仍可读。
 - 切换主题和背景。
 - 打开 modal / fullscreen。
@@ -1335,17 +1336,17 @@ pluginCrashReports
 
 ## 20. 风险与技术债
 
-| 风险                         | 描述                                                           | 应对                                                       |
-| ---------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
-| playground shell 逻辑变重    | App.tsx 可能承担过多编排职责                                   | 后续拆出 workspace orchestration hooks / services          |
-| runtime config 仍是内存 Map  | `getConfig` / `setConfig` 还未接入持久化 repository            | 接入 plugin config repository                              |
-| `@tabora/ui` 尚未落地        | PRD 已纳入 MVP，但当前仓库还没有 `packages/ui`                 | P0 新建基础组件包，并逐步迁移官方插件内容区控件            |
-| 权限模型只实现 external-open | 其他权限仍是类型和设计                                         | 分阶段实现 network、clipboard、local-file、workspace write |
-| 第三方插件不可信执行未解决   | MVP 不包含沙箱                                                 | V2 引入 sandbox runtime                                    |
-| E2E 未完善                   | 当前主要依赖单元测试和构建验证                                 | 引入 Playwright 用例                                       |
-| 插件 view 类型较宽           | 当前使用通用 Solid view 函数                                   | 后续按 extension point 定义 props contract                 |
-| IndexedDB 迁移和配额策略不足 | 当前持久化已可用，但 schema migration / quota 未成体系         | 增加 meta 表、migration 测试和 storage 失败回退            |
-| 浏览器扩展权限映射未定义     | playground 权限桥已跑通，但 extension shell 还未映射浏览器权限 | 在 WXT 阶段建立 Tabora 权限到 MV3 权限的适配层             |
+| 风险                         | 描述                                                                     | 应对                                                       |
+| ---------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| playground shell 逻辑变重    | App.tsx 可能承担过多编排职责                                             | 后续拆出 workspace orchestration hooks / services          |
+| runtime config 仍是内存 Map  | `getConfig` / `setConfig` 还未接入持久化 repository                      | 接入 plugin config repository                              |
+| `@tabora/ui` 尚未落地        | PRD 已纳入 MVP，但当前仓库还没有 `packages/ui`                           | P0 新建基础组件包，并逐步迁移官方插件内容区控件            |
+| 权限模型只实现 external-open | 其他权限仍是类型和设计                                                   | 分阶段实现 network、clipboard、local-file、workspace write |
+| 第三方插件不可信执行未解决   | MVP 不包含沙箱                                                           | V2 引入 sandbox runtime                                    |
+| E2E 覆盖仍需扩展             | 已引入 Vitest Browser Mode + Playwright provider，覆盖默认工作台关键路径 | 继续补齐主题/背景、settings host、权限路径和视觉回归       |
+| 插件 view 类型较宽           | 当前使用通用 Solid view 函数                                             | 后续按 extension point 定义 props contract                 |
+| IndexedDB 迁移和配额策略不足 | 当前持久化已可用，但 schema migration / quota 未成体系                   | 增加 meta 表、migration 测试和 storage 失败回退            |
+| 浏览器扩展权限映射未定义     | playground 权限桥已跑通，但 extension shell 还未映射浏览器权限           | 在 WXT 阶段建立 Tabora 权限到 MV3 权限的适配层             |
 
 ## 21. 验收清单
 
@@ -1353,6 +1354,7 @@ pluginCrashReports
 
 - `pnpm check` 通过。
 - `pnpm test` 通过。
+- `pnpm test:e2e` 通过。
 - `pnpm build` 通过。
 - playground dev server 返回 HTTP 200。
 

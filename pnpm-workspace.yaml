@@ -16,8 +16,10 @@ catalogs:
     dexie: ^4.4.2
     zod: ^4.4.3
   test:
+    "@vitest/browser-playwright": ^4.1.7
     fake-indexeddb: ^6.2.5
     happy-dom: ^20.9.0
+    playwright: ^1.60.0
     vitest: ^4.1.7
   ui:
     "@kobalte/core": ^0.13.11
