@@ -19,7 +19,7 @@
 本文档是 Tabora 的视觉、交互和基础组件设计事实源。它用于指导：
 
 - `@tabora/theme` 的 token 命名、语义和默认值。
-- P0 待建的 `@tabora/ui` 基础组件包。
+- `@tabora/ui` 基础组件包（已交付）。
 - Playground / extension shell 的宿主容器视觉。
 - 官方插件内容区 UI。
 - 后续第三方插件的设计约束和验收标准。
@@ -721,8 +721,8 @@ packages/ui/src/
 MVP：
 
 - 建立默认 light / dark token。
-- 建立 `@tabora/ui` 基础组件包。
-- 让官方插件逐步迁移到 `@tabora/ui`。
+- `@tabora/ui` 基础组件包已交付，包含 `Button` / `IconButton` / `Input` / `Textarea` / `Select` / `Checkbox` / `Switch` / `SegmentedControl` / `Tabs` / `Tooltip` / `Field` / `Badge` / `InlineError` / `Spinner` / `EmptyState` / `ListRow` / `CardSection` 17 个内容区控件，基于 `@kobalte/core` 提供 a11y 底层，使用 theme token 作为视觉契约。
+- 官方插件已迁移到 `@tabora/ui`。
 - 宿主容器按本文档统一 rail、search、grid、settings、modal 的视觉。
 
 V1.1：
