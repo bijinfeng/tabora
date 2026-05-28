@@ -20,6 +20,7 @@
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",
+    "@tabora/ui": "workspace:*",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

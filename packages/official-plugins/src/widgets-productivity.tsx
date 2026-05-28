@@ -2,6 +2,7 @@ import { createSignal, onMount } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { TodoCard } from "./widget-todo"
 import { WeatherCard } from "./widget-weather"
+import { Field, Input, Checkbox } from "@tabora/ui"
 
 export function QuickLinksCard() {
   return (
@@ -87,31 +88,29 @@ export function TodayFocusCard(props: TodayFocusCardProps = {}) {
     setFocus(value)
     localStorage.setItem(contentKey(), value)
   }
-
   function updateDone(value: boolean) {
     setDone(value)
     localStorage.setItem(doneKey(), String(value))
   }
+  const inputId = () => `today-focus-${instanceId()}`
 
   return (
     <div class="today-focus-widget">
-      <label class="today-focus-label">
-        <span>今天最重要的一件事</span>
-        <input
-          class="today-focus-input"
+      <Field label="今天最重要的一件事" htmlFor={inputId()}>
+        <Input
+          id={inputId()}
           value={focus()}
-          onInput={(e) => updateFocus(e.currentTarget.value)}
+          onInput={updateFocus}
           placeholder="写下今日重点"
+          aria-label="今日重点内容"
         />
-      </label>
-      <label class="today-focus-done">
-        <input
-          type="checkbox"
-          checked={done()}
-          onChange={(e) => updateDone(e.currentTarget.checked)}
-        />
-        <span>{done() ? "已完成" : "尚未完成"}</span>
-      </label>
+      </Field>
+      <Checkbox
+        checked={done()}
+        onChange={updateDone}
+        aria-label="今日重点完成状态"
+        label={done() ? "已完成" : "尚未完成"}
+      />
     </div>
   )
 }

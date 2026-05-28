@@ -156,6 +156,9 @@ importers:
       '@tabora/storage':
         specifier: workspace:*
         version: link:../storage
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../ui
       solid-js:
         specifier: catalog:ui
         version: 1.9.13
