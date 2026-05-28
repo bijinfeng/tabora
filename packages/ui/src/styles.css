@@ -1,2 +1,112 @@
+:root {
+  --tabora-danger: 192 57 43;
+}
+
 @layer tabora-ui {
+  .tabora-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font: inherit;
+    line-height: 1;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease;
+  }
+  .tabora-button[data-size="sm"] {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .tabora-button[data-size="md"] {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+  .tabora-button[data-variant="primary"] {
+    background: rgb(var(--color-accent));
+    color: rgb(var(--color-surface));
+  }
+  .tabora-button[data-variant="primary"]:not([disabled]):hover {
+    background: color-mix(in srgb, rgb(var(--color-accent)) 90%, black);
+  }
+  .tabora-button[data-variant="secondary"] {
+    background: rgb(var(--color-surface));
+    color: rgb(var(--color-text));
+    border-color: rgb(var(--color-line));
+  }
+  .tabora-button[data-variant="secondary"]:not([disabled]):hover {
+    background: rgba(var(--color-accent), 0.08);
+    border-color: rgb(var(--color-accent));
+    color: rgb(var(--color-accent));
+  }
+  .tabora-button[data-variant="ghost"] {
+    background: transparent;
+    color: rgb(var(--color-muted));
+  }
+  .tabora-button[data-variant="ghost"]:not([disabled]):hover {
+    background: rgba(var(--color-accent), 0.08);
+    color: rgb(var(--color-accent));
+  }
+  .tabora-button[data-variant="danger"] {
+    background: transparent;
+    color: rgb(var(--color-text));
+    border-color: rgb(var(--color-line));
+  }
+  .tabora-button[data-variant="danger"]:not([disabled]):hover {
+    color: rgb(var(--tabora-danger));
+    border-color: rgb(var(--tabora-danger));
+  }
+  .tabora-button:focus-visible {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 2px;
+  }
+  .tabora-button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .tabora-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: rgb(var(--color-muted));
+    cursor: pointer;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
+  }
+  .tabora-icon-button[data-size="sm"] {
+    width: 28px;
+    height: 28px;
+  }
+  .tabora-icon-button[data-size="md"] {
+    width: 32px;
+    height: 32px;
+  }
+  .tabora-icon-button:not([disabled]):hover {
+    background: rgba(var(--color-accent), 0.08);
+    color: rgb(var(--color-accent));
+  }
+  .tabora-icon-button[data-variant="danger"]:not([disabled]):hover {
+    color: rgb(var(--tabora-danger));
+    background: rgba(var(--tabora-danger), 0.1);
+  }
+  .tabora-icon-button:focus-visible {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 2px;
+  }
+  .tabora-icon-button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
 }
