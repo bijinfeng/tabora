@@ -210,6 +210,25 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
 
+  packages/ui:
+    dependencies:
+      '@kobalte/core':
+        specifier: catalog:ui
+        version: 0.13.11(solid-js@1.9.13)
+      '@tabora/theme':
+        specifier: workspace:*
+        version: link:../theme
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.13
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      vite-plugin-solid:
+        specifier: catalog:build
+        version: 2.11.12(solid-js@1.9.13)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
+
   tooling/tsconfig: {}
 
 packages:
