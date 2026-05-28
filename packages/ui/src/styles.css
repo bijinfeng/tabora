@@ -398,4 +398,42 @@
     cursor: not-allowed;
     opacity: 0.5;
   }
+
+  .tabora-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tabora-tabs-list {
+    display: inline-flex;
+    gap: 8px;
+    border-bottom: 1px solid rgb(var(--color-line));
+    position: relative;
+  }
+  .tabora-tabs-trigger {
+    border: none;
+    background: transparent;
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: rgb(var(--color-muted));
+    cursor: pointer;
+  }
+  .tabora-tabs-trigger[data-selected] {
+    color: rgb(var(--color-accent));
+  }
+  .tabora-tabs-trigger:focus-visible {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: -2px;
+  }
+  .tabora-tabs-indicator {
+    position: absolute;
+    bottom: -1px;
+    height: 2px;
+    background: rgb(var(--color-accent));
+    transition: all 200ms ease;
+  }
+  .tabora-tabs-content {
+    outline: none;
+  }
 }
