@@ -11,6 +11,7 @@ import {
 } from "@tabora/storage"
 import { PluginViewBoundary } from "./PluginViewBoundary"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
+import { WORKBENCH_RAIL_ACTIONS, findLayoutContribution } from "./workbenchShell"
 
 type SolidView = (...args: any[]) => JSX.Element
 
@@ -183,14 +184,6 @@ function defaultInstances(): PluginInstance[] {
 function findWidgetContribution(pluginId: string, contributionId: string) {
   const plugin = officialPlugins.find((p) => p.manifest.id === pluginId)
   return plugin?.manifest.contributes.widgets?.find((w) => w.id === contributionId)
-}
-
-function findLayoutContribution(layoutId: string) {
-  for (const plugin of officialPlugins) {
-    const layout = plugin.manifest.contributes.layouts?.find((item) => item.id === layoutId)
-    if (layout) return layout
-  }
-  return null
 }
 
 function pluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
@@ -470,7 +463,7 @@ export function App() {
             }}
           </For>
         </section>
-        <section class="add-widgets">
+        <section class="add-widgets" id="add-widgets" tabIndex={-1}>
           <div class="add-widgets-bar">
             <span>添加卡片：</span>
             <For each={availableWidgets()}>
@@ -486,23 +479,41 @@ export function App() {
     )
   }
 
+  function runRailAction(actionId: string) {
+    const action = WORKBENCH_RAIL_ACTIONS.find((item) => item.id === actionId)
+    if (!action) return
+
+    if (action.targetId) {
+      const target = document.getElementById(action.targetId)
+      target?.scrollIntoView({ block: "nearest" })
+      target?.focus({ preventScroll: true })
+      return
+    }
+
+    if (action.modalViewId) {
+      kernel.events.emit("ui.modal.open", { viewId: action.modalViewId, props: {} })
+    }
+  }
+
   function renderActiveLayout() {
-    const layout = findLayoutContribution(activeLayoutId())
+    const layout = findLayoutContribution(officialPlugins, activeLayoutId())
     const LayoutView = layout?.view ? viewOrUndefined(layout.view) : undefined
     const rail = (
       <nav class="workbench-rail" aria-label="工作台导航">
-        <button class="rail-action active" type="button" aria-label="主页" aria-current="page">
-          主页
-        </button>
-        <button class="rail-action" type="button" aria-label="添加卡片" disabled>
-          添加
-        </button>
-        <button class="rail-action" type="button" aria-label="插件" disabled>
-          插件
-        </button>
-        <button class="rail-action" type="button" aria-label="设置" disabled>
-          设置
-        </button>
+        <For each={WORKBENCH_RAIL_ACTIONS}>
+          {(action) => (
+            <button
+              class="rail-action"
+              classList={{ active: action.isActive }}
+              type="button"
+              aria-label={action.ariaLabel}
+              aria-current={action.isActive ? "page" : undefined}
+              onClick={() => runRailAction(action.id)}
+            >
+              {action.label}
+            </button>
+          )}
+        </For>
       </nav>
     )
     const topbar = <div class="topbar">{SearchView()({})}</div>

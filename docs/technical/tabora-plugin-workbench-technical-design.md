@@ -167,6 +167,7 @@ packages/
   official-plugins/
     src/
       index.ts
+      layout-workbench-dashboard.tsx
       layout-top-search-grid.tsx
       search-command-bar.tsx
       search-providers-basic.ts
@@ -830,7 +831,7 @@ workbench-shell
       today focus / quick links / notes / todo / optional widgets
 ```
 
-当前实现仍以 `topbar` + `mainGrid` 为主；后续实现应在不改变插件架构的前提下，把布局插件演进为 `official.layout.workbench-dashboard`，并把 rail 作为宿主级入口区域接入。
+当前实现已从 `official.layout.top-search-grid` 演进到 `official.layout.workbench-dashboard` 竖切：整体布局由 layout contribution 声明，宿主读取 `activeLayoutId` 后渲染 rail、topbar 和 mainGrid 的宿主容器。宿主仍负责真实 DOM 容器、焦点、滚动、错误边界、实例增删改和持久化；layout 插件只贡献区域结构和默认装配语义。
 
 主网格溢出规则：
 

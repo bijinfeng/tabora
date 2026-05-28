@@ -46,7 +46,7 @@
 - Modify: `packages/plugin-api/src/manifestSchema.ts`
 - Test: `packages/plugin-api/src/manifestSchema.test.ts`
 
-- [ ] **Step 1: Write the failing schema test**
+- [x] **Step 1: Write the failing schema test**
 
 Add this test to `packages/plugin-api/src/manifestSchema.test.ts`:
 
@@ -106,7 +106,7 @@ it("accepts a dashboard layout contribution with a registered view", () => {
 })
 ```
 
-- [ ] **Step 2: Run the focused test and verify it fails**
+- [x] **Step 2: Run the focused test and verify it fails**
 
 Run:
 
@@ -116,7 +116,7 @@ pnpm --filter @tabora/plugin-api test -- manifestSchema
 
 Expected: fail because `view` is not accepted on layout contributions.
 
-- [ ] **Step 3: Add `view` to the TypeScript contract**
+- [x] **Step 3: Add `view` to the TypeScript contract**
 
 Update `packages/plugin-api/src/manifest.ts`:
 
@@ -132,7 +132,7 @@ export type LayoutContribution = {
 }
 ```
 
-- [ ] **Step 4: Add `view` to the Zod schema**
+- [x] **Step 4: Add `view` to the Zod schema**
 
 Update the layout schema object in `packages/plugin-api/src/manifestSchema.ts`:
 
@@ -148,7 +148,7 @@ z.object({
 })
 ```
 
-- [ ] **Step 5: Re-run the focused test and verify it passes**
+- [x] **Step 5: Re-run the focused test and verify it passes**
 
 Run:
 
@@ -167,7 +167,7 @@ Expected: pass.
 - Create: `packages/official-plugins/src/layout-workbench-dashboard.tsx`
 - Modify: `packages/official-plugins/src/index.ts`
 
-- [ ] **Step 1: Create the dashboard layout plugin file**
+- [x] **Step 1: Create the dashboard layout plugin file**
 
 Create `packages/official-plugins/src/layout-workbench-dashboard.tsx`:
 
@@ -253,7 +253,7 @@ export const officialLayoutWorkbenchDashboard: BuiltinPlugin = {
 }
 ```
 
-- [ ] **Step 2: Register the plugin in the official plugin pack**
+- [x] **Step 2: Register the plugin in the official plugin pack**
 
 Update `packages/official-plugins/src/index.ts`:
 
@@ -280,7 +280,7 @@ export const officialPlugins = [
 ]
 ```
 
-- [ ] **Step 3: Run package type checks through the workspace check**
+- [x] **Step 3: Run package type checks through the workspace check**
 
 Run:
 
@@ -298,7 +298,7 @@ Expected: pass or fail only on downstream usage still assuming the old layout. I
 
 - Modify: `apps/playground/src/App.tsx`
 
-- [ ] **Step 1: Add layout contribution helpers**
+- [x] **Step 1: Add layout contribution helpers**
 
 Add these helpers near `findWidgetContribution` in `apps/playground/src/App.tsx`:
 
@@ -317,7 +317,7 @@ function findSearchContribution(pluginId: string, contributionId: string) {
 }
 ```
 
-- [ ] **Step 2: Update default workspace layout and regions**
+- [x] **Step 2: Update default workspace layout and regions**
 
 Replace `defaultWorkspace()` with:
 
@@ -356,7 +356,7 @@ function defaultWorkspace(): Workspace {
 }
 ```
 
-- [ ] **Step 3: Keep default instance loading scoped to mainGrid for this slice**
+- [x] **Step 3: Keep default instance loading scoped to mainGrid for this slice**
 
 For this task, continue loading widget instances with:
 
@@ -366,7 +366,7 @@ let loaded = await instanceRepo.getByRegion("mainGrid")
 
 This keeps the slice small. A later task can load all regions from `workspace.regions` once search instances are persisted and rendered by instance ID.
 
-- [ ] **Step 4: Render through the layout plugin view**
+- [x] **Step 4: Render through the layout plugin view**
 
 In the JSX, replace the current topbar/grid/add-widget structure with a local layout render block:
 
@@ -413,7 +413,7 @@ In the JSX, replace the current topbar/grid/add-widget structure with a local la
 
 Move the existing widget `<For each={instances()}>` block into the `workbench-grid` section and the existing add widget bar into the `add-widgets` section.
 
-- [ ] **Step 5: Run playground build**
+- [x] **Step 5: Run playground build**
 
 Run:
 
@@ -432,7 +432,7 @@ Expected: pass.
 - Modify: `packages/official-plugins/src/widgets-productivity.tsx`
 - Modify: `apps/playground/src/App.tsx`
 
-- [ ] **Step 1: Add the widget component**
+- [x] **Step 1: Add the widget component**
 
 Add this component to `packages/official-plugins/src/widgets-productivity.tsx`:
 
@@ -482,7 +482,7 @@ export function TodayFocusCard() {
 }
 ```
 
-- [ ] **Step 2: Add the widget contribution**
+- [x] **Step 2: Add the widget contribution**
 
 Add this contribution before `quick-links`:
 
@@ -497,7 +497,7 @@ Add this contribution before `quick-links`:
 },
 ```
 
-- [ ] **Step 3: Register the view**
+- [x] **Step 3: Register the view**
 
 Add to `activate(context)`:
 
@@ -505,7 +505,7 @@ Add to `activate(context)`:
 context.registry.views.register("official.widgets.today-focus.card", TodayFocusCard)
 ```
 
-- [ ] **Step 4: Add the default instance**
+- [x] **Step 4: Add the default instance**
 
 Add this item to `defaultInstances()` in `apps/playground/src/App.tsx` before `quick-links-1`:
 
@@ -524,7 +524,7 @@ Add this item to `defaultInstances()` in `apps/playground/src/App.tsx` before `q
 },
 ```
 
-- [ ] **Step 5: Run test and playground build**
+- [x] **Step 5: Run test and playground build**
 
 Run:
 
@@ -543,7 +543,7 @@ Expected: pass.
 
 - Modify: `apps/playground/src/app.css`
 
-- [ ] **Step 1: Add shell styles**
+- [x] **Step 1: Add shell styles**
 
 Add these styles near the existing layout styles:
 
@@ -604,7 +604,7 @@ Add these styles near the existing layout styles:
 }
 ```
 
-- [ ] **Step 2: Adjust topbar/grid centering inside the layout**
+- [x] **Step 2: Adjust topbar/grid centering inside the layout**
 
 Update `.toolbar`, `.topbar`, `.workbench-grid`, and `.add-widgets` max-width usage so they no longer fight the layout shell:
 
@@ -642,7 +642,7 @@ Update `.toolbar`, `.topbar`, `.workbench-grid`, and `.add-widgets` max-width us
 }
 ```
 
-- [ ] **Step 3: Add mobile rail fallback**
+- [x] **Step 3: Add mobile rail fallback**
 
 Add inside the existing `@media (max-width: 760px)` block:
 
@@ -663,7 +663,7 @@ Add inside the existing `@media (max-width: 760px)` block:
 }
 ```
 
-- [ ] **Step 4: Run full check**
+- [x] **Step 4: Run full check**
 
 Run:
 
@@ -682,7 +682,7 @@ Expected: pass.
 - Modify: `docs/product/tabora-official-plugins-design.md`
 - Modify: `docs/technical/tabora-plugin-workbench-technical-design.md`
 
-- [ ] **Step 1: Update official plugin implementation status**
+- [x] **Step 1: Update official plugin implementation status**
 
 In `docs/product/tabora-official-plugins-design.md`, update the implementation gap row for default layout from:
 
@@ -696,7 +696,7 @@ to:
 | 默认布局 | 已开始由 `official.layout.workbench-dashboard` 插件贡献整体布局，宿主按 layout contribution 渲染 rail / topbar / mainGrid | 继续补齐 settings host、动态 region 装配和更完整响应式 |
 ```
 
-- [ ] **Step 2: Update technical design host/layout split**
+- [x] **Step 2: Update technical design host/layout split**
 
 In `docs/technical/tabora-plugin-workbench-technical-design.md`, update the current implementation note under default workbench assembly to state:
 
@@ -704,7 +704,7 @@ In `docs/technical/tabora-plugin-workbench-technical-design.md`, update the curr
 当前实现已从 `official.layout.top-search-grid` 演进到 `official.layout.workbench-dashboard` 竖切：整体布局由 layout contribution 声明，宿主读取 `activeLayoutId` 后渲染 rail、topbar 和 mainGrid 的宿主容器。宿主仍负责真实 DOM 容器、焦点、滚动、错误边界、实例增删改和持久化；layout 插件只贡献区域结构和默认装配语义。
 ```
 
-- [ ] **Step 3: Run document validation**
+- [x] **Step 3: Run document validation**
 
 Run:
 
@@ -722,7 +722,7 @@ Expected: pass.
 
 - No source edits unless verification finds a bug.
 
-- [ ] **Step 1: Run unit tests**
+- [x] **Step 1: Run unit tests**
 
 Run:
 
@@ -732,7 +732,7 @@ pnpm test
 
 Expected: pass.
 
-- [ ] **Step 2: Run static checks**
+- [x] **Step 2: Run static checks**
 
 Run:
 
@@ -742,7 +742,7 @@ pnpm check
 
 Expected: pass.
 
-- [ ] **Step 3: Run production build**
+- [x] **Step 3: Run production build**
 
 Run:
 
@@ -752,7 +752,7 @@ pnpm build
 
 Expected: pass.
 
-- [ ] **Step 4: Start playground for browser verification**
+- [x] **Step 4: Start playground for browser verification**
 
 Run:
 
@@ -762,7 +762,10 @@ pnpm --filter @tabora/playground exec vite --host 127.0.0.1 --port 5173 --strict
 
 Expected: dev server starts at `http://127.0.0.1:5173`.
 
-- [ ] **Step 5: Browser-check key paths**
+Note: 2026-05-28 已补充 `apps/playground/src/workbenchDashboard.e2e.test.tsx`，由
+Vitest 启动 Vite server 和本机 headless Chrome，对同等浏览器关键路径做自动化验证。
+
+- [x] **Step 5: Browser-check key paths**
 
 Open `http://127.0.0.1:5173` and verify:
 
