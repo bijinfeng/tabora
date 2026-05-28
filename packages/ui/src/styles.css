@@ -150,4 +150,27 @@
     background: rgba(var(--color-line), 0.4);
     cursor: not-allowed;
   }
+
+  .tabora-textarea {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgb(var(--color-line));
+    background: rgb(var(--color-surface));
+    color: rgb(var(--color-text));
+    font: inherit;
+    resize: vertical;
+  }
+  .tabora-textarea::placeholder {
+    color: rgb(var(--color-muted));
+  }
+  .tabora-textarea:focus {
+    outline: none;
+    border-color: rgb(var(--color-accent));
+    box-shadow: 0 0 0 3px rgba(var(--color-accent), 0.18);
+  }
+  .tabora-textarea[data-invalid] {
+    border-color: rgb(var(--tabora-danger));
+  }
 }
