@@ -14,6 +14,7 @@
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",
     "@tabora/theme": "workspace:*",
+    "@tabora/ui": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui",
     "zod": "catalog:data"
