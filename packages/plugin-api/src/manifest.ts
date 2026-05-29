@@ -127,11 +127,20 @@ export type WidgetViewProps = {
   data: WidgetViewData
 }
 
+export type SearchHistoryEntry = {
+  query: string
+  providerId: string
+  timestamp: string
+}
+
 export type SearchViewProps = {
   providers: SearchProviderContribution[]
   defaultProviderId: string
   openExternal?: (url: string) => boolean
   onDefaultProviderChange?: (providerId: string) => void | Promise<void>
+  searchHistory?: SearchHistoryEntry[]
+  onSaveHistory?: (entry: { query: string; providerId: string }) => Promise<void>
+  onClearHistory?: () => Promise<void>
 }
 
 export type SettingsPanelViewProps = {

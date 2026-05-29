@@ -1,7 +1,7 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { SearchProviderContribution, SearchViewProps } from "@tabora/plugin-api"
-import { Input, Select, Button, InlineError } from "@tabora/ui"
+import { Button, Input, InlineError, Select } from "@tabora/ui"
 
 const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
 
@@ -32,6 +32,23 @@ export function buildSearchUrl(provider: SearchProviderContribution, query: stri
   return provider.urlTemplate.replaceAll("{query}", encodeURIComponent(query.trim()))
 }
 
+function resolveShortcut(
+  query: string,
+  providers: SearchProviderContribution[],
+): { provider: SearchProviderContribution; searchQuery: string } | null {
+  const trimmed = query.trim()
+  const spaceIndex = trimmed.indexOf(" ")
+  if (spaceIndex <= 0) return null
+
+  const shortcut = trimmed.slice(0, spaceIndex)
+  const provider = providers.find(
+    (p) => p.shortcut && p.shortcut.toLowerCase() === shortcut.toLowerCase(),
+  )
+  if (!provider) return null
+
+  return { provider, searchQuery: trimmed.slice(spaceIndex + 1).trim() }
+}
+
 export function SearchCommandBar(props: SearchViewProps) {
   const providers = createMemo(() =>
     props.providers.length > 0 ? props.providers : [FALLBACK_PROVIDER],
@@ -40,31 +57,37 @@ export function SearchCommandBar(props: SearchViewProps) {
   const [query, setQuery] = createSignal("")
   const [focused, setFocused] = createSignal(false)
   const [permissionDenied, setPermissionDenied] = createSignal(false)
+  const [showHistory, setShowHistory] = createSignal(false)
 
   const activeProvider = createMemo(() => {
     const match = providers().find((p) => p.id === providerId())
     return match ?? providers()[0]!
   })
 
-  function doSearch(q: string) {
+  function doSearch(q: string, targetProvider?: SearchProviderContribution) {
     setPermissionDenied(false)
-    const url = buildSearchUrl(activeProvider(), q)
+    setShowHistory(false)
+    const provider = targetProvider ?? activeProvider()
+    const url = buildSearchUrl(provider, q)
     const opened = props.openExternal?.(url)
     if (!opened) {
       setPermissionDenied(true)
+      return
     }
-  }
-
-  function handleProviderChange(nextProviderId: string) {
-    setProviderId(nextProviderId)
-    safelyHandleProviderChange(props.onDefaultProviderChange, nextProviderId)
+    void props.onSaveHistory?.({ query: q, providerId: provider.id })
   }
 
   function handleSubmit(event: Event) {
     event.preventDefault()
     const q = query().trim()
     if (!q) return
-    doSearch(q)
+
+    const resolved = resolveShortcut(q, providers())
+    if (resolved) {
+      doSearch(resolved.searchQuery, resolved.provider)
+    } else {
+      doSearch(q)
+    }
     setQuery("")
   }
 
@@ -73,10 +96,20 @@ export function SearchCommandBar(props: SearchViewProps) {
       e.preventDefault()
       const q = query().trim()
       if (q) {
-        doSearch(q)
+        const resolved = resolveShortcut(q, providers())
+        if (resolved) {
+          doSearch(resolved.searchQuery, resolved.provider)
+        } else {
+          doSearch(q)
+        }
         setQuery("")
       }
     }
+  }
+
+  function handleProviderChange(nextProviderId: string) {
+    setProviderId(nextProviderId)
+    safelyHandleProviderChange(props.onDefaultProviderChange, nextProviderId)
   }
 
   function handleTagClick(tag: string) {
@@ -84,7 +117,20 @@ export function SearchCommandBar(props: SearchViewProps) {
     doSearch(tag)
   }
 
-  const showSuggestions = () => focused() && query().length === 0
+  function handleHistoryClick(entry: { query: string; providerId: string }) {
+    const provider = providers().find((p) => p.id === entry.providerId)
+    if (provider) {
+      setProviderId(provider.id)
+    }
+    doSearch(entry.query, provider)
+  }
+
+  const recentHistory = createMemo(() => {
+    return (props.searchHistory ?? []).slice(0, 8).reverse()
+  })
+
+  const showSuggestions = () => focused() && query().length === 0 && !showHistory()
+
   return (
     <div class="search-wrapper">
       <form class="search-bar" onSubmit={handleSubmit}>
@@ -101,7 +147,7 @@ export function SearchCommandBar(props: SearchViewProps) {
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
-          placeholder="输入搜索内容"
+          placeholder="输入搜索内容（用 gh 搜索词 切换搜索源）"
           aria-label="搜索内容"
           type="search"
         />
@@ -122,6 +168,57 @@ export function SearchCommandBar(props: SearchViewProps) {
               </Button>
             )}
           </For>
+          <Show when={recentHistory().length > 0}>
+            <button
+              class="search-history-toggle"
+              onClick={() => setShowHistory(true)}
+              type="button"
+            >
+              历史
+            </button>
+          </Show>
+        </div>
+      </Show>
+      <Show when={showHistory()}>
+        <div class="search-history-panel">
+          <div class="search-history-header">
+            <span class="suggestions-label">最近搜索</span>
+            <Show when={recentHistory().length > 0}>
+              <button
+                class="search-history-clear"
+                onClick={() => void props.onClearHistory?.()}
+                type="button"
+              >
+                清空
+              </button>
+            </Show>
+          </div>
+          <Show
+            when={recentHistory().length > 0}
+            fallback={<div class="search-history-empty">暂无历史记录</div>}
+          >
+            <ul class="search-history-list">
+              <For each={recentHistory()}>
+                {(entry) => {
+                  const provider = providers().find((p) => p.id === entry.providerId)
+                  return (
+                    <li>
+                      <button
+                        class="search-history-item"
+                        onClick={() => handleHistoryClick(entry)}
+                        type="button"
+                      >
+                        <span class="search-history-query">{entry.query}</span>
+                        <span class="search-history-provider">
+                          {provider?.title ?? entry.providerId}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                }}
+              </For>
+            </ul>
+          </Show>
         </div>
       </Show>
     </div>

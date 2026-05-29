@@ -3,6 +3,7 @@ import type { JSX } from "solid-js"
 import type {
   BackgroundProviderContribution,
   PluginInstance,
+  SearchHistoryEntry,
   SearchProviderContribution,
   SettingsPanelViewProps,
   ThemeContribution,
@@ -61,6 +62,7 @@ export function App() {
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
   const [dragId, setDragId] = createSignal<string | null>(null)
+  const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
 
   const database = createTaboraDatabase()
   const workspaceRepo = createWorkspaceRepository(database)
@@ -115,6 +117,12 @@ export function App() {
     const savedBg = workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID
     setBackgroundId(savedBg)
     applyBackgroundStyle(resolveBackgroundStyle(savedBg, allBackgrounds))
+
+    const savedHistory = await pluginDataRepo.get<SearchHistoryEntry[]>(
+      "official.search.command-bar",
+      "search-history",
+    )
+    if (savedHistory) setSearchHistory(savedHistory)
 
     let loaded = await instanceRepo.getByRegion("mainGrid")
     if (loaded.length === 0) {
@@ -254,6 +262,21 @@ export function App() {
 
   async function togglePluginEnabled(pluginId: string, enabled: boolean) {
     await kernel.setPluginEnabled(pluginId, enabled)
+  }
+
+  async function saveSearchHistory(entry: { query: string; providerId: string }) {
+    const history = searchHistory()
+    const next: SearchHistoryEntry[] = [
+      ...history,
+      { ...entry, timestamp: new Date().toISOString() },
+    ]
+    setSearchHistory(next)
+    await pluginDataRepo.save("official.search.command-bar", "search-history", next)
+  }
+
+  async function clearSearchHistory() {
+    setSearchHistory([])
+    await pluginDataRepo.save("official.search.command-bar", "search-history", [])
   }
 
   function buildSettingsPanelProps(panel: {
@@ -601,6 +624,9 @@ export function App() {
           providers: enabledSearchProviders(),
           defaultProviderId: resolveDefaultProviderForSearch(),
           onDefaultProviderChange: setDefaultSearchProvider,
+          searchHistory: searchHistory(),
+          onSaveHistory: saveSearchHistory,
+          onClearHistory: clearSearchHistory,
         })}
       </div>
     )

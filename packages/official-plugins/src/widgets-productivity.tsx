@@ -1,35 +1,10 @@
 import { createSignal, onMount } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { QuickLinksCard } from "./widget-quick-links"
 import { TodoCard } from "./widget-todo"
 import { WeatherCard } from "./widget-weather"
-import { Field, Input, Checkbox, ListRow, Textarea } from "@tabora/ui"
-
-const DEFAULT_QUICK_LINKS = [
-  { title: "GitHub", url: "https://github.com" },
-  { title: "Vite+", url: "https://viteplus.dev" },
-] as const
-
-function resolveQuickLinks(config: Record<string, unknown>) {
-  if (Array.isArray(config.links) && config.links.length > 0) {
-    return config.links as Array<{ title: string; url: string }>
-  }
-  return [...DEFAULT_QUICK_LINKS]
-}
-
-export function QuickLinksCard(props: WidgetViewProps) {
-  const links = () => resolveQuickLinks(props.config)
-
-  return (
-    <div class="quick-links">
-      {links().map((link) => (
-        <a class="quick-link-anchor" href={link.url} target="_blank" rel="noreferrer">
-          <ListRow primary={link.title} secondary={link.url} />
-        </a>
-      ))}
-    </div>
-  )
-}
+import { Field, Input, Checkbox, Textarea } from "@tabora/ui"
 
 function migrateFromLocalStorage(key: string): string | null {
   const value = localStorage.getItem(key)
@@ -190,7 +165,12 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,
-          defaultConfig: { links: [...DEFAULT_QUICK_LINKS] },
+          defaultConfig: {
+            links: [
+              { title: "GitHub", url: "https://github.com" },
+              { title: "Vite+", url: "https://viteplus.dev" },
+            ],
+          },
           views: { card: "official.widgets.quick-links.card" },
         },
         {
