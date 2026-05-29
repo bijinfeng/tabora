@@ -1,7 +1,7 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { SearchProviderContribution, SearchViewProps } from "@tabora/plugin-api"
-import { Input, Select, Button } from "@tabora/ui"
+import { Input, Select, Button, InlineError } from "@tabora/ui"
 
 const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
 
@@ -39,6 +39,7 @@ export function SearchCommandBar(props: SearchViewProps) {
   const [providerId, setProviderId] = createSignal(props.defaultProviderId || providers()[0]!.id)
   const [query, setQuery] = createSignal("")
   const [focused, setFocused] = createSignal(false)
+  const [permissionDenied, setPermissionDenied] = createSignal(false)
 
   const activeProvider = createMemo(() => {
     const match = providers().find((p) => p.id === providerId())
@@ -46,8 +47,12 @@ export function SearchCommandBar(props: SearchViewProps) {
   })
 
   function doSearch(q: string) {
+    setPermissionDenied(false)
     const url = buildSearchUrl(activeProvider(), q)
-    props.openExternal?.(url)
+    const opened = props.openExternal?.(url)
+    if (!opened) {
+      setPermissionDenied(true)
+    }
   }
 
   function handleProviderChange(nextProviderId: string) {
@@ -104,6 +109,9 @@ export function SearchCommandBar(props: SearchViewProps) {
           搜索
         </Button>
       </form>
+      <Show when={permissionDenied()}>
+        <InlineError>外部打开被拒绝，请检查权限设置</InlineError>
+      </Show>
       <Show when={showSuggestions()}>
         <div class="search-suggestions">
           <span class="suggestions-label">快捷搜索：</span>
@@ -145,9 +153,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     context.registry.views.register("official.search.command-bar.view", (props: SearchViewProps) =>
       SearchCommandBar({
         ...props,
-        openExternal: (url) => {
-          context.permissions.openExternal(url)
-        },
+        openExternal: (url) => context.permissions.openExternal(url),
       }),
     )
   },

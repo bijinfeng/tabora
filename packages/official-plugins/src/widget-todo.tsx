@@ -1,22 +1,21 @@
 import { createSignal, For, Show } from "solid-js"
-import { createPluginDataRepository, createTaboraDatabase } from "@tabora/storage"
+import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Field, Input, IconButton, ListRow, Checkbox, EmptyState } from "@tabora/ui"
 
 type TodoItem = { id: string; text: string; done: boolean }
 
-const database = createTaboraDatabase()
-const dataRepo = createPluginDataRepository(database)
-
-export function TodoCard() {
+export function TodoCard(props: WidgetViewProps) {
   const [items, setItems] = createSignal<TodoItem[]>([])
   const [input, setInput] = createSignal("")
 
-  void dataRepo.get<TodoItem[]>("todo", "items").then((saved: TodoItem[] | undefined) => {
+  const storageKey = "items"
+
+  void props.data.get<TodoItem[]>(storageKey).then(async (saved) => {
     if (saved && saved.length > 0) setItems(saved)
   })
 
   async function persist(updated: TodoItem[]) {
-    await dataRepo.save("todo", "items", updated)
+    await props.data.save(storageKey, updated)
   }
   async function addItem() {
     const text = input().trim()
@@ -47,10 +46,10 @@ export function TodoCard() {
 
   return (
     <div class="todo-widget">
-      <Field label="新待办" htmlFor="todo-input">
+      <Field label="新待办" htmlFor={`todo-input-${props.instanceId}`}>
         <div class="todo-input-row">
           <Input
-            id="todo-input"
+            id={`todo-input-${props.instanceId}`}
             value={input()}
             onInput={setInput}
             onKeyDown={handleKeyDown}

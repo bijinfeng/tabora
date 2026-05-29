@@ -1,18 +1,28 @@
 import { createSignal, onMount } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { WidgetViewProps } from "@tabora/plugin-api"
 import { TodoCard } from "./widget-todo"
 import { WeatherCard } from "./widget-weather"
 import { Field, Input, Checkbox, ListRow, Textarea } from "@tabora/ui"
 
-const QUICK_LINKS = [
+const DEFAULT_QUICK_LINKS = [
   { title: "GitHub", url: "https://github.com" },
   { title: "Vite+", url: "https://viteplus.dev" },
 ] as const
 
-export function QuickLinksCard() {
+function resolveQuickLinks(config: Record<string, unknown>) {
+  if (Array.isArray(config.links) && config.links.length > 0) {
+    return config.links as Array<{ title: string; url: string }>
+  }
+  return [...DEFAULT_QUICK_LINKS]
+}
+
+export function QuickLinksCard(props: WidgetViewProps) {
+  const links = () => resolveQuickLinks(props.config)
+
   return (
     <div class="quick-links">
-      {QUICK_LINKS.map((link) => (
+      {links().map((link) => (
         <a class="quick-link-anchor" href={link.url} target="_blank" rel="noreferrer">
           <ListRow primary={link.title} secondary={link.url} />
         </a>
@@ -21,17 +31,33 @@ export function QuickLinksCard() {
   )
 }
 
-export function NotesCard() {
-  const [text, setText] = createSignal("")
+function migrateFromLocalStorage(key: string): string | null {
+  const value = localStorage.getItem(key)
+  if (value !== null) {
+    localStorage.removeItem(key)
+  }
+  return value
+}
 
-  onMount(() => {
-    const saved = localStorage.getItem("notes-content")
+export function NotesCard(props: WidgetViewProps) {
+  const [text, setText] = createSignal("")
+  const storageKey = "notes-content"
+
+  onMount(async () => {
+    let saved = await props.data.get<string>(storageKey)
+    if (saved === undefined) {
+      const legacy = migrateFromLocalStorage("notes-content")
+      if (legacy !== null) {
+        saved = legacy
+        await props.data.save(storageKey, legacy)
+      }
+    }
     if (saved) setText(saved)
   })
 
-  function update(value: string) {
+  async function update(value: string) {
     setText(value)
-    localStorage.setItem("notes-content", value)
+    await props.data.save(storageKey, value)
   }
 
   return (
@@ -45,16 +71,27 @@ export function NotesCard() {
   )
 }
 
-export function NotesModal() {
+export function NotesModal(props: WidgetViewProps) {
   const [text, setText] = createSignal("")
-  onMount(() => {
-    const saved = localStorage.getItem("notes-content")
+  const storageKey = "notes-content"
+
+  onMount(async () => {
+    let saved = await props.data.get<string>(storageKey)
+    if (saved === undefined) {
+      const legacy = migrateFromLocalStorage("notes-content")
+      if (legacy !== null) {
+        saved = legacy
+        await props.data.save(storageKey, legacy)
+      }
+    }
     if (saved) setText(saved)
   })
-  function update(value: string) {
+
+  async function update(value: string) {
     setText(value)
-    localStorage.setItem("notes-content", value)
+    await props.data.save(storageKey, value)
   }
+
   return (
     <div class="notes-modal">
       <h3>便签</h3>
@@ -69,33 +106,44 @@ export function NotesModal() {
   )
 }
 
-type TodayFocusCardProps = {
-  instanceId?: string
-}
-
-export function TodayFocusCard(props: TodayFocusCardProps = {}) {
+export function TodayFocusCard(props: WidgetViewProps) {
   const [focus, setFocus] = createSignal("")
   const [done, setDone] = createSignal(false)
-  const instanceId = () => props.instanceId ?? "default"
-  const contentKey = () => `today-focus:${instanceId()}:content`
-  const doneKey = () => `today-focus:${instanceId()}:done`
+  const contentKey = "focus-content"
+  const doneKey = "focus-done"
+  const inputId = () => `today-focus-${props.instanceId}`
 
-  onMount(() => {
-    const saved = localStorage.getItem(contentKey())
-    const savedDone = localStorage.getItem(doneKey())
+  onMount(async () => {
+    let saved = await props.data.get<string>(contentKey)
+    let savedDone = await props.data.get<string>(doneKey)
+
+    if (saved === undefined) {
+      const legacyKey = `today-focus:${props.instanceId}:content`
+      const legacyDoneKey = `today-focus:${props.instanceId}:done`
+      const legacy = migrateFromLocalStorage(legacyKey)
+      const legacyDone = migrateFromLocalStorage(legacyDoneKey)
+      if (legacy !== null) {
+        saved = legacy
+        await props.data.save(contentKey, legacy)
+      }
+      if (legacyDone !== null) {
+        savedDone = legacyDone
+        await props.data.save(doneKey, legacyDone)
+      }
+    }
+
     if (saved) setFocus(saved)
     setDone(savedDone === "true")
   })
 
-  function updateFocus(value: string) {
+  async function updateFocus(value: string) {
     setFocus(value)
-    localStorage.setItem(contentKey(), value)
+    await props.data.save(contentKey, value)
   }
-  function updateDone(value: boolean) {
+  async function updateDone(value: boolean) {
     setDone(value)
-    localStorage.setItem(doneKey(), String(value))
+    await props.data.save(doneKey, String(value))
   }
-  const inputId = () => `today-focus-${instanceId()}`
 
   return (
     <div class="today-focus-widget">
@@ -142,6 +190,7 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,
+          defaultConfig: { links: [...DEFAULT_QUICK_LINKS] },
           views: { card: "official.widgets.quick-links.card" },
         },
         {
@@ -150,7 +199,10 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,
-          views: { card: "official.widgets.notes.card", modal: "official.widgets.notes.modal" },
+          views: {
+            card: "official.widgets.notes.card",
+            modal: "official.widgets.notes.modal",
+          },
         },
         {
           id: "todo",

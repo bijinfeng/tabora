@@ -7,6 +7,7 @@ import type {
   SettingsPanelViewProps,
   ThemeContribution,
   WidgetSize,
+  WidgetViewProps,
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
@@ -15,6 +16,7 @@ import { createPluginKernel } from "@tabora/platform-kernel"
 import { applyThemeTokens } from "@tabora/theme"
 import {
   createInstanceRepository,
+  createPluginDataRepository,
   createTaboraDatabase,
   createWorkspaceRepository,
 } from "@tabora/storage"
@@ -63,6 +65,18 @@ export function App() {
   const database = createTaboraDatabase()
   const workspaceRepo = createWorkspaceRepository(database)
   const instanceRepo = createInstanceRepository(database)
+  const pluginDataRepo = createPluginDataRepository(database)
+
+  function makeScopedData(pluginId: string, instanceId: string): WidgetViewProps["data"] {
+    return {
+      get<T>(key: string): Promise<T | undefined> {
+        return pluginDataRepo.getByInstance<T>(pluginId, instanceId, key)
+      },
+      save<T>(key: string, value: T): Promise<void> {
+        return pluginDataRepo.saveForInstance<T>(pluginId, instanceId, key, value)
+      },
+    }
+  }
 
   function viewOrUndefined<Props = Record<string, unknown>>(
     viewId: string,
@@ -467,7 +481,13 @@ export function App() {
                               onClick={() =>
                                 kernel.events.emit("ui.modal.open", {
                                   viewId: w!.views.modal,
-                                  props: { instanceId: inst.id },
+                                  props: {
+                                    instanceId: inst.id,
+                                    pluginId: inst.pluginId,
+                                    contributionId: inst.contributionId,
+                                    config: inst.config,
+                                    data: makeScopedData(inst.pluginId, inst.id),
+                                  },
                                 })
                               }
                             >
@@ -496,7 +516,13 @@ export function App() {
                         instanceId={inst.id}
                         title={widgetTitle(inst.contributionId)}
                       >
-                        {View({ instanceId: inst.id })}
+                        {View({
+                          instanceId: inst.id,
+                          pluginId: inst.pluginId,
+                          contributionId: inst.contributionId,
+                          config: inst.config,
+                          data: makeScopedData(inst.pluginId, inst.id),
+                        } satisfies WidgetViewProps)}
                       </PluginViewBoundary>
                     </div>
                   </div>

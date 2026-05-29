@@ -114,10 +114,23 @@ export type BackgroundRendererViewProps = {
   fallbackStyle: Record<string, string>
 }
 
+export type WidgetViewData = {
+  get<T = unknown>(key: string): Promise<T | undefined>
+  save<T = unknown>(key: string, value: T): Promise<void>
+}
+
+export type WidgetViewProps = {
+  instanceId: string
+  pluginId: string
+  contributionId: string
+  config: Record<string, unknown>
+  data: WidgetViewData
+}
+
 export type SearchViewProps = {
   providers: SearchProviderContribution[]
   defaultProviderId: string
-  openExternal?: (url: string) => void
+  openExternal?: (url: string) => boolean
   onDefaultProviderChange?: (providerId: string) => void | Promise<void>
 }
 
