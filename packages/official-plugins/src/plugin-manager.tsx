@@ -39,6 +39,23 @@ function permissionLabel(permission: PluginPermission): string {
   }
 }
 
+function permissionType(permission: PluginPermission): string {
+  switch (permission.type) {
+    case "external-open":
+      return "外部打开"
+    case "storage":
+      return "存储"
+    case "workspace":
+      return "工作区"
+    case "network":
+      return "网络"
+    case "clipboard":
+      return "剪贴板"
+    case "local-file":
+      return "本地文件"
+  }
+}
+
 export function PluginManagerCard(props: PluginManagerCardProps = {}) {
   const plugins = () => props.plugins ?? []
 
@@ -93,6 +110,22 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
           }}
         </For>
       </ul>
+      <div class="plugin-audit-section">
+        <div class="plugin-audit-title">权限审计</div>
+        <For each={plugins()}>
+          {(plugin) => (
+            <div class="plugin-audit-item">
+              <span class="plugin-audit-name">{plugin.name}</span>
+              <For each={plugin.permissions}>
+                {(permission) => <Badge variant="neutral">{permissionType(permission)}</Badge>}
+              </For>
+              {plugin.permissions.length === 0 ? (
+                <span class="plugin-audit-none">无权限请求</span>
+              ) : null}
+            </div>
+          )}
+        </For>
+      </div>
     </CardSection>
   )
 }

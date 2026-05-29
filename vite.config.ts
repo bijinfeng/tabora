@@ -70,6 +70,7 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
+    ignorePatterns: ["examples/**"],
     rules: {
       "no-console": ["error", { allow: ["warn", "error"] }],
     },
