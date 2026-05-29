@@ -1,0 +1,1716 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 可交互工作台原型 V2</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-hover: #15785c;
+        --wb-accent-soft: #eaf5f0;
+        --wb-danger: #c94545;
+        --wb-danger-soft: #fef0f0;
+        --wb-success: #2d8a5e;
+        --wb-radius-card: 8px;
+        --wb-radius-control: 8px;
+        --wb-radius-panel: 12px;
+        --wb-dur-fast: 120ms;
+        --wb-dur-normal: 180ms;
+        --wb-dur-slow: 240ms;
+        --wb-ease: cubic-bezier(0.2, 0, 0, 1);
+        --wb-ease-bounce: cubic-bezier(0.05, 0.7, 0.1, 1);
+      }
+      .dark {
+        --wb-page: #191c1a;
+        --wb-surface: #252927;
+        --wb-surface-soft: #2a2e2c;
+        --wb-surface-hover: #323734;
+        --wb-text: #edf0ed;
+        --wb-text-muted: #b6bab6;
+        --wb-text-subtle: #868b86;
+        --wb-line: #3b403c;
+        --wb-line-strong: #535954;
+        --wb-accent: #34d19e;
+        --wb-accent-hover: #5ce0b6;
+        --wb-accent-soft: #1a2e26;
+        --wb-danger: #ef8b8b;
+        --wb-danger-soft: #2a1e1e;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        background: var(--wb-page);
+        color: var(--wb-text);
+        min-height: 100vh;
+        transition:
+          background var(--wb-dur-normal) var(--wb-ease),
+          color var(--wb-dur-normal) var(--wb-ease);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        min-height: 100vh;
+      }
+      .rail {
+        background: var(--wb-surface);
+        border-right: 1px solid var(--wb-line);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 8px;
+        transition:
+          background var(--wb-dur-normal) var(--wb-ease),
+          border-color var(--wb-dur-normal) var(--wb-ease);
+      }
+      .rail-logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--wb-accent);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .rail-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--wb-text-muted);
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+        background: transparent;
+        font-family: inherit;
+      }
+      .rail-btn:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+      .rail-btn:focus-visible {
+        outline: 2px solid var(--wb-accent);
+        outline-offset: 2px;
+      }
+      .rail-btn.active {
+        background: var(--wb-accent-soft);
+        border-color: var(--wb-accent);
+        color: var(--wb-accent);
+      }
+      .rail-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+      .rail-spacer {
+        flex: 1;
+      }
+      .main {
+        padding: 32px;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-width: 1440px;
+        margin: 0 auto;
+        width: 100%;
+      }
+      .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .greeting {
+        font-size: 15px;
+        font-weight: 650;
+      }
+      .greeting-muted {
+        color: var(--wb-text-muted);
+        font-weight: 400;
+      }
+
+      /* Search */
+      .search-wrap {
+        position: relative;
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 48px;
+        padding: 0 16px;
+        width: 100%;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        font-size: 13px;
+        color: var(--wb-text-subtle);
+        cursor: text;
+        transition:
+          border-color var(--wb-dur-fast) var(--wb-ease),
+          box-shadow var(--wb-dur-fast) var(--wb-ease);
+      }
+      .search:focus-within {
+        border-color: var(--wb-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
+      }
+      .search input {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--wb-text);
+      }
+      .search input::placeholder {
+        color: var(--wb-text-subtle);
+      }
+      .search-kbd {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 5px;
+        background: var(--wb-surface-soft);
+        font-size: 11px;
+        color: var(--wb-text-subtle);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+      .search-suggestions {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        box-shadow:
+          0 4px 16px rgba(0, 0, 0, 0.08),
+          0 0 1px rgba(0, 0, 0, 0.06);
+        opacity: 0;
+        transform: translateY(-4px);
+        pointer-events: none;
+        transition: all var(--wb-dur-normal) var(--wb-ease);
+        z-index: 50;
+        overflow: hidden;
+      }
+      .search-suggestions.open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      .suggestion {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background var(--wb-dur-fast) var(--wb-ease);
+      }
+      .suggestion:hover {
+        background: var(--wb-surface-hover);
+      }
+      .suggestion-icon {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .suggestion-text {
+        flex: 1;
+      }
+      .suggestion-type {
+        font-size: 11px;
+        color: var(--wb-text-subtle);
+      }
+
+      /* Cards */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .widget-card {
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        transition:
+          border-color var(--wb-dur-fast) var(--wb-ease),
+          background var(--wb-dur-normal) var(--wb-ease);
+      }
+      .widget-card:hover {
+        border-color: var(--wb-line-strong);
+      }
+      .widget-card.span-2 {
+        grid-column: span 2;
+      }
+      .widget-card.row-2 {
+        grid-row: span 2;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .card-title {
+        font-size: 13px;
+        font-weight: 650;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .card-title svg {
+        width: 15px;
+        height: 15px;
+        color: var(--wb-accent);
+        flex-shrink: 0;
+      }
+      .card-body {
+        flex: 1;
+        min-height: 0;
+      }
+      .card-action {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        color: var(--wb-text-muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+      }
+      .card-action:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+      .card-action:focus-visible {
+        outline: 2px solid var(--wb-accent);
+        outline-offset: 2px;
+      }
+
+      /* Focus */
+      .focus-input {
+        width: 100%;
+        padding: 4px 0;
+        border: none;
+        background: transparent;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: inherit;
+        color: var(--wb-text);
+        outline: none;
+      }
+      .focus-input::placeholder {
+        color: var(--wb-text-subtle);
+      }
+      .focus-saved {
+        font-size: 11px;
+        color: var(--wb-success);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity var(--wb-dur-normal) var(--wb-ease);
+        margin-top: 6px;
+      }
+      .focus-saved.show {
+        opacity: 1;
+      }
+
+      /* Links */
+      .link-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .link-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        height: 56px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+        cursor: pointer;
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+        position: relative;
+      }
+      .link-item:hover {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .link-item-add {
+        border-style: dashed;
+        color: var(--wb-text-subtle);
+      }
+      .link-item-add:hover {
+        color: var(--wb-accent);
+        border-color: var(--wb-accent);
+      }
+      .link-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+      .link-label {
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--wb-text-muted);
+      }
+      .link-delete {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+      }
+      .link-item:hover .link-delete {
+        display: flex;
+      }
+      .link-delete:hover {
+        background: var(--wb-danger-soft);
+        color: var(--wb-danger);
+      }
+
+      /* Todo */
+      .todo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .todo-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 6px;
+        border-radius: 6px;
+        transition: background var(--wb-dur-fast) var(--wb-ease);
+      }
+      .todo-item:hover {
+        background: var(--wb-surface-hover);
+      }
+      .todo-check {
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid var(--wb-line-strong);
+        border-radius: 4px;
+        flex-shrink: 0;
+        cursor: pointer;
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .todo-check:hover {
+        border-color: var(--wb-accent);
+      }
+      .todo-check.done {
+        background: var(--wb-accent);
+        border-color: var(--wb-accent);
+      }
+      .todo-check.done::after {
+        content: "";
+        width: 4px;
+        height: 8px;
+        border: solid #fff;
+        border-width: 0 1.5px 1.5px 0;
+        transform: rotate(45deg) translateY(-0.5px);
+      }
+      .todo-text {
+        font-size: 13px;
+        flex: 1;
+        transition: color var(--wb-dur-fast) var(--wb-ease);
+      }
+      .todo-text.done {
+        color: var(--wb-text-subtle);
+        text-decoration: line-through;
+      }
+      .todo-delete {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        border: none;
+        background: transparent;
+        color: var(--wb-text-subtle);
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+      }
+      .todo-item:hover .todo-delete {
+        opacity: 1;
+      }
+      .todo-delete:hover {
+        background: var(--wb-danger-soft);
+        color: var(--wb-danger);
+      }
+      .todo-add {
+        font-size: 12px;
+        color: var(--wb-text-subtle);
+        padding: 4px 6px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 2px;
+      }
+      .todo-add:hover {
+        color: var(--wb-accent);
+        background: var(--wb-surface-hover);
+      }
+      .todo-add-form {
+        display: flex;
+        gap: 4px;
+        padding: 4px 0;
+        animation: fadeIn var(--wb-dur-normal) var(--wb-ease);
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .todo-add-input {
+        flex: 1;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--wb-accent);
+        border-radius: 6px;
+        font-size: 12px;
+        font-family: inherit;
+        color: var(--wb-text);
+        outline: none;
+        background: var(--wb-surface);
+      }
+
+      /* Notes */
+      .notes-area {
+        width: 100%;
+        min-height: 40px;
+        border: none;
+        background: transparent;
+        font-size: 13px;
+        line-height: 1.6;
+        font-family: inherit;
+        color: var(--wb-text);
+        resize: none;
+        outline: none;
+      }
+      .notes-area::placeholder {
+        color: var(--wb-text-subtle);
+      }
+      .notes-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--wb-success);
+        margin-top: 4px;
+        opacity: 0;
+        transition: opacity var(--wb-dur-normal) var(--wb-ease);
+      }
+      .notes-footer.show {
+        opacity: 1;
+      }
+
+      /* Weather */
+      .weather-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        gap: 2px;
+      }
+      .weather-temp {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .weather-desc {
+        font-size: 12px;
+        color: var(--wb-text-muted);
+      }
+
+      /* Plugin stats */
+      .plugin-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .plugin-stat {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 5px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: background var(--wb-dur-fast) var(--wb-ease);
+      }
+      .plugin-stat:hover {
+        background: var(--wb-surface-hover);
+      }
+      .plugin-stat-val {
+        font-size: 12px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        color: var(--wb-text-muted);
+        font-weight: 600;
+      }
+      .plugin-stat-val.accent {
+        color: var(--wb-accent);
+      }
+
+      /* Modals */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.2);
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--wb-dur-slow) var(--wb-ease);
+        backdrop-filter: blur(2px);
+      }
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .modal {
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        width: 520px;
+        max-width: 90vw;
+        max-height: 80vh;
+        overflow-y: auto;
+        transform: translateY(12px) scale(0.97);
+        transition: transform var(--wb-dur-slow) var(--wb-ease-bounce);
+      }
+      .modal-overlay.open .modal {
+        transform: translateY(0) scale(1);
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 16px 0;
+        font-size: 16px;
+        font-weight: 650;
+      }
+      .modal-body {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .modal-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+        background: var(--wb-surface-soft);
+      }
+      .modal-item:hover {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .modal-item-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .modal-item-info {
+        flex: 1;
+      }
+      .modal-item-name {
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .modal-item-desc {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+        margin-top: 2px;
+      }
+
+      /* Settings */
+      .settings-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.2);
+        z-index: 200;
+        display: flex;
+        justify-content: flex-end;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--wb-dur-slow) var(--wb-ease);
+        backdrop-filter: blur(2px);
+      }
+      .settings-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .settings-panel {
+        width: 560px;
+        max-width: 90vw;
+        height: 100vh;
+        background: var(--wb-surface);
+        border-left: 1px solid var(--wb-line);
+        overflow-y: auto;
+        transform: translateX(20px);
+        transition: transform var(--wb-dur-slow) var(--wb-ease);
+        display: flex;
+        flex-direction: column;
+      }
+      .settings-overlay.open .settings-panel {
+        transform: translateX(0);
+      }
+      .settings-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border-bottom: 1px solid var(--wb-line);
+        position: sticky;
+        top: 0;
+        background: var(--wb-surface);
+        z-index: 1;
+      }
+      .settings-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .settings-body {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        flex: 1;
+      }
+      .settings-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .settings-group-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--wb-text-subtle);
+      }
+      .settings-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .settings-row-label {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .settings-row-desc {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+        margin-top: 2px;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 14px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--wb-dur-fast) var(--wb-ease);
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--wb-accent);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(26, 144, 112, 0.18);
+      }
+      .btn-primary {
+        background: var(--wb-accent);
+        color: #fff;
+        border-color: var(--wb-accent);
+      }
+      .btn-primary:hover {
+        background: var(--wb-accent-hover);
+      }
+      .btn-primary:active {
+        transform: scale(0.98);
+      }
+      .btn-secondary {
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        border-color: var(--wb-line);
+      }
+      .btn-secondary:hover {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .btn-subtle {
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+      .btn-subtle:hover {
+        background: #d8f0e8;
+      }
+      .btn-sm {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 12px;
+        border-radius: 6px;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--wb-text-muted);
+      }
+      .btn-ghost:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 300;
+        padding: 10px 16px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: all var(--wb-dur-normal) var(--wb-ease);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .toast-icon {
+        color: var(--wb-accent);
+        font-weight: 700;
+      }
+      @keyframes bounceIn {
+        0% {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        60% {
+          transform: scale(1.02);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .card-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .widget-card.span-2 {
+          grid-column: span 2;
+        }
+      }
+      @media (max-width: 768px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+        .rail {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          flex-direction: row;
+          justify-content: space-around;
+          padding: 6px 16px;
+          border-right: none;
+          border-top: 1px solid var(--wb-line);
+          height: 52px;
+          z-index: 100;
+        }
+        .rail-logo,
+        .rail-spacer {
+          display: none;
+        }
+        .main {
+          padding: 16px;
+          padding-bottom: 68px;
+        }
+        .card-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 500px) {
+        .card-grid {
+          grid-template-columns: 1fr;
+        }
+        .widget-card.span-2,
+        .widget-card.row-2 {
+          grid-column: span 1;
+          grid-row: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <nav class="rail">
+        <div class="rail-logo">T</div>
+        <button class="rail-btn active" aria-label="主页" title="主页" onclick="selectRail(this)">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </button>
+        <button class="rail-btn" aria-label="添加卡片" title="添加卡片" onclick="openAddWidget()">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        <div class="rail-spacer"></div>
+        <button class="rail-btn" aria-label="切换主题" title="切换主题" onclick="toggleTheme()">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
+        <button class="rail-btn" aria-label="设置" title="设置" onclick="openSettings()">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
+        </button>
+      </nav>
+
+      <div class="main">
+        <div class="top-bar">
+          <div class="greeting">下午好 <span class="greeting-muted">— 5月30日 星期六</span></div>
+          <div>
+            <button class="btn btn-subtle btn-sm" onclick="openAddWidget()">+ 添加卡片</button>
+          </div>
+        </div>
+
+        <div class="search-wrap" id="searchWrap">
+          <div class="search" id="searchBar">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              style="flex-shrink: 0; color: var(--wb-text-subtle)"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="搜索网页、工具、卡片内容、命令..."
+              autocomplete="off"
+            />
+            <span class="search-kbd">⌘K</span>
+          </div>
+          <div class="search-suggestions" id="searchSuggestions">
+            <div class="suggestion" data-action="web">
+              <span class="suggestion-icon">🌐</span
+              ><span class="suggestion-text">搜索 "<strong></strong>"</span
+              ><span class="suggestion-type">Google</span>
+            </div>
+            <div class="suggestion" data-action="card-add">
+              <span class="suggestion-icon">+</span><span class="suggestion-text">添加新卡片</span
+              ><span class="suggestion-type">命令</span>
+            </div>
+            <div class="suggestion" data-action="theme">
+              <span class="suggestion-icon">☀</span><span class="suggestion-text">切换主题</span
+              ><span class="suggestion-type">命令</span>
+            </div>
+            <div class="suggestion" data-action="settings">
+              <span class="suggestion-icon">⚙</span><span class="suggestion-text">打开设置</span
+              ><span class="suggestion-type">命令</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-grid" id="cardGrid">
+          <!-- 今日重点 -->
+          <div class="widget-card span-2" id="card-focus">
+            <div class="card-header">
+              <div class="card-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" /></svg
+                >今日重点
+              </div>
+              <div>
+                <button
+                  class="card-action"
+                  onclick="removeWidget('card-focus')"
+                  title="移除卡片"
+                  aria-label="移除"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <input
+                class="focus-input"
+                placeholder="今天最重要的一件事是什么？"
+                oninput="onFocusInput()"
+              />
+              <div class="focus-saved" id="focusSaved">✓ 已保存</div>
+            </div>
+          </div>
+
+          <!-- 快捷入口 -->
+          <div class="widget-card span-2" id="card-links">
+            <div class="card-header">
+              <div class="card-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg
+                >快捷入口
+              </div>
+              <div>
+                <button
+                  class="card-action"
+                  onclick="removeWidget('card-links')"
+                  title="移除卡片"
+                  aria-label="移除"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="card-body"><div class="link-grid" id="linkGrid"></div></div>
+          </div>
+
+          <!-- 待办 -->
+          <div class="widget-card" id="card-todo">
+            <div class="card-header">
+              <div class="card-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="9 11 12 14 22 4" />
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg
+                >待办
+              </div>
+              <div>
+                <button
+                  class="card-action"
+                  onclick="removeWidget('card-todo')"
+                  title="移除卡片"
+                  aria-label="移除"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="todo-list" id="todoList"></div>
+              <button class="todo-add" id="todoAddBtn" onclick="showTodoAdd()">+ 添加任务</button>
+            </div>
+          </div>
+
+          <!-- 便签 -->
+          <div class="widget-card row-2" id="card-notes">
+            <div class="card-header">
+              <div class="card-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" /></svg
+                >便签
+              </div>
+              <div>
+                <button
+                  class="card-action"
+                  onclick="removeWidget('card-notes')"
+                  title="移除卡片"
+                  aria-label="移除"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; flex: 1">
+              <textarea
+                class="notes-area"
+                placeholder="快速记录想法、灵感、提醒..."
+                style="flex: 1"
+                oninput="onNotesInput()"
+              ></textarea>
+              <div class="notes-footer" id="notesFooter">✓ 已自动保存</div>
+            </div>
+          </div>
+
+          <!-- 天气 -->
+          <div class="widget-card" id="card-weather">
+            <div class="card-header">
+              <div class="card-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="5" /></svg
+                >天气
+              </div>
+              <div>
+                <button
+                  class="card-action"
+                  onclick="removeWidget('card-weather')"
+                  title="移除卡片"
+                  aria-label="移除"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="weather-display">
+                <span class="weather-temp">22°C</span><span class="weather-desc">晴朗 · 北京</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 插件状态 -->
+          <div class="widget-card" id="card-plugins">
+            <div class="card-header">
+              <div class="card-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" /></svg
+                >插件
+              </div>
+              <div>
+                <button
+                  class="card-action"
+                  onclick="removeWidget('card-plugins')"
+                  title="移除卡片"
+                  aria-label="移除"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="card-body"><div class="plugin-stats" id="pluginStats"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加卡片弹窗 -->
+    <div class="modal-overlay" id="addWidgetOverlay" onclick="closeAddWidget(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <span>添加卡片</span
+          ><button class="card-action" onclick="closeAddWidget()" aria-label="关闭">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-item" onclick="addNewWidget('focus')">
+            <div class="modal-item-icon">🎯</div>
+            <div class="modal-item-info">
+              <div class="modal-item-name">今日重点</div>
+              <div class="modal-item-desc">设定今天最重要的一件事</div>
+            </div>
+          </div>
+          <div class="modal-item" onclick="addNewWidget('todo')">
+            <div class="modal-item-icon">✓</div>
+            <div class="modal-item-info">
+              <div class="modal-item-name">待办列表</div>
+              <div class="modal-item-desc">跟踪任务并标记完成</div>
+            </div>
+          </div>
+          <div class="modal-item" onclick="addNewWidget('notes')">
+            <div class="modal-item-icon">📝</div>
+            <div class="modal-item-info">
+              <div class="modal-item-name">便签</div>
+              <div class="modal-item-desc">快速记录灵感和想法</div>
+            </div>
+          </div>
+          <div class="modal-item" onclick="addNewWidget('links')">
+            <div class="modal-item-icon">🔗</div>
+            <div class="modal-item-info">
+              <div class="modal-item-name">快捷入口</div>
+              <div class="modal-item-desc">常用网站一键触达</div>
+            </div>
+          </div>
+          <div class="modal-item" onclick="addNewWidget('weather')">
+            <div class="modal-item-icon">☀</div>
+            <div class="modal-item-info">
+              <div class="modal-item-name">天气</div>
+              <div class="modal-item-desc">当前天气一目了然</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置抽屉 -->
+    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings(event)">
+      <div class="settings-panel" onclick="event.stopPropagation()">
+        <div class="settings-header">
+          <h2>设置</h2>
+          <button
+            class="card-action"
+            onclick="closeSettings()"
+            aria-label="关闭"
+            style="width: 32px; height: 32px"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="settings-body">
+          <div class="settings-group">
+            <div class="settings-group-title">外观</div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">主题</div>
+                <div class="settings-row-desc">选择偏好的色彩方案</div>
+              </div>
+              <div style="display: flex; gap: 4px">
+                <button
+                  class="btn btn-sm"
+                  style="
+                    font-weight: 700;
+                    background: var(--wb-accent-soft);
+                    color: var(--wb-accent);
+                    border-color: var(--wb-accent);
+                  "
+                  onclick="setTheme('light')"
+                >
+                  明亮
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="setTheme('dark')">暗色</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group">
+            <div class="settings-group-title">搜索</div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">默认搜索引擎</div>
+                <div class="settings-row-desc">搜索结果的打开方式</div>
+              </div>
+              <select
+                style="
+                  height: 32px;
+                  padding: 0 8px;
+                  border: 1px solid var(--wb-line);
+                  border-radius: 6px;
+                  font-size: 12px;
+                  font-family: inherit;
+                  color: var(--wb-text);
+                  background: var(--wb-surface);
+                "
+              >
+                <option>Google</option>
+                <option>Bing</option>
+                <option>DuckDuckGo</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-group">
+            <div class="settings-group-title">卡片</div>
+            <p style="font-size: 12px; color: var(--wb-text-muted)">
+              在主网格中添加、移除和拖拽排序卡片。卡片过多时网格纵向滚动。
+            </p>
+          </div>
+          <div class="settings-group">
+            <div class="settings-group-title">关于</div>
+            <div style="font-size: 12px; color: var(--wb-text-muted); line-height: 1.5">
+              Tabora v0.1.0 — 插件优先的个人工作台<br />设计体系 V2 · Refined Sage
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">
+      <span class="toast-icon">✓</span><span id="toastMsg">已保存</span>
+    </div>
+
+    <script>
+      let todos = [
+        { text: "完成 V2 设计 Token 定稿", done: true },
+        { text: "更新 @tabora/theme 包", done: false },
+        { text: "迁移官方插件到新 UI", done: false },
+      ]
+      let links = [
+        { name: "GitHub", icon: "Gh" },
+        { name: "Notion", icon: "No" },
+        { name: "Linear", icon: "Li" },
+        { name: "Figma", icon: "Fg" },
+        { name: "YouTube", icon: "Yt" },
+      ]
+      let isDark = false
+
+      function e(s) {
+        const d = document.createElement("div")
+        d.textContent = s
+        return d.innerHTML
+      }
+
+      function renderTodos() {
+        const list = document.getElementById("todoList")
+        list.innerHTML =
+          todos
+            .map(
+              (t, i) => `
+    <div class="todo-item" style="animation:fadeIn 180ms ease;animation-delay:${i * 30}ms">
+      <div class="todo-check ${t.done ? "done" : ""}" onclick="toggleTodo(${i})" role="checkbox" aria-checked="${t.done}" tabindex="0"></div>
+      <span class="todo-text ${t.done ? "done" : ""}">${e(t.text)}</span>
+      <button class="todo-delete" onclick="deleteTodo(${i})" aria-label="删除">✕</button>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="text-align:center;padding:16px;font-size:12px;color:var(--wb-text-subtle)">全部完成！✨</div>'
+      }
+
+      function renderLinks() {
+        const grid = document.getElementById("linkGrid")
+        grid.innerHTML = links
+          .map(
+            (l, i) => `
+    <div class="link-item" tabindex="0" onclick="openLink('${l.name}')" style="animation:fadeIn 180ms ease;animation-delay:${i * 30}ms">
+      <div class="link-icon">${l.icon}</div><span class="link-label">${e(l.name)}</span>
+      <button class="link-delete" onclick="event.stopPropagation();deleteLink(${i})" aria-label="删除">✕</button>
+    </div>`,
+          )
+          .join("")
+        if (links.length < 6)
+          grid.innerHTML += `<div class="link-item link-item-add" onclick="addLink()" tabindex="0"><span style="font-size:18px">+</span><span class="link-label">添加</span></div>`
+      }
+
+      function renderPlugins() {
+        const cnt = document.querySelectorAll(".widget-card").length
+        document.getElementById("pluginStats").innerHTML = `
+    <div class="plugin-stat"><span>卡片</span><span class="plugin-stat-val accent">${cnt} 张活跃</span></div>
+    <div class="plugin-stat"><span>搜索提供方</span><span class="plugin-stat-val">3 个</span></div>
+    <div class="plugin-stat"><span>主题</span><span class="plugin-stat-val accent">${isDark ? "Sage 暗色" : "Sage 明亮"}</span></div>
+    <div class="plugin-stat"><span>背景</span><span class="plugin-stat-val">静态</span></div>`
+      }
+
+      function toggleTodo(i) {
+        todos[i].done = !todos[i].done
+        renderTodos()
+        toast(todos[i].done ? "任务已完成" : "已取消标记")
+      }
+      function deleteTodo(i) {
+        const t = todos[i].text
+        todos.splice(i, 1)
+        renderTodos()
+        toast("已删除：" + t)
+      }
+
+      function showTodoAdd() {
+        const btn = document.getElementById("todoAddBtn")
+        const form = document.createElement("div")
+        form.className = "todo-add-form"
+        form.innerHTML = `<input class="todo-add-input" placeholder="新任务..." autofocus /><button class="btn btn-subtle btn-sm" onclick="addTodo(this)">添加</button><button class="btn btn-ghost btn-sm" onclick="cancelTodoAdd(this)">取消</button>`
+        btn.replaceWith(form)
+        const inp = form.querySelector("input")
+        inp.focus()
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") addTodo(form)
+          if (e.key === "Escape") cancelTodoAdd(form)
+        })
+      }
+
+      function addTodo(el) {
+        const t = el.parentElement.querySelector("input").value.trim()
+        if (!t) return
+        todos.push({ text: t, done: false })
+        renderTodos()
+        const form = el.parentElement
+        const btn = document.createElement("button")
+        btn.className = "todo-add"
+        btn.id = "todoAddBtn"
+        btn.textContent = "+ 添加任务"
+        btn.onclick = showTodoAdd
+        form.replaceWith(btn)
+        toast("任务已添加")
+      }
+
+      function cancelTodoAdd(el) {
+        const form = el.parentElement
+        const btn = document.createElement("button")
+        btn.className = "todo-add"
+        btn.id = "todoAddBtn"
+        btn.textContent = "+ 添加任务"
+        btn.onclick = showTodoAdd
+        form.replaceWith(btn)
+      }
+
+      function deleteLink(i) {
+        const n = links[i].name
+        links.splice(i, 1)
+        renderLinks()
+        toast("已移除：" + n)
+      }
+      function addLink() {
+        if (links.length >= 6) return
+        const names = ["Gmail", "Twitter", "Spotify", "Slack", "Drive", "Calendar"]
+        const available = names.find((n) => !links.some((l) => l.name === n)) || "新链接"
+        links.push({ name: available, icon: available.substring(0, 2).toUpperCase() })
+        renderLinks()
+        toast("已添加：" + available)
+      }
+      function openLink(n) {
+        toast("正在打开 " + n + "...（需要 external-open 权限）")
+      }
+
+      let ntTimer
+      function onNotesInput() {
+        clearTimeout(ntTimer)
+        const f = document.getElementById("notesFooter")
+        f.classList.add("show")
+        ntTimer = setTimeout(() => f.classList.remove("show"), 2000)
+      }
+
+      let fcTimer
+      function onFocusInput() {
+        clearTimeout(fcTimer)
+        const s = document.getElementById("focusSaved")
+        s.classList.add("show")
+        fcTimer = setTimeout(() => s.classList.remove("show"), 2000)
+      }
+
+      function toggleTheme() {
+        isDark = !isDark
+        document.body.classList.toggle("dark", isDark)
+        renderPlugins()
+        toast("主题：" + (isDark ? "Sage 暗色" : "Sage 明亮"))
+      }
+      function setTheme(t) {
+        isDark = t === "dark"
+        document.body.classList.toggle("dark", isDark)
+        renderPlugins()
+        toast("主题已设置为 " + (isDark ? "Sage 暗色" : "Sage 明亮"))
+      }
+
+      function selectRail(btn) {
+        document.querySelectorAll(".rail-btn").forEach((b) => b.classList.remove("active"))
+        btn.classList.add("active")
+      }
+
+      function openAddWidget() {
+        document.getElementById("addWidgetOverlay").classList.add("open")
+        document.body.style.overflow = "hidden"
+      }
+      function closeAddWidget(e) {
+        if (e && e.target !== document.getElementById("addWidgetOverlay")) return
+        document.getElementById("addWidgetOverlay").classList.remove("open")
+        document.body.style.overflow = ""
+      }
+      function openSettings() {
+        document.getElementById("settingsOverlay").classList.add("open")
+        document.body.style.overflow = "hidden"
+      }
+      function closeSettings(e) {
+        if (e && e.target !== document.getElementById("settingsOverlay")) return
+        document.getElementById("settingsOverlay").classList.remove("open")
+        document.body.style.overflow = ""
+      }
+
+      function addNewWidget(type) {
+        const grid = document.getElementById("cardGrid")
+        if (document.getElementById("card-" + type)) {
+          toast("该卡片已存在")
+          closeAddWidget()
+          return
+        }
+        const card = document.createElement("div")
+        card.className = "widget-card"
+        card.id = "card-" + type
+        card.style.animation = "bounceIn 240ms cubic-bezier(0.05,0.7,0.1,1)"
+        const rm = `<button class="card-action" onclick="removeWidget('card-${type}')" title="移除卡片" aria-label="移除">✕</button>`
+        switch (type) {
+          case "focus":
+            card.classList.add("span-2")
+            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>今日重点</div><div>${rm}</div></div><div class="card-body"><input class="focus-input" placeholder="今天最重要的一件事是什么？" oninput="onFocusInput()" /></div>`
+            break
+          case "todo":
+            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待办</div><div>${rm}</div></div><div class="card-body"><div style="text-align:center;padding:16px;font-size:12px;color:var(--wb-text-subtle)">暂无任务</div><button class="todo-add" onclick="showTodoAdd()">+ 添加任务</button></div>`
+            break
+          case "notes":
+            card.classList.add("row-2")
+            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>便签</div><div>${rm}</div></div><div class="card-body" style="display:flex;flex-direction:column;flex:1"><textarea class="notes-area" placeholder="快速记录想法、灵感..." style="flex:1" oninput="onNotesInput()"></textarea></div>`
+            break
+          case "links":
+            card.classList.add("span-2")
+            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/></svg>快捷入口</div><div>${rm}</div></div><div class="card-body"><div class="link-grid"><div class="link-item link-item-add" onclick="addLink()" tabindex="0"><span style="font-size:18px">+</span><span class="link-label">添加</span></div></div></div>`
+            break
+          case "weather":
+            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg>天气</div><div>${rm}</div></div><div class="card-body"><div class="weather-display"><span class="weather-temp">22°C</span><span class="weather-desc">晴朗 · 北京</span></div></div>`
+            break
+        }
+        grid.appendChild(card)
+        closeAddWidget()
+        renderPlugins()
+        toast("已添加卡片：" + type)
+      }
+
+      function removeWidget(id) {
+        const card = document.getElementById(id)
+        if (!card) return
+        card.style.opacity = "0"
+        card.style.transform = "scale(0.95)"
+        card.style.transition = "all 180ms ease"
+        const name = card.querySelector(".card-title")?.textContent?.trim() || "卡片"
+        setTimeout(() => {
+          card.remove()
+          renderPlugins()
+        }, 180)
+        toast("已移除：" + name)
+      }
+
+      // Search
+      const si = document.getElementById("searchInput")
+      const ss = document.getElementById("searchSuggestions")
+      si.addEventListener("focus", () => {
+        if (si.value.trim()) ss.classList.add("open")
+      })
+      si.addEventListener("blur", () => setTimeout(() => ss.classList.remove("open"), 200))
+      si.addEventListener("input", () => {
+        ss.classList.toggle("open", si.value.trim().length > 0)
+        ss.querySelector("strong").textContent = si.value
+      })
+      si.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") si.blur()
+        if (e.key === "Enter" && ss.classList.contains("open")) {
+          const act = ss.querySelector(".suggestion:hover")
+          if (act) handleSuggestion(act.dataset.action)
+        }
+      })
+      document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+          e.preventDefault()
+          si.focus()
+        }
+        if (e.key === "Escape") {
+          closeAddWidget()
+          closeSettings()
+        }
+      })
+
+      function handleSuggestion(action) {
+        si.blur()
+        ss.classList.remove("open")
+        switch (action) {
+          case "card-add":
+            openAddWidget()
+            break
+          case "theme":
+            toggleTheme()
+            break
+          case "settings":
+            openSettings()
+            break
+          case "web":
+            toast("正在搜索：" + si.value)
+            break
+        }
+      }
+
+      let toastTimer
+      function toast(msg) {
+        document.getElementById("toastMsg").textContent = msg
+        const t = document.getElementById("toast")
+        t.classList.add("show")
+        clearTimeout(toastTimer)
+        toastTimer = setTimeout(() => t.classList.remove("show"), 2000)
+      }
+
+      renderTodos()
+      renderLinks()
+      renderPlugins()
+    </script>
+  </body>
+</html>

@@ -1,0 +1,5343 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora 基础组件规范 V2</title>
+    <style>
+      :root {
+        --cp-page: #f6f7f4;
+        --cp-surface: #ffffff;
+        --cp-surface-soft: #fafaf8;
+        --cp-surface-hover: #f2f4f0;
+        --cp-text: #1c1e1c;
+        --cp-text-muted: #6b6e6a;
+        --cp-text-subtle: #949792;
+        --cp-line: #e6e8e3;
+        --cp-line-strong: #d1d4ce;
+        --cp-accent: #1a9070;
+        --cp-accent-hover: #15785c;
+        --cp-accent-soft: #eaf5f0;
+        --cp-danger: #c94545;
+        --cp-danger-soft: #fef0f0;
+        --cp-success: #2d8a5e;
+        --cp-warning: #a66a12;
+        --cp-info: #3d7ba8;
+        --cp-radius-control: 8px;
+        --cp-radius-card: 8px;
+        --cp-radius-panel: 12px;
+        --cp-radius-pill: 999px;
+        --cp-shadow-floating: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
+        --cp-space-2: 4px;
+        --cp-space-3: 8px;
+        --cp-space-4: 12px;
+        --cp-space-5: 16px;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        color: var(--cp-text);
+        background: var(--cp-page);
+        -webkit-font-smoothing: antialiased;
+      }
+      .dark {
+        --cp-page: #191c1a;
+        --cp-surface: #252927;
+        --cp-surface-soft: #2a2e2c;
+        --cp-surface-hover: #323734;
+        --cp-text: #edf0ed;
+        --cp-text-muted: #b6bab6;
+        --cp-text-subtle: #868b86;
+        --cp-line: #3b403c;
+        --cp-line-strong: #535954;
+        --cp-accent: #34d19e;
+        --cp-accent-hover: #5ce0b6;
+        --cp-accent-soft: #1a2e26;
+        --cp-danger: #ef8b8b;
+        --cp-danger-soft: #2a1e1e;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        min-height: 100vh;
+        transition: background 0.3s ease;
+      }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 20px;
+        background: var(--cp-surface);
+        border-right: 1px solid var(--cp-line);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .sidebar-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--cp-text);
+      }
+      .sidebar-title span {
+        color: var(--cp-accent);
+      }
+      .sidebar-section {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--cp-text-subtle);
+        padding: 10px 0 3px;
+      }
+      .sidebar-link {
+        display: block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        color: var(--cp-text-muted);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.12s ease;
+      }
+      .sidebar-link:hover {
+        background: var(--cp-surface-hover);
+        color: var(--cp-text);
+      }
+      .sidebar-link.active {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        font-weight: 650;
+      }
+      .sidebar-btn {
+        height: 30px;
+        padding: 0 12px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-pill);
+        background: var(--cp-surface-soft);
+        color: var(--cp-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s ease;
+        margin-top: auto;
+        min-height: 30px;
+      }
+      .sidebar-btn:hover {
+        background: var(--cp-surface-hover);
+        border-color: var(--cp-line-strong);
+      }
+      .main {
+        padding: 32px;
+        max-width: 1100px;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+      }
+      .comp-spec {
+        scroll-margin-top: 20px;
+      }
+      .comp-header {
+        margin-bottom: 16px;
+      }
+      .comp-header h2 {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 4px;
+      }
+      .comp-header p {
+        font-size: 13px;
+        color: var(--cp-text-muted);
+        max-width: 640px;
+        line-height: 1.5;
+      }
+      .comp-meta {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .comp-meta-tag {
+        font-size: 10px;
+        color: var(--cp-text-subtle);
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        padding: 2px 8px;
+        border-radius: var(--cp-radius-pill);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .anatomy-box {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-card);
+        padding: var(--cp-space-4);
+        margin-bottom: 14px;
+      }
+      .anatomy-box h4 {
+        font-size: 12px;
+        font-weight: 650;
+        margin-bottom: 6px;
+      }
+      .anatomy-box ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .anatomy-box li {
+        font-size: 11px;
+        color: var(--cp-text-muted);
+        padding: 3px 0;
+      }
+      .anatomy-box li code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        background: var(--cp-accent-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: var(--cp-accent);
+      }
+      .demo-section {
+        margin-bottom: 14px;
+      }
+      .demo-section h4 {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--cp-text-subtle);
+        margin-bottom: 10px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid var(--cp-line);
+      }
+      .demo-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--cp-space-3);
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .demo-col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .spec-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+        border: 1px solid var(--cp-line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--cp-surface);
+        margin-bottom: 8px;
+      }
+      .spec-table thead {
+        background: var(--cp-surface-soft);
+      }
+      .spec-table th {
+        padding: 7px 10px;
+        text-align: left;
+        font-weight: 650;
+        border-bottom: 1px solid var(--cp-line);
+      }
+      .spec-table td {
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--cp-line);
+        color: var(--cp-text);
+      }
+      .spec-table tr:last-child td {
+        border-bottom: none;
+      }
+      .do-dont {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .do,
+      .dont {
+        padding: 10px 12px;
+        border-radius: var(--cp-radius-card);
+        border: 1px solid var(--cp-line);
+        background: var(--cp-surface-soft);
+      }
+      .do h5 {
+        color: var(--cp-success);
+        font-size: 11px;
+        margin-bottom: 3px;
+      }
+      .dont h5 {
+        color: var(--cp-danger);
+        font-size: 11px;
+        margin-bottom: 3px;
+      }
+      .do p,
+      .dont p {
+        font-size: 11px;
+        color: var(--cp-text-muted);
+        line-height: 1.4;
+      }
+      .divider {
+        border: none;
+        border-top: 1px solid var(--cp-line);
+        margin: 0;
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--cp-text-subtle);
+        margin-top: 4px;
+      }
+
+      /* ---- BUTTON ---- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid transparent;
+        border-radius: var(--cp-radius-control);
+        font-family: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 120ms ease;
+        white-space: nowrap;
+        user-select: none;
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--cp-accent);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(26, 144, 112, 0.18);
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .btn-sm {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 12px;
+        border-radius: 6px;
+      }
+      .btn-md {
+        height: 36px;
+        padding: 0 14px;
+        font-size: 13px;
+      }
+      .btn-lg {
+        height: 44px;
+        padding: 0 18px;
+        font-size: 14px;
+      }
+      .btn-primary {
+        background: var(--cp-accent);
+        color: #fff;
+        border-color: var(--cp-accent);
+      }
+      .btn-primary:hover {
+        background: var(--cp-accent-hover);
+        border-color: var(--cp-accent-hover);
+      }
+      .btn-primary:active {
+        transform: scale(0.98);
+      }
+      .btn-secondary {
+        background: var(--cp-surface);
+        color: var(--cp-text);
+        border-color: var(--cp-line);
+      }
+      .btn-secondary:hover {
+        background: var(--cp-surface-hover);
+        border-color: var(--cp-line-strong);
+      }
+      .btn-subtle {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        border-color: transparent;
+      }
+      .btn-subtle:hover {
+        background: #d8f0e8;
+        color: var(--cp-accent-hover);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--cp-text-muted);
+        border-color: transparent;
+      }
+      .btn-ghost:hover {
+        background: var(--cp-surface-hover);
+        color: var(--cp-text);
+      }
+      .btn-danger {
+        background: var(--cp-danger);
+        color: #fff;
+        border-color: var(--cp-danger);
+      }
+      .btn-danger:hover {
+        background: #b33a3a;
+        border-color: #b33a3a;
+      }
+      .btn-danger-subtle {
+        background: var(--cp-danger-soft);
+        color: var(--cp-danger);
+        border-color: transparent;
+      }
+      .btn-danger-subtle:hover {
+        background: #fce8e8;
+      }
+      .btn-full {
+        width: 100%;
+        justify-content: center;
+      }
+      .btn-group {
+        display: inline-flex;
+      }
+      .btn-group .btn {
+        border-radius: 0;
+        margin-left: -1px;
+      }
+      .btn-group .btn:first-child {
+        border-radius: var(--cp-radius-control) 0 0 var(--cp-radius-control);
+      }
+      .btn-group .btn:last-child {
+        border-radius: 0 var(--cp-radius-control) var(--cp-radius-control) 0;
+      }
+
+      /* ---- ICON BUTTON ---- */
+      .icbtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid transparent;
+        border-radius: var(--cp-radius-control);
+        background: transparent;
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        transition: all 120ms ease;
+      }
+      .icbtn:hover {
+        background: var(--cp-surface-hover);
+        color: var(--cp-text);
+      }
+      .icbtn:focus-visible {
+        outline: 2px solid var(--cp-accent);
+        outline-offset: 2px;
+      }
+      .icbtn-sm {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+      }
+      .icbtn-lg {
+        width: 38px;
+        height: 38px;
+      }
+
+      /* ---- INPUT ---- */
+      .inp-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
+      .inp {
+        height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--cp-text);
+        width: 200px;
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease;
+      }
+      .inp::placeholder {
+        color: var(--cp-text-subtle);
+      }
+      .inp:focus {
+        outline: none;
+        border-color: var(--cp-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
+      }
+      .inp:disabled {
+        opacity: 0.5;
+        background: var(--cp-surface-soft);
+        cursor: not-allowed;
+      }
+      .inp.invalid {
+        border-color: var(--cp-danger);
+      }
+      .inp-sm {
+        height: 28px;
+        font-size: 12px;
+        padding: 0 10px;
+        border-radius: 6px;
+      }
+      .inp-leading {
+        padding-left: 34px;
+      }
+      .inp-trailing {
+        padding-right: 34px;
+      }
+      .inp-leading-icon,
+      .inp-trailing-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--cp-text-muted);
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+      }
+      .inp-leading-icon {
+        left: 10px;
+      }
+      .inp-trailing-icon {
+        right: 10px;
+      }
+      .inp-clear {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: var(--cp-text-muted);
+        font-size: 12px;
+        padding: 2px 4px;
+        border-radius: 3px;
+        display: none;
+      }
+      .inp-wrap:focus-within .inp-clear.has-value,
+      .inp-wrap:hover .inp-clear.has-value {
+        display: flex;
+      }
+      .inp-clear:hover {
+        background: var(--cp-surface-hover);
+        color: var(--cp-text);
+      }
+
+      /* ---- TEXTAREA ---- */
+      .txta-wrap {
+        position: relative;
+        display: inline-block;
+      }
+      .txta {
+        padding: 10px 12px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--cp-text);
+        width: 240px;
+        min-height: 60px;
+        resize: vertical;
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease;
+        line-height: 1.5;
+      }
+      .txta:focus {
+        outline: none;
+        border-color: var(--cp-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
+      }
+      .txta:disabled {
+        opacity: 0.5;
+        background: var(--cp-surface-soft);
+        cursor: not-allowed;
+      }
+      .txta-count {
+        position: absolute;
+        bottom: 6px;
+        right: 10px;
+        font-size: 10px;
+        color: var(--cp-text-subtle);
+      }
+      .txta-count.over {
+        color: var(--cp-danger);
+      }
+
+      /* ---- SELECT ---- */
+      .sel-demo {
+        position: relative;
+        display: inline-block;
+      }
+      .sel-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+        color: var(--cp-text);
+        min-width: 180px;
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease;
+        white-space: nowrap;
+      }
+      .sel-btn:hover {
+        border-color: var(--cp-line-strong);
+      }
+      .sel-btn:focus-visible {
+        outline: none;
+        border-color: var(--cp-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
+      }
+      .sel-placeholder {
+        color: var(--cp-text-subtle);
+        flex: 1;
+        text-align: left;
+      }
+      .sel-value {
+        flex: 1;
+        text-align: left;
+        font-weight: 500;
+      }
+      .sel-arrow {
+        color: var(--cp-text-muted);
+        font-size: 10px;
+        transition: transform 180ms ease;
+      }
+      .sel-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        box-shadow: var(--cp-shadow-floating);
+        z-index: 10;
+        overflow: hidden;
+        max-height: 260px;
+        overflow-y: auto;
+      }
+      .sel-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 120ms ease;
+        color: var(--cp-text);
+      }
+      .sel-option:hover {
+        background: var(--cp-surface-hover);
+      }
+      .sel-option.selected {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        font-weight: 600;
+      }
+      .sel-check {
+        width: 14px;
+        height: 14px;
+        color: var(--cp-accent);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+      }
+      .sel-option.selected .sel-check {
+        display: flex;
+      }
+      .sel-group-label {
+        padding: 6px 12px 2px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--cp-text-subtle);
+      }
+      .sel-tags {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        flex: 1;
+      }
+      .sel-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 4px;
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .sel-tag-remove {
+        cursor: pointer;
+        font-size: 10px;
+        opacity: 0.6;
+      }
+      .sel-tag-remove:hover {
+        opacity: 1;
+      }
+      .sel-search-input {
+        width: 100%;
+        height: 32px;
+        padding: 0 10px;
+        border: none;
+        border-bottom: 1px solid var(--cp-line);
+        outline: none;
+        font-size: 12px;
+        font-family: inherit;
+        background: transparent;
+        color: var(--cp-text);
+      }
+      .sel-empty {
+        padding: 16px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--cp-text-subtle);
+      }
+
+      /* ---- COMBOBOX ---- */
+      .combo-wrap {
+        position: relative;
+        display: inline-block;
+      }
+      .combo-input {
+        height: 36px;
+        padding: 0 36px 0 12px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--cp-text);
+        width: 260px;
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease;
+      }
+      .combo-input::placeholder {
+        color: var(--cp-text-subtle);
+      }
+      .combo-input:focus {
+        outline: none;
+        border-color: var(--cp-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
+      }
+      .combo-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--cp-text-muted);
+        pointer-events: none;
+        font-size: 10px;
+      }
+      .combo-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        box-shadow: var(--cp-shadow-floating);
+        z-index: 10;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .combo-option {
+        padding: 8px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 120ms ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .combo-option:hover,
+      .combo-option.active {
+        background: var(--cp-surface-hover);
+      }
+      .combo-option .highlight {
+        color: var(--cp-accent);
+        font-weight: 600;
+      }
+      .combo-empty {
+        padding: 16px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--cp-text-subtle);
+      }
+
+      /* ---- CHECKBOX / SWITCH / RADIO ---- */
+      .chk-wrap,
+      .sw-wrap,
+      .radio-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        user-select: none;
+        position: relative;
+      }
+      .chk {
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid var(--cp-line-strong);
+        border-radius: 4px;
+        flex-shrink: 0;
+        transition: all 120ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .chk-wrap:hover .chk {
+        border-color: var(--cp-accent);
+      }
+      .chk-wrap input,
+      .sw-wrap input,
+      .radio-wrap input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .chk-wrap input:checked + .chk {
+        background: var(--cp-accent);
+        border-color: var(--cp-accent);
+      }
+      .chk-wrap input:checked + .chk::after {
+        content: "";
+        width: 4px;
+        height: 8px;
+        border: solid #fff;
+        border-width: 0 1.5px 1.5px 0;
+        transform: rotate(45deg) translateY(-0.5px);
+      }
+      .chk-wrap.disabled,
+      .sw-wrap.disabled,
+      .radio-wrap.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .sw-track {
+        width: 36px;
+        height: 20px;
+        background: var(--cp-line-strong);
+        border-radius: 999px;
+        position: relative;
+        transition: background 180ms ease;
+        flex-shrink: 0;
+      }
+      .sw-thumb {
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition: left 180ms ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      .sw-wrap input:checked + .sw-track {
+        background: var(--cp-accent);
+      }
+      .sw-wrap input:checked + .sw-track .sw-thumb {
+        left: 18px;
+      }
+      .radio-circle {
+        width: 18px;
+        height: 18px;
+        border: 1.5px solid var(--cp-line-strong);
+        border-radius: 50%;
+        flex-shrink: 0;
+        transition: all 120ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .radio-wrap:hover .radio-circle {
+        border-color: var(--cp-accent);
+      }
+      .radio-wrap input:checked + .radio-circle {
+        border-color: var(--cp-accent);
+      }
+      .radio-wrap input:checked + .radio-circle::after {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--cp-accent);
+      }
+      .radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .radio-group-row {
+        display: flex;
+        gap: 16px;
+      }
+
+      /* ---- SEGMENTED / TOGGLE GROUP ---- */
+      .seg {
+        display: inline-flex;
+        background: var(--cp-surface-soft);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        padding: 2px;
+        gap: 0;
+      }
+      .seg-btn {
+        height: 30px;
+        padding: 0 12px;
+        border: none;
+        background: transparent;
+        font-size: 12px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--cp-text-muted);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 120ms ease;
+        white-space: nowrap;
+      }
+      .seg-btn:hover {
+        color: var(--cp-text);
+      }
+      .seg-btn.active {
+        background: var(--cp-surface);
+        color: var(--cp-text);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+      .tgl-group {
+        display: inline-flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .tgl-btn {
+        height: 30px;
+        padding: 0 12px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+        font-size: 12px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        transition: all 120ms ease;
+        white-space: nowrap;
+      }
+      .tgl-btn:hover {
+        border-color: var(--cp-line-strong);
+        color: var(--cp-text);
+      }
+      .tgl-btn.active {
+        background: var(--cp-accent-soft);
+        border-color: var(--cp-accent);
+        color: var(--cp-accent);
+      }
+
+      /* ---- TABS ---- */
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid var(--cp-line);
+        gap: 0;
+      }
+      .tab {
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-family: inherit;
+        position: relative;
+        transition: color 120ms ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .tab:hover {
+        color: var(--cp-text);
+      }
+      .tab.active {
+        color: var(--cp-accent);
+        font-weight: 650;
+      }
+      .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--cp-accent);
+        border-radius: 1px 1px 0 0;
+      }
+      .tab.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .tab-icon {
+        width: 15px;
+        height: 15px;
+      }
+      .tab-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: var(--cp-surface-soft);
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--cp-text-muted);
+      }
+      .tab.active .tab-badge {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+      }
+
+      /* ---- DROPDOWN MENU / CONTEXT ---- */
+      .menu-dropdown {
+        position: relative;
+        min-width: 180px;
+        max-width: 260px;
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        box-shadow: var(--cp-shadow-floating);
+        overflow: hidden;
+      }
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 120ms ease;
+        color: var(--cp-text);
+      }
+      .menu-item:hover {
+        background: var(--cp-surface-hover);
+      }
+      .menu-item.danger {
+        color: var(--cp-danger);
+      }
+      .menu-item.danger:hover {
+        background: var(--cp-danger-soft);
+      }
+      .menu-item kbd {
+        margin-left: auto;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        color: var(--cp-text-subtle);
+      }
+      .menu-separator {
+        height: 1px;
+        background: var(--cp-line);
+        margin: 3px 0;
+      }
+      .menu-icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cp-text-muted);
+      }
+
+      /* ---- DIALOG ---- */
+      .dialog-dim {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-panel);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        opacity: 0.85;
+      }
+      .dialog-dim.sm {
+        width: 320px;
+      }
+      .dialog-dim.md {
+        width: 420px;
+      }
+      .dialog-dim.lg {
+        width: 560px;
+      }
+      .dialog-header {
+        font-size: 15px;
+        font-weight: 650;
+      }
+      .dialog-body {
+        font-size: 13px;
+        color: var(--cp-text-muted);
+        line-height: 1.5;
+      }
+      .dialog-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .dialog-destructive .dialog-header {
+        color: var(--cp-danger);
+      }
+
+      /* ---- POPOVER ---- */
+      .popover-demo {
+        position: relative;
+        display: inline-block;
+      }
+      .popover {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-panel);
+        box-shadow: var(--cp-shadow-floating);
+        padding: var(--cp-space-5);
+        min-width: 220px;
+      }
+      .popover-title {
+        font-size: 13px;
+        font-weight: 650;
+        margin-bottom: 8px;
+      }
+      .popover-body {
+        font-size: 12px;
+        color: var(--cp-text-muted);
+        line-height: 1.5;
+      }
+
+      /* ---- TOAST ---- */
+      .toast-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .toast-demo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        box-shadow: var(--cp-shadow-floating);
+        font-size: 13px;
+      }
+      .toast-icon {
+        font-weight: 700;
+      }
+      .toast-icon.success {
+        color: var(--cp-success);
+      }
+      .toast-icon.error {
+        color: var(--cp-danger);
+      }
+      .toast-icon.warning {
+        color: var(--cp-warning);
+      }
+      .toast-action {
+        font-weight: 650;
+        color: var(--cp-accent);
+        cursor: pointer;
+        margin-left: auto;
+        font-size: 12px;
+      }
+
+      /* ---- CHIP ---- */
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 26px;
+        padding: 0 10px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-pill);
+        background: var(--cp-surface-soft);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--cp-text-muted);
+        transition: all 120ms ease;
+      }
+      .chip:hover {
+        background: var(--cp-surface-hover);
+        border-color: var(--cp-line-strong);
+      }
+      .chip.active {
+        background: var(--cp-accent-soft);
+        border-color: var(--cp-accent);
+        color: var(--cp-accent);
+      }
+      .chip-remove {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 10px;
+        color: var(--cp-text-subtle);
+        transition: all 120ms ease;
+      }
+      .chip-remove:hover {
+        background: var(--cp-danger-soft);
+        color: var(--cp-danger);
+      }
+      .chip-icon {
+        width: 14px;
+        height: 14px;
+        display: flex;
+        align-items: center;
+      }
+      .chip-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--cp-accent);
+      }
+
+      /* ---- ACCORDION ---- */
+      .accordion {
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-card);
+        overflow: hidden;
+        background: var(--cp-surface);
+        width: 360px;
+      }
+      .acc-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 12px 14px;
+        border: none;
+        border-bottom: 1px solid var(--cp-line);
+        background: none;
+        font-size: 13px;
+        font-weight: 650;
+        font-family: inherit;
+        color: var(--cp-text);
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+      .acc-trigger:last-child {
+        border-bottom: none;
+      }
+      .acc-trigger:hover {
+        background: var(--cp-surface-hover);
+      }
+      .acc-arrow {
+        transition: transform 180ms ease;
+        font-size: 10px;
+        color: var(--cp-text-muted);
+      }
+      .acc-content {
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--cp-text-muted);
+        line-height: 1.5;
+        border-bottom: 1px solid var(--cp-line);
+      }
+      .acc-content:last-child {
+        border-bottom: none;
+      }
+
+      /* ---- SLIDER ---- */
+      .slider-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 240px;
+      }
+      .slider {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        background: var(--cp-surface-soft);
+        border-radius: 999px;
+        outline: none;
+      }
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--cp-accent);
+        cursor: pointer;
+        border: 2px solid var(--cp-surface);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      }
+      .slider-value {
+        font-size: 12px;
+        font-weight: 650;
+        color: var(--cp-text);
+        min-width: 28px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---- PAGINATION ---- */
+      .pagination {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .page-btn {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        border: 1px solid var(--cp-line);
+        border-radius: 6px;
+        background: var(--cp-surface);
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        transition: all 120ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .page-btn:hover {
+        background: var(--cp-surface-hover);
+        color: var(--cp-text);
+        border-color: var(--cp-line-strong);
+      }
+      .page-btn.active {
+        background: var(--cp-accent-soft);
+        border-color: var(--cp-accent);
+        color: var(--cp-accent);
+        font-weight: 650;
+      }
+      .page-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .page-ellipsis {
+        min-width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        color: var(--cp-text-subtle);
+      }
+
+      /* ---- TABLE ---- */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        border: 1px solid var(--cp-line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--cp-surface);
+      }
+      .data-table thead {
+        background: var(--cp-surface-soft);
+      }
+      .data-table th {
+        padding: 8px 14px;
+        text-align: left;
+        font-weight: 650;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--cp-text-muted);
+        border-bottom: 1px solid var(--cp-line);
+        cursor: pointer;
+        white-space: nowrap;
+        user-select: none;
+      }
+      .data-table th:hover {
+        color: var(--cp-text);
+      }
+      .data-table th .sort-icon {
+        margin-left: 4px;
+        font-size: 9px;
+        color: var(--cp-text-subtle);
+      }
+      .data-table th.sorted .sort-icon {
+        color: var(--cp-accent);
+      }
+      .data-table td {
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--cp-line);
+        color: var(--cp-text);
+      }
+      .data-table tr:last-child td {
+        border-bottom: none;
+      }
+      .data-table tr:hover td {
+        background: var(--cp-surface-hover);
+      }
+      .data-table tr.selected td {
+        background: var(--cp-accent-soft);
+      }
+
+      /* ---- BADGE / AVATAR / SPINNER / SKELETON / PROGRESS ---- */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: var(--cp-radius-pill);
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .badge-default {
+        background: var(--cp-surface-soft);
+        color: var(--cp-text-muted);
+        border: 1px solid var(--cp-line);
+      }
+      .badge-success {
+        background: rgba(45, 138, 94, 0.1);
+        color: var(--cp-success);
+      }
+      .badge-warning {
+        background: rgba(166, 106, 18, 0.1);
+        color: var(--cp-warning);
+      }
+      .badge-danger {
+        background: rgba(201, 69, 69, 0.1);
+        color: var(--cp-danger);
+      }
+      .badge-accent {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+      }
+      .badge-dot {
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        border-radius: 50%;
+      }
+      .badge-counter {
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        justify-content: center;
+        font-size: 10px;
+      }
+      .avatar {
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--cp-surface-soft);
+        color: var(--cp-text-muted);
+        font-weight: 650;
+        border: 1px solid var(--cp-line);
+      }
+      .avatar-sm {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+      }
+      .avatar-md {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+      }
+      .avatar-lg {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+      }
+      .avatar-xl {
+        width: 56px;
+        height: 56px;
+        font-size: 18px;
+      }
+      .avatar-group {
+        display: flex;
+      }
+      .avatar-group .avatar {
+        margin-left: -6px;
+      }
+      .avatar-group .avatar:first-child {
+        margin-left: 0;
+      }
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--cp-line);
+        border-top-color: var(--cp-accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        display: inline-block;
+      }
+      .spinner-sm {
+        width: 14px;
+        height: 14px;
+        border-width: 1.5px;
+      }
+      .spinner-lg {
+        width: 28px;
+        height: 28px;
+        border-width: 2.5px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--cp-text-muted);
+      }
+      .skeleton {
+        background: var(--cp-surface-hover);
+        border-radius: 4px;
+        animation: skPulse 1.5s ease-in-out infinite;
+      }
+      @keyframes skPulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      .skeleton-text {
+        height: 12px;
+        margin-bottom: 8px;
+      }
+      .skeleton-text:last-child {
+        width: 60%;
+      }
+      .skeleton-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+      }
+      .skeleton-card {
+        padding: 14px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-card);
+      }
+      .skeleton-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .progress-track {
+        width: 180px;
+        height: 6px;
+        background: var(--cp-surface-soft);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--cp-accent);
+        border-radius: 999px;
+        transition: width 300ms ease;
+      }
+      .progress-label {
+        font-size: 11px;
+        color: var(--cp-text-muted);
+        margin-top: 4px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .progress-sm {
+        height: 4px;
+      }
+      .progress-lg {
+        height: 8px;
+      }
+      .progress-circle {
+        position: relative;
+        width: 48px;
+        height: 48px;
+      }
+      .progress-circle svg {
+        transform: rotate(-90deg);
+      }
+      .progress-circle-bg {
+        fill: none;
+        stroke: var(--cp-surface-soft);
+        stroke-width: 4;
+      }
+      .progress-circle-fill {
+        fill: none;
+        stroke: var(--cp-accent);
+        stroke-width: 4;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 300ms ease;
+      }
+      .progress-circle-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .progress-indeterminate .progress-fill {
+        width: 40%;
+        animation: progInd 1.5s ease-in-out infinite;
+      }
+      @keyframes progInd {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(350%);
+        }
+      }
+
+      /* ---- LIST ROW / CARD SECTION / EMPTY / FIELD / ERROR ---- */
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .field-label {
+        font-size: 12px;
+        font-weight: 650;
+        color: var(--cp-text);
+      }
+      .field-desc {
+        font-size: 11px;
+        color: var(--cp-text-muted);
+        line-height: 1.4;
+      }
+      .field-error {
+        font-size: 11px;
+        color: var(--cp-danger);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .inline-error {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border: 1px solid rgba(201, 69, 69, 0.25);
+        border-radius: var(--cp-radius-control);
+        background: rgba(201, 69, 69, 0.05);
+        font-size: 12px;
+        color: var(--cp-danger);
+      }
+      .listrow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: var(--cp-radius-control);
+        font-size: 13px;
+        transition: background 120ms ease;
+        min-height: 36px;
+      }
+      .listrow:hover {
+        background: var(--cp-surface-hover);
+      }
+      .listrow-label {
+        flex: 1;
+        min-width: 0;
+      }
+      .listrow-sublabel {
+        font-size: 11px;
+        color: var(--cp-text-subtle);
+        margin-top: 1px;
+      }
+      .listrow-leading,
+      .listrow-trailing {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .listrow-drag {
+        cursor: grab;
+        color: var(--cp-text-subtle);
+        font-size: 12px;
+        padding: 4px;
+      }
+      .listrow-drag:active {
+        cursor: grabbing;
+      }
+      .card-section {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-card);
+        overflow: hidden;
+      }
+      .card-section-title {
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 650;
+        border-bottom: 1px solid var(--cp-line);
+      }
+      .card-section-body {
+        padding: 14px;
+      }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 32px 16px;
+        text-align: center;
+      }
+      .empty-state p {
+        font-size: 13px;
+        color: var(--cp-text-muted);
+        max-width: 240px;
+        line-height: 1.5;
+      }
+      .empty-state-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: var(--cp-surface-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+      .empty-state.compact {
+        padding: 16px;
+        gap: 4px;
+      }
+      .empty-state.compact p {
+        font-size: 12px;
+      }
+      .tt-wrap {
+        position: relative;
+        display: inline-block;
+      }
+      .tt {
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--cp-text);
+        color: var(--cp-page);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 120ms ease;
+        pointer-events: none;
+      }
+      .tt::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 4px solid transparent;
+        border-top-color: var(--cp-text);
+      }
+      .tt-wrap:hover .tt {
+        opacity: 1;
+      }
+      .kbd-inline {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        background: var(--cp-surface-soft);
+        border: 1px solid var(--cp-line);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: var(--cp-text-muted);
+      }
+
+      /* ---- DRAWER ---- */
+      .drawer-demo {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-panel);
+        overflow: hidden;
+        width: 380px;
+      }
+      .drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border-bottom: 1px solid var(--cp-line);
+      }
+      .drawer-header h4 {
+        font-size: 15px;
+        font-weight: 650;
+      }
+      .drawer-body {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .drawer-footer {
+        padding: 12px 16px;
+        border-top: 1px solid var(--cp-line);
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      /* ---- HOVERCARD ---- */
+      .hovercard-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 8px;
+        border-radius: var(--cp-radius-control);
+        cursor: default;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--cp-accent);
+        background: var(--cp-accent-soft);
+      }
+      .hovercard {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-panel);
+        box-shadow: var(--cp-shadow-floating);
+        padding: 14px;
+        width: 280px;
+      }
+      .hovercard-image {
+        width: 100%;
+        height: 100px;
+        background: var(--cp-surface-soft);
+        border-radius: 6px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+      }
+      .hovercard-title {
+        font-size: 13px;
+        font-weight: 650;
+        margin-bottom: 4px;
+      }
+      .hovercard-desc {
+        font-size: 11px;
+        color: var(--cp-text-muted);
+        line-height: 1.4;
+        margin-bottom: 8px;
+      }
+      .hovercard-meta {
+        font-size: 10px;
+        color: var(--cp-text-subtle);
+        display: flex;
+        gap: 12px;
+      }
+
+      /* ---- BANNER ---- */
+      .banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: var(--cp-radius-control);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .banner-icon {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        margin-top: 1px;
+      }
+      .banner-body {
+        flex: 1;
+      }
+      .banner-title {
+        font-weight: 650;
+        margin-bottom: 2px;
+      }
+      .banner-desc {
+        color: var(--cp-text-muted);
+        font-size: 12px;
+      }
+      .banner-action {
+        flex-shrink: 0;
+      }
+      .banner-info {
+        background: rgba(61, 123, 168, 0.08);
+        border: 1px solid rgba(61, 123, 168, 0.2);
+        color: var(--cp-info);
+      }
+      .banner-warning {
+        background: rgba(166, 106, 18, 0.08);
+        border: 1px solid rgba(166, 106, 18, 0.2);
+        color: var(--cp-warning);
+      }
+      .banner-success {
+        background: rgba(45, 138, 94, 0.08);
+        border: 1px solid rgba(45, 138, 94, 0.2);
+        color: var(--cp-success);
+      }
+      .banner-danger {
+        background: rgba(201, 69, 69, 0.08);
+        border: 1px solid rgba(201, 69, 69, 0.2);
+        color: var(--cp-danger);
+      }
+
+      /* ---- DIVIDER ---- */
+      .hr-divider {
+        border: none;
+        border-top: 1px solid var(--cp-line);
+        margin: 12px 0;
+      }
+      .v-divider {
+        width: 1px;
+        background: var(--cp-line);
+        align-self: stretch;
+        flex-shrink: 0;
+      }
+
+      /* ---- LINK ---- */
+      .link {
+        color: var(--cp-accent);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+        transition:
+          color 120ms ease,
+          text-decoration 120ms ease;
+      }
+      .link:hover {
+        color: var(--cp-accent-hover);
+        text-decoration: underline;
+      }
+      .link:focus-visible {
+        outline: 2px solid var(--cp-accent);
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+      .link-muted {
+        color: var(--cp-text-muted);
+      }
+      .link-muted:hover {
+        color: var(--cp-text);
+      }
+      .link-external::after {
+        content: " ↗";
+        font-size: 10px;
+      }
+
+      /* ---- SCROLLAREA ---- */
+      .scrollarea {
+        overflow-y: auto;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+      }
+      .scrollarea-content {
+        padding: 12px;
+      }
+      .scrollarea::-webkit-scrollbar {
+        width: 6px;
+      }
+      .scrollarea::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .scrollarea::-webkit-scrollbar-thumb {
+        background: var(--cp-line-strong);
+        border-radius: 999px;
+      }
+      .scrollarea::-webkit-scrollbar-thumb:hover {
+        background: var(--cp-text-subtle);
+      }
+
+      /* ---- TABS VERTICAL ---- */
+      .tabs-v {
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid var(--cp-line);
+      }
+      .tab-v {
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-family: inherit;
+        text-align: left;
+        transition: color 120ms ease;
+        position: relative;
+      }
+      .tab-v:hover {
+        color: var(--cp-text);
+      }
+      .tab-v.active {
+        color: var(--cp-accent);
+        font-weight: 650;
+      }
+      .tab-v.active::before {
+        content: "";
+        position: absolute;
+        left: -1px;
+        top: 4px;
+        bottom: 4px;
+        width: 2px;
+        background: var(--cp-accent);
+        border-radius: 0 1px 1px 0;
+      }
+
+      /* ---- LAYOUT DENSITY ---- */
+      .listrow-dense {
+        padding: 4px 12px;
+        min-height: 28px;
+        font-size: 12px;
+        gap: 6px;
+      }
+      .listrow-relaxed {
+        padding: 12px 16px;
+        min-height: 48px;
+      }
+
+      /* ---- INPUT ADORN ---- */
+      .inp-adorn {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease;
+      }
+      .inp-adorn:focus-within {
+        border-color: var(--cp-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
+      }
+      .inp-adorn .inp-core {
+        border: none;
+        box-shadow: none;
+        width: auto;
+        flex: 1;
+        min-width: 0;
+      }
+      .inp-adorn .inp-core:focus {
+        box-shadow: none;
+      }
+      .inp-prefix,
+      .inp-suffix {
+        padding: 0 10px;
+        font-size: 12px;
+        color: var(--cp-text-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+        user-select: none;
+      }
+
+      /* ---- DROPDOWN CHECKED / DISABLED ---- */
+      .menu-item.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .menu-item .menu-check {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cp-accent);
+        font-size: 10px;
+      }
+
+      /* ---- COMMAND PALETTE ---- */
+      .cmd-dialog {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-panel);
+        box-shadow: var(--cp-shadow-floating);
+        overflow: hidden;
+        width: 520px;
+      }
+      .cmd-input {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--cp-line);
+      }
+      .cmd-input input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--cp-text);
+        background: transparent;
+      }
+      .cmd-input input::placeholder {
+        color: var(--cp-text-subtle);
+      }
+      .cmd-group-label {
+        padding: 8px 14px 2px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--cp-text-subtle);
+      }
+      .cmd-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+      .cmd-item:hover,
+      .cmd-item.active {
+        background: var(--cp-surface-hover);
+      }
+      .cmd-item-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: var(--cp-surface-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .cmd-item-text {
+        flex: 1;
+      }
+      .cmd-item-desc {
+        font-size: 11px;
+        color: var(--cp-text-muted);
+      }
+      .cmd-item kbd {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        color: var(--cp-text-subtle);
+      }
+
+      /* ---- BREADCRUMB ---- */
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+      }
+      .breadcrumb-item {
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 4px;
+        transition: all 120ms ease;
+      }
+      .breadcrumb-item:hover {
+        color: var(--cp-text);
+        background: var(--cp-surface-hover);
+      }
+      .breadcrumb-item.current {
+        color: var(--cp-text);
+        font-weight: 650;
+        cursor: default;
+      }
+      .breadcrumb-item.current:hover {
+        background: transparent;
+      }
+      .breadcrumb-sep {
+        color: var(--cp-text-subtle);
+        font-size: 10px;
+        user-select: none;
+      }
+
+      /* ---- TREE VIEW ---- */
+      .tree {
+        display: flex;
+        flex-direction: column;
+      }
+      .tree-item {
+        user-select: none;
+      }
+      .tree-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 120ms ease;
+        color: var(--cp-text);
+      }
+      .tree-row:hover {
+        background: var(--cp-surface-hover);
+      }
+      .tree-row.selected {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+      }
+      .tree-toggle {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        color: var(--cp-text-muted);
+        transition: transform 180ms ease;
+        flex-shrink: 0;
+      }
+      .tree-toggle.open {
+        transform: rotate(90deg);
+      }
+      .tree-toggle.empty {
+        visibility: hidden;
+      }
+      .tree-children {
+        margin-left: 20px;
+        overflow: hidden;
+        transition: max-height 240ms ease;
+      }
+      .tree-children.collapsed {
+        max-height: 0 !important;
+      }
+      .tree-icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cp-text-muted);
+        flex-shrink: 0;
+      }
+
+      /* ---- COPY BUTTON ---- */
+      .copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--cp-line);
+        border-radius: 6px;
+        background: var(--cp-surface);
+        font-size: 11px;
+        font-family: inherit;
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        transition: all 120ms ease;
+      }
+      .copy-btn:hover {
+        background: var(--cp-surface-hover);
+        border-color: var(--cp-line-strong);
+        color: var(--cp-text);
+      }
+      .copy-btn.copied {
+        background: var(--cp-accent-soft);
+        border-color: var(--cp-accent);
+        color: var(--cp-accent);
+      }
+
+      /* ---- TRUNCATE ---- */
+      .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .truncate-multiline {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .truncate-2 {
+        -webkit-line-clamp: 2;
+      }
+      .truncate-3 {
+        -webkit-line-clamp: 3;
+      }
+
+      /* ---- MENUBAR ---- */
+      .menubar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        padding: 2px;
+      }
+      .menubar-item {
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--cp-text-muted);
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 120ms ease;
+        border: none;
+        background: none;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .menubar-item:hover {
+        background: var(--cp-surface-hover);
+        color: var(--cp-text);
+      }
+      .menubar-item.active {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        font-weight: 650;
+      }
+
+      /* ---- STEPS ---- */
+      .steps {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+      }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex: 1;
+      }
+      .step-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+      }
+      .step-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        border: 2px solid var(--cp-line-strong);
+        color: var(--cp-text-muted);
+        background: var(--cp-surface);
+        transition: all 180ms ease;
+        flex-shrink: 0;
+      }
+      .step-circle.active {
+        border-color: var(--cp-accent);
+        background: var(--cp-accent);
+        color: #fff;
+      }
+      .step-circle.done {
+        border-color: var(--cp-accent);
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+      }
+      .step-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--cp-text-muted);
+        text-align: center;
+      }
+      .step-label.active {
+        color: var(--cp-accent);
+      }
+      .step-connector {
+        flex: 1;
+        height: 2px;
+        background: var(--cp-line-strong);
+        margin: 0 -2px;
+        align-self: center;
+        margin-bottom: 22px;
+      }
+      .step-connector.done {
+        background: var(--cp-accent);
+      }
+
+      /* ---- TAG INPUT ---- */
+      .taginput {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+        min-height: 36px;
+        padding: 4px 8px;
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        background: var(--cp-surface);
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease;
+        cursor: text;
+        width: 340px;
+      }
+      .taginput:focus-within {
+        border-color: var(--cp-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
+      }
+      .taginput-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        height: 24px;
+        padding: 0 6px;
+        border-radius: 4px;
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .taginput-tag-remove {
+        cursor: pointer;
+        font-size: 9px;
+        opacity: 0.5;
+      }
+      .taginput-tag-remove:hover {
+        opacity: 1;
+      }
+      .taginput-core {
+        flex: 1;
+        min-width: 80px;
+        height: 24px;
+        border: none;
+        outline: none;
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--cp-text);
+        background: transparent;
+      }
+      .taginput-core::placeholder {
+        color: var(--cp-text-subtle);
+      }
+
+      /* ---- COLLAPSIBLE ---- */
+      .collapsible {
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-control);
+        overflow: hidden;
+        background: var(--cp-surface);
+      }
+      .collapsible-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 10px 14px;
+        border: none;
+        background: none;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--cp-text);
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+      .collapsible-trigger:hover {
+        background: var(--cp-surface-hover);
+      }
+      .collapsible-arrow {
+        font-size: 9px;
+        color: var(--cp-text-muted);
+        transition: transform 180ms ease;
+      }
+      .collapsible-arrow.open {
+        transform: rotate(90deg);
+      }
+      .collapsible-content {
+        overflow: hidden;
+        transition:
+          max-height 240ms ease,
+          padding 240ms ease;
+      }
+      .collapsible-content-inner {
+        padding: 0 14px 14px;
+        font-size: 13px;
+        color: var(--cp-text-muted);
+        line-height: 1.5;
+      }
+
+      /* ---- ALERT ---- */
+      .alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: var(--cp-radius-control);
+        font-size: 13px;
+        line-height: 1.5;
+        border: 1px solid;
+      }
+      .alert-icon {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        margin-top: 1px;
+      }
+      .alert-body {
+        flex: 1;
+      }
+      .alert-title {
+        font-weight: 650;
+        margin-bottom: 2px;
+      }
+      .alert-desc {
+        font-size: 12px;
+        opacity: 0.85;
+      }
+      .alert-info {
+        background: rgba(61, 123, 168, 0.06);
+        border-color: rgba(61, 123, 168, 0.2);
+        color: var(--cp-info);
+      }
+      .alert-success {
+        background: rgba(45, 138, 94, 0.06);
+        border-color: rgba(45, 138, 94, 0.2);
+        color: var(--cp-success);
+      }
+      .alert-warning {
+        background: rgba(166, 106, 18, 0.06);
+        border-color: rgba(166, 106, 18, 0.2);
+        color: var(--cp-warning);
+      }
+      .alert-danger {
+        background: rgba(201, 69, 69, 0.06);
+        border-color: rgba(201, 69, 69, 0.2);
+        color: var(--cp-danger);
+      }
+
+      /* ---- TIMELINE ---- */
+      .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .timeline-item {
+        display: flex;
+        gap: 12px;
+      }
+      .timeline-rail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+        width: 20px;
+      }
+      .timeline-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--cp-line-strong);
+        margin-top: 4px;
+        flex-shrink: 0;
+      }
+      .timeline-dot.active {
+        background: var(--cp-accent);
+        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.15);
+      }
+      .timeline-dot.done {
+        background: var(--cp-success);
+      }
+      .timeline-line {
+        width: 2px;
+        flex: 1;
+        min-height: 20px;
+        background: var(--cp-line);
+        margin: 2px 0;
+      }
+      .timeline-item:last-child .timeline-line {
+        background: transparent;
+      }
+      .timeline-content {
+        padding-bottom: 14px;
+      }
+      .timeline-title {
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .timeline-desc {
+        font-size: 11px;
+        color: var(--cp-text-muted);
+        margin-top: 2px;
+      }
+      .timeline-time {
+        font-size: 10px;
+        color: var(--cp-text-subtle);
+        margin-top: 2px;
+      }
+
+      /* ---- COMPOSITION DEMOS ---- */
+      .comp-demo {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-line);
+        border-radius: var(--cp-radius-panel);
+        padding: var(--cp-space-5);
+        margin-bottom: 10px;
+      }
+      .comp-demo-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--cp-text-subtle);
+        margin-bottom: 10px;
+      }
+
+      /* ---- VISUALLY HIDDEN ---- */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 800px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          position: relative;
+          height: auto;
+          overflow-y: visible;
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 4px;
+          padding: 12px;
+        }
+        .sidebar-section {
+          display: none;
+        }
+        .sidebar-title {
+          margin-bottom: 0;
+        }
+        .main {
+          padding: 14px;
+        }
+        .do-dont {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-title">基础组件 <span>V2</span></div>
+      <div class="sidebar-section">输入控件</div>
+      <a href="#button" class="sidebar-link active">Button</a>
+      <a href="#iconbutton" class="sidebar-link">IconButton</a>
+      <a href="#input" class="sidebar-link">Input</a>
+      <a href="#textarea" class="sidebar-link">Textarea</a>
+      <a href="#select" class="sidebar-link">Select</a>
+      <a href="#combobox" class="sidebar-link">Combobox</a>
+      <a href="#link" class="sidebar-link">Link</a>
+      <a href="#kbd" class="sidebar-link">Kbd</a>
+      <a href="#taginput" class="sidebar-link">TagInput</a>
+      <a href="#breadcrumb" class="sidebar-link">Breadcrumb</a>
+      <div class="sidebar-section">选择控件</div>
+      <a href="#checkbox" class="sidebar-link">Checkbox</a>
+      <a href="#switch" class="sidebar-link">Switch</a>
+      <a href="#radio" class="sidebar-link">RadioGroup</a>
+      <a href="#segmented" class="sidebar-link">SegmentedControl</a>
+      <a href="#togglegroup" class="sidebar-link">ToggleGroup</a>
+      <a href="#tabs" class="sidebar-link">Tabs</a>
+      <div class="sidebar-section">浮层与菜单</div>
+      <a href="#menu" class="sidebar-link">DropdownMenu</a>
+      <a href="#contextmenu" class="sidebar-link">ContextMenu</a>
+      <a href="#dialog" class="sidebar-link">Dialog</a>
+      <a href="#drawer" class="sidebar-link">Drawer</a>
+      <a href="#popover" class="sidebar-link">Popover</a>
+      <a href="#hovercard" class="sidebar-link">HoverCard</a>
+      <a href="#tooltip" class="sidebar-link">Tooltip</a>
+      <a href="#command" class="sidebar-link">CommandPalette</a>
+      <div class="sidebar-section">反馈与通知</div>
+      <a href="#toast" class="sidebar-link">Toast</a>
+      <a href="#banner" class="sidebar-link">Banner</a>
+      <a href="#field" class="sidebar-link">Field</a>
+      <a href="#badge" class="sidebar-link">Badge</a>
+      <a href="#inlineerror" class="sidebar-link">InlineError</a>
+      <a href="#spinner" class="sidebar-link">Spinner</a>
+      <a href="#skeleton" class="sidebar-link">Skeleton</a>
+      <a href="#progress" class="sidebar-link">Progress</a>
+      <a href="#scrollarea" class="sidebar-link">ScrollArea</a>
+      <a href="#divider" class="sidebar-link">Divider</a>
+      <div class="sidebar-section">标签与结构</div>
+      <a href="#chip" class="sidebar-link">Chip</a>
+      <a href="#avatar" class="sidebar-link">Avatar</a>
+      <a href="#accordion" class="sidebar-link">Accordion</a>
+      <a href="#collapsible" class="sidebar-link">Collapsible</a>
+      <a href="#alert" class="sidebar-link">Alert</a>
+      <a href="#slider" class="sidebar-link">Slider</a>
+      <a href="#pagination" class="sidebar-link">Pagination</a>
+      <a href="#table" class="sidebar-link">Table</a>
+      <a href="#treeview" class="sidebar-link">TreeView</a>
+      <a href="#menubar" class="sidebar-link">Menubar</a>
+      <a href="#steps" class="sidebar-link">Steps</a>
+      <a href="#timeline" class="sidebar-link">Timeline</a>
+      <a href="#emptystate" class="sidebar-link">EmptyState</a>
+      <a href="#listrow" class="sidebar-link">ListRow</a>
+      <a href="#cardsection" class="sidebar-link">CardSection</a>
+      <a href="#copybutton" class="sidebar-link">CopyButton</a>
+      <div class="sidebar-section">工具</div>
+      <a href="#truncate" class="sidebar-link">Truncate</a>
+      <a href="#visuallyhidden" class="sidebar-link">VisuallyHidden</a>
+      <div class="sidebar-section">组合模式</div>
+      <a href="#patterns" class="sidebar-link">组合模式示范</a>
+      <button class="sidebar-btn" onclick="document.body.classList.toggle('dark')">明暗切换</button>
+    </aside>
+
+    <main class="main">
+      <!-- BUTTON -->
+      <section class="comp-spec" id="button">
+        <div class="comp-header">
+          <h2>Button 按钮</h2>
+          <p>主操作触发器。6 种变体 × 3 尺寸 × 6 状态。每个可视区域最多一个 primary。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">6 变体</span><span class="comp-meta-tag">3 尺寸</span
+            ><span class="comp-meta-tag">全宽</span><span class="comp-meta-tag">按钮组</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>变体</h4>
+          <div class="demo-row">
+            <button class="btn btn-primary btn-md">主要</button
+            ><button class="btn btn-secondary btn-md">次要</button
+            ><button class="btn btn-subtle btn-md">柔和</button
+            ><button class="btn btn-ghost btn-md">隐形</button
+            ><button class="btn btn-danger btn-md">危险</button
+            ><button class="btn btn-danger-subtle btn-md">危险柔和</button>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>尺寸 + 全宽 + 纯图标</h4>
+          <div class="demo-row">
+            <button class="btn btn-primary btn-sm">小 28px</button>
+            <button class="btn btn-primary btn-md">中 36px</button>
+            <button class="btn btn-primary btn-lg">大 44px</button>
+            <button class="btn btn-primary btn-md btn-full" style="width: 180px">全宽按钮</button>
+            <button
+              class="btn btn-primary btn-md"
+              style="width: 36px; padding: 0"
+              aria-label="添加"
+            >
+              +
+            </button>
+            <button
+              class="btn btn-secondary btn-sm"
+              style="width: 28px; padding: 0"
+              aria-label="更多"
+            >
+              ⋯
+            </button>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>按钮组</h4>
+          <div class="demo-row">
+            <div class="btn-group">
+              <button class="btn btn-secondary btn-md">日</button
+              ><button class="btn btn-secondary btn-md">周</button
+              ><button
+                class="btn btn-secondary btn-md"
+                style="
+                  background: var(--cp-accent-soft);
+                  color: var(--cp-accent);
+                  border-color: var(--cp-accent);
+                "
+              >
+                月
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>状态</h4>
+          <div class="demo-row">
+            <button class="btn btn-primary btn-md">默认</button>
+            <button
+              class="btn btn-primary btn-md"
+              style="background: var(--cp-accent-hover); border-color: var(--cp-accent-hover)"
+            >
+              悬停
+            </button>
+            <button class="btn btn-primary btn-md" style="transform: scale(0.98)">按下</button>
+            <button
+              class="btn btn-primary btn-md"
+              style="
+                outline: 2px solid var(--cp-accent);
+                outline-offset: 2px;
+                box-shadow: 0 0 0 4px rgba(26, 144, 112, 0.18);
+              "
+            >
+              聚焦
+            </button>
+            <button class="btn btn-primary btn-md" disabled>禁用</button>
+            <button
+              class="btn btn-primary btn-md"
+              disabled
+              style="color: transparent; position: relative"
+            >
+              加载中
+              <div
+                class="spinner spinner-sm"
+                style="
+                  position: absolute;
+                  border-width: 1.5px;
+                  border-color: rgba(255, 255, 255, 0.3);
+                  border-top-color: #fff;
+                  width: 12px;
+                  height: 12px;
+                "
+              ></div>
+            </button>
+          </div>
+        </div>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>尺寸</th>
+              <th>高度</th>
+              <th>内边距</th>
+              <th>字号</th>
+              <th>圆角</th>
+              <th>场景</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sm</td>
+              <td>28px</td>
+              <td>0 10px</td>
+              <td>12px/600</td>
+              <td>6px</td>
+              <td>卡片内次级动作</td>
+            </tr>
+            <tr>
+              <td>md</td>
+              <td>36px</td>
+              <td>0 14px</td>
+              <td>13px/600</td>
+              <td>8px</td>
+              <td>默认</td>
+            </tr>
+            <tr>
+              <td>lg</td>
+              <td>44px</td>
+              <td>0 18px</td>
+              <td>14px/600</td>
+              <td>8px</td>
+              <td>弹窗/设置主动作</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>
+              每区最多一个 primary。loading 保持按钮宽度。btn-group
+              用于互斥视图切换。全宽按钮用于移动端或弹窗底部。
+            </p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>两个 primary 并排。全宽按钮在桌面端滥用。danger 无二次确认。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- ICONBUTTON -->
+      <section class="comp-spec" id="iconbutton">
+        <div class="comp-header">
+          <h2>IconButton 图标按钮</h2>
+          <p>纯图标紧凑操作。必须提供 aria-label 或 tooltip。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">3 尺寸</span
+            ><span class="comp-meta-tag">需要 aria-label</span>
+          </div>
+        </div>
+        <div class="demo-row">
+          <button class="icbtn icbtn-sm" aria-label="编辑">✎</button>
+          <button class="icbtn" aria-label="编辑">✎</button>
+          <button class="icbtn icbtn-lg" aria-label="编辑">✎</button>
+          <span class="tt-wrap"
+            ><button class="icbtn" aria-label="设置">⚙</button><span class="tt">设置</span></span
+          >
+        </div>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>尺寸</th>
+              <th>宽×高</th>
+              <th>图标</th>
+              <th>圆角</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sm</td>
+              <td>26×26</td>
+              <td>14px</td>
+              <td>6px</td>
+            </tr>
+            <tr>
+              <td>md</td>
+              <td>32×32</td>
+              <td>16px</td>
+              <td>8px</td>
+            </tr>
+            <tr>
+              <td>lg</td>
+              <td>38×38</td>
+              <td>20px</td>
+              <td>8px</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <hr class="divider" />
+
+      <!-- INPUT -->
+      <section class="comp-spec" id="input">
+        <div class="comp-header">
+          <h2>Input 输入框</h2>
+          <p>单行文本输入。支持前后图标、清除按钮、密码显隐等模式。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">前后图标</span><span class="comp-meta-tag">清除按钮</span
+            ><span class="comp-meta-tag">密码</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>前后图标 + 清除</h4>
+          <div class="demo-row">
+            <span class="inp-wrap"
+              ><span class="inp-leading-icon">🔍</span
+              ><input class="inp inp-leading" placeholder="搜索..."
+            /></span>
+            <span class="inp-wrap"
+              ><input class="inp inp-trailing" value="可清除文本" /><button
+                class="inp-clear has-value"
+                style="display: flex; pointer-events: auto"
+              >
+                ✕
+              </button></span
+            >
+            <span class="inp-wrap"
+              ><span class="inp-leading-icon">🔗</span
+              ><input
+                class="inp inp-leading inp-trailing"
+                placeholder="URL..."
+                value="https://example.com"
+              /><button class="inp-clear has-value" style="display: flex; pointer-events: auto">
+                ✕
+              </button></span
+            >
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>密码显隐</h4>
+          <div class="demo-row">
+            <span class="inp-wrap"
+              ><input class="inp inp-trailing" type="password" value="secret" /><button
+                class="inp-trailing-icon"
+                style="cursor: pointer; pointer-events: auto; font-size: 13px"
+              >
+                👁
+              </button></span
+            >
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>状态与尺寸</h4>
+          <div class="demo-row">
+            <input class="inp" placeholder="占位" /><input class="inp" value="已输入" /><input
+              class="inp invalid"
+              value="校验失败"
+            /><input class="inp" value="禁用" disabled /><input
+              class="inp inp-sm"
+              placeholder="小尺寸"
+            />
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>前后缀文本</h4>
+          <div class="demo-row">
+            <span class="inp-adorn"
+              ><span class="inp-prefix">https://</span
+              ><input class="inp inp-core" placeholder="example.com" style="width: 160px"
+            /></span>
+            <span class="inp-adorn"
+              ><input
+                class="inp inp-core"
+                placeholder="宽度"
+                value="240"
+                style="width: 80px"
+              /><span class="inp-suffix">px</span></span
+            >
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>
+              搜索框用 leading 搜索图标。可清空输入用 trailing 清除按钮。密码框提供显隐切换。必须有
+              label。
+            </p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>placeholder 代替 label。清除按钮在输入为空时仍然显示。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TEXTAREA -->
+      <section class="comp-spec" id="textarea">
+        <div class="comp-header">
+          <h2>Textarea 文本域</h2>
+          <p>多行文本输入。支持字数统计。内部滚动不撑破父布局。</p>
+          <div class="comp-meta"><span class="comp-meta-tag">字数统计</span></div>
+        </div>
+        <div class="demo-row" style="align-items: flex-start">
+          <div class="txta-wrap">
+            <textarea class="txta" style="padding-bottom: 22px">
+这是一段示例文本，用来展示字数统计功能。</textarea
+            ><span class="txta-count">14 / 500</span>
+          </div>
+          <div class="txta-wrap">
+            <textarea class="txta" style="padding-bottom: 22px">
+超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本</textarea
+            ><span class="txta-count over">145 / 100</span>
+          </div>
+          <textarea class="txta" disabled>已禁用</textarea>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>有字数限制时显示字数统计。超限时变红并阻止提交。内部滚动，max-height 限制。</p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>Textarea 无限制撑破卡片。不加字数统计却有字数限制。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- SELECT -->
+      <section class="comp-spec" id="select">
+        <div class="comp-header">
+          <h2>Select 下拉选择</h2>
+          <p>
+            单选/多选/可搜索选择器。支持分组、搜索过滤、标签模式。5+ 选项用 Select，2-4 个用
+            SegmentedControl。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">单选</span><span class="comp-meta-tag">多选</span
+            ><span class="comp-meta-tag">可搜索</span><span class="comp-meta-tag">分组</span
+            ><span class="comp-meta-tag">空状态</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>单选展开 + 分组 + 空</h4>
+          <div class="demo-row" style="align-items: flex-start; gap: 16px">
+            <div
+              style="
+                background: var(--cp-surface);
+                border: 1px solid var(--cp-line);
+                border-radius: 8px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                overflow: hidden;
+                width: 240px;
+              "
+            >
+              <div class="sel-group-label">搜索引擎</div>
+              <div class="sel-option">Google</div>
+              <div class="sel-option selected"><span class="sel-check">✓</span>Bing</div>
+              <div class="sel-option">DuckDuckGo</div>
+              <div class="sel-group-label">AI 搜索</div>
+              <div class="sel-option">Perplexity</div>
+              <div class="sel-option">Kagi</div>
+            </div>
+            <div
+              style="
+                background: var(--cp-surface);
+                border: 1px solid var(--cp-line);
+                border-radius: 8px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                overflow: hidden;
+                width: 240px;
+              "
+            >
+              <input class="sel-search-input" placeholder="搜索选项..." />
+              <div class="sel-empty">未找到匹配选项</div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>多选标签模式</h4>
+          <div class="demo-row">
+            <div
+              class="sel-btn"
+              style="height: auto; min-height: 36px; padding: 4px 8px; width: 320px"
+            >
+              <div class="sel-tags">
+                <span class="sel-tag">Google<span class="sel-tag-remove">✕</span></span
+                ><span class="sel-tag">Bing<span class="sel-tag-remove">✕</span></span>
+              </div>
+              <span class="sel-arrow">▼</span>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>尺寸与状态</h4>
+          <div class="demo-row">
+            <div class="sel-demo">
+              <div class="sel-btn" style="height: 28px; font-size: 12px">
+                <span class="sel-placeholder">小尺寸</span><span class="sel-arrow">▼</span>
+              </div>
+            </div>
+            <div class="sel-demo">
+              <div class="sel-btn">
+                <span class="sel-placeholder">默认尺寸</span><span class="sel-arrow">▼</span>
+              </div>
+            </div>
+            <div class="sel-demo">
+              <div class="sel-btn" style="border-color: var(--cp-danger)">
+                <span class="sel-placeholder" style="color: var(--cp-danger)">校验失败</span
+                ><span class="sel-arrow">▼</span>
+              </div>
+            </div>
+            <div class="sel-demo">
+              <div class="sel-btn" style="opacity: 0.5">
+                <span class="sel-placeholder">已禁用</span><span class="sel-arrow">▼</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>
+              10+ 选项启用搜索。多选用标签展示已选值。展开列表设 max-height
+              防溢出。无匹配时显示空状态。
+            </p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>
+              2-4 个选项用 Select——改用 SegmentedControl。不设 max-height 导致选项列表无限延长。
+            </p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- COMBOBOX -->
+      <section class="comp-spec" id="combobox">
+        <div class="comp-header">
+          <h2>Combobox 搜索选择</h2>
+          <p>输入过滤 + 下拉选择。15+ 选项或动态搜索场景。支持键盘导航。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">输入过滤</span><span class="comp-meta-tag">高亮匹配</span
+            ><span class="comp-meta-tag">键盘导航</span>
+          </div>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 16px">
+          <div style="position: relative">
+            <input class="combo-input" value="Gi" placeholder="搜索或选择..." /><span
+              class="combo-icon"
+              >▼</span
+            >
+            <div class="combo-dropdown" style="position: relative; margin-top: 4px">
+              <div class="combo-option active"><span class="highlight">Gi</span>tHub</div>
+              <div class="combo-option"><span class="highlight">Gi</span>tLab</div>
+              <div class="combo-option"><span class="highlight">Gi</span>tBook</div>
+            </div>
+          </div>
+          <div style="position: relative">
+            <input class="combo-input" value="" placeholder="输入关键词..." /><span
+              class="combo-icon"
+              >▼</span
+            >
+            <div class="combo-dropdown" style="position: relative; margin-top: 4px">
+              <div class="combo-empty">输入关键词搜索</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- LINK -->
+      <section class="comp-spec" id="link">
+        <div class="comp-header">
+          <h2>Link 链接</h2>
+          <p>内联超链接。支持内部导航、外部链接、静默链接三种变体。外部链接带 ↗ 标记。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">内联</span><span class="comp-meta-tag">外部</span
+            ><span class="comp-meta-tag">静默</span>
+          </div>
+        </div>
+        <div class="demo-row" style="gap: 16px">
+          <a href="#" class="link">内部链接</a>
+          <a href="#" class="link link-external">外部链接</a>
+          <a href="#" class="link link-muted">静默链接</a>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- KBD -->
+      <section class="comp-spec" id="kbd">
+        <div class="comp-header">
+          <h2>Kbd 快捷键</h2>
+          <p>键盘快捷键或按键组合展示。用于菜单项、提示文本中标注键盘操作。</p>
+        </div>
+        <div class="demo-row" style="gap: 4px">
+          <span class="kbd-inline">⌘</span> + <span class="kbd-inline">K</span>
+          <span style="margin: 0 8px">|</span>
+          <span class="kbd-inline">⌘</span
+          ><span class="kbd-inline" style="margin-left: 2px">Shift</span
+          ><span class="kbd-inline" style="margin-left: 2px">P</span>
+          <span style="margin: 0 8px">|</span>
+          <span class="kbd-inline">⌫</span>
+          <span class="kbd-inline">Enter</span>
+          <span class="kbd-inline">Esc</span>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TAG INPUT -->
+      <section class="comp-spec" id="taginput">
+        <div class="comp-header">
+          <h2>TagInput 标签输入</h2>
+          <p>
+            输入文本后回车或逗号创建标签的输入组件。与 Chip 的区别：TagInput
+            是输入驱动的标签创建器，Chip 是已创建好的静态标签。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">回车创建</span><span class="comp-meta-tag">可删除</span
+            ><span class="comp-meta-tag">逗号分隔</span>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div class="taginput">
+            <span class="taginput-tag">设计<span class="taginput-tag-remove">✕</span></span>
+            <span class="taginput-tag">前端<span class="taginput-tag-remove">✕</span></span>
+            <span class="taginput-tag">工具<span class="taginput-tag-remove">✕</span></span>
+            <input class="taginput-core" placeholder="输入标签，回车添加..." />
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- BREADCRUMB -->
+      <section class="comp-spec" id="breadcrumb">
+        <div class="comp-header">
+          <h2>Breadcrumb 面包屑</h2>
+          <p>导航路径层级展示。用于设置深层页面、文件浏览等需要展示当前位置的场景。</p>
+        </div>
+        <div class="demo-row">
+          <div class="breadcrumb">
+            <span class="breadcrumb-item">工作台</span><span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-item">设置</span><span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-item current">外观</span>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- CHECKBOX / SWITCH / RADIO / SEGMENTED / TOGGLEGROUP -->
+      <section class="comp-spec" id="checkbox">
+        <div class="comp-header">
+          <h2>Checkbox 勾选框</h2>
+          <p>完成态、多选列表。需显式提交的场景。</p>
+        </div>
+        <div class="demo-row" style="gap: 16px">
+          <label class="chk-wrap"
+            ><input type="checkbox" />
+            <div class="chk"></div>
+            未选</label
+          ><label class="chk-wrap"
+            ><input type="checkbox" checked />
+            <div class="chk"></div>
+            已选</label
+          ><label class="chk-wrap disabled"
+            ><input type="checkbox" disabled />
+            <div class="chk"></div>
+            禁用</label
+          >
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="switch">
+        <div class="comp-header">
+          <h2>Switch 开关</h2>
+          <p>即时生效开关。插件启用、功能开关等。</p>
+        </div>
+        <div class="demo-row" style="gap: 16px">
+          <label class="sw-wrap"
+            ><input type="checkbox" /><span class="sw-track"><span class="sw-thumb"></span></span
+            >关</label
+          ><label class="sw-wrap"
+            ><input type="checkbox" checked /><span class="sw-track"
+              ><span class="sw-thumb"></span></span
+            >开</label
+          ><label class="sw-wrap disabled"
+            ><input type="checkbox" disabled /><span class="sw-track"
+              ><span class="sw-thumb"></span></span
+            >禁用</label
+          >
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="radio">
+        <div class="comp-header">
+          <h2>RadioGroup 单选组</h2>
+          <p>3-5 个互斥选项。纵排 Card 风格适合带说明的选项，横排适合纯文本短选项。</p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 20px">
+          <div class="radio-group" style="width: 240px">
+            <label class="radio-wrap"
+              ><input type="radio" name="r1" checked />
+              <div class="radio-circle"></div>
+              明亮主题 — 白天使用</label
+            ><label class="radio-wrap"
+              ><input type="radio" name="r1" />
+              <div class="radio-circle"></div>
+              暗色主题 — 夜间使用</label
+            ><label class="radio-wrap"
+              ><input type="radio" name="r1" />
+              <div class="radio-circle"></div>
+              跟随系统</label
+            >
+          </div>
+          <div class="radio-group-row">
+            <label class="radio-wrap"
+              ><input type="radio" name="r2" checked />
+              <div class="radio-circle"></div>
+              4 列</label
+            ><label class="radio-wrap"
+              ><input type="radio" name="r2" />
+              <div class="radio-circle"></div>
+              3 列</label
+            >
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="segmented">
+        <div class="comp-header">
+          <h2>SegmentedControl 分段</h2>
+          <p>2-4 个纯文本短选项互斥切换。</p>
+        </div>
+        <div class="demo-row">
+          <div class="seg">
+            <button class="seg-btn active">小</button><button class="seg-btn">中</button
+            ><button class="seg-btn">大</button>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="togglegroup">
+        <div class="comp-header">
+          <h2>ToggleGroup 多选组</h2>
+          <p>
+            多个独立按钮样式的多选。与 SegmentedControl 的区别：可以多选，每个按钮是独立 toggle。
+          </p>
+        </div>
+        <div class="demo-row">
+          <div class="tgl-group">
+            <button class="tgl-btn active">周一</button><button class="tgl-btn">周二</button
+            ><button class="tgl-btn active">周三</button><button class="tgl-btn active">周四</button
+            ><button class="tgl-btn">周五</button>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TABS -->
+      <section class="comp-spec" id="tabs">
+        <div class="comp-header">
+          <h2>Tabs 标签页</h2>
+          <p>面板内分组导航。支持图标标签、数字角标。ARIA tablist 语义。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">图标</span><span class="comp-meta-tag">角标</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>基本</h4>
+          <div class="demo-row">
+            <div class="tabs">
+              <button class="tab active">通用</button><button class="tab">外观</button
+              ><button class="tab">搜索</button><button class="tab disabled">高级</button>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>图标 + 数字角标</h4>
+          <div class="demo-row">
+            <div class="tabs">
+              <button class="tab active"><span class="tab-icon">🏠</span>概览</button
+              ><button class="tab">
+                <span class="tab-icon">📋</span>任务<span class="tab-badge">5</span></button
+              ><button class="tab"><span class="tab-icon">⚙</span>设置</button>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>竖排 Tab</h4>
+          <div class="demo-row" style="align-items: flex-start">
+            <div class="tabs-v" style="width: 160px">
+              <button class="tab-v active">通用设置</button>
+              <button class="tab-v">外观</button>
+              <button class="tab-v">搜索偏好</button>
+              <button class="tab-v">插件管理</button>
+              <button class="tab-v">关于</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- DROPDOWN MENU -->
+      <section class="comp-spec" id="menu">
+        <div class="comp-header">
+          <h2>DropdownMenu 下拉菜单</h2>
+          <p>操作溢出菜单。支持图标、快捷键、分割线、危险操作。</p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 16px">
+          <div class="menu-dropdown" style="width: 200px">
+            <div class="menu-item"><span class="menu-icon">✎</span>编辑<kbd>⌘E</kbd></div>
+            <div class="menu-item"><span class="menu-icon">📋</span>复制<kbd>⌘C</kbd></div>
+            <div class="menu-item"><span class="menu-check">✓</span>已选中项</div>
+            <div class="menu-item"><span class="menu-icon">📌</span>置顶</div>
+            <div class="menu-item disabled"><span class="menu-icon">🔒</span>锁定（不可用）</div>
+            <div class="menu-separator"></div>
+            <div class="menu-item danger"><span class="menu-icon">✕</span>删除<kbd>⌫</kbd></div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- CONTEXT MENU -->
+      <section class="comp-spec" id="contextmenu">
+        <div class="comp-header">
+          <h2>ContextMenu 右键菜单</h2>
+          <p>
+            右键/长按触发的上下文菜单。外观与 DropdownMenu 一致，触发方式不同。通常绑定到具体对象。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">右键触发</span><span class="comp-meta-tag">长按触发</span>
+          </div>
+        </div>
+        <div class="demo-row" style="align-items: flex-start">
+          <div class="menu-dropdown" style="width: 200px">
+            <div class="menu-item"><span class="menu-icon">📋</span>复制链接</div>
+            <div class="menu-item"><span class="menu-icon">🔗</span>在新标签打开</div>
+            <div class="menu-separator"></div>
+            <div class="menu-item"><span class="menu-icon">✎</span>编辑</div>
+            <div class="menu-item danger"><span class="menu-icon">✕</span>删除</div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- DIALOG -->
+      <section class="comp-spec" id="dialog">
+        <div class="comp-header">
+          <h2>Dialog 对话框</h2>
+          <p>模态确认/通知。三档尺寸。破坏型操作用 destructive 变体。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">3 尺寸</span><span class="comp-meta-tag">破坏型</span
+            ><span class="comp-meta-tag">焦点捕获</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>尺寸：sm · md · lg</h4>
+          <div class="demo-row" style="align-items: flex-start; gap: 12px">
+            <div class="dialog-dim sm">
+              <div class="dialog-header">确认操作</div>
+              <div class="dialog-body">确定要执行此操作吗？</div>
+              <div class="dialog-footer">
+                <button class="btn btn-secondary btn-sm">取消</button
+                ><button class="btn btn-primary btn-sm">确认</button>
+              </div>
+            </div>
+            <div class="dialog-dim md">
+              <div class="dialog-header">删除卡片</div>
+              <div class="dialog-body">
+                确定要删除「今日重点」？此操作不可撤销，卡片内容将一并删除。
+              </div>
+              <div class="dialog-footer">
+                <button class="btn btn-secondary btn-sm">取消</button
+                ><button class="btn btn-danger btn-sm">确认删除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>破坏型对话框（destructive）</h4>
+          <div class="demo-row">
+            <div
+              class="dialog-dim md dialog-destructive"
+              style="border-color: rgba(201, 69, 69, 0.3); border-width: 1.5px"
+            >
+              <div class="dialog-header" style="display: flex; align-items: center; gap: 8px">
+                ⚠ 删除工作区
+              </div>
+              <div class="dialog-body">
+                此操作将删除该工作区及其所有卡片和数据。这是不可逆操作。
+              </div>
+              <div class="dialog-footer">
+                <button class="btn btn-secondary btn-sm">取消</button
+                ><button class="btn btn-danger btn-sm">永久删除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>
+              危险操作用 destructive 变体。打开后焦点进入 Dialog 内。Escape
+              关闭。返回焦点到触发元素。移动端用 lg 尺寸。
+            </p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>连续弹多层 Dialog。Dialog 内放 4+ 按钮。用 Dialog 做普通提示——用 Toast。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- DRAWER -->
+      <section class="comp-spec" id="drawer">
+        <div class="comp-header">
+          <h2>Drawer 抽屉</h2>
+          <p>
+            从屏幕边缘滑入的面板。用于设置、详情查看等需要保持上下文但需要更多空间的场景。与 Dialog
+            的区别：Drawer 贴边，Dialog 居中。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">边缘滑入</span><span class="comp-meta-tag">左侧/右侧</span
+            ><span class="comp-meta-tag">头部+底部固定</span>
+          </div>
+        </div>
+        <div class="anatomy-box">
+          <h4>结构组成</h4>
+          <ul>
+            <li><code>Overlay</code> — 半透明遮罩</li>
+            <li><code>Panel</code> — 侧边滑入面板，固定宽度 420-560px</li>
+            <li><code>Header</code> — 标题 + 关闭按钮，sticky 吸顶</li>
+            <li><code>Body</code> — 可滚动内容区</li>
+            <li><code>Footer</code>（可选）— 底部固定操作栏</li>
+          </ul>
+        </div>
+        <div class="demo-section">
+          <h4>右侧 Drawer（设置面板风格）</h4>
+          <div class="demo-row" style="align-items: flex-start">
+            <div class="drawer-demo">
+              <div class="drawer-header">
+                <h4>设置</h4>
+                <button class="icbtn icbtn-sm" aria-label="关闭">✕</button>
+              </div>
+              <div class="drawer-body">
+                <div>
+                  <div class="field-label" style="margin-bottom: 4px">主题</div>
+                  <div style="display: flex; gap: 4px">
+                    <button
+                      class="btn btn-sm"
+                      style="
+                        background: var(--cp-accent-soft);
+                        color: var(--cp-accent);
+                        border: 1px solid var(--cp-accent);
+                      "
+                    >
+                      明亮</button
+                    ><button class="btn btn-sm btn-secondary">暗色</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <span class="field-label">默认搜索</span
+                  ><select
+                    style="
+                      height: 32px;
+                      padding: 0 8px;
+                      border: 1px solid var(--cp-line);
+                      border-radius: 6px;
+                      font-size: 12px;
+                      font-family: inherit;
+                      color: var(--cp-text);
+                      background: var(--cp-surface);
+                      width: 100%;
+                      margin-top: 4px;
+                    "
+                  >
+                    <option>Google</option>
+                    <option>Bing</option>
+                  </select>
+                </div>
+              </div>
+              <div class="drawer-footer">
+                <button class="btn btn-secondary btn-sm">取消</button
+                ><button class="btn btn-primary btn-sm">保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>
+              用于设置面板、详情侧栏。header/footer 固定。宽度 420-560px
+              桌面，移动端全屏。内容区设滚动。
+            </p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>用 Drawer 做危险确认——用 Dialog。Drawer 内嵌 Drawer。同时打开两个浮层。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- POPOVER -->
+      <section class="comp-spec" id="popover">
+        <div class="comp-header">
+          <h2>Popover 气泡卡片</h2>
+          <p>
+            点击触发的富内容浮层。与 Tooltip 的区别：Popover 包含可交互内容（按钮、表单等），Tooltip
+            仅纯文本。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">点击触发</span><span class="comp-meta-tag">可交互内容</span>
+          </div>
+        </div>
+        <div class="demo-row" style="align-items: flex-start">
+          <div class="popover-demo">
+            <button class="btn btn-secondary btn-sm">点击展开</button>
+            <div class="popover" style="position: relative; margin-top: 6px">
+              <div class="popover-title">通知设置</div>
+              <div class="popover-body">选择要接收的通知类型。</div>
+              <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px">
+                <label class="chk-wrap" style="font-size: 12px"
+                  ><input type="checkbox" checked />
+                  <div class="chk"></div>
+                  邮件通知</label
+                >
+                <label class="chk-wrap" style="font-size: 12px"
+                  ><input type="checkbox" />
+                  <div class="chk"></div>
+                  推送通知</label
+                >
+              </div>
+              <div style="margin-top: 10px">
+                <button class="btn btn-primary btn-sm">保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- HOVERCARD -->
+      <section class="comp-spec" id="hovercard">
+        <div class="comp-header">
+          <h2>HoverCard 悬停卡片</h2>
+          <p>
+            hover 触发的预览卡片。用于链接预览、天气详情展示等场景。与 Popover 的区别：HoverCard 是
+            hover 触发（纯信息展示），Popover 是 click 触发（可交互）。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">hover 触发</span><span class="comp-meta-tag">信息预览</span
+            ><span class="comp-meta-tag">不可交互</span>
+          </div>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 20px">
+          <div>
+            <span class="hovercard-preview">Tabora Design System</span>
+            <div class="hovercard" style="position: relative; margin-top: 8px">
+              <div class="hovercard-image">🎨</div>
+              <div class="hovercard-title">Tabora 设计体系 V2</div>
+              <div class="hovercard-desc">Refined Sage 色彩方案，33 个基础组件，完整交互原型。</div>
+              <div class="hovercard-meta"><span>docs/design/</span><span>5月30日</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- COMMAND PALETTE -->
+      <section class="comp-spec" id="command">
+        <div class="comp-header">
+          <h2>CommandPalette 命令面板</h2>
+          <p>全局命令搜索和快速导航。⌘K 触发。支持分组结果、键盘导航。Tabora 的核心交互入口。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">⌘K 触发</span><span class="comp-meta-tag">分组</span
+            ><span class="comp-meta-tag">键盘导航</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>面板展开态</h4>
+          <div class="demo-row" style="align-items: flex-start">
+            <div class="cmd-dialog">
+              <div class="cmd-input">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--cp-text-subtle)"
+                  stroke-width="2"
+                  style="flex-shrink: 0"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
+                ><input value="theme" placeholder="搜索命令、卡片、设置..." /><kbd
+                  style="font-size: 10px; color: var(--cp-text-subtle)"
+                  >esc</kbd
+                >
+              </div>
+              <div class="cmd-group-label">命令</div>
+              <div class="cmd-item active">
+                <div class="cmd-item-icon">🎨</div>
+                <div class="cmd-item-text">
+                  <div>切换主题</div>
+                  <div class="cmd-item-desc">在明亮和暗色之间切换</div>
+                </div>
+                <kbd>⌘T</kbd>
+              </div>
+              <div class="cmd-item">
+                <div class="cmd-item-icon">+</div>
+                <div class="cmd-item-text">
+                  <div>添加卡片</div>
+                  <div class="cmd-item-desc">向工作台添加新卡片</div>
+                </div>
+                <kbd>⌘N</kbd>
+              </div>
+              <div class="cmd-group-label">卡片</div>
+              <div class="cmd-item">
+                <div class="cmd-item-icon">✓</div>
+                <div class="cmd-item-text">
+                  <div>待办列表</div>
+                  <div class="cmd-item-desc">查看和管理待办任务</div>
+                </div>
+              </div>
+              <div class="cmd-item">
+                <div class="cmd-item-icon">📝</div>
+                <div class="cmd-item-text">
+                  <div>便签</div>
+                  <div class="cmd-item-desc">打开便签编辑</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>
+              默认 ⌘K 触发。支持模糊搜索。分组展示（命令/卡片/链接）。方向键导航，Enter 选择，Esc
+              关闭。
+            </p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>结果超过 10 条不分组。输入为空时展示历史或建议而非空面板。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TOOLTIP -->
+      <section class="comp-spec" id="tooltip">
+        <div class="comp-header">
+          <h2>Tooltip 提示</h2>
+          <p>hover/focus 简短说明。纯文本，不可交互。</p>
+        </div>
+        <div class="demo-row">
+          <span class="tt-wrap"
+            ><button class="btn btn-secondary btn-sm">悬停查看</button
+            ><span class="tt">这是对操作的简短说明</span></span
+          >
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TOAST -->
+      <section class="comp-spec" id="toast">
+        <div class="comp-header">
+          <h2>Toast 轻通知</h2>
+          <p>非模态操作反馈。自动消失（2-3s）。用于保存成功、操作确认等低优先级通知。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">自动消失</span><span class="comp-meta-tag">4 变体</span
+            ><span class="comp-meta-tag">可选操作</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>变体</h4>
+          <div class="toast-row">
+            <div class="toast-demo"><span class="toast-icon success">✓</span>设置已保存</div>
+            <div class="toast-demo"><span class="toast-icon error">✕</span>保存失败，请重试</div>
+            <div class="toast-demo"><span class="toast-icon warning">⚠</span>网络连接不稳定</div>
+            <div class="toast-demo">
+              <span class="toast-icon" style="color: var(--cp-info)">ℹ</span>新版本可用<span
+                class="toast-action"
+                >更新</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>用于保存成功、删除确认等低优先级反馈。2-3 秒自动消失。可附带一个撤销或查看操作。</p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>
+              用于需要用户确认的错误——用 Dialog 或 InlineError。叠加多个 Toast。包含超过 1 个操作。
+            </p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- BANNER -->
+      <section class="comp-spec" id="banner">
+        <div class="comp-header">
+          <h2>Banner 通知横幅</h2>
+          <p>
+            页面顶部的非模态通知条。用于系统公告、重要提醒、操作反馈等需要用户关注但不中断流程的场景。4
+            种语义变体。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">4 变体</span><span class="comp-meta-tag">可关闭</span
+            ><span class="comp-meta-tag">可选操作</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>变体</h4>
+          <div class="demo-col" style="gap: 8px">
+            <div class="banner banner-info">
+              <div class="banner-icon">ℹ</div>
+              <div class="banner-body">
+                <div class="banner-title">新版本可用</div>
+                <div class="banner-desc">Tabora v0.2.0 已发布，包含新设计体系。</div>
+              </div>
+              <div class="banner-action">
+                <button
+                  class="btn btn-sm"
+                  style="
+                    height: 26px;
+                    background: rgba(61, 123, 168, 0.15);
+                    color: var(--cp-info);
+                    border: none;
+                    font-weight: 600;
+                  "
+                >
+                  更新
+                </button>
+              </div>
+            </div>
+            <div class="banner banner-success">
+              <div class="banner-icon">✓</div>
+              <div class="banner-body">
+                <div class="banner-title">导入完成</div>
+                <div class="banner-desc">成功导入 12 个书签。</div>
+              </div>
+            </div>
+            <div class="banner banner-warning">
+              <div class="banner-icon">⚠</div>
+              <div class="banner-body">
+                <div class="banner-title">存储空间不足</div>
+                <div class="banner-desc">仅剩 5% 可用空间，建议清理旧数据。</div>
+              </div>
+              <div class="banner-action">
+                <button class="btn btn-sm btn-secondary" style="height: 26px">管理</button>
+              </div>
+            </div>
+            <div class="banner banner-danger">
+              <div class="banner-icon">✕</div>
+              <div class="banner-body">
+                <div class="banner-title">同步失败</div>
+                <div class="banner-desc">无法连接到服务器，数据保存到本地。</div>
+              </div>
+              <div class="banner-action">
+                <button
+                  class="btn btn-sm"
+                  style="
+                    height: 26px;
+                    background: rgba(201, 69, 69, 0.15);
+                    color: var(--cp-danger);
+                    border: none;
+                    font-weight: 600;
+                  "
+                >
+                  重试
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>
+              用于系统级通知（版本、存储、同步）。页面顶部显示。可附带一个操作按钮。支持用户手动关闭。
+            </p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>用 Banner 做操作确认——用 Toast。同时显示超过 2 条 Banner。Banner 内放表单。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- ALERT -->
+      <section class="comp-spec" id="alert">
+        <div class="comp-header">
+          <h2>Alert 提示框</h2>
+          <p>
+            带边框的强调提示框，用于卡片内或表单中的重要提示。与 Banner 的区别：Alert
+            是内联的（嵌入内容流中），Banner 是页面顶部的全宽通知条。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">4 变体</span><span class="comp-meta-tag">内联</span
+            ><span class="comp-meta-tag">标题+描述</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>变体</h4>
+          <div class="demo-col" style="gap: 8px">
+            <div class="alert alert-info">
+              <div class="alert-icon">ℹ</div>
+              <div class="alert-body">
+                <div class="alert-title">提示</div>
+                <div class="alert-desc">你可以在这里添加更多搜索引擎。</div>
+              </div>
+            </div>
+            <div class="alert alert-success">
+              <div class="alert-icon">✓</div>
+              <div class="alert-body">
+                <div class="alert-title">保存成功</div>
+                <div class="alert-desc">所有更改已安全保存到本地。</div>
+              </div>
+            </div>
+            <div class="alert alert-warning">
+              <div class="alert-icon">⚠</div>
+              <div class="alert-body">
+                <div class="alert-title">注意</div>
+                <div class="alert-desc">该操作仅影响当前工作区。</div>
+              </div>
+            </div>
+            <div class="alert alert-danger">
+              <div class="alert-icon">✕</div>
+              <div class="alert-body">
+                <div class="alert-title">错误</div>
+                <div class="alert-desc">加载插件列表失败，请检查网络后重试。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- FIELD / BADGE / INLINEERROR / SPINNER -->
+      <section class="comp-spec" id="field">
+        <div class="comp-header">
+          <h2>Field 表单字段</h2>
+          <p>label + description + input + error 的组合单元。</p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 20px">
+          <div class="field">
+            <span class="field-label">显示名称</span
+            ><span class="field-desc">显示在公开资料中。</span
+            ><input class="inp" placeholder="输入名称" style="width: 220px" />
+          </div>
+          <div class="field">
+            <span class="field-label">API 密钥</span
+            ><span class="field-desc">私密密钥，切勿分享。</span
+            ><input class="inp invalid" value="invalid_key" style="width: 220px" /><span
+              class="field-error"
+              >⚠ 必须为 32 位十六进制字符</span
+            >
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="badge">
+        <div class="comp-header">
+          <h2>Badge 标签</h2>
+          <p>状态指示。支持圆点、计数、文字三种模式。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">圆点</span><span class="comp-meta-tag">计数</span
+            ><span class="comp-meta-tag">5 色</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>文字标签</h4>
+          <div class="demo-row">
+            <span class="badge badge-default">默认</span
+            ><span class="badge badge-success">运行中</span
+            ><span class="badge badge-warning">演示</span
+            ><span class="badge badge-danger">错误</span
+            ><span class="badge badge-accent">新功能</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>圆点 + 计数</h4>
+          <div class="demo-row">
+            <span class="badge badge-dot badge-success" style="margin-right: 4px"></span>在线<span
+              class="badge badge-dot badge-danger"
+              style="margin-left: 12px; margin-right: 4px"
+            ></span
+            >离线<span class="badge badge-counter badge-accent" style="margin-left: 12px">12</span
+            ><span class="badge badge-counter badge-danger">99+</span>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="inlineerror">
+        <div class="comp-header">
+          <h2>InlineError 行内错误</h2>
+          <p>局部错误展示。可包含重试或授权操作。</p>
+        </div>
+        <div class="demo-col">
+          <div class="inline-error">
+            ⚠ 加载天气失败。<a
+              href="#"
+              style="color: var(--cp-danger); font-weight: 600; text-decoration: underline"
+              >重试</a
+            >
+          </div>
+          <div class="inline-error">
+            ⚠ external-open 权限拒绝
+            <button
+              class="btn btn-sm"
+              style="
+                background: var(--cp-danger-soft);
+                color: var(--cp-danger);
+                border: none;
+                font-weight: 600;
+                height: 24px;
+              "
+            >
+              授权
+            </button>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="spinner">
+        <div class="comp-header">
+          <h2>Spinner 加载指示</h2>
+          <p>不定长旋转。3 种尺寸。支持带文字标签。</p>
+        </div>
+        <div class="demo-row">
+          <div class="spinner spinner-sm" role="status"></div>
+          <div class="spinner" role="status"></div>
+          <div class="spinner spinner-lg" role="status"></div>
+          <span class="spinner-label"
+            ><div class="spinner spinner-sm"></div>
+            加载中...</span
+          >
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- SKELETON / PROGRESS -->
+      <section class="comp-spec" id="skeleton">
+        <div class="comp-header">
+          <h2>Skeleton 骨架屏</h2>
+          <p>加载占位。形状匹配实际内容，避免加载完成后的布局跳动。脉冲动画提示正在加载。</p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 20px">
+          <div style="width: 200px">
+            <div class="skeleton skeleton-text" style="width: 100%"></div>
+            <div class="skeleton skeleton-text" style="width: 70%"></div>
+            <div class="skeleton skeleton-text" style="width: 40%"></div>
+          </div>
+          <div class="skeleton-card" style="width: 240px">
+            <div class="skeleton-row">
+              <div class="skeleton skeleton-avatar"></div>
+              <div style="flex: 1">
+                <div class="skeleton skeleton-text" style="width: 60%"></div>
+                <div class="skeleton skeleton-text" style="width: 35%"></div>
+              </div>
+            </div>
+            <div class="skeleton skeleton-text" style="width: 100%"></div>
+            <div class="skeleton skeleton-text" style="width: 60%"></div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="progress">
+        <div class="comp-header">
+          <h2>Progress 进度条</h2>
+          <p>确定/不定进度。支持线性、圆形、不定长三种模式。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">线性</span><span class="comp-meta-tag">圆形</span
+            ><span class="comp-meta-tag">不定长</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>线性 — 尺寸</h4>
+          <div class="demo-col">
+            <div>
+              <div class="progress-track progress-sm">
+                <div class="progress-fill" style="width: 100%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="progress-track"><div class="progress-fill" style="width: 60%"></div></div>
+              <div class="progress-label"><span>60%</span><span>3/5 完成</span></div>
+            </div>
+            <div>
+              <div class="progress-track progress-lg">
+                <div class="progress-fill" style="width: 30%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>圆形</h4>
+          <div class="demo-row">
+            <div class="progress-circle">
+              <svg width="48" height="48" viewBox="0 0 48 48">
+                <circle class="progress-circle-bg" cx="24" cy="24" r="20" />
+                <circle
+                  class="progress-circle-fill"
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  stroke-dasharray="125.6"
+                  stroke-dashoffset="50.2"
+                />
+              </svg>
+              <div class="progress-circle-text">60%</div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>不定长</h4>
+          <div class="demo-row">
+            <div class="progress-track progress-indeterminate" style="overflow: hidden">
+              <div class="progress-fill" style="width: 40%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- SCROLLAREA -->
+      <section class="comp-spec" id="scrollarea">
+        <div class="comp-header">
+          <h2>ScrollArea 滚动区域</h2>
+          <p>自定义滚动条容器。用于需要美观滚动条的场景：长列表、代码块、设置面板内容区。</p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 16px">
+          <div class="scrollarea" style="width: 240px; height: 150px">
+            <div class="scrollarea-content">
+              <div style="font-size: 12px; color: var(--cp-text-muted); line-height: 1.8">
+                插件列表：<br />1. Todo Widget<br />2. Weather Widget<br />3. Notes Widget<br />4.
+                Quick Links<br />5. Theme Pack<br />6. Search Basic<br />7. Focus Widget<br />8.
+                Plugin Manager<br />9. Background Basic<br />10. Settings Panel
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- DIVIDER -->
+      <section class="comp-spec" id="divider">
+        <div class="comp-header">
+          <h2>Divider 分割线</h2>
+          <p>
+            视觉分隔器。支持水平（默认）和垂直两种方向。用于菜单分组、卡片间分隔、工具栏按钮分隔。
+          </p>
+        </div>
+        <div class="demo-section">
+          <h4>水平分割</h4>
+          <div
+            style="
+              background: var(--cp-surface);
+              border: 1px solid var(--cp-line);
+              border-radius: 8px;
+              padding: 8px 16px;
+              width: 200px;
+            "
+          >
+            <div style="padding: 8px 0; font-size: 13px">项目 A</div>
+            <div class="hr-divider"></div>
+            <div style="padding: 8px 0; font-size: 13px">项目 B</div>
+            <div class="hr-divider"></div>
+            <div style="padding: 8px 0; font-size: 13px">项目 C</div>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>垂直分割</h4>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 0;
+              background: var(--cp-surface);
+              border: 1px solid var(--cp-line);
+              border-radius: 8px;
+              padding: 4px;
+              width: 200px;
+            "
+          >
+            <button class="btn btn-ghost btn-sm">编辑</button>
+            <div class="v-divider" style="height: 20px"></div>
+            <button class="btn btn-ghost btn-sm">复制</button>
+            <div class="v-divider" style="height: 20px"></div>
+            <button class="btn btn-ghost btn-sm">删除</button>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- CHIP -->
+      <section class="comp-spec" id="chip">
+        <div class="comp-header">
+          <h2>Chip 标签</h2>
+          <p>可交互标签。用于筛选、分类、已选项展示。支持图标、圆点、删除按钮、点击选中。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">可选</span><span class="comp-meta-tag">可删除</span
+            ><span class="comp-meta-tag">图标/圆点</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>变体</h4>
+          <div class="demo-row">
+            <span class="chip">标签</span>
+            <span class="chip"><span class="chip-dot"></span>在线</span>
+            <span class="chip"><span class="chip-icon">🏷</span>分类</span>
+            <span class="chip">可删除<span class="chip-remove">✕</span></span>
+            <span class="chip active">已选中</span>
+          </div>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>✓ 应当</h5>
+            <p>单个或少量标签用 Chip。多选筛选场景。与 Select 多选搭配展示已选值。</p>
+          </div>
+          <div class="dont">
+            <h5>✗ 不应</h5>
+            <p>用 Chip 做主要导航——用 Tabs。超过 10 个 Chip 堆积不用容器包裹。</p>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- AVATAR -->
+      <section class="comp-spec" id="avatar">
+        <div class="comp-header">
+          <h2>Avatar 头像</h2>
+          <p>用户/实体圆形头像。4 种尺寸。支持头像组重叠排列。</p>
+        </div>
+        <div class="demo-row">
+          <div class="avatar avatar-sm">K</div>
+          <div class="avatar avatar-md">KE</div>
+          <div class="avatar avatar-lg">T</div>
+          <div class="avatar avatar-xl">TB</div>
+          <div class="avatar-group">
+            <div
+              class="avatar avatar-md"
+              style="background: var(--cp-accent-soft); color: var(--cp-accent)"
+            >
+              A
+            </div>
+            <div class="avatar avatar-md" style="background: #e8f0ff; color: #3d7ba8">B</div>
+            <div class="avatar avatar-md" style="font-size: 10px">+2</div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- ACCORDION -->
+      <section class="comp-spec" id="accordion">
+        <div class="comp-header">
+          <h2>Accordion 手风琴</h2>
+          <p>可展开/折叠的内容区域。用于 FAQ、设置分组、长列表。支持一次展开多个或仅一个。</p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start">
+          <div class="accordion">
+            <button class="acc-trigger">插件管理<span class="acc-arrow">▼</span></button>
+            <div class="acc-trigger" style="font-weight: 400; border-bottom: none">
+              外观设置<span class="acc-arrow" style="transform: rotate(180deg)">▼</span>
+            </div>
+            <div class="acc-content">
+              选择明亮或暗色主题。控制卡片圆角大小、页面底色和强调色方案。
+            </div>
+            <div class="acc-trigger">搜索偏好<span class="acc-arrow">▼</span></div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- COLLAPSIBLE -->
+      <section class="comp-spec" id="collapsible">
+        <div class="comp-header">
+          <h2>Collapsible 折叠面板</h2>
+          <p>
+            轻量内容折叠/展开。与 Accordion 的区别：Collapsible 是单个独立面板，Accordion
+            是多面板组（一次通常只展开一个）。
+          </p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start">
+          <div class="collapsible" style="width: 360px">
+            <button class="collapsible-trigger">
+              插件详情<span class="collapsible-arrow open">▶</span>
+            </button>
+            <div class="collapsible-content" style="max-height: 200px">
+              <div class="collapsible-content-inner">
+                这个插件提供待办列表功能，支持多实例、拖拽排序、完成态动画。版本 1.0.0，依赖
+                @tabora/ui 和 @tabora/storage。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- SLIDER -->
+      <section class="comp-spec" id="slider">
+        <div class="comp-header">
+          <h2>Slider 滑块</h2>
+          <p>连续或离散值的滑动选择器。用于音量、透明度、间距等需要视觉化范围选择的场景。</p>
+        </div>
+        <div class="demo-col">
+          <div class="slider-wrap">
+            <span style="font-size: 11px; color: var(--cp-text-muted); width: 40px">透明度</span
+            ><input type="range" class="slider" min="0" max="100" value="60" /><span
+              class="slider-value"
+              >60%</span
+            >
+          </div>
+          <div class="slider-wrap">
+            <span style="font-size: 11px; color: var(--cp-text-muted); width: 40px">间距</span
+            ><input type="range" class="slider" min="4" max="32" value="16" /><span
+              class="slider-value"
+              >16px</span
+            >
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- PAGINATION -->
+      <section class="comp-spec" id="pagination">
+        <div class="comp-header">
+          <h2>Pagination 分页</h2>
+          <p>列表/表格分页导航。支持页码、省略号、前后翻页。当前页高亮。</p>
+        </div>
+        <div class="demo-row">
+          <div class="pagination">
+            <button class="page-btn" disabled>‹</button><button class="page-btn active">1</button
+            ><button class="page-btn">2</button><button class="page-btn">3</button
+            ><span class="page-ellipsis">...</span><button class="page-btn">12</button
+            ><button class="page-btn">›</button>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TABLE -->
+      <section class="comp-spec" id="table">
+        <div class="comp-header">
+          <h2>Table 数据表格</h2>
+          <p>
+            结构化数据展示。支持排序、行选择、行 hover 高亮。用于插件列表、设置项、数据查看等场景。
+          </p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">排序</span><span class="comp-meta-tag">行选择</span
+            ><span class="comp-meta-tag">hover 高亮</span>
+          </div>
+        </div>
+        <div class="demo-row" style="flex-direction: column; align-items: flex-start">
+          <table class="data-table" style="width: 520px">
+            <thead>
+              <tr>
+                <th>插件名称</th>
+                <th class="sorted">ID<span class="sort-icon">↓</span></th>
+                <th>状态</th>
+                <th>版本</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Todo Widget</td>
+                <td
+                  style="
+                    font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                    font-size: 12px;
+                    color: var(--cp-text-muted);
+                  "
+                >
+                  official.widgets.todo
+                </td>
+                <td><span class="badge badge-success">运行中</span></td>
+                <td>1.0.0</td>
+              </tr>
+              <tr>
+                <td>Weather Widget</td>
+                <td
+                  style="
+                    font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                    font-size: 12px;
+                    color: var(--cp-text-muted);
+                  "
+                >
+                  official.widgets.weather
+                </td>
+                <td><span class="badge badge-success">运行中</span></td>
+                <td>1.0.0</td>
+              </tr>
+              <tr class="selected">
+                <td>Theme Pack</td>
+                <td
+                  style="
+                    font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                    font-size: 12px;
+                    color: var(--cp-text-muted);
+                  "
+                >
+                  official.theme.default
+                </td>
+                <td><span class="badge badge-accent">选中</span></td>
+                <td>1.2.0</td>
+              </tr>
+              <tr>
+                <td>Search Basic</td>
+                <td
+                  style="
+                    font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                    font-size: 12px;
+                    color: var(--cp-text-muted);
+                  "
+                >
+                  official.search.basic
+                </td>
+                <td><span class="badge badge-warning">演示</span></td>
+                <td>0.9.0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TREE VIEW -->
+      <section class="comp-spec" id="treeview">
+        <div class="comp-header">
+          <h2>TreeView 树形导航</h2>
+          <p>层级结构的展开/折叠导航。用于设置侧栏、文件浏览、插件分组等需要展示嵌套关系的场景。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">展开/折叠</span><span class="comp-meta-tag">层级嵌套</span
+            ><span class="comp-meta-tag">多选</span>
+          </div>
+        </div>
+        <div class="demo-row" style="align-items: flex-start">
+          <div class="tree" style="width: 260px">
+            <div class="tree-item">
+              <div class="tree-row selected">
+                <span class="tree-toggle open">▶</span><span class="tree-icon">📁</span>设计体系
+              </div>
+              <div class="tree-children" style="max-height: 200px">
+                <div class="tree-item">
+                  <div class="tree-row">
+                    <span class="tree-toggle empty">▶</span><span class="tree-icon">📄</span>色彩
+                    Token
+                  </div>
+                </div>
+                <div class="tree-item">
+                  <div class="tree-row">
+                    <span class="tree-toggle empty">▶</span
+                    ><span class="tree-icon">📄</span>字体规范
+                  </div>
+                </div>
+                <div class="tree-item">
+                  <div class="tree-row">
+                    <span class="tree-toggle open">▶</span><span class="tree-icon">📁</span>基础组件
+                  </div>
+                  <div class="tree-children" style="max-height: 200px">
+                    <div class="tree-item">
+                      <div class="tree-row">
+                        <span class="tree-toggle empty">▶</span
+                        ><span class="tree-icon">📄</span>Button
+                      </div>
+                    </div>
+                    <div class="tree-item">
+                      <div class="tree-row">
+                        <span class="tree-toggle empty">▶</span
+                        ><span class="tree-icon">📄</span>Input
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tree-item">
+              <div class="tree-row">
+                <span class="tree-toggle">▶</span><span class="tree-icon">📁</span>官方插件
+              </div>
+            </div>
+            <div class="tree-item">
+              <div class="tree-row">
+                <span class="tree-toggle">▶</span><span class="tree-icon">📁</span>设置
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- MENUBAR -->
+      <section class="comp-spec" id="menubar">
+        <div class="comp-header">
+          <h2>Menubar 菜单栏</h2>
+          <p>
+            水平菜单导航栏。用于设置页顶部导航、应用级菜单等场景。与 Tabs 的区别：Menubar
+            用于应用级操作菜单，Tabs 用于内容区视图切换。
+          </p>
+        </div>
+        <div class="demo-row">
+          <div class="menubar">
+            <button class="menubar-item active">文件</button>
+            <button class="menubar-item">编辑</button>
+            <button class="menubar-item">视图</button>
+            <button class="menubar-item">插件</button>
+            <button class="menubar-item">帮助</button>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- STEPS -->
+      <section class="comp-spec" id="steps">
+        <div class="comp-header">
+          <h2>Steps 步骤条</h2>
+          <p>多步流程进度指示。用于插件安装向导、导入流程等分步操作场景。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">3 状态</span><span class="comp-meta-tag">连接线</span>
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>混合状态</h4>
+          <div class="demo-row">
+            <div class="steps" style="width: 500px">
+              <div class="step">
+                <div class="step-indicator">
+                  <div class="step-circle done">✓</div>
+                  <span class="step-label">选择插件</span>
+                </div>
+                <div class="step-connector done"></div>
+              </div>
+              <div class="step">
+                <div class="step-indicator">
+                  <div class="step-circle active">2</div>
+                  <span class="step-label active">配置权限</span>
+                </div>
+                <div class="step-connector"></div>
+              </div>
+              <div class="step">
+                <div class="step-indicator">
+                  <div class="step-circle">3</div>
+                  <span class="step-label">安装</span>
+                </div>
+                <div class="step-connector"></div>
+              </div>
+              <div class="step">
+                <div class="step-indicator">
+                  <div class="step-circle">4</div>
+                  <span class="step-label">完成</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TIMELINE -->
+      <section class="comp-spec" id="timeline">
+        <div class="comp-header">
+          <h2>Timeline 时间线</h2>
+          <p>事件/活动时间线。用于版本更新日志、操作历史、活动记录等场景。</p>
+        </div>
+        <div class="demo-row">
+          <div class="timeline" style="width: 320px">
+            <div class="timeline-item">
+              <div class="timeline-rail">
+                <div class="timeline-dot active"></div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">设计体系 V2 发布</div>
+                <div class="timeline-desc">Refined Sage 色彩方案上线，46 个基础组件完成。</div>
+                <div class="timeline-time">今天 14:30</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-rail">
+                <div class="timeline-dot done"></div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">插件协议 v1.0</div>
+                <div class="timeline-desc">manifest 校验、activation、registry 完成。</div>
+                <div class="timeline-time">5月28日</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-rail"><div class="timeline-dot"></div></div>
+              <div class="timeline-content">
+                <div class="timeline-title">项目初始化</div>
+                <div class="timeline-desc">pnpm workspace + Solid + TypeScript 技术栈搭建。</div>
+                <div class="timeline-time">5月20日</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- EMPTY / LISTROW / CARDSECTION -->
+      <section class="comp-spec" id="emptystate">
+        <div class="comp-header">
+          <h2>EmptyState 空状态</h2>
+          <p>无内容占位。支持图标、紧凑模式。</p>
+        </div>
+        <div class="demo-row" style="align-items: flex-start; gap: 16px">
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <p>暂无链接。</p>
+            <button class="btn btn-primary btn-sm">添加第一个链接</button>
+          </div>
+          <div class="empty-state compact">
+            <p>未找到搜索结果。</p>
+            <button class="btn btn-secondary btn-sm">清除筛选</button>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="listrow">
+        <div class="comp-header">
+          <h2>ListRow 列表行</h2>
+          <p>列表单行。支持前置/尾部插槽、副标题、拖拽手柄、行内开关。</p>
+          <div class="comp-meta">
+            <span class="comp-meta-tag">副标题</span><span class="comp-meta-tag">拖拽</span
+            ><span class="comp-meta-tag">开关</span>
+          </div>
+        </div>
+        <div class="demo-col" style="max-width: 420px">
+          <div class="listrow listrow-dense">
+            <div class="listrow-leading">📄</div>
+            <div class="listrow-label"><div>紧凑行 (dense · 28px)</div></div>
+            <div class="listrow-trailing" style="font-size: 11px; color: var(--cp-text-subtle)">
+              dense
+            </div>
+          </div>
+          <div class="listrow">
+            <div class="listrow-leading">📄</div>
+            <div class="listrow-label">
+              <div>默认行 (36px)</div>
+              <div class="listrow-sublabel">标准间距，适用于大多数列表场景</div>
+            </div>
+            <div class="listrow-trailing" style="font-size: 11px; color: var(--cp-text-subtle)">
+              default
+            </div>
+          </div>
+          <div class="listrow listrow-relaxed">
+            <div class="listrow-leading">📄</div>
+            <div class="listrow-label">
+              <div>宽松行 (relaxed · 48px)</div>
+              <div class="listrow-sublabel">适合卡片内容丰富的列表，带更明确的操作区</div>
+            </div>
+            <div class="listrow-trailing"><span class="badge badge-accent">推荐</span></div>
+          </div>
+          <div class="listrow">
+            <div class="listrow-leading"><span class="listrow-drag">⠿</span></div>
+            <div class="listrow-label">可拖拽行</div>
+            <div class="listrow-trailing"><span class="badge badge-accent">新</span></div>
+          </div>
+          <div class="listrow">
+            <div class="listrow-leading">
+              <div
+                class="avatar avatar-sm"
+                style="background: var(--cp-accent-soft); color: var(--cp-accent); border: none"
+              >
+                Gh
+              </div>
+            </div>
+            <div class="listrow-label">GitHub</div>
+            <div class="listrow-trailing">
+              <label class="sw-wrap"
+                ><input type="checkbox" checked /><span
+                  class="sw-track"
+                  style="width: 32px; height: 18px"
+                  ><span
+                    class="sw-thumb"
+                    style="width: 14px; height: 14px; top: 2px; left: 2px"
+                  ></span></span
+              ></label>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <section class="comp-spec" id="cardsection">
+        <div class="comp-header">
+          <h2>CardSection 卡片分区</h2>
+          <p>卡片内语义分区容器。带可选标题和分割线。</p>
+        </div>
+        <div class="demo-row">
+          <div class="card-section" style="width: 280px">
+            <div class="card-section-title">外观设置</div>
+            <div class="card-section-body">
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <label class="sw-wrap"
+                  ><input type="checkbox" checked /><span class="sw-track"
+                    ><span class="sw-thumb"></span></span
+                  >显示天气</label
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- COPY BUTTON -->
+      <section class="comp-spec" id="copybutton">
+        <div class="comp-header">
+          <h2>CopyButton 复制按钮</h2>
+          <p>一键复制文本到剪贴板。复制成功后短暂显示已复制状态。</p>
+        </div>
+        <div class="demo-row">
+          <button
+            class="copy-btn"
+            onclick="
+              this.classList.add('copied')
+              this.textContent = '✓ 已复制'
+              setTimeout(() => {
+                this.classList.remove('copied')
+                this.textContent = '📋 复制'
+              }, 2000)
+            "
+          >
+            📋 复制
+          </button>
+          <span style="font-size: 13px; color: var(--cp-text-muted); margin-left: 8px"
+            >npm install @tabora/ui</span
+          >
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- TRUNCATE -->
+      <section class="comp-spec" id="truncate">
+        <div class="comp-header">
+          <h2>Truncate 文本截断</h2>
+          <p>单行或多行文本溢出省略。单行用 CSS text-overflow，多行用 line-clamp。</p>
+        </div>
+        <div class="demo-section">
+          <h4>单行截断</h4>
+          <div
+            class="truncate"
+            style="
+              width: 200px;
+              font-size: 13px;
+              color: var(--cp-text-muted);
+              background: var(--cp-surface-soft);
+              padding: 4px 8px;
+              border-radius: 4px;
+            "
+          >
+            这是一段很长的文本用于演示单行截断效果超过宽度后显示省略号
+          </div>
+        </div>
+        <div class="demo-section">
+          <h4>多行截断</h4>
+          <div
+            class="truncate-multiline truncate-2"
+            style="
+              width: 260px;
+              font-size: 13px;
+              color: var(--cp-text-muted);
+              background: var(--cp-surface-soft);
+              padding: 8px;
+              border-radius: 4px;
+              line-height: 1.5;
+            "
+          >
+            Tabora
+            是一个插件优先的个人工作台新标签页产品。它不是把搜索、壁纸、卡片和设置写死在平台里的页面，而是一个由插件装配出来的模块仪表盘型工作台平台。平台负责插件运行内核、扩展点协议和宿主容器。
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- VISUALLY HIDDEN -->
+      <section class="comp-spec" id="visuallyhidden">
+        <div class="comp-header">
+          <h2>VisuallyHidden 无障碍隐藏</h2>
+          <p>视觉上隐藏但对屏幕阅读器可见的内容。用于为纯图标按钮、装饰性元素提供文本描述。</p>
+        </div>
+        <div class="demo-row">
+          <div
+            style="
+              background: var(--cp-surface-soft);
+              border: 1px solid var(--cp-line);
+              border-radius: 8px;
+              padding: 12px;
+              font-size: 12px;
+              color: var(--cp-text-muted);
+              line-height: 1.5;
+            "
+          >
+            <button class="btn btn-primary btn-sm"><span class="sr-only">关闭对话框</span>✕</button>
+            <span style="margin-left: 12px">← 视觉上只显示 "✕"，但屏幕阅读器读出 "关闭对话框"</span>
+          </div>
+        </div>
+      </section>
+      <hr class="divider" />
+
+      <!-- ==================== COMPOSITION PATTERNS ==================== -->
+      <section class="comp-spec" id="patterns">
+        <div class="comp-header">
+          <h2>组件组合模式示范</h2>
+          <p>
+            展示 46 个基础组件如何搭配搭建 Tabora
+            的实际页面和交互流程。每个模式标注了使用的组件和关键交互。
+          </p>
+        </div>
+
+        <!-- Pattern 1: Settings Page -->
+        <div class="demo-section">
+          <h4>模式 1：设置页面</h4>
+          <p class="hint">
+            组件：Breadcrumb + Tabs + Menubar + Field + Switch + Select + Button · 场景：设置中心
+          </p>
+        </div>
+        <div class="comp-demo" style="max-width: 600px">
+          <div class="breadcrumb" style="margin-bottom: 12px">
+            <span class="breadcrumb-item">工作台</span><span class="breadcrumb-sep">/</span
+            ><span class="breadcrumb-item current">设置</span>
+          </div>
+          <div class="tabs" style="margin-bottom: 16px">
+            <button class="tab active">通用</button><button class="tab">外观</button
+            ><button class="tab">搜索</button><button class="tab">插件</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div class="field">
+              <span class="field-label">工作区名称</span
+              ><span class="field-desc">显示在页面顶部和浏览器标签中。</span
+              ><input class="inp" value="我的工作台" style="width: 100%; max-width: 320px" />
+            </div>
+            <div class="field">
+              <span class="field-label">默认搜索引擎</span
+              ><span class="field-desc">搜索栏的默认搜索提供方。</span>
+              <span class="sel-wrap"
+                ><span class="sel-btn" style="margin-top: 4px"
+                  ><span class="sel-value">Google</span><span class="sel-arrow">▼</span></span
+                ></span
+              >
+            </div>
+            <div style="display: flex; gap: 4px">
+              <button class="btn btn-primary btn-sm">保存</button
+              ><button class="btn btn-secondary btn-sm">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pattern 2: Card Sections -->
+        <div class="demo-section">
+          <h4>模式 2：卡片内容区</h4>
+          <p class="hint">
+            组件：CardSection + ListRow + Switch + Checkbox + Badge · 场景：插件设置卡片
+          </p>
+        </div>
+        <div class="comp-demo" style="max-width: 420px">
+          <div class="card-section">
+            <div class="card-section-title">天气插件设置</div>
+            <div class="card-section-body" style="display: flex; flex-direction: column; gap: 6px">
+              <div class="listrow">
+                <div class="listrow-label">显示温度</div>
+                <div class="listrow-trailing">
+                  <label class="sw-wrap"
+                    ><input type="checkbox" checked /><span class="sw-track"
+                      ><span class="sw-thumb"></span></span
+                  ></label>
+                </div>
+              </div>
+              <div class="listrow">
+                <div class="listrow-label">显示湿度</div>
+                <div class="listrow-trailing">
+                  <label class="sw-wrap"
+                    ><input type="checkbox" /><span class="sw-track"
+                      ><span class="sw-thumb"></span></span
+                  ></label>
+                </div>
+              </div>
+              <div class="listrow">
+                <div class="listrow-label">单位制</div>
+                <div class="listrow-trailing"><span class="badge badge-accent">°C</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pattern 3: Search Flow -->
+        <div class="demo-section">
+          <h4>模式 3：搜索交互流</h4>
+          <p class="hint">
+            组件：CommandPalette + Combobox + EmptyState + Kbd · 场景：全局搜索触发
+          </p>
+        </div>
+        <div class="comp-demo" style="max-width: 520px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 10px 14px;
+              background: var(--cp-surface-soft);
+              border: 1px solid var(--cp-line);
+              border-radius: 8px;
+              font-size: 13px;
+              color: var(--cp-text-subtle);
+              margin-bottom: 10px;
+            "
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            搜索命令、卡片、链接...
+            <span style="margin-left: auto"
+              ><span class="kbd-inline">⌘</span><span class="kbd-inline">K</span></span
+            >
+          </div>
+          <div style="display: flex; gap: 12px">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                  color: var(--cp-text-subtle);
+                "
+              >
+                最近搜索
+              </div>
+              <div
+                style="
+                  font-size: 13px;
+                  padding: 6px 8px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  transition: background 120ms;
+                "
+              >
+                设计体系
+              </div>
+              <div
+                style="
+                  font-size: 13px;
+                  padding: 6px 8px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  transition: background 120ms;
+                "
+              >
+                插件协议
+              </div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                  color: var(--cp-text-subtle);
+                "
+              >
+                快速命令
+              </div>
+              <div
+                style="
+                  font-size: 13px;
+                  padding: 6px 8px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  transition: background 120ms;
+                  display: flex;
+                  justify-content: space-between;
+                "
+              >
+                切换主题<span class="kbd-inline">⌘T</span>
+              </div>
+              <div
+                style="
+                  font-size: 13px;
+                  padding: 6px 8px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  transition: background 120ms;
+                  display: flex;
+                  justify-content: space-between;
+                "
+              >
+                添加卡片<span class="kbd-inline">⌘N</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pattern 4: Form with States -->
+        <div class="demo-section">
+          <h4>模式 4：表单提交流</h4>
+          <p class="hint">
+            组件：Field + Input + Textarea + Button loading + Toast · 场景：新建链接
+          </p>
+        </div>
+        <div class="comp-demo" style="max-width: 420px">
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div class="field">
+              <span class="field-label">链接名称</span
+              ><input class="inp" value="GitHub" style="width: 100%" />
+            </div>
+            <div class="field">
+              <span class="field-label">URL</span
+              ><input
+                class="inp inp-leading"
+                value="https://github.com"
+                style="width: 100%; padding-left: 34px"
+              /><span class="inp-leading-icon">🔗</span>
+            </div>
+            <div class="field">
+              <span class="field-label">备注</span
+              ><textarea class="txta" placeholder="可选备注..." style="width: 100%"></textarea>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end">
+              <button class="btn btn-secondary btn-sm">取消</button>
+              <button class="btn btn-primary btn-sm">保存</button>
+            </div>
+            <div class="toast-demo" style="margin-top: 0">
+              <span class="toast-icon success">✓</span>链接已保存
+            </div>
+          </div>
+        </div>
+
+        <!-- Pattern 5: Plugin List -->
+        <div class="demo-section">
+          <h4>模式 5：插件管理列表</h4>
+          <p class="hint">组件：Table + Badge + Switch + Pagination · 场景：插件管理设置</p>
+        </div>
+        <div class="comp-demo" style="max-width: 600px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 12px;
+            "
+          >
+            <div style="font-size: 13px; font-weight: 650">已安装插件</div>
+            <div style="font-size: 12px; color: var(--cp-text-muted)">共 8 个</div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>插件</th>
+                <th>版本</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Todo Widget</td>
+                <td
+                  style="
+                    font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                    font-size: 12px;
+                    color: var(--cp-text-muted);
+                  "
+                >
+                  1.0.0
+                </td>
+                <td><span class="badge badge-success">运行中</span></td>
+                <td>
+                  <label class="sw-wrap"
+                    ><input type="checkbox" checked /><span
+                      class="sw-track"
+                      style="width: 32px; height: 18px"
+                      ><span
+                        class="sw-thumb"
+                        style="width: 14px; height: 14px; top: 2px; left: 2px"
+                      ></span></span
+                  ></label>
+                </td>
+              </tr>
+              <tr>
+                <td>Weather Widget</td>
+                <td
+                  style="
+                    font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                    font-size: 12px;
+                    color: var(--cp-text-muted);
+                  "
+                >
+                  1.0.0
+                </td>
+                <td><span class="badge badge-success">运行中</span></td>
+                <td>
+                  <label class="sw-wrap"
+                    ><input type="checkbox" checked /><span
+                      class="sw-track"
+                      style="width: 32px; height: 18px"
+                      ><span
+                        class="sw-thumb"
+                        style="width: 14px; height: 14px; top: 2px; left: 2px"
+                      ></span></span
+                  ></label>
+                </td>
+              </tr>
+              <tr>
+                <td>Search Basic</td>
+                <td
+                  style="
+                    font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                    font-size: 12px;
+                    color: var(--cp-text-muted);
+                  "
+                >
+                  0.9.0
+                </td>
+                <td><span class="badge badge-warning">演示</span></td>
+                <td>
+                  <label class="sw-wrap"
+                    ><input type="checkbox" /><span
+                      class="sw-track"
+                      style="width: 32px; height: 18px"
+                      ><span
+                        class="sw-thumb"
+                        style="width: 14px; height: 14px; top: 2px; left: 2px"
+                      ></span></span
+                  ></label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 10px; display: flex; justify-content: center">
+            <div class="pagination">
+              <button class="page-btn" disabled>‹</button><button class="page-btn active">1</button
+              ><button class="page-btn">2</button><button class="page-btn">›</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pattern 6: Navigation -->
+        <div class="demo-section">
+          <h4>模式 6：侧栏导航</h4>
+          <p class="hint">组件：TreeView + Avatar + Badge · 场景：设置左侧导航</p>
+        </div>
+        <div class="comp-demo" style="max-width: 260px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 0 8px 12px;
+              margin-bottom: 8px;
+              border-bottom: 1px solid var(--cp-line);
+            "
+          >
+            <div
+              class="avatar avatar-md"
+              style="background: var(--cp-accent-soft); color: var(--cp-accent)"
+            >
+              TB
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 650">我的工作台</div>
+              <div style="font-size: 10px; color: var(--cp-text-subtle)">个人版</div>
+            </div>
+          </div>
+          <div class="tree">
+            <div class="tree-item">
+              <div class="tree-row selected"><span class="tree-toggle empty">▶</span>概览</div>
+            </div>
+            <div class="tree-item">
+              <div class="tree-row"><span class="tree-toggle open">▶</span>设置</div>
+              <div class="tree-children" style="max-height: 200px">
+                <div class="tree-item"><div class="tree-row">通用</div></div>
+                <div class="tree-item"><div class="tree-row">外观</div></div>
+                <div class="tree-item">
+                  <div class="tree-row">
+                    插件
+                    <span class="badge badge-accent badge-counter" style="margin-left: auto"
+                      >8</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pattern 7: Error States -->
+        <div class="demo-section">
+          <h4>模式 7：错误与空状态</h4>
+          <p class="hint">
+            组件：InlineError + EmptyState + Banner + Spinner · 场景：数据加载的各阶段
+          </p>
+        </div>
+        <div class="comp-demo" style="max-width: 520px">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div class="spinner-label">
+              <div class="spinner spinner-sm"></div>
+              正在加载卡片数据...
+            </div>
+            <div class="inline-error">
+              ⚠ 网络连接失败，使用缓存数据。<button
+                class="btn btn-sm"
+                style="
+                  background: var(--cp-danger-soft);
+                  color: var(--cp-danger);
+                  border: none;
+                  font-weight: 600;
+                  height: 24px;
+                  margin-left: 8px;
+                "
+              >
+                重试
+              </button>
+            </div>
+            <div class="banner banner-warning">
+              <div class="banner-icon">⚠</div>
+              <div class="banner-body">
+                <div class="banner-title">部分数据加载失败</div>
+                <div class="banner-desc">3 个插件未能加载，点击查看详情。</div>
+              </div>
+            </div>
+            <div class="empty-state compact">
+              <p>暂无搜索结果。</p>
+              <button class="btn btn-secondary btn-sm">清除筛选</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      document.querySelectorAll(".sidebar-link").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault()
+          const target = document.querySelector(this.getAttribute("href"))
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" })
+          document.querySelectorAll(".sidebar-link").forEach((l) => l.classList.remove("active"))
+          this.classList.add("active")
+        })
+      })
+    </script>
+  </body>
+</html>

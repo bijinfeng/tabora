@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora 设计体系规范 V2 · Refined Sage</title>
+    <style>
+      :root {
+        --ds-page: #f6f7f4;
+        --ds-page-muted: #f1f3ef;
+        --ds-surface: #ffffff;
+        --ds-surface-soft: #fafaf8;
+        --ds-surface-hover: #f2f4f0;
+        --ds-text: #1c1e1c;
+        --ds-text-muted: #6b6e6a;
+        --ds-text-subtle: #949792;
+        --ds-line: #e6e8e3;
+        --ds-line-strong: #d1d4ce;
+        --ds-accent: #1a9070;
+        --ds-accent-hover: #15785c;
+        --ds-accent-soft: #eaf5f0;
+        --ds-focus: #1a9070;
+        --ds-success: #2d8a5e;
+        --ds-warning: #a66a12;
+        --ds-danger: #c94545;
+        --ds-info: #3d7ba8;
+        --ds-space-3: 8px;
+        --ds-space-4: 12px;
+        --ds-space-5: 16px;
+        --ds-space-6: 20px;
+        --ds-space-7: 24px;
+        --ds-space-8: 32px;
+        --ds-space-9: 40px;
+        --ds-space-10: 48px;
+        --ds-radius-card: 8px;
+        --ds-radius-control: 8px;
+        --ds-radius-panel: 12px;
+        --ds-radius-pill: 999px;
+        --ds-dur-fast: 120ms;
+        --ds-dur-normal: 180ms;
+        --ds-ease: cubic-bezier(0.2, 0, 0, 1);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        color: var(--ds-text);
+        background: var(--ds-page);
+        -webkit-font-smoothing: antialiased;
+        scroll-behavior: smooth;
+      }
+      .dark {
+        --ds-page: #191c1a;
+        --ds-page-muted: #1f2321;
+        --ds-surface: #252927;
+        --ds-surface-soft: #2a2e2c;
+        --ds-surface-hover: #323734;
+        --ds-text: #edf0ed;
+        --ds-text-muted: #b6bab6;
+        --ds-text-subtle: #868b86;
+        --ds-line: #3b403c;
+        --ds-line-strong: #535954;
+        --ds-accent: #34d19e;
+        --ds-accent-hover: #5ce0b6;
+        --ds-accent-soft: #1a2e26;
+        --ds-focus: #34d19e;
+        --ds-success: #4fc49a;
+        --ds-warning: #d5a14a;
+        --ds-danger: #ef8b8b;
+        --ds-info: #7fb7df;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: 100vh;
+        transition: background 0.3s ease;
+      }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        padding: var(--ds-space-7);
+        background: var(--ds-surface);
+        border-right: 1px solid var(--ds-line);
+        display: flex;
+        flex-direction: column;
+        gap: var(--ds-space-3);
+      }
+      .sidebar-logo {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ds-text);
+        letter-spacing: -0.01em;
+        margin-bottom: var(--ds-space-5);
+      }
+      .sidebar-logo span {
+        color: var(--ds-accent);
+      }
+      .sidebar-section {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ds-text-subtle);
+        padding: var(--ds-space-3) 0 var(--ds-space-2);
+      }
+      .sidebar-link {
+        display: block;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        color: var(--ds-text-muted);
+        text-decoration: none;
+        font-weight: 450;
+        transition:
+          background 0.12s ease,
+          color 0.12s ease;
+      }
+      .sidebar-link:hover {
+        background: var(--ds-surface-hover);
+        color: var(--ds-text);
+      }
+      .sidebar-link.active {
+        background: var(--ds-accent-soft);
+        color: var(--ds-accent);
+        font-weight: 600;
+      }
+      .sidebar-toolbar {
+        margin-top: auto;
+      }
+      .sidebar-btn {
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--ds-line);
+        border-radius: var(--ds-radius-pill);
+        background: var(--ds-surface-soft);
+        color: var(--ds-text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s ease;
+      }
+      .sidebar-btn:hover {
+        background: var(--ds-surface-hover);
+        border-color: var(--ds-line-strong);
+      }
+      .main {
+        padding: var(--ds-space-8) var(--ds-space-9);
+        max-width: 1100px;
+      }
+      .spec-section {
+        margin-bottom: var(--ds-space-10);
+      }
+      .spec-section h2 {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        margin-bottom: var(--ds-space-2);
+      }
+      .spec-section h3 {
+        font-size: 20px;
+        font-weight: 650;
+        line-height: 1.3;
+        margin: var(--ds-space-6) 0 var(--ds-space-3);
+      }
+      .spec-section h4 {
+        font-size: 16px;
+        font-weight: 650;
+        line-height: 1.4;
+        margin: var(--ds-space-5) 0 var(--ds-space-3);
+      }
+      .spec-section > p {
+        font-size: 14px;
+        color: var(--ds-text-muted);
+        max-width: 720px;
+        line-height: 1.6;
+        margin-bottom: var(--ds-space-5);
+      }
+      .spec-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-bottom: var(--ds-space-6);
+        border: 1px solid var(--ds-line);
+        border-radius: var(--ds-radius-card);
+        overflow: hidden;
+        background: var(--ds-surface);
+      }
+      .spec-table thead {
+        background: var(--ds-surface-soft);
+      }
+      .spec-table th {
+        padding: 10px 14px;
+        text-align: left;
+        font-weight: 650;
+        font-size: 12px;
+        color: var(--ds-text-muted);
+        border-bottom: 1px solid var(--ds-line);
+      }
+      .spec-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--ds-line);
+        color: var(--ds-text);
+        vertical-align: top;
+      }
+      .spec-table tr:last-child td {
+        border-bottom: none;
+      }
+      .spec-table code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 12px;
+        color: var(--ds-accent);
+        background: var(--ds-accent-soft);
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: var(--ds-space-4);
+        margin-bottom: var(--ds-space-6);
+      }
+      .swatch-card {
+        border: 1px solid var(--ds-line);
+        border-radius: var(--ds-radius-card);
+        overflow: hidden;
+        background: var(--ds-surface);
+      }
+      .swatch-preview {
+        height: 80px;
+      }
+      .swatch-info {
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .swatch-info .name {
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .swatch-info .token {
+        font-size: 11px;
+        color: var(--ds-text-subtle);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+      .swatch-info .hex {
+        font-size: 12px;
+        color: var(--ds-text-muted);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+      .swatch-info .role {
+        font-size: 11px;
+        color: var(--ds-text-subtle);
+        margin-top: 2px;
+      }
+      .rule-box {
+        background: var(--ds-surface);
+        border: 1px solid var(--ds-line);
+        border-radius: var(--ds-radius-card);
+        padding: var(--ds-space-5);
+        margin-bottom: var(--ds-space-5);
+      }
+      .rule-box h4 {
+        font-size: 14px;
+        font-weight: 650;
+        margin: 0 0 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .rule-box h4::before {
+        content: "";
+        width: 4px;
+        height: 16px;
+        border-radius: 2px;
+        background: var(--ds-accent);
+      }
+      .rule-box ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .rule-box li {
+        font-size: 13px;
+        color: var(--ds-text-muted);
+        line-height: 1.5;
+        padding-left: 16px;
+        position: relative;
+      }
+      .rule-box li::before {
+        content: "─";
+        position: absolute;
+        left: 0;
+        color: var(--ds-line-strong);
+      }
+      .do-dont {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--ds-space-4);
+        margin-bottom: var(--ds-space-5);
+      }
+      .do,
+      .dont {
+        padding: var(--ds-space-5);
+        border-radius: var(--ds-radius-card);
+        border: 1px solid var(--ds-line);
+        background: var(--ds-surface);
+      }
+      .do h5 {
+        color: var(--ds-success);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      .do h5::before {
+        content: "✓ ";
+      }
+      .dont h5 {
+        color: var(--ds-danger);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      .dont h5::before {
+        content: "✗ ";
+      }
+      .do p,
+      .dont p {
+        font-size: 13px;
+        color: var(--ds-text-muted);
+        line-height: 1.5;
+      }
+      .motion-demo {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: var(--ds-space-4);
+        margin-bottom: var(--ds-space-6);
+      }
+      .motion-card {
+        border: 1px solid var(--ds-line);
+        border-radius: var(--ds-radius-card);
+        padding: var(--ds-space-5);
+        background: var(--ds-surface);
+      }
+      .motion-card h5 {
+        font-size: 13px;
+        font-weight: 650;
+        margin-bottom: 8px;
+      }
+      .motion-card p {
+        font-size: 12px;
+        color: var(--ds-text-muted);
+        margin-bottom: 12px;
+      }
+      .motion-preview {
+        height: 60px;
+        background: var(--ds-surface-soft);
+        border-radius: var(--ds-radius-control);
+        border: 1px solid var(--ds-line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+        overflow: hidden;
+      }
+      .motion-ball {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--ds-accent);
+        position: absolute;
+        left: 10px;
+        transition: left 0.12s cubic-bezier(0.2, 0, 0, 1);
+      }
+      .motion-card:hover .motion-ball {
+        left: calc(100% - 42px);
+      }
+      .layout-diagram {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 12px;
+        color: var(--ds-text-muted);
+        background: var(--ds-surface-soft);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid var(--ds-line);
+        line-height: 1.6;
+        margin-bottom: 16px;
+        white-space: pre;
+      }
+      @media (max-width: 900px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          position: relative;
+          height: auto;
+          overflow-y: visible;
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 4px;
+          padding: 12px;
+        }
+        .sidebar-logo {
+          margin-bottom: 0;
+        }
+        .sidebar-section {
+          display: none;
+        }
+        .sidebar-link {
+          font-size: 12px;
+          padding: 4px 8px;
+        }
+        .main {
+          padding: 20px;
+        }
+        .do-dont {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-logo">Tabora <span>V2</span></div>
+      <div class="sidebar-section">设计基础</div>
+      <a href="#principles" class="sidebar-link active">设计原则</a>
+      <a href="#color" class="sidebar-link">色彩体系</a>
+      <a href="#typography" class="sidebar-link">字体排印</a>
+      <a href="#spacing" class="sidebar-link">间距与网格</a>
+      <a href="#shape" class="sidebar-link">形状与层级</a>
+      <a href="#motion" class="sidebar-link">动效</a>
+      <a href="#iconography" class="sidebar-link">图标</a>
+      <a href="#responsive" class="sidebar-link">响应式</a>
+      <div class="sidebar-section">Token 参考</div>
+      <a href="#token-color" class="sidebar-link">色彩 Token</a>
+      <a href="#token-space" class="sidebar-link">间距 Token</a>
+      <a href="#token-radius" class="sidebar-link">圆角 Token</a>
+      <a href="#token-font" class="sidebar-link">字体与动效 Token</a>
+      <div class="sidebar-section">布局架构</div>
+      <a href="#layout-shell" class="sidebar-link">工作台壳体</a>
+      <a href="#layout-rail" class="sidebar-link">侧栏</a>
+      <a href="#layout-search" class="sidebar-link">命令搜索</a>
+      <a href="#layout-grid" class="sidebar-link">卡片网格</a>
+      <a href="#layout-card" class="sidebar-link">卡片壳体</a>
+      <a href="#layout-settings" class="sidebar-link">设置宿主</a>
+      <div class="sidebar-section">可访问性</div>
+      <a href="#a11y" class="sidebar-link">可访问性要求</a>
+      <div class="sidebar-toolbar">
+        <button class="sidebar-btn" onclick="document.body.classList.toggle('dark')">
+          明暗切换
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- ====== 设计原则 ====== -->
+      <section class="spec-section" id="principles">
+        <h2>设计原则</h2>
+        <p>
+          以下五条原则指导 Tabora
+          中每一个视觉和交互决策。按优先级排序——当两条原则冲突时，更高优先级的胜出。
+        </p>
+
+        <h3>1. 安静优先于响亮</h3>
+        <p>
+          Tabora
+          是一个每天打开数十次的工具。界面绝不能索求注意力。色彩、动画和装饰的存在意义是澄清状态和层级——绝不是为了取悦眼球。一次出色的
+          Tabora 使用体验，是你完全忘记了 UI 的存在。
+        </p>
+
+        <h3>2. 个性优先于通用</h3>
+        <p>
+          每个用户的工作台都应该有「自己的」感觉。设计语言提供一个安静、中性的地基——用户的卡片、链接、笔记和排列组合来提供个性。我们不强加品牌印记，我们提供画布。
+        </p>
+
+        <h3>3. 稳定优先于流动</h3>
+        <p>
+          卡片尺寸、位置和交互状态绝不允许引起布局抖动。hover
+          效果只改变颜色和边框，不改变尺寸。加载状态不推动内容位移。拖拽排序不坍塌网格。稳定铸造信任。
+        </p>
+
+        <h3>4. 清晰优先于花哨</h3>
+        <p>
+          每个可交互元素必须一眼可扫、一目了然。使用标准交互模式（勾选框表示完成、开关表示启用/禁用、下拉表示列表选择）。绝不发明新的交互范式来解决已被解决过的问题。
+        </p>
+
+        <h3>5. 默认即无障碍</h3>
+        <p>
+          无障碍性不是在发布前跑一遍的检查清单。每个组件在出厂时就带有正确的 ARIA
+          角色、键盘导航、焦点管理和色彩对比度。目标为 WCAG 2.2 AA 级合规。
+        </p>
+      </section>
+
+      <!-- ====== 色彩体系 ====== -->
+      <section class="spec-section" id="color">
+        <h2>色彩体系</h2>
+        <p>
+          Tabora 使用<strong>三层 token 体系</strong>（原始 → 语义 →
+          组件），确保主题可互换而不破坏视觉关系。插件和组件只引用语义 token——绝不硬编码原始色值。
+        </p>
+
+        <h3>Token 架构</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>层级</th>
+              <th>示例</th>
+              <th>使用者</th>
+              <th>规则</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>原始</strong></td>
+              <td><code>#1a9070</code>, <code>16px</code></td>
+              <td>仅主题定义文件</td>
+              <td>组件或插件代码中绝不引用</td>
+            </tr>
+            <tr>
+              <td><strong>语义</strong></td>
+              <td><code>--tabora-color-accent</code></td>
+              <td>所有组件、插件、布局</td>
+              <td>主题系统的主要 API 面</td>
+            </tr>
+            <tr>
+              <td><strong>组件</strong></td>
+              <td><code>--tabora-button-primary-bg</code></td>
+              <td>单个组件</td>
+              <td>从语义 token 映射而来，允许逐组件覆盖</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>明亮主题 — 语义色值</h3>
+        <div class="swatch-grid">
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #f6f7f4"></div>
+            <div class="swatch-info">
+              <span class="name">页面底色</span><span class="token">--tabora-color-page</span
+              ><span class="hex">#F6F7F4</span
+              ><span class="role">极淡 sage 暖白，几乎感觉不到绿色</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div
+              class="swatch-preview"
+              style="background: #ffffff; border: 1px solid #e6e8e3"
+            ></div>
+            <div class="swatch-info">
+              <span class="name">表面</span><span class="token">--tabora-color-surface</span
+              ><span class="hex">#FFFFFF</span><span class="role">卡片、输入框、弹窗表面</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #f2f4f0"></div>
+            <div class="swatch-info">
+              <span class="name">hover 表面</span
+              ><span class="token">--tabora-color-surface-hover</span
+              ><span class="hex">#F2F4F0</span><span class="role">hover 态弱背景</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #1a9070"></div>
+            <div class="swatch-info">
+              <span class="name">强调色</span><span class="token">--tabora-color-accent</span
+              ><span class="hex">#1A9070</span><span class="role">主操作、选中态、焦点环</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #eaf5f0"></div>
+            <div class="swatch-info">
+              <span class="name">轻强调</span><span class="token">--tabora-color-accent-soft</span
+              ><span class="hex">#EAF5F0</span><span class="role">选中背景、轻强调底色</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #1c1e1c"></div>
+            <div class="swatch-info">
+              <span class="name">主文本</span><span class="token">--tabora-color-text</span
+              ><span class="hex">#1C1E1C</span><span class="role">中性炭灰，不带绿色</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #6b6e6a"></div>
+            <div class="swatch-info">
+              <span class="name">次级文本</span><span class="token">--tabora-color-text-muted</span
+              ><span class="hex">#6B6E6A</span><span class="role">说明文字、辅助文本</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #e6e8e3"></div>
+            <div class="swatch-info">
+              <span class="name">普通边框</span><span class="token">--tabora-color-line</span
+              ><span class="hex">#E6E8E3</span><span class="role">暖灰带极微绿底</span>
+            </div>
+          </div>
+        </div>
+
+        <h3>色彩使用规则</h3>
+        <div class="rule-box">
+          <h4>强调色占比</h4>
+          <ul>
+            <li>绿色强调色在可视面积中的占比必须低于 5%。Tabora 不是"绿色主题"产品。</li>
+            <li>
+              强调色仅用于：主按钮、侧栏/导航的激活态、焦点环、已勾选态、选中边框和小型数据高亮。
+            </li>
+            <li>强调色绝不用于：正文文本、卡片背景、装饰元素、大面积页面区域。</li>
+          </ul>
+        </div>
+        <div class="rule-box">
+          <h4>文本对比度</h4>
+          <ul>
+            <li>
+              <code>text</code> 在 <code>surface</code> 上的对比度不低于 4.5:1（WCAG AA
+              普通文本要求）。
+            </li>
+            <li>
+              <code>text-muted</code> 对比度不低于 3:1（WCAG AA 大文本或 UI
+              组件要求）。在白色上的实际值约 4.8:1——超出要求。
+            </li>
+            <li>绝不将 <code>text-subtle</code> 用于用户完成任务所必须阅读的内容。</li>
+          </ul>
+        </div>
+        <div class="rule-box">
+          <h4>边框作为层级手段</h4>
+          <ul>
+            <li>边框是 Tabora 的主要视觉层级机制——不是阴影，不是背景渐变。</li>
+            <li>卡片默认为 1px <code>line</code> 边框，无阴影。</li>
+            <li>hover 态：边框切换为 <code>line-strong</code>。不改变尺寸，不缩放变形。</li>
+            <li>选中态：边框切换为 <code>accent</code>，叠加 <code>accent-soft</code> 背景。</li>
+          </ul>
+        </div>
+
+        <h3>暗色主题色值</h3>
+        <p>
+          暗色主题镜像明亮主题结构。页面底色使用深炭绿，表面使用稍浅的层次。强调色切换为更明亮的翡翠绿以维持暗色背景下的对比度。
+        </p>
+        <div class="swatch-grid">
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #191c1a"></div>
+            <div class="swatch-info">
+              <span class="name">页面底色</span><span class="hex">#191C1A</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #252927"></div>
+            <div class="swatch-info">
+              <span class="name">表面</span><span class="hex">#252927</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #edf0ed"></div>
+            <div class="swatch-info">
+              <span class="name">主文本</span><span class="hex">#EDF0ED</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #34d19e"></div>
+            <div class="swatch-info">
+              <span class="name">强调色</span><span class="hex">#34D19E</span>
+            </div>
+          </div>
+          <div class="swatch-card">
+            <div class="swatch-preview" style="background: #3b403c"></div>
+            <div class="swatch-info">
+              <span class="name">边框</span><span class="hex">#3B403C</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== 字体排印 ====== -->
+      <section class="spec-section" id="typography">
+        <h2>字体排印</h2>
+        <p>
+          Tabora 使用单一字体——<strong>Inter</strong>——以系统无衬线栈作为回退。全局使用紧凑型
+          productive type scale。不使用展示级或 hero 字号，不使用衬线配对。
+        </p>
+
+        <h3>字体栈</h3>
+        <p
+          style="
+            font-family:
+              &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace;
+            font-size: 12px;
+            color: var(--ds-text-muted);
+            background: var(--ds-surface-soft);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--ds-line);
+            margin-bottom: 16px;
+          "
+        >
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe
+          UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        </p>
+
+        <h3>Productive Type Scale</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>字号 / 行高</th>
+              <th>字重</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-font-display</code></td>
+              <td>32px / 1.2</td>
+              <td>700</td>
+              <td>页面标题、设置主页标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-title-1</code></td>
+              <td>24px / 1.25</td>
+              <td>700</td>
+              <td>设置面板标题、全屏视图标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-title-2</code></td>
+              <td>20px / 1.3</td>
+              <td>650</td>
+              <td>面板标题、弹窗标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-title-3</code></td>
+              <td>16px / 1.4</td>
+              <td>650</td>
+              <td>卡片标题、设置分组标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-body</code></td>
+              <td>14px / 1.45</td>
+              <td>400</td>
+              <td>默认正文、列表文本、搜索建议</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-body-sm</code></td>
+              <td>13px / 1.4</td>
+              <td>400</td>
+              <td>卡片内辅助正文、控件文本、描述</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-caption</code></td>
+              <td>12px / 1.35</td>
+              <td>400</td>
+              <td>标签、时间戳、元信息、帮助文本</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-micro</code></td>
+              <td>11px / 1.3</td>
+              <td>500</td>
+              <td>状态标签、快捷键、极端紧凑场景</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>等宽字体</h3>
+        <p
+          style="
+            font-family:
+              &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace;
+            font-size: 12px;
+            color: var(--ds-text-muted);
+            background: var(--ds-surface-soft);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--ds-line);
+            margin-bottom: 16px;
+          "
+        >
+          font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        </p>
+        <p>等宽字体用于：插件 ID、键盘快捷键、代码片段、调试信息和色值。绝不用于正文或 UI 标签。</p>
+      </section>
+
+      <!-- ====== 间距 ====== -->
+      <section class="spec-section" id="spacing">
+        <h2>间距与网格</h2>
+        <p>
+          Tabora 采用<strong>4px 基础单位</strong>，2px 步进用于微调。所有间距通过 token
+          定义——组件中绝不硬编码 px 值。
+        </p>
+
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>值</th>
+              <th>使用场景</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-space-0</code></td>
+              <td>0</td>
+              <td>无边距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-1</code></td>
+              <td>2px</td>
+              <td>微调：紧凑场景中的图标-文本间距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-2</code></td>
+              <td>4px</td>
+              <td>图标-文本小间距、勾选框-标签间距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-3</code></td>
+              <td>8px</td>
+              <td>控件内部紧凑间距、行内间距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-4</code></td>
+              <td>12px</td>
+              <td>卡片内小段落间距、图标行间距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-5</code></td>
+              <td>16px</td>
+              <td>卡片内边距、组件组间距、列表项内边距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-6</code></td>
+              <td>20px</td>
+              <td>中等内容分隔</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-7</code></td>
+              <td>24px</td>
+              <td>页面段落间距、网格区域分隔</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-8</code></td>
+              <td>32px</td>
+              <td>页面外边距、较大章节分隔</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-10</code></td>
+              <td>48px</td>
+              <td>全屏视图大分隔</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="rule-box">
+          <h4>组件间距 vs 布局间距</h4>
+          <ul>
+            <li>组件内部使用 <strong>padding</strong>。绝不在可复用组件上设置 margin。</li>
+            <li>
+              布局容器使用 <strong>gap</strong>（flex/grid gap）分隔子元素。绝不依赖子元素 margin
+              拼布局。
+            </li>
+            <li>这确保组件在任何布局上下文中都能工作，无需重置 margin。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ====== 形状与层级 ====== -->
+      <section class="spec-section" id="shape">
+        <h2>形状与层级</h2>
+        <h3>圆角</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>值</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-radius-1</code></td>
+              <td>4px</td>
+              <td>小型标签、勾选框、内部微元素</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-2</code></td>
+              <td>6px</td>
+              <td>小型控件、图标按钮</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-control</code></td>
+              <td>8px</td>
+              <td>按钮、输入框、下拉选择、列表行</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-card</code></td>
+              <td>8px</td>
+              <td>卡片、重复出现的卡片项</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-panel</code></td>
+              <td>12px</td>
+              <td>设置宿主、弹窗、页面级面板</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-pill</code></td>
+              <td>999px</td>
+              <td>标签、分段指示器、胶囊按钮</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>阴影层级</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>用途</th>
+              <th>等效 z-index</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-shadow-none</code></td>
+              <td>默认卡片、行内元素</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-shadow-raised</code></td>
+              <td>顶级面板、浮起卡片</td>
+              <td>100</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-shadow-floating</code></td>
+              <td>弹窗、抽屉、弹出菜单</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-shadow-dragging</code></td>
+              <td>正在拖拽的卡片</td>
+              <td>300</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ====== 动效 ====== -->
+      <section class="spec-section" id="motion">
+        <h2>动效</h2>
+        <p>
+          Tabora
+          中的动效是反馈，不是装饰。每个动画都服务于功能性目的：确认操作、展示状态变化或将注意力引导到新元素。
+        </p>
+
+        <h3>时长 Token</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>值</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-duration-fast</code></td>
+              <td>120ms</td>
+              <td>微交互：hover 颜色切换、勾选框切换</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-duration-normal</code></td>
+              <td>180ms</td>
+              <td>标准过渡：弹出框开关、状态切换</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-duration-slow</code></td>
+              <td>240ms</td>
+              <td>进场/退场：弹窗打开、抽屉滑入</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>缓动函数</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>CSS 值</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-ease-standard</code></td>
+              <td><code>cubic-bezier(0.2, 0, 0, 1)</code></td>
+              <td>默认缓动。快速启动，温和减速。</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-ease-emphasized</code></td>
+              <td><code>cubic-bezier(0.05, 0.7, 0.1, 1)</code></td>
+              <td>弹性缓动。用于愉悦时刻：完成任务、添加卡片。</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>动效演示（hover 触发）</h3>
+        <div class="motion-demo">
+          <div class="motion-card">
+            <h5>快速 · 120ms · 标准缓动</h5>
+            <p>hover 状态、勾选框切换、图标过渡</p>
+            <div class="motion-preview">
+              <div class="motion-ball" style="transition-duration: 0.12s"></div>
+            </div>
+          </div>
+          <div class="motion-card">
+            <h5>标准 · 180ms · 标准缓动</h5>
+            <p>弹出框、展开/折叠、状态切换</p>
+            <div class="motion-preview">
+              <div class="motion-ball" style="transition-duration: 0.18s"></div>
+            </div>
+          </div>
+          <div class="motion-card">
+            <h5>缓慢 · 240ms · 强调缓动</h5>
+            <p>弹窗进场、抽屉滑入、全屏打开</p>
+            <div class="motion-preview">
+              <div
+                class="motion-ball"
+                style="
+                  transition-duration: 0.24s;
+                  transition-timing-function: cubic-bezier(0.05, 0.7, 0.1, 1);
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <h4>动效规则</h4>
+          <ul>
+            <li>禁止在 hover 上使用 scale 缩放——引起布局抖动且显得玩具化</li>
+            <li>禁止连续动画（旋转指示器是唯一例外）</li>
+            <li>禁止触发重排的属性动画（margin、padding、border-width）</li>
+            <li>所有动画必须尊重 <code>@media (prefers-reduced-motion: reduce)</code></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ====== 图标 ====== -->
+      <section class="spec-section" id="iconography">
+        <h2>图标</h2>
+        <div class="rule-box">
+          <h4>图标系统</h4>
+          <ul>
+            <li>默认图标库：<strong>lucide-solid</strong></li>
+            <li>默认尺寸：内容区 16px，侧栏/导航区 20px</li>
+            <li>描边宽度：2px</li>
+            <li>颜色：继承自父级文本色（<code>currentColor</code>）</li>
+          </ul>
+        </div>
+        <div class="do-dont">
+          <div class="do">
+            <h5>使用语义图标</h5>
+            <p>勾选图标表示完成，加号表示添加，齿轮表示配置。图标匹配动作而不是装饰。</p>
+          </div>
+          <div class="dont">
+            <h5>用 emoji 做功能图标</h5>
+            <p>
+              emoji 在不同平台上渲染效果不同且无法被主题化。使用 lucide-solid 的 SVG
+              图标。天气图标可使用自定义 SVG。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== 响应式 ====== -->
+      <section class="spec-section" id="responsive">
+        <h2>响应式规范</h2>
+        <h3>断点</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>最小宽度</th>
+              <th>目标设备</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-breakpoint-sm</code></td>
+              <td>480px</td>
+              <td>小型手机</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-breakpoint-md</code></td>
+              <td>768px</td>
+              <td>平板、大屏手机</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-breakpoint-lg</code></td>
+              <td>1024px</td>
+              <td>桌面（默认目标）</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-breakpoint-xl</code></td>
+              <td>1280px</td>
+              <td>宽桌面</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>各断点布局行为</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>元素</th>
+              <th>≥ 1024px（桌面）</th>
+              <th>768-1023px（平板）</th>
+              <th>&lt; 768px（移动端）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>页面边距</td>
+              <td>24-32px</td>
+              <td>20px</td>
+              <td>16px</td>
+            </tr>
+            <tr>
+              <td>侧栏</td>
+              <td>56-64px 左侧栏</td>
+              <td>48px 左侧栏</td>
+              <td>底部工具栏</td>
+            </tr>
+            <tr>
+              <td>搜索栏</td>
+              <td>48-56px 高</td>
+              <td>44-52px</td>
+              <td>44px</td>
+            </tr>
+            <tr>
+              <td>卡片网格</td>
+              <td>4 列</td>
+              <td>3 列</td>
+              <td>1 列</td>
+            </tr>
+            <tr>
+              <td>横向滚动</td>
+              <td colspan="3" style="color: var(--ds-danger); font-weight: 650">
+                绝不。网格仅纵向滚动。
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ====== 布局架构 ====== -->
+      <section class="spec-section" id="layout-shell">
+        <h2>工作台布局架构</h2>
+        <p>
+          工作台采用三区布局：<strong>侧栏</strong>（左，56px）→ <strong>内容区</strong>（搜索 +
+          卡片网格）→ <strong>页面背景</strong>。
+        </p>
+        <div class="layout-diagram">
+          ┌──────────────────────────────────────────┐ │ workbench-shell │ │ ┌──┐
+          ┌────────────────────────────────┐ │ │ │侧│ │ 内容区 │ │ │ │栏│ │
+          ┌──────────────────────────┐ │ │ │ │ │ │ │ 命令搜索 (48-56px) │ │ │ │ │5 │ │
+          └──────────────────────────┘ │ │ │ │6 │ │ ┌──┬──┬──┬──┐ │ │ │ │ │ │ │ │ │ │ │ │ │ │ │p │ │
+          │ 卡片网格 (4列,12-16px间距) │ │ │ │x │ │ │ │ │ │ │ │ │ │ │ │ │ │ 仅纵向滚动 │ │ │ │ │ │
+          └────────────────────────┘ │ │ │ └──┘ └────────────────────────────────┘ │
+          └──────────────────────────────────────────┘
+        </div>
+      </section>
+
+      <!-- ====== 可访问性 ====== -->
+      <section class="spec-section" id="a11y">
+        <h2>可访问性要求</h2>
+        <p>Tabora 面向所有面向用户的功能，目标为 WCAG 2.2 AA 级合规。</p>
+
+        <h3>最低要求</h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>要求</th>
+              <th>WCAG 标准</th>
+              <th>实现方式</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>色彩对比（普通文本）</td>
+              <td>1.4.3 (AA) — 4.5:1</td>
+              <td>所有文本 token 已验证在表面色上的对比度</td>
+            </tr>
+            <tr>
+              <td>非文本对比</td>
+              <td>1.4.11 (AA) — 3:1</td>
+              <td>边框、图标、焦点环已验证在相邻色上的对比度</td>
+            </tr>
+            <tr>
+              <td>键盘可操作</td>
+              <td>2.1.1</td>
+              <td>所有可交互元素可聚焦并可通过键盘操作</td>
+            </tr>
+            <tr>
+              <td>焦点可见</td>
+              <td>2.4.7 (AA)</td>
+              <td>所有元素上的双环焦点指示器（outline + box-shadow）</td>
+            </tr>
+            <tr>
+              <td>焦点顺序</td>
+              <td>2.4.3</td>
+              <td>逻辑 tab 顺序：侧栏 → 搜索 → 卡片（行优先）→ 设置</td>
+            </tr>
+            <tr>
+              <td>标签/说明</td>
+              <td>3.3.2</td>
+              <td>所有表单输入有可见标签或 aria-label。图标按钮有 aria-label。</td>
+            </tr>
+            <tr>
+              <td>错误识别</td>
+              <td>3.3.1</td>
+              <td>错误使用 图标 + 文本 + 颜色。绝不单独使用颜色。</td>
+            </tr>
+            <tr>
+              <td>动效控制</td>
+              <td>2.3.3</td>
+              <td>尊重 prefers-reduced-motion。无自动播放动画。</td>
+            </tr>
+            <tr>
+              <td>触控目标尺寸</td>
+              <td>2.5.8 (AA)</td>
+              <td>交互目标 ≥ 24×24px。更小的目标有足够的间距。</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>焦点环规范</h3>
+        <p
+          style="
+            font-family:
+              &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace;
+            font-size: 12px;
+            color: var(--ds-text-muted);
+            background: var(--ds-surface-soft);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--ds-line);
+            line-height: 1.6;
+          "
+        >
+          :focus-visible {<br />
+            outline: 2px solid var(--tabora-color-focus);<br />
+            outline-offset: 2px;<br />
+            box-shadow: 0 0 0 4px rgba(26, 144, 112, 0.18);<br />
+          }
+        </p>
+
+        <div class="rule-box">
+          <h4>焦点管理</h4>
+          <ul>
+            <li>弹窗打开：焦点移至弹窗内第一个可聚焦元素</li>
+            <li>弹窗关闭：焦点返回至打开弹窗的元素</li>
+            <li>设置宿主：同弹窗模式</li>
+            <li>卡片拖拽：必须提供键盘替代方式（上/下/左/右移动）</li>
+            <li>搜索：方向键导航结果，Enter 选择，Escape 关闭</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ====== Token 参考表 ====== -->
+      <section class="spec-section" id="token-color">
+        <h2>色彩 Token 参考 — 明亮 + 暗色全部色值</h2>
+        <table class="spec-table" style="font-size: 12px">
+          <thead>
+            <tr>
+              <th>Token 名称</th>
+              <th>明亮色值</th>
+              <th>暗色色值</th>
+              <th>角色</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-color-page</code></td>
+              <td>#F6F7F4</td>
+              <td>#191C1A</td>
+              <td>页面底色</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-page-muted</code></td>
+              <td>#F1F3EF</td>
+              <td>#1F2321</td>
+              <td>次级页面底色</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-surface</code></td>
+              <td>#FFFFFF</td>
+              <td>#252927</td>
+              <td>卡片、输入、弹窗表面</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-surface-soft</code></td>
+              <td>#FAFAF8</td>
+              <td>#2A2E2C</td>
+              <td>弱表面</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-surface-hover</code></td>
+              <td>#F2F4F0</td>
+              <td>#323734</td>
+              <td>hover 表面</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-text</code></td>
+              <td>#1C1E1C</td>
+              <td>#EDF0ED</td>
+              <td>主文本</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-text-muted</code></td>
+              <td>#6B6E6A</td>
+              <td>#B6BAB6</td>
+              <td>次级文本</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-text-subtle</code></td>
+              <td>#949792</td>
+              <td>#868B86</td>
+              <td>占位、禁用文本</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-line</code></td>
+              <td>#E6E8E3</td>
+              <td>#3B403C</td>
+              <td>默认边框</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-line-strong</code></td>
+              <td>#D1D4CE</td>
+              <td>#535954</td>
+              <td>强边框</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-accent</code></td>
+              <td>#1A9070</td>
+              <td>#34D19E</td>
+              <td>主操作、选中</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-accent-hover</code></td>
+              <td>#15785C</td>
+              <td>#5CE0B6</td>
+              <td>主操作 hover</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-accent-soft</code></td>
+              <td>#EAF5F0</td>
+              <td>#1A2E26</td>
+              <td>选中背景</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-focus</code></td>
+              <td>#1A9070</td>
+              <td>#34D19E</td>
+              <td>焦点环</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-success</code></td>
+              <td>#2D8A5E</td>
+              <td>#4FC49A</td>
+              <td>成功状态</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-warning</code></td>
+              <td>#A66A12</td>
+              <td>#D5A14A</td>
+              <td>警告状态</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-danger</code></td>
+              <td>#C94545</td>
+              <td>#EF8B8B</td>
+              <td>错误、危险操作</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-color-info</code></td>
+              <td>#3D7BA8</td>
+              <td>#7FB7DF</td>
+              <td>信息提示</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="spec-section" id="token-space">
+        <h2>间距 Token 参考</h2>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>px</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-space-0</code></td>
+              <td>0</td>
+              <td>无</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-1</code></td>
+              <td>2</td>
+              <td>微调</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-2</code></td>
+              <td>4</td>
+              <td>图标-文本</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-3</code></td>
+              <td>8</td>
+              <td>紧凑间距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-4</code></td>
+              <td>12</td>
+              <td>小段落</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-5</code></td>
+              <td>16</td>
+              <td>卡片内边距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-6</code></td>
+              <td>20</td>
+              <td>中等间距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-7</code></td>
+              <td>24</td>
+              <td>段落间距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-8</code></td>
+              <td>32</td>
+              <td>页面边距</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-space-10</code></td>
+              <td>48</td>
+              <td>大分隔</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="spec-section" id="token-radius">
+        <h2>圆角与阴影 Token 参考</h2>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>值</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-radius-1</code></td>
+              <td>4px</td>
+              <td>微标签</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-2</code></td>
+              <td>6px</td>
+              <td>小控件</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-control</code></td>
+              <td>8px</td>
+              <td>按钮、输入框</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-card</code></td>
+              <td>8px</td>
+              <td>卡片</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-panel</code></td>
+              <td>12px</td>
+              <td>设置、弹窗</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-radius-pill</code></td>
+              <td>999px</td>
+              <td>标签、指示器</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="spec-section" id="token-font">
+        <h2>字体与动效 Token 参考</h2>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>值</th>
+              <th>用途</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--tabora-font-display</code></td>
+              <td>32px/1.2 · 700</td>
+              <td>页面标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-title-1</code></td>
+              <td>24px/1.25 · 700</td>
+              <td>面板标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-title-2</code></td>
+              <td>20px/1.3 · 650</td>
+              <td>段落标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-title-3</code></td>
+              <td>16px/1.4 · 650</td>
+              <td>卡片标题</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-body</code></td>
+              <td>14px/1.45 · 400</td>
+              <td>正文</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-font-duration-fast</code></td>
+              <td>120ms</td>
+              <td>微交互</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-duration-normal</code></td>
+              <td>180ms</td>
+              <td>标准过渡</td>
+            </tr>
+            <tr>
+              <td><code>--tabora-duration-slow</code></td>
+              <td>240ms</td>
+              <td>进场/退场</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      document.querySelectorAll(".sidebar-link").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault()
+          const target = document.querySelector(this.getAttribute("href"))
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" })
+          document.querySelectorAll(".sidebar-link").forEach((l) => l.classList.remove("active"))
+          this.classList.add("active")
+        })
+      })
+      const sections = document.querySelectorAll(".spec-section")
+      const links = document.querySelectorAll(".sidebar-link")
+      window.addEventListener("scroll", () => {
+        let current = ""
+        sections.forEach((s) => {
+          if (window.scrollY >= s.offsetTop - 100) current = s.id
+        })
+        links.forEach((l) => {
+          l.classList.remove("active")
+          if (l.getAttribute("href") === "#" + current) l.classList.add("active")
+        })
+      })
+    </script>
+  </body>
+</html>
