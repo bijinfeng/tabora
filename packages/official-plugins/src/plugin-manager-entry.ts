@@ -1,9 +1,6 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import {
-  PluginManagerCard,
-  type PluginManagerCardProps,
-  type PluginSummary,
-} from "./plugin-manager"
+import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import { PluginManagerCard, type PluginSummary } from "./plugin-manager"
 
 let pluginSummaryProvider: () => PluginSummary[] = () => []
 
@@ -20,16 +17,6 @@ export const officialPluginManager: BuiltinPlugin = {
     entry: "./plugin-manager-entry",
     engine: { platform: "^0.1.0" },
     contributes: {
-      widgets: [
-        {
-          id: "plugin-manager",
-          title: "插件管理",
-          supportedSizes: ["M", "L", "XL"],
-          defaultSize: "L",
-          allowMultipleInstances: false,
-          views: { card: "official.plugin-manager.card" },
-        },
-      ],
       settingsPanels: [
         {
           id: "official.settings.plugins",
@@ -43,8 +30,11 @@ export const officialPluginManager: BuiltinPlugin = {
   activate(context) {
     context.registry.views.register(
       "official.plugin-manager.card",
-      (props: PluginManagerCardProps = {}) =>
-        PluginManagerCard({ ...props, plugins: props.plugins ?? pluginSummaryProvider() }),
+      (props: SettingsPanelViewProps) =>
+        PluginManagerCard({
+          plugins: props.plugins ?? pluginSummaryProvider(),
+          host: props.host,
+        }),
     )
   },
 }

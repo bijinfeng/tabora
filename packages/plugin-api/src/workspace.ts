@@ -46,8 +46,12 @@ export type PluginRecord = {
   version: string
   source: "builtin" | "local" | "remote"
   enabled: boolean
+  status: "active" | "disabled" | "error"
   installedAt: string
   updatedAt: string
+  lastActivatedAt?: string
+  lastError?: string
+  disabledReason?: string
   manifest: PluginManifest
   grantedPermissions: PluginPermission[]
 }

@@ -17,6 +17,7 @@ import { applyThemeTokens } from "@tabora/theme"
 import {
   createInstanceRepository,
   createPluginDataRepository,
+  createPluginRecordRepository,
   createTaboraDatabase,
   createWorkspaceRepository,
 } from "@tabora/storage"
@@ -60,12 +61,17 @@ export function App() {
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
   const [dragId, setDragId] = createSignal<string | null>(null)
-  const kernel = createPluginKernel()
 
   const database = createTaboraDatabase()
   const workspaceRepo = createWorkspaceRepository(database)
   const instanceRepo = createInstanceRepository(database)
   const pluginDataRepo = createPluginDataRepository(database)
+  const pluginRecordRepo = createPluginRecordRepository(database)
+
+  const kernel = createPluginKernel({
+    lifecycleStore: pluginRecordRepo,
+    recordSource: "builtin",
+  })
 
   function makeScopedData(pluginId: string, instanceId: string): WidgetViewProps["data"] {
     return {
@@ -246,6 +252,10 @@ export function App() {
     })
   }
 
+  async function togglePluginEnabled(pluginId: string, enabled: boolean) {
+    await kernel.setPluginEnabled(pluginId, enabled)
+  }
+
   function buildSettingsPanelProps(panel: {
     id: string
     pluginId: string
@@ -264,6 +274,7 @@ export function App() {
         switchBackground,
         setDefaultSearchProvider,
         setSearchProviderEnabled,
+        togglePluginEnabled,
       },
       workspace,
       themes: themes(),

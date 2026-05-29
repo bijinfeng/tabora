@@ -1,6 +1,6 @@
-import { createComponent, createMemo, For, Show } from "solid-js"
+import { createComponent, createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import { X } from "lucide-solid"
+import { Search, X } from "lucide-solid"
 import type {
   PluginManifest,
   SettingsPanelContribution,
@@ -80,9 +80,17 @@ function renderPanel(
 }
 
 export function SettingsHost(props: SettingsHostProps) {
+  const [searchQuery, setSearchQuery] = createSignal("")
+
+  const filteredPanels = createMemo(() => {
+    const query = searchQuery().trim().toLowerCase()
+    if (!query) return props.panels
+    return props.panels.filter((panel) => panel.title.toLowerCase().includes(query))
+  })
+
   const activePanel = createMemo(() => {
     const requested = props.activePanelId
-    return props.panels.find((panel) => panel.id === requested) ?? props.panels[0] ?? null
+    return filteredPanels().find((panel) => panel.id === requested) ?? filteredPanels()[0] ?? null
   })
 
   const panelContent = createMemo(() => {
@@ -119,7 +127,18 @@ export function SettingsHost(props: SettingsHostProps) {
           </header>
           <div class="settings-host-body">
             <nav class="settings-nav" aria-label="设置面板">
-              <For each={props.panels}>
+              <div class="settings-search">
+                <Search size={16} stroke-width={2} aria-hidden="true" />
+                <input
+                  type="search"
+                  class="settings-search-input"
+                  placeholder="搜索设置..."
+                  value={searchQuery()}
+                  onInput={(e) => setSearchQuery(e.currentTarget.value)}
+                  aria-label="搜索设置面板"
+                />
+              </div>
+              <For each={filteredPanels()}>
                 {(panel) => (
                   <button
                     class="settings-nav-item"

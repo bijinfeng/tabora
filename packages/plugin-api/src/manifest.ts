@@ -144,6 +144,7 @@ export type SettingsPanelViewProps = {
     switchBackground(backgroundId: string): Promise<void>
     setDefaultSearchProvider(providerId: string): Promise<void>
     setSearchProviderEnabled?(providerId: string, enabled: boolean): Promise<void>
+    togglePluginEnabled?(pluginId: string, enabled: boolean): Promise<void>
   }
   workspace: Workspace
   themes: ThemeContribution[]
@@ -155,6 +156,8 @@ export type SettingsPanelViewProps = {
     name: string
     version: string
     enabled: boolean
+    status?: string
+    lastError?: string
     permissions: PluginPermission[]
     contributes: PluginManifest["contributes"]
   }>

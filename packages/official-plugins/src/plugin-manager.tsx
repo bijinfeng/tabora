@@ -1,9 +1,13 @@
 import { For } from "solid-js"
 import type { PluginManifest, PluginPermission, SettingsPanelViewProps } from "@tabora/plugin-api"
-import { Badge, CardSection, ListRow } from "@tabora/ui"
+import { Badge, CardSection, InlineError, ListRow, Switch } from "@tabora/ui"
+
 export type PluginSummary = SettingsPanelViewProps["plugins"][number]
 
-export type PluginManagerCardProps = Partial<Pick<SettingsPanelViewProps, "plugins">>
+export type PluginManagerCardProps = {
+  plugins?: PluginSummary[]
+  host?: SettingsPanelViewProps["host"]
+}
 
 function contributionLabels(contributes: PluginManifest["contributes"]): string[] {
   const extensions: string[] = []
@@ -57,12 +61,31 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
                       {permissions.length > 0 ? (
                         <span> · 权限 {permissions.join(" / ")}</span>
                       ) : null}
+                      {plugin.lastError ? (
+                        <span>
+                          {" "}
+                          · <InlineError>{plugin.lastError}</InlineError>
+                        </span>
+                      ) : null}
                     </span>
                   }
                   trailing={
-                    <Badge variant={plugin.enabled ? "accent" : "neutral"}>
-                      {plugin.enabled ? "已启用" : "已禁用"}
-                    </Badge>
+                    <div class="plugin-controls">
+                      {plugin.status === "error" ? (
+                        <Badge variant="danger">错误</Badge>
+                      ) : (
+                        <Badge variant={plugin.enabled ? "accent" : "neutral"}>
+                          {plugin.enabled ? "已启用" : "已禁用"}
+                        </Badge>
+                      )}
+                      <Switch
+                        checked={plugin.enabled}
+                        onChange={(enabled) => {
+                          void props.host?.togglePluginEnabled?.(plugin.id, enabled)
+                        }}
+                        aria-label={`${plugin.enabled ? "禁用" : "启用"} ${plugin.name}`}
+                      />
+                    </div>
                   }
                 />
               </li>
