@@ -172,10 +172,89 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
     }
   }
 
+  const [newWorkspaceName, setNewWorkspaceName] = createSignal("")
+
+  async function handleCreate() {
+    const name = newWorkspaceName().trim()
+    if (!name) return
+    await props.host.createWorkspace?.(name)
+    setNewWorkspaceName("")
+  }
+
+  const workspaces = () => props.workspaces ?? []
+
   return (
     <CardSection title="工作区">
       <div class="settings-panel-stack">
-        <ListRow primary={props.workspace.name} secondary={`ID: ${props.workspace.id}`} />
+        <div class="workspace-current">
+          <Field label="当前工作区" htmlFor="ws-current-name">
+            <span id="ws-current-name" class="workspace-active-name">
+              {props.workspace.name}
+            </span>
+          </Field>
+        </div>
+        <Show when={workspaces().length > 1}>
+          <div class="workspace-list">
+            <div class="workspace-list-title">所有工作区</div>
+            <For each={workspaces()}>
+              {(ws) => (
+                <div class="workspace-list-item">
+                  <span
+                    class="workspace-list-name"
+                    classList={{
+                      active: ws.id === props.workspace.id,
+                    }}
+                  >
+                    {ws.name}
+                    {ws.id === props.workspace.id ? " (当前)" : ""}
+                  </span>
+                  <div class="workspace-list-actions">
+                    <Show when={ws.id !== props.workspace.id}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void props.host.switchWorkspace?.(ws.id)}
+                      >
+                        切换
+                      </Button>
+                    </Show>
+                    <Show when={ws.id !== "default"}>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => void props.host.deleteWorkspace?.(ws.id)}
+                      >
+                        删除
+                      </Button>
+                    </Show>
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+        <div class="workspace-create">
+          <Field label="新建工作区" htmlFor="ws-new-name">
+            <div class="workspace-create-row">
+              <input
+                id="ws-new-name"
+                class="workspace-create-input"
+                value={newWorkspaceName()}
+                onInput={(e) => setNewWorkspaceName(e.currentTarget.value)}
+                onKeyDown={(e) => e.key === "Enter" && void handleCreate()}
+                placeholder="工作区名称"
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!newWorkspaceName().trim()}
+                onClick={() => void handleCreate()}
+              >
+                创建
+              </Button>
+            </div>
+          </Field>
+        </div>
         <div class="workspace-actions">
           <Button variant="secondary" size="sm" onClick={() => void handleExport()}>
             导出工作区

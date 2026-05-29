@@ -156,7 +156,11 @@ export type SettingsPanelViewProps = {
     togglePluginEnabled?(pluginId: string, enabled: boolean): Promise<void>
     exportWorkspace?(): Promise<string>
     importWorkspace?(json: string): Promise<{ warnings: string[] }>
+    createWorkspace?(name: string): Promise<void>
+    switchWorkspace?(id: string): Promise<void>
+    deleteWorkspace?(id: string): Promise<void>
   }
+  workspaces?: Workspace[]
   workspace: Workspace
   themes: ThemeContribution[]
   backgrounds: BackgroundProviderContribution[]

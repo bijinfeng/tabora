@@ -52,6 +52,7 @@ export function App() {
   const [themeId, setThemeId] = createSignal("official.theme.light")
   const [backgroundId, setBackgroundId] = createSignal(FALLBACK_BACKGROUND_ID)
   const [workspaceState, setWorkspaceState] = createSignal<Workspace | null>(null)
+  const [workspaceList, setWorkspaceList] = createSignal<Workspace[]>([])
   const [settingsOpen, setSettingsOpen] = createSignal(false)
   const [activeSettingsPanelId, setActiveSettingsPanelId] = createSignal<string | null>(null)
   const [searchSettings, setSearchSettings] = createSignal<WorkbenchSearchSettings>({
@@ -133,6 +134,8 @@ export function App() {
       }
     }
     setInstances(loaded)
+    const allWorkspaces = await workspaceRepo.getAll()
+    setWorkspaceList(allWorkspaces)
     setKernelReady(true)
   })
 
@@ -329,6 +332,56 @@ export function App() {
     return { warnings: result.warnings }
   }
 
+  async function createWorkspace(name: string): Promise<Workspace> {
+    const seed = createDefaultWorkspaceSeed({
+      ...OFFICIAL_DEFAULT_WORKSPACE_SEED,
+      workspaceName: name,
+    })
+    const ws = seed.workspace
+    ws.id = `ws-${Date.now()}`
+    ws.name = name
+    await workspaceRepo.save(ws)
+    for (const inst of seed.instances.filter((i) => i.regionId === "mainGrid")) {
+      await instanceRepo.save(inst)
+    }
+    setWorkspaceList((prev) => [...prev, ws])
+    return ws
+  }
+
+  async function switchWorkspace(id: string) {
+    if (id === workspaceState()?.id) return
+    const ws = await workspaceRepo.get(id)
+    if (!ws) return
+    setWorkspaceState(ws)
+    setActiveLayoutId(ws.activeLayoutId)
+    setThemeId(ws.activeThemeId)
+    const allThemes = themes()
+    applyThemeTokens(document.documentElement, resolveThemeTokens(ws.activeThemeId, allThemes))
+    const allBg = backgrounds()
+    const bg = ws.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID
+    setBackgroundId(bg)
+    applyBackgroundStyle(resolveBackgroundStyle(bg, allBg))
+    setSearchSettings(readSearchSettings(ws, searchProviders()))
+    const loaded = await instanceRepo.getByRegion("mainGrid")
+    setInstances(loaded)
+  }
+
+  async function deleteWorkspace(id: string) {
+    if (id === "default") return
+    await workspaceRepo.remove(id)
+    setWorkspaceList((prev) => prev.filter((w) => w.id !== id))
+    if (workspaceState()?.id === id) {
+      const fallback = await workspaceRepo.get("default")
+      if (fallback) {
+        await switchWorkspace("default")
+      }
+    }
+  }
+
+  function getWorkspaceList(): Workspace[] {
+    return workspaceList()
+  }
+
   function buildSettingsPanelProps(panel: {
     id: string
     pluginId: string
@@ -350,8 +403,15 @@ export function App() {
         togglePluginEnabled,
         exportWorkspace,
         importWorkspace,
+        createWorkspace: async (name) => {
+          const ws = await createWorkspace(name)
+          await switchWorkspace(ws.id)
+        },
+        switchWorkspace,
+        deleteWorkspace,
       },
       workspace,
+      workspaces: getWorkspaceList(),
       themes: themes(),
       backgrounds: backgrounds(),
       searchProviders: searchProviders(),
