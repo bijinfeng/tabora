@@ -1,0 +1,10 @@
+{
+  "extends": "@tabora/tsconfig/base.json",
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "paths": {
+      "@tabora/playground/src/*": ["../playground/src/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

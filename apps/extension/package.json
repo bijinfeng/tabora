@@ -1,0 +1,27 @@
+{
+  "name": "@tabora/extension",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@tabora/official-plugins": "workspace:*",
+    "@tabora/platform-kernel": "workspace:*",
+    "@tabora/storage": "workspace:*",
+    "@tabora/theme": "workspace:*",
+    "@tabora/ui": "workspace:*",
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "catalog:build",
+    "tailwindcss": "catalog:build",
+    "typescript": "catalog:build",
+    "vite": "catalog:build",
+    "vite-plugin-solid": "catalog:build",
+    "vitest": "catalog:test"
+  }
+}
