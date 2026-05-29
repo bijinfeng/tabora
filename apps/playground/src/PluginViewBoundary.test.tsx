@@ -52,7 +52,7 @@ describe("PluginViewBoundary", () => {
     })
 
     expect(root.textContent).toContain("Broken Widget")
-    expect(root.textContent).toContain("Plugin view failed")
+    expect(root.textContent).toContain("插件视图加载失败")
     expect(root.textContent).toContain("broken-widget")
   })
 
@@ -60,6 +60,6 @@ describe("PluginViewBoundary", () => {
     const root = mount(() => "Healthy plugin")
 
     expect(root.textContent).toContain("Healthy plugin")
-    expect(root.textContent).not.toContain("Plugin view failed")
+    expect(root.textContent).not.toContain("插件视图加载失败")
   })
 })

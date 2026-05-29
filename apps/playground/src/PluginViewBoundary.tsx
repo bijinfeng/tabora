@@ -16,9 +16,14 @@ export function createPluginErrorFallback(
   root.setAttribute("role", "alert")
   root.dataset.instanceId = instanceId
   appendText(root, "strong", title)
-  appendText(root, "span", "Plugin view failed")
+  appendText(root, "span", "插件视图加载失败")
   appendText(root, "small", instanceId)
   appendText(root, "pre", error instanceof Error ? error.message : String(error))
+  const btn = document.createElement("button")
+  btn.className = "plugin-error-retry-btn"
+  btn.textContent = "重试"
+  btn.addEventListener("click", () => location.reload())
+  root.append(btn)
   return root
 }
 

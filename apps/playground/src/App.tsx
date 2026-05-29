@@ -266,8 +266,17 @@ export function App() {
 
   async function saveSearchHistory(entry: { query: string; providerId: string }) {
     const history = searchHistory()
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
+    const filtered = history.filter(
+      (h) =>
+        !(
+          h.query === entry.query &&
+          h.providerId === entry.providerId &&
+          new Date(h.timestamp).getTime() > fiveMinutesAgo
+        ),
+    )
     const next: SearchHistoryEntry[] = [
-      ...history,
+      ...filtered,
       { ...entry, timestamp: new Date().toISOString() },
     ]
     setSearchHistory(next)
