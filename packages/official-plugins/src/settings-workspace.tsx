@@ -1,7 +1,7 @@
-import { For } from "solid-js"
+import { createMemo, For } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { Badge, CardSection, Field, ListRow, Select } from "@tabora/ui"
+import { Badge, CardSection, Field, ListRow, Select, Switch } from "@tabora/ui"
 
 function backgroundOptions(props: SettingsPanelViewProps) {
   return props.backgrounds.map((background) => ({
@@ -14,13 +14,6 @@ function themeOptions(props: SettingsPanelViewProps) {
   return props.themes.map((theme) => ({
     value: theme.id,
     label: theme.title,
-  }))
-}
-
-function searchProviderOptions(props: SettingsPanelViewProps) {
-  return props.searchProviders.map((provider) => ({
-    value: provider.id,
-    label: provider.shortcut ? `${provider.title} (${provider.shortcut})` : provider.title,
   }))
 }
 
@@ -58,8 +51,32 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
 }
 
 export function SearchSettingsPanel(props: SettingsPanelViewProps) {
-  const providers = () => searchProviderOptions(props)
-  const value = () => props.searchSettings.defaultProviderId || providers()[0]?.value || ""
+  const enabledIds = () =>
+    props.searchSettings.enabledProviderIds ?? props.searchProviders.map((p) => p.id)
+
+  const enabledProviders = createMemo(() =>
+    props.searchProviders.filter((p) => enabledIds().includes(p.id)),
+  )
+
+  function enabledProviderOptions() {
+    return enabledProviders().map((p) => ({
+      value: p.id,
+      label: p.shortcut ? `${p.title} (${p.shortcut})` : p.title,
+    }))
+  }
+
+  const defaultId = () => props.searchSettings.defaultProviderId || enabledProviders()[0]?.id || ""
+
+  function handleToggle(providerId: string) {
+    const currentlyEnabled = enabledIds().includes(providerId)
+    void props.host.setSearchProviderEnabled?.(providerId, !currentlyEnabled)
+    if (currentlyEnabled && providerId === defaultId()) {
+      const remaining = enabledProviders().filter((p) => p.id !== providerId)
+      if (remaining[0]) {
+        void props.host.setDefaultSearchProvider(remaining[0].id)
+      }
+    }
+  }
 
   return (
     <CardSection title="搜索">
@@ -67,29 +84,39 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
         <Field label="默认搜索源" htmlFor="settings-search-provider-select">
           <Select
             id="settings-search-provider-select"
-            value={value()}
-            options={providers()}
+            value={defaultId()}
+            options={enabledProviderOptions()}
             onChange={(providerId) => void props.host.setDefaultSearchProvider(providerId)}
             aria-label="选择默认搜索源"
           />
         </Field>
         <ul class="settings-provider-list">
           <For each={props.searchProviders}>
-            {(provider) => (
-              <li>
-                <ListRow
-                  primary={provider.title}
-                  secondary={provider.urlTemplate}
-                  trailing={
-                    provider.id === value() ? (
-                      <Badge variant="accent">默认</Badge>
-                    ) : provider.shortcut ? (
-                      <Badge>{provider.shortcut}</Badge>
-                    ) : null
-                  }
-                />
-              </li>
-            )}
+            {(provider) => {
+              const isEnabled = () => enabledIds().includes(provider.id)
+              return (
+                <li>
+                  <ListRow
+                    primary={provider.title}
+                    secondary={provider.urlTemplate}
+                    trailing={
+                      <div class="provider-controls">
+                        {provider.id === defaultId() ? (
+                          <Badge variant="accent">默认</Badge>
+                        ) : provider.shortcut ? (
+                          <Badge>{provider.shortcut}</Badge>
+                        ) : null}
+                        <Switch
+                          checked={isEnabled()}
+                          onChange={() => handleToggle(provider.id)}
+                          aria-label={`${isEnabled() ? "禁用" : "启用"} ${provider.title}`}
+                        />
+                      </div>
+                    }
+                  />
+                </li>
+              )
+            }}
           </For>
         </ul>
       </div>

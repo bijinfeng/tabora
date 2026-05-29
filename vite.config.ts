@@ -45,7 +45,15 @@ export default defineConfig({
   plugins: [solid({ hot: false })],
   test: {
     environment: "happy-dom",
-    include: ["packages/**/*.test.ts", "packages/**/*.test.tsx", "apps/**/*.test.tsx"],
+    include: [
+      "packages/plugin-api/src/**/*.test.ts",
+      "packages/platform-kernel/src/**/*.test.ts",
+      "packages/theme/src/**/*.test.ts",
+      "packages/storage/src/**/*.test.ts",
+      "packages/ui/src/**/*.test.tsx",
+      "packages/official-plugins/src/**/*.test.tsx",
+      "apps/playground/src/**/*.test.tsx",
+    ],
     exclude: ["apps/**/*.e2e.test.tsx"],
     server: {
       deps: {

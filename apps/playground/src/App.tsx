@@ -6,7 +6,6 @@ import type {
   SearchProviderContribution,
   SettingsPanelViewProps,
   ThemeContribution,
-  ThemeTokenSet,
   WidgetSize,
   WorkbenchSearchSettings,
   Workspace,
@@ -23,174 +22,15 @@ import { PluginViewBoundary } from "./PluginViewBoundary"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
 import { WORKBENCH_RAIL_ACTIONS, findLayoutContribution } from "./workbenchShell"
 import { SettingsHost, collectSettingsPanels, resolveInitialSettingsPanelId } from "./settingsHost"
+import { createDefaultWorkspaceSeed, OFFICIAL_DEFAULT_WORKSPACE_SEED } from "./defaultWorkspaceSeed"
+import { resolveThemeTokens } from "./themeResolver"
+import {
+  applyBackgroundStyle,
+  resolveBackgroundStyle,
+  FALLBACK_BACKGROUND_ID,
+} from "./backgroundResolver"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
-
-const LIGHT_TOKENS: ThemeTokenSet = {
-  "color-page": "237 241 238",
-  "color-surface": "255 255 255",
-  "color-text": "31 35 32",
-  "color-muted": "102 112 105",
-  "color-accent": "35 113 89",
-  "color-line": "210 218 213",
-  "radius-card": "16px",
-}
-
-const DARK_TOKENS: ThemeTokenSet = {
-  "color-page": "18 18 18",
-  "color-surface": "30 30 30",
-  "color-text": "230 230 230",
-  "color-muted": "140 140 140",
-  "color-accent": "80 200 160",
-  "color-line": "50 50 50",
-  "radius-card": "16px",
-}
-
-function tokensForTheme(themeId: string): ThemeTokenSet {
-  return themeId === "official.theme.dark" ? DARK_TOKENS : LIGHT_TOKENS
-}
-
-type BackgroundDef = { id: string; title: string; style: Record<string, string> }
-
-const BACKGROUNDS: BackgroundDef[] = [
-  {
-    id: "background.gradient-green",
-    title: "渐变绿",
-    style: {
-      background:
-        "linear-gradient(135deg, rgba(35, 113, 89, 0.18), transparent 32%), rgb(var(--color-page))",
-    },
-  },
-  {
-    id: "background.solid-page",
-    title: "纯色背景",
-    style: { background: "rgb(var(--color-page))" },
-  },
-  {
-    id: "background.gradient-blue",
-    title: "渐变蓝",
-    style: {
-      background:
-        "linear-gradient(160deg, rgba(66, 133, 244, 0.15), transparent 40%), rgb(var(--color-page))",
-    },
-  },
-  {
-    id: "background.gradient-purple",
-    title: "渐变紫",
-    style: {
-      background:
-        "linear-gradient(135deg, rgba(128, 90, 213, 0.15), transparent 35%), rgb(var(--color-page))",
-    },
-  },
-]
-
-const DEFAULT_BACKGROUND_ID = "background.gradient-green"
-
-function applyBackground(bgId: string) {
-  const bg = BACKGROUNDS.find((b) => b.id === bgId) ?? BACKGROUNDS[0]
-  if (!bg) return
-  for (const [prop, value] of Object.entries(bg.style)) {
-    ;(document.body.style as any)[prop] = value
-  }
-}
-
-function defaultWorkspace(): Workspace {
-  return {
-    id: "default",
-    name: "默认工作区",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    regions: {
-      rail: {
-        regionId: "rail",
-        accepts: ["layout"],
-        instances: [],
-      },
-      topbar: {
-        regionId: "topbar",
-        accepts: ["search"],
-        instances: [{ instanceId: "search-main" }],
-      },
-      mainGrid: {
-        regionId: "mainGrid",
-        accepts: ["widget"],
-        instances: [
-          { instanceId: "today-focus-1" },
-          { instanceId: "quick-links-1" },
-          { instanceId: "notes-1" },
-          { instanceId: "todo-1" },
-        ],
-      },
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-function defaultInstances(): PluginInstance[] {
-  const now = new Date().toISOString()
-  return [
-    {
-      id: "search-main",
-      pluginId: "official.search.command-bar",
-      contributionId: "official.search.command-bar",
-      extensionPoint: "search",
-      regionId: "topbar",
-      enabled: true,
-      config: {},
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "today-focus-1",
-      pluginId: "official.widgets.productivity",
-      contributionId: "today-focus",
-      extensionPoint: "widget",
-      regionId: "mainGrid",
-      enabled: true,
-      size: "M",
-      config: {},
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "quick-links-1",
-      pluginId: "official.widgets.productivity",
-      contributionId: "quick-links",
-      extensionPoint: "widget",
-      regionId: "mainGrid",
-      enabled: true,
-      size: "M",
-      config: {},
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "notes-1",
-      pluginId: "official.widgets.productivity",
-      contributionId: "notes",
-      extensionPoint: "widget",
-      regionId: "mainGrid",
-      enabled: true,
-      size: "M",
-      config: {},
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "todo-1",
-      pluginId: "official.widgets.productivity",
-      contributionId: "todo",
-      extensionPoint: "widget",
-      regionId: "mainGrid",
-      enabled: true,
-      size: "M",
-      config: {},
-      createdAt: now,
-      updatedAt: now,
-    },
-  ]
-}
 
 function findWidgetContribution(pluginId: string, contributionId: string) {
   const plugin = officialPlugins.find((p) => p.manifest.id === pluginId)
@@ -206,12 +46,12 @@ export function App() {
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
   const [activeLayoutId, setActiveLayoutId] = createSignal("official.layout.workbench-dashboard")
   const [themeId, setThemeId] = createSignal("official.theme.light")
-  const [backgroundId, setBackgroundId] = createSignal(DEFAULT_BACKGROUND_ID)
+  const [backgroundId, setBackgroundId] = createSignal(FALLBACK_BACKGROUND_ID)
   const [workspaceState, setWorkspaceState] = createSignal<Workspace | null>(null)
   const [settingsOpen, setSettingsOpen] = createSignal(false)
   const [activeSettingsPanelId, setActiveSettingsPanelId] = createSignal<string | null>(null)
   const [searchSettings, setSearchSettings] = createSignal<WorkbenchSearchSettings>({
-    defaultProviderId: "official.search.google",
+    defaultProviderId: "",
   })
   const [modalViewId, setModalViewId] = createSignal<string | null>(null)
   const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
@@ -237,7 +77,8 @@ export function App() {
 
     let workspace = await workspaceRepo.get("default")
     if (!workspace) {
-      workspace = defaultWorkspace()
+      const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
+      workspace = seed.workspace
       await workspaceRepo.save(workspace)
     }
 
@@ -245,15 +86,20 @@ export function App() {
     setSearchSettings(readSearchSettings(workspace, searchProviders()))
     setActiveLayoutId(workspace.activeLayoutId)
     setThemeId(workspace.activeThemeId)
-    applyThemeTokens(document.documentElement, tokensForTheme(workspace.activeThemeId))
 
-    const savedBg = workspace.activeBackgroundProviderId ?? DEFAULT_BACKGROUND_ID
+    const allThemes = themes()
+    const tokens = resolveThemeTokens(workspace.activeThemeId, allThemes)
+    applyThemeTokens(document.documentElement, tokens)
+
+    const allBackgrounds = backgrounds()
+    const savedBg = workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID
     setBackgroundId(savedBg)
-    applyBackground(savedBg)
+    applyBackgroundStyle(resolveBackgroundStyle(savedBg, allBackgrounds))
 
     let loaded = await instanceRepo.getByRegion("mainGrid")
     if (loaded.length === 0) {
-      loaded = assignGridOrder(defaultInstances().filter((i) => i.regionId === "mainGrid"))
+      const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
+      loaded = assignGridOrder(seed.instances.filter((i) => i.regionId === "mainGrid"))
       for (const inst of loaded) {
         await instanceRepo.save(inst)
       }
@@ -307,16 +153,22 @@ export function App() {
     workspace: Workspace,
     providers: SearchProviderContribution[],
   ): WorkbenchSearchSettings {
-    const saved = workspace.config?.search
+    const saved = workspace.config?.search as Record<string, unknown> | undefined
     const defaultProviderId =
-      typeof saved === "object" &&
-      saved !== null &&
-      "defaultProviderId" in saved &&
-      typeof saved.defaultProviderId === "string"
+      typeof saved?.defaultProviderId === "string"
         ? saved.defaultProviderId
-        : (providers[0]?.id ?? "official.search.google")
+        : (providers[0]?.id ?? "")
 
-    return { defaultProviderId }
+    let enabledProviderIds: string[] | undefined
+    if (Array.isArray(saved?.enabledProviderIds)) {
+      enabledProviderIds = saved.enabledProviderIds as string[]
+    }
+
+    const result: WorkbenchSearchSettings = { defaultProviderId }
+    if (enabledProviderIds) {
+      result.enabledProviderIds = enabledProviderIds
+    }
+    return result
   }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
@@ -340,13 +192,44 @@ export function App() {
       return
     }
     await updateWorkspace((workspace) => {
+      const currentSearch = (workspace.config?.search as Record<string, unknown>) ?? {}
       workspace.config = {
         ...(workspace.config ?? {}),
-        search: { defaultProviderId: providerId },
+        search: { ...currentSearch, defaultProviderId: providerId },
       }
       return workspace
     })
-    setSearchSettings({ defaultProviderId: providerId })
+    setSearchSettings((prev) => ({ ...prev, defaultProviderId: providerId }))
+  }
+
+  async function setSearchProviderEnabled(providerId: string, enabled: boolean) {
+    if (!searchProviders().some((provider) => provider.id === providerId)) {
+      console.warn(`Unknown search provider: "${providerId}"`)
+      return
+    }
+    await updateWorkspace((workspace) => {
+      const currentSearch = (workspace.config?.search as Record<string, unknown>) ?? {}
+      const currentEnabled = (
+        Array.isArray(currentSearch.enabledProviderIds)
+          ? currentSearch.enabledProviderIds
+          : searchProviders().map((p) => p.id)
+      ) as string[]
+      const nextEnabled = enabled
+        ? [...new Set([...currentEnabled, providerId])]
+        : currentEnabled.filter((id) => id !== providerId)
+      workspace.config = {
+        ...(workspace.config ?? {}),
+        search: { ...currentSearch, enabledProviderIds: nextEnabled },
+      }
+      return workspace
+    })
+    setSearchSettings((prev) => {
+      const currentEnabled = prev.enabledProviderIds ?? searchProviders().map((p) => p.id)
+      const nextEnabled = enabled
+        ? [...new Set([...currentEnabled, providerId])]
+        : currentEnabled.filter((id) => id !== providerId)
+      return { ...prev, enabledProviderIds: nextEnabled }
+    })
   }
 
   function buildSettingsPanelProps(panel: {
@@ -366,6 +249,7 @@ export function App() {
         switchTheme,
         switchBackground,
         setDefaultSearchProvider,
+        setSearchProviderEnabled,
       },
       workspace,
       themes: themes(),
@@ -379,7 +263,8 @@ export function App() {
   async function switchTheme(newThemeId: string) {
     const workspace = await workspaceRepo.get("default")
     if (!workspace) return
-    applyThemeTokens(document.documentElement, tokensForTheme(newThemeId))
+    const tokens = resolveThemeTokens(newThemeId, themes())
+    applyThemeTokens(document.documentElement, tokens)
     setThemeId(newThemeId)
     workspace.activeThemeId = newThemeId
     workspace.updatedAt = new Date().toISOString()
@@ -390,7 +275,7 @@ export function App() {
   async function switchBackground(bgId: string) {
     const workspace = await workspaceRepo.get("default")
     if (!workspace) return
-    applyBackground(bgId)
+    applyBackgroundStyle(resolveBackgroundStyle(bgId, backgrounds()))
     setBackgroundId(bgId)
     workspace.activeBackgroundProviderId = bgId
     workspace.updatedAt = new Date().toISOString()
@@ -418,13 +303,24 @@ export function App() {
     return contributionId
   }
 
+  function findWidgetPluginId(contributionId: string): string | null {
+    for (const plugin of officialPlugins) {
+      if (plugin.manifest.contributes.widgets?.some((w) => w.id === contributionId)) {
+        return plugin.manifest.id
+      }
+    }
+    return null
+  }
+
   async function addWidget(contributionId: string) {
-    const widget = findWidgetContribution("official.widgets.productivity", contributionId)
+    const pluginId = findWidgetPluginId(contributionId)
+    if (!pluginId) return
+    const widget = findWidgetContribution(pluginId, contributionId)
     if (!widget) return
     const id = `${contributionId}-${Date.now()}`
     const inst: PluginInstance = {
       id,
-      pluginId: "official.widgets.productivity",
+      pluginId,
       contributionId,
       extensionPoint: "widget",
       regionId: "mainGrid",
@@ -496,17 +392,42 @@ export function App() {
   }
 
   const availableWidgets = () => {
-    const contributions: { id: string; title: string; defaultSize: WidgetSize }[] = []
+    const contributions: {
+      id: string
+      pluginId: string
+      title: string
+      defaultSize: WidgetSize
+    }[] = []
     for (const plugin of officialPlugins) {
       for (const widget of plugin.manifest.contributes.widgets ?? []) {
         contributions.push({
           id: widget.id,
+          pluginId: plugin.manifest.id,
           title: widget.title,
           defaultSize: widget.defaultSize,
         })
       }
     }
     return contributions
+  }
+
+  function enabledProviderIds(): string[] {
+    const settings = searchSettings()
+    if (settings.enabledProviderIds) return settings.enabledProviderIds
+    return searchProviders().map((p) => p.id)
+  }
+
+  function enabledSearchProviders(): SearchProviderContribution[] {
+    const ids = new Set(enabledProviderIds())
+    return searchProviders().filter((p) => ids.has(p.id))
+  }
+
+  function resolveDefaultProviderForSearch(): string {
+    const settings = searchSettings()
+    if (settings.defaultProviderId) return settings.defaultProviderId
+    const enabled = enabledSearchProviders()
+    if (enabled[0]) return enabled[0].id
+    return ""
   }
 
   function renderMainGrid() {
@@ -640,8 +561,8 @@ export function App() {
     const topbar = (
       <div class="topbar">
         {SearchView()({
-          providers: searchProviders(),
-          defaultProviderId: searchSettings().defaultProviderId,
+          providers: enabledSearchProviders(),
+          defaultProviderId: resolveDefaultProviderForSearch(),
           onDefaultProviderChange: setDefaultSearchProvider,
         })}
       </div>
@@ -671,7 +592,7 @@ export function App() {
             onChange={(e) => switchBackground(e.currentTarget.value)}
             aria-label="切换背景"
           >
-            {BACKGROUNDS.map((b) => (
+            {backgrounds().map((b) => (
               <option value={b.id}>{b.title}</option>
             ))}
           </select>

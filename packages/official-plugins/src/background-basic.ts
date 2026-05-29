@@ -18,6 +18,7 @@ export const officialBackgroundBasic: BuiltinPlugin = {
         { id: "background.solid-dark", title: "纯色暗底", sourceType: "generated" },
         { id: "background.gradient-green", title: "渐变绿底", sourceType: "generated" },
         { id: "background.gradient-blue", title: "渐变蓝底", sourceType: "generated" },
+        { id: "background.gradient-purple", title: "渐变紫底", sourceType: "generated" },
       ],
       backgroundRenderers: [
         {

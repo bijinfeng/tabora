@@ -98,6 +98,20 @@ export type ThemeContribution = {
 
 export type WorkbenchSearchSettings = {
   defaultProviderId: string
+  enabledProviderIds?: string[]
+}
+
+export type ResolvedBackgroundValue = {
+  type: "css"
+  css: Record<string, string>
+}
+
+export type BackgroundRendererViewProps = {
+  providerId: string
+  providerTitle: string
+  sourceType: "local" | "remote" | "generated" | "collection"
+  resolvedValue: ResolvedBackgroundValue | null
+  fallbackStyle: Record<string, string>
 }
 
 export type SearchViewProps = {
@@ -116,6 +130,7 @@ export type SettingsPanelViewProps = {
     switchTheme(themeId: string): Promise<void>
     switchBackground(backgroundId: string): Promise<void>
     setDefaultSearchProvider(providerId: string): Promise<void>
+    setSearchProviderEnabled?(providerId: string, enabled: boolean): Promise<void>
   }
   workspace: Workspace
   themes: ThemeContribution[]
