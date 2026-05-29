@@ -1,7 +1,7 @@
-import { createMemo, For } from "solid-js"
+import { createMemo, createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { Badge, CardSection, Field, ListRow, Select, Switch } from "@tabora/ui"
+import { Badge, Button, CardSection, Field, InlineError, ListRow, Select, Switch } from "@tabora/ui"
 
 function backgroundOptions(props: SettingsPanelViewProps) {
   return props.backgrounds.map((background) => ({
@@ -124,6 +124,82 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
   )
 }
 
+export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
+  const [importError, setImportError] = createSignal<string | null>(null)
+  const [importWarnings, setImportWarnings] = createSignal<string[]>([])
+  const [importSuccess, setImportSuccess] = createSignal(false)
+
+  async function handleExport() {
+    try {
+      const json = await props.host.exportWorkspace?.()
+      if (!json) return
+      const blob = new Blob([json], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = url
+      anchor.download = `tabora-workspace-${props.workspace.name}.json`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    } catch (err: unknown) {
+      setImportError(err instanceof Error ? err.message : "导出失败")
+    }
+  }
+
+  async function handleImport() {
+    setImportError(null)
+    setImportWarnings([])
+    setImportSuccess(false)
+    try {
+      const input = document.createElement("input")
+      input.type = "file"
+      input.accept = ".json"
+      input.onchange = async () => {
+        const file = input.files?.[0]
+        if (!file) return
+        try {
+          const text = await file.text()
+          const result = await props.host.importWorkspace?.(text)
+          if (!result) return
+          setImportWarnings(result.warnings)
+          setImportSuccess(true)
+        } catch (err: unknown) {
+          setImportError(err instanceof Error ? err.message : "导入失败")
+        }
+      }
+      input.click()
+    } catch (err: unknown) {
+      setImportError(err instanceof Error ? err.message : "导入操作失败")
+    }
+  }
+
+  return (
+    <CardSection title="工作区">
+      <div class="settings-panel-stack">
+        <ListRow primary={props.workspace.name} secondary={`ID: ${props.workspace.id}`} />
+        <div class="workspace-actions">
+          <Button variant="secondary" size="sm" onClick={() => void handleExport()}>
+            导出工作区
+          </Button>
+          <Button variant="secondary" size="sm" onClick={handleImport}>
+            导入工作区
+          </Button>
+        </div>
+        <Show when={importError()}>
+          <InlineError>{importError()}</InlineError>
+        </Show>
+        <Show when={importSuccess()}>
+          <div class="workspace-import-success">导入成功</div>
+        </Show>
+        <Show when={importWarnings().length > 0}>
+          <ul class="workspace-import-warnings">
+            <For each={importWarnings()}>{(warning) => <li>{warning}</li>}</For>
+          </ul>
+        </Show>
+      </div>
+    </CardSection>
+  )
+}
+
 export const officialSettingsWorkspace: BuiltinPlugin = {
   enabled: true,
   manifest: {
@@ -146,6 +222,12 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
           view: "official.settings.workspace.search.view",
           order: 30,
         },
+        {
+          id: "official.settings.workspace.workbench",
+          title: "工作区",
+          view: "official.settings.workspace.workbench.view",
+          order: 40,
+        },
       ],
     },
   },
@@ -155,5 +237,9 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
       AppearanceSettingsPanel,
     )
     context.registry.views.register("official.settings.workspace.search.view", SearchSettingsPanel)
+    context.registry.views.register(
+      "official.settings.workspace.workbench.view",
+      WorkbenchSettingsPanel,
+    )
   },
 }

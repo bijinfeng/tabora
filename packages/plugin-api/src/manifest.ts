@@ -154,6 +154,8 @@ export type SettingsPanelViewProps = {
     setDefaultSearchProvider(providerId: string): Promise<void>
     setSearchProviderEnabled?(providerId: string, enabled: boolean): Promise<void>
     togglePluginEnabled?(pluginId: string, enabled: boolean): Promise<void>
+    exportWorkspace?(): Promise<string>
+    importWorkspace?(json: string): Promise<{ warnings: string[] }>
   }
   workspace: Workspace
   themes: ThemeContribution[]

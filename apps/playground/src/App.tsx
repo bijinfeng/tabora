@@ -279,6 +279,47 @@ export function App() {
     await pluginDataRepo.save("official.search.command-bar", "search-history", [])
   }
 
+  async function exportWorkspace(): Promise<string> {
+    const workspace = workspaceState()
+    if (!workspace) throw new Error("Workspace not loaded")
+    const instances = await instanceRepo.getAll()
+    const dataRows = await database.pluginData.toArray()
+    const { createWorkspaceExport, serializeExport } = await import("./workspacePortability")
+    const exportData = createWorkspaceExport(workspace, instances, dataRows)
+    return serializeExport(exportData)
+  }
+
+  async function importWorkspace(json: string): Promise<{ warnings: string[] }> {
+    const { parseExport, prepareImport } = await import("./workspacePortability")
+    const data = parseExport(json)
+    if (!data) throw new Error("导入数据格式无效")
+
+    const availablePluginIds = officialPlugins.map((p) => p.manifest.id)
+    const result = prepareImport(data, availablePluginIds)
+
+    const existing = await workspaceRepo.get(result.workspace.id)
+    if (existing) {
+      result.workspace.id = `${result.workspace.id}-import-${Date.now()}`
+      result.workspace.name = `${result.workspace.name} (导入)`
+    }
+
+    await workspaceRepo.save(result.workspace)
+    for (const inst of result.instances) {
+      await instanceRepo.save(inst)
+    }
+    for (const row of result.pluginDataRows) {
+      await database.pluginData.put(row)
+    }
+
+    setWorkspaceState({ ...result.workspace })
+    const gridInstances = result.instances.filter((i) => i.regionId === "mainGrid")
+    setInstances(gridInstances)
+    setActiveLayoutId(result.workspace.activeLayoutId)
+    setThemeId(result.workspace.activeThemeId)
+
+    return { warnings: result.warnings }
+  }
+
   function buildSettingsPanelProps(panel: {
     id: string
     pluginId: string
@@ -298,6 +339,8 @@ export function App() {
         setDefaultSearchProvider,
         setSearchProviderEnabled,
         togglePluginEnabled,
+        exportWorkspace,
+        importWorkspace,
       },
       workspace,
       themes: themes(),
