@@ -1,5 +1,6 @@
 import { For } from "solid-js"
 import type { PluginManifest, PluginPermission, SettingsPanelViewProps } from "@tabora/plugin-api"
+import { assessPermissionRisk } from "@tabora/plugin-api"
 import { Badge, CardSection, InlineError, ListRow, Switch } from "@tabora/ui"
 
 export type PluginSummary = SettingsPanelViewProps["plugins"][number]
@@ -113,17 +114,45 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
       <div class="plugin-audit-section">
         <div class="plugin-audit-title">权限审计</div>
         <For each={plugins()}>
-          {(plugin) => (
-            <div class="plugin-audit-item">
-              <span class="plugin-audit-name">{plugin.name}</span>
-              <For each={plugin.permissions}>
-                {(permission) => <Badge variant="neutral">{permissionType(permission)}</Badge>}
-              </For>
-              {plugin.permissions.length === 0 ? (
-                <span class="plugin-audit-none">无权限请求</span>
-              ) : null}
-            </div>
-          )}
+          {(plugin) => {
+            const risks = plugin.permissions.map(assessPermissionRisk)
+            const riskLevels: Record<string, number> = {
+              low: 0,
+              medium: 1,
+              high: 2,
+              critical: 3,
+            }
+            const maxRisk = risks.reduce(
+              (max: string, r) =>
+                (riskLevels[r.risk] ?? 0) > (riskLevels[max] ?? 0) ? r.risk : max,
+              "low",
+            )
+            return (
+              <div class="plugin-audit-item">
+                <span class="plugin-audit-name">{plugin.name}</span>
+                <For each={risks}>
+                  {(risk) => (
+                    <Badge
+                      variant={
+                        risk.risk === "low"
+                          ? "neutral"
+                          : risk.risk === "medium"
+                            ? "accent"
+                            : "danger"
+                      }
+                    >
+                      {permissionType(risk.permission)}
+                    </Badge>
+                  )}
+                </For>
+                {plugin.permissions.length === 0 ? (
+                  <span class="plugin-audit-none">无权限请求</span>
+                ) : (
+                  <span class="plugin-audit-risk">风险: {maxRisk}</span>
+                )}
+              </div>
+            )
+          }}
         </For>
       </div>
     </CardSection>
