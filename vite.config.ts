@@ -1,5 +1,45 @@
 import solid from "vite-plugin-solid"
 import { defineConfig } from "vite-plus"
+import type { PackUserConfig } from "vite-plus/pack"
+
+type PackageExports = Record<string, unknown>
+
+function withUiStylesExport(exports: PackageExports, isPublish: boolean): PackageExports {
+  const orderedExports: PackageExports = {}
+  const stylesExport = isPublish ? "./dist/styles.css" : "./src/styles.css"
+
+  if ("." in exports) {
+    orderedExports["."] = exports["."]
+  }
+  orderedExports["./styles.css"] = stylesExport
+
+  for (const [key, value] of Object.entries(exports)) {
+    if (key !== "." && key !== "./styles.css") {
+      orderedExports[key] = value
+    }
+  }
+
+  return orderedExports
+}
+
+const pack = {
+  dts: true,
+  copy: (options) =>
+    options.pkg?.name === "@tabora/ui"
+      ? [{ from: "src/styles.css", to: "dist", flatten: true }]
+      : [],
+  exports: {
+    devExports: true,
+    customExports(exports, context) {
+      if (context.pkg.name === "@tabora/ui") {
+        return withUiStylesExport(exports, context.isPublish)
+      }
+      return exports
+    },
+  },
+  platform: "browser",
+  plugins: [solid()],
+} as PackUserConfig
 
 export default defineConfig({
   plugins: [solid({ hot: false })],
@@ -39,12 +79,5 @@ export default defineConfig({
     singleQuote: false,
     semi: false,
   },
-  pack: {
-    dts: true,
-    exports: {
-      devExports: true,
-    },
-    platform: "browser",
-    plugins: [solid()],
-  },
+  pack,
 })

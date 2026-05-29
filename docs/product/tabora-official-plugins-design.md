@@ -259,20 +259,20 @@ MVP 组件清单：
 
 ## 4. 官方插件矩阵
 
-| 插件 ID                               | 插件名称                   | 扩展点                                       | 默认启用 | 当前状态                                                 | 产品职责                                           |
-| ------------------------------------- | -------------------------- | -------------------------------------------- | -------- | -------------------------------------------------------- | -------------------------------------------------- |
-| `official.theme.default-pack`         | Tabora Default Theme Pack  | `theme`                                      | 是       | 已实现基础 token                                         | 提供明亮、暗色工作台主题                           |
-| `official.background.basic`           | Basic Background           | `background-provider`, `background-renderer` | 是       | 已实现基础 provider 和 renderer view                     | 提供基础背景源和 CSS 背景渲染能力                  |
-| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已开始由 layout contribution 驱动                        | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
-| `official.search.command-bar`         | Tabora Command Search      | `search`                                     | 是       | 已实现基础 UI 和外部打开权限桥；已使用 `@tabora/ui` 控件 | 提供命令搜索、搜索源选择和快捷建议                 |
-| `official.search-providers.basic`     | Basic Search Providers     | `search-provider`                            | 是       | 已实现基础搜索源声明                                     | 提供 Google、Bing、百度、DuckDuckGo、GitHub 搜索源 |
-| `official.widgets.today-focus`        | Today Focus Widget         | `widget`                                     | 是       | MVP 新增；已使用 `@tabora/ui` 控件                       | 提供今日重点，建立个人工作台心智                   |
-| `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件       | 提供快捷入口，验证外部打开和实例配置               |
-| `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件       | 提供便签和弹窗编辑，验证插件数据和 modal           |
-| `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件       | 提供待办列表，验证交互型 widget 和持久化           |
-| `official.widgets.weather`            | Weather Widget             | `widget`                                     | 可选     | 当前在 productivity 包内                                 | 提供天气摘要，MVP 可添加但不强制首屏默认           |
-| `official.plugin-manager`             | Plugin Manager             | `widget`, `settings-panel`                   | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                 | 展示插件状态、贡献能力和权限摘要                   |
-| `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | MVP 需补齐轻量设置中心                                   | 聚合插件、外观、搜索等全局设置面板                 |
+| 插件 ID                               | 插件名称                   | 扩展点                                       | 默认启用 | 当前状态                                                                                 | 产品职责                                           |
+| ------------------------------------- | -------------------------- | -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `official.theme.default-pack`         | Tabora Default Theme Pack  | `theme`                                      | 是       | 已实现基础 token                                                                         | 提供明亮、暗色工作台主题                           |
+| `official.background.basic`           | Basic Background           | `background-provider`, `background-renderer` | 是       | 已实现基础 provider 和 renderer view                                                     | 提供基础背景源和 CSS 背景渲染能力                  |
+| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已开始由 layout contribution 驱动                                                        | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
+| `official.search.command-bar`         | Tabora Command Search      | `search`                                     | 是       | 已实现基础 UI 和外部打开权限桥；已使用 `@tabora/ui` 控件                                 | 提供命令搜索、搜索源选择和快捷建议                 |
+| `official.search-providers.basic`     | Basic Search Providers     | `search-provider`                            | 是       | 已实现基础搜索源声明                                                                     | 提供 Google、Bing、百度、DuckDuckGo、GitHub 搜索源 |
+| `official.widgets.today-focus`        | Today Focus Widget         | `widget`                                     | 是       | MVP 新增；已使用 `@tabora/ui` 控件                                                       | 提供今日重点，建立个人工作台心智                   |
+| `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供快捷入口，验证外部打开和实例配置               |
+| `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供便签和弹窗编辑，验证插件数据和 modal           |
+| `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供待办列表，验证交互型 widget 和持久化           |
+| `official.widgets.weather`            | Weather Widget             | `widget`                                     | 可选     | 当前在 productivity 包内                                                                 | 提供天气摘要，MVP 可添加但不强制首屏默认           |
+| `official.plugin-manager`             | Plugin Manager             | `widget`, `settings-panel`                   | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件状态、贡献能力和权限摘要                   |
+| `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | 已实现轻量 settings host 面板贡献：外观、搜索；插件面板由 `official.plugin-manager` 贡献 | 聚合插件、外观、搜索等全局设置面板                 |
 
 ## 5. 默认装配方案
 
@@ -615,14 +615,14 @@ MVP：
 
 - 搜索输入。
 - 搜索源选择。
+- 搜索 provider 从 registry 动态读取。
+- 默认搜索源设置和持久化。
 - 快捷搜索标签。
 - 外部打开权限桥。
 - 空查询保护。
 
 V1.1：
 
-- 搜索 provider 从 registry 动态读取，而不是搜索栏内部硬编码。
-- 默认搜索源设置。
 - 搜索历史。
 - provider 快捷前缀，例如 `gh vite-plus`。
 
@@ -710,12 +710,12 @@ MVP：
 
 - 声明基础搜索源。
 - 搜索栏可使用 URL template。
+- provider 动态注册和读取。
+- 默认搜索源持久化。
 - 权限声明支持外部打开。
 
 V1.1：
 
-- provider 动态注册和读取。
-- 默认搜索源持久化。
 - 启用/禁用搜索源。
 
 V1.5：
@@ -1901,21 +1901,21 @@ plugin view throws
 
 基于当前代码，建议后续补齐：
 
-| 领域          | 当前情况                                                                                                                  | 建议                                                   |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| 默认布局      | 已开始由 `official.layout.workbench-dashboard` 插件贡献整体布局，宿主按 layout contribution 渲染 rail / topbar / mainGrid | 继续补齐 settings host、动态 region 装配和更完整响应式 |
-| UI 基础组件   | 控件样式主要在 app.css 和插件内                                                                                           | 新增 `@tabora/ui`，官方插件优先复用基础组件            |
-| 今日重点      | 已实现基础 `today-focus` widget，并默认进入首屏                                                                           | 迁移到 plugin data，并完善多实例数据隔离               |
-| 搜索源读取    | 搜索栏内部仍有 provider 列表                                                                                              | 改为从 `search-provider` contribution 动态读取         |
-| 快捷入口      | 链接写在插件 view 内                                                                                                      | 支持实例配置和 plugin data                             |
-| 便签存储      | 使用 `localStorage` 全局 key                                                                                              | 迁移到 plugin data，并支持实例隔离                     |
-| 待办存储      | 使用 pluginId + key，全实例共享                                                                                           | 加入 instanceId 或明确共享列表策略                     |
-| 天气数据      | mock 北京天气                                                                                                             | 接入天气 provider，标明 demo 状态                      |
-| 天气图标      | 使用天气符号                                                                                                              | 换成统一图标资源                                       |
-| 插件管理器    | 只读官方插件列表                                                                                                          | 接入 plugin records、权限、错误和启用/禁用             |
-| 设置插件      | 未实现                                                                                                                    | MVP 新增轻量 settings host 和 workspace settings 插件  |
-| 权限反馈      | 搜索外部打开已有桥                                                                                                        | 增加 UI 层失败反馈和权限详情                           |
-| 背景 renderer | view 为空，宿主侧处理较多                                                                                                 | 明确 renderer props contract                           |
+| 领域          | 当前情况                                                                                                                  | 建议                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 默认布局      | 已开始由 `official.layout.workbench-dashboard` 插件贡献整体布局，宿主按 layout contribution 渲染 rail / topbar / mainGrid | 继续补齐动态 region 装配和更完整响应式      |
+| UI 基础组件   | 控件样式主要在 app.css 和插件内                                                                                           | 新增 `@tabora/ui`，官方插件优先复用基础组件 |
+| 今日重点      | 已实现基础 `today-focus` widget，并默认进入首屏                                                                           | 迁移到 plugin data，并完善多实例数据隔离    |
+| 搜索源读取    | 已从 `search-provider` contribution 动态读取                                                                              | —                                           |
+| 快捷入口      | 链接写在插件 view 内                                                                                                      | 支持实例配置和 plugin data                  |
+| 便签存储      | 使用 `localStorage` 全局 key                                                                                              | 迁移到 plugin data，并支持实例隔离          |
+| 待办存储      | 使用 pluginId + key，全实例共享                                                                                           | 加入 instanceId 或明确共享列表策略          |
+| 天气数据      | mock 北京天气                                                                                                             | 接入天气 provider，标明 demo 状态           |
+| 天气图标      | 使用天气符号                                                                                                              | 换成统一图标资源                            |
+| 插件管理器    | 只读官方插件列表                                                                                                          | 接入 plugin records、权限、错误和启用/禁用  |
+| 设置插件      | 已实现 MVP 轻量 settings host；插件、外观、搜索面板可进入                                                                 | 新增插件启停、权限详情、设置搜索            |
+| 权限反馈      | 搜索外部打开已有桥                                                                                                        | 增加 UI 层失败反馈和权限详情                |
+| 背景 renderer | view 为空，宿主侧处理较多                                                                                                 | 明确 renderer props contract                |
 
 ## 17. 推荐推进优先级
 

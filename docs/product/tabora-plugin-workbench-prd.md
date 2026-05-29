@@ -149,7 +149,7 @@ MVP 包含：
 - 通过 token 切换主题。
 - 切换背景来源和背景渲染器。
 - 搜索源启用、禁用和默认搜索源。
-- 轻量设置中心：统一承载插件贡献的 `settings-panel`，并提供插件、外观、搜索的最小设置入口。
+- 轻量设置中心：宿主提供 settings host，聚合插件、外观、搜索三个 settings-panel contribution；插件启停、权限审计、导入导出后移。
 - IndexedDB 本地持久化。
 - 插件错误边界和安全回退状态。
 - `external-open` 最小权限桥。

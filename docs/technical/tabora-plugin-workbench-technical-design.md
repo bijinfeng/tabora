@@ -470,6 +470,7 @@ MVP 组件：
 - `official.widgets.todo`
 - `official.widgets.weather`
 - `official.plugin-manager`
+- `official.settings.workspace`
 
 ## 7. 插件协议设计
 
@@ -877,6 +878,8 @@ Fullscreen 同理。
 
 MVP 需要提供轻量设置中心，用于验证 `settings-panel` 扩展点和统一插件设置入口。
 
+当前实现：playground 提供 settings host 容器；`official.plugin-manager` 贡献 `official.settings.plugins`；`official.settings.workspace` 贡献外观和搜索面板。宿主传入 workspace、theme/background/search-provider contributions 和最小 host actions。
+
 Settings 渲染流程：
 
 ```txt
@@ -909,6 +912,8 @@ MVP 必备面板：
 - `official.settings.plugins`：插件列表、贡献能力、权限摘要，MVP 可只读。
 - `official.settings.workspace.appearance`：主题和背景切换。
 - `official.settings.workspace.search`：默认搜索源和搜索源启用状态。
+
+后续仍需补齐 focus trap、Escape 关闭、插件启停、权限详情和设置搜索。
 
 ## 12. 错误隔离方案
 
@@ -1182,7 +1187,7 @@ MVP 官方插件可以通过 manifest 默认授权最小权限，但记录模型
 
 后续继续补齐：
 
-- 轻 rail 插件、设置入口。
+- 设置中心完整的焦点管理、Escape 关闭和搜索源配置 E2E。
 - 调整尺寸后持久化恢复。
 - 添加多张 widget 后验证主网格纵向滚动、无横向滚动、卡片仍可读。
 - 切换主题和背景。
@@ -1299,8 +1304,7 @@ pluginCrashReports
 - 工作台仪表盘布局：轻 rail + 命令搜索 + 主网格。
 - `@tabora/ui` 基础组件包，并迁移官方插件内容区控件。
 - 今日重点 widget。
-- 轻量 settings host。
-- workspace settings 插件。
+- 轻量 settings host 和 workspace settings 插件（已实现）。
 - permission grants 持久化。
 - 插件管理面板展示权限。
 - 插件启用 / 禁用完整流程。

@@ -1,5 +1,15 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { PluginManagerCard } from "./plugin-manager"
+import {
+  PluginManagerCard,
+  type PluginManagerCardProps,
+  type PluginSummary,
+} from "./plugin-manager"
+
+let pluginSummaryProvider: () => PluginSummary[] = () => []
+
+export function setPluginManagerFallbackPlugins(provider: () => PluginSummary[]) {
+  pluginSummaryProvider = provider
+}
 
 export const officialPluginManager: BuiltinPlugin = {
   enabled: true,
@@ -25,11 +35,16 @@ export const officialPluginManager: BuiltinPlugin = {
           id: "official.settings.plugins",
           title: "插件",
           view: "official.plugin-manager.card",
+          order: 10,
         },
       ],
     },
   },
   activate(context) {
-    context.registry.views.register("official.plugin-manager.card", PluginManagerCard)
+    context.registry.views.register(
+      "official.plugin-manager.card",
+      (props: PluginManagerCardProps = {}) =>
+        PluginManagerCard({ ...props, plugins: props.plugins ?? pluginSummaryProvider() }),
+    )
   },
 }

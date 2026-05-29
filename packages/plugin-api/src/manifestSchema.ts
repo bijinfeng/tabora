@@ -126,6 +126,7 @@ export const pluginManifestSchema = z.object({
           id: z.string().min(1),
           title: z.string().min(1),
           view: z.string().min(1),
+          order: z.number().int().optional(),
         }),
       )
       .optional(),

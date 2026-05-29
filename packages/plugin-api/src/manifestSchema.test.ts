@@ -107,6 +107,29 @@ describe("pluginManifestSchema", () => {
     )
   })
 
+  it("accepts an ordered settings panel contribution", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.settings.workspace",
+      name: "Workspace Settings",
+      version: "0.0.0",
+      entry: "./settings-workspace",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "official.settings.workspace.appearance",
+            title: "外观",
+            view: "official.settings.workspace.appearance.view",
+            order: 20,
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.success ? result.data.contributes.settingsPanels?.[0]?.order : undefined).toBe(20)
+  })
+
   it("rejects a layout contribution with an empty view", () => {
     const result = pluginManifestSchema.safeParse({
       id: "bad.layout",

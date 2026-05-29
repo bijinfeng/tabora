@@ -1,6 +1,16 @@
 import { createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import type { PluginInstance, ThemeTokenSet, WidgetSize, Workspace } from "@tabora/plugin-api"
+import type {
+  BackgroundProviderContribution,
+  PluginInstance,
+  SearchProviderContribution,
+  SettingsPanelViewProps,
+  ThemeContribution,
+  ThemeTokenSet,
+  WidgetSize,
+  WorkbenchSearchSettings,
+  Workspace,
+} from "@tabora/plugin-api"
 import { officialPlugins } from "@tabora/official-plugins"
 import { createPluginKernel } from "@tabora/platform-kernel"
 import { applyThemeTokens } from "@tabora/theme"
@@ -12,8 +22,9 @@ import {
 import { PluginViewBoundary } from "./PluginViewBoundary"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
 import { WORKBENCH_RAIL_ACTIONS, findLayoutContribution } from "./workbenchShell"
+import { SettingsHost, collectSettingsPanels, resolveInitialSettingsPanelId } from "./settingsHost"
 
-type SolidView = (...args: any[]) => JSX.Element
+type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 
 const LIGHT_TOKENS: ThemeTokenSet = {
   "color-page": "237 241 238",
@@ -196,6 +207,12 @@ export function App() {
   const [activeLayoutId, setActiveLayoutId] = createSignal("official.layout.workbench-dashboard")
   const [themeId, setThemeId] = createSignal("official.theme.light")
   const [backgroundId, setBackgroundId] = createSignal(DEFAULT_BACKGROUND_ID)
+  const [workspaceState, setWorkspaceState] = createSignal<Workspace | null>(null)
+  const [settingsOpen, setSettingsOpen] = createSignal(false)
+  const [activeSettingsPanelId, setActiveSettingsPanelId] = createSignal<string | null>(null)
+  const [searchSettings, setSearchSettings] = createSignal<WorkbenchSearchSettings>({
+    defaultProviderId: "official.search.google",
+  })
   const [modalViewId, setModalViewId] = createSignal<string | null>(null)
   const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
@@ -207,9 +224,11 @@ export function App() {
   const workspaceRepo = createWorkspaceRepository(database)
   const instanceRepo = createInstanceRepository(database)
 
-  function viewOrUndefined(viewId: string): SolidView | undefined {
+  function viewOrUndefined<Props = Record<string, unknown>>(
+    viewId: string,
+  ): SolidView<Props> | undefined {
     return kernel.registry.views.has(viewId)
-      ? (kernel.registry.views.get(viewId) as SolidView)
+      ? (kernel.registry.views.get(viewId) as SolidView<Props>)
       : undefined
   }
 
@@ -222,6 +241,8 @@ export function App() {
       await workspaceRepo.save(workspace)
     }
 
+    setWorkspaceState(workspace)
+    setSearchSettings(readSearchSettings(workspace, searchProviders()))
     setActiveLayoutId(workspace.activeLayoutId)
     setThemeId(workspace.activeThemeId)
     applyThemeTokens(document.documentElement, tokensForTheme(workspace.activeThemeId))
@@ -257,6 +278,104 @@ export function App() {
     }
   })
 
+  function themes(): ThemeContribution[] {
+    return officialPlugins.flatMap((plugin) => plugin.manifest.contributes.themes ?? [])
+  }
+
+  function searchProviders(): SearchProviderContribution[] {
+    return officialPlugins.flatMap((plugin) => plugin.manifest.contributes.searchProviders ?? [])
+  }
+
+  function backgrounds(): BackgroundProviderContribution[] {
+    return officialPlugins.flatMap(
+      (plugin) => plugin.manifest.contributes.backgroundProviders ?? [],
+    )
+  }
+
+  function pluginSummaries(): SettingsPanelViewProps["plugins"] {
+    return officialPlugins.map((plugin) => ({
+      id: plugin.manifest.id,
+      name: plugin.manifest.name,
+      version: plugin.manifest.version,
+      enabled: plugin.enabled,
+      permissions: plugin.manifest.permissions ?? [],
+      contributes: plugin.manifest.contributes,
+    }))
+  }
+
+  function readSearchSettings(
+    workspace: Workspace,
+    providers: SearchProviderContribution[],
+  ): WorkbenchSearchSettings {
+    const saved = workspace.config?.search
+    const defaultProviderId =
+      typeof saved === "object" &&
+      saved !== null &&
+      "defaultProviderId" in saved &&
+      typeof saved.defaultProviderId === "string"
+        ? saved.defaultProviderId
+        : (providers[0]?.id ?? "official.search.google")
+
+    return { defaultProviderId }
+  }
+
+  async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
+    const current = await workspaceRepo.get("default")
+    if (!current) return
+    const updated = mutator({ ...current, config: { ...(current.config ?? {}) } })
+    updated.updatedAt = new Date().toISOString()
+    await workspaceRepo.save(updated)
+    setWorkspaceState(updated)
+  }
+
+  function openSettings(panelId?: string) {
+    const panels = collectSettingsPanels(officialPlugins)
+    setActiveSettingsPanelId(resolveInitialSettingsPanelId(panels, panelId))
+    setSettingsOpen(true)
+  }
+
+  async function setDefaultSearchProvider(providerId: string) {
+    if (!searchProviders().some((provider) => provider.id === providerId)) {
+      console.warn(`Unknown search provider: "${providerId}"`)
+      return
+    }
+    await updateWorkspace((workspace) => {
+      workspace.config = {
+        ...(workspace.config ?? {}),
+        search: { defaultProviderId: providerId },
+      }
+      return workspace
+    })
+    setSearchSettings({ defaultProviderId: providerId })
+  }
+
+  function buildSettingsPanelProps(panel: {
+    id: string
+    pluginId: string
+  }): SettingsPanelViewProps {
+    const workspace = workspaceState()
+    if (!workspace) {
+      throw new Error("Workspace is not ready")
+    }
+    return {
+      panelId: panel.id,
+      pluginId: panel.pluginId,
+      host: {
+        close: () => setSettingsOpen(false),
+        setDirty: () => {},
+        switchTheme,
+        switchBackground,
+        setDefaultSearchProvider,
+      },
+      workspace,
+      themes: themes(),
+      backgrounds: backgrounds(),
+      searchProviders: searchProviders(),
+      searchSettings: searchSettings(),
+      plugins: pluginSummaries(),
+    }
+  }
+
   async function switchTheme(newThemeId: string) {
     const workspace = await workspaceRepo.get("default")
     if (!workspace) return
@@ -265,6 +384,7 @@ export function App() {
     workspace.activeThemeId = newThemeId
     workspace.updatedAt = new Date().toISOString()
     await workspaceRepo.save(workspace)
+    setWorkspaceState({ ...workspace })
   }
 
   async function switchBackground(bgId: string) {
@@ -275,6 +395,7 @@ export function App() {
     workspace.activeBackgroundProviderId = bgId
     workspace.updatedAt = new Date().toISOString()
     await workspaceRepo.save(workspace)
+    setWorkspaceState({ ...workspace })
   }
 
   const SearchView = () =>
@@ -490,8 +611,8 @@ export function App() {
       return
     }
 
-    if (action.modalViewId) {
-      kernel.events.emit("ui.modal.open", { viewId: action.modalViewId, props: {} })
+    if (action.settingsPanelId) {
+      openSettings(action.settingsPanelId)
     }
   }
 
@@ -516,7 +637,15 @@ export function App() {
         </For>
       </nav>
     )
-    const topbar = <div class="topbar">{SearchView()({})}</div>
+    const topbar = (
+      <div class="topbar">
+        {SearchView()({
+          providers: searchProviders(),
+          defaultProviderId: searchSettings().defaultProviderId,
+          onDefaultProviderChange: setDefaultSearchProvider,
+        })}
+      </div>
+    )
     const mainGrid = renderMainGrid()
 
     return LayoutView ? (
@@ -555,6 +684,15 @@ export function App() {
           </button>
         </div>
         {renderActiveLayout()}
+        <SettingsHost
+          open={settingsOpen()}
+          panels={collectSettingsPanels(officialPlugins)}
+          activePanelId={activeSettingsPanelId()}
+          onPanelChange={setActiveSettingsPanelId}
+          onClose={() => setSettingsOpen(false)}
+          getView={(viewId) => viewOrUndefined<SettingsPanelViewProps>(viewId)}
+          panelProps={buildSettingsPanelProps}
+        />
         <Show when={modalViewId()}>
           <div class="modal-overlay" onClick={() => setModalViewId(null)}>
             <div class="modal-container" onClick={(e) => e.stopPropagation()}>

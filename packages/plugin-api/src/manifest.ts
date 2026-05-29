@@ -1,3 +1,5 @@
+import type { Workspace } from "./workspace"
+
 export type ExtensionPoint =
   | "layout"
   | "widget"
@@ -94,10 +96,47 @@ export type ThemeContribution = {
   tokens: ThemeTokenSet
 }
 
+export type WorkbenchSearchSettings = {
+  defaultProviderId: string
+}
+
+export type SearchViewProps = {
+  providers: SearchProviderContribution[]
+  defaultProviderId: string
+  openExternal?: (url: string) => void
+  onDefaultProviderChange?: (providerId: string) => void | Promise<void>
+}
+
+export type SettingsPanelViewProps = {
+  panelId: string
+  pluginId: string
+  host: {
+    close(): void
+    setDirty(isDirty: boolean): void
+    switchTheme(themeId: string): Promise<void>
+    switchBackground(backgroundId: string): Promise<void>
+    setDefaultSearchProvider(providerId: string): Promise<void>
+  }
+  workspace: Workspace
+  themes: ThemeContribution[]
+  backgrounds: BackgroundProviderContribution[]
+  searchProviders: SearchProviderContribution[]
+  searchSettings: WorkbenchSearchSettings
+  plugins: Array<{
+    id: string
+    name: string
+    version: string
+    enabled: boolean
+    permissions: PluginPermission[]
+    contributes: PluginManifest["contributes"]
+  }>
+}
+
 export type SettingsPanelContribution = {
   id: string
   title: string
   view: string
+  order?: number
 }
 
 export type PluginManifest = {

@@ -10,7 +10,7 @@ export type WorkbenchRailAction = {
   label: string
   isActive?: boolean
   targetId?: string
-  modalViewId?: string
+  settingsPanelId?: string
 }
 
 export const WORKBENCH_RAIL_ACTIONS: WorkbenchRailAction[] = [
@@ -30,13 +30,13 @@ export const WORKBENCH_RAIL_ACTIONS: WorkbenchRailAction[] = [
     id: "plugins",
     ariaLabel: "插件",
     label: "插件",
-    modalViewId: "official.plugin-manager.card",
+    settingsPanelId: "official.settings.plugins",
   },
   {
     id: "settings",
     ariaLabel: "设置",
     label: "设置",
-    modalViewId: "official.plugin-manager.card",
+    settingsPanelId: "official.settings.workspace.appearance",
   },
 ]
 

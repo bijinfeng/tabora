@@ -43,6 +43,30 @@ describe("workbench dashboard layout", () => {
     await waitFor(() => expect(document.querySelector(".modal-overlay .notes-modal")).toBeTruthy())
     clickRequired(".modal-close")
 
+    clickRequired('.workbench-rail button[aria-label="设置"]')
+    await waitFor(() => expect(document.querySelector(".settings-host")).toBeTruthy())
+    expect(document.querySelector(".settings-nav-item.active")?.textContent).toContain("外观")
+
+    const searchNavBtn = findButtonByText(".settings-nav-item", "搜索")
+    expect(searchNavBtn).toBeTruthy()
+    expect(searchNavBtn?.textContent).toContain("搜索")
+    ;(searchNavBtn as HTMLElement).click()
+    await waitFor(() =>
+      expect(document.querySelector(".settings-nav-item.active")?.textContent).toContain("搜索"),
+    )
+
+    await waitFor(() =>
+      expect(document.querySelector("#settings-search-provider-select")).toBeTruthy(),
+    )
+
+    clickRequired(".settings-close")
+    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+
+    clickRequired('.workbench-rail button[aria-label="插件"]')
+    await waitFor(() => expect(document.querySelector(".settings-host")).toBeTruthy())
+    expect(document.querySelector(".settings-nav-item.active")?.textContent).toContain("插件")
+    clickRequired(".settings-close")
+
     const dragOrder = await dragFirstGridItemToSecond()
     expect(dragOrder.after).toEqual([
       dragOrder.before[1],
@@ -161,6 +185,14 @@ function clickRequired(selectorOrRoot: string | ParentNode, selector?: string): 
     throw new Error(`Clickable element was not found: ${targetSelector}`)
   }
   button.click()
+}
+
+function findButtonByText(selector: string, text: string): HTMLElement | null {
+  return (
+    [...document.querySelectorAll<HTMLElement>(selector)].find((node) =>
+      node.textContent?.includes(text),
+    ) ?? null
+  )
 }
 
 function hasHorizontalOverflow(): boolean {

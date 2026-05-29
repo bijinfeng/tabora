@@ -21,6 +21,7 @@ export type Workspace = {
   activeThemeId: string
   activeBackgroundProviderId?: string
   activeBackgroundRendererId?: string
+  config?: Record<string, unknown>
   regions: Record<string, RegionState>
   createdAt: string
   updatedAt: string

@@ -1,32 +1,58 @@
-import { createSignal, For, Show } from "solid-js"
+import { createMemo, createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { SearchProviderContribution, SearchViewProps } from "@tabora/plugin-api"
 import { Input, Select, Button } from "@tabora/ui"
 
 const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
 
-type ProviderId = "google" | "bing" | "baidu" | "duckduckgo" | "github"
-
-const PROVIDERS: { value: ProviderId; label: string; url: string }[] = [
-  { value: "google", label: "Google", url: "https://www.google.com/search?q={query}" },
-  { value: "bing", label: "Bing", url: "https://www.bing.com/search?q={query}" },
-  { value: "baidu", label: "百度", url: "https://www.baidu.com/s?wd={query}" },
-  { value: "duckduckgo", label: "DuckDuckGo", url: "https://duckduckgo.com/?q={query}" },
-  { value: "github", label: "GitHub", url: "https://github.com/search?q={query}" },
-]
-type SearchCommandBarProps = {
-  openExternal?: (url: string) => void
+const FALLBACK_PROVIDER: SearchProviderContribution = {
+  id: "official.search.google",
+  title: "Google",
+  urlTemplate: "https://www.google.com/search?q={query}",
+  shortcut: "g",
 }
 
-export function SearchCommandBar(props: SearchCommandBarProps = {}) {
+function providerOptions(providers: SearchProviderContribution[]) {
+  return providers.map((p) => ({ value: p.id, label: p.title }))
+}
+
+export function safelyHandleProviderChange(
+  onChange: ((id: string) => void | Promise<void>) | undefined,
+  nextProviderId: string,
+): void {
+  const result = onChange?.(nextProviderId)
+  if (result instanceof Promise) {
+    result.catch((err) => {
+      console.warn("Failed to change default provider:", err)
+    })
+  }
+}
+
+export function buildSearchUrl(provider: SearchProviderContribution, query: string): string {
+  return provider.urlTemplate.replaceAll("{query}", encodeURIComponent(query.trim()))
+}
+
+export function SearchCommandBar(props: SearchViewProps) {
+  const providers = createMemo(() =>
+    props.providers.length > 0 ? props.providers : [FALLBACK_PROVIDER],
+  )
+  const [providerId, setProviderId] = createSignal(props.defaultProviderId || providers()[0]!.id)
   const [query, setQuery] = createSignal("")
-  const [providerId, setProviderId] = createSignal<ProviderId>("google")
   const [focused, setFocused] = createSignal(false)
 
+  const activeProvider = createMemo(() => {
+    const match = providers().find((p) => p.id === providerId())
+    return match ?? providers()[0]!
+  })
+
   function doSearch(q: string) {
-    const provider = PROVIDERS.find((p) => p.value === providerId())
-    if (!provider) return
-    const url = provider.url.replace("{query}", encodeURIComponent(q.trim()))
+    const url = buildSearchUrl(activeProvider(), q)
     props.openExternal?.(url)
+  }
+
+  function handleProviderChange(nextProviderId: string) {
+    setProviderId(nextProviderId)
+    safelyHandleProviderChange(props.onDefaultProviderChange, nextProviderId)
   }
 
   function handleSubmit(event: Event) {
@@ -57,10 +83,10 @@ export function SearchCommandBar(props: SearchCommandBarProps = {}) {
   return (
     <div class="search-wrapper">
       <form class="search-bar" onSubmit={handleSubmit}>
-        <Select<ProviderId>
-          value={providerId()}
-          options={PROVIDERS.map((p) => ({ value: p.value, label: p.label }))}
-          onChange={(v) => setProviderId(v)}
+        <Select<string>
+          value={activeProvider().id}
+          options={providerOptions(providers())}
+          onChange={(v) => handleProviderChange(v)}
           aria-label="搜索源"
           size="sm"
         />
@@ -116,15 +142,13 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     },
   },
   activate(context) {
-    context.registry.views.register(
-      "official.search.command-bar.view",
-      (props: SearchCommandBarProps = {}) =>
-        SearchCommandBar({
-          ...props,
-          openExternal: (url) => {
-            context.permissions.openExternal(url)
-          },
-        }),
+    context.registry.views.register("official.search.command-bar.view", (props: SearchViewProps) =>
+      SearchCommandBar({
+        ...props,
+        openExternal: (url) => {
+          context.permissions.openExternal(url)
+        },
+      }),
     )
   },
 }

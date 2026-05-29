@@ -60,8 +60,11 @@ describe("workbench shell composition", () => {
     expect(WORKBENCH_RAIL_ACTIONS).toEqual([
       expect.objectContaining({ id: "home", isActive: true }),
       expect.objectContaining({ id: "add-widget", targetId: "add-widgets" }),
-      expect.objectContaining({ id: "plugins", modalViewId: "official.plugin-manager.card" }),
-      expect.objectContaining({ id: "settings", modalViewId: "official.plugin-manager.card" }),
+      expect.objectContaining({ id: "plugins", settingsPanelId: "official.settings.plugins" }),
+      expect.objectContaining({
+        id: "settings",
+        settingsPanelId: "official.settings.workspace.appearance",
+      }),
     ])
   })
 })
