@@ -918,17 +918,31 @@ export function App() {
 
     if (isStream) {
       const toolbar = (
-        <div style={{ display: "flex", "align-items": "center", gap: "12px" }}>
-          <span style={{ "font-size": "15px", "font-weight": 700 }}>
-            Tabora <span style={{ color: "rgb(var(--color-accent))" }}>Stream</span>
+        <div class="stream-topbar">
+          <span class="stream-topbar-logo">
+            Tabora <span>Stream</span>
           </span>
           <div style={{ flex: 1 }} />
+          <button class="toolbar-btn" onClick={() => setCmdPaletteOpen(true)}>
+            ⌘K 搜索
+          </button>
           <button class="toolbar-btn" onClick={() => setSettingsOpen(true)}>
             ⚙ 设置
           </button>
         </div>
       )
-      return LayoutView({ toolbar, stream: renderMainGrid() })
+      return LayoutView({
+        toolbar,
+        stream: (
+          <>
+            <div class="stream-hero">
+              <div class="stream-hero-greeting">下午好 ☀</div>
+              <div class="stream-hero-date">2026年5月30日 · 北京</div>
+            </div>
+            {renderMainGrid()}
+          </>
+        ),
+      })
     }
 
     return <>{renderMainGrid()}</>
