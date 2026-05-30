@@ -10,8 +10,14 @@ export type {
   ButtonVariant as StyledButtonVariant,
   ButtonSize as StyledButtonSize,
 } from "./styled/button"
-export { Input } from "./primitives/input"
-export type { InputProps, InputSize, InputType } from "./primitives/input"
+export { Input } from "./primitives/input/input"
+export type { InputProps, InputSize, InputType } from "./primitives/input/input"
+export { Input as StyledInput } from "./styled/input"
+export type {
+  InputProps as StyledInputProps,
+  InputSize as StyledInputSize,
+  InputType as StyledInputType,
+} from "./styled/input"
 export { Textarea } from "./primitives/textarea"
 export type { TextareaProps } from "./primitives/textarea"
 export { Field } from "./composites/field"

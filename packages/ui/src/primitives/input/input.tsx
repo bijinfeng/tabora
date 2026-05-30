@@ -1,7 +1,7 @@
 export type InputSize = "sm" | "md"
 export type InputType = "text" | "search" | "url" | "email"
 
-export type InputProps = {
+export type HeadlessInputProps = {
   value: string
   onInput: (value: string) => void
   placeholder?: string
@@ -9,6 +9,7 @@ export type InputProps = {
   disabled?: boolean
   invalid?: boolean
   type?: InputType
+  class?: string
   "aria-label"?: string
   id?: string
   onKeyDown?: (e: KeyboardEvent) => void
@@ -16,10 +17,10 @@ export type InputProps = {
   onBlur?: () => void
 }
 
-export function Input(props: InputProps) {
+export function HeadlessInput(props: HeadlessInputProps) {
   return (
     <input
-      class="tabora-input"
+      class={props.class}
       data-size={props.size ?? "md"}
       data-invalid={props.invalid ? "" : undefined}
       type={props.type ?? "text"}
@@ -36,3 +37,7 @@ export function Input(props: InputProps) {
     />
   )
 }
+
+// 向后兼容
+export type InputProps = HeadlessInputProps
+export const Input = HeadlessInput
