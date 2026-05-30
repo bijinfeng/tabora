@@ -22,6 +22,8 @@ import {
   createTaboraDatabase,
   createWorkspaceRepository,
 } from "@tabora/storage"
+import { Clock, Link2, Pencil, Sun, Target, CheckSquare } from "lucide-solid"
+
 import { PluginViewBoundary } from "./PluginViewBoundary"
 import { CommandPalette } from "./CommandPalette"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
@@ -531,6 +533,14 @@ export function App() {
     return contributionId
   }
 
+  const widgetIcons: Record<string, () => JSX.Element> = {
+    "today-focus": () => <Target size={14} />,
+    "quick-links": () => <Link2 size={14} />,
+    notes: () => <Pencil size={14} />,
+    todo: () => <CheckSquare size={14} />,
+    weather: () => <Sun size={14} />,
+  }
+
   function findWidgetPluginId(contributionId: string): string | null {
     for (const plugin of officialPlugins) {
       if (plugin.manifest.contributes.widgets?.some((w) => w.id === contributionId)) {
@@ -702,35 +712,12 @@ export function App() {
                   }}
                 >
                   <div class="widget-card">
-                    <div class="widget-header">
-                      <span class="drag-handle" aria-hidden="true">
-                        ⠿
-                      </span>
-                      <h2>{widgetTitle(inst.contributionId)}</h2>
-                      <div class="widget-actions">
-                        {(() => {
-                          const w = findWidgetContribution(inst.pluginId, inst.contributionId)
-                          const hasModal = !!w?.views.modal
-                          return hasModal ? (
-                            <button
-                              class="widget-expand-btn"
-                              onClick={() =>
-                                kernel.events.emit("ui.modal.open", {
-                                  viewId: w!.views.modal,
-                                  props: {
-                                    instanceId: inst.id,
-                                    pluginId: inst.pluginId,
-                                    contributionId: inst.contributionId,
-                                    config: inst.config,
-                                    data: makeScopedData(inst.pluginId, inst.id),
-                                  },
-                                })
-                              }
-                            >
-                              ⛶
-                            </button>
-                          ) : null
-                        })()}
+                    <div class="card-header">
+                      <div class="card-title">
+                        {(widgetIcons[inst.contributionId] ?? (() => <Clock size={14} />))()}
+                        <span class="card-title-text">{widgetTitle(inst.contributionId)}</span>
+                      </div>
+                      <div class="card-actions">
                         <div class="widget-size-bar">
                           {(widget?.supportedSizes ?? ["S", "M", "L"]).map((s) => (
                             <button
@@ -742,12 +729,15 @@ export function App() {
                             </button>
                           ))}
                         </div>
-                        <button class="widget-remove-btn" onClick={() => removeWidget(inst.id)}>
+                        <button
+                          class="card-action-btn card-danger"
+                          onClick={() => removeWidget(inst.id)}
+                        >
                           ×
                         </button>
                       </div>
                     </div>
-                    <div class="widget-body">
+                    <div class="card-body">
                       <PluginViewBoundary
                         instanceId={inst.id}
                         title={widgetTitle(inst.contributionId)}

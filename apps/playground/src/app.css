@@ -226,30 +226,38 @@
 }
 
 .widget-card:hover {
-  border-color: rgb(var(--color-accent));
+  border-color: rgb(var(--color-line-strong, var(--color-line)));
 }
 
-.widget-header {
+.card-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
   margin-bottom: 12px;
 }
 
-.widget-header h2 {
+.card-title {
   font-size: 13px;
   font-weight: 650;
-  margin: 0;
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgb(var(--color-text));
 }
 
-.widget-actions {
+.card-title svg {
+  color: rgb(var(--color-accent));
+  flex-shrink: 0;
+}
+
+.card-actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.widget-body {
+.card-body {
+  flex: 1;
   min-height: 0;
 }
 
@@ -317,4 +325,27 @@
 }
 .stream-topbar-logo span {
   color: rgb(var(--color-accent));
+}
+
+.card-action-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.12s;
+}
+.card-action-btn:hover {
+  background: rgba(var(--color-accent), 0.06);
+  color: rgb(var(--color-accent));
+}
+.card-action-btn.card-danger:hover {
+  background: rgba(var(--color-danger), 0.08);
+  color: rgb(var(--color-danger));
 }
