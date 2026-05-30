@@ -1,0 +1,32 @@
+/* Tabora Spinner */
+@layer tabora-ui {
+  .tbr-spinner {
+    display: inline-block;
+    border-radius: 50%;
+    animation: tbr-spin 0.6s linear infinite;
+  }
+  .tbr-spinner[data-size="sm"] {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid rgb(var(--tbr-color-line));
+    border-top-color: rgb(var(--tbr-color-accent));
+  }
+  .tbr-spinner[data-size="md"] {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgb(var(--tbr-color-line));
+    border-top-color: rgb(var(--tbr-color-accent));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tbr-spinner {
+      animation: none;
+      opacity: 0.5;
+    }
+  }
+}
+
+@keyframes tbr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
-import { Spinner } from "./spinner"
+import { Spinner } from "../primitives/spinner/spinner"
 
 describe("Spinner", () => {
   it("has role=status and default aria-label", () => {

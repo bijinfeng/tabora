@@ -4,12 +4,13 @@ export type BadgeVariant = "neutral" | "accent" | "success" | "warning" | "dange
 
 export type BadgeProps = {
   variant?: BadgeVariant
+  class?: string
   children: JSX.Element
 }
 
 export function Badge(props: BadgeProps) {
   return (
-    <span class="tabora-badge" data-variant={props.variant ?? "neutral"}>
+    <span class={props.class} data-variant={props.variant ?? "neutral"}>
       {props.children}
     </span>
   )

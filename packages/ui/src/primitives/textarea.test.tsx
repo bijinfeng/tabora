@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import { Textarea } from "./textarea"
+import { Textarea } from "../primitives/textarea/textarea"
 
 describe("Textarea", () => {
   it("renders controlled value and triggers onInput", () => {

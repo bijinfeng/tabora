@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
-import { InlineError } from "./inlineError"
+import { InlineError } from "../primitives/inlineError/inlineError"
 
 describe("InlineError", () => {
   it("uses role=alert and renders content", () => {

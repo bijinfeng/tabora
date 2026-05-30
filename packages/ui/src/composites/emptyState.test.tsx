@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
-import { EmptyState } from "./emptyState"
+import { EmptyState } from "../primitives/emptyState/emptyState"
 
 describe("EmptyState", () => {
   it("renders title, description and action", () => {

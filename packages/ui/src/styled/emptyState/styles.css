@@ -1,0 +1,26 @@
+/* Tabora Empty State */
+@layer tabora-ui {
+  .tbr-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 32px 16px;
+    text-align: center;
+  }
+  .tbr-empty-state-title {
+    font-size: 13px;
+    color: rgb(var(--tbr-color-text-muted));
+    max-width: 260px;
+  }
+  .tbr-empty-state-desc {
+    font-size: 12px;
+    color: rgb(var(--tbr-color-text-subtle));
+    max-width: 260px;
+    line-height: 1.5;
+  }
+  .tbr-empty-state-action {
+    margin-top: 4px;
+  }
+}

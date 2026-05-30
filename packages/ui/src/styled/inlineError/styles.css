@@ -1,0 +1,14 @@
+/* Tabora Inline Error */
+@layer tabora-ui {
+  .tbr-inline-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid rgba(var(--tbr-color-danger), 0.25);
+    border-radius: var(--tbr-radius-control);
+    background: rgba(var(--tbr-color-danger), 0.05);
+    font-size: 12px;
+    color: rgb(var(--tbr-color-danger));
+  }
+}
