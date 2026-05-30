@@ -24,7 +24,7 @@ import {
 } from "@tabora/storage"
 import { PluginViewBoundary } from "./PluginViewBoundary"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
-import { WORKBENCH_RAIL_ACTIONS, findLayoutContribution } from "./workbenchShell"
+import { findLayoutContribution } from "./workbenchShell"
 import { SettingsHost, collectSettingsPanels, resolveInitialSettingsPanelId } from "./settingsHost"
 import { createDefaultWorkspaceSeed, OFFICIAL_DEFAULT_WORKSPACE_SEED } from "./defaultWorkspaceSeed"
 import { resolveThemeTokens } from "./themeResolver"
@@ -726,18 +726,13 @@ export function App() {
   }
 
   function runRailAction(actionId: string) {
-    const action = WORKBENCH_RAIL_ACTIONS.find((item) => item.id === actionId)
-    if (!action) return
-
-    if (action.targetId) {
-      const target = document.getElementById(action.targetId)
-      target?.scrollIntoView({ block: "nearest" })
-      target?.focus({ preventScroll: true })
-      return
-    }
-
-    if (action.settingsPanelId) {
-      openSettings(action.settingsPanelId)
+    if (actionId === "add-widget") {
+      document.getElementById("add-widgets")?.scrollIntoView({ behavior: "smooth" })
+    } else if (actionId === "plugins") {
+      setActiveSettingsPanelId("official.settings.plugins")
+      setSettingsOpen(true)
+    } else if (actionId === "home") {
+      window.scrollTo({ top: 0, behavior: "smooth" })
     }
   }
 
@@ -755,20 +750,82 @@ export function App() {
     if (isDashboard) {
       const rail = (
         <nav class="workbench-rail" aria-label="工作台导航">
-          <For each={WORKBENCH_RAIL_ACTIONS}>
-            {(action) => (
-              <button
-                class="rail-action"
-                classList={{ active: action.isActive }}
-                type="button"
-                aria-label={action.ariaLabel}
-                aria-current={action.isActive ? "page" : undefined}
-                onClick={() => runRailAction(action.id)}
-              >
-                {action.label}
-              </button>
-            )}
-          </For>
+          <div class="rail-logo">T</div>
+          <button
+            class="rail-btn active"
+            aria-label="主页"
+            onClick={() => runRailAction("home")}
+            type="button"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </button>
+          <button
+            class="rail-btn"
+            aria-label="添加卡片"
+            onClick={() => runRailAction("add-widget")}
+            type="button"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+          <div style={{ flex: 1 }} />
+          <button
+            class="rail-btn"
+            aria-label="切换主题"
+            onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}
+            type="button"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+            </svg>
+          </button>
+          <button
+            class="rail-btn"
+            aria-label="设置"
+            onClick={() => setSettingsOpen(true)}
+            type="button"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
         </nav>
       )
       const topbar = (
@@ -793,7 +850,7 @@ export function App() {
             Tabora <span style={{ color: "rgb(var(--color-accent))" }}>Stream</span>
           </span>
           <div style={{ flex: 1 }} />
-          <button class="rail-action" onClick={() => setSettingsOpen(true)}>
+          <button class="toolbar-btn" onClick={() => setSettingsOpen(true)}>
             ⚙ 设置
           </button>
         </div>

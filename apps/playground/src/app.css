@@ -142,6 +142,44 @@
   padding: 12px 8px;
 }
 
+.rail-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgb(var(--color-accent));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.rail-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgb(var(--color-muted));
+  background: transparent;
+  transition: all 0.12s;
+}
+
+.rail-btn:hover {
+  background: rgba(var(--color-accent), 0.06);
+  color: rgb(var(--color-text));
+}
+.rail-btn.active {
+  background: rgba(var(--color-accent), 0.1);
+  border-color: rgb(var(--color-accent));
+  color: rgb(var(--color-accent));
+}
+
 /* ====== CONTENT ====== */
 .workbench-content-region {
   padding: 24px 32px;
