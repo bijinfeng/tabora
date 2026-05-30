@@ -1,0 +1,17 @@
+@layer tabora-ui {
+  .tbr-progress {
+    background: rgb(var(--tbr-color-surface-soft));
+    border-radius: 999px;
+    overflow: hidden;
+    width: 100%;
+  }
+  .tbr-progress[data-size="sm"] {
+    height: 4px;
+  }
+  .tbr-progress[data-size="md"] {
+    height: 6px;
+  }
+  .tbr-progress[data-size="lg"] {
+    height: 8px;
+  }
+}

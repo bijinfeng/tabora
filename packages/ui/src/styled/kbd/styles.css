@@ -1,0 +1,15 @@
+@layer tabora-ui {
+  .tbr-kbd {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 6px;
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: 4px;
+    background: rgb(var(--tbr-color-surface-soft));
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 10px;
+    color: rgb(var(--tbr-color-text-muted));
+    font-weight: 500;
+  }
+}
