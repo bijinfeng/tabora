@@ -8,6 +8,7 @@ export type HeadlessButtonProps = {
   size?: ButtonSize
   loading?: boolean
   disabled?: boolean
+  fullWidth?: boolean
   type?: "button" | "submit" | "reset"
   class?: string
   onClick?: (e: MouseEvent) => void
@@ -23,6 +24,7 @@ export function HeadlessButton(props: HeadlessButtonProps) {
       data-variant={props.variant}
       data-size={props.size}
       data-loading={props.loading ? "" : undefined}
+      data-fullwidth={props.fullWidth ? "" : undefined}
       type={props.type ?? "button"}
       disabled={props.disabled || props.loading}
       aria-label={props["aria-label"]}

@@ -6,6 +6,8 @@ export type SwitchProps = {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
+  loading?: boolean
+  size?: "sm" | "md"
   class?: string
   "aria-label"?: string
   label?: JSX.Element
@@ -15,9 +17,11 @@ export function Switch(props: SwitchProps) {
   return (
     <KSwitch
       class={props.class}
+      data-size={props.size ?? "md"}
+      data-loading={props.loading ? "" : undefined}
       checked={props.checked}
       onChange={(v) => props.onChange(v)}
-      disabled={props.disabled ?? false}
+      disabled={props.disabled ?? props.loading ?? false}
     >
       <KSwitch.Input class="tbr-switch-input" aria-label={props["aria-label"]} />
       <KSwitch.Control class="tbr-switch-control">

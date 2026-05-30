@@ -6,6 +6,8 @@ export type TabsProps = {
   value: string
   onChange: (value: string) => void
   tabs: { value: string; label: JSX.Element; content: JSX.Element }[]
+  variant?: "underline" | "pills"
+  size?: "sm" | "md"
   class?: string
   "aria-label": string
 }
@@ -14,6 +16,8 @@ export function Tabs(props: TabsProps) {
   return (
     <KTabs
       class={`tbr-tabs ${props.class ?? ""}`}
+      data-variant={props.variant ?? "underline"}
+      data-size={props.size ?? "md"}
       value={props.value}
       onChange={(v) => props.onChange(v)}
     >

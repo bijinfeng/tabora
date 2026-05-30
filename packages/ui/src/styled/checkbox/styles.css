@@ -28,7 +28,8 @@
   .tbr-checkbox:hover .tbr-checkbox-control {
     border-color: rgb(var(--tbr-color-accent));
   }
-  .tbr-checkbox[data-checked] .tbr-checkbox-control {
+  .tbr-checkbox[data-checked] .tbr-checkbox-control,
+  .tbr-checkbox[data-indeterminate] .tbr-checkbox-control {
     background: rgb(var(--tbr-color-accent));
     border-color: rgb(var(--tbr-color-accent));
     color: #fff;

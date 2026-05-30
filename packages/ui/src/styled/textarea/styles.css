@@ -3,7 +3,6 @@
   .tbr-textarea {
     display: block;
     width: 100%;
-    padding: 10px 12px;
     border-radius: var(--tbr-radius-control);
     border: 1px solid rgb(var(--tbr-color-line));
     background: rgb(var(--tbr-color-surface));
@@ -12,6 +11,14 @@
     line-height: 1.5;
     resize: vertical;
     transition: border-color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-textarea[data-size="md"] {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .tbr-textarea[data-size="sm"] {
+    padding: 6px 10px;
+    font-size: 12px;
   }
   .tbr-textarea::placeholder {
     color: rgb(var(--tbr-color-text-muted));

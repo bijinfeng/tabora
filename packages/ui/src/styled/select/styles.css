@@ -34,6 +34,9 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+  .tbr-select-trigger[data-invalid] {
+    border-color: rgb(var(--tbr-color-danger));
+  }
   .tbr-select-icon {
     color: rgb(var(--tbr-color-text-muted));
     font-size: 10px;

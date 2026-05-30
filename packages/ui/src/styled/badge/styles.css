@@ -3,13 +3,23 @@
   .tbr-badge {
     display: inline-flex;
     align-items: center;
-    height: 22px;
-    padding: 0 8px;
     border-radius: 999px;
-    font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
   }
+  /* 尺寸: md (default) */
+  .tbr-badge[data-size="md"] {
+    height: 22px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  /* 尺寸: sm */
+  .tbr-badge[data-size="sm"] {
+    height: 18px;
+    padding: 0 6px;
+    font-size: 10px;
+  }
+  /* 颜色变体 */
   .tbr-badge[data-variant="neutral"] {
     background: rgb(var(--tbr-color-surface-soft));
     color: rgb(var(--tbr-color-text-muted));
@@ -30,5 +40,44 @@
   .tbr-badge[data-variant="danger"] {
     background: rgba(var(--tbr-color-danger), 0.1);
     color: rgb(var(--tbr-color-danger));
+  }
+  /* counter — 更紧凑，无边框，等宽数字 */
+  .tbr-badge[data-variant="counter"] {
+    background: rgb(var(--tbr-color-accent-soft));
+    color: rgb(var(--tbr-color-accent));
+    min-width: auto;
+    font-variant-numeric: tabular-nums;
+  }
+  .tbr-badge[data-variant="counter"][data-size="md"] {
+    height: 20px;
+    padding: 0 6px;
+  }
+  .tbr-badge[data-variant="counter"][data-size="sm"] {
+    height: 16px;
+    padding: 0 4px;
+    min-width: 14px;
+  }
+  /* dot — 仅圆点 */
+  .tbr-badge[data-variant="dot"] {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border-radius: 50%;
+    border: none;
+  }
+  .tbr-badge[data-variant="dot"][data-variant-colors="neutral"] {
+    background: rgb(var(--tbr-color-line-strong));
+  }
+  .tbr-badge[data-variant="dot"][data-variant="accent"] {
+    background: rgb(var(--tbr-color-accent));
+  }
+  .tbr-badge[data-variant="dot"][data-variant="success"] {
+    background: rgb(var(--tbr-color-success));
+  }
+  .tbr-badge[data-variant="dot"][data-variant="warning"] {
+    background: rgb(var(--tbr-color-warning));
+  }
+  .tbr-badge[data-variant="dot"][data-variant="danger"] {
+    background: rgb(var(--tbr-color-danger));
   }
 }

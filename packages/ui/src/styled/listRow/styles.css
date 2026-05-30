@@ -48,4 +48,8 @@
     font-size: 11px;
     color: rgb(var(--tbr-color-text-subtle));
   }
+  .tbr-list-row[data-divider] {
+    border-bottom: 1px solid rgb(var(--tbr-color-line));
+    border-radius: 0;
+  }
 }

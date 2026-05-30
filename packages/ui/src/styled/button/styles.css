@@ -29,6 +29,10 @@
     opacity: 0.45;
   }
 
+  .tbr-btn[data-fullwidth] {
+    width: 100%;
+  }
+
   /* 尺寸 */
   .tbr-btn--sm {
     height: var(--tbr-control-sm);
@@ -56,6 +60,7 @@
     background: rgb(var(--tbr-color-accent-hover));
   }
   .tbr-btn--primary:not([disabled]):active {
+    background: color-mix(in srgb, rgb(var(--tbr-color-accent-hover)) 90%, black);
     transform: scale(0.98);
   }
 
@@ -67,6 +72,9 @@
   .tbr-btn--secondary:not([disabled]):hover {
     background: rgba(var(--tbr-color-accent), 0.08);
     border-color: rgb(var(--tbr-color-line-strong));
+  }
+  .tbr-btn--secondary:not([disabled]):active {
+    background: rgba(var(--tbr-color-accent), 0.14);
   }
 
   .tbr-btn--subtle {
@@ -81,6 +89,13 @@
       rgb(var(--tbr-color-accent))
     );
   }
+  .tbr-btn--subtle:not([disabled]):active {
+    background: color-mix(
+      in srgb,
+      rgb(var(--tbr-color-accent-soft)) 50%,
+      rgb(var(--tbr-color-accent))
+    );
+  }
 
   .tbr-btn--ghost {
     background: transparent;
@@ -91,6 +106,9 @@
     background: rgba(var(--tbr-color-accent), 0.06);
     color: rgb(var(--tbr-color-text));
   }
+  .tbr-btn--ghost:not([disabled]):active {
+    background: rgba(var(--tbr-color-accent), 0.12);
+  }
 
   .tbr-btn--danger {
     background: rgb(var(--tbr-color-danger));
@@ -98,6 +116,10 @@
   }
   .tbr-btn--danger:not([disabled]):hover {
     background: color-mix(in srgb, rgb(var(--tbr-color-danger)) 85%, black);
+  }
+  .tbr-btn--danger:not([disabled]):active {
+    background: color-mix(in srgb, rgb(var(--tbr-color-danger)) 75%, black);
+    transform: scale(0.98);
   }
 
   /* Icon Button */
@@ -123,6 +145,21 @@
   .tbr-icon-btn[disabled] {
     cursor: not-allowed;
     opacity: 0.45;
+  }
+  .tbr-icon-btn[data-variant="secondary"] {
+    background: rgb(var(--tbr-color-surface));
+    border-color: rgb(var(--tbr-color-line));
+    color: rgb(var(--tbr-color-text));
+  }
+  .tbr-icon-btn[data-variant="secondary"]:not([disabled]):hover {
+    background: rgba(var(--tbr-color-accent), 0.08);
+    border-color: rgb(var(--tbr-color-line-strong));
+  }
+  .tbr-icon-btn[data-variant="danger"] {
+    color: rgb(var(--tbr-color-danger));
+  }
+  .tbr-icon-btn[data-variant="danger"]:not([disabled]):hover {
+    background: rgba(var(--tbr-color-danger), 0.08);
   }
   .tbr-icon-btn--sm {
     width: 26px;

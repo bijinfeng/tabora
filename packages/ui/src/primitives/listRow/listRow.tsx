@@ -7,6 +7,7 @@ export type ListRowProps = {
   secondary?: JSX.Element
   trailing?: JSX.Element
   onClick?: () => void
+  divider?: boolean
   class?: string
 }
 
@@ -28,10 +29,17 @@ export function ListRow(props: ListRowProps) {
     </>
   )
   return props.onClick ? (
-    <button type="button" class={props.class} onClick={() => props.onClick?.()}>
+    <button
+      type="button"
+      class={props.class}
+      data-divider={props.divider ? "" : undefined}
+      onClick={() => props.onClick?.()}
+    >
       {inner}
     </button>
   ) : (
-    <div class={props.class}>{inner}</div>
+    <div class={props.class} data-divider={props.divider ? "" : undefined}>
+      {inner}
+    </div>
   )
 }

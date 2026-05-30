@@ -11,6 +11,7 @@ export type SelectProps<V extends string> = {
   placeholder?: JSX.Element
   size?: "sm" | "md"
   disabled?: boolean
+  invalid?: boolean
   class?: string
   "aria-label"?: string
   id?: string
@@ -24,6 +25,7 @@ export function Select<V extends string>(props: SelectProps<V>) {
     "placeholder",
     "size",
     "disabled",
+    "invalid",
     "aria-label",
     "id",
     "class",
@@ -47,6 +49,8 @@ export function Select<V extends string>(props: SelectProps<V>) {
       <KSelect.Trigger
         class={`tbr-select-trigger ${local.class ?? ""}`}
         data-size={local.size ?? "md"}
+        data-invalid={local.invalid ? "" : undefined}
+        aria-invalid={local.invalid ? true : undefined}
         {...(local["aria-label"] !== undefined ? { "aria-label": local["aria-label"] } : {})}
         {...(local.id !== undefined ? { id: local.id } : {})}
       >

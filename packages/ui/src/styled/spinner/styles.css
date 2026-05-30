@@ -17,6 +17,12 @@
     border: 2px solid rgb(var(--tbr-color-line));
     border-top-color: rgb(var(--tbr-color-accent));
   }
+  .tbr-spinner[data-size="lg"] {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgb(var(--tbr-color-line));
+    border-top-color: rgb(var(--tbr-color-accent));
+  }
   @media (prefers-reduced-motion: reduce) {
     .tbr-spinner {
       animation: none;

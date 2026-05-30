@@ -1,5 +1,5 @@
 export type SpinnerProps = {
-  size?: "sm" | "md"
+  size?: "sm" | "md" | "lg"
   class?: string
   "aria-label"?: string
 }

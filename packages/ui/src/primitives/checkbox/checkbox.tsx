@@ -3,7 +3,7 @@ import type { JSX } from "solid-js"
 import { Show } from "solid-js"
 
 export type CheckboxProps = {
-  checked: boolean
+  checked: boolean | "indeterminate"
   onChange: (checked: boolean) => void
   disabled?: boolean
   class?: string
@@ -15,13 +15,18 @@ export function Checkbox(props: CheckboxProps) {
   return (
     <KCheckbox
       class={props.class}
-      checked={props.checked}
+      checked={props.checked === true}
+      indeterminate={props.checked === "indeterminate"}
       onChange={(v) => props.onChange(v)}
       disabled={props.disabled ?? false}
     >
       <KCheckbox.Input class="tbr-checkbox-input" aria-label={props["aria-label"]} />
       <KCheckbox.Control class="tbr-checkbox-control">
-        <KCheckbox.Indicator>✓</KCheckbox.Indicator>
+        <KCheckbox.Indicator>
+          <Show when={props.checked === "indeterminate"} fallback={"✓"}>
+            –
+          </Show>
+        </KCheckbox.Indicator>
       </KCheckbox.Control>
       <Show when={props.label}>
         <KCheckbox.Label class="tbr-checkbox-label">{props.label}</KCheckbox.Label>

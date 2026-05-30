@@ -13,6 +13,25 @@
     white-space: nowrap;
     z-index: 100;
     animation: tbr-tooltip-in var(--tbr-dur-fast) var(--tbr-ease);
+    position: relative;
+  }
+  .tbr-tooltip-content::after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: rgb(var(--tbr-color-text));
+    transform: rotate(45deg);
+  }
+  .tbr-tooltip-content[data-placement="top"]::after {
+    bottom: -3px;
+    left: 50%;
+    margin-left: -3px;
+  }
+  .tbr-tooltip-content[data-placement="bottom"]::after {
+    top: -3px;
+    left: 50%;
+    margin-left: -3px;
   }
   @keyframes tbr-tooltip-in {
     from {

@@ -9,10 +9,17 @@
     padding: 32px 16px;
     text-align: center;
   }
+  .tbr-empty-state[data-compact] {
+    padding: 16px 12px;
+    gap: 4px;
+  }
   .tbr-empty-state-title {
     font-size: 13px;
     color: rgb(var(--tbr-color-text-muted));
     max-width: 260px;
+  }
+  .tbr-empty-state[data-compact] .tbr-empty-state-title {
+    font-size: 12px;
   }
   .tbr-empty-state-desc {
     font-size: 12px;

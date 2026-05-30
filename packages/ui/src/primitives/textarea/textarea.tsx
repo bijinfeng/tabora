@@ -4,7 +4,9 @@ export type HeadlessTextareaProps = {
   placeholder?: string
   rows?: number
   disabled?: boolean
+  readOnly?: boolean
   invalid?: boolean
+  size?: "sm" | "md"
   class?: string
   "aria-label"?: string
   id?: string
@@ -19,9 +21,11 @@ export function HeadlessTextarea(props: HeadlessTextareaProps) {
       value={props.value}
       placeholder={props.placeholder}
       disabled={props.disabled}
+      readOnly={props.readOnly}
       aria-label={props["aria-label"]}
       aria-invalid={props.invalid ? true : undefined}
       data-invalid={props.invalid ? "" : undefined}
+      data-size={props.size ?? "md"}
       onInput={(e) => props.onInput(e.currentTarget.value)}
     />
   )
