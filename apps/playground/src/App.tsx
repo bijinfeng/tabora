@@ -731,17 +731,17 @@ export function App() {
                             </button>
                           ) : null
                         })()}
-                        <select
-                          class="size-select"
-                          value={inst.size ?? "M"}
-                          onChange={(e) =>
-                            changeWidgetSize(inst.id, e.currentTarget.value as WidgetSize)
-                          }
-                        >
+                        <div class="widget-size-bar">
                           {(widget?.supportedSizes ?? ["S", "M", "L"]).map((s) => (
-                            <option value={s}>{s}</option>
+                            <button
+                              class="widget-size-btn"
+                              classList={{ active: (inst.size ?? "M") === s }}
+                              onClick={() => changeWidgetSize(inst.id, s)}
+                            >
+                              {s}
+                            </button>
                           ))}
-                        </select>
+                        </div>
                         <button class="widget-remove-btn" onClick={() => removeWidget(inst.id)}>
                           ×
                         </button>
