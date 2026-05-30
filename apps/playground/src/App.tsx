@@ -810,41 +810,55 @@ export function App() {
     <div class="tabora-root">
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
         <div class="toolbar">
-          <div class="toolbar-spacer" />
-          <select
-            class="bg-select"
-            value={backgroundId()}
-            onChange={(e) => switchBackground(e.currentTarget.value)}
-            aria-label="切换背景"
-          >
-            {backgrounds().map((b) => (
-              <option value={b.id}>{b.title}</option>
-            ))}
-          </select>
-          <button
-            class="theme-toggle"
-            onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}
-            aria-label="切换主题"
-          >
-            {isDark() ? "☀" : "☾"}
-          </button>
-          <button
-            class="theme-toggle"
-            onClick={() => {
-              const next =
-                activeLayoutId() === "official.layout.workbench-dashboard"
-                  ? "official.layout.workbench-stream"
-                  : "official.layout.workbench-dashboard"
-              setActiveLayoutId(next)
-              const ws = workspaceState()
-              if (ws) {
-                void workspaceRepo.save({ ...ws, activeLayoutId: next })
-              }
-            }}
-            aria-label="切换布局"
-          >
-            ⇄
-          </button>
+          <div class="toolbar-left">
+            <span class="toolbar-logo">Tabora</span>
+            <span class="toolbar-badge">{instances().length} 实例</span>
+          </div>
+          <div class="toolbar-right">
+            <button
+              class="toolbar-btn"
+              classList={{ active: activeLayoutId() === "official.layout.workbench-dashboard" }}
+              onClick={() => {
+                setActiveLayoutId("official.layout.workbench-dashboard")
+                const ws = workspaceState()
+                if (ws) {
+                  void workspaceRepo.save({
+                    ...ws,
+                    activeLayoutId: "official.layout.workbench-dashboard",
+                  })
+                }
+              }}
+            >
+              仪表盘
+            </button>
+            <button
+              class="toolbar-btn"
+              classList={{ active: activeLayoutId() === "official.layout.workbench-stream" }}
+              onClick={() => {
+                setActiveLayoutId("official.layout.workbench-stream")
+                const ws = workspaceState()
+                if (ws) {
+                  void workspaceRepo.save({
+                    ...ws,
+                    activeLayoutId: "official.layout.workbench-stream",
+                  })
+                }
+              }}
+            >
+              流式
+            </button>
+            <span class="toolbar-sep" />
+            <button
+              class="toolbar-btn"
+              onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}
+              aria-label="切换主题"
+            >
+              {isDark() ? "☀" : "☾"}
+            </button>
+            <button class="toolbar-btn" onClick={() => setSettingsOpen(true)} aria-label="设置">
+              ⚙
+            </button>
+          </div>
         </div>
         {renderActiveLayout()}
         <SettingsHost

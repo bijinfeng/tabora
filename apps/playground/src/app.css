@@ -49,6 +49,32 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.toolbar-logo {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.toolbar-badge {
+  font-size: 10px;
+  color: rgb(var(--color-muted));
+  background: rgb(var(--color-surface-soft));
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgb(var(--color-line));
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 15px;
   font-weight: 700;
 }
