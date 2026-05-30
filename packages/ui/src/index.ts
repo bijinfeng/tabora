@@ -1,6 +1,15 @@
 export * from "./tokens"
+// 向后兼容：保留旧路径
 export { Button, IconButton } from "./primitives/button"
 export type { ButtonProps, IconButtonProps, ButtonVariant, ButtonSize } from "./primitives/button"
+// 新增：styled 版本
+export { Button as StyledButton, IconButton as StyledIconButton } from "./styled/button"
+export type {
+  ButtonProps as StyledButtonProps,
+  IconButtonProps as StyledIconButtonProps,
+  ButtonVariant as StyledButtonVariant,
+  ButtonSize as StyledButtonSize,
+} from "./styled/button"
 export { Input } from "./primitives/input"
 export type { InputProps, InputSize, InputType } from "./primitives/input"
 export { Textarea } from "./primitives/textarea"

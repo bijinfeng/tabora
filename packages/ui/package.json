@@ -5,12 +5,16 @@
   "exports": {
     ".": "./src/index.ts",
     "./styles.css": "./src/styles.css",
+    "./button": "./src/styled/button/index.ts",
+    "./button/styles.css": "./src/styled/button/styles.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
       "./styles.css": "./dist/styles.css",
+      "./button": "./dist/button/index.js",
+      "./button/styles.css": "./dist/button/styles.css",
       "./package.json": "./package.json"
     }
   },

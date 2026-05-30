@@ -1,0 +1,48 @@
+/* Tabora Design Tokens — CSS Custom Properties (tbr-* namespace) */
+
+:root {
+  /* 颜色 */
+  --tbr-color-page: 246 247 244;
+  --tbr-color-surface: 255 255 255;
+  --tbr-color-surface-soft: 250 250 248;
+  --tbr-color-text: 28 30 28;
+  --tbr-color-text-muted: 107 110 106;
+  --tbr-color-text-subtle: 148 151 146;
+  --tbr-color-line: 230 232 227;
+  --tbr-color-line-strong: 209 212 206;
+  --tbr-color-accent: 26 144 112;
+  --tbr-color-accent-hover: 21 120 92;
+  --tbr-color-accent-soft: 234 245 240;
+  --tbr-color-danger: 201 69 69;
+  --tbr-color-danger-soft: 254 240 240;
+  --tbr-color-success: 45 138 94;
+  --tbr-color-warning: 166 106 18;
+  --tbr-color-info: 61 123 168;
+  --tbr-color-focus: 26 144 112;
+
+  /* 圆角 */
+  --tbr-radius-1: 4px;
+  --tbr-radius-2: 6px;
+  --tbr-radius-control: 8px;
+  --tbr-radius-card: 8px;
+  --tbr-radius-panel: 12px;
+
+  /* 间距 */
+  --tbr-space-1: 2px;
+  --tbr-space-2: 4px;
+  --tbr-space-3: 8px;
+  --tbr-space-4: 12px;
+  --tbr-space-5: 16px;
+  --tbr-space-6: 20px;
+  --tbr-space-8: 32px;
+
+  /* 控件尺寸 */
+  --tbr-control-sm: 28px;
+  --tbr-control-md: 36px;
+  --tbr-control-lg: 44px;
+
+  /* 动效 */
+  --tbr-dur-fast: 120ms;
+  --tbr-dur-normal: 180ms;
+  --tbr-ease: cubic-bezier(0.2, 0, 0, 1);
+}
