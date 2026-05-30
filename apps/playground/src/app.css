@@ -188,6 +188,11 @@
   align-items: center;
   justify-content: space-between;
 }
+.dash-greeting-muted {
+  color: rgb(var(--color-muted));
+  font-weight: 400;
+  font-size: 13px;
+}
 
 /* ====== SEARCH ====== */
 .search-wrap {
@@ -1008,6 +1013,39 @@
   font-size: 10px;
   color: rgb(var(--color-muted));
   margin-top: 2px;
+}
+
+/* ====== GENERAL BUTTONS (prototype) ====== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.btn:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
+}
+.btn-subtle {
+  background: rgba(var(--color-accent), 0.1);
+  color: rgb(var(--color-accent));
+}
+.btn-subtle:hover {
+  background: rgba(var(--color-accent), 0.16);
+}
+.btn-sm {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 11px;
+  border-radius: 6px;
 }
 
 /* ====== CONTEXT MENU ====== */

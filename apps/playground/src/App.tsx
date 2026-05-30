@@ -908,6 +908,21 @@ export function App() {
       )
       const topbar = (
         <div class="topbar">
+          <div class="dash-greeting">
+            <span>
+              {(() => {
+                const h = new Date().getHours()
+                return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
+              })()}{" "}
+              <span class="dash-greeting-muted">
+                · {new Date().getMonth() + 1}月{new Date().getDate()}日 星期
+                {["日", "一", "二", "三", "四", "五", "六"][new Date().getDay()]}
+              </span>
+            </span>
+            <button class="btn btn-subtle btn-sm" onClick={() => setAddWidgetOpen(true)}>
+              + 添加卡片
+            </button>
+          </div>
           {SearchView()({
             providers: enabledSearchProviders(),
             defaultProviderId: resolveDefaultProviderForSearch(),
