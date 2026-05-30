@@ -34,7 +34,7 @@ export type PluginRuntimeContext = {
 }
 
 export type RuntimeConfigStore = {
-  get(key: string): Promise<unknown | undefined>
+  get(key: string): Promise<unknown>
   set(key: string, value: unknown): Promise<void>
 }
 

@@ -207,6 +207,25 @@ importers:
         specifier: catalog:build
         version: 2.11.12(solid-js@1.9.13)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
 
+  packages/orchestrator:
+    dependencies:
+      '@tabora/platform-kernel':
+        specifier: workspace:*
+        version: link:../platform-kernel
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../plugin-api
+      '@tabora/storage':
+        specifier: workspace:*
+        version: link:../storage
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.13
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+
   packages/platform-kernel:
     dependencies:
       '@tabora/plugin-api':

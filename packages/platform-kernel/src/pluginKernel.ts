@@ -22,6 +22,7 @@ export type PluginKernelOptions = {
 export type PluginKernel = {
   registry: ReturnType<typeof createExtensionRegistry>
   events: ReturnType<typeof createEventBus>
+  plugins: BuiltinPlugin[]
   discover(plugins: BuiltinPlugin[]): Promise<void>
   activateEnabledPlugins(): Promise<void>
   setPluginEnabled(pluginId: string, enabled: boolean): Promise<void>
@@ -52,6 +53,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
   return {
     registry,
     events,
+    plugins,
     async discover(discoveredPlugins) {
       plugins.splice(0, plugins.length, ...discoveredPlugins)
 
