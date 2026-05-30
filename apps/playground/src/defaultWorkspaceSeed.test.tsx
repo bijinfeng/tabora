@@ -38,7 +38,6 @@ describe("createDefaultWorkspaceSeed", () => {
     expect(widgetInstances).toHaveLength(4)
     for (const inst of widgetInstances) {
       expect(inst.extensionPoint).toBe("widget")
-      expect(inst.pluginId).toBe("official.widgets.productivity")
       expect(inst.enabled).toBe(true)
       expect(inst.size).toBe("M")
     }

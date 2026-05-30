@@ -33,7 +33,9 @@ export function createDefaultWorkspaceSeed(config: WorkspaceSeedConfig): {
       rail: {
         regionId: "rail",
         accepts: ["layout"],
-        instances: [],
+        instances: config.instances
+          .filter((i) => i.regionId === "rail")
+          .map((i) => ({ instanceId: i.instanceId })),
       },
       topbar: {
         regionId: "topbar",
@@ -84,7 +86,7 @@ export const OFFICIAL_DEFAULT_WORKSPACE_SEED: WorkspaceSeedConfig = {
       regionId: "topbar",
     },
     {
-      pluginId: "official.widgets.productivity",
+      pluginId: "official.widgets.today-focus",
       contributionId: "today-focus",
       instanceId: "today-focus-1",
       extensionPoint: "widget",
@@ -92,7 +94,7 @@ export const OFFICIAL_DEFAULT_WORKSPACE_SEED: WorkspaceSeedConfig = {
       size: "M",
     },
     {
-      pluginId: "official.widgets.productivity",
+      pluginId: "official.widgets.quick-links",
       contributionId: "quick-links",
       instanceId: "quick-links-1",
       extensionPoint: "widget",
@@ -100,7 +102,7 @@ export const OFFICIAL_DEFAULT_WORKSPACE_SEED: WorkspaceSeedConfig = {
       size: "M",
     },
     {
-      pluginId: "official.widgets.productivity",
+      pluginId: "official.widgets.notes",
       contributionId: "notes",
       instanceId: "notes-1",
       extensionPoint: "widget",
@@ -108,7 +110,7 @@ export const OFFICIAL_DEFAULT_WORKSPACE_SEED: WorkspaceSeedConfig = {
       size: "M",
     },
     {
-      pluginId: "official.widgets.productivity",
+      pluginId: "official.widgets.todo",
       contributionId: "todo",
       instanceId: "todo-1",
       extensionPoint: "widget",
