@@ -63,6 +63,16 @@ export function App() {
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
   const [dragId, setDragId] = createSignal<string | null>(null)
+  const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
+    null,
+  )
+  const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
+  let toastId = 0
+  function showToast(msg: string) {
+    const id = ++toastId
+    setToasts((t) => [...t, { id, msg }])
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
+  }
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
 
   const database = createTaboraDatabase()
@@ -610,6 +620,10 @@ export function App() {
                   onDragStart={(e) => onDragStart(e, inst.id)}
                   onDragOver={onDragOver}
                   onDrop={(e) => onDrop(e, inst.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    setCtxMenu({ x: e.clientX, y: e.clientY, instanceId: inst.id })
+                  }}
                 >
                   <div class="widget-card">
                     <div class="widget-header">
@@ -866,6 +880,54 @@ export function App() {
             </div>
           </div>
         </Show>
+        <Show when={ctxMenu()}>
+          {(menu) => (
+            <div class="ctx-menu-overlay" onClick={() => setCtxMenu(null)}>
+              <div class="ctx-menu-panel" style={{ left: `${menu().x}px`, top: `${menu().y}px` }}>
+                <button
+                  class="ctx-menu-item"
+                  onClick={() => {
+                    setCtxMenu(null)
+                  }}
+                >
+                  尺寸 S
+                </button>
+                <button
+                  class="ctx-menu-item"
+                  onClick={() => {
+                    setCtxMenu(null)
+                  }}
+                >
+                  尺寸 M
+                </button>
+                <button
+                  class="ctx-menu-item"
+                  onClick={() => {
+                    setCtxMenu(null)
+                  }}
+                >
+                  尺寸 L
+                </button>
+                <hr class="ctx-menu-sep" />
+                <button
+                  class="ctx-menu-item ctx-menu-danger"
+                  onClick={() => {
+                    removeWidget(menu().instanceId)
+                    setCtxMenu(null)
+                  }}
+                >
+                  移除实例
+                </button>
+              </div>
+            </div>
+          )}
+        </Show>
+        <div
+          class="toast-stack"
+          style={{ position: "fixed", bottom: "20px", right: "20px", "z-index": 999 }}
+        >
+          <For each={toasts()}>{(t) => <div class="toast-item">{t.msg}</div>}</For>
+        </div>
       </Show>
     </div>
   )
