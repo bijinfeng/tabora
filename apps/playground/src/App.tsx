@@ -23,6 +23,7 @@ import {
   createWorkspaceRepository,
 } from "@tabora/storage"
 import { PluginViewBoundary } from "./PluginViewBoundary"
+import { CommandPalette } from "./CommandPalette"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
 import { findLayoutContribution } from "./workbenchShell"
 import { SettingsHost, collectSettingsPanels, resolveInitialSettingsPanelId } from "./settingsHost"
@@ -67,6 +68,7 @@ export function App() {
     null,
   )
   const [addWidgetOpen, setAddWidgetOpen] = createSignal(false)
+  const [cmdPaletteOpen, setCmdPaletteOpen] = createSignal(false)
   const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
   let toastSeq = 0
@@ -75,6 +77,61 @@ export function App() {
     setToasts((t) => [...t, { id, msg }])
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
   }
+
+  const commandItems = () => [
+    {
+      icon: "🎨",
+      name: "切换主题",
+      desc: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
+      group: "命令" as const,
+      shortcut: "⌘T",
+      action: () => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
+    },
+    {
+      icon: "⇄",
+      name: "切换布局",
+      desc:
+        activeLayoutId() === "official.layout.workbench-dashboard"
+          ? "仪表盘 → 流式"
+          : "流式 → 仪表盘",
+      group: "命令" as const,
+      shortcut: "⌘L",
+      action: () => {
+        const next =
+          activeLayoutId() === "official.layout.workbench-dashboard"
+            ? "official.layout.workbench-stream"
+            : "official.layout.workbench-dashboard"
+        setActiveLayoutId(next)
+        const ws = workspaceState()
+        if (ws) {
+          void workspaceRepo.save({ ...ws, activeLayoutId: next })
+        }
+      },
+    },
+    {
+      icon: "+",
+      name: "添加卡片",
+      desc: "向工作台添加新卡片",
+      group: "命令" as const,
+      shortcut: "⌘N",
+      action: () => setAddWidgetOpen(true),
+    },
+    {
+      icon: "⚙",
+      name: "打开设置",
+      desc: "配置工作台",
+      group: "命令" as const,
+      shortcut: "⌘,",
+      action: () => setSettingsOpen(true),
+    },
+    {
+      icon: "?",
+      name: "快捷键参考",
+      desc: "查看所有快捷键",
+      group: "命令" as const,
+      action: () => {},
+    },
+  ]
 
   const database = createTaboraDatabase()
   const workspaceRepo = createWorkspaceRepository(database)
@@ -880,7 +937,28 @@ export function App() {
   const isDark = () => themeId() === "official.theme.dark"
 
   return (
-    <div class="tabora-root">
+    <div
+      class="tabora-root"
+      onKeyDown={(e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+          e.preventDefault()
+          setCmdPaletteOpen(true)
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === "t") {
+          e.preventDefault()
+          switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+          e.preventDefault()
+          setSettingsOpen(true)
+        }
+        if (e.key === "Escape") {
+          setCtxMenu(null)
+          setAddWidgetOpen(false)
+        }
+      }}
+      tabIndex={-1}
+    >
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
         <div class="toolbar">
           <div class="toolbar-left">
@@ -1034,6 +1112,11 @@ export function App() {
           </div>
         </Show>
       </Show>
+      <CommandPalette
+        isOpen={cmdPaletteOpen()}
+        onClose={() => setCmdPaletteOpen(false)}
+        commands={commandItems()}
+      />
     </div>
   )
 }
