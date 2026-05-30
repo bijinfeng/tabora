@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tabora · 可交互工作台原型 V2</title>
+    <title>Tabora V2 · 双布局工作台原型 — PRD 评审版</title>
     <style>
       :root {
         --wb-page: #f6f7f4;
@@ -21,14 +21,10 @@
         --wb-danger: #c94545;
         --wb-danger-soft: #fef0f0;
         --wb-success: #2d8a5e;
-        --wb-radius-card: 8px;
-        --wb-radius-control: 8px;
-        --wb-radius-panel: 12px;
-        --wb-dur-fast: 120ms;
-        --wb-dur-normal: 180ms;
-        --wb-dur-slow: 240ms;
+        --wb-radius: 8px;
+        --wb-radius-lg: 12px;
+        --wb-dur: 180ms;
         --wb-ease: cubic-bezier(0.2, 0, 0, 1);
-        --wb-ease-bounce: cubic-bezier(0.05, 0.7, 0.1, 1);
       }
       .dark {
         --wb-page: #191c1a;
@@ -45,6 +41,7 @@
         --wb-accent-soft: #1a2e26;
         --wb-danger: #ef8b8b;
         --wb-danger-soft: #2a1e1e;
+        --wb-success: #4fc49a;
       }
       * {
         box-sizing: border-box;
@@ -65,17 +62,109 @@
         background: var(--wb-page);
         color: var(--wb-text);
         min-height: 100vh;
-        transition:
-          background var(--wb-dur-normal) var(--wb-ease),
-          color var(--wb-dur-normal) var(--wb-ease);
-        -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
+        transition:
+          background var(--wb-dur) var(--wb-ease),
+          color var(--wb-dur) var(--wb-ease);
+        -webkit-font-smoothing: antialiased;
       }
-      .shell {
-        display: grid;
+
+      /* ----- TOP BAR (clean) ----- */
+      .top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        background: var(--wb-surface);
+        border-bottom: 1px solid var(--wb-line);
+        padding: 0 24px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      .top-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .top-bar-logo {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .top-bar-logo span {
+        color: var(--wb-accent);
+      }
+      .top-bar-badge {
+        font-size: 10px;
+        color: var(--wb-text-subtle);
+        background: var(--wb-surface-soft);
+        padding: 2px 8px;
+        border-radius: 10px;
+        border: 1px solid var(--wb-line);
+      }
+      .top-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .tb-btn {
+        height: 28px;
+        padding: 0 10px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 120ms ease;
+        white-space: nowrap;
+      }
+      .tb-btn:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+      .tb-btn.active {
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-weight: 650;
+      }
+      .tb-sep {
+        width: 1px;
+        height: 16px;
+        background: var(--wb-line);
+        margin: 0 4px;
+      }
+      .tb-btn-icon {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+      }
+
+      /* ----- MAIN ----- */
+      .main-wrap {
+        padding: 0;
+      }
+
+      /* ====== DASHBOARD LAYOUT ====== */
+      .layout-dashboard {
+        display: none;
         grid-template-columns: 56px 1fr;
-        min-height: 100vh;
+        min-height: calc(100vh - 44px);
       }
+      .layout-dashboard.active {
+        display: grid;
+      }
+
       .rail {
         background: var(--wb-surface);
         border-right: 1px solid var(--wb-line);
@@ -84,9 +173,6 @@
         align-items: center;
         gap: 6px;
         padding: 14px 8px;
-        transition:
-          background var(--wb-dur-normal) var(--wb-ease),
-          border-color var(--wb-dur-normal) var(--wb-ease);
       }
       .rail-logo {
         width: 36px;
@@ -111,7 +197,7 @@
         justify-content: center;
         cursor: pointer;
         color: var(--wb-text-muted);
-        transition: all var(--wb-dur-fast) var(--wb-ease);
+        transition: all 120ms ease;
         background: transparent;
         font-family: inherit;
       }
@@ -135,8 +221,9 @@
       .rail-spacer {
         flex: 1;
       }
-      .main {
-        padding: 32px;
+
+      .dash-content {
+        padding: 24px 32px;
         min-width: 0;
         display: flex;
         flex-direction: column;
@@ -145,47 +232,32 @@
         margin: 0 auto;
         width: 100%;
       }
-      .top-bar {
+      .dash-greeting {
+        font-size: 14px;
+        font-weight: 650;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
       }
-      .greeting {
-        font-size: 15px;
-        font-weight: 650;
-      }
-      .greeting-muted {
+      .dash-greeting-muted {
         color: var(--wb-text-muted);
         font-weight: 400;
       }
 
-      /* Search */
-      .search-wrap {
-        position: relative;
-      }
-      .search {
+      /* Search (Dashboard) */
+      .search-bar {
         display: flex;
         align-items: center;
         gap: 10px;
-        height: 48px;
+        height: 44px;
         padding: 0 16px;
-        width: 100%;
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
-        border-radius: 8px;
-        font-size: 13px;
+        border-radius: var(--wb-radius);
         color: var(--wb-text-subtle);
-        cursor: text;
-        transition:
-          border-color var(--wb-dur-fast) var(--wb-ease),
-          box-shadow var(--wb-dur-fast) var(--wb-ease);
+        font-size: 13px;
       }
-      .search:focus-within {
-        border-color: var(--wb-accent);
-        box-shadow: 0 0 0 3px rgba(26, 144, 112, 0.12);
-      }
-      .search input {
+      .search-bar input {
         flex: 1;
         border: none;
         outline: none;
@@ -194,78 +266,836 @@
         font-family: inherit;
         color: var(--wb-text);
       }
-      .search input::placeholder {
+      .search-bar input::placeholder {
         color: var(--wb-text-subtle);
       }
       .search-kbd {
         display: inline-flex;
         align-items: center;
-        height: 22px;
-        padding: 0 7px;
+        height: 20px;
+        padding: 0 6px;
         border: 1px solid var(--wb-line);
-        border-radius: 5px;
+        border-radius: 4px;
         background: var(--wb-surface-soft);
-        font-size: 11px;
+        font-size: 10px;
         color: var(--wb-text-subtle);
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
       }
       .search-suggestions {
         position: absolute;
-        top: calc(100% + 4px);
+        z-index: 20;
+        margin-top: 4px;
         left: 0;
         right: 0;
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
-        border-radius: 8px;
-        box-shadow:
-          0 4px 16px rgba(0, 0, 0, 0.08),
-          0 0 1px rgba(0, 0, 0, 0.06);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        max-height: 300px;
+        overflow-y: auto;
         opacity: 0;
-        transform: translateY(-4px);
         pointer-events: none;
-        transition: all var(--wb-dur-normal) var(--wb-ease);
-        z-index: 50;
-        overflow: hidden;
+        transform: translateY(-4px);
+        transition: all 150ms ease;
       }
-      .search-suggestions.open {
+      .search-suggestions.show {
         opacity: 1;
-        transform: translateY(0);
         pointer-events: auto;
+        transform: translateY(0);
       }
-      .suggestion {
+      .suggest-item {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 10px 14px;
+        padding: 8px 14px;
         font-size: 13px;
         cursor: pointer;
-        transition: background var(--wb-dur-fast) var(--wb-ease);
+        transition: background 100ms ease;
       }
-      .suggestion:hover {
+      .suggest-item:hover,
+      .suggest-item.active {
         background: var(--wb-surface-hover);
       }
-      .suggestion-icon {
-        width: 22px;
-        height: 22px;
+      .suggest-item-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 5px;
-        background: var(--wb-surface-soft);
-        color: var(--wb-text-muted);
-        font-size: 11px;
-        font-weight: 700;
+        font-size: 12px;
         flex-shrink: 0;
       }
-      .suggestion-text {
+      .suggest-item-text {
         flex: 1;
       }
-      .suggestion-type {
+      .suggest-item-desc {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+      }
+      .suggest-item-hint {
+        font-size: 10px;
+        color: var(--wb-text-subtle);
+        font-family: "SFMono-Regular", Consolas, monospace;
+      }
+      .suggest-empty {
+        font-size: 12px;
+        color: var(--wb-text-subtle);
+      }
+      .suggest-group-label {
+        padding: 8px 14px 2px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--wb-text-subtle);
+      }
+      .suggest-highlight {
+        color: var(--wb-accent);
+        font-weight: 600;
+      }
+
+      /* Search provider selector */
+      .search-provider {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
+      .search-provider-btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 6px;
+        background: var(--wb-surface-soft);
+        cursor: pointer;
+        font-size: 11px;
+        font-family: inherit;
+        color: var(--wb-text-muted);
+        white-space: nowrap;
+        transition: all 120ms ease;
+      }
+      .search-provider-btn:hover {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .search-provider-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        min-width: 160px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        z-index: 20;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-4px);
+        transition: all 180ms ease;
+      }
+      .search-provider-dropdown.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+      }
+      .sp-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+      .sp-option:hover {
+        background: var(--wb-surface-hover);
+      }
+      .sp-option.active {
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-weight: 600;
+      }
+      .sp-option .sp-check {
+        width: 14px;
+        color: var(--wb-accent);
+        font-size: 10px;
+      }
+
+      /* Size picker on card */
+      .size-picker {
+        display: inline-flex;
+        gap: 2px;
+        margin-right: 4px;
+      }
+      .size-picker .size-btn {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        border: 1px solid var(--wb-line);
+        background: var(--wb-surface-soft);
+        font-size: 9px;
+        font-weight: 700;
+        font-family: inherit;
+        color: var(--wb-text-muted);
+        cursor: pointer;
+        transition: all 120ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .size-picker .size-btn:hover {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .size-picker .size-btn.active {
+        background: var(--wb-accent-soft);
+        border-color: var(--wb-accent);
+        color: var(--wb-accent);
+      }
+
+      /* Extension Point debug panel */
+      .ext-panel {
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius-lg);
+        padding: 16px;
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 300;
+        max-width: 360px;
+        font-size: 11px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      }
+      .ext-panel-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--wb-text-subtle);
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .ext-panel-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3px 0;
+      }
+      .ext-point {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .ext-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .ext-dot.active {
+        background: var(--wb-success);
+      }
+      .ext-dot.registered {
+        background: var(--wb-accent);
+      }
+      .ext-count {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 10px;
+        color: var(--wb-text-muted);
+      }
+
+      /* Background grid */
+      .bg-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      .bg-item {
+        height: 56px;
+        border-radius: var(--wb-radius);
+        border: 1.5px solid var(--wb-line);
+        cursor: pointer;
+        transition: all 120ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: var(--wb-text-muted);
+        font-weight: 600;
+      }
+      .bg-item:hover {
+        border-color: var(--wb-line-strong);
+      }
+      .bg-item.active {
+        border-color: var(--wb-accent);
+        box-shadow: 0 0 0 2px rgba(26, 144, 112, 0.15);
+      }
+      .bg-item.solid1 {
+        background: linear-gradient(135deg, #e8ecf0, #dce4e8);
+      }
+      .bg-item.solid2 {
+        background: linear-gradient(135deg, #e8ede6, #dce3da);
+      }
+      .bg-item.gradient1 {
+        background: linear-gradient(135deg, #f0e6d3, #e8dcc8);
+      }
+      .bg-item.gradient2 {
+        background: linear-gradient(135deg, #dce8f0, #d0dce8);
+      }
+      .bg-item.image {
+        background: var(--wb-surface-soft);
+        border-style: dashed;
+      }
+
+      .widget-card.resize-transition {
+        transition: all 200ms ease;
+      }
+
+      /* Card drag-and-drop */
+      body.drag-active {
+        user-select: none;
+        cursor: grabbing;
+      }
+      .widget-card.dragging {
+        opacity: 0.92;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        transform: scale(1.03);
+        z-index: 50;
+        border-color: var(--wb-accent);
+        transition:
+          box-shadow 150ms ease,
+          transform 150ms ease;
+      }
+
+      /* Context menu */
+      .ctx-menu {
+        position: fixed;
+        z-index: 500;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        min-width: 160px;
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.95);
+        transition: all 120ms ease;
+        overflow: hidden;
+      }
+      .ctx-menu.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+      }
+      .ctx-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+      .ctx-item:hover {
+        background: var(--wb-surface-hover);
+      }
+      .ctx-item.danger {
+        color: var(--wb-danger);
+      }
+      .ctx-item.danger:hover {
+        background: var(--wb-danger-soft);
+      }
+      .ctx-item kbd {
+        margin-left: auto;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 10px;
+        color: var(--wb-text-subtle);
+      }
+      .ctx-sep {
+        height: 1px;
+        background: var(--wb-line);
+        margin: 3px 0;
+      }
+
+      /* Shortcuts panel */
+      .shortcuts-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+        backdrop-filter: blur(3px);
+      }
+      .shortcuts-panel.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .shortcuts-card {
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius-lg);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        width: 480px;
+        max-width: 90vw;
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 20px;
+        transform: translateY(8px);
+        transition: transform 180ms cubic-bezier(0.05, 0.7, 0.1, 1);
+      }
+      .shortcuts-panel.show .shortcuts-card {
+        transform: translateY(0);
+      }
+      .shortcuts-card h3 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      .shortcut-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+      }
+      .shortcut-row span:first-child {
+        color: var(--wb-text-muted);
+      }
+      .shortcut-keys {
+        display: flex;
+        gap: 3px;
+      }
+      .shortcut-key {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 4px;
+        background: var(--wb-surface-soft);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 11px;
+        color: var(--wb-text);
+        font-weight: 500;
+      }
+
+      /* Focus/Expand modal */
+      .expand-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 450;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.15);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 250ms ease;
+        backdrop-filter: blur(4px);
+      }
+      .expand-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .expand-modal {
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius-lg);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+        width: 560px;
+        max-width: 90vw;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        transform: scale(0.95) translateY(12px);
+        transition: transform 250ms cubic-bezier(0.05, 0.7, 0.1, 1);
+        overflow: hidden;
+      }
+      .expand-overlay.open .expand-modal {
+        transform: scale(1) translateY(0);
+      }
+      .expand-overlay.closing {
+        opacity: 0;
+      }
+      .expand-overlay.closing .expand-modal {
+        transform: scale(0.95) translateY(12px);
+      }
+      .expand-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--wb-line);
+        flex-shrink: 0;
+      }
+      .expand-title {
+        font-size: 15px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .expand-title-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+      .expand-actions {
+        display: flex;
+        gap: 4px;
+      }
+      .expand-body {
+        padding: 18px;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+      }
+      .expand-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 18px;
+        border-top: 1px solid var(--wb-line);
+        flex-shrink: 0;
         font-size: 11px;
         color: var(--wb-text-subtle);
       }
+      .expand-meta {
+        display: flex;
+        gap: 12px;
+      }
+      .expand-close-hint {
+        font-size: 10px;
+        color: var(--wb-text-subtle);
+      }
 
-      /* Cards */
+      /* Expand content styles */
+      .expand-focus-input {
+        width: 100%;
+        padding: 8px 0;
+        border: none;
+        background: transparent;
+        font-size: 20px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--wb-text);
+        outline: none;
+      }
+      .expand-focus-input::placeholder {
+        color: var(--wb-text-subtle);
+      }
+      .expand-notes-area {
+        width: 100%;
+        min-height: 200px;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        line-height: 1.7;
+        font-family: inherit;
+        color: var(--wb-text);
+        resize: vertical;
+        outline: none;
+      }
+      .expand-notes-area::placeholder {
+        color: var(--wb-text-subtle);
+      }
+      .expand-todo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .expand-todo-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        transition: background 120ms ease;
+      }
+      .expand-todo-item:hover {
+        background: var(--wb-surface-hover);
+      }
+      .expand-link-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .expand-link-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        cursor: pointer;
+        transition: all 120ms ease;
+        background: var(--wb-surface-soft);
+      }
+      .expand-link-card:hover {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .expand-link-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .expand-link-label {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+        font-weight: 500;
+      }
+      .expand-link-url {
+        font-size: 9px;
+        color: var(--wb-text-subtle);
+        font-family: "SFMono-Regular", Consolas, monospace;
+      }
+
+      /* Layout transition */
+      .layout-dashboard,
+      .layout-stream {
+        transition: opacity 180ms ease;
+      }
+      .layout-dashboard.switching,
+      .layout-stream.switching {
+        opacity: 0;
+      }
+
+      /* Card stagger animation */
+      @keyframes cardEnter {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .widget-card.card-enter {
+        animation: cardEnter 250ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
+      }
+
+      /* Toast stacking */
+      .toast-stack {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 500;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 8px;
+      }
+      .toast-item {
+        padding: 10px 14px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: toastIn 200ms cubic-bezier(0.05, 0.7, 0.1, 1);
+        max-width: 360px;
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* ====== STREAM LAYOUT ====== */
+      .layout-stream {
+        display: none;
+        min-height: calc(100vh - 44px);
+      }
+      .layout-stream.active {
+        display: block;
+      }
+
+      .stream-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 24px;
+        height: 44px;
+        position: sticky;
+        top: 44px;
+        z-index: 10;
+        background: var(--wb-surface);
+        border-bottom: 1px solid var(--wb-line);
+      }
+      .stream-top-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .stream-logo {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--wb-text);
+      }
+      .stream-logo span {
+        color: var(--wb-accent);
+      }
+      .stream-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .stream-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 24px 24px 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .stream-hero {
+        text-align: center;
+        padding: 32px 0 16px;
+      }
+      .stream-hero-greeting {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .stream-hero-date {
+        font-size: 13px;
+        color: var(--wb-text-muted);
+      }
+      .stream-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      /* Command palette (stream) */
+      .cmd-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.2);
+        z-index: 300;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 15vh;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--wb-dur) var(--wb-ease);
+        backdrop-filter: blur(2px);
+      }
+      .cmd-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .cmd-panel {
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius-lg);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        width: 520px;
+        max-width: 90vw;
+        overflow: hidden;
+        transform: translateY(-8px);
+        transition: transform var(--wb-dur) var(--wb-ease);
+      }
+      .cmd-overlay.open .cmd-panel {
+        transform: translateY(0);
+      }
+      .cmd-input-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--wb-line);
+      }
+      .cmd-input-row input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--wb-text);
+        background: transparent;
+      }
+      .cmd-input-row input::placeholder {
+        color: var(--wb-text-subtle);
+      }
+      .cmd-group-label {
+        padding: 8px 14px 2px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--wb-text-subtle);
+      }
+      .cmd-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+      .cmd-item:hover,
+      .cmd-item.active {
+        background: var(--wb-surface-hover);
+      }
+      .cmd-item-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: var(--wb-surface-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+      .cmd-item-text {
+        flex: 1;
+      }
+      .cmd-item-desc {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+      }
+
+      /* ---- CARDS (shared) ---- */
       .card-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -274,13 +1104,16 @@
       .widget-card {
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
-        border-radius: 8px;
+        border-radius: var(--wb-radius);
         padding: 14px;
         display: flex;
         flex-direction: column;
-        transition:
-          border-color var(--wb-dur-fast) var(--wb-ease),
-          background var(--wb-dur-normal) var(--wb-ease);
+        transition: border-color 120ms ease;
+        position: relative;
+        cursor: grab;
+      }
+      .widget-card:active {
+        cursor: grabbing;
       }
       .widget-card:hover {
         border-color: var(--wb-line-strong);
@@ -290,6 +1123,19 @@
       }
       .widget-card.row-2 {
         grid-row: span 2;
+      }
+      .widget-card.full-width {
+        grid-column: 1 / -1;
+      }
+      .widget-card.error {
+        border-color: rgba(201, 69, 69, 0.3);
+      }
+      .widget-card.error .card-title-text {
+        color: var(--wb-danger);
+      }
+      .widget-card.simulated-error {
+        border-color: rgba(201, 69, 69, 0.3);
+        opacity: 0.8;
       }
       .card-header {
         display: flex;
@@ -305,14 +1151,18 @@
         gap: 6px;
       }
       .card-title svg {
-        width: 15px;
-        height: 15px;
+        width: 14px;
+        height: 14px;
         color: var(--wb-accent);
         flex-shrink: 0;
       }
       .card-body {
         flex: 1;
         min-height: 0;
+      }
+      .card-actions {
+        display: flex;
+        gap: 2px;
       }
       .card-action {
         width: 26px;
@@ -325,18 +1175,23 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all var(--wb-dur-fast) var(--wb-ease);
+        font-size: 12px;
+        transition: all 120ms ease;
       }
       .card-action:hover {
         background: var(--wb-surface-hover);
         color: var(--wb-text);
+      }
+      .card-danger:hover {
+        background: var(--wb-danger-soft);
+        color: var(--wb-danger);
       }
       .card-action:focus-visible {
         outline: 2px solid var(--wb-accent);
         outline-offset: 2px;
       }
 
-      /* Focus */
+      /* Widget content styles (shared) */
       .focus-input {
         width: 100%;
         padding: 4px 0;
@@ -354,18 +1209,13 @@
       .focus-saved {
         font-size: 11px;
         color: var(--wb-success);
-        display: flex;
-        align-items: center;
-        gap: 4px;
         opacity: 0;
-        transition: opacity var(--wb-dur-normal) var(--wb-ease);
+        transition: opacity var(--wb-dur) var(--wb-ease);
         margin-top: 6px;
       }
       .focus-saved.show {
         opacity: 1;
       }
-
-      /* Links */
       .link-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -377,29 +1227,21 @@
         align-items: center;
         justify-content: center;
         gap: 4px;
-        height: 56px;
+        height: 52px;
         border: 1px solid var(--wb-line);
-        border-radius: 8px;
+        border-radius: var(--wb-radius);
         background: var(--wb-surface-soft);
         cursor: pointer;
-        transition: all var(--wb-dur-fast) var(--wb-ease);
+        transition: all 120ms ease;
         position: relative;
       }
       .link-item:hover {
         background: var(--wb-surface-hover);
         border-color: var(--wb-line-strong);
       }
-      .link-item-add {
-        border-style: dashed;
-        color: var(--wb-text-subtle);
-      }
-      .link-item-add:hover {
-        color: var(--wb-accent);
-        border-color: var(--wb-accent);
-      }
       .link-icon {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
         border-radius: 5px;
         display: flex;
         align-items: center;
@@ -418,9 +1260,9 @@
         position: absolute;
         top: 2px;
         right: 2px;
-        width: 18px;
-        height: 18px;
-        border-radius: 4px;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
         display: none;
         align-items: center;
         justify-content: center;
@@ -428,7 +1270,7 @@
         border: none;
         background: var(--wb-surface);
         color: var(--wb-text-muted);
-        font-size: 10px;
+        font-size: 9px;
       }
       .link-item:hover .link-delete {
         display: flex;
@@ -437,8 +1279,6 @@
         background: var(--wb-danger-soft);
         color: var(--wb-danger);
       }
-
-      /* Todo */
       .todo-list {
         display: flex;
         flex-direction: column;
@@ -448,21 +1288,21 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 5px 6px;
+        padding: 4px 6px;
         border-radius: 6px;
-        transition: background var(--wb-dur-fast) var(--wb-ease);
+        transition: background 120ms ease;
       }
       .todo-item:hover {
         background: var(--wb-surface-hover);
       }
       .todo-check {
-        width: 16px;
-        height: 16px;
+        width: 15px;
+        height: 15px;
         border: 1.5px solid var(--wb-line-strong);
-        border-radius: 4px;
+        border-radius: 3px;
         flex-shrink: 0;
         cursor: pointer;
-        transition: all var(--wb-dur-fast) var(--wb-ease);
+        transition: all 120ms ease;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -476,35 +1316,34 @@
       }
       .todo-check.done::after {
         content: "";
-        width: 4px;
-        height: 8px;
+        width: 3px;
+        height: 7px;
         border: solid #fff;
         border-width: 0 1.5px 1.5px 0;
-        transform: rotate(45deg) translateY(-0.5px);
+        transform: rotate(45deg) translateY(-1px);
       }
       .todo-text {
-        font-size: 13px;
+        font-size: 12px;
         flex: 1;
-        transition: color var(--wb-dur-fast) var(--wb-ease);
       }
       .todo-text.done {
         color: var(--wb-text-subtle);
         text-decoration: line-through;
       }
       .todo-delete {
-        width: 22px;
-        height: 22px;
-        border-radius: 4px;
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
         border: none;
         background: transparent;
         color: var(--wb-text-subtle);
         cursor: pointer;
-        font-size: 12px;
+        font-size: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         opacity: 0;
-        transition: all var(--wb-dur-fast) var(--wb-ease);
+        transition: all 120ms ease;
       }
       .todo-item:hover .todo-delete {
         opacity: 1;
@@ -513,32 +1352,13 @@
         background: var(--wb-danger-soft);
         color: var(--wb-danger);
       }
-      .todo-add {
-        font-size: 12px;
-        color: var(--wb-text-subtle);
-        padding: 4px 6px;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: all var(--wb-dur-fast) var(--wb-ease);
-        border: none;
-        background: transparent;
-        font-family: inherit;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 2px;
-      }
-      .todo-add:hover {
-        color: var(--wb-accent);
-        background: var(--wb-surface-hover);
-      }
       .todo-add-form {
         display: flex;
         gap: 4px;
         padding: 4px 0;
-        animation: fadeIn var(--wb-dur-normal) var(--wb-ease);
+        animation: fadeSlideIn var(--wb-dur) var(--wb-ease);
       }
-      @keyframes fadeIn {
+      @keyframes fadeSlideIn {
         from {
           opacity: 0;
           transform: translateY(-4px);
@@ -550,7 +1370,7 @@
       }
       .todo-add-input {
         flex: 1;
-        height: 28px;
+        height: 26px;
         padding: 0 8px;
         border: 1px solid var(--wb-accent);
         border-radius: 6px;
@@ -560,15 +1380,13 @@
         outline: none;
         background: var(--wb-surface);
       }
-
-      /* Notes */
       .notes-area {
         width: 100%;
         min-height: 40px;
         border: none;
         background: transparent;
         font-size: 13px;
-        line-height: 1.6;
+        line-height: 1.5;
         font-family: inherit;
         color: var(--wb-text);
         resize: none;
@@ -578,21 +1396,16 @@
         color: var(--wb-text-subtle);
       }
       .notes-footer {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 6px;
-        font-size: 11px;
+        font-size: 10px;
         color: var(--wb-success);
-        margin-top: 4px;
         opacity: 0;
-        transition: opacity var(--wb-dur-normal) var(--wb-ease);
+        transition: opacity var(--wb-dur) var(--wb-ease);
+        margin-top: 4px;
+        text-align: right;
       }
       .notes-footer.show {
         opacity: 1;
       }
-
-      /* Weather */
       .weather-display {
         display: flex;
         flex-direction: column;
@@ -602,35 +1415,31 @@
         gap: 2px;
       }
       .weather-temp {
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 700;
         line-height: 1;
       }
       .weather-desc {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--wb-text-muted);
       }
-
-      /* Plugin stats */
       .plugin-stats {
         display: flex;
         flex-direction: column;
-        gap: 2px;
       }
       .plugin-stat {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 5px 8px;
-        border-radius: 6px;
-        font-size: 13px;
-        transition: background var(--wb-dur-fast) var(--wb-ease);
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 12px;
       }
       .plugin-stat:hover {
         background: var(--wb-surface-hover);
       }
       .plugin-stat-val {
-        font-size: 12px;
+        font-size: 11px;
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         color: var(--wb-text-muted);
         font-weight: 600;
@@ -639,72 +1448,87 @@
         color: var(--wb-accent);
       }
 
-      /* Modals */
-      .modal-overlay {
+      /* Error card */
+      .error-card-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 0;
+        text-align: center;
+      }
+      .error-card-body p {
+        font-size: 12px;
+        color: var(--wb-text-muted);
+        line-height: 1.4;
+      }
+
+      /* ---- MODALS & OVERLAYS ---- */
+      .overlay {
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.2);
-        z-index: 200;
+        z-index: 400;
         display: flex;
         align-items: center;
         justify-content: center;
         opacity: 0;
         pointer-events: none;
-        transition: opacity var(--wb-dur-slow) var(--wb-ease);
+        transition: opacity var(--wb-dur) var(--wb-ease);
         backdrop-filter: blur(2px);
       }
-      .modal-overlay.open {
+      .overlay.open {
         opacity: 1;
         pointer-events: auto;
       }
       .modal {
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
-        border-radius: 12px;
+        border-radius: var(--wb-radius-lg);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-        width: 520px;
+        width: 480px;
         max-width: 90vw;
         max-height: 80vh;
         overflow-y: auto;
-        transform: translateY(12px) scale(0.97);
-        transition: transform var(--wb-dur-slow) var(--wb-ease-bounce);
+        transform: translateY(8px);
+        transition: transform var(--wb-dur) var(--wb-ease);
       }
-      .modal-overlay.open .modal {
-        transform: translateY(0) scale(1);
+      .overlay.open .modal {
+        transform: translateY(0);
       }
       .modal-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 16px 16px 0;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 650;
       }
       .modal-body {
         padding: 16px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
       }
-      .modal-item {
+      .add-item {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px;
+        padding: 10px 12px;
         border: 1px solid var(--wb-line);
-        border-radius: 8px;
+        border-radius: var(--wb-radius);
         cursor: pointer;
-        transition: all var(--wb-dur-fast) var(--wb-ease);
+        transition: all 120ms ease;
         background: var(--wb-surface-soft);
       }
-      .modal-item:hover {
+      .add-item:hover {
         background: var(--wb-surface-hover);
         border-color: var(--wb-line-strong);
       }
-      .modal-item-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+      .add-item-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
         background: var(--wb-accent-soft);
         color: var(--wb-accent);
         display: flex;
@@ -714,30 +1538,30 @@
         font-weight: 700;
         flex-shrink: 0;
       }
-      .modal-item-info {
+      .add-item-info {
         flex: 1;
       }
-      .modal-item-name {
+      .add-item-name {
         font-size: 13px;
         font-weight: 650;
       }
-      .modal-item-desc {
+      .add-item-desc {
         font-size: 11px;
         color: var(--wb-text-muted);
-        margin-top: 2px;
+        margin-top: 1px;
       }
 
-      /* Settings */
+      /* Settings drawer */
       .settings-overlay {
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.2);
-        z-index: 200;
+        z-index: 400;
         display: flex;
         justify-content: flex-end;
         opacity: 0;
         pointer-events: none;
-        transition: opacity var(--wb-dur-slow) var(--wb-ease);
+        transition: opacity var(--wb-dur) var(--wb-ease);
         backdrop-filter: blur(2px);
       }
       .settings-overlay.open {
@@ -745,49 +1569,118 @@
         pointer-events: auto;
       }
       .settings-panel {
-        width: 560px;
+        width: 520px;
         max-width: 90vw;
         height: 100vh;
         background: var(--wb-surface);
         border-left: 1px solid var(--wb-line);
         overflow-y: auto;
         transform: translateX(20px);
-        transition: transform var(--wb-dur-slow) var(--wb-ease);
+        transition: transform var(--wb-dur) var(--wb-ease);
         display: flex;
         flex-direction: column;
       }
       .settings-overlay.open .settings-panel {
         transform: translateX(0);
       }
-      .settings-header {
+      .settings-hdr {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 16px;
+        padding: 14px 16px;
         border-bottom: 1px solid var(--wb-line);
         position: sticky;
         top: 0;
         background: var(--wb-surface);
         z-index: 1;
       }
-      .settings-header h2 {
-        font-size: 18px;
-        font-weight: 700;
-      }
       .settings-body {
         padding: 16px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 0;
         flex: 1;
+      }
+      .settings-nav {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        font-size: 12px;
+        font-family: inherit;
+        color: var(--wb-text-muted);
+        cursor: pointer;
+        text-align: left;
+        transition: all 120ms ease;
+        font-weight: 500;
+      }
+      .settings-nav:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+      .settings-nav.active {
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-weight: 650;
+      }
+      .set-group {
+        margin-bottom: 20px;
+      }
+      .set-group-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--wb-text-subtle);
+        margin-bottom: 10px;
+      }
+      .set-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .set-row-info {
+      }
+      .set-row-label {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .set-row-desc {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+        margin-top: 2px;
+      }
+      .set-hint {
+        font-size: 10px;
+        color: var(--wb-text-subtle);
+        margin-top: 6px;
+      }
+      .plugin-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        background: var(--wb-surface);
+        transition: border-color 120ms ease;
+      }
+      .plugin-card:hover {
+        border-color: var(--wb-line-strong);
+      }
+      .theme-card {
+        transition: all 120ms ease;
+      }
+      .theme-card:hover {
+        border-color: var(--wb-line-strong) !important;
       }
       .settings-group {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
       }
       .settings-group-title {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -805,7 +1698,78 @@
       .settings-row-desc {
         font-size: 11px;
         color: var(--wb-text-muted);
+        margin-top: 1px;
+      }
+      .settings-row-hint {
+        font-size: 10px;
+        color: var(--wb-text-subtle);
         margin-top: 2px;
+      }
+
+      /* Layout picker cards */
+      .layout-picker {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .layout-option {
+        padding: 14px;
+        border: 1.5px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        cursor: pointer;
+        transition: all 120ms ease;
+        text-align: center;
+      }
+      .layout-option:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+      .layout-option.active {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent-soft);
+      }
+      .layout-option-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+      .layout-option-name {
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .layout-option-desc {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 500;
+        padding: 10px 14px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: all var(--wb-dur) var(--wb-ease);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .toast-icon {
+        color: var(--wb-accent);
+        font-weight: 700;
       }
 
       /* Buttons */
@@ -813,15 +1777,15 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        height: 36px;
-        padding: 0 14px;
+        height: 32px;
+        padding: 0 12px;
         border: 1px solid transparent;
-        border-radius: 8px;
+        border-radius: var(--wb-radius);
         font-family: inherit;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
-        transition: all var(--wb-dur-fast) var(--wb-ease);
+        transition: all 120ms ease;
       }
       .btn:focus-visible {
         outline: 2px solid var(--wb-accent);
@@ -835,9 +1799,6 @@
       }
       .btn-primary:hover {
         background: var(--wb-accent-hover);
-      }
-      .btn-primary:active {
-        transform: scale(0.98);
       }
       .btn-secondary {
         background: var(--wb-surface);
@@ -855,63 +1816,29 @@
       .btn-subtle:hover {
         background: #d8f0e8;
       }
-      .btn-sm {
-        height: 28px;
-        padding: 0 10px;
-        font-size: 12px;
-        border-radius: 6px;
-      }
       .btn-ghost {
         background: transparent;
         color: var(--wb-text-muted);
       }
       .btn-ghost:hover {
         background: var(--wb-surface-hover);
-        color: var(--wb-text);
+      }
+      .btn-sm {
+        height: 26px;
+        padding: 0 8px;
+        font-size: 11px;
+        border-radius: 6px;
+      }
+      .btn-danger {
+        background: var(--wb-danger);
+        color: #fff;
+        border-color: var(--wb-danger);
+      }
+      .btn-danger:hover {
+        background: #b33a3a;
       }
 
-      /* Toast */
-      .toast {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 300;
-        padding: 10px 16px;
-        background: var(--wb-surface);
-        border: 1px solid var(--wb-line);
-        border-radius: 8px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-        font-size: 13px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        opacity: 0;
-        transform: translateY(8px);
-        pointer-events: none;
-        transition: all var(--wb-dur-normal) var(--wb-ease);
-      }
-      .toast.show {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      .toast-icon {
-        color: var(--wb-accent);
-        font-weight: 700;
-      }
-      @keyframes bounceIn {
-        0% {
-          transform: scale(0.9);
-          opacity: 0;
-        }
-        60% {
-          transform: scale(1.02);
-        }
-        100% {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-
+      /* Responsive */
       @media (max-width: 1100px) {
         .card-grid {
           grid-template-columns: repeat(3, 1fr);
@@ -919,9 +1846,12 @@
         .widget-card.span-2 {
           grid-column: span 2;
         }
+        .stream-cards {
+          grid-template-columns: 1fr;
+        }
       }
       @media (max-width: 768px) {
-        .shell {
+        .layout-dashboard {
           grid-template-columns: 1fr;
         }
         .rail {
@@ -931,26 +1861,35 @@
           right: 0;
           flex-direction: row;
           justify-content: space-around;
-          padding: 6px 16px;
+          padding: 6px 12px;
           border-right: none;
           border-top: 1px solid var(--wb-line);
-          height: 52px;
+          height: 50px;
           z-index: 100;
         }
         .rail-logo,
         .rail-spacer {
           display: none;
         }
-        .main {
+        .dash-content {
           padding: 16px;
-          padding-bottom: 68px;
+          padding-bottom: 66px;
         }
         .card-grid {
           grid-template-columns: repeat(2, 1fr);
         }
+        .stream-content {
+          padding: 16px 16px 80px;
+        }
+        .review-bar {
+          flex-wrap: wrap;
+          gap: 4px;
+          justify-content: center;
+        }
       }
       @media (max-width: 500px) {
-        .card-grid {
+        .card-grid,
+        .stream-cards {
           grid-template-columns: 1fr;
         }
         .widget-card.span-2,
@@ -962,65 +1901,838 @@
     </style>
   </head>
   <body>
-    <div class="shell">
+    <!-- ====== TOP BAR ====== -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="top-bar-logo">Tabora <span>V2</span></div>
+        <span class="top-bar-badge" id="widgetBadge">5 实例</span>
+      </div>
+      <div class="top-bar-right">
+        <button class="tb-btn active" id="layoutBtnDashboard" onclick="switchLayout('dashboard')">
+          仪表盘
+        </button>
+        <button class="tb-btn" id="layoutBtnStream" onclick="switchLayout('stream')">流式</button>
+        <span class="tb-sep"></span>
+        <button class="tb-btn tb-btn-icon" onclick="toggleTheme()" title="主题">☀</button>
+        <button class="tb-btn tb-btn-icon" onclick="openSettings()" title="设置">⚙</button>
+        <button class="tb-btn tb-btn-icon" onclick="simulateError()" id="errorBtn" title="模拟错误">
+          ⚠
+        </button>
+        <button class="tb-btn tb-btn-icon" onclick="toggleExtPanel()" id="extBtn" title="扩展点">
+          ◈
+        </button>
+      </div>
+    </div>
+
+    <!-- ====== COMMAND PALETTE (⌘K) ====== -->
+    <div class="cmd-overlay" id="cmdOverlay" onclick="closeCmd(event)">
+      <div class="cmd-panel" onclick="event.stopPropagation()">
+        <div class="cmd-input-row">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--wb-text-subtle)"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            id="cmdInput"
+            placeholder="搜索命令、卡片、网页..."
+            autocomplete="off"
+          />
+          <span class="search-kbd">esc</span>
+        </div>
+        <div id="cmdResults">
+          <div class="cmd-group-label">收藏</div>
+          <div
+            class="cmd-item"
+            onclick="
+              toggleTheme()
+              closeCmd()
+            "
+          >
+            <div class="cmd-item-icon">🎨</div>
+            <div class="cmd-item-text">
+              <div>切换主题</div>
+              <div class="cmd-item-desc">明亮 ⇄ 暗色</div>
+            </div>
+            <span class="suggest-item-hint">⌘T</span>
+          </div>
+          <div
+            class="cmd-item"
+            onclick="
+              switchLayout(layout === 'dashboard' ? 'stream' : 'dashboard')
+              closeCmd()
+            "
+          >
+            <div class="cmd-item-icon">⇄</div>
+            <div class="cmd-item-text">
+              <div>切换布局</div>
+              <div class="cmd-item-desc">仪表盘 ⇄ 流式</div>
+            </div>
+            <span class="suggest-item-hint">⌘L</span>
+          </div>
+          <div
+            class="cmd-item"
+            onclick="
+              openAddWidget()
+              closeCmd()
+            "
+          >
+            <div class="cmd-item-icon">+</div>
+            <div class="cmd-item-text">
+              <div>添加卡片</div>
+              <div class="cmd-item-desc">向工作台添加新卡片</div>
+            </div>
+            <span class="suggest-item-hint">⌘N</span>
+          </div>
+          <div
+            class="cmd-item"
+            onclick="
+              openSettings()
+              closeCmd()
+            "
+          >
+            <div class="cmd-item-icon">⚙</div>
+            <div class="cmd-item-text">
+              <div>打开设置</div>
+              <div class="cmd-item-desc">配置工作台</div>
+            </div>
+            <span class="suggest-item-hint">⌘,</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== ADD WIDGET MODAL ====== -->
+    <div class="overlay" id="addWidgetOverlay" onclick="closeAddWidget(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <span>添加卡片</span><button class="card-action" onclick="closeAddWidget()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="add-item" onclick="addWidget('focus')">
+            <div class="add-item-icon">🎯</div>
+            <div class="add-item-info">
+              <div class="add-item-name">今日重点</div>
+              <div class="add-item-desc">设定今天最重要的一件事</div>
+            </div>
+          </div>
+          <div class="add-item" onclick="addWidget('links')">
+            <div class="add-item-icon">🔗</div>
+            <div class="add-item-info">
+              <div class="add-item-name">快捷入口</div>
+              <div class="add-item-desc">常用网站一键触达</div>
+            </div>
+          </div>
+          <div class="add-item" onclick="addWidget('todo')">
+            <div class="add-item-icon">✓</div>
+            <div class="add-item-info">
+              <div class="add-item-name">待办列表</div>
+              <div class="add-item-desc">跟踪任务并标记完成</div>
+            </div>
+          </div>
+          <div class="add-item" onclick="addWidget('notes')">
+            <div class="add-item-icon">📝</div>
+            <div class="add-item-info">
+              <div class="add-item-name">便签</div>
+              <div class="add-item-desc">快速记录灵感和想法</div>
+            </div>
+          </div>
+          <div class="add-item" onclick="addWidget('weather')">
+            <div class="add-item-icon">☀</div>
+            <div class="add-item-info">
+              <div class="add-item-name">天气</div>
+              <div class="add-item-desc">当前天气一目了然</div>
+            </div>
+          </div>
+          <div class="add-item" onclick="addWidget('plugins')">
+            <div class="add-item-icon">◈</div>
+            <div class="add-item-info">
+              <div class="add-item-name">插件状态</div>
+              <div class="add-item-desc">查看插件运行概况</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== SETTINGS ====== -->
+    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings(event)">
+      <div
+        class="settings-panel"
+        onclick="event.stopPropagation()"
+        style="display: grid; grid-template-columns: 200px 1fr; width: 680px"
+      >
+        <!-- Left Nav -->
+        <nav
+          style="
+            border-right: 1px solid var(--wb-line);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: var(--wb-surface-soft);
+          "
+        >
+          <div
+            style="
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              color: var(--wb-text-subtle);
+              padding: 8px 10px 4px;
+            "
+          >
+            设置
+          </div>
+          <button
+            class="settings-nav active"
+            data-tab="general"
+            onclick="switchSettingsTab('general', this)"
+          >
+            通用
+          </button>
+          <button
+            class="settings-nav"
+            data-tab="appearance"
+            onclick="switchSettingsTab('appearance', this)"
+          >
+            外观
+          </button>
+          <button
+            class="settings-nav"
+            data-tab="search"
+            onclick="switchSettingsTab('search', this)"
+          >
+            搜索
+          </button>
+          <div
+            style="
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              color: var(--wb-text-subtle);
+              padding: 12px 10px 4px;
+              margin-top: 4px;
+            "
+          >
+            插件
+          </div>
+          <button
+            class="settings-nav"
+            data-tab="plugins"
+            onclick="switchSettingsTab('plugins', this)"
+          >
+            已安装
+          </button>
+          <div style="flex: 1"></div>
+          <button
+            class="settings-nav"
+            data-tab="about"
+            onclick="switchSettingsTab('about', this)"
+            style="margin-top: auto"
+          >
+            关于
+          </button>
+        </nav>
+        <!-- Right Content -->
+        <div style="overflow-y: auto; max-height: 70vh">
+          <div class="settings-hdr">
+            <h2 style="font-size: 17px; font-weight: 700" id="settingsTabTitle">通用</h2>
+            <button class="card-action" onclick="closeSettings()" style="width: 30px; height: 30px">
+              ✕
+            </button>
+          </div>
+          <div class="settings-body">
+            <!-- General -->
+            <div class="settings-tab" id="tab-general">
+              <div class="set-group">
+                <div class="set-group-title">工作台布局</div>
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--wb-text-muted);
+                    margin-bottom: 10px;
+                    line-height: 1.5;
+                  "
+                >
+                  布局是插件。切换布局保留所有卡片数据。仪表盘式是创建者的偏好——不同的布局适合不同的使用习惯。
+                </div>
+                <div class="layout-picker" style="grid-template-columns: 1fr 1fr; gap: 10px">
+                  <div
+                    class="layout-option active"
+                    id="settingLayoutDashboard"
+                    onclick="settingsSwitchLayout('dashboard')"
+                    style="text-align: left; display: flex; gap: 10px; align-items: flex-start"
+                  >
+                    <div style="font-size: 24px; flex-shrink: 0">◧</div>
+                    <div>
+                      <div class="layout-option-name">仪表盘式</div>
+                      <div class="layout-option-desc">
+                        Rail + 搜索栏 + 4列网格。多卡片并行查看。
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="layout-option"
+                    id="settingLayoutStream"
+                    onclick="settingsSwitchLayout('stream')"
+                    style="text-align: left; display: flex; gap: 10px; align-items: flex-start"
+                  >
+                    <div style="font-size: 24px; flex-shrink: 0">☰</div>
+                    <div>
+                      <div class="layout-option-name">流式</div>
+                      <div class="layout-option-desc">双列流式 · ⌘K 搜索。专注单一任务。</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="set-hint">切换后卡片数据保留。区域不匹配的卡片进入待放置列表。</div>
+              </div>
+              <div class="set-group">
+                <div class="set-group-title">工作区</div>
+                <div class="set-row">
+                  <div class="set-row-info">
+                    <div class="set-row-label">当前工作区</div>
+                    <div class="set-row-desc">存储布局、主题、背景和卡片配置</div>
+                  </div>
+                  <span style="font-size: 12px; color: var(--wb-text-muted)"
+                    >我的工作台 · 5 月 30 日</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Appearance -->
+            <div class="settings-tab" id="tab-appearance" style="display: none">
+              <div class="set-group">
+                <div class="set-group-title">主题</div>
+                <div style="font-size: 12px; color: var(--wb-text-muted); margin-bottom: 10px">
+                  选择明亮或暗色主题。主题来自 theme 插件的 token 贡献。
+                </div>
+                <div style="display: flex; gap: 8px">
+                  <div
+                    class="theme-card"
+                    id="themeLight"
+                    onclick="setTheme('light', this)"
+                    style="
+                      flex: 1;
+                      padding: 14px;
+                      border: 1.5px solid var(--wb-accent);
+                      border-radius: var(--wb-radius);
+                      cursor: pointer;
+                      background: var(--wb-accent-soft);
+                      text-align: center;
+                    "
+                  >
+                    <div style="font-size: 20px; margin-bottom: 6px">☀</div>
+                    <div style="font-size: 12px; font-weight: 650">明亮 · Sage Light</div>
+                    <div style="font-size: 10px; color: var(--wb-text-muted); margin-top: 2px">
+                      浅色页面，白天使用
+                    </div>
+                  </div>
+                  <div
+                    class="theme-card"
+                    id="themeDark"
+                    onclick="setTheme('dark', this)"
+                    style="
+                      flex: 1;
+                      padding: 14px;
+                      border: 1.5px solid var(--wb-line);
+                      border-radius: var(--wb-radius);
+                      cursor: pointer;
+                      background: var(--wb-surface);
+                      text-align: center;
+                    "
+                  >
+                    <div style="font-size: 20px; margin-bottom: 6px">☾</div>
+                    <div style="font-size: 12px; font-weight: 650">暗色 · Sage Dark</div>
+                    <div style="font-size: 10px; color: var(--wb-text-muted); margin-top: 2px">
+                      深色页面，夜间使用
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="set-group">
+                <div class="set-group-title">背景</div>
+                <div style="font-size: 12px; color: var(--wb-text-muted); margin-bottom: 10px">
+                  选择页面背景。背景来源通过 background-provider 贡献，渲染由 background-renderer
+                  执行。
+                </div>
+                <div class="bg-grid">
+                  <div class="bg-item solid1 active" onclick="setBg('solid1', this)">纯色 1</div>
+                  <div class="bg-item solid2" onclick="setBg('solid2', this)">纯色 2</div>
+                  <div class="bg-item gradient1" onclick="setBg('grad1', this)">渐变 1</div>
+                  <div class="bg-item gradient2" onclick="setBg('grad2', this)">渐变 2</div>
+                  <div class="bg-item image" onclick="setBg('image', this)">图片</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Search -->
+            <div class="settings-tab" id="tab-search" style="display: none">
+              <div class="set-group">
+                <div class="set-group-title">默认搜索引擎</div>
+                <div style="font-size: 12px; color: var(--wb-text-muted); margin-bottom: 10px">
+                  搜索栏默认使用的搜索引擎。可在搜索框中用
+                  <code
+                    style="
+                      background: var(--wb-accent-soft);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                      font-size: 11px;
+                      color: var(--wb-accent);
+                    "
+                    >@引擎名</code
+                  >
+                  临时切换。
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <div
+                    class="set-row"
+                    style="
+                      padding: 8px 12px;
+                      border: 1px solid var(--wb-line);
+                      border-radius: 8px;
+                      cursor: pointer;
+                    "
+                    onclick="
+                      selectProvider('google')
+                      renderWidgets()
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 16px">🔍</span>
+                      <div>
+                        <div style="font-size: 13px; font-weight: 650">Google</div>
+                        <div style="font-size: 11px; color: var(--wb-text-muted)">@google</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                      >${searchProvider==='google'?'✓ 当前':''}</span
+                    >
+                  </div>
+                  <div
+                    class="set-row"
+                    style="
+                      padding: 8px 12px;
+                      border: 1px solid var(--wb-line);
+                      border-radius: 8px;
+                      cursor: pointer;
+                    "
+                    onclick="
+                      selectProvider('bing')
+                      renderWidgets()
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 16px">🔍</span>
+                      <div>
+                        <div style="font-size: 13px; font-weight: 650">Bing</div>
+                        <div style="font-size: 11px; color: var(--wb-text-muted)">@bing</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                      >${searchProvider==='bing'?'✓ 当前':''}</span
+                    >
+                  </div>
+                  <div
+                    class="set-row"
+                    style="
+                      padding: 8px 12px;
+                      border: 1px solid var(--wb-line);
+                      border-radius: 8px;
+                      cursor: pointer;
+                    "
+                    onclick="
+                      selectProvider('ddg')
+                      renderWidgets()
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 16px">🔍</span>
+                      <div>
+                        <div style="font-size: 13px; font-weight: 650">DuckDuckGo</div>
+                        <div style="font-size: 11px; color: var(--wb-text-muted)">@ddg</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                      >${searchProvider==='ddg'?'✓ 当前':''}</span
+                    >
+                  </div>
+                  <div
+                    class="set-row"
+                    style="
+                      padding: 8px 12px;
+                      border: 1px solid var(--wb-line);
+                      border-radius: 8px;
+                      cursor: pointer;
+                    "
+                    onclick="
+                      selectProvider('github')
+                      renderWidgets()
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 16px">🔍</span>
+                      <div>
+                        <div style="font-size: 13px; font-weight: 650">GitHub</div>
+                        <div style="font-size: 11px; color: var(--wb-text-muted)">@github</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                      >${searchProvider==='github'?'✓ 当前':''}</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plugins -->
+            <div class="settings-tab" id="tab-plugins" style="display: none">
+              <div class="set-group">
+                <div class="set-group-title">已安装插件</div>
+                <div style="font-size: 12px; color: var(--wb-text-muted); margin-bottom: 10px">
+                  每个插件贡献的能力、版本和运行状态。插件启用状态控制是否加载到当前工作台。
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <div class="plugin-card" id="pcard-dashboard">
+                    <div style="flex: 1">
+                      <div style="font-size: 13px; font-weight: 650">仪表盘式布局</div>
+                      <div
+                        style="
+                          font-size: 11px;
+                          color: var(--wb-text-subtle);
+                          font-family: monospace;
+                        "
+                      >
+                        official.layout.workbench-dashboard
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 10px; color: var(--wb-text-subtle)">v1.0</span
+                      ><span
+                        style="
+                          font-size: 10px;
+                          padding: 2px 6px;
+                          border-radius: 10px;
+                          background: rgba(45, 138, 94, 0.12);
+                          color: var(--wb-success);
+                        "
+                        >layout · grid</span
+                      ><label class="sw-wrap"
+                        ><input type="checkbox" checked /><span
+                          class="sw-track"
+                          style="width: 32px; height: 18px"
+                          ><span
+                            class="sw-thumb"
+                            style="width: 14px; height: 14px; top: 2px; left: 2px"
+                          ></span></span
+                      ></label>
+                    </div>
+                  </div>
+                  <div class="plugin-card" id="pcard-stream">
+                    <div style="flex: 1">
+                      <div style="font-size: 13px; font-weight: 650">流式布局</div>
+                      <div
+                        style="
+                          font-size: 11px;
+                          color: var(--wb-text-subtle);
+                          font-family: monospace;
+                        "
+                      >
+                        official.layout.workbench-stream
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 10px; color: var(--wb-text-subtle)">v1.0</span
+                      ><span
+                        style="
+                          font-size: 10px;
+                          padding: 2px 6px;
+                          border-radius: 10px;
+                          background: rgba(45, 138, 94, 0.12);
+                          color: var(--wb-success);
+                        "
+                        >layout · stream</span
+                      ><label class="sw-wrap"
+                        ><input type="checkbox" checked /><span
+                          class="sw-track"
+                          style="width: 32px; height: 18px"
+                          ><span
+                            class="sw-thumb"
+                            style="width: 14px; height: 14px; top: 2px; left: 2px"
+                          ></span></span
+                      ></label>
+                    </div>
+                  </div>
+                  <div class="plugin-card">
+                    <div style="flex: 1">
+                      <div style="font-size: 13px; font-weight: 650">命令搜索</div>
+                      <div
+                        style="
+                          font-size: 11px;
+                          color: var(--wb-text-subtle);
+                          font-family: monospace;
+                        "
+                      >
+                        official.search.command-bar
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 10px; color: var(--wb-text-subtle)">v1.0</span
+                      ><span
+                        style="
+                          font-size: 10px;
+                          padding: 2px 6px;
+                          border-radius: 10px;
+                          background: rgba(45, 138, 94, 0.12);
+                          color: var(--wb-success);
+                        "
+                        >search</span
+                      ><label class="sw-wrap"
+                        ><input type="checkbox" checked /><span
+                          class="sw-track"
+                          style="width: 32px; height: 18px"
+                          ><span
+                            class="sw-thumb"
+                            style="width: 14px; height: 14px; top: 2px; left: 2px"
+                          ></span></span
+                      ></label>
+                    </div>
+                  </div>
+                  <div class="plugin-card">
+                    <div style="flex: 1">
+                      <div style="font-size: 13px; font-weight: 650">Widget 生产力套件</div>
+                      <div
+                        style="
+                          font-size: 11px;
+                          color: var(--wb-text-subtle);
+                          font-family: monospace;
+                        "
+                      >
+                        official.widgets.productivity
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 10px; color: var(--wb-text-subtle)">v1.0</span
+                      ><span
+                        style="
+                          font-size: 10px;
+                          padding: 2px 6px;
+                          border-radius: 10px;
+                          background: rgba(45, 138, 94, 0.12);
+                          color: var(--wb-success);
+                        "
+                        >widget ×5</span
+                      ><label class="sw-wrap"
+                        ><input type="checkbox" checked /><span
+                          class="sw-track"
+                          style="width: 32px; height: 18px"
+                          ><span
+                            class="sw-thumb"
+                            style="width: 14px; height: 14px; top: 2px; left: 2px"
+                          ></span></span
+                      ></label>
+                    </div>
+                  </div>
+                  <div class="plugin-card">
+                    <div style="flex: 1">
+                      <div style="font-size: 13px; font-weight: 650">主题包</div>
+                      <div
+                        style="
+                          font-size: 11px;
+                          color: var(--wb-text-subtle);
+                          font-family: monospace;
+                        "
+                      >
+                        official.theme.default-pack
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <span style="font-size: 10px; color: var(--wb-text-subtle)">v1.0</span
+                      ><span
+                        style="
+                          font-size: 10px;
+                          padding: 2px 6px;
+                          border-radius: 10px;
+                          background: rgba(45, 138, 94, 0.12);
+                          color: var(--wb-success);
+                        "
+                        >theme ×2</span
+                      ><label class="sw-wrap"
+                        ><input type="checkbox" checked /><span
+                          class="sw-track"
+                          style="width: 32px; height: 18px"
+                          ><span
+                            class="sw-thumb"
+                            style="width: 14px; height: 14px; top: 2px; left: 2px"
+                          ></span></span
+                      ></label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- About -->
+            <div class="settings-tab" id="tab-about" style="display: none">
+              <div class="set-group">
+                <div class="set-group-title">关于 Tabora</div>
+                <div style="font-size: 13px; color: var(--wb-text-muted); line-height: 1.6">
+                  <strong>Tabora V2</strong> · Refined Sage<br />
+                  插件优先的个人工作台新标签页<br /><br />
+                  设计体系：52 个基础组件 + 7 个组合模式<br />
+                  布局：Dashboard + Stream（2 种）<br />
+                  扩展点：layout, widget, search, search-provider,<br />
+                  background-provider, background-renderer, theme, settings-panel<br />
+                  <br />
+                  <span style="font-size: 11px; color: var(--wb-text-subtle)"
+                    >Version 0.1.0 · Built 2026-05-30</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== EXPAND MODAL ====== -->
+    <div class="expand-overlay" id="expandOverlay" onclick="closeExpand(event)">
+      <div class="expand-modal" onclick="event.stopPropagation()">
+        <div class="expand-header">
+          <div class="expand-title">
+            <div class="expand-title-icon" id="expandIcon">📋</div>
+            <span id="expandTitle">卡片详情</span>
+          </div>
+          <div class="expand-actions">
+            <button class="card-action" onclick="closeExpand()" title="关闭" aria-label="关闭">
+              ✕
+            </button>
+          </div>
+        </div>
+        <div class="expand-body" id="expandBody"></div>
+        <div class="expand-footer">
+          <div class="expand-meta"><span id="expandMeta"></span></div>
+          <span class="expand-close-hint">esc 关闭 · 双击打开 · 右键菜单</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context menu -->
+    <div class="ctx-menu" id="ctxMenu"></div>
+
+    <!-- Shortcuts panel -->
+    <div class="shortcuts-panel" id="shortcutsPanel" onclick="closeShortcuts(event)">
+      <div class="shortcuts-card" onclick="event.stopPropagation()">
+        <h3>⌨ 快捷键参考</h3>
+        <div class="shortcut-row">
+          <span>打开命令面板</span>
+          <div class="shortcut-keys">
+            <span class="shortcut-key">⌘</span><span class="shortcut-key">K</span>
+          </div>
+        </div>
+        <div class="shortcut-row">
+          <span>切换主题</span>
+          <div class="shortcut-keys">
+            <span class="shortcut-key">⌘</span><span class="shortcut-key">T</span>
+          </div>
+        </div>
+        <div class="shortcut-row">
+          <span>切换布局</span>
+          <div class="shortcut-keys">
+            <span class="shortcut-key">⌘</span><span class="shortcut-key">L</span>
+          </div>
+        </div>
+        <div class="shortcut-row">
+          <span>添加卡片</span>
+          <div class="shortcut-keys">
+            <span class="shortcut-key">⌘</span><span class="shortcut-key">N</span>
+          </div>
+        </div>
+        <div class="shortcut-row">
+          <span>打开设置</span>
+          <div class="shortcut-keys">
+            <span class="shortcut-key">⌘</span><span class="shortcut-key">,</span>
+          </div>
+        </div>
+        <div class="shortcut-row">
+          <span>快捷键面板</span>
+          <div class="shortcut-keys"><span class="shortcut-key">?</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span>关闭弹窗/面板</span>
+          <div class="shortcut-keys"><span class="shortcut-key">Esc</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span>展开卡片</span>
+          <div class="shortcut-keys"><span class="shortcut-key">双击</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span>右键菜单</span>
+          <div class="shortcut-keys"><span class="shortcut-key">右键</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== TOAST ====== -->
+    <div class="toast-stack" id="toastStack"></div>
+
+    <!-- ====== DASHBOARD -->
+    <div class="layout-dashboard active" id="layoutDashboard">
       <nav class="rail">
         <div class="rail-logo">T</div>
-        <button class="rail-btn active" aria-label="主页" title="主页" onclick="selectRail(this)">
+        <button
+          class="rail-btn active"
+          aria-label="主页"
+          onclick="renderWidgets()"
+          title="主页（全局约束：所有布局必须可达）"
+        >
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
-            stroke-linejoin="round"
           >
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
         </button>
-        <button class="rail-btn" aria-label="添加卡片" title="添加卡片" onclick="openAddWidget()">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button
+          class="rail-btn"
+          aria-label="添加卡片"
+          onclick="openAddWidget()"
+          title="添加卡片（全局约束：所有布局必须可达）"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </button>
         <div class="rail-spacer"></div>
-        <button class="rail-btn" aria-label="切换主题" title="切换主题" onclick="toggleTheme()">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button class="rail-btn" aria-label="切换主题" onclick="toggleTheme()" title="主题切换">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="5" />
             <line x1="12" y1="1" x2="12" y2="3" />
             <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
         </button>
-        <button class="rail-btn" aria-label="设置" title="设置" onclick="openSettings()">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button
+          class="rail-btn"
+          aria-label="设置"
+          onclick="openSettings()"
+          title="设置（全局约束：所有布局必须可达）"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3" />
             <path
               d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
@@ -1028,395 +2740,115 @@
           </svg>
         </button>
       </nav>
-
-      <div class="main">
-        <div class="top-bar">
-          <div class="greeting">下午好 <span class="greeting-muted">— 5月30日 星期六</span></div>
-          <div>
-            <button class="btn btn-subtle btn-sm" onclick="openAddWidget()">+ 添加卡片</button>
-          </div>
+      <div class="dash-content">
+        <div class="dash-greeting">
+          <div>下午好 <span class="dash-greeting-muted">· 5月30日 星期六</span></div>
+          <button class="btn btn-subtle btn-sm" onclick="openAddWidget()">+ 添加卡片</button>
         </div>
-
-        <div class="search-wrap" id="searchWrap">
-          <div class="search" id="searchBar">
+        <div style="position: relative">
+          <div class="search-bar" id="dashSearchWrap">
             <svg
-              width="16"
-              height="16"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="currentColor"
+              stroke="var(--wb-text-subtle)"
               stroke-width="2"
-              stroke-linecap="round"
-              style="flex-shrink: 0; color: var(--wb-text-subtle)"
             >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
               type="text"
-              id="searchInput"
-              placeholder="搜索网页、工具、卡片内容、命令..."
+              id="dashSearchInput"
+              placeholder="搜索或输入命令...  @google 切换引擎"
               autocomplete="off"
             />
             <span class="search-kbd">⌘K</span>
           </div>
-          <div class="search-suggestions" id="searchSuggestions">
-            <div class="suggestion" data-action="web">
-              <span class="suggestion-icon">🌐</span
-              ><span class="suggestion-text">搜索 "<strong></strong>"</span
-              ><span class="suggestion-type">Google</span>
-            </div>
-            <div class="suggestion" data-action="card-add">
-              <span class="suggestion-icon">+</span><span class="suggestion-text">添加新卡片</span
-              ><span class="suggestion-type">命令</span>
-            </div>
-            <div class="suggestion" data-action="theme">
-              <span class="suggestion-icon">☀</span><span class="suggestion-text">切换主题</span
-              ><span class="suggestion-type">命令</span>
-            </div>
-            <div class="suggestion" data-action="settings">
-              <span class="suggestion-icon">⚙</span><span class="suggestion-text">打开设置</span
-              ><span class="suggestion-type">命令</span>
-            </div>
-          </div>
+          <div class="search-suggestions" id="dashSuggestions"></div>
         </div>
+        <div class="card-grid" id="dashGrid"></div>
+      </div>
+    </div>
 
-        <div class="card-grid" id="cardGrid">
-          <!-- 今日重点 -->
-          <div class="widget-card span-2" id="card-focus">
-            <div class="card-header">
-              <div class="card-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" /></svg
-                >今日重点
-              </div>
-              <div>
-                <button
-                  class="card-action"
-                  onclick="removeWidget('card-focus')"
-                  title="移除卡片"
-                  aria-label="移除"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div class="card-body">
+    <!-- ================================================================== -->
+    <!-- STREAM LAYOUT -->
+    <div class="layout-stream" id="layoutStream">
+      <div class="stream-top">
+        <div class="stream-top-left">
+          <div class="stream-logo">Tabora <span>Stream</span></div>
+        </div>
+        <div class="stream-top-actions">
+          <button class="tb-btn" onclick="openCmd()">⌘K 搜索</button>
+          <button class="tb-btn" onclick="openAddWidget()">+ 添加卡片</button>
+          <button class="tb-btn tb-btn-icon" onclick="toggleTheme()">☀</button>
+          <button class="tb-btn tb-btn-icon" onclick="openSettings()">⚙</button>
+        </div>
+      </div>
+      <div class="stream-content">
+        <div class="stream-hero">
+          <div class="stream-hero-greeting">下午好 ☀</div>
+          <div class="stream-hero-date">5月30日 星期六 · 北京</div>
+          <div style="margin-top: 16px">
+            <div
+              class="search-bar"
+              style="width: 400px; margin: 0 auto; cursor: text"
+              onclick="document.getElementById('streamSearchInput').focus()"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--wb-text-subtle)"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
               <input
-                class="focus-input"
-                placeholder="今天最重要的一件事是什么？"
-                oninput="onFocusInput()"
-              />
-              <div class="focus-saved" id="focusSaved">✓ 已保存</div>
-            </div>
-          </div>
-
-          <!-- 快捷入口 -->
-          <div class="widget-card span-2" id="card-links">
-            <div class="card-header">
-              <div class="card-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg
-                >快捷入口
-              </div>
-              <div>
-                <button
-                  class="card-action"
-                  onclick="removeWidget('card-links')"
-                  title="移除卡片"
-                  aria-label="移除"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div class="card-body"><div class="link-grid" id="linkGrid"></div></div>
-          </div>
-
-          <!-- 待办 -->
-          <div class="widget-card" id="card-todo">
-            <div class="card-header">
-              <div class="card-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="9 11 12 14 22 4" />
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg
-                >待办
-              </div>
-              <div>
-                <button
-                  class="card-action"
-                  onclick="removeWidget('card-todo')"
-                  title="移除卡片"
-                  aria-label="移除"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="todo-list" id="todoList"></div>
-              <button class="todo-add" id="todoAddBtn" onclick="showTodoAdd()">+ 添加任务</button>
-            </div>
-          </div>
-
-          <!-- 便签 -->
-          <div class="widget-card row-2" id="card-notes">
-            <div class="card-header">
-              <div class="card-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" /></svg
-                >便签
-              </div>
-              <div>
-                <button
-                  class="card-action"
-                  onclick="removeWidget('card-notes')"
-                  title="移除卡片"
-                  aria-label="移除"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div class="card-body" style="display: flex; flex-direction: column; flex: 1">
-              <textarea
-                class="notes-area"
-                placeholder="快速记录想法、灵感、提醒..."
-                style="flex: 1"
-                oninput="onNotesInput()"
-              ></textarea>
-              <div class="notes-footer" id="notesFooter">✓ 已自动保存</div>
-            </div>
-          </div>
-
-          <!-- 天气 -->
-          <div class="widget-card" id="card-weather">
-            <div class="card-header">
-              <div class="card-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="12" cy="12" r="5" /></svg
-                >天气
-              </div>
-              <div>
-                <button
-                  class="card-action"
-                  onclick="removeWidget('card-weather')"
-                  title="移除卡片"
-                  aria-label="移除"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="weather-display">
-                <span class="weather-temp">22°C</span><span class="weather-desc">晴朗 · 北京</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 插件状态 -->
-          <div class="widget-card" id="card-plugins">
-            <div class="card-header">
-              <div class="card-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" /></svg
-                >插件
-              </div>
-              <div>
-                <button
-                  class="card-action"
-                  onclick="removeWidget('card-plugins')"
-                  title="移除卡片"
-                  aria-label="移除"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div class="card-body"><div class="plugin-stats" id="pluginStats"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 添加卡片弹窗 -->
-    <div class="modal-overlay" id="addWidgetOverlay" onclick="closeAddWidget(event)">
-      <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <span>添加卡片</span
-          ><button class="card-action" onclick="closeAddWidget()" aria-label="关闭">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-item" onclick="addNewWidget('focus')">
-            <div class="modal-item-icon">🎯</div>
-            <div class="modal-item-info">
-              <div class="modal-item-name">今日重点</div>
-              <div class="modal-item-desc">设定今天最重要的一件事</div>
-            </div>
-          </div>
-          <div class="modal-item" onclick="addNewWidget('todo')">
-            <div class="modal-item-icon">✓</div>
-            <div class="modal-item-info">
-              <div class="modal-item-name">待办列表</div>
-              <div class="modal-item-desc">跟踪任务并标记完成</div>
-            </div>
-          </div>
-          <div class="modal-item" onclick="addNewWidget('notes')">
-            <div class="modal-item-icon">📝</div>
-            <div class="modal-item-info">
-              <div class="modal-item-name">便签</div>
-              <div class="modal-item-desc">快速记录灵感和想法</div>
-            </div>
-          </div>
-          <div class="modal-item" onclick="addNewWidget('links')">
-            <div class="modal-item-icon">🔗</div>
-            <div class="modal-item-info">
-              <div class="modal-item-name">快捷入口</div>
-              <div class="modal-item-desc">常用网站一键触达</div>
-            </div>
-          </div>
-          <div class="modal-item" onclick="addNewWidget('weather')">
-            <div class="modal-item-icon">☀</div>
-            <div class="modal-item-info">
-              <div class="modal-item-name">天气</div>
-              <div class="modal-item-desc">当前天气一目了然</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 设置抽屉 -->
-    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings(event)">
-      <div class="settings-panel" onclick="event.stopPropagation()">
-        <div class="settings-header">
-          <h2>设置</h2>
-          <button
-            class="card-action"
-            onclick="closeSettings()"
-            aria-label="关闭"
-            style="width: 32px; height: 32px"
-          >
-            ✕
-          </button>
-        </div>
-        <div class="settings-body">
-          <div class="settings-group">
-            <div class="settings-group-title">外观</div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-label">主题</div>
-                <div class="settings-row-desc">选择偏好的色彩方案</div>
-              </div>
-              <div style="display: flex; gap: 4px">
-                <button
-                  class="btn btn-sm"
-                  style="
-                    font-weight: 700;
-                    background: var(--wb-accent-soft);
-                    color: var(--wb-accent);
-                    border-color: var(--wb-accent);
-                  "
-                  onclick="setTheme('light')"
-                >
-                  明亮
-                </button>
-                <button class="btn btn-sm btn-secondary" onclick="setTheme('dark')">暗色</button>
-              </div>
-            </div>
-          </div>
-          <div class="settings-group">
-            <div class="settings-group-title">搜索</div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-row-label">默认搜索引擎</div>
-                <div class="settings-row-desc">搜索结果的打开方式</div>
-              </div>
-              <select
+                type="text"
+                id="streamSearchInput"
+                placeholder="按 ⌘K 搜索命令、网页、卡片..."
                 style="
-                  height: 32px;
-                  padding: 0 8px;
-                  border: 1px solid var(--wb-line);
-                  border-radius: 6px;
-                  font-size: 12px;
+                  flex: 1;
+                  border: none;
+                  outline: none;
+                  background: transparent;
+                  font-size: 13px;
                   font-family: inherit;
                   color: var(--wb-text);
-                  background: var(--wb-surface);
                 "
-              >
-                <option>Google</option>
-                <option>Bing</option>
-                <option>DuckDuckGo</option>
-              </select>
-            </div>
-          </div>
-          <div class="settings-group">
-            <div class="settings-group-title">卡片</div>
-            <p style="font-size: 12px; color: var(--wb-text-muted)">
-              在主网格中添加、移除和拖拽排序卡片。卡片过多时网格纵向滚动。
-            </p>
-          </div>
-          <div class="settings-group">
-            <div class="settings-group-title">关于</div>
-            <div style="font-size: 12px; color: var(--wb-text-muted); line-height: 1.5">
-              Tabora v0.1.0 — 插件优先的个人工作台<br />设计体系 V2 · Refined Sage
+              />
+              <span class="search-kbd">⌘K</span>
             </div>
           </div>
         </div>
+        <div class="stream-cards" id="streamGrid"></div>
       </div>
     </div>
 
-    <div class="toast" id="toast">
-      <span class="toast-icon">✓</span><span id="toastMsg">已保存</span>
-    </div>
-
+    <!-- ================================================================ -->
     <script>
+      // ====== STATE ======
+      let layout = "dashboard"
+      let isDark = false
+      let errorMode = false
+      let searchProvider = "google"
+      let background = "solid1"
+
+      // Widget instances (multi-instance support)
+      // Each instance: { id, type, size, label }
+      let widgetInstances = [
+        { id: "focus-1", type: "focus", size: "M", label: "今日重点" },
+        { id: "links-1", type: "links", size: "M", label: "快捷入口" },
+        { id: "todo-1", type: "todo", size: "S", label: "待办" },
+        { id: "notes-1", type: "notes", size: "L", label: "便签" },
+        { id: "weather-1", type: "weather", size: "S", label: "天气" },
+      ]
+      let instanceCounter = { focus: 1, links: 1, todo: 1, notes: 1, weather: 1, plugins: 1 }
+
       let todos = [
         { text: "完成 V2 设计 Token 定稿", done: true },
         { text: "更新 @tabora/theme 包", done: false },
@@ -1429,288 +2861,409 @@
         { name: "Figma", icon: "Fg" },
         { name: "YouTube", icon: "Yt" },
       ]
-      let isDark = false
+      let notesText = ""
+      let focusText = ""
 
-      function e(s) {
-        const d = document.createElement("div")
-        d.textContent = s
-        return d.innerHTML
+      const supportedSizes = {
+        focus: ["S", "M", "L"],
+        links: ["S", "M", "L"],
+        todo: ["S", "M"],
+        notes: ["M", "L", "XL"],
+        weather: ["S", "M"],
+        plugins: ["S", "M"],
+      }
+      const typeNames = {
+        focus: "今日重点",
+        links: "快捷入口",
+        todo: "待办",
+        notes: "便签",
+        weather: "天气",
+        plugins: "插件状态",
+      }
+      const sizeSpans = {
+        S: { dash: "", stream: "" },
+        M: { dash: "span-2", stream: "" },
+        L: { dash: "span-2 row-2", stream: "full-width" },
+        XL: { dash: "span-2 row-2", stream: "full-width" },
+      }
+
+      // ====== LAYOUT SWITCHING ======
+      function switchLayout(l) {
+        if (layout === l && !errorMode) return
+        const oldEl = document.getElementById(
+          "layout" + (layout === "dashboard" ? "Dashboard" : "Stream"),
+        )
+        oldEl.classList.add("switching")
+        setTimeout(() => {
+          layout = l
+          errorMode = false
+          document.getElementById("errorBtn").classList.remove("active")
+          document.getElementById("layoutDashboard").classList.toggle("active", l === "dashboard")
+          document.getElementById("layoutStream").classList.toggle("active", l === "stream")
+          document
+            .getElementById("layoutBtnDashboard")
+            .classList.toggle("active", l === "dashboard")
+          document.getElementById("layoutBtnStream").classList.toggle("active", l === "stream")
+          document
+            .getElementById("settingLayoutDashboard")
+            .classList.toggle("active", l === "dashboard")
+          document.getElementById("settingLayoutStream").classList.toggle("active", l === "stream")
+          renderWidgets()
+          renderExtPanel()
+          setupSearch()
+          document
+            .getElementById("layout" + (l === "dashboard" ? "Dashboard" : "Stream"))
+            .classList.remove("switching")
+          oldEl.classList.remove("switching")
+          toast("布局 → " + (l === "dashboard" ? "仪表盘式" : "流式") + " · 卡片保留")
+        }, 180)
+      }
+      function settingsSwitchLayout(l) {
+        switchLayout(l)
+      }
+
+      // ====== RENDER ======
+      function renderWidgets() {
+        const dashGrid = document.getElementById("dashGrid")
+        const streamGrid = document.getElementById("streamGrid")
+        dashGrid.innerHTML = widgetInstances.length
+          ? widgetInstances.map((inst) => renderCard(inst, true)).join("")
+          : emptyGrid()
+        streamGrid.innerHTML = widgetInstances.length
+          ? widgetInstances.map((inst) => renderCard(inst, false)).join("")
+          : emptyStream()
+        updateBadge()
+      }
+
+      function renderCard(inst, isDash) {
+        const isError = errorMode && inst.type === "weather"
+        const errClass = isError ? " simulated-error" : ""
+        const span = sizeSpans[inst.size] || { dash: "", stream: "" }
+        const cls = isDash ? span.dash : span.stream
+
+        const rmBtn = `<button class="card-action card-danger" onclick="removeWidget('${inst.id}')" title="移除">✕</button>`
+
+        switch (inst.type) {
+          case "focus":
+            return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-body"><input class="focus-input" placeholder="今天最重要的一件事是什么？" value="${e(focusText)}" oninput="focusText=this.value" /></div></div>`
+
+          case "links":
+            return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-body">${renderLinks()}</div></div>`
+
+          case "todo":
+            return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-body">${renderTodos()}</div></div>`
+
+          case "notes":
+            return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="display:flex;flex-direction:column;animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-body" style="display:flex;flex-direction:column;flex:1"><textarea class="notes-area" style="flex:1" placeholder="快速记录想法..." oninput="notesText=this.value">${e(notesText)}</textarea></div></div>`
+
+          case "weather":
+            if (isError)
+              return `<div class="widget-card resize-transition card-enter ${cls} error" data-id="${inst.id}" data-type="${inst.type}" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="var(--wb-danger)" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg><span class="card-title-text" style="color:var(--wb-danger)">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="error-card-body"><p>⚠ 加载失败<br/><span style="font-size:11px;color:var(--wb-text-subtle)">插件错误隔离：仅该实例受影响</span></p><button class="btn btn-sm" style="background:var(--wb-danger-soft);color:var(--wb-danger);border:none;font-weight:600" onclick="errorMode=false;renderWidgets();toast('已恢复')">重试</button></div></div>`
+            return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-body"><div class="weather-display"><span class="weather-temp">22°C</span><span class="weather-desc">晴朗 · 北京</span></div></div></div>`
+
+          case "plugins":
+            return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-body"><div class="plugin-stats">
+    <div class="plugin-stat"><span>Widget 活跃</span><span class="plugin-stat-val accent">${widgetInstances.length}</span></div>
+    <div class="plugin-stat"><span>布局</span><span class="plugin-stat-val accent">${layout === "dashboard" ? "Dashboard" : "Stream"}</span></div>
+    <div class="plugin-stat"><span>搜索源</span><span class="plugin-stat-val accent">${searchProvider}</span></div>
+    <div class="plugin-stat"><span>背景</span><span class="plugin-stat-val">${background}</span></div>
+  </div></div></div>`
+        }
+        return ""
       }
 
       function renderTodos() {
-        const list = document.getElementById("todoList")
-        list.innerHTML =
+        return (
+          '<div class="todo-list">' +
           todos
             .map(
               (t, i) => `
-    <div class="todo-item" style="animation:fadeIn 180ms ease;animation-delay:${i * 30}ms">
-      <div class="todo-check ${t.done ? "done" : ""}" onclick="toggleTodo(${i})" role="checkbox" aria-checked="${t.done}" tabindex="0"></div>
+    <div class="todo-item">
+      <div class="todo-check ${t.done ? "done" : ""}" onclick="toggleTodo(${i})"></div>
       <span class="todo-text ${t.done ? "done" : ""}">${e(t.text)}</span>
-      <button class="todo-delete" onclick="deleteTodo(${i})" aria-label="删除">✕</button>
+      <button class="todo-delete" onclick="deleteTodo(${i})">✕</button>
     </div>`,
             )
-            .join("") ||
-          '<div style="text-align:center;padding:16px;font-size:12px;color:var(--wb-text-subtle)">全部完成！✨</div>'
+            .join("") +
+          `
+    <div class="todo-add-form" style="margin-top:4px">
+      <input class="todo-add-input" placeholder="新任务..." onkeydown="if(event.key==='Enter'){addTodo(this)}" />
+      <button class="btn btn-subtle btn-sm" onclick="addTodo(this.previousElementSibling)">添加</button>
+    </div></div>`
+        )
       }
 
       function renderLinks() {
-        const grid = document.getElementById("linkGrid")
-        grid.innerHTML = links
-          .map(
-            (l, i) => `
-    <div class="link-item" tabindex="0" onclick="openLink('${l.name}')" style="animation:fadeIn 180ms ease;animation-delay:${i * 30}ms">
-      <div class="link-icon">${l.icon}</div><span class="link-label">${e(l.name)}</span>
-      <button class="link-delete" onclick="event.stopPropagation();deleteLink(${i})" aria-label="删除">✕</button>
-    </div>`,
-          )
-          .join("")
-        if (links.length < 6)
-          grid.innerHTML += `<div class="link-item link-item-add" onclick="addLink()" tabindex="0"><span style="font-size:18px">+</span><span class="link-label">添加</span></div>`
+        return (
+          '<div class="link-grid">' +
+          links
+            .map(
+              (l, i) => `
+    <div class="link-item" onclick="openLink('${l.name}')"><div class="link-icon">${l.icon}</div><span class="link-label">${e(l.name)}</span><button class="link-delete" onclick="event.stopPropagation();deleteLink(${i})">✕</button></div>
+  `,
+            )
+            .join("") +
+          (links.length < 6
+            ? `<div class="link-item" style="border-style:dashed;color:var(--wb-text-subtle)" onclick="addLink()"><span style="font-size:16px">+</span><span class="link-label">添加</span></div>`
+            : "") +
+          "</div>"
+        )
       }
 
-      function renderPlugins() {
-        const cnt = document.querySelectorAll(".widget-card").length
-        document.getElementById("pluginStats").innerHTML = `
-    <div class="plugin-stat"><span>卡片</span><span class="plugin-stat-val accent">${cnt} 张活跃</span></div>
-    <div class="plugin-stat"><span>搜索提供方</span><span class="plugin-stat-val">3 个</span></div>
-    <div class="plugin-stat"><span>主题</span><span class="plugin-stat-val accent">${isDark ? "Sage 暗色" : "Sage 明亮"}</span></div>
-    <div class="plugin-stat"><span>背景</span><span class="plugin-stat-val">静态</span></div>`
+      function emptyGrid() {
+        return '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--wb-text-muted);font-size:13px">暂无卡片 · <span style="color:var(--wb-accent);cursor:pointer;font-weight:600" onclick="openAddWidget()">添加第一个</span></div>'
+      }
+      function emptyStream() {
+        return '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--wb-text-muted);font-size:13px">暂无卡片 · <span style="color:var(--wb-accent);cursor:pointer;font-weight:600" onclick="openAddWidget()">添加第一个</span></div>'
+      }
+
+      // ====== WIDGET ACTIONS ======
+      function setSize(id, size) {
+        const inst = widgetInstances.find((w) => w.id === id)
+        if (!inst) return
+        inst.size = size
+        renderWidgets()
+        toast(inst.label + " 尺寸 → " + size)
+      }
+
+      function addWidget(type) {
+        instanceCounter[type]++
+        const num = instanceCounter[type]
+        const label = typeNames[type] + (num > 1 ? " #" + num : "")
+        const defaultSize = supportedSizes[type][0]
+        widgetInstances.push({ id: type + "-" + num, type, size: defaultSize, label })
+        renderWidgets()
+        renderExtPanel()
+        updateBadge()
+        closeAddWidget()
+        toast(
+          "实例已创建：" +
+            label +
+            " · " +
+            typeNames[type] +
+            " ×" +
+            widgetInstances.filter((w) => w.type === type).length,
+        )
+      }
+
+      function removeWidget(id) {
+        const inst = widgetInstances.find((w) => w.id === id)
+        if (!inst) return
+        widgetInstances = widgetInstances.filter((w) => w.id !== id)
+        renderWidgets()
+        renderExtPanel()
+        toast("实例已移除：" + inst.label + "（插件本体保留）")
       }
 
       function toggleTodo(i) {
         todos[i].done = !todos[i].done
-        renderTodos()
-        toast(todos[i].done ? "任务已完成" : "已取消标记")
+        renderWidgets()
       }
       function deleteTodo(i) {
-        const t = todos[i].text
         todos.splice(i, 1)
-        renderTodos()
-        toast("已删除：" + t)
+        renderWidgets()
       }
-
-      function showTodoAdd() {
-        const btn = document.getElementById("todoAddBtn")
-        const form = document.createElement("div")
-        form.className = "todo-add-form"
-        form.innerHTML = `<input class="todo-add-input" placeholder="新任务..." autofocus /><button class="btn btn-subtle btn-sm" onclick="addTodo(this)">添加</button><button class="btn btn-ghost btn-sm" onclick="cancelTodoAdd(this)">取消</button>`
-        btn.replaceWith(form)
-        const inp = form.querySelector("input")
-        inp.focus()
-        inp.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") addTodo(form)
-          if (e.key === "Escape") cancelTodoAdd(form)
-        })
+      function addTodo(inp) {
+        const v = inp.value.trim()
+        if (!v) return
+        todos.push({ text: v, done: false })
+        inp.value = ""
+        renderWidgets()
       }
-
-      function addTodo(el) {
-        const t = el.parentElement.querySelector("input").value.trim()
-        if (!t) return
-        todos.push({ text: t, done: false })
-        renderTodos()
-        const form = el.parentElement
-        const btn = document.createElement("button")
-        btn.className = "todo-add"
-        btn.id = "todoAddBtn"
-        btn.textContent = "+ 添加任务"
-        btn.onclick = showTodoAdd
-        form.replaceWith(btn)
-        toast("任务已添加")
-      }
-
-      function cancelTodoAdd(el) {
-        const form = el.parentElement
-        const btn = document.createElement("button")
-        btn.className = "todo-add"
-        btn.id = "todoAddBtn"
-        btn.textContent = "+ 添加任务"
-        btn.onclick = showTodoAdd
-        form.replaceWith(btn)
-      }
-
       function deleteLink(i) {
-        const n = links[i].name
         links.splice(i, 1)
-        renderLinks()
-        toast("已移除：" + n)
+        renderWidgets()
       }
       function addLink() {
         if (links.length >= 6) return
-        const names = ["Gmail", "Twitter", "Spotify", "Slack", "Drive", "Calendar"]
-        const available = names.find((n) => !links.some((l) => l.name === n)) || "新链接"
-        links.push({ name: available, icon: available.substring(0, 2).toUpperCase() })
-        renderLinks()
-        toast("已添加：" + available)
+        const names = ["Gmail", "Twitter", "Slack", "Drive", "Calendar", "Spotify"]
+        const n = names.find((x) => !links.some((l) => l.name === x)) || "New"
+        links.push({ name: n, icon: n.substring(0, 2).toUpperCase() })
+        renderWidgets()
       }
       function openLink(n) {
-        toast("正在打开 " + n + "...（需要 external-open 权限）")
+        toast("打开 " + n + "（external-open 权限）")
       }
 
-      let ntTimer
-      function onNotesInput() {
-        clearTimeout(ntTimer)
-        const f = document.getElementById("notesFooter")
-        f.classList.add("show")
-        ntTimer = setTimeout(() => f.classList.remove("show"), 2000)
+      // ====== SEARCH PROVIDER ======
+      function selectProvider(p, el) {
+        searchProvider = p
+        document.getElementById("spDropdown")?.classList.remove("show")
+        renderWidgets()
+        renderExtPanel()
+        toast(
+          "默认搜索引擎：" +
+            { google: "Google", bing: "Bing", ddg: "DuckDuckGo", github: "GitHub" }[p],
+        )
       }
 
-      let fcTimer
-      function onFocusInput() {
-        clearTimeout(fcTimer)
-        const s = document.getElementById("focusSaved")
-        s.classList.add("show")
-        fcTimer = setTimeout(() => s.classList.remove("show"), 2000)
+      document.addEventListener("click", (e) => {
+        closeCtxMenu()
+      })
+
+      // Shortcuts panel
+      function openShortcuts() {
+        document.getElementById("shortcutsPanel").classList.add("show")
+      }
+      function closeShortcuts(e) {
+        if (e && e.target !== document.getElementById("shortcutsPanel")) return
+        document.getElementById("shortcutsPanel").classList.remove("show")
       }
 
-      function toggleTheme() {
-        isDark = !isDark
-        document.body.classList.toggle("dark", isDark)
-        renderPlugins()
-        toast("主题：" + (isDark ? "Sage 暗色" : "Sage 明亮"))
-      }
-      function setTheme(t) {
-        isDark = t === "dark"
-        document.body.classList.toggle("dark", isDark)
-        renderPlugins()
-        toast("主题已设置为 " + (isDark ? "Sage 暗色" : "Sage 明亮"))
-      }
+      // Focus/Expand mode
+      function openFocusMode(id) {
+        const inst = widgetInstances.find((w) => w.id === id)
+        if (!inst) return
+        const overlay = document.getElementById("expandOverlay")
+        document.getElementById("expandTitle").textContent = inst.label
+        document.getElementById("expandMeta").textContent =
+          "类型：" + typeNames[inst.type] + " · 实例：" + inst.id + " · 尺寸：" + inst.size
 
-      function selectRail(btn) {
-        document.querySelectorAll(".rail-btn").forEach((b) => b.classList.remove("active"))
-        btn.classList.add("active")
-      }
-
-      function openAddWidget() {
-        document.getElementById("addWidgetOverlay").classList.add("open")
-        document.body.style.overflow = "hidden"
-      }
-      function closeAddWidget(e) {
-        if (e && e.target !== document.getElementById("addWidgetOverlay")) return
-        document.getElementById("addWidgetOverlay").classList.remove("open")
-        document.body.style.overflow = ""
-      }
-      function openSettings() {
-        document.getElementById("settingsOverlay").classList.add("open")
-        document.body.style.overflow = "hidden"
-      }
-      function closeSettings(e) {
-        if (e && e.target !== document.getElementById("settingsOverlay")) return
-        document.getElementById("settingsOverlay").classList.remove("open")
-        document.body.style.overflow = ""
-      }
-
-      function addNewWidget(type) {
-        const grid = document.getElementById("cardGrid")
-        if (document.getElementById("card-" + type)) {
-          toast("该卡片已存在")
-          closeAddWidget()
-          return
-        }
-        const card = document.createElement("div")
-        card.className = "widget-card"
-        card.id = "card-" + type
-        card.style.animation = "bounceIn 240ms cubic-bezier(0.05,0.7,0.1,1)"
-        const rm = `<button class="card-action" onclick="removeWidget('card-${type}')" title="移除卡片" aria-label="移除">✕</button>`
-        switch (type) {
+        let bodyHtml = ""
+        switch (inst.type) {
           case "focus":
-            card.classList.add("span-2")
-            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>今日重点</div><div>${rm}</div></div><div class="card-body"><input class="focus-input" placeholder="今天最重要的一件事是什么？" oninput="onFocusInput()" /></div>`
-            break
-          case "todo":
-            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待办</div><div>${rm}</div></div><div class="card-body"><div style="text-align:center;padding:16px;font-size:12px;color:var(--wb-text-subtle)">暂无任务</div><button class="todo-add" onclick="showTodoAdd()">+ 添加任务</button></div>`
-            break
-          case "notes":
-            card.classList.add("row-2")
-            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>便签</div><div>${rm}</div></div><div class="card-body" style="display:flex;flex-direction:column;flex:1"><textarea class="notes-area" placeholder="快速记录想法、灵感..." style="flex:1" oninput="onNotesInput()"></textarea></div>`
+            bodyHtml = `<input class="expand-focus-input" placeholder="今天最重要的一件事是什么？" value="${e(focusText)}" oninput="focusText=this.value" autofocus /><div style="font-size:12px;color:var(--wb-text-muted);margin-top:8px">设定一个清晰的目标，让今天的工作有方向。</div>`
+            document.getElementById("expandIcon").textContent = "🎯"
             break
           case "links":
-            card.classList.add("span-2")
-            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/></svg>快捷入口</div><div>${rm}</div></div><div class="card-body"><div class="link-grid"><div class="link-item link-item-add" onclick="addLink()" tabindex="0"><span style="font-size:18px">+</span><span class="link-label">添加</span></div></div></div>`
+            bodyHtml = `<div class="expand-link-grid">${links.map((l) => `<div class="expand-link-card" onclick="openLink('${l.name}')"><div class="expand-link-icon">${l.icon}</div><div class="expand-link-label">${l.name}</div><div class="expand-link-url">${l.name.toLowerCase()}.com</div></div>`).join("")}</div>`
+            document.getElementById("expandIcon").textContent = "🔗"
+            break
+          case "todo":
+            bodyHtml = `<div class="expand-todo-list">${todos.map((t, i) => `<div class="expand-todo-item"><div class="todo-check ${t.done ? "done" : ""}" onclick="toggleTodo(${i});updateExpandTodo()"></div><span class="todo-text ${t.done ? "done" : ""}">${e(t.text)}</span></div>`).join("")}</div>
+        <div class="todo-add-form" style="margin-top:8px"><input class="todo-add-input" placeholder="新任务..." onkeydown="if(event.key==='Enter'){addTodo(this);updateExpandTodo()}" /><button class="btn btn-subtle btn-sm" onclick="addTodo(this.previousElementSibling);updateExpandTodo()">添加</button></div>`
+            document.getElementById("expandIcon").textContent = "✓"
+            break
+          case "notes":
+            bodyHtml = `<textarea class="expand-notes-area" placeholder="快速记录想法、灵感..." oninput="notesText=this.value" autofocus>${e(notesText)}</textarea>`
+            document.getElementById("expandIcon").textContent = "📝"
             break
           case "weather":
-            card.innerHTML = `<div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg>天气</div><div>${rm}</div></div><div class="card-body"><div class="weather-display"><span class="weather-temp">22°C</span><span class="weather-desc">晴朗 · 北京</span></div></div>`
+            bodyHtml = `<div style="text-align:center;padding:24px"><div style="font-size:48px;font-weight:700;line-height:1">22°C</div><div style="font-size:14px;color:var(--wb-text-muted);margin-top:8px">晴朗 · 北京</div><div style="font-size:12px;color:var(--wb-text-subtle);margin-top:4px">湿度 45% · 风速 12km/h</div></div>`
+            document.getElementById("expandIcon").textContent = "☀"
+            break
+          case "plugins":
+            bodyHtml = `<div style="display:flex;flex-direction:column;gap:4px">
+        <div class="plugin-stat" style="padding:8px"><span>活跃 Widget 实例</span><span class="plugin-stat-val accent">${widgetInstances.length}</span></div>
+        <div class="plugin-stat" style="padding:8px"><span>当前布局</span><span class="plugin-stat-val accent">${layout === "dashboard" ? "Dashboard" : "Stream"}</span></div>
+        <div class="plugin-stat" style="padding:8px"><span>活跃搜索源</span><span class="plugin-stat-val">${searchProvider}</span></div>
+        <div class="plugin-stat" style="padding:8px"><span>主题</span><span class="plugin-stat-val accent">${isDark ? "Sage Dark" : "Sage Light"}</span></div>
+        <div class="plugin-stat" style="padding:8px"><span>背景</span><span class="plugin-stat-val">${background}</span></div>
+      </div>`
+            document.getElementById("expandIcon").textContent = "◈"
             break
         }
-        grid.appendChild(card)
-        closeAddWidget()
-        renderPlugins()
-        toast("已添加卡片：" + type)
+        document.getElementById("expandBody").innerHTML = bodyHtml
+        overlay.classList.add("open")
+        overlay.classList.remove("closing")
+      }
+      function updateExpandTodo() {
+        if (document.getElementById("expandOverlay").classList.contains("open"))
+          openFocusMode(widgetInstances[0]?.id)
       }
 
-      function removeWidget(id) {
-        const card = document.getElementById(id)
-        if (!card) return
-        card.style.opacity = "0"
-        card.style.transform = "scale(0.95)"
-        card.style.transition = "all 180ms ease"
-        const name = card.querySelector(".card-title")?.textContent?.trim() || "卡片"
+      function closeExpand(e) {
+        if (e && e.target !== document.getElementById("expandOverlay")) return
+        const overlay = document.getElementById("expandOverlay")
+        overlay.classList.add("closing")
         setTimeout(() => {
-          card.remove()
-          renderPlugins()
-        }, 180)
-        toast("已移除：" + name)
+          overlay.classList.remove("open", "closing")
+          renderWidgets()
+        }, 250)
       }
 
-      // Search
-      const si = document.getElementById("searchInput")
-      const ss = document.getElementById("searchSuggestions")
-      si.addEventListener("focus", () => {
-        if (si.value.trim()) ss.classList.add("open")
-      })
-      si.addEventListener("blur", () => setTimeout(() => ss.classList.remove("open"), 200))
-      si.addEventListener("input", () => {
-        ss.classList.toggle("open", si.value.trim().length > 0)
-        ss.querySelector("strong").textContent = si.value
-      })
-      si.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") si.blur()
-        if (e.key === "Enter" && ss.classList.contains("open")) {
-          const act = ss.querySelector(".suggestion:hover")
-          if (act) handleSuggestion(act.dataset.action)
-        }
-      })
-      document.addEventListener("keydown", (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-          e.preventDefault()
-          si.focus()
-        }
-        if (e.key === "Escape") {
-          closeAddWidget()
-          closeSettings()
-        }
-      })
+      // Toast stacking
+      let toastId = 0
+      function toast(msg) {
+        const stack = document.getElementById("toastStack")
+        const id = ++toastId
+        const el = document.createElement("div")
+        el.className = "toast-item"
+        el.innerHTML = `<span style="color:var(--wb-accent);font-weight:700">✓</span> ${msg}`
+        el.id = "toast-" + id
+        stack.appendChild(el)
+        setTimeout(() => {
+          el.style.opacity = "0"
+          el.style.transform = "translateX(20px)"
+          el.style.transition = "all 200ms ease"
+          setTimeout(() => el.remove(), 200)
+        }, 2500)
+        if (stack.children.length > 3) stack.firstChild.remove()
+      }
 
-      function handleSuggestion(action) {
-        si.blur()
-        ss.classList.remove("open")
-        switch (action) {
-          case "card-add":
-            openAddWidget()
-            break
-          case "theme":
-            toggleTheme()
-            break
-          case "settings":
-            openSettings()
-            break
-          case "web":
-            toast("正在搜索：" + si.value)
-            break
-        }
+      // ====== UTILS ======
+      function e(s) {
+        const d = document.createElement("div")
+        d.textContent = s || ""
+        return d.innerHTML
+      }
+      function updateBadge() {
+        document.getElementById("widgetBadge").textContent = widgetInstances.length + " 实例"
       }
 
       let toastTimer
       function toast(msg) {
         document.getElementById("toastMsg").textContent = msg
-        const t = document.getElementById("toast")
-        t.classList.add("show")
+        document.getElementById("toast").classList.add("show")
         clearTimeout(toastTimer)
-        toastTimer = setTimeout(() => t.classList.remove("show"), 2000)
+        toastTimer = setTimeout(
+          () => document.getElementById("toast").classList.remove("show"),
+          2000,
+        )
       }
 
-      renderTodos()
-      renderLinks()
-      renderPlugins()
+      // Global shortcuts
+      document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+          e.preventDefault()
+          openCmd()
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === "t") {
+          e.preventDefault()
+          toggleTheme()
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === "l") {
+          e.preventDefault()
+          switchLayout(layout === "dashboard" ? "stream" : "dashboard")
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === "n") {
+          e.preventDefault()
+          openAddWidget()
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+          e.preventDefault()
+          openSettings()
+        }
+        if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
+          openShortcuts()
+        }
+        if (e.key === "Escape") {
+          closeCmd()
+          closeAddWidget()
+          closeSettings()
+          closeCtxMenu()
+          closeShortcuts()
+          closeExpand()
+        }
+      })
+
+      // INIT
+      renderWidgets()
+      renderExtPanel()
     </script>
   </body>
 </html>

@@ -82,6 +82,20 @@
 
 - `docs/product/tabora-design-system-preview.html`，静态 HTML，可直接在浏览器打开，不依赖本地服务。
 
+### V2 设计体系（2026-05-30 发布）
+
+V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、组件文档和可交互产品原型。所有内容中文编写，零依赖纯静态 HTML。
+
+- `docs/design/01-设计体系规范.html` — 完整设计原则、三层 Token 架构、色彩/字体/间距/形状/动效/图标/响应式/可访问性规范
+- `docs/design/02-基础组件规范.html` — 52 个基础组件完整文档，含所有状态/变体/尺寸/Anatomy/Do-Don't + 7 个组合模式
+- `docs/design/03-工作台交互原型.html` — 双布局可交互产品原型，覆盖 PRD 全部验收项（仪表盘式 + 流式、布局切换、⌘K 搜索、拖拽排序、右键菜单、双击展开、设置侧栏导航、Toast 堆叠、快捷键参考）
+
+用途：
+
+- 作为当前设计实现的视觉事实源。
+- PRD 评审时验证产品口径完备性。
+- 实现 UI 时参照颜色、间距、组件 API 和交互模式。
+
 ### 技术方案
 
 - `docs/technical/tabora-plugin-workbench-technical-design.md`
@@ -186,9 +200,10 @@
 
 先读：
 
-- `docs/product/tabora-design-system.md`。
+- `docs/design/01-设计体系规范.html` — V2 设计规范（色彩 token、字体、间距、动效等）
+- `docs/design/02-基础组件规范.html` — V2 组件 API 和状态文档
+- `docs/design/03-工作台交互原型.html` — V2 可交互原型（搜索、拖拽、双击展开、右键菜单等交互模式）
 - `docs/product/tabora-official-plugins-design.md` 的插件规格和交互示例。
-- `docs/technical/tabora-plugin-workbench-technical-design.md` 的 `@tabora/ui` 包边界。
 - `AGENTS.md` 的 UI 规则。
 - 相关 Solid 组件和 CSS。
 
@@ -259,7 +274,10 @@
 
 - MVP 包含轻量设置中心，但不做完整设置系统。
 - MVP 包含 `@tabora/ui` 基础组件包目标，当前状态为 P0 待建，用于统一插件内容区控件。
-- MVP 默认布局为左侧轻 rail + 顶部命令搜索 + 主网格。
+- MVP 提供至少两种布局插件（仪表盘式和流式），且它们有显著不同的区域结构。
+- MVP 默认布局为仪表盘式（左侧轻 rail + 顶部命令搜索 + 主网格），用户可在设置中切换到流式布局。
+- 布局切换保留所有插件实例数据。区域不匹配的实例进入待放置状态。
+- 所有布局必须满足全局可达性约束：搜索、添加卡片、插件管理、设置在任意布局下可达。
 - MVP 默认首屏核心卡片为今日重点、快捷入口、便签和待办；天气可作为可添加候选。
 - MVP 使用主网格纵向滚动处理卡片过多，不强行塞进一屏。
 - 默认首屏只保证命令搜索和 3-4 个核心卡片优先露出。
