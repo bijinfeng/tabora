@@ -1,0 +1,51 @@
+@layer tabora-ui {
+  .tbr-combo-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .tbr-combo-input {
+    height: var(--tbr-control-md);
+    padding: 0 12px;
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-control);
+    background: rgb(var(--tbr-color-surface));
+    font-size: 13px;
+    font-family: inherit;
+    color: rgb(var(--tbr-color-text));
+    width: 260px;
+    transition: border-color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-combo-input:focus {
+    outline: none;
+    border-color: rgb(var(--tbr-color-accent));
+    box-shadow: 0 0 0 3px rgba(var(--tbr-color-accent), 0.12);
+  }
+  .tbr-combo-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: rgb(var(--tbr-color-surface));
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-control);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    z-index: 50;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .tbr-combo-option {
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  .tbr-combo-option:hover {
+    background: rgba(var(--tbr-color-accent), 0.06);
+  }
+  .tbr-combo-empty {
+    padding: 16px;
+    text-align: center;
+    font-size: 12px;
+    color: rgb(var(--tbr-color-text-subtle));
+  }
+}

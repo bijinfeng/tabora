@@ -1,0 +1,50 @@
+@layer tabora-ui {
+  .tbr-accordion {
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-card);
+    overflow: hidden;
+    background: rgb(var(--tbr-color-surface));
+  }
+  .tbr-accordion-item {
+    border-bottom: 1px solid rgb(var(--tbr-color-line));
+  }
+  .tbr-accordion-item:last-child {
+    border-bottom: none;
+  }
+  .tbr-accordion-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 14px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 650;
+    font-family: inherit;
+    color: rgb(var(--tbr-color-text));
+    cursor: pointer;
+    transition: background var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-accordion-trigger:hover {
+    background: rgba(var(--tbr-color-accent), 0.04);
+  }
+  .tbr-accordion-trigger[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .tbr-accordion-arrow {
+    font-size: 10px;
+    color: rgb(var(--tbr-color-text-muted));
+    transition: transform var(--tbr-dur-normal) var(--tbr-ease);
+  }
+  .tbr-accordion-arrow[data-open] {
+    transform: rotate(180deg);
+  }
+  .tbr-accordion-content {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: rgb(var(--tbr-color-text-muted));
+    line-height: 1.5;
+  }
+}

@@ -1,0 +1,62 @@
+@layer tabora-ui {
+  .tbr-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+    animation: tbr-fade-in var(--tbr-dur-normal) var(--tbr-ease);
+  }
+  .tbr-dialog-panel {
+    background: rgb(var(--tbr-color-surface));
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-panel);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: tbr-scale-in var(--tbr-dur-normal) var(--tbr-ease);
+  }
+  .tbr-dialog-panel[data-destructive] .tbr-dialog-header {
+    color: rgb(var(--tbr-color-danger));
+  }
+  .tbr-dialog-panel[data-destructive] {
+    border-color: rgba(var(--tbr-color-danger), 0.3);
+  }
+  .tbr-dialog-header {
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .tbr-dialog-body {
+    font-size: 13px;
+    color: rgb(var(--tbr-color-text-muted));
+    line-height: 1.5;
+  }
+  .tbr-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  @keyframes tbr-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes tbr-scale-in {
+    from {
+      transform: scale(0.95) translateY(8px);
+    }
+    to {
+      transform: scale(1) translateY(0);
+    }
+  }
+}

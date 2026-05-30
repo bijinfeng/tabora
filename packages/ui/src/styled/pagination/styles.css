@@ -1,0 +1,43 @@
+@layer tabora-ui {
+  .tbr-pagination {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .tbr-page-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-2);
+    background: rgb(var(--tbr-color-surface));
+    font-size: 13px;
+    font-family: inherit;
+    color: rgb(var(--tbr-color-text-muted));
+    cursor: pointer;
+    transition: all var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-page-btn:hover {
+    background: rgba(var(--tbr-color-accent), 0.06);
+    border-color: rgb(var(--tbr-color-line-strong));
+  }
+  .tbr-page-btn[data-active] {
+    background: rgb(var(--tbr-color-accent-soft));
+    border-color: rgb(var(--tbr-color-accent));
+    color: rgb(var(--tbr-color-accent));
+    font-weight: 650;
+  }
+  .tbr-page-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .tbr-page-ellipsis {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: rgb(var(--tbr-color-text-subtle));
+  }
+}

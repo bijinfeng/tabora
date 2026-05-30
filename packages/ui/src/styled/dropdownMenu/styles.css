@@ -1,0 +1,67 @@
+@layer tabora-ui {
+  .tbr-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 180px;
+    background: rgb(var(--tbr-color-surface));
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-control);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    z-index: 50;
+    padding: 4px;
+    animation: tbr-scale-in 120ms var(--tbr-ease);
+  }
+  .tbr-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    border-radius: var(--tbr-radius-2);
+    background: none;
+    font-size: 13px;
+    font-family: inherit;
+    color: rgb(var(--tbr-color-text));
+    cursor: pointer;
+  }
+  .tbr-dropdown-item:hover {
+    background: rgba(var(--tbr-color-accent), 0.06);
+  }
+  .tbr-dropdown-item[data-danger] {
+    color: rgb(var(--tbr-color-danger));
+  }
+  .tbr-dropdown-item[data-danger]:hover {
+    background: rgba(var(--tbr-color-danger), 0.08);
+  }
+  .tbr-dropdown-item[data-disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .tbr-dropdown-sep {
+    height: 1px;
+    background: rgb(var(--tbr-color-line));
+    margin: 4px 0;
+  }
+  .tbr-dropdown-icon {
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tbr-dropdown-check {
+    width: 16px;
+    color: rgb(var(--tbr-color-accent));
+    font-size: 10px;
+  }
+  .tbr-dropdown-label {
+    flex: 1;
+  }
+  .tbr-dropdown-kbd {
+    margin-left: auto;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    color: rgb(var(--tbr-color-text-subtle));
+  }
+}

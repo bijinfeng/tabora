@@ -1,0 +1,39 @@
+@layer tabora-ui {
+  .tbr-collapsible {
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-control);
+    overflow: hidden;
+  }
+  .tbr-collapsible-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 650;
+    font-family: inherit;
+    color: rgb(var(--tbr-color-text));
+    cursor: pointer;
+    transition: background var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-collapsible-trigger:hover {
+    background: rgba(var(--tbr-color-accent), 0.04);
+  }
+  .tbr-collapsible-arrow {
+    font-size: 10px;
+    color: rgb(var(--tbr-color-text-muted));
+    transition: transform var(--tbr-dur-normal) var(--tbr-ease);
+  }
+  .tbr-collapsible-arrow[data-open] {
+    transform: rotate(90deg);
+  }
+  .tbr-collapsible-content {
+    padding: 0 14px 14px;
+    font-size: 13px;
+    color: rgb(var(--tbr-color-text-muted));
+    line-height: 1.5;
+  }
+}
