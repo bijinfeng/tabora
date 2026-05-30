@@ -79,6 +79,8 @@ export type BackgroundProviderContribution = {
   id: string
   title: string
   sourceType: "local" | "remote" | "generated" | "collection"
+  /** 默认 CSS 样式（fallback，当 renderer 不可用时使用） */
+  defaultCss?: Record<string, string>
 }
 
 export type BackgroundRendererContribution = {

@@ -14,11 +14,45 @@ export const officialBackgroundBasic: BuiltinPlugin = {
     engine: { platform: "^0.1.0" },
     contributes: {
       backgroundProviders: [
-        { id: "background.solid-green", title: "纯色绿底", sourceType: "generated" },
-        { id: "background.solid-dark", title: "纯色暗底", sourceType: "generated" },
-        { id: "background.gradient-green", title: "渐变绿底", sourceType: "generated" },
-        { id: "background.gradient-blue", title: "渐变蓝底", sourceType: "generated" },
-        { id: "background.gradient-purple", title: "渐变紫底", sourceType: "generated" },
+        {
+          id: "background.solid-green",
+          title: "纯色绿底",
+          sourceType: "generated",
+          defaultCss: { background: "rgb(237, 241, 238)" },
+        },
+        {
+          id: "background.solid-dark",
+          title: "纯色暗底",
+          sourceType: "generated",
+          defaultCss: { background: "rgb(18, 18, 18)" },
+        },
+        {
+          id: "background.gradient-green",
+          title: "渐变绿底",
+          sourceType: "generated",
+          defaultCss: {
+            background:
+              "linear-gradient(135deg, rgba(35, 113, 89, 0.18), transparent 32%), rgb(var(--color-page))",
+          },
+        },
+        {
+          id: "background.gradient-blue",
+          title: "渐变蓝底",
+          sourceType: "generated",
+          defaultCss: {
+            background:
+              "linear-gradient(160deg, rgba(66, 133, 244, 0.15), transparent 40%), rgb(var(--color-page))",
+          },
+        },
+        {
+          id: "background.gradient-purple",
+          title: "渐变紫底",
+          sourceType: "generated",
+          defaultCss: {
+            background:
+              "linear-gradient(135deg, rgba(128, 90, 213, 0.15), transparent 35%), rgb(var(--color-page))",
+          },
+        },
       ],
       backgroundRenderers: [
         {

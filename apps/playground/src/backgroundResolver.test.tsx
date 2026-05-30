@@ -6,14 +6,29 @@ import {
   resolveBackgroundValue,
 } from "./backgroundResolver"
 
-function makeProvider(id: string, title: string): BackgroundProviderContribution {
-  return { id, title, sourceType: "generated" }
+function makeProvider(
+  id: string,
+  title: string,
+  css?: Record<string, string>,
+): BackgroundProviderContribution {
+  return {
+    id,
+    title,
+    sourceType: "generated",
+    defaultCss: css ?? {
+      background: `linear-gradient(135deg, rgba(0,0,0,0.1), transparent), rgb(var(--color-page))`,
+    },
+  }
 }
 
 describe("resolveBackgroundValue", () => {
   const providers = [
-    makeProvider("background.gradient-green", "渐变绿"),
-    makeProvider("background.gradient-blue", "渐变蓝"),
+    makeProvider("background.gradient-green", "渐变绿", {
+      background: "linear-gradient(135deg, green, transparent)",
+    }),
+    makeProvider("background.gradient-blue", "渐变蓝", {
+      background: "linear-gradient(135deg, blue, transparent)",
+    }),
   ]
 
   it("resolves CSS value for known provider", () => {
