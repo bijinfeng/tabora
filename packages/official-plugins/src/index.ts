@@ -1,5 +1,6 @@
 import { officialBackgroundBasic } from "./background-basic"
 import { officialLayoutWorkbenchDashboard } from "./layout-workbench-dashboard"
+import { officialLayoutWorkbenchStream } from "./layout-workbench-stream"
 import { officialLayoutTopSearchGrid } from "./layout-top-search-grid"
 import { officialPluginManager } from "./plugin-manager-entry"
 import { officialSearchCommandBar } from "./search-command-bar"
@@ -11,6 +12,7 @@ import { officialWidgetsProductivity } from "./widgets-productivity"
 export {
   officialBackgroundBasic,
   officialLayoutWorkbenchDashboard,
+  officialLayoutWorkbenchStream,
   officialLayoutTopSearchGrid,
   officialPluginManager,
   officialSearchCommandBar,
@@ -24,6 +26,7 @@ export const officialPlugins = [
   officialThemeDefaultPack,
   officialBackgroundBasic,
   officialLayoutWorkbenchDashboard,
+  officialLayoutWorkbenchStream,
   officialLayoutTopSearchGrid,
   officialSearchCommandBar,
   officialSearchProvidersBasic,

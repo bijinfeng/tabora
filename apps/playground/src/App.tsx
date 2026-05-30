@@ -712,46 +712,64 @@ export function App() {
   function renderActiveLayout() {
     const layout = findLayoutContribution(officialPlugins, activeLayoutId())
     const LayoutView = layout?.view ? viewOrUndefined(layout.view) : undefined
-    const rail = (
-      <nav class="workbench-rail" aria-label="工作台导航">
-        <For each={WORKBENCH_RAIL_ACTIONS}>
-          {(action) => (
-            <button
-              class="rail-action"
-              classList={{ active: action.isActive }}
-              type="button"
-              aria-label={action.ariaLabel}
-              aria-current={action.isActive ? "page" : undefined}
-              onClick={() => runRailAction(action.id)}
-            >
-              {action.label}
-            </button>
-          )}
-        </For>
-      </nav>
-    )
-    const topbar = (
-      <div class="topbar">
-        {SearchView()({
-          providers: enabledSearchProviders(),
-          defaultProviderId: resolveDefaultProviderForSearch(),
-          onDefaultProviderChange: setDefaultSearchProvider,
-          searchHistory: searchHistory(),
-          onSaveHistory: saveSearchHistory,
-          onClearHistory: clearSearchHistory,
-        })}
-      </div>
-    )
-    const mainGrid = renderMainGrid()
 
-    return LayoutView ? (
-      LayoutView({ rail, topbar, mainGrid })
-    ) : (
-      <>
-        {topbar}
-        {mainGrid}
-      </>
-    )
+    if (!LayoutView) {
+      return <>{renderMainGrid()}</>
+    }
+
+    const isDashboard = activeLayoutId() === "official.layout.workbench-dashboard"
+    const isStream = activeLayoutId() === "official.layout.workbench-stream"
+
+    if (isDashboard) {
+      const rail = (
+        <nav class="workbench-rail" aria-label="工作台导航">
+          <For each={WORKBENCH_RAIL_ACTIONS}>
+            {(action) => (
+              <button
+                class="rail-action"
+                classList={{ active: action.isActive }}
+                type="button"
+                aria-label={action.ariaLabel}
+                aria-current={action.isActive ? "page" : undefined}
+                onClick={() => runRailAction(action.id)}
+              >
+                {action.label}
+              </button>
+            )}
+          </For>
+        </nav>
+      )
+      const topbar = (
+        <div class="topbar">
+          {SearchView()({
+            providers: enabledSearchProviders(),
+            defaultProviderId: resolveDefaultProviderForSearch(),
+            onDefaultProviderChange: setDefaultSearchProvider,
+            searchHistory: searchHistory(),
+            onSaveHistory: saveSearchHistory,
+            onClearHistory: clearSearchHistory,
+          })}
+        </div>
+      )
+      return LayoutView({ rail, topbar, mainGrid: renderMainGrid() })
+    }
+
+    if (isStream) {
+      const toolbar = (
+        <div style={{ display: "flex", "align-items": "center", gap: "12px" }}>
+          <span style={{ "font-size": "15px", "font-weight": 700 }}>
+            Tabora <span style={{ color: "rgb(var(--color-accent))" }}>Stream</span>
+          </span>
+          <div style={{ flex: 1 }} />
+          <button class="rail-action" onClick={() => setSettingsOpen(true)}>
+            ⚙ 设置
+          </button>
+        </div>
+      )
+      return LayoutView({ toolbar, stream: renderMainGrid() })
+    }
+
+    return <>{renderMainGrid()}</>
   }
 
   const isDark = () => themeId() === "official.theme.dark"
@@ -777,6 +795,20 @@ export function App() {
             aria-label="切换主题"
           >
             {isDark() ? "☀" : "☾"}
+          </button>
+          <button
+            class="theme-toggle"
+            onClick={() => {
+              const next =
+                activeLayoutId() === "official.layout.workbench-dashboard"
+                  ? "official.layout.workbench-stream"
+                  : "official.layout.workbench-dashboard"
+              setActiveLayoutId(next)
+              workspaceState() && workspaceRepo.save({ ...workspaceState()!, activeLayoutId: next })
+            }}
+            aria-label="切换布局"
+          >
+            ⇄
           </button>
         </div>
         {renderActiveLayout()}

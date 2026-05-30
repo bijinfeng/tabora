@@ -867,3 +867,33 @@ body {
     padding: 4px 8px;
   }
 }
+
+/* ====== STREAM LAYOUT ====== */
+.workbench-stream-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 44px;
+  border-bottom: 1px solid rgb(var(--color-line));
+  background: rgb(var(--color-surface));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.workbench-stream-region {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .workbench-stream-region {
+    grid-template-columns: 1fr;
+    padding: 16px 16px 80px;
+  }
+}
