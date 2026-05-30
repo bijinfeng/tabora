@@ -9,6 +9,7 @@ import { officialSearchProvidersBasic } from "./search-providers-basic"
 import { officialThemeDefaultPack } from "./theme-default-pack"
 import { officialWidgetsProductivity } from "./widgets-productivity"
 import { officialPluginWeather } from "@tabora/plugin-weather"
+import { officialPluginQuickLinks } from "@tabora/plugin-quick-links"
 import { officialPluginTodo } from "@tabora/plugin-todo"
 
 export {
@@ -17,6 +18,7 @@ export {
   officialLayoutWorkbenchStream,
   officialLayoutTopSearchGrid,
   officialPluginManager,
+  officialPluginQuickLinks,
   officialPluginTodo,
   officialPluginWeather,
   officialSearchCommandBar,
@@ -35,6 +37,7 @@ export const officialPlugins = [
   officialSearchCommandBar,
   officialSearchProvidersBasic,
   officialPluginWeather,
+  officialPluginQuickLinks,
   officialPluginTodo,
   officialWidgetsProductivity,
   officialPluginManager,

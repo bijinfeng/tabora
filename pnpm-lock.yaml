@@ -190,6 +190,9 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../plugin-api
+      '@tabora/plugin-quick-links':
+        specifier: workspace:*
+        version: link:../../plugins/widget-quick-links
       '@tabora/plugin-todo':
         specifier: workspace:*
         version: link:../../plugins/widget-todo
@@ -449,6 +452,9 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../packages/plugin-api
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       solid-js:
         specifier: catalog:ui
         version: 1.9.13

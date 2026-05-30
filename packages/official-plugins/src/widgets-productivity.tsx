@@ -1,7 +1,6 @@
 import { createSignal, onMount } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { QuickLinksCard } from "./widget-quick-links"
 import { Field, Input, Checkbox, Textarea } from "@tabora/ui"
 
 function migrateFromLocalStorage(key: string): string | null {
@@ -158,20 +157,6 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
           views: { card: "official.widgets.today-focus.card" },
         },
         {
-          id: "quick-links",
-          title: "快捷入口",
-          supportedSizes: ["S", "M", "L"],
-          defaultSize: "M",
-          allowMultipleInstances: true,
-          defaultConfig: {
-            links: [
-              { title: "GitHub", url: "https://github.com" },
-              { title: "Vite+", url: "https://viteplus.dev" },
-            ],
-          },
-          views: { card: "official.widgets.quick-links.card" },
-        },
-        {
           id: "notes",
           title: "便签",
           supportedSizes: ["S", "M", "L"],
@@ -187,7 +172,6 @@ export const officialWidgetsProductivity: BuiltinPlugin = {
   },
   activate(context) {
     context.registry.views.register("official.widgets.today-focus.card", TodayFocusCard)
-    context.registry.views.register("official.widgets.quick-links.card", QuickLinksCard)
     context.registry.views.register("official.widgets.notes.card", NotesCard)
     context.registry.views.register("official.widgets.notes.modal", NotesModal)
   },
