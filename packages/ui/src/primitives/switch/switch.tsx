@@ -6,6 +6,7 @@ export type SwitchProps = {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
+  class?: string
   "aria-label"?: string
   label?: JSX.Element
 }
@@ -13,17 +14,17 @@ export type SwitchProps = {
 export function Switch(props: SwitchProps) {
   return (
     <KSwitch
-      class="tabora-switch"
+      class={props.class}
       checked={props.checked}
       onChange={(v) => props.onChange(v)}
       disabled={props.disabled ?? false}
     >
-      <KSwitch.Input class="tabora-switch-input" aria-label={props["aria-label"]} />
-      <KSwitch.Control class="tabora-switch-control">
-        <KSwitch.Thumb class="tabora-switch-thumb" />
+      <KSwitch.Input class="tbr-switch-input" aria-label={props["aria-label"]} />
+      <KSwitch.Control class="tbr-switch-control">
+        <KSwitch.Thumb class="tbr-switch-thumb" />
       </KSwitch.Control>
       <Show when={props.label}>
-        <KSwitch.Label class="tabora-switch-label">{props.label}</KSwitch.Label>
+        <KSwitch.Label class="tbr-switch-label">{props.label}</KSwitch.Label>
       </Show>
     </KSwitch>
   )

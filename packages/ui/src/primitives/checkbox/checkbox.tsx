@@ -6,6 +6,7 @@ export type CheckboxProps = {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
+  class?: string
   "aria-label"?: string
   label?: JSX.Element
 }
@@ -13,17 +14,17 @@ export type CheckboxProps = {
 export function Checkbox(props: CheckboxProps) {
   return (
     <KCheckbox
-      class="tabora-checkbox"
+      class={props.class}
       checked={props.checked}
       onChange={(v) => props.onChange(v)}
       disabled={props.disabled ?? false}
     >
-      <KCheckbox.Input class="tabora-checkbox-input" aria-label={props["aria-label"]} />
-      <KCheckbox.Control class="tabora-checkbox-control">
+      <KCheckbox.Input class="tbr-checkbox-input" aria-label={props["aria-label"]} />
+      <KCheckbox.Control class="tbr-checkbox-control">
         <KCheckbox.Indicator>✓</KCheckbox.Indicator>
       </KCheckbox.Control>
       <Show when={props.label}>
-        <KCheckbox.Label class="tabora-checkbox-label">{props.label}</KCheckbox.Label>
+        <KCheckbox.Label class="tbr-checkbox-label">{props.label}</KCheckbox.Label>
       </Show>
     </KCheckbox>
   )

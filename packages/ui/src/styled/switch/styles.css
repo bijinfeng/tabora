@@ -1,0 +1,54 @@
+/* Tabora Switch */
+@layer tabora-ui {
+  .tbr-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .tbr-switch-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .tbr-switch-control {
+    width: 36px;
+    height: 20px;
+    background: rgb(var(--tbr-color-line-strong));
+    border-radius: 999px;
+    position: relative;
+    transition: background var(--tbr-dur-normal) var(--tbr-ease);
+    flex-shrink: 0;
+  }
+  .tbr-switch-thumb {
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: left var(--tbr-dur-normal) var(--tbr-ease);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+  .tbr-switch[data-checked] .tbr-switch-control {
+    background: rgb(var(--tbr-color-accent));
+  }
+  .tbr-switch[data-checked] .tbr-switch-thumb {
+    left: 18px;
+  }
+  .tbr-switch[data-disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .tbr-switch:focus-visible .tbr-switch-control {
+    outline: 2px solid rgb(var(--tbr-color-focus));
+    outline-offset: 2px;
+  }
+  .tbr-switch-label {
+    font-size: 13px;
+  }
+}

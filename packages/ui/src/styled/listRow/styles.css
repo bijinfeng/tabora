@@ -1,0 +1,51 @@
+/* Tabora List Row */
+@layer tabora-ui {
+  .tbr-list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--tbr-radius-control);
+    font-size: 13px;
+    min-height: 36px;
+    width: 100%;
+    border: none;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    text-align: inherit;
+  }
+  button.tbr-list-row {
+    cursor: pointer;
+  }
+  button.tbr-list-row:hover {
+    background: rgba(var(--tbr-color-accent), 0.06);
+  }
+  div.tbr-list-row:hover {
+    background: rgba(var(--tbr-color-accent), 0.06);
+  }
+  .tbr-list-row-leading {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .tbr-list-row-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .tbr-list-row-primary {
+    font-size: 13px;
+  }
+  .tbr-list-row-secondary {
+    font-size: 11px;
+    color: rgb(var(--tbr-color-text-subtle));
+    margin-top: 1px;
+  }
+  .tbr-list-row-trailing {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: rgb(var(--tbr-color-text-subtle));
+  }
+}

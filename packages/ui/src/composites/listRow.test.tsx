@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import { ListRow } from "./listRow"
+import { ListRow } from "../primitives/listRow/listRow"
 
 describe("ListRow", () => {
   it("renders as button when onClick provided and triggers it", () => {
@@ -20,6 +20,6 @@ describe("ListRow", () => {
     document.body.appendChild(root)
     render(() => <ListRow primary="x" />, root)
     expect(root.querySelector("button")).toBeNull()
-    expect(root.querySelector(".tabora-list-row")!.tagName).toBe("DIV")
+    expect(root.querySelector("div")!.tagName).toBe("DIV")
   })
 })

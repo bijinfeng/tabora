@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
-import { CardSection } from "./cardSection"
+import { CardSection } from "../primitives/cardSection/cardSection"
 
 describe("CardSection", () => {
   it("renders title and trailing", () => {

@@ -7,26 +7,27 @@ export type FieldProps = {
   error?: JSX.Element
   required?: boolean
   htmlFor?: string
+  class?: string
   children: JSX.Element
 }
 
 export function Field(props: FieldProps) {
   return (
-    <div class="tabora-field">
-      <label class="tabora-field-label" for={props.htmlFor}>
+    <div class={props.class}>
+      <label class="tbr-field-label" for={props.htmlFor}>
         {props.label}
         <Show when={props.required}>
-          <span class="tabora-field-required" aria-hidden="true">
+          <span class="tbr-field-required" aria-hidden="true">
             *
           </span>
         </Show>
       </label>
       {props.children}
       <Show when={props.helper}>
-        <div class="tabora-field-helper">{props.helper}</div>
+        <div class="tbr-field-helper">{props.helper}</div>
       </Show>
       <Show when={props.error}>
-        <div class="tabora-field-error" role="alert">
+        <div class="tbr-field-error" role="alert">
           {props.error}
         </div>
       </Show>
