@@ -32,27 +32,29 @@ describe("workbench dashboard layout", () => {
 
     const addBefore = countGridItems()
     clickRequired('.workbench-rail button[aria-label="添加卡片"]')
-    expect(document.activeElement?.id).toBe("add-widgets")
+    await waitFor(() => expect(document.querySelector("#add-widgets")).toBeTruthy())
 
-    clickRequired(".add-widget-btn")
+    clickRequired(".add-widget-trigger")
+    await waitFor(() => expect(document.querySelector(".modal-container")).toBeTruthy())
+    clickRequired(".add-widget-modal-item")
     await waitFor(() => expect(countGridItems()).toBe(addBefore + 1))
 
     expect(readTodoSizeOptions()).toEqual(["S", "M", "L", "XL"])
 
-    clickRequired(readGridItemByTitle("便签"), ".widget-expand-btn")
+    clickRequired(readGridItemByTitle("便签"), ".card-action-btn")
     await waitFor(() => expect(document.querySelector(".modal-overlay .notes-modal")).toBeTruthy())
     clickRequired(".modal-close")
 
     clickRequired('.workbench-rail button[aria-label="设置"]')
-    await waitFor(() => expect(document.querySelector(".settings-host")).toBeTruthy())
-    expect(document.querySelector(".settings-nav-item.active")?.textContent).toContain("外观")
+    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    expect(document.querySelector(".settings-nav.active")?.textContent).toContain("外观")
 
-    const searchNavBtn = findButtonByText(".settings-nav-item", "搜索")
+    const searchNavBtn = findButtonByText(".settings-nav", "搜索")
     expect(searchNavBtn).toBeTruthy()
     expect(searchNavBtn?.textContent).toContain("搜索")
     ;(searchNavBtn as HTMLElement).click()
     await waitFor(() =>
-      expect(document.querySelector(".settings-nav-item.active")?.textContent).toContain("搜索"),
+      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("搜索"),
     )
 
     await waitFor(() =>
@@ -64,7 +66,7 @@ describe("workbench dashboard layout", () => {
 
     clickRequired('.workbench-rail button[aria-label="插件"]')
     await waitFor(() => expect(document.querySelector(".settings-host")).toBeTruthy())
-    expect(document.querySelector(".settings-nav-item.active")?.textContent).toContain("插件")
+    expect(document.querySelector(".settings-nav.active")?.textContent).toContain("插件")
     clickRequired(".settings-close")
 
     const dragOrder = await dragFirstGridItemToSecond()
@@ -105,7 +107,7 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
     rail: !!document.querySelector(".workbench-rail"),
     topbar: !!document.querySelector(".topbar .search-bar"),
     grid: !!document.querySelector(".workbench-grid"),
-    cardTitles: [...document.querySelectorAll(".widget-header h2")].map(
+    cardTitles: [...document.querySelectorAll(".card-title-text")].map(
       (node) => node.textContent?.trim() ?? "",
     ),
     overflowX: hasHorizontalOverflow(),
@@ -118,7 +120,7 @@ function countGridItems(): number {
 
 function readTodoSizeOptions(): string[] {
   const todo = readGridItemByTitle("待办")
-  return [...todo.querySelectorAll<HTMLSelectElement>(".size-select option")].map(
+  return [...todo.querySelectorAll<HTMLSelectElement>(".widget-size-btn option")].map(
     (option) => option.value,
   )
 }
