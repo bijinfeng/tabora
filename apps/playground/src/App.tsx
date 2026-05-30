@@ -66,6 +66,7 @@ export function App() {
   const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
     null,
   )
+  const [addWidgetOpen, setAddWidgetOpen] = createSignal(false)
   const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
   let toastSeq = 0
@@ -710,16 +711,31 @@ export function App() {
           </For>
         </section>
         <section class="add-widgets" id="add-widgets" tabIndex={-1}>
-          <div class="add-widgets-bar">
-            <span>添加卡片：</span>
-            <For each={availableWidgets()}>
-              {(w) => (
-                <button class="add-widget-btn" onClick={() => addWidget(w.id)}>
-                  + {w.title}
-                </button>
-              )}
-            </For>
-          </div>
+          <button class="add-widget-trigger" onClick={() => setAddWidgetOpen(true)}>
+            + 添加卡片
+          </button>
+          <Show when={addWidgetOpen()}>
+            <div class="modal-overlay" onClick={() => setAddWidgetOpen(false)}>
+              <div class="modal-container" onClick={(e) => e.stopPropagation()}>
+                <div class="modal-title">添加卡片</div>
+                <div class="modal-body">
+                  <For each={availableWidgets()}>
+                    {(w) => (
+                      <button
+                        class="add-widget-modal-item"
+                        onClick={() => {
+                          addWidget(w.id)
+                          setAddWidgetOpen(false)
+                        }}
+                      >
+                        <span class="add-widget-modal-name">{w.title}</span>
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </div>
+            </div>
+          </Show>
         </section>
       </>
     )

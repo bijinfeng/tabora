@@ -729,3 +729,44 @@
   color: rgb(var(--color-danger));
   font-size: 13px;
 }
+
+.add-widget-trigger {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px dashed rgb(var(--color-line));
+  border-radius: var(--radius-control);
+  background: rgba(var(--color-accent), 0.02);
+  font-size: 12px;
+  font-family: inherit;
+  color: rgb(var(--color-muted));
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.add-widget-trigger:hover {
+  border-color: rgb(var(--color-accent));
+  color: rgb(var(--color-accent));
+}
+.add-widget-modal-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius-control);
+  background: rgb(var(--color-surface-soft));
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: rgb(var(--color-text));
+  transition: all 0.12s;
+}
+.add-widget-modal-item:hover {
+  border-color: rgb(var(--color-accent));
+  background: rgba(var(--color-accent), 0.04);
+}
+.add-widget-modal-name {
+  font-weight: 600;
+}
