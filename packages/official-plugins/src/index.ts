@@ -8,6 +8,7 @@ import { officialSettingsWorkspace } from "./settings-workspace"
 import { officialSearchProvidersBasic } from "./search-providers-basic"
 import { officialThemeDefaultPack } from "./theme-default-pack"
 import { officialWidgetsProductivity } from "./widgets-productivity"
+import { officialPluginWeather } from "@tabora/plugin-weather"
 
 export {
   officialBackgroundBasic,
@@ -15,6 +16,7 @@ export {
   officialLayoutWorkbenchStream,
   officialLayoutTopSearchGrid,
   officialPluginManager,
+  officialPluginWeather,
   officialSearchCommandBar,
   officialSettingsWorkspace,
   officialSearchProvidersBasic,
@@ -30,6 +32,7 @@ export const officialPlugins = [
   officialLayoutTopSearchGrid,
   officialSearchCommandBar,
   officialSearchProvidersBasic,
+  officialPluginWeather,
   officialWidgetsProductivity,
   officialPluginManager,
   officialSettingsWorkspace,
