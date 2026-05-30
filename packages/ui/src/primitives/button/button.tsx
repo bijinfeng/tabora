@@ -68,6 +68,5 @@ export function HeadlessIconButton(props: HeadlessIconButtonProps) {
   )
 }
 
-// 向后兼容：重新导出旧的类型名
 export type ButtonProps = HeadlessButtonProps
 export type IconButtonProps = HeadlessIconButtonProps

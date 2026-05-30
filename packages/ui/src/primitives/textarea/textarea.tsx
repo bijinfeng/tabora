@@ -28,4 +28,3 @@ export function HeadlessTextarea(props: HeadlessTextareaProps) {
 }
 
 export type TextareaProps = HeadlessTextareaProps
-export const Textarea = HeadlessTextarea

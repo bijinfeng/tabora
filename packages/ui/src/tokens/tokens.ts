@@ -45,14 +45,3 @@ export type TokenName = (typeof TOKEN)[keyof typeof TOKEN] extends infer T
     ? T[keyof T]
     : never
   : never
-
-// 向后兼容：保留旧 TOKENS 常量
-export const TOKENS = {
-  page: "color-page",
-  surface: "color-surface",
-  text: "color-text",
-  muted: "color-muted",
-  accent: "color-accent",
-  line: "color-line",
-  radiusCard: "radius-card",
-} as const

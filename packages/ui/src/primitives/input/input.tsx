@@ -38,6 +38,4 @@ export function HeadlessInput(props: HeadlessInputProps) {
   )
 }
 
-// 向后兼容
 export type InputProps = HeadlessInputProps
-export const Input = HeadlessInput

@@ -4,21 +4,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./styles.css": "./src/styles.css",
-    "./button": "./src/styled/button/index.ts",
-    "./button/styles.css": "./src/styled/button/styles.css",
-    "./input": "./src/styled/input/index.ts",
-    "./input/styles.css": "./src/styled/input/styles.css",
+    "./styles.css": "./src/tokens/theme.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
-      "./styles.css": "./dist/styles.css",
-      "./button": "./dist/button/index.js",
-      "./button/styles.css": "./dist/button/styles.css",
-      "./input": "./dist/input/index.js",
-      "./input/styles.css": "./dist/input/styles.css",
+      "./styles.css": "./dist/theme.css",
       "./package.json": "./package.json"
     }
   },
