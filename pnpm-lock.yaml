@@ -190,9 +190,15 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../plugin-api
+      '@tabora/plugin-notes':
+        specifier: workspace:*
+        version: link:../../plugins/widget-notes
       '@tabora/plugin-quick-links':
         specifier: workspace:*
         version: link:../../plugins/widget-quick-links
+      '@tabora/plugin-today-focus':
+        specifier: workspace:*
+        version: link:../../plugins/widget-today-focus
       '@tabora/plugin-todo':
         specifier: workspace:*
         version: link:../../plugins/widget-todo
@@ -300,134 +306,6 @@ importers:
         specifier: catalog:build
         version: 2.11.12(solid-js@1.9.13)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
 
-  plugins/background-basic:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/layout-workbench-dashboard:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/layout-workbench-stream:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/plugin-manager:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/search-command-bar:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/search-providers-basic:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/settings-workspace:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/theme-default-pack:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
   plugins/widget-notes:
     dependencies:
       '@tabora/platform-kernel':
@@ -436,6 +314,9 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../packages/plugin-api
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       solid-js:
         specifier: catalog:ui
         version: 1.9.13
@@ -471,6 +352,9 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../packages/plugin-api
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       solid-js:
         specifier: catalog:ui
         version: 1.9.13

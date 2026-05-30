@@ -1,5 +1,5 @@
 {
-  "name": "@tabora/plugin-widget-notes",
+  "name": "@tabora/plugin-notes",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -10,6 +10,7 @@
   "dependencies": {
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
+    "@tabora/ui": "workspace:*",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

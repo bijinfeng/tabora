@@ -7,10 +7,11 @@ import { officialSearchCommandBar } from "./search-command-bar"
 import { officialSettingsWorkspace } from "./settings-workspace"
 import { officialSearchProvidersBasic } from "./search-providers-basic"
 import { officialThemeDefaultPack } from "./theme-default-pack"
-import { officialWidgetsProductivity } from "./widgets-productivity"
 import { officialPluginWeather } from "@tabora/plugin-weather"
-import { officialPluginQuickLinks } from "@tabora/plugin-quick-links"
 import { officialPluginTodo } from "@tabora/plugin-todo"
+import { officialPluginQuickLinks } from "@tabora/plugin-quick-links"
+import { officialPluginTodayFocus } from "@tabora/plugin-today-focus"
+import { officialPluginNotes } from "@tabora/plugin-notes"
 
 export {
   officialBackgroundBasic,
@@ -18,14 +19,15 @@ export {
   officialLayoutWorkbenchStream,
   officialLayoutTopSearchGrid,
   officialPluginManager,
+  officialPluginNotes,
   officialPluginQuickLinks,
+  officialPluginTodayFocus,
   officialPluginTodo,
   officialPluginWeather,
   officialSearchCommandBar,
   officialSettingsWorkspace,
   officialSearchProvidersBasic,
   officialThemeDefaultPack,
-  officialWidgetsProductivity,
 }
 
 export const officialPlugins = [
@@ -37,9 +39,10 @@ export const officialPlugins = [
   officialSearchCommandBar,
   officialSearchProvidersBasic,
   officialPluginWeather,
-  officialPluginQuickLinks,
   officialPluginTodo,
-  officialWidgetsProductivity,
+  officialPluginQuickLinks,
+  officialPluginTodayFocus,
+  officialPluginNotes,
   officialPluginManager,
   officialSettingsWorkspace,
 ]
