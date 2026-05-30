@@ -13,6 +13,8 @@
 - V2 设计体系：`docs/design/01-设计体系规范.html`
 - V2 组件规范：`docs/design/02-基础组件规范.html`
 - V2 交互原型：`docs/design/03-工作台交互原型.html`
+- UI 重构方案：`docs/technical/tabora-ui-refactoring-plan.md`
+- 插件拆分方案：`docs/technical/tabora-plugin-package-splitting-plan.md`
 - 文档地图：`docs/README.md`
 
 ## 0. 评审起点
