@@ -32,9 +32,6 @@ describe("workbench dashboard layout", () => {
 
     const addBefore = countGridItems()
     clickRequired('.workbench-rail button[aria-label="添加卡片"]')
-    await waitFor(() => expect(document.querySelector("#add-widgets")).toBeTruthy())
-
-    clickRequired(".add-widget-trigger")
     await waitFor(() => expect(document.querySelector(".modal-container")).toBeTruthy())
     clickRequired(".add-widget-modal-item")
     await waitFor(() => expect(countGridItems()).toBe(addBefore + 1))
@@ -120,8 +117,8 @@ function countGridItems(): number {
 
 function readTodoSizeOptions(): string[] {
   const todo = readGridItemByTitle("待办")
-  return [...todo.querySelectorAll<HTMLSelectElement>(".widget-size-btn option")].map(
-    (option) => option.value,
+  return [...todo.querySelectorAll<HTMLElement>(".widget-size-btn")].map(
+    (btn) => btn.textContent ?? "",
   )
 }
 

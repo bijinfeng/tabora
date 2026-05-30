@@ -14,7 +14,7 @@ export const officialPluginTodo: BuiltinPlugin = {
         {
           id: "todo",
           title: "待办",
-          supportedSizes: ["S", "M"],
+          supportedSizes: ["S", "M", "L", "XL"],
           defaultSize: "S",
           allowMultipleInstances: true,
           views: { card: "official.widgets.todo.card" },

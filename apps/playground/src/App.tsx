@@ -790,7 +790,7 @@ export function App() {
 
   function runRailAction(actionId: string) {
     if (actionId === "add-widget") {
-      document.getElementById("add-widgets")?.scrollIntoView({ behavior: "smooth" })
+      setAddWidgetOpen(true)
     } else if (actionId === "plugins") {
       setActiveSettingsPanelId("official.settings.plugins")
       setSettingsOpen(true)
