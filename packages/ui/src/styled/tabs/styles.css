@@ -1,0 +1,41 @@
+/* Tabora Tabs */
+@layer tabora-ui {
+  .tbr-tabs {
+    width: 100%;
+  }
+  .tbr-tabs-list {
+    display: flex;
+    border-bottom: 1px solid rgb(var(--tbr-color-line));
+    position: relative;
+  }
+  .tbr-tabs-trigger {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--tbr-color-text-muted));
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    transition: color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-tabs-trigger:hover {
+    color: rgb(var(--tbr-color-text));
+  }
+  .tbr-tabs-trigger[data-selected] {
+    color: rgb(var(--tbr-color-accent));
+    font-weight: 650;
+  }
+  .tbr-tabs-trigger:focus-visible {
+    outline: 2px solid rgb(var(--tbr-color-focus));
+    outline-offset: -2px;
+  }
+  .tbr-tabs-indicator {
+    height: 2px;
+    background: rgb(var(--tbr-color-accent));
+    border-radius: 1px 1px 0 0;
+    transition:
+      left 200ms ease,
+      width 200ms ease;
+  }
+}

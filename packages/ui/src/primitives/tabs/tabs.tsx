@@ -6,25 +6,30 @@ export type TabsProps = {
   value: string
   onChange: (value: string) => void
   tabs: { value: string; label: JSX.Element; content: JSX.Element }[]
+  class?: string
   "aria-label": string
 }
 
 export function Tabs(props: TabsProps) {
   return (
-    <KTabs class="tabora-tabs" value={props.value} onChange={(v) => props.onChange(v)}>
-      <KTabs.List class="tabora-tabs-list" aria-label={props["aria-label"]}>
+    <KTabs
+      class={`tbr-tabs ${props.class ?? ""}`}
+      value={props.value}
+      onChange={(v) => props.onChange(v)}
+    >
+      <KTabs.List class="tbr-tabs-list" aria-label={props["aria-label"]}>
         <For each={props.tabs}>
           {(tab) => (
-            <KTabs.Trigger class="tabora-tabs-trigger" value={tab.value}>
+            <KTabs.Trigger class="tbr-tabs-trigger" value={tab.value}>
               {tab.label}
             </KTabs.Trigger>
           )}
         </For>
-        <KTabs.Indicator class="tabora-tabs-indicator" />
+        <KTabs.Indicator class="tbr-tabs-indicator" />
       </KTabs.List>
       <For each={props.tabs}>
         {(tab) => (
-          <KTabs.Content class="tabora-tabs-content" value={tab.value}>
+          <KTabs.Content class="tbr-tabs-content" value={tab.value}>
             {tab.content}
           </KTabs.Content>
         )}

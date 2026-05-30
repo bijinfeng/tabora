@@ -2,11 +2,7 @@ import { Select as KSelect } from "@kobalte/core/select"
 import { splitProps } from "solid-js"
 import type { JSX } from "solid-js"
 
-export type SelectOption<V extends string> = {
-  value: V
-  label: string
-  disabled?: boolean
-}
+export type SelectOption<V extends string> = { value: V; label: string; disabled?: boolean }
 
 export type SelectProps<V extends string> = {
   value: V
@@ -15,6 +11,7 @@ export type SelectProps<V extends string> = {
   placeholder?: JSX.Element
   size?: "sm" | "md"
   disabled?: boolean
+  class?: string
   "aria-label"?: string
   id?: string
 }
@@ -29,8 +26,8 @@ export function Select<V extends string>(props: SelectProps<V>) {
     "disabled",
     "aria-label",
     "id",
+    "class",
   ])
-
   return (
     <KSelect<SelectOption<V>>
       value={local.options.find((o) => o.value === local.value) ?? null}
@@ -42,25 +39,25 @@ export function Select<V extends string>(props: SelectProps<V>) {
       {...(local.disabled !== undefined ? { disabled: local.disabled } : {})}
       {...(local.placeholder !== undefined ? { placeholder: local.placeholder } : {})}
       itemComponent={(p) => (
-        <KSelect.Item item={p.item} class="tabora-select-item">
+        <KSelect.Item item={p.item} class="tbr-select-item">
           <KSelect.ItemLabel>{p.item.rawValue.label}</KSelect.ItemLabel>
         </KSelect.Item>
       )}
     >
       <KSelect.Trigger
-        class="tabora-select-trigger"
+        class={`tbr-select-trigger ${local.class ?? ""}`}
         data-size={local.size ?? "md"}
         {...(local["aria-label"] !== undefined ? { "aria-label": local["aria-label"] } : {})}
         {...(local.id !== undefined ? { id: local.id } : {})}
       >
         <KSelect.Value<SelectOption<V>>>{(state) => state.selectedOption().label}</KSelect.Value>
-        <KSelect.Icon class="tabora-select-icon" aria-hidden="true">
+        <KSelect.Icon class="tbr-select-icon" aria-hidden="true">
           ▾
         </KSelect.Icon>
       </KSelect.Trigger>
       <KSelect.Portal>
-        <KSelect.Content class="tabora-select-content">
-          <KSelect.Listbox class="tabora-select-listbox" />
+        <KSelect.Content class="tbr-select-content">
+          <KSelect.Listbox class="tbr-select-listbox" />
         </KSelect.Content>
       </KSelect.Portal>
     </KSelect>

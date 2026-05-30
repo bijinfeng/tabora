@@ -1,0 +1,66 @@
+/* Tabora Select */
+@layer tabora-ui {
+  .tbr-select-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 160px;
+    border-radius: var(--tbr-radius-control);
+    border: 1px solid rgb(var(--tbr-color-line));
+    background: rgb(var(--tbr-color-surface));
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--tbr-dur-fast) var(--tbr-ease);
+    white-space: nowrap;
+  }
+  .tbr-select-trigger[data-size="sm"] {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .tbr-select-trigger[data-size="md"] {
+    height: 36px;
+    padding: 0 12px;
+  }
+  .tbr-select-trigger:hover {
+    border-color: rgb(var(--tbr-color-line-strong));
+  }
+  .tbr-select-trigger:focus-visible {
+    outline: 2px solid rgb(var(--tbr-color-focus));
+    outline-offset: 2px;
+  }
+  .tbr-select-trigger[data-disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .tbr-select-icon {
+    color: rgb(var(--tbr-color-text-muted));
+    font-size: 10px;
+  }
+  .tbr-select-content {
+    background: rgb(var(--tbr-color-surface));
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-control);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    max-height: 260px;
+    z-index: 50;
+  }
+  .tbr-select-listbox {
+    overflow-y: auto;
+  }
+  .tbr-select-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  .tbr-select-item[data-highlighted] {
+    background: rgba(var(--tbr-color-accent), 0.08);
+  }
+  .tbr-select-item[data-disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

@@ -13,13 +13,14 @@ export type SegmentedControlProps<V extends string> = {
   options: SegmentedControlOption<V>[]
   onChange: (value: V) => void
   size?: "sm" | "md"
+  class?: string
   "aria-label": string
 }
 
 export function SegmentedControl<V extends string>(props: SegmentedControlProps<V>) {
   return (
     <ToggleGroup
-      class="tabora-segmented"
+      class={`tbr-segmented ${props.class ?? ""}`}
       data-size={props.size ?? "md"}
       value={props.value}
       onChange={(v) => v && props.onChange(v as V)}
@@ -27,7 +28,7 @@ export function SegmentedControl<V extends string>(props: SegmentedControlProps<
     >
       <For each={props.options}>
         {(opt) => (
-          <ToggleGroup.Item class="tabora-segmented-item" value={opt.value} disabled={opt.disabled}>
+          <ToggleGroup.Item class="tbr-segmented-item" value={opt.value} disabled={opt.disabled}>
             {opt.label}
           </ToggleGroup.Item>
         )}
