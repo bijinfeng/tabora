@@ -66,13 +66,6 @@ export function App() {
   const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
     null,
   )
-  const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
-  let toastId = 0
-  function showToast(msg: string) {
-    const id = ++toastId
-    setToasts((t) => [...t, { id, msg }])
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
-  }
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
 
   const database = createTaboraDatabase()
@@ -112,7 +105,7 @@ export function App() {
     if (!workspace) {
       const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
       workspace = seed.workspace
-      await void workspaceRepo.save(workspace)
+      await workspaceRepo.save(workspace)
     }
 
     setWorkspaceState(workspace)
@@ -217,7 +210,7 @@ export function App() {
     if (!current) return
     const updated = mutator({ ...current, config: { ...(current.config ?? {}) } })
     updated.updatedAt = new Date().toISOString()
-    await void workspaceRepo.save(updated)
+    await workspaceRepo.save(updated)
     setWorkspaceState(updated)
   }
 
@@ -325,7 +318,7 @@ export function App() {
       result.workspace.name = `${result.workspace.name} (导入)`
     }
 
-    await void workspaceRepo.save(result.workspace)
+    await workspaceRepo.save(result.workspace)
     for (const inst of result.instances) {
       await instanceRepo.save(inst)
     }
@@ -350,7 +343,7 @@ export function App() {
     const ws = seed.workspace
     ws.id = `ws-${Date.now()}`
     ws.name = name
-    await void workspaceRepo.save(ws)
+    await workspaceRepo.save(ws)
     for (const inst of seed.instances.filter((i) => i.regionId === "mainGrid")) {
       await instanceRepo.save(inst)
     }
@@ -438,7 +431,7 @@ export function App() {
     setThemeId(newThemeId)
     workspace.activeThemeId = newThemeId
     workspace.updatedAt = new Date().toISOString()
-    await void workspaceRepo.save(workspace)
+    await workspaceRepo.save(workspace)
     setWorkspaceState({ ...workspace })
   }
 
@@ -449,7 +442,7 @@ export function App() {
     setBackgroundId(bgId)
     workspace.activeBackgroundProviderId = bgId
     workspace.updatedAt = new Date().toISOString()
-    await void workspaceRepo.save(workspace)
+    await workspaceRepo.save(workspace)
     setWorkspaceState({ ...workspace })
   }
 
@@ -912,7 +905,7 @@ export function App() {
                 <button
                   class="ctx-menu-item ctx-menu-danger"
                   onClick={() => {
-                    removeWidget(menu().instanceId)
+                    void removeWidget(menu().instanceId)
                     setCtxMenu(null)
                   }}
                 >
@@ -922,12 +915,6 @@ export function App() {
             </div>
           )}
         </Show>
-        <div
-          class="toast-stack"
-          style={{ position: "fixed", bottom: "20px", right: "20px", "z-index": 999 }}
-        >
-          <For each={toasts()}>{(t) => <div class="toast-item">{t.msg}</div>}</For>
-        </div>
       </Show>
     </div>
   )
