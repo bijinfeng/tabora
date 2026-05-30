@@ -10,9 +10,12 @@ export type BadgeVariant =
   | "counter"
   | "dot"
 
+export type BadgeColorVariant = "neutral" | "accent" | "success" | "warning" | "danger"
+
 export type BadgeProps = {
   variant?: BadgeVariant
   size?: "sm" | "md"
+  dotColor?: BadgeColorVariant
   class?: string
   children?: JSX.Element
 }
@@ -23,6 +26,7 @@ export function Badge(props: BadgeProps) {
       class={props.class}
       data-variant={props.variant ?? "neutral"}
       data-size={props.size ?? "md"}
+      data-dot-color={props.variant === "dot" ? (props.dotColor ?? "accent") : undefined}
     >
       <Show when={props.variant !== "dot"}>{props.children}</Show>
     </span>

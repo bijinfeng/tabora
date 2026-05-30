@@ -6,4 +6,4 @@ export function Badge(props: BadgeProps) {
   return <BadgePrimitive {...props} class="tbr-badge" />
 }
 
-export type { BadgeProps, BadgeVariant } from "../../primitives/badge/badge"
+export type { BadgeProps, BadgeVariant, BadgeColorVariant } from "../../primitives/badge/badge"

@@ -65,19 +65,19 @@
     border-radius: 50%;
     border: none;
   }
-  .tbr-badge[data-variant="dot"][data-variant-colors="neutral"] {
+  .tbr-badge[data-variant="dot"][data-dot-color="neutral"] {
     background: rgb(var(--tbr-color-line-strong));
   }
-  .tbr-badge[data-variant="dot"][data-variant="accent"] {
+  .tbr-badge[data-variant="dot"][data-dot-color="accent"] {
     background: rgb(var(--tbr-color-accent));
   }
-  .tbr-badge[data-variant="dot"][data-variant="success"] {
+  .tbr-badge[data-variant="dot"][data-dot-color="success"] {
     background: rgb(var(--tbr-color-success));
   }
-  .tbr-badge[data-variant="dot"][data-variant="warning"] {
+  .tbr-badge[data-variant="dot"][data-dot-color="warning"] {
     background: rgb(var(--tbr-color-warning));
   }
-  .tbr-badge[data-variant="dot"][data-variant="danger"] {
+  .tbr-badge[data-variant="dot"][data-dot-color="danger"] {
     background: rgb(var(--tbr-color-danger));
   }
 }

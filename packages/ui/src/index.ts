@@ -62,7 +62,7 @@ export { CardSection } from "./styled/cardSection"
 export type { CardSectionProps } from "./styled/cardSection"
 
 export { Badge } from "./styled/badge"
-export type { BadgeProps, BadgeVariant } from "./styled/badge"
+export type { BadgeProps, BadgeVariant, BadgeColorVariant } from "./styled/badge"
 
 export { InlineError } from "./styled/inlineError"
 export type { InlineErrorProps } from "./styled/inlineError"
