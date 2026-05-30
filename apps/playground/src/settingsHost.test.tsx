@@ -110,7 +110,7 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-host")).toBeTruthy()
+    expect(root.querySelector(".settings-drawer")).toBeTruthy()
   })
 
   it("keeps the settings container open when a panel view fails", () => {
@@ -162,7 +162,7 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-host")).toBeTruthy()
+    expect(root.querySelector(".settings-drawer")).toBeTruthy()
     expect(root.textContent).toContain("插件视图加载失败")
     expect(root.textContent).toContain("broken")
   })
