@@ -66,7 +66,14 @@ export function App() {
   const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
     null,
   )
+  const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
+  let toastSeq = 0
+  function showToast(msg: string) {
+    const id = ++toastSeq
+    setToasts((t) => [...t, { id, msg }])
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
+  }
 
   const database = createTaboraDatabase()
   const workspaceRepo = createWorkspaceRepository(database)
@@ -906,6 +913,7 @@ export function App() {
                   class="ctx-menu-item ctx-menu-danger"
                   onClick={() => {
                     void removeWidget(menu().instanceId)
+                    showToast("实例已移除")
                     setCtxMenu(null)
                   }}
                 >
@@ -914,6 +922,11 @@ export function App() {
               </div>
             </div>
           )}
+        </Show>
+        <Show when={toasts().length > 0}>
+          <div class="toast-stack">
+            <For each={toasts()}>{(t) => <div class="toast-item">{t.msg}</div>}</For>
+          </div>
         </Show>
       </Show>
     </div>
