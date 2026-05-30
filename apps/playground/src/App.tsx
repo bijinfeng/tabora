@@ -559,6 +559,7 @@ export function App() {
     const [moved] = list.splice(fromIdx, 1)
     list.splice(toIdx, 0, moved!)
     void persistGridOrder(list)
+    showToast("排序已更新")
   }
 
   const availableWidgets = () => {
@@ -620,6 +621,23 @@ export function App() {
                   onDragStart={(e) => onDragStart(e, inst.id)}
                   onDragOver={onDragOver}
                   onDrop={(e) => onDrop(e, inst.id)}
+                  onDblClick={() => {
+                    const w = findWidgetContribution(inst.pluginId, inst.contributionId)
+                    const modalViewId = w?.views.modal
+                    if (modalViewId && kernel.registry.views.has(modalViewId)) {
+                      kernel.events.emit("ui.modal.open", {
+                        viewId: modalViewId,
+                        props: {
+                          instanceId: inst.id,
+                          pluginId: inst.pluginId,
+                          contributionId: inst.contributionId,
+                          config: inst.config,
+                          data: makeScopedData(inst.pluginId, inst.id),
+                        },
+                      })
+                      showToast("展开卡片：" + widgetTitle(inst.contributionId))
+                    }
+                  }}
                   onContextMenu={(e) => {
                     e.preventDefault()
                     setCtxMenu({ x: e.clientX, y: e.clientY, instanceId: inst.id })
