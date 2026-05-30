@@ -52,6 +52,8 @@ export default defineConfig({
       "packages/storage/src/**/*.test.ts",
       "packages/ui/src/**/*.test.tsx",
       "packages/official-plugins/src/**/*.test.tsx",
+      "plugins/*/src/**/*.test.tsx",
+      "plugins/*/src/**/*.test.ts",
       "apps/playground/src/**/*.test.tsx",
     ],
     exclude: ["apps/**/*.e2e.test.tsx"],
