@@ -102,7 +102,7 @@ export function App() {
     if (!workspace) {
       const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
       workspace = seed.workspace
-      await workspaceRepo.save(workspace)
+      await void workspaceRepo.save(workspace)
     }
 
     setWorkspaceState(workspace)
@@ -207,7 +207,7 @@ export function App() {
     if (!current) return
     const updated = mutator({ ...current, config: { ...(current.config ?? {}) } })
     updated.updatedAt = new Date().toISOString()
-    await workspaceRepo.save(updated)
+    await void workspaceRepo.save(updated)
     setWorkspaceState(updated)
   }
 
@@ -315,7 +315,7 @@ export function App() {
       result.workspace.name = `${result.workspace.name} (导入)`
     }
 
-    await workspaceRepo.save(result.workspace)
+    await void workspaceRepo.save(result.workspace)
     for (const inst of result.instances) {
       await instanceRepo.save(inst)
     }
@@ -340,7 +340,7 @@ export function App() {
     const ws = seed.workspace
     ws.id = `ws-${Date.now()}`
     ws.name = name
-    await workspaceRepo.save(ws)
+    await void workspaceRepo.save(ws)
     for (const inst of seed.instances.filter((i) => i.regionId === "mainGrid")) {
       await instanceRepo.save(inst)
     }
@@ -428,7 +428,7 @@ export function App() {
     setThemeId(newThemeId)
     workspace.activeThemeId = newThemeId
     workspace.updatedAt = new Date().toISOString()
-    await workspaceRepo.save(workspace)
+    await void workspaceRepo.save(workspace)
     setWorkspaceState({ ...workspace })
   }
 
@@ -439,7 +439,7 @@ export function App() {
     setBackgroundId(bgId)
     workspace.activeBackgroundProviderId = bgId
     workspace.updatedAt = new Date().toISOString()
-    await workspaceRepo.save(workspace)
+    await void workspaceRepo.save(workspace)
     setWorkspaceState({ ...workspace })
   }
 
@@ -804,7 +804,10 @@ export function App() {
                   ? "official.layout.workbench-stream"
                   : "official.layout.workbench-dashboard"
               setActiveLayoutId(next)
-              workspaceState() && workspaceRepo.save({ ...workspaceState()!, activeLayoutId: next })
+              const ws = workspaceState()
+              if (ws) {
+                void workspaceRepo.save({ ...ws, activeLayoutId: next })
+              }
             }}
             aria-label="切换布局"
           >

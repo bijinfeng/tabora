@@ -1,9 +1,16 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { SearchProviderContribution, SearchViewProps } from "@tabora/plugin-api"
-import { Button, Input, InlineError, Select } from "@tabora/ui"
+import { Button, Input, InlineError, Select, Kbd } from "@tabora/ui"
 
 const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
+const COMMANDS = [
+  { icon: "🎨", name: "切换主题", desc: "明亮 ⇄ 暗色", group: "命令", hint: "⌘T" },
+  { icon: "⇄", name: "切换布局", desc: "Dashboard ⇄ Stream", group: "命令", hint: "⌘L" },
+  { icon: "+", name: "添加卡片", desc: "向工作台添加新卡片", group: "命令", hint: "⌘N" },
+  { icon: "⚙", name: "打开设置", desc: "配置工作台", group: "命令", hint: "⌘," },
+  { icon: "?", name: "快捷键", desc: "查看所有快捷键", group: "命令", hint: "?" },
+] as const
 
 const FALLBACK_PROVIDER: SearchProviderContribution = {
   id: "official.search.google",
@@ -14,6 +21,34 @@ const FALLBACK_PROVIDER: SearchProviderContribution = {
 
 function providerOptions(providers: SearchProviderContribution[]) {
   return providers.map((p) => ({ value: p.id, label: p.title }))
+}
+
+export function buildSearchUrl(provider: SearchProviderContribution, query: string): string {
+  return provider.urlTemplate.replaceAll("{query}", encodeURIComponent(query.trim()))
+}
+
+function resolveShortcut(
+  query: string,
+  providers: SearchProviderContribution[],
+): { provider: SearchProviderContribution; searchQuery: string } | null {
+  const trimmed = query.trim()
+  const spaceIndex = trimmed.indexOf(" ")
+  if (spaceIndex <= 0) return null
+  const shortcut = trimmed.slice(0, spaceIndex)
+  const provider = providers.find(
+    (p) => p.shortcut && p.shortcut.toLowerCase() === shortcut.toLowerCase(),
+  )
+  if (!provider) return null
+  return { provider, searchQuery: trimmed.slice(spaceIndex + 1).trim() }
+}
+
+type Suggestion = {
+  icon: string
+  name: string
+  desc: string
+  group: string
+  hint: string
+  action: () => void
 }
 
 export function safelyHandleProviderChange(
@@ -28,27 +63,6 @@ export function safelyHandleProviderChange(
   }
 }
 
-export function buildSearchUrl(provider: SearchProviderContribution, query: string): string {
-  return provider.urlTemplate.replaceAll("{query}", encodeURIComponent(query.trim()))
-}
-
-function resolveShortcut(
-  query: string,
-  providers: SearchProviderContribution[],
-): { provider: SearchProviderContribution; searchQuery: string } | null {
-  const trimmed = query.trim()
-  const spaceIndex = trimmed.indexOf(" ")
-  if (spaceIndex <= 0) return null
-
-  const shortcut = trimmed.slice(0, spaceIndex)
-  const provider = providers.find(
-    (p) => p.shortcut && p.shortcut.toLowerCase() === shortcut.toLowerCase(),
-  )
-  if (!provider) return null
-
-  return { provider, searchQuery: trimmed.slice(spaceIndex + 1).trim() }
-}
-
 export function SearchCommandBar(props: SearchViewProps) {
   const providers = createMemo(() =>
     props.providers.length > 0 ? props.providers : [FALLBACK_PROVIDER],
@@ -57,16 +71,52 @@ export function SearchCommandBar(props: SearchViewProps) {
   const [query, setQuery] = createSignal("")
   const [focused, setFocused] = createSignal(false)
   const [permissionDenied, setPermissionDenied] = createSignal(false)
-  const [showHistory, setShowHistory] = createSignal(false)
+  const [suggestIdx, setSuggestIdx] = createSignal(-1)
 
   const activeProvider = createMemo(() => {
     const match = providers().find((p) => p.id === providerId())
     return match ?? providers()[0]!
   })
 
+  const suggestions = createMemo((): Suggestion[] => {
+    const q = query().toLowerCase().trim()
+    if (!q) return []
+    const results: Suggestion[] = []
+
+    for (const cmd of COMMANDS) {
+      if (cmd.name.includes(q) || cmd.desc.includes(q)) {
+        results.push({
+          ...cmd,
+          action: () => {
+            /* handled by keyboard navigation */
+          },
+        })
+      }
+    }
+
+    results.push({
+      icon: "🔍",
+      name: `在 ${activeProvider().title} 中搜索 "${query().trim()}"`,
+      desc: "直接搜索网页",
+      group: "搜索",
+      hint: activeProvider().shortcut ?? "",
+      action: () => doSearch(query().trim()),
+    })
+
+    return results
+  })
+
+  const groupedSuggestions = createMemo(() => {
+    const groups: Record<string, Suggestion[]> = {}
+    for (const s of suggestions()) {
+      const g = groups[s.group] ?? (groups[s.group] = [])
+      g.push(s)
+    }
+    return groups
+  })
+
   function doSearch(q: string, targetProvider?: SearchProviderContribution) {
     setPermissionDenied(false)
-    setShowHistory(false)
     const provider = targetProvider ?? activeProvider()
     const url = buildSearchUrl(provider, q)
     const opened = props.openExternal?.(url)
@@ -81,7 +131,6 @@ export function SearchCommandBar(props: SearchViewProps) {
     event.preventDefault()
     const q = query().trim()
     if (!q) return
-
     const resolved = resolveShortcut(q, providers())
     if (resolved) {
       doSearch(resolved.searchQuery, resolved.provider)
@@ -89,47 +138,45 @@ export function SearchCommandBar(props: SearchViewProps) {
       doSearch(q)
     }
     setQuery("")
+    setSuggestIdx(-1)
   }
 
   function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Enter") {
+    if (e.key === "ArrowDown") {
       e.preventDefault()
-      const q = query().trim()
-      if (q) {
-        const resolved = resolveShortcut(q, providers())
-        if (resolved) {
-          doSearch(resolved.searchQuery, resolved.provider)
-        } else {
-          doSearch(q)
-        }
+      setSuggestIdx((i) => Math.min(i + 1, suggestions().length - 1))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setSuggestIdx((i) => Math.max(i - 1, 0))
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      const idx = suggestIdx()
+      if (idx >= 0 && idx < suggestions().length) {
+        suggestions()[idx]?.action()
         setQuery("")
+        setSuggestIdx(-1)
+      } else {
+        const q = query().trim()
+        if (q) {
+          const resolved = resolveShortcut(q, providers())
+          if (resolved) doSearch(resolved.searchQuery, resolved.provider)
+          else doSearch(q)
+          setQuery("")
+        }
       }
+    } else if (e.key === "Escape") {
+      setSuggestIdx(-1)
+      setFocused(false)
     }
   }
 
   function handleProviderChange(nextProviderId: string) {
     setProviderId(nextProviderId)
-    safelyHandleProviderChange(props.onDefaultProviderChange, nextProviderId)
-  }
-
-  function handleTagClick(tag: string) {
-    setQuery(tag)
-    doSearch(tag)
-  }
-
-  function handleHistoryClick(entry: { query: string; providerId: string }) {
-    const provider = providers().find((p) => p.id === entry.providerId)
-    if (provider) {
-      setProviderId(provider.id)
+    const result = props.onDefaultProviderChange?.(nextProviderId)
+    if (result instanceof Promise) {
+      result.catch((err) => console.warn("Failed to change default provider:", err))
     }
-    doSearch(entry.query, provider)
   }
-
-  const recentHistory = createMemo(() => {
-    return (props.searchHistory ?? []).slice(0, 8).reverse()
-  })
-
-  const showSuggestions = () => focused() && query().length === 0 && !showHistory()
 
   return (
     <div class="search-wrapper">
@@ -143,11 +190,19 @@ export function SearchCommandBar(props: SearchViewProps) {
         />
         <Input
           value={query()}
-          onInput={setQuery}
+          onInput={(v) => {
+            setQuery(v)
+            setSuggestIdx(-1)
+          }}
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-          placeholder="输入搜索内容（用 gh 搜索词 切换搜索源）"
+          onBlur={() =>
+            setTimeout(() => {
+              setFocused(false)
+              setSuggestIdx(-1)
+            }, 200)
+          }
+          placeholder="搜索或输入命令... @google 切换引擎"
           aria-label="搜索内容"
           type="search"
         />
@@ -155,70 +210,69 @@ export function SearchCommandBar(props: SearchViewProps) {
           搜索
         </Button>
       </form>
+
       <Show when={permissionDenied()}>
         <InlineError>外部打开被拒绝，请检查权限设置</InlineError>
       </Show>
-      <Show when={showSuggestions()}>
+
+      <Show when={focused() && suggestions().length > 0}>
         <div class="search-suggestions">
-          <span class="suggestions-label">快捷搜索：</span>
-          <For each={QUICK_TAGS}>
-            {(tag) => (
-              <Button variant="ghost" size="sm" onClick={() => handleTagClick(tag)}>
-                {tag}
-              </Button>
-            )}
-          </For>
-          <Show when={recentHistory().length > 0}>
-            <button
-              class="search-history-toggle"
-              onClick={() => setShowHistory(true)}
-              type="button"
-            >
-              历史
-            </button>
-          </Show>
-        </div>
-      </Show>
-      <Show when={showHistory()}>
-        <div class="search-history-panel">
-          <div class="search-history-header">
-            <span class="suggestions-label">最近搜索</span>
-            <Show when={recentHistory().length > 0}>
-              <button
-                class="search-history-clear"
-                onClick={() => void props.onClearHistory?.()}
-                type="button"
-              >
-                清空
-              </button>
-            </Show>
-          </div>
-          <Show
-            when={recentHistory().length > 0}
-            fallback={<div class="search-history-empty">暂无历史记录</div>}
-          >
-            <ul class="search-history-list">
-              <For each={recentHistory()}>
-                {(entry) => {
-                  const provider = providers().find((p) => p.id === entry.providerId)
-                  return (
-                    <li>
+          <For each={Object.entries(groupedSuggestions())}>
+            {([group, items]) => (
+              <>
+                <div class="suggestions-label">{group}</div>
+                <For each={items}>
+                  {(item) => {
+                    const globalIdx = suggestions().indexOf(item)
+                    return (
                       <button
-                        class="search-history-item"
-                        onClick={() => handleHistoryClick(entry)}
+                        class="suggestion-item"
+                        classList={{ active: suggestIdx() === globalIdx }}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          item.action()
+                          setQuery("")
+                          setSuggestIdx(-1)
+                        }}
                         type="button"
                       >
-                        <span class="search-history-query">{entry.query}</span>
-                        <span class="search-history-provider">
-                          {provider?.title ?? entry.providerId}
+                        <span class="suggestion-icon">{item.icon}</span>
+                        <span class="suggestion-text">
+                          <span class="suggestion-name">{item.name}</span>
+                          <span class="suggestion-desc">{item.desc}</span>
                         </span>
+                        <Show when={item.hint}>
+                          <Kbd>{item.hint}</Kbd>
+                        </Show>
                       </button>
-                    </li>
-                  )
-                }}
-              </For>
-            </ul>
-          </Show>
+                    )
+                  }}
+                </For>
+              </>
+            )}
+          </For>
+        </div>
+      </Show>
+
+      <Show when={focused() && query().length === 0 && suggestions().length === 0}>
+        <div class="search-suggestions">
+          <div class="suggestions-label">快捷搜索</div>
+          <div class="quick-tags">
+            <For each={QUICK_TAGS}>
+              {(tag) => (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setQuery(tag)
+                    doSearch(tag)
+                  }}
+                >
+                  {tag}
+                </Button>
+              )}
+            </For>
+          </div>
         </div>
       </Show>
     </div>
