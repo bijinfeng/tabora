@@ -541,6 +541,14 @@ export function App() {
     weather: () => <Sun size={14} />,
   }
 
+  const widgetDescriptors: Record<string, { icon: string; desc: string }> = {
+    "today-focus": { icon: "🎯", desc: "记录今日最重要的任务" },
+    "quick-links": { icon: "🔗", desc: "快速访问常用网站" },
+    notes: { icon: "📝", desc: "随手记下想法和灵感" },
+    todo: { icon: "✅", desc: "管理待办事项列表" },
+    weather: { icon: "🌤", desc: "查看本地天气" },
+  }
+
   function findWidgetPluginId(contributionId: string): string | null {
     for (const plugin of officialPlugins) {
       if (plugin.manifest.contributes.widgets?.some((w) => w.id === contributionId)) {
@@ -767,17 +775,24 @@ export function App() {
                 <div class="modal-title">添加卡片</div>
                 <div class="modal-body">
                   <For each={availableWidgets()}>
-                    {(w) => (
-                      <button
-                        class="add-widget-modal-item"
-                        onClick={() => {
-                          addWidget(w.id)
-                          setAddWidgetOpen(false)
-                        }}
-                      >
-                        <span class="add-widget-modal-name">{w.title}</span>
-                      </button>
-                    )}
+                    {(w) => {
+                      const desc = widgetDescriptors[w.id] ?? { icon: "▦", desc: "" }
+                      return (
+                        <button
+                          class="add-widget-modal-item"
+                          onClick={() => {
+                            addWidget(w.id)
+                            setAddWidgetOpen(false)
+                          }}
+                        >
+                          <span class="add-widget-modal-icon">{desc.icon}</span>
+                          <span class="add-widget-modal-info">
+                            <div class="add-widget-modal-name">{w.title}</div>
+                            <div class="add-widget-modal-desc">{desc.desc}</div>
+                          </span>
+                        </button>
+                      )
+                    }}
                   </For>
                 </div>
               </div>
