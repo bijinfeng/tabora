@@ -33,19 +33,23 @@ export type PluginRuntimeContext = {
   setConfig<T = unknown>(scope: RuntimeConfigScope, value: T): Promise<void>
 }
 
+export type RuntimeConfigStore = {
+  get(key: string): Promise<unknown | undefined>
+  set(key: string, value: unknown): Promise<void>
+}
+
 export function createPluginRuntimeContext(options: {
   pluginId: string
   events: EventBus
   registry: ExtensionRegistry
   grantedPermissions?: PluginPermission[]
+  configStore?: RuntimeConfigStore
 }): PluginRuntimeContext {
   const config = new Map<string, unknown>()
   const grantedPermissions = options.grantedPermissions ?? []
 
   function keyFor(scope: RuntimeConfigScope): string {
-    if (scope.type === "instance") {
-      return `instance:${scope.instanceId}`
-    }
+    if (scope.type === "instance") return `instance:${scope.instanceId}`
     return scope.type
   }
 
@@ -56,11 +60,8 @@ export function createPluginRuntimeContext(options: {
     } catch {
       return false
     }
-
     return grantedPermissions.some((permission) => {
-      if (permission.type !== "external-open") {
-        return false
-      }
+      if (permission.type !== "external-open") return false
       return permission.hosts.some((host) => host === "*" || host === hostname)
     })
   }
@@ -86,9 +87,7 @@ export function createPluginRuntimeContext(options: {
     permissions: {
       canOpenExternal,
       openExternal(url) {
-        if (!canOpenExternal(url)) {
-          return false
-        }
+        if (!canOpenExternal(url)) return false
         options.events.emit("host.external.open", { url })
         return true
       },
@@ -105,7 +104,9 @@ export function createPluginRuntimeContext(options: {
       return config.get(keyFor(scope)) as any
     },
     async setConfig(scope, value) {
-      config.set(keyFor(scope), value)
+      const key = keyFor(scope)
+      config.set(key, value)
+      await options.configStore?.set(key, value)
     },
   }
 }

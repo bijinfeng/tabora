@@ -8,7 +8,6 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@kobalte/core": "catalog:ui",
     "@tabora/official-plugins": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
@@ -16,8 +15,7 @@
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "lucide-solid": "catalog:ui",
-    "solid-js": "catalog:ui",
-    "zod": "catalog:data"
+    "solid-js": "catalog:ui"
   },
   "devDependencies": {
     "@tabora/tsconfig": "workspace:*",

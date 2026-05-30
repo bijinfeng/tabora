@@ -20,9 +20,7 @@ export function createExtensionRegistry(): ExtensionRegistry {
       },
       get(viewId) {
         const view = views.get(viewId)
-        if (!view) {
-          throw new Error(`View not registered: ${viewId}`)
-        }
+        if (!view) throw new Error(`View not registered: ${viewId}`)
         return view
       },
       has(viewId) {

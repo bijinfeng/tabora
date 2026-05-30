@@ -1,12 +1,6 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { PluginManagerCard, type PluginSummary } from "./plugin-manager"
-
-let pluginSummaryProvider: () => PluginSummary[] = () => []
-
-export function setPluginManagerFallbackPlugins(provider: () => PluginSummary[]) {
-  pluginSummaryProvider = provider
-}
+import { PluginManagerCard } from "./plugin-manager"
 
 export const officialPluginManager: BuiltinPlugin = {
   enabled: true,
@@ -32,7 +26,7 @@ export const officialPluginManager: BuiltinPlugin = {
       "official.plugin-manager.card",
       (props: SettingsPanelViewProps) =>
         PluginManagerCard({
-          plugins: props.plugins ?? pluginSummaryProvider(),
+          plugins: props.plugins ?? [],
           host: props.host,
         }),
     )

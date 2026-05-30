@@ -21,14 +21,13 @@ export type PluginDataRepository = {
 }
 
 export function createPluginDataRepository(database: TaboraDatabase): PluginDataRepository {
-  function instanceIdFor(id: string, instanceId: string): string {
-    return `${id}:${instanceId}`
+  function idFor(...parts: string[]): string {
+    return parts.map(encodeURIComponent).join(":")
   }
 
   return {
     async get(pluginId, key) {
-      const id = `${pluginId}:${key}`
-      const row = await database.pluginData.get(id)
+      const row = await database.pluginData.get(idFor(pluginId, key))
       return row?.value as any
     },
     async getAll(pluginId) {
@@ -36,9 +35,8 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
       return rows.map((r) => r.value) as any[]
     },
     async save(pluginId, key, value) {
-      const id = `${pluginId}:${key}`
       await database.pluginData.put({
-        id,
+        id: idFor(pluginId, key),
         pluginId,
         key,
         value,
@@ -46,12 +44,10 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
       })
     },
     async remove(pluginId, key) {
-      const id = `${pluginId}:${key}`
-      await database.pluginData.delete(id)
+      await database.pluginData.delete(idFor(pluginId, key))
     },
     async getByInstance(pluginId, instanceId, key) {
-      const id = instanceIdFor(`${pluginId}:${key}`, instanceId)
-      const row = await database.pluginData.get(id)
+      const row = await database.pluginData.get(idFor(pluginId, key, instanceId))
       return row?.value as any
     },
     async getAllByInstance(pluginId, instanceId) {
@@ -63,9 +59,8 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
       return rows.map((r) => r.value) as any[]
     },
     async saveForInstance(pluginId, instanceId, key, value) {
-      const id = instanceIdFor(`${pluginId}:${key}`, instanceId)
       await database.pluginData.put({
-        id,
+        id: idFor(pluginId, key, instanceId),
         pluginId,
         instanceId,
         key,
@@ -74,8 +69,7 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
       })
     },
     async removeForInstance(pluginId, instanceId, key) {
-      const id = instanceIdFor(`${pluginId}:${key}`, instanceId)
-      await database.pluginData.delete(id)
+      await database.pluginData.delete(idFor(pluginId, key, instanceId))
     },
   }
 }
