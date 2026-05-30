@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
-import { Field } from "../primitives/field/field"
+import { Field } from "./field"
 
 describe("Field", () => {
   it("renders label, helper, error and links to control via htmlFor", () => {

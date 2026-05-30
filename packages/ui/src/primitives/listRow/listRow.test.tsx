@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import { ListRow } from "../primitives/listRow/listRow"
+import { ListRow } from "./listRow"
 
 describe("ListRow", () => {
   it("renders as button when onClick provided and triggers it", () => {

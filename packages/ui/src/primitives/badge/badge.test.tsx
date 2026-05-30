@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
-import { Badge } from "../primitives/badge/badge"
+import { Badge } from "./badge"
 
 describe("Badge", () => {
   it("renders with variant attr", () => {

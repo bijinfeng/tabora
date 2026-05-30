@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import { Button, IconButton } from "./button"
+import { Button, IconButton } from "../../styled/button/button.styled"
 
 describe("Button", () => {
   it("renders with text and triggers onClick", () => {

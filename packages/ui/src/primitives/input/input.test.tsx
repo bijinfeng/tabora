@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import { Input } from "../styled/input/input.styled"
+import { Input } from "../../styled/input/input.styled"
 
 describe("Input", () => {
   it("renders controlled value and calls onInput", () => {
