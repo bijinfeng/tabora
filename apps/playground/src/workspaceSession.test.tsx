@@ -12,6 +12,9 @@ import {
   deleteWorkspaceSession,
   ensureWorkspaceSession,
   readSearchSettings,
+  updateWorkspaceBackground,
+  updateWorkspaceRecord,
+  updateWorkspaceTheme,
 } from "./workspaceSession"
 
 const providers: SearchProviderContribution[] = [
@@ -209,5 +212,61 @@ describe("workspaceSession", () => {
         timestamp: "2026-06-01T00:00:00.000Z",
       },
     ])
+  })
+
+  it("updates workspace config via shared record helper", async () => {
+    const database = createTaboraDatabase("tabora-workspace-session-test")
+    const workspaceRepo = createWorkspaceRepository(database)
+    const instanceRepo = createInstanceRepository(database)
+
+    const workspace = await createWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      name: "设置工作区",
+    })
+
+    const updated = await updateWorkspaceRecord({
+      workspaceRepo,
+      workspaceId: workspace.id,
+      mutator(current) {
+        current.config = {
+          ...(current.config ?? {}),
+          search: {
+            defaultProviderId: "official.search.github",
+          },
+        }
+        return current
+      },
+    })
+
+    expect(updated?.config).toMatchObject({
+      search: { defaultProviderId: "official.search.github" },
+    })
+  })
+
+  it("updates workspace theme and background", async () => {
+    const database = createTaboraDatabase("tabora-workspace-session-test")
+    const workspaceRepo = createWorkspaceRepository(database)
+    const instanceRepo = createInstanceRepository(database)
+
+    const workspace = await createWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      name: "外观工作区",
+    })
+
+    const themed = await updateWorkspaceTheme({
+      workspaceRepo,
+      workspaceId: workspace.id,
+      themeId: "official.theme.dark",
+    })
+    const backgrounded = await updateWorkspaceBackground({
+      workspaceRepo,
+      workspaceId: workspace.id,
+      backgroundId: "background.gradient-blue",
+    })
+
+    expect(themed?.activeThemeId).toBe("official.theme.dark")
+    expect(backgrounded?.activeBackgroundProviderId).toBe("background.gradient-blue")
   })
 })

@@ -40,6 +40,9 @@ import {
   deleteWorkspaceSession,
   ensureWorkspaceSession,
   readSearchSettings,
+  updateWorkspaceBackground,
+  updateWorkspaceRecord,
+  updateWorkspaceTheme,
 } from "./workspaceSession"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
@@ -254,12 +257,14 @@ export function App() {
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
     const activeWorkspace = requireWorkspace(workspaceState())
-    const current = await workspaceRepo.get(activeWorkspace.id)
-    if (!current) return
-    const updated = mutator({ ...current, config: { ...(current.config ?? {}) } })
-    updated.updatedAt = new Date().toISOString()
-    await workspaceRepo.save(updated)
-    setWorkspaceState(updated)
+    const updated = await updateWorkspaceRecord({
+      workspaceRepo,
+      workspaceId: activeWorkspace.id,
+      mutator,
+    })
+    if (updated) {
+      setWorkspaceState(updated)
+    }
   }
 
   function openSettings(panelId?: string) {
@@ -494,27 +499,31 @@ export function App() {
 
   async function switchTheme(newThemeId: string) {
     const activeWorkspace = requireWorkspace(workspaceState())
-    const workspace = await workspaceRepo.get(activeWorkspace.id)
-    if (!workspace) return
     const tokens = resolveThemeTokens(newThemeId, themes())
     applyThemeTokens(document.documentElement, tokens)
     setThemeId(newThemeId)
-    workspace.activeThemeId = newThemeId
-    workspace.updatedAt = new Date().toISOString()
-    await workspaceRepo.save(workspace)
-    setWorkspaceState({ ...workspace })
+    const workspace = await updateWorkspaceTheme({
+      workspaceRepo,
+      workspaceId: activeWorkspace.id,
+      themeId: newThemeId,
+    })
+    if (workspace) {
+      setWorkspaceState(workspace)
+    }
   }
 
   async function switchBackground(bgId: string) {
     const activeWorkspace = requireWorkspace(workspaceState())
-    const workspace = await workspaceRepo.get(activeWorkspace.id)
-    if (!workspace) return
     applyBackgroundStyle(resolveBackgroundStyle(bgId, backgrounds()))
     setBackgroundId(bgId)
-    workspace.activeBackgroundProviderId = bgId
-    workspace.updatedAt = new Date().toISOString()
-    await workspaceRepo.save(workspace)
-    setWorkspaceState({ ...workspace })
+    const workspace = await updateWorkspaceBackground({
+      workspaceRepo,
+      workspaceId: activeWorkspace.id,
+      backgroundId: bgId,
+    })
+    if (workspace) {
+      setWorkspaceState(workspace)
+    }
   }
 
   const SearchView = () =>

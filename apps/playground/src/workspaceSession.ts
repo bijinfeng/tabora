@@ -3,7 +3,6 @@ import type {
   PluginInstance,
   SearchHistoryEntry,
   SearchProviderContribution,
-  ThemeContribution,
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
@@ -128,18 +127,57 @@ export async function deleteWorkspaceSession(options: {
   await options.workspaceRepo.remove(options.workspaceId)
 }
 
-export function resolveWorkspaceVisualState(options: {
-  workspace: Workspace
-  themes: ThemeContribution[]
-  backgrounds: BackgroundProviderContribution[]
-}): {
+export async function updateWorkspaceRecord(options: {
+  workspaceRepo: WorkspaceRepository
+  workspaceId: string
+  mutator: (workspace: Workspace) => Workspace
+}): Promise<Workspace | null> {
+  const current = await options.workspaceRepo.get(options.workspaceId)
+  if (!current) return null
+  const updated = options.mutator({ ...current, config: { ...(current.config ?? {}) } })
+  updated.updatedAt = new Date().toISOString()
+  await options.workspaceRepo.save(updated)
+  return updated
+}
+
+export async function updateWorkspaceTheme(options: {
+  workspaceRepo: WorkspaceRepository
+  workspaceId: string
+  themeId: string
+}): Promise<Workspace | null> {
+  return updateWorkspaceRecord({
+    workspaceRepo: options.workspaceRepo,
+    workspaceId: options.workspaceId,
+    mutator(workspace) {
+      workspace.activeThemeId = options.themeId
+      return workspace
+    },
+  })
+}
+
+export async function updateWorkspaceBackground(options: {
+  workspaceRepo: WorkspaceRepository
+  workspaceId: string
+  backgroundId: string
+}): Promise<Workspace | null> {
+  return updateWorkspaceRecord({
+    workspaceRepo: options.workspaceRepo,
+    workspaceId: options.workspaceId,
+    mutator(workspace) {
+      workspace.activeBackgroundProviderId = options.backgroundId
+      return workspace
+    },
+  })
+}
+
+export function resolveWorkspaceVisualState(workspace: Workspace): {
   activeLayoutId: string
   activeThemeId: string
   activeBackgroundId: string
 } {
   return {
-    activeLayoutId: options.workspace.activeLayoutId,
-    activeThemeId: options.workspace.activeThemeId,
-    activeBackgroundId: options.workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID,
+    activeLayoutId: workspace.activeLayoutId,
+    activeThemeId: workspace.activeThemeId,
+    activeBackgroundId: workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID,
   }
 }
