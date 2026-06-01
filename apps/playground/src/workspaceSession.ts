@@ -170,6 +170,21 @@ export async function updateWorkspaceBackground(options: {
   })
 }
 
+export async function updateWorkspaceLayout(options: {
+  workspaceRepo: WorkspaceRepository
+  workspaceId: string
+  layoutId: string
+}): Promise<Workspace | null> {
+  return updateWorkspaceRecord({
+    workspaceRepo: options.workspaceRepo,
+    workspaceId: options.workspaceId,
+    mutator(workspace) {
+      workspace.activeLayoutId = options.layoutId
+      return workspace
+    },
+  })
+}
+
 export function resolveWorkspaceVisualState(workspace: Workspace): {
   activeLayoutId: string
   activeThemeId: string

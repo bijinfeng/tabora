@@ -41,9 +41,11 @@ import {
   ensureWorkspaceSession,
   readSearchSettings,
   updateWorkspaceBackground,
+  updateWorkspaceLayout,
   updateWorkspaceRecord,
   updateWorkspaceTheme,
 } from "./workspaceSession"
+import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 
@@ -61,6 +63,25 @@ function requireWorkspace(workspace: Workspace | null): Workspace {
     throw new Error("Workspace is not ready")
   }
   return workspace
+}
+
+async function persistActiveLayout(options: {
+  workspace: Workspace | null
+  layoutId: string
+  workspaceRepo: ReturnType<typeof createWorkspaceRepository>
+  setWorkspaceState: (workspace: Workspace) => void
+  setActiveLayoutId: (layoutId: string) => void
+}) {
+  const workspace = requireWorkspace(options.workspace)
+  options.setActiveLayoutId(options.layoutId)
+  const updated = await updateWorkspaceLayout({
+    workspaceRepo: options.workspaceRepo,
+    workspaceId: workspace.id,
+    layoutId: options.layoutId,
+  })
+  if (updated) {
+    options.setWorkspaceState(updated)
+  }
 }
 
 export function App() {
@@ -118,15 +139,13 @@ export function App() {
           activeLayoutId() === "official.layout.workbench-dashboard"
             ? "official.layout.workbench-stream"
             : "official.layout.workbench-dashboard"
-        setActiveLayoutId(next)
-        const ws = workspaceState()
-        if (ws) {
-          void workspaceRepo.save({
-            ...ws,
-            activeLayoutId: next,
-            updatedAt: new Date().toISOString(),
-          })
-        }
+        void persistActiveLayout({
+          workspace: workspaceState(),
+          layoutId: next,
+          workspaceRepo,
+          setWorkspaceState,
+          setActiveLayoutId,
+        })
       },
     },
     {
@@ -362,42 +381,24 @@ export function App() {
   async function exportWorkspace(): Promise<string> {
     const workspace = workspaceState()
     if (!workspace) throw new Error("Workspace not loaded")
-    const instances = await instanceRepo.getByWorkspace(workspace.id)
-    const dataRows = await database.pluginData.where("workspaceId").equals(workspace.id).toArray()
-    const { createWorkspaceExport, serializeExport } = await import("./workspacePortability")
-    const exportData = createWorkspaceExport(workspace, instances, dataRows)
-    return serializeExport(exportData)
+    return exportWorkspaceData({
+      workspace,
+      instanceRepo,
+      database,
+    })
   }
 
   async function importWorkspace(json: string): Promise<{ warnings: string[] }> {
-    const { parseExport, prepareImport } = await import("./workspacePortability")
-    const data = parseExport(json)
-    if (!data) throw new Error("导入数据格式无效")
+    const result = await importWorkspaceData({
+      json,
+      workspaceRepo,
+      instanceRepo,
+      pluginDataRepo,
+      database,
+      availablePluginIds: officialPlugins.map((p) => p.manifest.id),
+    })
 
-    const availablePluginIds = officialPlugins.map((p) => p.manifest.id)
-    const result = prepareImport(data, availablePluginIds)
-
-    const existing = await workspaceRepo.get(result.workspace.id)
-    if (existing) {
-      result.workspace.id = `${result.workspace.id}-import-${Date.now()}`
-      result.workspace.name = `${result.workspace.name} (导入)`
-      for (const inst of result.instances) {
-        inst.workspaceId = result.workspace.id
-      }
-      for (const row of result.pluginDataRows) {
-        row.workspaceId = result.workspace.id
-      }
-    }
-
-    await workspaceRepo.save(result.workspace)
-    for (const inst of result.instances) {
-      await instanceRepo.save(inst)
-    }
-    for (const row of result.pluginDataRows) {
-      await database.pluginData.put(row)
-    }
-
-    setWorkspaceState({ ...result.workspace })
+    setWorkspaceState(result.workspace)
     const gridInstances = result.instances.filter((i) => i.regionId === "mainGrid")
     setInstances(gridInstances)
     setActiveLayoutId(result.workspace.activeLayoutId)
@@ -1018,34 +1019,30 @@ export function App() {
             <button
               class="toolbar-btn"
               classList={{ active: activeLayoutId() === "official.layout.workbench-dashboard" }}
-              onClick={() => {
-                setActiveLayoutId("official.layout.workbench-dashboard")
-                const ws = workspaceState()
-                if (ws) {
-                  void workspaceRepo.save({
-                    ...ws,
-                    activeLayoutId: "official.layout.workbench-dashboard",
-                    updatedAt: new Date().toISOString(),
-                  })
-                }
-              }}
+              onClick={() =>
+                void persistActiveLayout({
+                  workspace: workspaceState(),
+                  layoutId: "official.layout.workbench-dashboard",
+                  workspaceRepo,
+                  setWorkspaceState,
+                  setActiveLayoutId,
+                })
+              }
             >
               仪表盘
             </button>
             <button
               class="toolbar-btn"
               classList={{ active: activeLayoutId() === "official.layout.workbench-stream" }}
-              onClick={() => {
-                setActiveLayoutId("official.layout.workbench-stream")
-                const ws = workspaceState()
-                if (ws) {
-                  void workspaceRepo.save({
-                    ...ws,
-                    activeLayoutId: "official.layout.workbench-stream",
-                    updatedAt: new Date().toISOString(),
-                  })
-                }
-              }}
+              onClick={() =>
+                void persistActiveLayout({
+                  workspace: workspaceState(),
+                  layoutId: "official.layout.workbench-stream",
+                  workspaceRepo,
+                  setWorkspaceState,
+                  setActiveLayoutId,
+                })
+              }
             >
               流式
             </button>
