@@ -5,6 +5,7 @@ import { assignGridOrder } from "./workbenchGrid"
 function instance(id: string, size: WidgetSize): PluginInstance {
   return {
     id,
+    workspaceId: "default",
     pluginId: "official.widgets.productivity",
     contributionId: "notes",
     extensionPoint: "widget",

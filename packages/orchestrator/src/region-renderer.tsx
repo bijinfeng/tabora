@@ -5,7 +5,7 @@ import type { InstanceRepository } from "@tabora/storage"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 
 export type RegionRenderer = {
-  render(regionId: string): Promise<JSX.Element[]>
+  render(workspaceId: string, regionId: string): Promise<JSX.Element[]>
 }
 
 export type RegionRendererDeps = {
@@ -44,10 +44,10 @@ export function createRegionRenderer(deps: RegionRendererDeps): RegionRenderer {
   }
 
   return {
-    async render(regionId: string) {
+    async render(workspaceId: string, regionId: string) {
       let instances: PluginInstance[] = []
       try {
-        instances = await deps.instanceRepo.getByRegion(regionId)
+        instances = await deps.instanceRepo.getByRegion(workspaceId, regionId)
       } catch {
         /* empty */
       }

@@ -5,6 +5,19 @@ export type PluginDataRepository = {
   getAll<T = unknown>(pluginId: string): Promise<T[]>
   save<T = unknown>(pluginId: string, key: string, value: T): Promise<void>
   remove(pluginId: string, key: string): Promise<void>
+  getByWorkspace<T = unknown>(
+    pluginId: string,
+    workspaceId: string,
+    key: string,
+  ): Promise<T | undefined>
+  getAllByWorkspace<T = unknown>(pluginId: string, workspaceId: string): Promise<T[]>
+  saveForWorkspace<T = unknown>(
+    pluginId: string,
+    workspaceId: string,
+    key: string,
+    value: T,
+  ): Promise<void>
+  removeForWorkspace(pluginId: string, workspaceId: string, key: string): Promise<void>
   getByInstance<T = unknown>(
     pluginId: string,
     instanceId: string,
@@ -45,6 +58,31 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     },
     async remove(pluginId, key) {
       await database.pluginData.delete(idFor(pluginId, key))
+    },
+    async getByWorkspace(pluginId, workspaceId, key) {
+      const row = await database.pluginData.get(idFor(pluginId, key, workspaceId))
+      return row?.value as any
+    },
+    async getAllByWorkspace(pluginId, workspaceId) {
+      const rows = await database.pluginData
+        .where("pluginId")
+        .equals(pluginId)
+        .and((row) => row.workspaceId === workspaceId && !row.instanceId)
+        .toArray()
+      return rows.map((r) => r.value) as any[]
+    },
+    async saveForWorkspace(pluginId, workspaceId, key, value) {
+      await database.pluginData.put({
+        id: idFor(pluginId, key, workspaceId),
+        pluginId,
+        workspaceId,
+        key,
+        value,
+        updatedAt: new Date().toISOString(),
+      })
+    },
+    async removeForWorkspace(pluginId, workspaceId, key) {
+      await database.pluginData.delete(idFor(pluginId, key, workspaceId))
     },
     async getByInstance(pluginId, instanceId, key) {
       const row = await database.pluginData.get(idFor(pluginId, key, instanceId))

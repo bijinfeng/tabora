@@ -10,6 +10,7 @@ export type WorkspaceSeedInstance = {
 }
 
 export type WorkspaceSeedConfig = {
+  workspaceId?: string
   workspaceName: string
   activeLayoutId: string
   activeThemeId: string
@@ -24,7 +25,7 @@ export function createDefaultWorkspaceSeed(config: WorkspaceSeedConfig): {
   const now = new Date().toISOString()
 
   const workspace: Workspace = {
-    id: "default",
+    id: config.workspaceId ?? "default",
     name: config.workspaceName,
     activeLayoutId: config.activeLayoutId,
     activeThemeId: config.activeThemeId,
@@ -58,6 +59,7 @@ export function createDefaultWorkspaceSeed(config: WorkspaceSeedConfig): {
 
   const instances: PluginInstance[] = config.instances.map((i) => ({
     id: i.instanceId,
+    workspaceId: workspace.id,
     pluginId: i.pluginId,
     contributionId: i.contributionId,
     extensionPoint: i.extensionPoint,

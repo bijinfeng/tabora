@@ -29,6 +29,7 @@ export type Workspace = {
 
 export type PluginInstance = {
   id: string
+  workspaceId: string
   pluginId: string
   contributionId: string
   extensionPoint: ExtensionPoint

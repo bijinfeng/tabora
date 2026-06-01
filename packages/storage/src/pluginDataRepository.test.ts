@@ -79,4 +79,18 @@ describe("createPluginDataRepository", () => {
     const result = await repo.getAllByInstance(pluginId, "ghost-instance")
     expect(result).toEqual([])
   })
+
+  it("saves and retrieves workspace-scoped data", async () => {
+    await repo.saveForWorkspace(pluginId, "workspace-a", "history", ["hello"])
+    const result = await repo.getByWorkspace<string[]>(pluginId, "workspace-a", "history")
+    expect(result).toEqual(["hello"])
+  })
+
+  it("workspace-scoped data is isolated between workspaces", async () => {
+    await repo.saveForWorkspace(pluginId, "workspace-a", "history", ["a"])
+    await repo.saveForWorkspace(pluginId, "workspace-b", "history", ["b"])
+
+    await expect(repo.getByWorkspace(pluginId, "workspace-a", "history")).resolves.toEqual(["a"])
+    await expect(repo.getByWorkspace(pluginId, "workspace-b", "history")).resolves.toEqual(["b"])
+  })
 })

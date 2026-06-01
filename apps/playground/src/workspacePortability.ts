@@ -55,12 +55,14 @@ export type ImportResult = {
 
 export function prepareImport(data: WorkspaceExport, availablePluginIds: string[]): ImportResult {
   const warnings: string[] = []
+  const workspaceId = data.workspace.id
 
   const filteredInstances = data.instances.filter((inst) => {
     if (!availablePluginIds.includes(inst.pluginId)) {
       warnings.push(`插件 "${inst.pluginId}" 不存在 (实例: ${inst.id})`)
       return false
     }
+    inst.workspaceId = workspaceId
     return true
   })
 
@@ -69,6 +71,7 @@ export function prepareImport(data: WorkspaceExport, availablePluginIds: string[
       warnings.push(`插件 "${row.pluginId}" 数据已跳过`)
       return false
     }
+    row.workspaceId = workspaceId
     return true
   })
 

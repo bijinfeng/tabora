@@ -13,9 +13,10 @@ function deleteTestDatabase() {
   })
 }
 
-function widgetInstance(id: string, x: number): PluginInstance {
+function widgetInstance(id: string, x: number, workspaceId = "default"): PluginInstance {
   return {
     id,
+    workspaceId,
     pluginId: "official.widgets.productivity",
     contributionId: "notes",
     extensionPoint: "widget",
@@ -39,9 +40,24 @@ describe("createInstanceRepository", () => {
     await repository.save(widgetInstance("a-later", 1))
     await repository.save(widgetInstance("b-earlier", 0))
 
-    await expect(repository.getByRegion("mainGrid")).resolves.toMatchObject([
+    await expect(repository.getByRegion("default", "mainGrid")).resolves.toMatchObject([
       { id: "b-earlier" },
       { id: "a-later" },
+    ])
+  })
+
+  it("isolates instances by workspace", async () => {
+    const database = createTaboraDatabase("tabora-instance-test")
+    const repository = createInstanceRepository(database)
+
+    await repository.save(widgetInstance("default-item", 0, "default"))
+    await repository.save(widgetInstance("other-item", 0, "workspace-b"))
+
+    await expect(repository.getByRegion("default", "mainGrid")).resolves.toMatchObject([
+      { id: "default-item" },
+    ])
+    await expect(repository.getByRegion("workspace-b", "mainGrid")).resolves.toMatchObject([
+      { id: "other-item" },
     ])
   })
 })

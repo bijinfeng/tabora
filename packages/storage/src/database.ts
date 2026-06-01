@@ -4,6 +4,7 @@ import type { PluginInstance, PluginRecord, Workspace } from "@tabora/plugin-api
 export type PluginDataRow = {
   id: string
   pluginId: string
+  workspaceId?: string
   instanceId?: string
   key: string
   value: unknown
@@ -42,6 +43,34 @@ export class TaboraDatabase extends Dexie {
       })
       .upgrade(async (tx) => {
         await tx.table("meta").put({ key: "schemaVersion", value: "2" })
+        await tx.table("meta").put({ key: "migratedAt", value: new Date().toISOString() })
+      })
+
+    this.version(3)
+      .stores({
+        plugins: "id, enabled, source",
+        workspaces: "id, activeLayoutId, activeThemeId",
+        pluginInstances:
+          "id, workspaceId, [workspaceId+regionId], pluginId, contributionId, regionId, enabled",
+        pluginData: "id, pluginId, workspaceId, instanceId, key",
+        meta: "key",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("pluginInstances")
+          .toCollection()
+          .modify((row: PluginInstance & { workspaceId?: string }) => {
+            row.workspaceId ??= "default"
+          })
+
+        await tx
+          .table("pluginData")
+          .toCollection()
+          .modify((row: PluginDataRow) => {
+            row.workspaceId ??= "default"
+          })
+
+        await tx.table("meta").put({ key: "schemaVersion", value: "3" })
         await tx.table("meta").put({ key: "migratedAt", value: new Date().toISOString() })
       })
   }

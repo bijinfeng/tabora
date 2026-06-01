@@ -48,6 +48,13 @@ function pluginBoundaryId(props: Record<string, unknown>, fallback: string): str
   return typeof props.instanceId === "string" ? props.instanceId : fallback
 }
 
+function requireWorkspace(workspace: Workspace | null): Workspace {
+  if (!workspace) {
+    throw new Error("Workspace is not ready")
+  }
+  return workspace
+}
+
 export function App() {
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
@@ -106,7 +113,11 @@ export function App() {
         setActiveLayoutId(next)
         const ws = workspaceState()
         if (ws) {
-          void workspaceRepo.save({ ...ws, activeLayoutId: next })
+          void workspaceRepo.save({
+            ...ws,
+            activeLayoutId: next,
+            updatedAt: new Date().toISOString(),
+          })
         }
       },
     },
@@ -189,13 +200,14 @@ export function App() {
     setBackgroundId(savedBg)
     applyBackgroundStyle(resolveBackgroundStyle(savedBg, allBackgrounds))
 
-    const savedHistory = await pluginDataRepo.get<SearchHistoryEntry[]>(
+    const savedHistory = await pluginDataRepo.getByWorkspace<SearchHistoryEntry[]>(
       "official.search.command-bar",
+      workspace.id,
       "search-history",
     )
     if (savedHistory) setSearchHistory(savedHistory)
 
-    let loaded = await instanceRepo.getByRegion("mainGrid")
+    let loaded = await instanceRepo.getByRegion(workspace.id, "mainGrid")
     if (loaded.length === 0) {
       const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
       loaded = assignGridOrder(seed.instances.filter((i) => i.regionId === "mainGrid"))
@@ -273,7 +285,8 @@ export function App() {
   }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
-    const current = await workspaceRepo.get("default")
+    const activeWorkspace = requireWorkspace(workspaceState())
+    const current = await workspaceRepo.get(activeWorkspace.id)
     if (!current) return
     const updated = mutator({ ...current, config: { ...(current.config ?? {}) } })
     updated.updatedAt = new Date().toISOString()
@@ -338,6 +351,7 @@ export function App() {
   }
 
   async function saveSearchHistory(entry: { query: string; providerId: string }) {
+    const workspace = requireWorkspace(workspaceState())
     const history = searchHistory()
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
     const filtered = history.filter(
@@ -353,19 +367,30 @@ export function App() {
       { ...entry, timestamp: new Date().toISOString() },
     ]
     setSearchHistory(next)
-    await pluginDataRepo.save("official.search.command-bar", "search-history", next)
+    await pluginDataRepo.saveForWorkspace(
+      "official.search.command-bar",
+      workspace.id,
+      "search-history",
+      next,
+    )
   }
 
   async function clearSearchHistory() {
+    const workspace = requireWorkspace(workspaceState())
     setSearchHistory([])
-    await pluginDataRepo.save("official.search.command-bar", "search-history", [])
+    await pluginDataRepo.saveForWorkspace(
+      "official.search.command-bar",
+      workspace.id,
+      "search-history",
+      [],
+    )
   }
 
   async function exportWorkspace(): Promise<string> {
     const workspace = workspaceState()
     if (!workspace) throw new Error("Workspace not loaded")
-    const instances = await instanceRepo.getAll()
-    const dataRows = await database.pluginData.toArray()
+    const instances = await instanceRepo.getByWorkspace(workspace.id)
+    const dataRows = await database.pluginData.where("workspaceId").equals(workspace.id).toArray()
     const { createWorkspaceExport, serializeExport } = await import("./workspacePortability")
     const exportData = createWorkspaceExport(workspace, instances, dataRows)
     return serializeExport(exportData)
@@ -383,6 +408,12 @@ export function App() {
     if (existing) {
       result.workspace.id = `${result.workspace.id}-import-${Date.now()}`
       result.workspace.name = `${result.workspace.name} (导入)`
+      for (const inst of result.instances) {
+        inst.workspaceId = result.workspace.id
+      }
+      for (const row of result.pluginDataRows) {
+        row.workspaceId = result.workspace.id
+      }
     }
 
     await workspaceRepo.save(result.workspace)
@@ -410,8 +441,10 @@ export function App() {
     const ws = seed.workspace
     ws.id = `ws-${Date.now()}`
     ws.name = name
+    ws.updatedAt = new Date().toISOString()
     await workspaceRepo.save(ws)
-    for (const inst of seed.instances.filter((i) => i.regionId === "mainGrid")) {
+    for (const inst of seed.instances) {
+      inst.workspaceId = ws.id
       await instanceRepo.save(inst)
     }
     setWorkspaceList((prev) => [...prev, ws])
@@ -432,7 +465,14 @@ export function App() {
     setBackgroundId(bg)
     applyBackgroundStyle(resolveBackgroundStyle(bg, allBg))
     setSearchSettings(readSearchSettings(ws, searchProviders()))
-    const loaded = await instanceRepo.getByRegion("mainGrid")
+    const history =
+      (await pluginDataRepo.getByWorkspace<SearchHistoryEntry[]>(
+        "official.search.command-bar",
+        ws.id,
+        "search-history",
+      )) ?? []
+    setSearchHistory(history)
+    const loaded = await instanceRepo.getByRegion(ws.id, "mainGrid")
     setInstances(loaded)
   }
 
@@ -491,7 +531,8 @@ export function App() {
   }
 
   async function switchTheme(newThemeId: string) {
-    const workspace = await workspaceRepo.get("default")
+    const activeWorkspace = requireWorkspace(workspaceState())
+    const workspace = await workspaceRepo.get(activeWorkspace.id)
     if (!workspace) return
     const tokens = resolveThemeTokens(newThemeId, themes())
     applyThemeTokens(document.documentElement, tokens)
@@ -503,7 +544,8 @@ export function App() {
   }
 
   async function switchBackground(bgId: string) {
-    const workspace = await workspaceRepo.get("default")
+    const activeWorkspace = requireWorkspace(workspaceState())
+    const workspace = await workspaceRepo.get(activeWorkspace.id)
     if (!workspace) return
     applyBackgroundStyle(resolveBackgroundStyle(bgId, backgrounds()))
     setBackgroundId(bgId)
@@ -559,6 +601,7 @@ export function App() {
   }
 
   async function addWidget(contributionId: string) {
+    const workspace = requireWorkspace(workspaceState())
     const pluginId = findWidgetPluginId(contributionId)
     if (!pluginId) return
     const widget = findWidgetContribution(pluginId, contributionId)
@@ -566,6 +609,7 @@ export function App() {
     const id = `${contributionId}-${Date.now()}`
     const inst: PluginInstance = {
       id,
+      workspaceId: workspace.id,
       pluginId,
       contributionId,
       extensionPoint: "widget",
@@ -1010,6 +1054,7 @@ export function App() {
                   void workspaceRepo.save({
                     ...ws,
                     activeLayoutId: "official.layout.workbench-dashboard",
+                    updatedAt: new Date().toISOString(),
                   })
                 }
               }}
@@ -1026,6 +1071,7 @@ export function App() {
                   void workspaceRepo.save({
                     ...ws,
                     activeLayoutId: "official.layout.workbench-stream",
+                    updatedAt: new Date().toISOString(),
                   })
                 }
               }}
