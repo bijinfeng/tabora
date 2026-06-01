@@ -18,6 +18,7 @@ export type PluginDataRepository = {
     value: T,
   ): Promise<void>
   removeForWorkspace(pluginId: string, workspaceId: string, key: string): Promise<void>
+  removeByWorkspace(workspaceId: string): Promise<void>
   getByInstance<T = unknown>(
     pluginId: string,
     instanceId: string,
@@ -83,6 +84,9 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     },
     async removeForWorkspace(pluginId, workspaceId, key) {
       await database.pluginData.delete(idFor(pluginId, key, workspaceId))
+    },
+    async removeByWorkspace(workspaceId) {
+      await database.pluginData.where("workspaceId").equals(workspaceId).delete()
     },
     async getByInstance(pluginId, instanceId, key) {
       const row = await database.pluginData.get(idFor(pluginId, key, instanceId))

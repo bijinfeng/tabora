@@ -93,4 +93,16 @@ describe("createPluginDataRepository", () => {
     await expect(repo.getByWorkspace(pluginId, "workspace-a", "history")).resolves.toEqual(["a"])
     await expect(repo.getByWorkspace(pluginId, "workspace-b", "history")).resolves.toEqual(["b"])
   })
+
+  it("removes all data for a workspace", async () => {
+    await repo.saveForWorkspace(pluginId, "workspace-a", "history", ["a"])
+    await repo.saveForWorkspace(pluginId, "workspace-b", "history", ["b"])
+    await repo.saveForInstance(pluginId, "instance-a", "draft", "keep")
+
+    await repo.removeByWorkspace("workspace-a")
+
+    await expect(repo.getByWorkspace(pluginId, "workspace-a", "history")).resolves.toBeUndefined()
+    await expect(repo.getByWorkspace(pluginId, "workspace-b", "history")).resolves.toEqual(["b"])
+    await expect(repo.getByInstance(pluginId, "instance-a", "draft")).resolves.toBe("keep")
+  })
 })

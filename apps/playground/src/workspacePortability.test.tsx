@@ -50,4 +50,79 @@ describe("prepareImport", () => {
     expect(result.pluginDataRows).toMatchObject([{ workspaceId: "workspace-imported" }])
     expect(result.warnings).toEqual([])
   })
+
+  it("drops instances and plugin data for unavailable plugins while preserving valid rows", () => {
+    const data: WorkspaceExport = {
+      schemaVersion: 1,
+      exportedAt: "2026-06-01T00:00:00.000Z",
+      workspace: {
+        id: "workspace-imported",
+        name: "导入工作区",
+        activeLayoutId: "official.layout.workbench-dashboard",
+        activeThemeId: "official.theme.light",
+        regions: {},
+        createdAt: "2026-06-01T00:00:00.000Z",
+        updatedAt: "2026-06-01T00:00:00.000Z",
+      },
+      instances: [
+        {
+          id: "notes-1",
+          workspaceId: "legacy-workspace",
+          pluginId: "official.widgets.notes",
+          contributionId: "notes",
+          extensionPoint: "widget",
+          regionId: "mainGrid",
+          enabled: true,
+          size: "M",
+          config: {},
+          createdAt: "2026-06-01T00:00:00.000Z",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        },
+        {
+          id: "ghost-1",
+          workspaceId: "legacy-workspace",
+          pluginId: "missing.plugin",
+          contributionId: "ghost",
+          extensionPoint: "widget",
+          regionId: "mainGrid",
+          enabled: true,
+          size: "S",
+          config: {},
+          createdAt: "2026-06-01T00:00:00.000Z",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        },
+      ],
+      pluginData: [
+        {
+          id: "official.widgets.notes:content:notes-1",
+          pluginId: "official.widgets.notes",
+          workspaceId: "legacy-workspace",
+          instanceId: "notes-1",
+          key: "content",
+          value: "hello",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        },
+        {
+          id: "missing.plugin:content:ghost-1",
+          pluginId: "missing.plugin",
+          workspaceId: "legacy-workspace",
+          instanceId: "ghost-1",
+          key: "content",
+          value: "ghost",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        },
+      ],
+    }
+
+    const result = prepareImport(data, ["official.widgets.notes"])
+
+    expect(result.instances).toHaveLength(1)
+    expect(result.instances[0]?.pluginId).toBe("official.widgets.notes")
+    expect(result.pluginDataRows).toHaveLength(1)
+    expect(result.pluginDataRows[0]?.pluginId).toBe("official.widgets.notes")
+    expect(result.warnings).toEqual([
+      '插件 "missing.plugin" 不存在 (实例: ghost-1)',
+      '插件 "missing.plugin" 数据已跳过',
+    ])
+  })
 })

@@ -7,6 +7,7 @@ export type InstanceRepository = {
   getByRegion(workspaceId: string, regionId: string): Promise<PluginInstance[]>
   get(id: string): Promise<PluginInstance | undefined>
   save(instance: PluginInstance): Promise<void>
+  removeByWorkspace(workspaceId: string): Promise<void>
   remove(id: string): Promise<void>
 }
 
@@ -47,6 +48,9 @@ export function createInstanceRepository(database: TaboraDatabase): InstanceRepo
     },
     async save(instance) {
       await database.pluginInstances.put(instance)
+    },
+    async removeByWorkspace(workspaceId) {
+      await database.pluginInstances.where("workspaceId").equals(workspaceId).delete()
     },
     async remove(id) {
       await database.pluginInstances.delete(id)

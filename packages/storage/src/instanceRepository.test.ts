@@ -60,4 +60,19 @@ describe("createInstanceRepository", () => {
       { id: "other-item" },
     ])
   })
+
+  it("removes all instances for a workspace", async () => {
+    const database = createTaboraDatabase("tabora-instance-test")
+    const repository = createInstanceRepository(database)
+
+    await repository.save(widgetInstance("default-item", 0, "default"))
+    await repository.save(widgetInstance("other-item", 0, "workspace-b"))
+
+    await repository.removeByWorkspace("workspace-b")
+
+    await expect(repository.getByWorkspace("workspace-b")).resolves.toEqual([])
+    await expect(repository.getByWorkspace("default")).resolves.toMatchObject([
+      { id: "default-item" },
+    ])
+  })
 })

@@ -29,13 +29,18 @@ import { CommandPalette } from "./CommandPalette"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
 import { findLayoutContribution } from "./workbenchShell"
 import { SettingsHost, collectSettingsPanels, resolveInitialSettingsPanelId } from "./settingsHost"
-import { createDefaultWorkspaceSeed, OFFICIAL_DEFAULT_WORKSPACE_SEED } from "./defaultWorkspaceSeed"
 import { resolveThemeTokens } from "./themeResolver"
 import {
   applyBackgroundStyle,
   resolveBackgroundStyle,
   FALLBACK_BACKGROUND_ID,
 } from "./backgroundResolver"
+import {
+  createWorkspaceSession,
+  deleteWorkspaceSession,
+  ensureWorkspaceSession,
+  readSearchSettings,
+} from "./workspaceSession"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 
@@ -179,43 +184,28 @@ export function App() {
   void kernel.discover(officialPlugins).then(async () => {
     await kernel.activateEnabledPlugins()
 
-    let workspace = await workspaceRepo.get("default")
-    if (!workspace) {
-      const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
-      workspace = seed.workspace
-      await workspaceRepo.save(workspace)
-    }
+    const session = await ensureWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      pluginDataRepo,
+      searchProviders: searchProviders(),
+    })
 
-    setWorkspaceState(workspace)
-    setSearchSettings(readSearchSettings(workspace, searchProviders()))
-    setActiveLayoutId(workspace.activeLayoutId)
-    setThemeId(workspace.activeThemeId)
+    setWorkspaceState(session.workspace)
+    setSearchSettings(session.searchSettings)
+    setActiveLayoutId(session.activeLayoutId)
+    setThemeId(session.activeThemeId)
 
     const allThemes = themes()
-    const tokens = resolveThemeTokens(workspace.activeThemeId, allThemes)
+    const tokens = resolveThemeTokens(session.activeThemeId, allThemes)
     applyThemeTokens(document.documentElement, tokens)
 
     const allBackgrounds = backgrounds()
-    const savedBg = workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID
-    setBackgroundId(savedBg)
-    applyBackgroundStyle(resolveBackgroundStyle(savedBg, allBackgrounds))
+    setBackgroundId(session.activeBackgroundId)
+    applyBackgroundStyle(resolveBackgroundStyle(session.activeBackgroundId, allBackgrounds))
 
-    const savedHistory = await pluginDataRepo.getByWorkspace<SearchHistoryEntry[]>(
-      "official.search.command-bar",
-      workspace.id,
-      "search-history",
-    )
-    if (savedHistory) setSearchHistory(savedHistory)
-
-    let loaded = await instanceRepo.getByRegion(workspace.id, "mainGrid")
-    if (loaded.length === 0) {
-      const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
-      loaded = assignGridOrder(seed.instances.filter((i) => i.regionId === "mainGrid"))
-      for (const inst of loaded) {
-        await instanceRepo.save(inst)
-      }
-    }
-    setInstances(loaded)
+    setSearchHistory(session.searchHistory)
+    setInstances(assignGridOrder(session.instances))
     const allWorkspaces = await workspaceRepo.getAll()
     setWorkspaceList(allWorkspaces)
     setKernelReady(true)
@@ -260,28 +250,6 @@ export function App() {
       permissions: plugin.manifest.permissions ?? [],
       contributes: plugin.manifest.contributes,
     }))
-  }
-
-  function readSearchSettings(
-    workspace: Workspace,
-    providers: SearchProviderContribution[],
-  ): WorkbenchSearchSettings {
-    const saved = workspace.config?.search as Record<string, unknown> | undefined
-    const defaultProviderId =
-      typeof saved?.defaultProviderId === "string"
-        ? saved.defaultProviderId
-        : (providers[0]?.id ?? "")
-
-    let enabledProviderIds: string[] | undefined
-    if (Array.isArray(saved?.enabledProviderIds)) {
-      enabledProviderIds = saved.enabledProviderIds as string[]
-    }
-
-    const result: WorkbenchSearchSettings = { defaultProviderId }
-    if (enabledProviderIds) {
-      result.enabledProviderIds = enabledProviderIds
-    }
-    return result
   }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
@@ -434,51 +402,45 @@ export function App() {
   }
 
   async function createWorkspace(name: string): Promise<Workspace> {
-    const seed = createDefaultWorkspaceSeed({
-      ...OFFICIAL_DEFAULT_WORKSPACE_SEED,
-      workspaceName: name,
+    const ws = await createWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      name,
     })
-    const ws = seed.workspace
-    ws.id = `ws-${Date.now()}`
-    ws.name = name
-    ws.updatedAt = new Date().toISOString()
-    await workspaceRepo.save(ws)
-    for (const inst of seed.instances) {
-      inst.workspaceId = ws.id
-      await instanceRepo.save(inst)
-    }
     setWorkspaceList((prev) => [...prev, ws])
     return ws
   }
 
   async function switchWorkspace(id: string) {
     if (id === workspaceState()?.id) return
-    const ws = await workspaceRepo.get(id)
-    if (!ws) return
-    setWorkspaceState(ws)
-    setActiveLayoutId(ws.activeLayoutId)
-    setThemeId(ws.activeThemeId)
+    const session = await ensureWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      pluginDataRepo,
+      searchProviders: searchProviders(),
+      workspaceId: id,
+    })
+    setWorkspaceState(session.workspace)
+    setActiveLayoutId(session.activeLayoutId)
+    setThemeId(session.activeThemeId)
     const allThemes = themes()
-    applyThemeTokens(document.documentElement, resolveThemeTokens(ws.activeThemeId, allThemes))
+    applyThemeTokens(document.documentElement, resolveThemeTokens(session.activeThemeId, allThemes))
     const allBg = backgrounds()
-    const bg = ws.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID
+    const bg = session.activeBackgroundId
     setBackgroundId(bg)
     applyBackgroundStyle(resolveBackgroundStyle(bg, allBg))
-    setSearchSettings(readSearchSettings(ws, searchProviders()))
-    const history =
-      (await pluginDataRepo.getByWorkspace<SearchHistoryEntry[]>(
-        "official.search.command-bar",
-        ws.id,
-        "search-history",
-      )) ?? []
-    setSearchHistory(history)
-    const loaded = await instanceRepo.getByRegion(ws.id, "mainGrid")
-    setInstances(loaded)
+    setSearchSettings(session.searchSettings)
+    setSearchHistory(session.searchHistory)
+    setInstances(assignGridOrder(session.instances))
   }
 
   async function deleteWorkspace(id: string) {
-    if (id === "default") return
-    await workspaceRepo.remove(id)
+    await deleteWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      pluginDataRepo,
+      workspaceId: id,
+    })
     setWorkspaceList((prev) => prev.filter((w) => w.id !== id))
     if (workspaceState()?.id === id) {
       const fallback = await workspaceRepo.get("default")
