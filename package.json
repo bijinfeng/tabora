@@ -5,6 +5,8 @@
   "scripts": {
     "prepare": "vp config",
     "dev": "vp dev apps/playground",
+    "storybook": "pnpm --filter @tabora/storybook dev",
+    "storybook:build": "pnpm --filter @tabora/storybook build",
     "staged": "vp staged",
     "test": "pnpm run test:unit",
     "test:unit": "vitest run --config vite.config.ts",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:build",
+    "@types/node": "^25.9.1",
     "@vitest/browser-playwright": "catalog:test",
     "fake-indexeddb": "catalog:test",
     "happy-dom": "catalog:test",

@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
+storybook-static/
+apps/storybook/storybook-static/
 
 # IDE
 .vscode/

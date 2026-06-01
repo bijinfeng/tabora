@@ -718,7 +718,7 @@ packages/ui/src/
 ### 17.4 文档和实现验收
 
 - 修改 token 时同步本文档和 `@tabora/theme`。
-- 新增基础组件时同步 `@tabora/ui` 文档或 Story 示例。
+- 新增基础组件时同步 `@tabora/ui` 文档或 Story 示例；当前仓库组件文档站入口为 `apps/storybook/`。
 - 新增官方插件 UI 时优先复用 `@tabora/ui`。
 - 若实际实现偏离本文档，需要先更新设计体系并说明原因。
 - 文档整理后至少运行 `pnpm check`。
@@ -729,6 +729,7 @@ MVP：
 
 - 建立默认 light / dark token。
 - `@tabora/ui` 基础组件包已交付，包含 `Button` / `IconButton` / `Input` / `Textarea` / `Select` / `Checkbox` / `Switch` / `SegmentedControl` / `Tabs` / `Tooltip` / `Field` / `Badge` / `InlineError` / `Spinner` / `EmptyState` / `ListRow` / `CardSection` 17 个内容区控件，基于 `@kobalte/core` 提供 a11y 底层，使用 theme token 作为视觉契约。
+- `apps/storybook` 作为 `@tabora/ui` 的示例与文档站已接入 workspace，用于承载组件变体、交互状态和组合示例。
 - 官方插件已迁移到 `@tabora/ui`。
 - 宿主容器按本文档统一 rail、search、grid、settings、modal 的视觉。
 

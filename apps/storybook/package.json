@@ -1,0 +1,26 @@
+{
+  "name": "@tabora/storybook",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006 --no-open",
+    "build": "storybook build",
+    "preview": "serve storybook-static"
+  },
+  "dependencies": {
+    "@tabora/ui": "workspace:*",
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/addon-interactions": "^8.6.18",
+    "@storybook/addon-themes": "^8.6.18",
+    "@storybook/blocks": "^8.6.18",
+    "@storybook/builder-vite": "^8.6.18",
+    "@tabora/tsconfig": "workspace:*",
+    "storybook": "^8.6.18",
+    "storybook-solidjs": "^1.0.0-beta.7",
+    "vite-plugin-solid": "catalog:build"
+  }
+}

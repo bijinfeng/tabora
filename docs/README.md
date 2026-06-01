@@ -203,6 +203,7 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 - `docs/design/01-设计体系规范.html` — V2 设计规范（色彩 token、字体、间距、动效等）
 - `docs/design/02-基础组件规范.html` — V2 组件 API 和状态文档
 - `docs/design/03-工作台交互原型.html` — V2 可交互原型（搜索、拖拽、双击展开、右键菜单等交互模式）
+- `apps/storybook/` — `@tabora/ui` 基础组件的运行中示例与交互文档站，组件 API、状态和组合示例优先在这里对照
 - `docs/product/tabora-official-plugins-design.md` 的插件规格和交互示例。
 - `AGENTS.md` 的 UI 规则。
 - 相关 Solid 组件和 CSS。
@@ -216,6 +217,13 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 - 卡片稳定，不因 hover、focus、拖拽造成布局跳动。
 - 移动端无横向滚动。
 - 卡片过多时主网格纵向滚动，不强塞进一屏。
+
+Storybook 使用约定：
+
+- 启动：`pnpm storybook`
+- 构建：`pnpm storybook:build`
+- Storybook 作为 `@tabora/ui` 的组件示例和文档站，优先承载基础组件状态、变体、可访问性说明和组合示例。
+- `storybook-static/` 是构建产物，不作为事实源提交；如需静态预览，重新构建即可。
 
 ### 修改存储或数据模型
 
