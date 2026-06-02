@@ -30,9 +30,13 @@ export function Select<V extends string>(props: SelectProps<V>) {
     "id",
     "class",
   ])
+
+  const selectedOption = () => local.options.find((option) => option.value === local.value)
+  const hasSelection = () => selectedOption() !== undefined
+
   return (
     <KSelect<SelectOption<V>>
-      value={local.options.find((o) => o.value === local.value) ?? null}
+      value={selectedOption() ?? null}
       onChange={(opt) => opt && local.onChange(opt.value)}
       options={local.options}
       optionValue="value"
@@ -42,7 +46,12 @@ export function Select<V extends string>(props: SelectProps<V>) {
       {...(local.placeholder !== undefined ? { placeholder: local.placeholder } : {})}
       itemComponent={(p) => (
         <KSelect.Item item={p.item} class="tbr-select-item">
-          <KSelect.ItemLabel>{p.item.rawValue.label}</KSelect.ItemLabel>
+          <span class="tbr-select-item-check" aria-hidden="true">
+            {p.item.rawValue.value === local.value ? "✓" : ""}
+          </span>
+          <KSelect.ItemLabel class="tbr-select-item-label">
+            {p.item.rawValue.label}
+          </KSelect.ItemLabel>
         </KSelect.Item>
       )}
     >
@@ -54,9 +63,13 @@ export function Select<V extends string>(props: SelectProps<V>) {
         {...(local["aria-label"] !== undefined ? { "aria-label": local["aria-label"] } : {})}
         {...(local.id !== undefined ? { id: local.id } : {})}
       >
-        <KSelect.Value<SelectOption<V>>>{(state) => state.selectedOption().label}</KSelect.Value>
+        <span class="tbr-select-value" data-placeholder-shown={!hasSelection() ? "" : undefined}>
+          <KSelect.Value<SelectOption<V>>>
+            {(state) => state.selectedOption()?.label ?? local.placeholder ?? ""}
+          </KSelect.Value>
+        </span>
         <KSelect.Icon class="tbr-select-icon" aria-hidden="true">
-          ▾
+          <span class="tbr-select-chevron">▼</span>
         </KSelect.Icon>
       </KSelect.Trigger>
       <KSelect.Portal>

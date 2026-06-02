@@ -1,13 +1,22 @@
 import { Select } from "@tabora/ui"
 import { createSignal } from "solid-js"
-import type { Meta, StoryObj } from "storybook-solidjs"
+import type { Meta, StoryObj } from "storybook-solidjs-vite"
+import type { SelectOption, SelectProps } from "@tabora/ui"
 
-const options = [
-  { value: "1", label: "选项一" },
-  { value: "2", label: "选项二" },
-  { value: "3", label: "选项三（禁用）", disabled: true },
-  { value: "4", label: "选项四" },
+const options: SelectOption<string>[] = [
+  { value: "google", label: "Google" },
+  { value: "bing", label: "Bing" },
+  { value: "duckduckgo", label: "DuckDuckGo（禁用）", disabled: true },
+  { value: "perplexity", label: "Perplexity" },
+  { value: "kagi", label: "Kagi Search" },
 ]
+
+const defaultArgs: Pick<SelectProps<string>, "size" | "disabled" | "invalid" | "placeholder"> = {
+  size: "md",
+  disabled: false,
+  invalid: false,
+  placeholder: "请选择",
+}
 
 const meta = {
   title: "Inputs/Select",
@@ -17,53 +26,58 @@ const meta = {
     disabled: { control: "boolean" },
     invalid: { control: "boolean" },
   },
-  args: {
-    size: "md",
-    disabled: false,
-    invalid: false,
-    placeholder: "请选择",
-    options,
-  },
+  args: defaultArgs,
 } satisfies Meta<typeof Select>
 
 export default meta
 
 type Story = StoryObj<typeof meta>
+type SelectArgs = typeof meta.args
+
+function toSelectProps(args: SelectArgs): Omit<SelectProps<string>, "value" | "onChange"> {
+  return {
+    options,
+    ...(args.size !== undefined ? { size: args.size } : {}),
+    ...(args.disabled !== undefined ? { disabled: args.disabled } : {}),
+    ...(args.invalid !== undefined ? { invalid: args.invalid } : {}),
+    ...(args.placeholder !== undefined ? { placeholder: args.placeholder } : {}),
+  }
+}
 
 export const Default: Story = {
-  render: (args: typeof meta.args) => {
+  render: (args: SelectArgs) => {
     const [value, setValue] = createSignal("")
-    return <Select {...args} value={value()} onChange={setValue} options={options} />
+    return <Select {...toSelectProps(args)} value={value()} onChange={setValue} />
   },
 }
 
 export const WithValue: Story = {
-  render: (args: typeof meta.args) => {
-    const [value, setValue] = createSignal("2")
-    return <Select {...args} value={value()} onChange={setValue} options={options} />
+  render: (args: SelectArgs) => {
+    const [value, setValue] = createSignal("bing")
+    return <Select {...toSelectProps(args)} value={value()} onChange={setValue} />
   },
 }
 
 export const Invalid: Story = {
   args: { invalid: true },
-  render: (args: typeof meta.args) => {
+  render: (args: SelectArgs) => {
     const [value, setValue] = createSignal("")
-    return <Select {...args} value={value()} onChange={setValue} options={options} />
+    return <Select {...toSelectProps(args)} value={value()} onChange={setValue} />
   },
 }
 
 export const Disabled: Story = {
   args: { disabled: true },
-  render: (args: typeof meta.args) => {
-    const [value, setValue] = createSignal("1")
-    return <Select {...args} value={value()} onChange={setValue} options={options} />
+  render: (args: SelectArgs) => {
+    const [value, setValue] = createSignal("google")
+    return <Select {...toSelectProps(args)} value={value()} onChange={setValue} />
   },
 }
 
 export const SmallSize: Story = {
   args: { size: "sm" },
-  render: (args: typeof meta.args) => {
+  render: (args: SelectArgs) => {
     const [value, setValue] = createSignal("")
-    return <Select {...args} value={value()} onChange={setValue} options={options} />
+    return <Select {...toSelectProps(args)} value={value()} onChange={setValue} />
   },
 }
