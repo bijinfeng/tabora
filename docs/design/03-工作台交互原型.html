@@ -69,48 +69,6 @@
         -webkit-font-smoothing: antialiased;
       }
 
-      /* ----- TOP BAR (clean) ----- */
-      .top-bar {
-        position: sticky;
-        top: 0;
-        z-index: 500;
-        background: var(--wb-surface);
-        border-bottom: 1px solid var(--wb-line);
-        padding: 0 24px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-      }
-      .top-bar-left {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .top-bar-logo {
-        font-size: 15px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-      }
-      .top-bar-logo span {
-        color: var(--wb-accent);
-      }
-      .top-bar-badge {
-        font-size: 10px;
-        color: var(--wb-text-subtle);
-        background: var(--wb-surface-soft);
-        padding: 2px 8px;
-        border-radius: 10px;
-        border: 1px solid var(--wb-line);
-      }
-      .top-bar-right {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
       .tb-btn {
         height: 28px;
         padding: 0 10px;
@@ -134,12 +92,6 @@
         color: var(--wb-accent);
         font-weight: 650;
       }
-      .tb-sep {
-        width: 1px;
-        height: 16px;
-        background: var(--wb-line);
-        margin: 0 4px;
-      }
       .tb-btn-icon {
         width: 28px;
         height: 28px;
@@ -148,6 +100,37 @@
         align-items: center;
         justify-content: center;
         font-size: 13px;
+      }
+      .layout-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 1px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+      .layout-switch .tb-btn {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        border-radius: 5px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .layout-switch .tb-btn:hover {
+        background: var(--wb-surface-hover);
+      }
+      .layout-switch .tb-btn.active {
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wb-accent) 18%, transparent);
+      }
+      .layout-switch .tb-btn svg {
+        width: 12px;
+        height: 12px;
       }
 
       /* ----- MAIN ----- */
@@ -159,7 +142,7 @@
       .layout-dashboard {
         display: none;
         grid-template-columns: 56px 1fr;
-        min-height: calc(100vh - 44px);
+        min-height: 100vh;
       }
       .layout-dashboard.active {
         display: grid;
@@ -233,15 +216,51 @@
         width: 100%;
       }
       .dash-greeting {
-        font-size: 14px;
-        font-weight: 650;
+        font-size: 13px;
+        font-weight: 600;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
+      }
+      .dash-greeting-title {
+        color: var(--wb-text);
       }
       .dash-greeting-muted {
         color: var(--wb-text-muted);
         font-weight: 400;
+      }
+      .dash-greeting-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0.74;
+        transition: opacity 120ms ease;
+      }
+      .dash-greeting:hover .dash-greeting-actions,
+      .dash-greeting:focus-within .dash-greeting-actions {
+        opacity: 1;
+      }
+      .dash-toolbar-btn {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+      .dash-toolbar-btn:hover {
+        background: var(--wb-surface-soft);
+        color: var(--wb-text);
+      }
+      .search-stage {
+        position: relative;
+        max-width: 880px;
+      }
+      .search-stage.stream-stage {
+        max-width: 480px;
+        margin: 0 auto;
       }
 
       /* Search (Dashboard) */
@@ -249,37 +268,74 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        height: 44px;
-        padding: 0 16px;
-        background: var(--wb-surface);
+        height: 46px;
+        padding: 0 12px;
+        background: color-mix(in srgb, var(--wb-surface) 92%, var(--wb-page));
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius);
-        color: var(--wb-text-subtle);
+        color: var(--wb-text-muted);
         font-size: 13px;
+        box-shadow:
+          0 2px 8px rgba(28, 30, 28, 0.035),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease,
+          background 120ms ease;
+      }
+      .search-bar:hover {
+        border-color: var(--wb-line-strong);
+        background: color-mix(in srgb, var(--wb-surface) 96%, var(--wb-page));
+      }
+      .search-bar:focus-within {
+        border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+        box-shadow:
+          0 0 0 3px color-mix(in srgb, var(--wb-accent-soft) 72%, transparent),
+          0 12px 32px rgba(26, 144, 112, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
       .search-bar input {
         flex: 1;
+        min-width: 0;
         border: none;
         outline: none;
         background: transparent;
-        font-size: 13px;
+        font-size: 13.5px;
         font-family: inherit;
         color: var(--wb-text);
       }
       .search-bar input::placeholder {
         color: var(--wb-text-subtle);
       }
+      .search-scope-divider {
+        width: 1px;
+        height: 18px;
+        background: color-mix(in srgb, var(--wb-line) 86%, transparent);
+        flex-shrink: 0;
+        transition: background 120ms ease;
+      }
+      .search-bar:focus-within .search-scope-divider {
+        background: color-mix(in srgb, var(--wb-accent) 18%, var(--wb-line));
+      }
       .search-kbd {
         display: inline-flex;
         align-items: center;
-        height: 20px;
-        padding: 0 6px;
-        border: 1px solid var(--wb-line);
+        height: 18px;
+        padding: 0 5px;
+        border: 1px solid transparent;
         border-radius: 4px;
-        background: var(--wb-surface-soft);
+        background: transparent;
         font-size: 10px;
         color: var(--wb-text-subtle);
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        opacity: 0.68;
+        transition:
+          opacity 120ms ease,
+          transform 120ms ease;
+      }
+      .search-bar:focus-within .search-kbd {
+        opacity: 0.35;
+        transform: translateX(-1px);
       }
       .search-suggestions {
         position: absolute;
@@ -364,22 +420,31 @@
       .search-provider-btn {
         display: flex;
         align-items: center;
-        gap: 4px;
-        height: 28px;
-        padding: 0 8px;
-        border: 1px solid var(--wb-line);
-        border-radius: 6px;
-        background: var(--wb-surface-soft);
+        gap: 5px;
+        height: 24px;
+        padding: 0 7px 0 6px;
+        border: 1px solid color-mix(in srgb, var(--wb-line) 88%, transparent);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--wb-surface-soft) 88%, transparent);
         cursor: pointer;
         font-size: 11px;
         font-family: inherit;
         color: var(--wb-text-muted);
+        font-weight: 550;
         white-space: nowrap;
-        transition: all 120ms ease;
+        transition:
+          border-color 120ms ease,
+          background 120ms ease,
+          color 120ms ease,
+          transform 120ms ease;
       }
       .search-provider-btn:hover {
-        background: var(--wb-surface-hover);
+        background: color-mix(in srgb, var(--wb-surface) 96%, var(--wb-page));
         border-color: var(--wb-line-strong);
+      }
+      .search-bar:focus-within .search-provider-btn {
+        border-color: color-mix(in srgb, var(--wb-accent) 18%, var(--wb-line));
+        color: var(--wb-text);
       }
       .search-provider-dropdown {
         position: absolute;
@@ -423,6 +488,26 @@
         width: 14px;
         color: var(--wb-accent);
         font-size: 10px;
+      }
+      .search-provider-label {
+        min-width: 0;
+        text-align: left;
+      }
+      .search-provider-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--wb-accent) 82%, white);
+        flex-shrink: 0;
+      }
+      .search-provider-caret {
+        font-size: 9px;
+        opacity: 0.58;
+      }
+      .stream-search-bar {
+        width: 440px;
+        margin: 0 auto;
+        cursor: text;
       }
 
       /* Size picker on card */
@@ -901,44 +986,10 @@
         animation: cardEnter 250ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
       }
 
-      /* Toast stacking */
-      .toast-stack {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 500;
-        display: flex;
-        flex-direction: column-reverse;
-        gap: 8px;
-      }
-      .toast-item {
-        padding: 10px 14px;
-        background: var(--wb-surface);
-        border: 1px solid var(--wb-line);
-        border-radius: var(--wb-radius);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        animation: toastIn 200ms cubic-bezier(0.05, 0.7, 0.1, 1);
-        max-width: 360px;
-      }
-      @keyframes toastIn {
-        from {
-          opacity: 0;
-          transform: translateX(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
       /* ====== STREAM LAYOUT ====== */
       .layout-stream {
         display: none;
-        min-height: calc(100vh - 44px);
+        min-height: 100vh;
       }
       .layout-stream.active {
         display: block;
@@ -947,51 +998,90 @@
       .stream-top {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 0 24px;
-        height: 44px;
-        position: sticky;
-        top: 44px;
-        z-index: 10;
-        background: var(--wb-surface);
-        border-bottom: 1px solid var(--wb-line);
-      }
-      .stream-top-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .stream-logo {
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--wb-text);
-      }
-      .stream-logo span {
-        color: var(--wb-accent);
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 8px 24px 0;
       }
       .stream-top-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: flex-end;
+        gap: 10px;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        opacity: 0.76;
+        transition: opacity 140ms ease;
+      }
+      .stream-top:hover .stream-top-actions,
+      .stream-top:focus-within .stream-top-actions {
+        opacity: 1;
+      }
+      .stream-top-secondary {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        padding: 2px 0;
+      }
+      .stream-toolbar-btn {
+        height: 26px;
+        padding: 0 9px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        background: transparent;
+        color: color-mix(in srgb, var(--wb-text-subtle) 88%, transparent);
+        font-size: 11px;
+        transition:
+          background 120ms ease,
+          color 120ms ease,
+          border-color 120ms ease;
+      }
+      .stream-toolbar-btn:hover {
+        background: color-mix(in srgb, var(--wb-surface-soft) 92%, transparent);
+        color: var(--wb-text-muted);
+      }
+      .stream-toolbar-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+      }
+      .stream-top .layout-switch {
+        border-color: color-mix(in srgb, var(--wb-line) 54%, transparent);
+        background: transparent;
+      }
+      .stream-top .layout-switch .tb-btn {
+        color: color-mix(in srgb, var(--wb-text-subtle) 86%, transparent);
+      }
+      .stream-top .layout-switch .tb-btn.active {
+        color: var(--wb-accent);
+        background: color-mix(in srgb, var(--wb-accent-soft) 72%, transparent);
+      }
+      .stream-top-icon-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 6px;
+        margin-left: 2px;
+        border-left: 1px solid color-mix(in srgb, var(--wb-line) 64%, transparent);
       }
 
       .stream-content {
         max-width: 800px;
         margin: 0 auto;
-        padding: 24px 24px 80px;
+        padding: 20px 24px 80px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 18px;
       }
       .stream-hero {
         text-align: center;
-        padding: 32px 0 16px;
+        padding: 30px 0 18px;
       }
       .stream-hero-greeting {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 700;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
       }
       .stream-hero-date {
         font-size: 13px;
@@ -1901,29 +1991,6 @@
     </style>
   </head>
   <body>
-    <!-- ====== TOP BAR ====== -->
-    <div class="top-bar">
-      <div class="top-bar-left">
-        <div class="top-bar-logo">Tabora <span>V2</span></div>
-        <span class="top-bar-badge" id="widgetBadge">5 实例</span>
-      </div>
-      <div class="top-bar-right">
-        <button class="tb-btn active" id="layoutBtnDashboard" onclick="switchLayout('dashboard')">
-          仪表盘
-        </button>
-        <button class="tb-btn" id="layoutBtnStream" onclick="switchLayout('stream')">流式</button>
-        <span class="tb-sep"></span>
-        <button class="tb-btn tb-btn-icon" onclick="toggleTheme()" title="主题">☀</button>
-        <button class="tb-btn tb-btn-icon" onclick="openSettings()" title="设置">⚙</button>
-        <button class="tb-btn tb-btn-icon" onclick="simulateError()" id="errorBtn" title="模拟错误">
-          ⚠
-        </button>
-        <button class="tb-btn tb-btn-icon" onclick="toggleExtPanel()" id="extBtn" title="扩展点">
-          ◈
-        </button>
-      </div>
-    </div>
-
     <!-- ====== COMMAND PALETTE (⌘K) ====== -->
     <div class="cmd-overlay" id="cmdOverlay" onclick="closeCmd(event)">
       <div class="cmd-panel" onclick="event.stopPropagation()">
@@ -2683,9 +2750,6 @@
       </div>
     </div>
 
-    <!-- ====== TOAST ====== -->
-    <div class="toast-stack" id="toastStack"></div>
-
     <!-- ====== DASHBOARD -->
     <div class="layout-dashboard active" id="layoutDashboard">
       <nav class="rail">
@@ -2742,26 +2806,85 @@
       </nav>
       <div class="dash-content">
         <div class="dash-greeting">
-          <div>下午好 <span class="dash-greeting-muted">· 5月30日 星期六</span></div>
-          <button class="btn btn-subtle btn-sm" onclick="openAddWidget()">+ 添加卡片</button>
+          <div class="dash-greeting-title">
+            下午好 <span class="dash-greeting-muted">· 5月30日 星期六</span>
+          </div>
+          <div class="dash-greeting-actions">
+            <button class="tb-btn dash-toolbar-btn" onclick="openAddWidget()">+ 添加卡片</button>
+            <div class="layout-switch" aria-label="布局切换">
+              <button
+                class="tb-btn active"
+                data-layout-target="dashboard"
+                type="button"
+                onclick="switchLayout('dashboard')"
+                title="仪表盘布局"
+                aria-label="切换到仪表盘布局"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+              </button>
+              <button
+                class="tb-btn"
+                data-layout-target="stream"
+                type="button"
+                onclick="switchLayout('stream')"
+                title="流式布局"
+                aria-label="切换到流式布局"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <line x1="5" y1="7" x2="19" y2="7" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <line x1="5" y1="17" x2="19" y2="17" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
-        <div style="position: relative">
+        <div class="search-stage">
           <div class="search-bar" id="dashSearchWrap">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--wb-text-subtle)"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+            <div class="search-provider">
+              <button
+                class="search-provider-btn"
+                type="button"
+                onclick="toggleSearchProvider('dashSpDropdown', event)"
+                aria-label="切换搜索引擎"
+              >
+                <span class="search-provider-dot" aria-hidden="true"></span>
+                <span class="search-provider-label" id="dashSpLabel">Google</span>
+                <span class="search-provider-caret">▾</span>
+              </button>
+              <div class="search-provider-dropdown" id="dashSpDropdown">
+                <div
+                  class="sp-option active"
+                  data-provider-option="google"
+                  onclick="selectProvider('google')"
+                >
+                  <span class="sp-check">✓</span><span>Google</span>
+                </div>
+                <div class="sp-option" data-provider-option="bing" onclick="selectProvider('bing')">
+                  <span class="sp-check"></span><span>Bing</span>
+                </div>
+                <div class="sp-option" data-provider-option="ddg" onclick="selectProvider('ddg')">
+                  <span class="sp-check"></span><span>DuckDuckGo</span>
+                </div>
+                <div
+                  class="sp-option"
+                  data-provider-option="github"
+                  onclick="selectProvider('github')"
+                >
+                  <span class="sp-check"></span><span>GitHub</span>
+                </div>
+              </div>
+            </div>
+            <span class="search-scope-divider" aria-hidden="true"></span>
             <input
               type="text"
               id="dashSearchInput"
-              placeholder="搜索或输入命令...  @google 切换引擎"
+              placeholder="搜索网页、命令或卡片"
               autocomplete="off"
             />
             <span class="search-kbd">⌘K</span>
@@ -2776,14 +2899,55 @@
     <!-- STREAM LAYOUT -->
     <div class="layout-stream" id="layoutStream">
       <div class="stream-top">
-        <div class="stream-top-left">
-          <div class="stream-logo">Tabora <span>Stream</span></div>
-        </div>
         <div class="stream-top-actions">
-          <button class="tb-btn" onclick="openCmd()">⌘K 搜索</button>
-          <button class="tb-btn" onclick="openAddWidget()">+ 添加卡片</button>
-          <button class="tb-btn tb-btn-icon" onclick="toggleTheme()">☀</button>
-          <button class="tb-btn tb-btn-icon" onclick="openSettings()">⚙</button>
+          <div class="stream-top-secondary">
+            <button class="tb-btn stream-toolbar-btn" onclick="openAddWidget()">+ 添加卡片</button>
+            <div class="layout-switch" aria-label="布局切换">
+              <button
+                class="tb-btn"
+                data-layout-target="dashboard"
+                type="button"
+                onclick="switchLayout('dashboard')"
+                title="仪表盘布局"
+                aria-label="切换到仪表盘布局"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+              </button>
+              <button
+                class="tb-btn active"
+                data-layout-target="stream"
+                type="button"
+                onclick="switchLayout('stream')"
+                title="流式布局"
+                aria-label="切换到流式布局"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <line x1="5" y1="7" x2="19" y2="7" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <line x1="5" y1="17" x2="19" y2="17" />
+                </svg>
+              </button>
+            </div>
+            <div class="stream-top-icon-group">
+              <button
+                class="tb-btn tb-btn-icon stream-toolbar-btn stream-toolbar-icon"
+                onclick="toggleTheme()"
+              >
+                ☀
+              </button>
+              <button
+                class="tb-btn tb-btn-icon stream-toolbar-btn stream-toolbar-icon"
+                onclick="openSettings()"
+              >
+                ⚙
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="stream-content">
@@ -2791,37 +2955,71 @@
           <div class="stream-hero-greeting">下午好 ☀</div>
           <div class="stream-hero-date">5月30日 星期六 · 北京</div>
           <div style="margin-top: 16px">
-            <div
-              class="search-bar"
-              style="width: 400px; margin: 0 auto; cursor: text"
-              onclick="document.getElementById('streamSearchInput').focus()"
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--wb-text-subtle)"
-                stroke-width="2"
+            <div class="search-stage stream-stage">
+              <div
+                class="search-bar stream-search-bar"
+                onclick="document.getElementById('streamSearchInput').focus()"
               >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                id="streamSearchInput"
-                placeholder="按 ⌘K 搜索命令、网页、卡片..."
-                style="
-                  flex: 1;
-                  border: none;
-                  outline: none;
-                  background: transparent;
-                  font-size: 13px;
-                  font-family: inherit;
-                  color: var(--wb-text);
-                "
-              />
-              <span class="search-kbd">⌘K</span>
+                <div class="search-provider">
+                  <button
+                    class="search-provider-btn"
+                    type="button"
+                    onclick="toggleSearchProvider('streamSpDropdown', event)"
+                    aria-label="切换搜索引擎"
+                  >
+                    <span class="search-provider-dot" aria-hidden="true"></span>
+                    <span class="search-provider-label" id="streamSpLabel">Google</span>
+                    <span class="search-provider-caret">▾</span>
+                  </button>
+                  <div class="search-provider-dropdown" id="streamSpDropdown">
+                    <div
+                      class="sp-option active"
+                      data-provider-option="google"
+                      onclick="selectProvider('google')"
+                    >
+                      <span class="sp-check">✓</span><span>Google</span>
+                    </div>
+                    <div
+                      class="sp-option"
+                      data-provider-option="bing"
+                      onclick="selectProvider('bing')"
+                    >
+                      <span class="sp-check"></span><span>Bing</span>
+                    </div>
+                    <div
+                      class="sp-option"
+                      data-provider-option="ddg"
+                      onclick="selectProvider('ddg')"
+                    >
+                      <span class="sp-check"></span><span>DuckDuckGo</span>
+                    </div>
+                    <div
+                      class="sp-option"
+                      data-provider-option="github"
+                      onclick="selectProvider('github')"
+                    >
+                      <span class="sp-check"></span><span>GitHub</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="search-scope-divider" aria-hidden="true"></span>
+                <input
+                  type="text"
+                  id="streamSearchInput"
+                  placeholder="搜索网页、命令或卡片"
+                  style="
+                    flex: 1;
+                    border: none;
+                    outline: none;
+                    background: transparent;
+                    font-size: 13px;
+                    font-family: inherit;
+                    color: var(--wb-text);
+                  "
+                />
+                <span class="search-kbd">⌘K</span>
+              </div>
+              <div class="search-suggestions" id="streamSuggestions"></div>
             </div>
           </div>
         </div>
@@ -2897,20 +3095,17 @@
         setTimeout(() => {
           layout = l
           errorMode = false
-          document.getElementById("errorBtn").classList.remove("active")
           document.getElementById("layoutDashboard").classList.toggle("active", l === "dashboard")
           document.getElementById("layoutStream").classList.toggle("active", l === "stream")
-          document
-            .getElementById("layoutBtnDashboard")
-            .classList.toggle("active", l === "dashboard")
-          document.getElementById("layoutBtnStream").classList.toggle("active", l === "stream")
+          document.querySelectorAll("[data-layout-target]").forEach((button) => {
+            button.classList.toggle("active", button.dataset.layoutTarget === l)
+          })
           document
             .getElementById("settingLayoutDashboard")
             .classList.toggle("active", l === "dashboard")
           document.getElementById("settingLayoutStream").classList.toggle("active", l === "stream")
           renderWidgets()
           renderExtPanel()
-          setupSearch()
           document
             .getElementById("layout" + (l === "dashboard" ? "Dashboard" : "Stream"))
             .classList.remove("switching")
@@ -3100,19 +3295,45 @@
       }
 
       // ====== SEARCH PROVIDER ======
-      function selectProvider(p, el) {
+      function toggleSearchProvider(dropdownId, event) {
+        event?.stopPropagation()
+        const dropdown = document.getElementById(dropdownId)
+        if (!dropdown) return
+        document.querySelectorAll(".search-provider-dropdown").forEach((menu) => {
+          if (menu !== dropdown) menu.classList.remove("show")
+        })
+        dropdown.classList.toggle("show")
+      }
+      function selectProvider(p) {
         searchProvider = p
-        document.getElementById("spDropdown")?.classList.remove("show")
+        const providerNames = {
+          google: "Google",
+          bing: "Bing",
+          ddg: "DuckDuckGo",
+          github: "GitHub",
+        }
+        document.querySelectorAll(".search-provider-dropdown").forEach((menu) => {
+          menu.classList.remove("show")
+        })
+        document.querySelectorAll("[data-provider-option]").forEach((option) => {
+          const active = option.dataset.providerOption === p
+          option.classList.toggle("active", active)
+          const check = option.querySelector(".sp-check")
+          if (check) check.textContent = active ? "✓" : ""
+        })
+        document.querySelectorAll("#dashSpLabel, #streamSpLabel").forEach((label) => {
+          label.textContent = providerNames[p]
+        })
         renderWidgets()
         renderExtPanel()
-        toast(
-          "默认搜索引擎：" +
-            { google: "Google", bing: "Bing", ddg: "DuckDuckGo", github: "GitHub" }[p],
-        )
+        toast("默认搜索引擎：" + providerNames[p])
       }
 
       document.addEventListener("click", (e) => {
         closeCtxMenu()
+        document.querySelectorAll(".search-provider-dropdown").forEach((menu) => {
+          menu.classList.remove("show")
+        })
       })
 
       // Shortcuts panel
@@ -3186,25 +3407,6 @@
         }, 250)
       }
 
-      // Toast stacking
-      let toastId = 0
-      function toast(msg) {
-        const stack = document.getElementById("toastStack")
-        const id = ++toastId
-        const el = document.createElement("div")
-        el.className = "toast-item"
-        el.innerHTML = `<span style="color:var(--wb-accent);font-weight:700">✓</span> ${msg}`
-        el.id = "toast-" + id
-        stack.appendChild(el)
-        setTimeout(() => {
-          el.style.opacity = "0"
-          el.style.transform = "translateX(20px)"
-          el.style.transition = "all 200ms ease"
-          setTimeout(() => el.remove(), 200)
-        }, 2500)
-        if (stack.children.length > 3) stack.firstChild.remove()
-      }
-
       // ====== UTILS ======
       function e(s) {
         const d = document.createElement("div")
@@ -3212,7 +3414,7 @@
         return d.innerHTML
       }
       function updateBadge() {
-        document.getElementById("widgetBadge").textContent = widgetInstances.length + " 实例"
+        return widgetInstances.length
       }
 
       let toastTimer
