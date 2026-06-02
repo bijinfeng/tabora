@@ -19,6 +19,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/plugin-notes": "workspace:*",

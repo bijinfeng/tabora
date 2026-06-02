@@ -21,6 +21,13 @@ import { createPluginCatalog } from "@tabora/orchestrator"
 import { createPluginKernel } from "@tabora/platform-kernel"
 import { applyThemeTokens } from "@tabora/theme"
 import {
+  PluginViewBoundary,
+  CommandPalette,
+  SettingsHost,
+  resolveInitialSettingsSectionId,
+  type SettingsSectionId,
+} from "@tabora/workbench-shell"
+import {
   createInstanceRepository,
   createPluginDataRepository,
   createPluginRecordRepository,
@@ -29,14 +36,7 @@ import {
 } from "@tabora/storage"
 import { Clock, Link2, Pencil, Sun, Target, CheckSquare } from "lucide-solid"
 
-import { PluginViewBoundary } from "./PluginViewBoundary"
-import { CommandPalette } from "./CommandPalette"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
-import {
-  SettingsHost,
-  resolveInitialSettingsSectionId,
-  type SettingsSectionId,
-} from "./settingsHost"
 import { resolveThemeTokens } from "./themeResolver"
 import {
   applyBackgroundStyle,

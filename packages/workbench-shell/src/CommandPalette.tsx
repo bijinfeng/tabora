@@ -5,7 +5,7 @@ import type {
   SearchProviderContribution,
   SearchWidgetEntry,
 } from "@tabora/plugin-api"
-import { buildSearchUrl, matchProvidersByToken, routeSearchQuery } from "@tabora/official-plugins"
+import { buildSearchUrl, matchProvidersByToken, routeSearchQuery } from "@tabora/orchestrator"
 import { Kbd } from "@tabora/ui"
 
 export type CommandItem = SearchCommandEntry

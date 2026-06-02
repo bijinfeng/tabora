@@ -230,6 +230,9 @@ importers:
 
   packages/official-plugins:
     dependencies:
+      '@tabora/orchestrator':
+        specifier: workspace:*
+        version: link:../orchestrator
       '@tabora/platform-kernel':
         specifier: workspace:*
         version: link:../platform-kernel
@@ -353,6 +356,22 @@ importers:
         version: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.13)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
 
   packages/workbench-shell:
+    dependencies:
+      '@tabora/orchestrator':
+        specifier: workspace:*
+        version: link:../orchestrator
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../plugin-api
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../ui
+      lucide-solid:
+        specifier: catalog:ui
+        version: 1.16.0(solid-js@1.9.13)
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.13
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
