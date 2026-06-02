@@ -20,6 +20,7 @@
     "zod": "catalog:data"
   },
   "devDependencies": {
-    "@tabora/tsconfig": "workspace:*"
+    "@tabora/tsconfig": "workspace:*",
+    "solid-js": "catalog:ui"
   }
 }

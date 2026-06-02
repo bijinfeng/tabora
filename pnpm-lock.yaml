@@ -340,6 +340,9 @@ importers:
       '@tabora/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.13
 
   packages/storage:
     dependencies:
