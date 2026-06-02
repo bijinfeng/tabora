@@ -95,6 +95,7 @@ packages/
   theme/                # Token 应用（不变）
   ui/                   # 插件内容区基础组件（按 V2 组件规范扩展，不承接宿主容器）
   official-plugins/     # 官方插件包（新增 stream layout）
+  workbench-shell/      # Shell host 样式与后续宿主容器组件
 ```
 
 设计 catalog 与包边界的映射需要额外说明：
@@ -102,7 +103,7 @@ packages/
 - `docs/design/02-基础组件规范.html` 中的 52 个组件是**设计 catalog**，不是 `@tabora/ui` 的 1:1 导出清单。
 - `@tabora/ui` 只承接插件内容区基础组件和组合模式，如 `Button`、`Input`、`Field`、`ListRow`、`CardSection`、`Kbd` 等。
 - `CommandPalette`、`Dialog`、`Drawer`、`Toast`、`ContextMenu`、`ExpandHost`、`SettingsHost`、快捷键面板等宿主级容器由 shell / orchestrator 提供，可复用 design spec，但不应强行收进 `@tabora/ui`。
-- 官方插件和官方 layout 的样式由 `@tabora/official-plugins/styles.css` 跟随插件包提供；playground 只导入样式包，不维护官方插件 class 的 CSS。playground 可保留第一 shell 独有的 host 容器样式，例如 dev toolbar、widget card chrome、modal/fullscreen/settings host、toast 和 context menu。
+- 官方插件和官方 layout 的样式由 `@tabora/official-plugins/styles.css` 跟随插件包提供；shell host 样式由 `@tabora/workbench-shell/styles.css` 提供。playground 只导入样式包，不维护官方插件 class 或宿主容器 class 的 CSS。
 
 `@tabora/orchestrator` 的职责边界：
 
@@ -911,6 +912,7 @@ packages/
   theme/                # 不变
   ui/                   # 仅扩展插件内容区组件，不承载宿主容器
   official-plugins/     # 新增 layout-workbench-stream
+  workbench-shell/      # Shell host 样式，后续承接宿主容器组件
 ```
 
 ## 17. 实施路线

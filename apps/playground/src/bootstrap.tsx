@@ -1,8 +1,9 @@
 import { render } from "solid-js/web"
+import "./app.css"
 import "@tabora/ui/styles.css"
 import "@tabora/official-plugins/styles.css"
+import "@tabora/workbench-shell/styles.css"
 import { App } from "./App"
-import "./app.css"
 
 const root = document.getElementById("root")
 

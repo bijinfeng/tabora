@@ -15,6 +15,7 @@
     "@tabora/storage": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
+    "@tabora/workbench-shell": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
   },
