@@ -162,3 +162,46 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(false)
   })
 })
+
+describe("layout 最小强制规则", () => {
+  const baseLayout = {
+    id: "x.layout",
+    title: "X",
+    view: "x.layout.view",
+    regions: [{ id: "grid", title: "网格", accepts: ["widget"], required: true }],
+    defaultRegions: { grid: [] },
+    supportsResponsive: true,
+  }
+
+  function manifestWith(layout: unknown) {
+    return {
+      id: "x",
+      name: "X",
+      version: "1.0.0",
+      entry: "./x",
+      engine: { platform: "^0.1.0" },
+      contributes: { layouts: [layout] },
+    }
+  }
+
+  it("合格：含 widget region + view", () => {
+    expect(pluginManifestSchema.safeParse(manifestWith(baseLayout)).success).toBe(true)
+  })
+
+  it("不合格：无 widget region", () => {
+    const layout = {
+      ...baseLayout,
+      regions: [{ id: "side", title: "侧栏", accepts: ["search"], required: false }],
+    }
+    expect(pluginManifestSchema.safeParse(manifestWith(layout)).success).toBe(false)
+  })
+
+  it("不合格：缺 view 字段", () => {
+    const { view: _view, ...noView } = baseLayout
+    expect(pluginManifestSchema.safeParse(manifestWith(noView)).success).toBe(false)
+  })
+
+  it("合格：缺 search/settings region 仍通过", () => {
+    expect(pluginManifestSchema.safeParse(manifestWith(baseLayout)).success).toBe(true)
+  })
+})

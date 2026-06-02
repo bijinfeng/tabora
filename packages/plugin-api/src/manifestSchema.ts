@@ -58,15 +58,20 @@ export const pluginManifestSchema = z.object({
   contributes: z.object({
     layouts: z
       .array(
-        z.object({
-          id: z.string().min(1),
-          title: z.string().min(1),
-          preview: z.string().optional(),
-          view: z.string().min(1).optional(),
-          regions: z.array(layoutRegionSchema).min(1),
-          defaultRegions: z.record(z.string(), z.array(instanceRefSchema)),
-          supportsResponsive: z.boolean(),
-        }),
+        z
+          .object({
+            id: z.string().min(1),
+            title: z.string().min(1),
+            preview: z.string().optional(),
+            view: z.string().min(1),
+            regions: z.array(layoutRegionSchema).min(1),
+            defaultRegions: z.record(z.string(), z.array(instanceRefSchema)),
+            supportsResponsive: z.boolean(),
+          })
+          .refine((layout) => layout.regions.some((region) => region.accepts.includes("widget")), {
+            message: "layout must declare at least one region accepting widget",
+            path: ["regions"],
+          }),
       )
       .optional(),
     widgets: z.array(widgetContributionSchema).optional(),
