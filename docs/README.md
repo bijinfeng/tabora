@@ -48,6 +48,7 @@
 - 官方插件矩阵。
 - 默认装配方案。
 - `official.layout.workbench-dashboard`。
+- `official.layout.workbench-stream`。
 - `official.search.command-bar`。
 - `official.search-providers.basic`。
 - `official.background.basic`。
@@ -60,29 +61,7 @@
 - `official.settings.workspace`。
 - 跨插件流程。
 
-### 设计体系
-
-- `docs/product/tabora-design-system.md`
-
-用途：
-
-- 统一 Tabora 的视觉语言、design token、基础组件、宿主容器和插件内容区规范。
-- 实现或修改 `@tabora/theme`、`@tabora/ui`、shell UI 或官方插件 UI 前优先读它。
-- 将用户已认可的浅绿灰工作台方向转成可落地、可验收的设计约束。
-
-重点内容：
-
-- 设计定位和参考体系。
-- 色彩、字体、间距、圆角、边框、阴影和动效 token。
-- WorkbenchShell、Rail、CommandSearch、WidgetCardShell、SettingsHost 等宿主容器规范。
-- `@tabora/ui` 基础组件规格。
-- 插件内容区、可访问性、响应式和验收清单。
-
-视觉预览：
-
-- `docs/product/tabora-design-system-preview.html`，静态 HTML，可直接在浏览器打开，不依赖本地服务。
-
-### V2 设计体系（2026-05-30 发布）
+### 设计事实源（V2）
 
 V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、组件文档和可交互产品原型。所有内容中文编写，零依赖纯静态 HTML。
 
@@ -96,9 +75,23 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 - PRD 评审时验证产品口径完备性。
 - 实现 UI 时参照颜色、间距、组件 API 和交互模式。
 
+### 设计实现映射
+
+- `docs/product/tabora-design-system.md`
+
+用途：
+
+- 作为 V2 设计事实源到当前仓库实现的桥接文档。
+- 说明 `@tabora/theme`、`@tabora/ui`、shell 宿主容器和 Storybook 应如何承接 `docs/design/*`。
+- 记录实现映射、同步清单和历史预览文件的定位，不再重复维护完整视觉规范正文。
+
+补充预览：
+
+- `docs/product/tabora-design-system-preview.html` 是早期静态视觉预览，可作为历史参考，不再作为当前视觉事实源。
+
 ### 技术方案
 
-- `docs/technical/tabora-plugin-workbench-technical-design.md`
+- `docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 
 用途：
 
@@ -142,7 +135,7 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 ## 历史规格和实施计划
 
-历史规格和阶段性实施计划已不再作为当前分支的文档入口。当前事实源以 `docs/product/` 和 `docs/technical/` 下的文档为准。
+历史规格和阶段性实施计划已不再作为当前分支的文档入口。当前事实源以 `docs/product/`、`docs/technical/` 和 `docs/design/` 下登记的文档为准。
 
 `docs/superpowers/specs/2026-05-29-tabora-execution-roadmap.md` 是当前分支登记的阶段执行规划入口，用于辅助后续 Superpowers 任务拆解；它不覆盖当前事实源。
 
@@ -170,7 +163,7 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 先读：
 
-- `docs/technical/tabora-plugin-workbench-technical-design.md`
+- `docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - `docs/product/tabora-plugin-workbench-prd.md` 中对应功能章节。
 - 相关 package 源码。
 
@@ -187,8 +180,11 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 先读：
 
 - `docs/product/tabora-official-plugins-design.md`
-- `docs/product/tabora-design-system.md` 的插件内容区和基础组件规范。
-- `docs/technical/tabora-plugin-workbench-technical-design.md` 的官方插件方案。
+- `docs/design/01-设计体系规范.html`
+- `docs/design/02-基础组件规范.html`
+- `docs/design/03-工作台交互原型.html`
+- `docs/product/tabora-design-system.md` 的实现映射与同步清单。
+- `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 的官方插件方案。
 - `packages/official-plugins/src/`
 
 注意：
@@ -205,6 +201,7 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 - `docs/design/03-工作台交互原型.html` — V2 可交互原型（搜索、拖拽、双击展开、右键菜单等交互模式）
 - `apps/storybook/` — `@tabora/ui` 基础组件的运行中示例与交互文档站，组件 API、状态和组合示例优先在这里对照
 - `docs/product/tabora-official-plugins-design.md` 的插件规格和交互示例。
+- `docs/product/tabora-design-system.md` 的实现映射与同步清单。
 - `AGENTS.md` 的 UI 规则。
 - 相关 Solid 组件和 CSS。
 
@@ -212,7 +209,7 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 - 工作台优先，不做 landing page。
 - 目标默认布局为轻 rail + 命令搜索 + 主网格，不退回纯搜索页。
-- `@tabora/ui` 已进入 MVP 范围但当前仍是 P0 待建；落地后插件内容区控件优先使用它，宿主级容器仍由 shell 提供。
+- `@tabora/ui` 已落地为基础组件包；后续补齐或重构时继续以 V2 组件规范和 Storybook 为准，宿主级容器仍由 shell 提供。
 - 明暗主题可读。
 - 卡片稳定，不因 hover、focus、拖拽造成布局跳动。
 - 移动端无横向滚动。
@@ -229,7 +226,7 @@ Storybook 使用约定：
 
 先读：
 
-- `docs/technical/tabora-plugin-workbench-technical-design.md` 的数据模型和持久化方案。
+- `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 的数据模型和持久化方案。
 - `packages/storage/src/`
 - `packages/plugin-api/src/workspace.ts`
 
@@ -244,7 +241,7 @@ Storybook 使用约定：
 
 先读：
 
-- `docs/technical/tabora-plugin-workbench-technical-design.md` 的权限与安全方案。
+- `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 的权限与安全方案。
 - `packages/platform-kernel/src/runtimeContext.ts`
 - `packages/platform-kernel/src/runtimeContext.test.ts`
 
@@ -281,7 +278,7 @@ Storybook 使用约定：
 这些口径已经在当前文档中确认：
 
 - MVP 包含轻量设置中心，但不做完整设置系统。
-- MVP 包含 `@tabora/ui` 基础组件包目标，当前状态为 P0 待建，用于统一插件内容区控件。
+- MVP 包含 `@tabora/ui` 基础组件包，并继续按 V2 组件规范扩展，用于统一插件内容区控件。
 - MVP 提供至少两种布局插件（仪表盘式和流式），且它们有显著不同的区域结构。
 - MVP 默认布局为仪表盘式（左侧轻 rail + 顶部命令搜索 + 主网格），用户可在设置中切换到流式布局。
 - 布局切换保留所有插件实例数据。区域不匹配的实例进入待放置状态。
@@ -289,7 +286,8 @@ Storybook 使用约定：
 - MVP 默认首屏核心卡片为今日重点、快捷入口、便签和待办；天气可作为可添加候选。
 - MVP 使用主网格纵向滚动处理卡片过多，不强行塞进一屏。
 - 默认首屏只保证命令搜索和 3-4 个核心卡片优先露出。
-- 当前设计体系事实源为 `docs/product/tabora-design-system.md`，静态视觉预览为 `docs/product/tabora-design-system-preview.html`。
+- 当前设计事实源为 `docs/design/01-设计体系规范.html`、`docs/design/02-基础组件规范.html` 和 `docs/design/03-工作台交互原型.html`。
+- `docs/product/tabora-design-system.md` 是面向仓库实现的桥接文档，`docs/product/tabora-design-system-preview.html` 仅作历史预览参考。
 - 官方插件也是生态示例，不能绕过平台协议。
 - 平台不硬编码具体业务能力。
 - 文档和说明优先使用中文。

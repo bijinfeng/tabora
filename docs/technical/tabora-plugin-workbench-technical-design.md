@@ -1,10 +1,10 @@
-# Tabora 插件化个人工作台技术方案
+# Tabora 插件化个人工作台技术方案（V1 归档入口）
 
-版本：V1.0（当前实现参考）
+版本：V1.0（归档）
 
 日期：2026-05-27
 
-状态：基于当前 MVP 实现和产品文档整理；目标产品方向已收敛为模块仪表盘型个人工作台
+状态：保留 V1 阶段实现背景；当前技术事实源已切换为 V2 技术方案
 
 > **V2 技术方案已发布**，完整对照 V2 PRD 和设计原型从零评审重写。
 > 详见 `docs/technical/tabora-plugin-workbench-technical-design-v2.md`。
@@ -14,7 +14,11 @@
 
 - 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- 设计体系：`docs/product/tabora-design-system.md`
+- 设计规范：`docs/design/01-设计体系规范.html`
+- 组件规范：`docs/design/02-基础组件规范.html`
+- 工作台原型：`docs/design/03-工作台交互原型.html`
+- 设计实现映射：`docs/product/tabora-design-system.md`
+- 当前技术事实源：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 文档地图：`docs/README.md`
 
 ## 0. 本轮评审依据与补漏结论
