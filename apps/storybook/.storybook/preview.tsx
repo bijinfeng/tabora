@@ -1,5 +1,5 @@
 import "@tabora/ui/styles.css"
-import type { Preview } from "storybook-solidjs"
+import type { Preview } from "storybook-solidjs-vite"
 
 const preview: Preview = {
   globalTypes: {

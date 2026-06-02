@@ -13,14 +13,13 @@
     "solid-js": "catalog:ui"
   },
   "devDependencies": {
-    "@storybook/addon-essentials": "^8.6.18",
-    "@storybook/addon-interactions": "^8.6.18",
-    "@storybook/addon-themes": "^8.6.18",
-    "@storybook/blocks": "^8.6.18",
-    "@storybook/builder-vite": "^8.6.18",
+    "@storybook/addon-a11y": "^10.4.1",
+    "@storybook/addon-docs": "^10.4.1",
+    "@storybook/addon-themes": "^10.4.1",
+    "@storybook/builder-vite": "^10.4.1",
     "@tabora/tsconfig": "workspace:*",
-    "storybook": "^8.6.18",
-    "storybook-solidjs": "^1.0.0-beta.7",
+    "storybook": "^10.4.1",
+    "storybook-solidjs-vite": "^10.1.1",
     "vite-plugin-solid": "catalog:build"
   }
 }
