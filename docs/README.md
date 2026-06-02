@@ -116,6 +116,16 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 - 测试方案。
 - 验收清单。
 
+### Playground 部署
+
+- `docs/technical/playground-github-actions-deploy.md`
+
+用途：
+
+- 配置 GitHub Actions 将 `apps/playground` 构建并发布到自有服务器。
+- 确认仓库 Variables / Secrets、服务器目录和 SSH/rsync 前置条件。
+- 排查静态部署链路问题时优先读它。
+
 ### 阶段执行路线图
 
 - `docs/superpowers/specs/2026-05-29-tabora-execution-roadmap.md`
@@ -236,6 +246,20 @@ Storybook 使用约定：
 - plugin instance 存实例尺寸、区域、位置和配置。
 - plugin data 存插件业务数据。
 - 插件业务数据不要混入 workspace。
+
+### 部署 Playground
+
+先读：
+
+- `docs/technical/playground-github-actions-deploy.md`
+- `.github/workflows/deploy-playground.yml`
+
+常见问题：
+
+- 需要配置哪些 GitHub Variables / Secrets。
+- workflow 什么时候会自动发布。
+- 服务器目录需要什么权限。
+- 如何在部署后追加 reload 或缓存刷新命令。
 
 ### 修改权限或安全
 

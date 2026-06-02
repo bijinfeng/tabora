@@ -1,0 +1,109 @@
+name: Deploy Playground
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-playground.yml"
+      - "apps/playground/**"
+      - "packages/**"
+      - "plugins/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "vite.config.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-playground-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYGROUND_DEPLOY_HOST: ${{ vars.PLAYGROUND_DEPLOY_HOST }}
+      PLAYGROUND_DEPLOY_PORT: ${{ vars.PLAYGROUND_DEPLOY_PORT }}
+      PLAYGROUND_DEPLOY_USER: ${{ vars.PLAYGROUND_DEPLOY_USER }}
+      PLAYGROUND_DEPLOY_PATH: ${{ vars.PLAYGROUND_DEPLOY_PATH }}
+      PLAYGROUND_DEPLOY_POST_COMMAND: ${{ vars.PLAYGROUND_DEPLOY_POST_COMMAND }}
+      PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY }}
+      PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build playground
+        run: pnpm --filter @tabora/playground build
+
+      - name: Validate deploy configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+
+          for name in PLAYGROUND_DEPLOY_HOST PLAYGROUND_DEPLOY_USER PLAYGROUND_DEPLOY_PATH PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error title=Missing configuration::$name is not configured"
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          if [ -n "${PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS:-}" ]; then
+            printf '%s\n' "$PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "$deploy_port" -H "$PLAYGROUND_DEPLOY_HOST" > ~/.ssh/known_hosts
+          fi
+
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Ensure target directory exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
+          ssh -p "$deploy_port" "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST" "mkdir -p \"$PLAYGROUND_DEPLOY_PATH\""
+
+      - name: Sync static files
+        shell: bash
+        run: |
+          set -euo pipefail
+          deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
+          rsync -az --delete -e "ssh -p $deploy_port" apps/playground/dist/ "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST:$PLAYGROUND_DEPLOY_PATH/"
+
+      - name: Run post-deploy command
+        if: ${{ env.PLAYGROUND_DEPLOY_POST_COMMAND != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
+          ssh -p "$deploy_port" "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST" "$PLAYGROUND_DEPLOY_POST_COMMAND"
