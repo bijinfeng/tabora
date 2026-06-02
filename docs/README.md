@@ -134,6 +134,15 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 - 基于 PRD、官方插件设计、技术方案和当前实现状态，整理后续阶段的执行顺序。
 - 后续使用 Superpowers 拆解实施任务时，先选中路线图中的阶段或子项目，避免每次重新探索下一阶段范围。
+
+### 布局插件化契约重构设计
+
+- `docs/superpowers/specs/2026-06-02-layout-plugin-contract-design.md`
+
+用途：
+
+- 把布局从 shell 硬编码分发改为协议驱动，落地 LayoutViewProps / RegionSlot / LayoutHostAPI 契约。
+- 把官方两个布局拆成独立 package，并新增第三方 DIY 布局验证架构是否真支持第三方布局。
 - 作为实施规划入口，不替代 PRD、官方插件设计和技术方案的事实源地位。
 
 重点内容：

@@ -383,3 +383,32 @@ Phase A-H 已全部实施。当前 MVP 基线已达到：
 - **Phase L**：插件市场最小可验证流程（沙箱验证 + 包签名）
 - **Phase M**：云同步和账号系统（PRD V2）
 - **Phase N**：团队/共享工作区（PRD V2）
+- **Phase O**：official-plugins 全量拆包，为开放第三方生态铺路（见下）
+
+## 16. Phase O：official-plugins 拆包债务（开放第三方生态前置）
+
+最终目标是开放第三方插件生态。当前 `official-plugins` 把多个插件挤在一个 package 里，虽然每个在协议层都已是合格 `BuiltinPlugin`（独立 manifest + activate + contributes），但缺少独立 package 才能提供的"依赖隔离硬证据"，也无法作为第三方开发样板。
+
+布局插件已在"布局插件化重构"中先行拆出（`plugins/layout-*`），因为它当时被 shell 硬编码阻断，拆包同时完成解锁与验证。其余 6 个插件的拆包按以下优先级分批进行，作为开放第三方生态前必须偿还的债务：
+
+**优先级 1 — 纯数据三件套（最高性价比，第三方样板价值最大）**
+
+- `theme-default-pack`（`themes`）：主题包是经典第三方场景，外部开发者照此 5 分钟可仿一个。
+- `background-basic`（`backgroundProviders`）：天然隔离，拆包成本极低。
+- `search-providers-basic`（`searchProviders`）：加搜索源是高频第三方需求。
+
+这三个是纯数据 `.ts`，从无运行时耦合，拆包主要价值是"第三方怎么写插件"的活样板。
+
+**优先级 2 — search-command-bar（`searches`，真实 view）**
+
+中等复刻价值（多数人只想加搜索源、不想换整个搜索 UI），中等耦合。拆包前确认搜索 view 与 `@tabora/ui` / 样式的依赖面。
+
+**优先级 3 — settings-workspace + plugin-manager（控制面板，真正问题不是拆包）**
+
+`settings-workspace` 的 `host` 注入了 `switchLayout / switchTheme / switchBackground / exportWorkspace / importWorkspace / createWorkspace / deleteWorkspace` 等大量平台控制能力，本质是"平台控制台恰好用 settings-panel 协议实现"，不是普通第三方插件。
+
+关键判断：**把它拆成独立 package 不能解决它的根本问题**。它暴露的真问题是 `SettingsPanelViewProps` 契约把"平台控制能力"和"插件私有设置"混在一起，第三方插件不该拿到这些控制能力。这需要一次独立的契约重审（拆分平台控制面板协议与第三方 settings-panel 协议），不是拆包能解决的，应作为独立 brainstorming 主题。
+
+**伴随成本提醒**
+
+`AGENTS.md` 规定官方插件样式跟随 `official-plugins/styles.css`。全量拆包会把"纯拆包"放大成"拆包 + 样式归属重构"，分批时需把共享样式的拆分纳入每批范围。
