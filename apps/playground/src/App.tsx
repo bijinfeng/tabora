@@ -2,9 +2,12 @@ import { createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type {
   BackgroundProviderContribution,
+  LayoutContribution,
+  LayoutRegion,
   PluginInstance,
   SearchHistoryEntry,
   SearchProviderContribution,
+  SearchViewProps,
   SettingsPanelViewProps,
   ThemeContribution,
   WidgetSize,
@@ -27,8 +30,13 @@ import { Clock, Link2, Pencil, Sun, Target, CheckSquare } from "lucide-solid"
 import { PluginViewBoundary } from "./PluginViewBoundary"
 import { CommandPalette } from "./CommandPalette"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
-import { findLayoutContribution } from "./workbenchShell"
-import { SettingsHost, collectSettingsPanels, resolveInitialSettingsPanelId } from "./settingsHost"
+import { findLayoutContribution, findSearchContribution } from "./workbenchShell"
+import {
+  SettingsHost,
+  collectSettingsPanels,
+  resolveInitialSettingsSectionId,
+  type SettingsSectionId,
+} from "./settingsHost"
 import { resolveThemeTokens } from "./themeResolver"
 import {
   applyBackgroundStyle,
@@ -41,11 +49,11 @@ import {
   ensureWorkspaceSession,
   readSearchSettings,
   updateWorkspaceBackground,
-  updateWorkspaceLayout,
   updateWorkspaceRecord,
   updateWorkspaceTheme,
 } from "./workspaceSession"
 import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
+import { createWorkspaceRegions } from "./defaultWorkspaceSeed"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 
@@ -65,35 +73,17 @@ function requireWorkspace(workspace: Workspace | null): Workspace {
   return workspace
 }
 
-async function persistActiveLayout(options: {
-  workspace: Workspace | null
-  layoutId: string
-  workspaceRepo: ReturnType<typeof createWorkspaceRepository>
-  setWorkspaceState: (workspace: Workspace) => void
-  setActiveLayoutId: (layoutId: string) => void
-}) {
-  const workspace = requireWorkspace(options.workspace)
-  options.setActiveLayoutId(options.layoutId)
-  const updated = await updateWorkspaceLayout({
-    workspaceRepo: options.workspaceRepo,
-    workspaceId: workspace.id,
-    layoutId: options.layoutId,
-  })
-  if (updated) {
-    options.setWorkspaceState(updated)
-  }
-}
-
 export function App() {
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
   const [activeLayoutId, setActiveLayoutId] = createSignal("official.layout.workbench-dashboard")
   const [themeId, setThemeId] = createSignal("official.theme.light")
-  const [backgroundId, setBackgroundId] = createSignal(FALLBACK_BACKGROUND_ID)
+  const [, setBackgroundId] = createSignal(FALLBACK_BACKGROUND_ID)
   const [workspaceState, setWorkspaceState] = createSignal<Workspace | null>(null)
   const [workspaceList, setWorkspaceList] = createSignal<Workspace[]>([])
   const [settingsOpen, setSettingsOpen] = createSignal(false)
-  const [activeSettingsPanelId, setActiveSettingsPanelId] = createSignal<string | null>(null)
+  const [activeSettingsSectionId, setActiveSettingsSectionId] =
+    createSignal<SettingsSectionId>("general")
   const [searchSettings, setSearchSettings] = createSignal<WorkbenchSearchSettings>({
     defaultProviderId: "",
   })
@@ -139,13 +129,7 @@ export function App() {
           activeLayoutId() === "official.layout.workbench-dashboard"
             ? "official.layout.workbench-stream"
             : "official.layout.workbench-dashboard"
-        void persistActiveLayout({
-          workspace: workspaceState(),
-          layoutId: next,
-          workspaceRepo,
-          setWorkspaceState,
-          setActiveLayoutId,
-        })
+        void switchLayout(next)
       },
     },
     {
@@ -162,7 +146,7 @@ export function App() {
       desc: "配置工作台",
       group: "命令" as const,
       shortcut: "⌘,",
-      action: () => setSettingsOpen(true),
+      action: () => openSettings("official.settings.workspace.appearance"),
     },
     {
       icon: "?",
@@ -227,7 +211,11 @@ export function App() {
     applyBackgroundStyle(resolveBackgroundStyle(session.activeBackgroundId, allBackgrounds))
 
     setSearchHistory(session.searchHistory)
-    setInstances(assignGridOrder(session.instances))
+    const nextInstances = await reconcileInstancesForLayout(
+      session.activeLayoutId,
+      session.instances,
+    )
+    setInstances(nextInstances)
     const allWorkspaces = await workspaceRepo.getAll()
     setWorkspaceList(allWorkspaces)
     setKernelReady(true)
@@ -263,6 +251,100 @@ export function App() {
     )
   }
 
+  function layouts(): LayoutContribution[] {
+    return officialPlugins.flatMap((plugin) => plugin.manifest.contributes.layouts ?? [])
+  }
+
+  function layoutRegions(layoutId = activeLayoutId()): LayoutRegion[] {
+    return findLayoutContribution(officialPlugins, layoutId)?.regions ?? []
+  }
+
+  function buildWorkspaceRegionState(
+    layoutId: string,
+    currentInstances: PluginInstance[],
+  ): Workspace["regions"] {
+    return createWorkspaceRegions(
+      layoutRegions(layoutId).map((region) => ({
+        regionId: region.id,
+        accepts: region.accepts,
+      })),
+      currentInstances.map((instance) => ({
+        instanceId: instance.id,
+        regionId: instance.regionId,
+      })),
+    )
+  }
+
+  function reassignInstancesForLayout(
+    layoutId: string,
+    currentInstances: PluginInstance[],
+  ): PluginInstance[] {
+    const nextRegions = layoutRegions(layoutId)
+    const nextWidgetRegion = nextRegions.find((region) => region.accepts.includes("widget"))
+    const nextSearchRegion = nextRegions.find((region) => region.accepts.includes("search"))
+    const now = new Date().toISOString()
+
+    return currentInstances.map((instance) => {
+      const supportsCurrentRegion = nextRegions.some(
+        (region) =>
+          region.id === instance.regionId && region.accepts.includes(instance.extensionPoint),
+      )
+      if (supportsCurrentRegion) {
+        return instance
+      }
+
+      if (instance.extensionPoint === "widget" && nextWidgetRegion) {
+        return { ...instance, regionId: nextWidgetRegion.id, updatedAt: now }
+      }
+
+      if (instance.extensionPoint === "search" && nextSearchRegion) {
+        return { ...instance, regionId: nextSearchRegion.id, updatedAt: now }
+      }
+
+      return instance
+    })
+  }
+
+  async function reconcileInstancesForLayout(
+    layoutId: string,
+    currentInstances: PluginInstance[],
+  ): Promise<PluginInstance[]> {
+    const nextInstances = reassignInstancesForLayout(layoutId, currentInstances)
+    for (let index = 0; index < nextInstances.length; index += 1) {
+      const previous = currentInstances[index]
+      const next = nextInstances[index]
+      if (
+        previous &&
+        next &&
+        (previous.regionId !== next.regionId || previous.updatedAt !== next.updatedAt)
+      ) {
+        await instanceRepo.save(next)
+      }
+    }
+    return assignGridOrder(nextInstances)
+  }
+
+  async function switchLayout(layoutId: string) {
+    const activeWorkspace = requireWorkspace(workspaceState())
+    const nextInstances = await reconcileInstancesForLayout(layoutId, instances())
+    setInstances(nextInstances)
+    setActiveLayoutId(layoutId)
+
+    const updatedWorkspace = await updateWorkspaceRecord({
+      workspaceRepo,
+      workspaceId: activeWorkspace.id,
+      mutator(workspace) {
+        workspace.activeLayoutId = layoutId
+        workspace.regions = buildWorkspaceRegionState(layoutId, nextInstances)
+        return workspace
+      },
+    })
+
+    if (updatedWorkspace) {
+      setWorkspaceState(updatedWorkspace)
+    }
+  }
+
   function pluginSummaries(): SettingsPanelViewProps["plugins"] {
     return officialPlugins.map((plugin) => ({
       id: plugin.manifest.id,
@@ -288,7 +370,7 @@ export function App() {
 
   function openSettings(panelId?: string) {
     const panels = collectSettingsPanels(officialPlugins)
-    setActiveSettingsPanelId(resolveInitialSettingsPanelId(panels, panelId))
+    setActiveSettingsSectionId(resolveInitialSettingsSectionId(panels, panelId))
     setSettingsOpen(true)
   }
 
@@ -399,10 +481,23 @@ export function App() {
     })
 
     setWorkspaceState(result.workspace)
-    const gridInstances = result.instances.filter((i) => i.regionId === "mainGrid")
-    setInstances(gridInstances)
+    const nextInstances = await reconcileInstancesForLayout(
+      result.workspace.activeLayoutId,
+      result.instances,
+    )
+    setInstances(nextInstances)
     setActiveLayoutId(result.workspace.activeLayoutId)
     setThemeId(result.workspace.activeThemeId)
+    applyThemeTokens(
+      document.documentElement,
+      resolveThemeTokens(result.workspace.activeThemeId, themes()),
+    )
+    const importedBackgroundId =
+      result.workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID
+    setBackgroundId(importedBackgroundId)
+    applyBackgroundStyle(resolveBackgroundStyle(importedBackgroundId, backgrounds()))
+    setSearchSettings(readSearchSettings(result.workspace, searchProviders()))
+    setWorkspaceList((prev) => [...prev, result.workspace])
 
     return { warnings: result.warnings }
   }
@@ -437,7 +532,11 @@ export function App() {
     applyBackgroundStyle(resolveBackgroundStyle(bg, allBg))
     setSearchSettings(session.searchSettings)
     setSearchHistory(session.searchHistory)
-    setInstances(assignGridOrder(session.instances))
+    const nextInstances = await reconcileInstancesForLayout(
+      session.activeLayoutId,
+      session.instances,
+    )
+    setInstances(nextInstances)
   }
 
   async function deleteWorkspace(id: string) {
@@ -474,6 +573,7 @@ export function App() {
       host: {
         close: () => setSettingsOpen(false),
         setDirty: () => {},
+        switchLayout,
         switchTheme,
         switchBackground,
         setDefaultSearchProvider,
@@ -490,6 +590,7 @@ export function App() {
       },
       workspace,
       workspaces: getWorkspaceList(),
+      layouts: layouts(),
       themes: themes(),
       backgrounds: backgrounds(),
       searchProviders: searchProviders(),
@@ -526,9 +627,6 @@ export function App() {
       setWorkspaceState(workspace)
     }
   }
-
-  const SearchView = () =>
-    kernel.registry.views.get("official.search.command-bar.view") as SolidView
 
   function widgetCardView(contributionId: string): SolidView | null {
     const plugin = officialPlugins.find((p) =>
@@ -578,6 +676,8 @@ export function App() {
     if (!pluginId) return
     const widget = findWidgetContribution(pluginId, contributionId)
     if (!widget) return
+    const widgetRegionId =
+      layoutRegions().find((region) => region.accepts.includes("widget"))?.id ?? "mainGrid"
     const id = `${contributionId}-${Date.now()}`
     const inst: PluginInstance = {
       id,
@@ -585,7 +685,7 @@ export function App() {
       pluginId,
       contributionId,
       extensionPoint: "widget",
-      regionId: "mainGrid",
+      regionId: widgetRegionId,
       enabled: true,
       size: widget.defaultSize,
       config: {},
@@ -629,28 +729,52 @@ export function App() {
     e.dataTransfer!.dropEffect = "move"
   }
 
-  async function persistGridOrder(orderedInstances: PluginInstance[]) {
-    const next = assignGridOrder(orderedInstances)
+  function regionInstances(regionId: string, extensionPoint?: PluginInstance["extensionPoint"]) {
+    return instances()
+      .filter(
+        (instance) =>
+          instance.regionId === regionId &&
+          (extensionPoint ? instance.extensionPoint === extensionPoint : true),
+      )
+      .sort(
+        (left, right) =>
+          (left.grid?.x ?? 0) - (right.grid?.x ?? 0) ||
+          left.createdAt.localeCompare(right.createdAt),
+      )
+  }
 
-    for (const instance of next) {
+  function widgetInstancesForRegion(regionId: string) {
+    return regionInstances(regionId, "widget")
+  }
+
+  function searchInstancesForRegion(regionId: string) {
+    return regionInstances(regionId, "search")
+  }
+
+  async function persistGridOrder(regionId: string, orderedInstances: PluginInstance[]) {
+    const nextRegionInstances = assignGridOrder(orderedInstances)
+    const nextById = new Map(nextRegionInstances.map((instance) => [instance.id, instance]))
+    const mergedInstances = instances().map((instance) => nextById.get(instance.id) ?? instance)
+
+    for (const instance of nextRegionInstances) {
       await instanceRepo.save(instance)
     }
 
-    setInstances(next)
+    setInstances(mergedInstances)
   }
 
-  function onDrop(e: DragEvent, targetId: string) {
+  function onDrop(e: DragEvent, targetId: string, regionId: string) {
     e.preventDefault()
     const sourceId = dragId()
     if (!sourceId || sourceId === targetId) return
     setDragId(null)
-    const list = [...instances()]
+    const list = [...widgetInstancesForRegion(regionId)]
     const fromIdx = list.findIndex((i) => i.id === sourceId)
     const toIdx = list.findIndex((i) => i.id === targetId)
     if (fromIdx === -1 || toIdx === -1) return
     const [moved] = list.splice(fromIdx, 1)
     list.splice(toIdx, 0, moved!)
-    void persistGridOrder(list)
+    void persistGridOrder(regionId, list)
     showToast("排序已更新")
   }
 
@@ -693,11 +817,54 @@ export function App() {
     return ""
   }
 
-  function renderMainGrid() {
+  function openExternal(url: string): boolean {
+    kernel.events.emit("host.external.open", { url })
+    return true
+  }
+
+  function renderSearchRegion(regionId: string) {
+    const searchInstances = searchInstancesForRegion(regionId)
+    if (searchInstances.length === 0) {
+      return <div class="settings-empty">当前布局未放置搜索插件</div>
+    }
+
+    return (
+      <For each={searchInstances}>
+        {(instance) => {
+          const search = findSearchContribution(
+            officialPlugins,
+            instance.pluginId,
+            instance.contributionId,
+          )
+          if (!search) return null
+          const View = viewOrUndefined<SearchViewProps>(search.view)
+          if (!View) {
+            return <div class="settings-empty">搜索视图不可用：{search.id}</div>
+          }
+
+          return (
+            <PluginViewBoundary instanceId={instance.id} title={search.title}>
+              {View({
+                providers: enabledSearchProviders(),
+                defaultProviderId: resolveDefaultProviderForSearch(),
+                openExternal,
+                onDefaultProviderChange: setDefaultSearchProvider,
+                searchHistory: searchHistory(),
+                onSaveHistory: saveSearchHistory,
+                onClearHistory: clearSearchHistory,
+              })}
+            </PluginViewBoundary>
+          )
+        }}
+      </For>
+    )
+  }
+
+  function renderMainGrid(regionId: string) {
     return (
       <>
         <section class="workbench-grid">
-          <For each={instances()}>
+          <For each={widgetInstancesForRegion(regionId)}>
             {(inst) => {
               const View = widgetCardView(inst.contributionId)
               if (!View) return null
@@ -712,7 +879,7 @@ export function App() {
                   draggable="true"
                   onDragStart={(e) => onDragStart(e, inst.id)}
                   onDragOver={onDragOver}
-                  onDrop={(e) => onDrop(e, inst.id)}
+                  onDrop={(e) => onDrop(e, inst.id, regionId)}
                   onDblClick={() => {
                     const w = findWidgetContribution(inst.pluginId, inst.contributionId)
                     const modalViewId = w?.views.modal
@@ -797,7 +964,7 @@ export function App() {
                         <button
                           class="add-widget-modal-item"
                           onClick={() => {
-                            addWidget(w.id)
+                            void addWidget(w.id)
                             setAddWidgetOpen(false)
                           }}
                         >
@@ -823,7 +990,10 @@ export function App() {
     if (actionId === "add-widget") {
       setAddWidgetOpen(true)
     } else if (actionId === "plugins") {
-      setActiveSettingsPanelId("official.settings.plugins")
+      setActiveSettingsSectionId("plugins")
+      setSettingsOpen(true)
+    } else if (actionId === "settings") {
+      setActiveSettingsSectionId("appearance")
       setSettingsOpen(true)
     } else if (actionId === "home") {
       window.scrollTo({ top: 0, behavior: "smooth" })
@@ -835,7 +1005,9 @@ export function App() {
     const LayoutView = layout?.view ? viewOrUndefined(layout.view) : undefined
 
     if (!LayoutView) {
-      return <>{renderMainGrid()}</>
+      const fallbackRegionId =
+        layoutRegions().find((region) => region.accepts.includes("widget"))?.id ?? "mainGrid"
+      return <>{renderMainGrid(fallbackRegionId)}</>
     }
 
     const isDashboard = activeLayoutId() === "official.layout.workbench-dashboard"
@@ -905,7 +1077,7 @@ export function App() {
           <button
             class="rail-btn"
             aria-label="设置"
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => runRailAction("settings")}
             type="button"
           >
             <svg
@@ -939,17 +1111,10 @@ export function App() {
               + 添加卡片
             </button>
           </div>
-          {SearchView()({
-            providers: enabledSearchProviders(),
-            defaultProviderId: resolveDefaultProviderForSearch(),
-            onDefaultProviderChange: setDefaultSearchProvider,
-            searchHistory: searchHistory(),
-            onSaveHistory: saveSearchHistory,
-            onClearHistory: clearSearchHistory,
-          })}
+          {renderSearchRegion("topbar")}
         </div>
       )
-      return LayoutView({ rail, topbar, mainGrid: renderMainGrid() })
+      return LayoutView({ rail, topbar, mainGrid: renderMainGrid("mainGrid") })
     }
 
     if (isStream) {
@@ -962,7 +1127,7 @@ export function App() {
           <button class="toolbar-btn" onClick={() => setCmdPaletteOpen(true)}>
             ⌘K 搜索
           </button>
-          <button class="toolbar-btn" onClick={() => setSettingsOpen(true)}>
+          <button class="toolbar-btn" onClick={() => runRailAction("settings")}>
             ⚙ 设置
           </button>
         </div>
@@ -975,13 +1140,15 @@ export function App() {
               <div class="stream-hero-greeting">下午好 ☀</div>
               <div class="stream-hero-date">2026年5月30日 · 北京</div>
             </div>
-            {renderMainGrid()}
+            {renderMainGrid("stream")}
           </>
         ),
       })
     }
 
-    return <>{renderMainGrid()}</>
+    const fallbackRegionId =
+      layoutRegions().find((region) => region.accepts.includes("widget"))?.id ?? "mainGrid"
+    return <>{renderMainGrid(fallbackRegionId)}</>
   }
 
   const isDark = () => themeId() === "official.theme.dark"
@@ -996,11 +1163,11 @@ export function App() {
         }
         if ((e.metaKey || e.ctrlKey) && e.key === "t") {
           e.preventDefault()
-          switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+          void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
         }
         if ((e.metaKey || e.ctrlKey) && e.key === ",") {
           e.preventDefault()
-          setSettingsOpen(true)
+          openSettings("official.settings.workspace.appearance")
         }
         if (e.key === "Escape") {
           setCtxMenu(null)
@@ -1019,30 +1186,14 @@ export function App() {
             <button
               class="toolbar-btn"
               classList={{ active: activeLayoutId() === "official.layout.workbench-dashboard" }}
-              onClick={() =>
-                void persistActiveLayout({
-                  workspace: workspaceState(),
-                  layoutId: "official.layout.workbench-dashboard",
-                  workspaceRepo,
-                  setWorkspaceState,
-                  setActiveLayoutId,
-                })
-              }
+              onClick={() => void switchLayout("official.layout.workbench-dashboard")}
             >
               仪表盘
             </button>
             <button
               class="toolbar-btn"
               classList={{ active: activeLayoutId() === "official.layout.workbench-stream" }}
-              onClick={() =>
-                void persistActiveLayout({
-                  workspace: workspaceState(),
-                  layoutId: "official.layout.workbench-stream",
-                  workspaceRepo,
-                  setWorkspaceState,
-                  setActiveLayoutId,
-                })
-              }
+              onClick={() => void switchLayout("official.layout.workbench-stream")}
             >
               流式
             </button>
@@ -1054,7 +1205,11 @@ export function App() {
             >
               {isDark() ? "☀" : "☾"}
             </button>
-            <button class="toolbar-btn" onClick={() => setSettingsOpen(true)} aria-label="设置">
+            <button
+              class="toolbar-btn"
+              onClick={() => openSettings("official.settings.workspace.appearance")}
+              aria-label="设置"
+            >
               ⚙
             </button>
           </div>
@@ -1063,11 +1218,29 @@ export function App() {
         <SettingsHost
           open={settingsOpen()}
           panels={collectSettingsPanels(officialPlugins)}
-          activePanelId={activeSettingsPanelId()}
-          onPanelChange={setActiveSettingsPanelId}
+          activeSectionId={activeSettingsSectionId()}
+          onSectionChange={setActiveSettingsSectionId}
           onClose={() => setSettingsOpen(false)}
           getView={(viewId) => viewOrUndefined<SettingsPanelViewProps>(viewId)}
           panelProps={buildSettingsPanelProps}
+          aboutContent={
+            <div class="settings-panel-stack-host">
+              <section class="widget-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-title-text">关于 Tabora</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <p>当前实现已切换到双布局工作台骨架，设置中心按固定分类组织插件设置内容。</p>
+                  <p>当前工作区：{workspaceState()?.name ?? "未加载"}。</p>
+                  <p>
+                    已启用官方插件：{pluginSummaries().filter((plugin) => plugin.enabled).length}。
+                  </p>
+                </div>
+              </section>
+            </div>
+          }
         />
         <Show when={modalViewId()}>
           <div class="modal-overlay" onClick={() => setModalViewId(null)}>

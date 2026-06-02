@@ -151,6 +151,7 @@ export type SettingsPanelViewProps = {
   host: {
     close(): void
     setDirty(isDirty: boolean): void
+    switchLayout?(layoutId: string): Promise<void>
     switchTheme(themeId: string): Promise<void>
     switchBackground(backgroundId: string): Promise<void>
     setDefaultSearchProvider(providerId: string): Promise<void>
@@ -164,6 +165,7 @@ export type SettingsPanelViewProps = {
   }
   workspaces?: Workspace[]
   workspace: Workspace
+  layouts: LayoutContribution[]
   themes: ThemeContribution[]
   backgrounds: BackgroundProviderContribution[]
   searchProviders: SearchProviderContribution[]

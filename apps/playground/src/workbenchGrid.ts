@@ -10,14 +10,25 @@ export function assignGridOrder(
   instances: PluginInstance[],
   updatedAt = new Date().toISOString(),
 ): PluginInstance[] {
-  return instances.map((instance, index) => ({
-    ...instance,
-    grid: {
-      x: index,
-      y: 0,
-      colSpan: gridColumnSpan(instance.size),
-      rowSpan: 1,
-    },
-    updatedAt,
-  }))
+  const regionIndex = new Map<string, number>()
+
+  return instances.map((instance) => {
+    if (instance.extensionPoint !== "widget") {
+      return instance
+    }
+
+    const x = regionIndex.get(instance.regionId) ?? 0
+    regionIndex.set(instance.regionId, x + 1)
+
+    return {
+      ...instance,
+      grid: {
+        x,
+        y: 0,
+        colSpan: gridColumnSpan(instance.size),
+        rowSpan: 1,
+      },
+      updatedAt,
+    }
+  })
 }

@@ -31,13 +31,6 @@ export const officialLayoutWorkbenchStream: BuiltinPlugin = {
           view: "official.layout.workbench-stream.view",
           regions: [
             {
-              id: "toolbar",
-              title: "顶部工具条",
-              accepts: ["layout"],
-              required: true,
-              maxInstances: 1,
-            },
-            {
               id: "stream",
               title: "卡片流",
               accepts: ["widget"],
@@ -45,7 +38,6 @@ export const officialLayoutWorkbenchStream: BuiltinPlugin = {
             },
           ],
           defaultRegions: {
-            toolbar: [],
             stream: [
               { instanceId: "today-focus-1" },
               { instanceId: "quick-links-1" },

@@ -1,5 +1,4 @@
 import type {
-  BackgroundProviderContribution,
   PluginInstance,
   SearchHistoryEntry,
   SearchProviderContribution,
@@ -56,7 +55,7 @@ export async function ensureWorkspaceSession(options: {
     await options.workspaceRepo.save(workspace)
   }
 
-  let instances = await options.instanceRepo.getByRegion(workspace.id, "mainGrid")
+  let instances = await options.instanceRepo.getByWorkspace(workspace.id)
   if (instances.length === 0) {
     const seed = createDefaultWorkspaceSeed({
       ...OFFICIAL_DEFAULT_WORKSPACE_SEED,
@@ -68,7 +67,7 @@ export async function ensureWorkspaceSession(options: {
         workspace.activeBackgroundProviderId ??
         OFFICIAL_DEFAULT_WORKSPACE_SEED.defaultBackgroundProviderId,
     })
-    instances = seed.instances.filter((instance) => instance.regionId === "mainGrid")
+    instances = seed.instances
     for (const instance of instances) {
       await options.instanceRepo.save(instance)
     }

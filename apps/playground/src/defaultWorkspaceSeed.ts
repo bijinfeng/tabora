@@ -1,4 +1,4 @@
-import type { PluginInstance, WidgetSize, Workspace } from "@tabora/plugin-api"
+import type { ExtensionPoint, PluginInstance, WidgetSize, Workspace } from "@tabora/plugin-api"
 
 export type WorkspaceSeedInstance = {
   pluginId: string
@@ -15,7 +15,29 @@ export type WorkspaceSeedConfig = {
   activeLayoutId: string
   activeThemeId: string
   defaultBackgroundProviderId: string
+  regions: Array<{
+    regionId: string
+    accepts: ExtensionPoint[]
+  }>
   instances: WorkspaceSeedInstance[]
+}
+
+export function createWorkspaceRegions(
+  regions: Array<{ regionId: string; accepts: ExtensionPoint[] }>,
+  instances: Array<{ instanceId: string; regionId: string }>,
+): Workspace["regions"] {
+  return Object.fromEntries(
+    regions.map((region) => [
+      region.regionId,
+      {
+        regionId: region.regionId,
+        accepts: region.accepts,
+        instances: instances
+          .filter((instance) => instance.regionId === region.regionId)
+          .map((instance) => ({ instanceId: instance.instanceId })),
+      },
+    ]),
+  )
 }
 
 export function createDefaultWorkspaceSeed(config: WorkspaceSeedConfig): {
@@ -30,29 +52,7 @@ export function createDefaultWorkspaceSeed(config: WorkspaceSeedConfig): {
     activeLayoutId: config.activeLayoutId,
     activeThemeId: config.activeThemeId,
     activeBackgroundProviderId: config.defaultBackgroundProviderId,
-    regions: {
-      rail: {
-        regionId: "rail",
-        accepts: ["layout"],
-        instances: config.instances
-          .filter((i) => i.regionId === "rail")
-          .map((i) => ({ instanceId: i.instanceId })),
-      },
-      topbar: {
-        regionId: "topbar",
-        accepts: ["search"],
-        instances: config.instances
-          .filter((i) => i.regionId === "topbar")
-          .map((i) => ({ instanceId: i.instanceId })),
-      },
-      mainGrid: {
-        regionId: "mainGrid",
-        accepts: ["widget"],
-        instances: config.instances
-          .filter((i) => i.regionId === "mainGrid")
-          .map((i) => ({ instanceId: i.instanceId })),
-      },
-    },
+    regions: createWorkspaceRegions(config.regions, config.instances),
     createdAt: now,
     updatedAt: now,
   }
@@ -79,6 +79,11 @@ export const OFFICIAL_DEFAULT_WORKSPACE_SEED: WorkspaceSeedConfig = {
   activeLayoutId: "official.layout.workbench-dashboard",
   activeThemeId: "official.theme.light",
   defaultBackgroundProviderId: "background.gradient-green",
+  regions: [
+    { regionId: "rail", accepts: ["layout"] },
+    { regionId: "topbar", accepts: ["search"] },
+    { regionId: "mainGrid", accepts: ["widget"] },
+  ],
   instances: [
     {
       pluginId: "official.search.command-bar",

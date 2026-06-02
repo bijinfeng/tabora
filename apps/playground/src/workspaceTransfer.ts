@@ -2,7 +2,6 @@ import type { Workspace } from "@tabora/plugin-api"
 import type {
   InstanceRepository,
   PluginDataRepository,
-  PluginDataRow,
   TaboraDatabase,
   WorkspaceRepository,
 } from "@tabora/storage"

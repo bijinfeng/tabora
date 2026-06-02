@@ -18,8 +18,14 @@ function themeOptions(props: SettingsPanelViewProps) {
 }
 
 export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
+  const layouts = () =>
+    props.layouts.map((layout) => ({
+      value: layout.id,
+      label: layout.title,
+    }))
   const themes = () => themeOptions(props)
   const backgrounds = () => backgroundOptions(props)
+  const layoutValue = () => props.workspace.activeLayoutId
   const themeValue = () => props.workspace.activeThemeId
   const backgroundValue = () =>
     props.workspace.activeBackgroundProviderId ?? backgrounds()[0]?.value ?? ""
@@ -27,6 +33,15 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
   return (
     <CardSection title="外观">
       <div class="settings-panel-stack">
+        <Field label="布局" htmlFor="settings-layout-select">
+          <Select
+            id="settings-layout-select"
+            value={layoutValue()}
+            options={layouts()}
+            onChange={(value) => void props.host.switchLayout?.(value)}
+            aria-label="选择布局"
+          />
+        </Field>
         <Field label="主题" htmlFor="settings-theme-select">
           <Select
             id="settings-theme-select"

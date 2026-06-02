@@ -7,6 +7,7 @@ import {
   SettingsHost,
   collectSettingsPanels,
   resolveInitialSettingsPanelId,
+  resolveInitialSettingsSectionId,
   type SettingsPanelDescriptor,
 } from "./settingsHost"
 
@@ -68,9 +69,27 @@ describe("settings host composition", () => {
     expect(resolveInitialSettingsPanelId(panels, "missing")).toBe("plugins")
   })
 
+  it("maps settings panels to fixed sections", () => {
+    const panels: SettingsPanelDescriptor[] = [
+      { ...panel("official.settings.workspace.workbench", 10), pluginId: "plugin-a" },
+      { ...panel("official.settings.workspace.search", 20), pluginId: "plugin-b" },
+    ]
+
+    expect(resolveInitialSettingsSectionId(panels, "official.settings.workspace.search")).toBe(
+      "search",
+    )
+    expect(resolveInitialSettingsSectionId(panels, "missing")).toBe("general")
+  })
+
   it("renders the settings host with open=true", () => {
     const panels: SettingsPanelDescriptor[] = [
-      { id: "test", title: "Test", view: "test.view", order: 10, pluginId: "plugin-a" },
+      {
+        id: "official.settings.workspace.workbench",
+        title: "Test",
+        view: "test.view",
+        order: 10,
+        pluginId: "plugin-a",
+      },
     ]
     const views = new Map<string, any>([["test.view", () => document.createElement("div")]])
 
@@ -78,16 +97,17 @@ describe("settings host composition", () => {
       createComponent(SettingsHost, {
         open: true,
         panels,
-        activePanelId: "test",
-        onPanelChange: vi.fn(),
+        activeSectionId: "general",
+        onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: (viewId) => views.get(viewId),
         panelProps: () => ({
-          panelId: "test",
+          panelId: "official.settings.workspace.workbench",
           pluginId: "plugin-a",
           host: {
             close: vi.fn(),
             setDirty: vi.fn(),
+            switchLayout: vi.fn(),
             switchTheme: vi.fn(),
             switchBackground: vi.fn(),
             setDefaultSearchProvider: vi.fn(),
@@ -101,6 +121,7 @@ describe("settings host composition", () => {
             createdAt: "",
             updatedAt: "",
           },
+          layouts: [],
           themes: [],
           backgrounds: [],
           searchProviders: [],
@@ -115,7 +136,13 @@ describe("settings host composition", () => {
 
   it("keeps the settings container open when a panel view fails", () => {
     const panels: SettingsPanelDescriptor[] = [
-      { id: "broken", title: "Broken", view: "broken.view", order: 10, pluginId: "plugin-a" },
+      {
+        id: "official.settings.workspace.workbench",
+        title: "Broken",
+        view: "broken.view",
+        order: 10,
+        pluginId: "plugin-a",
+      },
     ]
     const views = new Map<string, any>([
       [
@@ -130,16 +157,17 @@ describe("settings host composition", () => {
       createComponent(SettingsHost, {
         open: true,
         panels,
-        activePanelId: "broken",
-        onPanelChange: vi.fn(),
+        activeSectionId: "general",
+        onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: (viewId) => views.get(viewId),
         panelProps: () => ({
-          panelId: "broken",
+          panelId: "official.settings.workspace.workbench",
           pluginId: "plugin-a",
           host: {
             close: vi.fn(),
             setDirty: vi.fn(),
+            switchLayout: vi.fn(),
             switchTheme: vi.fn(),
             switchBackground: vi.fn(),
             setDefaultSearchProvider: vi.fn(),
@@ -153,6 +181,7 @@ describe("settings host composition", () => {
             createdAt: "",
             updatedAt: "",
           },
+          layouts: [],
           themes: [],
           backgrounds: [],
           searchProviders: [],
@@ -164,6 +193,6 @@ describe("settings host composition", () => {
 
     expect(root.querySelector(".settings-drawer")).toBeTruthy()
     expect(root.textContent).toContain("插件视图加载失败")
-    expect(root.textContent).toContain("broken")
+    expect(root.textContent).toContain("official.settings.workspace.workbench")
   })
 })
