@@ -5,9 +5,11 @@ import type {
   LayoutContribution,
   LayoutRegion,
   PluginInstance,
+  SearchCommandEntry,
   SearchHistoryEntry,
   SearchProviderContribution,
   SearchViewProps,
+  SearchWidgetEntry,
   SettingsPanelViewProps,
   ThemeContribution,
   WidgetSize,
@@ -114,56 +116,57 @@ export function App() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
   }
 
-  const commandItems = () => [
-    {
-      icon: "🎨",
-      name: "切换主题",
-      desc: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
-      group: "命令" as const,
-      shortcut: "⌘T",
-      action: () => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
-    },
-    {
-      icon: "⇄",
-      name: "切换布局",
-      desc:
-        activeLayoutId() === "official.layout.workbench-dashboard"
-          ? "仪表盘 → 流式"
-          : "流式 → 仪表盘",
-      group: "命令" as const,
-      shortcut: "⌘L",
-      action: () => {
-        const next =
-          activeLayoutId() === "official.layout.workbench-dashboard"
-            ? "official.layout.workbench-stream"
-            : "official.layout.workbench-dashboard"
-        void switchLayout(next)
+  const commandItems = () =>
+    [
+      {
+        id: "toggle-theme",
+        icon: "🎨",
+        name: "切换主题",
+        desc: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
+        shortcut: "⌘T",
+        action: () => void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
       },
-    },
-    {
-      icon: "+",
-      name: "添加卡片",
-      desc: "向工作台添加新卡片",
-      group: "命令" as const,
-      shortcut: "⌘N",
-      action: () => setAddWidgetOpen(true),
-    },
-    {
-      icon: "⚙",
-      name: "打开设置",
-      desc: "配置工作台",
-      group: "命令" as const,
-      shortcut: "⌘,",
-      action: () => openSettings("official.settings.workspace.appearance"),
-    },
-    {
-      icon: "?",
-      name: "快捷键参考",
-      desc: "查看所有快捷键",
-      group: "命令" as const,
-      action: () => {},
-    },
-  ]
+      {
+        id: "toggle-layout",
+        icon: "⇄",
+        name: "切换布局",
+        desc:
+          activeLayoutId() === "official.layout.workbench-dashboard"
+            ? "仪表盘 → 流式"
+            : "流式 → 仪表盘",
+        shortcut: "⌘L",
+        action: () => {
+          const next =
+            activeLayoutId() === "official.layout.workbench-dashboard"
+              ? "official.layout.workbench-stream"
+              : "official.layout.workbench-dashboard"
+          void switchLayout(next)
+        },
+      },
+      {
+        id: "add-widget",
+        icon: "+",
+        name: "添加卡片",
+        desc: "向工作台添加新卡片",
+        shortcut: "⌘N",
+        action: () => setAddWidgetOpen(true),
+      },
+      {
+        id: "open-settings",
+        icon: "⚙",
+        name: "打开设置",
+        desc: "配置工作台",
+        shortcut: "⌘,",
+        action: () => openSettings("official.settings.workspace.appearance"),
+      },
+      {
+        id: "open-shortcuts",
+        icon: "?",
+        name: "快捷键参考",
+        desc: "查看所有快捷键",
+        action: () => showToast("快捷键：⌘K、⌘L、⌘T、⌘,、Esc"),
+      },
+    ] satisfies SearchCommandEntry[]
 
   const database = createTaboraDatabase()
   const workspaceRepo = createWorkspaceRepository(database)
@@ -856,6 +859,26 @@ export function App() {
     )
   }
 
+  function focusWidgetInstance(instanceId: string) {
+    const card = document.querySelector<HTMLElement>(`[data-widget-instance-id="${instanceId}"]`)
+    if (!card) return
+    card.scrollIntoView({ behavior: "smooth", block: "center" })
+    card.focus()
+    showToast("已定位到对应卡片")
+  }
+
+  function searchableWidgets(): SearchWidgetEntry[] {
+    return instances()
+      .filter((instance) => instance.extensionPoint === "widget")
+      .map((instance) => ({
+        instanceId: instance.id,
+        icon: widgetDescriptors[instance.contributionId]?.icon ?? "▦",
+        name: widgetTitle(instance.contributionId),
+        desc: `定位到 ${widgetTitle(instance.contributionId)} 卡片`,
+        action: () => focusWidgetInstance(instance.id),
+      }))
+  }
+
   async function persistGridOrder(regionId: string, orderedInstances: PluginInstance[]) {
     const nextRegionInstances = assignGridOrder(orderedInstances)
     const nextById = new Map(nextRegionInstances.map((instance) => [instance.id, instance]))
@@ -955,6 +978,8 @@ export function App() {
                 openExternal,
                 onDefaultProviderChange: setDefaultSearchProvider,
                 searchHistory: searchHistory(),
+                commands: commandItems(),
+                widgets: searchableWidgets(),
                 onSaveHistory: saveSearchHistory,
                 onClearHistory: clearSearchHistory,
               })}
@@ -981,7 +1006,9 @@ export function App() {
                   class={`grid-item`}
                   classList={{ dragging: dragId() === inst.id }}
                   style={{ "grid-column": `span ${span}` }}
+                  data-widget-instance-id={inst.id}
                   aria-label={widgetTitle(inst.contributionId)}
+                  tabIndex={0}
                   draggable="true"
                   onDragStart={(e) => onDragStart(e, inst.id)}
                   onDragOver={onDragOver}
@@ -1501,6 +1528,12 @@ export function App() {
         isOpen={cmdPaletteOpen()}
         onClose={() => setCmdPaletteOpen(false)}
         commands={commandItems()}
+        widgets={searchableWidgets()}
+        providers={enabledSearchProviders()}
+        defaultProviderId={resolveDefaultProviderForSearch()}
+        searchHistory={searchHistory()}
+        openExternal={openExternal}
+        onSaveHistory={saveSearchHistory}
       />
     </div>
   )

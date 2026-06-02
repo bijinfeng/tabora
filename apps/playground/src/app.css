@@ -236,6 +236,16 @@
   color: rgb(var(--color-muted));
   font-family: "SFMono-Regular", Consolas, monospace;
 }
+.search-provider-state {
+  margin-top: 6px;
+  padding: 0 4px;
+  font-size: 11px;
+  color: rgb(var(--color-muted));
+}
+.search-provider-state strong {
+  color: rgb(var(--color-text));
+  font-weight: 650;
+}
 .search-suggestions {
   position: absolute;
   top: calc(100% + 4px);

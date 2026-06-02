@@ -1,16 +1,18 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
+import type {
+  SearchHistoryEntry,
+  SearchProviderContribution,
+  SearchViewProps,
+} from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import type { SearchProviderContribution, SearchViewProps } from "@tabora/plugin-api"
 import { Button, Input, InlineError, Select, Kbd } from "@tabora/ui"
 
-const QUICK_TAGS = ["天气", "新闻", "翻译", "计算器", "汇率"]
-const COMMANDS = [
-  { icon: "🎨", name: "切换主题", desc: "明亮 ⇄ 暗色", group: "命令", hint: "⌘T" },
-  { icon: "⇄", name: "切换布局", desc: "Dashboard ⇄ Stream", group: "命令", hint: "⌘L" },
-  { icon: "+", name: "添加卡片", desc: "向工作台添加新卡片", group: "命令", hint: "⌘N" },
-  { icon: "⚙", name: "打开设置", desc: "配置工作台", group: "命令", hint: "⌘," },
-  { icon: "?", name: "快捷键", desc: "查看所有快捷键", group: "命令", hint: "?" },
-] as const
+import {
+  buildSearchUrl,
+  matchProvidersByToken,
+  resolveDefaultProvider,
+  routeSearchQuery,
+} from "./search-model"
 
 const FALLBACK_PROVIDER: SearchProviderContribution = {
   id: "official.search.google",
@@ -19,36 +21,31 @@ const FALLBACK_PROVIDER: SearchProviderContribution = {
   shortcut: "g",
 }
 
-function providerOptions(providers: SearchProviderContribution[]) {
-  return providers.map((p) => ({ value: p.id, label: p.title }))
-}
-
-export function buildSearchUrl(provider: SearchProviderContribution, query: string): string {
-  return provider.urlTemplate.replaceAll("{query}", encodeURIComponent(query.trim()))
-}
-
-function resolveShortcut(
-  query: string,
-  providers: SearchProviderContribution[],
-): { provider: SearchProviderContribution; searchQuery: string } | null {
-  const trimmed = query.trim()
-  const spaceIndex = trimmed.indexOf(" ")
-  if (spaceIndex <= 0) return null
-  const shortcut = trimmed.slice(0, spaceIndex)
-  const provider = providers.find(
-    (p) => p.shortcut && p.shortcut.toLowerCase() === shortcut.toLowerCase(),
-  )
-  if (!provider) return null
-  return { provider, searchQuery: trimmed.slice(spaceIndex + 1).trim() }
-}
-
 type Suggestion = {
+  id: string
   icon: string
   name: string
   desc: string
   group: string
-  hint: string
+  hint: string | undefined
   action: () => void
+  clearAfterAction: boolean | undefined
+}
+
+function providerOptions(providers: SearchProviderContribution[]) {
+  return providers.map((provider) => ({ value: provider.id, label: provider.title }))
+}
+
+function includesText(value: string, query: string): boolean {
+  return value.toLowerCase().includes(query.toLowerCase())
+}
+
+function providerToken(provider: SearchProviderContribution): string {
+  return provider.shortcut || provider.id.split(".").at(-1) || provider.title.toLowerCase()
+}
+
+function historyLabel(entry: SearchHistoryEntry, providers: SearchProviderContribution[]): string {
+  return providers.find((provider) => provider.id === entry.providerId)?.title ?? entry.providerId
 }
 
 export function safelyHandleProviderChange(
@@ -57,8 +54,8 @@ export function safelyHandleProviderChange(
 ): void {
   const result = onChange?.(nextProviderId)
   if (result instanceof Promise) {
-    result.catch((err) => {
-      console.warn("Failed to change default provider:", err)
+    result.catch((error) => {
+      console.warn("Failed to change default provider:", error)
     })
   }
 }
@@ -73,98 +70,242 @@ export function SearchCommandBar(props: SearchViewProps) {
   const [permissionDenied, setPermissionDenied] = createSignal(false)
   const [suggestIdx, setSuggestIdx] = createSignal(-1)
 
-  const activeProvider = createMemo(() => {
-    const match = providers().find((p) => p.id === providerId())
-    return match ?? providers()[0]!
-  })
-
-  const suggestions = createMemo((): Suggestion[] => {
-    const q = query().toLowerCase().trim()
-    if (!q) return []
-    const results: Suggestion[] = []
-
-    for (const cmd of COMMANDS) {
-      if (cmd.name.includes(q) || cmd.desc.includes(q)) {
-        results.push({
-          ...cmd,
-          action: () => {
-            /* handled by keyboard navigation */
-          },
-        })
-      }
+  const commands = createMemo(() => props.commands ?? [])
+  const widgets = createMemo(() => props.widgets ?? [])
+  const activeProvider = createMemo(
+    () => resolveDefaultProvider(providers(), providerId()) ?? providers()[0]!,
+  )
+  const route = createMemo(() =>
+    routeSearchQuery(query(), providers(), providerId() || activeProvider().id),
+  )
+  const providerStateLabel = createMemo(() => {
+    const currentRoute = route()
+    if (currentRoute?.type === "provider-pending") {
+      return currentRoute.provider
+        ? `@${providerToken(currentRoute.provider)}`
+        : `@${query().trim().slice(1)}`
     }
-
-    results.push({
-      icon: "🔍",
-      name: `在 ${activeProvider().title} 中搜索 "${query().trim()}"`,
-      desc: "直接搜索网页",
-      group: "搜索",
-      hint: activeProvider().shortcut ?? "",
-      action: () => doSearch(query().trim()),
-    })
-
-    return results
-  })
-
-  const groupedSuggestions = createMemo(() => {
-    const groups: Record<string, Suggestion[]> = {}
-    for (const s of suggestions()) {
-      const g = groups[s.group] ?? (groups[s.group] = [])
-      g.push(s)
+    if (currentRoute?.type === "provider") {
+      return currentRoute.provider.title
     }
-    return groups
+    return ""
   })
 
-  function doSearch(q: string, targetProvider?: SearchProviderContribution) {
+  function doSearch(targetQuery: string, targetProvider?: SearchProviderContribution) {
+    const trimmed = targetQuery.trim()
+    if (!trimmed) return
     setPermissionDenied(false)
     const provider = targetProvider ?? activeProvider()
-    const url = buildSearchUrl(provider, q)
-    const opened = props.openExternal?.(url)
+    const opened = props.openExternal?.(buildSearchUrl(provider, trimmed))
     if (!opened) {
       setPermissionDenied(true)
       return
     }
-    void props.onSaveHistory?.({ query: q, providerId: provider.id })
+    void props.onSaveHistory?.({ query: trimmed, providerId: provider.id })
   }
 
-  function handleSubmit(event: Event) {
-    event.preventDefault()
-    const q = query().trim()
-    if (!q) return
-    const resolved = resolveShortcut(q, providers())
-    if (resolved) {
-      doSearch(resolved.searchQuery, resolved.provider)
+  function createHistorySuggestion(entry: SearchHistoryEntry): Suggestion {
+    return {
+      id: `history-${entry.providerId}-${entry.timestamp}`,
+      icon: "🕘",
+      name: entry.query,
+      desc: `最近搜索 · ${historyLabel(entry, providers())}`,
+      group: "最近搜索",
+      hint: providers().find((provider) => provider.id === entry.providerId)?.shortcut,
+      action: () => {
+        const provider = providers().find((item) => item.id === entry.providerId)
+        if (provider) {
+          doSearch(entry.query, provider)
+        }
+      },
+      clearAfterAction: true,
+    }
+  }
+
+  const suggestions = createMemo((): Suggestion[] => {
+    const trimmed = query().trim()
+    const history = (props.searchHistory ?? []).slice().reverse()
+
+    if (!trimmed) {
+      return [
+        ...commands()
+          .slice(0, 4)
+          .map((command) => ({
+            ...command,
+            group: "常用命令",
+            hint: command.shortcut,
+            clearAfterAction: true,
+          })),
+        ...history.slice(0, 3).map(createHistorySuggestion),
+        ...providers()
+          .slice(0, 4)
+          .map((provider) => ({
+            id: `provider-${provider.id}`,
+            icon: "＠",
+            name: `@${providerToken(provider)}`,
+            desc: `搜索源 · ${provider.title}`,
+            group: "搜索源",
+            hint: provider.shortcut,
+            action: () => {
+              setQuery(`@${providerToken(provider)} `)
+              setSuggestIdx(-1)
+            },
+            clearAfterAction: false,
+          })),
+        ...widgets()
+          .slice(0, 4)
+          .map((widget) => ({
+            id: `widget-${widget.instanceId}`,
+            icon: widget.icon,
+            name: widget.name,
+            desc: widget.desc,
+            action: widget.action,
+            group: "核心卡片",
+            hint: undefined,
+            clearAfterAction: true,
+          })),
+      ]
+    }
+
+    const nextSuggestions: Suggestion[] = []
+    const currentRoute = route()
+    if (currentRoute?.type === "provider-pending") {
+      return matchProvidersByToken(providers(), currentRoute.token).map((provider) => ({
+        id: `provider-pending-${provider.id}`,
+        icon: "＠",
+        name: `@${providerToken(provider)}`,
+        desc: `搜索源 · ${provider.title}`,
+        group: "搜索源",
+        hint: provider.shortcut,
+        action: () => {
+          setQuery(`@${providerToken(provider)} `)
+          setSuggestIdx(-1)
+        },
+        clearAfterAction: false,
+      }))
+    }
+
+    if (currentRoute?.type === "provider") {
+      return [
+        {
+          id: `search-${currentRoute.provider.id}`,
+          icon: "🔍",
+          name: `在 ${currentRoute.provider.title} 中搜索 "${currentRoute.query}"`,
+          desc: "临时搜索源",
+          group: "搜索",
+          hint: currentRoute.provider.shortcut,
+          action: () => doSearch(currentRoute.query, currentRoute.provider),
+          clearAfterAction: true,
+        },
+      ]
+    }
+
+    const commandMatches = commands().filter(
+      (command) => includesText(command.name, trimmed) || includesText(command.desc, trimmed),
+    )
+    const widgetMatches = widgets().filter(
+      (widget) => includesText(widget.name, trimmed) || includesText(widget.desc, trimmed),
+    )
+    const historyMatches = history.filter(
+      (entry) =>
+        includesText(entry.query, trimmed) ||
+        includesText(historyLabel(entry, providers()), trimmed),
+    )
+
+    nextSuggestions.push(
+      ...commandMatches.map((command) => ({
+        ...command,
+        group: "命令",
+        hint: command.shortcut,
+        clearAfterAction: true,
+      })),
+    )
+    nextSuggestions.push(
+      ...widgetMatches.map((widget) => ({
+        id: `widget-${widget.instanceId}`,
+        icon: widget.icon,
+        name: widget.name,
+        desc: widget.desc,
+        action: widget.action,
+        group: "卡片",
+        hint: undefined,
+        clearAfterAction: true,
+      })),
+    )
+    nextSuggestions.push(...historyMatches.slice(0, 3).map(createHistorySuggestion))
+
+    if (currentRoute?.type === "web") {
+      nextSuggestions.push({
+        id: `web-${currentRoute.provider.id}-${currentRoute.query}`,
+        icon: "🔍",
+        name: `在 ${currentRoute.provider.title} 中搜索 "${currentRoute.query}"`,
+        desc: "网页搜索",
+        group: "搜索",
+        hint: currentRoute.provider.shortcut,
+        action: () => doSearch(currentRoute.query, currentRoute.provider),
+        clearAfterAction: true,
+      })
+    }
+
+    return nextSuggestions
+  })
+
+  const groupedSuggestions = createMemo(() => {
+    const groups: Record<string, Suggestion[]> = {}
+    for (const suggestion of suggestions()) {
+      const bucket = groups[suggestion.group] ?? (groups[suggestion.group] = [])
+      bucket.push(suggestion)
+    }
+    return groups
+  })
+
+  function submitCurrentQuery() {
+    const currentRoute = route()
+    if (!currentRoute) return
+    if (currentRoute.type === "provider-pending") return
+    if (currentRoute.type === "provider") {
+      doSearch(currentRoute.query, currentRoute.provider)
     } else {
-      doSearch(q)
+      doSearch(currentRoute.query, currentRoute.provider)
     }
     setQuery("")
     setSuggestIdx(-1)
   }
 
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "ArrowDown") {
-      e.preventDefault()
-      setSuggestIdx((i) => Math.min(i + 1, suggestions().length - 1))
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault()
-      setSuggestIdx((i) => Math.max(i - 1, 0))
-    } else if (e.key === "Enter") {
-      e.preventDefault()
-      const idx = suggestIdx()
-      if (idx >= 0 && idx < suggestions().length) {
-        suggestions()[idx]?.action()
-        setQuery("")
-        setSuggestIdx(-1)
-      } else {
-        const q = query().trim()
-        if (q) {
-          const resolved = resolveShortcut(q, providers())
-          if (resolved) doSearch(resolved.searchQuery, resolved.provider)
-          else doSearch(q)
+  function handleSubmit(event: Event) {
+    event.preventDefault()
+    submitCurrentQuery()
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      setSuggestIdx((index) => Math.min(index + 1, suggestions().length - 1))
+      return
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault()
+      setSuggestIdx((index) => Math.max(index - 1, 0))
+      return
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault()
+      const activeSuggestion = suggestions()[suggestIdx()]
+      if (activeSuggestion) {
+        activeSuggestion.action()
+        if (activeSuggestion.clearAfterAction !== false) {
           setQuery("")
+          setSuggestIdx(-1)
         }
+      } else {
+        submitCurrentQuery()
       }
-    } else if (e.key === "Escape") {
+      return
+    }
+
+    if (event.key === "Escape") {
       setSuggestIdx(-1)
       setFocused(false)
     }
@@ -172,10 +313,7 @@ export function SearchCommandBar(props: SearchViewProps) {
 
   function handleProviderChange(nextProviderId: string) {
     setProviderId(nextProviderId)
-    const result = props.onDefaultProviderChange?.(nextProviderId)
-    if (result instanceof Promise) {
-      result.catch((err) => console.warn("Failed to change default provider:", err))
-    }
+    safelyHandleProviderChange(props.onDefaultProviderChange, nextProviderId)
   }
 
   return (
@@ -184,14 +322,14 @@ export function SearchCommandBar(props: SearchViewProps) {
         <Select<string>
           value={activeProvider().id}
           options={providerOptions(providers())}
-          onChange={(v) => handleProviderChange(v)}
+          onChange={handleProviderChange}
           aria-label="搜索源"
           size="sm"
         />
         <Input
           value={query()}
-          onInput={(v) => {
-            setQuery(v)
+          onInput={(value) => {
+            setQuery(value)
             setSuggestIdx(-1)
           }}
           onKeyDown={handleKeyDown}
@@ -202,7 +340,7 @@ export function SearchCommandBar(props: SearchViewProps) {
               setSuggestIdx(-1)
             }, 200)
           }
-          placeholder="搜索或输入命令... @google 切换引擎"
+          placeholder="搜索、命令或输入 @github vite-plus"
           aria-label="搜索内容"
           type="search"
         />
@@ -211,8 +349,22 @@ export function SearchCommandBar(props: SearchViewProps) {
         </Button>
       </form>
 
+      <Show when={route()?.type === "provider-pending"}>
+        <div class="search-provider-state">
+          继续输入查询以使用临时搜索源：
+          <strong>{` ${providerStateLabel()}`}</strong>
+        </div>
+      </Show>
+
+      <Show when={route()?.type === "provider"}>
+        <div class="search-provider-state">
+          当前临时搜索源：
+          <strong>{` ${providerStateLabel()}`}</strong>
+        </div>
+      </Show>
+
       <Show when={permissionDenied()}>
-        <InlineError>外部打开被拒绝，请检查权限设置</InlineError>
+        <InlineError>无法打开该搜索源，请检查插件权限</InlineError>
       </Show>
 
       <Show when={focused() && suggestions().length > 0}>
@@ -228,11 +380,13 @@ export function SearchCommandBar(props: SearchViewProps) {
                       <button
                         class="suggestion-item"
                         classList={{ active: suggestIdx() === globalIdx }}
-                        onMouseDown={(e) => {
-                          e.preventDefault()
+                        onMouseDown={(event) => {
+                          event.preventDefault()
                           item.action()
-                          setQuery("")
-                          setSuggestIdx(-1)
+                          if (item.clearAfterAction !== false) {
+                            setQuery("")
+                            setSuggestIdx(-1)
+                          }
                         }}
                         type="button"
                       >
@@ -242,7 +396,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                           <span class="suggestion-desc">{item.desc}</span>
                         </span>
                         <Show when={item.hint}>
-                          <Kbd>{item.hint}</Kbd>
+                          <Kbd>{item.hint!}</Kbd>
                         </Show>
                       </button>
                     )
@@ -251,28 +405,6 @@ export function SearchCommandBar(props: SearchViewProps) {
               </>
             )}
           </For>
-        </div>
-      </Show>
-
-      <Show when={focused() && query().length === 0 && suggestions().length === 0}>
-        <div class="search-suggestions">
-          <div class="suggestions-label">快捷搜索</div>
-          <div class="quick-tags">
-            <For each={QUICK_TAGS}>
-              {(tag) => (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setQuery(tag)
-                    doSearch(tag)
-                  }}
-                >
-                  {tag}
-                </Button>
-              )}
-            </For>
-          </div>
         </div>
       </Show>
     </div>

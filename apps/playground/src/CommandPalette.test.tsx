@@ -1,26 +1,25 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import { createSignal } from "solid-js"
 import { CommandPalette, type CommandItem } from "./CommandPalette"
 
 const commands: CommandItem[] = [
   {
+    id: "toggle-theme",
     icon: "🎨",
     name: "切换主题",
     desc: "明亮 ⇄ 暗色",
-    group: "命令",
     shortcut: "⌘T",
     action: vi.fn(),
   },
   {
+    id: "open-settings",
     icon: "⚙",
     name: "打开设置",
     desc: "配置工作台",
-    group: "命令",
     shortcut: "⌘,",
     action: vi.fn(),
   },
-  { icon: "🔍", name: "搜索网页", desc: "直接搜索", group: "搜索", action: vi.fn() },
+  { id: "search-web", icon: "🔍", name: "搜索网页", desc: "直接搜索", action: vi.fn() },
 ]
 
 describe("CommandPalette", () => {
@@ -44,7 +43,7 @@ describe("CommandPalette", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <CommandPalette isOpen={true} onClose={vi.fn()} commands={commands} />, root)
-    expect(root.textContent).toContain("收藏")
+    expect(root.textContent).toContain("常用命令")
     expect(root.textContent).toContain("切换主题")
     root.remove()
   })

@@ -28,6 +28,8 @@ export {
   officialThemeDefaultPack,
 }
 
+export * from "./search-model"
+
 export const officialPlugins = [
   officialThemeDefaultPack,
   officialBackgroundBasic,

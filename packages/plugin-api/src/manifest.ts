@@ -135,12 +135,31 @@ export type SearchHistoryEntry = {
   timestamp: string
 }
 
+export type SearchCommandEntry = {
+  id: string
+  icon: string
+  name: string
+  desc: string
+  shortcut?: string
+  action: () => void
+}
+
+export type SearchWidgetEntry = {
+  instanceId: string
+  icon: string
+  name: string
+  desc: string
+  action: () => void
+}
+
 export type SearchViewProps = {
   providers: SearchProviderContribution[]
   defaultProviderId: string
   openExternal?: (url: string) => boolean
   onDefaultProviderChange?: (providerId: string) => void | Promise<void>
   searchHistory?: SearchHistoryEntry[]
+  commands?: SearchCommandEntry[]
+  widgets?: SearchWidgetEntry[]
   onSaveHistory?: (entry: { query: string; providerId: string }) => Promise<void>
   onClearHistory?: () => Promise<void>
 }
