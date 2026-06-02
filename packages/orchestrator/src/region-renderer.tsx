@@ -3,6 +3,7 @@ import type { PluginInstance } from "@tabora/plugin-api"
 import type { ExtensionRegistry } from "@tabora/platform-kernel"
 import type { InstanceRepository } from "@tabora/storage"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { createPluginCatalog } from "./plugin-catalog"
 
 export type RegionRenderer = {
   render(workspaceId: string, regionId: string): Promise<JSX.Element[]>
@@ -16,28 +17,19 @@ export type RegionRendererDeps = {
 }
 
 export function createRegionRenderer(deps: RegionRendererDeps): RegionRenderer {
-  function findContribution(instance: PluginInstance) {
-    const plugin = deps.plugins.find((p) => p.manifest.id === instance.pluginId)
-    if (!plugin) return null
-    const c = plugin.manifest.contributes
-    switch (instance.extensionPoint) {
-      case "widget":
-        return c.widgets?.find((w) => w.id === instance.contributionId) ?? null
-      case "search":
-        return c.searches?.find((s) => s.id === instance.contributionId) ?? null
-      default:
-        return null
-    }
-  }
+  const catalog = createPluginCatalog(deps.plugins)
 
   function resolveViewId(instance: PluginInstance): string | null {
-    const contribution = findContribution(instance)
-    if (!contribution) return null
     switch (instance.extensionPoint) {
       case "widget":
-        return (contribution as any).views?.card ?? null
+        return (
+          catalog.findWidgetContribution(instance.pluginId, instance.contributionId)?.views.card ??
+          null
+        )
       case "search":
-        return (contribution as any).views?.main ?? null
+        return (
+          catalog.findSearchContribution(instance.pluginId, instance.contributionId)?.view ?? null
+        )
       default:
         return null
     }

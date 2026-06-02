@@ -48,6 +48,7 @@ export default defineConfig({
     include: [
       "packages/plugin-api/src/**/*.test.ts",
       "packages/platform-kernel/src/**/*.test.ts",
+      "packages/orchestrator/src/**/*.test.ts",
       "packages/theme/src/**/*.test.ts",
       "packages/storage/src/**/*.test.ts",
       "packages/ui/src/**/*.test.tsx",

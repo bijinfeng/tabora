@@ -1,10 +1,10 @@
 # Tabora 插件化个人工作台技术方案 V2
 
-版本：V2.1
+版本：V2.2
 
 日期：2026-06-02
 
-状态：按当前 V2 设计事实源复核修订，确保技术方案与 PRD、官方插件设计和工作台原型一致
+状态：按当前 V2 设计事实源和实现边界复核修订，确保技术方案与 PRD、官方插件设计和工作台原型一致
 
 关联文档：
 
@@ -68,7 +68,9 @@
 └──────────────────────────────────────────────────────┘
 ```
 
-关键变化：新增 **Orchestration Layer**（`@tabora/orchestrator`）。当前实现将编排逻辑散落在 `App.tsx` 中（837 行单体组件），造成 shell 与业务逻辑耦合。拆出独立编排层后：
+关键变化：新增 **Orchestration Layer**（`@tabora/orchestrator`）。早期实现将编排逻辑散落在 `App.tsx` 中，造成 shell 与业务逻辑耦合。当前实现已开始把插件贡献查询、插件摘要、settings panel 收集、widget/search/layout contribution 解析收敛到 `@tabora/orchestrator` 的 `plugin-catalog.ts`，playground 只在组合根加载 `officialPlugins`，不再在业务渲染路径里直接扫描官方插件 manifest。后续继续把布局切换、区域实例渲染和搜索路由迁出 shell。
+
+拆出独立编排层后：
 
 - Shell 只负责 DOM 挂载、宿主容器渲染、全局生命周期
 - Orchestrator 负责所有跨插件、跨区域的协调逻辑
@@ -104,6 +106,15 @@ packages/
 `@tabora/orchestrator` 的职责边界：
 
 ```ts
+// 插件贡献目录
+const catalog = createPluginCatalog(plugins)
+catalog.listWidgetContributions()
+catalog.findWidgetContribution(pluginId, contributionId)
+catalog.findSearchContribution(pluginId, contributionId)
+catalog.findLayoutContribution(layoutId)
+catalog.listSettingsPanels()
+catalog.pluginSummaries()
+
 // 布局切换引擎
 switchLayout(layoutId: string): Promise<void>
 getActiveRegions(): RegionState[]
@@ -648,6 +659,26 @@ SettingsHost (shell 提供)
 
 ### 12.1 Widget
 
+Widget contribution 的展示元数据归插件所有，shell 不应按官方插件 ID 维护标题、图标或说明映射：
+
+```ts
+type WidgetContribution = {
+  id: string
+  title: string
+  icon?: string
+  description?: string
+  supportedSizes: WidgetSize[]
+  defaultSize: WidgetSize
+  allowMultipleInstances: boolean
+  views: {
+    card: string
+    modal?: string
+    fullscreen?: string
+    settings?: string
+  }
+}
+```
+
 ```ts
 type WidgetViewProps = {
   // 身份
@@ -863,6 +894,7 @@ packages/
   platform-kernel/      # 增强：快捷键注册、上下文菜单注册
   orchestrator/         # 新增：编排层
     src/
+      plugin-catalog.ts
       layout-switcher.ts
       region-renderer.ts
       search-engine.ts
@@ -884,10 +916,11 @@ packages/
 
 ### Phase A: 编排层基础（1-2 周）
 
-1. 创建 `@tabora/orchestrator` 包
-2. 实现 `RegionRenderer`：通用区域 → 实例 → view 映射
-3. 重构 playground `App.tsx`：将 rail/topbar/mainGrid 硬编码改为 `RegionRenderer` 调用
-4. 验证 Dashboard 布局功能不变
+1. 创建 `@tabora/orchestrator` 包。已完成。
+2. 实现 `PluginCatalog`：插件贡献枚举、layout/search/widget 查询、settings panel 收集和插件摘要。已完成，playground 不再自行扫描官方插件 manifest。
+3. 实现 `RegionRenderer`：通用区域 → 实例 → view 映射。已具备基础版本，并已修正 search contribution 使用 `view` 字段解析。
+4. 重构 playground `App.tsx`：先移除官方插件业务耦合，再逐步将 rail/topbar/mainGrid 的区域渲染改为 `RegionRenderer` 调用。
+5. 验证 Dashboard 布局功能不变
 
 ### Phase B: 布局切换（1 周）
 

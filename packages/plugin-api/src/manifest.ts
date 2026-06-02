@@ -24,6 +24,7 @@ export type WidgetContribution = {
   id: string
   title: string
   icon?: string
+  description?: string
   supportedSizes: WidgetSize[]
   defaultSize: WidgetSize
   allowMultipleInstances: boolean

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
-import { buildSearchUrl, safelyHandleProviderChange } from "./search-command-bar"
+import { safelyHandleProviderChange } from "./search-command-bar"
+import { buildSearchUrl } from "./search-model"
 import type { SearchProviderContribution } from "@tabora/plugin-api"
 
 describe("buildSearchUrl", () => {

@@ -14,6 +14,8 @@ export const officialPluginWeather: BuiltinPlugin = {
         {
           id: "weather",
           title: "天气",
+          icon: "sun",
+          description: "查看本地天气",
           supportedSizes: ["S", "M"],
           defaultSize: "S",
           allowMultipleInstances: true,

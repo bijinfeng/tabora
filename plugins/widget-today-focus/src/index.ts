@@ -14,6 +14,8 @@ export const officialPluginTodayFocus: BuiltinPlugin = {
         {
           id: "today-focus",
           title: "今日重点",
+          icon: "target",
+          description: "记录今日最重要的任务",
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,

@@ -14,6 +14,8 @@ export const officialPluginNotes: BuiltinPlugin = {
         {
           id: "notes",
           title: "便签",
+          icon: "pencil",
+          description: "随手记下想法和灵感",
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,

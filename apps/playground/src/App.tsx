@@ -2,7 +2,6 @@ import { createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type {
   BackgroundProviderContribution,
-  LayoutContribution,
   LayoutRegion,
   PluginInstance,
   SearchCommandEntry,
@@ -18,6 +17,7 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import { officialPlugins } from "@tabora/official-plugins"
+import { createPluginCatalog } from "@tabora/orchestrator"
 import { createPluginKernel } from "@tabora/platform-kernel"
 import { applyThemeTokens } from "@tabora/theme"
 import {
@@ -32,10 +32,8 @@ import { Clock, Link2, Pencil, Sun, Target, CheckSquare } from "lucide-solid"
 import { PluginViewBoundary } from "./PluginViewBoundary"
 import { CommandPalette } from "./CommandPalette"
 import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
-import { findLayoutContribution, findSearchContribution } from "./workbenchShell"
 import {
   SettingsHost,
-  collectSettingsPanels,
   resolveInitialSettingsSectionId,
   type SettingsSectionId,
 } from "./settingsHost"
@@ -58,11 +56,6 @@ import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
 import { createWorkspaceRegions } from "./defaultWorkspaceSeed"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
-
-function findWidgetContribution(pluginId: string, contributionId: string) {
-  const plugin = officialPlugins.find((p) => p.manifest.id === pluginId)
-  return plugin?.manifest.contributes.widgets?.find((w) => w.id === contributionId)
-}
 
 function pluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
   return typeof props.instanceId === "string" ? props.instanceId : fallback
@@ -173,6 +166,7 @@ export function App() {
   const instanceRepo = createInstanceRepository(database)
   const pluginDataRepo = createPluginDataRepository(database)
   const pluginRecordRepo = createPluginRecordRepository(database)
+  const pluginCatalog = createPluginCatalog(officialPlugins)
 
   const kernel = createPluginKernel({
     lifecycleStore: pluginRecordRepo,
@@ -259,25 +253,23 @@ export function App() {
   })
 
   function themes(): ThemeContribution[] {
-    return officialPlugins.flatMap((plugin) => plugin.manifest.contributes.themes ?? [])
+    return pluginCatalog.listThemes()
   }
 
   function searchProviders(): SearchProviderContribution[] {
-    return officialPlugins.flatMap((plugin) => plugin.manifest.contributes.searchProviders ?? [])
+    return pluginCatalog.listSearchProviders()
   }
 
   function backgrounds(): BackgroundProviderContribution[] {
-    return officialPlugins.flatMap(
-      (plugin) => plugin.manifest.contributes.backgroundProviders ?? [],
-    )
+    return pluginCatalog.listBackgroundProviders()
   }
 
-  function layouts(): LayoutContribution[] {
-    return officialPlugins.flatMap((plugin) => plugin.manifest.contributes.layouts ?? [])
+  function layouts() {
+    return pluginCatalog.listLayouts()
   }
 
   function layoutRegions(layoutId = activeLayoutId()): LayoutRegion[] {
-    return findLayoutContribution(officialPlugins, layoutId)?.regions ?? []
+    return pluginCatalog.findLayoutContribution(layoutId)?.regions ?? []
   }
 
   function buildWorkspaceRegionState(
@@ -369,14 +361,7 @@ export function App() {
   }
 
   function pluginSummaries(): SettingsPanelViewProps["plugins"] {
-    return officialPlugins.map((plugin) => ({
-      id: plugin.manifest.id,
-      name: plugin.manifest.name,
-      version: plugin.manifest.version,
-      enabled: plugin.enabled,
-      permissions: plugin.manifest.permissions ?? [],
-      contributes: plugin.manifest.contributes,
-    }))
+    return pluginCatalog.pluginSummaries()
   }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
@@ -392,7 +377,7 @@ export function App() {
   }
 
   function openSettings(panelId?: string) {
-    const panels = collectSettingsPanels(officialPlugins)
+    const panels = pluginCatalog.listSettingsPanels()
     setActiveSettingsSectionId(resolveInitialSettingsSectionId(panels, panelId))
     setSettingsOpen(true)
   }
@@ -500,7 +485,7 @@ export function App() {
       instanceRepo,
       pluginDataRepo,
       database,
-      availablePluginIds: officialPlugins.map((p) => p.manifest.id),
+      availablePluginIds: pluginCatalog.pluginIds(),
     })
 
     setCtxMenu(null)
@@ -655,53 +640,57 @@ export function App() {
     }
   }
 
-  function widgetCardView(contributionId: string): SolidView | null {
-    const plugin = officialPlugins.find((p) =>
-      p.manifest.contributes.widgets?.some((w) => w.id === contributionId),
-    )
-    if (!plugin) return null
-    const widget = plugin.manifest.contributes.widgets!.find((w) => w.id === contributionId)!
-    return kernel.registry.views.get(widget.views.card) as SolidView
+  function widgetContribution(instance: Pick<PluginInstance, "pluginId" | "contributionId">) {
+    return pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId)
   }
 
-  function widgetTitle(contributionId: string): string {
-    for (const plugin of officialPlugins) {
-      const widget = plugin.manifest.contributes.widgets?.find((w) => w.id === contributionId)
-      if (widget) return widget.title
+  function widgetCardView(instance: PluginInstance): SolidView | null {
+    const widget = widgetContribution(instance)
+    if (!widget) return null
+    return viewOrUndefined(widget.views.card) ?? null
+  }
+
+  function widgetTitle(instance: Pick<PluginInstance, "pluginId" | "contributionId">): string {
+    return widgetContribution(instance)?.title ?? instance.contributionId
+  }
+
+  function renderWidgetIcon(icon?: string): JSX.Element {
+    switch (icon) {
+      case "target":
+        return <Target size={14} />
+      case "link":
+        return <Link2 size={14} />
+      case "pencil":
+        return <Pencil size={14} />
+      case "check-square":
+        return <CheckSquare size={14} />
+      case "sun":
+        return <Sun size={14} />
+      default:
+        return <Clock size={14} />
     }
-    return contributionId
   }
 
-  const widgetIcons: Record<string, () => JSX.Element> = {
-    "today-focus": () => <Target size={14} />,
-    "quick-links": () => <Link2 size={14} />,
-    notes: () => <Pencil size={14} />,
-    todo: () => <CheckSquare size={14} />,
-    weather: () => <Sun size={14} />,
-  }
-
-  const widgetDescriptors: Record<string, { icon: string; desc: string }> = {
-    "today-focus": { icon: "🎯", desc: "记录今日最重要的任务" },
-    "quick-links": { icon: "🔗", desc: "快速访问常用网站" },
-    notes: { icon: "📝", desc: "随手记下想法和灵感" },
-    todo: { icon: "✅", desc: "管理待办事项列表" },
-    weather: { icon: "🌤", desc: "查看本地天气" },
-  }
-
-  function findWidgetPluginId(contributionId: string): string | null {
-    for (const plugin of officialPlugins) {
-      if (plugin.manifest.contributes.widgets?.some((w) => w.id === contributionId)) {
-        return plugin.manifest.id
-      }
+  function widgetIconLabel(icon?: string): string {
+    switch (icon) {
+      case "target":
+        return "◎"
+      case "link":
+        return "↗"
+      case "pencil":
+        return "✎"
+      case "check-square":
+        return "✓"
+      case "sun":
+        return "☼"
+      default:
+        return "▦"
     }
-    return null
   }
 
-  async function addWidget(contributionId: string) {
+  async function addWidget(pluginId: string, contributionId: string) {
     const workspace = requireWorkspace(workspaceState())
-    const pluginId = findWidgetPluginId(contributionId)
-    if (!pluginId) return
-    const widget = findWidgetContribution(pluginId, contributionId)
+    const widget = pluginCatalog.findWidgetContribution(pluginId, contributionId)
     if (!widget) return
     const widgetRegionId =
       layoutRegions().find((region) => region.accepts.includes("widget"))?.id ?? "mainGrid"
@@ -709,7 +698,7 @@ export function App() {
     const inst: PluginInstance = {
       id,
       workspaceId: workspace.id,
-      pluginId,
+      pluginId: widget.pluginId,
       contributionId,
       extensionPoint: "widget",
       regionId: widgetRegionId,
@@ -764,7 +753,7 @@ export function App() {
     viewId: string
     mode: "card" | "modal" | "fullscreen"
   } | null {
-    const widget = findWidgetContribution(instance.pluginId, instance.contributionId)
+    const widget = widgetContribution(instance)
     if (!widget) return null
     if (widget.views.fullscreen && kernel.registry.views.has(widget.views.fullscreen)) {
       return { viewId: widget.views.fullscreen, mode: "fullscreen" }
@@ -790,7 +779,7 @@ export function App() {
   function openWidgetExpand(instance: PluginInstance, trigger?: HTMLElement) {
     const target = resolveExpandView(instance)
     if (!target) {
-      showToast(`当前卡片暂不支持展开：${widgetTitle(instance.contributionId)}`)
+      showToast(`当前卡片暂不支持展开：${widgetTitle(instance)}`)
       return
     }
     lastExpandTrigger =
@@ -798,7 +787,7 @@ export function App() {
     setCtxMenu(null)
     setExpandState({
       instanceId: instance.id,
-      title: widgetTitle(instance.contributionId),
+      title: widgetTitle(instance),
       viewId: target.viewId,
       mode: target.mode,
       props: buildWidgetViewProps(instance),
@@ -850,13 +839,7 @@ export function App() {
 
   function supportedWidgetSizes(instance: PluginInstance | null): WidgetSize[] {
     if (!instance) return ["S", "M", "L"]
-    return (
-      findWidgetContribution(instance.pluginId, instance.contributionId)?.supportedSizes ?? [
-        "S",
-        "M",
-        "L",
-      ]
-    )
+    return widgetContribution(instance)?.supportedSizes ?? ["S", "M", "L"]
   }
 
   function focusWidgetInstance(instanceId: string) {
@@ -870,13 +853,17 @@ export function App() {
   function searchableWidgets(): SearchWidgetEntry[] {
     return instances()
       .filter((instance) => instance.extensionPoint === "widget")
-      .map((instance) => ({
-        instanceId: instance.id,
-        icon: widgetDescriptors[instance.contributionId]?.icon ?? "▦",
-        name: widgetTitle(instance.contributionId),
-        desc: `定位到 ${widgetTitle(instance.contributionId)} 卡片`,
-        action: () => focusWidgetInstance(instance.id),
-      }))
+      .map((instance) => {
+        const widget = widgetContribution(instance)
+        const title = widget?.title ?? instance.contributionId
+        return {
+          instanceId: instance.id,
+          icon: widgetIconLabel(widget?.icon),
+          name: title,
+          desc: `定位到 ${title} 卡片`,
+          action: () => focusWidgetInstance(instance.id),
+        }
+      })
   }
 
   async function persistGridOrder(regionId: string, orderedInstances: PluginInstance[]) {
@@ -907,23 +894,7 @@ export function App() {
   }
 
   const availableWidgets = () => {
-    const contributions: {
-      id: string
-      pluginId: string
-      title: string
-      defaultSize: WidgetSize
-    }[] = []
-    for (const plugin of officialPlugins) {
-      for (const widget of plugin.manifest.contributes.widgets ?? []) {
-        contributions.push({
-          id: widget.id,
-          pluginId: plugin.manifest.id,
-          title: widget.title,
-          defaultSize: widget.defaultSize,
-        })
-      }
-    }
-    return contributions
+    return pluginCatalog.listWidgetContributions()
   }
 
   function enabledProviderIds(): string[] {
@@ -959,8 +930,7 @@ export function App() {
     return (
       <For each={searchInstances}>
         {(instance) => {
-          const search = findSearchContribution(
-            officialPlugins,
+          const search = pluginCatalog.findSearchContribution(
             instance.pluginId,
             instance.contributionId,
           )
@@ -996,9 +966,10 @@ export function App() {
         <section class="workbench-grid">
           <For each={widgetInstancesForRegion(regionId)}>
             {(inst) => {
-              const View = widgetCardView(inst.contributionId)
+              const View = widgetCardView(inst)
               if (!View) return null
-              const widget = findWidgetContribution(inst.pluginId, inst.contributionId)
+              const widget = widgetContribution(inst)
+              const title = widget?.title ?? inst.contributionId
               const viewProps = buildWidgetViewProps(inst)
               const span = gridColumnSpan(inst.size)
               return (
@@ -1007,7 +978,7 @@ export function App() {
                   classList={{ dragging: dragId() === inst.id }}
                   style={{ "grid-column": `span ${span}` }}
                   data-widget-instance-id={inst.id}
-                  aria-label={widgetTitle(inst.contributionId)}
+                  aria-label={title}
                   tabIndex={0}
                   draggable="true"
                   onDragStart={(e) => onDragStart(e, inst.id)}
@@ -1016,7 +987,7 @@ export function App() {
                   onDblClick={(e) => {
                     if (isInteractiveElement(e.target)) return
                     openWidgetExpand(inst, e.currentTarget as HTMLElement)
-                    showToast(`展开卡片：${widgetTitle(inst.contributionId)}`)
+                    showToast(`展开卡片：${title}`)
                   }}
                   onContextMenu={(e) => {
                     e.preventDefault()
@@ -1026,8 +997,8 @@ export function App() {
                   <div class="widget-card">
                     <div class="card-header">
                       <div class="card-title">
-                        {(widgetIcons[inst.contributionId] ?? (() => <Clock size={14} />))()}
-                        <span class="card-title-text">{widgetTitle(inst.contributionId)}</span>
+                        {renderWidgetIcon(widget?.icon)}
+                        <span class="card-title-text">{title}</span>
                       </div>
                       <div class="card-actions">
                         <div class="widget-size-bar">
@@ -1043,7 +1014,7 @@ export function App() {
                         </div>
                         <button
                           class="card-action-btn"
-                          aria-label={`展开 ${widgetTitle(inst.contributionId)}`}
+                          aria-label={`展开 ${title}`}
                           onClick={() => openWidgetExpand(inst)}
                         >
                           ⤢
@@ -1057,10 +1028,7 @@ export function App() {
                       </div>
                     </div>
                     <div class="card-body">
-                      <PluginViewBoundary
-                        instanceId={inst.id}
-                        title={widgetTitle(inst.contributionId)}
-                      >
+                      <PluginViewBoundary instanceId={inst.id} title={title}>
                         {View(viewProps)}
                       </PluginViewBoundary>
                     </div>
@@ -1081,19 +1049,18 @@ export function App() {
                 <div class="modal-body">
                   <For each={availableWidgets()}>
                     {(w) => {
-                      const desc = widgetDescriptors[w.id] ?? { icon: "▦", desc: "" }
                       return (
                         <button
                           class="add-widget-modal-item"
                           onClick={() => {
-                            void addWidget(w.id)
+                            void addWidget(w.pluginId, w.id)
                             setAddWidgetOpen(false)
                           }}
                         >
-                          <span class="add-widget-modal-icon">{desc.icon}</span>
+                          <span class="add-widget-modal-icon">{widgetIconLabel(w.icon)}</span>
                           <span class="add-widget-modal-info">
                             <div class="add-widget-modal-name">{w.title}</div>
-                            <div class="add-widget-modal-desc">{desc.desc}</div>
+                            <div class="add-widget-modal-desc">{w.description}</div>
                           </span>
                         </button>
                       )
@@ -1123,7 +1090,7 @@ export function App() {
   }
 
   function renderActiveLayout() {
-    const layout = findLayoutContribution(officialPlugins, activeLayoutId())
+    const layout = pluginCatalog.findLayoutContribution(activeLayoutId())
     const LayoutView = layout?.view ? viewOrUndefined(layout.view) : undefined
 
     if (!LayoutView) {
@@ -1344,7 +1311,7 @@ export function App() {
         {renderActiveLayout()}
         <SettingsHost
           open={settingsOpen()}
-          panels={collectSettingsPanels(officialPlugins)}
+          panels={pluginCatalog.listSettingsPanels()}
           activeSectionId={activeSettingsSectionId()}
           onSectionChange={setActiveSettingsSectionId}
           onClose={() => setSettingsOpen(false)}
@@ -1383,9 +1350,7 @@ export function App() {
                 <div class="expand-header">
                   <div class="expand-title">
                     <span class="expand-title-icon">
-                      {(
-                        widgetIcons[expand().props.contributionId] ?? (() => <Clock size={14} />)
-                      )()}
+                      {renderWidgetIcon(widgetContribution(expand().props)?.icon)}
                     </span>
                     <div class="expand-title-texts">
                       <span class="expand-title-text">{expand().title}</span>

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@tabora/official-plugins": "workspace:*",
+    "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",

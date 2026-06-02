@@ -14,6 +14,8 @@ export const officialPluginQuickLinks: BuiltinPlugin = {
         {
           id: "quick-links",
           title: "快捷入口",
+          icon: "link",
+          description: "快速访问常用网站",
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,

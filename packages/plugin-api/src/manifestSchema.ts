@@ -18,6 +18,7 @@ const widgetContributionSchema = z
     id: z.string().min(1),
     title: z.string().min(1),
     icon: z.string().optional(),
+    description: z.string().optional(),
     supportedSizes: z.array(widgetSizeSchema).min(1),
     defaultSize: widgetSizeSchema,
     allowMultipleInstances: z.boolean(),
