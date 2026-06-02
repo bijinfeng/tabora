@@ -271,6 +271,20 @@ Storybook 使用约定：
 - 服务器目录需要什么权限。
 - 如何在部署后追加 reload 或缓存刷新命令。
 
+### 官网预览与站点实现
+
+当前官网方向包含两层：
+
+- `docs/design/04-官网预览.html` 和 `docs/design/05-官网下载.html`：静态设计预览，用于评审布局、文案和视觉方向。
+- `apps/site/`：按上述设计稿还原的 Vite + SolidJS + Tailwind CSS 官网应用，复用 `@tabora/ui` 和 `@tabora/theme`。
+
+常用命令：
+
+```bash
+pnpm --filter @tabora/site dev
+pnpm --filter @tabora/site build
+```
+
 ### 修改权限或安全
 
 先读：

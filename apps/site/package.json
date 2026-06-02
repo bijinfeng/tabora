@@ -1,0 +1,22 @@
+{
+  "name": "@tabora/site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@tabora/theme": "workspace:*",
+    "@tabora/ui": "workspace:*",
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "catalog:build",
+    "tailwindcss": "catalog:build",
+    "typescript": "catalog:build",
+    "vite": "catalog:build",
+    "vite-plugin-solid": "catalog:build"
+  }
+}
