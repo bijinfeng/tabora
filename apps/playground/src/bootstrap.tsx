@@ -1,5 +1,6 @@
 import { render } from "solid-js/web"
 import "@tabora/ui/styles.css"
+import "@tabora/official-plugins/styles.css"
 import { App } from "./App"
 import "./app.css"
 

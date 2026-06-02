@@ -4,11 +4,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
+      "./styles.css": "./dist/styles.css",
       "./package.json": "./package.json"
     }
   },

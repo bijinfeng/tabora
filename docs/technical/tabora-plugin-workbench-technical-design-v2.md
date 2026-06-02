@@ -102,6 +102,7 @@ packages/
 - `docs/design/02-基础组件规范.html` 中的 52 个组件是**设计 catalog**，不是 `@tabora/ui` 的 1:1 导出清单。
 - `@tabora/ui` 只承接插件内容区基础组件和组合模式，如 `Button`、`Input`、`Field`、`ListRow`、`CardSection`、`Kbd` 等。
 - `CommandPalette`、`Dialog`、`Drawer`、`Toast`、`ContextMenu`、`ExpandHost`、`SettingsHost`、快捷键面板等宿主级容器由 shell / orchestrator 提供，可复用 design spec，但不应强行收进 `@tabora/ui`。
+- 官方插件和官方 layout 的样式由 `@tabora/official-plugins/styles.css` 跟随插件包提供；playground 只导入样式包，不维护官方插件 class 的 CSS。playground 可保留第一 shell 独有的 host 容器样式，例如 dev toolbar、widget card chrome、modal/fullscreen/settings host、toast 和 context menu。
 
 `@tabora/orchestrator` 的职责边界：
 

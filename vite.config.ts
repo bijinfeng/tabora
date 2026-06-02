@@ -24,14 +24,19 @@ function withUiStylesExport(exports: PackageExports, isPublish: boolean): Packag
 
 const pack = {
   dts: true,
-  copy: (options) =>
-    options.pkg?.name === "@tabora/ui"
-      ? [{ from: "src/styles.css", to: "dist", flatten: true }]
-      : [],
+  copy: (options) => {
+    if (options.pkg?.name === "@tabora/ui") {
+      return [{ from: "src/styles.css", to: "dist", flatten: true }]
+    }
+    if (options.pkg?.name === "@tabora/official-plugins") {
+      return [{ from: "src/styles.css", to: "dist", flatten: true }]
+    }
+    return []
+  },
   exports: {
     devExports: true,
     customExports(exports, context) {
-      if (context.pkg.name === "@tabora/ui") {
+      if (context.pkg.name === "@tabora/ui" || context.pkg.name === "@tabora/official-plugins") {
         return withUiStylesExport(exports, context.isPublish)
       }
       return exports
