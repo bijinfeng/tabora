@@ -7,11 +7,17 @@ const config: StorybookConfig = {
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-themes"],
   framework: {
     name: "storybook-solidjs-vite",
-    options: {},
+    options: {
+      docgen: false,
+    },
   },
   core: {
     builder: "@storybook/builder-vite",
+    disableWhatsNewNotifications: true,
   },
+  features: {
+    test: false,
+  } as StorybookConfig["features"] & { test?: boolean },
   viteFinal: async (config: InlineConfig) => {
     return {
       ...config,

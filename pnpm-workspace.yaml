@@ -4,6 +4,9 @@ packages:
   - plugins/*
   - tooling/*
 
+allowBuilds:
+  esbuild: true
+
 catalogs:
   build:
     "@tailwindcss/vite": ^4.3.0
