@@ -87,6 +87,7 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 补充预览：
 
+- `docs/design/04-官网预览.html` 和 `docs/design/05-官网下载.html` 是官网方向的静态设计预览，用于评审信息架构和视觉语言，不作为产品或交互事实源。
 - `docs/product/tabora-design-system-preview.html` 是早期静态视觉预览，可作为历史参考，不再作为当前视觉事实源。
 
 ### 技术方案
