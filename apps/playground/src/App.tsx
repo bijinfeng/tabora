@@ -91,6 +91,13 @@ export function App() {
   const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
+  const [expandState, setExpandState] = createSignal<{
+    instanceId: string
+    title: string
+    viewId: string
+    mode: "card" | "modal" | "fullscreen"
+    props: WidgetViewProps
+  } | null>(null)
   const [dragId, setDragId] = createSignal<string | null>(null)
   const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
     null,
@@ -99,6 +106,7 @@ export function App() {
   const [cmdPaletteOpen, setCmdPaletteOpen] = createSignal(false)
   const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
+  let lastExpandTrigger: HTMLElement | null = null
   let toastSeq = 0
   function showToast(msg: string) {
     const id = ++toastSeq
@@ -185,6 +193,16 @@ export function App() {
     return kernel.registry.views.has(viewId)
       ? (kernel.registry.views.get(viewId) as SolidView<Props>)
       : undefined
+  }
+
+  function buildWidgetViewProps(instance: PluginInstance): WidgetViewProps {
+    return {
+      instanceId: instance.id,
+      pluginId: instance.pluginId,
+      contributionId: instance.contributionId,
+      config: instance.config,
+      data: makeScopedData(instance.pluginId, instance.id),
+    }
   }
 
   void kernel.discover(officialPlugins).then(async () => {
@@ -326,6 +344,8 @@ export function App() {
 
   async function switchLayout(layoutId: string) {
     const activeWorkspace = requireWorkspace(workspaceState())
+    setCtxMenu(null)
+    setExpandState(null)
     const nextInstances = await reconcileInstancesForLayout(layoutId, instances())
     setInstances(nextInstances)
     setActiveLayoutId(layoutId)
@@ -480,6 +500,8 @@ export function App() {
       availablePluginIds: officialPlugins.map((p) => p.manifest.id),
     })
 
+    setCtxMenu(null)
+    setExpandState(null)
     setWorkspaceState(result.workspace)
     const nextInstances = await reconcileInstancesForLayout(
       result.workspace.activeLayoutId,
@@ -521,6 +543,8 @@ export function App() {
       searchProviders: searchProviders(),
       workspaceId: id,
     })
+    setCtxMenu(null)
+    setExpandState(null)
     setWorkspaceState(session.workspace)
     setActiveLayoutId(session.activeLayoutId)
     setThemeId(session.activeThemeId)
@@ -698,6 +722,12 @@ export function App() {
   }
 
   async function removeWidget(instanceId: string) {
+    if (expandState()?.instanceId === instanceId) {
+      closeExpand()
+    }
+    if (ctxMenu()?.instanceId === instanceId) {
+      setCtxMenu(null)
+    }
     await instanceRepo.remove(instanceId)
     setInstances((prev) => prev.filter((i) => i.id !== instanceId))
   }
@@ -716,6 +746,60 @@ export function App() {
     }
     await instanceRepo.save(updated)
     setInstances((prev) => prev.map((i) => (i.id === instanceId ? updated : i)))
+  }
+
+  function isInteractiveElement(target: EventTarget | null): boolean {
+    return (
+      target instanceof HTMLElement &&
+      target.closest(
+        "button, input, textarea, select, a, [role='button'], [data-prevent-expand='true']",
+      ) !== null
+    )
+  }
+
+  function resolveExpandView(instance: PluginInstance): {
+    viewId: string
+    mode: "card" | "modal" | "fullscreen"
+  } | null {
+    const widget = findWidgetContribution(instance.pluginId, instance.contributionId)
+    if (!widget) return null
+    if (widget.views.fullscreen && kernel.registry.views.has(widget.views.fullscreen)) {
+      return { viewId: widget.views.fullscreen, mode: "fullscreen" }
+    }
+    if (widget.views.modal && kernel.registry.views.has(widget.views.modal)) {
+      return { viewId: widget.views.modal, mode: "modal" }
+    }
+    if (kernel.registry.views.has(widget.views.card)) {
+      return { viewId: widget.views.card, mode: "card" }
+    }
+    return null
+  }
+
+  function closeExpand() {
+    setExpandState(null)
+    if (lastExpandTrigger) {
+      requestAnimationFrame(() => {
+        lastExpandTrigger?.focus()
+      })
+    }
+  }
+
+  function openWidgetExpand(instance: PluginInstance, trigger?: HTMLElement) {
+    const target = resolveExpandView(instance)
+    if (!target) {
+      showToast(`当前卡片暂不支持展开：${widgetTitle(instance.contributionId)}`)
+      return
+    }
+    lastExpandTrigger =
+      trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
+    setCtxMenu(null)
+    setExpandState({
+      instanceId: instance.id,
+      title: widgetTitle(instance.contributionId),
+      viewId: target.viewId,
+      mode: target.mode,
+      props: buildWidgetViewProps(instance),
+    })
   }
 
   function onDragStart(e: DragEvent, instanceId: string) {
@@ -749,6 +833,27 @@ export function App() {
 
   function searchInstancesForRegion(regionId: string) {
     return regionInstances(regionId, "search")
+  }
+
+  function widgetInstanceById(instanceId: string): PluginInstance | undefined {
+    return instances().find((instance) => instance.id === instanceId)
+  }
+
+  function contextMenuInstance(): PluginInstance | null {
+    const menu = ctxMenu()
+    if (!menu) return null
+    return widgetInstanceById(menu.instanceId) ?? null
+  }
+
+  function supportedWidgetSizes(instance: PluginInstance | null): WidgetSize[] {
+    if (!instance) return ["S", "M", "L"]
+    return (
+      findWidgetContribution(instance.pluginId, instance.contributionId)?.supportedSizes ?? [
+        "S",
+        "M",
+        "L",
+      ]
+    )
   }
 
   async function persistGridOrder(regionId: string, orderedInstances: PluginInstance[]) {
@@ -869,6 +974,7 @@ export function App() {
               const View = widgetCardView(inst.contributionId)
               if (!View) return null
               const widget = findWidgetContribution(inst.pluginId, inst.contributionId)
+              const viewProps = buildWidgetViewProps(inst)
               const span = gridColumnSpan(inst.size)
               return (
                 <div
@@ -880,22 +986,10 @@ export function App() {
                   onDragStart={(e) => onDragStart(e, inst.id)}
                   onDragOver={onDragOver}
                   onDrop={(e) => onDrop(e, inst.id, regionId)}
-                  onDblClick={() => {
-                    const w = findWidgetContribution(inst.pluginId, inst.contributionId)
-                    const modalViewId = w?.views.modal
-                    if (modalViewId && kernel.registry.views.has(modalViewId)) {
-                      kernel.events.emit("ui.modal.open", {
-                        viewId: modalViewId,
-                        props: {
-                          instanceId: inst.id,
-                          pluginId: inst.pluginId,
-                          contributionId: inst.contributionId,
-                          config: inst.config,
-                          data: makeScopedData(inst.pluginId, inst.id),
-                        },
-                      })
-                      showToast("展开卡片：" + widgetTitle(inst.contributionId))
-                    }
+                  onDblClick={(e) => {
+                    if (isInteractiveElement(e.target)) return
+                    openWidgetExpand(inst, e.currentTarget as HTMLElement)
+                    showToast(`展开卡片：${widgetTitle(inst.contributionId)}`)
                   }}
                   onContextMenu={(e) => {
                     e.preventDefault()
@@ -914,15 +1008,22 @@ export function App() {
                             <button
                               class="widget-size-btn"
                               classList={{ active: (inst.size ?? "M") === s }}
-                              onClick={() => changeWidgetSize(inst.id, s)}
+                              onClick={() => void changeWidgetSize(inst.id, s)}
                             >
                               {s}
                             </button>
                           ))}
                         </div>
                         <button
+                          class="card-action-btn"
+                          aria-label={`展开 ${widgetTitle(inst.contributionId)}`}
+                          onClick={() => openWidgetExpand(inst)}
+                        >
+                          ⤢
+                        </button>
+                        <button
                           class="card-action-btn card-danger"
-                          onClick={() => removeWidget(inst.id)}
+                          onClick={() => void removeWidget(inst.id)}
                         >
                           ×
                         </button>
@@ -933,13 +1034,7 @@ export function App() {
                         instanceId={inst.id}
                         title={widgetTitle(inst.contributionId)}
                       >
-                        {View({
-                          instanceId: inst.id,
-                          pluginId: inst.pluginId,
-                          contributionId: inst.contributionId,
-                          config: inst.config,
-                          data: makeScopedData(inst.pluginId, inst.id),
-                        } satisfies WidgetViewProps)}
+                        {View(viewProps)}
                       </PluginViewBoundary>
                     </div>
                   </div>
@@ -1058,7 +1153,9 @@ export function App() {
           <button
             class="rail-btn"
             aria-label="切换主题"
-            onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}
+            onClick={() =>
+              void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+            }
             type="button"
           >
             <svg
@@ -1170,6 +1267,7 @@ export function App() {
           openSettings("official.settings.workspace.appearance")
         }
         if (e.key === "Escape") {
+          closeExpand()
           setCtxMenu(null)
           setAddWidgetOpen(false)
         }
@@ -1200,7 +1298,9 @@ export function App() {
             <span class="toolbar-sep" />
             <button
               class="toolbar-btn"
-              onClick={() => switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")}
+              onClick={() =>
+                void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+              }
               aria-label="切换主题"
             >
               {isDark() ? "☀" : "☾"}
@@ -1242,6 +1342,65 @@ export function App() {
             </div>
           }
         />
+        <Show when={expandState()}>
+          {(expand) => (
+            <div class="expand-overlay" onClick={closeExpand}>
+              <div
+                class="expand-shell"
+                classList={{
+                  "is-card-fallback": expand().mode === "card",
+                  "is-fullscreen": expand().mode === "fullscreen",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div class="expand-header">
+                  <div class="expand-title">
+                    <span class="expand-title-icon">
+                      {(
+                        widgetIcons[expand().props.contributionId] ?? (() => <Clock size={14} />)
+                      )()}
+                    </span>
+                    <div class="expand-title-texts">
+                      <span class="expand-title-text">{expand().title}</span>
+                      <span class="expand-title-meta">
+                        {expand().mode === "fullscreen"
+                          ? "全屏视图"
+                          : expand().mode === "modal"
+                            ? "插件展开视图"
+                            : "卡片放大视图"}
+                      </span>
+                    </div>
+                  </div>
+                  <button class="expand-close-btn" onClick={closeExpand} aria-label="关闭展开视图">
+                    ×
+                  </button>
+                </div>
+                <div class="expand-body">
+                  {(() => {
+                    const View = viewOrUndefined<WidgetViewProps>(expand().viewId)
+                    if (!View) {
+                      return (
+                        <div class="settings-panel-missing" role="alert">
+                          展开视图不可用：{expand().viewId}
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <PluginViewBoundary instanceId={expand().instanceId} title={expand().title}>
+                        {View(expand().props)}
+                      </PluginViewBoundary>
+                    )
+                  })()}
+                </div>
+                <div class="expand-footer">
+                  <span class="expand-footer-meta">{expand().instanceId}</span>
+                  <span class="expand-close-hint">Esc 关闭 · 双击打开 · 右键菜单</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </Show>
         <Show when={modalViewId()}>
           <div class="modal-overlay" onClick={() => setModalViewId(null)}>
             <div class="modal-container" onClick={(e) => e.stopPropagation()}>
@@ -1288,29 +1447,34 @@ export function App() {
           {(menu) => (
             <div class="ctx-menu-overlay" onClick={() => setCtxMenu(null)}>
               <div class="ctx-menu-panel" style={{ left: `${menu().x}px`, top: `${menu().y}px` }}>
+                <For each={supportedWidgetSizes(contextMenuInstance())}>
+                  {(size) => (
+                    <button
+                      class="ctx-menu-item"
+                      onClick={() => {
+                        const instance = contextMenuInstance()
+                        if (!instance) return
+                        void changeWidgetSize(instance.id, size)
+                        setCtxMenu(null)
+                      }}
+                    >
+                      尺寸 {size}
+                      <Show when={(contextMenuInstance()?.size ?? "M") === size}>
+                        <span class="ctx-menu-check">当前</span>
+                      </Show>
+                    </button>
+                  )}
+                </For>
+                <hr class="ctx-menu-sep" />
                 <button
                   class="ctx-menu-item"
                   onClick={() => {
-                    setCtxMenu(null)
+                    const instance = contextMenuInstance()
+                    if (!instance) return
+                    openWidgetExpand(instance)
                   }}
                 >
-                  尺寸 S
-                </button>
-                <button
-                  class="ctx-menu-item"
-                  onClick={() => {
-                    setCtxMenu(null)
-                  }}
-                >
-                  尺寸 M
-                </button>
-                <button
-                  class="ctx-menu-item"
-                  onClick={() => {
-                    setCtxMenu(null)
-                  }}
-                >
-                  尺寸 L
+                  展开详情
                 </button>
                 <hr class="ctx-menu-sep" />
                 <button
