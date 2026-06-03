@@ -111,6 +111,16 @@
   min-width: 0;
 }
 
+.grid-item[data-widget-size="S"] .widget-card,
+.grid-item[data-widget-size="M"] .widget-card {
+  height: 180px;
+}
+
+.grid-item[data-widget-size="L"] .widget-card,
+.grid-item[data-widget-size="XL"] .widget-card {
+  height: 372px;
+}
+
 /* ====== CARD (exact prototype values) ====== */
 .widget-card {
   background: rgb(var(--color-surface));
@@ -159,6 +169,7 @@
 .card-body {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 .card-actions {
   display: flex;

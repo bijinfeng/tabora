@@ -23,7 +23,17 @@ describe("createDefaultWorkspaceSeed", () => {
 
     const mainGrid = workspace.regions["mainGrid"]
     expect(mainGrid).toBeDefined()
-    expect(mainGrid!.instances).toHaveLength(4)
+    expect(mainGrid!.instances).toHaveLength(8)
+    expect(mainGrid!.instances.map((instance) => instance.instanceId)).toEqual([
+      "today-focus-1",
+      "quick-links-1",
+      "todo-1",
+      "notes-1",
+      "weather-1",
+      "today-focus-2",
+      "quick-links-2",
+      "todo-2",
+    ])
   })
 
   it("assigns correct extension points and region IDs to instances", () => {
@@ -35,12 +45,12 @@ describe("createDefaultWorkspaceSeed", () => {
     expect(searchInstance!.pluginId).toBe("official.search.command-bar")
 
     const widgetInstances = instances.filter((i) => i.regionId === "mainGrid")
-    expect(widgetInstances).toHaveLength(4)
+    expect(widgetInstances).toHaveLength(8)
     for (const inst of widgetInstances) {
       expect(inst.extensionPoint).toBe("widget")
       expect(inst.enabled).toBe(true)
-      expect(inst.size).toBe("M")
     }
+    expect(instances.find((i) => i.id === "weather-1")?.size).toBe("S")
   })
 
   it("each instance has createdAt and updatedAt timestamps", () => {

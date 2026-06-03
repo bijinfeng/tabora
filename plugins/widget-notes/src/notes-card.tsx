@@ -39,16 +39,21 @@ export function NotesCard(props: WidgetViewProps) {
   })
 
   return (
-    <Textarea
-      value={text()}
-      onInput={async (v) => {
-        setText(v)
-        await props.data.save(storageKey, v)
-      }}
-      placeholder="写点什么..."
-      aria-label="便签内容"
-      rows={4}
-    />
+    <div class="notes-widget">
+      <textarea
+        class="notes-area"
+        value={text()}
+        onInput={async (event) => {
+          const value = event.currentTarget.value
+          setText(value)
+          await props.data.save(storageKey, value)
+        }}
+        placeholder="写点什么..."
+        aria-label="便签内容"
+        rows={4}
+      />
+      <div class="notes-footer">自动保存</div>
+    </div>
   )
 }
 

@@ -279,7 +279,7 @@ MVP 组件清单：
 | `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供快捷入口，验证外部打开和实例配置               |
 | `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供便签和弹窗编辑，验证插件数据和 modal           |
 | `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供待办列表，验证交互型 widget 和持久化           |
-| `official.widgets.weather`            | Weather Widget             | `widget`                                     | 可选     | 当前在 productivity 包内                                                                 | 提供天气摘要，MVP 可添加但不强制首屏默认           |
+| `official.widgets.weather`            | Weather Widget             | `widget`                                     | 是       | 当前在 productivity 包内                                                                 | 提供天气摘要，按工作台交互原型进入默认工作台       |
 | `official.plugin-manager`             | Plugin Manager             | `widget`, `settings-panel`                   | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件状态、贡献能力和权限摘要                   |
 | `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | 已实现轻量 settings host 面板贡献：外观、搜索；插件面板由 `official.plugin-manager` 贡献 | 聚合插件、外观、搜索等全局设置面板                 |
 
@@ -289,20 +289,23 @@ MVP 组件清单：
 
 建议默认装配：
 
-| 区域       | 实例             | 来源插件                              | 尺寸         | 说明                                     |
-| ---------- | ---------------- | ------------------------------------- | ------------ | ---------------------------------------- |
-| `rail`     | `rail-main`      | `official.layout.workbench-dashboard` | 固定左侧区域 | 主页、添加卡片、插件、设置等工作台级入口 |
-| `topbar`   | `search-main`    | `official.search.command-bar`         | 固定顶部区域 | 命令搜索入口                             |
-| `mainGrid` | `today-focus-1`  | `official.widgets.today-focus`        | M            | 今日重点，默认首屏第一张核心卡片         |
-| `mainGrid` | `quick-links-1`  | `official.widgets.quick-links`        | M            | 快捷入口                                 |
-| `mainGrid` | `notes-1`        | `official.widgets.notes`              | M            | 快速记录                                 |
-| `mainGrid` | `todo-1`         | `official.widgets.todo`               | M            | 待办列表                                 |
-| `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 可添加候选；不强制首屏默认               |
-| `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 默认从设置中心进入，不作为首屏大卡片     |
+| 区域       | 实例             | 来源插件                              | 尺寸         | 说明                                         |
+| ---------- | ---------------- | ------------------------------------- | ------------ | -------------------------------------------- |
+| `rail`     | `rail-main`      | `official.layout.workbench-dashboard` | 固定左侧区域 | 主页、添加卡片、切换主题、设置等工作台级入口 |
+| `topbar`   | `search-main`    | `official.search.command-bar`         | 固定顶部区域 | 命令搜索入口                                 |
+| `mainGrid` | `today-focus-1`  | `official.widgets.today-focus`        | M            | 今日重点，默认首屏第一张核心卡片             |
+| `mainGrid` | `quick-links-1`  | `official.widgets.quick-links`        | M            | 快捷入口                                     |
+| `mainGrid` | `todo-1`         | `official.widgets.todo`               | M            | 待办列表                                     |
+| `mainGrid` | `notes-1`        | `official.widgets.notes`              | M            | 快速记录                                     |
+| `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
+| `mainGrid` | `today-focus-2`  | `official.widgets.today-focus`        | M            | 多实例样张，用于验证默认网格滚动             |
+| `mainGrid` | `quick-links-2`  | `official.widgets.quick-links`        | M            | 多实例样张，用于验证默认网格滚动             |
+| `mainGrid` | `todo-2`         | `official.widgets.todo`               | M            | 多实例样张，用于验证默认网格滚动             |
+| `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 默认从设置中心进入，不作为首屏大卡片         |
 
-当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、插件、设置等宿主动作。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span。主网格默认包含 `today-focus-1`、`quick-links-1`、`notes-1` 和 `todo-1`；天气保留为可添加候选，不强制进入首屏。
+当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。主网格默认按原型样张包含 `today-focus-1`、`quick-links-1`、`todo-1`、`notes-1`、`weather-1`、`today-focus-2`、`quick-links-2` 和 `todo-2`。旧默认工作区会通过一次性 seed 版本迁移补齐缺失样张实例；迁移后用户手动删除的默认卡片不会被反复恢复。
 
-默认首屏不要求容纳所有官方卡片。首屏应优先保证命令搜索和 3-4 个核心卡片可见：今日重点、快捷入口、便签和待办。天气、插件状态和低频工具可以在主网格下方通过纵向滚动访问，或放入添加面板和设置中心。
+默认工作台以 `docs/design/03-工作台交互原型.html` 的仪表盘样张为视觉事实源：首屏优先呈现命令搜索、今日重点、快捷入口、待办、便签和天气摘要，并允许更多默认样张卡片在主网格下方通过纵向滚动访问。插件状态和低频工具默认从设置中心进入，不作为首屏大卡片。
 
 ### 5.2 默认插件加载顺序
 
@@ -1068,7 +1071,7 @@ MVP widget 清单：
 | `quick-links` | 快捷入口 | S, M, L     | M        | 是         | card        | 是       |
 | `notes`       | 便签     | S, M, L     | M        | 是         | card, modal | 是       |
 | `todo`        | 待办     | S, M, L, XL | M        | 是         | card        | 是       |
-| `weather`     | 天气     | S, M        | S        | 是         | card        | 可添加   |
+| `weather`     | 天气     | S, M        | S        | 是         | card        | 是       |
 
 ### 11.3 统一卡片规范
 
@@ -2008,7 +2011,7 @@ plugin view throws
 - 新增 `@tabora/ui` 基础组件包，并让官方插件逐步迁移到统一控件。
 - 新增今日重点卡片，默认进入首屏。
 - 快捷入口、便签、待办使用统一 plugin storage。
-- 默认工作台包含 3-4 个稳定有用的核心卡片。
+- 默认工作台按交互原型样张包含命令搜索、今日重点、快捷入口、待办、便签、天气和多实例样张卡片。
 - 插件错误边界覆盖 card、modal、fullscreen。
 - 提供轻量设置中心，聚合插件、外观和搜索面板。
 

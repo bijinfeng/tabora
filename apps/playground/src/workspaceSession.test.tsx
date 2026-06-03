@@ -6,7 +6,7 @@ import {
   createPluginDataRepository,
   createWorkspaceRepository,
 } from "@tabora/storage"
-import type { SearchProviderContribution, Workspace } from "@tabora/plugin-api"
+import type { PluginInstance, SearchProviderContribution, Workspace } from "@tabora/plugin-api"
 import {
   createWorkspaceSession,
   deleteWorkspaceSession,
@@ -80,8 +80,65 @@ describe("workspaceSession", () => {
     })
 
     expect(session.workspace.id).toBe("default")
-    expect(session.instances).toHaveLength(5)
+    expect(session.instances).toHaveLength(9)
     expect(session.searchSettings.defaultProviderId).toBe("official.search.google")
+  })
+
+  it("adds missing prototype default instances to an existing default workspace", async () => {
+    const database = createTaboraDatabase("tabora-workspace-session-test")
+    const workspaceRepo = createWorkspaceRepository(database)
+    const instanceRepo = createInstanceRepository(database)
+    const pluginDataRepo = createPluginDataRepository(database)
+    const now = "2026-06-01T00:00:00.000Z"
+
+    await workspaceRepo.save({
+      id: "default",
+      name: "默认工作区",
+      activeLayoutId: "official.layout.workbench-dashboard",
+      activeThemeId: "official.theme.light",
+      activeBackgroundProviderId: "background.gradient-green",
+      regions: {},
+      createdAt: now,
+      updatedAt: now,
+    })
+    const legacyInstances: PluginInstance[] = [
+      [
+        "search-main",
+        "official.search.command-bar",
+        "official.search.command-bar",
+        "search",
+        "topbar",
+      ],
+      ["today-focus-1", "official.widgets.today-focus", "today-focus", "widget", "mainGrid"],
+      ["quick-links-1", "official.widgets.quick-links", "quick-links", "widget", "mainGrid"],
+      ["notes-1", "official.widgets.notes", "notes", "widget", "mainGrid"],
+      ["todo-1", "official.widgets.todo", "todo", "widget", "mainGrid"],
+    ].map(([id, pluginId, contributionId, extensionPoint, regionId]) => ({
+      id,
+      workspaceId: "default",
+      pluginId,
+      contributionId,
+      extensionPoint,
+      regionId,
+      enabled: true,
+      size: "M",
+      config: {},
+      createdAt: now,
+      updatedAt: now,
+    })) as PluginInstance[]
+    for (const instance of legacyInstances) {
+      await instanceRepo.save(instance)
+    }
+
+    const session = await ensureWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      pluginDataRepo,
+      searchProviders: providers,
+    })
+
+    expect(session.instances.some((instance) => instance.id === "weather-1")).toBe(true)
+    expect(session.instances.filter((instance) => instance.regionId === "mainGrid")).toHaveLength(8)
   })
 
   it("creates an isolated workspace with seeded instances", async () => {
@@ -97,7 +154,7 @@ describe("workspaceSession", () => {
 
     const instances = await instanceRepo.getByWorkspace(workspace.id)
     expect(workspace.name).toBe("新的工作区")
-    expect(instances).toHaveLength(5)
+    expect(instances).toHaveLength(9)
     expect(instances.every((instance) => instance.workspaceId === workspace.id)).toBe(true)
   })
 

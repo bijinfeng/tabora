@@ -9,6 +9,8 @@ import type { InstanceRepository, PluginDataRepository, WorkspaceRepository } fr
 import { createDefaultWorkspaceSeed, OFFICIAL_DEFAULT_WORKSPACE_SEED } from "./defaultWorkspaceSeed"
 import { FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
 
+const DEFAULT_WORKSPACE_SEED_VERSION = 2
+
 export type WorkspaceSessionState = {
   workspace: Workspace
   instances: PluginInstance[]
@@ -41,6 +43,46 @@ export function readSearchSettings(
   return result
 }
 
+async function ensureSeedInstances(options: {
+  workspace: Workspace
+  instances: PluginInstance[]
+  instanceRepo: InstanceRepository
+  workspaceRepo: WorkspaceRepository
+}): Promise<PluginInstance[]> {
+  const savedVersion =
+    typeof options.workspace.config?.defaultSeedVersion === "number"
+      ? options.workspace.config.defaultSeedVersion
+      : 0
+  if (savedVersion >= DEFAULT_WORKSPACE_SEED_VERSION) return options.instances
+
+  const seed = createDefaultWorkspaceSeed({
+    ...OFFICIAL_DEFAULT_WORKSPACE_SEED,
+    workspaceId: options.workspace.id,
+    workspaceName: options.workspace.name,
+    activeLayoutId: options.workspace.activeLayoutId,
+    activeThemeId: options.workspace.activeThemeId,
+    defaultBackgroundProviderId:
+      options.workspace.activeBackgroundProviderId ??
+      OFFICIAL_DEFAULT_WORKSPACE_SEED.defaultBackgroundProviderId,
+  })
+  const existingIds = new Set(options.instances.map((instance) => instance.id))
+  const missing = seed.instances.filter((instance) => !existingIds.has(instance.id))
+
+  for (const instance of missing) {
+    await options.instanceRepo.save(instance)
+  }
+  await options.workspaceRepo.save({
+    ...options.workspace,
+    config: {
+      ...(options.workspace.config ?? {}),
+      defaultSeedVersion: DEFAULT_WORKSPACE_SEED_VERSION,
+    },
+    updatedAt: new Date().toISOString(),
+  })
+  if (missing.length === 0) return options.instances
+  return [...options.instances, ...missing]
+}
+
 export async function ensureWorkspaceSession(options: {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
@@ -51,7 +93,13 @@ export async function ensureWorkspaceSession(options: {
   let workspace = await options.workspaceRepo.get(options.workspaceId ?? "default")
   if (!workspace) {
     const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
-    workspace = seed.workspace
+    workspace = {
+      ...seed.workspace,
+      config: {
+        ...(seed.workspace.config ?? {}),
+        defaultSeedVersion: DEFAULT_WORKSPACE_SEED_VERSION,
+      },
+    }
     await options.workspaceRepo.save(workspace)
   }
 
@@ -71,6 +119,13 @@ export async function ensureWorkspaceSession(options: {
     for (const instance of instances) {
       await options.instanceRepo.save(instance)
     }
+  } else if (workspace.id === "default") {
+    instances = await ensureSeedInstances({
+      workspace,
+      instances,
+      instanceRepo: options.instanceRepo,
+      workspaceRepo: options.workspaceRepo,
+    })
   }
 
   const searchHistory =
@@ -103,6 +158,10 @@ export async function createWorkspaceSession(options: {
   })
   const workspace = {
     ...seed.workspace,
+    config: {
+      ...(seed.workspace.config ?? {}),
+      defaultSeedVersion: DEFAULT_WORKSPACE_SEED_VERSION,
+    },
     updatedAt: new Date().toISOString(),
   }
 

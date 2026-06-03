@@ -285,7 +285,7 @@ export function App() {
             icon: "+",
             run: () => runRailAction("add-widget"),
           },
-          { id: "plugins", label: "插件", icon: "▣", run: () => runRailAction("plugins") },
+          { id: "theme", label: "切换主题", icon: "☼", run: () => runRailAction("theme") },
           { id: "settings", label: "设置", icon: "⚙", run: () => runRailAction("settings") },
         ]
       }
@@ -1109,9 +1109,8 @@ export function App() {
   function runRailAction(actionId: string) {
     if (actionId === "add-widget") {
       setAddWidgetOpen(true)
-    } else if (actionId === "plugins") {
-      setActiveSettingsSectionId("plugins")
-      setSettingsOpen(true)
+    } else if (actionId === "theme") {
+      void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
     } else if (actionId === "settings") {
       openSettings("official.settings.workspace.appearance")
     } else if (actionId === "home") {

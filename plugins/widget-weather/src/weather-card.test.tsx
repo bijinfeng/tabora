@@ -23,7 +23,7 @@ describe("WeatherCard", () => {
     document.body.appendChild(root)
     render(() => <WeatherCard {...makeProps()} />, root)
     expect(root.textContent).toContain("北京")
-    expect(root.textContent).toContain("demo")
+    expect(root.querySelector(".weather-display")).toBeTruthy()
     root.remove()
   })
 

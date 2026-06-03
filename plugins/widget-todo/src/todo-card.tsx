@@ -1,6 +1,5 @@
 import { createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Button, Checkbox, EmptyState, Field, IconButton, Input, ListRow } from "@tabora/ui"
 
 type TodoItem = { id: string; text: string; done: boolean }
 
@@ -14,7 +13,15 @@ export function TodoCard(props: WidgetViewProps) {
   const inputId = () => `todo-input-${props.instanceId}`
 
   void props.data.get<TodoItem[]>(storageKey).then(async (saved) => {
-    if (saved && saved.length > 0) setItems(saved)
+    if (saved && saved.length > 0) {
+      setItems(saved)
+    } else {
+      setItems([
+        { id: "seed-read", text: "整理今天的重点", done: false },
+        { id: "seed-mail", text: "回复关键消息", done: false },
+        { id: "seed-plan", text: "检查晚间计划", done: true },
+      ])
+    }
   })
 
   async function persist(updated: TodoItem[]) {
@@ -85,25 +92,7 @@ export function TodoCard(props: WidgetViewProps) {
 
   return (
     <div class="todo-widget">
-      <Field label="新待办" htmlFor={inputId()}>
-        <div class="todo-input-row">
-          <Input
-            id={inputId()}
-            value={input()}
-            onInput={setInput}
-            onKeyDown={handleKeyDown}
-            placeholder="添加待办..."
-            aria-label="新待办内容"
-          />
-          <IconButton aria-label="添加待办" variant="secondary" onClick={() => void addItem()}>
-            +
-          </IconButton>
-        </div>
-      </Field>
-      <Show
-        when={items().length > 0}
-        fallback={<EmptyState title="还没有待办" description="今天先写一件事" />}
-      >
+      <Show when={items().length > 0} fallback={<div class="todo-empty">今天先写一件事</div>}>
         <ul class="todo-list">
           <For each={items()}>
             {(item) => (
@@ -111,62 +100,58 @@ export function TodoCard(props: WidgetViewProps) {
                 <Show
                   when={editingId() === item.id}
                   fallback={
-                    <ListRow
-                      leading={
-                        <Checkbox
-                          checked={item.done}
-                          onChange={() => void toggleItem(item.id)}
-                          aria-label={`标记 ${item.text} 完成`}
-                        />
-                      }
-                      primary={<span class="todo-item-text">{item.text}</span>}
-                      trailing={
-                        <div class="todo-item-actions">
-                          <IconButton
-                            aria-label={`编辑 ${item.text}`}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => startEdit(item)}
-                          >
-                            ✎
-                          </IconButton>
-                          <IconButton
-                            aria-label={`删除 ${item.text}`}
-                            variant="danger"
-                            size="sm"
-                            onClick={() => void removeItem(item.id)}
-                          >
-                            ×
-                          </IconButton>
-                        </div>
-                      }
-                    />
+                    <>
+                      <button
+                        class="todo-check"
+                        classList={{ done: item.done }}
+                        type="button"
+                        aria-label={`标记 ${item.text} 完成`}
+                        aria-pressed={item.done}
+                        onClick={() => void toggleItem(item.id)}
+                      />
+                      <button
+                        class="todo-text"
+                        classList={{ done: item.done }}
+                        type="button"
+                        onClick={() => startEdit(item)}
+                      >
+                        {item.text}
+                      </button>
+                      <button
+                        class="todo-delete"
+                        aria-label={`删除 ${item.text}`}
+                        type="button"
+                        onClick={() => void removeItem(item.id)}
+                      >
+                        ×
+                      </button>
+                    </>
                   }
                 >
                   <div class="todo-edit-row">
-                    <Input
+                    <input
+                      class="todo-add-input"
                       value={editText()}
-                      onInput={setEditText}
+                      onInput={(event) => setEditText(event.currentTarget.value)}
                       onKeyDown={handleEditKeyDown}
                       aria-label={`编辑 ${item.text}`}
-                      size="sm"
                     />
-                    <IconButton
+                    <button
+                      class="todo-mini-btn"
                       aria-label="确认编辑"
-                      variant="secondary"
-                      size="sm"
+                      type="button"
                       onClick={() => void confirmEdit()}
                     >
                       ✓
-                    </IconButton>
-                    <IconButton
+                    </button>
+                    <button
+                      class="todo-mini-btn"
                       aria-label="取消编辑"
-                      variant="ghost"
-                      size="sm"
+                      type="button"
                       onClick={cancelEdit}
                     >
                       ×
-                    </IconButton>
+                    </button>
                   </div>
                 </Show>
               </li>
@@ -174,18 +159,35 @@ export function TodoCard(props: WidgetViewProps) {
           </For>
         </ul>
       </Show>
-      <Show when={items().length > 0}>
-        <div class="todo-footer">
-          <span>
-            {activeCount()} 剩余 · {doneCount()}/{items().length} 完成
-          </span>
-          <Show when={doneCount() > 0}>
-            <Button variant="ghost" size="sm" onClick={() => void clearCompleted()}>
-              清空已完成
-            </Button>
-          </Show>
-        </div>
-      </Show>
+      <div class="todo-add-form">
+        <input
+          id={inputId()}
+          class="todo-add-input"
+          value={input()}
+          onInput={(event) => setInput(event.currentTarget.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="添加待办..."
+          aria-label="新待办内容"
+        />
+        <button
+          class="todo-mini-btn"
+          aria-label="添加待办"
+          type="button"
+          onClick={() => void addItem()}
+        >
+          +
+        </button>
+        <Show when={doneCount() > 0}>
+          <button
+            class="todo-clear-btn"
+            type="button"
+            aria-label={`清空 ${doneCount()} 项已完成待办`}
+            onClick={() => void clearCompleted()}
+          >
+            {activeCount()} 剩余
+          </button>
+        </Show>
+      </div>
     </div>
   )
 }

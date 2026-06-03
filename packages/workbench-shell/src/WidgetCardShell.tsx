@@ -36,6 +36,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       class="grid-item"
       classList={{ dragging: props.callbacks.isDragging }}
       style={{ "grid-column": `span ${gridColumnSpan(props.currentSize)}` }}
+      data-widget-size={props.currentSize}
       data-widget-instance-id={props.instance.id}
       aria-label={props.title}
       tabIndex={0}

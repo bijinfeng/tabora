@@ -5,7 +5,7 @@ import type {
   SearchViewProps,
 } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { Button, Input, InlineError, Select, Kbd } from "@tabora/ui"
+import { InlineError, Kbd } from "@tabora/ui"
 
 import {
   buildSearchUrl,
@@ -30,10 +30,6 @@ type Suggestion = {
   hint: string | undefined
   action: () => void
   clearAfterAction: boolean | undefined
-}
-
-function providerOptions(providers: SearchProviderContribution[]) {
-  return providers.map((provider) => ({ value: provider.id, label: provider.title }))
 }
 
 function includesText(value: string, query: string): boolean {
@@ -67,6 +63,7 @@ export function SearchCommandBar(props: SearchViewProps) {
   const [providerId, setProviderId] = createSignal(props.defaultProviderId || providers()[0]!.id)
   const [query, setQuery] = createSignal("")
   const [focused, setFocused] = createSignal(false)
+  const [providerOpen, setProviderOpen] = createSignal(false)
   const [permissionDenied, setPermissionDenied] = createSignal(false)
   const [suggestIdx, setSuggestIdx] = createSignal(-1)
 
@@ -313,23 +310,51 @@ export function SearchCommandBar(props: SearchViewProps) {
 
   function handleProviderChange(nextProviderId: string) {
     setProviderId(nextProviderId)
+    setProviderOpen(false)
     safelyHandleProviderChange(props.onDefaultProviderChange, nextProviderId)
   }
 
   return (
     <div class="search-wrapper">
       <form class="search-bar" onSubmit={handleSubmit}>
-        <Select<string>
-          value={activeProvider().id}
-          options={providerOptions(providers())}
-          onChange={handleProviderChange}
-          aria-label="搜索源"
-          size="sm"
-        />
-        <Input
+        <div class="search-provider">
+          <button
+            class="search-provider-btn"
+            type="button"
+            aria-label="切换搜索引擎"
+            aria-expanded={providerOpen()}
+            onClick={() => setProviderOpen((open) => !open)}
+          >
+            <span class="search-provider-dot" aria-hidden="true" />
+            <span class="search-provider-label">{activeProvider().title}</span>
+            <span class="search-provider-caret">▾</span>
+          </button>
+          <Show when={providerOpen()}>
+            <div class="search-provider-dropdown">
+              <For each={providers()}>
+                {(provider) => (
+                  <button
+                    class="sp-option"
+                    classList={{ active: provider.id === activeProvider().id }}
+                    type="button"
+                    onMouseDown={(event) => {
+                      event.preventDefault()
+                      handleProviderChange(provider.id)
+                    }}
+                  >
+                    <span class="sp-check">{provider.id === activeProvider().id ? "✓" : ""}</span>
+                    <span>{provider.title}</span>
+                  </button>
+                )}
+              </For>
+            </div>
+          </Show>
+        </div>
+        <span class="search-scope-divider" aria-hidden="true" />
+        <input
           value={query()}
-          onInput={(value) => {
-            setQuery(value)
+          onInput={(event) => {
+            setQuery(event.currentTarget.value)
             setSuggestIdx(-1)
           }}
           onKeyDown={handleKeyDown}
@@ -337,16 +362,15 @@ export function SearchCommandBar(props: SearchViewProps) {
           onBlur={() =>
             setTimeout(() => {
               setFocused(false)
+              setProviderOpen(false)
               setSuggestIdx(-1)
             }, 200)
           }
-          placeholder="搜索、命令或输入 @github vite-plus"
+          placeholder="搜索网页、命令或卡片"
           aria-label="搜索内容"
           type="search"
         />
-        <Button type="submit" variant="primary" size="sm">
-          搜索
-        </Button>
+        <span class="search-kbd">⌘K</span>
       </form>
 
       <Show when={route()?.type === "provider-pending"}>

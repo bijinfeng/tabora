@@ -21,8 +21,10 @@ describe("TodayFocusCard", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <TodayFocusCard {...makeProps()} />, root)
-    expect(root.querySelector("input")).toBeTruthy()
-    expect(root.textContent).toContain("今天最重要的一件事")
+    const input = root.querySelector("input.focus-input") as HTMLInputElement
+    expect(input).toBeTruthy()
+    expect(input.placeholder).toBe("写下今日重点")
+    expect(root.textContent).toContain("尚未完成")
     root.remove()
   })
 })

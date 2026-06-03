@@ -1,6 +1,5 @@
 import { createSignal, onCleanup, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Badge, CardSection } from "@tabora/ui"
 
 type WeatherData = {
   city: string
@@ -61,30 +60,22 @@ export function WeatherCard(props: WidgetViewProps) {
   const unitLabel = () => (config().unit === "fahrenheit" ? "°F" : "°C")
   return (
     <div class="weather-widget">
-      <CardSection
-        title={w.city}
-        trailing={
-          <div class="weather-badges">
-            <Badge variant="warning">demo</Badge>
-            {error() ? <Badge variant="danger">错误</Badge> : null}
-          </div>
-        }
-      >
-        <div class="weather-main">
-          <span class="weather-icon">{conditionIcons[w.condition] ?? ""}</span>
-          <span class="weather-temp">
-            {w.temp}
-            {unitLabel()}
-          </span>
-        </div>
-        <div class="weather-detail">
-          {w.condition}
-          {error() ? <span class="weather-error"> · {error()}</span> : null}
-        </div>
-        <div class="weather-extra">
+      <div class="weather-display">
+        <span class="weather-icon" aria-hidden="true">
+          {conditionIcons[w.condition] ?? ""}
+        </span>
+        <span class="weather-temp">
+          {w.temp}
+          {unitLabel()}
+        </span>
+        <span class="weather-desc">
+          {w.city} · {w.condition}
+          {error() ? ` · ${error()}` : ""}
+        </span>
+        <span class="weather-extra">
           湿度 {w.humidity}% · 风速 {w.windSpeed}km/h
-        </div>
-      </CardSection>
+        </span>
+      </div>
     </div>
   )
 }

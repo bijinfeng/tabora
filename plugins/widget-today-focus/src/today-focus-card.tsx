@@ -1,6 +1,5 @@
 import { createSignal, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Checkbox, Field, Input } from "@tabora/ui"
 
 function getLegacyStorage(): Storage | null {
   const storage = typeof window !== "undefined" ? window.localStorage : undefined
@@ -50,27 +49,32 @@ export function TodayFocusCard(props: WidgetViewProps) {
 
   return (
     <div class="today-focus-widget">
-      <Field label="今天最重要的一件事" htmlFor={inputId()}>
-        <Input
-          id={inputId()}
-          value={focus()}
-          onInput={async (v) => {
-            setFocus(v)
-            await props.data.save(contentKey, v)
-          }}
-          placeholder="写下今日重点"
-          aria-label="今日重点内容"
-        />
-      </Field>
-      <Checkbox
-        checked={done()}
-        onChange={async (v) => {
-          setDone(v)
-          await props.data.save(doneKey, String(v))
+      <input
+        id={inputId()}
+        class="focus-input"
+        value={focus()}
+        onInput={async (event) => {
+          const value = event.currentTarget.value
+          setFocus(value)
+          await props.data.save(contentKey, value)
         }}
-        aria-label="今日重点完成状态"
-        label={done() ? "已完成" : "尚未完成"}
+        placeholder="写下今日重点"
+        aria-label="今日重点内容"
       />
+      <label class="focus-check-row" for={`${inputId()}-done`}>
+        <input
+          id={`${inputId()}-done`}
+          class="focus-check"
+          type="checkbox"
+          checked={done()}
+          onChange={async (event) => {
+            const value = event.currentTarget.checked
+            setDone(value)
+            await props.data.save(doneKey, String(value))
+          }}
+        />
+        <span>{done() ? "已完成" : "尚未完成"}</span>
+      </label>
     </div>
   )
 }

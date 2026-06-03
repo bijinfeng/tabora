@@ -1,6 +1,5 @@
 import { createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Field, IconButton, Input, ListRow } from "@tabora/ui"
 
 type QuickLink = {
   id: string
@@ -42,6 +41,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
   const [urlError, setUrlError] = createSignal<string | null>(null)
 
   const storageKey = "quick-links"
+  const visibleLinks = () => links().slice(0, 6)
 
   onMount(async () => {
     let saved = await props.data.get<QuickLink[]>(storageKey)
@@ -128,90 +128,89 @@ export function QuickLinksCard(props: WidgetViewProps) {
 
   return (
     <div class="quick-links">
-      <ul class="quick-links-list">
-        <For each={links()}>
+      <ul class="link-grid" aria-label="快捷入口">
+        <For each={visibleLinks()}>
           {(link, index) => (
-            <li class="quick-link-item">
+            <li class="link-item">
               <Show
                 when={editId() === link.id}
                 fallback={
-                  <div class="quick-link-row">
-                    <a class="quick-link-anchor" href={link.url} target="_blank" rel="noreferrer">
-                      <ListRow primary={link.title} secondary={link.url} />
+                  <>
+                    <a class="link-anchor" href={link.url} target="_blank" rel="noreferrer">
+                      <span class="link-icon">{link.title.slice(0, 1).toUpperCase()}</span>
+                      <span class="link-label">{link.title}</span>
                     </a>
-                    <div class="quick-link-actions">
-                      <IconButton
+                    <div class="link-actions">
+                      <button
+                        class="link-mini-btn"
                         aria-label="上移"
-                        size="sm"
-                        variant="ghost"
+                        type="button"
                         onClick={() => void moveLink(link.id, "up")}
                         disabled={index() === 0}
                       >
                         ↑
-                      </IconButton>
-                      <IconButton
+                      </button>
+                      <button
+                        class="link-mini-btn"
                         aria-label="下移"
-                        size="sm"
-                        variant="ghost"
+                        type="button"
                         onClick={() => void moveLink(link.id, "down")}
                         disabled={index() === links().length - 1}
                       >
                         ↓
-                      </IconButton>
-                      <IconButton
+                      </button>
+                      <button
+                        class="link-mini-btn"
                         aria-label={`编辑 ${link.title}`}
-                        size="sm"
-                        variant="ghost"
+                        type="button"
                         onClick={() => startEdit(link)}
                       >
                         ✎
-                      </IconButton>
-                      <IconButton
+                      </button>
+                      <button
+                        class="link-mini-btn link-delete"
                         aria-label={`删除 ${link.title}`}
-                        size="sm"
-                        variant="danger"
+                        type="button"
                         onClick={() => void removeLink(link.id)}
                       >
                         ×
-                      </IconButton>
+                      </button>
                     </div>
-                  </div>
+                  </>
                 }
               >
                 <div class="quick-link-edit-form">
                   <div class="quick-link-edit-fields">
-                    <Input
+                    <input
                       value={editTitle()}
-                      onInput={setEditTitle}
+                      onInput={(event) => setEditTitle(event.currentTarget.value)}
                       placeholder="标题"
                       aria-label="编辑链接标题"
-                      size="sm"
                     />
-                    <Input
+                    <input
                       value={editUrl()}
-                      onInput={setEditUrl}
+                      onInput={(event) => setEditUrl(event.currentTarget.value)}
                       placeholder="https://..."
                       aria-label="编辑链接地址"
-                      size="sm"
                     />
                   </div>
                   <div class="quick-link-edit-actions">
-                    <IconButton
+                    <button
                       aria-label="确认编辑"
-                      size="sm"
-                      variant="secondary"
+                      class="link-mini-btn"
+                      type="button"
                       onClick={() => void confirmEdit()}
                     >
                       ✓
-                    </IconButton>
-                    <IconButton
+                    </button>
+                    <button
                       aria-label="取消编辑"
-                      size="sm"
-                      variant="ghost"
+                      class="link-mini-btn"
+                      type="button"
                       onClick={cancelEdit}
                     >
                       ×
-                    </IconButton>
+                    </button>
                   </div>
                 </div>
               </Show>
@@ -227,39 +226,38 @@ export function QuickLinksCard(props: WidgetViewProps) {
       <Show
         when={editing()}
         fallback={
-          <button class="quick-link-add-btn" onClick={startAdd}>
+          <button class="quick-link-add-btn" type="button" onClick={startAdd}>
             + 添加快捷入口
           </button>
         }
       >
         <div class="quick-link-add-form">
-          <Field label="标题" htmlFor={`ql-title-${props.instanceId}`}>
-            <Input
-              id={`ql-title-${props.instanceId}`}
-              value={newTitle()}
-              onInput={setNewTitle}
-              placeholder="链接标题"
-              aria-label="新链接标题"
-              size="sm"
-            />
-          </Field>
-          <Field label="URL" htmlFor={`ql-url-${props.instanceId}`}>
-            <Input
-              id={`ql-url-${props.instanceId}`}
-              value={newUrl()}
-              onInput={setNewUrl}
-              placeholder="https://..."
-              aria-label="新链接地址"
-              size="sm"
-            />
-          </Field>
+          <input
+            id={`ql-title-${props.instanceId}`}
+            value={newTitle()}
+            onInput={(event) => setNewTitle(event.currentTarget.value)}
+            placeholder="链接标题"
+            aria-label="新链接标题"
+          />
+          <input
+            id={`ql-url-${props.instanceId}`}
+            value={newUrl()}
+            onInput={(event) => setNewUrl(event.currentTarget.value)}
+            placeholder="https://..."
+            aria-label="新链接地址"
+          />
           <div class="quick-link-add-actions">
-            <IconButton aria-label="确认添加" variant="secondary" onClick={() => void confirmAdd()}>
+            <button
+              aria-label="确认添加"
+              class="link-mini-btn"
+              type="button"
+              onClick={() => void confirmAdd()}
+            >
               ✓
-            </IconButton>
-            <IconButton aria-label="取消添加" variant="ghost" onClick={cancelAdd}>
+            </button>
+            <button aria-label="取消添加" class="link-mini-btn" type="button" onClick={cancelAdd}>
               ×
-            </IconButton>
+            </button>
           </div>
         </div>
       </Show>

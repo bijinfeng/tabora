@@ -4,6 +4,22 @@ import type { BuiltinPlugin } from "@tabora/platform-kernel"
 
 export function DashboardLayout(props: LayoutViewProps) {
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
+  const addWidgetAction = () =>
+    props.host.getGlobalActions("rail").find((action) => action.id === "add-widget")
+  const layoutAction = () => toolbarActions().find((action) => action.shortcut === "⌘L")
+  const greeting = () => {
+    const h = new Date().getHours()
+    return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
+  }
+  const dateLabel = () => {
+    const now = new Date()
+    const date = new Intl.DateTimeFormat("zh-CN", {
+      month: "numeric",
+      day: "numeric",
+    }).format(now)
+    const weekday = new Intl.DateTimeFormat("zh-CN", { weekday: "long" }).format(now)
+    return `${date} ${weekday}`
+  }
 
   return (
     <main class="layout-dashboard" data-layout="dashboard">
@@ -28,44 +44,41 @@ export function DashboardLayout(props: LayoutViewProps) {
       <section class="dash-content">
         <header class="dash-topbar">
           <div class="dash-greeting">
-            <div>
-              <span class="dash-greeting-title">
-                {(() => {
-                  const h = new Date().getHours()
-                  return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
-                })()}
-              </span>
-              <span class="dash-greeting-muted">，把今天整理成几个安静的模块。</span>
+            <div class="dash-greeting-title">
+              {greeting()} <span class="dash-greeting-muted">· {dateLabel()}</span>
             </div>
             <div class="dash-greeting-actions">
-              <div class="layout-switch" aria-label="布局切换">
-                <For each={toolbarActions().filter((action) => action.shortcut === "⌘L")}>
-                  {(action) => (
-                    <button
-                      class="tb-btn"
-                      type="button"
-                      aria-label={action.label}
-                      title={action.label}
-                      onClick={() => action.run()}
-                    >
-                      {action.icon}
-                    </button>
-                  )}
-                </For>
-              </div>
-              <For each={toolbarActions().filter((action) => action.shortcut !== "⌘L")}>
+              <Show when={addWidgetAction()}>
                 {(action) => (
                   <button
-                    class="dash-toolbar-btn"
+                    class="tb-btn dash-toolbar-btn dash-add-widget-btn"
                     type="button"
-                    aria-label={action.label}
-                    title={action.shortcut ? `${action.label} ${action.shortcut}` : action.label}
-                    onClick={() => action.run()}
+                    onClick={() => action().run()}
                   >
-                    {action.icon}
+                    + 添加卡片
                   </button>
                 )}
-              </For>
+              </Show>
+              <div class="layout-switch" aria-label="布局切换">
+                <button
+                  class="tb-btn active"
+                  type="button"
+                  aria-label="切换到仪表盘布局"
+                  title="仪表盘布局"
+                  onClick={() => undefined}
+                >
+                  ▦
+                </button>
+                <button
+                  class="tb-btn"
+                  type="button"
+                  aria-label={layoutAction()?.label ?? "切换到流式布局"}
+                  title="流式布局"
+                  onClick={() => layoutAction()?.run()}
+                >
+                  ☰
+                </button>
+              </div>
             </div>
           </div>
           <div class="dash-search-stage">
@@ -111,8 +124,12 @@ export const layoutDashboard: BuiltinPlugin = {
             mainGrid: [
               { instanceId: "today-focus-1" },
               { instanceId: "quick-links-1" },
-              { instanceId: "notes-1" },
               { instanceId: "todo-1" },
+              { instanceId: "notes-1" },
+              { instanceId: "weather-1" },
+              { instanceId: "today-focus-2" },
+              { instanceId: "quick-links-2" },
+              { instanceId: "todo-2" },
             ],
           },
           supportsResponsive: true,
