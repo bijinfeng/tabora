@@ -261,6 +261,15 @@ importers:
 
   packages/official-plugins:
     dependencies:
+      '@tabora/layout-dashboard':
+        specifier: workspace:*
+        version: link:../../plugins/layout-dashboard
+      '@tabora/layout-diy-masonry':
+        specifier: workspace:*
+        version: link:../../plugins/layout-diy-masonry
+      '@tabora/layout-stream':
+        specifier: workspace:*
+        version: link:../../plugins/layout-stream
       '@tabora/orchestrator':
         specifier: workspace:*
         version: link:../orchestrator

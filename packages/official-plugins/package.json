@@ -19,6 +19,9 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@tabora/layout-dashboard": "workspace:*",
+    "@tabora/layout-diy-masonry": "workspace:*",
+    "@tabora/layout-stream": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",

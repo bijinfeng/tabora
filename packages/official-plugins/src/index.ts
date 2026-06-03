@@ -1,6 +1,7 @@
 import { officialBackgroundBasic } from "./background-basic"
-import { officialLayoutWorkbenchDashboard } from "./layout-workbench-dashboard"
-import { officialLayoutWorkbenchStream } from "./layout-workbench-stream"
+import { layoutDashboard } from "@tabora/layout-dashboard"
+import { layoutStream } from "@tabora/layout-stream"
+import { layoutDiyMasonry } from "@tabora/layout-diy-masonry"
 import { officialPluginManager } from "./plugin-manager-entry"
 import { officialSearchCommandBar } from "./search-command-bar"
 import { officialSettingsWorkspace } from "./settings-workspace"
@@ -14,8 +15,9 @@ import { officialPluginNotes } from "@tabora/plugin-notes"
 
 export {
   officialBackgroundBasic,
-  officialLayoutWorkbenchDashboard,
-  officialLayoutWorkbenchStream,
+  layoutDashboard,
+  layoutStream,
+  layoutDiyMasonry,
   officialPluginManager,
   officialPluginNotes,
   officialPluginQuickLinks,
@@ -33,8 +35,9 @@ export * from "./search-model"
 export const officialPlugins = [
   officialThemeDefaultPack,
   officialBackgroundBasic,
-  officialLayoutWorkbenchDashboard,
-  officialLayoutWorkbenchStream,
+  layoutDashboard,
+  layoutStream,
+  layoutDiyMasonry,
   officialSearchCommandBar,
   officialSearchProvidersBasic,
   officialPluginWeather,
