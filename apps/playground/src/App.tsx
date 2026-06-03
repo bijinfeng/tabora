@@ -44,7 +44,7 @@ import {
 } from "@tabora/storage"
 import { Clock, Link2, Pencil, Sun, Moon, Target, CheckSquare, X } from "lucide-solid"
 
-import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
+import { assignGridOrder, gridColumnSpan, gridRowSpan } from "./workbenchGrid"
 import { resolveThemeTokens } from "./themeResolver"
 import {
   applyBackgroundStyle,
@@ -889,6 +889,7 @@ export function App() {
       grid: {
         ...(inst.grid ?? { x: 0, y: 0, rowSpan: 1 }),
         colSpan: gridColumnSpan(newSize),
+        rowSpan: gridRowSpan(newSize),
       },
       updatedAt: new Date().toISOString(),
     }
