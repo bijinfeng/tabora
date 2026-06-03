@@ -2,7 +2,7 @@
 
 日期：2026-06-02
 
-状态：设计已确认，待编写实现计划
+状态：已实现（2026-06-03，详见 `docs/superpowers/plans/2026-06-02-layout-plugin-contract.md`）
 
 关联文档：
 

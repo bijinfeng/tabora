@@ -95,11 +95,12 @@ Phase A-H 已全部实施。当前 MVP 基线已达到：
 6. ✅ Phase F：浏览器 Extension Shell。
 7. ✅ Phase G：本地插件生态准备。
 8. ✅ Phase H：第三方插件市场前置安全架构。
+9. ✅ Phase A.1（独立子项目，2026-06-03 完成）：布局插件化契约重构 —— 落地 `LayoutViewProps`/`RegionSlot`/`LayoutHostAPI` 契约，把官方两个布局拆成独立 package，新增第三方 DIY 瀑布流布局验证。详见 `docs/superpowers/specs/2026-06-02-layout-plugin-contract-design.md` 和 `docs/superpowers/plans/2026-06-02-layout-plugin-contract.md`。
 
 待执行 (➡)：
 
-9. Phase I：质量巩固与体验打磨。
-10. Phase J：多工作区与权限深度闭环。
+10. Phase I：质量巩固与体验打磨。
+11. Phase J：多工作区与权限深度闭环。
 
 ## 5. Phase A：Shell 去业务化与插件协议收口 ✅ 已完成
 
