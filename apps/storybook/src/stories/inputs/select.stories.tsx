@@ -1,6 +1,6 @@
 import { Select } from "@tabora/ui"
 import { createSignal } from "solid-js"
-import type { Meta, StoryObj } from "storybook-solidjs-vite"
+import type { Meta, StoryObj } from "storybook-solidjs"
 import type { SelectOption, SelectProps } from "@tabora/ui"
 
 const options: SelectOption<string>[] = [

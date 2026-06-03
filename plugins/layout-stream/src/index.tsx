@@ -3,26 +3,58 @@ import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 
 export function StreamLayout(props: LayoutViewProps) {
+  const toolbarActions = () => props.host.getGlobalActions("toolbar")
+
   return (
     <main class="layout-stream" data-layout="stream">
       <header class="stream-toolbar">
-        <span class="stream-toolbar-logo">
-          Tabora <span>Stream</span>
-        </span>
-        <div class="stream-toolbar-spacer" />
-        <For each={props.host.getGlobalActions("toolbar")}>
+        <div class="stream-toolbar-actions">
+          <div class="layout-switch" aria-label="布局切换">
+            <For each={toolbarActions().filter((action) => action.shortcut === "⌘L")}>
+              {(action) => (
+                <button
+                  class="tb-btn"
+                  type="button"
+                  aria-label={action.label}
+                  title={action.label}
+                  onClick={() => action.run()}
+                >
+                  {action.icon}
+                </button>
+              )}
+            </For>
+          </div>
+          <For each={toolbarActions().filter((action) => action.shortcut !== "⌘L")}>
+            {(action) => (
+              <button
+                class="stream-toolbar-btn"
+                type="button"
+                aria-label={action.label}
+                title={action.shortcut ? `${action.label} ${action.shortcut}` : action.label}
+                onClick={() => action.run()}
+              >
+                {action.icon}
+              </button>
+            )}
+          </For>
+        </div>
+        {/* Preserve the extension surface for future toolbar-only actions. */}
+        <For each={props.host.getGlobalActions("menu")}>
           {(action) => (
             <button class="stream-toolbar-btn" type="button" onClick={() => action.run()}>
-              <span aria-hidden="true">{action.icon}</span> {action.label}
+              {action.icon}
             </button>
           )}
         </For>
       </header>
       <section class="stream-region">
         <div class="stream-hero">
-          <div class="stream-hero-greeting">下午好 ☀</div>
+          <div class="stream-hero-greeting">下午好</div>
+          <div class="stream-hero-date">按下 ⌘K 搜索、切换卡片或打开命令。</div>
         </div>
-        <Show when={props.regions["stream"]}>{props.regions["stream"]!.render()}</Show>
+        <div class="workbench-grid">
+          <Show when={props.regions["stream"]}>{props.regions["stream"]!.render()}</Show>
+        </div>
       </section>
     </main>
   )

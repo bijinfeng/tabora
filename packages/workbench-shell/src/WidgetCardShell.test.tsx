@@ -61,6 +61,13 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
+  it("按当前尺寸设置网格列跨度", () => {
+    const { host, dispose } = mount(makeCallbacks())
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+    expect(card.style.gridColumn).toBe("span 2")
+    dispose()
+  })
+
   it("点击尺寸按钮触发 onResize 带正确 size", () => {
     const cb = makeCallbacks()
     const { host, dispose } = mount(cb)

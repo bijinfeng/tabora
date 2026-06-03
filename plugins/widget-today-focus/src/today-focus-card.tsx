@@ -2,9 +2,23 @@ import { createSignal, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Checkbox, Field, Input } from "@tabora/ui"
 
+function getLegacyStorage(): Storage | null {
+  const storage = typeof window !== "undefined" ? window.localStorage : undefined
+  if (
+    storage &&
+    typeof storage.getItem === "function" &&
+    typeof storage.removeItem === "function"
+  ) {
+    return storage
+  }
+  return null
+}
+
 function migrateFromLocalStorage(key: string): string | null {
-  const value = localStorage.getItem(key)
-  if (value !== null) localStorage.removeItem(key)
+  const storage = getLegacyStorage()
+  if (!storage) return null
+  const value = storage.getItem(key)
+  if (value !== null) storage.removeItem(key)
   return value
 }
 

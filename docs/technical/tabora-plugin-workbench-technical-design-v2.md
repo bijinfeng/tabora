@@ -936,9 +936,9 @@ plugins/
 2. `manifestSchema` 新增最小强制 schema：layout 必须含至少一个 `accepts:["widget"]` 的 region 且 `view` 字段必填。
 3. `workbench-shell` 抽出 `WidgetCardShell`（卡片壳）和 `LayoutBoundary`（错误边界）。
 4. 把官方 dashboard、stream 布局拆成独立 package（`plugins/layout-dashboard`、`plugins/layout-stream`），依赖面只有 plugin-api/platform-kernel/solid-js（隔离硬证据）。
-5. 新增 `plugins/layout-diy-masonry`：第三方差异化 DIY 布局，验证只靠公开契约就能实现瀑布流分列、浮动菜单、emoji 图标等创新形态。
+5. 新增 `plugins/layout-diy-masonry`：第三方差异化 DIY 布局，验证只靠公开契约就能实现瀑布流分列、浮动菜单、自定义图标等创新形态。
 6. `official-plugins` 装配层引入三个布局 package，删除原 `layout-workbench-*.tsx` 内联实现。
-7. `App.tsx` 引入 `WidgetCardShell` 卡片壳，将拖拽/双击/右键/尺寸条等交互通过 `WidgetHostCallbacks` 闭包注入。
+7. `App.tsx` 引入 `WidgetCardShell` 卡片壳，将拖拽/双击/右键/尺寸条等交互通过 `WidgetHostCallbacks` 闭包注入；layout view 负责包裹 `.workbench-grid`，`WidgetCardShell` 根据当前 widget size 写入 grid span，避免协议驱动布局丢失原型的 4 列卡片排布。
 
 ### Phase B: 布局切换（1 周）
 

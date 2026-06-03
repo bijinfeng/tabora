@@ -1,7 +1,7 @@
 /* Official layout views */
 .workbench-shell {
   display: grid;
-  min-height: calc(100vh - 44px);
+  min-height: 100vh;
 }
 
 .workbench-shell[data-layout="workbench-dashboard"] {
@@ -160,31 +160,64 @@
 /* Official search command bar */
 .search-wrapper {
   position: relative;
+  max-width: 880px;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
-  padding: 6px 8px;
-  background: rgb(var(--color-surface));
+  min-height: 46px;
+  padding: 0 12px;
+  background: color-mix(in srgb, rgb(var(--color-surface)) 92%, rgb(var(--color-page)));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
+  box-shadow:
+    0 2px 8px rgba(28, 30, 28, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.search-bar:hover {
+  background: color-mix(in srgb, rgb(var(--color-surface)) 96%, rgb(var(--color-page)));
+  border-color: rgb(var(--color-line-strong, var(--color-line)));
 }
 
 .search-bar:focus-within {
-  border-color: rgb(var(--color-accent));
-  box-shadow: 0 0 0 3px rgba(var(--color-accent), 0.12);
+  border-color: color-mix(in srgb, rgb(var(--color-accent)) 34%, rgb(var(--color-line)));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, rgb(var(--color-accent-soft, 234 245 240)) 72%, transparent),
+    0 12px 32px rgba(26, 144, 112, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .search-bar input {
   flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 13.5px;
+}
+
+.search-bar input::placeholder {
+  color: rgb(var(--color-subtle, var(--color-muted)));
+}
+
+.search-bar .tabora-select-trigger {
+  height: 28px;
+  border-radius: 999px;
+  font-size: 11px;
 }
 
 .search-provider-state {
-  margin-top: 6px;
-  padding: 0 4px;
+  margin-top: 5px;
+  padding: 0 2px;
   font-size: 11px;
   color: rgb(var(--color-muted));
 }
@@ -203,7 +236,7 @@
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   max-height: 300px;
   overflow-y: auto;
 }

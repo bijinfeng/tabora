@@ -270,9 +270,9 @@ MVP 组件清单：
 
 | 插件 ID                               | 插件名称                   | 扩展点                                       | 默认启用 | 当前状态                                                                                 | 产品职责                                           |
 | ------------------------------------- | -------------------------- | -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `official.theme.default-pack`         | Tabora Default Theme Pack  | `theme`                                      | 是       | 已实现基础 token                                                                         | 提供明亮、暗色工作台主题                           |
+| `official.theme.default-pack`         | Tabora Default Theme Pack  | `theme`                                      | 是       | 已按 V2 原型 Refined Sage token 对齐明亮/暗色主题                                        | 提供明亮、暗色工作台主题                           |
 | `official.background.basic`           | Basic Background           | `background-provider`, `background-renderer` | 是       | 已实现基础 provider 和 renderer view                                                     | 提供基础背景源和 CSS 背景渲染能力                  |
-| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已开始由 layout contribution 驱动                                                        | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
+| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已由独立 layout package 和 layout contribution 驱动                                      | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
 | `official.search.command-bar`         | Tabora Command Search      | `search`                                     | 是       | 已实现基础 UI 和外部打开权限桥；已使用 `@tabora/ui` 控件                                 | 提供命令搜索、搜索源选择和快捷建议                 |
 | `official.search-providers.basic`     | Basic Search Providers     | `search-provider`                            | 是       | 已实现基础搜索源声明                                                                     | 提供 Google、Bing、百度、DuckDuckGo、GitHub 搜索源 |
 | `official.widgets.today-focus`        | Today Focus Widget         | `widget`                                     | 是       | MVP 新增；已使用 `@tabora/ui` 控件                                                       | 提供今日重点，建立个人工作台心智                   |
@@ -300,7 +300,7 @@ MVP 组件清单：
 | `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 可添加候选；不强制首屏默认               |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 默认从设置中心进入，不作为首屏大卡片     |
 
-当前实现已开始由 `official.layout.workbench-dashboard` 贡献整体布局语义，默认区域为 `rail`、`topbar` 和 `mainGrid`。宿主按 layout contribution 渲染 rail / topbar / mainGrid 容器，主网格默认包含 `today-focus-1`、`quick-links-1`、`notes-1` 和 `todo-1`；天气保留为可添加候选，不强制进入首屏。
+当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、插件、设置等宿主动作。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span。主网格默认包含 `today-focus-1`、`quick-links-1`、`notes-1` 和 `todo-1`；天气保留为可添加候选，不强制进入首屏。
 
 默认首屏不要求容纳所有官方卡片。首屏应优先保证命令搜索和 3-4 个核心卡片可见：今日重点、快捷入口、便签和待办。天气、插件状态和低频工具可以在主网格下方通过纵向滚动访问，或放入添加面板和设置中心。
 
@@ -327,7 +327,7 @@ theme -> background -> layout -> search providers -> command search -> widgets -
 1. 平台发现并启用官方插件。
 2. 主题插件提供默认明亮 token。
 3. 背景插件提供默认背景源。
-4. 布局插件提供 `rail`、`topbar` 和 `mainGrid`。
+4. 布局插件提供 rail 宿主入口、`topbar` 搜索 region 和 `mainGrid` 网格 region。
 5. 搜索插件渲染顶部命令搜索栏。
 6. Widget 插件渲染今日重点、快捷入口、便签和待办。
 7. 用户可以直接搜索、打开快捷链接、记录便签、处理待办。
@@ -351,27 +351,28 @@ theme -> background -> layout -> search providers -> command search -> widgets -
 
 当前声明：
 
-| 字段                  | 值                                    |
-| --------------------- | ------------------------------------- |
-| layout id             | `official.layout.workbench-dashboard` |
-| title                 | `工作台仪表盘布局`                    |
-| regions               | `rail`, `topbar`, `mainGrid`          |
-| `rail.accepts`        | 工作台级 host actions，不承载业务插件 |
-| `topbar.accepts`      | `search`                              |
-| `topbar.maxInstances` | 1                                     |
-| `mainGrid.accepts`    | `widget`                              |
-| `supportsResponsive`  | true                                  |
+| 字段                  | 值                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| layout id             | `official.layout.workbench-dashboard`                                                    |
+| title                 | `工作台仪表盘布局`                                                                       |
+| regions               | `topbar`, `mainGrid`                                                                     |
+| rail                  | 由 layout view 消费 `LayoutHostAPI.getGlobalActions("rail")` 渲染，不作为插件实例 region |
+| `topbar.accepts`      | `search`                                                                                 |
+| `topbar.maxInstances` | 1                                                                                        |
+| `mainGrid.accepts`    | `widget`                                                                                 |
+| `supportsResponsive`  | true                                                                                     |
 
 ### 6.3 信息架构
 
 ```txt
 workbench-shell
-  rail-region
+  rail host actions
     home / add widget / plugins / settings
   content-region
     topbar-region
       search instance
     main-grid-region
+      workbench-grid
       widget instances
 ```
 
@@ -413,7 +414,7 @@ workbench-shell
 
 1. 布局插件被激活。
 2. 宿主读取 layout contribution。
-3. 宿主创建 `rail`、`topbar` 和 `mainGrid` 渲染区。
+3. 布局 view 渲染 rail 宿主入口，并创建 `topbar` 和 `mainGrid` 渲染区。
 4. 宿主在 `rail` 中渲染主页、添加卡片、插件和设置入口。
 5. 宿主把 `search-main` 放入 `topbar`。
 6. 宿主把 widget 实例放入 `mainGrid`。
@@ -1982,21 +1983,21 @@ plugin view throws
 
 基于当前代码，建议后续补齐：
 
-| 领域          | 当前情况                                                                                                                  | 建议                                        |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 默认布局      | 已开始由 `official.layout.workbench-dashboard` 插件贡献整体布局，宿主按 layout contribution 渲染 rail / topbar / mainGrid | 继续补齐动态 region 装配和更完整响应式      |
-| UI 基础组件   | 控件样式主要在 app.css 和插件内                                                                                           | 新增 `@tabora/ui`，官方插件优先复用基础组件 |
-| 今日重点      | 已实现基础 `today-focus` widget，并默认进入首屏                                                                           | 迁移到 plugin data，并完善多实例数据隔离    |
-| 搜索源读取    | 已从 `search-provider` contribution 动态读取                                                                              | —                                           |
-| 快捷入口      | 链接写在插件 view 内                                                                                                      | 支持实例配置和 plugin data                  |
-| 便签存储      | 使用 `localStorage` 全局 key                                                                                              | 迁移到 plugin data，并支持实例隔离          |
-| 待办存储      | 使用 pluginId + key，全实例共享                                                                                           | 加入 instanceId 或明确共享列表策略          |
-| 天气数据      | mock 北京天气                                                                                                             | 接入天气 provider，标明 demo 状态           |
-| 天气图标      | 使用天气符号                                                                                                              | 换成统一图标资源                            |
-| 插件管理器    | 只读官方插件列表                                                                                                          | 接入 plugin records、权限、错误和启用/禁用  |
-| 设置插件      | 已实现 MVP 轻量 settings host；插件、外观、搜索面板可进入                                                                 | 新增插件启停、权限详情、设置搜索            |
-| 权限反馈      | 搜索外部打开已有桥                                                                                                        | 增加 UI 层失败反馈和权限详情                |
-| 背景 renderer | view 为空，宿主侧处理较多                                                                                                 | 明确 renderer props contract                |
+| 领域          | 当前情况                                                                                                                          | 建议                                        |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 默认布局      | 已由独立 `plugins/layout-dashboard` 贡献整体布局；rail 走 host actions，topbar/mainGrid 走 region slot，主网格由 layout view 包裹 | 继续补齐更完整响应式与视觉细节              |
+| UI 基础组件   | 控件样式主要在 app.css 和插件内                                                                                                   | 新增 `@tabora/ui`，官方插件优先复用基础组件 |
+| 今日重点      | 已实现基础 `today-focus` widget，并默认进入首屏                                                                                   | 迁移到 plugin data，并完善多实例数据隔离    |
+| 搜索源读取    | 已从 `search-provider` contribution 动态读取                                                                                      | —                                           |
+| 快捷入口      | 链接写在插件 view 内                                                                                                              | 支持实例配置和 plugin data                  |
+| 便签存储      | 使用 `localStorage` 全局 key                                                                                                      | 迁移到 plugin data，并支持实例隔离          |
+| 待办存储      | 使用 pluginId + key，全实例共享                                                                                                   | 加入 instanceId 或明确共享列表策略          |
+| 天气数据      | mock 北京天气                                                                                                                     | 接入天气 provider，标明 demo 状态           |
+| 天气图标      | 使用天气符号                                                                                                                      | 换成统一图标资源                            |
+| 插件管理器    | 只读官方插件列表                                                                                                                  | 接入 plugin records、权限、错误和启用/禁用  |
+| 设置插件      | 已实现 MVP 轻量 settings host；插件、外观、搜索面板可进入                                                                         | 新增插件启停、权限详情、设置搜索            |
+| 权限反馈      | 搜索外部打开已有桥                                                                                                                | 增加 UI 层失败反馈和权限详情                |
+| 背景 renderer | view 为空，宿主侧处理较多                                                                                                         | 明确 renderer props contract                |
 
 ## 17. 推荐推进优先级
 

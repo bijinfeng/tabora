@@ -3,7 +3,10 @@ import { page } from "vitest/browser"
 
 type WorkbenchSnapshot = {
   rail: boolean
+  railLabels: string[]
   topbar: boolean
+  globalToolbar: boolean
+  layoutSwitch: boolean
   grid: boolean
   cardTitles: string[]
   overflowX: boolean
@@ -24,7 +27,10 @@ describe("workbench dashboard layout", () => {
 
     expect(initial).toMatchObject({
       rail: true,
+      railLabels: ["主页", "添加卡片", "插件", "设置"],
       topbar: true,
+      globalToolbar: false,
+      layoutSwitch: true,
       grid: true,
       overflowX: false,
     })
@@ -39,8 +45,8 @@ describe("workbench dashboard layout", () => {
     expect(readTodoSizeOptions()).toEqual(["S", "M", "L", "XL"])
 
     clickRequired(readGridItemByTitle("便签"), ".card-action-btn")
-    await waitFor(() => expect(document.querySelector(".modal-overlay .notes-modal")).toBeTruthy())
-    clickRequired(".modal-close")
+    await waitFor(() => expect(document.querySelector(".expand-overlay .notes-modal")).toBeTruthy())
+    clickRequired(".expand-close-btn")
 
     clickRequired('.workbench-rail button[aria-label="设置"]')
     await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
@@ -102,7 +108,12 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
 
   return {
     rail: !!document.querySelector(".workbench-rail"),
-    topbar: !!document.querySelector(".topbar .search-bar"),
+    railLabels: [...document.querySelectorAll<HTMLElement>(".workbench-rail button")].map(
+      (node) => node.getAttribute("aria-label") ?? "",
+    ),
+    topbar: !!document.querySelector(".dash-topbar .search-bar"),
+    globalToolbar: !!document.querySelector(".toolbar"),
+    layoutSwitch: !!document.querySelector(".layout-switch"),
     grid: !!document.querySelector(".workbench-grid"),
     cardTitles: [...document.querySelectorAll(".card-title-text")].map(
       (node) => node.textContent?.trim() ?? "",

@@ -3,9 +3,11 @@ import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 
 export function DashboardLayout(props: LayoutViewProps) {
+  const toolbarActions = () => props.host.getGlobalActions("toolbar")
+
   return (
     <main class="layout-dashboard" data-layout="dashboard">
-      <aside class="dash-rail" aria-label="工作台导航">
+      <aside class="dash-rail workbench-rail" aria-label="工作台导航">
         <div class="dash-rail-logo">T</div>
         <For each={props.host.getGlobalActions("rail")}>
           {(action) => (
@@ -21,21 +23,59 @@ export function DashboardLayout(props: LayoutViewProps) {
             </button>
           )}
         </For>
+        <div class="dash-rail-spacer" />
       </aside>
       <section class="dash-content">
         <header class="dash-topbar">
           <div class="dash-greeting">
-            <span>
-              {(() => {
-                const h = new Date().getHours()
-                return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
-              })()}
-            </span>
+            <div>
+              <span class="dash-greeting-title">
+                {(() => {
+                  const h = new Date().getHours()
+                  return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
+                })()}
+              </span>
+              <span class="dash-greeting-muted">，把今天整理成几个安静的模块。</span>
+            </div>
+            <div class="dash-greeting-actions">
+              <div class="layout-switch" aria-label="布局切换">
+                <For each={toolbarActions().filter((action) => action.shortcut === "⌘L")}>
+                  {(action) => (
+                    <button
+                      class="tb-btn"
+                      type="button"
+                      aria-label={action.label}
+                      title={action.label}
+                      onClick={() => action.run()}
+                    >
+                      {action.icon}
+                    </button>
+                  )}
+                </For>
+              </div>
+              <For each={toolbarActions().filter((action) => action.shortcut !== "⌘L")}>
+                {(action) => (
+                  <button
+                    class="dash-toolbar-btn"
+                    type="button"
+                    aria-label={action.label}
+                    title={action.shortcut ? `${action.label} ${action.shortcut}` : action.label}
+                    onClick={() => action.run()}
+                  >
+                    {action.icon}
+                  </button>
+                )}
+              </For>
+            </div>
           </div>
-          <Show when={props.regions["topbar"]}>{props.regions["topbar"]!.render()}</Show>
+          <div class="dash-search-stage">
+            <Show when={props.regions["topbar"]}>{props.regions["topbar"]!.render()}</Show>
+          </div>
         </header>
         <section class="dash-grid">
-          <Show when={props.regions["mainGrid"]}>{props.regions["mainGrid"]!.render()}</Show>
+          <div class="workbench-grid">
+            <Show when={props.regions["mainGrid"]}>{props.regions["mainGrid"]!.render()}</Show>
+          </div>
         </section>
       </section>
     </main>

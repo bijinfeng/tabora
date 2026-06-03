@@ -24,4 +24,13 @@ describe("NotesCard", () => {
     expect(root.querySelector("textarea")).toBeTruthy()
     root.remove()
   })
+
+  it("does not fail when host localStorage is unavailable", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesCard {...makeProps()} />, root)
+    await Promise.resolve()
+    expect(root.querySelector("textarea")).toBeTruthy()
+    root.remove()
+  })
 })

@@ -92,7 +92,7 @@ export function SettingsHost(props: SettingsHostProps) {
 
   return (
     <Show when={props.open}>
-      <div class="settings-overlay" onClick={props.onClose}>
+      <div class="settings-overlay settings-host" onClick={props.onClose}>
         <div class="settings-drawer" onClick={(e) => e.stopPropagation()}>
           <nav class="settings-sidebar">
             <div class="settings-sidebar-title">设置</div>
@@ -111,7 +111,11 @@ export function SettingsHost(props: SettingsHostProps) {
           <div class="settings-content">
             <div class="settings-tab-title">
               <span>{activeSectionTitle()}</span>
-              <button class="settings-close-btn" onClick={props.onClose} aria-label="关闭设置">
+              <button
+                class="settings-close-btn settings-close"
+                onClick={props.onClose}
+                aria-label="关闭设置"
+              >
                 <X size={16} />
               </button>
             </div>

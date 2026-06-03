@@ -1,32 +1,119 @@
 .layout-stream {
   min-height: 100vh;
+  background: rgb(var(--color-page));
+  color: rgb(var(--color-text));
 }
+
 .stream-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 24px 0;
 }
-.stream-toolbar-spacer {
-  flex: 1;
-}
-.stream-toolbar-btn {
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 8px;
-  padding: 6px 12px;
-  background: transparent;
-  cursor: pointer;
-}
-.stream-region {
-  max-width: 720px;
+
+.stream-toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 24px;
+  opacity: 0.76;
+  transition: opacity 140ms ease;
 }
+
+.stream-toolbar:hover .stream-toolbar-actions,
+.stream-toolbar:focus-within .stream-toolbar-actions {
+  opacity: 1;
+}
+
+.layout-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 54%, transparent);
+  border-radius: 7px;
+  background: transparent;
+}
+
+.layout-switch .tb-btn,
+.stream-toolbar-btn {
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.layout-switch .tb-btn {
+  width: 24px;
+  min-width: 24px;
+  padding: 0;
+}
+
+.stream-toolbar-btn {
+  padding: 0 9px;
+}
+
+.layout-switch .tb-btn:hover,
+.stream-toolbar-btn:hover {
+  background: rgb(var(--color-surface-soft, 250 250 248));
+  color: rgb(var(--color-text));
+}
+
+.stream-region {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .stream-hero {
-  margin-bottom: 16px;
+  text-align: center;
+  padding: 30px 0 18px;
 }
+
 .stream-hero-greeting {
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.stream-hero-date {
+  font-size: 13px;
+  color: rgb(var(--color-muted));
+}
+
+.stream-region .workbench-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 560px) {
+  .stream-toolbar {
+    padding: 8px 12px 0;
+  }
+
+  .stream-toolbar-actions {
+    gap: 6px;
+  }
+
+  .stream-region {
+    padding: 12px 12px 64px;
+  }
+
+  .stream-region .workbench-grid {
+    grid-template-columns: 1fr;
+  }
 }

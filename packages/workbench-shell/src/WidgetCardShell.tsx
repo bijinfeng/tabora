@@ -24,11 +24,18 @@ export type WidgetCardShellProps = {
   callbacks: WidgetHostCallbacks
 }
 
+const SIZE_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 4 }
+
+function gridColumnSpan(size: WidgetSize): number {
+  return SIZE_SPAN[size] ?? 2
+}
+
 export function WidgetCardShell(props: WidgetCardShellProps) {
   return (
     <div
       class="grid-item"
       classList={{ dragging: props.callbacks.isDragging }}
+      style={{ "grid-column": `span ${gridColumnSpan(props.currentSize)}` }}
       data-widget-instance-id={props.instance.id}
       aria-label={props.title}
       tabIndex={0}

@@ -121,7 +121,7 @@ export function App() {
     [
       {
         id: "toggle-theme",
-        icon: "🎨",
+        icon: "T",
         name: "切换主题",
         desc: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
         shortcut: "⌘T",
@@ -129,7 +129,7 @@ export function App() {
       },
       {
         id: "toggle-layout",
-        icon: "⇄",
+        icon: "L",
         name: "切换布局",
         desc:
           activeLayoutId() === "official.layout.workbench-dashboard"
@@ -154,7 +154,7 @@ export function App() {
       },
       {
         id: "open-settings",
-        icon: "⚙",
+        icon: "S",
         name: "打开设置",
         desc: "配置工作台",
         shortcut: "⌘,",
@@ -183,7 +183,7 @@ export function App() {
 
   // Create InstanceRenderer for layout engine
   const instanceRenderer: InstanceRenderer = {
-    renderWidget(instance: PluginInstance, callbacks?: unknown) {
+    renderWidget(instance: PluginInstance) {
       const widget = widgetContribution(instance)
       const title = widget?.title ?? instance.contributionId
       const View = widgetCardView(instance)
@@ -253,7 +253,66 @@ export function App() {
 
   // Create LayoutHostAPI for layout engine
   const layoutHostAPI: LayoutHostAPI = {
-    getGlobalActions: () => [],
+    getGlobalActions: (surface) => {
+      const layoutToggle = {
+        id: "theme" as const,
+        label:
+          activeLayoutId() === "official.layout.workbench-dashboard"
+            ? "切换到流式"
+            : "切换到仪表盘",
+        icon: activeLayoutId() === "official.layout.workbench-dashboard" ? "⇄" : "▦",
+        shortcut: "⌘L",
+        run: () => {
+          const next =
+            activeLayoutId() === "official.layout.workbench-dashboard"
+              ? "official.layout.workbench-stream"
+              : "official.layout.workbench-dashboard"
+          void switchLayout(next)
+        },
+      }
+      if (surface === "rail") {
+        return [
+          {
+            id: "home",
+            label: "主页",
+            icon: "⌂",
+            isActive: true,
+            run: () => runRailAction("home"),
+          },
+          {
+            id: "add-widget",
+            label: "添加卡片",
+            icon: "+",
+            run: () => runRailAction("add-widget"),
+          },
+          { id: "plugins", label: "插件", icon: "▣", run: () => runRailAction("plugins") },
+          { id: "settings", label: "设置", icon: "⚙", run: () => runRailAction("settings") },
+        ]
+      }
+      if (surface === "toolbar") {
+        return [
+          {
+            id: "command",
+            label: "命令",
+            icon: "⌘K",
+            shortcut: "⌘K",
+            run: () => setCmdPaletteOpen(true),
+          },
+          layoutToggle,
+          {
+            id: "theme",
+            label: isDark() ? "明亮" : "暗色",
+            icon: isDark() ? "☀" : "☾",
+            shortcut: "⌘T",
+            run: () => {
+              void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+            },
+          },
+          { id: "settings", label: "设置", icon: "⚙", run: () => runRailAction("settings") },
+        ]
+      }
+      return []
+    },
     openSettings: (panelId?: string) => openSettings(panelId),
     openCommandPalette: () => setCmdPaletteOpen(true),
     openAddWidget: () => setAddWidgetOpen(true),
@@ -920,10 +979,6 @@ export function App() {
     return regionInstances(regionId, "widget")
   }
 
-  function searchInstancesForRegion(regionId: string) {
-    return regionInstances(regionId, "search")
-  }
-
   function widgetInstanceById(instanceId: string): PluginInstance | undefined {
     return instances().find((instance) => instance.id === instanceId)
   }
@@ -1018,157 +1073,36 @@ export function App() {
     return true
   }
 
-  function renderSearchRegion(regionId: string) {
-    const searchInstances = searchInstancesForRegion(regionId)
-    if (searchInstances.length === 0) {
-      return <div class="settings-empty">当前布局未放置搜索插件</div>
-    }
-
+  function renderAddWidgetModal() {
     return (
-      <For each={searchInstances}>
-        {(instance) => {
-          const search = pluginCatalog.findSearchContribution(
-            instance.pluginId,
-            instance.contributionId,
-          )
-          if (!search) return null
-          const View = viewOrUndefined<SearchViewProps>(search.view)
-          if (!View) {
-            return <div class="settings-empty">搜索视图不可用：{search.id}</div>
-          }
-
-          return (
-            <PluginViewBoundary instanceId={instance.id} title={search.title}>
-              {View({
-                providers: enabledSearchProviders(),
-                defaultProviderId: resolveDefaultProviderForSearch(),
-                openExternal,
-                onDefaultProviderChange: setDefaultSearchProvider,
-                searchHistory: searchHistory(),
-                commands: commandItems(),
-                widgets: searchableWidgets(),
-                onSaveHistory: saveSearchHistory,
-                onClearHistory: clearSearchHistory,
-              })}
-            </PluginViewBoundary>
-          )
-        }}
-      </For>
-    )
-  }
-
-  function renderMainGrid(regionId: string) {
-    return (
-      <>
-        <section class="workbench-grid">
-          <For each={widgetInstancesForRegion(regionId)}>
-            {(inst) => {
-              const View = widgetCardView(inst)
-              if (!View) return null
-              const widget = widgetContribution(inst)
-              const title = widget?.title ?? inst.contributionId
-              const viewProps = buildWidgetViewProps(inst)
-              const span = gridColumnSpan(inst.size)
-              return (
-                <div
-                  class={`grid-item`}
-                  classList={{ dragging: dragId() === inst.id }}
-                  style={{ "grid-column": `span ${span}` }}
-                  data-widget-instance-id={inst.id}
-                  aria-label={title}
-                  tabIndex={0}
-                  draggable="true"
-                  onDragStart={(e) => onDragStart(e, inst.id)}
-                  onDragOver={onDragOver}
-                  onDrop={(e) => onDrop(e, inst.id, regionId)}
-                  onDblClick={(e) => {
-                    if (isInteractiveElement(e.target)) return
-                    openWidgetExpand(inst, e.currentTarget as HTMLElement)
-                    showToast(`展开卡片：${title}`)
-                  }}
-                  onContextMenu={(e) => {
-                    e.preventDefault()
-                    setCtxMenu({ x: e.clientX, y: e.clientY, instanceId: inst.id })
-                  }}
-                >
-                  <div class="widget-card">
-                    <div class="card-header">
-                      <div class="card-title">
-                        {renderWidgetIcon(widget?.icon)}
-                        <span class="card-title-text">{title}</span>
-                      </div>
-                      <div class="card-actions">
-                        <div class="widget-size-bar">
-                          {(widget?.supportedSizes ?? ["S", "M", "L"]).map((s) => (
-                            <button
-                              class="widget-size-btn"
-                              classList={{ active: (inst.size ?? "M") === s }}
-                              onClick={() => void changeWidgetSize(inst.id, s)}
-                            >
-                              {s}
-                            </button>
-                          ))}
-                        </div>
-                        <button
-                          class="card-action-btn"
-                          aria-label={`展开 ${title}`}
-                          onClick={() => openWidgetExpand(inst)}
-                        >
-                          ⤢
-                        </button>
-                        <button
-                          class="card-action-btn card-danger"
-                          onClick={() => void removeWidget(inst.id)}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                    <div class="card-body">
-                      <PluginViewBoundary instanceId={inst.id} title={title}>
-                        {View(viewProps)}
-                      </PluginViewBoundary>
-                    </div>
-                  </div>
-                </div>
-              )
-            }}
-          </For>
-        </section>
-        <section class="add-widgets" id="add-widgets" tabIndex={-1}>
-          <button class="add-widget-trigger" onClick={() => setAddWidgetOpen(true)}>
-            + 添加卡片
-          </button>
-          <Show when={addWidgetOpen()}>
-            <div class="modal-overlay" onClick={() => setAddWidgetOpen(false)}>
-              <div class="modal-container" onClick={(e) => e.stopPropagation()}>
-                <div class="modal-title">添加卡片</div>
-                <div class="modal-body">
-                  <For each={availableWidgets()}>
-                    {(w) => {
-                      return (
-                        <button
-                          class="add-widget-modal-item"
-                          onClick={() => {
-                            void addWidget(w.pluginId, w.id)
-                            setAddWidgetOpen(false)
-                          }}
-                        >
-                          <span class="add-widget-modal-icon">{widgetIconLabel(w.icon)}</span>
-                          <span class="add-widget-modal-info">
-                            <div class="add-widget-modal-name">{w.title}</div>
-                            <div class="add-widget-modal-desc">{w.description}</div>
-                          </span>
-                        </button>
-                      )
-                    }}
-                  </For>
-                </div>
-              </div>
+      <Show when={addWidgetOpen()}>
+        <div class="modal-overlay" onClick={() => setAddWidgetOpen(false)}>
+          <div class="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div class="modal-title">添加卡片</div>
+            <div class="modal-body">
+              <For each={availableWidgets()}>
+                {(w) => {
+                  return (
+                    <button
+                      class="add-widget-modal-item"
+                      onClick={() => {
+                        void addWidget(w.pluginId, w.id)
+                        setAddWidgetOpen(false)
+                      }}
+                    >
+                      <span class="add-widget-modal-icon">{widgetIconLabel(w.icon)}</span>
+                      <span class="add-widget-modal-info">
+                        <div class="add-widget-modal-name">{w.title}</div>
+                        <div class="add-widget-modal-desc">{w.description}</div>
+                      </span>
+                    </button>
+                  )
+                }}
+              </For>
             </div>
-          </Show>
-        </section>
-      </>
+          </div>
+        </div>
+      </Show>
     )
   }
 
@@ -1179,8 +1113,7 @@ export function App() {
       setActiveSettingsSectionId("plugins")
       setSettingsOpen(true)
     } else if (actionId === "settings") {
-      setActiveSettingsSectionId("appearance")
-      setSettingsOpen(true)
+      openSettings("official.settings.workspace.appearance")
     } else if (actionId === "home") {
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
@@ -1307,46 +1240,8 @@ export function App() {
       tabIndex={-1}
     >
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <span class="toolbar-logo">Tabora</span>
-            <span class="toolbar-badge">{instances().length} 实例</span>
-          </div>
-          <div class="toolbar-right">
-            <button
-              class="toolbar-btn"
-              classList={{ active: activeLayoutId() === "official.layout.workbench-dashboard" }}
-              onClick={() => void switchLayout("official.layout.workbench-dashboard")}
-            >
-              仪表盘
-            </button>
-            <button
-              class="toolbar-btn"
-              classList={{ active: activeLayoutId() === "official.layout.workbench-stream" }}
-              onClick={() => void switchLayout("official.layout.workbench-stream")}
-            >
-              流式
-            </button>
-            <span class="toolbar-sep" />
-            <button
-              class="toolbar-btn"
-              onClick={() =>
-                void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
-              }
-              aria-label="切换主题"
-            >
-              {isDark() ? "☀" : "☾"}
-            </button>
-            <button
-              class="toolbar-btn"
-              onClick={() => openSettings("official.settings.workspace.appearance")}
-              aria-label="设置"
-            >
-              ⚙
-            </button>
-          </div>
-        </div>
         {renderActiveLayout()}
+        {renderAddWidgetModal()}
         <SettingsHost
           open={settingsOpen()}
           panels={pluginCatalog.listSettingsPanels()}

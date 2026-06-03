@@ -3,11 +3,15 @@
   --color-page: 246 247 244;
   --color-surface: 255 255 255;
   --color-surface-soft: 250 250 248;
+  --color-surface-hover: 242 244 240;
   --color-text: 28 30 28;
   --color-muted: 107 110 106;
+  --color-subtle: 148 151 146;
   --color-line: 230 232 227;
+  --color-line-strong: 209 212 206;
   --color-accent: 26 144 112;
   --color-accent-hover: 21 120 92;
+  --color-accent-soft: 234 245 240;
   --color-danger: 201 69 69;
   --color-success: 45 138 94;
   --radius: 8px;
@@ -100,12 +104,18 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+  align-items: start;
 }
+
+.grid-item {
+  min-width: 0;
+}
+
 /* ====== CARD (exact prototype values) ====== */
 .widget-card {
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
-  border-radius: var(--radius);
+  border-radius: var(--radius-card, var(--radius));
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -114,7 +124,7 @@
   cursor: grab;
 }
 .widget-card:hover {
-  border-color: rgb(var(--color-muted));
+  border-color: rgb(var(--color-line-strong));
 }
 .widget-card:active {
   cursor: grabbing;
@@ -170,7 +180,7 @@
   transition: all 0.12s;
 }
 .card-action-btn:hover {
-  background: rgba(var(--color-accent), 0.06);
+  background: rgb(var(--color-surface-hover));
   color: rgb(var(--color-text));
 }
 .card-action-btn.card-danger:hover {
@@ -200,10 +210,11 @@
   transition: all 0.12s;
 }
 .widget-size-btn:hover {
-  border-color: rgb(var(--color-muted));
+  background: rgb(var(--color-surface-hover));
+  border-color: rgb(var(--color-line-strong));
 }
 .widget-size-btn.active {
-  background: rgba(var(--color-accent), 0.1);
+  background: rgb(var(--color-accent-soft));
   border-color: rgb(var(--color-accent));
   color: rgb(var(--color-accent));
 }

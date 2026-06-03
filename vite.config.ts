@@ -4,9 +4,8 @@ import type { PackUserConfig } from "vite-plus/pack"
 
 type PackageExports = Record<string, unknown>
 
-function withUiStylesExport(exports: PackageExports, isPublish: boolean): PackageExports {
+function withStylesExport(exports: PackageExports, stylesExport: string): PackageExports {
   const orderedExports: PackageExports = {}
-  const stylesExport = isPublish ? "./dist/styles.css" : "./src/styles.css"
 
   if ("." in exports) {
     orderedExports["."] = exports["."]
@@ -26,7 +25,7 @@ const pack = {
   dts: true,
   copy: (options) => {
     if (options.pkg?.name === "@tabora/ui") {
-      return [{ from: "src/styles.css", to: "dist", flatten: true }]
+      return [{ from: "src/tokens/theme.css", to: "dist/theme.css", flatten: true }]
     }
     if (options.pkg?.name === "@tabora/official-plugins") {
       return [{ from: "src/styles.css", to: "dist", flatten: true }]
@@ -36,8 +35,17 @@ const pack = {
   exports: {
     devExports: true,
     customExports(exports, context) {
-      if (context.pkg.name === "@tabora/ui" || context.pkg.name === "@tabora/official-plugins") {
-        return withUiStylesExport(exports, context.isPublish)
+      if (context.pkg.name === "@tabora/ui") {
+        return withStylesExport(
+          exports,
+          context.isPublish ? "./dist/theme.css" : "./src/tokens/theme.css",
+        )
+      }
+      if (context.pkg.name === "@tabora/official-plugins") {
+        return withStylesExport(
+          exports,
+          context.isPublish ? "./dist/styles.css" : "./src/styles.css",
+        )
       }
       return exports
     },
