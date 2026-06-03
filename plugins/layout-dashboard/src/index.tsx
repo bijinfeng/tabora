@@ -1,6 +1,8 @@
 import { For, Show } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { HostActionIcon } from "@tabora/workbench-shell"
+import { AlignJustify, LayoutGrid, Plus } from "lucide-solid"
 
 export function DashboardLayout(props: LayoutViewProps) {
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
@@ -35,7 +37,7 @@ export function DashboardLayout(props: LayoutViewProps) {
               type="button"
               onClick={() => action.run()}
             >
-              {action.icon}
+              <HostActionIcon id={action.id} icon={action.icon} />
             </button>
           )}
         </For>
@@ -55,7 +57,8 @@ export function DashboardLayout(props: LayoutViewProps) {
                     type="button"
                     onClick={() => action().run()}
                   >
-                    + 添加卡片
+                    <Plus size={14} />
+                    <span>添加卡片</span>
                   </button>
                 )}
               </Show>
@@ -67,7 +70,7 @@ export function DashboardLayout(props: LayoutViewProps) {
                   title="仪表盘布局"
                   onClick={() => undefined}
                 >
-                  ▦
+                  <LayoutGrid size={15} />
                 </button>
                 <button
                   class="tb-btn"
@@ -76,7 +79,7 @@ export function DashboardLayout(props: LayoutViewProps) {
                   title="流式布局"
                   onClick={() => layoutAction()?.run()}
                 >
-                  ☰
+                  <AlignJustify size={15} />
                 </button>
               </div>
             </div>

@@ -40,10 +40,18 @@
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
     background 120ms ease,
     border-color 120ms ease,
     color 120ms ease;
+}
+
+.dash-rail-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .dash-rail-btn:hover,
@@ -117,6 +125,10 @@
 
 .dash-toolbar-btn,
 .tb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   height: 28px;
   padding: 0 10px;
   border: 1px solid transparent;
@@ -132,6 +144,11 @@
     background 120ms ease,
     border-color 120ms ease,
     color 120ms ease;
+}
+
+.dash-toolbar-btn svg,
+.tb-btn svg {
+  flex-shrink: 0;
 }
 
 .dash-toolbar-btn:hover,

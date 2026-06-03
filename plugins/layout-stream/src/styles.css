@@ -41,6 +41,9 @@
 
 .layout-switch .tb-btn,
 .stream-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 26px;
   border: 1px solid transparent;
   border-radius: 7px;
@@ -53,6 +56,11 @@
     background 120ms ease,
     color 120ms ease,
     border-color 120ms ease;
+}
+
+.layout-switch .tb-btn svg,
+.stream-toolbar-btn svg {
+  flex-shrink: 0;
 }
 
 .layout-switch .tb-btn {

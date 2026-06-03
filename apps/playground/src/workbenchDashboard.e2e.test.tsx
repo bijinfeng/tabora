@@ -27,14 +27,23 @@ describe("workbench dashboard layout", () => {
 
     expect(initial).toMatchObject({
       rail: true,
-      railLabels: ["主页", "添加卡片", "插件", "设置"],
+      railLabels: ["主页", "添加卡片", "切换主题", "设置"],
       topbar: true,
       globalToolbar: false,
       layoutSwitch: true,
       grid: true,
       overflowX: false,
     })
-    expect(initial.cardTitles).toEqual(["今日重点", "快捷入口", "便签", "待办"])
+    expect(initial.cardTitles).toEqual([
+      "今日重点",
+      "快捷入口",
+      "待办",
+      "便签",
+      "天气",
+      "今日重点",
+      "快捷入口",
+      "待办",
+    ])
 
     const addBefore = countGridItems()
     clickRequired('.workbench-rail button[aria-label="添加卡片"]')
@@ -42,7 +51,8 @@ describe("workbench dashboard layout", () => {
     clickRequired(".add-widget-modal-item")
     await waitFor(() => expect(countGridItems()).toBe(addBefore + 1))
 
-    expect(readTodoSizeOptions()).toEqual(["S", "M", "L", "XL"])
+    expect(readHeaderSizeButtons("待办")).toEqual([])
+    expect(readContextMenuSizeOptions("待办")).toEqual(["尺寸 S", "尺寸 M", "尺寸 L", "尺寸 XL"])
 
     clickRequired(readGridItemByTitle("便签"), ".card-action-btn")
     await waitFor(() => expect(document.querySelector(".expand-overlay .notes-modal")).toBeTruthy())
@@ -66,11 +76,6 @@ describe("workbench dashboard layout", () => {
 
     clickRequired(".settings-close")
     await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
-
-    clickRequired('.workbench-rail button[aria-label="插件"]')
-    await waitFor(() => expect(document.querySelector(".settings-host")).toBeTruthy())
-    expect(document.querySelector(".settings-nav.active")?.textContent).toContain("插件")
-    clickRequired(".settings-close")
 
     const dragOrder = await dragFirstGridItemToSecond()
     expect(dragOrder.after).toEqual([
@@ -126,11 +131,28 @@ function countGridItems(): number {
   return document.querySelectorAll(".grid-item").length
 }
 
-function readTodoSizeOptions(): string[] {
-  const todo = readGridItemByTitle("待办")
+function readHeaderSizeButtons(title: string): string[] {
+  const todo = readGridItemByTitle(title)
   return [...todo.querySelectorAll<HTMLElement>(".widget-size-btn")].map(
     (btn) => btn.textContent ?? "",
   )
+}
+
+function readContextMenuSizeOptions(title: string): string[] {
+  const todo = readGridItemByTitle(title)
+  todo.dispatchEvent(
+    new MouseEvent("contextmenu", {
+      bubbles: true,
+      clientX: 24,
+      clientY: 24,
+    }),
+  )
+  const options = [...document.querySelectorAll<HTMLElement>(".ctx-menu-item")]
+    .map((btn) => btn.textContent?.replace(/\s+/g, " ").trim() ?? "")
+    .filter((text) => text.startsWith("尺寸 "))
+    .map((text) => text.replace("当前", "").trim())
+  clickRequired(".ctx-menu-overlay")
+  return options
 }
 
 function readGridItemByTitle(title: string): HTMLElement {

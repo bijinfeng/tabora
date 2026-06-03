@@ -1,6 +1,6 @@
-import { For } from "solid-js"
 import type { JSX } from "solid-js"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
+import { Maximize2, X } from "lucide-solid"
 
 export type WidgetHostCallbacks = {
   onDragStart: (e: DragEvent) => void
@@ -54,30 +54,19 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
             <span class="card-title-text">{props.title}</span>
           </div>
           <div class="card-actions">
-            <div class="widget-size-bar">
-              <For each={props.supportedSizes}>
-                {(size) => (
-                  <button
-                    class="widget-size-btn"
-                    classList={{ active: props.currentSize === size }}
-                    onClick={() => props.callbacks.onResize(size)}
-                    aria-label={`尺寸 ${size}`}
-                    aria-pressed={props.currentSize === size}
-                  >
-                    {size}
-                  </button>
-                )}
-              </For>
-            </div>
             <button
               class="card-action-btn"
               aria-label={`展开 ${props.title}`}
               onClick={() => props.callbacks.onExpand()}
             >
-              ⤢
+              <Maximize2 size={14} />
             </button>
-            <button class="card-action-btn card-danger" onClick={() => props.callbacks.onRemove()}>
-              ×
+            <button
+              class="card-action-btn card-danger"
+              aria-label={`移除 ${props.title}`}
+              onClick={() => props.callbacks.onRemove()}
+            >
+              <X size={15} />
             </button>
           </div>
         </div>
