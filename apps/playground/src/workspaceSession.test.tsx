@@ -80,7 +80,7 @@ describe("workspaceSession", () => {
     })
 
     expect(session.workspace.id).toBe("default")
-    expect(session.instances).toHaveLength(4)
+    expect(session.instances).toHaveLength(5)
     expect(session.searchSettings.defaultProviderId).toBe("official.search.google")
   })
 

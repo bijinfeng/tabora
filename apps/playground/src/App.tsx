@@ -2,6 +2,7 @@ import { createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type {
   BackgroundProviderContribution,
+  LayoutHostAPI,
   LayoutRegion,
   PluginInstance,
   SearchCommandEntry,
@@ -17,15 +18,22 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import { officialPlugins } from "@tabora/official-plugins"
-import { createPluginCatalog } from "@tabora/orchestrator"
+import {
+  createPluginCatalog,
+  createLayoutEngine,
+  type InstanceRenderer,
+} from "@tabora/orchestrator"
 import { createPluginKernel } from "@tabora/platform-kernel"
 import { applyThemeTokens } from "@tabora/theme"
 import {
   PluginViewBoundary,
   CommandPalette,
   SettingsHost,
+  WidgetCardShell,
+  LayoutBoundary,
   resolveInitialSettingsSectionId,
   type SettingsSectionId,
+  type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
 import {
   createInstanceRepository,
@@ -171,6 +179,95 @@ export function App() {
   const kernel = createPluginKernel({
     lifecycleStore: pluginRecordRepo,
     recordSource: "builtin",
+  })
+
+  // Create InstanceRenderer for layout engine
+  const instanceRenderer: InstanceRenderer = {
+    renderWidget(instance: PluginInstance, callbacks?: unknown) {
+      const widget = widgetContribution(instance)
+      const title = widget?.title ?? instance.contributionId
+      const View = widgetCardView(instance)
+      if (!View) return <div class="settings-empty">Widget view not available</div>
+
+      // Construct host callbacks for this instance
+      const hostCallbacks: WidgetHostCallbacks = {
+        onDragStart: (e: DragEvent) => onDragStart(e, instance.id),
+        onDragOver: (e: DragEvent) => onDragOver(e),
+        onDrop: (e: DragEvent) => onDrop(e, instance.id, instance.regionId),
+        onDblClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement
+          if (isInteractiveElement(target)) return
+          openWidgetExpand(instance)
+        },
+        onContextMenu: (e: MouseEvent) => {
+          e.preventDefault()
+          setCtxMenu({ x: e.clientX, y: e.clientY, instanceId: instance.id })
+        },
+        onResize: (size: WidgetSize) => changeWidgetSize(instance.id, size),
+        onRemove: () => removeWidget(instance.id),
+        onExpand: () => openWidgetExpand(instance),
+        isDragging: dragId() === instance.id,
+      }
+
+      return (
+        <WidgetCardShell
+          instance={instance}
+          title={title}
+          icon={renderWidgetIcon(widget?.icon)}
+          supportedSizes={widget?.supportedSizes ?? ["S", "M", "L"]}
+          currentSize={instance.size ?? "M"}
+          callbacks={hostCallbacks}
+        >
+          <PluginViewBoundary instanceId={instance.id} title={title}>
+            {View(buildWidgetViewProps(instance))}
+          </PluginViewBoundary>
+        </WidgetCardShell>
+      )
+    },
+    renderSearch(instance: PluginInstance) {
+      const search = pluginCatalog.findSearchContribution(
+        instance.pluginId,
+        instance.contributionId,
+      )
+      if (!search) return <div class="settings-empty">搜索贡献未找到</div>
+      const View = viewOrUndefined<SearchViewProps>(search.view)
+      if (!View) return <div class="settings-empty">搜索视图不可用：{search.id}</div>
+
+      return (
+        <PluginViewBoundary instanceId={instance.id} title={search.title}>
+          {View({
+            providers: enabledSearchProviders(),
+            defaultProviderId: resolveDefaultProviderForSearch(),
+            openExternal,
+            onDefaultProviderChange: setDefaultSearchProvider,
+            searchHistory: searchHistory(),
+            commands: commandItems(),
+            widgets: searchableWidgets(),
+            onSaveHistory: saveSearchHistory,
+            onClearHistory: clearSearchHistory,
+          })}
+        </PluginViewBoundary>
+      )
+    },
+  }
+
+  // Create LayoutHostAPI for layout engine
+  const layoutHostAPI: LayoutHostAPI = {
+    getGlobalActions: () => [],
+    openSettings: (panelId?: string) => openSettings(panelId),
+    openCommandPalette: () => setCmdPaletteOpen(true),
+    openAddWidget: () => setAddWidgetOpen(true),
+    toggleTheme: () => {
+      void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+    },
+    isDark: () => isDark(),
+  }
+
+  // Create layout engine
+  const layoutEngine = createLayoutEngine({
+    catalog: pluginCatalog,
+    instanceRenderer,
+    hostActions: layoutHostAPI,
   })
 
   function makeScopedData(pluginId: string, instanceId: string): WidgetViewProps["data"] {
@@ -1089,157 +1186,98 @@ export function App() {
     }
   }
 
+  function renderSafeLayout() {
+    // Built-in safe layout: single-column stream of all cards with minimal toolbar
+    return (
+      <div class="safe-layout">
+        <div class="safe-layout-toolbar">
+          <span class="toolbar-logo">Tabora</span>
+          <div style={{ flex: 1 }} />
+          <button class="toolbar-btn" onClick={() => setCmdPaletteOpen(true)}>
+            搜索
+          </button>
+          <button
+            class="toolbar-btn"
+            onClick={() =>
+              void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+            }
+          >
+            {isDark() ? "☀" : "☾"}
+          </button>
+          <button class="toolbar-btn" onClick={() => openSettings()}>
+            设置
+          </button>
+        </div>
+        <div class="safe-layout-stream">
+          <For each={instances()}>
+            {(instance) => {
+              const widget = widgetContribution(instance)
+              const title = widget?.title ?? instance.contributionId
+              const View = widgetCardView(instance)
+              if (!View) return null
+
+              return (
+                <WidgetCardShell
+                  instance={instance}
+                  title={title}
+                  icon={renderWidgetIcon(widget?.icon)}
+                  supportedSizes={widget?.supportedSizes ?? ["S", "M", "L"]}
+                  currentSize={instance.size ?? "M"}
+                  callbacks={{
+                    onDragStart: () => setDragId(instance.id),
+                    onDragOver: (e: DragEvent) => {
+                      e.preventDefault()
+                      e.dataTransfer!.dropEffect = "move"
+                    },
+                    onDrop: () => setDragId(null),
+                    onDblClick: () => openWidgetExpand(instance),
+                    onContextMenu: (e: MouseEvent) => {
+                      e.preventDefault()
+                      setCtxMenu({ x: e.clientX, y: e.clientY, instanceId: instance.id })
+                    },
+                    onResize: (size: WidgetSize) => changeWidgetSize(instance.id, size),
+                    onRemove: () => removeWidget(instance.id),
+                    onExpand: () => openWidgetExpand(instance),
+                    isDragging: dragId() === instance.id,
+                  }}
+                >
+                  <PluginViewBoundary instanceId={instance.id} title={title}>
+                    {View(buildWidgetViewProps(instance))}
+                  </PluginViewBoundary>
+                </WidgetCardShell>
+              )
+            }}
+          </For>
+        </div>
+      </div>
+    )
+  }
+
   function renderActiveLayout() {
     const layout = pluginCatalog.findLayoutContribution(activeLayoutId())
     const LayoutView = layout?.view ? viewOrUndefined(layout.view) : undefined
 
     if (!LayoutView) {
-      const fallbackRegionId =
-        layoutRegions().find((region) => region.accepts.includes("widget"))?.id ?? "mainGrid"
-      return <>{renderMainGrid(fallbackRegionId)}</>
+      return renderSafeLayout()
     }
 
-    const isDashboard = activeLayoutId() === "official.layout.workbench-dashboard"
-    const isStream = activeLayoutId() === "official.layout.workbench-stream"
+    const regions = layoutEngine.buildRegionSlots(activeLayoutId(), instances())
+    const host = layoutEngine.buildHostAPI()
 
-    if (isDashboard) {
-      const rail = (
-        <nav class="workbench-rail" aria-label="工作台导航">
-          <div class="rail-logo">T</div>
-          <button
-            class="rail-btn active"
-            aria-label="主页"
-            onClick={() => runRailAction("home")}
-            type="button"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            >
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-          </button>
-          <button
-            class="rail-btn"
-            aria-label="添加卡片"
-            onClick={() => runRailAction("add-widget")}
-            type="button"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          </button>
-          <div style={{ flex: 1 }} />
-          <button
-            class="rail-btn"
-            aria-label="切换主题"
-            onClick={() =>
-              void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
-            }
-            type="button"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="5" />
-              <line x1="12" y1="1" x2="12" y2="3" />
-              <line x1="12" y1="21" x2="12" y2="23" />
-            </svg>
-          </button>
-          <button
-            class="rail-btn"
-            aria-label="设置"
-            onClick={() => runRailAction("settings")}
-            type="button"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-          </button>
-        </nav>
-      )
-      const topbar = (
-        <div class="topbar">
-          <div class="dash-greeting">
-            <span>
-              {(() => {
-                const h = new Date().getHours()
-                return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
-              })()}{" "}
-              <span class="dash-greeting-muted">
-                · {new Date().getMonth() + 1}月{new Date().getDate()}日 星期
-                {["日", "一", "二", "三", "四", "五", "六"][new Date().getDay()]}
-              </span>
-            </span>
-            <button class="btn btn-subtle btn-sm" onClick={() => setAddWidgetOpen(true)}>
-              + 添加卡片
-            </button>
-          </div>
-          {renderSearchRegion("topbar")}
-        </div>
-      )
-      return LayoutView({ rail, topbar, mainGrid: renderMainGrid("mainGrid") })
-    }
-
-    if (isStream) {
-      const toolbar = (
-        <div class="stream-topbar">
-          <span class="stream-topbar-logo">
-            Tabora <span>Stream</span>
-          </span>
-          <div style={{ flex: 1 }} />
-          <button class="toolbar-btn" onClick={() => setCmdPaletteOpen(true)}>
-            ⌘K 搜索
-          </button>
-          <button class="toolbar-btn" onClick={() => runRailAction("settings")}>
-            ⚙ 设置
-          </button>
-        </div>
-      )
-      return LayoutView({
-        toolbar,
-        stream: (
-          <>
-            <div class="stream-hero">
-              <div class="stream-hero-greeting">下午好 ☀</div>
-              <div class="stream-hero-date">2026年5月30日 · 北京</div>
-            </div>
-            {renderMainGrid("stream")}
-          </>
-        ),
-      })
-    }
-
-    const fallbackRegionId =
-      layoutRegions().find((region) => region.accepts.includes("widget"))?.id ?? "mainGrid"
-    return <>{renderMainGrid(fallbackRegionId)}</>
+    return (
+      <LayoutBoundary
+        fallback={renderSafeLayout()}
+        onError={(error) => {
+          console.error("Layout error:", error)
+        }}
+      >
+        {LayoutView({
+          regions,
+          isMobile: false,
+          host,
+        })}
+      </LayoutBoundary>
+    )
   }
 
   const isDark = () => themeId() === "official.theme.dark"
