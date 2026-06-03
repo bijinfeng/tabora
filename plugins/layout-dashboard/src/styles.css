@@ -1,0 +1,43 @@
+.layout-dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+.dash-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 56px;
+  padding: 12px 0;
+  border-right: 1px solid var(--color-border, #e5e7eb);
+}
+.dash-rail-logo {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.dash-rail-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.dash-rail-btn:hover,
+.dash-rail-btn.active {
+  background: var(--color-surface-hover, #f3f4f6);
+}
+.dash-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+}
+.dash-grid {
+  padding: 0 24px 24px;
+}
