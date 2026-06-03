@@ -1,0 +1,62 @@
+name: Release Extension
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "extension-v*"
+
+jobs:
+  release-extension:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Chrome zip
+        run: pnpm --filter @tabora/extension zip
+
+      - name: Build Firefox zip
+        run: pnpm --filter @tabora/extension zip:firefox
+
+      - name: Upload extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tabora-extension-packages
+          path: |
+            apps/extension/.output/*-chrome.zip
+            apps/extension/.output/*-firefox.zip
+            apps/extension/.output/*-sources.zip
+          if-no-files-found: error
+
+      - name: Submit extension packages
+        if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+        run: |
+          pnpm --filter @tabora/extension exec wxt submit \
+            --chrome-zip .output/*-chrome.zip \
+            --firefox-zip .output/*-firefox.zip \
+            --firefox-sources-zip .output/*-sources.zip
+        working-directory: apps/extension
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}

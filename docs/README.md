@@ -127,6 +127,16 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 - 确认仓库 Variables / Secrets、服务器目录和 SSH/rsync 前置条件。
 - 排查静态部署链路问题时优先读它。
 
+### Extension 分发
+
+- `docs/technical/extension-github-actions-publish.md`
+
+用途：
+
+- 配置 GitHub Actions 将 `apps/extension` 构建为 WXT zip，并提交到 Chrome Web Store / Firefox Add-ons。
+- 确认 `wxt submit init`、GitHub Secrets 和发布触发方式。
+- 排查扩展构建与商店提交流程时优先读它。
+
 ### 阶段执行路线图
 
 - `docs/superpowers/specs/2026-05-29-tabora-execution-roadmap.md`
