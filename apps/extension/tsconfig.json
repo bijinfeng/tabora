@@ -6,5 +6,5 @@
       "@tabora/playground/src/*": ["../playground/src/*"]
     }
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["entrypoints", "app", "wxt.config.ts"]
 }

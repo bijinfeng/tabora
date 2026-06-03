@@ -64,7 +64,7 @@ Phase A-H 已全部实施。当前 MVP 基线已达到：
 - ✅ 待办：编辑、清空已完成、完成统计。
 - ✅ 天气：provider adapter 边界，demo/live 模式。
 - ✅ 工作区导出/导入：JSON 格式，schemaVersion 校验。
-- ✅ Extension Shell：Chrome MV3 新标签页 (apps/extension)。
+- ✅ Extension Shell：Chrome MV3 新标签页，当前由 WXT 驱动 (`apps/extension`)。
 - ✅ 权限桥：external-open 打通，权限风险评估模型。
 - ✅ 示例插件：hello-world 模板展示 SDK 用法。
 - ✅ 安全架构类型：沙箱、包签名、权限审核类型定义。

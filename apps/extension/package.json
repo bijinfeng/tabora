@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "vite build"
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip"
   },
   "dependencies": {
     "@tabora/official-plugins": "workspace:*",
@@ -17,11 +18,11 @@
   },
   "devDependencies": {
     "@tabora/tsconfig": "workspace:*",
-    "@tailwindcss/vite": "catalog:build",
+    "@wxt-dev/module-solid": "^1.1.4",
     "tailwindcss": "catalog:build",
     "typescript": "catalog:build",
     "vite": "catalog:build",
-    "vite-plugin-solid": "catalog:build",
-    "vitest": "catalog:test"
+    "vitest": "catalog:test",
+    "wxt": "^0.20.26"
   }
 }
