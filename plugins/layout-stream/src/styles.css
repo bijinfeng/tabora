@@ -1,0 +1,32 @@
+.layout-stream {
+  min-height: 100vh;
+}
+.stream-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+.stream-toolbar-spacer {
+  flex: 1;
+}
+.stream-toolbar-btn {
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  cursor: pointer;
+}
+.stream-region {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.stream-hero {
+  margin-bottom: 16px;
+}
+.stream-hero-greeting {
+  font-size: 24px;
+  font-weight: 600;
+}
