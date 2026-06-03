@@ -14,3 +14,4 @@ export {
   type WidgetCardShellProps,
   type WidgetHostCallbacks,
 } from "./WidgetCardShell"
+export { LayoutBoundary, type LayoutBoundaryProps } from "./LayoutBoundary"
