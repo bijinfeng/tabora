@@ -9,3 +9,8 @@ export {
   type SettingsPanelDescriptor,
   type SettingsSectionId,
 } from "./settingsHost"
+export {
+  WidgetCardShell,
+  type WidgetCardShellProps,
+  type WidgetHostCallbacks,
+} from "./WidgetCardShell"
