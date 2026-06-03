@@ -53,6 +53,8 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
                     class="widget-size-btn"
                     classList={{ active: props.currentSize === size }}
                     onClick={() => props.callbacks.onResize(size)}
+                    aria-label={`尺寸 ${size}`}
+                    aria-pressed={props.currentSize === size}
                   >
                     {size}
                   </button>

@@ -88,4 +88,13 @@ describe("WidgetCardShell", () => {
     expect(cb.onContextMenu).toHaveBeenCalled()
     dispose()
   })
+
+  it("点击展开按钮触发 onExpand", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const expandBtn = host.querySelector("button[aria-label^='展开']") as HTMLButtonElement
+    expandBtn.click()
+    expect(cb.onExpand).toHaveBeenCalled()
+    dispose()
+  })
 })
