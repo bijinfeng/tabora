@@ -427,6 +427,22 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
 
+  plugins/layout-diy-masonry:
+    dependencies:
+      '@tabora/platform-kernel':
+        specifier: workspace:*
+        version: link:../../packages/platform-kernel
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../../packages/plugin-api
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.13
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+
   plugins/layout-stream:
     dependencies:
       '@tabora/platform-kernel':
