@@ -63,6 +63,7 @@
 │  Infrastructure Layer                                 │
 │  - @tabora/storage (IndexedDB 持久化)                  │
 │  - @tabora/theme (CSS custom properties)              │
+│  - @tabora/brand (品牌图标源与品牌组件)               │
 │  - @tabora/ui (基础组件库)                             │
 │  - @tabora/official-plugins (官方插件包)               │
 └──────────────────────────────────────────────────────┘
@@ -93,6 +94,7 @@ packages/
   orchestrator/         # 新增：布局切换、区域映射、搜索路由、拖拽、展开、设置导航
   storage/              # IndexedDB 持久化（增强 migration 和 quota）
   theme/                # Token 应用（不变）
+  brand/                # 品牌图标源文件、品牌组件、静态图标路径导出
   ui/                   # 插件内容区基础组件（按 V2 组件规范扩展，不承接宿主容器）
   official-plugins/     # 官方插件包（新增 stream layout）
   workbench-shell/      # Shell host 样式与通用宿主容器组件

@@ -54,8 +54,17 @@
   gap: 8px;
 }
 .toolbar-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 15px;
   font-weight: 700;
+}
+.toolbar-logo-mark {
+  width: 20px;
+  height: 20px;
+  color: rgb(var(--color-accent));
+  flex-shrink: 0;
 }
 .toolbar-badge {
   font-size: 10px;

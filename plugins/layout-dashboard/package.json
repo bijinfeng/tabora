@@ -12,6 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@tabora/brand": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "solid-js": "catalog:ui"

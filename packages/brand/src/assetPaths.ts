@@ -1,0 +1,6 @@
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+
+const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+
+export const taboraAppIconPath = path.join(packageDir, "assets", "tabora-app-icon.svg")

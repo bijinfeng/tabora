@@ -1,3 +1,4 @@
+import { TaboraMark } from "@tabora/brand"
 import { createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type {
@@ -1123,7 +1124,10 @@ export function App() {
     return (
       <div class="safe-layout">
         <div class="safe-layout-toolbar">
-          <span class="toolbar-logo">Tabora</span>
+          <span class="toolbar-logo">
+            <TaboraMark class="toolbar-logo-mark" />
+            <span>Tabora</span>
+          </span>
           <div style={{ flex: 1 }} />
           <button class="toolbar-btn" onClick={() => setCmdPaletteOpen(true)}>
             搜索

@@ -88,15 +88,11 @@ button {
 }
 
 .brand-mark {
-  display: grid;
-  place-items: center;
   width: 24px;
   height: 24px;
-  border: 1px solid rgb(var(--tbr-color-line-strong));
-  border-radius: 6px;
-  background: var(--site-ink);
-  color: rgb(var(--tbr-color-page));
-  font-size: 12px;
+  display: block;
+  color: var(--site-ink);
+  flex-shrink: 0;
 }
 
 .nav,

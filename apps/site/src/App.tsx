@@ -1,3 +1,4 @@
+import { TaboraMark } from "@tabora/brand"
 import { Button } from "@tabora/ui"
 import { applyThemeTokens } from "@tabora/theme"
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js"
@@ -134,7 +135,7 @@ function Topbar(props: {
         aria-label="Tabora 首页"
         onClick={() => props.onNavigate("home")}
       >
-        <span class="brand-mark">T</span>
+        <TaboraMark class="brand-mark" />
         <span>Tabora</span>
       </button>
       <nav class="nav" aria-label="主导航">

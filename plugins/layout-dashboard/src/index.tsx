@@ -1,3 +1,4 @@
+import { TaboraMark } from "@tabora/brand"
 import { For, Show } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
@@ -24,7 +25,7 @@ export function DashboardLayout(props: LayoutViewProps) {
   return (
     <main class="layout-dashboard" data-layout="dashboard">
       <aside class="dash-rail workbench-rail" aria-label="工作台导航">
-        <div class="dash-rail-logo">T</div>
+        <TaboraMark class="dash-rail-logo" />
         <For each={props.host.getGlobalActions("rail")}>
           {(action) => (
             <button

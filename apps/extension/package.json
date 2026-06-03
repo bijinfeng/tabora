@@ -12,6 +12,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@tabora/brand": "workspace:*",
     "@tabora/official-plugins": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/storage": "workspace:*",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@tabora/tsconfig": "workspace:*",
+    "@wxt-dev/auto-icons": "1.1.1",
     "@wxt-dev/module-solid": "^1.1.4",
     "tailwindcss": "catalog:build",
     "typescript": "catalog:build",

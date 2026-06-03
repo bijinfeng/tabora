@@ -1,0 +1,27 @@
+{
+  "name": "@tabora/brand",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./assetPaths": "./src/assetPaths.ts",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./assetPaths": "./dist/assetPaths.js",
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "vp pack src/index.ts src/assetPaths.ts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*"
+  }
+}

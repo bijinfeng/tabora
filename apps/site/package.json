@@ -7,6 +7,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@tabora/brand": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "solid-js": "catalog:ui"

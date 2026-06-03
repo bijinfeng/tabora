@@ -8,6 +8,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@tabora/brand": "workspace:*",
     "@tabora/layout-dashboard": "workspace:*",
     "@tabora/layout-diy-masonry": "workspace:*",
     "@tabora/layout-stream": "workspace:*",

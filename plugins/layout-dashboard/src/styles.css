@@ -19,14 +19,8 @@
 .dash-rail-logo {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgb(var(--color-accent));
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  display: block;
+  color: rgb(var(--color-accent));
   margin-bottom: 8px;
 }
 
