@@ -1,5 +1,6 @@
 import { createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { ArrowDown, ArrowUp, Check, Pencil, X } from "lucide-solid"
 
 type QuickLink = {
   id: string
@@ -148,7 +149,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                         onClick={() => void moveLink(link.id, "up")}
                         disabled={index() === 0}
                       >
-                        ↑
+                        <ArrowUp size={13} />
                       </button>
                       <button
                         class="link-mini-btn"
@@ -157,7 +158,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                         onClick={() => void moveLink(link.id, "down")}
                         disabled={index() === links().length - 1}
                       >
-                        ↓
+                        <ArrowDown size={13} />
                       </button>
                       <button
                         class="link-mini-btn"
@@ -165,7 +166,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                         type="button"
                         onClick={() => startEdit(link)}
                       >
-                        ✎
+                        <Pencil size={13} />
                       </button>
                       <button
                         class="link-mini-btn link-delete"
@@ -173,7 +174,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                         type="button"
                         onClick={() => void removeLink(link.id)}
                       >
-                        ×
+                        <X size={14} />
                       </button>
                     </div>
                   </>
@@ -201,7 +202,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                       type="button"
                       onClick={() => void confirmEdit()}
                     >
-                      ✓
+                      <Check size={14} />
                     </button>
                     <button
                       aria-label="取消编辑"
@@ -209,7 +210,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                       type="button"
                       onClick={cancelEdit}
                     >
-                      ×
+                      <X size={14} />
                     </button>
                   </div>
                 </div>
@@ -253,10 +254,10 @@ export function QuickLinksCard(props: WidgetViewProps) {
               type="button"
               onClick={() => void confirmAdd()}
             >
-              ✓
+              <Check size={14} />
             </button>
             <button aria-label="取消添加" class="link-mini-btn" type="button" onClick={cancelAdd}>
-              ×
+              <X size={14} />
             </button>
           </div>
         </div>

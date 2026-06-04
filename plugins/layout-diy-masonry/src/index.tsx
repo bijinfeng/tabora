@@ -1,6 +1,8 @@
 import { createSignal, For, Show } from "solid-js"
 import type { LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { HostActionIcon } from "@tabora/workbench-shell"
+import { Menu } from "lucide-solid"
 
 const COLUMN_COUNT = 3
 
@@ -35,7 +37,7 @@ export function MasonryLayout(props: LayoutViewProps) {
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
         >
-          ☰
+          <Menu size={20} />
         </button>
         <Show when={menuOpen()}>
           <div class="masonry-menu" role="menu">
@@ -50,7 +52,8 @@ export function MasonryLayout(props: LayoutViewProps) {
                     setMenuOpen(false)
                   }}
                 >
-                  <span aria-hidden="true">{action.icon}</span> {action.label}
+                  <HostActionIcon id={action.id} icon={action.icon} size={16} />
+                  <span>{action.label}</span>
                 </button>
               )}
             </For>

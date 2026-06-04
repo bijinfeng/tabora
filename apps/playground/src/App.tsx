@@ -43,9 +43,9 @@ import {
   createTaboraDatabase,
   createWorkspaceRepository,
 } from "@tabora/storage"
-import { Clock, Link2, Pencil, Sun, Target, CheckSquare } from "lucide-solid"
+import { Clock, Link2, Pencil, Sun, Moon, Target, CheckSquare, X } from "lucide-solid"
 
-import { assignGridOrder, gridColumnSpan } from "./workbenchGrid"
+import { assignGridOrder, gridColumnSpan, gridRowSpan } from "./workbenchGrid"
 import { resolveThemeTokens } from "./themeResolver"
 import {
   applyBackgroundStyle,
@@ -890,6 +890,7 @@ export function App() {
       grid: {
         ...(inst.grid ?? { x: 0, y: 0, rowSpan: 1 }),
         colSpan: gridColumnSpan(newSize),
+        rowSpan: gridRowSpan(newSize),
       },
       updatedAt: new Date().toISOString(),
     }
@@ -1134,11 +1135,12 @@ export function App() {
           </button>
           <button
             class="toolbar-btn"
+            aria-label={isDark() ? "切换到明亮主题" : "切换到暗色主题"}
             onClick={() =>
               void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
             }
           >
-            {isDark() ? "☀" : "☾"}
+            {isDark() ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           <button class="toolbar-btn" onClick={() => openSettings()}>
             设置
@@ -1300,7 +1302,7 @@ export function App() {
                     </div>
                   </div>
                   <button class="expand-close-btn" onClick={closeExpand} aria-label="关闭展开视图">
-                    ×
+                    <X size={18} />
                   </button>
                 </div>
                 <div class="expand-body">
@@ -1332,8 +1334,8 @@ export function App() {
         <Show when={modalViewId()}>
           <div class="modal-overlay" onClick={() => setModalViewId(null)}>
             <div class="modal-container" onClick={(e) => e.stopPropagation()}>
-              <button class="modal-close" onClick={() => setModalViewId(null)}>
-                ×
+              <button class="modal-close" aria-label="关闭" onClick={() => setModalViewId(null)}>
+                <X size={16} />
               </button>
               <div class="modal-body">
                 {(() => {
@@ -1353,8 +1355,12 @@ export function App() {
         </Show>
         <Show when={fullscreenViewId()}>
           <div class="fullscreen-overlay">
-            <button class="fullscreen-close" onClick={() => setFullscreenViewId(null)}>
-              ×
+            <button
+              class="fullscreen-close"
+              aria-label="关闭全屏视图"
+              onClick={() => setFullscreenViewId(null)}
+            >
+              <X size={18} />
             </button>
             <div class="fullscreen-body">
               {(() => {

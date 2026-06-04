@@ -68,13 +68,9 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  it("点击尺寸按钮触发 onResize 带正确 size", () => {
-    const cb = makeCallbacks()
-    const { host, dispose } = mount(cb)
-    const buttons = [...host.querySelectorAll("button.widget-size-btn")] as HTMLButtonElement[]
-    const lBtn = buttons.find((b) => b.textContent?.trim() === "L")
-    lBtn!.click()
-    expect(cb.onResize).toHaveBeenCalledWith("L")
+  it("标题栏不渲染尺寸切换按钮", () => {
+    const { host, dispose } = mount(makeCallbacks())
+    expect(host.querySelector("button.widget-size-btn")).toBeFalsy()
     dispose()
   })
 

@@ -19,12 +19,16 @@
   bottom: 24px;
 }
 .masonry-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 48px;
   height: 48px;
   border-radius: 50%;
   border: none;
+  background: rgb(var(--color-accent));
+  color: #fff;
   cursor: pointer;
-  font-size: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 .masonry-menu {
@@ -40,6 +44,9 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 .masonry-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   border: none;
   background: transparent;
   padding: 8px 12px;
@@ -47,6 +54,11 @@
   cursor: pointer;
   border-radius: 8px;
   white-space: nowrap;
+  color: rgb(var(--color-text, 28 30 28));
+}
+.masonry-menu-item svg {
+  flex-shrink: 0;
+  color: rgb(var(--color-muted, 107 110 106));
 }
 .masonry-menu-item:hover {
   background: var(--color-surface-hover, #f3f4f6);

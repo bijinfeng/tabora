@@ -15,3 +15,4 @@ export {
   type WidgetHostCallbacks,
 } from "./WidgetCardShell"
 export { LayoutBoundary, type LayoutBoundaryProps } from "./LayoutBoundary"
+export { HostActionIcon, type HostActionIconProps } from "./HostActionIcon"

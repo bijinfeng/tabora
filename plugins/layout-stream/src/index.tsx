@@ -1,6 +1,8 @@
 import { For, Show } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { HostActionIcon } from "@tabora/workbench-shell"
+import { AlignJustify } from "lucide-solid"
 
 export function StreamLayout(props: LayoutViewProps) {
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
@@ -19,7 +21,7 @@ export function StreamLayout(props: LayoutViewProps) {
                   title={action.label}
                   onClick={() => action.run()}
                 >
-                  {action.icon}
+                  <AlignJustify size={15} />
                 </button>
               )}
             </For>
@@ -33,7 +35,7 @@ export function StreamLayout(props: LayoutViewProps) {
                 title={action.shortcut ? `${action.label} ${action.shortcut}` : action.label}
                 onClick={() => action.run()}
               >
-                {action.icon}
+                <HostActionIcon id={action.id} icon={action.icon} size={16} />
               </button>
             )}
           </For>
@@ -42,7 +44,7 @@ export function StreamLayout(props: LayoutViewProps) {
         <For each={props.host.getGlobalActions("menu")}>
           {(action) => (
             <button class="stream-toolbar-btn" type="button" onClick={() => action.run()}>
-              {action.icon}
+              <HostActionIcon id={action.id} icon={action.icon} size={16} />
             </button>
           )}
         </For>
