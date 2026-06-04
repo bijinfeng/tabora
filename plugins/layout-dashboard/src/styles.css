@@ -114,7 +114,15 @@
 
 .dash-search-stage {
   position: relative;
-  max-width: 880px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 2px 0 4px;
+}
+
+.dash-search-stage > * {
+  width: min(100%, 720px);
+  max-width: 720px;
 }
 
 .dash-toolbar-btn,
@@ -176,7 +184,6 @@
 @media (max-width: 768px) {
   .layout-dashboard {
     display: block;
-    padding-bottom: 56px;
   }
 
   .dash-rail {
@@ -187,8 +194,8 @@
     left: 0;
     flex-direction: row;
     justify-content: space-around;
-    height: 52px;
-    padding: 6px 16px;
+    height: 50px;
+    padding: 6px 12px;
     border-top: 1px solid rgb(var(--color-line));
     border-right: none;
   }
@@ -199,18 +206,21 @@
   }
 
   .dash-content {
-    padding: 16px;
+    padding: 16px 16px 66px;
   }
 
   .dash-greeting {
     align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .dash-greeting-muted {
-    display: none;
+    display: inline;
   }
 
   .dash-greeting-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
     opacity: 1;
   }
 }

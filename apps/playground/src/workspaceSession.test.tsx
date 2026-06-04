@@ -80,7 +80,7 @@ describe("workspaceSession", () => {
     })
 
     expect(session.workspace.id).toBe("default")
-    expect(session.instances).toHaveLength(9)
+    expect(session.instances).toHaveLength(7)
     expect(session.searchSettings.defaultProviderId).toBe("official.search.google")
   })
 
@@ -138,7 +138,8 @@ describe("workspaceSession", () => {
     })
 
     expect(session.instances.some((instance) => instance.id === "weather-1")).toBe(true)
-    expect(session.instances.filter((instance) => instance.regionId === "mainGrid")).toHaveLength(8)
+    expect(session.instances.some((instance) => instance.id === "plugin-status-1")).toBe(true)
+    expect(session.instances.filter((instance) => instance.regionId === "mainGrid")).toHaveLength(6)
   })
 
   it("creates an isolated workspace with seeded instances", async () => {
@@ -154,7 +155,7 @@ describe("workspaceSession", () => {
 
     const instances = await instanceRepo.getByWorkspace(workspace.id)
     expect(workspace.name).toBe("新的工作区")
-    expect(instances).toHaveLength(9)
+    expect(instances).toHaveLength(7)
     expect(instances.every((instance) => instance.workspaceId === workspace.id)).toBe(true)
   })
 

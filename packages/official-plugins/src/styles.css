@@ -160,7 +160,8 @@
 /* Official search command bar */
 .search-wrapper {
   position: relative;
-  max-width: 880px;
+  width: 100%;
+  max-width: 720px;
 }
 
 .search-bar {
@@ -217,16 +218,16 @@
 .search-provider-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 9px;
-  border: 1px solid rgb(var(--color-line));
+  gap: 5px;
+  height: 24px;
+  padding: 0 7px 0 6px;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
   border-radius: 999px;
-  background: rgb(var(--color-surface-soft));
-  color: rgb(var(--color-text));
+  background: color-mix(in srgb, rgb(var(--color-surface-soft)) 88%, transparent);
+  color: rgb(var(--color-muted));
   font-family: inherit;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 550;
   cursor: pointer;
   transition:
     background 120ms ease,
@@ -301,17 +302,19 @@
 }
 
 .search-kbd {
-  height: 22px;
-  min-width: 32px;
-  border-radius: 5px;
-  border: 1px solid rgb(var(--color-line));
-  background: rgb(var(--color-surface-soft));
-  color: rgb(var(--color-muted));
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgb(var(--color-subtle, var(--color-muted)));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.68;
   flex-shrink: 0;
 }
 
@@ -829,6 +832,37 @@
 .weather-extra {
   color: rgb(var(--color-subtle));
   font-size: 10px;
+}
+
+.plugin-stats {
+  display: flex;
+  flex-direction: column;
+}
+
+.plugin-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.plugin-stat:hover {
+  background: rgb(var(--color-surface-hover));
+}
+
+.plugin-stat-val {
+  color: rgb(var(--color-muted));
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.plugin-stat-val.accent {
+  color: rgb(var(--color-accent));
 }
 
 @media (max-width: 768px) {

@@ -288,23 +288,21 @@ MVP 组件清单：
 
 建议默认装配：
 
-| 区域       | 实例             | 来源插件                              | 尺寸         | 说明                                         |
-| ---------- | ---------------- | ------------------------------------- | ------------ | -------------------------------------------- |
-| `rail`     | `rail-main`      | `official.layout.workbench-dashboard` | 固定左侧区域 | 主页、添加卡片、切换主题、设置等工作台级入口 |
-| `topbar`   | `search-main`    | `official.search.command-bar`         | 固定顶部区域 | 命令搜索入口                                 |
-| `mainGrid` | `today-focus-1`  | `official.widgets.today-focus`        | M            | 今日重点，默认首屏第一张核心卡片             |
-| `mainGrid` | `quick-links-1`  | `official.widgets.quick-links`        | M            | 快捷入口                                     |
-| `mainGrid` | `todo-1`         | `official.widgets.todo`               | M            | 待办列表                                     |
-| `mainGrid` | `notes-1`        | `official.widgets.notes`              | M            | 快速记录                                     |
-| `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
-| `mainGrid` | `today-focus-2`  | `official.widgets.today-focus`        | M            | 多实例样张，用于验证默认网格滚动             |
-| `mainGrid` | `quick-links-2`  | `official.widgets.quick-links`        | M            | 多实例样张，用于验证默认网格滚动             |
-| `mainGrid` | `todo-2`         | `official.widgets.todo`               | M            | 多实例样张，用于验证默认网格滚动             |
-| `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 默认从设置中心进入，不作为首屏大卡片         |
+| 区域       | 实例              | 来源插件                              | 尺寸         | 说明                                         |
+| ---------- | ----------------- | ------------------------------------- | ------------ | -------------------------------------------- |
+| `rail`     | `rail-main`       | `official.layout.workbench-dashboard` | 固定左侧区域 | 主页、添加卡片、切换主题、设置等工作台级入口 |
+| `topbar`   | `search-main`     | `official.search.command-bar`         | 固定顶部区域 | 命令搜索入口                                 |
+| `mainGrid` | `today-focus-1`   | `official.widgets.today-focus`        | M            | 今日重点，默认首屏第一张核心卡片             |
+| `mainGrid` | `quick-links-1`   | `official.widgets.quick-links`        | M            | 快捷入口                                     |
+| `mainGrid` | `todo-1`          | `official.widgets.todo`               | S            | 待办列表                                     |
+| `mainGrid` | `notes-1`         | `official.widgets.notes`              | L            | 快速记录，按原型占据主编辑区域               |
+| `mainGrid` | `weather-1`       | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
+| `mainGrid` | `plugin-status-1` | `official.plugin-manager`             | S            | 插件状态摘要，位于核心卡片之后               |
+| `settings` | `plugin-manager`  | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
-当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。主网格默认按原型样张包含 `today-focus-1`、`quick-links-1`、`todo-1`、`notes-1`、`weather-1`、`today-focus-2`、`quick-links-2` 和 `todo-2`。旧默认工作区会通过一次性 seed 版本迁移补齐缺失样张实例；迁移后用户手动删除的默认卡片不会被反复恢复。
+当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。主网格默认按原型样张包含 `today-focus-1`、`quick-links-1`、`todo-1`、`notes-1`、`weather-1` 和 `plugin-status-1`。
 
-默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/03-工作台交互原型.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、今日重点、快捷入口、待办、便签和天气摘要，并允许更多默认样张卡片在主网格下方通过纵向滚动访问。插件状态和低频工具默认从设置中心进入，不作为首屏大卡片。
+默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/03-工作台交互原型.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、今日重点、快捷入口、待办、便签和天气摘要。插件状态作为 S 尺寸摘要卡片进入默认主网格，但排在核心工作卡片之后，不抢占首屏核心位置；完整插件管理仍从设置中心进入。
 
 ### 5.2 默认插件加载顺序
 
@@ -1574,10 +1572,10 @@ V1.5：
 
 | 字段                   | 值                          |
 | ---------------------- | --------------------------- |
-| widget id              | `plugin-manager`            |
-| title                  | `插件管理`                  |
-| supportedSizes         | M, L, XL                    |
-| defaultSize            | L                           |
+| widget id              | `plugin-status`             |
+| title                  | `插件状态`                  |
+| supportedSizes         | S                           |
+| defaultSize            | S                           |
 | allowMultipleInstances | false                       |
 | settings panel id      | `official.settings.plugins` |
 
