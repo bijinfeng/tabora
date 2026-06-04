@@ -1,10 +1,7 @@
 {
   "extends": "@tabora/tsconfig/base.json",
   "compilerOptions": {
-    "types": ["vite/client"],
-    "paths": {
-      "@tabora/playground/src/*": ["../playground/src/*"]
-    }
+    "types": ["vite/client"]
   },
   "include": ["entrypoints", "app", "wxt.config.ts"]
 }

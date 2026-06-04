@@ -1,0 +1,32 @@
+{
+  "name": "@tabora/workbench-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "vp pack src/index.ts",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@tabora/host-adapters": "workspace:*",
+    "@tabora/orchestrator": "workspace:*",
+    "@tabora/platform-kernel": "workspace:*",
+    "@tabora/plugin-api": "workspace:*",
+    "@tabora/storage": "workspace:*",
+    "@tabora/theme": "workspace:*",
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*"
+  }
+}

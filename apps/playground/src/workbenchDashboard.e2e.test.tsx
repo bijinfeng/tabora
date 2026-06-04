@@ -34,16 +34,7 @@ describe("workbench dashboard layout", () => {
       grid: true,
       overflowX: false,
     })
-    expect(initial.cardTitles).toEqual([
-      "今日重点",
-      "快捷入口",
-      "待办",
-      "便签",
-      "天气",
-      "今日重点",
-      "快捷入口",
-      "待办",
-    ])
+    expect(initial.cardTitles).toEqual(["今日重点", "快捷入口", "待办", "便签", "天气", "插件状态"])
 
     const addBefore = countGridItems()
     clickRequired('.workbench-rail button[aria-label="添加卡片"]')

@@ -34,13 +34,13 @@ import {
 } from "@tabora/workbench-shell"
 import { Clock, Link2, Pencil, Sun, Moon, Target, CheckSquare, X } from "lucide-solid"
 
-import { assignGridOrder, gridColumnSpan, gridRowSpan } from "./workbenchGrid"
-import { resolveThemeTokens } from "./themeResolver"
+import { assignGridOrder, gridColumnSpan, gridRowSpan } from "../../../playground/src/workbenchGrid"
+import { resolveThemeTokens } from "../../../playground/src/themeResolver"
 import {
   applyBackgroundStyle,
   resolveBackgroundStyle,
   FALLBACK_BACKGROUND_ID,
-} from "./backgroundResolver"
+} from "../../../playground/src/backgroundResolver"
 import {
   createWorkspaceSession,
   deleteWorkspaceSession,
@@ -49,12 +49,12 @@ import {
   updateWorkspaceBackground,
   updateWorkspaceRecord,
   updateWorkspaceTheme,
-} from "./workspaceSession"
-import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
-import { createWorkspaceRegions } from "./defaultWorkspaceSeed"
+} from "../../../playground/src/workspaceSession"
+import { exportWorkspaceData, importWorkspaceData } from "../../../playground/src/workspaceTransfer"
+import { createWorkspaceRegions } from "../../../playground/src/defaultWorkspaceSeed"
 import {
-  createPlaygroundRuntimeBootstrap,
-  createPlaygroundWorkbenchComposition,
+  createExtensionRuntimeBootstrap,
+  createExtensionWorkbenchComposition,
 } from "./workbenchComposition"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
@@ -71,7 +71,7 @@ function requireWorkspace(workspace: Workspace | null): Workspace {
 }
 
 export function App() {
-  const composition = createPlaygroundWorkbenchComposition()
+  const composition = createExtensionWorkbenchComposition()
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
   const [activeLayoutId, setActiveLayoutId] = createSignal("official.layout.workbench-dashboard")
@@ -164,7 +164,7 @@ export function App() {
       },
     ] satisfies SearchCommandEntry[]
 
-  const runtime = createPlaygroundRuntimeBootstrap()
+  const runtime = createExtensionRuntimeBootstrap()
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
 

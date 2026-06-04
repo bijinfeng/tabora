@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@tabora/brand": "workspace:*",
+    "@tabora/host-adapters": "workspace:*",
     "@tabora/layout-dashboard": "workspace:*",
     "@tabora/layout-diy-masonry": "workspace:*",
     "@tabora/layout-stream": "workspace:*",
@@ -19,6 +20,7 @@
     "@tabora/storage": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
+    "@tabora/workbench-app": "workspace:*",
     "@tabora/workbench-shell": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"

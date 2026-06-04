@@ -91,6 +91,8 @@ packages/
   plugin-api/           # 类型、Schema、Props Contract（不变）
   platform-kernel/      # 插件生命周期、Registry、EventBus、权限、快捷键注册（增强）
   orchestrator/         # 新增：布局切换、区域映射、搜索路由、拖拽、展开、设置导航
+  workbench-app/        # Phase X1 起步：跨 shell 的 workbench composition 承载层
+  host-adapters/        # Phase X1 起步：Web / extension / desktop host capability adapters
   storage/              # IndexedDB 持久化（增强 migration 和 quota）
   theme/                # Token 应用（不变）
   brand/                # 品牌图标源文件、品牌组件、静态图标路径导出
@@ -105,6 +107,9 @@ packages/
 - `@tabora/ui` 只承接插件内容区基础组件和组合模式，如 `Button`、`Input`、`Field`、`ListRow`、`CardSection`、`Kbd` 等。
 - `CommandPalette`、`Dialog`、`Drawer`、`Toast`、`ContextMenu`、`ExpandHost`、`SettingsHost`、快捷键面板等宿主级容器由 shell / orchestrator 提供，可复用 design spec，但不应强行收进 `@tabora/ui`。
 - 官方插件和官方 layout 的样式由 `@tabora/official-plugins/styles.css` 跟随插件包提供；shell host 样式与通用宿主容器组件由 `@tabora/workbench-shell` 提供。当前已迁入 `PluginViewBoundary` 和 `SettingsHost`，playground 只负责装配和传入 host actions，不维护官方插件 class 或宿主容器 class 的 CSS。
+- Phase X1 当前状态已前进到“工程边界收口进行中”：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。
+- playground 当前通过 `apps/playground/src/workbenchComposition.ts` 组装 `@tabora/workbench-app` 与 `@tabora/host-adapters`，不再在 `App.tsx` 内直接 new 全套基础设施对象；`App.tsx` 仍是重型 shell，但已经收缩为组合根 + 宿主交互编排。
+- extension newtab 已拥有自己的 shell entry，不再直接 import `@tabora/playground/src/App`。当前仍通过相对路径复用 playground 的纯逻辑 helper，这是 Phase X1 允许的过渡状态；后续需要继续把 shared shell 状态与 helper 收敛到独立 package。
 
 `@tabora/orchestrator` 的职责边界：
 

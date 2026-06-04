@@ -1,47 +1,28 @@
-import { createComponent, createRoot } from "solid-js"
 import type { JSX } from "solid-js"
-import { afterEach, describe, expect, it } from "vitest"
+import { render } from "solid-js/web"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { PluginViewBoundary } from "./PluginViewBoundary"
 
-const mounts: Array<{ root: HTMLElement; dispose: () => void }> = []
+const mounts: HTMLElement[] = []
 
 afterEach(() => {
-  for (const { dispose, root } of mounts.splice(0)) {
-    dispose()
+  for (const root of mounts.splice(0)) {
     root.remove()
   }
 })
 
-function appendResult(root: HTMLElement, value: JSX.Element): void {
-  if (value instanceof Node) {
-    root.append(value)
-    return
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) appendResult(root, item)
-    return
-  }
-  if (typeof value === "string" || typeof value === "number") {
-    root.append(String(value))
-  }
-}
-
 function mount(view: () => JSX.Element): HTMLElement {
   const root = document.createElement("div")
   document.body.append(root)
-  let dispose = () => {}
-  createRoot((rootDispose) => {
-    dispose = rootDispose
-    const result = createComponent(PluginViewBoundary, {
-      instanceId: "broken-widget",
-      title: "Broken Widget",
-      get children() {
-        return view()
-      },
-    })
-    appendResult(root, result)
-  })
-  mounts.push({ root, dispose })
+  render(
+    () => (
+      <PluginViewBoundary instanceId="broken-widget" title="Broken Widget">
+        {view()}
+      </PluginViewBoundary>
+    ),
+    root,
+  )
+  mounts.push(root)
   return root
 }
 
@@ -54,6 +35,7 @@ describe("PluginViewBoundary", () => {
     expect(root.textContent).toContain("Broken Widget")
     expect(root.textContent).toContain("插件视图加载失败")
     expect(root.textContent).toContain("broken-widget")
+    expect(root.textContent).toContain("boom")
   })
 
   it("renders healthy plugin content normally", () => {
@@ -61,5 +43,20 @@ describe("PluginViewBoundary", () => {
 
     expect(root.textContent).toContain("Healthy plugin")
     expect(root.textContent).not.toContain("插件视图加载失败")
+  })
+
+  it("renders a retry button without relying on full page reload", () => {
+    const reloadSpy = vi.spyOn(window.location, "reload").mockImplementation(() => undefined)
+    const root = mount(() => {
+      throw new Error("retry-me")
+    })
+
+    const button = root.querySelector("button")
+    expect(button?.textContent).toBe("重试")
+
+    button?.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    expect(reloadSpy).not.toHaveBeenCalled()
+
+    reloadSpy.mockRestore()
   })
 })
