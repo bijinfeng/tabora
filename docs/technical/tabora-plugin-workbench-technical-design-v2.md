@@ -10,9 +10,8 @@
 
 - 产品 PRD V2：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- V2 设计体系：`docs/design/01-设计体系规范.html`
-- V2 组件规范：`docs/design/02-基础组件规范.html`
-- V2 交互原型：`docs/design/03-工作台交互原型.html`
+- V2 设计事实源：`DESIGN.md`
+- V2 交互原型参考：`docs/design/03-工作台交互原型.html`
 - UI 重构方案：`docs/technical/tabora-ui-refactoring-plan.md`
 - 插件拆分方案：`docs/technical/tabora-plugin-package-splitting-plan.md`
 - 文档地图：`docs/README.md`
@@ -102,7 +101,7 @@ packages/
 
 设计 catalog 与包边界的映射需要额外说明：
 
-- `docs/design/02-基础组件规范.html` 中的 52 个组件是**设计 catalog**，不是 `@tabora/ui` 的 1:1 导出清单。
+- `DESIGN.md` 中的组件 catalog 是**设计 catalog**，不是 `@tabora/ui` 的 1:1 导出清单。
 - `@tabora/ui` 只承接插件内容区基础组件和组合模式，如 `Button`、`Input`、`Field`、`ListRow`、`CardSection`、`Kbd` 等。
 - `CommandPalette`、`Dialog`、`Drawer`、`Toast`、`ContextMenu`、`ExpandHost`、`SettingsHost`、快捷键面板等宿主级容器由 shell / orchestrator 提供，可复用 design spec，但不应强行收进 `@tabora/ui`。
 - 官方插件和官方 layout 的样式由 `@tabora/official-plugins/styles.css` 跟随插件包提供；shell host 样式与通用宿主容器组件由 `@tabora/workbench-shell` 提供。当前已迁入 `PluginViewBoundary` 和 `SettingsHost`，playground 只负责装配和传入 host actions，不维护官方插件 class 或宿主容器 class 的 CSS。

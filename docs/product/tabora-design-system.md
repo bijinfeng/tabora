@@ -4,13 +4,12 @@
 
 日期：2026-06-02
 
-状态：作为 `docs/design/*` 到当前仓库实现的桥接文档；不再重复维护完整视觉规范正文
+状态：作为 `DESIGN.md` 到当前仓库实现的桥接文档；不再重复维护完整视觉规范正文
 
 关联文档：
 
-- 设计规范：`docs/design/01-设计体系规范.html`
-- 组件规范：`docs/design/02-基础组件规范.html`
-- 工作台原型：`docs/design/03-工作台交互原型.html`
+- 设计事实源：`DESIGN.md`
+- 工作台原型参考：`docs/design/03-工作台交互原型.html`
 - 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
@@ -19,32 +18,29 @@
 
 ## 1. 文档职责
 
-自 2026-05-30 发布 V2 设计体系后，Tabora 的视觉、组件和交互事实源已经转移到 `docs/design/`：
+自 2026-06-04 起，Tabora 的视觉、组件和交互事实源收敛到根目录 `DESIGN.md`：
 
-- `01-设计体系规范.html`：Token、布局、响应式、可访问性、宿主容器总规则。
-- `02-基础组件规范.html`：52 个基础组件和 7 个组合模式的组件事实源。
-- `03-工作台交互原型.html`：双布局、命令搜索、拖拽、展开、右键菜单、设置导航、Toast、快捷键等交互事实源。
+- `DESIGN.md`：视觉语言、token、基础组件语义、宿主容器视觉、交互模式和可访问性规则。
+- `docs/design/03-工作台交互原型.html`：双布局、命令搜索、拖拽、展开、右键菜单、设置导航、Toast、快捷键等可交互原型参考，不再承载规范事实。
 
 本文件不再复刻上述内容，而是回答三个实现问题：
 
 1. 这些设计事实应落到仓库中的哪些包和目录。
-2. 当实现与设计有偏差时，应该更新哪一层文档。
+2. 当实现与设计有偏差时，应该更新哪些文档或预览资产。
 3. 设计变更时，哪些实现资产必须同步检查。
 
 ## 2. 事实源优先级
 
 出现冲突时，按以下优先级判定：
 
-1. `docs/design/03-工作台交互原型.html`
-   用于交互行为、信息架构、布局切换、快捷键、上下文菜单、Toast、设置导航。
-2. `docs/design/02-基础组件规范.html`
-   用于组件 API、状态、变体、尺寸、Anatomy、Do/Don't。
-3. `docs/design/01-设计体系规范.html`
-   用于色彩、字体、间距、圆角、动效、响应式、可访问性、宿主容器约束。
-4. 本文件
+1. `DESIGN.md`
+   用于视觉语言、token、基础组件语义、宿主容器视觉、交互模式和可访问性规则。
+2. 本文件
    只用于说明仓库中的实现映射、同步清单和历史文件定位。
+3. `docs/design/03-工作台交互原型.html`、`docs/design/04-官网预览.html`、`docs/design/05-官网下载.html`
+   只作为可视原型或静态预览参考。
 
-如果本文件与 `docs/design/*` 冲突，以 `docs/design/*` 为准，并应立即回写本文件。
+如果本文件或预览资产与 `DESIGN.md` 冲突，以 `DESIGN.md` 为准，并应立即回写对应文档或预览。
 
 ## 3. 设计到实现映射
 
@@ -62,7 +58,7 @@
 
 ## 4. 当前实现必须遵守的 V2 规则
 
-以下规则来自 `docs/design/*`，在代码实现中不得被“临时样式”或“局部特例”绕过：
+以下规则来自 `DESIGN.md`，在代码实现中不得被“临时样式”或“局部特例”绕过：
 
 ### 4.1 视觉与 Token
 
@@ -91,11 +87,11 @@
 
 - `@tabora/ui` 只承载插件内容区基础组件，不承载 `WidgetCardShell`、`Modal`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid` 等宿主级容器。
 - 官方插件内容区优先复用 `@tabora/ui` 组件，不在各插件中重复实现按钮、输入、选择器、字段包装、错误状态等基础控件。
-- Storybook 中的组件示例、状态和组合模式应能追溯到 `docs/design/02-基础组件规范.html`。
+- Storybook 中的组件示例、状态和组合模式应能追溯到 `DESIGN.md`。
 
 ## 5. 设计变更时的同步清单
 
-### 5.1 改 `docs/design/01-设计体系规范.html`
+### 5.1 改 `DESIGN.md` 的视觉 token、形状、动效或响应式规则
 
 同时检查：
 
@@ -103,7 +99,7 @@
 - 宿主容器样式、全局 CSS 变量、主题切换逻辑。
 - `docs/product/tabora-official-plugins-design.md` 中的视觉摘要是否仍正确。
 
-### 5.2 改 `docs/design/02-基础组件规范.html`
+### 5.2 改 `DESIGN.md` 的组件语义或组件 catalog
 
 同时检查：
 
@@ -111,7 +107,7 @@
 - `apps/storybook/` 中的 stories、状态示例和可访问性说明。
 - 官方插件内容区是否仍有重复实现或违反组件语义的 UI。
 
-### 5.3 改 `docs/design/03-工作台交互原型.html`
+### 5.3 改 `DESIGN.md` 的交互模式或宿主容器规则
 
 同时检查：
 
@@ -119,6 +115,7 @@
 - 官方插件设计中的交互示例。
 - 技术方案 V2 中的 orchestrator、runtime context 和宿主渲染描述。
 - shell / playground 中的搜索、布局切换、设置、Toast、快捷键、展开、右键、拖拽实现。
+- `docs/design/03-工作台交互原型.html` 是否仍能作为当前交互参考。
 
 ## 6. 视觉验收速查
 
@@ -136,10 +133,12 @@
 
 - `docs/product/tabora-design-system-preview.html`
   这是 V2 之前的静态视觉预览，可帮助理解项目早期方向，但不再作为当前设计事实源。
-- 旧版“设计体系大文档”已由本桥接文档接管职责，避免与 `docs/design/*` 双写双维护。
+- `docs/design/03-工作台交互原型.html`、`docs/design/04-官网预览.html`、`docs/design/05-官网下载.html`
+  这些文件只作为可视原型或静态预览资产，不再作为当前设计事实源。
+- 旧版设计体系与组件规范大文档已由 `DESIGN.md` 接管职责，避免双写双维护。
 
 ## 8. 维护原则
 
-- 不要把 `docs/design/*` 的完整规范再拷贝回 Markdown 长文中。
+- 不要把 `DESIGN.md` 的完整规范再拷贝到其他文档中。
 - 需要重复时，只保留摘要、实现映射和同步动作。
 - 如果实现故意偏离原型或组件规范，必须同时更新 PRD / 官方插件设计 / 技术方案中的对应说明，并在变更说明中明确原因。

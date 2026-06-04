@@ -8,8 +8,7 @@
 
 关联文档：
 
-- V2 设计体系：`docs/design/01-设计体系规范.html`
-- V2 组件规范：`docs/design/02-基础组件规范.html`
+- V2 设计事实源：`DESIGN.md`
 - V2 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 
 ## 1. 现状诊断
@@ -530,7 +529,7 @@ import { TOKEN } from "../tokens"
 
 ### Phase 6: 文档更新（1 天）
 
-1. 更新 `docs/design/02-基础组件规范.html` 中的组件 API 文档
+1. 更新 `DESIGN.md` 中的组件 catalog 和组件语义
 2. 新增 Headless 组件使用指南
 
 ## 6. 风险与应对

@@ -63,17 +63,23 @@
 
 ### 设计事实源（V2）
 
-V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、组件文档和可交互产品原型。所有内容中文编写，零依赖纯静态 HTML。
+V2 设计体系基于 Refined Sage 色彩方案。根目录 `DESIGN.md` 是视觉语言、token、基础组件语义、宿主容器视觉、交互模式和可访问性规则的单一事实源。
 
-- `docs/design/01-设计体系规范.html` — 完整设计原则、三层 Token 架构、色彩/字体/间距/形状/动效/图标/响应式/可访问性规范
-- `docs/design/02-基础组件规范.html` — 52 个基础组件完整文档，含所有状态/变体/尺寸/Anatomy/Do-Don't + 7 个组合模式
-- `docs/design/03-工作台交互原型.html` — 双布局可交互产品原型，覆盖 PRD 全部验收项（仪表盘式 + 流式、布局切换、⌘K 搜索、拖拽排序、右键菜单、双击展开、设置侧栏导航、Toast 堆叠、快捷键参考）
+- `DESIGN.md` — 按 `google-labs-code/design.md` 规范生成的仓库级设计事实源，提供机器可读 token front matter 和面向 AI / 工程实现的设计规范。
 
 用途：
 
 - 作为当前设计实现的视觉事实源。
 - PRD 评审时验证产品口径完备性。
 - 实现 UI 时参照颜色、间距、组件 API 和交互模式。
+- 给 AI / agent 快速对齐设计语言。
+
+### 设计预览资产
+
+- `docs/design/03-工作台交互原型.html` — 双布局可交互产品原型，用于评审仪表盘式与流式布局、布局切换、⌘K 搜索、拖拽排序、右键菜单、双击展开、设置侧栏导航、Toast 堆叠和快捷键参考。
+- `docs/design/04-官网预览.html` 和 `docs/design/05-官网下载.html` — 官网方向静态设计预览，用于评审信息架构和视觉方向。
+
+这些 HTML 文件只作为可视原型或静态预览资产，不再承载规范事实。若预览资产与 `DESIGN.md` 冲突，以 `DESIGN.md` 为准，并同步修订预览或实现。
 
 ### 设计实现映射
 
@@ -81,13 +87,12 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 用途：
 
-- 作为 V2 设计事实源到当前仓库实现的桥接文档。
-- 说明 `@tabora/theme`、`@tabora/ui`、shell 宿主容器和 Storybook 应如何承接 `docs/design/*`。
+- 作为 `DESIGN.md` 到当前仓库实现的桥接文档。
+- 说明 `@tabora/theme`、`@tabora/ui`、shell 宿主容器和 Storybook 应如何承接设计规范。
 - 记录实现映射、同步清单和历史预览文件的定位，不再重复维护完整视觉规范正文。
 
 补充预览：
 
-- `docs/design/04-官网预览.html` 和 `docs/design/05-官网下载.html` 是官网方向的静态设计预览，用于评审信息架构和视觉语言，不作为产品或交互事实源。
 - `docs/product/tabora-design-system-preview.html` 是早期静态视觉预览，可作为历史参考，不再作为当前视觉事实源。
 
 ### 技术方案
@@ -165,7 +170,7 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 ## 历史规格和实施计划
 
-历史规格和阶段性实施计划已不再作为当前分支的文档入口。当前事实源以 `docs/product/`、`docs/technical/` 和 `docs/design/` 下登记的文档为准。
+历史规格和阶段性实施计划已不再作为当前分支的文档入口。当前事实源以 `DESIGN.md`、`docs/product/` 和 `docs/technical/` 下登记的文档为准。
 
 `docs/superpowers/specs/2026-05-29-tabora-execution-roadmap.md` 是当前分支登记的阶段执行规划入口，用于辅助后续 Superpowers 任务拆解；它不覆盖当前事实源。
 
@@ -210,9 +215,8 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 先读：
 
 - `docs/product/tabora-official-plugins-design.md`
-- `docs/design/01-设计体系规范.html`
-- `docs/design/02-基础组件规范.html`
-- `docs/design/03-工作台交互原型.html`
+- `DESIGN.md`
+- `docs/design/03-工作台交互原型.html`（仅用于查看可交互原型）
 - `docs/product/tabora-design-system.md` 的实现映射与同步清单。
 - `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 的官方插件方案。
 - `packages/official-plugins/src/`
@@ -226,9 +230,8 @@ V2 设计体系基于 Refined Sage 色彩方案，包含完整的设计规范、
 
 先读：
 
-- `docs/design/01-设计体系规范.html` — V2 设计规范（色彩 token、字体、间距、动效等）
-- `docs/design/02-基础组件规范.html` — V2 组件 API 和状态文档
-- `docs/design/03-工作台交互原型.html` — V2 可交互原型（搜索、拖拽、双击展开、右键菜单等交互模式）
+- `DESIGN.md` — V2 设计规范事实源（色彩 token、字体、间距、动效、组件语义、交互模式等）
+- `docs/design/03-工作台交互原型.html` — V2 可交互原型参考（搜索、拖拽、双击展开、右键菜单等交互模式）
 - `apps/storybook/` — `@tabora/ui` 基础组件的运行中示例与交互文档站，组件 API、状态和组合示例优先在这里对照
 - `docs/product/tabora-official-plugins-design.md` 的插件规格和交互示例。
 - `docs/product/tabora-design-system.md` 的实现映射与同步清单。
@@ -285,7 +288,7 @@ Storybook 使用约定：
 
 当前官网方向包含两层：
 
-- `docs/design/04-官网预览.html` 和 `docs/design/05-官网下载.html`：静态设计预览，用于评审布局、文案和视觉方向。
+- `docs/design/04-官网预览.html` 和 `docs/design/05-官网下载.html`：静态设计预览，用于评审布局、文案和视觉方向；若视觉规范与 `DESIGN.md` 冲突，以 `DESIGN.md` 为准。
 - `apps/site/`：按上述设计稿还原的 Vite + SolidJS + Tailwind CSS 官网应用，复用 `@tabora/ui` 和 `@tabora/theme`。
 
 常用命令：
@@ -317,7 +320,7 @@ pnpm --filter @tabora/site build
 
 - 产品范围变化：更新 PRD。
 - 官方插件行为变化：更新官方插件设计。
-- 视觉语言、token、基础组件、宿主容器视觉或可访问性规则变化：更新设计体系。
+- 视觉语言、token、基础组件、宿主容器视觉或可访问性规则变化：更新 `DESIGN.md`。
 - 包边界、数据流、运行时、权限、宿主渲染变化：更新技术方案。
 - agent 行为或验证要求变化：更新 `AGENTS.md`。
 - 文档结构变化：更新本文档。
@@ -336,14 +339,14 @@ pnpm --filter @tabora/site build
 这些口径已经在当前文档中确认：
 
 - MVP 包含轻量设置中心，但不做完整设置系统。
-- MVP 包含 `@tabora/ui` 基础组件包，并继续按 V2 组件规范扩展，用于统一插件内容区控件。
+- MVP 包含 `@tabora/ui` 基础组件包，并继续按 `DESIGN.md` 的组件语义扩展，用于统一插件内容区控件。
 - MVP 提供至少两种布局插件（仪表盘式和流式），且它们有显著不同的区域结构。
 - MVP 默认布局为仪表盘式（左侧轻 rail + 顶部命令搜索 + 主网格），用户可在设置中切换到流式布局。
 - 布局切换保留所有插件实例数据。区域不匹配的实例进入待放置状态。
 - 所有布局必须满足全局可达性约束：搜索、添加卡片、插件管理、设置在任意布局下可达。
-- 默认首屏按工作台交互原型样张优先露出命令搜索、今日重点、快捷入口、待办、便签和天气摘要。
+- 默认首屏按 `DESIGN.md` 的工作台规则和工作台原型参考样张优先露出命令搜索、今日重点、快捷入口、待办、便签和天气摘要。
 - MVP 使用主网格纵向滚动处理卡片过多，不强行塞进一屏。
-- 当前设计事实源为 `docs/design/01-设计体系规范.html`、`docs/design/02-基础组件规范.html` 和 `docs/design/03-工作台交互原型.html`。
+- 当前设计事实源为根目录 `DESIGN.md`。
 - `docs/product/tabora-design-system.md` 是面向仓库实现的桥接文档，`docs/product/tabora-design-system-preview.html` 仅作历史预览参考。
 - 官方插件也是生态示例，不能绕过平台协议。
 - 平台不硬编码具体业务能力。

@@ -4,14 +4,13 @@
 
 日期：2026-06-02
 
-状态：按 V2 设计规范与交互原型复核更新；产品方向已收敛为模块仪表盘型个人工作台
+状态：按 V2 设计规范与交互参考复核更新；产品方向已收敛为模块仪表盘型个人工作台
 
 关联文档：
 
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- 设计规范：`docs/design/01-设计体系规范.html`
-- 组件规范：`docs/design/02-基础组件规范.html`
-- 工作台原型：`docs/design/03-工作台交互原型.html`
+- 设计事实源：`DESIGN.md`
+- 工作台原型参考：`docs/design/03-工作台交互原型.html`
 - 设计实现映射：`docs/product/tabora-design-system.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 文档地图：`docs/README.md`
@@ -251,7 +250,7 @@ MVP 推荐官方插件：
 - `official.widgets.quick-links`：提供快捷入口卡片，验证外部打开和实例配置。
 - `official.widgets.notes`：提供便签卡片和弹窗展开，验证插件私有数据和宿主 modal。
 - `official.widgets.todo`：提供待办卡片，验证交互型 widget 和持久化。
-- `official.widgets.weather`：提供天气摘要卡片，按工作台交互原型进入默认工作台，同时保留可添加多实例能力。
+- `official.widgets.weather`：提供天气摘要卡片，按 `DESIGN.md` 和工作台原型参考进入默认工作台，同时保留可添加多实例能力。
 - `official.plugin-manager`：提供插件设置面板，MVP 展示插件状态、贡献能力和权限摘要，默认从设置中心进入，后续承载启用、禁用和版本管理。
 - `official.settings.workspace`：提供 MVP 轻量设置中心，聚合插件贡献的设置面板，并组织外观、搜索和基础工作区设置。
 
@@ -267,7 +266,7 @@ MVP 推荐官方插件：
 - 仪表盘式布局包含左侧轻导航 rail、顶部命令搜索区域和下方主网格区域。
 - 流式布局包含可折叠顶部工具条、⌘K 浮层搜索和双列卡片流。
 - 两种布局下，默认都包含基础 widget 实例：今日重点、快捷入口、便签和待办。
-- 默认首屏按 `docs/design/03-工作台交互原型.html` 的仪表盘样张优先露出命令搜索、今日重点、快捷入口、待办、便签和天气摘要；更多样张卡片可在主网格下方纵向滚动访问，不要求一屏完整显示所有卡片。
+- 默认首屏按 `DESIGN.md` 的工作台规则和 `docs/design/03-工作台交互原型.html` 的仪表盘参考样张优先露出命令搜索、今日重点、快捷入口、待办、便签和天气摘要；更多样张卡片可在主网格下方纵向滚动访问，不要求一屏完整显示所有卡片。
 - 插件状态默认从设置入口进入，不作为首屏大卡片。
 - 默认主题和背景来自插件 contribution。
 - 平台代码不硬编码具体业务功能——包括具体布局结构。

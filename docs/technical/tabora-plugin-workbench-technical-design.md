@@ -14,9 +14,8 @@
 
 - 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- 设计规范：`docs/design/01-设计体系规范.html`
-- 组件规范：`docs/design/02-基础组件规范.html`
-- 工作台原型：`docs/design/03-工作台交互原型.html`
+- 当前设计事实源：`DESIGN.md`
+- 工作台原型参考：`docs/design/03-工作台交互原型.html`
 - 设计实现映射：`docs/product/tabora-design-system.md`
 - 当前技术事实源：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 文档地图：`docs/README.md`
@@ -1094,7 +1093,7 @@ MVP 官方插件可以通过 manifest 默认授权最小权限，但记录模型
 职责：
 
 - 贡献天气摘要 widget。
-- 按工作台交互原型进入默认工作台，同时保留可添加多实例能力。
+- 按 `DESIGN.md` 和工作台交互原型参考进入默认工作台，同时保留可添加多实例能力。
 - 验证非核心信息卡片和后续 network provider 扩展路径。
 
 实现备注：
