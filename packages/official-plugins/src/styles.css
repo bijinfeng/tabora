@@ -342,7 +342,7 @@
 }
 
 .suggestions-label {
-  padding: 8px 14px 2px;
+  padding: 6px 14px 2px;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -355,7 +355,7 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 8px 14px;
+  padding: 6px 14px;
   border: none;
   background: none;
   font-family: inherit;
@@ -383,6 +383,8 @@
 
 .suggestion-text {
   flex: 1;
+  min-width: 0;
+  line-height: 1.35;
 }
 
 .suggestion-name {
@@ -429,7 +431,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  margin-top: auto;
+  margin-top: 12px;
   color: rgb(var(--color-muted));
   font-size: 11px;
   cursor: pointer;
@@ -539,6 +541,12 @@
 .todo-clear-btn:hover {
   background: rgba(var(--color-accent), 0.08);
   color: rgb(var(--color-accent));
+}
+
+.link-mini-btn svg,
+.todo-mini-btn svg,
+.todo-delete svg {
+  flex-shrink: 0;
 }
 
 .link-mini-btn:disabled {

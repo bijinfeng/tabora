@@ -186,6 +186,19 @@
 .card-actions {
   display: flex;
   gap: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.grid-item:hover .card-actions,
+.grid-item:focus-within .card-actions,
+.grid-item.dragging .card-actions {
+  opacity: 1;
+}
+/* Keep actions reachable on touch devices that lack hover. */
+@media (hover: none) {
+  .card-actions {
+    opacity: 1;
+  }
 }
 
 .card-action-btn {

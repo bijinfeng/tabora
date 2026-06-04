@@ -1,5 +1,6 @@
 import { createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { Check, Plus, X } from "lucide-solid"
 
 type TodoItem = { id: string; text: string; done: boolean }
 
@@ -123,7 +124,7 @@ export function TodoCard(props: WidgetViewProps) {
                         type="button"
                         onClick={() => void removeItem(item.id)}
                       >
-                        ×
+                        <X size={14} />
                       </button>
                     </>
                   }
@@ -142,7 +143,7 @@ export function TodoCard(props: WidgetViewProps) {
                       type="button"
                       onClick={() => void confirmEdit()}
                     >
-                      ✓
+                      <Check size={14} />
                     </button>
                     <button
                       class="todo-mini-btn"
@@ -150,7 +151,7 @@ export function TodoCard(props: WidgetViewProps) {
                       type="button"
                       onClick={cancelEdit}
                     >
-                      ×
+                      <X size={14} />
                     </button>
                   </div>
                 </Show>
@@ -175,7 +176,7 @@ export function TodoCard(props: WidgetViewProps) {
           type="button"
           onClick={() => void addItem()}
         >
-          +
+          <Plus size={16} />
         </button>
         <Show when={doneCount() > 0}>
           <button
