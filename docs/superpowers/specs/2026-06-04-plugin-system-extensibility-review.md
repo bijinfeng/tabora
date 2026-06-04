@@ -441,7 +441,7 @@ plugins/
 - CommandPalette、SettingsHost、WidgetCardShell 仍混合 UI 和业务/编排模型。
 - 样式入口已在 playground/extension 间对齐，但 `workbenchShellStyleModules` 仍只是静态清单常量，还没有形成单一自动化装配入口。
 - `workbench-app` / `host-adapters` 已建立，但 shared shell 逻辑仍有一部分停留在 app 层和 playground helper 中。
-- `plugins/` 目录未区分 official / community / examples，`packages/official-plugins` 同时承担 official pack 和 builtin registry 职责。
+- `plugins/` 已分层为 official / community / examples，`packages/official-plugins` 与 `packages/builtin-plugin-registry` 的职责也已分离；后续问题转为 shared helper 与样式装配自动化。
 - 历史文档和计划中仍残留旧路径，容易误导后续实现。
 - `RegionSlot` 构建只按 `regionId` 过滤实例，没有按 `region.accepts` 防御 extensionPoint 错配。
 - `isMobile` 传给 layout 时仍可能是固定值，响应式契约未完全接入。
@@ -485,6 +485,8 @@ plugins/
 
 ### Phase X1.5: 文件组织和包边界整理
 
+状态：已完成
+
 目标：在继续补协议前，把 monorepo 目录和 package 边界整理到能支撑第三方插件和多 shell 的形态。
 
 主要任务：
@@ -495,6 +497,15 @@ plugins/
 - 建立“禁止 app 互相 import”的约束，extension 不再通过 alias 指向 playground src。
 - 清理或归档历史文档中已不存在 / 已迁移的旧路径引用。
 - 更新 `AGENTS.md` 和文档地图中的工程结构说明。
+
+当前完成情况：
+
+- 已新增 `packages/builtin-plugin-registry`，由它表达 shell 默认 builtin plugins。
+- `@tabora/official-plugins` 已收缩为官方插件集合，不再混入 `community.layout.diy-masonry`。
+- playground / extension 的 workbench bootstrap 与 `kernel.discover` 已统一切到 `builtinPlugins`。
+- `plugins/` 已整理为 `plugins/official`、`plugins/community`、`plugins/examples`。
+- `pnpm-workspace.yaml` 和测试 glob 已兼容两级插件目录。
+- `AGENTS.md`、文档地图和技术设计已同步新结构。
 
 验收标准：
 

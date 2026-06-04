@@ -60,12 +60,19 @@ apps/
   playground/
     src/
       App.tsx
-      PluginViewBoundary.tsx
       bootstrap.tsx
-      workbenchGrid.ts
-      app.css
+      workbenchComposition.ts
+  extension/
+    entrypoints/
+      newtab/
+        App.tsx
+        main.tsx
+        workbenchComposition.ts
 
 packages/
+  builtin-plugin-registry/
+    src/
+      index.ts
   plugin-api/
     src/
       manifest.ts
@@ -97,16 +104,37 @@ packages/
   official-plugins/
     src/
       index.ts
-      layout-top-search-grid.tsx
       search-command-bar.tsx
       search-providers-basic.ts
       background-basic.ts
       theme-default-pack.ts
-      widgets-productivity.tsx
-      widget-todo.tsx
-      widget-weather.tsx
       plugin-manager.tsx
       plugin-manager-entry.ts
+      settings-workspace.tsx
+
+  workbench-app/
+    src/
+      bootstrap.ts
+      index.ts
+
+  host-adapters/
+    src/
+      extension.ts
+      web.ts
+      index.ts
+
+plugins/
+  official/
+    layout-dashboard/
+    layout-stream/
+    widget-notes/
+    widget-quick-links/
+    widget-today-focus/
+    widget-todo/
+    widget-weather/
+  community/
+    layout-diy-masonry/
+  examples/
 
   ui/
     src/
@@ -215,7 +243,7 @@ workspace / instance / pluginData 要分层。插件业务数据不要混入 wor
 
 ### `@tabora/official-plugins`
 
-官方默认体验来自这里。官方插件也必须遵守和第三方插件一样的协议：
+官方插件集合来自这里。它只表达“官方插件 pack”，不负责决定 shell 最终默认加载哪些 builtin plugins。官方插件也必须遵守和第三方插件一样的协议：
 
 - manifest 声明能力。
 - activate 阶段注册 view。
@@ -223,6 +251,14 @@ workspace / instance / pluginData 要分层。插件业务数据不要混入 wor
 - 外部能力通过 runtime context 和权限桥请求。
 - 插件数据通过 storage repository 保存。
 - 内容区 UI 优先使用 `@tabora/ui` 基础组件。
+
+### `@tabora/builtin-plugin-registry`
+
+当前 shell 默认 builtin 装配入口：
+
+- 聚合 `@tabora/official-plugins` 与当前需要一起验证的 community builtin 插件。
+- playground / extension / 未来 desktop shell 通过它拿默认 builtin plugin 列表。
+- 不承载插件运行时逻辑，不替代官方插件 pack。
 
 ### `apps/playground`
 

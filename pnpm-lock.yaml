@@ -116,9 +116,21 @@ importers:
       '@tabora/brand':
         specifier: workspace:*
         version: link:../../packages/brand
+      '@tabora/builtin-plugin-registry':
+        specifier: workspace:*
+        version: link:../../packages/builtin-plugin-registry
       '@tabora/host-adapters':
         specifier: workspace:*
         version: link:../../packages/host-adapters
+      '@tabora/layout-dashboard':
+        specifier: workspace:*
+        version: link:../../plugins/official/layout-dashboard
+      '@tabora/layout-diy-masonry':
+        specifier: workspace:*
+        version: link:../../plugins/community/layout-diy-masonry
+      '@tabora/layout-stream':
+        specifier: workspace:*
+        version: link:../../plugins/official/layout-stream
       '@tabora/official-plugins':
         specifier: workspace:*
         version: link:../../packages/official-plugins
@@ -183,18 +195,21 @@ importers:
       '@tabora/brand':
         specifier: workspace:*
         version: link:../../packages/brand
+      '@tabora/builtin-plugin-registry':
+        specifier: workspace:*
+        version: link:../../packages/builtin-plugin-registry
       '@tabora/host-adapters':
         specifier: workspace:*
         version: link:../../packages/host-adapters
       '@tabora/layout-dashboard':
         specifier: workspace:*
-        version: link:../../plugins/layout-dashboard
+        version: link:../../plugins/official/layout-dashboard
       '@tabora/layout-diy-masonry':
         specifier: workspace:*
-        version: link:../../plugins/layout-diy-masonry
+        version: link:../../plugins/community/layout-diy-masonry
       '@tabora/layout-stream':
         specifier: workspace:*
-        version: link:../../plugins/layout-stream
+        version: link:../../plugins/official/layout-stream
       '@tabora/official-plugins':
         specifier: workspace:*
         version: link:../../packages/official-plugins
@@ -317,6 +332,22 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
 
+  packages/builtin-plugin-registry:
+    dependencies:
+      '@tabora/layout-diy-masonry':
+        specifier: workspace:*
+        version: link:../../plugins/community/layout-diy-masonry
+      '@tabora/official-plugins':
+        specifier: workspace:*
+        version: link:../official-plugins
+      '@tabora/platform-kernel':
+        specifier: workspace:*
+        version: link:../platform-kernel
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+
   packages/host-adapters:
     dependencies:
       solid-js:
@@ -331,13 +362,10 @@ importers:
     dependencies:
       '@tabora/layout-dashboard':
         specifier: workspace:*
-        version: link:../../plugins/layout-dashboard
-      '@tabora/layout-diy-masonry':
-        specifier: workspace:*
-        version: link:../../plugins/layout-diy-masonry
+        version: link:../../plugins/official/layout-dashboard
       '@tabora/layout-stream':
         specifier: workspace:*
-        version: link:../../plugins/layout-stream
+        version: link:../../plugins/official/layout-stream
       '@tabora/orchestrator':
         specifier: workspace:*
         version: link:../orchestrator
@@ -349,19 +377,19 @@ importers:
         version: link:../plugin-api
       '@tabora/plugin-notes':
         specifier: workspace:*
-        version: link:../../plugins/widget-notes
+        version: link:../../plugins/official/widget-notes
       '@tabora/plugin-quick-links':
         specifier: workspace:*
-        version: link:../../plugins/widget-quick-links
+        version: link:../../plugins/official/widget-quick-links
       '@tabora/plugin-today-focus':
         specifier: workspace:*
-        version: link:../../plugins/widget-today-focus
+        version: link:../../plugins/official/widget-today-focus
       '@tabora/plugin-todo':
         specifier: workspace:*
-        version: link:../../plugins/widget-todo
+        version: link:../../plugins/official/widget-todo
       '@tabora/plugin-weather':
         specifier: workspace:*
-        version: link:../../plugins/widget-weather
+        version: link:../../plugins/official/widget-weather
       '@tabora/storage':
         specifier: workspace:*
         version: link:../storage
@@ -516,20 +544,42 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
 
-  plugins/layout-dashboard:
+  plugins/community/layout-diy-masonry:
+    dependencies:
+      '@tabora/platform-kernel':
+        specifier: workspace:*
+        version: link:../../../packages/platform-kernel
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-api
+      '@tabora/workbench-shell':
+        specifier: workspace:*
+        version: link:../../../packages/workbench-shell
+      lucide-solid:
+        specifier: catalog:ui
+        version: 1.16.0(solid-js@1.9.13)
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.13
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../../tooling/tsconfig
+
+  plugins/official/layout-dashboard:
     dependencies:
       '@tabora/brand':
         specifier: workspace:*
-        version: link:../../packages/brand
+        version: link:../../../packages/brand
       '@tabora/platform-kernel':
         specifier: workspace:*
-        version: link:../../packages/platform-kernel
+        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
-        version: link:../../packages/plugin-api
+        version: link:../../../packages/plugin-api
       '@tabora/workbench-shell':
         specifier: workspace:*
-        version: link:../../packages/workbench-shell
+        version: link:../../../packages/workbench-shell
       lucide-solid:
         specifier: catalog:ui
         version: 1.16.0(solid-js@1.9.13)
@@ -539,19 +589,19 @@ importers:
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
-        version: link:../../tooling/tsconfig
+        version: link:../../../tooling/tsconfig
 
-  plugins/layout-diy-masonry:
+  plugins/official/layout-stream:
     dependencies:
       '@tabora/platform-kernel':
         specifier: workspace:*
-        version: link:../../packages/platform-kernel
+        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
-        version: link:../../packages/plugin-api
+        version: link:../../../packages/plugin-api
       '@tabora/workbench-shell':
         specifier: workspace:*
-        version: link:../../packages/workbench-shell
+        version: link:../../../packages/workbench-shell
       lucide-solid:
         specifier: catalog:ui
         version: 1.16.0(solid-js@1.9.13)
@@ -561,19 +611,38 @@ importers:
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
-        version: link:../../tooling/tsconfig
+        version: link:../../../tooling/tsconfig
 
-  plugins/layout-stream:
+  plugins/official/widget-notes:
     dependencies:
       '@tabora/platform-kernel':
         specifier: workspace:*
-        version: link:../../packages/platform-kernel
+        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
-        version: link:../../packages/plugin-api
-      '@tabora/workbench-shell':
+        version: link:../../../packages/plugin-api
+      '@tabora/ui':
         specifier: workspace:*
-        version: link:../../packages/workbench-shell
+        version: link:../../../packages/ui
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.13
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../../tooling/tsconfig
+
+  plugins/official/widget-quick-links:
+    dependencies:
+      '@tabora/platform-kernel':
+        specifier: workspace:*
+        version: link:../../../packages/platform-kernel
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-api
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../../../packages/ui
       lucide-solid:
         specifier: catalog:ui
         version: 1.16.0(solid-js@1.9.13)
@@ -583,38 +652,38 @@ importers:
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
-        version: link:../../tooling/tsconfig
+        version: link:../../../tooling/tsconfig
 
-  plugins/widget-notes:
+  plugins/official/widget-today-focus:
     dependencies:
       '@tabora/platform-kernel':
         specifier: workspace:*
-        version: link:../../packages/platform-kernel
+        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
-        version: link:../../packages/plugin-api
+        version: link:../../../packages/plugin-api
       '@tabora/ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../../../packages/ui
       solid-js:
         specifier: catalog:ui
         version: 1.9.13
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
-        version: link:../../tooling/tsconfig
+        version: link:../../../tooling/tsconfig
 
-  plugins/widget-quick-links:
+  plugins/official/widget-todo:
     dependencies:
       '@tabora/platform-kernel':
         specifier: workspace:*
-        version: link:../../packages/platform-kernel
+        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
-        version: link:../../packages/plugin-api
+        version: link:../../../packages/plugin-api
       '@tabora/ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../../../packages/ui
       lucide-solid:
         specifier: catalog:ui
         version: 1.16.0(solid-js@1.9.13)
@@ -624,67 +693,26 @@ importers:
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
-        version: link:../../tooling/tsconfig
+        version: link:../../../tooling/tsconfig
 
-  plugins/widget-today-focus:
+  plugins/official/widget-weather:
     dependencies:
       '@tabora/platform-kernel':
         specifier: workspace:*
-        version: link:../../packages/platform-kernel
+        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
-        version: link:../../packages/plugin-api
+        version: link:../../../packages/plugin-api
       '@tabora/ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../../../packages/ui
       solid-js:
         specifier: catalog:ui
         version: 1.9.13
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/widget-todo:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      '@tabora/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      lucide-solid:
-        specifier: catalog:ui
-        version: 1.16.0(solid-js@1.9.13)
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-
-  plugins/widget-weather:
-    dependencies:
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      '@tabora/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
+        version: link:../../../tooling/tsconfig
 
   tooling/tsconfig: {}
 

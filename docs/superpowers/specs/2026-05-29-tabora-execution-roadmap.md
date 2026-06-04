@@ -390,7 +390,7 @@ Phase A-H 已全部实施。当前 MVP 基线已达到：
 
 最终目标是开放第三方插件生态。当前 `official-plugins` 把多个插件挤在一个 package 里，虽然每个在协议层都已是合格 `BuiltinPlugin`（独立 manifest + activate + contributes），但缺少独立 package 才能提供的"依赖隔离硬证据"，也无法作为第三方开发样板。
 
-布局插件已在"布局插件化重构"中先行拆出（`plugins/layout-*`），因为它当时被 shell 硬编码阻断，拆包同时完成解锁与验证。其余 6 个插件的拆包按以下优先级分批进行，作为开放第三方生态前必须偿还的债务：
+布局插件已在"布局插件化重构"中先行拆出，并在 Phase X1.5 中进一步整理到 `plugins/official/layout-*` 与 `plugins/community/layout-diy-masonry`。其余 6 个插件的拆包按以下优先级分批进行，作为开放第三方生态前必须偿还的债务：
 
 **优先级 1 — 纯数据三件套（最高性价比，第三方样板价值最大）**
 

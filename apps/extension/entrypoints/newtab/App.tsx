@@ -18,7 +18,7 @@ import type {
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
-import { officialPlugins } from "@tabora/official-plugins"
+import { builtinPlugins } from "@tabora/builtin-plugin-registry"
 import { createLayoutEngine, type InstanceRenderer } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 import {
@@ -345,7 +345,7 @@ export function App() {
     }
   }
 
-  void kernel.discover(officialPlugins).then(async () => {
+  void kernel.discover(builtinPlugins).then(async () => {
     await kernel.activateEnabledPlugins()
 
     const session = await ensureWorkspaceSession({

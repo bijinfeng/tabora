@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@tabora/brand": "workspace:*",
+    "@tabora/builtin-plugin-registry": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
     "@tabora/layout-dashboard": "workspace:*",
     "@tabora/layout-diy-masonry": "workspace:*",

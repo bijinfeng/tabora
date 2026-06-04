@@ -1,0 +1,226 @@
+.layout-dashboard {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  min-height: 100vh;
+  background: rgb(var(--color-page));
+  color: rgb(var(--color-text));
+}
+
+.dash-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: rgb(var(--color-surface));
+  border-right: 1px solid rgb(var(--color-line));
+}
+
+.dash-rail-logo {
+  width: 36px;
+  height: 36px;
+  display: block;
+  color: rgb(var(--color-accent));
+  margin-bottom: 8px;
+}
+
+.dash-rail-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.dash-rail-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dash-rail-btn:hover,
+.dash-rail-btn.active {
+  background: rgb(var(--color-accent-soft, 234 245 240));
+  border-color: rgb(var(--color-accent));
+  color: rgb(var(--color-accent));
+}
+
+.dash-rail-btn:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
+}
+
+.dash-rail-spacer {
+  flex: 1;
+}
+
+.dash-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 32px;
+}
+
+.dash-topbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dash-greeting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dash-greeting-title {
+  color: rgb(var(--color-text));
+}
+
+.dash-greeting-muted {
+  color: rgb(var(--color-muted));
+  font-weight: 400;
+}
+
+.dash-greeting-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.74;
+  transition: opacity 120ms ease;
+}
+
+.dash-greeting:hover .dash-greeting-actions,
+.dash-greeting:focus-within .dash-greeting-actions {
+  opacity: 1;
+}
+
+.dash-search-stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 2px 0 4px;
+}
+
+.dash-search-stage > * {
+  width: min(100%, 720px);
+  max-width: 720px;
+}
+
+.dash-toolbar-btn,
+.tb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 550;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.dash-toolbar-btn svg,
+.tb-btn svg {
+  flex-shrink: 0;
+}
+
+.dash-toolbar-btn:hover,
+.tb-btn:hover {
+  background: rgb(var(--color-surface-hover, 242 244 240));
+  color: rgb(var(--color-text));
+}
+
+.layout-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 7px;
+  background: rgb(var(--color-surface-soft, 250 250 248));
+}
+
+.layout-switch .tb-btn {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 5px;
+}
+
+.dash-grid {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .layout-dashboard {
+    display: block;
+  }
+
+  .dash-rail {
+    position: fixed;
+    z-index: 100;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 50px;
+    padding: 6px 12px;
+    border-top: 1px solid rgb(var(--color-line));
+    border-right: none;
+  }
+
+  .dash-rail-logo,
+  .dash-rail-spacer {
+    display: none;
+  }
+
+  .dash-content {
+    padding: 16px 16px 66px;
+  }
+
+  .dash-greeting {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .dash-greeting-muted {
+    display: inline;
+  }
+
+  .dash-greeting-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    opacity: 1;
+  }
+}

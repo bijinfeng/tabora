@@ -1,0 +1,28 @@
+{
+  "name": "@tabora/builtin-plugin-registry",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "vp pack src/index.ts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@tabora/layout-diy-masonry": "workspace:*",
+    "@tabora/official-plugins": "workspace:*",
+    "@tabora/platform-kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*"
+  }
+}

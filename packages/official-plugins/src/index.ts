@@ -1,7 +1,6 @@
 import { officialBackgroundBasic } from "./background-basic"
 import { layoutDashboard } from "@tabora/layout-dashboard"
 import { layoutStream } from "@tabora/layout-stream"
-import { layoutDiyMasonry } from "@tabora/layout-diy-masonry"
 import { officialPluginManager } from "./plugin-manager-entry"
 import { officialSearchCommandBar } from "./search-command-bar"
 import { officialSettingsWorkspace } from "./settings-workspace"
@@ -17,7 +16,6 @@ export {
   officialBackgroundBasic,
   layoutDashboard,
   layoutStream,
-  layoutDiyMasonry,
   officialPluginManager,
   officialPluginNotes,
   officialPluginQuickLinks,
@@ -37,7 +35,6 @@ export const officialPlugins = [
   officialBackgroundBasic,
   layoutDashboard,
   layoutStream,
-  layoutDiyMasonry,
   officialSearchCommandBar,
   officialSearchProvidersBasic,
   officialPluginWeather,
