@@ -10,7 +10,7 @@
 
 **关联文档：**
 
-- Spec：`docs/superpowers/specs/2026-05-28-tabora-ui-base-components-design.md`
+- 历史 Spec：`docs/superpowers/specs/2026-05-28-tabora-ui-base-components-design.md`（已清理；当前 `@tabora/ui` 事实源以 `DESIGN.md`、`docs/product/tabora-design-system.md` 和实际实现为准）
 - 项目入口：`AGENTS.md`、`docs/README.md`
 - 设计体系：`docs/product/tabora-design-system.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
