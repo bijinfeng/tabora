@@ -14,7 +14,6 @@
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 文档地图：`docs/README.md`
-- 历史预览：`docs/product/tabora-design-system-preview.html`
 
 ## 1. 文档职责
 
@@ -40,7 +39,7 @@
 3. `docs/design/03-工作台交互原型.html`、`docs/design/04-官网预览.html`、`docs/design/05-官网下载.html`
    只作为可视原型或静态预览参考。
 
-如果本文件或预览资产与 `DESIGN.md` 冲突，以 `DESIGN.md` 为准，并应立即回写对应文档或预览。
+如果本文件或可视原型资产与 `DESIGN.md` 冲突，以 `DESIGN.md` 为准，并应立即回写对应文档或原型。
 
 ## 3. 设计到实现映射
 
@@ -131,8 +130,6 @@
 
 ## 7. 历史文件定位
 
-- `docs/product/tabora-design-system-preview.html`
-  这是 V2 之前的静态视觉预览，可帮助理解项目早期方向，但不再作为当前设计事实源。
 - `docs/design/03-工作台交互原型.html`、`docs/design/04-官网预览.html`、`docs/design/05-官网下载.html`
   这些文件只作为可视原型或静态预览资产，不再作为当前设计事实源。
 - 旧版设计体系与组件规范大文档已由 `DESIGN.md` 接管职责，避免双写双维护。

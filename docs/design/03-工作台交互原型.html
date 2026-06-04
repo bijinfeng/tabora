@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tabora V2 · 双布局工作台原型 — PRD 评审版</title>
+    <title>Tabora V2 · 插件化工作台优化原型</title>
     <style>
       :root {
         --wb-page: #f6f7f4;
@@ -18,9 +18,18 @@
         --wb-accent: #1a9070;
         --wb-accent-hover: #15785c;
         --wb-accent-soft: #eaf5f0;
+        --wb-on-accent: #ffffff;
         --wb-danger: #c94545;
         --wb-danger-soft: #fef0f0;
+        --wb-danger-line: color-mix(in srgb, var(--wb-danger) 30%, var(--wb-line));
         --wb-success: #2d8a5e;
+        --wb-success-soft: color-mix(in srgb, var(--wb-success) 12%, transparent);
+        --wb-overlay: rgba(0, 0, 0, 0.2);
+        --wb-overlay-strong: rgba(0, 0, 0, 0.3);
+        --wb-shadow-soft: rgba(28, 30, 28, 0.08);
+        --wb-shadow-raised: rgba(0, 0, 0, 0.12);
+        --wb-shadow-floating: rgba(0, 0, 0, 0.15);
+        --wb-focus-ring: rgba(26, 144, 112, 0.18);
         --wb-radius: 8px;
         --wb-radius-lg: 12px;
         --wb-dur: 180ms;
@@ -39,9 +48,18 @@
         --wb-accent: #34d19e;
         --wb-accent-hover: #5ce0b6;
         --wb-accent-soft: #1a2e26;
+        --wb-on-accent: #10201a;
         --wb-danger: #ef8b8b;
         --wb-danger-soft: #2a1e1e;
+        --wb-danger-line: color-mix(in srgb, var(--wb-danger) 34%, var(--wb-line));
         --wb-success: #4fc49a;
+        --wb-success-soft: color-mix(in srgb, var(--wb-success) 14%, transparent);
+        --wb-overlay: rgba(0, 0, 0, 0.34);
+        --wb-overlay-strong: rgba(0, 0, 0, 0.46);
+        --wb-shadow-soft: rgba(0, 0, 0, 0.18);
+        --wb-shadow-raised: rgba(0, 0, 0, 0.28);
+        --wb-shadow-floating: rgba(0, 0, 0, 0.36);
+        --wb-focus-ring: rgba(52, 209, 158, 0.22);
       }
       * {
         box-sizing: border-box;
@@ -162,7 +180,7 @@
         height: 36px;
         border-radius: 10px;
         background: var(--wb-accent);
-        color: #fff;
+        color: var(--wb-on-accent);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -254,9 +272,20 @@
         background: var(--wb-surface-soft);
         color: var(--wb-text);
       }
+      .search-command-band {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin: 2px 0 4px;
+      }
       .search-stage {
         position: relative;
-        max-width: 880px;
+        width: 100%;
+        max-width: none;
+      }
+      .search-command-band > .search-stage {
+        width: min(100%, 720px);
+        max-width: 720px;
       }
       .search-stage.stream-stage {
         max-width: 480px;
@@ -276,8 +305,8 @@
         color: var(--wb-text-muted);
         font-size: 13px;
         box-shadow:
-          0 2px 8px rgba(28, 30, 28, 0.035),
-          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          0 2px 8px color-mix(in srgb, var(--wb-shadow-soft) 46%, transparent),
+          inset 0 1px 0 color-mix(in srgb, var(--wb-surface) 72%, transparent);
         transition:
           border-color 120ms ease,
           box-shadow 120ms ease,
@@ -291,8 +320,8 @@
         border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
         box-shadow:
           0 0 0 3px color-mix(in srgb, var(--wb-accent-soft) 72%, transparent),
-          0 12px 32px rgba(26, 144, 112, 0.08),
-          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          0 12px 32px color-mix(in srgb, var(--wb-accent) 10%, transparent),
+          inset 0 1px 0 color-mix(in srgb, var(--wb-surface) 72%, transparent);
       }
       .search-bar input {
         flex: 1;
@@ -346,7 +375,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 20px var(--wb-shadow-soft);
         max-height: 300px;
         overflow-y: auto;
         opacity: 0;
@@ -454,7 +483,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 16px var(--wb-shadow-soft);
         z-index: 20;
         overflow: hidden;
         opacity: 0;
@@ -505,44 +534,12 @@
         opacity: 0.58;
       }
       .stream-search-bar {
-        width: 440px;
+        width: min(440px, 100%);
         margin: 0 auto;
         cursor: text;
       }
 
-      /* Size picker on card */
-      .size-picker {
-        display: inline-flex;
-        gap: 2px;
-        margin-right: 4px;
-      }
-      .size-picker .size-btn {
-        width: 22px;
-        height: 22px;
-        border-radius: 4px;
-        border: 1px solid var(--wb-line);
-        background: var(--wb-surface-soft);
-        font-size: 9px;
-        font-weight: 700;
-        font-family: inherit;
-        color: var(--wb-text-muted);
-        cursor: pointer;
-        transition: all 120ms ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .size-picker .size-btn:hover {
-        background: var(--wb-surface-hover);
-        border-color: var(--wb-line-strong);
-      }
-      .size-picker .size-btn.active {
-        background: var(--wb-accent-soft);
-        border-color: var(--wb-accent);
-        color: var(--wb-accent);
-      }
-
-      /* Extension Point debug panel */
+      /* Extension point status styles */
       .ext-panel {
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
@@ -554,7 +551,7 @@
         z-index: 300;
         max-width: 360px;
         font-size: 11px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 16px var(--wb-shadow-soft);
       }
       .ext-panel-title {
         font-size: 11px;
@@ -619,19 +616,27 @@
       }
       .bg-item.active {
         border-color: var(--wb-accent);
-        box-shadow: 0 0 0 2px rgba(26, 144, 112, 0.15);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--wb-accent) 18%, transparent);
       }
       .bg-item.solid1 {
-        background: linear-gradient(135deg, #e8ecf0, #dce4e8);
+        background: linear-gradient(135deg, var(--wb-surface), var(--wb-page));
       }
       .bg-item.solid2 {
-        background: linear-gradient(135deg, #e8ede6, #dce3da);
+        background: linear-gradient(135deg, var(--wb-accent-soft), var(--wb-page));
       }
       .bg-item.gradient1 {
-        background: linear-gradient(135deg, #f0e6d3, #e8dcc8);
+        background: linear-gradient(
+          135deg,
+          var(--wb-surface-soft),
+          color-mix(in srgb, var(--wb-accent-soft) 56%, var(--wb-page))
+        );
       }
       .bg-item.gradient2 {
-        background: linear-gradient(135deg, #dce8f0, #d0dce8);
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--wb-accent) 10%, var(--wb-surface)),
+          var(--wb-page)
+        );
       }
       .bg-item.image {
         background: var(--wb-surface-soft);
@@ -649,7 +654,7 @@
       }
       .widget-card.dragging {
         opacity: 0.92;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 12px 40px var(--wb-shadow-floating);
         transform: scale(1.03);
         z-index: 50;
         border-color: var(--wb-accent);
@@ -665,7 +670,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 4px 20px var(--wb-shadow-raised);
         min-width: 160px;
         opacity: 0;
         pointer-events: none;
@@ -716,7 +721,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--wb-overlay-strong);
         opacity: 0;
         pointer-events: none;
         transition: opacity 180ms ease;
@@ -730,7 +735,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius-lg);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 32px var(--wb-shadow-raised);
         width: 480px;
         max-width: 90vw;
         max-height: 70vh;
@@ -783,7 +788,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(0, 0, 0, 0.15);
+        background: color-mix(in srgb, var(--wb-overlay) 78%, transparent);
         opacity: 0;
         pointer-events: none;
         transition: opacity 250ms ease;
@@ -797,7 +802,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius-lg);
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 16px 48px var(--wb-shadow-floating);
         width: 560px;
         max-width: 90vw;
         max-height: 80vh;
@@ -1097,7 +1102,7 @@
       .cmd-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--wb-overlay);
         z-index: 300;
         display: flex;
         align-items: flex-start;
@@ -1116,7 +1121,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius-lg);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 32px var(--wb-shadow-raised);
         width: 520px;
         max-width: 90vw;
         overflow: hidden;
@@ -1177,6 +1182,12 @@
         font-size: 12px;
         flex-shrink: 0;
       }
+      .cmd-item-icon svg,
+      .add-item-icon svg,
+      .stream-toolbar-icon svg {
+        width: 14px;
+        height: 14px;
+      }
       .cmd-item-text {
         flex: 1;
       }
@@ -1218,13 +1229,13 @@
         grid-column: 1 / -1;
       }
       .widget-card.error {
-        border-color: rgba(201, 69, 69, 0.3);
+        border-color: var(--wb-danger-line);
       }
       .widget-card.error .card-title-text {
         color: var(--wb-danger);
       }
       .widget-card.simulated-error {
-        border-color: rgba(201, 69, 69, 0.3);
+        border-color: var(--wb-danger-line);
         opacity: 0.8;
       }
       .card-header {
@@ -1243,7 +1254,7 @@
       .card-title svg {
         width: 14px;
         height: 14px;
-        color: var(--wb-accent);
+        color: var(--wb-text-subtle);
         flex-shrink: 0;
       }
       .card-body {
@@ -1253,6 +1264,7 @@
       .card-actions {
         display: flex;
         gap: 2px;
+        align-items: center;
       }
       .card-action {
         width: 26px;
@@ -1338,8 +1350,9 @@
         justify-content: center;
         font-size: 10px;
         font-weight: 700;
-        background: var(--wb-accent-soft);
-        color: var(--wb-accent);
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        border: 1px solid var(--wb-line);
       }
       .link-label {
         font-size: 10px;
@@ -1408,7 +1421,8 @@
         content: "";
         width: 3px;
         height: 7px;
-        border: solid #fff;
+        border: solid var(--wb-on-accent);
+        border-color: var(--wb-on-accent);
         border-width: 0 1.5px 1.5px 0;
         transform: rotate(45deg) translateY(-1px);
       }
@@ -1557,7 +1571,7 @@
       .overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--wb-overlay);
         z-index: 400;
         display: flex;
         align-items: center;
@@ -1575,7 +1589,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius-lg);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 32px var(--wb-shadow-raised);
         width: 480px;
         max-width: 90vw;
         max-height: 80vh;
@@ -1645,7 +1659,7 @@
       .settings-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--wb-overlay);
         z-index: 400;
         display: flex;
         justify-content: flex-end;
@@ -1669,6 +1683,12 @@
         transition: transform var(--wb-dur) var(--wb-ease);
         display: flex;
         flex-direction: column;
+      }
+      .settings-shell {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        width: min(680px, 100vw);
+        max-width: 92vw;
       }
       .settings-overlay.open .settings-panel {
         transform: translateX(0);
@@ -1843,7 +1863,7 @@
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
         border-radius: var(--wb-radius);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 16px var(--wb-shadow-soft);
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -1880,11 +1900,11 @@
       .btn:focus-visible {
         outline: 2px solid var(--wb-accent);
         outline-offset: 2px;
-        box-shadow: 0 0 0 4px rgba(26, 144, 112, 0.18);
+        box-shadow: 0 0 0 4px var(--wb-focus-ring);
       }
       .btn-primary {
         background: var(--wb-accent);
-        color: #fff;
+        color: var(--wb-on-accent);
         border-color: var(--wb-accent);
       }
       .btn-primary:hover {
@@ -1904,7 +1924,7 @@
         color: var(--wb-accent);
       }
       .btn-subtle:hover {
-        background: #d8f0e8;
+        background: color-mix(in srgb, var(--wb-accent-soft) 72%, var(--wb-surface));
       }
       .btn-ghost {
         background: transparent;
@@ -1921,15 +1941,18 @@
       }
       .btn-danger {
         background: var(--wb-danger);
-        color: #fff;
+        color: var(--wb-on-accent);
         border-color: var(--wb-danger);
       }
       .btn-danger:hover {
-        background: #b33a3a;
+        background: color-mix(in srgb, var(--wb-danger) 88%, var(--wb-text));
       }
 
       /* Responsive */
       @media (max-width: 1100px) {
+        .search-command-band > .search-stage {
+          max-width: 720px;
+        }
         .card-grid {
           grid-template-columns: repeat(3, 1fr);
         }
@@ -1965,8 +1988,28 @@
           padding: 16px;
           padding-bottom: 66px;
         }
+        .dash-greeting {
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .dash-greeting-actions {
+          flex-wrap: wrap;
+          justify-content: flex-start;
+        }
+        .search-stage {
+          width: 100%;
+        }
+        .search-provider-label {
+          max-width: 80px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         .card-grid {
           grid-template-columns: repeat(2, 1fr);
+        }
+        .settings-shell {
+          grid-template-columns: 160px minmax(0, 1fr);
+          max-width: 100vw;
         }
         .stream-content {
           padding: 16px 16px 80px;
@@ -1986,6 +2029,22 @@
         .widget-card.row-2 {
           grid-column: span 1;
           grid-row: auto;
+        }
+        .search-kbd,
+        .search-scope-divider {
+          display: none;
+        }
+        .search-provider-btn {
+          max-width: 104px;
+        }
+        .settings-shell {
+          grid-template-columns: 1fr;
+        }
+        .settings-shell nav {
+          border-right: 0 !important;
+          border-bottom: 1px solid var(--wb-line);
+          max-height: 170px;
+          overflow-y: auto;
         }
       }
     </style>
@@ -2023,7 +2082,16 @@
               closeCmd()
             "
           >
-            <div class="cmd-item-icon">🎨</div>
+            <div class="cmd-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.4-3.4l-.2-.2a1.8 1.8 0 0 1 1.3-3.1H18a3 3 0 0 0 3-3A8.3 8.3 0 0 0 12 3Z"
+                />
+                <circle cx="7.5" cy="10" r="1" />
+                <circle cx="10.5" cy="7.5" r="1" />
+                <circle cx="14" cy="7.5" r="1" />
+              </svg>
+            </div>
             <div class="cmd-item-text">
               <div>切换主题</div>
               <div class="cmd-item-desc">明亮 ⇄ 暗色</div>
@@ -2065,7 +2133,14 @@
               closeCmd()
             "
           >
-            <div class="cmd-item-icon">⚙</div>
+            <div class="cmd-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7.1 4.3l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z"
+                />
+              </svg>
+            </div>
             <div class="cmd-item-text">
               <div>打开设置</div>
               <div class="cmd-item-desc">配置工作台</div>
@@ -2084,14 +2159,24 @@
         </div>
         <div class="modal-body">
           <div class="add-item" onclick="addWidget('focus')">
-            <div class="add-item-icon">🎯</div>
+            <div class="add-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="8" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </div>
             <div class="add-item-info">
               <div class="add-item-name">今日重点</div>
               <div class="add-item-desc">设定今天最重要的一件事</div>
             </div>
           </div>
           <div class="add-item" onclick="addWidget('links')">
-            <div class="add-item-icon">🔗</div>
+            <div class="add-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+                <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+              </svg>
+            </div>
             <div class="add-item-info">
               <div class="add-item-name">快捷入口</div>
               <div class="add-item-desc">常用网站一键触达</div>
@@ -2105,14 +2190,26 @@
             </div>
           </div>
           <div class="add-item" onclick="addWidget('notes')">
-            <div class="add-item-icon">📝</div>
+            <div class="add-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+                <path d="M14 2v6h6M8 13h8M8 17h5" />
+              </svg>
+            </div>
             <div class="add-item-info">
               <div class="add-item-name">便签</div>
               <div class="add-item-desc">快速记录灵感和想法</div>
             </div>
           </div>
           <div class="add-item" onclick="addWidget('weather')">
-            <div class="add-item-icon">☀</div>
+            <div class="add-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="4" />
+                <path
+                  d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                />
+              </svg>
+            </div>
             <div class="add-item-info">
               <div class="add-item-name">天气</div>
               <div class="add-item-desc">当前天气一目了然</div>
@@ -2131,11 +2228,7 @@
 
     <!-- ====== SETTINGS ====== -->
     <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings(event)">
-      <div
-        class="settings-panel"
-        onclick="event.stopPropagation()"
-        style="display: grid; grid-template-columns: 200px 1fr; width: 680px"
-      >
+      <div class="settings-panel settings-shell" onclick="event.stopPropagation()">
         <!-- Left Nav -->
         <nav
           style="
@@ -2299,7 +2392,7 @@
                       text-align: center;
                     "
                   >
-                    <div style="font-size: 20px; margin-bottom: 6px">☀</div>
+                    <div style="font-size: 20px; margin-bottom: 6px">明</div>
                     <div style="font-size: 12px; font-weight: 650">明亮 · Sage Light</div>
                     <div style="font-size: 10px; color: var(--wb-text-muted); margin-top: 2px">
                       浅色页面，白天使用
@@ -2319,7 +2412,7 @@
                       text-align: center;
                     "
                   >
-                    <div style="font-size: 20px; margin-bottom: 6px">☾</div>
+                    <div style="font-size: 20px; margin-bottom: 6px">暗</div>
                     <div style="font-size: 12px; font-weight: 650">暗色 · Sage Dark</div>
                     <div style="font-size: 10px; color: var(--wb-text-muted); margin-top: 2px">
                       深色页面，夜间使用
@@ -2376,14 +2469,17 @@
                     "
                   >
                     <div style="display: flex; align-items: center; gap: 10px">
-                      <span style="font-size: 16px">🔍</span>
+                      <span style="font-size: 12px; color: var(--wb-text-subtle)">搜索</span>
                       <div>
                         <div style="font-size: 13px; font-weight: 650">Google</div>
                         <div style="font-size: 11px; color: var(--wb-text-muted)">@google</div>
                       </div>
                     </div>
-                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
-                      >${searchProvider==='google'?'✓ 当前':''}</span
+                    <span
+                      class="provider-state"
+                      data-provider-state="google"
+                      style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                      >✓ 当前</span
                     >
                   </div>
                   <div
@@ -2400,15 +2496,17 @@
                     "
                   >
                     <div style="display: flex; align-items: center; gap: 10px">
-                      <span style="font-size: 16px">🔍</span>
+                      <span style="font-size: 12px; color: var(--wb-text-subtle)">搜索</span>
                       <div>
                         <div style="font-size: 13px; font-weight: 650">Bing</div>
                         <div style="font-size: 11px; color: var(--wb-text-muted)">@bing</div>
                       </div>
                     </div>
-                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
-                      >${searchProvider==='bing'?'✓ 当前':''}</span
-                    >
+                    <span
+                      class="provider-state"
+                      data-provider-state="bing"
+                      style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                    ></span>
                   </div>
                   <div
                     class="set-row"
@@ -2424,15 +2522,17 @@
                     "
                   >
                     <div style="display: flex; align-items: center; gap: 10px">
-                      <span style="font-size: 16px">🔍</span>
+                      <span style="font-size: 12px; color: var(--wb-text-subtle)">搜索</span>
                       <div>
                         <div style="font-size: 13px; font-weight: 650">DuckDuckGo</div>
                         <div style="font-size: 11px; color: var(--wb-text-muted)">@ddg</div>
                       </div>
                     </div>
-                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
-                      >${searchProvider==='ddg'?'✓ 当前':''}</span
-                    >
+                    <span
+                      class="provider-state"
+                      data-provider-state="ddg"
+                      style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                    ></span>
                   </div>
                   <div
                     class="set-row"
@@ -2448,15 +2548,17 @@
                     "
                   >
                     <div style="display: flex; align-items: center; gap: 10px">
-                      <span style="font-size: 16px">🔍</span>
+                      <span style="font-size: 12px; color: var(--wb-text-subtle)">搜索</span>
                       <div>
                         <div style="font-size: 13px; font-weight: 650">GitHub</div>
                         <div style="font-size: 11px; color: var(--wb-text-muted)">@github</div>
                       </div>
                     </div>
-                    <span style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
-                      >${searchProvider==='github'?'✓ 当前':''}</span
-                    >
+                    <span
+                      class="provider-state"
+                      data-provider-state="github"
+                      style="font-size: 12px; color: var(--wb-accent); font-weight: 600"
+                    ></span>
                   </div>
                 </div>
               </div>
@@ -2490,7 +2592,7 @@
                           font-size: 10px;
                           padding: 2px 6px;
                           border-radius: 10px;
-                          background: rgba(45, 138, 94, 0.12);
+                          background: var(--wb-success-soft);
                           color: var(--wb-success);
                         "
                         >layout · grid</span
@@ -2525,7 +2627,7 @@
                           font-size: 10px;
                           padding: 2px 6px;
                           border-radius: 10px;
-                          background: rgba(45, 138, 94, 0.12);
+                          background: var(--wb-success-soft);
                           color: var(--wb-success);
                         "
                         >layout · stream</span
@@ -2560,7 +2662,7 @@
                           font-size: 10px;
                           padding: 2px 6px;
                           border-radius: 10px;
-                          background: rgba(45, 138, 94, 0.12);
+                          background: var(--wb-success-soft);
                           color: var(--wb-success);
                         "
                         >search</span
@@ -2595,7 +2697,7 @@
                           font-size: 10px;
                           padding: 2px 6px;
                           border-radius: 10px;
-                          background: rgba(45, 138, 94, 0.12);
+                          background: var(--wb-success-soft);
                           color: var(--wb-success);
                         "
                         >widget ×5</span
@@ -2630,7 +2732,7 @@
                           font-size: 10px;
                           padding: 2px 6px;
                           border-radius: 10px;
-                          background: rgba(45, 138, 94, 0.12);
+                          background: var(--wb-success-soft);
                           color: var(--wb-success);
                         "
                         >theme ×2</span
@@ -2656,13 +2758,13 @@
                 <div style="font-size: 13px; color: var(--wb-text-muted); line-height: 1.6">
                   <strong>Tabora V2</strong> · Refined Sage<br />
                   插件优先的个人工作台新标签页<br /><br />
-                  设计体系：52 个基础组件 + 7 个组合模式<br />
+                  设计体系：基础组件目录 + 宿主容器语义 + 插件约束<br />
                   布局：Dashboard + Stream（2 种）<br />
                   扩展点：layout, widget, search, search-provider,<br />
                   background-provider, background-renderer, theme, settings-panel<br />
                   <br />
                   <span style="font-size: 11px; color: var(--wb-text-subtle)"
-                    >Version 0.1.0 · Built 2026-05-30</span
+                    >原型版本 · PRD V2.1 · 2026-06-02</span
                   >
                 </div>
               </div>
@@ -2677,7 +2779,7 @@
       <div class="expand-modal" onclick="event.stopPropagation()">
         <div class="expand-header">
           <div class="expand-title">
-            <div class="expand-title-icon" id="expandIcon">📋</div>
+            <div class="expand-title-icon" id="expandIcon">□</div>
             <span id="expandTitle">卡片详情</span>
           </div>
           <div class="expand-actions">
@@ -2697,10 +2799,15 @@
     <!-- Context menu -->
     <div class="ctx-menu" id="ctxMenu"></div>
 
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <span class="toast-icon">✓</span>
+      <span id="toastMsg">已更新</span>
+    </div>
+
     <!-- Shortcuts panel -->
     <div class="shortcuts-panel" id="shortcutsPanel" onclick="closeShortcuts(event)">
       <div class="shortcuts-card" onclick="event.stopPropagation()">
-        <h3>⌨ 快捷键参考</h3>
+        <h3>快捷键参考</h3>
         <div class="shortcut-row">
           <span>打开命令面板</span>
           <div class="shortcut-keys">
@@ -2782,6 +2889,17 @@
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </button>
+        <button
+          class="rail-btn"
+          aria-label="插件"
+          onclick="openSettings('plugins')"
+          title="插件管理（全局约束：所有布局必须可达）"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
+            <path d="M12 22v-6.5M22 8.5l-10 7-10-7" />
+          </svg>
+        </button>
         <div class="rail-spacer"></div>
         <button class="rail-btn" aria-label="切换主题" onclick="toggleTheme()" title="主题切换">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2844,52 +2962,58 @@
             </div>
           </div>
         </div>
-        <div class="search-stage">
-          <div class="search-bar" id="dashSearchWrap">
-            <div class="search-provider">
-              <button
-                class="search-provider-btn"
-                type="button"
-                onclick="toggleSearchProvider('dashSpDropdown', event)"
-                aria-label="切换搜索引擎"
-              >
-                <span class="search-provider-dot" aria-hidden="true"></span>
-                <span class="search-provider-label" id="dashSpLabel">Google</span>
-                <span class="search-provider-caret">▾</span>
-              </button>
-              <div class="search-provider-dropdown" id="dashSpDropdown">
-                <div
-                  class="sp-option active"
-                  data-provider-option="google"
-                  onclick="selectProvider('google')"
+        <div class="search-command-band">
+          <div class="search-stage">
+            <div class="search-bar" id="dashSearchWrap">
+              <div class="search-provider">
+                <button
+                  class="search-provider-btn"
+                  type="button"
+                  onclick="toggleSearchProvider('dashSpDropdown', event)"
+                  aria-label="切换搜索引擎"
                 >
-                  <span class="sp-check">✓</span><span>Google</span>
-                </div>
-                <div class="sp-option" data-provider-option="bing" onclick="selectProvider('bing')">
-                  <span class="sp-check"></span><span>Bing</span>
-                </div>
-                <div class="sp-option" data-provider-option="ddg" onclick="selectProvider('ddg')">
-                  <span class="sp-check"></span><span>DuckDuckGo</span>
-                </div>
-                <div
-                  class="sp-option"
-                  data-provider-option="github"
-                  onclick="selectProvider('github')"
-                >
-                  <span class="sp-check"></span><span>GitHub</span>
+                  <span class="search-provider-dot" aria-hidden="true"></span>
+                  <span class="search-provider-label" id="dashSpLabel">Google</span>
+                  <span class="search-provider-caret">▾</span>
+                </button>
+                <div class="search-provider-dropdown" id="dashSpDropdown">
+                  <div
+                    class="sp-option active"
+                    data-provider-option="google"
+                    onclick="selectProvider('google')"
+                  >
+                    <span class="sp-check">✓</span><span>Google</span>
+                  </div>
+                  <div
+                    class="sp-option"
+                    data-provider-option="bing"
+                    onclick="selectProvider('bing')"
+                  >
+                    <span class="sp-check"></span><span>Bing</span>
+                  </div>
+                  <div class="sp-option" data-provider-option="ddg" onclick="selectProvider('ddg')">
+                    <span class="sp-check"></span><span>DuckDuckGo</span>
+                  </div>
+                  <div
+                    class="sp-option"
+                    data-provider-option="github"
+                    onclick="selectProvider('github')"
+                  >
+                    <span class="sp-check"></span><span>GitHub</span>
+                  </div>
                 </div>
               </div>
+              <span class="search-scope-divider" aria-hidden="true"></span>
+              <input
+                type="text"
+                id="dashSearchInput"
+                placeholder="搜索网页、命令或卡片"
+                autocomplete="off"
+              />
+              <span class="search-kbd">⌘K</span>
             </div>
-            <span class="search-scope-divider" aria-hidden="true"></span>
-            <input
-              type="text"
-              id="dashSearchInput"
-              placeholder="搜索网页、命令或卡片"
-              autocomplete="off"
-            />
-            <span class="search-kbd">⌘K</span>
+            <div class="search-suggestions" id="dashSuggestions"></div>
           </div>
-          <div class="search-suggestions" id="dashSuggestions"></div>
         </div>
         <div class="card-grid" id="dashGrid"></div>
       </div>
@@ -2937,14 +3061,21 @@
               <button
                 class="tb-btn tb-btn-icon stream-toolbar-btn stream-toolbar-icon"
                 onclick="toggleTheme()"
+                aria-label="切换主题"
               >
-                ☀
+                明
               </button>
               <button
                 class="tb-btn tb-btn-icon stream-toolbar-btn stream-toolbar-icon"
                 onclick="openSettings()"
+                aria-label="打开设置"
               >
-                ⚙
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7.1 4.3l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z"
+                  />
+                </svg>
               </button>
             </div>
           </div>
@@ -2952,7 +3083,7 @@
       </div>
       <div class="stream-content">
         <div class="stream-hero">
-          <div class="stream-hero-greeting">下午好 ☀</div>
+          <div class="stream-hero-greeting">下午好</div>
           <div class="stream-hero-date">5月30日 星期六 · 北京</div>
           <div style="margin-top: 16px">
             <div class="search-stage stream-stage">
@@ -3035,6 +3166,7 @@
       let errorMode = false
       let searchProvider = "google"
       let background = "solid1"
+      let expandedWidgetId = null
 
       // Widget instances (multi-instance support)
       // Each instance: { id, type, size, label }
@@ -3044,13 +3176,14 @@
         { id: "todo-1", type: "todo", size: "S", label: "待办" },
         { id: "notes-1", type: "notes", size: "L", label: "便签" },
         { id: "weather-1", type: "weather", size: "S", label: "天气" },
+        { id: "plugins-1", type: "plugins", size: "S", label: "插件状态" },
       ]
       let instanceCounter = { focus: 1, links: 1, todo: 1, notes: 1, weather: 1, plugins: 1 }
 
       let todos = [
-        { text: "完成 V2 设计 Token 定稿", done: true },
-        { text: "更新 @tabora/theme 包", done: false },
-        { text: "迁移官方插件到新 UI", done: false },
+        { text: "复核 Dashboard / Stream 布局协议", done: true },
+        { text: "补齐 widget 尺寸菜单与展开态", done: false },
+        { text: "清理插件设置中的导入导出后置项", done: false },
       ]
       let links = [
         { name: "GitHub", icon: "Gh" },
@@ -3059,8 +3192,8 @@
         { name: "Figma", icon: "Fg" },
         { name: "YouTube", icon: "Yt" },
       ]
-      let notesText = ""
-      let focusText = ""
+      let notesText = "MVP 重点：布局本身也是插件。平台只提供运行时、权限桥、持久化与安全回退。"
+      let focusText = "把默认新标签页做成可组合的个人工作入口"
 
       const supportedSizes = {
         focus: ["S", "M", "L"],
@@ -3117,6 +3250,168 @@
         switchLayout(l)
       }
 
+      // ====== OVERLAYS & SETTINGS ======
+      const settingsTitles = {
+        general: "通用",
+        appearance: "外观",
+        search: "搜索",
+        plugins: "已安装插件",
+        about: "关于",
+      }
+      const commandItems = [
+        {
+          label: "切换主题",
+          desc: "明亮 / 暗色 token",
+          hint: "⌘T",
+          icon: "明",
+          run: () => toggleTheme(),
+        },
+        {
+          label: "切换布局",
+          desc: "Dashboard / Stream",
+          hint: "⌘L",
+          icon: "⇄",
+          run: () => switchLayout(layout === "dashboard" ? "stream" : "dashboard"),
+        },
+        {
+          label: "添加卡片",
+          desc: "从官方 widget 列表创建实例",
+          hint: "⌘N",
+          icon: "+",
+          run: () => openAddWidget(),
+        },
+        {
+          label: "插件管理",
+          desc: "查看插件贡献、版本和状态",
+          hint: "⌘,",
+          icon: "◈",
+          run: () => openSettings("plugins"),
+        },
+        {
+          label: "搜索设置",
+          desc: "调整默认搜索源",
+          hint: "@",
+          icon: "搜",
+          run: () => openSettings("search"),
+        },
+      ]
+      const quickSuggestions = [
+        { id: "github", title: "@github tabora runtime", desc: "用 GitHub 搜索插件运行时相关内容" },
+        { id: "add-note", title: "添加便签卡片", desc: "创建一个新的 notes widget 实例" },
+        { id: "settings", title: "打开插件管理", desc: "查看 layout / widget / theme 贡献" },
+        { id: "theme", title: "切换到暗色主题", desc: "验证 Sage Dark token" },
+      ]
+
+      function openCmd() {
+        const overlay = document.getElementById("cmdOverlay")
+        overlay.classList.add("open")
+        renderCommandResults()
+        requestAnimationFrame(() => document.getElementById("cmdInput").focus())
+      }
+      function closeCmd(e) {
+        if (e && e.target !== document.getElementById("cmdOverlay")) return
+        document.getElementById("cmdOverlay").classList.remove("open")
+        document.getElementById("cmdInput").value = ""
+      }
+      function renderCommandResults(query = "") {
+        const q = query.trim().toLowerCase()
+        const rows = commandItems
+          .map((item, index) => ({ item, index }))
+          .filter(({ item }) => !q || `${item.label} ${item.desc}`.toLowerCase().includes(q))
+        document.getElementById("cmdResults").innerHTML =
+          `<div class="cmd-group-label">常用命令</div>` +
+          (rows.length
+            ? rows
+                .map(
+                  ({ item, index }) => `
+          <div class="cmd-item" onclick="runCommand(${index})">
+            <div class="cmd-item-icon">${item.icon}</div>
+            <div class="cmd-item-text">
+              <div>${item.label}</div>
+              <div class="cmd-item-desc">${item.desc}</div>
+            </div>
+            <span class="suggest-item-hint">${item.hint}</span>
+          </div>`,
+                )
+                .join("")
+            : `<div class="cmd-item"><div class="cmd-item-text"><div>没有匹配命令</div><div class="cmd-item-desc">试试“插件”“布局”或“主题”</div></div></div>`)
+      }
+      function runCommand(index) {
+        const item = commandItems[index]
+        if (!item) return
+        closeCmd()
+        item.run()
+      }
+      function openAddWidget() {
+        document.getElementById("addWidgetOverlay").classList.add("open")
+      }
+      function closeAddWidget(e) {
+        if (e && e.target !== document.getElementById("addWidgetOverlay")) return
+        document.getElementById("addWidgetOverlay").classList.remove("open")
+      }
+      function openSettings(tab = "general") {
+        const overlay = document.getElementById("settingsOverlay")
+        overlay.classList.add("open")
+        const nav = document.querySelector(`.settings-nav[data-tab="${tab}"]`)
+        switchSettingsTab(tab, nav)
+      }
+      function closeSettings(e) {
+        if (e && e.target !== document.getElementById("settingsOverlay")) return
+        document.getElementById("settingsOverlay").classList.remove("open")
+      }
+      function switchSettingsTab(tab, el) {
+        document.querySelectorAll(".settings-tab").forEach((panel) => {
+          panel.style.display = panel.id === "tab-" + tab ? "" : "none"
+        })
+        document.querySelectorAll(".settings-nav").forEach((nav) => {
+          nav.classList.toggle("active", nav === el)
+        })
+        document.getElementById("settingsTabTitle").textContent = settingsTitles[tab] || "通用"
+      }
+      function toggleTheme() {
+        setTheme(isDark ? "light" : "dark")
+      }
+      function setTheme(theme) {
+        isDark = theme === "dark"
+        document.body.classList.toggle("dark", isDark)
+        syncThemeCards()
+        toast(isDark ? "已切换到 Sage Dark" : "已切换到 Sage Light")
+      }
+      function syncThemeCards() {
+        const light = document.getElementById("themeLight")
+        const dark = document.getElementById("themeDark")
+        if (!light || !dark) return
+        light.style.borderColor = isDark ? "var(--wb-line)" : "var(--wb-accent)"
+        light.style.background = isDark ? "var(--wb-surface)" : "var(--wb-accent-soft)"
+        dark.style.borderColor = isDark ? "var(--wb-accent)" : "var(--wb-line)"
+        dark.style.background = isDark ? "var(--wb-accent-soft)" : "var(--wb-surface)"
+      }
+      function setBg(bg, el) {
+        background = bg
+        document.querySelectorAll(".bg-item").forEach((item) => item.classList.remove("active"))
+        el?.classList.add("active")
+        const backgrounds = {
+          solid1: "var(--wb-page)",
+          solid2: "linear-gradient(135deg, var(--wb-page), var(--wb-surface-soft))",
+          grad1:
+            "linear-gradient(135deg, var(--wb-page), color-mix(in srgb, var(--wb-accent-soft) 52%, var(--wb-page)))",
+          grad2:
+            "linear-gradient(135deg, color-mix(in srgb, var(--wb-accent) 8%, var(--wb-page)), var(--wb-page))",
+          image: "var(--wb-page)",
+        }
+        document.body.style.background = backgrounds[bg] || backgrounds.solid1
+        renderWidgets()
+        toast("背景已更新：" + bg)
+      }
+      function updateProviderSettings() {
+        document.querySelectorAll(".provider-state").forEach((state) => {
+          state.textContent = state.dataset.providerState === searchProvider ? "✓ 当前" : ""
+        })
+      }
+      function renderExtPanel() {
+        updateProviderSettings()
+      }
+
       // ====== RENDER ======
       function renderWidgets() {
         const dashGrid = document.getElementById("dashGrid")
@@ -3136,41 +3431,42 @@
         const span = sizeSpans[inst.size] || { dash: "", stream: "" }
         const cls = isDash ? span.dash : span.stream
 
-        const rmBtn = `<button class="card-action card-danger" onclick="removeWidget('${inst.id}')" title="移除">✕</button>`
+        const rmBtn = `<button class="card-action card-danger" onclick="event.stopPropagation();removeWidget('${inst.id}')" title="移除">✕</button>`
+        const controls = rmBtn
 
         switch (inst.type) {
           case "focus":
             return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
   <div class="card-body"><input class="focus-input" placeholder="今天最重要的一件事是什么？" value="${e(focusText)}" oninput="focusText=this.value" /></div></div>`
 
           case "links":
             return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
   <div class="card-body">${renderLinks()}</div></div>`
 
           case "todo":
             return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
   <div class="card-body">${renderTodos()}</div></div>`
 
           case "notes":
             return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="display:flex;flex-direction:column;animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
   <div class="card-body" style="display:flex;flex-direction:column;flex:1"><textarea class="notes-area" style="flex:1" placeholder="快速记录想法..." oninput="notesText=this.value">${e(notesText)}</textarea></div></div>`
 
           case "weather":
             if (isError)
               return `<div class="widget-card resize-transition card-enter ${cls} error" data-id="${inst.id}" data-type="${inst.type}" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="var(--wb-danger)" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg><span class="card-title-text" style="color:var(--wb-danger)">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
-  <div class="error-card-body"><p>⚠ 加载失败<br/><span style="font-size:11px;color:var(--wb-text-subtle)">插件错误隔离：仅该实例受影响</span></p><button class="btn btn-sm" style="background:var(--wb-danger-soft);color:var(--wb-danger);border:none;font-weight:600" onclick="errorMode=false;renderWidgets();toast('已恢复')">重试</button></div></div>`
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="var(--wb-danger)" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg><span class="card-title-text" style="color:var(--wb-danger)">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
+  <div class="error-card-body"><p>加载失败<br/><span style="font-size:11px;color:var(--wb-text-subtle)">插件错误隔离：仅该实例受影响</span></p><button class="btn btn-sm" style="background:var(--wb-danger-soft);color:var(--wb-danger);border:none;font-weight:600" onclick="event.stopPropagation();errorMode=false;renderWidgets();toast('已恢复')">重试</button></div></div>`
             return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
   <div class="card-body"><div class="weather-display"><span class="weather-temp">22°C</span><span class="weather-desc">晴朗 · 北京</span></div></div></div>`
 
           case "plugins":
             return `<div class="widget-card resize-transition card-enter ${cls}${errClass}" data-id="${inst.id}" data-type="${inst.type}" ondblclick="openFocusMode('${inst.id}')" style="animation-delay:${widgetInstances.indexOf(inst) * 40}ms">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${rmBtn}</div></div>
+  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
   <div class="card-body"><div class="plugin-stats">
     <div class="plugin-stat"><span>Widget 活跃</span><span class="plugin-stat-val accent">${widgetInstances.length}</span></div>
     <div class="plugin-stat"><span>布局</span><span class="plugin-stat-val accent">${layout === "dashboard" ? "Dashboard" : "Stream"}</span></div>
@@ -3329,11 +3625,122 @@
         toast("默认搜索引擎：" + providerNames[p])
       }
 
+      function bindSearchBox(inputId, panelId) {
+        const input = document.getElementById(inputId)
+        const panel = document.getElementById(panelId)
+        if (!input || !panel) return
+        input.addEventListener("focus", () => renderSearchSuggestions(input, panel))
+        input.addEventListener("input", () => renderSearchSuggestions(input, panel))
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            runSearch(input.value)
+            panel.classList.remove("show")
+          }
+          if (event.key === "Escape") panel.classList.remove("show")
+        })
+      }
+      function renderSearchSuggestions(input, panel) {
+        const value = input.value.trim()
+        const rows = quickSuggestions.filter(
+          (item) =>
+            !value || `${item.title} ${item.desc}`.toLowerCase().includes(value.toLowerCase()),
+        )
+        panel.innerHTML =
+          `<div class="suggest-group-label">建议</div>` +
+          rows
+            .map(
+              (item) => `
+          <div class="suggest-item" onclick="runSuggestion('${item.id}')">
+            <div class="suggest-item-icon" style="background:var(--wb-surface-soft);color:var(--wb-accent)">↵</div>
+            <div class="suggest-item-text">
+              <div>${item.title}</div>
+              <div class="suggest-item-desc">${item.desc}</div>
+            </div>
+          </div>`,
+            )
+            .join("") +
+          (value
+            ? `<div class="suggest-item" onclick="runSearchFrom('${input.id}')">
+            <div class="suggest-item-icon" style="background:var(--wb-accent-soft);color:var(--wb-accent)">搜</div>
+            <div class="suggest-item-text">
+              <div>使用 ${searchProvider} 搜索“${e(value)}”</div>
+              <div class="suggest-item-desc">通过 external-open 权限桥打开</div>
+            </div>
+          </div>`
+            : "")
+        panel.classList.add("show")
+      }
+      function runSuggestion(id) {
+        if (id === "github") {
+          selectProvider("github")
+          runSearch("tabora plugin runtime")
+        }
+        if (id === "add-note") addWidget("notes")
+        if (id === "settings") openSettings("plugins")
+        if (id === "theme") setTheme("dark")
+        document
+          .querySelectorAll(".search-suggestions")
+          .forEach((panel) => panel.classList.remove("show"))
+      }
+      function runSearch(query) {
+        const q = query.trim()
+        if (!q) return
+        if (q.startsWith("@github")) {
+          selectProvider("github")
+          toast("使用 GitHub 搜索：" + q.replace("@github", "").trim())
+          return
+        }
+        toast("使用 " + searchProvider + " 搜索：" + q)
+      }
+      function runSearchFrom(inputId) {
+        const input = document.getElementById(inputId)
+        runSearch(input?.value || "")
+        document
+          .querySelectorAll(".search-suggestions")
+          .forEach((panel) => panel.classList.remove("show"))
+      }
+
+      function openCtxMenu(event, id) {
+        const inst = widgetInstances.find((w) => w.id === id)
+        if (!inst) return
+        const menu = document.getElementById("ctxMenu")
+        const sizes = supportedSizes[inst.type] || []
+        menu.innerHTML =
+          `<div class="ctx-item" onclick="openFocusMode('${id}');closeCtxMenu()">展开卡片 <kbd>双击</kbd></div>` +
+          `<div class="ctx-sep"></div>` +
+          sizes
+            .map(
+              (size) =>
+                `<div class="ctx-item" onclick="setSize('${id}','${size}');closeCtxMenu()">尺寸 ${size}<kbd>${inst.size === size ? "当前" : ""}</kbd></div>`,
+            )
+            .join("") +
+          `<div class="ctx-sep"></div><div class="ctx-item danger" onclick="removeWidget('${id}');closeCtxMenu()">移除实例</div>`
+        const left = Math.min(event.clientX, window.innerWidth - 180)
+        const top = Math.min(event.clientY, window.innerHeight - 180)
+        menu.style.left = Math.max(8, left) + "px"
+        menu.style.top = Math.max(8, top) + "px"
+        menu.classList.add("show")
+      }
+      function closeCtxMenu() {
+        document.getElementById("ctxMenu").classList.remove("show")
+      }
+
       document.addEventListener("click", (e) => {
         closeCtxMenu()
         document.querySelectorAll(".search-provider-dropdown").forEach((menu) => {
           menu.classList.remove("show")
         })
+        if (!e.target.closest(".search-stage")) {
+          document
+            .querySelectorAll(".search-suggestions")
+            .forEach((panel) => panel.classList.remove("show"))
+        }
+      })
+      document.addEventListener("contextmenu", (event) => {
+        const card = event.target.closest(".widget-card")
+        if (!card) return
+        event.preventDefault()
+        openCtxMenu(event, card.dataset.id)
       })
 
       // Shortcuts panel
@@ -3349,6 +3756,7 @@
       function openFocusMode(id) {
         const inst = widgetInstances.find((w) => w.id === id)
         if (!inst) return
+        expandedWidgetId = id
         const overlay = document.getElementById("expandOverlay")
         document.getElementById("expandTitle").textContent = inst.label
         document.getElementById("expandMeta").textContent =
@@ -3358,11 +3766,11 @@
         switch (inst.type) {
           case "focus":
             bodyHtml = `<input class="expand-focus-input" placeholder="今天最重要的一件事是什么？" value="${e(focusText)}" oninput="focusText=this.value" autofocus /><div style="font-size:12px;color:var(--wb-text-muted);margin-top:8px">设定一个清晰的目标，让今天的工作有方向。</div>`
-            document.getElementById("expandIcon").textContent = "🎯"
+            document.getElementById("expandIcon").textContent = "目"
             break
           case "links":
             bodyHtml = `<div class="expand-link-grid">${links.map((l) => `<div class="expand-link-card" onclick="openLink('${l.name}')"><div class="expand-link-icon">${l.icon}</div><div class="expand-link-label">${l.name}</div><div class="expand-link-url">${l.name.toLowerCase()}.com</div></div>`).join("")}</div>`
-            document.getElementById("expandIcon").textContent = "🔗"
+            document.getElementById("expandIcon").textContent = "链"
             break
           case "todo":
             bodyHtml = `<div class="expand-todo-list">${todos.map((t, i) => `<div class="expand-todo-item"><div class="todo-check ${t.done ? "done" : ""}" onclick="toggleTodo(${i});updateExpandTodo()"></div><span class="todo-text ${t.done ? "done" : ""}">${e(t.text)}</span></div>`).join("")}</div>
@@ -3371,11 +3779,11 @@
             break
           case "notes":
             bodyHtml = `<textarea class="expand-notes-area" placeholder="快速记录想法、灵感..." oninput="notesText=this.value" autofocus>${e(notesText)}</textarea>`
-            document.getElementById("expandIcon").textContent = "📝"
+            document.getElementById("expandIcon").textContent = "记"
             break
           case "weather":
             bodyHtml = `<div style="text-align:center;padding:24px"><div style="font-size:48px;font-weight:700;line-height:1">22°C</div><div style="font-size:14px;color:var(--wb-text-muted);margin-top:8px">晴朗 · 北京</div><div style="font-size:12px;color:var(--wb-text-subtle);margin-top:4px">湿度 45% · 风速 12km/h</div></div>`
-            document.getElementById("expandIcon").textContent = "☀"
+            document.getElementById("expandIcon").textContent = "晴"
             break
           case "plugins":
             bodyHtml = `<div style="display:flex;flex-direction:column;gap:4px">
@@ -3394,7 +3802,7 @@
       }
       function updateExpandTodo() {
         if (document.getElementById("expandOverlay").classList.contains("open"))
-          openFocusMode(widgetInstances[0]?.id)
+          openFocusMode(expandedWidgetId)
       }
 
       function closeExpand(e) {
@@ -3403,6 +3811,7 @@
         overlay.classList.add("closing")
         setTimeout(() => {
           overlay.classList.remove("open", "closing")
+          expandedWidgetId = null
           renderWidgets()
         }, 250)
       }
@@ -3464,6 +3873,13 @@
       })
 
       // INIT
+      document.getElementById("cmdInput").addEventListener("input", (event) => {
+        renderCommandResults(event.target.value)
+      })
+      bindSearchBox("dashSearchInput", "dashSuggestions")
+      bindSearchBox("streamSearchInput", "streamSuggestions")
+      renderCommandResults()
+      syncThemeCards()
       renderWidgets()
       renderExtPanel()
     </script>
