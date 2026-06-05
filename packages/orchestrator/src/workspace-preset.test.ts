@@ -69,27 +69,74 @@ describe("applyWorkspacePreset", () => {
     })
   })
 
-  it("does not create instances for unknown regions", () => {
+  it("fails when a preset instance targets an unknown region", () => {
+    expect(() =>
+      applyWorkspacePreset({
+        preset: {
+          ...preset,
+          instances: [
+            ...preset.instances,
+            {
+              pluginId: "official.widgets.todo",
+              contributionId: "todo",
+              instanceId: "todo-1",
+              extensionPoint: "widget",
+              regionId: "missing",
+            },
+          ],
+        },
+        workspaceId: "default",
+        workspaceName: "默认工作区",
+        now: "2026-06-05T00:00:00.000Z",
+      }),
+    ).toThrow(
+      'Workspace preset "official.workspace.default" instance "todo-1" targets unknown region "missing"',
+    )
+  })
+
+  it("fails when a preset instance targets an incompatible region", () => {
+    expect(() =>
+      applyWorkspacePreset({
+        preset: {
+          ...preset,
+          instances: [
+            ...preset.instances,
+            {
+              pluginId: "official.widgets.todo",
+              contributionId: "todo",
+              instanceId: "todo-1",
+              extensionPoint: "widget",
+              regionId: "topbar",
+            },
+          ],
+        },
+        workspaceId: "default",
+        workspaceName: "默认工作区",
+        now: "2026-06-05T00:00:00.000Z",
+      }),
+    ).toThrow(
+      'Workspace preset "official.workspace.default" instance "todo-1" uses extension point "widget" incompatible with region "topbar"',
+    )
+  })
+
+  it("does not share mutable nested preset values with output", () => {
     const result = applyWorkspacePreset({
       preset: {
         ...preset,
-        instances: [
-          ...preset.instances,
-          {
-            pluginId: "official.widgets.todo",
-            contributionId: "todo",
-            instanceId: "todo-1",
-            extensionPoint: "widget",
-            regionId: "missing",
-          },
-        ],
       },
       workspaceId: "default",
       workspaceName: "默认工作区",
       now: "2026-06-05T00:00:00.000Z",
     })
 
-    expect(result.instances.map((instance) => instance.id)).toEqual(["search-main", "notes-1"])
-    expect(Object.keys(result.workspace.regions)).toEqual(["topbar", "mainGrid"])
+    result.workspace.regions["topbar"]!.accepts.push("widget")
+    ;(result.workspace.config!.search as { enabledProviderIds: string[] }).enabledProviderIds.push(
+      "official.search.github",
+    )
+    result.instances[1]!.config.color = "blue"
+
+    expect(preset.regions[0]!.accepts).toEqual(["search"])
+    expect(preset.search.enabledProviderIds).toEqual(["official.search.google"])
+    expect(preset.instances[1]!.config).toEqual({ color: "green" })
   })
 })

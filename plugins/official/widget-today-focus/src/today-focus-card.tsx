@@ -1,26 +1,6 @@
 import { createSignal, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 
-function getLegacyStorage(): Storage | null {
-  const storage = typeof window !== "undefined" ? window.localStorage : undefined
-  if (
-    storage &&
-    typeof storage.getItem === "function" &&
-    typeof storage.removeItem === "function"
-  ) {
-    return storage
-  }
-  return null
-}
-
-function migrateFromLocalStorage(key: string): string | null {
-  const storage = getLegacyStorage()
-  if (!storage) return null
-  const value = storage.getItem(key)
-  if (value !== null) storage.removeItem(key)
-  return value
-}
-
 export function TodayFocusCard(props: WidgetViewProps) {
   const [focus, setFocus] = createSignal("")
   const [done, setDone] = createSignal(false)
@@ -29,20 +9,8 @@ export function TodayFocusCard(props: WidgetViewProps) {
   const inputId = () => `today-focus-${props.instanceId}`
 
   onMount(async () => {
-    let saved = await props.data.get<string>(contentKey)
-    let savedDone = await props.data.get<string>(doneKey)
-    if (saved === undefined) {
-      const legacy = migrateFromLocalStorage(`today-focus:${props.instanceId}:content`)
-      const legacyDone = migrateFromLocalStorage(`today-focus:${props.instanceId}:done`)
-      if (legacy !== null) {
-        saved = legacy
-        await props.data.save(contentKey, legacy)
-      }
-      if (legacyDone !== null) {
-        savedDone = legacyDone
-        await props.data.save(doneKey, legacyDone)
-      }
-    }
+    const saved = await props.data.get<string>(contentKey)
+    const savedDone = await props.data.get<string>(doneKey)
     if (saved) setFocus(saved)
     setDone(savedDone === "true")
   })

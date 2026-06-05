@@ -21,7 +21,7 @@ export function applyWorkspacePreset(
       region.regionId,
       {
         regionId: region.regionId,
-        accepts: region.accepts,
+        accepts: [...region.accepts],
         instances: [],
       },
     ]),
@@ -31,7 +31,16 @@ export function applyWorkspacePreset(
 
   for (const presetInstance of options.preset.instances) {
     const region = regions[presetInstance.regionId]
-    if (!region || !region.accepts.includes(presetInstance.extensionPoint)) continue
+    if (!region) {
+      throw new Error(
+        `Workspace preset "${options.preset.id}" instance "${presetInstance.instanceId}" targets unknown region "${presetInstance.regionId}"`,
+      )
+    }
+    if (!region.accepts.includes(presetInstance.extensionPoint)) {
+      throw new Error(
+        `Workspace preset "${options.preset.id}" instance "${presetInstance.instanceId}" uses extension point "${presetInstance.extensionPoint}" incompatible with region "${presetInstance.regionId}"`,
+      )
+    }
 
     region.instances.push({ instanceId: presetInstance.instanceId })
     instances.push({
@@ -43,7 +52,7 @@ export function applyWorkspacePreset(
       regionId: presetInstance.regionId,
       enabled: true,
       size: presetInstance.size ?? "M",
-      config: presetInstance.config ?? {},
+      config: { ...(presetInstance.config ?? {}) },
       createdAt: now,
       updatedAt: now,
     })
@@ -57,7 +66,12 @@ export function applyWorkspacePreset(
       activeThemeId: options.preset.themeId,
       activeBackgroundProviderId: options.preset.backgroundProviderId,
       config: {
-        search: options.preset.search,
+        search: {
+          defaultProviderId: options.preset.search.defaultProviderId,
+          ...(options.preset.search.enabledProviderIds
+            ? { enabledProviderIds: [...options.preset.search.enabledProviderIds] }
+            : {}),
+        },
       },
       regions,
       createdAt: now,

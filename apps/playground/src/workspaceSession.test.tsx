@@ -142,6 +142,39 @@ describe("workspaceSession", () => {
     expect(session.instances).toHaveLength(5)
   })
 
+  it("does not seed an existing empty workspace", async () => {
+    const database = createTaboraDatabase("tabora-workspace-session-test")
+    const workspaceRepo = createWorkspaceRepository(database)
+    const instanceRepo = createInstanceRepository(database)
+    const pluginDataRepo = createPluginDataRepository(database)
+    const now = "2026-06-01T00:00:00.000Z"
+
+    await workspaceRepo.save({
+      id: "default",
+      name: "空工作区",
+      activeLayoutId: "official.layout.workbench-dashboard",
+      activeThemeId: "official.theme.light",
+      activeBackgroundProviderId: "background.gradient-green",
+      regions: {
+        topbar: { regionId: "topbar", accepts: ["search"], instances: [] },
+        mainGrid: { regionId: "mainGrid", accepts: ["widget"], instances: [] },
+      },
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    const session = await ensureWorkspaceSession({
+      workspaceRepo,
+      instanceRepo,
+      pluginDataRepo,
+      searchProviders: providers,
+    })
+
+    expect(session.workspace.name).toBe("空工作区")
+    expect(session.instances).toEqual([])
+    await expect(instanceRepo.getByWorkspace("default")).resolves.toEqual([])
+  })
+
   it("creates an isolated workspace with seeded instances", async () => {
     const database = createTaboraDatabase("tabora-workspace-session-test")
     const workspaceRepo = createWorkspaceRepository(database)

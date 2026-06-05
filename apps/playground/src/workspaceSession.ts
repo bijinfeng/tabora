@@ -6,10 +6,7 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import type { InstanceRepository, PluginDataRepository, WorkspaceRepository } from "@tabora/storage"
-import {
-  createDefaultWorkspaceFromPreset,
-  OFFICIAL_DEFAULT_WORKSPACE_PRESET,
-} from "./defaultWorkspaceSeed"
+import { createDefaultWorkspaceFromPreset } from "./defaultWorkspaceSeed"
 import { FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
 
 export type WorkspaceSessionState = {
@@ -52,33 +49,17 @@ export async function ensureWorkspaceSession(options: {
   workspaceId?: string
 }): Promise<WorkspaceSessionState> {
   let workspace = await options.workspaceRepo.get(options.workspaceId ?? "default")
+  let instances: PluginInstance[] = []
   if (!workspace) {
     const seed = createDefaultWorkspaceFromPreset({})
     workspace = seed.workspace
-    await options.workspaceRepo.save(workspace)
-  }
-
-  let instances = await options.instanceRepo.getByWorkspace(workspace.id)
-  if (instances.length === 0) {
-    const seed = createDefaultWorkspaceFromPreset({
-      workspaceId: workspace.id,
-      workspaceName: workspace.name,
-      preset: {
-        ...OFFICIAL_DEFAULT_WORKSPACE_PRESET,
-        layoutId: workspace.activeLayoutId,
-        themeId: workspace.activeThemeId,
-        backgroundProviderId:
-          workspace.activeBackgroundProviderId ??
-          OFFICIAL_DEFAULT_WORKSPACE_PRESET.backgroundProviderId,
-        search:
-          (workspace.config?.search as typeof OFFICIAL_DEFAULT_WORKSPACE_PRESET.search) ??
-          OFFICIAL_DEFAULT_WORKSPACE_PRESET.search,
-      },
-    })
     instances = seed.instances
+    await options.workspaceRepo.save(workspace)
     for (const instance of instances) {
       await options.instanceRepo.save(instance)
     }
+  } else {
+    instances = await options.instanceRepo.getByWorkspace(workspace.id)
   }
 
   const searchHistory =
