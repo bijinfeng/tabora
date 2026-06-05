@@ -47,7 +47,7 @@
 | --------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Refined Sage 语义 token           | `packages/theme/`                                                                     | `@tabora/theme` 负责把主题贡献应用为 CSS custom properties，不在插件里硬编码大面积颜色。                   |
 | 应用品牌图标与 favicon / 扩展图标 | `packages/brand/` + `apps/site/vite.config.ts` + `apps/extension/wxt.config.ts`       | `@tabora/brand` 保存唯一 SVG 图标源；站点 favicon 由 Vite 注入，扩展图标由 `auto-icons` 从同一源自动生成。 |
-| 基础组件 API 与状态               | `packages/ui/` + `apps/storybook/`                                                    | `@tabora/ui` 提供插件内容区基础组件；Storybook 负责运行中示例与文档对照。                                  |
+| 基础组件 API 与状态               | `packages/ui/`                                                                        | `@tabora/ui` 提供插件内容区基础组件；组件 API、状态和组合模式以源码、测试和消费方实现为准。                |
 | Dashboard / Stream 双布局宿主结构 | `plugins/layout-dashboard/` + `plugins/layout-stream/` + `packages/workbench-shell/`  | 布局壳体由 layout 插件贡献；卡片壳、设置宿主、展开层等通用宿主容器在 shell。                               |
 | 命令搜索、`@provider`、键盘导航   | `packages/official-plugins/` + `packages/platform-kernel/` + `packages/orchestrator/` | 搜索 UI 走插件协议；全局快捷键、搜索路由和建议编排走平台/编排层。                                          |
 | 拖拽、双击展开、右键菜单          | shell + orchestrator + official widgets                                               | 交互触发与宿主容器由平台负责，插件只声明支持能力并渲染内容。                                               |
@@ -86,7 +86,7 @@
 
 - `@tabora/ui` 只承载插件内容区基础组件，不承载 `WidgetCardShell`、`Modal`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid` 等宿主级容器。
 - 官方插件内容区优先复用 `@tabora/ui` 组件，不在各插件中重复实现按钮、输入、选择器、字段包装、错误状态等基础控件。
-- Storybook 中的组件示例、状态和组合模式应能追溯到 `DESIGN.md`。
+- `@tabora/ui` 的组件实现、测试和消费方式应能追溯到 `DESIGN.md`。
 
 ## 5. 设计变更时的同步清单
 
@@ -103,7 +103,6 @@
 同时检查：
 
 - `packages/ui/` 组件实现与导出。
-- `apps/storybook/` 中的 stories、状态示例和可访问性说明。
 - 官方插件内容区是否仍有重复实现或违反组件语义的 UI。
 
 ### 5.3 改 `DESIGN.md` 的交互模式或宿主容器规则

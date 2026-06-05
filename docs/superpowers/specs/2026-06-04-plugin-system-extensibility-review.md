@@ -389,7 +389,6 @@ apps/
   extension/               # 浏览器 extension shell
   desktop/                 # 未来桌面 WebView shell
   site/
-  storybook/
 
 packages/
   plugin-api/              # 协议、类型、schema

@@ -6,8 +6,6 @@ dist/
 .output/
 .wxt/
 *.tsbuildinfo
-storybook-static/
-apps/storybook/storybook-static/
 
 # IDE
 .vscode/

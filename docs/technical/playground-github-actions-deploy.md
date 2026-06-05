@@ -79,5 +79,5 @@ sudo systemctl reload nginx
 ## 注意事项
 
 - 当前 workflow 假设 `PLAYGROUND_DEPLOY_PATH` 不包含空格。
-- 当前部署的是 `playground` 静态产物，不包含浏览器扩展或 Storybook。
+- 当前部署的是 `playground` 静态产物，不包含浏览器扩展。
 - 如果未来改成子路径部署，需要同步调整 `apps/playground/vite.config.ts` 中的 `base` 配置。
