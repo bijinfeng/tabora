@@ -3,12 +3,15 @@ import type {
   LayoutContribution,
   SearchContribution,
   SearchProviderContribution,
-  SettingsPanelContribution,
   SettingsPanelViewProps,
   ThemeContribution,
   WidgetContribution,
 } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import {
+  normalizeSettingsPanelDescriptor,
+  type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
+} from "./settings-navigator"
 
 export type PluginCatalog = ReturnType<typeof createPluginCatalog>
 
@@ -23,9 +26,7 @@ export type WidgetContributionDescriptor = WidgetContribution & {
   description: string
 }
 
-export type SettingsPanelDescriptor = SettingsPanelContribution & {
-  pluginId: string
-}
+export type SettingsPanelDescriptor = NavigatorSettingsPanelDescriptor
 
 function byContributionOrder<T extends { title: string }>(left: T, right: T): number {
   return left.title.localeCompare(right.title)
@@ -75,8 +76,7 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
     return plugins
       .flatMap((plugin) =>
         (plugin.manifest.contributes.settingsPanels ?? []).map((panel) => ({
-          ...panel,
-          pluginId: plugin.manifest.id,
+          ...normalizeSettingsPanelDescriptor({ ...panel, pluginId: plugin.manifest.id }),
         })),
       )
       .sort(

@@ -48,10 +48,12 @@ export {
 } from "./context-menu-model"
 export {
   createSettingsNavigator,
+  normalizeSettingsPanelDescriptor,
   resolveInitialSettingsPanelId,
   resolveSettingsSectionId,
   SETTINGS_SECTIONS,
   type SettingsNavigatorSection,
+  type SettingsPanelScope,
   type SettingsSectionId,
 } from "./settings-navigator"
 export {

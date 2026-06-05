@@ -28,10 +28,18 @@ function mount(component: () => JSX.Element): HTMLElement {
   return root
 }
 
-function panel(id: string, order?: number): SettingsPanelContribution {
-  return order !== undefined
-    ? { id, title: id, view: `${id}.view`, order }
-    : { id, title: id, view: `${id}.view` }
+function panel(
+  id: string,
+  order?: number,
+  overrides: Partial<SettingsPanelContribution> = {},
+): SettingsPanelContribution {
+  return {
+    id,
+    title: id,
+    view: `${id}.view`,
+    ...(order !== undefined ? { order } : {}),
+    ...overrides,
+  }
 }
 
 describe("settings host composition", () => {
@@ -59,10 +67,43 @@ describe("settings host composition", () => {
     ])
   })
 
+  it("collects settings panel section and normalized scope for host rendering", () => {
+    const plugins = [
+      {
+        manifest: {
+          id: "plugin-a",
+          contributes: {
+            settingsPanels: [
+              panel("plugin.settings", 10, {
+                section: "plugins",
+                scope: "plugin",
+              }),
+              panel("legacy.settings", 20),
+            ],
+          },
+        },
+      },
+    ]
+
+    const panels = collectSettingsPanels(plugins)
+
+    expect(panels[0]).toMatchObject({
+      id: "plugin.settings",
+      section: "plugins",
+      scope: "plugin",
+      pluginId: "plugin-a",
+    })
+    expect(panels[1]).toMatchObject({
+      id: "legacy.settings",
+      scope: "workspace",
+      pluginId: "plugin-a",
+    })
+  })
+
   it("uses requested panel when available and falls back to the first panel", () => {
     const panels: SettingsPanelDescriptor[] = [
-      { ...panel("plugins", 10), pluginId: "plugin-a" },
-      { ...panel("search", 30), pluginId: "plugin-b" },
+      { ...panel("plugins", 10), pluginId: "plugin-a", scope: "workspace" },
+      { ...panel("search", 30), pluginId: "plugin-b", scope: "workspace" },
     ]
 
     expect(resolveInitialSettingsPanelId(panels, "search")).toBe("search")
@@ -71,8 +112,16 @@ describe("settings host composition", () => {
 
   it("maps settings panels to fixed sections", () => {
     const panels: SettingsPanelDescriptor[] = [
-      { ...panel("official.settings.workspace.workbench", 10), pluginId: "plugin-a" },
-      { ...panel("official.settings.workspace.search", 20), pluginId: "plugin-b" },
+      {
+        ...panel("official.settings.workspace.workbench", 10),
+        pluginId: "plugin-a",
+        scope: "workspace",
+      },
+      {
+        ...panel("official.settings.workspace.search", 20),
+        pluginId: "plugin-b",
+        scope: "workspace",
+      },
     ]
 
     expect(resolveInitialSettingsSectionId(panels, "official.settings.workspace.search")).toBe(
@@ -89,6 +138,7 @@ describe("settings host composition", () => {
         view: "test.view",
         order: 10,
         pluginId: "plugin-a",
+        scope: "workspace",
       },
     ]
     const views = new Map<string, any>([["test.view", () => document.createElement("div")]])
@@ -142,6 +192,7 @@ describe("settings host composition", () => {
         view: "broken.view",
         order: 10,
         pluginId: "plugin-a",
+        scope: "workspace",
       },
     ]
     const views = new Map<string, any>([

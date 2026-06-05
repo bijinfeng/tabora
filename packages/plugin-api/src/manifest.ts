@@ -216,6 +216,8 @@ export type SettingsPanelContribution = {
   id: string
   title: string
   view: string
+  section?: "general" | "appearance" | "search" | "plugins" | "about"
+  scope?: "global" | "workspace" | "plugin" | "instance"
   order?: number
 }
 

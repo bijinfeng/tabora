@@ -1,21 +1,19 @@
 import { createComponent, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import { X } from "lucide-solid"
-import type {
-  PluginManifest,
-  SettingsPanelContribution,
-  SettingsPanelViewProps,
-} from "@tabora/plugin-api"
+import type { PluginManifest, SettingsPanelViewProps } from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
+  normalizeSettingsPanelDescriptor,
   SETTINGS_SECTIONS,
+  type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
   type SettingsSectionId,
 } from "@tabora/orchestrator"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
 
-export type SettingsPanelDescriptor = SettingsPanelContribution & { pluginId: string }
+export type SettingsPanelDescriptor = NavigatorSettingsPanelDescriptor
 export type { SettingsSectionId }
 export { resolveInitialSettingsPanelId, resolveSettingsSectionId } from "@tabora/orchestrator"
 
@@ -34,7 +32,7 @@ export function collectSettingsPanels(plugins: PluginLike[]): SettingsPanelDescr
   const panels: SettingsPanelDescriptor[] = []
   for (const plugin of plugins) {
     for (const panel of plugin.manifest.contributes.settingsPanels ?? []) {
-      panels.push({ ...panel, pluginId: plugin.manifest.id })
+      panels.push(normalizeSettingsPanelDescriptor({ ...panel, pluginId: plugin.manifest.id }))
     }
   }
   return panels.sort(

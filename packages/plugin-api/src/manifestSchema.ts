@@ -2,6 +2,10 @@ import { z } from "zod"
 
 const widgetSizeSchema = z.enum(["S", "M", "L", "XL"])
 
+const settingsPanelSectionSchema = z.enum(["general", "appearance", "search", "plugins", "about"])
+
+const settingsPanelScopeSchema = z.enum(["global", "workspace", "plugin", "instance"])
+
 const extensionPointSchema = z.enum([
   "layout",
   "widget",
@@ -164,6 +168,8 @@ export const pluginManifestSchema = z.object({
           id: z.string().min(1),
           title: z.string().min(1),
           view: z.string().min(1),
+          section: settingsPanelSectionSchema.optional(),
+          scope: settingsPanelScopeSchema.optional(),
           order: z.number().int().optional(),
         }),
       )

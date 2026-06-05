@@ -51,6 +51,8 @@ export const officialPluginManager: BuiltinPlugin = {
           id: "official.settings.plugins",
           title: "插件",
           view: "official.plugin-manager.card",
+          section: "plugins",
+          scope: "workspace",
           order: 10,
         },
       ],

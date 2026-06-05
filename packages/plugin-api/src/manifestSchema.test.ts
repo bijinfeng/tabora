@@ -201,6 +201,43 @@ describe("pluginManifestSchema", () => {
     expect(result.success ? result.data.contributes.settingsPanels?.[0]?.order : undefined).toBe(20)
   })
 
+  it("accepts explicit settings panel section and scope", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.settings.workspace",
+      name: "Workspace Settings",
+      version: "0.0.0",
+      entry: "./settings-workspace",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "official.settings.workspace.appearance",
+            title: "外观",
+            view: "official.settings.workspace.appearance.view",
+            section: "appearance",
+            scope: "workspace",
+            order: 20,
+          },
+          {
+            id: "official.widget.notes.settings",
+            title: "便签实例",
+            view: "official.widget.notes.settings.view",
+            section: "general",
+            scope: "instance",
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.success ? result.data.contributes.settingsPanels?.[0]?.section : undefined).toBe(
+      "appearance",
+    )
+    expect(result.success ? result.data.contributes.settingsPanels?.[1]?.scope : undefined).toBe(
+      "instance",
+    )
+  })
+
   it("accepts a command contribution", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.commands.workspace",
