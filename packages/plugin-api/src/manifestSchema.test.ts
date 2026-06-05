@@ -130,6 +130,57 @@ describe("pluginManifestSchema", () => {
     expect(result.success ? result.data.contributes.settingsPanels?.[0]?.order : undefined).toBe(20)
   })
 
+  it("accepts a command contribution", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.commands.workspace",
+      name: "Workspace Commands",
+      version: "0.0.0",
+      entry: "./commands",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        commands: [
+          {
+            id: "official.command.add-widget",
+            title: "添加卡片",
+            description: "向工作台添加新卡片",
+            icon: "+",
+            category: "workspace",
+            keywords: ["widget", "card"],
+            defaultShortcut: "mod+n",
+            requiredCapabilities: ["workspace.write"],
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects a command contribution without id, title, or category", () => {
+    const baseManifest = {
+      id: "bad.commands",
+      name: "Bad Commands",
+      version: "0.0.0",
+      entry: "./commands",
+      engine: { platform: "^0.1.0" },
+    }
+
+    for (const command of [
+      { title: "添加卡片", category: "workspace" },
+      { id: "bad.command.add-widget", category: "workspace" },
+      { id: "bad.command.add-widget", title: "添加卡片" },
+    ]) {
+      const result = pluginManifestSchema.safeParse({
+        ...baseManifest,
+        contributes: {
+          commands: [command],
+        },
+      })
+
+      expect(result.success).toBe(false)
+    }
+  })
+
   it("rejects a layout contribution with an empty view", () => {
     const result = pluginManifestSchema.safeParse({
       id: "bad.layout",

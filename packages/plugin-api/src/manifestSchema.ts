@@ -35,6 +35,17 @@ const widgetContributionSchema = z
     path: ["defaultSize"],
   })
 
+const commandContributionSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  category: z.string().min(1),
+  keywords: z.array(z.string().min(1)).optional(),
+  defaultShortcut: z.string().optional(),
+  requiredCapabilities: z.array(z.string().min(1)).optional(),
+})
+
 const layoutRegionSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -136,5 +147,6 @@ export const pluginManifestSchema = z.object({
         }),
       )
       .optional(),
+    commands: z.array(commandContributionSchema).optional(),
   }),
 })

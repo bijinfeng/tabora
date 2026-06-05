@@ -3,10 +3,10 @@ import { createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type {
   BackgroundProviderContribution,
+  CommandContribution,
   LayoutHostAPI,
   LayoutRegion,
   PluginInstance,
-  SearchCommandEntry,
   SearchHistoryEntry,
   SearchProviderContribution,
   SearchViewProps,
@@ -28,6 +28,7 @@ import {
   resolveWidgetTitle,
 } from "@tabora/workbench-app"
 import {
+  createCommandPaletteCommands,
   createLayoutEngine,
   createLayoutSwitchPlan,
   createDragSortPlan,
@@ -127,57 +128,72 @@ export function App() {
   }
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
 
+  const pluginCommands = builtinPlugins.flatMap(
+    (plugin) => plugin.manifest.contributes.commands ?? [],
+  )
+
   const commandItems = () =>
-    [
-      {
-        id: "toggle-theme",
-        icon: "T",
-        name: "切换主题",
-        desc: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
-        shortcut: "⌘T",
-        action: () => void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
-      },
-      {
-        id: "toggle-layout",
-        icon: "L",
-        name: "切换布局",
-        desc:
-          activeLayoutId() === "official.layout.workbench-dashboard"
-            ? "仪表盘 → 流式"
-            : "流式 → 仪表盘",
-        shortcut: "⌘L",
-        action: () => {
+    createCommandPaletteCommands({
+      platformCommands: [
+        {
+          id: "toggle-theme",
+          icon: "T",
+          title: "切换主题",
+          description: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
+          category: "workspace",
+          defaultShortcut: "⌘T",
+        },
+        {
+          id: "toggle-layout",
+          icon: "L",
+          title: "切换布局",
+          description:
+            activeLayoutId() === "official.layout.workbench-dashboard"
+              ? "仪表盘 → 流式"
+              : "流式 → 仪表盘",
+          category: "workspace",
+          defaultShortcut: "⌘L",
+        },
+        {
+          id: "add-widget",
+          icon: "+",
+          title: "添加卡片",
+          description: "向工作台添加新卡片",
+          category: "workspace",
+          defaultShortcut: "⌘N",
+        },
+        {
+          id: "open-settings",
+          icon: "S",
+          title: "打开设置",
+          description: "配置工作台",
+          category: "workspace",
+          defaultShortcut: "⌘,",
+        },
+        {
+          id: "open-shortcuts",
+          icon: "?",
+          title: "快捷键参考",
+          description: "查看所有快捷键",
+          category: "workspace",
+        },
+      ] satisfies CommandContribution[],
+      pluginCommands,
+      actions: {
+        "toggle-theme": () =>
+          void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
+        "toggle-layout": () => {
           const next =
             activeLayoutId() === "official.layout.workbench-dashboard"
               ? "official.layout.workbench-stream"
               : "official.layout.workbench-dashboard"
           void switchLayout(next)
         },
+        "add-widget": () => setAddWidgetOpen(true),
+        "open-settings": () => openSettings("official.settings.workspace.appearance"),
+        "open-shortcuts": () => showToast("快捷键：⌘K、⌘L、⌘T、⌘,、Esc"),
       },
-      {
-        id: "add-widget",
-        icon: "+",
-        name: "添加卡片",
-        desc: "向工作台添加新卡片",
-        shortcut: "⌘N",
-        action: () => setAddWidgetOpen(true),
-      },
-      {
-        id: "open-settings",
-        icon: "S",
-        name: "打开设置",
-        desc: "配置工作台",
-        shortcut: "⌘,",
-        action: () => openSettings("official.settings.workspace.appearance"),
-      },
-      {
-        id: "open-shortcuts",
-        icon: "?",
-        name: "快捷键参考",
-        desc: "查看所有快捷键",
-        action: () => showToast("快捷键：⌘K、⌘L、⌘T、⌘,、Esc"),
-      },
-    ] satisfies SearchCommandEntry[]
+    })
 
   const runtime = createExtensionRuntimeBootstrap()
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime

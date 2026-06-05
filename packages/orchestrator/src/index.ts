@@ -22,6 +22,13 @@ export {
   type CommandPaletteModelOptions,
 } from "./command-palette-model"
 export {
+  createCommandCatalog,
+  createCommandPaletteCommands,
+  type CommandActionMap,
+  type CommandCatalog,
+  type CommandCatalogOptions,
+} from "./command-catalog"
+export {
   createWidgetContextMenuModel,
   type ContextMenuItem,
   type ContextMenuSection,

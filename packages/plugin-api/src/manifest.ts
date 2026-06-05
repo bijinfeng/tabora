@@ -209,6 +209,17 @@ export type SettingsPanelContribution = {
   order?: number
 }
 
+export type CommandContribution = {
+  id: string
+  title: string
+  description?: string
+  icon?: string
+  category: string
+  keywords?: string[]
+  defaultShortcut?: string
+  requiredCapabilities?: string[]
+}
+
 export type PluginManifest = {
   id: string
   name: string
@@ -230,5 +241,6 @@ export type PluginManifest = {
     backgroundRenderers?: BackgroundRendererContribution[]
     themes?: ThemeContribution[]
     settingsPanels?: SettingsPanelContribution[]
+    commands?: CommandContribution[]
   }
 }
