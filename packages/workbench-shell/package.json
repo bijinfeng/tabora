@@ -9,7 +9,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "vitest run --root ../.. packages/workbench-shell/src/CommandPalette.test.tsx packages/workbench-shell/src/PluginViewBoundary.test.tsx packages/workbench-shell/src/ToastHost.test.tsx packages/workbench-shell/src/settingsHost.test.tsx packages/workbench-shell/src/WidgetCardShell.test.tsx packages/workbench-shell/src/LayoutBoundary.test.tsx"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@tabora/orchestrator": "workspace:*",

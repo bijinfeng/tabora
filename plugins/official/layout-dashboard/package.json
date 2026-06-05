@@ -9,7 +9,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "vitest"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@tabora/brand": "workspace:*",

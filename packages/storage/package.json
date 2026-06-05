@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "vp pack src/index.ts",
-    "test": "vitest"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@tabora/plugin-api": "workspace:*",

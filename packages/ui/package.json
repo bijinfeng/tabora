@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "vp pack src/index.ts",
-    "test": "vitest"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@kobalte/core": "catalog:ui",

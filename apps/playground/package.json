@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "vitest"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@tabora/brand": "workspace:*",

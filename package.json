@@ -7,7 +7,7 @@
     "dev": "vp dev apps/playground",
     "staged": "vp staged",
     "test": "pnpm run test:unit",
-    "test:unit": "vitest run --config vite.config.ts",
+    "test:unit": "vitest run --config vitest.config.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "build": "vp run -r build",
     "pack": "vp run -r build",

@@ -1149,7 +1149,7 @@ MVP 官方插件可以通过 manifest 默认授权最小权限，但记录模型
 
 ### 15.2 集成测试
 
-当前通过 `pnpm test` 执行快速单元 / 集成测试。该命令显式枚举当前已落地的普通测试文件，并排除 `*.e2e.test.tsx`，避免真实浏览器测试混入日常反馈路径。
+当前通过 `pnpm test` 执行快速单元 / 集成测试。根目录 `vitest.config.ts` 使用 Vitest 官方 `test.projects` 方案聚合 monorepo 普通测试文件；各 package / plugin / app 内部通过各自薄 `vitest.config.ts` 复用 `tooling/vitest/` 共享 helper，保证 `pnpm --filter <pkg> test` 只跑本包测试；浏览器 E2E 继续走独立 `vitest.e2e.config.ts`。
 
 重点覆盖：
 

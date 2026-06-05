@@ -56,33 +56,6 @@ const pack = {
 
 export default defineConfig({
   plugins: [solid({ hot: false })],
-  test: {
-    environment: "happy-dom",
-    include: [
-      "packages/plugin-api/src/**/*.test.ts",
-      "packages/platform-kernel/src/**/*.test.ts",
-      "packages/orchestrator/src/**/*.test.ts",
-      "packages/host-adapters/src/**/*.test.ts",
-      "packages/builtin-plugin-registry/src/**/*.test.ts",
-      "packages/workbench-app/src/**/*.test.ts",
-      "packages/workbench-shell/src/**/*.test.tsx",
-      "packages/theme/src/**/*.test.ts",
-      "packages/storage/src/**/*.test.ts",
-      "packages/ui/src/**/*.test.tsx",
-      "packages/official-plugins/src/**/*.test.tsx",
-      "plugins/*/src/**/*.test.tsx",
-      "plugins/*/src/**/*.test.ts",
-      "plugins/*/*/src/**/*.test.tsx",
-      "plugins/*/*/src/**/*.test.ts",
-      "apps/playground/src/**/*.test.tsx",
-    ],
-    exclude: ["apps/**/*.e2e.test.tsx"],
-    server: {
-      deps: {
-        inline: [/@kobalte\//, /solid-prevent-scroll/, /@corvu\//, /solid-presence/, /solid-/],
-      },
-    },
-  },
   staged: {
     "*.{css,html,json,md,ts,tsx,yaml,yml}": "vp check --fix",
   },
