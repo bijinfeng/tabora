@@ -72,4 +72,74 @@ describe("createWidgetContextMenuModel", () => {
 
     expect(model.sections[0]!.items.map((item) => item.isCurrent)).toEqual([false, true, false])
   })
+
+  it("merges ordered plugin context menu items before remove", () => {
+    const onFocus = vi.fn()
+    const onClear = vi.fn()
+    const model = createWidgetContextMenuModel({
+      instance: instance(),
+      supportedSizes: ["S"],
+      contextMenus: [
+        {
+          id: "clear",
+          label: "清空待办",
+          commandId: "todo.clear",
+          order: 30,
+          danger: true,
+        },
+        {
+          id: "focus",
+          label: "聚焦待办",
+          commandId: "todo.focus",
+          order: 10,
+        },
+      ],
+      commandActions: {
+        "todo.focus": onFocus,
+        "todo.clear": onClear,
+      },
+      onResize: vi.fn(),
+      onExpand: vi.fn(),
+      onRemove: vi.fn(),
+    })
+
+    expect(model.sections.map((section) => section.id)).toEqual([
+      "size",
+      "expand",
+      "plugin",
+      "remove",
+    ])
+    expect(model.sections[2]!.items.map((item) => item.label)).toEqual(["聚焦待办", "清空待办"])
+
+    model.sections[2]!.items[0]!.run()
+    model.sections[2]!.items[1]!.run()
+
+    expect(onFocus).toHaveBeenCalledOnce()
+    expect(onClear).toHaveBeenCalledOnce()
+    expect(model.sections[2]!.items[1]!.danger).toBe(true)
+  })
+
+  it("skips plugin context menu items without a resolved command action", () => {
+    const model = createWidgetContextMenuModel({
+      instance: instance(),
+      supportedSizes: ["S"],
+      contextMenus: [
+        {
+          id: "missing-command",
+          label: "缺少命令",
+          commandId: "todo.missing",
+        },
+        {
+          id: "no-command",
+          label: "无命令",
+        },
+      ],
+      commandActions: {},
+      onResize: vi.fn(),
+      onExpand: vi.fn(),
+      onRemove: vi.fn(),
+    })
+
+    expect(model.sections.map((section) => section.id)).toEqual(["size", "expand", "remove"])
+  })
 })

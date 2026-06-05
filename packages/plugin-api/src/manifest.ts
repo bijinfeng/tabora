@@ -20,6 +20,15 @@ export type PluginPermission =
   | { type: "local-file"; access: "read" | "write" }
   | { type: "external-open"; hosts: string[] }
 
+export type WidgetContextMenuContribution = {
+  id: string
+  label: string
+  commandId?: string
+  order?: number
+  danger?: boolean
+  when?: string
+}
+
 export type WidgetContribution = {
   id: string
   title: string
@@ -35,6 +44,7 @@ export type WidgetContribution = {
     fullscreen?: string
     settings?: string
   }
+  contextMenus?: WidgetContextMenuContribution[]
 }
 
 export type LayoutRegion = {

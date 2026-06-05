@@ -1,4 +1,5 @@
-import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
+import type { PluginInstance, WidgetContextMenuContribution, WidgetSize } from "@tabora/plugin-api"
+import type { CommandActionMap } from "./command-catalog"
 
 export type ContextMenuItem = {
   id: string
@@ -21,9 +22,36 @@ export type WidgetContextMenuModel = {
 export type WidgetContextMenuModelOptions = {
   instance: PluginInstance
   supportedSizes: WidgetSize[]
+  contextMenus?: WidgetContextMenuContribution[]
+  commandActions?: CommandActionMap
   onResize: (instanceId: string, size: WidgetSize) => void
   onExpand: (instanceId: string) => void
   onRemove: (instanceId: string) => void
+}
+
+function pluginContextMenuItems(
+  contextMenus: WidgetContextMenuContribution[],
+  commandActions: CommandActionMap,
+): ContextMenuItem[] {
+  return [...contextMenus]
+    .sort(
+      (left, right) =>
+        (left.order ?? 0) - (right.order ?? 0) || left.label.localeCompare(right.label),
+    )
+    .flatMap((item) => {
+      if (!item.commandId) return []
+      const action = commandActions[item.commandId]
+      if (!action) return []
+
+      const menuItem: ContextMenuItem = {
+        id: item.id,
+        label: item.label,
+        run: action,
+      }
+      if (item.danger) menuItem.danger = true
+
+      return [menuItem]
+    })
 }
 
 export function createWidgetContextMenuModel(
@@ -31,6 +59,10 @@ export function createWidgetContextMenuModel(
 ): WidgetContextMenuModel {
   const instanceId = options.instance.id
   const currentSize = options.instance.size ?? "M"
+  const pluginItems = pluginContextMenuItems(
+    options.contextMenus ?? [],
+    options.commandActions ?? {},
+  )
 
   return {
     instanceId,
@@ -54,6 +86,7 @@ export function createWidgetContextMenuModel(
           },
         ],
       },
+      ...(pluginItems.length > 0 ? [{ id: "plugin", items: pluginItems }] : []),
       {
         id: "remove",
         items: [

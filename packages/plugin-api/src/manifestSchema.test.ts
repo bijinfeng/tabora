@@ -26,6 +26,77 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(true)
   })
 
+  it("accepts widget context menu contributions", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.widgets.notes",
+      name: "Notes Widget",
+      version: "0.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        widgets: [
+          {
+            id: "notes",
+            title: "便签",
+            supportedSizes: ["S", "M", "L"],
+            defaultSize: "M",
+            allowMultipleInstances: true,
+            views: { card: "official.notes.card" },
+            contextMenus: [
+              {
+                id: "notes.clear",
+                label: "清空便签",
+                commandId: "official.notes.clear",
+                order: 30,
+                danger: true,
+                when: "widget",
+              },
+            ],
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+    expect(
+      result.success ? result.data.contributes.widgets?.[0]?.contextMenus?.[0]?.danger : undefined,
+    ).toBe(true)
+  })
+
+  it("rejects widget context menu contributions without id or label", () => {
+    const baseWidget = {
+      id: "notes",
+      title: "便签",
+      supportedSizes: ["S", "M"],
+      defaultSize: "M",
+      allowMultipleInstances: true,
+      views: { card: "official.notes.card" },
+    }
+
+    for (const contextMenu of [
+      { label: "清空便签", commandId: "official.notes.clear" },
+      { id: "notes.clear", commandId: "official.notes.clear" },
+    ]) {
+      const result = pluginManifestSchema.safeParse({
+        id: "bad.widget.context-menu",
+        name: "Bad Widget Context Menu",
+        version: "0.0.0",
+        entry: "./entry",
+        engine: { platform: "^0.1.0" },
+        contributes: {
+          widgets: [
+            {
+              ...baseWidget,
+              contextMenus: [contextMenu],
+            },
+          ],
+        },
+      })
+
+      expect(result.success).toBe(false)
+    }
+  })
+
   it("rejects a widget whose default size is not supported", () => {
     const result = pluginManifestSchema.safeParse({
       id: "bad.widgets",

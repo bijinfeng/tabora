@@ -29,6 +29,18 @@ const widgetContributionSchema = z
       fullscreen: z.string().min(1).optional(),
       settings: z.string().min(1).optional(),
     }),
+    contextMenus: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          label: z.string().min(1),
+          commandId: z.string().min(1).optional(),
+          order: z.number().int().optional(),
+          danger: z.boolean().optional(),
+          when: z.string().min(1).optional(),
+        }),
+      )
+      .optional(),
   })
   .refine((value) => value.supportedSizes.includes(value.defaultSize), {
     message: "defaultSize must be included in supportedSizes",

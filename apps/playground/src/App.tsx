@@ -12,6 +12,7 @@ import type {
   SearchViewProps,
   SettingsPanelViewProps,
   ThemeContribution,
+  WidgetContextMenuContribution,
   WidgetSize,
   WidgetViewProps,
   WorkbenchSearchSettings,
@@ -875,6 +876,10 @@ export function App() {
   const resolveWidgetContribution = (pluginId: string, contributionId: string) =>
     widgetContribution({ pluginId, contributionId })
 
+  function contextMenuContributions(instance: PluginInstance): WidgetContextMenuContribution[] {
+    return widgetContribution(instance)?.contextMenus ?? []
+  }
+
   function widgetCardView(instance: PluginInstance): SolidView | null {
     const widget = widgetContribution(instance)
     if (!widget) return null
@@ -1045,6 +1050,8 @@ export function App() {
     return createWidgetContextMenuModel({
       instance,
       supportedSizes: supportedWidgetSizes(instance),
+      contextMenus: contextMenuContributions(instance),
+      commandActions: commandActions(),
       onResize: (instanceId, size) => {
         void changeWidgetSize(instanceId, size)
       },
