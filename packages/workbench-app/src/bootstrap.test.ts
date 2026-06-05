@@ -31,7 +31,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
 
     expect(runtime.host.id).toBe("host.test")
     expect(runtime.kernel.plugins).toEqual([])
-    expect(runtime.catalog.plugins).toBe(testPlugins)
+    expect(runtime.catalog.plugins[0]).toBe(testPlugins[0])
     expect(runtime.repositories.workspaceRepo).toBeDefined()
     expect(runtime.repositories.instanceRepo).toBeDefined()
     expect(runtime.repositories.pluginDataRepo).toBeDefined()

@@ -1,6 +1,12 @@
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createPluginCatalog, type PluginCatalog } from "@tabora/orchestrator"
-import { createPluginKernel, type BuiltinPlugin, type PluginKernel } from "@tabora/platform-kernel"
+import {
+  createPluginKernel,
+  loadBuiltinPlugins,
+  type BuiltinPlugin,
+  type PluginLoadRejectedRecord,
+  type PluginKernel,
+} from "@tabora/platform-kernel"
 import {
   createInstanceRepository,
   createPluginDataRepository,
@@ -28,6 +34,7 @@ export type WorkbenchRuntimeBootstrap = {
   repositories: WorkbenchRuntimeRepositories
   catalog: PluginCatalog
   kernel: PluginKernel
+  rejectedPlugins: PluginLoadRejectedRecord[]
 }
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
@@ -49,7 +56,9 @@ export function createWorkbenchRuntimeBootstrap(
     pluginRecordRepo: createPluginRecordRepository(database),
   }
   const { pluginRecordRepo } = repositories
-  const catalog = createPluginCatalog(options.plugins)
+  const loadResult = loadBuiltinPlugins(options.plugins)
+  const loadedPlugins = loadResult.loaded.map((record) => record.plugin)
+  const catalog = createPluginCatalog(loadedPlugins)
   const kernel = createPluginKernel({
     lifecycleStore: pluginRecordRepo,
     recordSource: "builtin",
@@ -63,5 +72,6 @@ export function createWorkbenchRuntimeBootstrap(
     repositories,
     catalog,
     kernel,
+    rejectedPlugins: loadResult.rejected,
   }
 }

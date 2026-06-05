@@ -45,7 +45,7 @@ export type PluginInstance = {
 export type PluginRecord = {
   id: string
   version: string
-  source: "builtin" | "local" | "remote"
+  source: "builtin" | "local-trusted" | "remote-untrusted"
   enabled: boolean
   status: "active" | "disabled" | "error" | "skipped"
   installedAt: string
