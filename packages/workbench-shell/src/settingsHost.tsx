@@ -6,20 +6,18 @@ import type {
   SettingsPanelContribution,
   SettingsPanelViewProps,
 } from "@tabora/plugin-api"
+import {
+  createSettingsNavigator,
+  SETTINGS_SECTIONS,
+  type SettingsSectionId,
+} from "@tabora/orchestrator"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
 
 export type SettingsPanelDescriptor = SettingsPanelContribution & { pluginId: string }
-export type SettingsSectionId = "general" | "appearance" | "search" | "plugins" | "about"
-
-const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; title: string }> = [
-  { id: "general", title: "通用" },
-  { id: "appearance", title: "外观" },
-  { id: "search", title: "搜索" },
-  { id: "plugins", title: "插件" },
-  { id: "about", title: "关于" },
-]
+export type { SettingsSectionId }
+export { resolveInitialSettingsPanelId, resolveSettingsSectionId } from "@tabora/orchestrator"
 
 export type SettingsHostProps = {
   open: boolean
@@ -44,49 +42,18 @@ export function collectSettingsPanels(plugins: PluginLike[]): SettingsPanelDescr
   )
 }
 
-export function resolveInitialSettingsPanelId(
-  panels: SettingsPanelDescriptor[],
-  requested?: string | null,
-): string | null {
-  if (requested && panels.some((p) => p.id === requested)) return requested
-  return panels[0]?.id ?? null
-}
-
-export function resolveSettingsSectionId(panelId?: string | null): SettingsSectionId {
-  if (!panelId) return "general"
-  if (panelId === "official.settings.plugins") return "plugins"
-  if (panelId.includes(".appearance")) return "appearance"
-  if (panelId.includes(".search")) return "search"
-  if (panelId.includes(".workbench")) return "general"
-  return "about"
-}
-
 export function resolveInitialSettingsSectionId(
   panels: SettingsPanelDescriptor[],
   requested?: string | null,
 ): SettingsSectionId {
-  const initialPanelId = resolveInitialSettingsPanelId(panels, requested)
-  return resolveSettingsSectionId(initialPanelId)
+  return createSettingsNavigator(panels).initialSectionId(requested)
 }
 
 export function SettingsHost(props: SettingsHostProps) {
-  const panelsBySection = () =>
-    props.panels.reduce<Record<SettingsSectionId, SettingsPanelDescriptor[]>>(
-      (result, panel) => {
-        result[resolveSettingsSectionId(panel.id)].push(panel)
-        return result
-      },
-      {
-        general: [],
-        appearance: [],
-        search: [],
-        plugins: [],
-        about: [],
-      },
-    )
+  const navigator = () => createSettingsNavigator(props.panels)
 
   const activeSection = () => props.activeSectionId ?? "general"
-  const activePanels = () => panelsBySection()[activeSection()]
+  const activePanels = () => navigator().sections[activeSection()].panels
   const activeSectionTitle = () =>
     SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ?? "设置"
 

@@ -15,3 +15,11 @@ export {
   routeSearchQuery,
   type SearchRoute,
 } from "./search-model"
+export {
+  createSettingsNavigator,
+  resolveInitialSettingsPanelId,
+  resolveSettingsSectionId,
+  SETTINGS_SECTIONS,
+  type SettingsNavigatorSection,
+  type SettingsSectionId,
+} from "./settings-navigator"
