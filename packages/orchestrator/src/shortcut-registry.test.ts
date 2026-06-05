@@ -66,6 +66,90 @@ describe("createShortcutRegistry", () => {
     expect(second).not.toHaveBeenCalled()
   })
 
+  it("executes explicit ctrl bindings from ctrl keydown events", () => {
+    const action = vi.fn()
+    const registry = createShortcutRegistry({
+      platform: "linux",
+      keybindings: [{ id: "linux.open", commandId: "open-command", key: "ctrl+k" }],
+      commands: {
+        "open-command": action,
+      },
+    })
+
+    expect(
+      registry.executeKeydown({
+        key: "k",
+        ctrlKey: true,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      }),
+    ).toBe(true)
+
+    expect(action).toHaveBeenCalledOnce()
+  })
+
+  it("executes mod bindings from ctrl and meta keydown events", () => {
+    const action = vi.fn()
+    const registry = createShortcutRegistry({
+      platform: "mac",
+      keybindings: [{ id: "command.open", commandId: "open-command", key: "mod+k" }],
+      commands: {
+        "open-command": action,
+      },
+    })
+
+    expect(
+      registry.executeKeydown({
+        key: "k",
+        ctrlKey: true,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      }),
+    ).toBe(true)
+    expect(
+      registry.executeKeydown({
+        key: "k",
+        ctrlKey: false,
+        metaKey: true,
+        altKey: false,
+        shiftKey: false,
+      }),
+    ).toBe(true)
+
+    expect(action).toHaveBeenCalledTimes(2)
+  })
+
+  it("keeps registry order stable when ctrl keydown can match mod and ctrl bindings", () => {
+    const first = vi.fn()
+    const second = vi.fn()
+    const registry = createShortcutRegistry({
+      platform: "linux",
+      keybindings: [
+        { id: "first.open", commandId: "first.open", key: "ctrl+k" },
+        { id: "second.open", commandId: "second.open", key: "mod+k" },
+      ],
+      commands: {
+        "first.open": first,
+        "second.open": second,
+      },
+    })
+
+    expect(
+      registry.executeKeydown({
+        key: "k",
+        ctrlKey: true,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+      }),
+    ).toBe(true)
+
+    expect(first).toHaveBeenCalledOnce()
+    expect(second).not.toHaveBeenCalled()
+  })
+
   it("exposes a shortcut reference list from enabled registry bindings", () => {
     const registry = createShortcutRegistry({
       platform: "mac",

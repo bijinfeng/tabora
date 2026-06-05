@@ -83,11 +83,24 @@ export function normalizeShortcutKey(key: string): string {
 export function shortcutKeyFromEvent(
   event: Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey">,
 ): string {
+  return shortcutKeysFromEvent(event)[0] ?? normalizeShortcutKey(event.key)
+}
+
+export function shortcutKeysFromEvent(
+  event: Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey">,
+): string[] {
   const modifiers: string[] = []
-  if (event.metaKey || event.ctrlKey) modifiers.push("mod")
+  if (event.metaKey) modifiers.push("mod")
+  if (event.ctrlKey) modifiers.push("ctrl")
   if (event.altKey) modifiers.push("alt")
   if (event.shiftKey) modifiers.push("shift")
-  return normalizeShortcutKey([...modifiers, event.key].join("+"))
+
+  const explicitKey = normalizeShortcutKey([...modifiers, event.key].join("+"))
+  if (!event.ctrlKey) return [explicitKey]
+
+  const modModifiers = modifiers.map((modifier) => (modifier === "ctrl" ? "mod" : modifier))
+  const modKey = normalizeShortcutKey([...modModifiers, event.key].join("+"))
+  return [...new Set([explicitKey, modKey])]
 }
 
 export function createShortcutRegistry(options: ShortcutRegistryOptions): ShortcutRegistry {
@@ -119,16 +132,25 @@ export function createShortcutRegistry(options: ShortcutRegistryOptions): Shortc
 
     return resolved
   })
+  const enabledBindings = bindings.filter((binding) => !binding.disabled)
+
+  function executeNormalizedKey(key: string): boolean {
+    const binding = enabledByKey.get(normalizeShortcutKey(key))
+    if (!binding || binding.disabled) return false
+    executeCommand(binding.commandId)
+    return true
+  }
 
   return {
     execute(key) {
-      const binding = enabledByKey.get(normalizeShortcutKey(key))
-      if (!binding || binding.disabled) return false
-      executeCommand(binding.commandId)
-      return true
+      return executeNormalizedKey(key)
     },
     executeKeydown(event) {
-      return this.execute(shortcutKeyFromEvent(event))
+      const candidateKeys = new Set(shortcutKeysFromEvent(event))
+      const binding = enabledBindings.find((candidate) => candidateKeys.has(candidate.key))
+      if (!binding) return false
+      executeCommand(binding.commandId)
+      return true
     },
     listBindings: () => [...bindings],
     listConflicts: () => [...conflicts],
