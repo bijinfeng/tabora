@@ -16,6 +16,12 @@ export {
   type SearchRoute,
 } from "./search-model"
 export {
+  createCommandPaletteItems,
+  providerToken,
+  type CommandPaletteItem,
+  type CommandPaletteModelOptions,
+} from "./command-palette-model"
+export {
   createSettingsNavigator,
   resolveInitialSettingsPanelId,
   resolveSettingsSectionId,

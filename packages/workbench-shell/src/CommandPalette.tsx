@@ -5,21 +5,15 @@ import type {
   SearchProviderContribution,
   SearchWidgetEntry,
 } from "@tabora/plugin-api"
-import { buildSearchUrl, matchProvidersByToken, routeSearchQuery } from "@tabora/orchestrator"
+import {
+  buildSearchUrl,
+  createCommandPaletteItems,
+  routeSearchQuery,
+  type CommandPaletteItem,
+} from "@tabora/orchestrator"
 import { Kbd } from "@tabora/ui"
 
 export type CommandItem = SearchCommandEntry
-
-type PaletteItem = {
-  id: string
-  icon: string
-  name: string
-  desc: string
-  group: string
-  hint: string | undefined
-  action: () => void
-  closeAfterAction: boolean | undefined
-}
 
 export type CommandPaletteProps = {
   isOpen: boolean
@@ -31,14 +25,6 @@ export type CommandPaletteProps = {
   searchHistory?: SearchHistoryEntry[]
   openExternal?: (url: string) => boolean
   onSaveHistory?: (entry: { query: string; providerId: string }) => Promise<void>
-}
-
-function includesText(value: string, query: string): boolean {
-  return value.toLowerCase().includes(query.toLowerCase())
-}
-
-function providerToken(provider: SearchProviderContribution): string {
-  return provider.shortcut || provider.id.split(".").at(-1) || provider.title.toLowerCase()
 }
 
 export function CommandPalette(props: CommandPaletteProps) {
@@ -58,133 +44,24 @@ export function CommandPalette(props: CommandPaletteProps) {
     void props.onSaveHistory?.({ query: trimmed, providerId: provider.id })
   }
 
-  const items = createMemo((): PaletteItem[] => {
-    const trimmed = query().trim()
-    const history = (props.searchHistory ?? []).slice().reverse()
-    const providers = props.providers ?? []
-    const widgets = props.widgets ?? []
-    const defaultProviderId = props.defaultProviderId ?? providers[0]?.id ?? ""
-
-    if (!trimmed) {
-      return [
-        ...props.commands.slice(0, 4).map((command) => ({
-          ...command,
-          group: "常用命令",
-          hint: command.shortcut,
-          closeAfterAction: true,
-        })),
-        ...history.slice(0, 4).map((entry) => ({
-          id: `history-${entry.providerId}-${entry.timestamp}`,
-          icon: "🕘",
-          name: entry.query,
-          desc: `最近搜索 · ${
-            providers.find((provider) => provider.id === entry.providerId)?.title ??
-            entry.providerId
-          }`,
-          group: "最近搜索",
-          hint: providers.find((provider) => provider.id === entry.providerId)?.shortcut,
-          action: () => {
-            const provider = providers.find((item) => item.id === entry.providerId)
-            if (provider) runWebSearch(provider, entry.query)
-          },
-          closeAfterAction: true,
-        })),
-        ...providers.slice(0, 4).map((provider) => ({
-          id: `provider-${provider.id}`,
-          icon: "＠",
-          name: `@${providerToken(provider)}`,
-          desc: `搜索源 · ${provider.title}`,
-          group: "搜索源",
-          hint: provider.shortcut,
-          action: () => {
-            setQuery(`@${providerToken(provider)} `)
-            setActiveIdx(0)
-          },
-          closeAfterAction: false,
-        })),
-      ]
-    }
-
-    const route = routeSearchQuery(trimmed, providers, defaultProviderId)
-    if (route?.type === "provider-pending") {
-      return matchProvidersByToken(providers, route.token).map((provider) => ({
-        id: `provider-pending-${provider.id}`,
-        icon: "＠",
-        name: `@${providerToken(provider)}`,
-        desc: `搜索源 · ${provider.title}`,
-        group: "搜索源",
-        hint: provider.shortcut,
-        action: () => {
-          setQuery(`@${providerToken(provider)} `)
-          setActiveIdx(0)
-        },
-        closeAfterAction: false,
-      }))
-    }
-
-    if (route?.type === "provider") {
-      return [
-        {
-          id: `provider-search-${route.provider.id}`,
-          icon: "🔍",
-          name: `在 ${route.provider.title} 中搜索 "${route.query}"`,
-          desc: "临时搜索源",
-          group: "搜索",
-          hint: route.provider.shortcut,
-          action: () => runWebSearch(route.provider, route.query),
-          closeAfterAction: true,
-        },
-      ]
-    }
-
-    const results: PaletteItem[] = []
-    results.push(
-      ...props.commands
-        .filter(
-          (command) => includesText(command.name, trimmed) || includesText(command.desc, trimmed),
-        )
-        .map((command) => ({
-          ...command,
-          group: "命令",
-          hint: command.shortcut,
-          closeAfterAction: true,
-        })),
-    )
-    results.push(
-      ...widgets
-        .filter(
-          (widget) => includesText(widget.name, trimmed) || includesText(widget.desc, trimmed),
-        )
-        .map((widget) => ({
-          id: `widget-${widget.instanceId}`,
-          icon: widget.icon,
-          name: widget.name,
-          desc: widget.desc,
-          action: widget.action,
-          group: "卡片",
-          hint: undefined,
-          closeAfterAction: true,
-        })),
-    )
-
-    if (route?.type === "web") {
-      results.push({
-        id: `web-${route.provider.id}-${route.query}`,
-        icon: "🔍",
-        name: `在 ${route.provider.title} 中搜索 "${route.query}"`,
-        desc: "网页搜索",
-        group: "搜索",
-        hint: route.provider.shortcut,
-        action: () => runWebSearch(route.provider, route.query),
-        closeAfterAction: true,
-      })
-    }
-
-    return results
-  })
+  const items = createMemo((): CommandPaletteItem[] =>
+    createCommandPaletteItems({
+      query: query(),
+      commands: props.commands,
+      widgets: props.widgets,
+      providers: props.providers,
+      defaultProviderId: props.defaultProviderId,
+      history: props.searchHistory,
+      onProviderTokenSelect: (token) => {
+        setQuery(`@${token} `)
+        setActiveIdx(0)
+      },
+      onWebSearch: runWebSearch,
+    }),
+  )
 
   const grouped = createMemo(() => {
-    const groups: Record<string, PaletteItem[]> = {}
+    const groups: Record<string, CommandPaletteItem[]> = {}
     for (const item of items()) {
       const bucket = groups[item.group] ?? (groups[item.group] = [])
       bucket.push(item)
