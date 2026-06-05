@@ -70,6 +70,7 @@ export const layoutDiyMasonry: BuiltinPlugin = {
     id: "community.layout.diy-masonry",
     name: "DIY Masonry Layout",
     version: "1.0.0",
+    apiVersion: "1.0.0",
     publisher: "community",
     entry: "./index",
     engine: { platform: "^0.1.0" },

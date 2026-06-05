@@ -300,6 +300,7 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
     id: "official.settings.workspace",
     name: "Workspace Settings",
     version: "0.0.0",
+    apiVersion: "1.0.0",
     entry: "./settings-workspace",
     engine: { platform: "^0.1.0" },
     contributes: {

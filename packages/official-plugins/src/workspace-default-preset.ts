@@ -92,6 +92,7 @@ export const officialWorkspacePresetPack: BuiltinPlugin = {
     id: "official.workspace-presets",
     name: "官方工作区预设",
     version: "0.1.0",
+    apiVersion: "1.0.0",
     entry: "builtin:official.workspace-presets",
     engine: { platform: "tabora" },
     contributes: {

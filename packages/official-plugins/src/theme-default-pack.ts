@@ -6,6 +6,7 @@ export const officialThemeDefaultPack: BuiltinPlugin = {
     id: "official.theme.default-pack",
     name: "Tabora Default Theme Pack",
     version: "0.0.0",
+    apiVersion: "1.0.0",
     entry: "./theme-default-pack",
     engine: { platform: "^0.1.0" },
     contributes: {

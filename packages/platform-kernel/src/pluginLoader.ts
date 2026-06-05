@@ -1,6 +1,8 @@
 import { pluginManifestSchema, type PluginManifest } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "./pluginKernel"
 
+export const TABORA_PLUGIN_API_VERSION = "1.0.0"
+
 export type PluginSource = "builtin" | "local-trusted" | "remote-untrusted"
 
 export type PluginLoadRecord = {
@@ -24,6 +26,46 @@ export type PluginLoader = {
   load(): Promise<PluginLoadResult>
 }
 
+export type TrustedLocalPluginPackage = {
+  package: {
+    name: string
+    version: string
+  }
+  tabora: PluginManifest
+  entry: string
+}
+
+export type ParsedTrustedLocalPluginPackage = {
+  packageName: string
+  packageVersion: string
+  manifest: PluginManifest
+  entry: string
+  source: "local-trusted"
+}
+
+function majorVersion(version: string): number | null {
+  const [major] = version.split(".")
+  if (!major || !/^\d+$/.test(major)) return null
+  return Number(major)
+}
+
+export function isPluginApiVersionCompatible(
+  pluginApiVersion: string,
+  hostApiVersion = TABORA_PLUGIN_API_VERSION,
+): boolean {
+  const pluginMajor = majorVersion(pluginApiVersion)
+  const hostMajor = majorVersion(hostApiVersion)
+  return pluginMajor !== null && hostMajor !== null && pluginMajor === hostMajor
+}
+
+function apiCompatibilityRejection(manifest: PluginManifest): string | undefined {
+  if (!manifest.apiVersion) return "Plugin manifest must declare apiVersion"
+  if (!isPluginApiVersionCompatible(manifest.apiVersion)) {
+    return `Incompatible plugin apiVersion "${manifest.apiVersion}"`
+  }
+  return undefined
+}
+
 export function loadBuiltinPlugins(plugins: BuiltinPlugin[]): PluginLoadResult {
   const loaded: PluginLoadRecord[] = []
   const rejected: PluginLoadRejectedRecord[] = []
@@ -34,6 +76,16 @@ export function loadBuiltinPlugins(plugins: BuiltinPlugin[]): PluginLoadResult {
       rejected.push({
         source: "builtin",
         reason: "Invalid plugin manifest",
+        manifest: plugin.manifest,
+      })
+      continue
+    }
+
+    const apiRejection = apiCompatibilityRejection(parsed.data as PluginManifest)
+    if (apiRejection) {
+      rejected.push({
+        source: "builtin",
+        reason: apiRejection,
         manifest: plugin.manifest,
       })
       continue
@@ -54,5 +106,20 @@ export function createBuiltinPluginLoader(plugins: BuiltinPlugin[]): PluginLoade
     async load() {
       return loadBuiltinPlugins(plugins)
     },
+  }
+}
+
+export function parseTrustedLocalPluginPackage(
+  value: TrustedLocalPluginPackage,
+): ParsedTrustedLocalPluginPackage {
+  const parsedManifest = pluginManifestSchema.parse(value.tabora) as PluginManifest
+  const apiRejection = apiCompatibilityRejection(parsedManifest)
+  if (apiRejection) throw new Error(apiRejection)
+  return {
+    packageName: value.package.name,
+    packageVersion: value.package.version,
+    manifest: parsedManifest,
+    entry: value.entry,
+    source: "local-trusted",
   }
 }

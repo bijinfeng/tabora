@@ -68,6 +68,7 @@ export const layoutStream: BuiltinPlugin = {
     id: "official.layout.workbench-stream",
     name: "Workbench Stream Layout",
     version: "1.0.0",
+    apiVersion: "1.0.0",
     entry: "./index",
     engine: { platform: "^0.1.0" },
     contributes: {

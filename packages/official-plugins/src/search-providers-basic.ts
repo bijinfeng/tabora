@@ -6,6 +6,7 @@ export const officialSearchProvidersBasic: BuiltinPlugin = {
     id: "official.search-providers.basic",
     name: "Basic Search Providers",
     version: "0.0.0",
+    apiVersion: "1.0.0",
     entry: "./search-providers-basic",
     engine: { platform: "^0.1.0" },
     permissions: [{ type: "external-open", hosts: ["*"] }],

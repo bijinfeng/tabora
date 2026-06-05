@@ -441,6 +441,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     id: "official.search.command-bar",
     name: "Tabora Search Command Bar",
     version: "0.0.0",
+    apiVersion: "1.0.0",
     entry: "./search-command-bar",
     engine: { platform: "^0.1.0" },
     permissions: [{ type: "external-open", hosts: ["*"] }],

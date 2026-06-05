@@ -12,6 +12,7 @@ const testPlugins: BuiltinPlugin[] = [
       id: "test.plugin",
       name: "Test Plugin",
       version: "0.0.1",
+      apiVersion: "1.0.0",
       entry: "./index.ts",
       engine: { platform: "^0.1.0" },
       contributes: {},
@@ -31,6 +32,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
 
     expect(runtime.host.id).toBe("host.test")
     expect(runtime.kernel.plugins).toEqual([])
+    expect(runtime.plugins[0]).toBe(testPlugins[0])
     expect(runtime.catalog.plugins[0]).toBe(testPlugins[0])
     expect(runtime.repositories.workspaceRepo).toBeDefined()
     expect(runtime.repositories.instanceRepo).toBeDefined()

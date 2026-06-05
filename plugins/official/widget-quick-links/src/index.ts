@@ -7,6 +7,7 @@ export const officialPluginQuickLinks: BuiltinPlugin = {
     id: "official.widgets.quick-links",
     name: "Quick Links Widget",
     version: "1.0.0",
+    apiVersion: "1.0.0",
     entry: "./index",
     engine: { platform: "^0.1.0" },
     contributes: {

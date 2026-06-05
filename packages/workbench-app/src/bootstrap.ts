@@ -34,6 +34,7 @@ export type WorkbenchRuntimeBootstrap = {
   repositories: WorkbenchRuntimeRepositories
   catalog: PluginCatalog
   kernel: PluginKernel
+  plugins: BuiltinPlugin[]
   rejectedPlugins: PluginLoadRejectedRecord[]
 }
 
@@ -72,6 +73,7 @@ export function createWorkbenchRuntimeBootstrap(
     repositories,
     catalog,
     kernel,
+    plugins: loadedPlugins,
     rejectedPlugins: loadResult.rejected,
   }
 }

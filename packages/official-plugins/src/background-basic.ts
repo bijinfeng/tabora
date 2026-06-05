@@ -10,6 +10,7 @@ export const officialBackgroundBasic: BuiltinPlugin = {
     id: "official.background.basic",
     name: "Basic Background",
     version: "0.0.0",
+    apiVersion: "1.0.0",
     entry: "./background-basic",
     engine: { platform: "^0.1.0" },
     contributes: {

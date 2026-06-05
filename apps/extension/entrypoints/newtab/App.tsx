@@ -19,7 +19,6 @@ import type {
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
-import { builtinPlugins } from "@tabora/builtin-plugin-registry"
 import {
   buildSearchableWidgetEntries,
   createCommandExecutor,
@@ -154,11 +153,13 @@ export function App() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
   }
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
+  const runtime = createExtensionRuntimeBootstrap()
+  const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
+  const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
+  const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
 
-  const pluginCommands = builtinPlugins.flatMap(
-    (plugin) => plugin.manifest.contributes.commands ?? [],
-  )
-  const pluginKeybindings = builtinPlugins.flatMap(
+  const pluginCommands = plugins.flatMap((plugin) => plugin.manifest.contributes.commands ?? [])
+  const pluginKeybindings = plugins.flatMap(
     (plugin) => plugin.manifest.contributes.keybindings ?? [],
   )
 
@@ -275,11 +276,6 @@ export function App() {
       pluginCommandIds: pluginCommands.map((command) => command.id),
       runPluginCommand,
     })(commandId, context)
-
-  const runtime = createExtensionRuntimeBootstrap()
-  const { database, catalog: pluginCatalog, kernel, repositories } = runtime
-  const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
-  const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
 
   // Create InstanceRenderer for layout engine
   const instanceRenderer: InstanceRenderer = {
@@ -461,7 +457,7 @@ export function App() {
     }
   }
 
-  void kernel.discover(builtinPlugins).then(async () => {
+  void kernel.discover(plugins).then(async () => {
     await kernel.activateEnabledPlugins()
     setPluginRecords(await repositories.pluginRecordRepo.getAll())
 

@@ -31,6 +31,7 @@ export const officialPluginManager: BuiltinPlugin = {
     id: "official.plugin-manager",
     name: "Plugin Manager",
     version: "0.0.0",
+    apiVersion: "1.0.0",
     entry: "./plugin-manager-entry",
     engine: { platform: "^0.1.0" },
     contributes: {
