@@ -1,4 +1,4 @@
-import type { Workspace } from "./workspace"
+import type { PluginInstance, Workspace } from "./workspace"
 
 export type ExtensionPoint =
   | "layout"
@@ -112,6 +112,34 @@ export type ThemeContribution = {
 export type WorkbenchSearchSettings = {
   defaultProviderId: string
   enabledProviderIds?: string[]
+}
+
+export type WorkspacePresetRegionContribution = {
+  regionId: string
+  accepts: ExtensionPoint[]
+}
+
+export type WorkspacePresetInstanceContribution = {
+  pluginId: string
+  contributionId: string
+  instanceId: string
+  extensionPoint: PluginInstance["extensionPoint"]
+  regionId: string
+  size?: WidgetSize
+  config?: Record<string, unknown>
+}
+
+export type WorkspacePresetContribution = {
+  id: string
+  title: string
+  description?: string
+  plugins: string[]
+  layoutId: string
+  themeId: string
+  backgroundProviderId: string
+  search: WorkbenchSearchSettings
+  instances: WorkspacePresetInstanceContribution[]
+  regions: WorkspacePresetRegionContribution[]
 }
 
 export type ResolvedBackgroundValue = {
@@ -267,5 +295,6 @@ export type PluginManifest = {
     settingsPanels?: SettingsPanelContribution[]
     commands?: CommandContribution[]
     keybindings?: KeybindingContribution[]
+    workspacePresets?: WorkspacePresetContribution[]
   }
 }

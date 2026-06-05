@@ -6,6 +6,10 @@ import { officialSearchCommandBar } from "./search-command-bar"
 import { officialSettingsWorkspace } from "./settings-workspace"
 import { officialSearchProvidersBasic } from "./search-providers-basic"
 import { officialThemeDefaultPack } from "./theme-default-pack"
+import {
+  officialDefaultWorkspacePreset,
+  officialWorkspacePresetPack,
+} from "./workspace-default-preset"
 import { officialPluginWeather } from "@tabora/plugin-weather"
 import { officialPluginTodo } from "@tabora/plugin-todo"
 import { officialPluginQuickLinks } from "@tabora/plugin-quick-links"
@@ -26,11 +30,14 @@ export {
   officialSettingsWorkspace,
   officialSearchProvidersBasic,
   officialThemeDefaultPack,
+  officialDefaultWorkspacePreset,
+  officialWorkspacePresetPack,
 }
 
 export * from "./search-model"
 
 export const officialPlugins = [
+  officialWorkspacePresetPack,
   officialThemeDefaultPack,
   officialBackgroundBasic,
   layoutDashboard,

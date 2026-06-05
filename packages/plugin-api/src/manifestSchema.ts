@@ -71,6 +71,39 @@ const keybindingContributionSchema = z.object({
   editable: z.boolean().optional(),
 })
 
+const workspacePresetSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  plugins: z.array(z.string().min(1)),
+  layoutId: z.string().min(1),
+  themeId: z.string().min(1),
+  backgroundProviderId: z.string().min(1),
+  search: z.object({
+    defaultProviderId: z.string().min(1),
+    enabledProviderIds: z.array(z.string().min(1)).optional(),
+  }),
+  regions: z
+    .array(
+      z.object({
+        regionId: z.string().min(1),
+        accepts: z.array(extensionPointSchema).min(1),
+      }),
+    )
+    .min(1),
+  instances: z.array(
+    z.object({
+      pluginId: z.string().min(1),
+      contributionId: z.string().min(1),
+      instanceId: z.string().min(1),
+      extensionPoint: extensionPointSchema,
+      regionId: z.string().min(1),
+      size: widgetSizeSchema.optional(),
+      config: z.record(z.string(), z.unknown()).optional(),
+    }),
+  ),
+})
+
 const layoutRegionSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -176,5 +209,6 @@ export const pluginManifestSchema = z.object({
       .optional(),
     commands: z.array(commandContributionSchema).optional(),
     keybindings: z.array(keybindingContributionSchema).optional(),
+    workspacePresets: z.array(workspacePresetSchema).optional(),
   }),
 })

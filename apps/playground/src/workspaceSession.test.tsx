@@ -84,7 +84,7 @@ describe("workspaceSession", () => {
     expect(session.searchSettings.defaultProviderId).toBe("official.search.google")
   })
 
-  it("adds missing prototype default instances to an existing default workspace", async () => {
+  it("does not backfill existing default workspace instances", async () => {
     const database = createTaboraDatabase("tabora-workspace-session-test")
     const workspaceRepo = createWorkspaceRepository(database)
     const instanceRepo = createInstanceRepository(database)
@@ -137,9 +137,9 @@ describe("workspaceSession", () => {
       searchProviders: providers,
     })
 
-    expect(session.instances.some((instance) => instance.id === "weather-1")).toBe(true)
-    expect(session.instances.some((instance) => instance.id === "plugin-status-1")).toBe(true)
-    expect(session.instances.filter((instance) => instance.regionId === "mainGrid")).toHaveLength(6)
+    expect(session.instances.some((instance) => instance.id === "weather-1")).toBe(false)
+    expect(session.instances.some((instance) => instance.id === "plugin-status-1")).toBe(false)
+    expect(session.instances).toHaveLength(5)
   })
 
   it("creates an isolated workspace with seeded instances", async () => {

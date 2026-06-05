@@ -6,10 +6,11 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import type { InstanceRepository, PluginDataRepository, WorkspaceRepository } from "@tabora/storage"
-import { createDefaultWorkspaceSeed, OFFICIAL_DEFAULT_WORKSPACE_SEED } from "./defaultWorkspaceSeed"
+import {
+  createDefaultWorkspaceFromPreset,
+  OFFICIAL_DEFAULT_WORKSPACE_PRESET,
+} from "./defaultWorkspaceSeed"
 import { FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
-
-const DEFAULT_WORKSPACE_SEED_VERSION = 2
 
 export type WorkspaceSessionState = {
   workspace: Workspace
@@ -43,46 +44,6 @@ export function readSearchSettings(
   return result
 }
 
-async function ensureSeedInstances(options: {
-  workspace: Workspace
-  instances: PluginInstance[]
-  instanceRepo: InstanceRepository
-  workspaceRepo: WorkspaceRepository
-}): Promise<PluginInstance[]> {
-  const savedVersion =
-    typeof options.workspace.config?.defaultSeedVersion === "number"
-      ? options.workspace.config.defaultSeedVersion
-      : 0
-  if (savedVersion >= DEFAULT_WORKSPACE_SEED_VERSION) return options.instances
-
-  const seed = createDefaultWorkspaceSeed({
-    ...OFFICIAL_DEFAULT_WORKSPACE_SEED,
-    workspaceId: options.workspace.id,
-    workspaceName: options.workspace.name,
-    activeLayoutId: options.workspace.activeLayoutId,
-    activeThemeId: options.workspace.activeThemeId,
-    defaultBackgroundProviderId:
-      options.workspace.activeBackgroundProviderId ??
-      OFFICIAL_DEFAULT_WORKSPACE_SEED.defaultBackgroundProviderId,
-  })
-  const existingIds = new Set(options.instances.map((instance) => instance.id))
-  const missing = seed.instances.filter((instance) => !existingIds.has(instance.id))
-
-  for (const instance of missing) {
-    await options.instanceRepo.save(instance)
-  }
-  await options.workspaceRepo.save({
-    ...options.workspace,
-    config: {
-      ...(options.workspace.config ?? {}),
-      defaultSeedVersion: DEFAULT_WORKSPACE_SEED_VERSION,
-    },
-    updatedAt: new Date().toISOString(),
-  })
-  if (missing.length === 0) return options.instances
-  return [...options.instances, ...missing]
-}
-
 export async function ensureWorkspaceSession(options: {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
@@ -92,40 +53,32 @@ export async function ensureWorkspaceSession(options: {
 }): Promise<WorkspaceSessionState> {
   let workspace = await options.workspaceRepo.get(options.workspaceId ?? "default")
   if (!workspace) {
-    const seed = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
-    workspace = {
-      ...seed.workspace,
-      config: {
-        ...(seed.workspace.config ?? {}),
-        defaultSeedVersion: DEFAULT_WORKSPACE_SEED_VERSION,
-      },
-    }
+    const seed = createDefaultWorkspaceFromPreset({})
+    workspace = seed.workspace
     await options.workspaceRepo.save(workspace)
   }
 
   let instances = await options.instanceRepo.getByWorkspace(workspace.id)
   if (instances.length === 0) {
-    const seed = createDefaultWorkspaceSeed({
-      ...OFFICIAL_DEFAULT_WORKSPACE_SEED,
+    const seed = createDefaultWorkspaceFromPreset({
       workspaceId: workspace.id,
       workspaceName: workspace.name,
-      activeLayoutId: workspace.activeLayoutId,
-      activeThemeId: workspace.activeThemeId,
-      defaultBackgroundProviderId:
-        workspace.activeBackgroundProviderId ??
-        OFFICIAL_DEFAULT_WORKSPACE_SEED.defaultBackgroundProviderId,
+      preset: {
+        ...OFFICIAL_DEFAULT_WORKSPACE_PRESET,
+        layoutId: workspace.activeLayoutId,
+        themeId: workspace.activeThemeId,
+        backgroundProviderId:
+          workspace.activeBackgroundProviderId ??
+          OFFICIAL_DEFAULT_WORKSPACE_PRESET.backgroundProviderId,
+        search:
+          (workspace.config?.search as typeof OFFICIAL_DEFAULT_WORKSPACE_PRESET.search) ??
+          OFFICIAL_DEFAULT_WORKSPACE_PRESET.search,
+      },
     })
     instances = seed.instances
     for (const instance of instances) {
       await options.instanceRepo.save(instance)
     }
-  } else if (workspace.id === "default") {
-    instances = await ensureSeedInstances({
-      workspace,
-      instances,
-      instanceRepo: options.instanceRepo,
-      workspaceRepo: options.workspaceRepo,
-    })
   }
 
   const searchHistory =
@@ -151,19 +104,11 @@ export async function createWorkspaceSession(options: {
   instanceRepo: InstanceRepository
   name: string
 }): Promise<Workspace> {
-  const seed = createDefaultWorkspaceSeed({
-    ...OFFICIAL_DEFAULT_WORKSPACE_SEED,
+  const seed = createDefaultWorkspaceFromPreset({
     workspaceId: `ws-${Date.now()}`,
     workspaceName: options.name,
   })
-  const workspace = {
-    ...seed.workspace,
-    config: {
-      ...(seed.workspace.config ?? {}),
-      defaultSeedVersion: DEFAULT_WORKSPACE_SEED_VERSION,
-    },
-    updatedAt: new Date().toISOString(),
-  }
+  const workspace = { ...seed.workspace, updatedAt: new Date().toISOString() }
 
   await options.workspaceRepo.save(workspace)
   for (const instance of seed.instances) {

@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { createDefaultWorkspaceSeed, OFFICIAL_DEFAULT_WORKSPACE_SEED } from "./defaultWorkspaceSeed"
+import {
+  createDefaultWorkspaceFromPreset,
+  OFFICIAL_DEFAULT_WORKSPACE_PRESET,
+} from "./defaultWorkspaceSeed"
 
-describe("createDefaultWorkspaceSeed", () => {
-  it("creates workspace and instances from seed config", () => {
-    const { workspace } = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
+describe("createDefaultWorkspaceFromPreset", () => {
+  it("creates workspace and instances from the official preset", () => {
+    const { workspace } = createDefaultWorkspaceFromPreset({})
 
     expect(workspace.id).toBe("default")
     expect(workspace.name).toBe("默认工作区")
@@ -35,7 +38,7 @@ describe("createDefaultWorkspaceSeed", () => {
   })
 
   it("assigns correct extension points and region IDs to instances", () => {
-    const { instances } = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
+    const { instances } = createDefaultWorkspaceFromPreset({})
 
     const searchInstance = instances.find((i) => i.regionId === "topbar")
     expect(searchInstance).toBeDefined()
@@ -57,7 +60,7 @@ describe("createDefaultWorkspaceSeed", () => {
   })
 
   it("each instance has createdAt and updatedAt timestamps", () => {
-    const { instances, workspace } = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
+    const { instances, workspace } = createDefaultWorkspaceFromPreset({})
 
     expect(workspace.createdAt).toBeTruthy()
     expect(workspace.updatedAt).toBeTruthy()
@@ -69,9 +72,9 @@ describe("createDefaultWorkspaceSeed", () => {
   })
 
   it("seed does not hardcode token values or background styles", () => {
-    const { workspace } = createDefaultWorkspaceSeed(OFFICIAL_DEFAULT_WORKSPACE_SEED)
+    const { workspace } = createDefaultWorkspaceFromPreset({})
 
-    expect(workspace.config).toBeUndefined()
+    expect(workspace.config).toEqual({ search: OFFICIAL_DEFAULT_WORKSPACE_PRESET.search })
     expect(workspace).not.toHaveProperty("tokens")
     expect(workspace).not.toHaveProperty("backgrounds")
   })

@@ -62,3 +62,8 @@ export {
   type LayoutSwitchPlanOptions,
 } from "./layout-switcher"
 export { createDragSortPlan, type DragSortPlan, type DragSortPlanOptions } from "./drag-sort-model"
+export {
+  applyWorkspacePreset,
+  type WorkspacePresetApplyOptions,
+  type WorkspacePresetApplyResult,
+} from "./workspace-preset"
