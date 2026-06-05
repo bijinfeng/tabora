@@ -73,7 +73,7 @@ export const officialBackgroundBasic: BuiltinPlugin = {
         {
           id: "official.background.css-renderer",
           title: "CSS 背景渲染器",
-          accepts: ["image", "gradient"],
+          accepts: ["css", "gradient"],
           view: "official.background.css-renderer.view",
         },
       ],

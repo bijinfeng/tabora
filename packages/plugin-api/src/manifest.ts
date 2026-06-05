@@ -111,7 +111,7 @@ export type BackgroundProviderContribution = {
 export type BackgroundRendererContribution = {
   id: string
   title: string
-  accepts: Array<"image" | "video" | "gradient" | "canvas" | "webgl">
+  accepts: Array<"css" | "image" | "video" | "gradient" | "canvas" | "webgl">
   view: string
 }
 

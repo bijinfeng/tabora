@@ -302,6 +302,29 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(true)
   })
 
+  it("accepts a background renderer for css and gradient sources", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.background.basic",
+      name: "Basic Background",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./background-basic",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        backgroundRenderers: [
+          {
+            id: "official.background.css-renderer",
+            title: "CSS 背景渲染器",
+            accepts: ["css", "gradient"],
+            view: "official.background.css-renderer.view",
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
   it("accepts a command contribution", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.commands.workspace",
