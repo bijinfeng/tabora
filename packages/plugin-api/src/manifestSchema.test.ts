@@ -181,6 +181,55 @@ describe("pluginManifestSchema", () => {
     }
   })
 
+  it("accepts a keybinding contribution", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.keybindings.workspace",
+      name: "Workspace Keybindings",
+      version: "0.0.0",
+      entry: "./keybindings",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        keybindings: [
+          {
+            id: "official.keybinding.open-settings",
+            commandId: "open-settings",
+            key: "mod+,",
+            platform: "mac",
+            when: "workspace",
+            editable: true,
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects a keybinding contribution without id, commandId, or key", () => {
+    const baseManifest = {
+      id: "bad.keybindings",
+      name: "Bad Keybindings",
+      version: "0.0.0",
+      entry: "./keybindings",
+      engine: { platform: "^0.1.0" },
+    }
+
+    for (const keybinding of [
+      { commandId: "open-settings", key: "mod+," },
+      { id: "bad.keybinding.open-settings", key: "mod+," },
+      { id: "bad.keybinding.open-settings", commandId: "open-settings" },
+    ]) {
+      const result = pluginManifestSchema.safeParse({
+        ...baseManifest,
+        contributes: {
+          keybindings: [keybinding],
+        },
+      })
+
+      expect(result.success).toBe(false)
+    }
+  })
+
   it("rejects a layout contribution with an empty view", () => {
     const result = pluginManifestSchema.safeParse({
       id: "bad.layout",

@@ -220,6 +220,17 @@ export type CommandContribution = {
   requiredCapabilities?: string[]
 }
 
+export type KeybindingPlatform = "mac" | "windows" | "linux" | (string & {})
+
+export type KeybindingContribution = {
+  id: string
+  commandId: string
+  key: string
+  platform?: KeybindingPlatform
+  when?: string
+  editable?: boolean
+}
+
 export type PluginManifest = {
   id: string
   name: string
@@ -242,5 +253,6 @@ export type PluginManifest = {
     themes?: ThemeContribution[]
     settingsPanels?: SettingsPanelContribution[]
     commands?: CommandContribution[]
+    keybindings?: KeybindingContribution[]
   }
 }

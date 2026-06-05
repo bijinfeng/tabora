@@ -29,11 +29,14 @@ import {
 } from "@tabora/workbench-app"
 import {
   createCommandPaletteCommands,
+  createShortcutRegistry,
   createLayoutEngine,
   createLayoutSwitchPlan,
   createDragSortPlan,
   createWidgetContextMenuModel,
+  type CommandActionMap,
   type InstanceRenderer,
+  type ShortcutRegistry,
 } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 import {
@@ -72,6 +75,25 @@ import {
 } from "./workbenchComposition"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
+
+function currentShortcutPlatform(): string {
+  if (typeof navigator === "undefined") return "linux"
+  const platform = navigator.platform.toLowerCase()
+  if (platform.includes("mac")) return "mac"
+  if (platform.includes("win")) return "windows"
+  return "linux"
+}
+
+function shortcutDisplay(key: string): string {
+  return key
+    .split("+")
+    .map((part) => {
+      if (part === "mod") return "⌘/Ctrl"
+      if (part.length === 1) return part.toUpperCase()
+      return part
+    })
+    .join("+")
+}
 
 function pluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
   return typeof props.instanceId === "string" ? props.instanceId : fallback
@@ -131,68 +153,106 @@ export function App() {
   const pluginCommands = builtinPlugins.flatMap(
     (plugin) => plugin.manifest.contributes.commands ?? [],
   )
+  const pluginKeybindings = builtinPlugins.flatMap(
+    (plugin) => plugin.manifest.contributes.keybindings ?? [],
+  )
+
+  const platformCommands = (): CommandContribution[] => [
+    {
+      id: "open-command-palette",
+      icon: "⌘K",
+      title: "打开命令",
+      description: "搜索命令、卡片和搜索源",
+      category: "workspace",
+      defaultShortcut: "⌘K",
+    },
+    {
+      id: "toggle-theme",
+      icon: "T",
+      title: "切换主题",
+      description: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
+      category: "workspace",
+      defaultShortcut: "⌘T",
+    },
+    {
+      id: "toggle-layout",
+      icon: "L",
+      title: "切换布局",
+      description:
+        activeLayoutId() === "official.layout.workbench-dashboard"
+          ? "仪表盘 → 流式"
+          : "流式 → 仪表盘",
+      category: "workspace",
+      defaultShortcut: "⌘L",
+    },
+    {
+      id: "add-widget",
+      icon: "+",
+      title: "添加卡片",
+      description: "向工作台添加新卡片",
+      category: "workspace",
+      defaultShortcut: "⌘N",
+    },
+    {
+      id: "open-settings",
+      icon: "S",
+      title: "打开设置",
+      description: "配置工作台",
+      category: "workspace",
+      defaultShortcut: "⌘,",
+    },
+    {
+      id: "open-shortcuts",
+      icon: "?",
+      title: "快捷键参考",
+      description: "查看所有快捷键",
+      category: "workspace",
+    },
+  ]
+
+  const platformKeybindings = () => [
+    { id: "keybinding.open-command-palette", commandId: "open-command-palette", key: "mod+k" },
+    { id: "keybinding.toggle-theme", commandId: "toggle-theme", key: "mod+t" },
+    { id: "keybinding.toggle-layout", commandId: "toggle-layout", key: "mod+l" },
+    { id: "keybinding.add-widget", commandId: "add-widget", key: "mod+n" },
+    { id: "keybinding.open-settings", commandId: "open-settings", key: "mod+," },
+  ]
+
+  const commandActions = (): CommandActionMap => ({
+    "open-command-palette": () => setCmdPaletteOpen(true),
+    "toggle-theme": () =>
+      void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
+    "toggle-layout": () => {
+      const next =
+        activeLayoutId() === "official.layout.workbench-dashboard"
+          ? "official.layout.workbench-stream"
+          : "official.layout.workbench-dashboard"
+      void switchLayout(next)
+    },
+    "add-widget": () => setAddWidgetOpen(true),
+    "open-settings": () => openSettings("official.settings.workspace.appearance"),
+    "open-shortcuts": () => {
+      const shortcuts = shortcutRegistry()
+        .listShortcutReferences()
+        .map((reference) => shortcutDisplay(reference.key))
+        .join("、")
+      showToast(`快捷键：${shortcuts}、Esc`)
+    },
+  })
+
+  const shortcutRegistry = (): ShortcutRegistry =>
+    createShortcutRegistry({
+      platform: currentShortcutPlatform(),
+      platformKeybindings: platformKeybindings(),
+      pluginKeybindings,
+      commands: commandActions(),
+    })
 
   const commandItems = () =>
     createCommandPaletteCommands({
-      platformCommands: [
-        {
-          id: "toggle-theme",
-          icon: "T",
-          title: "切换主题",
-          description: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
-          category: "workspace",
-          defaultShortcut: "⌘T",
-        },
-        {
-          id: "toggle-layout",
-          icon: "L",
-          title: "切换布局",
-          description:
-            activeLayoutId() === "official.layout.workbench-dashboard"
-              ? "仪表盘 → 流式"
-              : "流式 → 仪表盘",
-          category: "workspace",
-          defaultShortcut: "⌘L",
-        },
-        {
-          id: "add-widget",
-          icon: "+",
-          title: "添加卡片",
-          description: "向工作台添加新卡片",
-          category: "workspace",
-          defaultShortcut: "⌘N",
-        },
-        {
-          id: "open-settings",
-          icon: "S",
-          title: "打开设置",
-          description: "配置工作台",
-          category: "workspace",
-          defaultShortcut: "⌘,",
-        },
-        {
-          id: "open-shortcuts",
-          icon: "?",
-          title: "快捷键参考",
-          description: "查看所有快捷键",
-          category: "workspace",
-        },
-      ] satisfies CommandContribution[],
+      platformCommands: platformCommands(),
       pluginCommands,
-      actions: {
-        "toggle-theme": () =>
-          void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
-        "toggle-layout": () => {
-          const next =
-            activeLayoutId() === "official.layout.workbench-dashboard"
-              ? "official.layout.workbench-stream"
-              : "official.layout.workbench-dashboard"
-          void switchLayout(next)
-        },
-        "add-widget": () => setAddWidgetOpen(true),
-        "open-settings": () => openSettings("official.settings.workspace.appearance"),
-        "open-shortcuts": () => showToast("快捷键：⌘K、⌘L、⌘T、⌘,、Esc"),
-      },
+      actions: commandActions(),
     })
 
   const runtime = createExtensionRuntimeBootstrap()
@@ -1211,17 +1271,8 @@ export function App() {
     <div
       class="tabora-root"
       onKeyDown={(e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        if (shortcutRegistry().executeKeydown(e)) {
           e.preventDefault()
-          setCmdPaletteOpen(true)
-        }
-        if ((e.metaKey || e.ctrlKey) && e.key === "t") {
-          e.preventDefault()
-          void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
-        }
-        if ((e.metaKey || e.ctrlKey) && e.key === ",") {
-          e.preventDefault()
-          openSettings("official.settings.workspace.appearance")
         }
         if (e.key === "Escape") {
           closeExpand()

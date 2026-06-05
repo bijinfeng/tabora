@@ -29,6 +29,17 @@ export {
   type CommandCatalogOptions,
 } from "./command-catalog"
 export {
+  createShortcutRegistry,
+  normalizeShortcutKey,
+  shortcutKeyFromEvent,
+  type ShortcutBinding,
+  type ShortcutCommandMap,
+  type ShortcutConflict,
+  type ShortcutReference,
+  type ShortcutRegistry,
+  type ShortcutRegistryOptions,
+} from "./shortcut-registry"
+export {
   createWidgetContextMenuModel,
   type ContextMenuItem,
   type ContextMenuSection,

@@ -46,6 +46,15 @@ const commandContributionSchema = z.object({
   requiredCapabilities: z.array(z.string().min(1)).optional(),
 })
 
+const keybindingContributionSchema = z.object({
+  id: z.string().min(1),
+  commandId: z.string().min(1),
+  key: z.string().min(1),
+  platform: z.string().min(1).optional(),
+  when: z.string().min(1).optional(),
+  editable: z.boolean().optional(),
+})
+
 const layoutRegionSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -148,5 +157,6 @@ export const pluginManifestSchema = z.object({
       )
       .optional(),
     commands: z.array(commandContributionSchema).optional(),
+    keybindings: z.array(keybindingContributionSchema).optional(),
   }),
 })
