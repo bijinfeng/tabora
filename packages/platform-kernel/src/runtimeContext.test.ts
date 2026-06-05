@@ -42,4 +42,25 @@ describe("createPluginRuntimeContext permissions", () => {
 
     expect(context.permissions.canOpenExternal("https://www.google.com/search?q=tabora")).toBe(true)
   })
+
+  it("exposes a runtime toast bridge through typed UI events", () => {
+    const events = createEventBus()
+    const toasts: unknown[] = []
+    events.on("ui.toast.show", (payload) => toasts.push(payload))
+
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+    })
+
+    context.ui.showToast("Saved", { type: "success", duration: 3000 })
+
+    expect(toasts).toEqual([
+      {
+        message: "Saved",
+        options: { type: "success", duration: 3000 },
+      },
+    ])
+  })
 })

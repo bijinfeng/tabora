@@ -13,7 +13,6 @@ const hostCapabilitySchema = z.enum([
   "themeApply",
   "backgroundApply",
   "importExportWorkspace",
-  "legacyMigration",
   "clipboard",
   "localFile",
   "network",

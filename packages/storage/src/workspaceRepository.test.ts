@@ -20,8 +20,9 @@ describe("createWorkspaceRepository", () => {
     const workspace: Workspace = {
       id: "default",
       name: "默认",
-      activeLayoutId: "official.layout.top-search-grid",
+      activeLayoutId: "official.layout.workbench-dashboard",
       activeThemeId: "official.theme.light",
+      activeBackgroundProviderId: "background.gradient-green",
       regions: {},
       createdAt: "2026-05-26T00:00:00.000Z",
       updatedAt: "2026-05-26T00:00:00.000Z",

@@ -19,7 +19,7 @@ export type Workspace = {
   name: string
   activeLayoutId: string
   activeThemeId: string
-  activeBackgroundProviderId?: string
+  activeBackgroundProviderId: string
   activeBackgroundRendererId?: string
   config?: Record<string, unknown>
   regions: Record<string, RegionState>

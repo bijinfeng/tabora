@@ -11,8 +11,8 @@ import {
   resolveDefaultProviderForSearch,
   resolveEnabledProviderIds,
   resolveEnabledSearchProviders,
+  resolveWidgetRenderModel,
   resolveWidgetIconLabel,
-  resolveWidgetTitle,
 } from "./shellHelpers"
 
 function instance(
@@ -54,14 +54,6 @@ const providers: SearchProviderContribution[] = [
 ]
 
 describe("shell helper widget resolvers", () => {
-  it("resolves widget title from contribution and falls back to contribution id", () => {
-    const known = instance("widget-1", "today")
-    const missing = instance("widget-2", "missing-widget")
-
-    expect(resolveWidgetTitle(known, () => widget("today", "今日重点"))).toBe("今日重点")
-    expect(resolveWidgetTitle(missing, () => undefined)).toBe("missing-widget")
-  })
-
   it("maps supported widget icon names to compact labels and falls back safely", () => {
     expect(resolveWidgetIconLabel("target")).toBe("◎")
     expect(resolveWidgetIconLabel("link")).toBe("↗")
@@ -72,7 +64,7 @@ describe("shell helper widget resolvers", () => {
     expect(resolveWidgetIconLabel()).toBe("▦")
   })
 
-  it("builds searchable entries for widget instances and preserves current enabled behavior", () => {
+  it("builds searchable entries only for widget instances with registered contributions", () => {
     const focus = vi.fn()
     const entries = buildSearchableWidgetEntries({
       instances: [
@@ -85,7 +77,7 @@ describe("shell helper widget resolvers", () => {
       buildFocusAction: (instanceId) => () => focus(instanceId),
     })
 
-    expect(entries).toHaveLength(2)
+    expect(entries).toHaveLength(1)
     expect(entries).toMatchObject([
       {
         instanceId: "enabled-widget",
@@ -93,16 +85,28 @@ describe("shell helper widget resolvers", () => {
         name: "今日重点",
         desc: "定位到 今日重点 卡片",
       },
-      {
-        instanceId: "disabled-widget",
-        icon: "▦",
-        name: "notes",
-        desc: "定位到 notes 卡片",
-      },
     ])
 
-    entries[1]!.action()
-    expect(focus).toHaveBeenCalledWith("disabled-widget")
+    entries[0]!.action()
+    expect(focus).toHaveBeenCalledWith("enabled-widget")
+  })
+
+  it("requires registered widget contribution and explicit supported size for rendering", () => {
+    const notes = widget("notes", "便签", "pencil")
+    const sizeMissing = instance("size-missing", "notes")
+    delete sizeMissing.size
+
+    expect(resolveWidgetRenderModel(instance("notes-1", "notes"), notes)).toMatchObject({
+      title: "便签",
+      icon: "pencil",
+      currentSize: "M",
+      supportedSizes: ["S", "M"],
+    })
+    expect(resolveWidgetRenderModel(instance("missing-1", "missing"), undefined)).toBeNull()
+    expect(resolveWidgetRenderModel(sizeMissing, notes)).toBeNull()
+    expect(
+      resolveWidgetRenderModel({ ...instance("unsupported-size", "notes"), size: "XL" }, notes),
+    ).toBeNull()
   })
 })
 

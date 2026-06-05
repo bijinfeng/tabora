@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 import type { WorkspaceExport } from "./workspacePortability"
-import { prepareImport } from "./workspacePortability"
+import { parseExport, prepareImport } from "./workspacePortability"
 
 describe("prepareImport", () => {
-  it("rebinds imported instances and plugin data rows to the target workspace", () => {
-    const data: WorkspaceExport = {
+  it("rejects current schema exports without an explicit active background provider", () => {
+    const data = {
       schemaVersion: 1,
       exportedAt: "2026-06-01T00:00:00.000Z",
       workspace: {
@@ -16,10 +16,31 @@ describe("prepareImport", () => {
         createdAt: "2026-06-01T00:00:00.000Z",
         updatedAt: "2026-06-01T00:00:00.000Z",
       },
+      instances: [],
+      pluginData: [],
+    }
+
+    expect(parseExport(JSON.stringify(data))).toBeNull()
+  })
+
+  it("rebinds imported instances and plugin data rows to the target workspace", () => {
+    const data: WorkspaceExport = {
+      schemaVersion: 1,
+      exportedAt: "2026-06-01T00:00:00.000Z",
+      workspace: {
+        id: "workspace-imported",
+        name: "导入工作区",
+        activeLayoutId: "official.layout.workbench-dashboard",
+        activeThemeId: "official.theme.light",
+        activeBackgroundProviderId: "background.gradient-green",
+        regions: {},
+        createdAt: "2026-06-01T00:00:00.000Z",
+        updatedAt: "2026-06-01T00:00:00.000Z",
+      },
       instances: [
         {
           id: "notes-1",
-          workspaceId: "legacy-workspace",
+          workspaceId: "source-workspace",
           pluginId: "official.widgets.notes",
           contributionId: "notes",
           extensionPoint: "widget",
@@ -35,7 +56,7 @@ describe("prepareImport", () => {
         {
           id: "official.widgets.notes:content:notes-1",
           pluginId: "official.widgets.notes",
-          workspaceId: "legacy-workspace",
+          workspaceId: "source-workspace",
           instanceId: "notes-1",
           key: "content",
           value: "hello",
@@ -60,6 +81,7 @@ describe("prepareImport", () => {
         name: "导入工作区",
         activeLayoutId: "official.layout.workbench-dashboard",
         activeThemeId: "official.theme.light",
+        activeBackgroundProviderId: "background.gradient-green",
         regions: {},
         createdAt: "2026-06-01T00:00:00.000Z",
         updatedAt: "2026-06-01T00:00:00.000Z",
@@ -67,7 +89,7 @@ describe("prepareImport", () => {
       instances: [
         {
           id: "notes-1",
-          workspaceId: "legacy-workspace",
+          workspaceId: "source-workspace",
           pluginId: "official.widgets.notes",
           contributionId: "notes",
           extensionPoint: "widget",
@@ -80,7 +102,7 @@ describe("prepareImport", () => {
         },
         {
           id: "ghost-1",
-          workspaceId: "legacy-workspace",
+          workspaceId: "source-workspace",
           pluginId: "missing.plugin",
           contributionId: "ghost",
           extensionPoint: "widget",
@@ -96,7 +118,7 @@ describe("prepareImport", () => {
         {
           id: "official.widgets.notes:content:notes-1",
           pluginId: "official.widgets.notes",
-          workspaceId: "legacy-workspace",
+          workspaceId: "source-workspace",
           instanceId: "notes-1",
           key: "content",
           value: "hello",
@@ -105,7 +127,7 @@ describe("prepareImport", () => {
         {
           id: "missing.plugin:content:ghost-1",
           pluginId: "missing.plugin",
-          workspaceId: "legacy-workspace",
+          workspaceId: "source-workspace",
           instanceId: "ghost-1",
           key: "content",
           value: "ghost",

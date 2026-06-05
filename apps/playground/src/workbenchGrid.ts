@@ -3,12 +3,12 @@ import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 const SIZE_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 2 }
 const SIZE_ROW_SPAN: Record<WidgetSize, number> = { S: 1, M: 1, L: 2, XL: 2 }
 
-export function gridColumnSpan(size?: WidgetSize): number {
-  return SIZE_SPAN[size ?? "M"] ?? 2
+export function gridColumnSpan(size: WidgetSize): number {
+  return SIZE_SPAN[size]
 }
 
-export function gridRowSpan(size?: WidgetSize): number {
-  return SIZE_ROW_SPAN[size ?? "M"] ?? 1
+export function gridRowSpan(size: WidgetSize): number {
+  return SIZE_ROW_SPAN[size]
 }
 
 export function assignGridOrder(
@@ -18,7 +18,7 @@ export function assignGridOrder(
   const regionIndex = new Map<string, number>()
 
   return instances.map((instance) => {
-    if (instance.extensionPoint !== "widget") {
+    if (instance.extensionPoint !== "widget" || !instance.size) {
       return instance
     }
 

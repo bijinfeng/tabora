@@ -12,6 +12,14 @@ export type PluginUiBridge = {
   closeModal(): void
   openFullscreen(viewId: string, props?: Record<string, unknown>): void
   closeFullscreen(): void
+  showToast(
+    message: string,
+    options?: {
+      type?: "success" | "error" | "warning" | "info"
+      duration?: number
+      action?: { label: string; commandId: string }
+    },
+  ): void
 }
 
 export type PermissionBridge = {
@@ -82,6 +90,9 @@ export function createPluginRuntimeContext(options: {
       },
       closeFullscreen() {
         options.events.emit("ui.fullscreen.close", null)
+      },
+      showToast(message, toastOptions) {
+        options.events.emit("ui.toast.show", { message, options: toastOptions })
       },
     },
     permissions: {

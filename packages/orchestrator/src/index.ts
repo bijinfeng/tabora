@@ -63,6 +63,14 @@ export {
 } from "./layout-switcher"
 export { createDragSortPlan, type DragSortPlan, type DragSortPlanOptions } from "./drag-sort-model"
 export {
+  createToastManager,
+  type ToastAction,
+  type ToastManager,
+  type ToastOptions,
+  type ToastRecord,
+  type ToastType,
+} from "./toast-manager"
+export {
   applyWorkspacePreset,
   type WorkspacePresetApplyOptions,
   type WorkspacePresetApplyResult,

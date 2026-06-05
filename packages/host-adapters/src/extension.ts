@@ -9,7 +9,6 @@ export function createExtensionHostAdapter(overrides: Partial<HostAdapter> = {})
       themeApply: true,
       backgroundApply: true,
       importExportWorkspace: true,
-      legacyMigration: false,
       clipboard: true,
       localFile: false,
       network: true,

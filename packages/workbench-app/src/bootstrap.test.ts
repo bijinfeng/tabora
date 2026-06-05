@@ -107,6 +107,12 @@ describe("createWorkbenchRuntimeBootstrap", () => {
           async save() {},
           async remove() {},
         },
+        workspaceSnapshotRepo: {
+          async save() {},
+          async getLast() {
+            return undefined
+          },
+        },
       },
     }
 

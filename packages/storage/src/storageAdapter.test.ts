@@ -22,6 +22,7 @@ describe("createWebStorageAdapter", () => {
       name: "默认",
       activeLayoutId: "official.layout.workbench-dashboard",
       activeThemeId: "official.theme.light",
+      activeBackgroundProviderId: "background.gradient-green",
       regions: {},
       createdAt: "2026-06-05T00:00:00.000Z",
       updatedAt: "2026-06-05T00:00:00.000Z",

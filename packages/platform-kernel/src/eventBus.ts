@@ -3,6 +3,14 @@ export type EventPayloads = {
   "ui.modal.close": null
   "ui.fullscreen.open": { viewId: string; props?: Record<string, unknown> }
   "ui.fullscreen.close": null
+  "ui.toast.show": {
+    message: string
+    options?: {
+      type?: "success" | "error" | "warning" | "info"
+      duration?: number
+      action?: { label: string; commandId: string }
+    }
+  }
   "host.external.open": { url: string }
   "theme.changed": { themeId: string }
 }

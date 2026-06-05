@@ -40,6 +40,24 @@ export function parseExport(json: string): WorkspaceExport | null {
       return null
     }
 
+    const workspace = exportData.workspace as Record<string, unknown> | undefined
+    if (
+      !workspace ||
+      typeof workspace.id !== "string" ||
+      typeof workspace.name !== "string" ||
+      typeof workspace.activeLayoutId !== "string" ||
+      typeof workspace.activeThemeId !== "string" ||
+      typeof workspace.activeBackgroundProviderId !== "string" ||
+      typeof workspace.regions !== "object" ||
+      workspace.regions === null ||
+      typeof workspace.createdAt !== "string" ||
+      typeof workspace.updatedAt !== "string" ||
+      !Array.isArray(exportData.instances) ||
+      !Array.isArray(exportData.pluginData)
+    ) {
+      return null
+    }
+
     return data as WorkspaceExport
   } catch {
     return null

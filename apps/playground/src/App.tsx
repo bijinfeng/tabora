@@ -27,8 +27,9 @@ import {
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
   resolveEnabledSearchProviders,
   resolveWidgetIconLabel,
-  resolveWidgetTitle,
+  resolveWidgetRenderModel,
   type CommandExecutionContext,
+  type WidgetRenderModel,
 } from "@tabora/workbench-app"
 import {
   createCommandPaletteCommands,
@@ -37,9 +38,12 @@ import {
   createLayoutSwitchPlan,
   createDragSortPlan,
   createWidgetContextMenuModel,
+  createToastManager,
   type CommandActionMap,
   type InstanceRenderer,
   type ShortcutRegistry,
+  type ToastOptions,
+  type ToastRecord,
 } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 import {
@@ -142,20 +146,29 @@ export function App() {
   )
   const [addWidgetOpen, setAddWidgetOpen] = createSignal(false)
   const [cmdPaletteOpen, setCmdPaletteOpen] = createSignal(false)
-  const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
+  const toastManager = createToastManager()
+  const [toasts, setToasts] = createSignal<ToastRecord[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
   const responsive = createWorkbenchResponsiveState()
   let lastExpandTrigger: HTMLElement | null = null
-  let toastSeq = 0
-  function showToast(msg: string) {
-    const id = ++toastSeq
-    setToasts((t) => [...t, { id, msg }])
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
+  function refreshToasts() {
+    setToasts(toastManager.list())
+  }
+  function showToast(msg: string, options?: ToastOptions) {
+    const id = toastManager.show(msg, options)
+    refreshToasts()
+    if (toastManager.shouldAutoDismiss(id)) {
+      const toast = toastManager.list().find((item) => item.id === id)
+      setTimeout(() => {
+        toastManager.dismiss(id)
+        refreshToasts()
+      }, toast?.duration ?? 2500)
+    }
   }
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
   const runtime = createPlaygroundRuntimeBootstrap()
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
-  const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
+  const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
   const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
 
   const pluginCommands = plugins.flatMap((plugin) => plugin.manifest.contributes.commands ?? [])
@@ -281,8 +294,9 @@ export function App() {
   const instanceRenderer: InstanceRenderer = {
     renderWidget(instance: PluginInstance) {
       const widget = widgetContribution(instance)
-      const title = widget?.title ?? instance.contributionId
-      const View = widgetCardView(instance)
+      const model = resolveWidgetRenderModel(instance, widget)
+      if (!model) return <div class="settings-empty">卡片实例无效：{instance.id}</div>
+      const View = widget ? viewOrUndefined(widget.views.card) : undefined
       if (!View) return <div class="settings-empty">Widget view not available</div>
 
       // Construct host callbacks for this instance
@@ -308,14 +322,14 @@ export function App() {
       return (
         <WidgetCardShell
           instance={instance}
-          title={title}
-          icon={renderWidgetIcon(widget?.icon)}
-          supportedSizes={widget?.supportedSizes ?? ["S", "M", "L"]}
-          currentSize={instance.size ?? "M"}
+          title={model.title}
+          icon={renderWidgetIcon(model.icon)}
+          supportedSizes={model.supportedSizes}
+          currentSize={model.currentSize}
           callbacks={hostCallbacks}
         >
-          <PluginViewBoundary instanceId={instance.id} title={title}>
-            {View(buildWidgetViewProps(instance))}
+          <PluginViewBoundary instanceId={instance.id} title={model.title}>
+            {View(buildWidgetViewProps(instance, model))}
           </PluginViewBoundary>
         </WidgetCardShell>
       )
@@ -447,13 +461,51 @@ export function App() {
       : undefined
   }
 
-  function buildWidgetViewProps(instance: PluginInstance): WidgetViewProps {
+  function buildWidgetViewProps(
+    instance: PluginInstance,
+    model: WidgetRenderModel,
+  ): WidgetViewProps {
     return {
       instanceId: instance.id,
       pluginId: instance.pluginId,
       contributionId: instance.contributionId,
+      size: model.currentSize,
+      supportedSizes: model.supportedSizes,
       config: instance.config,
       data: makeScopedData(instance.pluginId, instance.id),
+      host: {
+        async updateConfig(value) {
+          const updated: PluginInstance = {
+            ...instance,
+            config: value,
+            updatedAt: new Date().toISOString(),
+          }
+          await instanceRepo.save(updated)
+          setInstances((prev) => prev.map((item) => (item.id === instance.id ? updated : item)))
+        },
+        async removeInstance() {
+          await removeWidget(instance.id)
+        },
+        async requestResize(size) {
+          await changeWidgetSize(instance.id, size)
+        },
+        openModal(viewId, props) {
+          setModalViewId(viewId)
+          setModalProps(
+            typeof props === "object" && props !== null ? (props as Record<string, unknown>) : {},
+          )
+        },
+        closeModal() {
+          setModalViewId(null)
+        },
+        openExpand() {
+          openWidgetExpand(instance)
+        },
+        showToast,
+        async openExternal(url) {
+          return openExternal(url)
+        },
+      },
     }
   }
 
@@ -502,6 +554,11 @@ export function App() {
     setFullscreenProps(payload.props ?? {})
   })
   kernel.events.on("ui.fullscreen.close", () => setFullscreenViewId(null))
+  kernel.events.on("ui.toast.show", (payload: any) => {
+    if (typeof payload.message === "string") {
+      showToast(payload.message, payload.options)
+    }
+  })
   kernel.events.on("host.external.open", (payload: any) => {
     if (typeof payload.url === "string") {
       window.open(payload.url, "_blank")
@@ -543,10 +600,10 @@ export function App() {
     const now = new Date().toISOString()
 
     const nextInstances = new Map(
-      [...plan.migratedInstances, ...plan.unplacedInstances].map((instance) => [
-        instance.id,
-        instance,
-      ]),
+      [
+        ...plan.placedInstances,
+        ...plan.unplacedInstances.map((instance) => ({ ...instance, regionId: "unplaced" })),
+      ].map((instance) => [instance.id, instance]),
     )
 
     return currentInstances.map((currentInstance) => {
@@ -591,6 +648,7 @@ export function App() {
       instances: nextInstances,
       targetLayout,
     })
+    await workspaceSnapshotRepo.save(plan.snapshot)
 
     const updatedWorkspace = await updateWorkspaceRecord({
       workspaceRepo,
@@ -749,8 +807,7 @@ export function App() {
       document.documentElement,
       resolveThemeTokens(result.workspace.activeThemeId, themes()),
     )
-    const importedBackgroundId =
-      result.workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID
+    const importedBackgroundId = result.workspace.activeBackgroundProviderId
     setBackgroundId(importedBackgroundId)
     applyBackgroundStyle(resolveBackgroundStyle(importedBackgroundId, backgrounds()))
     setSearchSettings(readSearchSettings(result.workspace, searchProviders()))
@@ -889,21 +946,12 @@ export function App() {
     return pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId)
   }
 
-  const resolveWidgetContribution = (pluginId: string, contributionId: string) =>
-    widgetContribution({ pluginId, contributionId })
+  function widgetRenderModel(instance: PluginInstance): WidgetRenderModel | null {
+    return resolveWidgetRenderModel(instance, widgetContribution(instance))
+  }
 
   function contextMenuContributions(instance: PluginInstance): WidgetContextMenuContribution[] {
     return widgetContribution(instance)?.contextMenus ?? []
-  }
-
-  function widgetCardView(instance: PluginInstance): SolidView | null {
-    const widget = widgetContribution(instance)
-    if (!widget) return null
-    return viewOrUndefined(widget.views.card) ?? null
-  }
-
-  function widgetTitle(instance: Pick<PluginInstance, "pluginId" | "contributionId">): string {
-    return resolveWidgetTitle(instance, resolveWidgetContribution)
   }
 
   function renderWidgetIcon(icon?: string): JSX.Element {
@@ -1023,9 +1071,14 @@ export function App() {
   }
 
   function openWidgetExpand(instance: PluginInstance, trigger?: HTMLElement) {
+    const model = widgetRenderModel(instance)
+    if (!model) {
+      showToast(`卡片实例无效：${instance.id}`)
+      return
+    }
     const target = resolveExpandView(instance)
     if (!target) {
-      showToast(`当前卡片暂不支持展开：${widgetTitle(instance)}`)
+      showToast(`当前卡片暂不支持展开：${model.title}`)
       return
     }
     lastExpandTrigger =
@@ -1033,17 +1086,22 @@ export function App() {
     setCtxMenu(null)
     setExpandState({
       instanceId: instance.id,
-      title: widgetTitle(instance),
+      title: model.title,
       viewId: target.viewId,
       mode: target.mode,
-      props: buildWidgetViewProps(instance),
+      props: buildWidgetViewProps(instance, model),
     })
   }
 
   function openWidgetInstanceSettings(instance: PluginInstance) {
+    const model = widgetRenderModel(instance)
+    if (!model) {
+      showToast(`卡片实例无效：${instance.id}`)
+      return
+    }
     const viewId = resolveInstanceSettingsView(instance)
     if (!viewId) {
-      showToast(`当前卡片暂不支持实例设置：${widgetTitle(instance)}`)
+      showToast(`当前卡片暂不支持实例设置：${model.title}`)
       return
     }
     lastExpandTrigger =
@@ -1051,10 +1109,10 @@ export function App() {
     setCtxMenu(null)
     setExpandState({
       instanceId: instance.id,
-      title: `${widgetTitle(instance)} 设置`,
+      title: `${model.title} 设置`,
       viewId,
       mode: "settings",
-      props: buildWidgetViewProps(instance),
+      props: buildWidgetViewProps(instance, model),
     })
   }
 
@@ -1080,8 +1138,8 @@ export function App() {
   }
 
   function supportedWidgetSizes(instance: PluginInstance | null): WidgetSize[] {
-    if (!instance) return ["S", "M", "L"]
-    return widgetContribution(instance)?.supportedSizes ?? ["S", "M", "L"]
+    if (!instance) return []
+    return widgetRenderModel(instance)?.supportedSizes ?? []
   }
 
   function contextMenuModel() {
@@ -1123,7 +1181,8 @@ export function App() {
   function searchableWidgets() {
     return buildSearchableWidgetEntries({
       instances: instances(),
-      resolveWidgetContribution,
+      resolveWidgetContribution: (pluginId, contributionId) =>
+        widgetContribution({ pluginId, contributionId }),
       buildFocusAction: (instanceId) => () => focusWidgetInstance(instanceId),
     })
   }
@@ -1248,17 +1307,18 @@ export function App() {
           <For each={instances()}>
             {(instance) => {
               const widget = widgetContribution(instance)
-              const title = widget?.title ?? instance.contributionId
-              const View = widgetCardView(instance)
+              const model = resolveWidgetRenderModel(instance, widget)
+              if (!model) return <div class="settings-empty">卡片实例无效：{instance.id}</div>
+              const View = widget ? viewOrUndefined(widget.views.card) : undefined
               if (!View) return null
 
               return (
                 <WidgetCardShell
                   instance={instance}
-                  title={title}
-                  icon={renderWidgetIcon(widget?.icon)}
-                  supportedSizes={widget?.supportedSizes ?? ["S", "M", "L"]}
-                  currentSize={instance.size ?? "M"}
+                  title={model.title}
+                  icon={renderWidgetIcon(model.icon)}
+                  supportedSizes={model.supportedSizes}
+                  currentSize={model.currentSize}
                   callbacks={{
                     onDragStart: () => setDragId(instance.id),
                     onDragOver: (e: DragEvent) => {
@@ -1277,8 +1337,8 @@ export function App() {
                     isDragging: dragId() === instance.id,
                   }}
                 >
-                  <PluginViewBoundary instanceId={instance.id} title={title}>
-                    {View(buildWidgetViewProps(instance))}
+                  <PluginViewBoundary instanceId={instance.id} title={model.title}>
+                    {View(buildWidgetViewProps(instance, model))}
                   </PluginViewBoundary>
                 </WidgetCardShell>
               )
@@ -1508,7 +1568,7 @@ export function App() {
             </div>
           )}
         </Show>
-        <ToastHost toasts={toasts()} />
+        <ToastHost toasts={toasts()} onAction={(commandId) => runCommand(commandId, {})} />
       </Show>
       <CommandPalette
         isOpen={cmdPaletteOpen()}

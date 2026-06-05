@@ -110,10 +110,10 @@ packages/
 - `CommandPalette`、`Dialog`、`Drawer`、`Toast`、`ContextMenu`、`ExpandHost`、`SettingsHost`、快捷键面板等宿主级容器由 shell / orchestrator 提供，可复用 design spec，但不应强行收进 `@tabora/ui`。
 - 官方插件样式由 `@tabora/official-plugins/styles.css` 提供；官方与 community layout 样式由各自 layout package 显式提供；shell host 样式与通用宿主容器组件由 `@tabora/workbench-shell` 提供。playground 与 extension 统一按样式入口装配这些模块，不在 `App.tsx` 内维护官方插件 class 或宿主容器 class 的 CSS。
 - Phase X2 已完成布局协议语义收口：`HostActionId` 已包含 `layout-switch`、`shortcuts`、`plugin-manager` 等稳定动作 ID，布局切换不再伪装为 `theme` action；`RegionSlot` 构建会按 `region.accepts` 过滤实例，避免 extension point 错配；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖，保持第三方 layout 依赖面隔离；playground / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误 fallback 会记录状态并触发 toast。
-- Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、workspace preset applier 均已进入 `@tabora/orchestrator`；`@tabora/workbench-app` 承接可复用 shell helper；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
-- `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope` 等必须显式声明，缺失即视为无效 manifest。
-- `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查和 skipped reason 记录。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
-- `@tabora/storage` 已引入 `StorageAdapter` port；Web 默认 adapter 包装当前 Dexie/IndexedDB repository，`workbench-app` bootstrap 可注入 fake/memory adapter 进行测试或未来跨平台替换。
+- Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；`@tabora/workbench-app` 承接可复用 shell helper；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
+- `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope`、workspace `activeBackgroundProviderId`、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
+- `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
+- `@tabora/storage` 已引入 `StorageAdapter` port；Web 默认 adapter 包装当前 Dexie/IndexedDB repository，`workbench-app` bootstrap 可注入 fake/memory adapter 进行测试或未来跨平台替换。当前上线前 schema 采用单一 Dexie version，直接声明 MVP 所需表，不保留旧版本迁移/backfill 路径。
 - 插件依赖边界已由测试守卫：官方、community、example 插件源码和 package manifest 不得依赖 `@tabora/workbench-shell`、`@tabora/storage` 或 app 源码/package。
 - Phase X1 当前状态已前进到“工程边界收口进行中”：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。
 - playground 当前通过 `apps/playground/src/workbenchComposition.ts` 组装 `@tabora/workbench-app`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`，不再在 `App.tsx` 内直接 new 全套基础设施对象；`App.tsx` 仍是重型 shell，但已经收缩为组合根 + 宿主交互编排。
@@ -585,7 +585,7 @@ type ToastManager = {
 type ToastOptions = {
   type?: "success" | "error" | "warning" | "info"
   duration?: number // 默认 2500ms
-  action?: { label: string; onClick: () => void }
+  action?: { label: string; commandId: string }
 }
 ```
 
@@ -595,6 +595,7 @@ Toast 行为：
 - 堆叠不超过 3 条，超出时移除最早的
 - 每条独立计时 2.5s 后淡出移除
 - 带 action 的 Toast 不自动消失
+- 插件通过 `context.ui.showToast(message, options)` 触发 runtime toast bridge；shell 监听 `ui.toast.show`，由 `ToastHost` 渲染并通过 `commandId` 回调到 command executor，不允许插件直接注入任意函数到 Toast action。
 
 ### 9.2 插件可访问性
 
@@ -749,28 +750,19 @@ type WidgetViewProps = {
 
   // 宿主交互
   host: {
-    // 基本
     updateConfig(value: Record<string, unknown>): Promise<void>
     removeInstance(): Promise<void>
-
-    // 尺寸（平台通过右键菜单/尺寸选择器触发，插件也可请求）
     requestResize(size: WidgetSize): Promise<void>
-
-    // 弹窗
     openModal(viewId: string, props?: unknown): void
     closeModal(): void
-
-    // 展开（双击触发，或插件请求）
     openExpand(): void
-
-    // 通知
     showToast(message: string, opts?: ToastOptions): void
-
-    // 外部操作
     openExternal(url: string): Promise<boolean>
   }
 }
 ```
+
+宿主渲染 widget 前必须解析当前 `WidgetContribution` 并校验实例显式声明的 `size` 是否包含在 `supportedSizes` 内。缺少 contribution、缺少 `size` 或 size 不受支持时，该实例进入局部无效实例占位，不按 `defaultSize` 或硬编码 `"M"` 做读取时补齐。`defaultSize` 只用于创建新实例 / preset 生成阶段。
 
 ### 12.2 Search
 
@@ -860,6 +852,8 @@ type WorkspacePresetContribution = {
 
 preset applier 只在创建新 workspace 时生成 workspace 与 plugin instances；已有 workspace 不做 backfill、不覆盖数据，也不为旧 seed 做迁移。
 
+Workspace 当前协议要求保存 `activeBackgroundProviderId`。导入 / 导出只接受当前 schema；缺失 `activeBackgroundProviderId` 的 workspace JSON 被拒绝，不按默认背景做补齐。背景 provider 找不到时仍由背景 resolver 使用安全页面样式兜底，这是错误恢复机制，不是旧数据迁移。
+
 ### 12.5 Background Source
 
 背景 provider 通过 `BackgroundSourceValue` 声明具体 source：
@@ -892,7 +886,7 @@ type StorageAdapter = {
 }
 ```
 
-Web 默认 adapter 使用当前 Dexie/IndexedDB repository；`createTaboraDatabase` 继续作为 Web adapter 的底层兼容导出，但 app bootstrap 优先接收 `StorageAdapter`。插件业务数据必须通过 runtime context / repository port 访问，插件 package 不得直接依赖 `@tabora/storage`。
+Web 默认 adapter 使用当前 Dexie/IndexedDB repository；app bootstrap 优先接收 `StorageAdapter` 以支持测试和未来跨平台替换。插件业务数据必须通过 runtime context / repository port 访问，插件 package 不得直接依赖 `@tabora/storage`。
 
 ### 13.2 新增表
 
@@ -909,6 +903,7 @@ class TaboraDatabase extends Dexie {
   eventLogs!: Table<EventLog, string>
   searchHistory!: Table<SearchHistoryEntry, string>
   shortcutBindings!: Table<ShortcutBindingRecord, string>
+  workspaceSnapshots!: Table<WorkspaceSnapshot, string>
 }
 ```
 
@@ -921,17 +916,17 @@ type WorkspaceSnapshot = {
   id: string
   workspaceId: string
   layoutId: string        // 切换前的布局 ID
+  regions: Workspace["regions"]
   instances: PluginInstance[]  // 完整的实例列表快照
   createdAt: string
 }
 
 // repository 方法
-snapshotRepository.save(workspaceId, layoutId, instances)
-snapshotRepository.getLast(workspaceId): WorkspaceSnapshot | null
-snapshotRepository.restore(snapshotId): void
+workspaceSnapshotRepository.save(snapshot)
+workspaceSnapshotRepository.getLast(workspaceId): WorkspaceSnapshot | undefined
 ```
 
-这在布局切换失败时提供一键回滚能力。
+当前 shell 在切换布局前保存 snapshot。`createLayoutSwitchPlan` 输出 `placedInstances`、`unplacedInstances`、`nextRegions` 和 snapshot；不兼容目标布局 region 的实例保留数据并进入 `unplaced` 区域，不删除、不做旧 layout ID 迁移。
 
 ## 14. 错误回退体系
 
@@ -1021,12 +1016,13 @@ packages/
       layout-engine.tsx        # createLayoutEngine 产出 RegionSlot + LayoutHostAPI
       search-engine.ts          # （Phase C 待实现）
       search-router.ts
-      drag-sort-controller.ts   # （Phase D 待实现）
-      expand-manager.ts         # （Phase D 待实现）
-      context-menu-manager.ts   # （Phase D 待实现）
-      settings-navigator.ts     # （Phase E 待实现）
-      toast-manager.ts          # （Phase D 待实现）
-      shortcut-registry.ts      # （Phase E 待实现）
+      drag-sort-model.ts
+      context-menu-model.ts
+      settings-navigator.ts
+      toast-manager.ts
+      shortcut-registry.ts
+      layout-switcher.ts
+      workspace-preset.ts
       index.ts
   storage/              # StorageAdapter port + Web Dexie adapter + repository factory
   theme/                # 不变

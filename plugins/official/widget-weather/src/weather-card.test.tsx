@@ -8,13 +8,25 @@ function makeProps(overrides?: Partial<WidgetViewProps>): WidgetViewProps {
     instanceId: "weather-1",
     pluginId: "official.widgets.weather",
     contributionId: "weather",
+    size: "M",
+    supportedSizes: ["S", "M"],
     config: { city: "北京", unit: "celsius", refreshIntervalMs: 60000 },
     data: {
       get: vi.fn().mockResolvedValue(undefined),
       save: vi.fn().mockResolvedValue(undefined),
     },
+    host: {
+      updateConfig: vi.fn().mockResolvedValue(undefined),
+      removeInstance: vi.fn().mockResolvedValue(undefined),
+      requestResize: vi.fn().mockResolvedValue(undefined),
+      openModal: vi.fn(),
+      closeModal: vi.fn(),
+      openExpand: vi.fn(),
+      showToast: vi.fn(),
+      openExternal: vi.fn().mockResolvedValue(true),
+    },
     ...overrides,
-  } as WidgetViewProps
+  }
 }
 
 describe("WeatherCard", () => {

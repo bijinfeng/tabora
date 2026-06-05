@@ -5,7 +5,6 @@ export type HostCapabilities = {
   themeApply: boolean
   backgroundApply: boolean
   importExportWorkspace: boolean
-  legacyMigration: boolean
   clipboard: boolean
   localFile: boolean
   network: boolean

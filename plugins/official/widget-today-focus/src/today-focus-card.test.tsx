@@ -8,12 +8,24 @@ function makeProps(): WidgetViewProps {
     instanceId: "focus-1",
     pluginId: "official.widgets.today-focus",
     contributionId: "today-focus",
+    size: "M",
+    supportedSizes: ["M", "L"],
     config: {},
     data: {
       get: vi.fn().mockResolvedValue(undefined),
       save: vi.fn().mockResolvedValue(undefined),
     },
-  } as unknown as WidgetViewProps
+    host: {
+      updateConfig: vi.fn().mockResolvedValue(undefined),
+      removeInstance: vi.fn().mockResolvedValue(undefined),
+      requestResize: vi.fn().mockResolvedValue(undefined),
+      openModal: vi.fn(),
+      closeModal: vi.fn(),
+      openExpand: vi.fn(),
+      showToast: vi.fn(),
+      openExternal: vi.fn().mockResolvedValue(true),
+    },
+  }
 }
 
 describe("TodayFocusCard", () => {

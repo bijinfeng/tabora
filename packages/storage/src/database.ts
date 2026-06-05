@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie"
-import type { PluginInstance, PluginRecord, Workspace } from "@tabora/plugin-api"
+import type { PluginInstance, PluginPermission, PluginRecord, Workspace } from "@tabora/plugin-api"
 
 export type PluginDataRow = {
   id: string
@@ -16,12 +16,58 @@ export type StorageMeta = {
   value: string
 }
 
+export type PermissionGrant = {
+  id: string
+  pluginId: string
+  permission: PluginPermission
+  grantedAt: string
+}
+
+export type EventLog = {
+  id: string
+  eventName: string
+  pluginId?: string
+  payload?: unknown
+  createdAt: string
+}
+
+export type SearchHistoryRecord = {
+  id: string
+  workspaceId: string
+  query: string
+  providerId: string
+  createdAt: string
+}
+
+export type ShortcutBindingRecord = {
+  id: string
+  commandId: string
+  key: string
+  source: "platform" | "plugin" | "user"
+  pluginId?: string
+  updatedAt: string
+}
+
+export type WorkspaceSnapshot = {
+  id: string
+  workspaceId: string
+  layoutId: string
+  regions: Workspace["regions"]
+  instances: PluginInstance[]
+  createdAt: string
+}
+
 export class TaboraDatabase extends Dexie {
   plugins!: Table<PluginRecord, string>
   workspaces!: Table<Workspace, string>
   pluginInstances!: Table<PluginInstance, string>
   pluginData!: Table<PluginDataRow, string>
   meta!: Table<StorageMeta, string>
+  permissionGrants!: Table<PermissionGrant, string>
+  eventLogs!: Table<EventLog, string>
+  searchHistory!: Table<SearchHistoryRecord, string>
+  shortcutBindings!: Table<ShortcutBindingRecord, string>
+  workspaceSnapshots!: Table<WorkspaceSnapshot, string>
 
   constructor(name: string) {
     super(name)
@@ -29,50 +75,16 @@ export class TaboraDatabase extends Dexie {
     this.version(1).stores({
       plugins: "id, enabled, source",
       workspaces: "id, activeLayoutId, activeThemeId",
-      pluginInstances: "id, pluginId, contributionId, regionId, enabled",
-      pluginData: "id, pluginId, instanceId, key",
+      pluginInstances:
+        "id, workspaceId, [workspaceId+regionId], pluginId, contributionId, regionId, enabled",
+      pluginData: "id, pluginId, workspaceId, instanceId, key",
+      meta: "key",
+      permissionGrants: "id, pluginId, grantedAt",
+      eventLogs: "id, eventName, pluginId, createdAt",
+      searchHistory: "id, workspaceId, providerId, createdAt",
+      shortcutBindings: "id, commandId, key, source, pluginId",
+      workspaceSnapshots: "id, workspaceId, layoutId, createdAt",
     })
-
-    this.version(2)
-      .stores({
-        plugins: "id, enabled, source",
-        workspaces: "id, activeLayoutId, activeThemeId",
-        pluginInstances: "id, pluginId, contributionId, regionId, enabled",
-        pluginData: "id, pluginId, instanceId, key",
-        meta: "key",
-      })
-      .upgrade(async (tx) => {
-        await tx.table("meta").put({ key: "schemaVersion", value: "2" })
-        await tx.table("meta").put({ key: "migratedAt", value: new Date().toISOString() })
-      })
-
-    this.version(3)
-      .stores({
-        plugins: "id, enabled, source",
-        workspaces: "id, activeLayoutId, activeThemeId",
-        pluginInstances:
-          "id, workspaceId, [workspaceId+regionId], pluginId, contributionId, regionId, enabled",
-        pluginData: "id, pluginId, workspaceId, instanceId, key",
-        meta: "key",
-      })
-      .upgrade(async (tx) => {
-        await tx
-          .table("pluginInstances")
-          .toCollection()
-          .modify((row: PluginInstance & { workspaceId?: string }) => {
-            row.workspaceId ??= "default"
-          })
-
-        await tx
-          .table("pluginData")
-          .toCollection()
-          .modify((row: PluginDataRow) => {
-            row.workspaceId ??= "default"
-          })
-
-        await tx.table("meta").put({ key: "schemaVersion", value: "3" })
-        await tx.table("meta").put({ key: "migratedAt", value: new Date().toISOString() })
-      })
   }
 }
 

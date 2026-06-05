@@ -57,6 +57,7 @@ describe("applyWorkspacePreset", () => {
     expect(result.workspace.regions["topbar"]?.instances).toEqual([{ instanceId: "search-main" }])
     expect(result.workspace.regions["mainGrid"]?.instances).toEqual([{ instanceId: "notes-1" }])
     expect(result.instances).toHaveLength(2)
+    expect(result.instances[0]).not.toHaveProperty("size")
     expect(result.instances[1]).toMatchObject({
       id: "notes-1",
       workspaceId: "default",
@@ -67,6 +68,30 @@ describe("applyWorkspacePreset", () => {
       size: "L",
       config: { color: "green", nested: { enabled: true }, tags: ["daily"] },
     })
+  })
+
+  it("fails when a widget preset instance omits explicit size", () => {
+    expect(() =>
+      applyWorkspacePreset({
+        preset: {
+          ...preset,
+          instances: [
+            {
+              pluginId: "official.widgets.todo",
+              contributionId: "todo",
+              instanceId: "todo-1",
+              extensionPoint: "widget",
+              regionId: "mainGrid",
+            },
+          ],
+        } as WorkspacePresetContribution,
+        workspaceId: "default",
+        workspaceName: "默认工作区",
+        now: "2026-06-05T00:00:00.000Z",
+      }),
+    ).toThrow(
+      'Workspace preset "official.workspace.default" widget instance "todo-1" must declare size',
+    )
   })
 
   it("fails when a preset instance targets an unknown region", () => {
@@ -82,6 +107,7 @@ describe("applyWorkspacePreset", () => {
               instanceId: "todo-1",
               extensionPoint: "widget",
               regionId: "missing",
+              size: "S",
             },
           ],
         },
@@ -107,6 +133,7 @@ describe("applyWorkspacePreset", () => {
               instanceId: "todo-1",
               extensionPoint: "widget",
               regionId: "topbar",
+              size: "S",
             },
           ],
         },

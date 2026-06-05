@@ -9,7 +9,6 @@ export function createWebHostAdapter(overrides: Partial<HostAdapter> = {}): Host
       themeApply: true,
       backgroundApply: true,
       importExportWorkspace: true,
-      legacyMigration: false,
       clipboard: true,
       localFile: false,
       network: true,

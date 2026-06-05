@@ -11,8 +11,8 @@ describe("ToastHost", () => {
       () => (
         <ToastHost
           toasts={[
-            { id: 1, msg: "A" },
-            { id: 2, msg: "B" },
+            { id: "toast-1", message: "A", type: "info", duration: 2500 },
+            { id: "toast-2", message: "B", type: "success", duration: 2500 },
           ]}
         />
       ),
@@ -21,6 +21,35 @@ describe("ToastHost", () => {
 
     expect(root.textContent).toContain("A")
     expect(root.textContent).toContain("B")
+
+    root.remove()
+  })
+
+  it("runs toast action commands by id", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const commandIds: string[] = []
+
+    render(
+      () => (
+        <ToastHost
+          toasts={[
+            {
+              id: "toast-1",
+              message: "查看详情",
+              type: "error",
+              action: { label: "打开", commandId: "open-details" },
+            },
+          ]}
+          onAction={(commandId) => commandIds.push(commandId)}
+        />
+      ),
+      root,
+    )
+
+    root.querySelector<HTMLButtonElement>(".toast-action")?.click()
+
+    expect(commandIds).toEqual(["open-details"])
 
     root.remove()
   })

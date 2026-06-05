@@ -27,7 +27,6 @@ export type HostCapabilityId =
   | "themeApply"
   | "backgroundApply"
   | "importExportWorkspace"
-  | "legacyMigration"
   | "clipboard"
   | "localFile"
   | "network"
@@ -184,8 +183,27 @@ export type WidgetViewProps = {
   instanceId: string
   pluginId: string
   contributionId: string
+  size: WidgetSize
+  supportedSizes: WidgetSize[]
   config: Record<string, unknown>
   data: WidgetViewData
+  host: {
+    updateConfig(value: Record<string, unknown>): Promise<void>
+    removeInstance(): Promise<void>
+    requestResize(size: WidgetSize): Promise<void>
+    openModal(viewId: string, props?: unknown): void
+    closeModal(): void
+    openExpand(): void
+    showToast(
+      message: string,
+      opts?: {
+        type?: "success" | "error" | "warning" | "info"
+        duration?: number
+        action?: { label: string; commandId: string }
+      },
+    ): void
+    openExternal(url: string): Promise<boolean>
+  }
 }
 
 export type SearchHistoryEntry = {

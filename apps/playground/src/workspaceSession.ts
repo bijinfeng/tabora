@@ -7,7 +7,6 @@ import type {
 } from "@tabora/plugin-api"
 import type { InstanceRepository, PluginDataRepository, WorkspaceRepository } from "@tabora/storage"
 import { createDefaultWorkspaceFromPreset } from "./defaultWorkspaceSeed"
-import { FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
 
 export type WorkspaceSessionState = {
   workspace: Workspace
@@ -76,7 +75,7 @@ export async function ensureWorkspaceSession(options: {
     searchSettings: readSearchSettings(workspace, options.searchProviders),
     activeLayoutId: workspace.activeLayoutId,
     activeThemeId: workspace.activeThemeId,
-    activeBackgroundId: workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID,
+    activeBackgroundId: workspace.activeBackgroundProviderId,
   }
 }
 
@@ -177,6 +176,6 @@ export function resolveWorkspaceVisualState(workspace: Workspace): {
   return {
     activeLayoutId: workspace.activeLayoutId,
     activeThemeId: workspace.activeThemeId,
-    activeBackgroundId: workspace.activeBackgroundProviderId ?? FALLBACK_BACKGROUND_ID,
+    activeBackgroundId: workspace.activeBackgroundProviderId,
   }
 }

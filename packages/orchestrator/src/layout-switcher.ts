@@ -1,4 +1,21 @@
-import type { LayoutContribution, PluginInstance, Workspace } from "@tabora/plugin-api"
+import type {
+  ExtensionPoint,
+  LayoutContribution,
+  PluginInstance,
+  Workspace,
+} from "@tabora/plugin-api"
+
+const UNPLACED_REGION_ID = "unplaced"
+const UNPLACED_REGION_ACCEPTS: ExtensionPoint[] = [
+  "layout",
+  "widget",
+  "search",
+  "search-provider",
+  "background-provider",
+  "background-renderer",
+  "theme",
+  "settings-panel",
+]
 
 export type LayoutSwitchPlanOptions = {
   workspace: Workspace
@@ -8,12 +25,15 @@ export type LayoutSwitchPlanOptions = {
 
 export type LayoutSwitchPlan = {
   nextRegions: Workspace["regions"]
-  migratedInstances: PluginInstance[]
+  placedInstances: PluginInstance[]
   unplacedInstances: PluginInstance[]
   snapshot: {
+    id: string
+    workspaceId: string
     layoutId: string
     regions: Workspace["regions"]
     instances: PluginInstance[]
+    createdAt: string
   }
 }
 
@@ -29,7 +49,7 @@ export function createLayoutSwitchPlan(options: LayoutSwitchPlanOptions): Layout
       },
     ]),
   )
-  const migratedInstances: PluginInstance[] = []
+  const placedInstances: PluginInstance[] = []
   const unplacedInstances: PluginInstance[] = []
 
   for (const instance of instances) {
@@ -46,20 +66,33 @@ export function createLayoutSwitchPlan(options: LayoutSwitchPlanOptions): Layout
       continue
     }
 
-    const migratedInstance =
+    const placedInstance =
       nextRegion.id === instance.regionId ? instance : { ...instance, regionId: nextRegion.id }
-    migratedInstances.push(migratedInstance)
-    nextRegions[nextRegion.id]?.instances.push({ instanceId: migratedInstance.id })
+    placedInstances.push(placedInstance)
+    nextRegions[nextRegion.id]?.instances.push({ instanceId: placedInstance.id })
   }
+
+  if (unplacedInstances.length > 0) {
+    nextRegions[UNPLACED_REGION_ID] = {
+      regionId: UNPLACED_REGION_ID,
+      accepts: UNPLACED_REGION_ACCEPTS,
+      instances: unplacedInstances.map((instance) => ({ instanceId: instance.id })),
+    }
+  }
+
+  const createdAt = workspace.updatedAt
 
   return {
     nextRegions,
-    migratedInstances,
+    placedInstances,
     unplacedInstances,
     snapshot: {
+      id: `${workspace.id}:snapshot:${workspace.activeLayoutId}:${targetLayout.id}`,
+      workspaceId: workspace.id,
       layoutId: workspace.activeLayoutId,
       regions: workspace.regions,
       instances,
+      createdAt,
     },
   }
 }

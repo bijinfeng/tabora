@@ -11,6 +11,7 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
     name: "Main",
     activeLayoutId: "layout.previous",
     activeThemeId: "theme.light",
+    activeBackgroundProviderId: "background.gradient-green",
     regions: {
       search: { regionId: "search", accepts: ["search"], instances: [{ instanceId: "search-1" }] },
       grid: { regionId: "grid", accepts: ["widget"], instances: [{ instanceId: "widget-1" }] },
@@ -58,13 +59,13 @@ describe("createLayoutSwitchPlan", () => {
       targetLayout: layout([{ id: "grid", title: "Grid", accepts: ["widget"] }]),
     })
 
-    expect(plan.migratedInstances).toEqual([currentInstance])
+    expect(plan.placedInstances).toEqual([currentInstance])
     expect(plan.nextRegions).toEqual({
       grid: { regionId: "grid", accepts: ["widget"], instances: [{ instanceId: "widget-1" }] },
     })
   })
 
-  test("widget migrates to first compatible widget region", () => {
+  test("widget is placed in the first compatible widget region", () => {
     const plan = createLayoutSwitchPlan({
       workspace: workspace(),
       instances: [instance({ regionId: "oldGrid" })],
@@ -75,12 +76,12 @@ describe("createLayoutSwitchPlan", () => {
       ]),
     })
 
-    expect(plan.migratedInstances[0]?.regionId).toBe("primary")
+    expect(plan.placedInstances[0]?.regionId).toBe("primary")
     expect(plan.nextRegions.primary?.instances).toEqual([{ instanceId: "widget-1" }])
     expect(plan.nextRegions.secondary?.instances).toEqual([])
   })
 
-  test("search does not migrate into widget region", () => {
+  test("search is not placed into widget region", () => {
     const searchInstance = instance({
       id: "search-1",
       pluginId: "plugin.search",
@@ -95,7 +96,7 @@ describe("createLayoutSwitchPlan", () => {
       targetLayout: layout([{ id: "grid", title: "Grid", accepts: ["widget"] }]),
     })
 
-    expect(plan.migratedInstances).toEqual([])
+    expect(plan.placedInstances).toEqual([])
     expect(plan.unplacedInstances).toEqual([searchInstance])
     expect(plan.nextRegions.grid?.instances).toEqual([])
   })
@@ -115,13 +116,27 @@ describe("createLayoutSwitchPlan", () => {
       targetLayout: layout([{ id: "grid", title: "Grid", accepts: ["widget"] }]),
     })
 
-    expect(plan.migratedInstances).toEqual([])
+    expect(plan.placedInstances).toEqual([])
     expect(plan.unplacedInstances).toEqual([themeInstance])
     expect(plan.unplacedInstances[0]?.regionId).toBe("themeRegion")
+    expect(plan.nextRegions.unplaced).toEqual({
+      regionId: "unplaced",
+      accepts: [
+        "layout",
+        "widget",
+        "search",
+        "search-provider",
+        "background-provider",
+        "background-renderer",
+        "theme",
+        "settings-panel",
+      ],
+      instances: [{ instanceId: "theme-1" }],
+    })
     expect(plan.nextRegions.grid?.instances).toEqual([])
   })
 
-  test("snapshot captures previous regions and instances", () => {
+  test("snapshot captures a persistable previous workspace state", () => {
     const currentWorkspace = workspace({
       activeLayoutId: "layout.previous",
       regions: {
@@ -137,9 +152,12 @@ describe("createLayoutSwitchPlan", () => {
     })
 
     expect(plan.snapshot).toEqual({
+      id: "workspace-1:snapshot:layout.previous:layout.next",
+      workspaceId: "workspace-1",
       layoutId: "layout.previous",
       regions: currentWorkspace.regions,
       instances: [currentInstance],
+      createdAt: baseDate,
     })
   })
 })

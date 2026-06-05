@@ -58,7 +58,7 @@ describe("createWidgetContextMenuModel", () => {
     expect(onRemove).toHaveBeenCalledWith("todo-1")
   })
 
-  it("falls back to the default medium size when the instance has no size", () => {
+  it("does not mark a current size when the instance has no explicit size", () => {
     const widget = instance()
     delete widget.size
 
@@ -70,7 +70,7 @@ describe("createWidgetContextMenuModel", () => {
       onRemove: vi.fn(),
     })
 
-    expect(model.sections[0]!.items.map((item) => item.isCurrent)).toEqual([false, true, false])
+    expect(model.sections[0]!.items.map((item) => item.isCurrent)).toEqual([false, false, false])
   })
 
   it("merges ordered plugin context menu items before remove", () => {

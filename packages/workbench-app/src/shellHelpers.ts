@@ -3,6 +3,7 @@ import type {
   SearchProviderContribution,
   SearchWidgetEntry,
   WidgetContribution,
+  WidgetSize,
   WorkbenchSearchSettings,
 } from "@tabora/plugin-api"
 import type { CommandActionMap } from "@tabora/orchestrator"
@@ -11,6 +12,13 @@ export type WidgetContributionResolver = (
   pluginId: string,
   contributionId: string,
 ) => Pick<WidgetContribution, "title" | "icon"> | undefined
+
+export type WidgetRenderModel = {
+  title: string
+  icon?: string
+  currentSize: WidgetSize
+  supportedSizes: WidgetSize[]
+}
 
 export type BuildSearchableWidgetEntriesOptions = {
   instances: PluginInstance[]
@@ -30,16 +38,6 @@ export type CreateCommandExecutorOptions = {
 
 export type CommandExecutor = (commandId: string, context: CommandExecutionContext) => boolean
 
-export function resolveWidgetTitle(
-  instance: Pick<PluginInstance, "pluginId" | "contributionId">,
-  resolveWidgetContribution: WidgetContributionResolver,
-): string {
-  return (
-    resolveWidgetContribution(instance.pluginId, instance.contributionId)?.title ??
-    instance.contributionId
-  )
-}
-
 export function resolveWidgetIconLabel(icon?: string): string {
   switch (icon) {
     case "target":
@@ -57,21 +55,37 @@ export function resolveWidgetIconLabel(icon?: string): string {
   }
 }
 
+export function resolveWidgetRenderModel(
+  instance: Pick<PluginInstance, "size">,
+  widget: Pick<WidgetContribution, "title" | "icon" | "supportedSizes"> | undefined,
+): WidgetRenderModel | null {
+  if (!widget || !instance.size || !widget.supportedSizes.includes(instance.size)) return null
+
+  return {
+    title: widget.title,
+    ...(widget.icon ? { icon: widget.icon } : {}),
+    currentSize: instance.size,
+    supportedSizes: widget.supportedSizes,
+  }
+}
+
 export function buildSearchableWidgetEntries(
   options: BuildSearchableWidgetEntriesOptions,
 ): SearchWidgetEntry[] {
   return options.instances
     .filter((instance) => instance.extensionPoint === "widget")
-    .map((instance) => {
+    .flatMap((instance) => {
       const widget = options.resolveWidgetContribution(instance.pluginId, instance.contributionId)
-      const title = widget?.title ?? instance.contributionId
-      return {
-        instanceId: instance.id,
-        icon: resolveWidgetIconLabel(widget?.icon),
-        name: title,
-        desc: `定位到 ${title} 卡片`,
-        action: options.buildFocusAction(instance.id),
-      }
+      if (!widget) return []
+      return [
+        {
+          instanceId: instance.id,
+          icon: resolveWidgetIconLabel(widget.icon),
+          name: widget.title,
+          desc: `定位到 ${widget.title} 卡片`,
+          action: options.buildFocusAction(instance.id),
+        },
+      ]
     })
 }
 

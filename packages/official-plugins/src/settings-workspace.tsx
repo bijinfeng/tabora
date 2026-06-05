@@ -27,8 +27,7 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
   const backgrounds = () => backgroundOptions(props)
   const layoutValue = () => props.workspace.activeLayoutId
   const themeValue = () => props.workspace.activeThemeId
-  const backgroundValue = () =>
-    props.workspace.activeBackgroundProviderId ?? backgrounds()[0]?.value ?? ""
+  const backgroundValue = () => props.workspace.activeBackgroundProviderId
 
   return (
     <CardSection title="外观">

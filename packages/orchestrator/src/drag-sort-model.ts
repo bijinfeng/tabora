@@ -16,9 +16,12 @@ const SIZE_COLUMN_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 2 }
 const SIZE_ROW_SPAN: Record<WidgetSize, number> = { S: 1, M: 1, L: 2, XL: 2 }
 
 function gridShape(instance: PluginInstance): Omit<GridPlacement, "x" | "y"> {
+  if (!instance.size) {
+    throw new Error(`Widget instance "${instance.id}" must declare size before sorting`)
+  }
   return {
-    colSpan: instance.grid?.colSpan ?? SIZE_COLUMN_SPAN[instance.size ?? "M"],
-    rowSpan: instance.grid?.rowSpan ?? SIZE_ROW_SPAN[instance.size ?? "M"],
+    colSpan: instance.grid?.colSpan ?? SIZE_COLUMN_SPAN[instance.size],
+    rowSpan: instance.grid?.rowSpan ?? SIZE_ROW_SPAN[instance.size],
     ...(instance.grid?.locked === undefined ? {} : { locked: instance.grid.locked }),
   }
 }
@@ -57,7 +60,9 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
     !source.enabled ||
     !target.enabled ||
     source.extensionPoint !== "widget" ||
-    target.extensionPoint !== "widget"
+    target.extensionPoint !== "widget" ||
+    !source.size ||
+    !target.size
   ) {
     return { changed: false, instances: options.instances }
   }
@@ -71,7 +76,8 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
       (instance) =>
         instance.enabled &&
         instance.regionId === source.regionId &&
-        instance.extensionPoint === "widget",
+        instance.extensionPoint === "widget" &&
+        Boolean(instance.size),
     )
     .sort(visualOrder)
   const fromIndex = sortableRegionInstances.findIndex((instance) => instance.id === source.id)

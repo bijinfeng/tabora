@@ -77,7 +77,7 @@ export function createWidgetContextMenuModel(
   options: WidgetContextMenuModelOptions,
 ): WidgetContextMenuModel {
   const instanceId = options.instance.id
-  const currentSize = options.instance.size ?? "M"
+  const currentSize = options.instance.size
   const pluginItems = pluginContextMenuItems(
     options.instance,
     options.contextMenus ?? [],

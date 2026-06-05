@@ -13,12 +13,14 @@ import {
   createPluginRecordRepository,
   createTaboraDatabase,
   createWorkspaceRepository,
+  createWorkspaceSnapshotRepository,
   type InstanceRepository,
   type PluginDataRepository,
   type PluginRecordRepository,
   type StorageAdapter,
   type TaboraDatabase,
   type WorkspaceRepository,
+  type WorkspaceSnapshotRepository,
 } from "@tabora/storage"
 
 export type WorkbenchRuntimeRepositories = {
@@ -26,6 +28,7 @@ export type WorkbenchRuntimeRepositories = {
   instanceRepo: InstanceRepository
   pluginDataRepo: PluginDataRepository
   pluginRecordRepo: PluginRecordRepository
+  workspaceSnapshotRepo: WorkspaceSnapshotRepository
 }
 
 export type WorkbenchRuntimeBootstrap = {
@@ -55,6 +58,7 @@ export function createWorkbenchRuntimeBootstrap(
     instanceRepo: createInstanceRepository(database),
     pluginDataRepo: createPluginDataRepository(database),
     pluginRecordRepo: createPluginRecordRepository(database),
+    workspaceSnapshotRepo: createWorkspaceSnapshotRepository(database),
   }
   const { pluginRecordRepo } = repositories
   const loadResult = loadBuiltinPlugins(options.plugins)

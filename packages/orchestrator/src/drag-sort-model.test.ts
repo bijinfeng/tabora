@@ -143,4 +143,19 @@ describe("createDragSortPlan", () => {
       { id: "second", grid: { x: 2, y: 0, colSpan: 2, rowSpan: 1 } },
     ])
   })
+
+  test("does not sort widget instances without an explicit size", () => {
+    const source = instance({ id: "source" })
+    delete source.size
+    const target = instance({ id: "target" })
+
+    const plan = createDragSortPlan({
+      sourceId: "source",
+      targetId: "target",
+      instances: [source, target],
+    })
+
+    expect(plan.changed).toBe(false)
+    expect(plan.instances).toEqual([source, target])
+  })
 })

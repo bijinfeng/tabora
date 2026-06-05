@@ -49,6 +49,7 @@ describe("workspaceSession", () => {
       name: "默认工作区",
       activeLayoutId: "official.layout.workbench-dashboard",
       activeThemeId: "official.theme.light",
+      activeBackgroundProviderId: "background.gradient-green",
       config: {
         search: {
           defaultProviderId: "official.search.github",
@@ -84,7 +85,7 @@ describe("workspaceSession", () => {
     expect(session.searchSettings.defaultProviderId).toBe("official.search.google")
   })
 
-  it("does not backfill existing default workspace instances", async () => {
+  it("keeps existing default workspace instances unchanged", async () => {
     const database = createTaboraDatabase("tabora-workspace-session-test")
     const workspaceRepo = createWorkspaceRepository(database)
     const instanceRepo = createInstanceRepository(database)
@@ -101,7 +102,7 @@ describe("workspaceSession", () => {
       createdAt: now,
       updatedAt: now,
     })
-    const legacyInstances: PluginInstance[] = [
+    const existingInstances: PluginInstance[] = [
       [
         "search-main",
         "official.search.command-bar",
@@ -126,7 +127,7 @@ describe("workspaceSession", () => {
       createdAt: now,
       updatedAt: now,
     })) as PluginInstance[]
-    for (const instance of legacyInstances) {
+    for (const instance of existingInstances) {
       await instanceRepo.save(instance)
     }
 

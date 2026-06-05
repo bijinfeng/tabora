@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 import { assignGridOrder } from "./workbenchGrid"
 
-function instance(id: string, size: WidgetSize): PluginInstance {
+function instance(id: string, size?: WidgetSize): PluginInstance {
   return {
     id,
     workspaceId: "default",
@@ -11,7 +11,7 @@ function instance(id: string, size: WidgetSize): PluginInstance {
     extensionPoint: "widget",
     regionId: "mainGrid",
     enabled: true,
-    size,
+    ...(size ? { size } : {}),
     config: {},
     createdAt: "2026-05-26T00:00:00.000Z",
     updatedAt: "2026-05-26T00:00:00.000Z",
@@ -37,5 +37,16 @@ describe("assignGridOrder", () => {
         updatedAt: "2026-05-27T00:00:00.000Z",
       },
     ])
+  })
+
+  it("does not assign grid metadata to widget instances without explicit size", () => {
+    const withoutSize = instance("broken")
+    const ordered = assignGridOrder(
+      [withoutSize, instance("notes", "M")],
+      "2026-05-27T00:00:00.000Z",
+    )
+
+    expect(ordered[0]).toEqual(withoutSize)
+    expect(ordered[1]?.grid).toEqual({ x: 0, y: 0, colSpan: 2, rowSpan: 1 })
   })
 })

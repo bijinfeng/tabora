@@ -40,6 +40,21 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(true)
   })
 
+  it("rejects historical migration host capabilities", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "legacy.migration.plugin",
+      name: "Legacy Migration Plugin",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      requiredCapabilities: ["legacyMigration"],
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it("accepts widget context menu contributions", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.widgets.notes",
@@ -96,6 +111,7 @@ describe("pluginManifestSchema", () => {
         id: "bad.widget.context-menu",
         name: "Bad Widget Context Menu",
         version: "0.0.0",
+        apiVersion: "1.0.0",
         entry: "./entry",
         engine: { platform: "^0.1.0" },
         contributes: {
@@ -117,6 +133,7 @@ describe("pluginManifestSchema", () => {
       id: "bad.widgets",
       name: "Bad Widgets",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./entry",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -348,6 +365,42 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(false)
   })
 
+  it("rejects workspace presets whose widget instances omit explicit size", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.workspace-presets",
+      name: "Workspace Presets",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./workspace-presets",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        workspacePresets: [
+          {
+            id: "official.workspace.default",
+            title: "默认工作区",
+            plugins: ["official.widgets.todo"],
+            layoutId: "official.layout.workbench-dashboard",
+            themeId: "official.theme.light",
+            backgroundProviderId: "background.gradient-green",
+            search: { defaultProviderId: "official.search.google" },
+            regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
+            instances: [
+              {
+                pluginId: "official.widgets.todo",
+                contributionId: "todo",
+                instanceId: "todo-1",
+                extensionPoint: "widget",
+                regionId: "mainGrid",
+              },
+            ],
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it("accepts a command contribution", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.commands.workspace",
@@ -380,6 +433,7 @@ describe("pluginManifestSchema", () => {
       id: "bad.commands",
       name: "Bad Commands",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./commands",
       engine: { platform: "^0.1.0" },
     }
@@ -430,6 +484,7 @@ describe("pluginManifestSchema", () => {
       id: "bad.keybindings",
       name: "Bad Keybindings",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./keybindings",
       engine: { platform: "^0.1.0" },
     }
@@ -455,6 +510,7 @@ describe("pluginManifestSchema", () => {
       id: "bad.layout",
       name: "Bad Layout",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./layout",
       engine: { platform: "^0.1.0" },
       contributes: {
