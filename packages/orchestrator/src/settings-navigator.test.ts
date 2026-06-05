@@ -16,19 +16,20 @@ function panel(
     id,
     title: id,
     view: `${id}.view`,
+    section: "general",
+    scope: "workspace",
     ...(order !== undefined ? { order } : {}),
     ...overrides,
   }
 }
 
 describe("settings navigator", () => {
-  it("resolves section ids without depending on DOM or settings host UI", () => {
-    expect(resolveSettingsSectionId()).toBe("general")
-    expect(resolveSettingsSectionId("official.settings.plugins")).toBe("plugins")
-    expect(resolveSettingsSectionId("official.settings.workspace.appearance")).toBe("appearance")
-    expect(resolveSettingsSectionId("official.settings.workspace.search")).toBe("search")
-    expect(resolveSettingsSectionId("official.settings.workspace.workbench")).toBe("general")
-    expect(resolveSettingsSectionId("community.settings.custom")).toBe("about")
+  it("resolves section ids from explicit panel section only", () => {
+    expect(resolveSettingsSectionId("plugins")).toBe("plugins")
+    expect(resolveSettingsSectionId("appearance")).toBe("appearance")
+    expect(resolveSettingsSectionId("search")).toBe("search")
+    expect(resolveSettingsSectionId("general")).toBe("general")
+    expect(resolveSettingsSectionId("about")).toBe("about")
   })
 
   it("uses requested panel when available and falls back to first sorted panel", () => {
@@ -47,12 +48,33 @@ describe("settings navigator", () => {
     expect(resolveInitialSettingsPanelId(panels, "missing")).toBe("official.settings.plugins")
   })
 
-  it("groups panels by section and resolves the initial section", () => {
+  it("groups panels by explicit section and resolves the initial section", () => {
     const navigator = createSettingsNavigator([
-      { ...panel("official.settings.workspace.search", 30), pluginId: "plugin-b" },
-      { ...panel("official.settings.workspace.appearance", 20), pluginId: "plugin-a" },
-      { ...panel("official.settings.plugins", 10), pluginId: "plugin-a" },
-      { ...panel("community.settings.misc"), pluginId: "plugin-c" },
+      {
+        ...panel("official.settings.workspace.search", 30, {
+          section: "search",
+          scope: "workspace",
+        }),
+        pluginId: "plugin-b",
+      },
+      {
+        ...panel("official.settings.workspace.appearance", 20, {
+          section: "appearance",
+          scope: "workspace",
+        }),
+        pluginId: "plugin-a",
+      },
+      {
+        ...panel("official.settings.plugins", 10, { section: "plugins", scope: "workspace" }),
+        pluginId: "plugin-a",
+      },
+      {
+        ...panel("community.settings.misc", undefined, {
+          section: "about",
+          scope: "workspace",
+        }),
+        pluginId: "plugin-c",
+      },
     ])
 
     expect(navigator.initialSectionId("official.settings.workspace.search")).toBe("search")
@@ -67,14 +89,13 @@ describe("settings navigator", () => {
     ])
   })
 
-  it("uses explicit section before id fallback", () => {
-    expect(resolveSettingsSectionId("official.settings.workspace.search", "appearance")).toBe(
-      "appearance",
-    )
-
+  it("uses explicit section without id inference", () => {
     const navigator = createSettingsNavigator([
       {
-        ...panel("official.settings.workspace.search", 10, { section: "appearance" }),
+        ...panel("official.settings.workspace.search", 10, {
+          section: "appearance",
+          scope: "workspace",
+        }),
         pluginId: "plugin-a",
       },
     ])
@@ -86,9 +107,8 @@ describe("settings navigator", () => {
     expect(navigator.sections.search.panels).toEqual([])
   })
 
-  it("defaults scope to workspace and preserves plugin and instance scopes", () => {
+  it("preserves declared plugin and instance scopes", () => {
     const navigator = createSettingsNavigator([
-      { ...panel("legacy.settings.panel", 10), pluginId: "plugin-a" },
       {
         ...panel("plugin.settings.panel", 20, { section: "plugins", scope: "plugin" }),
         pluginId: "plugin-b",
@@ -99,7 +119,6 @@ describe("settings navigator", () => {
       },
     ])
 
-    expect(navigator.sections.about.panels[0]?.scope).toBe("workspace")
     expect(navigator.sections.plugins.panels[0]?.scope).toBe("plugin")
     expect(navigator.sections.general.panels[0]?.scope).toBe("instance")
   })

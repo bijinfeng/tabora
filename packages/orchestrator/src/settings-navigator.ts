@@ -5,7 +5,6 @@ export type SettingsPanelScope = "global" | "workspace" | "plugin" | "instance"
 
 export type SettingsPanelDescriptor = SettingsPanelContribution & {
   pluginId: string
-  scope: SettingsPanelScope
 }
 
 type SettingsPanelInput = SettingsPanelContribution & {
@@ -34,26 +33,14 @@ export function resolveInitialSettingsPanelId(
   return panels[0]?.id ?? null
 }
 
-export function resolveSettingsSectionId(
-  panelId?: string | null,
-  section?: SettingsSectionId | null,
-): SettingsSectionId {
-  if (section) return section
-  if (!panelId) return "general"
-  if (panelId === "official.settings.plugins") return "plugins"
-  if (panelId.includes(".appearance")) return "appearance"
-  if (panelId.includes(".search")) return "search"
-  if (panelId.includes(".workbench")) return "general"
-  return "about"
+export function resolveSettingsSectionId(section: SettingsSectionId): SettingsSectionId {
+  return section
 }
 
 export function normalizeSettingsPanelDescriptor(
   panel: SettingsPanelInput,
 ): SettingsPanelDescriptor {
-  return {
-    ...panel,
-    scope: panel.scope ?? "workspace",
-  }
+  return panel
 }
 
 export function createSettingsNavigator(panels: SettingsPanelInput[]) {
@@ -67,13 +54,13 @@ export function createSettingsNavigator(panels: SettingsPanelInput[]) {
   )
 
   for (const panel of normalizedPanels) {
-    sections[resolveSettingsSectionId(panel.id, panel.section)].panels.push(panel)
+    sections[resolveSettingsSectionId(panel.section)].panels.push(panel)
   }
 
   function initialSectionId(requested?: string | null): SettingsSectionId {
     const panelId = resolveInitialSettingsPanelId(normalizedPanels, requested)
     const panel = normalizedPanels.find((candidate) => candidate.id === panelId)
-    return resolveSettingsSectionId(panelId, panel?.section)
+    return panel ? resolveSettingsSectionId(panel.section) : "general"
   }
 
   return { sections, initialSectionId }

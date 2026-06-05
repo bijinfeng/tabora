@@ -50,6 +50,7 @@ import {
   LayoutBoundary,
   ToastHost,
   resolveInitialSettingsSectionId,
+  type SettingsPanelDescriptor,
   type SettingsSectionId,
   type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
@@ -818,10 +819,7 @@ export function App() {
     return workspaceList()
   }
 
-  function buildSettingsPanelProps(panel: {
-    id: string
-    pluginId: string
-  }): SettingsPanelViewProps {
+  function buildSettingsPanelProps(panel: SettingsPanelDescriptor): SettingsPanelViewProps {
     const workspace = workspaceState()
     if (!workspace) {
       throw new Error("Workspace is not ready")
@@ -829,6 +827,7 @@ export function App() {
     return {
       panelId: panel.id,
       pluginId: panel.pluginId,
+      scope: panel.scope,
       host: {
         close: () => setSettingsOpen(false),
         setDirty: () => {},

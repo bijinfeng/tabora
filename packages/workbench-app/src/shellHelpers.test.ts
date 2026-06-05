@@ -156,12 +156,13 @@ describe("shell helper command execution", () => {
     expect(pluginRunner).toHaveBeenCalledWith("todo.inspect", { instance: widgetInstance })
   })
 
-  it("keeps declared plugin commands without a runner as an explicit no-op", () => {
+  it("reports unhandled plugin commands when no plugin runner is configured", () => {
+    const widgetInstance = instance("todo-1", "todo")
     const runCommand = createCommandExecutor({
       actions: {},
-      pluginCommandIds: ["todo.noop"],
+      pluginCommandIds: ["todo.unhandled"],
     })
 
-    expect(() => runCommand("todo.noop", { instance: instance("todo-1", "todo") })).not.toThrow()
+    expect(runCommand("todo.unhandled", { instance: widgetInstance })).toBe(false)
   })
 })

@@ -120,7 +120,7 @@ describe("createCommandCatalog", () => {
     expect(entries.map((entry) => entry.id)).toEqual(["shell.open-settings"])
   })
 
-  it("keeps required-capability commands when supported capabilities are omitted", () => {
+  it("filters required-capability commands until host capabilities are explicit", () => {
     const entries = createCommandPaletteCommands({
       platformCommands: [],
       pluginCommands: [
@@ -136,10 +136,10 @@ describe("createCommandCatalog", () => {
       },
     })
 
-    expect(entries.map((entry) => entry.id)).toEqual(["plugin.clipboard.copy"])
+    expect(entries).toEqual([])
   })
 
-  it("keeps commands without registered actions as no-op entries", () => {
+  it("skips commands without registered actions", () => {
     const entries = createCommandPaletteCommands({
       platformCommands: [],
       pluginCommands: [
@@ -152,7 +152,6 @@ describe("createCommandCatalog", () => {
       actions: {},
     })
 
-    expect(entries).toHaveLength(1)
-    expect(() => entries[0]!.action()).not.toThrow()
+    expect(entries).toEqual([])
   })
 })

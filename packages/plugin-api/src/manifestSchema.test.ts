@@ -178,7 +178,7 @@ describe("pluginManifestSchema", () => {
     )
   })
 
-  it("accepts an ordered settings panel contribution", () => {
+  it("rejects settings panels without explicit section and scope", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.settings.workspace",
       name: "Workspace Settings",
@@ -197,8 +197,7 @@ describe("pluginManifestSchema", () => {
       },
     })
 
-    expect(result.success).toBe(true)
-    expect(result.success ? result.data.contributes.settingsPanels?.[0]?.order : undefined).toBe(20)
+    expect(result.success).toBe(false)
   })
 
   it("accepts explicit settings panel section and scope", () => {

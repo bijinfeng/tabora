@@ -37,6 +37,8 @@ function panel(
     id,
     title: id,
     view: `${id}.view`,
+    section: "general",
+    scope: "workspace",
     ...(order !== undefined ? { order } : {}),
     ...overrides,
   }
@@ -54,7 +56,12 @@ describe("settings host composition", () => {
       {
         manifest: {
           id: "plugin-a",
-          contributes: { settingsPanels: [panel("plugins", 10), panel("fallback")] },
+          contributes: {
+            settingsPanels: [
+              panel("plugins", 10, { section: "plugins" }),
+              panel("about", 40, { section: "about" }),
+            ],
+          },
         },
       },
     ]
@@ -63,11 +70,11 @@ describe("settings host composition", () => {
       "plugins",
       "appearance",
       "search",
-      "fallback",
+      "about",
     ])
   })
 
-  it("collects settings panel section and normalized scope for host rendering", () => {
+  it("collects explicit settings panel section and scope for host rendering", () => {
     const plugins = [
       {
         manifest: {
@@ -78,7 +85,10 @@ describe("settings host composition", () => {
                 section: "plugins",
                 scope: "plugin",
               }),
-              panel("legacy.settings", 20),
+              panel("instance.settings", 20, {
+                section: "general",
+                scope: "instance",
+              }),
             ],
           },
         },
@@ -94,8 +104,9 @@ describe("settings host composition", () => {
       pluginId: "plugin-a",
     })
     expect(panels[1]).toMatchObject({
-      id: "legacy.settings",
-      scope: "workspace",
+      id: "instance.settings",
+      section: "general",
+      scope: "instance",
       pluginId: "plugin-a",
     })
   })
@@ -113,12 +124,12 @@ describe("settings host composition", () => {
   it("maps settings panels to fixed sections", () => {
     const panels: SettingsPanelDescriptor[] = [
       {
-        ...panel("official.settings.workspace.workbench", 10),
+        ...panel("official.settings.workspace.workbench", 10, { section: "general" }),
         pluginId: "plugin-a",
         scope: "workspace",
       },
       {
-        ...panel("official.settings.workspace.search", 20),
+        ...panel("official.settings.workspace.search", 20, { section: "search" }),
         pluginId: "plugin-b",
         scope: "workspace",
       },
@@ -136,6 +147,7 @@ describe("settings host composition", () => {
         id: "official.settings.workspace.workbench",
         title: "Test",
         view: "test.view",
+        section: "general",
         order: 10,
         pluginId: "plugin-a",
         scope: "workspace",
@@ -154,6 +166,7 @@ describe("settings host composition", () => {
         panelProps: () => ({
           panelId: "official.settings.workspace.workbench",
           pluginId: "plugin-a",
+          scope: "workspace",
           host: {
             close: vi.fn(),
             setDirty: vi.fn(),
@@ -190,6 +203,7 @@ describe("settings host composition", () => {
         id: "official.settings.workspace.workbench",
         title: "Broken",
         view: "broken.view",
+        section: "general",
         order: 10,
         pluginId: "plugin-a",
         scope: "workspace",
@@ -215,6 +229,7 @@ describe("settings host composition", () => {
         panelProps: () => ({
           panelId: "official.settings.workspace.workbench",
           pluginId: "plugin-a",
+          scope: "workspace",
           host: {
             close: vi.fn(),
             setDirty: vi.fn(),

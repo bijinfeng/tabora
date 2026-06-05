@@ -28,7 +28,7 @@ export type CreateCommandExecutorOptions = {
   runPluginCommand?: (commandId: string, context: CommandExecutionContext) => void
 }
 
-export type CommandExecutor = (commandId: string, context: CommandExecutionContext) => void
+export type CommandExecutor = (commandId: string, context: CommandExecutionContext) => boolean
 
 export function resolveWidgetTitle(
   instance: Pick<PluginInstance, "pluginId" | "contributionId">,
@@ -85,12 +85,15 @@ export function createCommandExecutor(options: CreateCommandExecutorOptions): Co
     const action = options.actions[commandId]
     if (action) {
       action()
-      return
+      return true
     }
 
-    if (pluginCommandIds.has(commandId)) {
-      options.runPluginCommand?.(commandId, context)
+    if (pluginCommandIds.has(commandId) && options.runPluginCommand) {
+      options.runPluginCommand(commandId, context)
+      return true
     }
+
+    return false
   }
 }
 

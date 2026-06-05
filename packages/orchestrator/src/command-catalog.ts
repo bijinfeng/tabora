@@ -18,7 +18,7 @@ function hasRequiredCapabilities(
   supportedCapabilities: Set<string> | undefined,
 ): boolean {
   if (!command.requiredCapabilities?.length) return true
-  if (!supportedCapabilities) return true
+  if (!supportedCapabilities) return false
   return command.requiredCapabilities.every((capability) => supportedCapabilities.has(capability))
 }
 
@@ -35,13 +35,16 @@ function commandDescription(command: CommandContribution): string {
 function toCommandEntry(
   command: CommandContribution,
   actions: CommandActionMap,
-): SearchCommandEntry {
+): SearchCommandEntry | null {
+  const action = actions[command.id]
+  if (!action) return null
+
   const entry: SearchCommandEntry = {
     id: command.id,
     icon: command.icon ?? "",
     name: command.title,
     desc: commandDescription(command),
-    action: actions[command.id] ?? (() => {}),
+    action,
   }
 
   if (command.defaultShortcut) {
@@ -63,7 +66,10 @@ export function createCommandPaletteCommands(options: CommandCatalogOptions): Se
     .filter((command) => hasRequiredCapabilities(command, supportedCapabilities))
     .sort(comparePluginCommands)
 
-  return [...platformCommands, ...pluginCommands].map((command) => toCommandEntry(command, actions))
+  return [...platformCommands, ...pluginCommands].flatMap((command) => {
+    const entry = toCommandEntry(command, actions)
+    return entry ? [entry] : []
+  })
 }
 
 export function createCommandCatalog(options: CommandCatalogOptions): CommandCatalog {

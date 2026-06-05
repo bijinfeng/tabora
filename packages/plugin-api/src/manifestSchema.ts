@@ -168,8 +168,8 @@ export const pluginManifestSchema = z.object({
           id: z.string().min(1),
           title: z.string().min(1),
           view: z.string().min(1),
-          section: settingsPanelSectionSchema.optional(),
-          scope: settingsPanelScopeSchema.optional(),
+          section: settingsPanelSectionSchema,
+          scope: settingsPanelScopeSchema,
           order: z.number().int().optional(),
         }),
       )

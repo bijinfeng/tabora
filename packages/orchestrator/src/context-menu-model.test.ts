@@ -140,16 +140,16 @@ describe("createWidgetContextMenuModel", () => {
     expect(model.sections.map((section) => section.id)).toEqual(["size", "expand", "remove"])
   })
 
-  it("keeps declared plugin command items without an action and runs them as a no-op", () => {
+  it("skips plugin command items when no command executor is configured", () => {
     const model = createWidgetContextMenuModel({
       instance: instance(),
       supportedSizes: ["S"],
-      availableCommandIds: ["todo.noop"],
+      availableCommandIds: ["todo.unhandled"],
       contextMenus: [
         {
-          id: "noop",
+          id: "unhandled",
           label: "暂无实现",
-          commandId: "todo.noop",
+          commandId: "todo.unhandled",
         },
       ],
       onResize: vi.fn(),
@@ -157,14 +157,7 @@ describe("createWidgetContextMenuModel", () => {
       onRemove: vi.fn(),
     })
 
-    expect(model.sections.map((section) => section.id)).toEqual([
-      "size",
-      "expand",
-      "plugin",
-      "remove",
-    ])
-    expect(model.sections[2]!.items[0]!.label).toBe("暂无实现")
-    expect(() => model.sections[2]!.items[0]!.run()).not.toThrow()
+    expect(model.sections.map((section) => section.id)).toEqual(["size", "expand", "remove"])
   })
 
   it("passes the current widget instance context when running a plugin command", () => {

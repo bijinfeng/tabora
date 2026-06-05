@@ -178,6 +178,7 @@ export type SearchViewProps = {
 export type SettingsPanelViewProps = {
   panelId: string
   pluginId: string
+  scope: "global" | "workspace" | "plugin" | "instance"
   host: {
     close(): void
     setDirty(isDirty: boolean): void
@@ -216,8 +217,8 @@ export type SettingsPanelContribution = {
   id: string
   title: string
   view: string
-  section?: "general" | "appearance" | "search" | "plugins" | "about"
-  scope?: "global" | "workspace" | "plugin" | "instance"
+  section: "general" | "appearance" | "search" | "plugins" | "about"
+  scope: "global" | "workspace" | "plugin" | "instance"
   order?: number
 }
 

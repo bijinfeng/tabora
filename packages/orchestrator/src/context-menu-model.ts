@@ -34,8 +34,10 @@ function pluginContextMenuItems(
   instance: PluginInstance,
   contextMenus: WidgetContextMenuContribution[],
   hasCommand: (commandId: string) => boolean,
-  runCommand: (commandId: string, context: { instance: PluginInstance }) => void,
+  runCommand: ((commandId: string, context: { instance: PluginInstance }) => void) | undefined,
 ): ContextMenuItem[] {
+  if (!runCommand) return []
+
   return [...contextMenus]
     .sort(
       (left, right) =>
@@ -78,7 +80,7 @@ export function createWidgetContextMenuModel(
     options.instance,
     options.contextMenus ?? [],
     createCommandResolver(options),
-    options.runCommand ?? (() => {}),
+    options.runCommand,
   )
 
   return {
