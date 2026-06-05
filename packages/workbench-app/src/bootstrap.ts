@@ -10,6 +10,7 @@ import {
   type InstanceRepository,
   type PluginDataRepository,
   type PluginRecordRepository,
+  type StorageAdapter,
   type TaboraDatabase,
   type WorkspaceRepository,
 } from "@tabora/storage"
@@ -33,16 +34,21 @@ export type CreateWorkbenchRuntimeBootstrapOptions = {
   host: HostAdapter
   plugins: BuiltinPlugin[]
   databaseName?: string
+  storageAdapter?: StorageAdapter
 }
 
 export function createWorkbenchRuntimeBootstrap(
   options: CreateWorkbenchRuntimeBootstrapOptions,
 ): WorkbenchRuntimeBootstrap {
-  const database = createTaboraDatabase(options.databaseName)
-  const workspaceRepo = createWorkspaceRepository(database)
-  const instanceRepo = createInstanceRepository(database)
-  const pluginDataRepo = createPluginDataRepository(database)
-  const pluginRecordRepo = createPluginRecordRepository(database)
+  const storageAdapter = options.storageAdapter
+  const database = storageAdapter?.database ?? createTaboraDatabase(options.databaseName)
+  const repositories = storageAdapter?.repositories ?? {
+    workspaceRepo: createWorkspaceRepository(database),
+    instanceRepo: createInstanceRepository(database),
+    pluginDataRepo: createPluginDataRepository(database),
+    pluginRecordRepo: createPluginRecordRepository(database),
+  }
+  const { pluginRecordRepo } = repositories
   const catalog = createPluginCatalog(options.plugins)
   const kernel = createPluginKernel({
     lifecycleStore: pluginRecordRepo,
@@ -54,12 +60,7 @@ export function createWorkbenchRuntimeBootstrap(
   return {
     host: options.host,
     database,
-    repositories: {
-      workspaceRepo,
-      instanceRepo,
-      pluginDataRepo,
-      pluginRecordRepo,
-    },
+    repositories,
     catalog,
     kernel,
   }

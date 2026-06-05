@@ -2,6 +2,7 @@ import "fake-indexeddb/auto"
 import { describe, expect, it } from "vitest"
 import { createWebHostAdapter } from "@tabora/host-adapters"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { createWebStorageAdapter } from "@tabora/storage"
 
 import { createWorkbenchRuntimeBootstrap } from "./bootstrap"
 
@@ -35,5 +36,18 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.repositories.instanceRepo).toBeDefined()
     expect(runtime.repositories.pluginDataRepo).toBeDefined()
     expect(runtime.repositories.pluginRecordRepo).toBeDefined()
+  })
+
+  it("accepts a storage adapter from the host", () => {
+    const storageAdapter = createWebStorageAdapter("tabora-workbench-app-adapter-test")
+
+    const runtime = createWorkbenchRuntimeBootstrap({
+      host: createWebHostAdapter({ id: "host.test" }),
+      plugins: testPlugins,
+      storageAdapter,
+    })
+
+    expect(runtime.database).toBe(storageAdapter.database)
+    expect(runtime.repositories).toBe(storageAdapter.repositories)
   })
 })
