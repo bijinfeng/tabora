@@ -27,4 +27,119 @@ describe("createPluginKernel", () => {
 
     expect(kernel.registry.views.has("official.test.view")).toBe(true)
   })
+
+  it("skips plugins when the host platform is unsupported", async () => {
+    const saved: Array<{ id: string; status: string; disabledReason: string | undefined }> = []
+    const manifest: PluginManifest = {
+      id: "desktop.only",
+      name: "Desktop Only",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      supportedPlatforms: ["desktop-webview"],
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+    let activated = false
+
+    const kernel = createPluginKernel({
+      hostPlatform: "web",
+      hostCapabilities: {
+        externalOpen: true,
+        themeApply: true,
+        backgroundApply: true,
+        importExportWorkspace: true,
+        legacyMigration: false,
+        clipboard: true,
+        localFile: false,
+        network: true,
+        storage: true,
+      },
+      lifecycleStore: {
+        async save(record) {
+          saved.push({
+            id: record.id,
+            status: record.status,
+            disabledReason: record.disabledReason,
+          })
+        },
+      },
+    })
+
+    await kernel.discover([
+      {
+        manifest,
+        enabled: true,
+        activate() {
+          activated = true
+        },
+      },
+    ])
+    await kernel.activateEnabledPlugins()
+
+    expect(activated).toBe(false)
+    expect(saved.at(-1)).toEqual({
+      id: "desktop.only",
+      status: "skipped",
+      disabledReason: 'Unsupported platform "web"',
+    })
+  })
+
+  it("skips plugins when required capabilities are missing", async () => {
+    const saved: Array<{ id: string; status: string; disabledReason: string | undefined }> = []
+    const manifest: PluginManifest = {
+      id: "network.plugin",
+      name: "Network Plugin",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      supportedPlatforms: ["web"],
+      requiredCapabilities: ["network", "clipboard"],
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+    let activated = false
+
+    const kernel = createPluginKernel({
+      hostPlatform: "web",
+      hostCapabilities: {
+        externalOpen: true,
+        themeApply: true,
+        backgroundApply: true,
+        importExportWorkspace: true,
+        legacyMigration: false,
+        clipboard: false,
+        localFile: false,
+        network: true,
+        storage: true,
+      },
+      lifecycleStore: {
+        async save(record) {
+          saved.push({
+            id: record.id,
+            status: record.status,
+            disabledReason: record.disabledReason,
+          })
+        },
+      },
+    })
+
+    await kernel.discover([
+      {
+        manifest,
+        enabled: true,
+        activate() {
+          activated = true
+        },
+      },
+    ])
+    await kernel.activateEnabledPlugins()
+
+    expect(activated).toBe(false)
+    expect(saved.at(-1)).toEqual({
+      id: "network.plugin",
+      status: "skipped",
+      disabledReason: "Missing host capabilities: clipboard",
+    })
+  })
 })

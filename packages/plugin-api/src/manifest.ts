@@ -20,6 +20,19 @@ export type PluginPermission =
   | { type: "local-file"; access: "read" | "write" }
   | { type: "external-open"; hosts: string[] }
 
+export type HostPlatform = "web" | "extension" | "desktop-webview"
+
+export type HostCapabilityId =
+  | "externalOpen"
+  | "themeApply"
+  | "backgroundApply"
+  | "importExportWorkspace"
+  | "legacyMigration"
+  | "clipboard"
+  | "localFile"
+  | "network"
+  | "storage"
+
 export type WidgetContextMenuContribution = {
   id: string
   label: string
@@ -236,6 +249,9 @@ export type SettingsPanelViewProps = {
     enabled: boolean
     status?: string
     lastError?: string
+    disabledReason?: string
+    requiredCapabilities?: HostCapabilityId[]
+    supportedPlatforms?: HostPlatform[]
     permissions: PluginPermission[]
     contributes: PluginManifest["contributes"]
   }>
@@ -276,6 +292,9 @@ export type PluginManifest = {
   id: string
   name: string
   version: string
+  apiVersion?: string
+  supportedPlatforms?: HostPlatform[]
+  requiredCapabilities?: HostCapabilityId[]
   publisher?: string
   description?: string
   icon?: string

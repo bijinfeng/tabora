@@ -1,11 +1,15 @@
 export type HostPlatform = "web" | "extension" | "desktop-webview"
 
 export type HostCapabilities = {
-  canOpenExternal: boolean
-  canApplyTheme: boolean
-  canApplyBackground: boolean
-  canImportExportWorkspace: boolean
-  canRunLegacyMigration: boolean
+  externalOpen: boolean
+  themeApply: boolean
+  backgroundApply: boolean
+  importExportWorkspace: boolean
+  legacyMigration: boolean
+  clipboard: boolean
+  localFile: boolean
+  network: boolean
+  storage: boolean
 }
 
 export type HostAdapter = {

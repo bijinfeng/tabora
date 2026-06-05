@@ -47,6 +47,8 @@ export function createWorkbenchRuntimeBootstrap(
   const kernel = createPluginKernel({
     lifecycleStore: pluginRecordRepo,
     recordSource: "builtin",
+    hostPlatform: options.host.platform,
+    hostCapabilities: options.host.capabilities,
   })
 
   return {

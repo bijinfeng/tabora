@@ -7,6 +7,7 @@ import type {
   LayoutHostAPI,
   LayoutRegion,
   PluginInstance,
+  PluginRecord,
   SearchHistoryEntry,
   SearchProviderContribution,
   SearchViewProps,
@@ -278,6 +279,7 @@ export function App() {
   const runtime = createPlaygroundRuntimeBootstrap()
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
+  const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
 
   // Create InstanceRenderer for layout engine
   const instanceRenderer: InstanceRenderer = {
@@ -461,6 +463,7 @@ export function App() {
 
   void kernel.discover(builtinPlugins).then(async () => {
     await kernel.activateEnabledPlugins()
+    setPluginRecords(await repositories.pluginRecordRepo.getAll())
 
     const session = await ensureWorkspaceSession({
       workspaceRepo,
@@ -609,7 +612,7 @@ export function App() {
   }
 
   function pluginSummaries(): SettingsPanelViewProps["plugins"] {
-    return pluginCatalog.pluginSummaries()
+    return pluginCatalog.pluginSummaries(pluginRecords())
   }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {

@@ -1,6 +1,7 @@
 import type {
   BackgroundProviderContribution,
   LayoutContribution,
+  PluginRecord,
   SearchContribution,
   SearchProviderContribution,
   SettingsPanelViewProps,
@@ -106,15 +107,33 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
     return plugin?.manifest.contributes.searches?.find((search) => search.id === contributionId)
   }
 
-  function pluginSummaries(): SettingsPanelViewProps["plugins"] {
-    return plugins.map((plugin) => ({
-      id: plugin.manifest.id,
-      name: plugin.manifest.name,
-      version: plugin.manifest.version,
-      enabled: plugin.enabled,
-      permissions: plugin.manifest.permissions ?? [],
-      contributes: plugin.manifest.contributes,
-    }))
+  function pluginSummaries(
+    records: Array<
+      Pick<PluginRecord, "id"> &
+        Partial<Pick<PluginRecord, "enabled" | "status" | "lastError" | "disabledReason">>
+    > = [],
+  ): SettingsPanelViewProps["plugins"] {
+    const recordsById = new Map(records.map((record) => [record.id, record]))
+    return plugins.map((plugin) => {
+      const record = recordsById.get(plugin.manifest.id)
+      return {
+        id: plugin.manifest.id,
+        name: plugin.manifest.name,
+        version: plugin.manifest.version,
+        enabled: record?.enabled ?? plugin.enabled,
+        ...(record?.status ? { status: record.status } : {}),
+        ...(record?.lastError ? { lastError: record.lastError } : {}),
+        ...(record?.disabledReason ? { disabledReason: record.disabledReason } : {}),
+        permissions: plugin.manifest.permissions ?? [],
+        contributes: plugin.manifest.contributes,
+        ...(plugin.manifest.requiredCapabilities
+          ? { requiredCapabilities: plugin.manifest.requiredCapabilities }
+          : {}),
+        ...(plugin.manifest.supportedPlatforms
+          ? { supportedPlatforms: plugin.manifest.supportedPlatforms }
+          : {}),
+      }
+    })
   }
 
   return {

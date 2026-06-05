@@ -6,6 +6,20 @@ const settingsPanelSectionSchema = z.enum(["general", "appearance", "search", "p
 
 const settingsPanelScopeSchema = z.enum(["global", "workspace", "plugin", "instance"])
 
+const hostPlatformSchema = z.enum(["web", "extension", "desktop-webview"])
+
+const hostCapabilitySchema = z.enum([
+  "externalOpen",
+  "themeApply",
+  "backgroundApply",
+  "importExportWorkspace",
+  "legacyMigration",
+  "clipboard",
+  "localFile",
+  "network",
+  "storage",
+])
+
 const extensionPointSchema = z.enum([
   "layout",
   "widget",
@@ -118,6 +132,9 @@ export const pluginManifestSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   version: z.string().min(1),
+  apiVersion: z.string().min(1).optional(),
+  supportedPlatforms: z.array(hostPlatformSchema).optional(),
+  requiredCapabilities: z.array(hostCapabilitySchema).optional(),
   publisher: z.string().optional(),
   description: z.string().optional(),
   icon: z.string().optional(),

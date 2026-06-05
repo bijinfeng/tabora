@@ -1,5 +1,9 @@
-import type { PluginRecord } from "@tabora/plugin-api"
-import type { PluginManifest } from "@tabora/plugin-api"
+import type {
+  HostCapabilityId,
+  HostPlatform,
+  PluginManifest,
+  PluginRecord,
+} from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry } from "./extensionRegistry"
 import { createPluginRuntimeContext, type PluginRuntimeContext } from "./runtimeContext"
@@ -17,6 +21,8 @@ export type PluginLifecycleStore = {
 export type PluginKernelOptions = {
   lifecycleStore?: PluginLifecycleStore
   recordSource?: PluginRecord["source"]
+  hostPlatform?: HostPlatform
+  hostCapabilities?: Partial<Record<HostCapabilityId, boolean>>
 }
 
 export type PluginKernel = {
@@ -34,6 +40,26 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
   const plugins: BuiltinPlugin[] = []
   const lifecycleStore = options.lifecycleStore
   const recordSource = options.recordSource ?? "builtin"
+
+  function compatibilityReason(plugin: BuiltinPlugin): string | undefined {
+    const { supportedPlatforms, requiredCapabilities } = plugin.manifest
+    if (
+      options.hostPlatform &&
+      supportedPlatforms &&
+      !supportedPlatforms.includes(options.hostPlatform)
+    ) {
+      return `Unsupported platform "${options.hostPlatform}"`
+    }
+
+    if (requiredCapabilities?.length) {
+      const missing = requiredCapabilities.filter(
+        (capability) => options.hostCapabilities?.[capability] !== true,
+      )
+      if (missing.length) return `Missing host capabilities: ${missing.join(", ")}`
+    }
+
+    return undefined
+  }
 
   function buildRecord(plugin: BuiltinPlugin, overrides?: Partial<PluginRecord>): PluginRecord {
     return {
@@ -59,7 +85,17 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
 
       if (lifecycleStore) {
         for (const plugin of discoveredPlugins) {
-          const record = buildRecord(plugin, { installedAt: new Date().toISOString() })
+          const reason = compatibilityReason(plugin)
+          const record = buildRecord(plugin, {
+            installedAt: new Date().toISOString(),
+            ...(reason
+              ? {
+                  enabled: false,
+                  status: "skipped",
+                  disabledReason: reason,
+                }
+              : {}),
+          })
           await lifecycleStore.save(record)
         }
       }
@@ -67,6 +103,19 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     async activateEnabledPlugins() {
       for (const plugin of plugins) {
         if (!plugin.enabled) {
+          continue
+        }
+        const reason = compatibilityReason(plugin)
+        if (reason) {
+          if (lifecycleStore) {
+            await lifecycleStore.save(
+              buildRecord(plugin, {
+                enabled: false,
+                status: "skipped",
+                disabledReason: reason,
+              }),
+            )
+          }
           continue
         }
         try {

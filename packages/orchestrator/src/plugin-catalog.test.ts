@@ -105,4 +105,26 @@ describe("createPluginCatalog", () => {
       { id: "plugin.beta", enabled: false },
     ])
   })
+
+  it("merges plugin record compatibility status into summaries", () => {
+    const catalog = createPluginCatalog(plugins)
+
+    expect(
+      catalog.pluginSummaries([
+        {
+          id: "plugin.beta",
+          status: "skipped",
+          disabledReason: "Missing host capabilities: network",
+        },
+      ]),
+    ).toMatchObject([
+      { id: "plugin.alpha", enabled: true },
+      {
+        id: "plugin.beta",
+        enabled: false,
+        status: "skipped",
+        disabledReason: "Missing host capabilities: network",
+      },
+    ])
+  })
 })

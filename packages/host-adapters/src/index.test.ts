@@ -11,7 +11,8 @@ describe("host adapters", () => {
     const adapter = createWebHostAdapter({ id: "host.playground" })
 
     expect(adapter.platform).toBe("web")
-    expect(adapter.capabilities.canOpenExternal).toBe(true)
+    expect(adapter.capabilities.externalOpen).toBe(true)
+    expect(adapter.capabilities.storage).toBe(true)
     expect(adapter.id).toBe("host.playground")
   })
 

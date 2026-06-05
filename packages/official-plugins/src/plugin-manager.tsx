@@ -20,6 +20,7 @@ function contributionLabels(contributes: PluginManifest["contributes"]): string[
   if (contributes.backgroundRenderers?.length) extensions.push("背景渲染")
   if (contributes.themes?.length) extensions.push("主题")
   if (contributes.settingsPanels?.length) extensions.push("设置")
+  if (contributes.workspacePresets?.length) extensions.push("工作区预设")
   return extensions
 }
 
@@ -85,12 +86,23 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
                           · <InlineError>{plugin.lastError}</InlineError>
                         </span>
                       ) : null}
+                      {plugin.disabledReason ? (
+                        <span>
+                          {" "}
+                          · <InlineError>{plugin.disabledReason}</InlineError>
+                        </span>
+                      ) : null}
+                      {plugin.requiredCapabilities?.length ? (
+                        <span> · 需要能力 {plugin.requiredCapabilities.join(", ")}</span>
+                      ) : null}
                     </span>
                   }
                   trailing={
                     <div class="plugin-controls">
                       {plugin.status === "error" ? (
                         <Badge variant="danger">错误</Badge>
+                      ) : plugin.status === "skipped" ? (
+                        <Badge variant="danger">不兼容</Badge>
                       ) : (
                         <Badge variant={plugin.enabled ? "accent" : "neutral"}>
                           {plugin.enabled ? "已启用" : "已禁用"}
