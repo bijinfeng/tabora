@@ -1,5 +1,7 @@
 # `@tabora/ui` 基础组件包实施计划
 
+> **归档状态：** 本计划已不在默认实施路径中。仅在用户明确要求继续或审查该计划时使用；当前事实源以 `docs/README.md` 登记的 PRD、设计、技术方案 V2 和回归基准为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 落地 `@tabora/ui` 基础组件包（17 个控件，基于 `@kobalte/core`），并把 `widgets-productivity` / `widget-todo` / `search-command-bar` / `plugin-manager` 的内容区控件全部迁过去；同步更新四份事实源文档。

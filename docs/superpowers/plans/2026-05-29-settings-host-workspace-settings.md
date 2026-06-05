@@ -1,5 +1,7 @@
 # Settings Host Workspace Settings Implementation Plan
 
+> **归档状态：** 本计划已不在默认实施路径中。仅在用户明确要求继续或审查该计划时使用；当前事实源以 `docs/README.md` 登记的 PRD、设计、技术方案 V2 和回归基准为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add the MVP settings host so Tabora opens plugin-contributed settings panels for plugins, appearance, and search from the workbench rail.

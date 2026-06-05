@@ -2,7 +2,9 @@
 
 日期：2026-06-04
 
-状态：Phase X1 / X1.5 / X2 已完成；Phase X3 进行中，settings navigator、command palette model 与 context menu model 已下沉到 orchestrator
+状态：归档问题台账；Phase X1-X8 当前状态以 V2 技术方案和回归基准为准。
+
+> Agent 注意：本文包含阶段推进过程中的历史描述，可能与当前实现不一致。不要把本文中的阶段性状态直接当作当前待办。
 
 关联事实源：
 
@@ -540,7 +542,7 @@ plugins/
 
 ### Phase X3: 编排模型下沉
 
-状态：进行中。settings navigator、CommandPalette 结果模型和 widget context menu 默认菜单模型已下沉到 `@tabora/orchestrator` 并有单测覆盖；layout switcher、drag sort model，以及完整 command contribution / shortcut model 仍待继续。
+历史状态：本文编写时 Phase X3 仍在推进，settings navigator、CommandPalette 结果模型和 widget context menu 默认菜单模型已下沉到 `@tabora/orchestrator` 并有单测覆盖；后续状态以 V2 技术方案和当前实现为准。
 
 目标：把当前散落在 shell UI 中的编排模型下沉到 orchestrator，workbench-shell 只做容器和交互表面。
 

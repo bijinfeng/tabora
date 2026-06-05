@@ -4,7 +4,9 @@
 
 日期：2026-05-30
 
-状态：对标 shadcn/ui + Radix 模式，从零设计组件库架构
+状态：历史方案参考；当前 `@tabora/ui` 事实源以 `DESIGN.md`、设计实现映射和实际代码为准
+
+> Agent 注意：本文用于追溯 UI 组件库重构讨论，不作为当前实施计划。修改 UI 时先读 `docs/README.md`、`DESIGN.md` 和 `docs/product/tabora-design-system.md`。
 
 关联文档：
 

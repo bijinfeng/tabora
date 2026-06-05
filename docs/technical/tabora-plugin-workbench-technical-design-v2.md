@@ -12,8 +12,9 @@
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - V2 设计事实源：`DESIGN.md`
 - V2 交互原型参考：`docs/design/03-工作台交互原型.html`
-- UI 重构方案：`docs/technical/tabora-ui-refactoring-plan.md`
-- 插件拆分方案：`docs/technical/tabora-plugin-package-splitting-plan.md`
+- UI 重构历史方案（非默认事实源）：`docs/technical/tabora-ui-refactoring-plan.md`
+- 插件拆分历史方案（非默认事实源）：`docs/technical/tabora-plugin-package-splitting-plan.md`
+- 回归基准与 Agent 工程治理：`docs/technical/tabora-regression-baseline.md`
 - 文档地图：`docs/README.md`
 
 ## 0. 评审起点
@@ -115,7 +116,7 @@ packages/
 - `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
 - `@tabora/storage` 已引入 `StorageAdapter` port；Web 默认 adapter 包装当前 Dexie/IndexedDB repository，`workbench-app` bootstrap 可注入 fake/memory adapter 进行测试或未来跨平台替换。当前上线前 schema 采用单一 Dexie version，直接声明 MVP 所需表，不保留旧版本迁移/backfill 路径。
 - 插件依赖边界已由测试守卫：官方、community、example 插件源码和 package manifest 不得依赖 `@tabora/workbench-shell`、`@tabora/storage` 或 app 源码/package。
-- Phase X1 当前状态已前进到“工程边界收口进行中”：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。
+- 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。
 - playground 当前通过 `apps/playground/src/workbenchComposition.ts` 组装 `@tabora/workbench-app`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`，不再在 `App.tsx` 内直接 new 全套基础设施对象；`App.tsx` 仍是重型 shell，但已经收缩为组合根 + 宿主交互编排。
 - extension newtab 已拥有自己的 shell entry，不再直接 import `@tabora/playground/src/App`。当前仍通过相对路径复用 playground 的纯逻辑 helper，这是 Phase X1 允许的过渡状态；后续需要继续把 shared shell 状态与 helper 收敛到独立 package。
 

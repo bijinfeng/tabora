@@ -1,5 +1,7 @@
 # Tabora 插件系统可扩展性收尾 Implementation Plan
 
+> **归档状态：** 本计划已完成并归档。仅在用户明确要求复盘或审查该计划时使用；当前事实源以 `docs/README.md` 登记的 PRD、设计、技术方案 V2 和回归基准为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 连续完成 `docs/superpowers/specs/2026-06-04-plugin-system-extensibility-review.md` 中剩余 X3-X8 插件扩展性改造，不再每个阶段等待人工继续。

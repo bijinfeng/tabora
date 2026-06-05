@@ -2,7 +2,9 @@
 
 日期：2026-06-02
 
-状态：已实现（2026-06-03，详见 `docs/superpowers/plans/2026-06-02-layout-plugin-contract.md`）
+状态：已实现归档（2026-06-03，详见 `docs/superpowers/plans/2026-06-02-layout-plugin-contract.md`）
+
+> Agent 注意：本文用于追溯布局协议设计，不作为当前技术事实源。当前 layout contract 以 V2 技术方案、`@tabora/plugin-api` 和实现测试为准。
 
 关联文档：
 

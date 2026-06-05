@@ -1,5 +1,7 @@
 # Workbench Dashboard Layout Plugin Implementation Plan
 
+> **归档状态：** 本计划已不在默认实施路径中。仅在用户明确要求继续或审查该计划时使用；当前事实源以 `docs/README.md` 登记的 PRD、设计、技术方案 V2 和回归基准为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 让 Tabora 的整体工作台骨架由官方 layout 插件贡献，而不是由 `apps/playground` 写死为顶部搜索和主网格。

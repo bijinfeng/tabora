@@ -1,5 +1,7 @@
 # Phase X1.5: 文件组织与包边界整理 Implementation Plan
 
+> **归档状态：** 本计划已不在默认实施路径中。仅在用户明确要求继续或审查该计划时使用；当前事实源以 `docs/README.md` 登记的 PRD、设计、技术方案 V2 和回归基准为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 把插件目录、官方插件集合和 builtin 装配职责整理成更清晰的工程结构，为后续 X2-X4 协议演进建立稳定边界。
@@ -404,7 +406,7 @@ plugins/
 - `packages/official-plugins` 不再承担 builtin registry 职责。
 - 新增 `packages/builtin-plugin-registry`。
 - `plugins/` 已分层。
-- Phase X1.5 的状态从“待执行”更新为“已完成”。
+- Phase X1.5 的状态从历史初始状态更新为“已完成”。
 
 在 `docs/superpowers/specs/2026-05-29-tabora-execution-roadmap.md` 中同步当前基线，避免继续把 app 间 import 或官方/community 混放描述为现状。
 

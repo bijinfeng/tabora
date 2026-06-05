@@ -9,6 +9,8 @@
 > **V2 技术方案已发布**，完整对照 V2 PRD 和设计原型从零评审重写。
 > 详见 `docs/technical/tabora-plugin-workbench-technical-design-v2.md`。
 > V2 覆盖：多布局架构、区域渲染引擎、搜索子系统、拖拽排序、卡片展开、上下文菜单、通知系统、快捷键系统、设置架构、扩展点 Props Contract V2、持久化增强、错误回退体系、实施路线。
+>
+> Agent 注意：本文只用于追溯 V1 背景，不作为当前实现入口。
 
 关联文档：
 

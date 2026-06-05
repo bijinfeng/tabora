@@ -1,5 +1,7 @@
 # Phase X1: Shell 工程边界收口 Implementation Plan
 
+> **归档状态：** 本计划已不在默认实施路径中。仅在用户明确要求继续或审查该计划时使用；当前事实源以 `docs/README.md` 登记的 PRD、设计、技术方案 V2 和回归基准为准。
+
 > **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [ ]`）语法来跟踪进度。
 
 **目标：** 把 `apps/playground` 从事实上的平台核心收缩为组合根，建立 `workbench-app` / `host-adapters` / `workbench-shell` 的清晰边界，并让 extension 改为独立 shell entry，在不改变当前用户行为的前提下为后续 X2-X8 协议演进提供稳定工程基础。
@@ -111,7 +113,7 @@ sed -n '1,220p' apps/playground/src/workbenchComposition.ts
 改为：
 
 ```md
-状态：implementation plan 已创建，待执行
+状态：implementation plan 已创建（历史记录）
 ```
 
 并在文档用途段落后追加一小段：
