@@ -21,12 +21,14 @@ import type {
 import { builtinPlugins } from "@tabora/builtin-plugin-registry"
 import {
   buildSearchableWidgetEntries,
+  createCommandExecutor,
   createLayoutFallbackTracker,
   createWorkbenchResponsiveState,
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
   resolveEnabledSearchProviders,
   resolveWidgetIconLabel,
   resolveWidgetTitle,
+  type CommandExecutionContext,
 } from "@tabora/workbench-app"
 import {
   createCommandPaletteCommands,
@@ -261,9 +263,16 @@ export function App() {
     ...pluginCommands.map((command) => command.id),
   ]
 
-  const runCommand = (commandId: string, _context: { instance: PluginInstance }) => {
-    commandActions()[commandId]?.()
+  const runPluginCommand = (_commandId: string, _context: CommandExecutionContext) => {
+    // Plugin command execution is routed here so widget context stays available for the future bus.
   }
+
+  const runCommand = (commandId: string, context: CommandExecutionContext) =>
+    createCommandExecutor({
+      actions: commandActions(),
+      pluginCommandIds: pluginCommands.map((command) => command.id),
+      runPluginCommand,
+    })(commandId, context)
 
   const runtime = createExtensionRuntimeBootstrap()
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime

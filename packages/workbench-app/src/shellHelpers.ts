@@ -5,6 +5,7 @@ import type {
   WidgetContribution,
   WorkbenchSearchSettings,
 } from "@tabora/plugin-api"
+import type { CommandActionMap } from "@tabora/orchestrator"
 
 export type WidgetContributionResolver = (
   pluginId: string,
@@ -16,6 +17,18 @@ export type BuildSearchableWidgetEntriesOptions = {
   resolveWidgetContribution: WidgetContributionResolver
   buildFocusAction: (instanceId: string) => () => void
 }
+
+export type CommandExecutionContext = {
+  instance?: PluginInstance
+}
+
+export type CreateCommandExecutorOptions = {
+  actions: CommandActionMap
+  pluginCommandIds?: string[] | Set<string>
+  runPluginCommand?: (commandId: string, context: CommandExecutionContext) => void
+}
+
+export type CommandExecutor = (commandId: string, context: CommandExecutionContext) => void
 
 export function resolveWidgetTitle(
   instance: Pick<PluginInstance, "pluginId" | "contributionId">,
@@ -60,6 +73,25 @@ export function buildSearchableWidgetEntries(
         action: options.buildFocusAction(instance.id),
       }
     })
+}
+
+export function createCommandExecutor(options: CreateCommandExecutorOptions): CommandExecutor {
+  const pluginCommandIds =
+    options.pluginCommandIds instanceof Set
+      ? options.pluginCommandIds
+      : new Set(options.pluginCommandIds ?? [])
+
+  return (commandId, context) => {
+    const action = options.actions[commandId]
+    if (action) {
+      action()
+      return
+    }
+
+    if (pluginCommandIds.has(commandId)) {
+      options.runPluginCommand?.(commandId, context)
+    }
+  }
 }
 
 export function resolveEnabledProviderIds(

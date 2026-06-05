@@ -7,6 +7,7 @@ import type {
 import { describe, expect, it, vi } from "vitest"
 import {
   buildSearchableWidgetEntries,
+  createCommandExecutor,
   resolveDefaultProviderForSearch,
   resolveEnabledProviderIds,
   resolveEnabledSearchProviders,
@@ -132,5 +133,35 @@ describe("shell helper search settings resolvers", () => {
     ).toBe("google")
     expect(resolveDefaultProviderForSearch({ defaultProviderId: "" }, providers)).toBe("google")
     expect(resolveDefaultProviderForSearch({ defaultProviderId: "" }, [])).toBe("")
+  })
+})
+
+describe("shell helper command execution", () => {
+  it("routes platform commands to actions and plugin commands with context to the plugin runner", () => {
+    const platformAction = vi.fn()
+    const pluginRunner = vi.fn()
+    const widgetInstance = instance("todo-1", "todo")
+    const runCommand = createCommandExecutor({
+      actions: {
+        "open-settings": platformAction,
+      },
+      pluginCommandIds: ["todo.inspect"],
+      runPluginCommand: pluginRunner,
+    })
+
+    runCommand("open-settings", { instance: widgetInstance })
+    runCommand("todo.inspect", { instance: widgetInstance })
+
+    expect(platformAction).toHaveBeenCalledOnce()
+    expect(pluginRunner).toHaveBeenCalledWith("todo.inspect", { instance: widgetInstance })
+  })
+
+  it("keeps declared plugin commands without a runner as an explicit no-op", () => {
+    const runCommand = createCommandExecutor({
+      actions: {},
+      pluginCommandIds: ["todo.noop"],
+    })
+
+    expect(() => runCommand("todo.noop", { instance: instance("todo-1", "todo") })).not.toThrow()
   })
 })
