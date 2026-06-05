@@ -25,8 +25,10 @@ export type WidgetContextMenuModelOptions = {
   availableCommandIds?: string[] | Set<string>
   hasCommand?: (commandId: string) => boolean
   runCommand?: (commandId: string, context: { instance: PluginInstance }) => void
+  hasInstanceSettings?: boolean
   onResize: (instanceId: string, size: WidgetSize) => void
   onExpand: (instanceId: string) => void
+  onOpenSettings?: (instanceId: string) => void
   onRemove: (instanceId: string) => void
 }
 
@@ -82,6 +84,21 @@ export function createWidgetContextMenuModel(
     createCommandResolver(options),
     options.runCommand,
   )
+  const settingsSection =
+    options.hasInstanceSettings && options.onOpenSettings
+      ? [
+          {
+            id: "settings",
+            items: [
+              {
+                id: "settings",
+                label: "实例设置",
+                run: () => options.onOpenSettings?.(instanceId),
+              },
+            ],
+          },
+        ]
+      : []
 
   return {
     instanceId,
@@ -106,6 +123,7 @@ export function createWidgetContextMenuModel(
         ],
       },
       ...(pluginItems.length > 0 ? [{ id: "plugin", items: pluginItems }] : []),
+      ...settingsSection,
       {
         id: "remove",
         items: [

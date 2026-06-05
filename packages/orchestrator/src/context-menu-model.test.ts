@@ -116,6 +116,61 @@ describe("createWidgetContextMenuModel", () => {
     expect(model.sections[2]!.items[1]!.danger).toBe(true)
   })
 
+  it("adds an instance settings action before remove when explicitly configured", () => {
+    const onOpenSettings = vi.fn()
+    const model = createWidgetContextMenuModel({
+      instance: instance(),
+      supportedSizes: ["S"],
+      hasInstanceSettings: true,
+      onOpenSettings,
+      onResize: vi.fn(),
+      onExpand: vi.fn(),
+      onRemove: vi.fn(),
+    })
+
+    expect(model.sections.map((section) => section.id)).toEqual([
+      "size",
+      "expand",
+      "settings",
+      "remove",
+    ])
+    expect(model.sections[2]!.items.map((item) => item.label)).toEqual(["实例设置"])
+
+    model.sections[2]!.items[0]!.run()
+
+    expect(onOpenSettings).toHaveBeenCalledWith("todo-1")
+  })
+
+  it("does not add instance settings unless availability and handler are both explicit", () => {
+    const withAvailabilityOnly = createWidgetContextMenuModel({
+      instance: instance(),
+      supportedSizes: ["S"],
+      hasInstanceSettings: true,
+      onResize: vi.fn(),
+      onExpand: vi.fn(),
+      onRemove: vi.fn(),
+    })
+    const withHandlerOnly = createWidgetContextMenuModel({
+      instance: instance(),
+      supportedSizes: ["S"],
+      onOpenSettings: vi.fn(),
+      onResize: vi.fn(),
+      onExpand: vi.fn(),
+      onRemove: vi.fn(),
+    })
+
+    expect(withAvailabilityOnly.sections.map((section) => section.id)).toEqual([
+      "size",
+      "expand",
+      "remove",
+    ])
+    expect(withHandlerOnly.sections.map((section) => section.id)).toEqual([
+      "size",
+      "expand",
+      "remove",
+    ])
+  })
+
   it("skips plugin context menu items without a declared command", () => {
     const model = createWidgetContextMenuModel({
       instance: instance(),

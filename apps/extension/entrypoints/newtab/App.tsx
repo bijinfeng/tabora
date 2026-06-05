@@ -133,7 +133,7 @@ export function App() {
     instanceId: string
     title: string
     viewId: string
-    mode: "card" | "modal" | "fullscreen"
+    mode: "card" | "modal" | "fullscreen" | "settings"
     props: WidgetViewProps
   } | null>(null)
   const [dragId, setDragId] = createSignal<string | null>(null)
@@ -1008,6 +1008,12 @@ export function App() {
     return null
   }
 
+  function resolveInstanceSettingsView(instance: PluginInstance): string | null {
+    const settingsViewId = widgetContribution(instance)?.views.settings
+    if (!settingsViewId) return null
+    return kernel.registry.views.has(settingsViewId) ? settingsViewId : null
+  }
+
   function closeExpand() {
     setExpandState(null)
     if (lastExpandTrigger) {
@@ -1031,6 +1037,24 @@ export function App() {
       title: widgetTitle(instance),
       viewId: target.viewId,
       mode: target.mode,
+      props: buildWidgetViewProps(instance),
+    })
+  }
+
+  function openWidgetInstanceSettings(instance: PluginInstance) {
+    const viewId = resolveInstanceSettingsView(instance)
+    if (!viewId) {
+      showToast(`当前卡片暂不支持实例设置：${widgetTitle(instance)}`)
+      return
+    }
+    lastExpandTrigger =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setCtxMenu(null)
+    setExpandState({
+      instanceId: instance.id,
+      title: `${widgetTitle(instance)} 设置`,
+      viewId,
+      mode: "settings",
       props: buildWidgetViewProps(instance),
     })
   }
@@ -1070,12 +1094,17 @@ export function App() {
       contextMenus: contextMenuContributions(instance),
       availableCommandIds: availableCommandIds(),
       runCommand,
+      hasInstanceSettings: resolveInstanceSettingsView(instance) !== null,
       onResize: (instanceId, size) => {
         void changeWidgetSize(instanceId, size)
       },
       onExpand: (instanceId) => {
         const target = widgetInstanceById(instanceId)
         if (target) openWidgetExpand(target)
+      },
+      onOpenSettings: (instanceId) => {
+        const target = widgetInstanceById(instanceId)
+        if (target) openWidgetInstanceSettings(target)
       },
       onRemove: (instanceId) => {
         void removeWidget(instanceId)
@@ -1360,11 +1389,17 @@ export function App() {
                           ? "全屏视图"
                           : expand().mode === "modal"
                             ? "插件展开视图"
-                            : "卡片放大视图"}
+                            : expand().mode === "settings"
+                              ? "实例设置"
+                              : "卡片放大视图"}
                       </span>
                     </div>
                   </div>
-                  <button class="expand-close-btn" onClick={closeExpand} aria-label="关闭展开视图">
+                  <button
+                    class="expand-close-btn"
+                    onClick={closeExpand}
+                    aria-label={expand().mode === "settings" ? "关闭实例设置" : "关闭展开视图"}
+                  >
                     <X size={18} />
                   </button>
                 </div>
