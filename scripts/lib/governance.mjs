@@ -1,0 +1,564 @@
+import { existsSync } from "node:fs"
+import { readdir, readFile } from "node:fs/promises"
+import path from "node:path"
+
+const DEPENDENCY_SECTIONS = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+]
+
+const IMPORT_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mjs"])
+const QUALITY_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".css", ".mjs"])
+const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/
+
+const PLUGIN_IMPORT_RULES = [
+  {
+    matches: (specifier) =>
+      specifier === "@tabora/workbench-shell" || specifier.startsWith("@tabora/workbench-shell/"),
+    reason: "plugins must not import host shell internals",
+  },
+  {
+    matches: (specifier) =>
+      specifier === "@tabora/storage" || specifier.startsWith("@tabora/storage/"),
+    reason: "plugins must use host-provided runtime data ports",
+  },
+  {
+    matches: (specifier) =>
+      specifier.includes("apps/") ||
+      specifier.startsWith("app/") ||
+      specifier === "@tabora/playground" ||
+      specifier.startsWith("@tabora/playground/") ||
+      specifier === "@tabora/extension" ||
+      specifier.startsWith("@tabora/extension/"),
+    reason: "plugins must not import app source paths",
+  },
+]
+
+const UI_IMPORT_RULES = [
+  {
+    matches: (specifier) =>
+      specifier === "@tabora/platform-kernel" || specifier.startsWith("@tabora/platform-kernel/"),
+    reason: "@tabora/ui must not import platform kernel",
+  },
+  {
+    matches: (specifier) =>
+      specifier === "@tabora/storage" || specifier.startsWith("@tabora/storage/"),
+    reason: "@tabora/ui must not import storage",
+  },
+  {
+    matches: (specifier) =>
+      specifier === "@tabora/official-plugins" || specifier.startsWith("@tabora/official-plugins/"),
+    reason: "@tabora/ui must not import official plugin packages",
+  },
+  {
+    matches: (specifier) =>
+      specifier.includes("apps/") ||
+      specifier === "@tabora/playground" ||
+      specifier.startsWith("@tabora/playground/") ||
+      specifier === "@tabora/extension" ||
+      specifier.startsWith("@tabora/extension/"),
+    reason: "@tabora/ui must not import app source paths",
+  },
+]
+
+const UI_DEPENDENCY_RULES = [
+  {
+    matches: (dependency) =>
+      dependency === "@tabora/platform-kernel" || dependency.startsWith("@tabora/platform-kernel/"),
+    reason: "@tabora/ui must not depend on platform kernel",
+  },
+  {
+    matches: (dependency) =>
+      dependency === "@tabora/storage" || dependency.startsWith("@tabora/storage/"),
+    reason: "@tabora/ui must not depend on storage",
+  },
+  {
+    matches: (dependency) =>
+      dependency === "@tabora/official-plugins" ||
+      dependency.startsWith("@tabora/official-plugins/"),
+    reason: "@tabora/ui must not depend on official plugin packages",
+  },
+  {
+    matches: (dependency) =>
+      dependency === "@tabora/playground" ||
+      dependency.startsWith("@tabora/playground/") ||
+      dependency === "@tabora/extension" ||
+      dependency.startsWith("@tabora/extension/"),
+    reason: "@tabora/ui must not depend on app packages",
+  },
+]
+
+const CORE_PACKAGE_APP_IMPORT_RULES = [
+  {
+    matches: (specifier) =>
+      specifier.includes("apps/") ||
+      specifier === "@tabora/playground" ||
+      specifier.startsWith("@tabora/playground/") ||
+      specifier === "@tabora/extension" ||
+      specifier.startsWith("@tabora/extension/"),
+    reason: "packages must not import app source or app packages",
+  },
+]
+
+const RAW_COLOR_PATTERN =
+  /#(?:[0-9a-fA-F]{3,8})\b|rgba?\(\s*(?!var\()[^)]+\)|hsla?\(\s*(?!var\()[^)]+\)|!important\b/g
+const TYPE_ESCAPE_PATTERN = /\bas any\b|@ts-expect-error|@ts-ignore/g
+const ISSUE_MARKER_PATTERN = /\b(?:TODO|FIXME|HACK)\b|console\.(?:log|debug|info)\b/g
+const PLUGIN_EXTERNAL_OPEN_PATTERN = /window\.open|target="_blank"|target='_blank'/g
+const QUALITY_EXTERNAL_OPEN_PATTERN =
+  /window\.open|target="_blank"|target='_blank'|openExternal|external-open/g
+const TEST_MODE_PATTERNS = [
+  {
+    pattern: /\b(?:it|test|describe)\.only\b/g,
+    reason: "focused tests must not be committed",
+  },
+  {
+    pattern: /\.skip\(/g,
+    reason: "skipped tests must not be committed",
+  },
+]
+
+export function resolveRepositoryRoot(startDir) {
+  if (existsSync(path.join(startDir, "pnpm-workspace.yaml"))) {
+    return startDir
+  }
+
+  return path.resolve(startDir, "../..")
+}
+
+export function extractImportSpecifiers(source) {
+  const specifiers = []
+  const importPattern =
+    /(?:import\s+(?:type\s+)?(?:[^"'()]+?\s+from\s+)?|export\s+(?:type\s+)?[^"'()]+?\s+from\s+|import\s*\()\s*["']([^"']+)["']/g
+
+  for (const match of source.matchAll(importPattern)) {
+    if (match[1]) {
+      specifiers.push(match[1])
+    }
+  }
+
+  return specifiers
+}
+
+export function findForbiddenPluginImports(options) {
+  return findForbiddenImports(options, PLUGIN_IMPORT_RULES)
+}
+
+export function findForbiddenPluginDependencies(options) {
+  return findForbiddenDependencies(options, PLUGIN_IMPORT_RULES)
+}
+
+export function findForbiddenUiImports(options) {
+  return findForbiddenImports(options, UI_IMPORT_RULES)
+}
+
+export function findForbiddenUiDependencies(options) {
+  return findForbiddenDependencies(options, UI_DEPENDENCY_RULES)
+}
+
+export function findCorePackageAppImports(options) {
+  return findForbiddenImports(options, CORE_PACKAGE_APP_IMPORT_RULES)
+}
+
+export function findPluginExternalOpenViolations(options) {
+  if (isTestFile(options.filePath)) {
+    return []
+  }
+
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: PLUGIN_EXTERNAL_OPEN_PATTERN,
+    reason: "plugins must not bypass the external-open permission bridge",
+  })
+}
+
+export function findTestModeViolations(options) {
+  return TEST_MODE_PATTERNS.flatMap(({ pattern, reason }) =>
+    collectPatternMatches({
+      filePath: options.filePath,
+      source: options.source,
+      pattern,
+      reason,
+    }),
+  )
+}
+
+export function findTypeEscapeMatches(options) {
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: TYPE_ESCAPE_PATTERN,
+  })
+}
+
+export function findIssueMarkerMatches(options) {
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: ISSUE_MARKER_PATTERN,
+  })
+}
+
+export function findRawColorMatches(options) {
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: RAW_COLOR_PATTERN,
+  })
+}
+
+export function findExternalOpenMatches(options) {
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: QUALITY_EXTERNAL_OPEN_PATTERN,
+  })
+}
+
+export function rankFilesByLineCount(entries, limit = 20) {
+  return [...entries]
+    .sort(
+      (left, right) =>
+        right.lineCount - left.lineCount || left.filePath.localeCompare(right.filePath),
+    )
+    .slice(0, limit)
+}
+
+export async function scanPluginSourceBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "packages", "official-plugins", "src"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath)) && !isTestFile(filePath),
+  )
+
+  return scanFiles(repositoryRoot, files, findForbiddenPluginImports)
+}
+
+export async function scanPluginPackageBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = [
+    path.join(repositoryRoot, "packages", "official-plugins", "package.json"),
+    ...(await collectFiles(
+      [path.join(repositoryRoot, "plugins")],
+      (filePath) => path.basename(filePath) === "package.json",
+    )),
+  ]
+
+  return scanPackageFiles(repositoryRoot, uniquePaths(files), findForbiddenPluginDependencies)
+}
+
+export async function scanUiSourceBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [path.join(repositoryRoot, "packages", "ui", "src")],
+    (filePath) => IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath)) && !isTestFile(filePath),
+  )
+
+  return scanFiles(repositoryRoot, files, findForbiddenUiImports)
+}
+
+export async function scanUiPackageBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  return scanPackageFiles(
+    repositoryRoot,
+    [path.join(repositoryRoot, "packages", "ui", "package.json")],
+    findForbiddenUiDependencies,
+  )
+}
+
+export async function scanPluginExternalOpenBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles([path.join(repositoryRoot, "plugins")], (filePath) =>
+    IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath)),
+  )
+
+  return scanFiles(repositoryRoot, files, findPluginExternalOpenViolations)
+}
+
+export async function scanTestModeBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath)) && isTestFile(filePath),
+  )
+
+  return scanFiles(repositoryRoot, files, findTestModeViolations)
+}
+
+export async function scanCorePackageAppImportBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles([path.join(repositoryRoot, "packages")], (filePath) => {
+    if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+      return false
+    }
+
+    if (isTestFile(filePath)) {
+      return false
+    }
+
+    return filePath.includes(`${path.sep}src${path.sep}`)
+  })
+
+  return scanFiles(repositoryRoot, files, findCorePackageAppImports)
+}
+
+export async function scanArchitecture(rootDir) {
+  const findings = [
+    ...(await scanPluginSourceBoundaries(rootDir)),
+    ...(await scanPluginPackageBoundaries(rootDir)),
+    ...(await scanUiSourceBoundaries(rootDir)),
+    ...(await scanUiPackageBoundaries(rootDir)),
+    ...(await scanPluginExternalOpenBoundaries(rootDir)),
+    ...(await scanTestModeBoundaries(rootDir)),
+    ...(await scanCorePackageAppImportBoundaries(rootDir)),
+  ]
+
+  return findings.sort(compareFindings)
+}
+
+export async function scanQuality(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const qualityFiles = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => QUALITY_SOURCE_EXTENSIONS.has(path.extname(filePath)),
+  )
+
+  const typeEscapes = await scanFiles(repositoryRoot, qualityFiles, findTypeEscapeMatches)
+  const issueMarkers = await scanFiles(repositoryRoot, qualityFiles, findIssueMarkerMatches)
+  const rawColors = await scanFiles(repositoryRoot, qualityFiles, findRawColorMatches)
+  const externalOpenPatterns = await scanFiles(
+    repositoryRoot,
+    qualityFiles.filter((filePath) => path.extname(filePath) !== ".css"),
+    findExternalOpenMatches,
+  )
+  const largeFiles = rankFilesByLineCount(
+    await Promise.all(
+      qualityFiles.map(async (filePath) => ({
+        filePath: path.relative(repositoryRoot, filePath),
+        lineCount: countLines(await readFile(filePath, "utf8")),
+      })),
+    ),
+  )
+
+  return {
+    typeEscapes,
+    issueMarkers,
+    largeFiles,
+    rawColors,
+    externalOpenPatterns,
+  }
+}
+
+export function buildArchitectureFailureReport(findings) {
+  const lines = ["Architecture check failed:"]
+
+  for (const finding of findings) {
+    lines.push(`- ${formatArchitectureFinding(finding)}`)
+  }
+
+  return lines.join("\n")
+}
+
+export function buildQualityReport(result) {
+  const lines = [
+    "Quality report",
+    `- Type escapes: ${result.typeEscapes.length}`,
+    ...formatMatchSamples(result.typeEscapes),
+    `- Issue markers: ${result.issueMarkers.length}`,
+    ...formatMatchSamples(result.issueMarkers),
+    "- Large files top 20:",
+    ...formatLargeFiles(result.largeFiles),
+    `- Raw CSS colors / !important: ${result.rawColors.length}`,
+    ...formatMatchSamples(result.rawColors),
+    `- External open paths: ${result.externalOpenPatterns.length}`,
+    ...formatMatchSamples(result.externalOpenPatterns),
+  ]
+
+  return lines.join("\n")
+}
+
+function findForbiddenImports(options, rules) {
+  const specifiers = extractImportSpecifiers(options.source)
+
+  return specifiers.flatMap((specifier) =>
+    rules
+      .filter((rule) => rule.matches(specifier))
+      .map((rule) => ({
+        filePath: options.filePath,
+        specifier,
+        reason: rule.reason,
+      })),
+  )
+}
+
+function findForbiddenDependencies(options, rules) {
+  return DEPENDENCY_SECTIONS.flatMap((section) =>
+    Object.keys(options.manifest[section] ?? {}).flatMap((dependency) =>
+      rules
+        .filter((rule) => rule.matches(dependency))
+        .map((rule) => ({
+          filePath: options.filePath,
+          dependency,
+          section,
+          reason: rule.reason,
+        })),
+    ),
+  )
+}
+
+function collectPatternMatches(options) {
+  const matches = []
+
+  for (const match of options.source.matchAll(options.pattern)) {
+    if (match[0]) {
+      matches.push({
+        filePath: options.filePath,
+        match: match[0],
+        ...(options.reason ? { reason: options.reason } : {}),
+      })
+    }
+  }
+
+  return matches
+}
+
+async function collectFiles(roots, matcher) {
+  const files = []
+
+  for (const root of roots) {
+    await walk(root, files, matcher)
+  }
+
+  return uniquePaths(files)
+}
+
+async function walk(dir, files, matcher) {
+  if (!existsSync(dir)) {
+    return
+  }
+
+  const entries = await readdir(dir, { withFileTypes: true })
+
+  for (const entry of entries) {
+    if (entry.name === "dist" || entry.name === "node_modules" || entry.name.startsWith(".")) {
+      continue
+    }
+
+    const entryPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      await walk(entryPath, files, matcher)
+      continue
+    }
+
+    if (matcher(entryPath)) {
+      files.push(entryPath)
+    }
+  }
+}
+
+async function scanFiles(repositoryRoot, files, finder) {
+  const findings = []
+
+  for (const filePath of files) {
+    const source = await readFile(filePath, "utf8")
+    findings.push(
+      ...finder({
+        filePath: path.relative(repositoryRoot, filePath),
+        source,
+      }),
+    )
+  }
+
+  return uniqueFindings(findings)
+}
+
+async function scanPackageFiles(repositoryRoot, files, finder) {
+  const findings = []
+
+  for (const filePath of files) {
+    if (!existsSync(filePath)) {
+      continue
+    }
+
+    const manifest = JSON.parse(await readFile(filePath, "utf8"))
+    findings.push(
+      ...finder({
+        filePath: path.relative(repositoryRoot, filePath),
+        manifest,
+      }),
+    )
+  }
+
+  return uniqueFindings(findings)
+}
+
+function uniquePaths(paths) {
+  return [...new Set(paths)]
+}
+
+function uniqueFindings(findings) {
+  const seen = new Set()
+  const result = []
+
+  for (const finding of findings) {
+    const key = JSON.stringify(finding)
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    result.push(finding)
+  }
+
+  return result
+}
+
+function compareFindings(left, right) {
+  return formatArchitectureFinding(left).localeCompare(formatArchitectureFinding(right))
+}
+
+function formatArchitectureFinding(finding) {
+  if ("specifier" in finding) {
+    return `${finding.filePath} imports ${finding.specifier}: ${finding.reason}`
+  }
+
+  if ("dependency" in finding) {
+    return `${finding.filePath} depends on ${finding.dependency} (${finding.section}): ${finding.reason}`
+  }
+
+  return `${finding.filePath} contains ${finding.match}: ${finding.reason}`
+}
+
+function formatMatchSamples(findings, limit = 10) {
+  return findings.slice(0, limit).map((finding) => `  - ${finding.filePath}: ${finding.match}`)
+}
+
+function formatLargeFiles(entries) {
+  return entries.map((entry) => `  - ${entry.filePath} (${entry.lineCount} lines)`)
+}
+
+function isTestFile(filePath) {
+  return TEST_FILE_PATTERN.test(filePath)
+}
+
+function countLines(source) {
+  if (source.length === 0) {
+    return 0
+  }
+
+  return source.split(/\r?\n/).length
+}

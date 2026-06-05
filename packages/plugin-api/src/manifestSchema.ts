@@ -30,6 +30,33 @@ const extensionPointSchema = z.enum([
   "settings-panel",
 ])
 
+const pluginPermissionSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("external-open"),
+    hosts: z.array(z.string().min(1)).min(1),
+  }),
+  z.object({
+    type: z.literal("storage"),
+    scope: z.literal("plugin"),
+  }),
+  z.object({
+    type: z.literal("workspace"),
+    access: z.enum(["read", "write"]),
+  }),
+  z.object({
+    type: z.literal("network"),
+    hosts: z.array(z.string().min(1)).min(1),
+  }),
+  z.object({
+    type: z.literal("clipboard"),
+    access: z.enum(["read", "write"]),
+  }),
+  z.object({
+    type: z.literal("local-file"),
+    access: z.enum(["read", "write"]),
+  }),
+])
+
 const widgetContributionSchema = z
   .object({
     id: z.string().min(1),
@@ -182,7 +209,7 @@ export const pluginManifestSchema = z.object({
   icon: z.string().optional(),
   entry: z.string().min(1),
   engine: z.object({ platform: z.string().min(1) }),
-  permissions: z.array(z.unknown()).optional(),
+  permissions: z.array(pluginPermissionSchema).optional(),
   contributes: z.object({
     layouts: z
       .array(

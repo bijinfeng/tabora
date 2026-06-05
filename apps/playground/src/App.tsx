@@ -21,8 +21,10 @@ import type {
 } from "@tabora/plugin-api"
 import {
   buildSearchableWidgetEntries,
+  canPluginOpenExternal,
   createCommandExecutor,
   createLayoutFallbackTracker,
+  createLayoutSwitchExecution,
   createWorkbenchResponsiveState,
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
   resolveEnabledSearchProviders,
@@ -35,12 +37,12 @@ import {
   createCommandPaletteCommands,
   createShortcutRegistry,
   createLayoutEngine,
-  createLayoutSwitchPlan,
   createDragSortPlan,
   createWidgetContextMenuModel,
   createToastManager,
   type CommandActionMap,
   type InstanceRenderer,
+  type LayoutSwitchPlan,
   type ShortcutRegistry,
   type ToastOptions,
   type ToastRecord,
@@ -348,7 +350,7 @@ export function App() {
           {View({
             providers: enabledSearchProviders(),
             defaultProviderId: resolveDefaultProviderForSearch(),
-            openExternal,
+            openExternal: (url) => openExternalForPlugin(instance.pluginId, url),
             onDefaultProviderChange: setDefaultSearchProvider,
             searchHistory: searchHistory(),
             commands: commandItems(),
@@ -503,7 +505,7 @@ export function App() {
         },
         showToast,
         async openExternal(url) {
-          return openExternal(url)
+          return openExternalForPlugin(instance.pluginId, url)
         },
       },
     }
@@ -534,7 +536,7 @@ export function App() {
     applyBackgroundStyle(resolveBackgroundStyle(session.activeBackgroundId, allBackgrounds))
 
     setSearchHistory(session.searchHistory)
-    const nextInstances = await reconcileInstancesForLayout(
+    const { instances: nextInstances } = await reconcileInstancesForLayout(
       session.activeLayoutId,
       session.instances,
     )
@@ -585,41 +587,27 @@ export function App() {
     return pluginCatalog.findLayoutContribution(layoutId)?.regions ?? []
   }
 
-  function reassignInstancesForLayout(
-    layoutId: string,
-    currentInstances: PluginInstance[],
-  ): PluginInstance[] {
+  function reassignInstancesForLayout(layoutId: string, currentInstances: PluginInstance[]) {
     const activeWorkspace = requireWorkspace(workspaceState())
     const targetLayout = pluginCatalog.findLayoutContribution(layoutId)
     if (!targetLayout) return currentInstances
-    const plan = createLayoutSwitchPlan({
+    return createLayoutSwitchExecution({
       workspace: activeWorkspace,
       instances: currentInstances,
       targetLayout,
-    })
-    const now = new Date().toISOString()
-
-    const nextInstances = new Map(
-      [
-        ...plan.placedInstances,
-        ...plan.unplacedInstances.map((instance) => ({ ...instance, regionId: "unplaced" })),
-      ].map((instance) => [instance.id, instance]),
-    )
-
-    return currentInstances.map((currentInstance) => {
-      const instance = nextInstances.get(currentInstance.id) ?? currentInstance
-      const previous = currentInstances.find((current) => current.id === instance.id)
-      return previous && previous.regionId !== instance.regionId
-        ? { ...instance, updatedAt: now }
-        : instance
+      now: new Date().toISOString(),
     })
   }
 
   async function reconcileInstancesForLayout(
     layoutId: string,
     currentInstances: PluginInstance[],
-  ): Promise<PluginInstance[]> {
-    const nextInstances = reassignInstancesForLayout(layoutId, currentInstances)
+  ): Promise<{ instances: PluginInstance[]; plan: LayoutSwitchPlan | null }> {
+    const execution = reassignInstancesForLayout(layoutId, currentInstances)
+    if (Array.isArray(execution)) {
+      return { instances: assignGridOrder(execution), plan: null }
+    }
+    const nextInstances = execution.instances
     for (let index = 0; index < nextInstances.length; index += 1) {
       const previous = currentInstances[index]
       const next = nextInstances[index]
@@ -631,7 +619,7 @@ export function App() {
         await instanceRepo.save(next)
       }
     }
-    return assignGridOrder(nextInstances)
+    return { instances: assignGridOrder(nextInstances), plan: execution.plan }
   }
 
   async function switchLayout(layoutId: string) {
@@ -640,14 +628,13 @@ export function App() {
     if (!targetLayout) return
     setCtxMenu(null)
     setExpandState(null)
-    const nextInstances = await reconcileInstancesForLayout(layoutId, instances())
+    const { instances: nextInstances, plan } = await reconcileInstancesForLayout(
+      layoutId,
+      instances(),
+    )
     setInstances(nextInstances)
     setActiveLayoutId(layoutId)
-    const plan = createLayoutSwitchPlan({
-      workspace: activeWorkspace,
-      instances: nextInstances,
-      targetLayout,
-    })
+    if (!plan) return
     await workspaceSnapshotRepo.save(plan.snapshot)
 
     const updatedWorkspace = await updateWorkspaceRecord({
@@ -796,7 +783,7 @@ export function App() {
     setCtxMenu(null)
     setExpandState(null)
     setWorkspaceState(result.workspace)
-    const nextInstances = await reconcileInstancesForLayout(
+    const { instances: nextInstances } = await reconcileInstancesForLayout(
       result.workspace.activeLayoutId,
       result.instances,
     )
@@ -848,7 +835,7 @@ export function App() {
     applyBackgroundStyle(resolveBackgroundStyle(bg, allBg))
     setSearchSettings(session.searchSettings)
     setSearchHistory(session.searchHistory)
-    const nextInstances = await reconcileInstancesForLayout(
+    const { instances: nextInstances } = await reconcileInstancesForLayout(
       session.activeLayoutId,
       session.instances,
     )
@@ -1223,6 +1210,11 @@ export function App() {
 
   function resolveDefaultProviderForSearch(): string {
     return resolveDefaultProviderId(searchSettings(), searchProviders())
+  }
+
+  function openExternalForPlugin(pluginId: string, url: string): boolean {
+    if (!canPluginOpenExternal({ pluginId, url, plugins: kernel.plugins })) return false
+    return openExternal(url)
   }
 
   function openExternal(url: string): boolean {

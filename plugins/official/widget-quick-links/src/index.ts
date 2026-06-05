@@ -10,6 +10,7 @@ export const officialPluginQuickLinks: BuiltinPlugin = {
     apiVersion: "1.0.0",
     entry: "./index",
     engine: { platform: "^0.1.0" },
+    permissions: [{ type: "external-open", hosts: ["*"] }],
     contributes: {
       widgets: [
         {

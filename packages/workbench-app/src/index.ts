@@ -4,6 +4,7 @@ import type { HostAdapter } from "@tabora/host-adapters"
 export * from "./bootstrap"
 export * from "./layoutFallback"
 export * from "./responsive"
+export * from "./shellController"
 export * from "./shellHelpers"
 
 export type WorkbenchCompositionState = {

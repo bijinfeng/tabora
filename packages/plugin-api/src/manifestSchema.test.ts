@@ -55,6 +55,36 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(false)
   })
 
+  it("accepts declared external-open permissions", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.search.command-bar",
+      name: "Search",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      permissions: [{ type: "external-open", hosts: ["github.com"] }],
+      contributes: {},
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects malformed plugin permissions", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "bad.permissions",
+      name: "Bad Permissions",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      permissions: [{ type: "external-open", hosts: "github.com" }],
+      contributes: {},
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it("accepts widget context menu contributions", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.widgets.notes",

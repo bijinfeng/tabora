@@ -206,10 +206,10 @@ git diff --stat
 建议检查命令：
 
 ```bash
-rg -n "from ['\"]@tabora/(workbench-shell|storage)|apps/playground|@tabora/playground|window\\.open|target=\"_blank\"" packages plugins apps
+pnpm check:architecture
 ```
 
-命中不一定都是错误，但必须逐项判断。
+脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
 
 ### L3：自动化基础门禁
 
@@ -327,6 +327,8 @@ rg -n "window\\.open|target=\"_blank|openExternal|external-open|remote-untrusted
 
 本层目标不是追求抽象数量，而是保证代码可理解、可测试、可替换、可被 agent 稳定修改。
 
+标准入口：先运行 `pnpm quality`，再按子项需要补充 `pnpm check`、`pnpm test` 或定向 `rg`。
+
 #### L7.1 TypeScript 与类型契约
 
 检查标准：
@@ -340,6 +342,7 @@ rg -n "window\\.open|target=\"_blank|openExternal|external-open|remote-untrusted
 建议检查：
 
 ```bash
+pnpm quality
 pnpm check
 rg -n "\\bas any\\b|@ts-expect-error|@ts-ignore|!\\." apps packages plugins
 ```
@@ -359,7 +362,7 @@ rg -n "\\bas any\\b|@ts-expect-error|@ts-ignore|!\\." apps packages plugins
 建议检查：
 
 ```bash
-rg -n "TODO|FIXME|HACK|console\\.(log|debug|info)" apps packages plugins
+pnpm quality
 find apps packages plugins -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -nr | head -20
 ```
 
@@ -402,7 +405,7 @@ rg -n "addEventListener|setInterval|setTimeout|ResizeObserver|MutationObserver|c
 
 ```bash
 pnpm test
-rg -n "it\\.only|describe\\.only|test\\.only|\\.skip\\(" apps packages plugins
+pnpm check:architecture
 ```
 
 如果本轮代码改动没有新增测试，final 必须说明原因，例如纯文案、死代码删除、已有测试覆盖的机械调整。
@@ -422,7 +425,7 @@ rg -n "it\\.only|describe\\.only|test\\.only|\\.skip\\(" apps packages plugins
 
 ```bash
 git diff -- package.json pnpm-lock.yaml pnpm-workspace.yaml "**/package.json"
-rg -n "@tabora/(workbench-shell|storage|official-plugins|playground)|apps/playground|apps/extension" plugins packages/ui packages/plugin-api packages/platform-kernel
+pnpm check:architecture
 ```
 
 #### L7.6 CSS、Token 与样式工程
@@ -439,7 +442,7 @@ rg -n "@tabora/(workbench-shell|storage|official-plugins|playground)|apps/playgr
 建议检查：
 
 ```bash
-rg -n "!important|#[0-9a-fA-F]{3,8}|rgb\\(|rgba\\(|hsl\\(|hsla\\(" apps packages plugins
+pnpm quality
 ```
 
 命中颜色不一定错误，但新增大面积视觉必须能解释为什么不用 token。
@@ -510,6 +513,11 @@ pnpm --filter @tabora/extension zip:firefox
 - `pnpm test`
 - `pnpm build`
 
+本地脚本已覆盖：
+
+- `pnpm check:architecture`：L2 + L7 的高信号架构/边界静态扫描。
+- `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 路径报告。
+
 建议后续逐步补齐：
 
 1. 将 `pnpm test:e2e` 纳入 PR 或 nightly CI。
@@ -518,7 +526,7 @@ pnpm --filter @tabora/extension zip:firefox
 4. 为 workspace preset 的 plugin id / contribution id 增加 contract test。
 5. 为 mobile no-horizontal-scroll 增加浏览器断言。
 6. 为 layout failure fallback 增加 E2E 或 browser-mode 测试。
-7. 将 L7 中的架构边界、`as any`、focused/skipped tests、CSS token 和依赖变更扫描逐步脚本化。
+7. 在 `check:architecture` / `quality` 之上继续扩展 package exports、mobile layout 和 layout failure fallback 的自动化守卫。
 
 ## 6. Agent 每轮工作流
 
@@ -707,26 +715,26 @@ Agent 必须：
 
 以下债务来自 2026-06-05 对技术方案落地情况的审查。后续每轮迭代如果触碰相关区域，必须优先修正或确认没有扩大影响面。
 
-| 债务                                                                                   | 影响                                | 建议优先级 |
-| -------------------------------------------------------------------------------------- | ----------------------------------- | ---------- |
-| shell 注入的 `host.openExternal()` 可绕过插件 manifest 权限                            | 破坏 `external-open` 权限模型       | P0         |
-| `official.widgets.quick-links` 直接渲染 `<a target="_blank">` 且未声明 `external-open` | 内置插件绕过权限桥                  | P0         |
-| 布局切换 snapshot 在实例迁移后生成，不是真正切换前快照                                 | 回滚语义不可靠                      | P1         |
-| playground / extension `App.tsx` 高度重复                                              | 多 shell 维护成本高，bug 修复易遗漏 | P1         |
-| extension 仍通过相对路径 import playground helper                                      | shell 边界未收口                    | P1         |
-| `SearchViewProps` 尚未升级到技术方案描述的状态机 contract                              | 搜索编排仍分散在插件和 shell        | P2         |
-| 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致      | P2         |
-| Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整            | P2         |
-| workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id                       | 默认装配协议校验不完整              | P2         |
-| `pnpm test:e2e` 未进入 CI                                                              | 关键交互回归依赖人工或本地执行      | P2         |
-| L7 质量扫描尚未脚本化                                                                  | 代码质量仍依赖人工执行 rg 检查      | P2         |
+| 债务                                                                                   | 影响                                                                           | 建议优先级 |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
+| shell 注入的 `host.openExternal()` 可绕过插件 manifest 权限                            | 已于 2026-06-06 通过 widget owner manifest 权限校验收口                        | 已解决     |
+| `official.widgets.quick-links` 直接渲染 `<a target="_blank">` 且未声明 `external-open` | 已于 2026-06-06 改为声明 `external-open` 并走 host bridge                      | 已解决     |
+| 布局切换 snapshot 在实例迁移后生成，不是真正切换前快照                                 | 已于 2026-06-06 改为通过切换前 workspace/instances 生成 snapshot               | 已解决     |
+| playground / extension `App.tsx` 高度重复                                              | 多 shell 维护成本高，bug 修复易遗漏                                            | P1         |
+| extension 仍通过相对路径 import playground helper                                      | shell 边界未收口                                                               | P1         |
+| `SearchViewProps` 尚未升级到技术方案描述的状态机 contract                              | 搜索编排仍分散在插件和 shell                                                   | P2         |
+| 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致                                                 | P2         |
+| Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整                                                       | P2         |
+| workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id                       | 默认装配协议校验不完整                                                         | P2         |
+| `pnpm test:e2e` 未进入 CI                                                              | 关键交互回归依赖人工或本地执行                                                 | P2         |
+| L7 质量扫描尚未脚本化                                                                  | 已于 2026-06-06 通过 `pnpm check:architecture` / `pnpm quality` 收口高信号扫描 | 已解决     |
 
 ## 11. 后续治理建议
 
 短期：
 
 1. 修复 `external-open` 权限绕过，并补 runtime / shell / quick-links 回归测试。
-2. 修正布局切换 snapshot 时机。
+2. 已于 2026-06-06 修正布局切换 snapshot 时机。
 3. 把 extension 复用 playground helper 的路径迁入共享 package。
 4. 把 `pnpm test:e2e` 作为 PR 可选门禁或 nightly job。
 5. 将 L7 中的高信号扫描收敛为 `pnpm quality` 或 `pnpm check:architecture`。
