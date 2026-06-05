@@ -36,3 +36,8 @@ export {
   type SettingsNavigatorSection,
   type SettingsSectionId,
 } from "./settings-navigator"
+export {
+  createLayoutSwitchPlan,
+  type LayoutSwitchPlan,
+  type LayoutSwitchPlanOptions,
+} from "./layout-switcher"

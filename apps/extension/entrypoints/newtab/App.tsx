@@ -22,6 +22,7 @@ import { builtinPlugins } from "@tabora/builtin-plugin-registry"
 import { createLayoutFallbackTracker, createWorkbenchResponsiveState } from "@tabora/workbench-app"
 import {
   createLayoutEngine,
+  createLayoutSwitchPlan,
   createWidgetContextMenuModel,
   type InstanceRenderer,
 } from "@tabora/orchestrator"
@@ -56,7 +57,6 @@ import {
   updateWorkspaceTheme,
 } from "../../../playground/src/workspaceSession"
 import { exportWorkspaceData, importWorkspaceData } from "../../../playground/src/workspaceTransfer"
-import { createWorkspaceRegions } from "../../../playground/src/defaultWorkspaceSeed"
 import {
   createExtensionRuntimeBootstrap,
   createExtensionWorkbenchComposition,
@@ -425,49 +425,33 @@ export function App() {
     return pluginCatalog.findLayoutContribution(layoutId)?.regions ?? []
   }
 
-  function buildWorkspaceRegionState(
-    layoutId: string,
-    currentInstances: PluginInstance[],
-  ): Workspace["regions"] {
-    return createWorkspaceRegions(
-      layoutRegions(layoutId).map((region) => ({
-        regionId: region.id,
-        accepts: region.accepts,
-      })),
-      currentInstances.map((instance) => ({
-        instanceId: instance.id,
-        regionId: instance.regionId,
-      })),
-    )
-  }
-
   function reassignInstancesForLayout(
     layoutId: string,
     currentInstances: PluginInstance[],
   ): PluginInstance[] {
-    const nextRegions = layoutRegions(layoutId)
-    const nextWidgetRegion = nextRegions.find((region) => region.accepts.includes("widget"))
-    const nextSearchRegion = nextRegions.find((region) => region.accepts.includes("search"))
+    const activeWorkspace = requireWorkspace(workspaceState())
+    const targetLayout = pluginCatalog.findLayoutContribution(layoutId)
+    if (!targetLayout) return currentInstances
+    const plan = createLayoutSwitchPlan({
+      workspace: activeWorkspace,
+      instances: currentInstances,
+      targetLayout,
+    })
     const now = new Date().toISOString()
 
-    return currentInstances.map((instance) => {
-      const supportsCurrentRegion = nextRegions.some(
-        (region) =>
-          region.id === instance.regionId && region.accepts.includes(instance.extensionPoint),
-      )
-      if (supportsCurrentRegion) {
-        return instance
-      }
+    const nextInstances = new Map(
+      [...plan.migratedInstances, ...plan.unplacedInstances].map((instance) => [
+        instance.id,
+        instance,
+      ]),
+    )
 
-      if (instance.extensionPoint === "widget" && nextWidgetRegion) {
-        return { ...instance, regionId: nextWidgetRegion.id, updatedAt: now }
-      }
-
-      if (instance.extensionPoint === "search" && nextSearchRegion) {
-        return { ...instance, regionId: nextSearchRegion.id, updatedAt: now }
-      }
-
-      return instance
+    return currentInstances.map((currentInstance) => {
+      const instance = nextInstances.get(currentInstance.id) ?? currentInstance
+      const previous = currentInstances.find((current) => current.id === instance.id)
+      return previous && previous.regionId !== instance.regionId
+        ? { ...instance, updatedAt: now }
+        : instance
     })
   }
 
@@ -492,18 +476,25 @@ export function App() {
 
   async function switchLayout(layoutId: string) {
     const activeWorkspace = requireWorkspace(workspaceState())
+    const targetLayout = pluginCatalog.findLayoutContribution(layoutId)
+    if (!targetLayout) return
     setCtxMenu(null)
     setExpandState(null)
     const nextInstances = await reconcileInstancesForLayout(layoutId, instances())
     setInstances(nextInstances)
     setActiveLayoutId(layoutId)
+    const plan = createLayoutSwitchPlan({
+      workspace: activeWorkspace,
+      instances: nextInstances,
+      targetLayout,
+    })
 
     const updatedWorkspace = await updateWorkspaceRecord({
       workspaceRepo,
       workspaceId: activeWorkspace.id,
       mutator(workspace) {
         workspace.activeLayoutId = layoutId
-        workspace.regions = buildWorkspaceRegionState(layoutId, nextInstances)
+        workspace.regions = plan.nextRegions
         return workspace
       },
     })
