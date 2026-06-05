@@ -39,7 +39,12 @@ export function createLayoutEngine(deps: LayoutEngineDeps) {
     const slots: Record<string, RegionSlot> = {}
     for (const region of layout?.regions ?? []) {
       const regionInstances = instances
-        .filter((inst) => inst.regionId === region.id && inst.enabled !== false)
+        .filter(
+          (inst) =>
+            inst.regionId === region.id &&
+            inst.enabled !== false &&
+            region.accepts.includes(inst.extensionPoint),
+        )
         .sort(byGrid)
       slots[region.id] = {
         regionId: region.id,

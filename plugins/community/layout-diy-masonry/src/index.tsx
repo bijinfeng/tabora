@@ -1,8 +1,8 @@
 import { createSignal, For, Show } from "solid-js"
 import type { LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { HostActionIcon } from "@tabora/workbench-shell"
 import { Menu } from "lucide-solid"
+import { HostActionIcon } from "./host-action-icon"
 
 const COLUMN_COUNT = 3
 

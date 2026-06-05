@@ -14,7 +14,16 @@ export type RegionSlot = {
 
 export type HostSurface = "rail" | "toolbar" | "menu"
 
-export type HostActionId = "home" | "add-widget" | "plugins" | "settings" | "theme" | "command"
+export type HostActionId =
+  | "home"
+  | "add-widget"
+  | "plugins"
+  | "plugin-manager"
+  | "settings"
+  | "theme"
+  | "command"
+  | "layout-switch"
+  | "shortcuts"
 
 export type HostActionItem = {
   id: HostActionId

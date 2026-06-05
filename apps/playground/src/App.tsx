@@ -19,6 +19,7 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import { builtinPlugins } from "@tabora/builtin-plugin-registry"
+import { createWorkbenchResponsiveState } from "@tabora/workbench-app"
 import { createLayoutEngine, type InstanceRenderer } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 import {
@@ -104,6 +105,7 @@ export function App() {
   const [cmdPaletteOpen, setCmdPaletteOpen] = createSignal(false)
   const [toasts, setToasts] = createSignal<{ id: number; msg: string }[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
+  const responsive = createWorkbenchResponsiveState()
   let lastExpandTrigger: HTMLElement | null = null
   let toastSeq = 0
   function showToast(msg: string) {
@@ -242,12 +244,15 @@ export function App() {
   const layoutHostAPI: LayoutHostAPI = {
     getGlobalActions: (surface) => {
       const layoutToggle = {
-        id: "theme" as const,
+        id: "layout-switch" as const,
         label:
           activeLayoutId() === "official.layout.workbench-dashboard"
             ? "切换到流式"
             : "切换到仪表盘",
-        icon: activeLayoutId() === "official.layout.workbench-dashboard" ? "⇄" : "▦",
+        icon:
+          activeLayoutId() === "official.layout.workbench-dashboard"
+            ? "layout-stream"
+            : "layout-dashboard",
         shortcut: "⌘L",
         run: () => {
           const next =
@@ -1199,7 +1204,7 @@ export function App() {
       >
         {LayoutView({
           regions,
-          isMobile: false,
+          isMobile: responsive.isMobile(),
           host,
         })}
       </LayoutBoundary>

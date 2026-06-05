@@ -1,8 +1,8 @@
 import { For, Show } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { HostActionIcon } from "@tabora/workbench-shell"
 import { AlignJustify } from "lucide-solid"
+import { HostActionIcon } from "./host-action-icon"
 
 export function StreamLayout(props: LayoutViewProps) {
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
@@ -12,7 +12,7 @@ export function StreamLayout(props: LayoutViewProps) {
       <header class="stream-toolbar">
         <div class="stream-toolbar-actions">
           <div class="layout-switch" aria-label="布局切换">
-            <For each={toolbarActions().filter((action) => action.shortcut === "⌘L")}>
+            <For each={toolbarActions().filter((action) => action.id === "layout-switch")}>
               {(action) => (
                 <button
                   class="tb-btn"
@@ -26,7 +26,7 @@ export function StreamLayout(props: LayoutViewProps) {
               )}
             </For>
           </div>
-          <For each={toolbarActions().filter((action) => action.shortcut !== "⌘L")}>
+          <For each={toolbarActions().filter((action) => action.id !== "layout-switch")}>
             {(action) => (
               <button
                 class="stream-toolbar-btn"

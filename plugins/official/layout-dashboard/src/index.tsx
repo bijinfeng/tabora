@@ -2,14 +2,14 @@ import { TaboraMark } from "@tabora/brand"
 import { For, Show } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { HostActionIcon } from "@tabora/workbench-shell"
 import { AlignJustify, LayoutGrid, Plus } from "lucide-solid"
+import { HostActionIcon } from "./host-action-icon"
 
 export function DashboardLayout(props: LayoutViewProps) {
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
   const addWidgetAction = () =>
     props.host.getGlobalActions("rail").find((action) => action.id === "add-widget")
-  const layoutAction = () => toolbarActions().find((action) => action.shortcut === "⌘L")
+  const layoutAction = () => toolbarActions().find((action) => action.id === "layout-switch")
   const greeting = () => {
     const h = new Date().getHours()
     return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"

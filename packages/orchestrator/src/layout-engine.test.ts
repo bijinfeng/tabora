@@ -116,10 +116,22 @@ describe("createLayoutEngine.buildRegionSlots", () => {
     const slots = makeEngine([], calls).buildRegionSlots("test.layout", [])
     expect(slots["grid"]!.isEmpty).toBe(true)
   })
+
+  it("不把 extensionPoint 不被接受的实例放进 region", () => {
+    const calls: string[] = []
+    const insts = [
+      instance("w1", "grid", "widget"),
+      instance("bad-search", "grid", "search"),
+      instance("bad-widget", "top", "widget"),
+    ]
+    const slots = makeEngine(insts, calls).buildRegionSlots("test.layout", insts)
+    expect(slots["grid"]!.instances.map((i) => i.id)).toEqual(["w1"])
+    expect(slots["top"]!.instances).toEqual([])
+  })
 })
 
 describe("createLayoutEngine.buildHostAPI", () => {
-  it("getGlobalActions 返回含 settings/command 的完整集，与布局无关", () => {
+  it("getGlobalActions 返回含稳定 host action id 的完整集，与布局无关", () => {
     const calls: string[] = []
     const host = makeEngine([], calls).buildHostAPI()
     const ids = host.getGlobalActions("rail").map((a) => a.id)

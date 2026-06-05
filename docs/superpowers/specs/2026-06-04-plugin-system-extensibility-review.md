@@ -2,7 +2,7 @@
 
 日期：2026-06-04
 
-状态：Phase X1 已完成，后续阶段待执行
+状态：Phase X1 / X1.5 已完成；Phase X2 已开始，部分协议语义债务已修正
 
 关联事实源：
 
@@ -18,6 +18,7 @@
 
 当前 Phase X1 的 implementation plan 位于：`docs/superpowers/plans/2026-06-04-phase-x1-shell-boundaries.md`。
 当前分支已完成 Phase X1 的核心收口：新增 `@tabora/workbench-app`、`@tabora/host-adapters`，playground 改为通过 `workbenchComposition` / runtime bootstrap 组装基础设施，extension newtab 已切断对 playground `App` 的直接依赖。
+2026-06-05 已开始 Phase X2：`HostActionId` 已补齐 `layout-switch` / `shortcuts` / `plugin-manager`，layout 切换不再伪装为 `theme` action；RegionSlot 构建已按 `region.accepts` 过滤实例；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖；playground / extension 已接入真实 responsive state 并传入 `LayoutViewProps.isMobile`。
 
 评估视角：
 
@@ -431,20 +432,20 @@ plugins/
 
 以下问题来自当前仓库代码口径，表示 **Phase X1 完成后仍然存在** 的后续任务：
 
-- 默认 workspace seed 仍保留 `rail accepts:["layout"]`，与“rail 是 host chrome，不应作为实例 region”冲突。
+- 默认 workspace seed 是否仍存在 `rail accepts:["layout"]` 需要在后续 X2 收尾中复核；当前官方 dashboard / stream / DIY layout 已不依赖伪 `layout` region。
 - 布局切换仍在 shell 中处理较多逻辑，orchestrator 还没有完全接管布局切换、实例迁移和 unplaced 状态。
-- 命令面板和 `LayoutHostAPI` 中布局切换仍偏 dashboard / stream 两种官方布局硬编码。
+- 命令面板和 `LayoutHostAPI` 中布局切换仍偏 dashboard / stream 两种官方布局硬编码；但 host action id 已改为稳定的 `layout-switch`，不再用 `theme` action 承载布局切换语义。
 - `App.tsx` 仍然过重，当前只是收缩为 composition root + 宿主编排，尚未把 workspace session、instances、theme/background、search state、host surfaces 彻底下沉。
 - extension newtab 虽然不再 import playground `App`，但当前仍通过相对路径复用 playground 的纯逻辑 helper，shared shell 状态和 helper 还没有完全抽到独立 package。
-- layout package 依赖 `@tabora/workbench-shell`，不符合第三方布局隔离目标。
+- layout package 已移除对 `@tabora/workbench-shell` 的依赖，官方和 community layout 当前只依赖公开协议面、平台内核、Solid 与自身 UI 依赖。
 - modal / fullscreen / expand / context menu / add widget 等宿主容器仍内联在 playground；toast 已迁入 `@tabora/workbench-shell`，但 host surfaces 还未整体收口。
 - CommandPalette、SettingsHost、WidgetCardShell 仍混合 UI 和业务/编排模型。
 - 样式入口已在 playground/extension 间对齐，但 `workbenchShellStyleModules` 仍只是静态清单常量，还没有形成单一自动化装配入口。
 - `workbench-app` / `host-adapters` 已建立，但 shared shell 逻辑仍有一部分停留在 app 层和 playground helper 中。
 - `plugins/` 已分层为 official / community / examples，`packages/official-plugins` 与 `packages/builtin-plugin-registry` 的职责也已分离；后续问题转为 shared helper 与样式装配自动化。
 - 历史文档和计划中仍残留旧路径，容易误导后续实现。
-- `RegionSlot` 构建只按 `regionId` 过滤实例，没有按 `region.accepts` 防御 extensionPoint 错配。
-- `isMobile` 传给 layout 时仍可能是固定值，响应式契约未完全接入。
+- `RegionSlot` 构建已按 `region.accepts` 防御 extensionPoint 错配，并增加 orchestrator 单测覆盖。
+- `isMobile` 已通过 `@tabora/workbench-app` responsive state 接入 playground / extension，不再固定传 `false`。
 - layout fallback 当前主要是渲染安全布局，toast 提示和激活安全布局状态闭环不足。
 - `background-renderer` 协议存在，但 playground 背景应用主要依赖 `defaultCss` 解析。
 - 部分 widget 仍直接访问 `window.localStorage`，不符合插件数据通过 storage repository 隔离的方向。
@@ -515,6 +516,8 @@ plugins/
 - 文档入口不再把旧文件路径描述为当前事实。
 
 ### Phase X2: 协议收口与语义修正
+
+状态：进行中，已完成 host action 语义、layout 依赖隔离、RegionSlot accepts 校验和 responsive state 接入；布局错误 fallback toast / 状态记录与 rail seed 复核仍待收尾。
 
 目标：修正当前 MVP 插件契约的语义债务，避免继续在错误模型上扩展。
 

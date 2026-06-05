@@ -14,7 +14,6 @@
   "dependencies": {
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
-    "@tabora/workbench-shell": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
   },

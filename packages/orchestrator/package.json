@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "vp pack src/index.ts",
-    "test": "vitest run --root ../.. packages/orchestrator/src/plugin-catalog.test.ts packages/orchestrator/src/layout-engine.test.ts"
+    "test": "vitest run --root ../.. packages/orchestrator/src/plugin-catalog.test.ts packages/orchestrator/src/layout-engine.test.ts packages/orchestrator/src/layout-package-boundaries.test.ts"
   },
   "dependencies": {
     "@tabora/platform-kernel": "workspace:*",
