@@ -88,9 +88,7 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
   }
 
   const reordered = [...sortableRegionInstances]
-  const [moved] = reordered.splice(fromIndex, 1)
-  const insertIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
-  reordered.splice(insertIndex, 0, moved!)
+  ;[reordered[fromIndex], reordered[toIndex]] = [reordered[toIndex]!, reordered[fromIndex]!]
 
   const reorderedById = new Map(
     reordered.map((instance, index) => [instance.id, withGridOrder(instance, index)]),

@@ -40,7 +40,7 @@ describe("createDragSortPlan", () => {
     expect(plan.instances.map((item) => item.grid?.x)).toEqual([0, 1, 2])
   })
 
-  test("moves source before target when source starts earlier in visual order", () => {
+  test("swaps source with target when source starts earlier in visual order", () => {
     const source = instance({ id: "source", grid: { x: 0, y: 0, colSpan: 1, rowSpan: 1 } })
     const middle = instance({ id: "middle", grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 } })
     const target = instance({ id: "target", grid: { x: 2, y: 0, colSpan: 2, rowSpan: 2 } })
@@ -52,7 +52,7 @@ describe("createDragSortPlan", () => {
     })
 
     expect(plan.changed).toBe(true)
-    expect(plan.instances.map((item) => item.id)).toEqual(["middle", "source", "target"])
+    expect(plan.instances.map((item) => item.id)).toEqual(["target", "middle", "source"])
     expect(plan.instances.map((item) => item.grid?.x)).toEqual([0, 1, 2])
   })
 
@@ -139,8 +139,8 @@ describe("createDragSortPlan", () => {
 
     expect(plan.instances.map((item) => ({ id: item.id, grid: item.grid }))).toEqual([
       { id: "third", grid: { x: 0, y: 0, colSpan: 2, rowSpan: 2 } },
-      { id: "first", grid: { x: 1, y: 0, colSpan: 1, rowSpan: 2, locked: true } },
-      { id: "second", grid: { x: 2, y: 0, colSpan: 2, rowSpan: 1 } },
+      { id: "second", grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 } },
+      { id: "first", grid: { x: 2, y: 0, colSpan: 1, rowSpan: 2, locked: true } },
     ])
   })
 

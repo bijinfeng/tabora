@@ -1173,8 +1173,9 @@ V1.5：
 打开链接：
 
 1. 用户点击 `GitHub`。
-2. 插件请求或直接打开外部链接。
-3. 后续应改为通过权限桥打开，保证官方插件也遵守 external-open 协议。
+2. 插件通过 `WidgetViewProps.host.openExternal(url)` 请求宿主外部打开。
+3. 插件 manifest 显式声明 `permissions: [{ type: "external-open", hosts: ["*"] }]`。
+4. 宿主经 permission bridge 校验后再执行外部打开；不允许裸 `<a target="_blank">` 绕过权限模型。
 
 添加快捷入口：
 

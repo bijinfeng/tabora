@@ -266,6 +266,14 @@ pnpm build
 pnpm test:e2e
 ```
 
+当前 `pnpm test:e2e` 已覆盖：
+
+- 默认工作台首屏、添加 widget、尺寸菜单、展开视图、设置抽屉、拖拽排序。
+- 搜索 external-open 允许/拒绝路径。
+- Quick Links 通过 host callback 打开外链，而非裸 `<a target="_blank">`。
+- safe layout fallback、搜索入口和设置入口可达。
+- `1280x900`、`768x900`、`390x844` 三档无横向滚动断言。
+
 如果 E2E 未覆盖本轮风险，需手动启动 playground 检查：
 
 ```bash
@@ -295,6 +303,8 @@ UI / layout / shell / `@tabora/ui` / official plugin 改动必须做 L5。
 - Desktop：1280 x 900
 - Tablet：768 x 900
 - Mobile：390 x 844
+
+其中移动端和窄屏无横向滚动可优先依赖 `pnpm test:e2e` 的浏览器断言；视觉细节、hover/focus 样式和复杂层级冲突仍需人工复核。
 
 ### L6：安全、权限和数据隔离
 
@@ -509,9 +519,21 @@ pnpm --filter @tabora/extension zip:firefox
 
 当前 CI 已覆盖：
 
+- `pnpm check:architecture`
 - `pnpm check`
 - `pnpm test`
 - `pnpm build`
+
+Nightly CI 已覆盖：
+
+- `pnpm test:e2e`
+
+当前 browser smoke 已覆盖：
+
+- 默认 dashboard 工作台关键操作。
+- 搜索/Quick Links 外部打开权限路径。
+- safe layout fallback 可达性。
+- `1280x900`、`768x900`、`390x844` 无横向滚动。
 
 本地脚本已覆盖：
 
@@ -520,12 +542,12 @@ pnpm --filter @tabora/extension zip:firefox
 
 建议后续逐步补齐：
 
-1. 将 `pnpm test:e2e` 纳入 PR 或 nightly CI。
+1. 按路径触发策略把 `pnpm test:e2e` 从 nightly 继续推进到 PR 强门禁。
 2. 为 permission bridge 增加专门回归测试。
 3. 为 playground / extension shell helper 复用边界增加依赖守卫。
 4. 为 workspace preset 的 plugin id / contribution id 增加 contract test。
-5. 为 mobile no-horizontal-scroll 增加浏览器断言。
-6. 为 layout failure fallback 增加 E2E 或 browser-mode 测试。
+5. 将 `pnpm test:e2e` 从单一 dashboard smoke 扩展到更多 layout / settings / import-export 场景。
+6. 为 layout failure fallback 的更多变体和触屏拖拽策略补细粒度浏览器断言。
 7. 在 `check:architecture` / `quality` 之上继续扩展 package exports、mobile layout 和 layout failure fallback 的自动化守卫。
 
 ## 6. Agent 每轮工作流
@@ -622,6 +644,9 @@ Agent 必须：
 
 自动化验证：
 
+- pnpm check:architecture:
+- pnpm quality:
+- pnpm regression:summary:
 - pnpm check:
 - pnpm test:
 - pnpm build:
@@ -726,18 +751,18 @@ Agent 必须：
 | 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致                                                 | P2         |
 | Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整                                                       | P2         |
 | workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id                       | 默认装配协议校验不完整                                                         | P2         |
-| `pnpm test:e2e` 未进入 CI                                                              | 关键交互回归依赖人工或本地执行                                                 | P2         |
+| `pnpm test:e2e` 未进入 CI                                                              | 已于 2026-06-06 接入 nightly workflow；PR 路径强门禁仍待按路径策略推进         | 已解决     |
 | L7 质量扫描尚未脚本化                                                                  | 已于 2026-06-06 通过 `pnpm check:architecture` / `pnpm quality` 收口高信号扫描 | 已解决     |
 
 ## 11. 后续治理建议
 
 短期：
 
-1. 修复 `external-open` 权限绕过，并补 runtime / shell / quick-links 回归测试。
+1. 已于 2026-06-06 修复 `external-open` 权限绕过，并补 runtime / shell / quick-links 回归测试。
 2. 已于 2026-06-06 修正布局切换 snapshot 时机。
 3. 把 extension 复用 playground helper 的路径迁入共享 package。
-4. 把 `pnpm test:e2e` 作为 PR 可选门禁或 nightly job。
-5. 将 L7 中的高信号扫描收敛为 `pnpm quality` 或 `pnpm check:architecture`。
+4. 已于 2026-06-06 接入 nightly workflow；后续按路径触发策略推进 PR 强门禁。
+5. 已于 2026-06-06 将 L7 中的高信号扫描收敛为 `pnpm quality` / `pnpm check:architecture`，并在 release workflow 接入 `pnpm regression:summary`。
 
 中期：
 

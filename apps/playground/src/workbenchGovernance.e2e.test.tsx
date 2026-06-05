@@ -1,0 +1,220 @@
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { page } from "vitest/browser"
+import { render } from "solid-js/web"
+import { builtinPlugins } from "@tabora/builtin-plugin-registry"
+import type { BuiltinPlugin } from "@tabora/platform-kernel"
+
+import { App } from "./App"
+
+type PluginSnapshot = {
+  activate: BuiltinPlugin["activate"]
+  permissions: BuiltinPlugin["manifest"]["permissions"] | undefined
+}
+
+const builtinPluginSnapshots = new Map<string, PluginSnapshot>(
+  builtinPlugins.map((plugin) => {
+    const activate = Reflect.get(plugin, "activate") as BuiltinPlugin["activate"]
+    return [
+      plugin.manifest.id,
+      {
+        activate: (context) => activate(context),
+        permissions: clonePermissions(plugin.manifest.permissions),
+      },
+    ]
+  }),
+)
+
+let disposeApp: (() => void) | undefined
+
+describe("workbench governance smoke", () => {
+  afterEach(async () => {
+    disposeApp?.()
+    disposeApp = undefined
+    restoreBuiltinPlugins()
+    vi.restoreAllMocks()
+    document.body.innerHTML = ""
+    document.documentElement.removeAttribute("style")
+    document.body.removeAttribute("style")
+    localStorage.clear()
+    await deleteDatabase("tabora")
+  })
+
+  it("opens quick links and allowed search through the host external-open path", async () => {
+    const openSpy = vi.spyOn(window, "open").mockImplementation((() => null) as typeof window.open)
+
+    await mountFreshWorkbench()
+    await waitFor(() => expect(document.querySelector(".link-anchor")).toBeTruthy())
+
+    const quickLinkButton = document.querySelector<HTMLElement>(".link-anchor")
+    expect(quickLinkButton?.tagName).toBe("BUTTON")
+    expect(document.querySelector(".link-item a")).toBeFalsy()
+
+    quickLinkButton?.click()
+    await waitFor(() => expect(openSpy).toHaveBeenNthCalledWith(1, "https://github.com", "_blank"))
+
+    enterSearchQuery("tabora governance")
+    await waitFor(() =>
+      expect(openSpy).toHaveBeenNthCalledWith(
+        2,
+        "https://www.google.com/search?q=tabora%20governance",
+        "_blank",
+      ),
+    )
+  })
+
+  it("shows an inline error when search external-open permission is denied", async () => {
+    patchPluginPermissions("official.search.command-bar", [
+      { type: "external-open", hosts: ["example.com"] },
+    ])
+
+    const openSpy = vi.spyOn(window, "open").mockImplementation((() => null) as typeof window.open)
+
+    await mountFreshWorkbench()
+
+    enterSearchQuery("blocked query")
+
+    await waitFor(() =>
+      expect(document.querySelector(".tbr-inline-error")?.textContent).toContain(
+        "无法打开该搜索源，请检查插件权限",
+      ),
+    )
+    expect(openSpy).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the safe layout when the active layout view throws", async () => {
+    patchLayoutToThrow(
+      "official.layout.workbench-dashboard",
+      "official.layout.workbench-dashboard.view",
+    )
+
+    await mountFreshWorkbench({ readySelector: ".safe-layout" })
+
+    await waitFor(() => expect(document.querySelector(".safe-layout")).toBeTruthy())
+    await waitFor(() =>
+      expect(document.querySelector(".toast-item")?.textContent).toContain(
+        "布局加载失败，已切换到安全布局",
+      ),
+    )
+    expect(document.querySelectorAll(".safe-layout-stream .grid-item").length).toBeGreaterThan(0)
+
+    findButtonByText(".safe-layout-toolbar .toolbar-btn", "搜索")?.click()
+    await waitFor(() => expect(document.querySelector(".cmd-panel")).toBeTruthy())
+    clickRequired(".cmd-overlay")
+
+    findButtonByText(".safe-layout-toolbar .toolbar-btn", "设置")?.click()
+    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+  })
+})
+
+async function mountFreshWorkbench(options: { readySelector?: string } = {}): Promise<void> {
+  await page.viewport(1280, 900)
+  localStorage.clear()
+  await deleteDatabase("tabora")
+  document.body.innerHTML = '<div id="root"></div>'
+  const root = document.getElementById("root")
+  if (!root) {
+    throw new Error("Root element #root was not found")
+  }
+  disposeApp = render(() => <App />, root)
+  await vi.waitFor(
+    () => expect(document.querySelector(options.readySelector ?? ".workbench-grid")).toBeTruthy(),
+    {
+      timeout: 5_000,
+    },
+  )
+}
+
+function patchPluginPermissions(
+  pluginId: string,
+  permissions: BuiltinPlugin["manifest"]["permissions"],
+): void {
+  const plugin = requireBuiltinPlugin(pluginId)
+  setPluginPermissions(plugin, clonePermissions(permissions))
+}
+
+function patchLayoutToThrow(pluginId: string, viewId: string): void {
+  const plugin = requireBuiltinPlugin(pluginId)
+  plugin.activate = (context) => {
+    context.registry.views.register(viewId, () => {
+      throw new Error("E2E layout failure")
+    })
+  }
+}
+
+function requireBuiltinPlugin(pluginId: string): BuiltinPlugin {
+  const plugin = builtinPlugins.find((item) => item.manifest.id === pluginId)
+  if (!plugin) {
+    throw new Error(`Builtin plugin was not found: ${pluginId}`)
+  }
+  return plugin
+}
+
+function restoreBuiltinPlugins(): void {
+  for (const plugin of builtinPlugins) {
+    const snapshot = builtinPluginSnapshots.get(plugin.manifest.id)
+    if (!snapshot) continue
+    plugin.activate = snapshot.activate
+    setPluginPermissions(plugin, clonePermissions(snapshot.permissions))
+  }
+}
+
+function setPluginPermissions(
+  plugin: BuiltinPlugin,
+  permissions: BuiltinPlugin["manifest"]["permissions"],
+): void {
+  if (permissions) {
+    plugin.manifest.permissions = permissions
+  } else {
+    delete plugin.manifest.permissions
+  }
+}
+
+function clonePermissions(
+  permissions: BuiltinPlugin["manifest"]["permissions"],
+): BuiltinPlugin["manifest"]["permissions"] {
+  return permissions?.map((permission) => {
+    if ("hosts" in permission && Array.isArray(permission.hosts)) {
+      return { ...permission, hosts: [...permission.hosts] }
+    }
+    return { ...permission }
+  })
+}
+
+function enterSearchQuery(query: string): void {
+  const input = document.querySelector<HTMLInputElement>('.search-bar input[type="search"]')
+  if (!input) {
+    throw new Error("Search input was not found")
+  }
+  input.value = query
+  input.dispatchEvent(new InputEvent("input", { bubbles: true, data: query }))
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+}
+
+function findButtonByText(selector: string, text: string): HTMLElement | null {
+  return (
+    [...document.querySelectorAll<HTMLElement>(selector)].find((node) =>
+      node.textContent?.includes(text),
+    ) ?? null
+  )
+}
+
+function clickRequired(selector: string): void {
+  const node = document.querySelector<HTMLElement>(selector)
+  if (!node) {
+    throw new Error(`Clickable element was not found: ${selector}`)
+  }
+  node.click()
+}
+
+function deleteDatabase(name: string): Promise<void> {
+  return new Promise((resolve) => {
+    const request = indexedDB.deleteDatabase(name)
+    request.onsuccess = () => resolve()
+    request.onerror = () => resolve()
+    request.onblocked = () => resolve()
+  })
+}
+
+async function waitFor(assertion: () => void | Promise<void>): Promise<void> {
+  await vi.waitFor(assertion, { timeout: 2_000 })
+}

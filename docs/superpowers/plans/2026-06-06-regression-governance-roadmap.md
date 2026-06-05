@@ -1,5 +1,7 @@
 # Tabora 回归治理 Roadmap Implementation Plan
 
+> **归档状态：** 本计划已完成并归档。仅在用户明确要求复盘或审查该计划时使用；当前事实源以 `docs/README.md` 登记的 PRD、设计、技术方案 V2 和回归基准为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 将 `docs/technical/tabora-regression-baseline.md` §10-§11 的已知债务和后续治理建议落成可执行、可验证、可持续扩展的工程治理体系。
