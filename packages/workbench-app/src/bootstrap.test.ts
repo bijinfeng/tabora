@@ -2,7 +2,7 @@ import "fake-indexeddb/auto"
 import { describe, expect, it } from "vitest"
 import { createWebHostAdapter } from "@tabora/host-adapters"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { createWebStorageAdapter } from "@tabora/storage"
+import type { StorageAdapter } from "@tabora/storage"
 
 import { createWorkbenchRuntimeBootstrap } from "./bootstrap"
 
@@ -39,7 +39,74 @@ describe("createWorkbenchRuntimeBootstrap", () => {
   })
 
   it("accepts a storage adapter from the host", () => {
-    const storageAdapter = createWebStorageAdapter("tabora-workbench-app-adapter-test")
+    const storageAdapter: StorageAdapter = {
+      repositories: {
+        workspaceRepo: {
+          async get() {
+            return undefined
+          },
+          async getAll() {
+            return []
+          },
+          async save() {},
+          async remove() {},
+        },
+        instanceRepo: {
+          async getAll() {
+            return []
+          },
+          async getByWorkspace() {
+            return []
+          },
+          async getByRegion() {
+            return []
+          },
+          async get() {
+            return undefined
+          },
+          async save() {},
+          async removeByWorkspace() {},
+          async remove() {},
+        },
+        pluginDataRepo: {
+          async get() {
+            return undefined
+          },
+          async getAll() {
+            return []
+          },
+          async save() {},
+          async remove() {},
+          async getByWorkspace() {
+            return undefined
+          },
+          async getAllByWorkspace() {
+            return []
+          },
+          async saveForWorkspace() {},
+          async removeForWorkspace() {},
+          async removeByWorkspace() {},
+          async getByInstance() {
+            return undefined
+          },
+          async getAllByInstance() {
+            return []
+          },
+          async saveForInstance() {},
+          async removeForInstance() {},
+        },
+        pluginRecordRepo: {
+          async get() {
+            return undefined
+          },
+          async getAll() {
+            return []
+          },
+          async save() {},
+          async remove() {},
+        },
+      },
+    }
 
     const runtime = createWorkbenchRuntimeBootstrap({
       host: createWebHostAdapter({ id: "host.test" }),
@@ -47,7 +114,6 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       storageAdapter,
     })
 
-    expect(runtime.database).toBe(storageAdapter.database)
     expect(runtime.repositories).toBe(storageAdapter.repositories)
   })
 })

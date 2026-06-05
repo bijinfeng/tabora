@@ -13,7 +13,7 @@ export type StorageRepositories = {
 }
 
 export type StorageAdapter = {
-  database: TaboraDatabase
+  database?: TaboraDatabase
   repositories: StorageRepositories
 }
 
