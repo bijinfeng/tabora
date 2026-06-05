@@ -18,7 +18,7 @@ function hasRequiredCapabilities(
   supportedCapabilities: Set<string> | undefined,
 ): boolean {
   if (!command.requiredCapabilities?.length) return true
-  if (!supportedCapabilities) return false
+  if (!supportedCapabilities) return true
   return command.requiredCapabilities.every((capability) => supportedCapabilities.has(capability))
 }
 

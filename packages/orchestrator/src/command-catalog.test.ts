@@ -120,6 +120,25 @@ describe("createCommandCatalog", () => {
     expect(entries.map((entry) => entry.id)).toEqual(["shell.open-settings"])
   })
 
+  it("keeps required-capability commands when supported capabilities are omitted", () => {
+    const entries = createCommandPaletteCommands({
+      platformCommands: [],
+      pluginCommands: [
+        {
+          id: "plugin.clipboard.copy",
+          title: "复制摘要",
+          category: "clipboard",
+          requiredCapabilities: ["clipboard.write"],
+        },
+      ],
+      actions: {
+        "plugin.clipboard.copy": vi.fn(),
+      },
+    })
+
+    expect(entries.map((entry) => entry.id)).toEqual(["plugin.clipboard.copy"])
+  })
+
   it("keeps commands without registered actions as no-op entries", () => {
     const entries = createCommandPaletteCommands({
       platformCommands: [],
