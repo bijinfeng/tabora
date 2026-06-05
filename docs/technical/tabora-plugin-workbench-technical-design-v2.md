@@ -873,7 +873,7 @@ type BackgroundSourceValue =
   | { type: "canvas"; view: string }
 ```
 
-renderer contribution 的 `accepts` 与 source type 对齐，允许 `css`、`image`、`video`、`gradient`、`canvas`、`webgl`。宿主 resolver 优先读取 `source`，仅在缺失时使用 `defaultCss` 作为安全背景样式。
+renderer contribution 的 `accepts` 与 source type 对齐，允许 `css`、`image`、`video`、`gradient`、`canvas`。宿主 resolver 优先读取 `source`，仅在缺失时使用 `defaultCss` 作为安全背景样式。
 
 ### 12.6 Loader 与兼容检查
 

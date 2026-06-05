@@ -830,12 +830,13 @@ V1.5：
 
 当前 provider：
 
-| Provider ID                 | 名称     | sourceType  | source                      |
-| --------------------------- | -------- | ----------- | --------------------------- |
-| `background.solid-green`    | 纯色绿底 | `generated` | `{ type: "css", css }`      |
-| `background.solid-dark`     | 纯色暗底 | `generated` | `{ type: "css", css }`      |
-| `background.gradient-green` | 渐变绿底 | `generated` | `{ type: "gradient", css }` |
-| `background.gradient-blue`  | 渐变蓝底 | `generated` | `{ type: "gradient", css }` |
+| Provider ID                  | 名称     | sourceType  | source                      |
+| ---------------------------- | -------- | ----------- | --------------------------- |
+| `background.solid-green`     | 纯色绿底 | `generated` | `{ type: "css", css }`      |
+| `background.solid-dark`      | 纯色暗底 | `generated` | `{ type: "css", css }`      |
+| `background.gradient-green`  | 渐变绿底 | `generated` | `{ type: "gradient", css }` |
+| `background.gradient-blue`   | 渐变蓝底 | `generated` | `{ type: "gradient", css }` |
+| `background.gradient-purple` | 渐变紫底 | `generated` | `{ type: "gradient", css }` |
 
 当前 renderer：
 
@@ -1586,7 +1587,7 @@ V1.5：
 - 插件名称。
 - 插件 ID。
 - 版本。
-- 来源：builtin、local、remote。
+- 来源：`builtin`、`local-trusted`、`remote-untrusted`。
 - 启用状态。
 - 贡献能力摘要。
 - 权限摘要。

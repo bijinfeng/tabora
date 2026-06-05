@@ -325,6 +325,29 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(true)
   })
 
+  it("rejects unsupported background renderer source types", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "bad.background.renderer",
+      name: "Bad Background Renderer",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./background-basic",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        backgroundRenderers: [
+          {
+            id: "bad.background.webgl-renderer",
+            title: "WebGL 背景渲染器",
+            accepts: ["webgl"],
+            view: "bad.background.webgl-renderer.view",
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it("accepts a command contribution", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.commands.workspace",

@@ -225,7 +225,7 @@ export const pluginManifestSchema = z.object({
         z.object({
           id: z.string().min(1),
           title: z.string().min(1),
-          accepts: z.array(z.enum(["css", "image", "video", "gradient", "canvas", "webgl"])).min(1),
+          accepts: z.array(z.enum(["css", "image", "video", "gradient", "canvas"])).min(1),
           view: z.string().min(1),
         }),
       )
