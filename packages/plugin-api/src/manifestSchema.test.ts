@@ -237,6 +237,52 @@ describe("pluginManifestSchema", () => {
     )
   })
 
+  it("accepts background provider source values", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.background.basic",
+      name: "Basic Background",
+      version: "0.0.0",
+      entry: "./background-basic",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        backgroundProviders: [
+          {
+            id: "background.css",
+            title: "CSS",
+            sourceType: "generated",
+            source: { type: "css", css: { background: "rgb(1, 2, 3)" } },
+          },
+          {
+            id: "background.gradient",
+            title: "Gradient",
+            sourceType: "generated",
+            source: { type: "gradient", css: "linear-gradient(red, blue)" },
+          },
+          {
+            id: "background.image",
+            title: "Image",
+            sourceType: "remote",
+            source: { type: "image", url: "https://example.com/image.jpg", fit: "cover" },
+          },
+          {
+            id: "background.video",
+            title: "Video",
+            sourceType: "remote",
+            source: { type: "video", url: "https://example.com/video.mp4" },
+          },
+          {
+            id: "background.canvas",
+            title: "Canvas",
+            sourceType: "generated",
+            source: { type: "canvas", view: "background.canvas.view" },
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
   it("accepts a command contribution", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.commands.workspace",

@@ -118,6 +118,31 @@ const workspacePresetSchema = z.object({
   ),
 })
 
+const backgroundSourceSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("css"),
+    css: z.record(z.string(), z.string()),
+  }),
+  z.object({
+    type: z.literal("image"),
+    url: z.string().min(1),
+    fit: z.enum(["cover", "contain", "fill"]).optional(),
+  }),
+  z.object({
+    type: z.literal("video"),
+    url: z.string().min(1),
+    poster: z.string().min(1).optional(),
+  }),
+  z.object({
+    type: z.literal("gradient"),
+    css: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("canvas"),
+    view: z.string().min(1),
+  }),
+])
+
 const layoutRegionSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -190,6 +215,8 @@ export const pluginManifestSchema = z.object({
           id: z.string().min(1),
           title: z.string().min(1),
           sourceType: z.enum(["local", "remote", "generated", "collection"]),
+          source: backgroundSourceSchema.optional(),
+          defaultCss: z.record(z.string(), z.string()).optional(),
         }),
       )
       .optional(),

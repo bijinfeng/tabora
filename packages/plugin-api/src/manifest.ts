@@ -103,6 +103,7 @@ export type BackgroundProviderContribution = {
   id: string
   title: string
   sourceType: "local" | "remote" | "generated" | "collection"
+  source?: BackgroundSourceValue
   /** 默认 CSS 样式（fallback，当 renderer 不可用时使用） */
   defaultCss?: Record<string, string>
 }
@@ -121,6 +122,13 @@ export type ThemeContribution = {
   title: string
   tokens: ThemeTokenSet
 }
+
+export type BackgroundSourceValue =
+  | { type: "css"; css: Record<string, string> }
+  | { type: "image"; url: string; fit?: "cover" | "contain" | "fill" }
+  | { type: "video"; url: string; poster?: string }
+  | { type: "gradient"; css: string }
+  | { type: "canvas"; view: string }
 
 export type WorkbenchSearchSettings = {
   defaultProviderId: string
@@ -156,9 +164,8 @@ export type WorkspacePresetContribution = {
 }
 
 export type ResolvedBackgroundValue = {
-  type: "css"
-  css: Record<string, string>
-}
+  [K in BackgroundSourceValue["type"]]: Extract<BackgroundSourceValue, { type: K }>
+}[BackgroundSourceValue["type"]]
 
 export type BackgroundRendererViewProps = {
   providerId: string

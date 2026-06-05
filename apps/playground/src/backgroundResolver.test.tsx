@@ -35,8 +35,86 @@ describe("resolveBackgroundValue", () => {
     const resolved = resolveBackgroundValue("background.gradient-green", providers)
     expect(resolved).not.toBeNull()
     expect(resolved!.type).toBe("css")
-    expect(resolved!.css).toHaveProperty("background")
-    expect(resolved!.css.background).toContain("linear-gradient")
+    if (resolved?.type !== "css") throw new Error("Expected css background")
+    expect(resolved.css).toHaveProperty("background")
+    expect(resolved.css.background).toContain("linear-gradient")
+  })
+
+  it("prefers explicit css source over defaultCss", () => {
+    const resolved = resolveBackgroundValue("background.css-source", [
+      {
+        id: "background.css-source",
+        title: "CSS Source",
+        sourceType: "generated",
+        source: {
+          type: "css",
+          css: { background: "rgb(1, 2, 3)" },
+        },
+        defaultCss: { background: "rgb(4, 5, 6)" },
+      },
+    ])
+
+    expect(resolved).toEqual({ type: "css", css: { background: "rgb(1, 2, 3)" } })
+  })
+
+  it("resolves gradient, image, video, and canvas sources", () => {
+    const sources: BackgroundProviderContribution[] = [
+      {
+        id: "background.gradient-source",
+        title: "Gradient Source",
+        sourceType: "generated",
+        source: {
+          type: "gradient",
+          css: "linear-gradient(135deg, red, blue)",
+        },
+      },
+      {
+        id: "background.image-source",
+        title: "Image Source",
+        sourceType: "remote",
+        source: {
+          type: "image",
+          url: "https://example.com/image.jpg",
+          fit: "cover",
+        },
+      },
+      {
+        id: "background.video-source",
+        title: "Video Source",
+        sourceType: "remote",
+        source: {
+          type: "video",
+          url: "https://example.com/video.mp4",
+        },
+      },
+      {
+        id: "background.canvas-source",
+        title: "Canvas Source",
+        sourceType: "generated",
+        source: {
+          type: "canvas",
+          view: "background.canvas.view",
+        },
+      },
+    ]
+
+    expect(resolveBackgroundValue("background.gradient-source", sources)).toEqual({
+      type: "gradient",
+      css: "linear-gradient(135deg, red, blue)",
+    })
+    expect(resolveBackgroundValue("background.image-source", sources)).toEqual({
+      type: "image",
+      url: "https://example.com/image.jpg",
+      fit: "cover",
+    })
+    expect(resolveBackgroundValue("background.video-source", sources)).toEqual({
+      type: "video",
+      url: "https://example.com/video.mp4",
+    })
+    expect(resolveBackgroundValue("background.canvas-source", sources)).toEqual({
+      type: "canvas",
+      view: "background.canvas.view",
+    })
   })
 
   it("returns null for unknown provider ID", () => {
@@ -71,6 +149,38 @@ describe("resolveBackgroundStyle", () => {
     const style = resolveBackgroundStyle("any-id", [])
     expect(style).toHaveProperty("background")
     expect(style.background).toBe("rgb(var(--color-page))")
+  })
+
+  it("uses safe fallback style when a non-css source has no renderer", () => {
+    const style = resolveBackgroundStyle("background.image-source", [
+      {
+        id: "background.image-source",
+        title: "Image Source",
+        sourceType: "remote",
+        source: {
+          type: "image",
+          url: "https://example.com/image.jpg",
+        },
+      },
+    ])
+
+    expect(style).toEqual({ background: "rgb(var(--color-page))" })
+  })
+
+  it("renders gradient source as css background", () => {
+    const style = resolveBackgroundStyle("background.gradient-source", [
+      {
+        id: "background.gradient-source",
+        title: "Gradient Source",
+        sourceType: "generated",
+        source: {
+          type: "gradient",
+          css: "linear-gradient(135deg, red, blue)",
+        },
+      },
+    ])
+
+    expect(style).toEqual({ background: "linear-gradient(135deg, red, blue)" })
   })
 })
 
