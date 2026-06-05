@@ -19,7 +19,7 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import { builtinPlugins } from "@tabora/builtin-plugin-registry"
-import { createWorkbenchResponsiveState } from "@tabora/workbench-app"
+import { createLayoutFallbackTracker, createWorkbenchResponsiveState } from "@tabora/workbench-app"
 import { createLayoutEngine, type InstanceRenderer } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 import {
@@ -113,6 +113,7 @@ export function App() {
     setToasts((t) => [...t, { id, msg }])
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
   }
+  const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
 
   const commandItems = () =>
     [
@@ -1191,6 +1192,7 @@ export function App() {
     if (!LayoutView) {
       return renderSafeLayout()
     }
+    layoutFallback.clearLayoutError()
 
     const regions = layoutEngine.buildRegionSlots(activeLayoutId(), instances())
     const host = layoutEngine.buildHostAPI()
@@ -1200,6 +1202,7 @@ export function App() {
         fallback={renderSafeLayout()}
         onError={(error) => {
           console.error("Layout error:", error)
+          layoutFallback.recordLayoutError(activeLayoutId(), error)
         }}
       >
         {LayoutView({

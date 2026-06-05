@@ -2,6 +2,7 @@ import type { PluginInstance, WorkbenchSearchSettings, Workspace } from "@tabora
 import type { HostAdapter } from "@tabora/host-adapters"
 
 export * from "./bootstrap"
+export * from "./layoutFallback"
 export * from "./responsive"
 
 export type WorkbenchCompositionState = {

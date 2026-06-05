@@ -2,7 +2,7 @@
 
 日期：2026-06-04
 
-状态：Phase X1 / X1.5 已完成；Phase X2 已开始，部分协议语义债务已修正
+状态：Phase X1 / X1.5 已完成；Phase X2 已完成，后续进入 X3 编排模型下沉
 
 关联事实源：
 
@@ -18,7 +18,7 @@
 
 当前 Phase X1 的 implementation plan 位于：`docs/superpowers/plans/2026-06-04-phase-x1-shell-boundaries.md`。
 当前分支已完成 Phase X1 的核心收口：新增 `@tabora/workbench-app`、`@tabora/host-adapters`，playground 改为通过 `workbenchComposition` / runtime bootstrap 组装基础设施，extension newtab 已切断对 playground `App` 的直接依赖。
-2026-06-05 已开始 Phase X2：`HostActionId` 已补齐 `layout-switch` / `shortcuts` / `plugin-manager`，layout 切换不再伪装为 `theme` action；RegionSlot 构建已按 `region.accepts` 过滤实例；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖；playground / extension 已接入真实 responsive state 并传入 `LayoutViewProps.isMobile`。
+2026-06-05 已完成 Phase X2：`HostActionId` 已补齐 `layout-switch` / `shortcuts` / `plugin-manager`，layout 切换不再伪装为 `theme` action；RegionSlot 构建已按 `region.accepts` 过滤实例；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖；playground / extension 已接入真实 responsive state 并传入 `LayoutViewProps.isMobile`；默认 workspace seed 已移除伪 `rail accepts:["layout"]` region；布局错误 fallback 已增加 toast 和状态记录。
 
 评估视角：
 
@@ -432,7 +432,7 @@ plugins/
 
 以下问题来自当前仓库代码口径，表示 **Phase X1 完成后仍然存在** 的后续任务：
 
-- 默认 workspace seed 是否仍存在 `rail accepts:["layout"]` 需要在后续 X2 收尾中复核；当前官方 dashboard / stream / DIY layout 已不依赖伪 `layout` region。
+- 默认 workspace seed 已移除 `rail accepts:["layout"]`，rail 只作为 host chrome，不再作为 workspace instance region。
 - 布局切换仍在 shell 中处理较多逻辑，orchestrator 还没有完全接管布局切换、实例迁移和 unplaced 状态。
 - 命令面板和 `LayoutHostAPI` 中布局切换仍偏 dashboard / stream 两种官方布局硬编码；但 host action id 已改为稳定的 `layout-switch`，不再用 `theme` action 承载布局切换语义。
 - `App.tsx` 仍然过重，当前只是收缩为 composition root + 宿主编排，尚未把 workspace session、instances、theme/background、search state、host surfaces 彻底下沉。
@@ -446,7 +446,7 @@ plugins/
 - 历史文档和计划中仍残留旧路径，容易误导后续实现。
 - `RegionSlot` 构建已按 `region.accepts` 防御 extensionPoint 错配，并增加 orchestrator 单测覆盖。
 - `isMobile` 已通过 `@tabora/workbench-app` responsive state 接入 playground / extension，不再固定传 `false`。
-- layout fallback 当前主要是渲染安全布局，toast 提示和激活安全布局状态闭环不足。
+- layout fallback 当前会渲染安全布局，并通过 `@tabora/workbench-app` fallback tracker 记录错误状态、触发 toast 提示；后续可在 X3/X5 把该状态接入调试或设置表面。
 - `background-renderer` 协议存在，但 playground 背景应用主要依赖 `defaultCss` 解析。
 - 部分 widget 仍直接访问 `window.localStorage`，不符合插件数据通过 storage repository 隔离的方向。
 
@@ -517,7 +517,7 @@ plugins/
 
 ### Phase X2: 协议收口与语义修正
 
-状态：进行中，已完成 host action 语义、layout 依赖隔离、RegionSlot accepts 校验和 responsive state 接入；布局错误 fallback toast / 状态记录与 rail seed 复核仍待收尾。
+状态：已完成。已完成 host action 语义、layout 依赖隔离、RegionSlot accepts 校验、responsive state 接入、默认 seed rail 语义移除，以及布局错误 fallback toast / 状态记录。
 
 目标：修正当前 MVP 插件契约的语义债务，避免继续在错误模型上扩展。
 

@@ -11,10 +11,10 @@ describe("createDefaultWorkspaceSeed", () => {
     expect(workspace.activeThemeId).toBe("official.theme.light")
     expect(workspace.activeBackgroundProviderId).toBe("background.gradient-green")
 
-    const rail = workspace.regions["rail"]
-    expect(rail).toBeDefined()
-    expect(rail!.accepts).toContain("layout")
-    expect(rail!.instances).toEqual([])
+    expect(workspace.regions["rail"]).toBeUndefined()
+    expect(Object.values(workspace.regions).flatMap((region) => region.accepts)).not.toContain(
+      "layout",
+    )
 
     const topbar = workspace.regions["topbar"]
     expect(topbar).toBeDefined()

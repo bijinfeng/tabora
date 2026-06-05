@@ -80,7 +80,6 @@ export const OFFICIAL_DEFAULT_WORKSPACE_SEED: WorkspaceSeedConfig = {
   activeThemeId: "official.theme.light",
   defaultBackgroundProviderId: "background.gradient-green",
   regions: [
-    { regionId: "rail", accepts: ["layout"] },
     { regionId: "topbar", accepts: ["search"] },
     { regionId: "mainGrid", accepts: ["widget"] },
   ],
