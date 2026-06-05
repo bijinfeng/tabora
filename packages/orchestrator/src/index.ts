@@ -41,3 +41,4 @@ export {
   type LayoutSwitchPlan,
   type LayoutSwitchPlanOptions,
 } from "./layout-switcher"
+export { createDragSortPlan, type DragSortPlan, type DragSortPlanOptions } from "./drag-sort-model"

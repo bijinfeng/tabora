@@ -23,6 +23,7 @@ import { createLayoutFallbackTracker, createWorkbenchResponsiveState } from "@ta
 import {
   createLayoutEngine,
   createLayoutSwitchPlan,
+  createDragSortPlan,
   createWidgetContextMenuModel,
   type InstanceRenderer,
 } from "@tabora/orchestrator"
@@ -950,24 +951,6 @@ export function App() {
     e.dataTransfer!.dropEffect = "move"
   }
 
-  function regionInstances(regionId: string, extensionPoint?: PluginInstance["extensionPoint"]) {
-    return instances()
-      .filter(
-        (instance) =>
-          instance.regionId === regionId &&
-          (extensionPoint ? instance.extensionPoint === extensionPoint : true),
-      )
-      .sort(
-        (left, right) =>
-          (left.grid?.x ?? 0) - (right.grid?.x ?? 0) ||
-          left.createdAt.localeCompare(right.createdAt),
-      )
-  }
-
-  function widgetInstancesForRegion(regionId: string) {
-    return regionInstances(regionId, "widget")
-  }
-
   function widgetInstanceById(instanceId: string): PluginInstance | undefined {
     return instances().find((instance) => instance.id === instanceId)
   }
@@ -1027,30 +1010,29 @@ export function App() {
       })
   }
 
-  async function persistGridOrder(regionId: string, orderedInstances: PluginInstance[]) {
-    const nextRegionInstances = assignGridOrder(orderedInstances)
-    const nextById = new Map(nextRegionInstances.map((instance) => [instance.id, instance]))
+  async function persistGridOrder(orderedInstances: PluginInstance[]) {
+    const nextById = new Map(orderedInstances.map((instance) => [instance.id, instance]))
     const mergedInstances = instances().map((instance) => nextById.get(instance.id) ?? instance)
 
-    for (const instance of nextRegionInstances) {
+    for (const instance of orderedInstances) {
       await instanceRepo.save(instance)
     }
 
     setInstances(mergedInstances)
   }
 
-  function onDrop(e: DragEvent, targetId: string, regionId: string) {
+  function onDrop(e: DragEvent, targetId: string, _regionId: string) {
     e.preventDefault()
     const sourceId = dragId()
     if (!sourceId || sourceId === targetId) return
     setDragId(null)
-    const list = [...widgetInstancesForRegion(regionId)]
-    const fromIdx = list.findIndex((i) => i.id === sourceId)
-    const toIdx = list.findIndex((i) => i.id === targetId)
-    if (fromIdx === -1 || toIdx === -1) return
-    const [moved] = list.splice(fromIdx, 1)
-    list.splice(toIdx, 0, moved!)
-    void persistGridOrder(regionId, list)
+    const plan = createDragSortPlan({
+      sourceId,
+      targetId,
+      instances: instances(),
+    })
+    if (!plan.changed) return
+    void persistGridOrder(plan.instances)
     showToast("排序已更新")
   }
 
