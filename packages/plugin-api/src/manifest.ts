@@ -139,15 +139,23 @@ export type WorkspacePresetRegionContribution = {
   accepts: ExtensionPoint[]
 }
 
-export type WorkspacePresetInstanceContribution = {
+type WorkspacePresetInstanceBaseContribution = {
   pluginId: string
   contributionId: string
   instanceId: string
-  extensionPoint: PluginInstance["extensionPoint"]
   regionId: string
-  size?: WidgetSize
   config?: Record<string, unknown>
 }
+
+export type WorkspacePresetInstanceContribution =
+  | (WorkspacePresetInstanceBaseContribution & {
+      extensionPoint: "widget"
+      size: WidgetSize
+    })
+  | (WorkspacePresetInstanceBaseContribution & {
+      extensionPoint: Exclude<PluginInstance["extensionPoint"], "widget">
+      size?: never
+    })
 
 export type WorkspacePresetContribution = {
   id: string

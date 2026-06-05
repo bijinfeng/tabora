@@ -84,6 +84,34 @@ const keybindingContributionSchema = z.object({
   editable: z.boolean().optional(),
 })
 
+const workspacePresetInstanceSchema = z
+  .object({
+    pluginId: z.string().min(1),
+    contributionId: z.string().min(1),
+    instanceId: z.string().min(1),
+    extensionPoint: extensionPointSchema,
+    regionId: z.string().min(1),
+    size: widgetSizeSchema.optional(),
+    config: z.record(z.string(), z.unknown()).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.extensionPoint === "widget" && !value.size) {
+      ctx.addIssue({
+        code: "custom",
+        message: "workspace preset widget instances must declare size",
+        path: ["size"],
+      })
+    }
+
+    if (value.extensionPoint !== "widget" && value.size !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "workspace preset non-widget instances must not declare size",
+        path: ["size"],
+      })
+    }
+  })
+
 const workspacePresetSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -104,17 +132,7 @@ const workspacePresetSchema = z.object({
       }),
     )
     .min(1),
-  instances: z.array(
-    z.object({
-      pluginId: z.string().min(1),
-      contributionId: z.string().min(1),
-      instanceId: z.string().min(1),
-      extensionPoint: extensionPointSchema,
-      regionId: z.string().min(1),
-      size: widgetSizeSchema.optional(),
-      config: z.record(z.string(), z.unknown()).optional(),
-    }),
-  ),
+  instances: z.array(workspacePresetInstanceSchema),
 })
 
 const backgroundSourceSchema = z.discriminatedUnion("type", [

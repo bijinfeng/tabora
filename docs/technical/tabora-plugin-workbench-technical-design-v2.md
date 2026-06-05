@@ -94,7 +94,7 @@ packages/
   orchestrator/         # 新增：布局切换、区域映射、搜索路由、拖拽、展开、设置导航
   workbench-app/        # Phase X1 起步：跨 shell 的 workbench composition 承载层
   host-adapters/        # Phase X1 起步：Web / extension / desktop host capability adapters
-  storage/              # IndexedDB 持久化（增强 migration 和 quota）
+  storage/              # IndexedDB 持久化（当前单版本 schema、quota / 错误处理）
   theme/                # Token 应用（不变）
   brand/                # 品牌图标源文件、品牌组件、静态图标路径导出
   ui/                   # 插件内容区基础组件（按 V2 组件规范扩展，不承接宿主容器）
@@ -762,7 +762,7 @@ type WidgetViewProps = {
 }
 ```
 
-宿主渲染 widget 前必须解析当前 `WidgetContribution` 并校验实例显式声明的 `size` 是否包含在 `supportedSizes` 内。缺少 contribution、缺少 `size` 或 size 不受支持时，该实例进入局部无效实例占位，不按 `defaultSize` 或硬编码 `"M"` 做读取时补齐。`defaultSize` 只用于创建新实例 / preset 生成阶段。
+宿主渲染 widget 前必须解析当前 `WidgetContribution` 并校验实例显式声明的 `size` 是否包含在 `supportedSizes` 内。缺少 contribution、缺少 `size` 或 size 不受支持时，该实例进入局部无效实例占位，不按 `defaultSize` 或硬编码 `"M"` 做读取时补齐。`defaultSize` 只用于用户新增实例时从 contribution 取初始尺寸；workspace preset 中的 widget instance 也必须显式写入 `size`。
 
 ### 12.2 Search
 
@@ -850,7 +850,7 @@ type WorkspacePresetContribution = {
 }
 ```
 
-preset applier 只在创建新 workspace 时生成 workspace 与 plugin instances；已有 workspace 不做 backfill、不覆盖数据，也不为旧 seed 做迁移。
+preset applier 只在创建新 workspace 时生成 workspace 与 plugin instances；已有 workspace 不做 backfill、不覆盖数据，也不为旧 seed 做迁移。preset widget instance 缺少 `size` 会被 schema 与 applier 拒绝，非 widget instance 不写入 `size`。
 
 Workspace 当前协议要求保存 `activeBackgroundProviderId`。导入 / 导出只接受当前 schema；缺失 `activeBackgroundProviderId` 的 workspace JSON 被拒绝，不按默认背景做补齐。背景 provider 找不到时仍由背景 resolver 使用安全页面样式兜底，这是错误恢复机制，不是旧数据迁移。
 

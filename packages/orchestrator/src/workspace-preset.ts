@@ -17,6 +17,34 @@ function cloneJsonValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
+type PresetInstanceSizeInput = {
+  instanceId: string
+  extensionPoint: PluginInstance["extensionPoint"]
+  size?: PluginInstance["size"]
+}
+
+function resolvePresetInstanceSize(
+  presetId: string,
+  presetInstance: PresetInstanceSizeInput,
+): Pick<PluginInstance, "size"> {
+  if (presetInstance.extensionPoint !== "widget") {
+    if (presetInstance.size !== undefined) {
+      throw new Error(
+        `Workspace preset "${presetId}" non-widget instance "${presetInstance.instanceId}" must not declare size`,
+      )
+    }
+    return {}
+  }
+
+  if (!presetInstance.size) {
+    throw new Error(
+      `Workspace preset "${presetId}" widget instance "${presetInstance.instanceId}" must declare size`,
+    )
+  }
+
+  return { size: presetInstance.size }
+}
+
 export function applyWorkspacePreset(
   options: WorkspacePresetApplyOptions,
 ): WorkspacePresetApplyResult {
@@ -56,7 +84,7 @@ export function applyWorkspacePreset(
       extensionPoint: presetInstance.extensionPoint,
       regionId: presetInstance.regionId,
       enabled: true,
-      size: presetInstance.size ?? "M",
+      ...resolvePresetInstanceSize(options.preset.id, presetInstance),
       config: cloneJsonValue(presetInstance.config ?? {}),
       createdAt: now,
       updatedAt: now,
