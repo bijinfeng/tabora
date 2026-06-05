@@ -22,6 +22,13 @@ export {
   type CommandPaletteModelOptions,
 } from "./command-palette-model"
 export {
+  createWidgetContextMenuModel,
+  type ContextMenuItem,
+  type ContextMenuSection,
+  type WidgetContextMenuModel,
+  type WidgetContextMenuModelOptions,
+} from "./context-menu-model"
+export {
   createSettingsNavigator,
   resolveInitialSettingsPanelId,
   resolveSettingsSectionId,

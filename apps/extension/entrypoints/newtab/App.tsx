@@ -20,7 +20,11 @@ import type {
 } from "@tabora/plugin-api"
 import { builtinPlugins } from "@tabora/builtin-plugin-registry"
 import { createLayoutFallbackTracker, createWorkbenchResponsiveState } from "@tabora/workbench-app"
-import { createLayoutEngine, type InstanceRenderer } from "@tabora/orchestrator"
+import {
+  createLayoutEngine,
+  createWidgetContextMenuModel,
+  type InstanceRenderer,
+} from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 import {
   PluginViewBoundary,
@@ -988,6 +992,26 @@ export function App() {
     return widgetContribution(instance)?.supportedSizes ?? ["S", "M", "L"]
   }
 
+  function contextMenuModel() {
+    const instance = contextMenuInstance()
+    if (!instance) return null
+    return createWidgetContextMenuModel({
+      instance,
+      supportedSizes: supportedWidgetSizes(instance),
+      onResize: (instanceId, size) => {
+        void changeWidgetSize(instanceId, size)
+      },
+      onExpand: (instanceId) => {
+        const target = widgetInstanceById(instanceId)
+        if (target) openWidgetExpand(target)
+      },
+      onRemove: (instanceId) => {
+        void removeWidget(instanceId)
+        showToast("实例已移除")
+      },
+    })
+  }
+
   function focusWidgetInstance(instanceId: string) {
     const card = document.querySelector<HTMLElement>(`[data-widget-instance-id="${instanceId}"]`)
     if (!card) return
@@ -1377,46 +1401,32 @@ export function App() {
           {(menu) => (
             <div class="ctx-menu-overlay" onClick={() => setCtxMenu(null)}>
               <div class="ctx-menu-panel" style={{ left: `${menu().x}px`, top: `${menu().y}px` }}>
-                <For each={supportedWidgetSizes(contextMenuInstance())}>
-                  {(size) => (
-                    <button
-                      class="ctx-menu-item"
-                      onClick={() => {
-                        const instance = contextMenuInstance()
-                        if (!instance) return
-                        void changeWidgetSize(instance.id, size)
-                        setCtxMenu(null)
-                      }}
-                    >
-                      尺寸 {size}
-                      <Show when={(contextMenuInstance()?.size ?? "M") === size}>
-                        <span class="ctx-menu-check">当前</span>
+                <For each={contextMenuModel()?.sections ?? []}>
+                  {(section, sectionIndex) => (
+                    <>
+                      <Show when={sectionIndex() > 0}>
+                        <hr class="ctx-menu-sep" />
                       </Show>
-                    </button>
+                      <For each={section.items}>
+                        {(item) => (
+                          <button
+                            class="ctx-menu-item"
+                            classList={{ "ctx-menu-danger": item.danger }}
+                            onClick={() => {
+                              item.run()
+                              setCtxMenu(null)
+                            }}
+                          >
+                            {item.label}
+                            <Show when={item.isCurrent}>
+                              <span class="ctx-menu-check">当前</span>
+                            </Show>
+                          </button>
+                        )}
+                      </For>
+                    </>
                   )}
                 </For>
-                <hr class="ctx-menu-sep" />
-                <button
-                  class="ctx-menu-item"
-                  onClick={() => {
-                    const instance = contextMenuInstance()
-                    if (!instance) return
-                    openWidgetExpand(instance)
-                  }}
-                >
-                  展开详情
-                </button>
-                <hr class="ctx-menu-sep" />
-                <button
-                  class="ctx-menu-item ctx-menu-danger"
-                  onClick={() => {
-                    void removeWidget(menu().instanceId)
-                    showToast("实例已移除")
-                    setCtxMenu(null)
-                  }}
-                >
-                  移除实例
-                </button>
               </div>
             </div>
           )}

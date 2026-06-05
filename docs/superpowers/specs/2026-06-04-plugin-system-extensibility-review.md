@@ -2,7 +2,7 @@
 
 日期：2026-06-04
 
-状态：Phase X1 / X1.5 / X2 已完成；Phase X3 进行中，settings navigator 与 command palette model 已下沉到 orchestrator
+状态：Phase X1 / X1.5 / X2 已完成；Phase X3 进行中，settings navigator、command palette model 与 context menu model 已下沉到 orchestrator
 
 关联事实源：
 
@@ -19,7 +19,7 @@
 当前 Phase X1 的 implementation plan 位于：`docs/superpowers/plans/2026-06-04-phase-x1-shell-boundaries.md`。
 当前分支已完成 Phase X1 的核心收口：新增 `@tabora/workbench-app`、`@tabora/host-adapters`，playground 改为通过 `workbenchComposition` / runtime bootstrap 组装基础设施，extension newtab 已切断对 playground `App` 的直接依赖。
 2026-06-05 已完成 Phase X2：`HostActionId` 已补齐 `layout-switch` / `shortcuts` / `plugin-manager`，layout 切换不再伪装为 `theme` action；RegionSlot 构建已按 `region.accepts` 过滤实例；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖；playground / extension 已接入真实 responsive state 并传入 `LayoutViewProps.isMobile`；默认 workspace seed 已移除伪 `rail accepts:["layout"]` region；布局错误 fallback 已增加 toast 和状态记录。
-2026-06-05 已开始 Phase X3：settings navigator 已迁入 `@tabora/orchestrator`，`@tabora/workbench-shell` 的 `SettingsHost` 复用该纯模型进行 section 分组和初始 section 解析；CommandPalette 的结果拼装模型也已迁入 `@tabora/orchestrator`，shell 组件保留输入、焦点和渲染职责。
+2026-06-05 已开始 Phase X3：settings navigator 已迁入 `@tabora/orchestrator`，`@tabora/workbench-shell` 的 `SettingsHost` 复用该纯模型进行 section 分组和初始 section 解析；CommandPalette 的结果拼装模型也已迁入 `@tabora/orchestrator`，shell 组件保留输入、焦点和渲染职责；widget context menu 的默认 size / expand / remove 菜单模型已迁入 `@tabora/orchestrator`，playground / extension 只负责渲染和执行回调。
 
 评估视角：
 
@@ -541,7 +541,7 @@ plugins/
 
 ### Phase X3: 编排模型下沉
 
-状态：进行中。settings navigator 与 CommandPalette 结果模型已下沉到 `@tabora/orchestrator` 并有单测覆盖；layout switcher、context menu model、drag sort model，以及完整 command contribution / shortcut model 仍待继续。
+状态：进行中。settings navigator、CommandPalette 结果模型和 widget context menu 默认菜单模型已下沉到 `@tabora/orchestrator` 并有单测覆盖；layout switcher、drag sort model，以及完整 command contribution / shortcut model 仍待继续。
 
 目标：把当前散落在 shell UI 中的编排模型下沉到 orchestrator，workbench-shell 只做容器和交互表面。
 
