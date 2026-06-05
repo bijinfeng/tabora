@@ -74,11 +74,11 @@ describe("createWidgetContextMenuModel", () => {
   })
 
   it("merges ordered plugin context menu items before remove", () => {
-    const onFocus = vi.fn()
-    const onClear = vi.fn()
+    const runCommand = vi.fn()
     const model = createWidgetContextMenuModel({
       instance: instance(),
       supportedSizes: ["S"],
+      availableCommandIds: ["todo.focus", "todo.clear"],
       contextMenus: [
         {
           id: "clear",
@@ -94,10 +94,7 @@ describe("createWidgetContextMenuModel", () => {
           order: 10,
         },
       ],
-      commandActions: {
-        "todo.focus": onFocus,
-        "todo.clear": onClear,
-      },
+      runCommand,
       onResize: vi.fn(),
       onExpand: vi.fn(),
       onRemove: vi.fn(),
@@ -114,15 +111,16 @@ describe("createWidgetContextMenuModel", () => {
     model.sections[2]!.items[0]!.run()
     model.sections[2]!.items[1]!.run()
 
-    expect(onFocus).toHaveBeenCalledOnce()
-    expect(onClear).toHaveBeenCalledOnce()
+    expect(runCommand).toHaveBeenCalledWith("todo.focus", { instance: instance() })
+    expect(runCommand).toHaveBeenCalledWith("todo.clear", { instance: instance() })
     expect(model.sections[2]!.items[1]!.danger).toBe(true)
   })
 
-  it("skips plugin context menu items without a resolved command action", () => {
+  it("skips plugin context menu items without a declared command", () => {
     const model = createWidgetContextMenuModel({
       instance: instance(),
       supportedSizes: ["S"],
+      availableCommandIds: ["todo.known"],
       contextMenus: [
         {
           id: "missing-command",
@@ -134,12 +132,63 @@ describe("createWidgetContextMenuModel", () => {
           label: "无命令",
         },
       ],
-      commandActions: {},
       onResize: vi.fn(),
       onExpand: vi.fn(),
       onRemove: vi.fn(),
     })
 
     expect(model.sections.map((section) => section.id)).toEqual(["size", "expand", "remove"])
+  })
+
+  it("keeps declared plugin command items without an action and runs them as a no-op", () => {
+    const model = createWidgetContextMenuModel({
+      instance: instance(),
+      supportedSizes: ["S"],
+      availableCommandIds: ["todo.noop"],
+      contextMenus: [
+        {
+          id: "noop",
+          label: "暂无实现",
+          commandId: "todo.noop",
+        },
+      ],
+      onResize: vi.fn(),
+      onExpand: vi.fn(),
+      onRemove: vi.fn(),
+    })
+
+    expect(model.sections.map((section) => section.id)).toEqual([
+      "size",
+      "expand",
+      "plugin",
+      "remove",
+    ])
+    expect(model.sections[2]!.items[0]!.label).toBe("暂无实现")
+    expect(() => model.sections[2]!.items[0]!.run()).not.toThrow()
+  })
+
+  it("passes the current widget instance context when running a plugin command", () => {
+    const widget = instance("XL")
+    const runCommand = vi.fn()
+    const model = createWidgetContextMenuModel({
+      instance: widget,
+      supportedSizes: ["XL"],
+      availableCommandIds: ["todo.inspect"],
+      contextMenus: [
+        {
+          id: "inspect",
+          label: "检查实例",
+          commandId: "todo.inspect",
+        },
+      ],
+      runCommand,
+      onResize: vi.fn(),
+      onExpand: vi.fn(),
+      onRemove: vi.fn(),
+    })
+
+    model.sections[2]!.items[0]!.run()
+
+    expect(runCommand).toHaveBeenCalledWith("todo.inspect", { instance: widget })
   })
 })

@@ -1,5 +1,4 @@
 import type { PluginInstance, WidgetContextMenuContribution, WidgetSize } from "@tabora/plugin-api"
-import type { CommandActionMap } from "./command-catalog"
 
 export type ContextMenuItem = {
   id: string
@@ -23,15 +22,19 @@ export type WidgetContextMenuModelOptions = {
   instance: PluginInstance
   supportedSizes: WidgetSize[]
   contextMenus?: WidgetContextMenuContribution[]
-  commandActions?: CommandActionMap
+  availableCommandIds?: string[] | Set<string>
+  hasCommand?: (commandId: string) => boolean
+  runCommand?: (commandId: string, context: { instance: PluginInstance }) => void
   onResize: (instanceId: string, size: WidgetSize) => void
   onExpand: (instanceId: string) => void
   onRemove: (instanceId: string) => void
 }
 
 function pluginContextMenuItems(
+  instance: PluginInstance,
   contextMenus: WidgetContextMenuContribution[],
-  commandActions: CommandActionMap,
+  hasCommand: (commandId: string) => boolean,
+  runCommand: (commandId: string, context: { instance: PluginInstance }) => void,
 ): ContextMenuItem[] {
   return [...contextMenus]
     .sort(
@@ -39,19 +42,31 @@ function pluginContextMenuItems(
         (left.order ?? 0) - (right.order ?? 0) || left.label.localeCompare(right.label),
     )
     .flatMap((item) => {
-      if (!item.commandId) return []
-      const action = commandActions[item.commandId]
-      if (!action) return []
+      const commandId = item.commandId
+      if (!commandId) return []
+      if (!hasCommand(commandId)) return []
 
       const menuItem: ContextMenuItem = {
         id: item.id,
         label: item.label,
-        run: action,
+        run: () => runCommand(commandId, { instance }),
       }
       if (item.danger) menuItem.danger = true
 
       return [menuItem]
     })
+}
+
+function createCommandResolver(
+  options: WidgetContextMenuModelOptions,
+): (commandId: string) => boolean {
+  if (options.hasCommand) return options.hasCommand
+  if (!options.availableCommandIds) return () => false
+  const availableCommandIds =
+    options.availableCommandIds instanceof Set
+      ? options.availableCommandIds
+      : new Set(options.availableCommandIds)
+  return (commandId) => availableCommandIds.has(commandId)
 }
 
 export function createWidgetContextMenuModel(
@@ -60,8 +75,10 @@ export function createWidgetContextMenuModel(
   const instanceId = options.instance.id
   const currentSize = options.instance.size ?? "M"
   const pluginItems = pluginContextMenuItems(
+    options.instance,
     options.contextMenus ?? [],
-    options.commandActions ?? {},
+    createCommandResolver(options),
+    options.runCommand ?? (() => {}),
   )
 
   return {

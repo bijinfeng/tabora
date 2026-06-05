@@ -256,6 +256,15 @@ export function App() {
       actions: commandActions(),
     })
 
+  const availableCommandIds = () => [
+    ...platformCommands().map((command) => command.id),
+    ...pluginCommands.map((command) => command.id),
+  ]
+
+  const runCommand = (commandId: string, _context: { instance: PluginInstance }) => {
+    commandActions()[commandId]?.()
+  }
+
   const runtime = createExtensionRuntimeBootstrap()
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
@@ -1051,7 +1060,8 @@ export function App() {
       instance,
       supportedSizes: supportedWidgetSizes(instance),
       contextMenus: contextMenuContributions(instance),
-      commandActions: commandActions(),
+      availableCommandIds: availableCommandIds(),
+      runCommand,
       onResize: (instanceId, size) => {
         void changeWidgetSize(instanceId, size)
       },
