@@ -9,6 +9,7 @@ const layoutPlugin: BuiltinPlugin = {
     id: "test.layout",
     name: "Test Layout",
     version: "1.0.0",
+    apiVersion: "1.0.0",
     entry: "./test",
     engine: { platform: "^0.1.0" },
     contributes: {

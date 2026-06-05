@@ -2,11 +2,25 @@ import { describe, expect, it } from "vitest"
 import { pluginManifestSchema } from "./manifestSchema"
 
 describe("pluginManifestSchema", () => {
+  it("rejects a manifest without explicit apiVersion", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.widgets.productivity",
+      name: "Productivity Widgets",
+      version: "0.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it("accepts a plugin that contributes a widget", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.widgets.productivity",
       name: "Productivity Widgets",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./entry",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -31,6 +45,7 @@ describe("pluginManifestSchema", () => {
       id: "official.widgets.notes",
       name: "Notes Widget",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./entry",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -126,6 +141,7 @@ describe("pluginManifestSchema", () => {
       id: "official.layout.workbench-dashboard",
       name: "Workbench Dashboard Layout",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./layout-workbench-dashboard",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -183,6 +199,7 @@ describe("pluginManifestSchema", () => {
       id: "official.settings.workspace",
       name: "Workspace Settings",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./settings-workspace",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -205,6 +222,7 @@ describe("pluginManifestSchema", () => {
       id: "official.settings.workspace",
       name: "Workspace Settings",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./settings-workspace",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -242,6 +260,7 @@ describe("pluginManifestSchema", () => {
       id: "official.background.basic",
       name: "Basic Background",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./background-basic",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -288,6 +307,7 @@ describe("pluginManifestSchema", () => {
       id: "official.commands.workspace",
       name: "Workspace Commands",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./commands",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -339,6 +359,7 @@ describe("pluginManifestSchema", () => {
       id: "official.keybindings.workspace",
       name: "Workspace Keybindings",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./keybindings",
       engine: { platform: "^0.1.0" },
       contributes: {
@@ -431,6 +452,7 @@ describe("layout 最小强制规则", () => {
       id: "x",
       name: "X",
       version: "1.0.0",
+      apiVersion: "1.0.0",
       entry: "./x",
       engine: { platform: "^0.1.0" },
       contributes: { layouts: [layout] },

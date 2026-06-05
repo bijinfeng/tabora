@@ -299,7 +299,7 @@ export type PluginManifest = {
   id: string
   name: string
   version: string
-  apiVersion?: string
+  apiVersion: string
   supportedPlatforms?: HostPlatform[]
   requiredCapabilities?: HostCapabilityId[]
   publisher?: string

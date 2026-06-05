@@ -8,6 +8,7 @@ describe("createPluginKernel", () => {
       id: "official.test",
       name: "Official Test",
       version: "0.0.0",
+      apiVersion: "1.0.0",
       entry: "./entry",
       engine: { platform: "^0.1.0" },
       contributes: {},

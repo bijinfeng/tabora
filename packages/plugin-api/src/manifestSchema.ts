@@ -157,7 +157,7 @@ export const pluginManifestSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   version: z.string().min(1),
-  apiVersion: z.string().min(1).optional(),
+  apiVersion: z.string().min(1),
   supportedPlatforms: z.array(hostPlatformSchema).optional(),
   requiredCapabilities: z.array(hostCapabilitySchema).optional(),
   publisher: z.string().optional(),

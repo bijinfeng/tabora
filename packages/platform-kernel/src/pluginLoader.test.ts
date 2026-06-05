@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { BuiltinPlugin } from "./pluginKernel"
+import type { PluginManifest } from "@tabora/plugin-api"
 import { createBuiltinPluginLoader, parseTrustedLocalPluginPackage } from "./pluginLoader"
 
 const plugin: BuiltinPlugin = {
@@ -91,7 +92,9 @@ describe("createBuiltinPluginLoader", () => {
 
   it("rejects plugins without apiVersion", async () => {
     const { apiVersion: _apiVersion, ...manifest } = plugin.manifest
-    const loader = createBuiltinPluginLoader([{ ...plugin, manifest }])
+    const loader = createBuiltinPluginLoader([
+      { ...plugin, manifest: manifest as unknown as PluginManifest },
+    ])
 
     const result = await loader.load()
 

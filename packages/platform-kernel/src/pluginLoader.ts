@@ -75,7 +75,9 @@ export function loadBuiltinPlugins(plugins: BuiltinPlugin[]): PluginLoadResult {
     if (!parsed.success) {
       rejected.push({
         source: "builtin",
-        reason: "Invalid plugin manifest",
+        reason: hasApiVersion(plugin.manifest)
+          ? "Invalid plugin manifest"
+          : "Plugin manifest must declare apiVersion",
         manifest: plugin.manifest,
       })
       continue
@@ -99,6 +101,16 @@ export function loadBuiltinPlugins(plugins: BuiltinPlugin[]): PluginLoadResult {
   }
 
   return { loaded, rejected }
+}
+
+function hasApiVersion(manifest: unknown): manifest is { apiVersion: string } {
+  return (
+    typeof manifest === "object" &&
+    manifest !== null &&
+    "apiVersion" in manifest &&
+    typeof manifest.apiVersion === "string" &&
+    manifest.apiVersion.length > 0
+  )
 }
 
 export function createBuiltinPluginLoader(plugins: BuiltinPlugin[]): PluginLoader {

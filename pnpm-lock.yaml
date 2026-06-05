@@ -390,9 +390,6 @@ importers:
       '@tabora/plugin-weather':
         specifier: workspace:*
         version: link:../../plugins/official/widget-weather
-      '@tabora/storage':
-        specifier: workspace:*
-        version: link:../storage
       '@tabora/ui':
         specifier: workspace:*
         version: link:../ui

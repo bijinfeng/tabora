@@ -9,6 +9,7 @@ const plugins: BuiltinPlugin[] = [
       id: "plugin.alpha",
       name: "Alpha",
       version: "1.0.0",
+      apiVersion: "1.0.0",
       entry: "./alpha",
       engine: { platform: "^0.1.0" },
       permissions: [{ type: "storage", scope: "plugin" }],
@@ -45,6 +46,7 @@ const plugins: BuiltinPlugin[] = [
       id: "plugin.beta",
       name: "Beta",
       version: "2.0.0",
+      apiVersion: "1.0.0",
       entry: "./beta",
       engine: { platform: "^0.1.0" },
       contributes: {

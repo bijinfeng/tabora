@@ -29,7 +29,6 @@
     "@tabora/plugin-today-focus": "workspace:*",
     "@tabora/plugin-todo": "workspace:*",
     "@tabora/plugin-weather": "workspace:*",
-    "@tabora/storage": "workspace:*",
     "@tabora/ui": "workspace:*",
     "solid-js": "catalog:ui"
   },
