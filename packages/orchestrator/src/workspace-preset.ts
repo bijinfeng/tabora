@@ -12,6 +12,11 @@ export type WorkspacePresetApplyResult = {
   instances: PluginInstance[]
 }
 
+function cloneJsonValue<T>(value: T): T {
+  if (value === undefined || value === null) return value
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
 export function applyWorkspacePreset(
   options: WorkspacePresetApplyOptions,
 ): WorkspacePresetApplyResult {
@@ -52,7 +57,7 @@ export function applyWorkspacePreset(
       regionId: presetInstance.regionId,
       enabled: true,
       size: presetInstance.size ?? "M",
-      config: { ...(presetInstance.config ?? {}) },
+      config: cloneJsonValue(presetInstance.config ?? {}),
       createdAt: now,
       updatedAt: now,
     })

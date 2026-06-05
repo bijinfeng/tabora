@@ -155,6 +155,21 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     async setPluginEnabled(pluginId, enabled) {
       const plugin = plugins.find((p) => p.manifest.id === pluginId)
       if (!plugin) return
+      const reason = compatibilityReason(plugin)
+      if (enabled && reason) {
+        plugin.enabled = false
+        if (lifecycleStore) {
+          await lifecycleStore.save(
+            buildRecord(plugin, {
+              enabled: false,
+              status: "skipped",
+              disabledReason: reason,
+              updatedAt: new Date().toISOString(),
+            }),
+          )
+        }
+        return
+      }
       plugin.enabled = enabled
 
       if (lifecycleStore) {

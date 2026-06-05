@@ -32,7 +32,7 @@ const preset: WorkspacePresetContribution = {
       extensionPoint: "widget",
       regionId: "mainGrid",
       size: "L",
-      config: { color: "green" },
+      config: { color: "green", nested: { enabled: true }, tags: ["daily"] },
     },
   ],
 }
@@ -65,7 +65,7 @@ describe("applyWorkspacePreset", () => {
       extensionPoint: "widget",
       regionId: "mainGrid",
       size: "L",
-      config: { color: "green" },
+      config: { color: "green", nested: { enabled: true }, tags: ["daily"] },
     })
   })
 
@@ -134,9 +134,15 @@ describe("applyWorkspacePreset", () => {
       "official.search.github",
     )
     result.instances[1]!.config.color = "blue"
+    ;(result.instances[1]!.config.nested as { enabled: boolean }).enabled = false
+    ;(result.instances[1]!.config.tags as string[]).push("mutated")
 
     expect(preset.regions[0]!.accepts).toEqual(["search"])
     expect(preset.search.enabledProviderIds).toEqual(["official.search.google"])
-    expect(preset.instances[1]!.config).toEqual({ color: "green" })
+    expect(preset.instances[1]!.config).toEqual({
+      color: "green",
+      nested: { enabled: true },
+      tags: ["daily"],
+    })
   })
 })
