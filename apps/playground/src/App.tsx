@@ -10,7 +10,6 @@ import type {
   SearchHistoryEntry,
   SearchProviderContribution,
   SearchViewProps,
-  SearchWidgetEntry,
   SettingsPanelViewProps,
   ThemeContribution,
   WidgetSize,
@@ -19,7 +18,15 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import { builtinPlugins } from "@tabora/builtin-plugin-registry"
-import { createLayoutFallbackTracker, createWorkbenchResponsiveState } from "@tabora/workbench-app"
+import {
+  buildSearchableWidgetEntries,
+  createLayoutFallbackTracker,
+  createWorkbenchResponsiveState,
+  resolveDefaultProviderForSearch as resolveDefaultProviderId,
+  resolveEnabledSearchProviders,
+  resolveWidgetIconLabel,
+  resolveWidgetTitle,
+} from "@tabora/workbench-app"
 import {
   createLayoutEngine,
   createLayoutSwitchPlan,
@@ -789,6 +796,9 @@ export function App() {
     return pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId)
   }
 
+  const resolveWidgetContribution = (pluginId: string, contributionId: string) =>
+    widgetContribution({ pluginId, contributionId })
+
   function widgetCardView(instance: PluginInstance): SolidView | null {
     const widget = widgetContribution(instance)
     if (!widget) return null
@@ -796,7 +806,7 @@ export function App() {
   }
 
   function widgetTitle(instance: Pick<PluginInstance, "pluginId" | "contributionId">): string {
-    return widgetContribution(instance)?.title ?? instance.contributionId
+    return resolveWidgetTitle(instance, resolveWidgetContribution)
   }
 
   function renderWidgetIcon(icon?: string): JSX.Element {
@@ -817,20 +827,7 @@ export function App() {
   }
 
   function widgetIconLabel(icon?: string): string {
-    switch (icon) {
-      case "target":
-        return "◎"
-      case "link":
-        return "↗"
-      case "pencil":
-        return "✎"
-      case "check-square":
-        return "✓"
-      case "sun":
-        return "☼"
-      default:
-        return "▦"
-    }
+    return resolveWidgetIconLabel(icon)
   }
 
   async function addWidget(pluginId: string, contributionId: string) {
@@ -994,20 +991,12 @@ export function App() {
     showToast("已定位到对应卡片")
   }
 
-  function searchableWidgets(): SearchWidgetEntry[] {
-    return instances()
-      .filter((instance) => instance.extensionPoint === "widget")
-      .map((instance) => {
-        const widget = widgetContribution(instance)
-        const title = widget?.title ?? instance.contributionId
-        return {
-          instanceId: instance.id,
-          icon: widgetIconLabel(widget?.icon),
-          name: title,
-          desc: `定位到 ${title} 卡片`,
-          action: () => focusWidgetInstance(instance.id),
-        }
-      })
+  function searchableWidgets() {
+    return buildSearchableWidgetEntries({
+      instances: instances(),
+      resolveWidgetContribution,
+      buildFocusAction: (instanceId) => () => focusWidgetInstance(instanceId),
+    })
   }
 
   async function persistGridOrder(orderedInstances: PluginInstance[]) {
@@ -1040,23 +1029,12 @@ export function App() {
     return pluginCatalog.listWidgetContributions()
   }
 
-  function enabledProviderIds(): string[] {
-    const settings = searchSettings()
-    if (settings.enabledProviderIds) return settings.enabledProviderIds
-    return searchProviders().map((p) => p.id)
-  }
-
   function enabledSearchProviders(): SearchProviderContribution[] {
-    const ids = new Set(enabledProviderIds())
-    return searchProviders().filter((p) => ids.has(p.id))
+    return resolveEnabledSearchProviders(searchSettings(), searchProviders())
   }
 
   function resolveDefaultProviderForSearch(): string {
-    const settings = searchSettings()
-    if (settings.defaultProviderId) return settings.defaultProviderId
-    const enabled = enabledSearchProviders()
-    if (enabled[0]) return enabled[0].id
-    return ""
+    return resolveDefaultProviderId(searchSettings(), searchProviders())
   }
 
   function openExternal(url: string): boolean {
