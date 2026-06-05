@@ -830,18 +830,18 @@ V1.5：
 
 当前 provider：
 
-| Provider ID                 | 名称     | sourceType  |
-| --------------------------- | -------- | ----------- |
-| `background.solid-green`    | 纯色绿底 | `generated` |
-| `background.solid-dark`     | 纯色暗底 | `generated` |
-| `background.gradient-green` | 渐变绿底 | `generated` |
-| `background.gradient-blue`  | 渐变蓝底 | `generated` |
+| Provider ID                 | 名称     | sourceType  | source                      |
+| --------------------------- | -------- | ----------- | --------------------------- |
+| `background.solid-green`    | 纯色绿底 | `generated` | `{ type: "css", css }`      |
+| `background.solid-dark`     | 纯色暗底 | `generated` | `{ type: "css", css }`      |
+| `background.gradient-green` | 渐变绿底 | `generated` | `{ type: "gradient", css }` |
+| `background.gradient-blue`  | 渐变蓝底 | `generated` | `{ type: "gradient", css }` |
 
 当前 renderer：
 
-| Renderer ID                        | 名称           | accepts             |
-| ---------------------------------- | -------------- | ------------------- |
-| `official.background.css-renderer` | CSS 背景渲染器 | `image`, `gradient` |
+| Renderer ID                        | 名称           | accepts           |
+| ---------------------------------- | -------------- | ----------------- |
+| `official.background.css-renderer` | CSS 背景渲染器 | `css`, `gradient` |
 
 ### 9.3 交互示例
 
@@ -1921,7 +1921,7 @@ appearance control
 关键要求：
 
 - 主题和背景选择存 workspace。
-- token 应用和背景渲染是宿主职责。
+- token 应用和背景 source 解析是宿主职责；renderer 按 `source.type` 与 `accepts` 匹配。
 - 插件只贡献数据和 renderer view。
 
 ### 14.6 插件错误流程
@@ -1995,9 +1995,11 @@ plugin view throws
 | 天气数据      | mock 北京天气                                                                                                                     | 接入天气 provider，标明 demo 状态           |
 | 天气图标      | 使用天气符号                                                                                                                      | 换成统一图标资源                            |
 | 插件管理器    | 只读官方插件列表                                                                                                                  | 接入 plugin records、权限、错误和启用/禁用  |
-| 设置插件      | 已实现 MVP 轻量 settings host；插件、外观、搜索面板可进入                                                                         | 新增插件启停、权限详情、设置搜索            |
-| 权限反馈      | 搜索外部打开已有桥                                                                                                                | 增加 UI 层失败反馈和权限详情                |
-| 背景 renderer | view 为空，宿主侧处理较多                                                                                                         | 明确 renderer props contract                |
+| 设置插件      | 已实现 MVP 轻量 settings host；插件、外观、搜索面板显式声明 `section/scope` 并经 settings navigator 进入                          | 新增权限详情、设置搜索                      |
+| 权限反馈      | 搜索外部打开已有桥；插件管理器可展示 required capabilities / supported platforms / skipped reason                                 | 增加更完整权限详情                          |
+| 背景 renderer | 已建立 `BackgroundSourceValue` 和 source 优先解析；CSS renderer 覆盖 css/gradient，失败时回退安全背景                             | 后续补图片/视频/canvas renderer             |
+| 默认装配      | 官方默认 workspace 已迁为 `workspacePresets` contribution，创建新 workspace 时应用；已有 workspace 不做 backfill 或历史迁移       | 后续增加用户选择 preset 的 UI               |
+| 命令和快捷键  | 官方 shell 命令与快捷键已通过 command catalog / shortcut registry 消费，插件可声明 command/keybinding/context menu contribution   | 后续开放更完整用户自定义快捷键              |
 
 ## 17. 推荐推进优先级
 

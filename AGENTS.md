@@ -276,6 +276,7 @@ MVP 第一个 shell：
 
 - 具体业务能力默认放进插件。
 - manifest 只声明能力，不执行逻辑。
+- 上线前不保留历史兼容包袱：manifest 必须显式声明当前协议要求的字段，例如 `apiVersion`、settings panel 的 `section/scope`、插件兼容能力等；不要为旧 manifest 增加 id 推断、默认补齐、迁移或 backfill 逻辑。
 - 插件入口 `activate(context)` 只通过 runtime context 使用平台能力。
 - 插件不能直接访问宿主内部 store。
 - 插件不能直接创建全局 modal、fullscreen 或 settings 容器。
