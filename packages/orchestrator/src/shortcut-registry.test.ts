@@ -121,18 +121,18 @@ describe("createShortcutRegistry", () => {
     expect(action).toHaveBeenCalledTimes(2)
   })
 
-  it("keeps registry order stable when ctrl keydown can match mod and ctrl bindings", () => {
-    const first = vi.fn()
-    const second = vi.fn()
+  it("prefers explicit ctrl bindings over mod bindings for ctrl keydown events", () => {
+    const modAction = vi.fn()
+    const ctrlAction = vi.fn()
     const registry = createShortcutRegistry({
       platform: "linux",
       keybindings: [
-        { id: "first.open", commandId: "first.open", key: "ctrl+k" },
-        { id: "second.open", commandId: "second.open", key: "mod+k" },
+        { id: "mod.open", commandId: "mod.open", key: "mod+k" },
+        { id: "ctrl.open", commandId: "ctrl.open", key: "ctrl+k" },
       ],
       commands: {
-        "first.open": first,
-        "second.open": second,
+        "mod.open": modAction,
+        "ctrl.open": ctrlAction,
       },
     })
 
@@ -146,8 +146,8 @@ describe("createShortcutRegistry", () => {
       }),
     ).toBe(true)
 
-    expect(first).toHaveBeenCalledOnce()
-    expect(second).not.toHaveBeenCalled()
+    expect(ctrlAction).toHaveBeenCalledOnce()
+    expect(modAction).not.toHaveBeenCalled()
   })
 
   it("exposes a shortcut reference list from enabled registry bindings", () => {

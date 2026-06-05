@@ -132,8 +132,6 @@ export function createShortcutRegistry(options: ShortcutRegistryOptions): Shortc
 
     return resolved
   })
-  const enabledBindings = bindings.filter((binding) => !binding.disabled)
-
   function executeNormalizedKey(key: string): boolean {
     const binding = enabledByKey.get(normalizeShortcutKey(key))
     if (!binding || binding.disabled) return false
@@ -146,11 +144,7 @@ export function createShortcutRegistry(options: ShortcutRegistryOptions): Shortc
       return executeNormalizedKey(key)
     },
     executeKeydown(event) {
-      const candidateKeys = new Set(shortcutKeysFromEvent(event))
-      const binding = enabledBindings.find((candidate) => candidateKeys.has(candidate.key))
-      if (!binding) return false
-      executeCommand(binding.commandId)
-      return true
+      return shortcutKeysFromEvent(event).some((key) => executeNormalizedKey(key))
     },
     listBindings: () => [...bindings],
     listConflicts: () => [...conflicts],
