@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   buildQualityReport,
+  classifyExternalOpenMatch,
   classifyRawColorMatch,
   classifyWorkbenchRawColorDebt,
   findCorePackageAppImports,
@@ -19,6 +20,7 @@ import {
   findWindowOpenViolations,
   rankFilesByLineCount,
   readRepositoryText,
+  summarizeExternalOpenMatches,
   summarizeRawColorMatches,
   summarizeWorkbenchRawColorDebt,
 } from "../../scripts/lib/governance.mjs"
@@ -654,6 +656,50 @@ describe("governance rules", () => {
   })
 
   it("builds a grouped quality report", () => {
+    expect(
+      classifyExternalOpenMatch({
+        filePath: "apps/playground/src/App.tsx",
+        match: "window.open",
+      }),
+    ).toBe("host-execution")
+
+    expect(
+      classifyExternalOpenMatch({
+        filePath: "packages/official-plugins/src/search-command-bar.tsx",
+        match: "openExternal",
+      }),
+    ).toBe("capability-reference")
+
+    expect(
+      classifyExternalOpenMatch({
+        filePath: "plugins/example/src/view.tsx",
+        match: 'target="_blank"',
+      }),
+    ).toBe("bypass-risk")
+
+    expect(
+      classifyExternalOpenMatch({
+        filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx",
+        match: "window.open",
+      }),
+    ).toBe("test-fixture")
+
+    expect(
+      summarizeExternalOpenMatches([
+        { filePath: "apps/playground/src/App.tsx", match: "window.open" },
+        { filePath: "apps/playground/src/App.tsx", match: "openExternal" },
+        { filePath: "packages/official-plugins/src/search-command-bar.tsx", match: "openExternal" },
+        { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
+        { filePath: "plugins/example/src/view.tsx", match: "window.open" },
+        { filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx", match: "window.open" },
+      ]),
+    ).toEqual({
+      "host-execution": 1,
+      "capability-reference": 1,
+      "bypass-risk": 1,
+      "test-fixture": 1,
+    })
+
     const report = buildQualityReport({
       typeEscapes: [{ filePath: "packages/storage/src/repository.ts", match: "as any" }],
       issueMarkers: [{ filePath: "packages/ui/src/index.ts", match: "TODO" }],
@@ -671,7 +717,17 @@ describe("governance rules", () => {
         site: 1,
         "test-fixture": 0,
       },
-      externalOpenPatterns: [{ filePath: "apps/playground/src/App.tsx", match: "window.open" }],
+      externalOpenPatterns: [
+        { filePath: "apps/playground/src/App.tsx", match: "window.open" },
+        { filePath: "apps/playground/src/App.tsx", match: "openExternal" },
+        {
+          filePath: "packages/official-plugins/src/search-command-bar.tsx",
+          match: "openExternal",
+        },
+        { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
+        { filePath: "plugins/example/src/view.tsx", match: "window.open" },
+        { filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx", match: "window.open" },
+      ],
     })
 
     expect(report).toContain("Quality report")
@@ -684,6 +740,15 @@ describe("governance rules", () => {
     expect(report).toContain("site styles: 1")
     expect(report).toContain("Workbench raw color debt")
     expect(report).toContain("inverse foreground: 1")
-    expect(report).toContain("External open paths: 1")
+    expect(report).toContain("External open signals")
+    expect(report).toContain("host execution paths: 1")
+    expect(report).toContain("capability references: 1")
+    expect(report).toContain("potential bypass paths: 1")
+    expect(report).toContain("test fixtures: 1")
+    expect(report).toContain('plugins/example/src/view.tsx: target="_blank", window.open')
+    expect(report).not.toContain("apps/playground/src/App.tsx: window.open")
+    expect(report).not.toContain(
+      "apps/playground/src/workbenchGovernance.e2e.test.tsx: window.open",
+    )
   })
 })

@@ -114,6 +114,12 @@ const ALLOWED_WINDOW_OPEN_FILES = new Set([
   "apps/playground/src/App.tsx",
   "apps/extension/entrypoints/newtab/App.tsx",
 ])
+const EXTERNAL_OPEN_SIGNAL_ORDER = [
+  "host-execution",
+  "capability-reference",
+  "test-fixture",
+  "bypass-risk",
+]
 const TEST_MODE_PATTERNS = [
   {
     pattern: /\b(?:it|test|describe)\.only\b/g,
@@ -416,6 +422,49 @@ export function findExternalOpenMatches(options) {
   })
 }
 
+export function classifyExternalOpenMatch(finding) {
+  if (isTestFile(finding.filePath)) {
+    return "test-fixture"
+  }
+
+  if (ALLOWED_WINDOW_OPEN_FILES.has(finding.filePath)) {
+    return "host-execution"
+  }
+
+  if (
+    finding.match === "window.open" ||
+    finding.match === 'target="_blank"' ||
+    finding.match === "target='_blank'"
+  ) {
+    return "bypass-risk"
+  }
+
+  return "capability-reference"
+}
+
+export function summarizeExternalOpenMatches(findings) {
+  const summary = {
+    "host-execution": 0,
+    "capability-reference": 0,
+    "test-fixture": 0,
+    "bypass-risk": 0,
+  }
+  const seen = new Set()
+
+  for (const finding of findings) {
+    const category = classifyExternalOpenMatch(finding)
+    const key = `${category}::${finding.filePath}`
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    summary[category] += 1
+  }
+
+  return summary
+}
+
 export function rankFilesByLineCount(entries, limit = 20) {
   return [...entries]
     .sort(
@@ -687,6 +736,9 @@ export function buildQualityReport(result) {
   const rawColorSummary = result.rawColorSummary ?? summarizeRawColorMatches(result.rawColors)
   const workbenchRawColorDebtSummary =
     result.workbenchRawColorDebtSummary ?? summarizeWorkbenchRawColorDebt(result.rawColors)
+  const externalOpenSummary =
+    result.externalOpenSummary ?? summarizeExternalOpenMatches(result.externalOpenPatterns)
+  const externalOpenBypassRiskSamples = summarizeBypassRiskSamples(result.externalOpenPatterns)
   const lines = [
     "Quality report",
     `- Type escapes: ${result.typeEscapes.length}`,
@@ -699,8 +751,8 @@ export function buildQualityReport(result) {
     ...formatRawColorSummary(rawColorSummary),
     ...formatWorkbenchRawColorDebtSummary(workbenchRawColorDebtSummary),
     ...formatMatchSamples(orderRawColorMatchesForReport(result.rawColors)),
-    `- External open paths: ${result.externalOpenPatterns.length}`,
-    ...formatMatchSamples(result.externalOpenPatterns),
+    ...formatExternalOpenSummary(externalOpenSummary),
+    ...formatMatchSamples(externalOpenBypassRiskSamples),
   ]
 
   return lines.join("\n")
@@ -939,6 +991,43 @@ function formatRawColorSummary(summary) {
     `  - site styles: ${summary.site}`,
     `  - test fixtures: ${summary["test-fixture"]}`,
   ]
+}
+
+function formatExternalOpenSummary(summary) {
+  const labels = {
+    "host-execution": "host execution paths",
+    "capability-reference": "capability references",
+    "test-fixture": "test fixtures",
+    "bypass-risk": "potential bypass paths",
+  }
+
+  return [
+    "- External open signals:",
+    ...EXTERNAL_OPEN_SIGNAL_ORDER.map(
+      (category) => `  - ${labels[category]}: ${summary[category]}`,
+    ),
+  ]
+}
+
+function summarizeBypassRiskSamples(findings) {
+  const matchesByFile = new Map()
+
+  for (const finding of findings) {
+    if (classifyExternalOpenMatch(finding) !== "bypass-risk") {
+      continue
+    }
+
+    const matches = matchesByFile.get(finding.filePath) ?? new Set()
+    matches.add(finding.match)
+    matchesByFile.set(finding.filePath, matches)
+  }
+
+  return [...matchesByFile.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([filePath, matches]) => ({
+      filePath,
+      match: [...matches].sort((left, right) => left.localeCompare(right)).join(", "),
+    }))
 }
 
 function formatWorkbenchRawColorDebtSummary(summary) {
