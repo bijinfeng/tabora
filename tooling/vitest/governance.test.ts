@@ -13,11 +13,13 @@ import {
   findRawColorMatches,
   findTypeEscapeViolations,
   findTestModeViolations,
+  classifyWorkbenchRawColorDebt,
   findWorkbenchRawColorViolations,
   findWorkbenchAvoidableStyleViolations,
   findWindowOpenViolations,
   rankFilesByLineCount,
   summarizeRawColorMatches,
+  summarizeWorkbenchRawColorDebt,
 } from "../../scripts/lib/governance.mjs"
 
 describe("governance rules", () => {
@@ -431,6 +433,60 @@ describe("governance rules", () => {
     ).toEqual([])
   })
 
+  it("classifies remaining workbench raw color debt by tokenization strategy", () => {
+    expect(
+      classifyWorkbenchRawColorDebt({
+        filePath: "packages/ui/src/styled/button/styles.css",
+        match: "#fff",
+      }),
+    ).toBe("inverse-foreground")
+
+    expect(
+      classifyWorkbenchRawColorDebt({
+        filePath: "packages/workbench-shell/src/styles.css",
+        match: "rgba(0, 0, 0, 0.12)",
+      }),
+    ).toBe("shadow-overlay")
+
+    expect(
+      classifyWorkbenchRawColorDebt({
+        filePath: "packages/official-plugins/src/styles.css",
+        match: "rgba(255, 255, 255, 0.45)",
+      }),
+    ).toBe("glow-highlight")
+
+    expect(
+      classifyWorkbenchRawColorDebt({
+        filePath: "packages/workbench-shell/src/styles.css",
+        match: "!important",
+      }),
+    ).toBe("important-override")
+
+    expect(
+      classifyWorkbenchRawColorDebt({
+        filePath: "apps/site/src/styles.css",
+        match: "#111512",
+      }),
+    ).toBe(null)
+
+    expect(
+      summarizeWorkbenchRawColorDebt([
+        { filePath: "packages/ui/src/styled/button/styles.css", match: "#fff" },
+        { filePath: "packages/workbench-shell/src/styles.css", match: "rgba(0, 0, 0, 0.12)" },
+        {
+          filePath: "packages/official-plugins/src/styles.css",
+          match: "rgba(255, 255, 255, 0.45)",
+        },
+        { filePath: "packages/workbench-shell/src/styles.css", match: "!important" },
+      ]),
+    ).toEqual({
+      "inverse-foreground": 1,
+      "shadow-overlay": 1,
+      "glow-highlight": 1,
+      "important-override": 1,
+    })
+  })
+
   it("builds a grouped quality report", () => {
     const report = buildQualityReport({
       typeEscapes: [{ filePath: "packages/storage/src/repository.ts", match: "as any" }],
@@ -460,6 +516,8 @@ describe("governance rules", () => {
     expect(report).toContain("Raw CSS colors / !important: 2")
     expect(report).toContain("workbench production: 1")
     expect(report).toContain("site styles: 1")
+    expect(report).toContain("Workbench raw color debt")
+    expect(report).toContain("inverse foreground: 1")
     expect(report).toContain("External open paths: 1")
   })
 })

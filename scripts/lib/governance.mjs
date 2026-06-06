@@ -125,6 +125,12 @@ const TEST_MODE_PATTERNS = [
   },
 ]
 const RAW_COLOR_CATEGORY_ORDER = ["workbench", "background-preset", "site", "test-fixture"]
+const WORKBENCH_RAW_COLOR_DEBT_ORDER = [
+  "inverse-foreground",
+  "shadow-overlay",
+  "glow-highlight",
+  "important-override",
+]
 const WORKBENCH_AVOIDABLE_STYLE_PATTERNS = [
   {
     pattern: /rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0(?:\.0+)?\s*\)/g,
@@ -374,6 +380,56 @@ export function summarizeRawColorMatches(findings) {
 
   for (const finding of findings) {
     summary[classifyRawColorMatch(finding.filePath)] += 1
+  }
+
+  return summary
+}
+
+export function classifyWorkbenchRawColorDebt(finding) {
+  if (classifyRawColorMatch(finding.filePath) !== "workbench") {
+    return null
+  }
+
+  if (finding.match === "#fff") {
+    return "inverse-foreground"
+  }
+
+  if (finding.match === "!important") {
+    return "important-override"
+  }
+
+  if (
+    /^rgba\(\s*(?:255\s*,\s*255\s*,\s*255|26\s*,\s*144\s*,\s*112|28\s*,\s*30\s*,\s*28)\s*,/i.test(
+      finding.match,
+    )
+  ) {
+    return "glow-highlight"
+  }
+
+  if (
+    /^rgba\(\s*(?:0\s*,\s*0\s*,\s*0|8\s*,\s*10\s*,\s*8|15\s*,\s*23\s*,\s*18)\s*,/i.test(
+      finding.match,
+    )
+  ) {
+    return "shadow-overlay"
+  }
+
+  return null
+}
+
+export function summarizeWorkbenchRawColorDebt(findings) {
+  const summary = {
+    "inverse-foreground": 0,
+    "shadow-overlay": 0,
+    "glow-highlight": 0,
+    "important-override": 0,
+  }
+
+  for (const finding of findings) {
+    const category = classifyWorkbenchRawColorDebt(finding)
+    if (category) {
+      summary[category] += 1
+    }
   }
 
   return summary
@@ -639,6 +695,7 @@ export async function scanQuality(rootDir) {
     largeFiles,
     rawColors,
     rawColorSummary: summarizeRawColorMatches(rawColors),
+    workbenchRawColorDebtSummary: summarizeWorkbenchRawColorDebt(rawColors),
     externalOpenPatterns,
   }
 }
@@ -655,6 +712,8 @@ export function buildArchitectureFailureReport(findings) {
 
 export function buildQualityReport(result) {
   const rawColorSummary = result.rawColorSummary ?? summarizeRawColorMatches(result.rawColors)
+  const workbenchRawColorDebtSummary =
+    result.workbenchRawColorDebtSummary ?? summarizeWorkbenchRawColorDebt(result.rawColors)
   const lines = [
     "Quality report",
     `- Type escapes: ${result.typeEscapes.length}`,
@@ -665,6 +724,7 @@ export function buildQualityReport(result) {
     ...formatLargeFiles(result.largeFiles),
     `- Raw CSS colors / !important: ${result.rawColors.length}`,
     ...formatRawColorSummary(rawColorSummary),
+    ...formatWorkbenchRawColorDebtSummary(workbenchRawColorDebtSummary),
     ...formatMatchSamples(orderRawColorMatchesForReport(result.rawColors)),
     `- External open paths: ${result.externalOpenPatterns.length}`,
     ...formatMatchSamples(result.externalOpenPatterns),
@@ -905,6 +965,21 @@ function formatRawColorSummary(summary) {
     `  - generated backgrounds: ${summary["background-preset"]}`,
     `  - site styles: ${summary.site}`,
     `  - test fixtures: ${summary["test-fixture"]}`,
+  ]
+}
+
+function formatWorkbenchRawColorDebtSummary(summary) {
+  const total = Object.values(summary).reduce((count, value) => count + value, 0)
+  if (total === 0) {
+    return []
+  }
+
+  return [
+    "- Workbench raw color debt:",
+    ...WORKBENCH_RAW_COLOR_DEBT_ORDER.map((category) => {
+      const label = category.replaceAll("-", " ")
+      return `  - ${label}: ${summary[category]}`
+    }),
   ]
 }
 
