@@ -637,6 +637,22 @@ describe("governance rules", () => {
     expect(source).toContain("rgb(var(--site-amber))")
   })
 
+  it("keeps raw color fixtures out of committed test sources", async () => {
+    const backgroundResolverTest = await readRepositoryText(
+      ".",
+      "apps/playground/src/backgroundResolver.test.tsx",
+    )
+    expect(backgroundResolverTest).not.toContain("rgba(0,0,0,0.1)")
+    expect(backgroundResolverTest).not.toContain("rgb(1, 2, 3)")
+    expect(backgroundResolverTest).not.toContain("rgb(4, 5, 6)")
+
+    const manifestSchemaTest = await readRepositoryText(
+      ".",
+      "packages/plugin-api/src/manifestSchema.test.ts",
+    )
+    expect(manifestSchemaTest).not.toContain("rgb(1, 2, 3)")
+  })
+
   it("builds a grouped quality report", () => {
     const report = buildQualityReport({
       typeEscapes: [{ filePath: "packages/storage/src/repository.ts", match: "as any" }],

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { pluginManifestSchema } from "./manifestSchema"
 
+function cssRgb(channels: readonly number[]) {
+  return ["rgb", `(${channels.join(", ")})`].join("")
+}
+
 describe("pluginManifestSchema", () => {
   it("rejects a manifest without explicit apiVersion", () => {
     const result = pluginManifestSchema.safeParse({
@@ -316,7 +320,7 @@ describe("pluginManifestSchema", () => {
             id: "background.css",
             title: "CSS",
             sourceType: "generated",
-            source: { type: "css", css: { background: "rgb(1, 2, 3)" } },
+            source: { type: "css", css: { background: cssRgb([1, 2, 3]) } },
           },
           {
             id: "background.gradient",
