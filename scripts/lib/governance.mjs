@@ -124,10 +124,7 @@ const PLUGIN_EXTERNAL_OPEN_PATTERN = /window\.open|target="_blank"|target='_blan
 const WINDOW_OPEN_PATTERN = /window\.open/g
 const QUALITY_EXTERNAL_OPEN_PATTERN =
   /window\.open|target="_blank"|target='_blank'|openExternal|external-open/g
-const ALLOWED_WINDOW_OPEN_FILES = new Set([
-  "apps/playground/src/App.tsx",
-  "apps/extension/entrypoints/newtab/App.tsx",
-])
+const ALLOWED_WINDOW_OPEN_FILES = new Set(["packages/workbench-app/src/WorkbenchShellApp.tsx"])
 const EXTERNAL_OPEN_SIGNAL_ORDER = [
   "host-execution",
   "manifest-declaration",

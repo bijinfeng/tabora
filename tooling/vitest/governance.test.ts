@@ -323,7 +323,7 @@ describe("governance rules", () => {
 
     expect(
       findWindowOpenViolations({
-        filePath: "apps/playground/src/App.tsx",
+        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
         source: `window.open(payload.url, "_blank")`,
       }),
     ).toEqual([])
@@ -690,10 +690,18 @@ describe("governance rules", () => {
     expect(extensionApp).toContain('from "@tabora/workbench-app"')
   })
 
+  it("keeps shell app entrypoints as thin wrappers", async () => {
+    const playgroundApp = await readRepositoryText(".", "apps/playground/src/App.tsx")
+    const extensionApp = await readRepositoryText(".", "apps/extension/entrypoints/newtab/App.tsx")
+
+    expect(playgroundApp.split("\n").length).toBeLessThan(200)
+    expect(extensionApp.split("\n").length).toBeLessThan(200)
+  })
+
   it("builds a grouped quality report", () => {
     expect(
       classifyExternalOpenMatch({
-        filePath: "apps/playground/src/App.tsx",
+        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
         match: "window.open",
       }),
     ).toBe("host-execution")
@@ -728,8 +736,14 @@ describe("governance rules", () => {
 
     expect(
       summarizeExternalOpenMatches([
-        { filePath: "apps/playground/src/App.tsx", match: "window.open" },
-        { filePath: "apps/playground/src/App.tsx", match: "openExternal" },
+        {
+          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          match: "window.open",
+        },
+        {
+          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          match: "openExternal",
+        },
         {
           filePath: "packages/official-plugins/src/search-command-bar.tsx",
           match: "external-open",
@@ -765,8 +779,14 @@ describe("governance rules", () => {
         "test-fixture": 0,
       },
       externalOpenPatterns: [
-        { filePath: "apps/playground/src/App.tsx", match: "window.open" },
-        { filePath: "apps/playground/src/App.tsx", match: "openExternal" },
+        {
+          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          match: "window.open",
+        },
+        {
+          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          match: "openExternal",
+        },
         {
           filePath: "packages/official-plugins/src/search-command-bar.tsx",
           match: "external-open",
@@ -798,7 +818,7 @@ describe("governance rules", () => {
     expect(report).toContain("potential bypass paths: 1")
     expect(report).toContain("test fixtures: 1")
     expect(report).toContain('plugins/example/src/view.tsx: target="_blank", window.open')
-    expect(report).not.toContain("apps/playground/src/App.tsx: window.open")
+    expect(report).not.toContain("packages/workbench-app/src/WorkbenchShellApp.tsx: window.open")
     expect(report).not.toContain(
       "apps/playground/src/workbenchGovernance.e2e.test.tsx: window.open",
     )

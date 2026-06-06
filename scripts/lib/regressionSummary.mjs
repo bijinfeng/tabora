@@ -89,11 +89,11 @@ const LEVEL_ORDER = ["L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8"]
 
 const KNOWN_DEBT_RULES = [
   {
-    label: "playground / extension `App.tsx` 高度重复",
+    label: "`WorkbenchShellApp.tsx` 仍是重型共享宿主编排",
     matches: (filePath) =>
+      filePath === "packages/workbench-app/src/WorkbenchShellApp.tsx" ||
       filePath === "apps/playground/src/App.tsx" ||
-      filePath === "apps/extension/entrypoints/newtab/App.tsx" ||
-      filePath.startsWith("packages/workbench-app/src/"),
+      filePath === "apps/extension/entrypoints/newtab/App.tsx",
   },
   {
     label: "`SearchViewProps` 尚未升级到技术方案描述的状态机 contract",

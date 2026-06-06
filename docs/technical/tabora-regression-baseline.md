@@ -546,7 +546,7 @@ Nightly CI 已覆盖：
 
 1. 按路径触发策略把 `pnpm test:e2e` 从 nightly 继续推进到 PR 强门禁。
 2. 为 permission bridge 增加专门回归测试。
-3. 继续收缩 playground / extension `App.tsx` 的重复宿主编排逻辑，避免双份维护。
+3. 继续拆分 `packages/workbench-app/src/WorkbenchShellApp.tsx` 的宿主编排职责，降低单文件维护成本。
 4. 为 workspace preset 的 plugin id / contribution id 增加 contract test。
 5. 将 `pnpm test:e2e` 从单一 dashboard smoke 扩展到更多 layout / settings / import-export 场景。
 6. 为 layout failure fallback 的更多变体和触屏拖拽策略补细粒度浏览器断言。
@@ -747,8 +747,9 @@ Agent 必须：
 | shell 注入的 `host.openExternal()` 可绕过插件 manifest 权限                            | 已于 2026-06-06 通过 widget owner manifest 权限校验收口                        | 已解决     |
 | `official.widgets.quick-links` 直接渲染 `<a target="_blank">` 且未声明 `external-open` | 已于 2026-06-06 改为声明 `external-open` 并走 host bridge                      | 已解决     |
 | 布局切换 snapshot 在实例迁移后生成，不是真正切换前快照                                 | 已于 2026-06-06 改为通过切换前 workspace/instances 生成 snapshot               | 已解决     |
-| playground / extension `App.tsx` 高度重复                                              | 多 shell 维护成本高，bug 修复易遗漏                                            | P1         |
+| playground / extension `App.tsx` 高度重复                                              | 已于 2026-06-06 收敛为薄 wrapper，共享宿主编排集中到 `WorkbenchShellApp.tsx`   | 已解决     |
 | extension 仍通过相对路径 import playground helper                                      | 已于 2026-06-06 改为通过 `@tabora/workbench-app` 共享 helper，并受架构守卫覆盖 | 已解决     |
+| `packages/workbench-app/src/WorkbenchShellApp.tsx` 体积仍大                            | 重复已收口，但共享宿主编排仍偏重，后续拆分成本高                               | P2         |
 | `SearchViewProps` 尚未升级到技术方案描述的状态机 contract                              | 搜索编排仍分散在插件和 shell                                                   | P2         |
 | 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致                                                 | P2         |
 | Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整                                                       | P2         |
@@ -763,8 +764,9 @@ Agent 必须：
 1. 已于 2026-06-06 修复 `external-open` 权限绕过，并补 runtime / shell / quick-links 回归测试。
 2. 已于 2026-06-06 修正布局切换 snapshot 时机。
 3. 已于 2026-06-06 将 extension 复用 playground helper 的路径迁入 `@tabora/workbench-app`，并补 app 间源码 import 守卫。
-4. 已于 2026-06-06 接入 nightly workflow；后续按路径触发策略推进 PR 强门禁。
-5. 已于 2026-06-06 将 L7 中的高信号扫描收敛为 `pnpm quality` / `pnpm check:architecture`，并在 release workflow 接入 `pnpm regression:summary`。
+4. 已于 2026-06-06 将 playground / extension `App.tsx` 收敛为薄 wrapper，共享宿主根组件迁入 `@tabora/workbench-app`。
+5. 已于 2026-06-06 接入 nightly workflow；后续按路径触发策略推进 PR 强门禁。
+6. 已于 2026-06-06 将 L7 中的高信号扫描收敛为 `pnpm quality` / `pnpm check:architecture`，并在 release workflow 接入 `pnpm regression:summary`。
 
 中期：
 
