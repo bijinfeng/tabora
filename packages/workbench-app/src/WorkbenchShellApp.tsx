@@ -50,6 +50,10 @@ import {
   persistWorkbenchGridOrder,
   runWorkbenchRailAction,
 } from "./WorkbenchShellHostActions"
+import {
+  reconcileWorkbenchLayoutInstances,
+  switchWorkbenchLayout,
+} from "./WorkbenchShellLayoutState"
 import { hydrateWorkbenchSessionState } from "./WorkbenchShellSessionState"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
@@ -481,69 +485,51 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     return pluginCatalog.findLayoutContribution(layoutId)?.regions ?? []
   }
 
-  function reassignInstancesForLayout(layoutId: string, currentInstances: PluginInstance[]) {
-    const activeWorkspace = requireWorkspace(workspaceState())
-    const targetLayout = pluginCatalog.findLayoutContribution(layoutId)
-    if (!targetLayout) return currentInstances
-    return createLayoutSwitchExecution({
-      workspace: activeWorkspace,
-      instances: currentInstances,
-      targetLayout,
-      now: new Date().toISOString(),
-    })
-  }
-
   async function reconcileInstancesForLayout(
     layoutId: string,
     currentInstances: PluginInstance[],
   ): Promise<{ instances: PluginInstance[]; plan: LayoutSwitchPlan | null }> {
-    const execution = reassignInstancesForLayout(layoutId, currentInstances)
-    if (Array.isArray(execution)) {
-      return { instances: assignGridOrder(execution), plan: null }
-    }
-    const nextInstances = execution.instances
-    for (let index = 0; index < nextInstances.length; index += 1) {
-      const previous = currentInstances[index]
-      const next = nextInstances[index]
-      if (
-        previous &&
-        next &&
-        (previous.regionId !== next.regionId || previous.updatedAt !== next.updatedAt)
-      ) {
-        await instanceRepo.save(next)
-      }
-    }
-    return { instances: assignGridOrder(nextInstances), plan: execution.plan }
+    return reconcileWorkbenchLayoutInstances({
+      layoutId,
+      currentInstances,
+      activeWorkspace: requireWorkspace(workspaceState()),
+      findLayout: (targetLayoutId) => pluginCatalog.findLayoutContribution(targetLayoutId),
+      executeLayoutSwitch: ({ workspace, instances, targetLayout }) =>
+        createLayoutSwitchExecution({
+          workspace,
+          instances,
+          targetLayout,
+          now: new Date().toISOString(),
+        }),
+      assignGridOrder,
+      saveInstance: (instance) => instanceRepo.save(instance),
+    })
   }
 
   async function switchLayout(layoutId: string) {
-    const activeWorkspace = requireWorkspace(workspaceState())
-    const targetLayout = pluginCatalog.findLayoutContribution(layoutId)
-    if (!targetLayout) return
-    setCtxMenu(null)
-    setExpandState(null)
-    const { instances: nextInstances, plan } = await reconcileInstancesForLayout(
+    await switchWorkbenchLayout({
       layoutId,
-      instances(),
-    )
-    setInstances(nextInstances)
-    setActiveLayoutId(layoutId)
-    if (!plan) return
-    await workspaceSnapshotRepo.save(plan.snapshot)
-
-    const updatedWorkspace = await updateWorkspaceRecord({
-      workspaceRepo,
-      workspaceId: activeWorkspace.id,
-      mutator(workspace) {
-        workspace.activeLayoutId = layoutId
-        workspace.regions = plan.nextRegions
-        return workspace
-      },
+      activeWorkspace: requireWorkspace(workspaceState()),
+      currentInstances: instances(),
+      findLayout: (targetLayoutId) => pluginCatalog.findLayoutContribution(targetLayoutId),
+      reconcileInstances: reconcileInstancesForLayout,
+      clearContextMenu: () => setCtxMenu(null),
+      clearExpandState: () => setExpandState(null),
+      setInstances,
+      setActiveLayoutId,
+      saveSnapshot: (snapshot) => workspaceSnapshotRepo.save(snapshot),
+      persistWorkspaceLayout: (workspaceId, nextLayoutId, regions) =>
+        updateWorkspaceRecord({
+          workspaceRepo,
+          workspaceId,
+          mutator(workspace) {
+            workspace.activeLayoutId = nextLayoutId
+            workspace.regions = regions
+            return workspace
+          },
+        }),
+      setWorkspaceState,
     })
-
-    if (updatedWorkspace) {
-      setWorkspaceState(updatedWorkspace)
-    }
   }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
