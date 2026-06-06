@@ -35,11 +35,7 @@ import {
 } from "@tabora/workbench-shell"
 
 import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
-import {
-  applyBackgroundStyle,
-  FALLBACK_BACKGROUND_ID,
-  resolveBackgroundStyle,
-} from "./backgroundResolver"
+import { applyBackgroundStyle, FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
 import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
@@ -54,10 +50,17 @@ import {
   persistWorkbenchGridOrder,
   runWorkbenchRailAction,
 } from "./WorkbenchShellHostActions"
+import { hydrateWorkbenchSessionState } from "./WorkbenchShellSessionState"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
+import {
+  applyWorkbenchBackgroundSelection,
+  applyWorkbenchThemeSelection,
+  switchWorkbenchBackground,
+  switchWorkbenchTheme,
+} from "./WorkbenchShellAppearanceState"
 import {
   clearWorkbenchSearchHistory,
   saveWorkbenchSearchHistory,
@@ -89,7 +92,6 @@ import {
   resolveWidgetRenderModel,
   type WidgetRenderModel,
 } from "./shellHelpers"
-import { resolveThemeTokens } from "./themeResolver"
 import { requireWorkspace } from "./WorkbenchShellUtils"
 import { assignGridOrder, gridColumnSpan, gridRowSpan } from "./workbenchGrid"
 import {
@@ -172,6 +174,20 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
   const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
+  const applyThemeSelection = (themeId: string) =>
+    applyWorkbenchThemeSelection({
+      themeId,
+      themes: pluginCatalog.listThemes(),
+      setThemeId,
+      applyTheme: (tokens) => applyThemeTokens(document.documentElement, tokens),
+    })
+  const applyBackgroundSelection = (backgroundId: string) =>
+    applyWorkbenchBackgroundSelection({
+      backgroundId,
+      backgrounds: pluginCatalog.listBackgroundProviders(),
+      setBackgroundId,
+      applyBackground: applyBackgroundStyle,
+    })
   const openSettings = (panelId?: string) =>
     openWorkbenchSettings(
       {
@@ -424,25 +440,17 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       searchProviders: pluginCatalog.listSearchProviders(),
     })
 
-    setWorkspaceState(session.workspace)
-    setSearchSettings(session.searchSettings)
-    setActiveLayoutId(session.activeLayoutId)
-    setThemeId(session.activeThemeId)
-
-    const allThemes = pluginCatalog.listThemes()
-    const tokens = resolveThemeTokens(session.activeThemeId, allThemes)
-    applyThemeTokens(document.documentElement, tokens)
-
-    const allBackgrounds = pluginCatalog.listBackgroundProviders()
-    setBackgroundId(session.activeBackgroundId)
-    applyBackgroundStyle(resolveBackgroundStyle(session.activeBackgroundId, allBackgrounds))
-
-    setSearchHistory(session.searchHistory)
-    const { instances: nextInstances } = await reconcileInstancesForLayout(
-      session.activeLayoutId,
-      session.instances,
-    )
-    setInstances(nextInstances)
+    await hydrateWorkbenchSessionState({
+      session,
+      setWorkspaceState,
+      setActiveLayoutId,
+      setSearchSettings,
+      setSearchHistory,
+      setInstances,
+      applyThemeSelection,
+      applyBackgroundSelection,
+      reconcileInstancesForLayout,
+    })
     const allWorkspaces = await workspaceRepo.getAll()
     setWorkspaceList(allWorkspaces)
     setKernelReady(true)
@@ -626,16 +634,8 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     )
     setInstances(nextInstances)
     setActiveLayoutId(result.workspace.activeLayoutId)
-    setThemeId(result.workspace.activeThemeId)
-    applyThemeTokens(
-      document.documentElement,
-      resolveThemeTokens(result.workspace.activeThemeId, pluginCatalog.listThemes()),
-    )
-    const importedBackgroundId = result.workspace.activeBackgroundProviderId
-    setBackgroundId(importedBackgroundId)
-    applyBackgroundStyle(
-      resolveBackgroundStyle(importedBackgroundId, pluginCatalog.listBackgroundProviders()),
-    )
+    applyThemeSelection(result.workspace.activeThemeId)
+    applyBackgroundSelection(result.workspace.activeBackgroundProviderId)
     setSearchSettings(readSearchSettings(result.workspace, pluginCatalog.listSearchProviders()))
     setWorkspaceList((prev) => [...prev, result.workspace])
 
@@ -663,22 +663,17 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     })
     setCtxMenu(null)
     setExpandState(null)
-    setWorkspaceState(session.workspace)
-    setActiveLayoutId(session.activeLayoutId)
-    setThemeId(session.activeThemeId)
-    const allThemes = pluginCatalog.listThemes()
-    applyThemeTokens(document.documentElement, resolveThemeTokens(session.activeThemeId, allThemes))
-    const allBg = pluginCatalog.listBackgroundProviders()
-    const bg = session.activeBackgroundId
-    setBackgroundId(bg)
-    applyBackgroundStyle(resolveBackgroundStyle(bg, allBg))
-    setSearchSettings(session.searchSettings)
-    setSearchHistory(session.searchHistory)
-    const { instances: nextInstances } = await reconcileInstancesForLayout(
-      session.activeLayoutId,
-      session.instances,
-    )
-    setInstances(nextInstances)
+    await hydrateWorkbenchSessionState({
+      session,
+      setWorkspaceState,
+      setActiveLayoutId,
+      setSearchSettings,
+      setSearchHistory,
+      setInstances,
+      applyThemeSelection,
+      applyBackgroundSelection,
+      reconcileInstancesForLayout,
+    })
   }
 
   async function deleteWorkspace(id: string) {
@@ -698,32 +693,37 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   async function switchTheme(newThemeId: string) {
-    const activeWorkspace = requireWorkspace(workspaceState())
-    const tokens = resolveThemeTokens(newThemeId, pluginCatalog.listThemes())
-    applyThemeTokens(document.documentElement, tokens)
-    setThemeId(newThemeId)
-    const workspace = await updateWorkspaceTheme({
-      workspaceRepo,
-      workspaceId: activeWorkspace.id,
+    await switchWorkbenchTheme({
+      workspace: requireWorkspace(workspaceState()),
       themeId: newThemeId,
+      themes: pluginCatalog.listThemes(),
+      setThemeId,
+      applyTheme: (tokens) => applyThemeTokens(document.documentElement, tokens),
+      persistTheme: (workspaceId, themeId) =>
+        updateWorkspaceTheme({
+          workspaceRepo,
+          workspaceId,
+          themeId,
+        }),
+      setWorkspaceState,
     })
-    if (workspace) {
-      setWorkspaceState(workspace)
-    }
   }
 
   async function switchBackground(bgId: string) {
-    const activeWorkspace = requireWorkspace(workspaceState())
-    applyBackgroundStyle(resolveBackgroundStyle(bgId, pluginCatalog.listBackgroundProviders()))
-    setBackgroundId(bgId)
-    const workspace = await updateWorkspaceBackground({
-      workspaceRepo,
-      workspaceId: activeWorkspace.id,
+    await switchWorkbenchBackground({
+      workspace: requireWorkspace(workspaceState()),
       backgroundId: bgId,
+      backgrounds: pluginCatalog.listBackgroundProviders(),
+      setBackgroundId,
+      applyBackground: applyBackgroundStyle,
+      persistBackground: (workspaceId, backgroundId) =>
+        updateWorkspaceBackground({
+          workspaceRepo,
+          workspaceId,
+          backgroundId,
+        }),
+      setWorkspaceState,
     })
-    if (workspace) {
-      setWorkspaceState(workspace)
-    }
   }
 
   const widgetContribution = (instance: Pick<PluginInstance, "pluginId" | "contributionId">) =>
