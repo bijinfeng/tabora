@@ -1,6 +1,5 @@
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createSignal, Show } from "solid-js"
-import type { JSX } from "solid-js"
 import type {
   LayoutHostAPI,
   LayoutRegion,
@@ -59,6 +58,7 @@ import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
+import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import {
   buildWorkbenchContextMenuModel,
   buildWorkbenchDragDropPlan,
@@ -97,7 +97,6 @@ import {
 } from "./workspaceSession"
 import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
 
-type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 export type WorkbenchShellAppProps = {
   composition: {
     host: HostAdapter
@@ -238,7 +237,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       const widget = widgetContribution(instance)
       const model = resolveWidgetRenderModel(instance, widget)
       if (!model) return <div class="settings-empty">卡片实例无效：{instance.id}</div>
-      const View = widget ? viewOrUndefined(widget.views.card) : undefined
+      const View = widget
+        ? resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, widget.views.card)
+        : undefined
       if (!View) return <div class="settings-empty">Widget view not available</div>
 
       // Construct host callbacks for this instance
@@ -282,7 +283,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         instance.contributionId,
       )
       if (!search) return <div class="settings-empty">搜索贡献未找到</div>
-      const View = viewOrUndefined<SearchViewProps>(search.view)
+      const View = resolveWorkbenchView<SearchViewProps>(kernel.registry.views, search.view)
       if (!View) return <div class="settings-empty">搜索视图不可用：{search.id}</div>
 
       return (
@@ -390,72 +391,21 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     hostActions: layoutHostAPI,
   })
 
-  function makeScopedData(pluginId: string, instanceId: string): WidgetViewProps["data"] {
-    return {
-      get<T>(key: string): Promise<T | undefined> {
-        return pluginDataRepo.getByInstance<T>(pluginId, instanceId, key)
-      },
-      save<T>(key: string, value: T): Promise<void> {
-        return pluginDataRepo.saveForInstance<T>(pluginId, instanceId, key, value)
-      },
-    }
-  }
-
-  function viewOrUndefined<Props = Record<string, unknown>>(
-    viewId: string,
-  ): SolidView<Props> | undefined {
-    return kernel.registry.views.has(viewId)
-      ? (kernel.registry.views.get(viewId) as SolidView<Props>)
-      : undefined
-  }
-
-  function buildWidgetViewProps(
-    instance: PluginInstance,
-    model: WidgetRenderModel,
-  ): WidgetViewProps {
-    return {
-      instanceId: instance.id,
-      pluginId: instance.pluginId,
-      contributionId: instance.contributionId,
-      size: model.currentSize,
-      supportedSizes: model.supportedSizes,
-      config: instance.config,
-      data: makeScopedData(instance.pluginId, instance.id),
-      host: {
-        async updateConfig(value) {
-          const updated: PluginInstance = {
-            ...instance,
-            config: value,
-            updatedAt: new Date().toISOString(),
-          }
-          await instanceRepo.save(updated)
-          setInstances((prev) => prev.map((item) => (item.id === instance.id ? updated : item)))
-        },
-        async removeInstance() {
-          await removeWidget(instance.id)
-        },
-        async requestResize(size) {
-          await changeWidgetSize(instance.id, size)
-        },
-        openModal(viewId, props) {
-          setModalViewId(viewId)
-          setModalProps(
-            typeof props === "object" && props !== null ? (props as Record<string, unknown>) : {},
-          )
-        },
-        closeModal() {
-          setModalViewId(null)
-        },
-        openExpand() {
-          openWidgetExpand(instance)
-        },
-        showToast,
-        async openExternal(url) {
-          return openExternalForPlugin(instance.pluginId, url)
-        },
-      },
-    }
-  }
+  const buildWidgetViewProps = (instance: PluginInstance, model: WidgetRenderModel) =>
+    buildWorkbenchWidgetViewProps({
+      instance,
+      model,
+      pluginDataRepo,
+      saveInstance: (updated) => instanceRepo.save(updated),
+      setInstances,
+      removeWidget,
+      changeWidgetSize,
+      setModalViewId,
+      setModalProps,
+      openWidgetExpand,
+      showToast,
+      openExternalForPlugin,
+    })
 
   void kernel.discover(plugins).then(async () => {
     await kernel.activateEnabledPlugins()
@@ -1019,7 +969,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         resolveWidgetModel={(instance) =>
           resolveWidgetRenderModel(instance, widgetContribution(instance))
         }
-        getView={(viewId) => viewOrUndefined<WidgetViewProps>(viewId)}
+        getView={(viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId)}
         renderWidgetIcon={renderWorkbenchWidgetIcon}
         buildWidgetViewProps={buildWidgetViewProps}
         onOpenCommandPalette={() => setCmdPaletteOpen(true)}
@@ -1047,7 +997,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   function renderActiveLayout() {
     const layout = pluginCatalog.findLayoutContribution(activeLayoutId())
-    const LayoutView = layout?.view ? viewOrUndefined(layout.view) : undefined
+    const LayoutView = layout?.view
+      ? resolveWorkbenchView(kernel.registry.views, layout.view)
+      : undefined
 
     if (!LayoutView) {
       return renderSafeLayout()
@@ -1107,7 +1059,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
           activeSectionId={activeSettingsSectionId()}
           onSectionChange={setActiveSettingsSectionId}
           onClose={() => setSettingsOpen(false)}
-          getView={(viewId) => viewOrUndefined<SettingsPanelViewProps>(viewId)}
+          getView={(viewId) =>
+            resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId)
+          }
           panelProps={buildSettingsPanelProps}
           aboutContent={
             <WorkbenchSettingsAboutContent
@@ -1121,7 +1075,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         />
         <WorkbenchExpandOverlay
           expandState={expandState()}
-          getView={(viewId) => viewOrUndefined<WidgetViewProps>(viewId)}
+          getView={(viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId)}
           widgetIconForProps={(viewProps) =>
             renderWorkbenchWidgetIcon(widgetContribution(viewProps)?.icon)
           }
@@ -1130,13 +1084,13 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         <WorkbenchPluginModal
           viewId={modalViewId()}
           modalProps={modalProps()}
-          getView={(viewId) => viewOrUndefined(viewId)}
+          getView={(viewId) => resolveWorkbenchView(kernel.registry.views, viewId)}
           onClose={() => setModalViewId(null)}
         />
         <WorkbenchFullscreenOverlay
           viewId={fullscreenViewId()}
           fullscreenProps={fullscreenProps()}
-          getView={(viewId) => viewOrUndefined(viewId)}
+          getView={(viewId) => resolveWorkbenchView(kernel.registry.views, viewId)}
           onClose={() => setFullscreenViewId(null)}
         />
         <WorkbenchContextMenuOverlay
