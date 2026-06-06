@@ -50,7 +50,7 @@
 
 .dash-rail-btn:hover,
 .dash-rail-btn.active {
-  background: rgb(var(--color-accent-soft, 234 245 240));
+  background: rgb(var(--color-accent-soft));
   border-color: rgb(var(--color-accent));
   color: rgb(var(--color-accent));
 }
@@ -155,7 +155,7 @@
 
 .dash-toolbar-btn:hover,
 .tb-btn:hover {
-  background: rgb(var(--color-surface-hover, 242 244 240));
+  background: rgb(var(--color-surface-hover));
   color: rgb(var(--color-text));
 }
 
@@ -166,7 +166,7 @@
   padding: 1px;
   border: 1px solid rgb(var(--color-line));
   border-radius: 7px;
-  background: rgb(var(--color-surface-soft, 250 250 248));
+  background: rgb(var(--color-surface-soft));
 }
 
 .layout-switch .tb-btn {

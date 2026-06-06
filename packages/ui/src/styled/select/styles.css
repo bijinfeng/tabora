@@ -20,7 +20,7 @@
       background-color var(--tbr-dur-fast) var(--tbr-ease),
       box-shadow var(--tbr-dur-fast) var(--tbr-ease);
     white-space: nowrap;
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    box-shadow: none;
   }
   .tbr-select-trigger[data-size="sm"] {
     height: 28px;

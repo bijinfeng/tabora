@@ -190,7 +190,7 @@
 .search-bar:focus-within {
   border-color: color-mix(in srgb, rgb(var(--color-accent)) 34%, rgb(var(--color-line)));
   box-shadow:
-    0 0 0 3px color-mix(in srgb, rgb(var(--color-accent-soft, 234 245 240)) 72%, transparent),
+    0 0 0 3px color-mix(in srgb, rgb(var(--color-accent-soft)) 72%, transparent),
     0 12px 32px rgba(26, 144, 112, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }

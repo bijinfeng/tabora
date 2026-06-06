@@ -540,6 +540,7 @@ Nightly CI 已覆盖：
 - `pnpm check:architecture`：L2 + L7 的高信号架构/边界静态扫描。
 - `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 路径报告；raw color 当前按 `workbench production / generated backgrounds / site styles / test fixtures` 分组，优先关注 `workbench production`。
 - `pnpm check:architecture` 已于 2026-06-06 冻结当前 `workbench production` raw color 基线，新增字面量颜色或 `!important` 会直接失败；存量债务继续通过 `pnpm quality` 跟踪。
+- `pnpm check:architecture` 同时禁止 workbench 生产样式里的零透明度 `rgba(...)` 和宿主题色变量字面量 fallback；前者统一改为 `transparent`，后者直接依赖宿主主题 token。
 
 建议后续逐步补齐：
 

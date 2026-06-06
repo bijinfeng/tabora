@@ -125,6 +125,17 @@ const TEST_MODE_PATTERNS = [
   },
 ]
 const RAW_COLOR_CATEGORY_ORDER = ["workbench", "background-preset", "site", "test-fixture"]
+const WORKBENCH_AVOIDABLE_STYLE_PATTERNS = [
+  {
+    pattern: /rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0(?:\.0+)?\s*\)/g,
+    reason: "use transparent instead of zero-alpha rgba",
+  },
+  {
+    pattern:
+      /var\(\s*--color-[a-z0-9-]+\s*,\s*(?:#[0-9a-fA-F]{3,8}|\d{1,3}(?:\s+\d{1,3}){2})\s*\)/gi,
+    reason: "workbench theme variables must not carry literal color fallbacks",
+  },
+]
 const WORKBENCH_RAW_COLOR_BASELINE = new Set([
   "packages/official-plugins/src/styles.css::#fff",
   "packages/official-plugins/src/styles.css::rgba(28, 30, 28, 0.035)",
@@ -259,6 +270,21 @@ export function findWorkbenchRawColorViolations(options) {
       ...finding,
       reason: "new workbench raw colors must be tokenized or added to the reviewed baseline",
     }))
+}
+
+export function findWorkbenchAvoidableStyleViolations(options) {
+  if (classifyRawColorMatch(options.filePath) !== "workbench") {
+    return []
+  }
+
+  return WORKBENCH_AVOIDABLE_STYLE_PATTERNS.flatMap(({ pattern, reason }) =>
+    collectPatternMatches({
+      filePath: options.filePath,
+      source: options.source,
+      pattern,
+      reason,
+    }),
+  )
 }
 
 export function findWindowOpenViolations(options) {
@@ -536,6 +562,30 @@ export async function scanWorkbenchRawColorBoundaries(rootDir) {
   return scanFiles(repositoryRoot, files, findWorkbenchRawColorViolations)
 }
 
+export async function scanWorkbenchAvoidableStyleBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => {
+      if (!QUALITY_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      if (isTestFile(filePath)) {
+        return false
+      }
+
+      return filePath.includes(`${path.sep}src${path.sep}`)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findWorkbenchAvoidableStyleViolations)
+}
+
 export async function scanArchitecture(rootDir) {
   const findings = [
     ...(await scanPluginSourceBoundaries(rootDir)),
@@ -549,6 +599,7 @@ export async function scanArchitecture(rootDir) {
     ...(await scanTypeEscapeBoundaries(rootDir)),
     ...(await scanWindowOpenBoundaries(rootDir)),
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),
+    ...(await scanWorkbenchAvoidableStyleBoundaries(rootDir)),
   ]
 
   return findings.sort(compareFindings)

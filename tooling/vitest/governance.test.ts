@@ -14,6 +14,7 @@ import {
   findTypeEscapeViolations,
   findTestModeViolations,
   findWorkbenchRawColorViolations,
+  findWorkbenchAvoidableStyleViolations,
   findWindowOpenViolations,
   rankFilesByLineCount,
   summarizeRawColorMatches,
@@ -369,6 +370,61 @@ describe("governance rules", () => {
         source: `
           :root {
             --site-ink: #111512;
+          }
+        `,
+      }),
+    ).toEqual([])
+  })
+
+  it("flags avoidable workbench style literals but ignores token fallback chains", () => {
+    expect(
+      findWorkbenchAvoidableStyleViolations({
+        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        source: `
+          .menu {
+            background: var(--color-surface, #fff);
+            color: rgb(var(--color-text, 28 30 28));
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+            border-color: rgb(var(--color-line-strong, var(--color-line)));
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        match: "rgba(0, 0, 0, 0)",
+        reason: "use transparent instead of zero-alpha rgba",
+      },
+      {
+        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        match: "var(--color-surface, #fff)",
+        reason: "workbench theme variables must not carry literal color fallbacks",
+      },
+      {
+        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        match: "var(--color-text, 28 30 28)",
+        reason: "workbench theme variables must not carry literal color fallbacks",
+      },
+    ])
+
+    expect(
+      findWorkbenchAvoidableStyleViolations({
+        filePath: "packages/official-plugins/src/styles.css",
+        source: `
+          .search {
+            color: rgb(var(--color-subtle, var(--color-muted)));
+            border-color: rgb(var(--color-line-strong, var(--color-line)));
+          }
+        `,
+      }),
+    ).toEqual([])
+
+    expect(
+      findWorkbenchAvoidableStyleViolations({
+        filePath: "apps/site/src/styles.css",
+        source: `
+          .site {
+            background: var(--color-surface, #fff);
           }
         `,
       }),
