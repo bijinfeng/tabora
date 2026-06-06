@@ -13,6 +13,7 @@ import {
   findRawColorMatches,
   findTypeEscapeViolations,
   findTestModeViolations,
+  findWorkbenchRawColorViolations,
   findWindowOpenViolations,
   rankFilesByLineCount,
   summarizeRawColorMatches,
@@ -341,6 +342,37 @@ describe("governance rules", () => {
       site: 1,
       "test-fixture": 1,
     })
+  })
+
+  it("flags new workbench raw colors but allows frozen baseline entries", () => {
+    expect(
+      findWorkbenchRawColorViolations({
+        filePath: "packages/ui/src/styled/button/styles.css",
+        source: `
+          .button {
+            color: #fff;
+            border-color: #123456;
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/ui/src/styled/button/styles.css",
+        match: "#123456",
+        reason: "new workbench raw colors must be tokenized or added to the reviewed baseline",
+      },
+    ])
+
+    expect(
+      findWorkbenchRawColorViolations({
+        filePath: "apps/site/src/styles.css",
+        source: `
+          :root {
+            --site-ink: #111512;
+          }
+        `,
+      }),
+    ).toEqual([])
   })
 
   it("builds a grouped quality report", () => {
