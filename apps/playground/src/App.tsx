@@ -20,16 +20,32 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import {
+  applyBackgroundStyle,
+  assignGridOrder,
   buildSearchableWidgetEntries,
   canPluginOpenExternal,
   createCommandExecutor,
   createLayoutFallbackTracker,
   createLayoutSwitchExecution,
   createWorkbenchResponsiveState,
+  createWorkspaceSession,
+  deleteWorkspaceSession,
+  ensureWorkspaceSession,
+  exportWorkspaceData,
+  FALLBACK_BACKGROUND_ID,
+  gridColumnSpan,
+  gridRowSpan,
+  importWorkspaceData,
+  readSearchSettings,
+  resolveBackgroundStyle,
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
   resolveEnabledSearchProviders,
+  resolveThemeTokens,
   resolveWidgetIconLabel,
   resolveWidgetRenderModel,
+  updateWorkspaceBackground,
+  updateWorkspaceRecord,
+  updateWorkspaceTheme,
   type CommandExecutionContext,
   type WidgetRenderModel,
 } from "@tabora/workbench-app"
@@ -62,23 +78,6 @@ import {
 } from "@tabora/workbench-shell"
 import { Clock, Link2, Pencil, Sun, Moon, Target, CheckSquare, X } from "lucide-solid"
 
-import { assignGridOrder, gridColumnSpan, gridRowSpan } from "./workbenchGrid"
-import { resolveThemeTokens } from "./themeResolver"
-import {
-  applyBackgroundStyle,
-  resolveBackgroundStyle,
-  FALLBACK_BACKGROUND_ID,
-} from "./backgroundResolver"
-import {
-  createWorkspaceSession,
-  deleteWorkspaceSession,
-  ensureWorkspaceSession,
-  readSearchSettings,
-  updateWorkspaceBackground,
-  updateWorkspaceRecord,
-  updateWorkspaceTheme,
-} from "./workspaceSession"
-import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
 import {
   createPlaygroundRuntimeBootstrap,
   createPlaygroundWorkbenchComposition,

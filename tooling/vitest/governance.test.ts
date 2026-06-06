@@ -5,6 +5,7 @@ import {
   classifyExternalOpenMatch,
   classifyRawColorMatch,
   classifyWorkbenchRawColorDebt,
+  findCrossAppSourceImports,
   findCorePackageAppImports,
   findForbiddenPluginDependencies,
   findForbiddenPluginImports,
@@ -218,6 +219,33 @@ describe("governance rules", () => {
         reason: "packages must not import app source or app packages",
       },
     ])
+  })
+
+  it("detects shell apps importing other app source", () => {
+    expect(
+      findCrossAppSourceImports({
+        filePath: "apps/extension/entrypoints/newtab/App.tsx",
+        source: `
+          import { helper } from "../../../playground/src/helper"
+          import { local } from "./workbenchComposition"
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "apps/extension/entrypoints/newtab/App.tsx",
+        specifier: "../../../playground/src/helper",
+        reason: "apps must not import other app source or app packages",
+      },
+    ])
+
+    expect(
+      findCrossAppSourceImports({
+        filePath: "apps/playground/src/App.tsx",
+        source: `
+          import { helper } from "./workspaceSession"
+        `,
+      }),
+    ).toEqual([])
   })
 
   it("detects package export drift from vp pack entrypoints", () => {
@@ -653,6 +681,13 @@ describe("governance rules", () => {
       "packages/plugin-api/src/manifestSchema.test.ts",
     )
     expect(manifestSchemaTest).not.toContain("rgb(1, 2, 3)")
+  })
+
+  it("keeps extension shell helpers in shared packages", async () => {
+    const extensionApp = await readRepositoryText(".", "apps/extension/entrypoints/newtab/App.tsx")
+
+    expect(extensionApp).not.toContain("../../../playground/src/")
+    expect(extensionApp).toContain('from "@tabora/workbench-app"')
   })
 
   it("builds a grouped quality report", () => {

@@ -462,6 +462,9 @@ importers:
       '@tabora/host-adapters':
         specifier: workspace:*
         version: link:../host-adapters
+      '@tabora/official-plugins':
+        specifier: workspace:*
+        version: link:../official-plugins
       '@tabora/orchestrator':
         specifier: workspace:*
         version: link:../orchestrator

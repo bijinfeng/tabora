@@ -102,6 +102,20 @@ const CORE_PACKAGE_APP_IMPORT_RULES = [
   },
 ]
 
+const APP_SOURCE_IMPORT_RULES = [
+  {
+    matches: (specifier) =>
+      specifier.includes("apps/") ||
+      specifier.includes("playground/src/") ||
+      specifier.includes("extension/entrypoints/") ||
+      specifier === "@tabora/playground" ||
+      specifier.startsWith("@tabora/playground/") ||
+      specifier === "@tabora/extension" ||
+      specifier.startsWith("@tabora/extension/"),
+    reason: "apps must not import other app source or app packages",
+  },
+]
+
 const RAW_COLOR_PATTERN =
   /#(?:[0-9a-fA-F]{3,8})\b|rgba?\(\s*(?!var\()[^)]+\)|hsla?\(\s*(?!var\()[^)]+\)|!important\b/g
 const TYPE_ESCAPE_PATTERN = /\bas any\b|@ts-expect-error|@ts-ignore/g
@@ -196,6 +210,10 @@ export function findForbiddenUiDependencies(options) {
 
 export function findCorePackageAppImports(options) {
   return findForbiddenImports(options, CORE_PACKAGE_APP_IMPORT_RULES)
+}
+
+export function findCrossAppSourceImports(options) {
+  return findForbiddenImports(options, APP_SOURCE_IMPORT_RULES)
 }
 
 export function findPackageExportViolations(options) {
@@ -565,6 +583,25 @@ export async function scanCorePackageAppImportBoundaries(rootDir) {
   return scanFiles(repositoryRoot, files, findCorePackageAppImports)
 }
 
+export async function scanAppSourceBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps", "playground", "src"),
+      path.join(repositoryRoot, "apps", "extension", "entrypoints"),
+    ],
+    (filePath) => {
+      if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      return !isTestFile(filePath)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findCrossAppSourceImports)
+}
+
 export async function scanPackageExportBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles([path.join(repositoryRoot, "packages")], (filePath) => {
@@ -679,6 +716,7 @@ export async function scanArchitecture(rootDir) {
     ...(await scanPluginExternalOpenBoundaries(rootDir)),
     ...(await scanTestModeBoundaries(rootDir)),
     ...(await scanCorePackageAppImportBoundaries(rootDir)),
+    ...(await scanAppSourceBoundaries(rootDir)),
     ...(await scanPackageExportBoundaries(rootDir)),
     ...(await scanTypeEscapeBoundaries(rootDir)),
     ...(await scanWindowOpenBoundaries(rootDir)),

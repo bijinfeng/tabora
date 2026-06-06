@@ -96,12 +96,6 @@ const KNOWN_DEBT_RULES = [
       filePath.startsWith("packages/workbench-app/src/"),
   },
   {
-    label: "extension 仍通过相对路径 import playground helper",
-    matches: (filePath) =>
-      filePath === "apps/extension/entrypoints/newtab/App.tsx" ||
-      filePath.startsWith("packages/workbench-app/src/"),
-  },
-  {
     label: "`SearchViewProps` 尚未升级到技术方案描述的状态机 contract",
     matches: (filePath) =>
       filePath.startsWith("packages/official-plugins/src/search-command-bar") ||
