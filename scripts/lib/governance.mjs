@@ -116,7 +116,8 @@ const ALLOWED_WINDOW_OPEN_FILES = new Set([
 ])
 const EXTERNAL_OPEN_SIGNAL_ORDER = [
   "host-execution",
-  "capability-reference",
+  "manifest-declaration",
+  "runtime-method-reference",
   "test-fixture",
   "bypass-risk",
 ]
@@ -439,13 +440,18 @@ export function classifyExternalOpenMatch(finding) {
     return "bypass-risk"
   }
 
-  return "capability-reference"
+  if (finding.match === "external-open") {
+    return "manifest-declaration"
+  }
+
+  return "runtime-method-reference"
 }
 
 export function summarizeExternalOpenMatches(findings) {
   const summary = {
     "host-execution": 0,
-    "capability-reference": 0,
+    "manifest-declaration": 0,
+    "runtime-method-reference": 0,
     "test-fixture": 0,
     "bypass-risk": 0,
   }
@@ -996,7 +1002,8 @@ function formatRawColorSummary(summary) {
 function formatExternalOpenSummary(summary) {
   const labels = {
     "host-execution": "host execution paths",
-    "capability-reference": "capability references",
+    "manifest-declaration": "manifest declarations",
+    "runtime-method-reference": "runtime method references",
     "test-fixture": "test fixtures",
     "bypass-risk": "potential bypass paths",
   }

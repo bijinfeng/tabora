@@ -666,9 +666,16 @@ describe("governance rules", () => {
     expect(
       classifyExternalOpenMatch({
         filePath: "packages/official-plugins/src/search-command-bar.tsx",
+        match: "external-open",
+      }),
+    ).toBe("manifest-declaration")
+
+    expect(
+      classifyExternalOpenMatch({
+        filePath: "packages/official-plugins/src/search-command-bar.tsx",
         match: "openExternal",
       }),
-    ).toBe("capability-reference")
+    ).toBe("runtime-method-reference")
 
     expect(
       classifyExternalOpenMatch({
@@ -688,6 +695,10 @@ describe("governance rules", () => {
       summarizeExternalOpenMatches([
         { filePath: "apps/playground/src/App.tsx", match: "window.open" },
         { filePath: "apps/playground/src/App.tsx", match: "openExternal" },
+        {
+          filePath: "packages/official-plugins/src/search-command-bar.tsx",
+          match: "external-open",
+        },
         { filePath: "packages/official-plugins/src/search-command-bar.tsx", match: "openExternal" },
         { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
         { filePath: "plugins/example/src/view.tsx", match: "window.open" },
@@ -695,7 +706,8 @@ describe("governance rules", () => {
       ]),
     ).toEqual({
       "host-execution": 1,
-      "capability-reference": 1,
+      "manifest-declaration": 1,
+      "runtime-method-reference": 1,
       "bypass-risk": 1,
       "test-fixture": 1,
     })
@@ -722,6 +734,10 @@ describe("governance rules", () => {
         { filePath: "apps/playground/src/App.tsx", match: "openExternal" },
         {
           filePath: "packages/official-plugins/src/search-command-bar.tsx",
+          match: "external-open",
+        },
+        {
+          filePath: "packages/official-plugins/src/search-command-bar.tsx",
           match: "openExternal",
         },
         { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
@@ -742,7 +758,8 @@ describe("governance rules", () => {
     expect(report).toContain("inverse foreground: 1")
     expect(report).toContain("External open signals")
     expect(report).toContain("host execution paths: 1")
-    expect(report).toContain("capability references: 1")
+    expect(report).toContain("manifest declarations: 1")
+    expect(report).toContain("runtime method references: 1")
     expect(report).toContain("potential bypass paths: 1")
     expect(report).toContain("test fixtures: 1")
     expect(report).toContain('plugins/example/src/view.tsx: target="_blank", window.open')

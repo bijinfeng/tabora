@@ -455,7 +455,12 @@ Quality report
 - TODO/FIXME/HACK: N
 - Large files top 20: ...
 - CSS raw colors: N
-- External open paths: N
+- External open signals:
+  - host execution paths: N
+  - manifest declarations: N
+  - runtime method references: N
+  - test fixtures: N
+  - potential bypass paths: N
 ```
 
 This script may warn without failing; `check-architecture` owns hard failures.
