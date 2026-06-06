@@ -124,6 +124,8 @@
 .grid-item {
   min-width: 0;
   min-height: 0;
+  grid-column: span var(--widget-col-span, 1);
+  grid-row: span var(--widget-row-span, 1);
 }
 
 .workbench-grid .widget-card {
@@ -902,8 +904,8 @@
   }
   /* Single column: let cards size to content instead of spanning rows. */
   .grid-item {
-    grid-column: span 1 !important;
-    grid-row: auto !important;
+    grid-column: span 1;
+    grid-row: auto;
   }
   .grid-item .widget-card {
     height: auto;
