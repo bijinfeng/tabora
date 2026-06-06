@@ -7,7 +7,6 @@ import type {
   PluginInstance,
   PluginRecord,
   SearchHistoryEntry,
-  SearchProviderContribution,
   SearchViewProps,
   SettingsPanelViewProps,
   WidgetContextMenuContribution,
@@ -18,8 +17,6 @@ import type {
 } from "@tabora/plugin-api"
 import {
   createLayoutEngine,
-  createDragSortPlan,
-  createWidgetContextMenuModel,
   createToastManager,
   type InstanceRenderer,
   type LayoutSwitchPlan,
@@ -54,9 +51,19 @@ import {
   resolveWorkbenchInstanceSettingsView,
 } from "./WorkbenchShellInteractions"
 import {
+  focusWorkbenchWidgetInstance,
+  persistWorkbenchGridOrder,
+  runWorkbenchRailAction,
+} from "./WorkbenchShellHostActions"
+import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
+import {
+  buildWorkbenchContextMenuModel,
+  buildWorkbenchDragDropPlan,
+  buildWorkbenchSearchableWidgets,
+} from "./WorkbenchShellWidgets"
 import {
   SafeWorkbenchLayout,
   WorkbenchAddWidgetModal,
@@ -69,7 +76,6 @@ import {
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
 import { canPluginOpenExternal, createLayoutSwitchExecution } from "./shellController"
 import {
-  buildSearchableWidgetEntries,
   type CommandExecutionContext,
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
   resolveEnabledSearchProviders,
@@ -282,8 +288,14 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       return (
         <PluginViewBoundary instanceId={instance.id} title={search.title}>
           {View({
-            providers: enabledSearchProviders(),
-            defaultProviderId: resolveDefaultProviderForSearch(),
+            providers: resolveEnabledSearchProviders(
+              searchSettings(),
+              pluginCatalog.listSearchProviders(),
+            ),
+            defaultProviderId: resolveDefaultProviderId(
+              searchSettings(),
+              pluginCatalog.listSearchProviders(),
+            ),
             openExternal: (url) => openExternalForPlugin(instance.pluginId, url),
             onDefaultProviderChange: setDefaultSearchProvider,
             searchHistory: searchHistory(),
@@ -917,31 +929,15 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     e.dataTransfer!.dropEffect = "move"
   }
 
-  function widgetInstanceById(instanceId: string): PluginInstance | undefined {
-    return instances().find((instance) => instance.id === instanceId)
-  }
-
-  function contextMenuInstance(): PluginInstance | null {
-    const menu = ctxMenu()
-    if (!menu) return null
-    return widgetInstanceById(menu.instanceId) ?? null
-  }
-
-  function supportedWidgetSizes(instance: PluginInstance | null): WidgetSize[] {
-    if (!instance) return []
-    return widgetRenderModel(instance)?.supportedSizes ?? []
-  }
-
   function contextMenuModel() {
-    const instance = contextMenuInstance()
-    if (!instance) return null
-    return createWidgetContextMenuModel({
-      instance,
-      supportedSizes: supportedWidgetSizes(instance),
-      contextMenus: contextMenuContributions(instance),
+    return buildWorkbenchContextMenuModel({
+      menu: ctxMenu(),
+      instances: instances(),
+      resolveWidgetRenderModel: widgetRenderModel,
+      resolveContextMenus: contextMenuContributions,
       availableCommandIds: availableCommandIds(),
       runCommand,
-      hasInstanceSettings:
+      hasInstanceSettings: (instance) =>
         resolveWorkbenchInstanceSettingsView(widgetContribution(instance), (viewId) =>
           kernel.registry.views.has(viewId),
         ) !== null,
@@ -949,11 +945,11 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         void changeWidgetSize(instanceId, size)
       },
       onExpand: (instanceId) => {
-        const target = widgetInstanceById(instanceId)
+        const target = instances().find((instance) => instance.id === instanceId)
         if (target) openWidgetExpand(target)
       },
       onOpenSettings: (instanceId) => {
-        const target = widgetInstanceById(instanceId)
+        const target = instances().find((instance) => instance.id === instanceId)
         if (target) openWidgetInstanceSettings(target)
       },
       onRemove: (instanceId) => {
@@ -963,56 +959,38 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     })
   }
 
-  function focusWidgetInstance(instanceId: string) {
-    const card = document.querySelector<HTMLElement>(`[data-widget-instance-id="${instanceId}"]`)
-    if (!card) return
-    card.scrollIntoView({ behavior: "smooth", block: "center" })
-    card.focus()
-    showToast("已定位到对应卡片")
-  }
-
-  function searchableWidgets() {
-    return buildSearchableWidgetEntries({
+  const searchableWidgets = () =>
+    buildWorkbenchSearchableWidgets({
       instances: instances(),
       resolveWidgetContribution: (pluginId, contributionId) =>
         widgetContribution({ pluginId, contributionId }),
-      buildFocusAction: (instanceId) => () => focusWidgetInstance(instanceId),
+      buildFocusAction: (instanceId) => () => {
+        if (focusWorkbenchWidgetInstance(instanceId)) showToast("已定位到对应卡片")
+      },
     })
-  }
 
   async function persistGridOrder(orderedInstances: PluginInstance[]) {
-    const nextById = new Map(orderedInstances.map((instance) => [instance.id, instance]))
-    const mergedInstances = instances().map((instance) => nextById.get(instance.id) ?? instance)
-
-    for (const instance of orderedInstances) {
-      await instanceRepo.save(instance)
-    }
-
-    setInstances(mergedInstances)
+    await persistWorkbenchGridOrder({
+      currentInstances: instances(),
+      orderedInstances,
+      saveInstance: (instance) => instanceRepo.save(instance),
+      setInstances,
+    })
   }
 
   function onDrop(e: DragEvent, targetId: string, _regionId: string) {
     e.preventDefault()
-    const sourceId = dragId()
-    if (!sourceId || sourceId === targetId) return
-    setDragId(null)
-    const plan = createDragSortPlan({
-      sourceId,
+    const plan = buildWorkbenchDragDropPlan({
+      dragId: dragId(),
       targetId,
       instances: instances(),
     })
+    if (!plan) return
+    setDragId(null)
     if (!plan.changed) return
     void persistGridOrder(plan.instances)
     showToast("排序已更新")
   }
-
-  const availableWidgets = () => pluginCatalog.listWidgetContributions()
-
-  const enabledSearchProviders = (): SearchProviderContribution[] =>
-    resolveEnabledSearchProviders(searchSettings(), pluginCatalog.listSearchProviders())
-
-  const resolveDefaultProviderForSearch = (): string =>
-    resolveDefaultProviderId(searchSettings(), pluginCatalog.listSearchProviders())
 
   const openExternalForPlugin = (pluginId: string, url: string): boolean =>
     canPluginOpenExternal({ pluginId, url, plugins: kernel.plugins }) && openExternal(url)
@@ -1022,19 +1000,15 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     true
   )
 
-  function runRailAction(actionId: string) {
-    if (actionId === "add-widget") {
-      setAddWidgetOpen(true)
-    } else if (actionId === "theme") {
-      void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
-    } else if (actionId === "settings") {
-      openSettings("official.settings.workspace.appearance")
-    } else if (actionId === "home") {
-      if (composition.host.platform === "web") {
-        window.scrollTo({ top: 0, behavior: "smooth" })
-      }
-    }
-  }
+  const runRailAction = (actionId: string) =>
+    runWorkbenchRailAction(actionId, {
+      platform: composition.host.platform,
+      onAddWidget: () => setAddWidgetOpen(true),
+      onToggleTheme: () => {
+        void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+      },
+      onOpenSettings: () => openSettings("official.settings.workspace.appearance"),
+    })
 
   function renderSafeLayout() {
     return (
@@ -1119,7 +1093,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         {renderActiveLayout()}
         <WorkbenchAddWidgetModal
           open={addWidgetOpen()}
-          availableWidgets={availableWidgets()}
+          availableWidgets={pluginCatalog.listWidgetContributions()}
           widgetIconLabel={resolveWidgetIconLabel}
           onAdd={(pluginId, widgetId) => {
             void addWidget(pluginId, widgetId)
@@ -1177,8 +1151,14 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         onClose={() => setCmdPaletteOpen(false)}
         commands={commandItems()}
         widgets={searchableWidgets()}
-        providers={enabledSearchProviders()}
-        defaultProviderId={resolveDefaultProviderForSearch()}
+        providers={resolveEnabledSearchProviders(
+          searchSettings(),
+          pluginCatalog.listSearchProviders(),
+        )}
+        defaultProviderId={resolveDefaultProviderId(
+          searchSettings(),
+          pluginCatalog.listSearchProviders(),
+        )}
         searchHistory={searchHistory()}
         openExternal={openExternal}
         onSaveHistory={saveSearchHistory}
