@@ -704,7 +704,7 @@ describe("governance rules", () => {
       "packages/workbench-app/src/WorkbenchShellApp.tsx",
     )
 
-    expect(shellRoot.split("\n").length).toBeLessThan(1225)
+    expect(shellRoot.split("\n").length).toBeLessThan(1195)
   })
 
   it("builds a grouped quality report", () => {

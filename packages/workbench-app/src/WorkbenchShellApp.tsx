@@ -48,6 +48,12 @@ import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
 import {
+  buildWorkbenchWidgetExpandState,
+  buildWorkbenchWidgetInstanceSettingsState,
+  isWorkbenchInteractiveElement,
+  resolveWorkbenchInstanceSettingsView,
+} from "./WorkbenchShellInteractions"
+import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
@@ -236,7 +242,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         onDrop: (e: DragEvent) => onDrop(e, instance.id, instance.regionId),
         onDblClick: (e: MouseEvent) => {
           const target = e.target as HTMLElement
-          if (isInteractiveElement(target)) return
+          if (isWorkbenchInteractiveElement(target)) return
           openWidgetExpand(instance)
         },
         onContextMenu: (e: MouseEvent) => {
@@ -855,39 +861,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setInstances((prev) => prev.map((i) => (i.id === instanceId ? updated : i)))
   }
 
-  function isInteractiveElement(target: EventTarget | null): boolean {
-    return (
-      target instanceof HTMLElement &&
-      target.closest(
-        "button, input, textarea, select, a, [role='button'], [data-prevent-expand='true']",
-      ) !== null
-    )
-  }
-
-  function resolveExpandView(instance: PluginInstance): {
-    viewId: string
-    mode: "card" | "modal" | "fullscreen"
-  } | null {
-    const widget = widgetContribution(instance)
-    if (!widget) return null
-    if (widget.views.fullscreen && kernel.registry.views.has(widget.views.fullscreen)) {
-      return { viewId: widget.views.fullscreen, mode: "fullscreen" }
-    }
-    if (widget.views.modal && kernel.registry.views.has(widget.views.modal)) {
-      return { viewId: widget.views.modal, mode: "modal" }
-    }
-    if (kernel.registry.views.has(widget.views.card)) {
-      return { viewId: widget.views.card, mode: "card" }
-    }
-    return null
-  }
-
-  function resolveInstanceSettingsView(instance: PluginInstance): string | null {
-    const settingsViewId = widgetContribution(instance)?.views.settings
-    if (!settingsViewId) return null
-    return kernel.registry.views.has(settingsViewId) ? settingsViewId : null
-  }
-
   function closeExpand() {
     setExpandState(null)
     if (lastExpandTrigger) {
@@ -898,49 +871,39 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   function openWidgetExpand(instance: PluginInstance, trigger?: HTMLElement) {
-    const model = widgetRenderModel(instance)
-    if (!model) {
-      showToast(`卡片实例无效：${instance.id}`)
-      return
-    }
-    const target = resolveExpandView(instance)
-    if (!target) {
-      showToast(`当前卡片暂不支持展开：${model.title}`)
+    const result = buildWorkbenchWidgetExpandState({
+      instance,
+      model: widgetRenderModel(instance),
+      widget: widgetContribution(instance),
+      hasView: (viewId) => kernel.registry.views.has(viewId),
+      buildWidgetViewProps,
+    })
+    if (!result.expandState) {
+      if (result.errorMessage) showToast(result.errorMessage)
       return
     }
     lastExpandTrigger =
       trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
     setCtxMenu(null)
-    setExpandState({
-      instanceId: instance.id,
-      title: model.title,
-      viewId: target.viewId,
-      mode: target.mode,
-      props: buildWidgetViewProps(instance, model),
-    })
+    setExpandState(result.expandState)
   }
 
   function openWidgetInstanceSettings(instance: PluginInstance) {
-    const model = widgetRenderModel(instance)
-    if (!model) {
-      showToast(`卡片实例无效：${instance.id}`)
-      return
-    }
-    const viewId = resolveInstanceSettingsView(instance)
-    if (!viewId) {
-      showToast(`当前卡片暂不支持实例设置：${model.title}`)
+    const result = buildWorkbenchWidgetInstanceSettingsState({
+      instance,
+      model: widgetRenderModel(instance),
+      widget: widgetContribution(instance),
+      hasView: (viewId) => kernel.registry.views.has(viewId),
+      buildWidgetViewProps,
+    })
+    if (!result.expandState) {
+      if (result.errorMessage) showToast(result.errorMessage)
       return
     }
     lastExpandTrigger =
       document.activeElement instanceof HTMLElement ? document.activeElement : null
     setCtxMenu(null)
-    setExpandState({
-      instanceId: instance.id,
-      title: `${model.title} 设置`,
-      viewId,
-      mode: "settings",
-      props: buildWidgetViewProps(instance, model),
-    })
+    setExpandState(result.expandState)
   }
 
   function onDragStart(e: DragEvent, instanceId: string) {
@@ -978,7 +941,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       contextMenus: contextMenuContributions(instance),
       availableCommandIds: availableCommandIds(),
       runCommand,
-      hasInstanceSettings: resolveInstanceSettingsView(instance) !== null,
+      hasInstanceSettings:
+        resolveWorkbenchInstanceSettingsView(widgetContribution(instance), (viewId) =>
+          kernel.registry.views.has(viewId),
+        ) !== null,
       onResize: (instanceId, size) => {
         void changeWidgetSize(instanceId, size)
       },
