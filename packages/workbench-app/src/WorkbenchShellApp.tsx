@@ -34,8 +34,6 @@ import {
   WidgetCardShell,
   LayoutBoundary,
   ToastHost,
-  resolveInitialSettingsSectionId,
-  type SettingsPanelDescriptor,
   type SettingsSectionId,
   type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
@@ -49,6 +47,10 @@ import {
 import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
+import {
+  createWorkbenchSettingsPanelPropsBuilder,
+  openWorkbenchSettings,
+} from "./WorkbenchShellSettings"
 import {
   SafeWorkbenchLayout,
   WorkbenchAddWidgetModal,
@@ -153,6 +155,43 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
   const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
+  const openSettings = (panelId?: string) =>
+    openWorkbenchSettings(
+      {
+        panels: pluginCatalog.listSettingsPanels(),
+        setActiveSettingsSectionId,
+        setSettingsOpen,
+      },
+      panelId,
+    )
+  const buildSettingsPanelProps = createWorkbenchSettingsPanelPropsBuilder({
+    getWorkspace: workspaceState,
+    getWorkspaces: workspaceList,
+    getLayouts: () => pluginCatalog.listLayouts(),
+    getThemes: () => pluginCatalog.listThemes(),
+    getBackgrounds: () => pluginCatalog.listBackgroundProviders(),
+    getSearchProviders: () => pluginCatalog.listSearchProviders(),
+    getSearchSettings: searchSettings,
+    getPlugins: () => pluginCatalog.pluginSummaries(pluginRecords()),
+    host: {
+      close: () => setSettingsOpen(false),
+      setDirty: () => {},
+      switchLayout,
+      switchTheme,
+      switchBackground,
+      setDefaultSearchProvider,
+      setSearchProviderEnabled,
+      togglePluginEnabled,
+      exportWorkspace,
+      importWorkspace,
+      createWorkspace: async (name) => {
+        const ws = await createWorkspace(name)
+        await switchWorkspace(ws.id)
+      },
+      switchWorkspace,
+      deleteWorkspace,
+    },
+  })
 
   const pluginCommands = plugins.flatMap((plugin) => plugin.manifest.contributes.commands ?? [])
   const pluginKeybindings = plugins.flatMap(
@@ -525,10 +564,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     }
   }
 
-  function pluginSummaries(): SettingsPanelViewProps["plugins"] {
-    return pluginCatalog.pluginSummaries(pluginRecords())
-  }
-
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
     const activeWorkspace = requireWorkspace(workspaceState())
     const updated = await updateWorkspaceRecord({
@@ -539,12 +574,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     if (updated) {
       setWorkspaceState(updated)
     }
-  }
-
-  function openSettings(panelId?: string) {
-    const panels = pluginCatalog.listSettingsPanels()
-    setActiveSettingsSectionId(resolveInitialSettingsSectionId(panels, panelId))
-    setSettingsOpen(true)
   }
 
   async function setDefaultSearchProvider(providerId: string) {
@@ -735,48 +764,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     }
   }
 
-  function getWorkspaceList(): Workspace[] {
-    return workspaceList()
-  }
-
-  function buildSettingsPanelProps(panel: SettingsPanelDescriptor): SettingsPanelViewProps {
-    const workspace = workspaceState()
-    if (!workspace) {
-      throw new Error("Workspace is not ready")
-    }
-    return {
-      panelId: panel.id,
-      pluginId: panel.pluginId,
-      scope: panel.scope,
-      host: {
-        close: () => setSettingsOpen(false),
-        setDirty: () => {},
-        switchLayout,
-        switchTheme,
-        switchBackground,
-        setDefaultSearchProvider,
-        setSearchProviderEnabled,
-        togglePluginEnabled,
-        exportWorkspace,
-        importWorkspace,
-        createWorkspace: async (name) => {
-          const ws = await createWorkspace(name)
-          await switchWorkspace(ws.id)
-        },
-        switchWorkspace,
-        deleteWorkspace,
-      },
-      workspace,
-      workspaces: getWorkspaceList(),
-      layouts: pluginCatalog.listLayouts(),
-      themes: pluginCatalog.listThemes(),
-      backgrounds: pluginCatalog.listBackgroundProviders(),
-      searchProviders: pluginCatalog.listSearchProviders(),
-      searchSettings: searchSettings(),
-      plugins: pluginSummaries(),
-    }
-  }
-
   async function switchTheme(newThemeId: string) {
     const activeWorkspace = requireWorkspace(workspaceState())
     const tokens = resolveThemeTokens(newThemeId, pluginCatalog.listThemes())
@@ -806,17 +793,14 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     }
   }
 
-  function widgetContribution(instance: Pick<PluginInstance, "pluginId" | "contributionId">) {
-    return pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId)
-  }
+  const widgetContribution = (instance: Pick<PluginInstance, "pluginId" | "contributionId">) =>
+    pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId)
 
-  function widgetRenderModel(instance: PluginInstance): WidgetRenderModel | null {
-    return resolveWidgetRenderModel(instance, widgetContribution(instance))
-  }
+  const widgetRenderModel = (instance: PluginInstance): WidgetRenderModel | null =>
+    resolveWidgetRenderModel(instance, widgetContribution(instance))
 
-  function contextMenuContributions(instance: PluginInstance): WidgetContextMenuContribution[] {
-    return widgetContribution(instance)?.contextMenus ?? []
-  }
+  const contextMenuContributions = (instance: PluginInstance): WidgetContextMenuContribution[] =>
+    widgetContribution(instance)?.contextMenus ?? []
 
   async function addWidget(pluginId: string, contributionId: string) {
     const workspace = requireWorkspace(workspaceState())
@@ -1056,27 +1040,21 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     showToast("排序已更新")
   }
 
-  const availableWidgets = () => {
-    return pluginCatalog.listWidgetContributions()
-  }
+  const availableWidgets = () => pluginCatalog.listWidgetContributions()
 
-  function enabledSearchProviders(): SearchProviderContribution[] {
-    return resolveEnabledSearchProviders(searchSettings(), pluginCatalog.listSearchProviders())
-  }
+  const enabledSearchProviders = (): SearchProviderContribution[] =>
+    resolveEnabledSearchProviders(searchSettings(), pluginCatalog.listSearchProviders())
 
-  function resolveDefaultProviderForSearch(): string {
-    return resolveDefaultProviderId(searchSettings(), pluginCatalog.listSearchProviders())
-  }
+  const resolveDefaultProviderForSearch = (): string =>
+    resolveDefaultProviderId(searchSettings(), pluginCatalog.listSearchProviders())
 
-  function openExternalForPlugin(pluginId: string, url: string): boolean {
-    if (!canPluginOpenExternal({ pluginId, url, plugins: kernel.plugins })) return false
-    return openExternal(url)
-  }
+  const openExternalForPlugin = (pluginId: string, url: string): boolean =>
+    canPluginOpenExternal({ pluginId, url, plugins: kernel.plugins }) && openExternal(url)
 
-  function openExternal(url: string): boolean {
-    kernel.events.emit("host.external.open", { url })
-    return true
-  }
+  const openExternal = (url: string): boolean => (
+    kernel.events.emit("host.external.open", { url }),
+    true
+  )
 
   function runRailAction(actionId: string) {
     if (actionId === "add-widget") {
@@ -1194,7 +1172,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
           aboutContent={
             <WorkbenchSettingsAboutContent
               workspaceName={workspaceState()?.name ?? "未加载"}
-              enabledPluginCount={pluginSummaries().filter((plugin) => plugin.enabled).length}
+              enabledPluginCount={
+                pluginCatalog.pluginSummaries(pluginRecords()).filter((plugin) => plugin.enabled)
+                  .length
+              }
             />
           }
         />
