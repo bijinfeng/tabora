@@ -22,7 +22,7 @@
     flex-shrink: 0;
   }
   .tbr-switch-thumb {
-    background: #fff;
+    background: rgb(var(--tbr-color-surface));
     border-radius: 50%;
     position: absolute;
     transition: left var(--tbr-dur-normal) var(--tbr-ease);

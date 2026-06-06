@@ -32,7 +32,7 @@
   .tbr-checkbox[data-indeterminate] .tbr-checkbox-control {
     background: rgb(var(--tbr-color-accent));
     border-color: rgb(var(--tbr-color-accent));
-    color: #fff;
+    color: rgb(var(--tbr-color-inverse));
   }
   .tbr-checkbox[data-disabled] {
     opacity: 0.45;

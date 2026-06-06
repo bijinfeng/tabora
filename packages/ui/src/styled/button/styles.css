@@ -54,7 +54,7 @@
   /* 变体 */
   .tbr-btn--primary {
     background: rgb(var(--tbr-color-accent));
-    color: #fff;
+    color: rgb(var(--tbr-color-inverse));
   }
   .tbr-btn--primary:not([disabled]):hover {
     background: rgb(var(--tbr-color-accent-hover));
@@ -112,7 +112,7 @@
 
   .tbr-btn--danger {
     background: rgb(var(--tbr-color-danger));
-    color: #fff;
+    color: rgb(var(--tbr-color-inverse));
   }
   .tbr-btn--danger:not([disabled]):hover {
     background: color-mix(in srgb, rgb(var(--tbr-color-danger)) 85%, black);

@@ -5,6 +5,7 @@ export const TOKEN = {
     text: "tbr-color-text",
     muted: "tbr-color-text-muted",
     subtle: "tbr-color-text-subtle",
+    inverse: "tbr-color-inverse",
     accent: "tbr-color-accent",
     accentHover: "tbr-color-accent-hover",
     accentSoft: "tbr-color-accent-soft",

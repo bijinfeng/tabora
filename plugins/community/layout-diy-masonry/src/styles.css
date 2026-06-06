@@ -27,7 +27,7 @@
   border-radius: 50%;
   border: none;
   background: rgb(var(--color-accent));
-  color: #fff;
+  color: rgb(var(--color-inverse));
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

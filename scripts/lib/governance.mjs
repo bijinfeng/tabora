@@ -184,6 +184,11 @@ export function resolveRepositoryRoot(startDir) {
   return path.resolve(startDir, "../..")
 }
 
+export async function readRepositoryText(rootDir, relativePath) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  return readFile(path.join(repositoryRoot, relativePath), "utf8")
+}
+
 export function extractImportSpecifiers(source) {
   const specifiers = []
   const importPattern =

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   buildQualityReport,
   classifyRawColorMatch,
+  classifyWorkbenchRawColorDebt,
   findCorePackageAppImports,
   findForbiddenPluginDependencies,
   findForbiddenPluginImports,
@@ -13,11 +14,11 @@ import {
   findRawColorMatches,
   findTypeEscapeViolations,
   findTestModeViolations,
-  classifyWorkbenchRawColorDebt,
   findWorkbenchRawColorViolations,
   findWorkbenchAvoidableStyleViolations,
   findWindowOpenViolations,
   rankFilesByLineCount,
+  readRepositoryText,
   summarizeRawColorMatches,
   summarizeWorkbenchRawColorDebt,
 } from "../../scripts/lib/governance.mjs"
@@ -485,6 +486,39 @@ describe("governance rules", () => {
       "glow-highlight": 1,
       "important-override": 1,
     })
+  })
+
+  it("tokenizes shared inverse foreground styles instead of keeping raw white literals", async () => {
+    const targetFiles = [
+      "packages/official-plugins/src/styles.css",
+      "packages/ui/src/styled/button/styles.css",
+      "packages/ui/src/styled/checkbox/styles.css",
+      "packages/ui/src/styled/switch/styles.css",
+      "plugins/community/layout-diy-masonry/src/styles.css",
+    ]
+
+    for (const filePath of targetFiles) {
+      const source = await readRepositoryText(".", filePath)
+      expect(source).not.toContain("#fff")
+    }
+
+    const uiThemeTokens = await readRepositoryText(".", "packages/ui/src/tokens/theme.css")
+    expect(uiThemeTokens).toContain("--tbr-color-inverse: 255 255 255;")
+
+    const uiTokenRegistry = await readRepositoryText(".", "packages/ui/src/tokens/tokens.ts")
+    expect(uiTokenRegistry).toContain('inverse: "tbr-color-inverse"')
+
+    const workbenchDefaults = await readRepositoryText(
+      ".",
+      "packages/workbench-shell/src/styles.css",
+    )
+    expect(workbenchDefaults).toContain("--color-inverse: 255 255 255;")
+
+    const themePack = await readRepositoryText(
+      ".",
+      "packages/official-plugins/src/theme-default-pack.ts",
+    )
+    expect(themePack).toContain('"color-inverse": "255 255 255"')
   })
 
   it("builds a grouped quality report", () => {
