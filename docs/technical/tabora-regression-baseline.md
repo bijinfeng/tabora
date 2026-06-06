@@ -209,7 +209,7 @@ git diff --stat
 pnpm check:architecture
 ```
 
-脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
+脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
 
 ### L3：自动化基础门禁
 
@@ -769,7 +769,7 @@ Agent 必须：
 1. 将 L2 架构边界检查脚本化，减少人工判断。
 2. 给 product critical path 建立 browser-mode smoke tests。
 3. 为 mobile no-horizontal-scroll、settings host、layout fallback 加可重复截图或 DOM 断言。
-4. 为依赖边界、package exports、CSS token 使用和 focused tests 建立自动化守卫。
+4. 已于 2026-06-06 为依赖边界、package exports、生产源码 type escape、非宿主 `window.open` 和 focused tests 建立自动化守卫；后续继续收紧 CSS token 使用。
 5. 让每个计划文档明确对应的回归层级。
 
 长期：

@@ -10,7 +10,9 @@ import {
   findForbiddenUiImports,
   findPluginExternalOpenViolations,
   findRawColorMatches,
+  findTypeEscapeViolations,
   findTestModeViolations,
+  findWindowOpenViolations,
   rankFilesByLineCount,
 } from "../../scripts/lib/governance.mjs"
 
@@ -243,6 +245,51 @@ describe("governance rules", () => {
           'missing or incorrect publish export for build entry "src/assetPaths.ts"; expected "./dist/assetPaths.js"',
       },
     ])
+  })
+
+  it("detects type escapes in production source", () => {
+    expect(
+      findTypeEscapeViolations({
+        filePath: "packages/storage/src/pluginDataRepository.ts",
+        source: `
+          export function read(value: unknown) {
+            return value as any
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/storage/src/pluginDataRepository.ts",
+        match: "as any",
+        reason: "type escapes must not be committed in production source",
+      },
+    ])
+  })
+
+  it("detects window.open outside the allowed shell execution points", () => {
+    expect(
+      findWindowOpenViolations({
+        filePath: "packages/example/src/runtime.ts",
+        source: `
+          export function open(url: string) {
+            return window.open(url, "_blank")
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/example/src/runtime.ts",
+        match: "window.open",
+        reason: "window.open must stay in the shell host execution path",
+      },
+    ])
+
+    expect(
+      findWindowOpenViolations({
+        filePath: "apps/playground/src/App.tsx",
+        source: `window.open(payload.url, "_blank")`,
+      }),
+    ).toEqual([])
   })
 
   it("reports literal colors but ignores token-based rgb(var()) usage", () => {

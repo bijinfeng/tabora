@@ -107,8 +107,13 @@ const RAW_COLOR_PATTERN =
 const TYPE_ESCAPE_PATTERN = /\bas any\b|@ts-expect-error|@ts-ignore/g
 const ISSUE_MARKER_PATTERN = /\b(?:TODO|FIXME|HACK)\b|console\.(?:log|debug|info)\b/g
 const PLUGIN_EXTERNAL_OPEN_PATTERN = /window\.open|target="_blank"|target='_blank'/g
+const WINDOW_OPEN_PATTERN = /window\.open/g
 const QUALITY_EXTERNAL_OPEN_PATTERN =
   /window\.open|target="_blank"|target='_blank'|openExternal|external-open/g
+const ALLOWED_WINDOW_OPEN_FILES = new Set([
+  "apps/playground/src/App.tsx",
+  "apps/extension/entrypoints/newtab/App.tsx",
+])
 const TEST_MODE_PATTERNS = [
   {
     pattern: /\b(?:it|test|describe)\.only\b/g,
@@ -197,6 +202,28 @@ export function findPackageExportViolations(options) {
     }
 
     return findings
+  })
+}
+
+export function findTypeEscapeViolations(options) {
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: TYPE_ESCAPE_PATTERN,
+    reason: "type escapes must not be committed in production source",
+  })
+}
+
+export function findWindowOpenViolations(options) {
+  if (isTestFile(options.filePath) || ALLOWED_WINDOW_OPEN_FILES.has(options.filePath)) {
+    return []
+  }
+
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: WINDOW_OPEN_PATTERN,
+    reason: "window.open must stay in the shell host execution path",
   })
 }
 
@@ -359,6 +386,54 @@ export async function scanPackageExportBoundaries(rootDir) {
   return scanPackageFiles(repositoryRoot, files, findPackageExportViolations)
 }
 
+export async function scanTypeEscapeBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => {
+      if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      if (isTestFile(filePath)) {
+        return false
+      }
+
+      return filePath.includes(`${path.sep}src${path.sep}`)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findTypeEscapeViolations)
+}
+
+export async function scanWindowOpenBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => {
+      if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      if (isTestFile(filePath)) {
+        return false
+      }
+
+      return filePath.includes(`${path.sep}src${path.sep}`)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findWindowOpenViolations)
+}
+
 export async function scanArchitecture(rootDir) {
   const findings = [
     ...(await scanPluginSourceBoundaries(rootDir)),
@@ -369,6 +444,8 @@ export async function scanArchitecture(rootDir) {
     ...(await scanTestModeBoundaries(rootDir)),
     ...(await scanCorePackageAppImportBoundaries(rootDir)),
     ...(await scanPackageExportBoundaries(rootDir)),
+    ...(await scanTypeEscapeBoundaries(rootDir)),
+    ...(await scanWindowOpenBoundaries(rootDir)),
   ]
 
   return findings.sort(compareFindings)

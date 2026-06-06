@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process"
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -26,7 +27,7 @@ describe("assetPaths build", () => {
   })
 
   it("bundles node-side asset path helpers without unresolved import warnings", () => {
-    const sandboxDir = mkdtempSync(path.join(packageDir, ".tmp-brand-build-"))
+    const sandboxDir = mkdtempSync(path.join(tmpdir(), "tabora-brand-build-"))
     mkdirSync(path.join(sandboxDir, "src"), { recursive: true })
 
     writeFileSync(

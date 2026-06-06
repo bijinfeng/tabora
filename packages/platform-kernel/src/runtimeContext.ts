@@ -111,8 +111,8 @@ export function createPluginRuntimeContext(options: {
         console.error(`[${options.pluginId}] ${message}`)
       },
     },
-    getConfig(scope) {
-      return config.get(keyFor(scope)) as any
+    getConfig<T = unknown>(scope: RuntimeConfigScope): T | undefined {
+      return config.get(keyFor(scope)) as T | undefined
     },
     async setConfig(scope, value) {
       const key = keyFor(scope)
