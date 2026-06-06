@@ -1,10 +1,7 @@
-import { TaboraMark } from "@tabora/brand"
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createSignal, For, Show } from "solid-js"
+import { createSignal, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type {
-  BackgroundProviderContribution,
-  CommandContribution,
   LayoutHostAPI,
   LayoutRegion,
   PluginInstance,
@@ -13,7 +10,6 @@ import type {
   SearchProviderContribution,
   SearchViewProps,
   SettingsPanelViewProps,
-  ThemeContribution,
   WidgetContextMenuContribution,
   WidgetSize,
   WidgetViewProps,
@@ -21,16 +17,12 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import {
-  createCommandPaletteCommands,
-  createShortcutRegistry,
   createLayoutEngine,
   createDragSortPlan,
   createWidgetContextMenuModel,
   createToastManager,
-  type CommandActionMap,
   type InstanceRenderer,
   type LayoutSwitchPlan,
-  type ShortcutRegistry,
   type ToastOptions,
   type ToastRecord,
 } from "@tabora/orchestrator"
@@ -47,7 +39,6 @@ import {
   type SettingsSectionId,
   type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
-import { Clock, Link2, Pencil, Sun, Moon, Target, CheckSquare, X } from "lucide-solid"
 
 import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
 import {
@@ -57,11 +48,21 @@ import {
 } from "./backgroundResolver"
 import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
+import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
+import {
+  SafeWorkbenchLayout,
+  WorkbenchAddWidgetModal,
+  WorkbenchContextMenuOverlay,
+  WorkbenchExpandOverlay,
+  WorkbenchFullscreenOverlay,
+  WorkbenchPluginModal,
+  WorkbenchSettingsAboutContent,
+} from "./WorkbenchShellChrome"
+import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
 import { canPluginOpenExternal, createLayoutSwitchExecution } from "./shellController"
 import {
   buildSearchableWidgetEntries,
   type CommandExecutionContext,
-  createCommandExecutor,
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
   resolveEnabledSearchProviders,
   resolveWidgetIconLabel,
@@ -69,6 +70,7 @@ import {
   type WidgetRenderModel,
 } from "./shellHelpers"
 import { resolveThemeTokens } from "./themeResolver"
+import { requireWorkspace } from "./WorkbenchShellUtils"
 import { assignGridOrder, gridColumnSpan, gridRowSpan } from "./workbenchGrid"
 import {
   createWorkspaceSession,
@@ -92,36 +94,6 @@ export type WorkbenchShellAppProps = {
     }
   }
   runtime: WorkbenchRuntimeBootstrap
-}
-
-function currentShortcutPlatform(): string {
-  if (typeof navigator === "undefined") return "linux"
-  const platform = navigator.platform.toLowerCase()
-  if (platform.includes("mac")) return "mac"
-  if (platform.includes("win")) return "windows"
-  return "linux"
-}
-
-function shortcutDisplay(key: string): string {
-  return key
-    .split("+")
-    .map((part) => {
-      if (part === "mod") return "⌘/Ctrl"
-      if (part.length === 1) return part.toUpperCase()
-      return part
-    })
-    .join("+")
-}
-
-function pluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
-  return typeof props.instanceId === "string" ? props.instanceId : fallback
-}
-
-function requireWorkspace(workspace: Workspace | null): Workspace {
-  if (!workspace) {
-    throw new Error("Workspace is not ready")
-  }
-  return workspace
 }
 
 export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
@@ -160,6 +132,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const [toasts, setToasts] = createSignal<ToastRecord[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
   const responsive = createWorkbenchResponsiveState()
+  const isDark = () => themeId() === "official.theme.dark"
   let lastExpandTrigger: HTMLElement | null = null
   function refreshToasts() {
     setToasts(toastManager.list())
@@ -186,119 +159,27 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     (plugin) => plugin.manifest.contributes.keybindings ?? [],
   )
 
-  const platformCommands = (): CommandContribution[] => [
-    {
-      id: "open-command-palette",
-      icon: "⌘K",
-      title: "打开命令",
-      description: "搜索命令、卡片和搜索源",
-      category: "workspace",
-      defaultShortcut: "⌘K",
-    },
-    {
-      id: "toggle-theme",
-      icon: "T",
-      title: "切换主题",
-      description: isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
-      category: "workspace",
-      defaultShortcut: "⌘T",
-    },
-    {
-      id: "toggle-layout",
-      icon: "L",
-      title: "切换布局",
-      description:
-        activeLayoutId() === "official.layout.workbench-dashboard"
-          ? "仪表盘 → 流式"
-          : "流式 → 仪表盘",
-      category: "workspace",
-      defaultShortcut: "⌘L",
-    },
-    {
-      id: "add-widget",
-      icon: "+",
-      title: "添加卡片",
-      description: "向工作台添加新卡片",
-      category: "workspace",
-      defaultShortcut: "⌘N",
-    },
-    {
-      id: "open-settings",
-      icon: "S",
-      title: "打开设置",
-      description: "配置工作台",
-      category: "workspace",
-      defaultShortcut: "⌘,",
-    },
-    {
-      id: "open-shortcuts",
-      icon: "?",
-      title: "快捷键参考",
-      description: "查看所有快捷键",
-      category: "workspace",
-    },
-  ]
-
-  const platformKeybindings = () => [
-    { id: "keybinding.open-command-palette", commandId: "open-command-palette", key: "mod+k" },
-    { id: "keybinding.toggle-theme", commandId: "toggle-theme", key: "mod+t" },
-    { id: "keybinding.toggle-layout", commandId: "toggle-layout", key: "mod+l" },
-    { id: "keybinding.add-widget", commandId: "add-widget", key: "mod+n" },
-    { id: "keybinding.open-settings", commandId: "open-settings", key: "mod+," },
-  ]
-
-  const commandActions = (): CommandActionMap => ({
-    "open-command-palette": () => setCmdPaletteOpen(true),
-    "toggle-theme": () =>
-      void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark"),
-    "toggle-layout": () => {
-      const next =
-        activeLayoutId() === "official.layout.workbench-dashboard"
-          ? "official.layout.workbench-stream"
-          : "official.layout.workbench-dashboard"
-      void switchLayout(next)
-    },
-    "add-widget": () => setAddWidgetOpen(true),
-    "open-settings": () => openSettings("official.settings.workspace.appearance"),
-    "open-shortcuts": () => {
-      const shortcuts = shortcutRegistry()
-        .listShortcutReferences()
-        .map((reference) => shortcutDisplay(reference.key))
-        .join("、")
-      showToast(`快捷键：${shortcuts}、Esc`)
-    },
-  })
-
-  const shortcutRegistry = (): ShortcutRegistry =>
-    createShortcutRegistry({
-      platform: currentShortcutPlatform(),
-      platformKeybindings: platformKeybindings(),
-      pluginKeybindings,
-      commands: commandActions(),
-    })
-
-  const commandItems = () =>
-    createCommandPaletteCommands({
-      platformCommands: platformCommands(),
-      pluginCommands,
-      actions: commandActions(),
-    })
-
-  const availableCommandIds = () => [
-    ...platformCommands().map((command) => command.id),
-    ...pluginCommands.map((command) => command.id),
-  ]
-
   const runPluginCommand = (_commandId: string, _context: CommandExecutionContext) => {
     // Plugin command execution is routed here so widget context stays available for the future bus.
   }
-
-  const runCommand = (commandId: string, context: CommandExecutionContext) =>
-    createCommandExecutor({
-      actions: commandActions(),
-      pluginCommandIds: pluginCommands.map((command) => command.id),
+  const { availableCommandIds, commandItems, runCommand, shortcutRegistry } =
+    createWorkbenchShellCommandModels({
+      isDark,
+      activeLayoutId,
+      pluginCommands,
+      pluginKeybindings,
+      setCommandPaletteOpen: setCmdPaletteOpen,
+      setAddWidgetOpen,
+      openSettings,
+      showToast,
+      switchTheme: (themeId) => {
+        void switchTheme(themeId)
+      },
+      switchLayout: (layoutId) => {
+        void switchLayout(layoutId)
+      },
       runPluginCommand,
-    })(commandId, context)
+    })
 
   // Create InstanceRenderer for layout engine
   const instanceRenderer: InstanceRenderer = {
@@ -333,7 +214,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         <WidgetCardShell
           instance={instance}
           title={model.title}
-          icon={renderWidgetIcon(model.icon)}
+          icon={renderWorkbenchWidgetIcon(model.icon)}
           supportedSizes={model.supportedSizes}
           currentSize={model.currentSize}
           callbacks={hostCallbacks}
@@ -527,7 +408,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: searchProviders(),
+      searchProviders: pluginCatalog.listSearchProviders(),
     })
 
     setWorkspaceState(session.workspace)
@@ -535,11 +416,11 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setActiveLayoutId(session.activeLayoutId)
     setThemeId(session.activeThemeId)
 
-    const allThemes = themes()
+    const allThemes = pluginCatalog.listThemes()
     const tokens = resolveThemeTokens(session.activeThemeId, allThemes)
     applyThemeTokens(document.documentElement, tokens)
 
-    const allBackgrounds = backgrounds()
+    const allBackgrounds = pluginCatalog.listBackgroundProviders()
     setBackgroundId(session.activeBackgroundId)
     applyBackgroundStyle(resolveBackgroundStyle(session.activeBackgroundId, allBackgrounds))
 
@@ -574,22 +455,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       window.open(payload.url, "_blank")
     }
   })
-
-  function themes(): ThemeContribution[] {
-    return pluginCatalog.listThemes()
-  }
-
-  function searchProviders(): SearchProviderContribution[] {
-    return pluginCatalog.listSearchProviders()
-  }
-
-  function backgrounds(): BackgroundProviderContribution[] {
-    return pluginCatalog.listBackgroundProviders()
-  }
-
-  function layouts() {
-    return pluginCatalog.listLayouts()
-  }
 
   function layoutRegions(layoutId = activeLayoutId()): LayoutRegion[] {
     return pluginCatalog.findLayoutContribution(layoutId)?.regions ?? []
@@ -683,7 +548,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   async function setDefaultSearchProvider(providerId: string) {
-    if (!searchProviders().some((provider) => provider.id === providerId)) {
+    if (!pluginCatalog.listSearchProviders().some((provider) => provider.id === providerId)) {
       console.warn(`Unknown search provider: "${providerId}"`)
       return
     }
@@ -699,7 +564,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   async function setSearchProviderEnabled(providerId: string, enabled: boolean) {
-    if (!searchProviders().some((provider) => provider.id === providerId)) {
+    if (!pluginCatalog.listSearchProviders().some((provider) => provider.id === providerId)) {
       console.warn(`Unknown search provider: "${providerId}"`)
       return
     }
@@ -708,7 +573,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       const currentEnabled = (
         Array.isArray(currentSearch.enabledProviderIds)
           ? currentSearch.enabledProviderIds
-          : searchProviders().map((p) => p.id)
+          : pluginCatalog.listSearchProviders().map((provider) => provider.id)
       ) as string[]
       const nextEnabled = enabled
         ? [...new Set([...currentEnabled, providerId])]
@@ -720,7 +585,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       return workspace
     })
     setSearchSettings((prev) => {
-      const currentEnabled = prev.enabledProviderIds ?? searchProviders().map((p) => p.id)
+      const currentEnabled =
+        prev.enabledProviderIds ??
+        pluginCatalog.listSearchProviders().map((provider) => provider.id)
       const nextEnabled = enabled
         ? [...new Set([...currentEnabled, providerId])]
         : currentEnabled.filter((id) => id !== providerId)
@@ -800,12 +667,14 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setThemeId(result.workspace.activeThemeId)
     applyThemeTokens(
       document.documentElement,
-      resolveThemeTokens(result.workspace.activeThemeId, themes()),
+      resolveThemeTokens(result.workspace.activeThemeId, pluginCatalog.listThemes()),
     )
     const importedBackgroundId = result.workspace.activeBackgroundProviderId
     setBackgroundId(importedBackgroundId)
-    applyBackgroundStyle(resolveBackgroundStyle(importedBackgroundId, backgrounds()))
-    setSearchSettings(readSearchSettings(result.workspace, searchProviders()))
+    applyBackgroundStyle(
+      resolveBackgroundStyle(importedBackgroundId, pluginCatalog.listBackgroundProviders()),
+    )
+    setSearchSettings(readSearchSettings(result.workspace, pluginCatalog.listSearchProviders()))
     setWorkspaceList((prev) => [...prev, result.workspace])
 
     return { warnings: result.warnings }
@@ -827,7 +696,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: searchProviders(),
+      searchProviders: pluginCatalog.listSearchProviders(),
       workspaceId: id,
     })
     setCtxMenu(null)
@@ -835,9 +704,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setWorkspaceState(session.workspace)
     setActiveLayoutId(session.activeLayoutId)
     setThemeId(session.activeThemeId)
-    const allThemes = themes()
+    const allThemes = pluginCatalog.listThemes()
     applyThemeTokens(document.documentElement, resolveThemeTokens(session.activeThemeId, allThemes))
-    const allBg = backgrounds()
+    const allBg = pluginCatalog.listBackgroundProviders()
     const bg = session.activeBackgroundId
     setBackgroundId(bg)
     applyBackgroundStyle(resolveBackgroundStyle(bg, allBg))
@@ -899,10 +768,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       },
       workspace,
       workspaces: getWorkspaceList(),
-      layouts: layouts(),
-      themes: themes(),
-      backgrounds: backgrounds(),
-      searchProviders: searchProviders(),
+      layouts: pluginCatalog.listLayouts(),
+      themes: pluginCatalog.listThemes(),
+      backgrounds: pluginCatalog.listBackgroundProviders(),
+      searchProviders: pluginCatalog.listSearchProviders(),
       searchSettings: searchSettings(),
       plugins: pluginSummaries(),
     }
@@ -910,7 +779,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   async function switchTheme(newThemeId: string) {
     const activeWorkspace = requireWorkspace(workspaceState())
-    const tokens = resolveThemeTokens(newThemeId, themes())
+    const tokens = resolveThemeTokens(newThemeId, pluginCatalog.listThemes())
     applyThemeTokens(document.documentElement, tokens)
     setThemeId(newThemeId)
     const workspace = await updateWorkspaceTheme({
@@ -925,7 +794,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   async function switchBackground(bgId: string) {
     const activeWorkspace = requireWorkspace(workspaceState())
-    applyBackgroundStyle(resolveBackgroundStyle(bgId, backgrounds()))
+    applyBackgroundStyle(resolveBackgroundStyle(bgId, pluginCatalog.listBackgroundProviders()))
     setBackgroundId(bgId)
     const workspace = await updateWorkspaceBackground({
       workspaceRepo,
@@ -947,27 +816,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   function contextMenuContributions(instance: PluginInstance): WidgetContextMenuContribution[] {
     return widgetContribution(instance)?.contextMenus ?? []
-  }
-
-  function renderWidgetIcon(icon?: string): JSX.Element {
-    switch (icon) {
-      case "target":
-        return <Target size={14} />
-      case "link":
-        return <Link2 size={14} />
-      case "pencil":
-        return <Pencil size={14} />
-      case "check-square":
-        return <CheckSquare size={14} />
-      case "sun":
-        return <Sun size={14} />
-      default:
-        return <Clock size={14} />
-    }
-  }
-
-  function widgetIconLabel(icon?: string): string {
-    return resolveWidgetIconLabel(icon)
   }
 
   async function addWidget(pluginId: string, contributionId: string) {
@@ -1213,11 +1061,11 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   function enabledSearchProviders(): SearchProviderContribution[] {
-    return resolveEnabledSearchProviders(searchSettings(), searchProviders())
+    return resolveEnabledSearchProviders(searchSettings(), pluginCatalog.listSearchProviders())
   }
 
   function resolveDefaultProviderForSearch(): string {
-    return resolveDefaultProviderId(searchSettings(), searchProviders())
+    return resolveDefaultProviderId(searchSettings(), pluginCatalog.listSearchProviders())
   }
 
   function openExternalForPlugin(pluginId: string, url: string): boolean {
@@ -1228,39 +1076,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   function openExternal(url: string): boolean {
     kernel.events.emit("host.external.open", { url })
     return true
-  }
-
-  function renderAddWidgetModal() {
-    return (
-      <Show when={addWidgetOpen()}>
-        <div class="modal-overlay" onClick={() => setAddWidgetOpen(false)}>
-          <div class="modal-container" onClick={(e) => e.stopPropagation()}>
-            <div class="modal-title">添加卡片</div>
-            <div class="modal-body">
-              <For each={availableWidgets()}>
-                {(w) => {
-                  return (
-                    <button
-                      class="add-widget-modal-item"
-                      onClick={() => {
-                        void addWidget(w.pluginId, w.id)
-                        setAddWidgetOpen(false)
-                      }}
-                    >
-                      <span class="add-widget-modal-icon">{widgetIconLabel(w.icon)}</span>
-                      <span class="add-widget-modal-info">
-                        <div class="add-widget-modal-name">{w.title}</div>
-                        <div class="add-widget-modal-desc">{w.description}</div>
-                      </span>
-                    </button>
-                  )
-                }}
-              </For>
-            </div>
-          </div>
-        </div>
-      </Show>
-    )
   }
 
   function runRailAction(actionId: string) {
@@ -1278,74 +1093,37 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   function renderSafeLayout() {
-    // Built-in safe layout: single-column stream of all cards with minimal toolbar
     return (
-      <div class="safe-layout">
-        <div class="safe-layout-toolbar">
-          <span class="toolbar-logo">
-            <TaboraMark class="toolbar-logo-mark" />
-            <span>Tabora</span>
-          </span>
-          <div style={{ flex: 1 }} />
-          <button class="toolbar-btn" onClick={() => setCmdPaletteOpen(true)}>
-            搜索
-          </button>
-          <button
-            class="toolbar-btn"
-            aria-label={isDark() ? "切换到明亮主题" : "切换到暗色主题"}
-            onClick={() =>
-              void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
-            }
-          >
-            {isDark() ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button class="toolbar-btn" onClick={() => openSettings()}>
-            设置
-          </button>
-        </div>
-        <div class="safe-layout-stream">
-          <For each={instances()}>
-            {(instance) => {
-              const widget = widgetContribution(instance)
-              const model = resolveWidgetRenderModel(instance, widget)
-              if (!model) return <div class="settings-empty">卡片实例无效：{instance.id}</div>
-              const View = widget ? viewOrUndefined(widget.views.card) : undefined
-              if (!View) return null
-
-              return (
-                <WidgetCardShell
-                  instance={instance}
-                  title={model.title}
-                  icon={renderWidgetIcon(model.icon)}
-                  supportedSizes={model.supportedSizes}
-                  currentSize={model.currentSize}
-                  callbacks={{
-                    onDragStart: () => setDragId(instance.id),
-                    onDragOver: (e: DragEvent) => {
-                      e.preventDefault()
-                      e.dataTransfer!.dropEffect = "move"
-                    },
-                    onDrop: () => setDragId(null),
-                    onDblClick: () => openWidgetExpand(instance),
-                    onContextMenu: (e: MouseEvent) => {
-                      e.preventDefault()
-                      setCtxMenu({ x: e.clientX, y: e.clientY, instanceId: instance.id })
-                    },
-                    onResize: (size: WidgetSize) => changeWidgetSize(instance.id, size),
-                    onRemove: () => removeWidget(instance.id),
-                    onExpand: () => openWidgetExpand(instance),
-                    isDragging: dragId() === instance.id,
-                  }}
-                >
-                  <PluginViewBoundary instanceId={instance.id} title={model.title}>
-                    {View(buildWidgetViewProps(instance, model))}
-                  </PluginViewBoundary>
-                </WidgetCardShell>
-              )
-            }}
-          </For>
-        </div>
-      </div>
+      <SafeWorkbenchLayout
+        isDark={isDark()}
+        instances={instances()}
+        widgetContribution={widgetContribution}
+        resolveWidgetModel={(instance) =>
+          resolveWidgetRenderModel(instance, widgetContribution(instance))
+        }
+        getView={(viewId) => viewOrUndefined<WidgetViewProps>(viewId)}
+        renderWidgetIcon={renderWorkbenchWidgetIcon}
+        buildWidgetViewProps={buildWidgetViewProps}
+        onOpenCommandPalette={() => setCmdPaletteOpen(true)}
+        onToggleTheme={() =>
+          void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+        }
+        onOpenSettings={() => openSettings()}
+        onDragStart={setDragId}
+        onDragEnd={() => setDragId(null)}
+        onOpenExpand={openWidgetExpand}
+        onOpenContextMenu={(event, instanceId) => {
+          event.preventDefault()
+          setCtxMenu({ x: event.clientX, y: event.clientY, instanceId })
+        }}
+        onResize={(instanceId, size) => {
+          void changeWidgetSize(instanceId, size)
+        }}
+        onRemove={(instanceId) => {
+          void removeWidget(instanceId)
+        }}
+        isDragging={(instanceId) => dragId() === instanceId}
+      />
     )
   }
 
@@ -1378,8 +1156,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     )
   }
 
-  const isDark = () => themeId() === "official.theme.dark"
-
   return (
     <div
       class="tabora-root"
@@ -1397,7 +1173,16 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     >
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
         {renderActiveLayout()}
-        {renderAddWidgetModal()}
+        <WorkbenchAddWidgetModal
+          open={addWidgetOpen()}
+          availableWidgets={availableWidgets()}
+          widgetIconLabel={resolveWidgetIconLabel}
+          onAdd={(pluginId, widgetId) => {
+            void addWidget(pluginId, widgetId)
+            setAddWidgetOpen(false)
+          }}
+          onClose={() => setAddWidgetOpen(false)}
+        />
         <SettingsHost
           open={settingsOpen()}
           panels={pluginCatalog.listSettingsPanels()}
@@ -1407,167 +1192,37 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
           getView={(viewId) => viewOrUndefined<SettingsPanelViewProps>(viewId)}
           panelProps={buildSettingsPanelProps}
           aboutContent={
-            <div class="settings-panel-stack-host">
-              <section class="widget-card">
-                <div class="card-header">
-                  <div class="card-title">
-                    <span class="card-title-text">关于 Tabora</span>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <p>当前实现已切换到双布局工作台骨架，设置中心按固定分类组织插件设置内容。</p>
-                  <p>当前工作区：{workspaceState()?.name ?? "未加载"}。</p>
-                  <p>
-                    已启用官方插件：{pluginSummaries().filter((plugin) => plugin.enabled).length}。
-                  </p>
-                </div>
-              </section>
-            </div>
+            <WorkbenchSettingsAboutContent
+              workspaceName={workspaceState()?.name ?? "未加载"}
+              enabledPluginCount={pluginSummaries().filter((plugin) => plugin.enabled).length}
+            />
           }
         />
-        <Show when={expandState()}>
-          {(expand) => (
-            <div class="expand-overlay" onClick={closeExpand}>
-              <div
-                class="expand-shell"
-                classList={{
-                  "is-card-fallback": expand().mode === "card",
-                  "is-fullscreen": expand().mode === "fullscreen",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div class="expand-header">
-                  <div class="expand-title">
-                    <span class="expand-title-icon">
-                      {renderWidgetIcon(widgetContribution(expand().props)?.icon)}
-                    </span>
-                    <div class="expand-title-texts">
-                      <span class="expand-title-text">{expand().title}</span>
-                      <span class="expand-title-meta">
-                        {expand().mode === "fullscreen"
-                          ? "全屏视图"
-                          : expand().mode === "modal"
-                            ? "插件展开视图"
-                            : expand().mode === "settings"
-                              ? "实例设置"
-                              : "卡片放大视图"}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    class="expand-close-btn"
-                    onClick={closeExpand}
-                    aria-label={expand().mode === "settings" ? "关闭实例设置" : "关闭展开视图"}
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-                <div class="expand-body">
-                  {(() => {
-                    const View = viewOrUndefined<WidgetViewProps>(expand().viewId)
-                    if (!View) {
-                      return (
-                        <div class="settings-panel-missing" role="alert">
-                          展开视图不可用：{expand().viewId}
-                        </div>
-                      )
-                    }
-
-                    return (
-                      <PluginViewBoundary instanceId={expand().instanceId} title={expand().title}>
-                        {View(expand().props)}
-                      </PluginViewBoundary>
-                    )
-                  })()}
-                </div>
-                <div class="expand-footer">
-                  <span class="expand-footer-meta">{expand().instanceId}</span>
-                  <span class="expand-close-hint">Esc 关闭 · 双击打开 · 右键菜单</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </Show>
-        <Show when={modalViewId()}>
-          <div class="modal-overlay" onClick={() => setModalViewId(null)}>
-            <div class="modal-container" onClick={(e) => e.stopPropagation()}>
-              <button class="modal-close" aria-label="关闭" onClick={() => setModalViewId(null)}>
-                <X size={16} />
-              </button>
-              <div class="modal-body">
-                {(() => {
-                  const viewId = modalViewId()
-                  if (!viewId) return null
-                  const View = kernel.registry.views.get(viewId) as SolidView
-                  const props = modalProps()
-                  return (
-                    <PluginViewBoundary instanceId={pluginBoundaryId(props, viewId)} title={viewId}>
-                      {View(props)}
-                    </PluginViewBoundary>
-                  )
-                })()}
-              </div>
-            </div>
-          </div>
-        </Show>
-        <Show when={fullscreenViewId()}>
-          <div class="fullscreen-overlay">
-            <button
-              class="fullscreen-close"
-              aria-label="关闭全屏视图"
-              onClick={() => setFullscreenViewId(null)}
-            >
-              <X size={18} />
-            </button>
-            <div class="fullscreen-body">
-              {(() => {
-                const viewId = fullscreenViewId()
-                if (!viewId) return null
-                const View = kernel.registry.views.get(viewId) as SolidView
-                const props = fullscreenProps()
-                return (
-                  <PluginViewBoundary instanceId={pluginBoundaryId(props, viewId)} title={viewId}>
-                    {View(props)}
-                  </PluginViewBoundary>
-                )
-              })()}
-            </div>
-          </div>
-        </Show>
-        <Show when={ctxMenu()}>
-          {(menu) => (
-            <div class="ctx-menu-overlay" onClick={() => setCtxMenu(null)}>
-              <div class="ctx-menu-panel" style={{ left: `${menu().x}px`, top: `${menu().y}px` }}>
-                <For each={contextMenuModel()?.sections ?? []}>
-                  {(section, sectionIndex) => (
-                    <>
-                      <Show when={sectionIndex() > 0}>
-                        <hr class="ctx-menu-sep" />
-                      </Show>
-                      <For each={section.items}>
-                        {(item) => (
-                          <button
-                            class="ctx-menu-item"
-                            classList={{ "ctx-menu-danger": item.danger }}
-                            onClick={() => {
-                              item.run()
-                              setCtxMenu(null)
-                            }}
-                          >
-                            {item.label}
-                            <Show when={item.isCurrent}>
-                              <span class="ctx-menu-check">当前</span>
-                            </Show>
-                          </button>
-                        )}
-                      </For>
-                    </>
-                  )}
-                </For>
-              </div>
-            </div>
-          )}
-        </Show>
+        <WorkbenchExpandOverlay
+          expandState={expandState()}
+          getView={(viewId) => viewOrUndefined<WidgetViewProps>(viewId)}
+          widgetIconForProps={(viewProps) =>
+            renderWorkbenchWidgetIcon(widgetContribution(viewProps)?.icon)
+          }
+          onClose={closeExpand}
+        />
+        <WorkbenchPluginModal
+          viewId={modalViewId()}
+          modalProps={modalProps()}
+          getView={(viewId) => viewOrUndefined(viewId)}
+          onClose={() => setModalViewId(null)}
+        />
+        <WorkbenchFullscreenOverlay
+          viewId={fullscreenViewId()}
+          fullscreenProps={fullscreenProps()}
+          getView={(viewId) => viewOrUndefined(viewId)}
+          onClose={() => setFullscreenViewId(null)}
+        />
+        <WorkbenchContextMenuOverlay
+          menu={ctxMenu()}
+          sections={contextMenuModel()?.sections ?? []}
+          onClose={() => setCtxMenu(null)}
+        />
         <ToastHost toasts={toasts()} onAction={(commandId) => runCommand(commandId, {})} />
       </Show>
       <CommandPalette

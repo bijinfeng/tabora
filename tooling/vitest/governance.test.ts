@@ -698,6 +698,15 @@ describe("governance rules", () => {
     expect(extensionApp.split("\n").length).toBeLessThan(200)
   })
 
+  it("keeps the shared shell root under the current governance threshold", async () => {
+    const shellRoot = await readRepositoryText(
+      ".",
+      "packages/workbench-app/src/WorkbenchShellApp.tsx",
+    )
+
+    expect(shellRoot.split("\n").length).toBeLessThan(1265)
+  })
+
   it("builds a grouped quality report", () => {
     expect(
       classifyExternalOpenMatch({

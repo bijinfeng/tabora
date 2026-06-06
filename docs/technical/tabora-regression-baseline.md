@@ -742,20 +742,20 @@ Agent 必须：
 
 以下债务来自 2026-06-05 对技术方案落地情况的审查。后续每轮迭代如果触碰相关区域，必须优先修正或确认没有扩大影响面。
 
-| 债务                                                                                   | 影响                                                                           | 建议优先级 |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
-| shell 注入的 `host.openExternal()` 可绕过插件 manifest 权限                            | 已于 2026-06-06 通过 widget owner manifest 权限校验收口                        | 已解决     |
-| `official.widgets.quick-links` 直接渲染 `<a target="_blank">` 且未声明 `external-open` | 已于 2026-06-06 改为声明 `external-open` 并走 host bridge                      | 已解决     |
-| 布局切换 snapshot 在实例迁移后生成，不是真正切换前快照                                 | 已于 2026-06-06 改为通过切换前 workspace/instances 生成 snapshot               | 已解决     |
-| playground / extension `App.tsx` 高度重复                                              | 已于 2026-06-06 收敛为薄 wrapper，共享宿主编排集中到 `WorkbenchShellApp.tsx`   | 已解决     |
-| extension 仍通过相对路径 import playground helper                                      | 已于 2026-06-06 改为通过 `@tabora/workbench-app` 共享 helper，并受架构守卫覆盖 | 已解决     |
-| `packages/workbench-app/src/WorkbenchShellApp.tsx` 体积仍大                            | 重复已收口，但共享宿主编排仍偏重，后续拆分成本高                               | P2         |
-| `SearchViewProps` 尚未升级到技术方案描述的状态机 contract                              | 搜索编排仍分散在插件和 shell                                                   | P2         |
-| 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致                                                 | P2         |
-| Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整                                                       | P2         |
-| workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id                       | 默认装配协议校验不完整                                                         | P2         |
-| `pnpm test:e2e` 未进入 CI                                                              | 已于 2026-06-06 接入 nightly workflow；PR 路径强门禁仍待按路径策略推进         | 已解决     |
-| L7 质量扫描尚未脚本化                                                                  | 已于 2026-06-06 通过 `pnpm check:architecture` / `pnpm quality` 收口高信号扫描 | 已解决     |
+| 债务                                                                                   | 影响                                                                                                                                                     | 建议优先级 |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| shell 注入的 `host.openExternal()` 可绕过插件 manifest 权限                            | 已于 2026-06-06 通过 widget owner manifest 权限校验收口                                                                                                  | 已解决     |
+| `official.widgets.quick-links` 直接渲染 `<a target="_blank">` 且未声明 `external-open` | 已于 2026-06-06 改为声明 `external-open` 并走 host bridge                                                                                                | 已解决     |
+| 布局切换 snapshot 在实例迁移后生成，不是真正切换前快照                                 | 已于 2026-06-06 改为通过切换前 workspace/instances 生成 snapshot                                                                                         | 已解决     |
+| playground / extension `App.tsx` 高度重复                                              | 已于 2026-06-06 收敛为薄 wrapper，共享宿主编排集中到 `WorkbenchShellApp.tsx`                                                                             | 已解决     |
+| extension 仍通过相对路径 import playground helper                                      | 已于 2026-06-06 改为通过 `@tabora/workbench-app` 共享 helper，并受架构守卫覆盖                                                                           | 已解决     |
+| `packages/workbench-app/src/WorkbenchShellApp.tsx` 体积仍大                            | 已于 2026-06-06 继续拆出 safe layout / overlay chrome、command/shortcut orchestration 与 icon helper，主文件降到 1265 行治理阈值内，但共享宿主编排仍偏重 | P2         |
+| `SearchViewProps` 尚未升级到技术方案描述的状态机 contract                              | 搜索编排仍分散在插件和 shell                                                                                                                             | P2         |
+| 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致                                                                                                                           | P2         |
+| Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整                                                                                                                                 | P2         |
+| workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id                       | 默认装配协议校验不完整                                                                                                                                   | P2         |
+| `pnpm test:e2e` 未进入 CI                                                              | 已于 2026-06-06 接入 nightly workflow；PR 路径强门禁仍待按路径策略推进                                                                                   | 已解决     |
+| L7 质量扫描尚未脚本化                                                                  | 已于 2026-06-06 通过 `pnpm check:architecture` / `pnpm quality` 收口高信号扫描                                                                           | 已解决     |
 
 ## 11. 后续治理建议
 
@@ -765,8 +765,9 @@ Agent 必须：
 2. 已于 2026-06-06 修正布局切换 snapshot 时机。
 3. 已于 2026-06-06 将 extension 复用 playground helper 的路径迁入 `@tabora/workbench-app`，并补 app 间源码 import 守卫。
 4. 已于 2026-06-06 将 playground / extension `App.tsx` 收敛为薄 wrapper，共享宿主根组件迁入 `@tabora/workbench-app`。
-5. 已于 2026-06-06 接入 nightly workflow；后续按路径触发策略推进 PR 强门禁。
-6. 已于 2026-06-06 将 L7 中的高信号扫描收敛为 `pnpm quality` / `pnpm check:architecture`，并在 release workflow 接入 `pnpm regression:summary`。
+5. 已于 2026-06-06 继续把 `WorkbenchShellApp` 的 safe layout / overlay / settings about chrome、command/shortcut orchestration、icon helper 拆到独立模块，并用治理测试把共享宿主根组件压到 1265 行阈值以内。
+6. 已于 2026-06-06 接入 nightly workflow；后续按路径触发策略推进 PR 强门禁。
+7. 已于 2026-06-06 将 L7 中的高信号扫描收敛为 `pnpm quality` / `pnpm check:architecture`，并在 release workflow 接入 `pnpm regression:summary`。
 
 中期：
 
