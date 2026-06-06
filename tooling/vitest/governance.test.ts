@@ -5,6 +5,7 @@ import {
   findCorePackageAppImports,
   findForbiddenPluginDependencies,
   findForbiddenPluginImports,
+  findPackageExportViolations,
   findForbiddenUiDependencies,
   findForbiddenUiImports,
   findPluginExternalOpenViolations,
@@ -204,6 +205,42 @@ describe("governance rules", () => {
         filePath: "packages/platform-kernel/src/runtimeContext.ts",
         specifier: "@tabora/extension/runtime",
         reason: "packages must not import app source or app packages",
+      },
+    ])
+  })
+
+  it("detects package export drift from vp pack entrypoints", () => {
+    expect(
+      findPackageExportViolations({
+        filePath: "packages/brand/package.json",
+        manifest: {
+          scripts: {
+            build: "vp pack src/index.ts src/assetPaths.ts",
+          },
+          exports: {
+            ".": "./src/index.ts",
+            "./package.json": "./package.json",
+          },
+          publishConfig: {
+            exports: {
+              ".": "./dist/index.js",
+              "./package.json": "./package.json",
+            },
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/brand/package.json",
+        match: 'exports["./assetPaths"]',
+        reason:
+          'missing or incorrect export for build entry "src/assetPaths.ts"; expected "./src/assetPaths.ts"',
+      },
+      {
+        filePath: "packages/brand/package.json",
+        match: 'publishConfig.exports["./assetPaths"]',
+        reason:
+          'missing or incorrect publish export for build entry "src/assetPaths.ts"; expected "./dist/assetPaths.js"',
       },
     ])
   })

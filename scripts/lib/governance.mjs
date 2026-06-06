@@ -162,6 +162,44 @@ export function findCorePackageAppImports(options) {
   return findForbiddenImports(options, CORE_PACKAGE_APP_IMPORT_RULES)
 }
 
+export function findPackageExportViolations(options) {
+  const buildScript = options.manifest.scripts?.build
+
+  if (typeof buildScript !== "string" || !buildScript.includes("vp pack")) {
+    return []
+  }
+
+  const exportsMap = normalizeExportMap(options.manifest.exports)
+  const publishExportsMap = normalizeExportMap(options.manifest.publishConfig?.exports)
+
+  return extractVpPackEntrypoints(buildScript).flatMap((entryPath) => {
+    const expected = buildExpectedExports(entryPath)
+    if (!expected) {
+      return []
+    }
+
+    const findings = []
+
+    if (exportsMap[expected.exportKey] !== expected.sourceTarget) {
+      findings.push({
+        filePath: options.filePath,
+        match: `exports["${expected.exportKey}"]`,
+        reason: `missing or incorrect export for build entry "${entryPath}"; expected "${expected.sourceTarget}"`,
+      })
+    }
+
+    if (publishExportsMap[expected.exportKey] !== expected.publishTarget) {
+      findings.push({
+        filePath: options.filePath,
+        match: `publishConfig.exports["${expected.exportKey}"]`,
+        reason: `missing or incorrect publish export for build entry "${entryPath}"; expected "${expected.publishTarget}"`,
+      })
+    }
+
+    return findings
+  })
+}
+
 export function findPluginExternalOpenViolations(options) {
   if (isTestFile(options.filePath)) {
     return []
@@ -312,6 +350,15 @@ export async function scanCorePackageAppImportBoundaries(rootDir) {
   return scanFiles(repositoryRoot, files, findCorePackageAppImports)
 }
 
+export async function scanPackageExportBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles([path.join(repositoryRoot, "packages")], (filePath) => {
+    return path.basename(filePath) === "package.json"
+  })
+
+  return scanPackageFiles(repositoryRoot, files, findPackageExportViolations)
+}
+
 export async function scanArchitecture(rootDir) {
   const findings = [
     ...(await scanPluginSourceBoundaries(rootDir)),
@@ -321,6 +368,7 @@ export async function scanArchitecture(rootDir) {
     ...(await scanPluginExternalOpenBoundaries(rootDir)),
     ...(await scanTestModeBoundaries(rootDir)),
     ...(await scanCorePackageAppImportBoundaries(rootDir)),
+    ...(await scanPackageExportBoundaries(rootDir)),
   ]
 
   return findings.sort(compareFindings)
@@ -434,6 +482,76 @@ function collectPatternMatches(options) {
   }
 
   return matches
+}
+
+function normalizeExportMap(exportsField) {
+  if (!exportsField || typeof exportsField !== "object" || Array.isArray(exportsField)) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(exportsField).flatMap(([exportKey, target]) =>
+      typeof target === "string" ? [[exportKey, target]] : [],
+    ),
+  )
+}
+
+function extractVpPackEntrypoints(buildScript) {
+  const match = buildScript.match(/\bvp\s+pack\b([\s\S]*)/)
+
+  if (!match) {
+    return []
+  }
+
+  const tokens = match[1]
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length > 0)
+  const entries = []
+
+  for (const token of tokens) {
+    if (token === "&&" || token === "||") {
+      break
+    }
+
+    if (token.startsWith("-")) {
+      continue
+    }
+
+    if (/\.[cm]?[jt]sx?$/.test(token)) {
+      entries.push(token)
+    }
+  }
+
+  return [...new Set(entries)]
+}
+
+function buildExpectedExports(entryPath) {
+  const normalizedPath = entryPath.replaceAll("\\", "/")
+
+  if (!normalizedPath.startsWith("src/")) {
+    return null
+  }
+
+  const extension = path.extname(normalizedPath)
+  const relativeEntry = normalizedPath.slice("src/".length, -extension.length)
+
+  if (relativeEntry.length === 0) {
+    return null
+  }
+
+  const exportKey =
+    relativeEntry === "index"
+      ? "."
+      : relativeEntry.endsWith("/index")
+        ? `./${relativeEntry.slice(0, -"/index".length)}`
+        : `./${relativeEntry}`
+
+  return {
+    exportKey,
+    sourceTarget: `./${normalizedPath}`,
+    publishTarget: `./dist/${relativeEntry}.js`,
+  }
 }
 
 async function collectFiles(roots, matcher) {
