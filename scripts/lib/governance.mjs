@@ -142,39 +142,7 @@ const WORKBENCH_AVOIDABLE_STYLE_PATTERNS = [
     reason: "workbench theme variables must not carry literal color fallbacks",
   },
 ]
-const WORKBENCH_RAW_COLOR_BASELINE = new Set([
-  "packages/official-plugins/src/styles.css::#fff",
-  "packages/official-plugins/src/styles.css::rgba(28, 30, 28, 0.035)",
-  "packages/official-plugins/src/styles.css::rgba(255, 255, 255, 0.45)",
-  "packages/official-plugins/src/styles.css::rgba(26, 144, 112, 0.08)",
-  "packages/official-plugins/src/styles.css::rgba(15, 23, 18, 0.12)",
-  "packages/official-plugins/src/styles.css::rgba(0, 0, 0, 0.1)",
-  "packages/ui/src/styled/button/styles.css::#fff",
-  "packages/ui/src/styled/checkbox/styles.css::#fff",
-  "packages/ui/src/styled/combobox/styles.css::rgba(0, 0, 0, 0.08)",
-  "packages/ui/src/styled/dialog/styles.css::rgba(0, 0, 0, 0.2)",
-  "packages/ui/src/styled/dialog/styles.css::rgba(0, 0, 0, 0.12)",
-  "packages/ui/src/styled/dropdownMenu/styles.css::rgba(0, 0, 0, 0.08)",
-  "packages/ui/src/styled/popover/styles.css::rgba(0, 0, 0, 0.08)",
-  "packages/ui/src/styled/segmentedControl/styles.css::rgba(0, 0, 0, 0.06)",
-  "packages/ui/src/styled/select/styles.css::rgba(0, 0, 0, 0)",
-  "packages/ui/src/styled/select/styles.css::rgba(0, 0, 0, 0.08)",
-  "packages/ui/src/styled/select/styles.css::rgba(0, 0, 0, 0.06)",
-  "packages/ui/src/styled/slider/styles.css::rgba(0, 0, 0, 0.12)",
-  "packages/ui/src/styled/switch/styles.css::#fff",
-  "packages/ui/src/styled/switch/styles.css::rgba(0, 0, 0, 0.12)",
-  "packages/workbench-shell/src/styles.css::rgba(0, 0, 0, 0.15)",
-  "packages/workbench-shell/src/styles.css::rgba(8, 10, 8, 0.18)",
-  "packages/workbench-shell/src/styles.css::rgba(15, 23, 18, 0.2)",
-  "packages/workbench-shell/src/styles.css::rgba(0, 0, 0, 0.12)",
-  "packages/workbench-shell/src/styles.css::rgba(0, 0, 0, 0.2)",
-  "packages/workbench-shell/src/styles.css::rgba(0, 0, 0, 0.08)",
-  "packages/workbench-shell/src/styles.css::!important",
-  "plugins/community/layout-diy-masonry/src/styles.css::#fff",
-  "plugins/community/layout-diy-masonry/src/styles.css::rgba(0, 0, 0, 0.15)",
-  "plugins/community/layout-diy-masonry/src/styles.css::rgba(0, 0, 0, 0.18)",
-  "plugins/community/layout-diy-masonry/src/styles.css::#f3f4f6",
-])
+const WORKBENCH_RAW_COLOR_BASELINE = new Set()
 
 export function resolveRepositoryRoot(startDir) {
   if (existsSync(path.join(startDir, "pnpm-workspace.yaml"))) {

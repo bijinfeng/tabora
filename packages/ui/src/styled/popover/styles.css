@@ -7,7 +7,7 @@
     background: rgb(var(--tbr-color-surface));
     border: 1px solid rgb(var(--tbr-color-line));
     border-radius: var(--tbr-radius-panel);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 16px rgb(var(--tbr-color-shadow) / 0.08);
     z-index: 50;
     padding: 14px;
     animation: tbr-scale-in 120ms var(--tbr-ease);

@@ -85,8 +85,8 @@
     border: 1px solid rgb(var(--tbr-color-line));
     border-radius: var(--tbr-radius-control);
     box-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.08),
-      0 0 1px rgba(0, 0, 0, 0.06);
+      0 4px 16px rgb(var(--tbr-color-shadow) / 0.08),
+      0 0 1px rgb(var(--tbr-color-shadow) / 0.06);
     overflow-x: hidden;
     overflow-y: hidden;
     max-height: 260px;

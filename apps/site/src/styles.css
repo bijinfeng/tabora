@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --site-ink: #111512;
-  --site-blue: #2e718f;
-  --site-amber: #9b6b16;
-  --site-shadow: 0 22px 60px rgba(17, 21, 18, 0.1);
+  --site-ink: 17 21 18;
+  --site-blue: 46 113 143;
+  --site-amber: 155 107 22;
+  --site-shadow-rgb: 17 21 18;
+  --site-shadow-alpha: 0.1;
+  --site-mask-ink: 0 0 0;
 }
 
 .site-dark {
-  --site-ink: #f7f8f6;
-  --site-blue: #6fb4d2;
-  --site-amber: #d5a64f;
-  --site-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  --site-ink: 247 248 246;
+  --site-blue: 111 180 210;
+  --site-amber: 213 166 79;
+  --site-shadow-rgb: 0 0 0;
+  --site-shadow-alpha: 0.28;
 }
 
 html {
@@ -48,7 +51,7 @@ body::before {
     linear-gradient(90deg, rgb(var(--tbr-color-line)) 1px, transparent 1px);
   background-size: 48px 48px;
   opacity: 0.24;
-  mask-image: linear-gradient(180deg, #000 0%, transparent 58%);
+  mask-image: linear-gradient(180deg, rgb(var(--site-mask-ink)) 0%, transparent 58%);
 }
 
 button {
@@ -91,7 +94,7 @@ button {
   width: 24px;
   height: 24px;
   display: block;
-  color: var(--site-ink);
+  color: rgb(var(--site-ink));
   flex-shrink: 0;
 }
 
@@ -272,7 +275,7 @@ h3 {
 .anatomy,
 .download-console,
 .card-featured {
-  box-shadow: var(--site-shadow);
+  box-shadow: 0 22px 60px rgb(var(--site-shadow-rgb) / var(--site-shadow-alpha));
 }
 
 .product-stage,
@@ -577,13 +580,13 @@ h3 {
 }
 
 .tag.blue {
-  background: color-mix(in srgb, var(--site-blue) 12%, transparent);
-  color: var(--site-blue);
+  background: color-mix(in srgb, rgb(var(--site-blue)) 12%, transparent);
+  color: rgb(var(--site-blue));
 }
 
 .tag.amber {
-  background: color-mix(in srgb, var(--site-amber) 14%, transparent);
-  color: var(--site-amber);
+  background: color-mix(in srgb, rgb(var(--site-amber)) 14%, transparent);
+  color: rgb(var(--site-amber));
 }
 
 .start-grid,

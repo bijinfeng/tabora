@@ -16,7 +16,7 @@
     background: rgb(var(--tbr-color-accent));
     cursor: pointer;
     border: 2px solid rgb(var(--tbr-color-surface));
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 3px rgb(var(--tbr-color-shadow) / 0.12);
   }
   .tbr-slider:focus-visible::-webkit-slider-thumb {
     outline: 2px solid rgb(var(--tbr-color-focus));

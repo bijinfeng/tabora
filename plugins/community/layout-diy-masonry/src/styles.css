@@ -29,7 +29,7 @@
   background: rgb(var(--color-accent));
   color: rgb(var(--color-inverse));
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(var(--color-shadow) / 0.15);
 }
 .masonry-menu {
   position: absolute;
@@ -41,7 +41,7 @@
   padding: 8px;
   border-radius: 12px;
   background: rgb(var(--color-surface));
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 24px rgb(var(--color-shadow) / 0.18);
 }
 .masonry-menu-item {
   display: flex;

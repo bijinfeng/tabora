@@ -174,8 +174,8 @@
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
   box-shadow:
-    0 2px 8px rgba(28, 30, 28, 0.035),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    0 2px 8px rgb(var(--color-text) / 0.035),
+    inset 0 1px 0 rgb(var(--color-inverse) / 0.45);
   transition:
     background 120ms ease,
     border-color 120ms ease,
@@ -191,8 +191,8 @@
   border-color: color-mix(in srgb, rgb(var(--color-accent)) 34%, rgb(var(--color-line)));
   box-shadow:
     0 0 0 3px color-mix(in srgb, rgb(var(--color-accent-soft)) 72%, transparent),
-    0 12px 32px rgba(26, 144, 112, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    0 12px 32px rgb(var(--color-accent) / 0.08),
+    inset 0 1px 0 rgb(var(--color-inverse) / 0.45);
 }
 
 .search-bar input {
@@ -261,7 +261,7 @@
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
   background: rgb(var(--color-surface));
-  box-shadow: 0 10px 26px rgba(15, 23, 18, 0.12);
+  box-shadow: 0 10px 26px rgb(var(--color-shadow-strong) / 0.12);
 }
 
 .sp-option {
@@ -339,7 +339,7 @@
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgb(var(--color-shadow) / 0.1);
   max-height: 300px;
   overflow-y: auto;
 }

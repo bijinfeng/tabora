@@ -348,7 +348,7 @@ describe("governance rules", () => {
     })
   })
 
-  it("flags new workbench raw colors but allows frozen baseline entries", () => {
+  it("flags historical workbench raw colors now that the baseline is zero", () => {
     expect(
       findWorkbenchRawColorViolations({
         filePath: "packages/ui/src/styled/button/styles.css",
@@ -362,7 +362,29 @@ describe("governance rules", () => {
     ).toEqual([
       {
         filePath: "packages/ui/src/styled/button/styles.css",
+        match: "#fff",
+        reason: "new workbench raw colors must be tokenized or added to the reviewed baseline",
+      },
+      {
+        filePath: "packages/ui/src/styled/button/styles.css",
         match: "#123456",
+        reason: "new workbench raw colors must be tokenized or added to the reviewed baseline",
+      },
+    ])
+
+    expect(
+      findWorkbenchRawColorViolations({
+        filePath: "packages/workbench-shell/src/styles.css",
+        source: `
+          .overlay {
+            background: rgba(0, 0, 0, 0.12);
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/workbench-shell/src/styles.css",
+        match: "rgba(0, 0, 0, 0.12)",
         reason: "new workbench raw colors must be tokenized or added to the reviewed baseline",
       },
     ])
@@ -519,6 +541,100 @@ describe("governance rules", () => {
       "packages/official-plugins/src/theme-default-pack.ts",
     )
     expect(themePack).toContain('"color-inverse": "255 255 255"')
+  })
+
+  it("tokenizes shared shadow and scrim styles instead of keeping raw overlay colors", async () => {
+    const targetFiles = [
+      "packages/official-plugins/src/styles.css",
+      "packages/ui/src/styled/combobox/styles.css",
+      "packages/ui/src/styled/dialog/styles.css",
+      "packages/ui/src/styled/dropdownMenu/styles.css",
+      "packages/ui/src/styled/popover/styles.css",
+      "packages/ui/src/styled/segmentedControl/styles.css",
+      "packages/ui/src/styled/select/styles.css",
+      "packages/ui/src/styled/slider/styles.css",
+      "packages/ui/src/styled/switch/styles.css",
+      "packages/workbench-shell/src/styles.css",
+      "plugins/community/layout-diy-masonry/src/styles.css",
+    ]
+
+    for (const filePath of targetFiles) {
+      const source = await readRepositoryText(".", filePath)
+      expect(source).not.toMatch(/rgba\(\s*0\s*,\s*0\s*,\s*0\s*,/i)
+      expect(source).not.toMatch(/rgba\(\s*15\s*,\s*23\s*,\s*18\s*,/i)
+      expect(source).not.toMatch(/rgba\(\s*8\s*,\s*10\s*,\s*8\s*,/i)
+    }
+
+    const uiThemeTokens = await readRepositoryText(".", "packages/ui/src/tokens/theme.css")
+    expect(uiThemeTokens).toContain("--tbr-color-shadow: 0 0 0;")
+    expect(uiThemeTokens).toContain("--tbr-color-shadow-strong: 15 23 18;")
+    expect(uiThemeTokens).toContain("--tbr-color-scrim: 8 10 8;")
+
+    const uiTokenRegistry = await readRepositoryText(".", "packages/ui/src/tokens/tokens.ts")
+    expect(uiTokenRegistry).toContain('shadow: "tbr-color-shadow"')
+    expect(uiTokenRegistry).toContain('shadowStrong: "tbr-color-shadow-strong"')
+    expect(uiTokenRegistry).toContain('scrim: "tbr-color-scrim"')
+
+    const workbenchDefaults = await readRepositoryText(
+      ".",
+      "packages/workbench-shell/src/styles.css",
+    )
+    expect(workbenchDefaults).toContain("--color-shadow: 0 0 0;")
+    expect(workbenchDefaults).toContain("--color-shadow-strong: 15 23 18;")
+    expect(workbenchDefaults).toContain("--color-scrim: 8 10 8;")
+
+    const themePack = await readRepositoryText(
+      ".",
+      "packages/official-plugins/src/theme-default-pack.ts",
+    )
+    expect(themePack).toContain('"color-shadow": "0 0 0"')
+    expect(themePack).toContain('"color-shadow-strong": "15 23 18"')
+    expect(themePack).toContain('"color-scrim": "8 10 8"')
+  })
+
+  it("reuses semantic tokens for glow and highlight treatments", async () => {
+    const source = await readRepositoryText(".", "packages/official-plugins/src/styles.css")
+
+    expect(source).not.toContain("rgba(255, 255, 255, 0.45)")
+    expect(source).not.toContain("rgba(26, 144, 112, 0.08)")
+    expect(source).not.toContain("rgba(28, 30, 28, 0.035)")
+
+    expect(source).toContain("rgb(var(--color-text) / 0.035)")
+    expect(source).toContain("rgb(var(--color-inverse) / 0.45)")
+    expect(source).toContain("rgb(var(--color-accent) / 0.08)")
+  })
+
+  it("builds generated background presets from data instead of inline raw color literals", async () => {
+    const source = await readRepositoryText(
+      ".",
+      "packages/official-plugins/src/background-basic.ts",
+    )
+
+    expect(source).not.toContain("rgb(237, 241, 238)")
+    expect(source).not.toContain("rgb(18, 18, 18)")
+    expect(source).not.toContain("rgba(35, 113, 89, 0.18)")
+    expect(source).not.toContain("rgba(66, 133, 244, 0.15)")
+    expect(source).not.toContain("rgba(128, 90, 213, 0.15)")
+  })
+
+  it("uses local site variables instead of raw site color literals", async () => {
+    const source = await readRepositoryText(".", "apps/site/src/styles.css")
+
+    expect(source).not.toContain("#000")
+    expect(source).not.toContain("#111512")
+    expect(source).not.toContain("#2e718f")
+    expect(source).not.toContain("#6fb4d2")
+    expect(source).not.toContain("#9b6b16")
+    expect(source).not.toContain("#d5a64f")
+    expect(source).not.toContain("#f7f8f6")
+    expect(source).not.toContain("rgba(0, 0, 0, 0.28)")
+    expect(source).not.toContain("rgba(17, 21, 18, 0.1)")
+
+    expect(source).toContain("--site-ink: 17 21 18;")
+    expect(source).toContain("--site-shadow-rgb: 17 21 18;")
+    expect(source).toContain("rgb(var(--site-ink))")
+    expect(source).toContain("rgb(var(--site-blue))")
+    expect(source).toContain("rgb(var(--site-amber))")
   })
 
   it("builds a grouped quality report", () => {

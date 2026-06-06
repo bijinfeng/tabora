@@ -64,6 +64,8 @@
 - 明亮 / 暗色主题都以 Refined Sage 色板和语义 token 为准。
 - 主文本、次级文本、表面、边框、强调色必须走 theme token。
 - 强填充按钮文字、勾选图标、强色块上的品牌标记统一走 `color-inverse`，不要继续写死 `#fff`。
+- 浮层阴影、拖拽阴影和遮罩统一走 `color-shadow` / `color-shadow-strong` / `color-scrim`，透明度按场景单独控制，不再写死黑色或深色 `rgba(...)`。
+- 搜索栏 glow、内高光和轻抬升效果优先复用 `color-text` / `color-accent` / `color-inverse` 并叠加透明度，不新增临时 raw color。
 - 组件和插件默认只消费 semantic / component token，不直接消费原始色值。
 - hover、focus、active、selected、loading 只改变颜色、边框、阴影和内容反馈，不改变外部尺寸。
 

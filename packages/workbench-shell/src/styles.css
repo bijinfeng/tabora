@@ -10,6 +10,9 @@
   --color-line: 230 232 227;
   --color-line-strong: 209 212 206;
   --color-inverse: 255 255 255;
+  --color-shadow: 0 0 0;
+  --color-shadow-strong: 15 23 18;
+  --color-scrim: 8 10 8;
   --color-accent: 26 144 112;
   --color-accent-hover: 21 120 92;
   --color-accent-soft: 234 245 240;
@@ -153,7 +156,7 @@
 }
 .grid-item.dragging .widget-card {
   opacity: 0.92;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 40px rgb(var(--color-shadow) / 0.15);
   transform: scale(1.03);
   z-index: 50;
   border-color: rgb(var(--color-accent));
@@ -315,7 +318,7 @@
   position: fixed;
   inset: 0;
   z-index: 210;
-  background: rgba(8, 10, 8, 0.18);
+  background: rgb(var(--color-scrim) / 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,7 +332,7 @@
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: 18px;
-  box-shadow: 0 24px 72px rgba(15, 23, 18, 0.2);
+  box-shadow: 0 24px 72px rgb(var(--color-shadow-strong) / 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -431,7 +434,7 @@
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgb(var(--color-shadow) / 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -442,7 +445,7 @@
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgb(var(--color-shadow) / 0.12);
   width: 480px;
   max-width: 90vw;
   max-height: 80vh;
@@ -503,7 +506,7 @@
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgb(var(--color-shadow) / 0.2);
   backdrop-filter: blur(2px);
   display: flex;
   justify-content: flex-end;
@@ -681,7 +684,7 @@
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 20px rgb(var(--color-shadow) / 0.12);
   min-width: 160px;
   padding: 4px;
 }
@@ -731,7 +734,7 @@
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgb(var(--color-shadow) / 0.08);
   font-size: 13px;
   max-width: 360px;
   animation: toast-in 0.2s ease;
@@ -752,7 +755,7 @@
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgb(var(--color-shadow) / 0.15);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -765,7 +768,7 @@
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgb(var(--color-shadow) / 0.12);
   overflow: hidden;
 }
 .cmd-input-wrap {
