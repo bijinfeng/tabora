@@ -58,6 +58,12 @@ import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
+import {
+  clearWorkbenchSearchHistory,
+  saveWorkbenchSearchHistory,
+  setWorkbenchDefaultSearchProvider,
+  setWorkbenchSearchProviderEnabled,
+} from "./WorkbenchShellSearchState"
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import {
   buildWorkbenchContextMenuModel,
@@ -545,50 +551,23 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   async function setDefaultSearchProvider(providerId: string) {
-    if (!pluginCatalog.listSearchProviders().some((provider) => provider.id === providerId)) {
-      console.warn(`Unknown search provider: "${providerId}"`)
-      return
-    }
-    await updateWorkspace((workspace) => {
-      const currentSearch = (workspace.config?.search as Record<string, unknown>) ?? {}
-      workspace.config = {
-        ...(workspace.config ?? {}),
-        search: { ...currentSearch, defaultProviderId: providerId },
-      }
-      return workspace
+    await setWorkbenchDefaultSearchProvider({
+      providerId,
+      providers: pluginCatalog.listSearchProviders(),
+      updateWorkspace,
+      setSearchSettings,
+      warn: console.warn,
     })
-    setSearchSettings((prev) => ({ ...prev, defaultProviderId: providerId }))
   }
 
   async function setSearchProviderEnabled(providerId: string, enabled: boolean) {
-    if (!pluginCatalog.listSearchProviders().some((provider) => provider.id === providerId)) {
-      console.warn(`Unknown search provider: "${providerId}"`)
-      return
-    }
-    await updateWorkspace((workspace) => {
-      const currentSearch = (workspace.config?.search as Record<string, unknown>) ?? {}
-      const currentEnabled = (
-        Array.isArray(currentSearch.enabledProviderIds)
-          ? currentSearch.enabledProviderIds
-          : pluginCatalog.listSearchProviders().map((provider) => provider.id)
-      ) as string[]
-      const nextEnabled = enabled
-        ? [...new Set([...currentEnabled, providerId])]
-        : currentEnabled.filter((id) => id !== providerId)
-      workspace.config = {
-        ...(workspace.config ?? {}),
-        search: { ...currentSearch, enabledProviderIds: nextEnabled },
-      }
-      return workspace
-    })
-    setSearchSettings((prev) => {
-      const currentEnabled =
-        prev.enabledProviderIds ??
-        pluginCatalog.listSearchProviders().map((provider) => provider.id)
-      const nextEnabled = enabled
-        ? [...new Set([...currentEnabled, providerId])]
-        : currentEnabled.filter((id) => id !== providerId)
-      return { ...prev, enabledProviderIds: nextEnabled }
+    await setWorkbenchSearchProviderEnabled({
+      providerId,
+      enabled,
+      providers: pluginCatalog.listSearchProviders(),
+      updateWorkspace,
+      setSearchSettings,
+      warn: console.warn,
     })
   }
 
@@ -598,38 +577,24 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   async function saveSearchHistory(entry: { query: string; providerId: string }) {
     const workspace = requireWorkspace(workspaceState())
-    const history = searchHistory()
-    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
-    const filtered = history.filter(
-      (h) =>
-        !(
-          h.query === entry.query &&
-          h.providerId === entry.providerId &&
-          new Date(h.timestamp).getTime() > fiveMinutesAgo
-        ),
-    )
-    const next: SearchHistoryEntry[] = [
-      ...filtered,
-      { ...entry, timestamp: new Date().toISOString() },
-    ]
-    setSearchHistory(next)
-    await pluginDataRepo.saveForWorkspace(
-      "official.search.command-bar",
-      workspace.id,
-      "search-history",
-      next,
-    )
+    await saveWorkbenchSearchHistory({
+      workspaceId: workspace.id,
+      history: searchHistory(),
+      entry,
+      setSearchHistory,
+      saveForWorkspace: (pluginId, workspaceId, key, value) =>
+        pluginDataRepo.saveForWorkspace(pluginId, workspaceId, key, value),
+    })
   }
 
   async function clearSearchHistory() {
     const workspace = requireWorkspace(workspaceState())
-    setSearchHistory([])
-    await pluginDataRepo.saveForWorkspace(
-      "official.search.command-bar",
-      workspace.id,
-      "search-history",
-      [],
-    )
+    await clearWorkbenchSearchHistory({
+      workspaceId: workspace.id,
+      setSearchHistory,
+      saveForWorkspace: (pluginId, workspaceId, key, value) =>
+        pluginDataRepo.saveForWorkspace(pluginId, workspaceId, key, value),
+    })
   }
 
   async function exportWorkspace(): Promise<string> {
