@@ -124,6 +124,7 @@ const TEST_MODE_PATTERNS = [
     reason: "skipped tests must not be committed",
   },
 ]
+const RAW_COLOR_CATEGORY_ORDER = ["workbench", "background-preset", "site", "test-fixture"]
 
 export function resolveRepositoryRoot(startDir) {
   if (existsSync(path.join(startDir, "pnpm-workspace.yaml"))) {
@@ -273,6 +274,37 @@ export function findRawColorMatches(options) {
     source: options.source,
     pattern: RAW_COLOR_PATTERN,
   })
+}
+
+export function classifyRawColorMatch(filePath) {
+  if (isTestFile(filePath)) {
+    return "test-fixture"
+  }
+
+  if (filePath.startsWith("apps/site/")) {
+    return "site"
+  }
+
+  if (filePath === "packages/official-plugins/src/background-basic.ts") {
+    return "background-preset"
+  }
+
+  return "workbench"
+}
+
+export function summarizeRawColorMatches(findings) {
+  const summary = {
+    workbench: 0,
+    "background-preset": 0,
+    site: 0,
+    "test-fixture": 0,
+  }
+
+  for (const finding of findings) {
+    summary[classifyRawColorMatch(finding.filePath)] += 1
+  }
+
+  return summary
 }
 
 export function findExternalOpenMatches(options) {
@@ -484,6 +516,7 @@ export async function scanQuality(rootDir) {
     issueMarkers,
     largeFiles,
     rawColors,
+    rawColorSummary: summarizeRawColorMatches(rawColors),
     externalOpenPatterns,
   }
 }
@@ -499,6 +532,7 @@ export function buildArchitectureFailureReport(findings) {
 }
 
 export function buildQualityReport(result) {
+  const rawColorSummary = result.rawColorSummary ?? summarizeRawColorMatches(result.rawColors)
   const lines = [
     "Quality report",
     `- Type escapes: ${result.typeEscapes.length}`,
@@ -508,7 +542,8 @@ export function buildQualityReport(result) {
     "- Large files top 20:",
     ...formatLargeFiles(result.largeFiles),
     `- Raw CSS colors / !important: ${result.rawColors.length}`,
-    ...formatMatchSamples(result.rawColors),
+    ...formatRawColorSummary(rawColorSummary),
+    ...formatMatchSamples(orderRawColorMatchesForReport(result.rawColors)),
     `- External open paths: ${result.externalOpenPatterns.length}`,
     ...formatMatchSamples(result.externalOpenPatterns),
   ]
@@ -742,8 +777,31 @@ function formatMatchSamples(findings, limit = 10) {
   return findings.slice(0, limit).map((finding) => `  - ${finding.filePath}: ${finding.match}`)
 }
 
+function formatRawColorSummary(summary) {
+  return [
+    `  - workbench production: ${summary.workbench}`,
+    `  - generated backgrounds: ${summary["background-preset"]}`,
+    `  - site styles: ${summary.site}`,
+    `  - test fixtures: ${summary["test-fixture"]}`,
+  ]
+}
+
 function formatLargeFiles(entries) {
   return entries.map((entry) => `  - ${entry.filePath} (${entry.lineCount} lines)`)
+}
+
+function orderRawColorMatchesForReport(findings) {
+  return [...findings].sort((left, right) => {
+    const leftCategory = classifyRawColorMatch(left.filePath)
+    const rightCategory = classifyRawColorMatch(right.filePath)
+
+    return (
+      RAW_COLOR_CATEGORY_ORDER.indexOf(leftCategory) -
+        RAW_COLOR_CATEGORY_ORDER.indexOf(rightCategory) ||
+      left.filePath.localeCompare(right.filePath) ||
+      left.match.localeCompare(right.match)
+    )
+  })
 }
 
 function isTestFile(filePath) {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   buildQualityReport,
+  classifyRawColorMatch,
   findCorePackageAppImports,
   findForbiddenPluginDependencies,
   findForbiddenPluginImports,
@@ -14,6 +15,7 @@ import {
   findTestModeViolations,
   findWindowOpenViolations,
   rankFilesByLineCount,
+  summarizeRawColorMatches,
 } from "../../scripts/lib/governance.mjs"
 
 describe("governance rules", () => {
@@ -316,6 +318,31 @@ describe("governance rules", () => {
     ])
   })
 
+  it("classifies raw color matches by risk bucket", () => {
+    expect(classifyRawColorMatch("apps/site/src/styles.css")).toBe("site")
+    expect(classifyRawColorMatch("apps/playground/src/backgroundResolver.test.tsx")).toBe(
+      "test-fixture",
+    )
+    expect(classifyRawColorMatch("packages/official-plugins/src/background-basic.ts")).toBe(
+      "background-preset",
+    )
+    expect(classifyRawColorMatch("packages/workbench-shell/src/styles.css")).toBe("workbench")
+
+    expect(
+      summarizeRawColorMatches([
+        { filePath: "packages/workbench-shell/src/styles.css", match: "rgba(0, 0, 0, 0.12)" },
+        { filePath: "packages/official-plugins/src/background-basic.ts", match: "rgb(18, 18, 18)" },
+        { filePath: "apps/site/src/styles.css", match: "#111512" },
+        { filePath: "apps/playground/src/backgroundResolver.test.tsx", match: "rgb(1, 2, 3)" },
+      ]),
+    ).toEqual({
+      workbench: 1,
+      "background-preset": 1,
+      site: 1,
+      "test-fixture": 1,
+    })
+  })
+
   it("builds a grouped quality report", () => {
     const report = buildQualityReport({
       typeEscapes: [{ filePath: "packages/storage/src/repository.ts", match: "as any" }],
@@ -324,7 +351,16 @@ describe("governance rules", () => {
         { filePath: "apps/playground/src/App.tsx", lineCount: 1578 },
         { filePath: "packages/workbench-shell/src/styles.css", lineCount: 912 },
       ]),
-      rawColors: [{ filePath: "packages/ui/src/button.css", match: "#fff" }],
+      rawColors: [
+        { filePath: "packages/ui/src/button.css", match: "#fff" },
+        { filePath: "apps/site/src/styles.css", match: "#111512" },
+      ],
+      rawColorSummary: {
+        workbench: 1,
+        "background-preset": 0,
+        site: 1,
+        "test-fixture": 0,
+      },
       externalOpenPatterns: [{ filePath: "apps/playground/src/App.tsx", match: "window.open" }],
     })
 
@@ -333,7 +369,9 @@ describe("governance rules", () => {
     expect(report).toContain("Issue markers: 1")
     expect(report).toContain("Large files top 20")
     expect(report).toContain("apps/playground/src/App.tsx (1578 lines)")
-    expect(report).toContain("Raw CSS colors / !important: 1")
+    expect(report).toContain("Raw CSS colors / !important: 2")
+    expect(report).toContain("workbench production: 1")
+    expect(report).toContain("site styles: 1")
     expect(report).toContain("External open paths: 1")
   })
 })

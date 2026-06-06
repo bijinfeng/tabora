@@ -538,7 +538,7 @@ Nightly CI 已覆盖：
 本地脚本已覆盖：
 
 - `pnpm check:architecture`：L2 + L7 的高信号架构/边界静态扫描。
-- `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 路径报告。
+- `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 路径报告；raw color 当前按 `workbench production / generated backgrounds / site styles / test fixtures` 分组，优先关注 `workbench production`。
 
 建议后续逐步补齐：
 
