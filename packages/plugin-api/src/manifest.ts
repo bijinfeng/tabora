@@ -237,16 +237,42 @@ export type SearchWidgetEntry = {
   action: () => void
 }
 
+export type SearchResultItem = {
+  id: string
+  icon: string
+  name: string
+  desc: string
+  hint?: string
+}
+
+export type SearchResultGroup = {
+  id: string
+  label: string
+  items: SearchResultItem[]
+}
+
 export type SearchViewProps = {
+  entry: "inline" | "palette"
   providers: SearchProviderContribution[]
   defaultProviderId: string
-  openExternal?: (url: string) => boolean
-  onDefaultProviderChange?: (providerId: string) => void | Promise<void>
-  searchHistory?: SearchHistoryEntry[]
-  commands?: SearchCommandEntry[]
-  widgets?: SearchWidgetEntry[]
-  onSaveHistory?: (entry: { query: string; providerId: string }) => Promise<void>
-  onClearHistory?: () => Promise<void>
+  activeProviderId: string
+  query: string
+  providerToken: string | null
+  recentSearches: string[]
+  results: SearchResultGroup[]
+  activeResultIndex: number
+  isOpen: boolean
+  host: {
+    setQuery(query: string): void
+    submit(query: string, providerId?: string): Promise<void>
+    setActiveProvider(providerId: string): void | Promise<void>
+    resolveProvider(keyword: string): SearchProviderContribution | null
+    moveSelection(direction: "next" | "prev"): void
+    executeSelection(resultIndex?: number): Promise<void>
+    open(): void
+    close(): void
+    showToast(message: string): void
+  }
 }
 
 export type SettingsPanelViewProps = {

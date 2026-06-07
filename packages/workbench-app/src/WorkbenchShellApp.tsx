@@ -14,8 +14,11 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import {
+  buildSearchUrl,
   createLayoutEngine,
   createToastManager,
+  findProviderByToken,
+  routeSearchQuery,
   type InstanceRenderer,
   type LayoutSwitchPlan,
   type ToastOptions,
@@ -65,11 +68,14 @@ import {
   switchWorkbenchTheme,
 } from "./WorkbenchShellAppearanceState"
 import {
-  clearWorkbenchSearchHistory,
   saveWorkbenchSearchHistory,
   setWorkbenchDefaultSearchProvider,
   setWorkbenchSearchProviderEnabled,
 } from "./WorkbenchShellSearchState"
+import {
+  buildWorkbenchSearchSurfaceState,
+  moveWorkbenchSearchSelection,
+} from "./WorkbenchSearchSurfaceState"
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import {
   buildWorkbenchContextMenuModel,
@@ -160,6 +166,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const toastManager = createToastManager()
   const [toasts, setToasts] = createSignal<ToastRecord[]>([])
   const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
+  const [inlineSearchQuery, setInlineSearchQuery] = createSignal("")
+  const [inlineSearchOpen, setInlineSearchOpen] = createSignal(false)
+  const [inlineSearchActiveResultIndex, setInlineSearchActiveResultIndex] = createSignal(-1)
   const responsive = createWorkbenchResponsiveState()
   const isDark = () => themeId() === "official.theme.dark"
   let lastExpandTrigger: HTMLElement | null = null
@@ -315,25 +324,137 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       if (!search) return <div class="settings-empty">搜索贡献未找到</div>
       const View = resolveWorkbenchView<SearchViewProps>(kernel.registry.views, search.view)
       if (!View) return <div class="settings-empty">搜索视图不可用：{search.id}</div>
+      const providers = resolveEnabledSearchProviders(
+        searchSettings(),
+        pluginCatalog.listSearchProviders(),
+      )
+      const defaultProviderId = resolveDefaultProviderId(
+        searchSettings(),
+        pluginCatalog.listSearchProviders(),
+      )
+      const searchSurfaceState = buildWorkbenchSearchSurfaceState({
+        query: inlineSearchQuery(),
+        providers,
+        defaultProviderId,
+        commands: commandItems(),
+        widgets: searchableWidgets(),
+        history: searchHistory(),
+        onProviderTokenSelect: (token) => {
+          setInlineSearchQuery(`@${token} `)
+          setInlineSearchActiveResultIndex(-1)
+          setInlineSearchOpen(true)
+        },
+        onWebSearch: (provider, query) => {
+          void submitInlineSearch(query, provider.id)
+        },
+      })
+
+      async function submitInlineSearch(searchQuery: string, providerId?: string) {
+        const trimmed = searchQuery.trim()
+        if (!trimmed) {
+          return
+        }
+
+        const provider = providerId
+          ? providers.find((candidate) => candidate.id === providerId)
+          : undefined
+        const targetProvider =
+          provider ??
+          (() => {
+            const route = routeSearchQuery(trimmed, providers, defaultProviderId)
+            if (route?.type === "provider" || route?.type === "web") {
+              return route.provider
+            }
+            return undefined
+          })()
+        const targetQuery = providerId
+          ? trimmed
+          : (() => {
+              const route = routeSearchQuery(trimmed, providers, defaultProviderId)
+              if (route?.type === "provider" || route?.type === "web") {
+                return route.query
+              }
+              return ""
+            })()
+
+        if (!targetProvider || !targetQuery) {
+          return
+        }
+
+        const opened = openExternalForPlugin(
+          instance.pluginId,
+          buildSearchUrl(targetProvider, targetQuery),
+        )
+        if (!opened) {
+          showToast("无法打开该搜索源，请检查插件权限", { type: "error" })
+          return
+        }
+
+        await saveSearchHistory({ query: targetQuery, providerId: targetProvider.id })
+        setInlineSearchQuery("")
+        setInlineSearchActiveResultIndex(-1)
+        setInlineSearchOpen(false)
+      }
 
       return (
         <PluginViewBoundary instanceId={instance.id} title={search.title}>
           {View({
-            providers: resolveEnabledSearchProviders(
-              searchSettings(),
-              pluginCatalog.listSearchProviders(),
-            ),
-            defaultProviderId: resolveDefaultProviderId(
-              searchSettings(),
-              pluginCatalog.listSearchProviders(),
-            ),
-            openExternal: (url) => openExternalForPlugin(instance.pluginId, url),
-            onDefaultProviderChange: setDefaultSearchProvider,
-            searchHistory: searchHistory(),
-            commands: commandItems(),
-            widgets: searchableWidgets(),
-            onSaveHistory: saveSearchHistory,
-            onClearHistory: clearSearchHistory,
+            entry: "inline",
+            providers,
+            defaultProviderId,
+            activeProviderId: searchSurfaceState.activeProviderId,
+            query: inlineSearchQuery(),
+            providerToken: searchSurfaceState.providerToken,
+            recentSearches: searchHistory().map((entry) => entry.query),
+            results: searchSurfaceState.results,
+            activeResultIndex: inlineSearchActiveResultIndex(),
+            isOpen: inlineSearchOpen(),
+            host: {
+              setQuery: (query) => {
+                setInlineSearchQuery(query)
+                setInlineSearchActiveResultIndex(-1)
+              },
+              submit: async (query, providerId) => {
+                await submitInlineSearch(query, providerId)
+              },
+              setActiveProvider: (providerId) => {
+                void setDefaultSearchProvider(providerId)
+              },
+              resolveProvider: (keyword) => findProviderByToken(providers, keyword) ?? null,
+              moveSelection: (direction) => {
+                setInlineSearchOpen(true)
+                setInlineSearchActiveResultIndex((currentIndex) =>
+                  moveWorkbenchSearchSelection(
+                    currentIndex,
+                    direction,
+                    searchSurfaceState.items.length,
+                  ),
+                )
+              },
+              executeSelection: async (resultIndex) => {
+                const nextIndex = resultIndex ?? inlineSearchActiveResultIndex()
+                const item = searchSurfaceState.items[nextIndex]
+                if (item) {
+                  item.action()
+                  if (item.closeAfterAction !== false) {
+                    setInlineSearchQuery("")
+                    setInlineSearchActiveResultIndex(-1)
+                    setInlineSearchOpen(false)
+                  }
+                  return
+                }
+
+                await submitInlineSearch(inlineSearchQuery())
+              },
+              open: () => {
+                setInlineSearchOpen(true)
+              },
+              close: () => {
+                setInlineSearchOpen(false)
+                setInlineSearchActiveResultIndex(-1)
+              },
+              showToast: (message) => showToast(message),
+            },
           })}
         </PluginViewBoundary>
       )
@@ -575,16 +696,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       workspaceId: workspace.id,
       history: searchHistory(),
       entry,
-      setSearchHistory,
-      saveForWorkspace: (pluginId, workspaceId, key, value) =>
-        pluginDataRepo.saveForWorkspace(pluginId, workspaceId, key, value),
-    })
-  }
-
-  async function clearSearchHistory() {
-    const workspace = requireWorkspace(workspaceState())
-    await clearWorkbenchSearchHistory({
-      workspaceId: workspace.id,
       setSearchHistory,
       saveForWorkspace: (pluginId, workspaceId, key, value) =>
         pluginDataRepo.saveForWorkspace(pluginId, workspaceId, key, value),

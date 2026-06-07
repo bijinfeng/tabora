@@ -7,7 +7,7 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   plugins: [
     "official.theme.default-pack",
     "official.background.basic",
-    "official.layout.dashboard",
+    "official.layout.workbench-dashboard",
     "official.search.command-bar",
     "official.search-providers.basic",
     "official.widgets.today-focus",

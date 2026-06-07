@@ -1,162 +1,70 @@
-import { createEffect, createMemo, createSignal, For, Show } from "solid-js"
-import type { SearchProviderContribution, SearchViewProps } from "@tabora/plugin-api"
+import { createMemo, createSignal, For, Show } from "solid-js"
+import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { InlineError, Kbd } from "@tabora/ui"
-import {
-  buildSearchUrl,
-  createCommandPaletteItems,
-  providerToken,
-  resolveDefaultProvider,
-  routeSearchQuery,
-  type CommandPaletteItem,
-} from "@tabora/orchestrator"
-
-export function safelyHandleProviderChange(
-  onChange: ((id: string) => void | Promise<void>) | undefined,
-  nextProviderId: string,
-): void {
-  const result = onChange?.(nextProviderId)
-  if (result instanceof Promise) {
-    result.catch((error) => {
-      console.warn("Failed to change default provider:", error)
-    })
-  }
-}
+import { resolveDefaultProvider } from "@tabora/orchestrator"
 
 export function SearchCommandBar(props: SearchViewProps) {
   const providers = createMemo(() => props.providers)
-  const [providerId, setProviderId] = createSignal(props.defaultProviderId)
-  const [query, setQuery] = createSignal("")
-  const [focused, setFocused] = createSignal(false)
   const [providerOpen, setProviderOpen] = createSignal(false)
-  const [permissionDenied, setPermissionDenied] = createSignal(false)
-  const [suggestIdx, setSuggestIdx] = createSignal(-1)
-
-  const commands = createMemo(() => props.commands ?? [])
-  const widgets = createMemo(() => props.widgets ?? [])
-  createEffect(() => {
-    setProviderId(props.defaultProviderId)
-  })
-
-  const activeProvider = createMemo(() => resolveDefaultProvider(providers(), providerId()))
+  const activeProvider = createMemo(() =>
+    resolveDefaultProvider(providers(), props.activeProviderId),
+  )
   const configurationError = createMemo(() => {
     if (providers().length === 0) return "未配置可用搜索源"
     if (!activeProvider()) return "默认搜索源不可用，请在设置中重新选择"
     return null
   })
-  const route = createMemo(() => {
-    if (!activeProvider()) return null
-    return routeSearchQuery(query(), providers(), activeProvider()!.id)
-  })
   const providerStateLabel = createMemo(() => {
-    const currentRoute = route()
-    if (currentRoute?.type === "provider-pending") {
-      return currentRoute.provider
-        ? `@${providerToken(currentRoute.provider)}`
-        : `@${query().trim().slice(1)}`
+    if (!props.providerToken) {
+      return ""
     }
-    if (currentRoute?.type === "provider") {
-      return currentRoute.provider.title
+
+    const provider = props.host.resolveProvider(props.providerToken)
+    if (provider && /^@\S+\s+/.test(props.query.trim())) {
+      return provider.title
     }
-    return ""
+
+    return `@${props.providerToken}`
   })
-
-  function doSearch(targetQuery: string, targetProvider?: SearchProviderContribution) {
-    const trimmed = targetQuery.trim()
-    if (!trimmed) return
-    setPermissionDenied(false)
-    const provider = targetProvider ?? activeProvider()
-    if (!provider) return
-    const opened = props.openExternal?.(buildSearchUrl(provider, trimmed))
-    if (!opened) {
-      setPermissionDenied(true)
-      return
-    }
-    void props.onSaveHistory?.({ query: trimmed, providerId: provider.id })
-  }
-
-  const suggestions = createMemo((): CommandPaletteItem[] =>
-    createCommandPaletteItems({
-      surface: "inline",
-      query: query(),
-      commands: commands(),
-      widgets: widgets(),
-      providers: providers(),
-      defaultProviderId: providerId(),
-      history: props.searchHistory,
-      onProviderTokenSelect: (token) => {
-        setQuery(`@${token} `)
-        setSuggestIdx(-1)
-      },
-      onWebSearch: (provider, targetQuery) => doSearch(targetQuery, provider),
-    }),
-  )
-
-  const groupedSuggestions = createMemo(() => {
-    const groups: Record<string, CommandPaletteItem[]> = {}
-    for (const suggestion of suggestions()) {
-      const bucket = groups[suggestion.group] ?? (groups[suggestion.group] = [])
-      bucket.push(suggestion)
-    }
-    return groups
-  })
-
-  function submitCurrentQuery() {
-    const currentRoute = route()
-    if (!currentRoute) return
-    if (currentRoute.type === "provider-pending") return
-    if (currentRoute.type === "provider") {
-      doSearch(currentRoute.query, currentRoute.provider)
-    } else {
-      doSearch(currentRoute.query, currentRoute.provider)
-    }
-    setQuery("")
-    setSuggestIdx(-1)
-  }
 
   function handleSubmit(event: Event) {
     event.preventDefault()
-    submitCurrentQuery()
+    void props.host.submit(props.query)
   }
 
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "ArrowDown") {
       event.preventDefault()
-      setSuggestIdx((index) => Math.min(index + 1, suggestions().length - 1))
+      props.host.moveSelection("next")
       return
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault()
-      setSuggestIdx((index) => Math.max(index - 1, 0))
+      props.host.moveSelection("prev")
       return
     }
 
     if (event.key === "Enter") {
       event.preventDefault()
-      const activeSuggestion = suggestions()[suggestIdx()]
-      if (activeSuggestion) {
-        activeSuggestion.action()
-        if (activeSuggestion.closeAfterAction !== false) {
-          setQuery("")
-          setSuggestIdx(-1)
-        }
-      } else {
-        submitCurrentQuery()
-      }
+      void props.host.executeSelection()
       return
     }
 
     if (event.key === "Escape") {
-      setSuggestIdx(-1)
-      setFocused(false)
+      props.host.close()
     }
   }
 
   function handleProviderChange(nextProviderId: string) {
-    setProviderId(nextProviderId)
     setProviderOpen(false)
-    safelyHandleProviderChange(props.onDefaultProviderChange, nextProviderId)
+    const result = props.host.setActiveProvider(nextProviderId)
+    if (result instanceof Promise) {
+      result.catch((error) => {
+        console.warn("Failed to change default provider:", error)
+      })
+    }
   }
 
   return (
@@ -208,18 +116,16 @@ export function SearchCommandBar(props: SearchViewProps) {
           </div>
           <span class="search-scope-divider" aria-hidden="true" />
           <input
-            value={query()}
+            value={props.query}
             onInput={(event) => {
-              setQuery(event.currentTarget.value)
-              setSuggestIdx(-1)
+              props.host.setQuery(event.currentTarget.value)
             }}
             onKeyDown={handleKeyDown}
-            onFocus={() => setFocused(true)}
+            onFocus={() => props.host.open()}
             onBlur={() =>
               setTimeout(() => {
-                setFocused(false)
                 setProviderOpen(false)
-                setSuggestIdx(-1)
+                props.host.close()
               }, 200)
             }
             placeholder="搜索网页、命令或卡片"
@@ -230,44 +136,38 @@ export function SearchCommandBar(props: SearchViewProps) {
         </form>
       </Show>
 
-      <Show when={route()?.type === "provider-pending"}>
+      <Show when={/^@\S+$/.test(props.query.trim())}>
         <div class="search-provider-state">
           继续输入查询以使用临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
-      <Show when={route()?.type === "provider"}>
+      <Show when={/^@\S+\s+/.test(props.query.trim()) && !!props.providerToken}>
         <div class="search-provider-state">
           当前临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
-      <Show when={permissionDenied()}>
-        <InlineError>无法打开该搜索源，请检查插件权限</InlineError>
-      </Show>
-
-      <Show when={focused() && suggestions().length > 0}>
+      <Show when={props.isOpen && props.results.length > 0}>
         <div class="search-suggestions">
-          <For each={Object.entries(groupedSuggestions())}>
-            {([group, items]) => (
+          <For each={props.results}>
+            {(group) => (
               <>
-                <div class="suggestions-label">{group}</div>
-                <For each={items}>
+                <div class="suggestions-label">{group.label}</div>
+                <For each={group.items}>
                   {(item) => {
-                    const globalIdx = suggestions().indexOf(item)
+                    const globalIdx = props.results
+                      .flatMap((resultGroup) => resultGroup.items)
+                      .findIndex((candidate) => candidate.id === item.id)
                     return (
                       <button
                         class="suggestion-item"
-                        classList={{ active: suggestIdx() === globalIdx }}
+                        classList={{ active: props.activeResultIndex === globalIdx }}
                         onMouseDown={(event) => {
                           event.preventDefault()
-                          item.action()
-                          if (item.closeAfterAction !== false) {
-                            setQuery("")
-                            setSuggestIdx(-1)
-                          }
+                          void props.host.executeSelection(globalIdx)
                         }}
                         type="button"
                       >
@@ -316,10 +216,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
   },
   activate(context) {
     context.registry.views.register("official.search.command-bar.view", (props: SearchViewProps) =>
-      SearchCommandBar({
-        ...props,
-        openExternal: (url) => context.permissions.openExternal(url),
-      }),
+      SearchCommandBar(props),
     )
   },
 }
