@@ -1,33 +1,23 @@
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createSignal, onCleanup, Show } from "solid-js"
+import { onCleanup, Show } from "solid-js"
 import type {
   PluginInstance,
-  PluginRecord,
-  SearchHistoryEntry,
   SettingsPanelViewProps,
   WidgetViewProps,
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
-import {
-  createLayoutEngine,
-  createToastManager,
-  type ToastOptions,
-  type ToastRecord,
-} from "@tabora/orchestrator"
+import { createLayoutEngine } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
-import { type SettingsSectionId } from "@tabora/workbench-shell"
 
 import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
-import { applyBackgroundStyle, FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
+import { applyBackgroundStyle } from "./backgroundResolver"
 import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
-import { type WorkbenchExpandState } from "./WorkbenchShellInteractions"
 import { createWorkbenchInstanceRenderer } from "./WorkbenchShellInstanceRenderer"
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 import { createWorkbenchLayoutRenderer } from "./WorkbenchShellLayoutRenderer"
-import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
 import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
 import { focusWorkbenchWidgetInstance, runWorkbenchRailAction } from "./WorkbenchShellHostActions"
 import {
@@ -40,6 +30,7 @@ import {
 } from "./WorkbenchShellSettings"
 import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
+import { createWorkbenchShellState } from "./WorkbenchShellState"
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import { createWorkbenchWidgetController } from "./WorkbenchShellWidgetController"
 import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
@@ -70,57 +61,64 @@ export type WorkbenchShellAppProps = {
 
 export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const composition = props.composition
-  const [kernelReady, setKernelReady] = createSignal(false)
-  const [instances, setInstances] = createSignal<PluginInstance[]>([])
-  const [activeLayoutId, setActiveLayoutId] = createSignal("official.layout.workbench-dashboard")
-  const [themeId, setThemeId] = createSignal("official.theme.light")
-  const [, setBackgroundId] = createSignal(FALLBACK_BACKGROUND_ID)
-  const [workspaceState, setWorkspaceState] = createSignal<Workspace | null>(null)
-  const [workspaceList, setWorkspaceList] = createSignal<Workspace[]>([])
-  const [settingsOpen, setSettingsOpen] = createSignal(false)
-  const [activeSettingsSectionId, setActiveSettingsSectionId] =
-    createSignal<SettingsSectionId>("general")
-  const [searchSettings, setSearchSettings] = createSignal<WorkbenchSearchSettings>(
-    composition.initialState.searchSettings,
-  )
-  const [modalViewId, setModalViewId] = createSignal<string | null>(null)
-  const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
-  const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
-  const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
-  const [expandState, setExpandState] = createSignal<WorkbenchExpandState | null>(null)
-  const [dragState, setDragState] = createSignal<WorkbenchDragControllerState | null>(null)
-  const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
-    null,
-  )
-  const [addWidgetOpen, setAddWidgetOpen] = createSignal(false)
-  const [cmdPaletteOpen, setCmdPaletteOpen] = createSignal(false)
-  const toastManager = createToastManager()
-  const [toasts, setToasts] = createSignal<ToastRecord[]>([])
-  const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
-  const [inlineSearchQuery, setInlineSearchQuery] = createSignal("")
-  const [inlineSearchOpen, setInlineSearchOpen] = createSignal(false)
-  const [inlineSearchActiveResultIndex, setInlineSearchActiveResultIndex] = createSignal(-1)
+  const {
+    kernelReady,
+    setKernelReady,
+    instances,
+    setInstances,
+    activeLayoutId,
+    setActiveLayoutId,
+    setThemeId,
+    setBackgroundId,
+    workspaceState,
+    setWorkspaceState,
+    workspaceList,
+    setWorkspaceList,
+    settingsOpen,
+    setSettingsOpen,
+    activeSettingsSectionId,
+    setActiveSettingsSectionId,
+    searchSettings,
+    setSearchSettings,
+    modalViewId,
+    setModalViewId,
+    modalProps,
+    setModalProps,
+    fullscreenViewId,
+    setFullscreenViewId,
+    fullscreenProps,
+    setFullscreenProps,
+    expandState,
+    setExpandState,
+    dragState,
+    setDragState,
+    ctxMenu,
+    setCtxMenu,
+    addWidgetOpen,
+    setAddWidgetOpen,
+    cmdPaletteOpen,
+    setCmdPaletteOpen,
+    pluginRecords,
+    setPluginRecords,
+    toasts,
+    searchHistory,
+    setSearchHistory,
+    inlineSearchQuery,
+    setInlineSearchQuery,
+    inlineSearchOpen,
+    setInlineSearchOpen,
+    inlineSearchActiveResultIndex,
+    setInlineSearchActiveResultIndex,
+    isDark,
+    showToast,
+  } = createWorkbenchShellState({
+    initialSearchSettings: composition.initialState.searchSettings,
+  })
   const responsive = createWorkbenchResponsiveState()
-  const isDark = () => themeId() === "official.theme.dark"
-  function refreshToasts() {
-    setToasts(toastManager.list())
-  }
-  function showToast(msg: string, options?: ToastOptions) {
-    const id = toastManager.show(msg, options)
-    refreshToasts()
-    if (toastManager.shouldAutoDismiss(id)) {
-      const toast = toastManager.list().find((item) => item.id === id)
-      setTimeout(() => {
-        toastManager.dismiss(id)
-        refreshToasts()
-      }, toast?.duration ?? 2500)
-    }
-  }
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
   const runtime = props.runtime
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
-  const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
   const openSettings = (panelId?: string) =>
     openWorkbenchSettings(
       {
