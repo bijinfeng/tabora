@@ -1,10 +1,10 @@
 import type {
   PluginInstance,
   SearchHistoryEntry,
-  SearchProviderContribution,
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
+import { workbenchSearchSettingsSchema } from "@tabora/plugin-api"
 import type { InstanceRepository, PluginDataRepository, WorkspaceRepository } from "@tabora/storage"
 
 import { createDefaultWorkspaceFromPreset } from "./defaultWorkspaceSeed"
@@ -19,33 +19,19 @@ export type WorkspaceSessionState = {
   activeBackgroundId: string
 }
 
-export function readSearchSettings(
-  workspace: Workspace,
-  providers: SearchProviderContribution[],
-): WorkbenchSearchSettings {
-  const saved = workspace.config?.search as Record<string, unknown> | undefined
-  const defaultProviderId =
-    typeof saved?.defaultProviderId === "string"
-      ? saved.defaultProviderId
-      : (providers[0]?.id ?? "")
-
-  let enabledProviderIds: string[] | undefined
-  if (Array.isArray(saved?.enabledProviderIds)) {
-    enabledProviderIds = saved.enabledProviderIds as string[]
+export function readSearchSettings(workspace: Workspace): WorkbenchSearchSettings {
+  const parsed = workbenchSearchSettingsSchema.safeParse(workspace.config?.search)
+  if (!parsed.success) {
+    throw new Error("Workspace search settings are invalid")
   }
 
-  const result: WorkbenchSearchSettings = { defaultProviderId }
-  if (enabledProviderIds) {
-    result.enabledProviderIds = enabledProviderIds
-  }
-  return result
+  return parsed.data
 }
 
 export async function ensureWorkspaceSession(options: {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
   pluginDataRepo: PluginDataRepository
-  searchProviders: SearchProviderContribution[]
   workspaceId?: string
 }): Promise<WorkspaceSessionState> {
   let workspace = await options.workspaceRepo.get(options.workspaceId ?? "default")
@@ -73,7 +59,7 @@ export async function ensureWorkspaceSession(options: {
     workspace,
     instances,
     searchHistory,
-    searchSettings: readSearchSettings(workspace, options.searchProviders),
+    searchSettings: readSearchSettings(workspace),
     activeLayoutId: workspace.activeLayoutId,
     activeThemeId: workspace.activeThemeId,
     activeBackgroundId: workspace.activeBackgroundProviderId,

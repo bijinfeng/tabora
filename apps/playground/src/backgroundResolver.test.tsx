@@ -4,7 +4,7 @@ import {
   FALLBACK_BACKGROUND_ID,
   resolveBackgroundStyle,
   resolveBackgroundValue,
-} from "./backgroundResolver"
+} from "@tabora/workbench-app"
 
 function cssFunction(name: "rgb" | "rgba", args: string) {
   return [name, `(${args})`].join("")

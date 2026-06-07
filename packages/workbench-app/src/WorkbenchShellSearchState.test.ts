@@ -24,12 +24,12 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
 }
 
 describe("resolveWorkbenchEnabledProviderIds", () => {
-  it("falls back to all provider ids when settings omit enabled providers", () => {
+  it("returns the explicit enabled provider ids", () => {
     expect(
-      resolveWorkbenchEnabledProviderIds({ defaultProviderId: "" }, [
-        { id: "official.google" },
-        { id: "official.duckduckgo" },
-      ]),
+      resolveWorkbenchEnabledProviderIds({
+        defaultProviderId: "official.google",
+        enabledProviderIds: ["official.google", "official.duckduckgo"],
+      }),
     ).toEqual(["official.google", "official.duckduckgo"])
   })
 })
@@ -38,7 +38,10 @@ describe("setWorkbenchDefaultSearchProvider", () => {
   it("persists the default provider into workspace config and local search settings", async () => {
     const providers = [{ id: "official.google" }, { id: "official.duckduckgo" }]
     let currentWorkspace = workspace()
-    let currentSettings: WorkbenchSearchSettings = { defaultProviderId: "" }
+    let currentSettings: WorkbenchSearchSettings = {
+      defaultProviderId: "official.google",
+      enabledProviderIds: ["official.google", "official.duckduckgo"],
+    }
 
     await setWorkbenchDefaultSearchProvider({
       providerId: "official.duckduckgo",
@@ -91,6 +94,7 @@ describe("setWorkbenchSearchProviderEnabled", () => {
     await setWorkbenchSearchProviderEnabled({
       providerId: "official.duckduckgo",
       enabled: false,
+      currentSettings,
       providers,
       updateWorkspace: async (mutator) => {
         currentWorkspace = mutator(currentWorkspace)
@@ -105,6 +109,32 @@ describe("setWorkbenchSearchProviderEnabled", () => {
       (currentWorkspace.config?.search as Record<string, unknown>)?.enabledProviderIds,
     ).toEqual(["official.google"])
     expect(currentSettings.enabledProviderIds).toEqual(["official.google"])
+  })
+
+  it("warns and skips updates when disabling the current default provider", async () => {
+    const providers = [{ id: "official.google" }, { id: "official.duckduckgo" }]
+    const warn = vi.fn()
+    const updateWorkspace = vi.fn(async () => {})
+    const setSearchSettings = vi.fn()
+
+    await setWorkbenchSearchProviderEnabled({
+      providerId: "official.google",
+      enabled: false,
+      currentSettings: {
+        defaultProviderId: "official.google",
+        enabledProviderIds: ["official.google", "official.duckduckgo"],
+      },
+      providers,
+      updateWorkspace,
+      setSearchSettings,
+      warn,
+    })
+
+    expect(warn).toHaveBeenCalledWith(
+      'Cannot disable the default search provider: "official.google"',
+    )
+    expect(updateWorkspace).not.toHaveBeenCalled()
+    expect(setSearchSettings).not.toHaveBeenCalled()
   })
 })
 

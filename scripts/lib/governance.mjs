@@ -120,6 +120,26 @@ const RAW_COLOR_PATTERN =
   /#(?:[0-9a-fA-F]{3,8})\b|rgba?\(\s*(?!var\()[^)]+\)|hsla?\(\s*(?!var\()[^)]+\)|!important\b/g
 const TYPE_ESCAPE_PATTERN = /\bas any\b|@ts-expect-error|@ts-ignore/g
 const ISSUE_MARKER_PATTERN = /\b(?:TODO|FIXME|HACK)\b|console\.(?:log|debug|info)\b/g
+const SEARCH_FALLBACK_PATTERNS = [
+  {
+    pattern:
+      /defaultProviderId\s*(?:\|\||\?\?)\s*providers(?:\(\))?\s*\[\s*0\s*\]\??\.(?:id|value)/g,
+    reason: "search settings must not fall back from defaultProviderId to the first provider",
+  },
+  {
+    pattern:
+      /defaultProviderId\s*(?:\|\||\?\?)\s*enabledProviders(?:\(\))?\s*\[\s*0\s*\](?:\??\.(?:id|value))?/g,
+    reason:
+      "search settings must not fall back from defaultProviderId to the first enabled provider",
+  },
+  {
+    pattern: /enabledProviderIds\s*\?\?\s*[A-Za-z_$][\w$]*(?:\(\))?\.map\(/g,
+    reason: "search settings must not backfill enabledProviderIds from all providers",
+  },
+]
+const WIDGET_REGION_FALLBACK_PATTERN = /\?\?\s*(?:"mainGrid"|'mainGrid')/g
+const WORKBENCH_APP_EXPORT_PATTERN =
+  /export\s+(?:type\s+)?(?:\*|\{[\s\S]*?\})\s+from\s+["']@tabora\/workbench-app["'];?/g
 const PLUGIN_EXTERNAL_OPEN_PATTERN = /window\.open|target="_blank"|target='_blank'/g
 const WINDOW_OPEN_PATTERN = /window\.open/g
 const QUALITY_EXTERNAL_OPEN_PATTERN =
@@ -258,6 +278,64 @@ export function findTypeEscapeViolations(options) {
     pattern: TYPE_ESCAPE_PATTERN,
     reason: "type escapes must not be committed in production source",
   })
+}
+
+export function findForbiddenSearchFallbacks(options) {
+  if (isTestFile(options.filePath)) {
+    return []
+  }
+
+  return SEARCH_FALLBACK_PATTERNS.flatMap(({ pattern, reason }) =>
+    collectPatternMatches({
+      filePath: options.filePath,
+      source: options.source,
+      pattern,
+      reason,
+    }),
+  )
+}
+
+export function findWidgetRegionFallbackViolations(options) {
+  if (isTestFile(options.filePath)) {
+    return []
+  }
+
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: WIDGET_REGION_FALLBACK_PATTERN,
+    reason: 'widget region resolution must not fall back to "mainGrid"',
+  })
+}
+
+export function findPassThroughWorkbenchAppExports(options) {
+  if (isTestFile(options.filePath) || !options.filePath.startsWith("apps/")) {
+    return []
+  }
+
+  const matches = [...options.source.matchAll(WORKBENCH_APP_EXPORT_PATTERN)].map(
+    (match) => match[0],
+  )
+  if (matches.length === 0) {
+    return []
+  }
+
+  const strippedSource = options.source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "")
+    .replace(WORKBENCH_APP_EXPORT_PATTERN, "")
+    .replace(/\s+/g, "")
+    .replace(/;+$/g, "")
+
+  if (strippedSource.length > 0) {
+    return []
+  }
+
+  return matches.map((match) => ({
+    filePath: options.filePath,
+    match,
+    reason: "apps must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
+  }))
 }
 
 export function findWorkbenchRawColorViolations(options) {
@@ -632,6 +710,73 @@ export async function scanTypeEscapeBoundaries(rootDir) {
   return scanFiles(repositoryRoot, files, findTypeEscapeViolations)
 }
 
+export async function scanSearchFallbackBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => {
+      if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      if (isTestFile(filePath)) {
+        return false
+      }
+
+      return filePath.includes(`${path.sep}src${path.sep}`)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findForbiddenSearchFallbacks)
+}
+
+export async function scanWidgetRegionFallbackBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => {
+      if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      if (isTestFile(filePath)) {
+        return false
+      }
+
+      return filePath.includes(`${path.sep}src${path.sep}`)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findWidgetRegionFallbackViolations)
+}
+
+export async function scanAppWorkbenchPassThroughBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps", "playground", "src"),
+      path.join(repositoryRoot, "apps", "extension", "entrypoints"),
+    ],
+    (filePath) => {
+      if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      return !isTestFile(filePath)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findPassThroughWorkbenchAppExports)
+}
+
 export async function scanWindowOpenBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles(
@@ -716,6 +861,9 @@ export async function scanArchitecture(rootDir) {
     ...(await scanAppSourceBoundaries(rootDir)),
     ...(await scanPackageExportBoundaries(rootDir)),
     ...(await scanTypeEscapeBoundaries(rootDir)),
+    ...(await scanSearchFallbackBoundaries(rootDir)),
+    ...(await scanWidgetRegionFallbackBoundaries(rootDir)),
+    ...(await scanAppWorkbenchPassThroughBoundaries(rootDir)),
     ...(await scanWindowOpenBoundaries(rootDir)),
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),
     ...(await scanWorkbenchAvoidableStyleBoundaries(rootDir)),

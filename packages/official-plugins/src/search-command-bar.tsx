@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js"
 import type {
   SearchHistoryEntry,
   SearchProviderContribution,
@@ -13,13 +13,6 @@ import {
   resolveDefaultProvider,
   routeSearchQuery,
 } from "./search-model"
-
-const FALLBACK_PROVIDER: SearchProviderContribution = {
-  id: "official.search.google",
-  title: "Google",
-  urlTemplate: "https://www.google.com/search?q={query}",
-  shortcut: "g",
-}
 
 type Suggestion = {
   id: string
@@ -57,10 +50,8 @@ export function safelyHandleProviderChange(
 }
 
 export function SearchCommandBar(props: SearchViewProps) {
-  const providers = createMemo(() =>
-    props.providers.length > 0 ? props.providers : [FALLBACK_PROVIDER],
-  )
-  const [providerId, setProviderId] = createSignal(props.defaultProviderId || providers()[0]!.id)
+  const providers = createMemo(() => props.providers)
+  const [providerId, setProviderId] = createSignal(props.defaultProviderId)
   const [query, setQuery] = createSignal("")
   const [focused, setFocused] = createSignal(false)
   const [providerOpen, setProviderOpen] = createSignal(false)
@@ -69,12 +60,20 @@ export function SearchCommandBar(props: SearchViewProps) {
 
   const commands = createMemo(() => props.commands ?? [])
   const widgets = createMemo(() => props.widgets ?? [])
-  const activeProvider = createMemo(
-    () => resolveDefaultProvider(providers(), providerId()) ?? providers()[0]!,
-  )
-  const route = createMemo(() =>
-    routeSearchQuery(query(), providers(), providerId() || activeProvider().id),
-  )
+  createEffect(() => {
+    setProviderId(props.defaultProviderId)
+  })
+
+  const activeProvider = createMemo(() => resolveDefaultProvider(providers(), providerId()))
+  const configurationError = createMemo(() => {
+    if (providers().length === 0) return "未配置可用搜索源"
+    if (!activeProvider()) return "默认搜索源不可用，请在设置中重新选择"
+    return null
+  })
+  const route = createMemo(() => {
+    if (!activeProvider()) return null
+    return routeSearchQuery(query(), providers(), activeProvider()!.id)
+  })
   const providerStateLabel = createMemo(() => {
     const currentRoute = route()
     if (currentRoute?.type === "provider-pending") {
@@ -93,6 +92,7 @@ export function SearchCommandBar(props: SearchViewProps) {
     if (!trimmed) return
     setPermissionDenied(false)
     const provider = targetProvider ?? activeProvider()
+    if (!provider) return
     const opened = props.openExternal?.(buildSearchUrl(provider, trimmed))
     if (!opened) {
       setPermissionDenied(true)
@@ -316,62 +316,74 @@ export function SearchCommandBar(props: SearchViewProps) {
 
   return (
     <div class="search-wrapper">
-      <form class="search-bar" onSubmit={handleSubmit}>
-        <div class="search-provider">
-          <button
-            class="search-provider-btn"
-            type="button"
-            aria-label="切换搜索引擎"
-            aria-expanded={providerOpen()}
-            onClick={() => setProviderOpen((open) => !open)}
-          >
-            <span class="search-provider-dot" aria-hidden="true" />
-            <span class="search-provider-label">{activeProvider().title}</span>
-            <span class="search-provider-caret">▾</span>
-          </button>
-          <Show when={providerOpen()}>
-            <div class="search-provider-dropdown">
-              <For each={providers()}>
-                {(provider) => (
-                  <button
-                    class="sp-option"
-                    classList={{ active: provider.id === activeProvider().id }}
-                    type="button"
-                    onMouseDown={(event) => {
-                      event.preventDefault()
-                      handleProviderChange(provider.id)
-                    }}
-                  >
-                    <span class="sp-check">{provider.id === activeProvider().id ? "✓" : ""}</span>
-                    <span>{provider.title}</span>
-                  </button>
-                )}
-              </For>
-            </div>
-          </Show>
-        </div>
-        <span class="search-scope-divider" aria-hidden="true" />
-        <input
-          value={query()}
-          onInput={(event) => {
-            setQuery(event.currentTarget.value)
-            setSuggestIdx(-1)
-          }}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setFocused(true)}
-          onBlur={() =>
-            setTimeout(() => {
-              setFocused(false)
-              setProviderOpen(false)
+      <Show
+        when={!configurationError()}
+        fallback={
+          <InlineError>
+            搜索不可用
+            <span>{`：${configurationError()}`}</span>
+          </InlineError>
+        }
+      >
+        <form class="search-bar" onSubmit={handleSubmit}>
+          <div class="search-provider">
+            <button
+              class="search-provider-btn"
+              type="button"
+              aria-label="切换搜索引擎"
+              aria-expanded={providerOpen()}
+              onClick={() => setProviderOpen((open) => !open)}
+            >
+              <span class="search-provider-dot" aria-hidden="true" />
+              <span class="search-provider-label">{activeProvider()!.title}</span>
+              <span class="search-provider-caret">▾</span>
+            </button>
+            <Show when={providerOpen()}>
+              <div class="search-provider-dropdown">
+                <For each={providers()}>
+                  {(provider) => (
+                    <button
+                      class="sp-option"
+                      classList={{ active: provider.id === activeProvider()!.id }}
+                      type="button"
+                      onMouseDown={(event) => {
+                        event.preventDefault()
+                        handleProviderChange(provider.id)
+                      }}
+                    >
+                      <span class="sp-check">
+                        {provider.id === activeProvider()!.id ? "✓" : ""}
+                      </span>
+                      <span>{provider.title}</span>
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
+          </div>
+          <span class="search-scope-divider" aria-hidden="true" />
+          <input
+            value={query()}
+            onInput={(event) => {
+              setQuery(event.currentTarget.value)
               setSuggestIdx(-1)
-            }, 200)
-          }
-          placeholder="搜索网页、命令或卡片"
-          aria-label="搜索内容"
-          type="search"
-        />
-        <span class="search-kbd">⌘K</span>
-      </form>
+            }}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setFocused(true)}
+            onBlur={() =>
+              setTimeout(() => {
+                setFocused(false)
+                setProviderOpen(false)
+                setSuggestIdx(-1)
+              }, 200)
+            }
+            placeholder="搜索网页、命令或卡片"
+            aria-label="搜索内容"
+            type="search"
+          />
+          <span class="search-kbd">⌘K</span>
+        </form>
+      </Show>
 
       <Show when={route()?.type === "provider-pending"}>
         <div class="search-provider-state">

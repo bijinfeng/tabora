@@ -82,7 +82,10 @@ describe("buildWorkbenchSettingsPanelProps", () => {
         themes: [],
         backgrounds: [],
         searchProviders: [],
-        searchSettings: { defaultProviderId: "" },
+        searchSettings: {
+          defaultProviderId: "official.search.google",
+          enabledProviderIds: ["official.search.google"],
+        },
         plugins: [],
         host: settingsHost(),
       }),

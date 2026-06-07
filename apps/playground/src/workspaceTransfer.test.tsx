@@ -6,8 +6,11 @@ import {
   createPluginDataRepository,
   createWorkspaceRepository,
 } from "@tabora/storage"
-import { createWorkspaceSession } from "./workspaceSession"
-import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
+import {
+  createWorkspaceSession,
+  exportWorkspaceData,
+  importWorkspaceData,
+} from "@tabora/workbench-app"
 
 function deleteTestDatabase() {
   const request = indexedDB.deleteDatabase("tabora-workspace-transfer-test")

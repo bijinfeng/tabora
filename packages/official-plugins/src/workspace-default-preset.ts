@@ -23,6 +23,13 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   backgroundProviderId: "background.gradient-green",
   search: {
     defaultProviderId: "official.search.google",
+    enabledProviderIds: [
+      "official.search.google",
+      "official.search.bing",
+      "official.search.baidu",
+      "official.search.duckduckgo",
+      "official.search.github",
+    ],
   },
   regions: [
     { regionId: "topbar", accepts: ["search"] },

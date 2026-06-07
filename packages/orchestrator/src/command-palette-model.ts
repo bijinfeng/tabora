@@ -43,7 +43,7 @@ export function createCommandPaletteItems(
   const history = (options.history ?? []).slice().reverse()
   const providers = options.providers ?? []
   const widgets = options.widgets ?? []
-  const defaultProviderId = options.defaultProviderId ?? providers[0]?.id ?? ""
+  const defaultProviderId = options.defaultProviderId ?? ""
 
   function selectProvider(provider: SearchProviderContribution) {
     options.onProviderTokenSelect?.(providerToken(provider))

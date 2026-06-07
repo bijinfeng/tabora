@@ -131,7 +131,7 @@ export type BackgroundSourceValue =
 
 export type WorkbenchSearchSettings = {
   defaultProviderId: string
-  enabledProviderIds?: string[]
+  enabledProviderIds: string[]
 }
 
 export type WorkspacePresetRegionContribution = {

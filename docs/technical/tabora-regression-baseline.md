@@ -1,8 +1,8 @@
 # Tabora 回归基准与 Agent 友好工程治理标准
 
-版本：V1.1
+版本：V1.2
 
-日期：2026-06-06
+日期：2026-06-07
 
 状态：作为每轮迭代后的回归检查基准；当前实现债务见 §10。
 
@@ -202,6 +202,8 @@ git diff --stat
 - shell 不应继续堆业务推断逻辑。
 - playground 与 extension 的共享逻辑应进入 `@tabora/workbench-app`、`@tabora/host-adapters` 或其他独立 package。
 - extension 不应长期通过相对路径 import playground helper。
+- 仓库内部 refactor 不为旧调用方式保留兼容层；允许同步修改 helper 签名、模块出口和调用方。
+- app 层不保留纯 pass-through `@tabora/workbench-app` 兼容模块；只有真实装配工厂或宿主入口文件可以继续存在。
 
 建议检查命令：
 
@@ -209,7 +211,7 @@ git diff --stat
 pnpm check:architecture
 ```
 
-脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
+脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、搜索配置首项 provider 兜底、`enabledProviderIds ?? providers.map(...)` backfill、widget region `?? "mainGrid"` 推断、app 层纯 `@tabora/workbench-app` pass-through wrapper、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
 
 ### L3：自动化基础门禁
 
@@ -323,6 +325,7 @@ UI / layout / shell / `@tabora/ui` / official plugin 改动必须做 L5。
 - host platform / capability 不满足时插件 skipped，并在插件管理器展示原因。
 - plugin data 按 plugin / workspace / instance scope 隔离。
 - 导入 workspace 必须包含当前 schema 必填字段，例如 `activeBackgroundProviderId`。
+- `WorkbenchSearchSettings` 必须显式包含 `defaultProviderId` 与 `enabledProviderIds`，且默认 provider 属于启用列表；旧数据缺字段时直接拒绝，不 silent backfill。
 - widget instance 缺失 `size` 或 size 不在 `supportedSizes` 内时显示局部无效占位，不读取时补默认值。
 
 建议检查命令：
@@ -348,6 +351,7 @@ rg -n "window\\.open|target=\"_blank|openExternal|external-open|remote-untrusted
 - discriminated union 优先于字符串散落判断。
 - package 导出面稳定，新增导出要有明确消费者；不暴露内部 helper 作为长期公共 API。
 - 类型和 runtime 校验保持一致：协议字段改动必须同步 `manifestSchema` / workspace schema / 测试。
+- 运行时安全恢复只能使用显式、固定的安全值，例如 `SAFE_THEME_TOKENS`；不允许以“第一个可用项”猜测 theme、provider 或 region。
 
 建议检查：
 
@@ -541,6 +545,7 @@ Nightly CI 已覆盖：
 - `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 信号报告；raw color 当前按 `workbench production / generated backgrounds / site styles / test fixtures` 分组，external-open 当前按 `host execution / manifest declaration / runtime method reference / test fixture / bypass risk` 分组，并按文件级信号去重计数。截止 2026-06-06，raw color 四类命中均已清零，当前仓库已没有剩余 raw color / `!important` 报告项。
 - `pnpm check:architecture` 已于 2026-06-06 将 `workbench production` raw color 基线收敛到 0，重新引入任何字面量颜色或 `!important` 都会直接失败；其余类别继续通过 `pnpm quality` 审计是否回归。
 - `pnpm check:architecture` 同时禁止 workbench 生产样式里的零透明度 `rgba(...)` 和宿主题色变量字面量 fallback；前者统一改为 `transparent`，后者直接依赖宿主主题 token。
+- `pnpm check:architecture` 已于 2026-06-07 新增守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper。
 
 建议后续逐步补齐：
 
@@ -550,7 +555,7 @@ Nightly CI 已覆盖：
 4. 为 workspace preset 的 plugin id / contribution id 增加 contract test。
 5. 将 `pnpm test:e2e` 从单一 dashboard smoke 扩展到更多 layout / settings / import-export 场景。
 6. 为 layout failure fallback 的更多变体和触屏拖拽策略补细粒度浏览器断言。
-7. 在 `check:architecture` / `quality` 之上继续扩展 package exports、mobile layout 和 layout failure fallback 的自动化守卫。
+7. 在 `check:architecture` / `quality` 之上继续扩展 mobile layout 和 layout failure fallback 的自动化守卫。
 
 ## 6. Agent 每轮工作流
 
@@ -749,7 +754,10 @@ Agent 必须：
 | 布局切换 snapshot 在实例迁移后生成，不是真正切换前快照                                 | 已于 2026-06-06 改为通过切换前 workspace/instances 生成 snapshot                                                                                                                                                                                                                                                                                                                                                                            | 已解决     |
 | playground / extension `App.tsx` 高度重复                                              | 已于 2026-06-06 收敛为薄 wrapper，共享宿主编排集中到 `WorkbenchShellApp.tsx`                                                                                                                                                                                                                                                                                                                                                                | 已解决     |
 | extension 仍通过相对路径 import playground helper                                      | 已于 2026-06-06 改为通过 `@tabora/workbench-app` 共享 helper，并受架构守卫覆盖                                                                                                                                                                                                                                                                                                                                                              | 已解决     |
+| app 层仍保留纯 `@tabora/workbench-app` pass-through wrapper                            | 已于 2026-06-07 删除 playground 兼容转导出模块，并由架构守卫禁止回归                                                                                                                                                                                                                                                                                                                                                                        | 已解决     |
 | `packages/workbench-app/src/WorkbenchShellApp.tsx` 体积仍大                            | 已于 2026-06-07 继续拆出 safe layout / overlay chrome、command/shortcut orchestration、icon helper、settings host wiring、expand / instance settings 交互判定，并进一步拆出 `WorkbenchShellWidgets`、`WorkbenchShellHostActions`、`WorkbenchShellViewBridge`、`WorkbenchShellSearchState`、`WorkbenchShellAppearanceState`、`WorkbenchShellSessionState` 与 `WorkbenchShellLayoutState`；主文件降到 1090 行治理阈值内，但共享宿主编排仍偏重 | P2         |
+| search 配置通过首项 provider 或全量 provider 静默补齐                                  | 已于 2026-06-07 改为统一走 schema 校验并删除所有首项兜底 / 全量 backfill；无效 workspace / export 数据直接拒绝                                                                                                                                                                                                                                                                                                                              | 已解决     |
+| theme 无效时退回首个 theme，而不是固定安全 token                                       | 已于 2026-06-07 改为应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再猜测首个 theme                                                                                                                                                                                                                                                                                                                                                             | 已解决     |
 | `SearchViewProps` 尚未升级到技术方案描述的状态机 contract                              | 搜索编排仍分散在插件和 shell                                                                                                                                                                                                                                                                                                                                                                                                                | P2         |
 | 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致                                                                                                                                                                                                                                                                                                                                                                                                              | P2         |
 | Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整                                                                                                                                                                                                                                                                                                                                                                                                                    | P2         |
@@ -768,10 +776,12 @@ Agent 必须：
 5. 已于 2026-06-07 继续把 `WorkbenchShellApp` 的 safe layout / overlay / settings about chrome、command/shortcut orchestration、icon helper、settings host wiring、expand / instance settings 交互判定拆到独立模块，并进一步抽出 `WorkbenchShellWidgets` / `WorkbenchShellHostActions` / `WorkbenchShellViewBridge` / `WorkbenchShellSearchState` / `WorkbenchShellAppearanceState` / `WorkbenchShellSessionState` / `WorkbenchShellLayoutState` 承接右键菜单模型、可搜索 widget 条目、拖拽排序计划、网格持久化、rail action 分发、widget view props 宿主桥接、搜索源配置 / 搜索历史持久化、主题背景应用、workspace session hydration，以及 layout 切换编排；治理测试同步把共享宿主根组件压到 1090 行阈值以内。
 6. 已于 2026-06-06 接入 nightly workflow；后续按路径触发策略推进 PR 强门禁。
 7. 已于 2026-06-06 将 L7 中的高信号扫描收敛为 `pnpm quality` / `pnpm check:architecture`，并在 release workflow 接入 `pnpm regression:summary`。
+8. 已于 2026-06-07 删除 playground 纯 pass-through wrapper，统一改为直接消费 `@tabora/workbench-app` 导出；仓库内部 refactor 不再为旧调用路径保留兼容层。
+9. 已于 2026-06-07 将 search 设置、workspace hydration、import/export 全链路收口到当前 schema，删除首项 provider / 全量 provider 的静默 backfill；theme fallback 改为固定 `SAFE_THEME_TOKENS`。
 
 中期：
 
-1. 将 L2 架构边界检查脚本化，减少人工判断。
+1. 继续扩大 L2 架构边界检查覆盖面，减少人工判断。
 2. 给 product critical path 建立 browser-mode smoke tests。
 3. 为 mobile no-horizontal-scroll、settings host、layout fallback 加可重复截图或 DOM 断言。
 4. 已于 2026-06-06 为依赖边界、package exports、生产源码 type escape、非宿主 `window.open` 和 focused tests 建立自动化守卫；后续继续收紧 CSS token 使用。

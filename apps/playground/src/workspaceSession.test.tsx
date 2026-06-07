@@ -6,7 +6,7 @@ import {
   createPluginDataRepository,
   createWorkspaceRepository,
 } from "@tabora/storage"
-import type { PluginInstance, SearchProviderContribution, Workspace } from "@tabora/plugin-api"
+import type { PluginInstance, Workspace } from "@tabora/plugin-api"
 import {
   createWorkspaceSession,
   deleteWorkspaceSession,
@@ -15,21 +15,7 @@ import {
   updateWorkspaceBackground,
   updateWorkspaceRecord,
   updateWorkspaceTheme,
-} from "./workspaceSession"
-
-const providers: SearchProviderContribution[] = [
-  {
-    id: "official.search.google",
-    title: "Google",
-    urlTemplate: "https://www.google.com/search?q={query}",
-  },
-  {
-    id: "official.search.github",
-    title: "GitHub",
-    urlTemplate: "https://github.com/search?q={query}",
-    shortcut: "gh",
-  },
-]
+} from "@tabora/workbench-app"
 
 function deleteTestDatabase() {
   const request = indexedDB.deleteDatabase("tabora-workspace-session-test")
@@ -61,10 +47,30 @@ describe("workspaceSession", () => {
       updatedAt: "2026-06-01T00:00:00.000Z",
     }
 
-    expect(readSearchSettings(workspace, providers)).toEqual({
+    expect(readSearchSettings(workspace)).toEqual({
       defaultProviderId: "official.search.github",
       enabledProviderIds: ["official.search.github"],
     })
+  })
+
+  it("rejects workspace search settings when enabled provider ids are missing", () => {
+    const workspace: Workspace = {
+      id: "default",
+      name: "默认工作区",
+      activeLayoutId: "official.layout.workbench-dashboard",
+      activeThemeId: "official.theme.light",
+      activeBackgroundProviderId: "background.gradient-green",
+      config: {
+        search: {
+          defaultProviderId: "official.search.github",
+        },
+      },
+      regions: {},
+      createdAt: "2026-06-01T00:00:00.000Z",
+      updatedAt: "2026-06-01T00:00:00.000Z",
+    }
+
+    expect(() => readSearchSettings(workspace)).toThrow("Workspace search settings are invalid")
   })
 
   it("creates a default workspace session when none exists", async () => {
@@ -77,7 +83,6 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: providers,
     })
 
     expect(session.workspace.id).toBe("default")
@@ -98,6 +103,12 @@ describe("workspaceSession", () => {
       activeLayoutId: "official.layout.workbench-dashboard",
       activeThemeId: "official.theme.light",
       activeBackgroundProviderId: "background.gradient-green",
+      config: {
+        search: {
+          defaultProviderId: "official.search.google",
+          enabledProviderIds: ["official.search.google", "official.search.github"],
+        },
+      },
       regions: {},
       createdAt: now,
       updatedAt: now,
@@ -135,7 +146,6 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: providers,
     })
 
     expect(session.instances.some((instance) => instance.id === "weather-1")).toBe(false)
@@ -156,6 +166,12 @@ describe("workspaceSession", () => {
       activeLayoutId: "official.layout.workbench-dashboard",
       activeThemeId: "official.theme.light",
       activeBackgroundProviderId: "background.gradient-green",
+      config: {
+        search: {
+          defaultProviderId: "official.search.google",
+          enabledProviderIds: ["official.search.google", "official.search.github"],
+        },
+      },
       regions: {
         topbar: { regionId: "topbar", accepts: ["search"], instances: [] },
         mainGrid: { regionId: "mainGrid", accepts: ["widget"], instances: [] },
@@ -168,7 +184,6 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: providers,
     })
 
     expect(session.workspace.name).toBe("空工作区")
@@ -271,14 +286,12 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: providers,
       workspaceId: workspaceA.id,
     })
     const sessionB = await ensureWorkspaceSession({
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: providers,
       workspaceId: workspaceB.id,
     })
 

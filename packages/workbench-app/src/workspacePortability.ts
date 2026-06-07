@@ -1,4 +1,4 @@
-import type { PluginInstance, Workspace } from "@tabora/plugin-api"
+import { workspaceExportSchema, type PluginInstance, type Workspace } from "@tabora/plugin-api"
 import type { PluginDataRow } from "@tabora/storage"
 
 const SCHEMA_VERSION = 1
@@ -32,33 +32,19 @@ export function serializeExport(data: WorkspaceExport): string {
 export function parseExport(json: string): WorkspaceExport | null {
   try {
     const data = JSON.parse(json) as unknown
-    if (!data || typeof data !== "object") return null
-
-    const exportData = data as Record<string, unknown>
-    if (exportData.schemaVersion !== SCHEMA_VERSION) {
-      console.warn(`Unsupported schema version: ${String(exportData.schemaVersion)}`)
+    const parsed = workspaceExportSchema.safeParse(data)
+    if (!parsed.success) {
+      const schemaVersion =
+        typeof data === "object" && data !== null
+          ? (data as Record<string, unknown>).schemaVersion
+          : undefined
+      if (schemaVersion !== SCHEMA_VERSION) {
+        console.warn(`Unsupported schema version: ${String(schemaVersion)}`)
+      }
       return null
     }
 
-    const workspace = exportData.workspace as Record<string, unknown> | undefined
-    if (
-      !workspace ||
-      typeof workspace.id !== "string" ||
-      typeof workspace.name !== "string" ||
-      typeof workspace.activeLayoutId !== "string" ||
-      typeof workspace.activeThemeId !== "string" ||
-      typeof workspace.activeBackgroundProviderId !== "string" ||
-      typeof workspace.regions !== "object" ||
-      workspace.regions === null ||
-      typeof workspace.createdAt !== "string" ||
-      typeof workspace.updatedAt !== "string" ||
-      !Array.isArray(exportData.instances) ||
-      !Array.isArray(exportData.pluginData)
-    ) {
-      return null
-    }
-
-    return data as WorkspaceExport
+    return parsed.data as WorkspaceExport
   } catch {
     return null
   }

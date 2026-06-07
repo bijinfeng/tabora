@@ -87,4 +87,16 @@ describe("createCommandPaletteItems", () => {
       ["搜索", '在 Bing 中搜索 "待办"'],
     ])
   })
+
+  it("does not create a web search entry when the default provider is unavailable", () => {
+    const items = createCommandPaletteItems({
+      query: "待办",
+      commands,
+      widgets,
+      providers,
+      defaultProviderId: "official.search.missing",
+    })
+
+    expect(items.map((item) => [item.group, item.name])).toEqual([["卡片", "待办"]])
+  })
 })

@@ -2,7 +2,6 @@ import type { HostAdapter } from "@tabora/host-adapters"
 import { createSignal, Show } from "solid-js"
 import type {
   LayoutHostAPI,
-  LayoutRegion,
   PluginInstance,
   PluginRecord,
   SearchHistoryEntry,
@@ -78,6 +77,11 @@ import {
   buildWorkbenchSearchableWidgets,
 } from "./WorkbenchShellWidgets"
 import {
+  addWorkbenchWidget,
+  removeWorkbenchWidget,
+  resizeWorkbenchWidget,
+} from "./WorkbenchShellWidgetState"
+import {
   SafeWorkbenchLayout,
   WorkbenchAddWidgetModal,
   WorkbenchContextMenuOverlay,
@@ -97,7 +101,7 @@ import {
   type WidgetRenderModel,
 } from "./shellHelpers"
 import { requireWorkspace } from "./WorkbenchShellUtils"
-import { assignGridOrder, gridColumnSpan, gridRowSpan } from "./workbenchGrid"
+import { assignGridOrder } from "./workbenchGrid"
 import {
   createWorkspaceSession,
   deleteWorkspaceSession,
@@ -441,7 +445,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: pluginCatalog.listSearchProviders(),
     })
 
     await hydrateWorkbenchSessionState({
@@ -480,10 +483,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       window.open(payload.url, "_blank")
     }
   })
-
-  function layoutRegions(layoutId = activeLayoutId()): LayoutRegion[] {
-    return pluginCatalog.findLayoutContribution(layoutId)?.regions ?? []
-  }
 
   async function reconcileInstancesForLayout(
     layoutId: string,
@@ -558,6 +557,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     await setWorkbenchSearchProviderEnabled({
       providerId,
       enabled,
+      currentSettings: searchSettings(),
       providers: pluginCatalog.listSearchProviders(),
       updateWorkspace,
       setSearchSettings,
@@ -622,7 +622,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setActiveLayoutId(result.workspace.activeLayoutId)
     applyThemeSelection(result.workspace.activeThemeId)
     applyBackgroundSelection(result.workspace.activeBackgroundProviderId)
-    setSearchSettings(readSearchSettings(result.workspace, pluginCatalog.listSearchProviders()))
+    setSearchSettings(readSearchSettings(result.workspace))
     setWorkspaceList((prev) => [...prev, result.workspace])
 
     return { warnings: result.warnings }
@@ -644,7 +644,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
-      searchProviders: pluginCatalog.listSearchProviders(),
       workspaceId: id,
     })
     setCtxMenu(null)
@@ -723,55 +722,44 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   async function addWidget(pluginId: string, contributionId: string) {
     const workspace = requireWorkspace(workspaceState())
-    const widget = pluginCatalog.findWidgetContribution(pluginId, contributionId)
-    if (!widget) return
-    const widgetRegionId =
-      layoutRegions().find((region) => region.accepts.includes("widget"))?.id ?? "mainGrid"
-    const id = `${contributionId}-${Date.now()}`
-    const inst: PluginInstance = {
-      id,
+    const added = await addWorkbenchWidget({
       workspaceId: workspace.id,
-      pluginId: widget.pluginId,
+      pluginId,
       contributionId,
-      extensionPoint: "widget",
-      regionId: widgetRegionId,
-      enabled: true,
-      size: widget.defaultSize,
-      config: {},
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      currentInstances: instances(),
+      layoutRegions: pluginCatalog.findLayoutContribution(activeLayoutId())?.regions ?? [],
+      resolveWidget: (targetPluginId, targetContributionId) =>
+        pluginCatalog.findWidgetContribution(targetPluginId, targetContributionId),
+      assignGridOrder,
+      saveInstance: (instance) => instanceRepo.save(instance),
+      setInstances,
+    })
+    if (!added) {
+      showToast("当前布局不支持添加卡片", { type: "warning" })
     }
-    const next = assignGridOrder([...instances(), inst])
-    await instanceRepo.save(next[next.length - 1]!)
-    setInstances(next)
   }
 
   async function removeWidget(instanceId: string) {
-    if (expandState()?.instanceId === instanceId) {
-      closeExpand()
-    }
-    if (ctxMenu()?.instanceId === instanceId) {
-      setCtxMenu(null)
-    }
-    await instanceRepo.remove(instanceId)
-    setInstances((prev) => prev.filter((i) => i.id !== instanceId))
+    await removeWorkbenchWidget({
+      instanceId,
+      currentInstances: instances(),
+      currentExpandInstanceId: expandState()?.instanceId ?? null,
+      currentContextMenuInstanceId: ctxMenu()?.instanceId ?? null,
+      clearExpand: closeExpand,
+      clearContextMenu: () => setCtxMenu(null),
+      removeInstance: (targetInstanceId) => instanceRepo.remove(targetInstanceId),
+      setInstances,
+    })
   }
 
   async function changeWidgetSize(instanceId: string, newSize: WidgetSize) {
-    const inst = instances().find((i) => i.id === instanceId)
-    if (!inst) return
-    const updated: PluginInstance = {
-      ...inst,
-      size: newSize,
-      grid: {
-        ...(inst.grid ?? { x: 0, y: 0, rowSpan: 1 }),
-        colSpan: gridColumnSpan(newSize),
-        rowSpan: gridRowSpan(newSize),
-      },
-      updatedAt: new Date().toISOString(),
-    }
-    await instanceRepo.save(updated)
-    setInstances((prev) => prev.map((i) => (i.id === instanceId ? updated : i)))
+    await resizeWorkbenchWidget({
+      instanceId,
+      newSize,
+      currentInstances: instances(),
+      saveInstance: (instance) => instanceRepo.save(instance),
+      setInstances,
+    })
   }
 
   function closeExpand() {

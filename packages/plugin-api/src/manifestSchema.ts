@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { workbenchSearchSettingsSchema } from "./workspaceSchema"
+
 const widgetSizeSchema = z.enum(["S", "M", "L", "XL"])
 
 const settingsPanelSectionSchema = z.enum(["general", "appearance", "search", "plugins", "about"])
@@ -147,10 +149,7 @@ const workspacePresetSchema = z.object({
   layoutId: z.string().min(1),
   themeId: z.string().min(1),
   backgroundProviderId: z.string().min(1),
-  search: z.object({
-    defaultProviderId: z.string().min(1),
-    enabledProviderIds: z.array(z.string().min(1)).optional(),
-  }),
+  search: workbenchSearchSettingsSchema,
   regions: z
     .array(
       z.object({

@@ -7,15 +7,18 @@ import {
   classifyWorkbenchRawColorDebt,
   findCrossAppSourceImports,
   findCorePackageAppImports,
+  findForbiddenSearchFallbacks,
   findForbiddenPluginDependencies,
   findForbiddenPluginImports,
   findPackageExportViolations,
+  findPassThroughWorkbenchAppExports,
   findForbiddenUiDependencies,
   findForbiddenUiImports,
   findPluginExternalOpenViolations,
   findRawColorMatches,
   findTypeEscapeViolations,
   findTestModeViolations,
+  findWidgetRegionFallbackViolations,
   findWorkbenchRawColorViolations,
   findWorkbenchAvoidableStyleViolations,
   findWindowOpenViolations,
@@ -243,6 +246,78 @@ describe("governance rules", () => {
         filePath: "apps/playground/src/App.tsx",
         source: `
           import { helper } from "./workspaceSession"
+        `,
+      }),
+    ).toEqual([])
+  })
+
+  it("detects forbidden search fallback patterns in production source", () => {
+    expect(
+      findForbiddenSearchFallbacks({
+        filePath: "packages/official-plugins/src/settings-workspace.tsx",
+        source: `
+          const providerId = props.searchSettings.defaultProviderId || providers()[0]?.id || ""
+          const enabledProviderIds =
+            props.searchSettings.enabledProviderIds ?? providers().map((provider) => provider.id)
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/official-plugins/src/settings-workspace.tsx",
+        match: "defaultProviderId || providers()[0]?.id",
+        reason: "search settings must not fall back from defaultProviderId to the first provider",
+      },
+      {
+        filePath: "packages/official-plugins/src/settings-workspace.tsx",
+        match: "enabledProviderIds ?? providers().map(",
+        reason: "search settings must not backfill enabledProviderIds from all providers",
+      },
+    ])
+  })
+
+  it("detects widget region fallback to mainGrid", () => {
+    expect(
+      findWidgetRegionFallbackViolations({
+        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+        source: `
+          const widgetRegionId = region?.regionId ?? "mainGrid"
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+        match: '?? "mainGrid"',
+        reason: 'widget region resolution must not fall back to "mainGrid"',
+      },
+    ])
+  })
+
+  it("detects pure app pass-through exports from workbench-app", () => {
+    expect(
+      findPassThroughWorkbenchAppExports({
+        filePath: "apps/playground/src/themeResolver.ts",
+        source: `
+          export * from "@tabora/workbench-app"
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "apps/playground/src/themeResolver.ts",
+        match: 'export * from "@tabora/workbench-app"',
+        reason:
+          "apps must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
+      },
+    ])
+
+    expect(
+      findPassThroughWorkbenchAppExports({
+        filePath: "apps/playground/src/workbenchComposition.ts",
+        source: `
+          import { createWorkbenchComposition } from "@tabora/workbench-app"
+
+          export function createPlaygroundComposition() {
+            return createWorkbenchComposition()
+          }
         `,
       }),
     ).toEqual([])

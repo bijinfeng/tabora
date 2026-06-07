@@ -1,33 +1,57 @@
+import { render } from "solid-js/web"
 import { describe, expect, it, vi } from "vitest"
-import { safelyHandleProviderChange } from "./search-command-bar"
-import { buildSearchUrl } from "./search-model"
-import type { SearchProviderContribution } from "@tabora/plugin-api"
 
-describe("buildSearchUrl", () => {
-  it("replaces multiple {query} placeholders and URL-encodes the trimmed query", () => {
-    const provider: SearchProviderContribution = {
-      id: "test",
-      title: "Test",
-      urlTemplate: "https://example.com/search?q={query}&ref={query}",
-    }
+import { SearchCommandBar } from "./search-command-bar"
 
-    const result = buildSearchUrl(provider, "  hello world  ")
+describe("SearchCommandBar", () => {
+  it("shows an inline error when no search providers are available", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
 
-    expect(result).toBe("https://example.com/search?q=hello%20world&ref=hello%20world")
+    render(
+      () => (
+        <SearchCommandBar
+          providers={[]}
+          defaultProviderId="official.search.google"
+          commands={[]}
+          widgets={[]}
+          onDefaultProviderChange={vi.fn()}
+        />
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("搜索不可用")
+    expect(root.textContent).toContain("未配置可用搜索源")
+    root.remove()
   })
-})
 
-describe("safelyHandleProviderChange", () => {
-  it("catches a rejected onDefaultProviderChange and logs console.warn", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+  it("shows an inline error when the configured default provider is unavailable", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
 
-    const rejectingFn = () => Promise.reject(new Error("change failed"))
-    safelyHandleProviderChange(rejectingFn, "test-id")
+    render(
+      () => (
+        <SearchCommandBar
+          providers={[
+            {
+              id: "official.search.bing",
+              title: "Bing",
+              shortcut: "b",
+              urlTemplate: "https://bing.example/search?q={query}",
+            },
+          ]}
+          defaultProviderId="official.search.google"
+          commands={[]}
+          widgets={[]}
+          onDefaultProviderChange={vi.fn()}
+        />
+      ),
+      root,
+    )
 
-    await new Promise((r) => setTimeout(r, 10))
-
-    expect(warnSpy).toHaveBeenCalledWith("Failed to change default provider:", expect.any(Error))
-
-    warnSpy.mockRestore()
+    expect(root.textContent).toContain("搜索不可用")
+    expect(root.textContent).toContain("默认搜索源不可用")
+    root.remove()
   })
 })

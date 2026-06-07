@@ -19,11 +19,8 @@ type WorkspaceSearchDataSaver = (
   value: SearchHistoryEntry[],
 ) => Promise<void>
 
-export function resolveWorkbenchEnabledProviderIds(
-  settings: WorkbenchSearchSettings,
-  providers: SearchProviderSummary[],
-): string[] {
-  return settings.enabledProviderIds ?? providers.map((provider) => provider.id)
+export function resolveWorkbenchEnabledProviderIds(settings: WorkbenchSearchSettings): string[] {
+  return settings.enabledProviderIds
 }
 
 export async function setWorkbenchDefaultSearchProvider(options: {
@@ -56,6 +53,7 @@ export async function setWorkbenchDefaultSearchProvider(options: {
 export async function setWorkbenchSearchProviderEnabled(options: {
   providerId: string
   enabled: boolean
+  currentSettings: WorkbenchSearchSettings
   providers: SearchProviderSummary[]
   updateWorkspace: UpdateWorkspace
   setSearchSettings: SearchSettingsUpdater
@@ -66,16 +64,19 @@ export async function setWorkbenchSearchProviderEnabled(options: {
     return
   }
 
+  const currentEnabled = resolveWorkbenchEnabledProviderIds(options.currentSettings)
+
+  if (!options.enabled && options.currentSettings.defaultProviderId === options.providerId) {
+    options.warn(`Cannot disable the default search provider: "${options.providerId}"`)
+    return
+  }
+
+  const nextEnabled = options.enabled
+    ? [...new Set([...currentEnabled, options.providerId])]
+    : currentEnabled.filter((id) => id !== options.providerId)
+
   await options.updateWorkspace((workspace) => {
-    const currentSearch = (workspace.config?.search as Record<string, unknown>) ?? {}
-    const currentEnabled = (
-      Array.isArray(currentSearch.enabledProviderIds)
-        ? currentSearch.enabledProviderIds
-        : options.providers.map((provider) => provider.id)
-    ) as string[]
-    const nextEnabled = options.enabled
-      ? [...new Set([...currentEnabled, options.providerId])]
-      : currentEnabled.filter((id) => id !== options.providerId)
+    const currentSearch = workspace.config?.search as WorkbenchSearchSettings
     workspace.config = {
       ...(workspace.config ?? {}),
       search: { ...currentSearch, enabledProviderIds: nextEnabled },
@@ -84,10 +85,6 @@ export async function setWorkbenchSearchProviderEnabled(options: {
   })
 
   options.setSearchSettings((previous) => {
-    const currentEnabled = resolveWorkbenchEnabledProviderIds(previous, options.providers)
-    const nextEnabled = options.enabled
-      ? [...new Set([...currentEnabled, options.providerId])]
-      : currentEnabled.filter((id) => id !== options.providerId)
     return {
       ...previous,
       enabledProviderIds: nextEnabled,
