@@ -30,11 +30,11 @@ import {
 } from "./WorkbenchShellSettings"
 import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
+import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
 import { createWorkbenchShellState } from "./WorkbenchShellState"
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import { createWorkbenchWidgetController } from "./WorkbenchShellWidgetController"
 import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
-import { WorkbenchSettingsAboutContent } from "./WorkbenchShellChrome"
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
 import { canPluginOpenExternal } from "./shellController"
 import {
@@ -427,6 +427,46 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     reconcileInstancesForLayout: workspaceController.reconcileInstancesForLayout,
   })
 
+  const surfaceProps = createWorkbenchShellSurfaceProps({
+    content: layoutRenderer.renderActiveLayout(),
+    availableWidgets: pluginCatalog.listWidgetContributions(),
+    widgetIconLabel: resolveWidgetIconLabel,
+    addWidgetOpen: addWidgetOpen(),
+    addWidget: widgetController.addWidget,
+    closeAddWidget: () => setAddWidgetOpen(false),
+    settingsOpen: settingsOpen(),
+    settingsPanels: pluginCatalog.listSettingsPanels(),
+    activeSettingsSectionId: activeSettingsSectionId(),
+    onSettingsSectionChange: setActiveSettingsSectionId,
+    closeSettings: () => setSettingsOpen(false),
+    getSettingsView: (viewId) =>
+      resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId),
+    buildSettingsPanelProps,
+    workspaceName: workspaceState()?.name ?? "未加载",
+    enabledPluginCount: pluginCatalog
+      .pluginSummaries(pluginRecords())
+      .filter((plugin) => plugin.enabled).length,
+    expandState: expandState(),
+    getWidgetView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
+    widgetIconForProps: (viewProps) =>
+      renderWorkbenchWidgetIcon(widgetController.widgetContribution(viewProps)?.icon),
+    closeExpand: widgetController.closeExpand,
+    modalViewId: modalViewId(),
+    modalProps: modalProps(),
+    getModalView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
+    closeModal: () => setModalViewId(null),
+    fullscreenViewId: fullscreenViewId(),
+    fullscreenProps: fullscreenProps(),
+    getFullscreenView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
+    closeFullscreen: () => setFullscreenViewId(null),
+    contextMenu: ctxMenu(),
+    contextSections: widgetController.buildContextMenuModel()?.sections,
+    closeContextMenu: () => setCtxMenu(null),
+    toasts: toasts(),
+    runCommand,
+    commandPalette: searchSurfaces.buildCommandPaletteProps(),
+  })
+
   return (
     <div
       class="tabora-root"
@@ -443,68 +483,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       tabIndex={-1}
     >
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
-        <WorkbenchShellSurfaceHost
-          content={layoutRenderer.renderActiveLayout()}
-          addWidgetModal={{
-            open: addWidgetOpen(),
-            availableWidgets: pluginCatalog.listWidgetContributions(),
-            widgetIconLabel: resolveWidgetIconLabel,
-            onAdd: (pluginId, widgetId) => {
-              void widgetController.addWidget(pluginId, widgetId)
-              setAddWidgetOpen(false)
-            },
-            onClose: () => setAddWidgetOpen(false),
-          }}
-          settingsHost={{
-            open: settingsOpen(),
-            panels: pluginCatalog.listSettingsPanels(),
-            activeSectionId: activeSettingsSectionId(),
-            onSectionChange: setActiveSettingsSectionId,
-            onClose: () => setSettingsOpen(false),
-            getView: (viewId) =>
-              resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId),
-            panelProps: buildSettingsPanelProps,
-            aboutContent: (
-              <WorkbenchSettingsAboutContent
-                workspaceName={workspaceState()?.name ?? "未加载"}
-                enabledPluginCount={
-                  pluginCatalog.pluginSummaries(pluginRecords()).filter((plugin) => plugin.enabled)
-                    .length
-                }
-              />
-            ),
-          }}
-          expandOverlay={{
-            expandState: expandState(),
-            getView: (viewId) =>
-              resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
-            widgetIconForProps: (viewProps) =>
-              renderWorkbenchWidgetIcon(widgetController.widgetContribution(viewProps)?.icon),
-            onClose: widgetController.closeExpand,
-          }}
-          pluginModal={{
-            viewId: modalViewId(),
-            modalProps: modalProps(),
-            getView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-            onClose: () => setModalViewId(null),
-          }}
-          fullscreenOverlay={{
-            viewId: fullscreenViewId(),
-            fullscreenProps: fullscreenProps(),
-            getView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-            onClose: () => setFullscreenViewId(null),
-          }}
-          contextMenuOverlay={{
-            menu: ctxMenu(),
-            sections: widgetController.buildContextMenuModel()?.sections ?? [],
-            onClose: () => setCtxMenu(null),
-          }}
-          toastHost={{
-            toasts: toasts(),
-            onAction: (commandId) => runCommand(commandId, {}),
-          }}
-          commandPalette={searchSurfaces.buildCommandPaletteProps()}
-        />
+        <WorkbenchShellSurfaceHost {...surfaceProps} />
       </Show>
     </div>
   )
