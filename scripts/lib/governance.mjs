@@ -143,6 +143,19 @@ const WORKBENCH_APP_EXPORT_PATTERN =
   /export\s+(?:type\s+)?(?:\*|\{[\s\S]*?\})\s+from\s+["']@tabora\/workbench-app["'];?/g
 const PLUGIN_EXTERNAL_OPEN_PATTERN = /window\.open|target="_blank"|target='_blank'/g
 const WINDOW_OPEN_PATTERN = /window\.open/g
+const REQUIRED_BROWSER_SMOKE_PATHS = [
+  "apps/playground/**",
+  "apps/extension/**",
+  "packages/**",
+  "plugins/**",
+  "scripts/**",
+  "tooling/**",
+  "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  "vitest.e2e.config.ts",
+  ".github/workflows/**",
+]
 const QUALITY_EXTERNAL_OPEN_PATTERN =
   /window\.open|target="_blank"|target='_blank'|openExternal|external-open/g
 const ALLOWED_WINDOW_OPEN_FILES = new Set(["packages/workbench-app/src/WorkbenchShellApp.tsx"])
@@ -350,6 +363,55 @@ export function findPassThroughWorkbenchAppExports(options) {
     match,
     reason: "apps must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
   }))
+}
+
+export function findBrowserSmokeWorkflowViolations(options) {
+  if (options.filePath !== ".github/workflows/ci.yml") {
+    return []
+  }
+
+  const findings = []
+
+  for (const workflowPath of REQUIRED_BROWSER_SMOKE_PATHS) {
+    if (!options.source.includes(`- "${workflowPath}"`)) {
+      findings.push({
+        filePath: options.filePath,
+        match: "pull_request.paths",
+        reason: "CI pull_request workflow must gate browser smoke by the required Tabora path set",
+      })
+      break
+    }
+  }
+
+  if (
+    !/browser-smoke:\s*[\s\S]*?\bif:\s*github\.event_name\s*==\s*['"]pull_request['"]/.test(
+      options.source,
+    )
+  ) {
+    findings.push({
+      filePath: options.filePath,
+      match: "jobs.browser-smoke.if",
+      reason: "CI browser smoke job must run only for pull_request events",
+    })
+  }
+
+  if (!options.source.includes("pnpm exec playwright install --with-deps chromium")) {
+    findings.push({
+      filePath: options.filePath,
+      match: "pnpm exec playwright install --with-deps chromium",
+      reason: "CI browser smoke job must install Playwright Chromium before pnpm test:e2e",
+    })
+  }
+
+  if (!/browser-smoke:\s*[\s\S]*?- run: pnpm test:e2e/.test(options.source)) {
+    findings.push({
+      filePath: options.filePath,
+      match: "pnpm test:e2e",
+      reason: "CI browser smoke job must execute pnpm test:e2e",
+    })
+  }
+
+  return findings
 }
 
 export function findWorkbenchRawColorViolations(options) {
@@ -839,6 +901,17 @@ export async function scanWindowOpenBoundaries(rootDir) {
   return scanFiles(repositoryRoot, files, findWindowOpenViolations)
 }
 
+export async function scanBrowserSmokeWorkflowBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const workflowPath = path.join(repositoryRoot, ".github", "workflows", "ci.yml")
+
+  if (!existsSync(workflowPath)) {
+    return []
+  }
+
+  return scanFiles(repositoryRoot, [workflowPath], findBrowserSmokeWorkflowViolations)
+}
+
 export async function scanWorkbenchRawColorBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles(
@@ -904,6 +977,7 @@ export async function scanArchitecture(rootDir) {
     ...(await scanDeprecatedLayoutIdBoundaries(rootDir)),
     ...(await scanAppWorkbenchPassThroughBoundaries(rootDir)),
     ...(await scanWindowOpenBoundaries(rootDir)),
+    ...(await scanBrowserSmokeWorkflowBoundaries(rootDir)),
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),
     ...(await scanWorkbenchAvoidableStyleBoundaries(rootDir)),
   ]

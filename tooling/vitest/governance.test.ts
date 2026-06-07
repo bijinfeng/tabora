@@ -5,6 +5,7 @@ import {
   classifyExternalOpenMatch,
   classifyRawColorMatch,
   classifyWorkbenchRawColorDebt,
+  findBrowserSmokeWorkflowViolations,
   findCrossAppSourceImports,
   findCorePackageAppImports,
   findDeprecatedLayoutIdViolations,
@@ -361,6 +362,73 @@ describe("governance rules", () => {
           export function createPlaygroundComposition() {
             return createWorkbenchComposition()
           }
+        `,
+      }),
+    ).toEqual([])
+  })
+
+  it("detects missing PR browser smoke workflow contracts", () => {
+    expect(
+      findBrowserSmokeWorkflowViolations({
+        filePath: ".github/workflows/ci.yml",
+        source: `
+          name: CI
+          on:
+            pull_request:
+              branches: [main]
+          jobs:
+            browser-smoke:
+              runs-on: ubuntu-latest
+              steps:
+                - run: pnpm install --frozen-lockfile
+                - run: pnpm test:e2e
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: ".github/workflows/ci.yml",
+        match: "pull_request.paths",
+        reason: "CI pull_request workflow must gate browser smoke by the required Tabora path set",
+      },
+      {
+        filePath: ".github/workflows/ci.yml",
+        match: "jobs.browser-smoke.if",
+        reason: "CI browser smoke job must run only for pull_request events",
+      },
+      {
+        filePath: ".github/workflows/ci.yml",
+        match: "pnpm exec playwright install --with-deps chromium",
+        reason: "CI browser smoke job must install Playwright Chromium before pnpm test:e2e",
+      },
+    ])
+
+    expect(
+      findBrowserSmokeWorkflowViolations({
+        filePath: ".github/workflows/ci.yml",
+        source: `
+          on:
+            pull_request:
+              branches: [main]
+              paths:
+                - "apps/playground/**"
+                - "apps/extension/**"
+                - "packages/**"
+                - "plugins/**"
+                - "scripts/**"
+                - "tooling/**"
+                - "package.json"
+                - "pnpm-lock.yaml"
+                - "pnpm-workspace.yaml"
+                - "vitest.e2e.config.ts"
+                - ".github/workflows/**"
+          jobs:
+            browser-smoke:
+              if: github.event_name == 'pull_request'
+              runs-on: ubuntu-latest
+              steps:
+                - run: pnpm install --frozen-lockfile
+                - run: pnpm exec playwright install --with-deps chromium
+                - run: pnpm test:e2e
         `,
       }),
     ).toEqual([])
@@ -822,7 +890,7 @@ describe("governance rules", () => {
       "packages/workbench-app/src/WorkbenchShellApp.tsx",
     )
 
-    expect(shellRoot.split("\n").length).toBeLessThan(1090)
+    expect(shellRoot.split("\n").length).toBeLessThan(420)
   })
 
   it("builds a grouped quality report", () => {
