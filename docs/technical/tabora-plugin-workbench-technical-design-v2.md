@@ -113,7 +113,7 @@ packages/
 - Phase X2 已完成布局协议语义收口：`HostActionId` 已包含 `layout-switch`、`shortcuts`、`plugin-manager` 等稳定动作 ID，布局切换不再伪装为 `theme` action；`RegionSlot` 构建会按 `region.accepts` 过滤实例，避免 extension point 错配；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖，保持第三方 layout 依赖面隔离；playground / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误 fallback 会记录状态并触发 toast。
 - Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；`@tabora/workbench-app` 承接可复用 shell helper；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
 - `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope`、workspace `activeBackgroundProviderId`、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
-- 2026-06-07 发布前兼容性清理补充：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归。
+- 2026-06-07 发布前兼容性清理补充：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
 - `@tabora/plugin-api` 当前额外导出 `workbenchSearchSettingsSchema`、`pluginInstanceSchema`、`workspaceSchema`、`workspaceExportSchema` 作为当前工作台协议事实源。`WorkbenchSearchSettings` 当前协议为完整显式配置：`defaultProviderId: string`、`enabledProviderIds: string[]`，并要求默认 provider 必须属于启用列表。workspace hydration、import/export 和 preset 链路统一走 schema 校验；缺失字段、旧导出或不满足约束的数据直接拒绝，不再按“首个 provider”或“全量 providers”做 silent backfill。
 - `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
 - `@tabora/storage` 已引入 `StorageAdapter` port；Web 默认 adapter 包装当前 Dexie/IndexedDB repository，`workbench-app` bootstrap 可注入 fake/memory adapter 进行测试或未来跨平台替换。当前上线前 schema 采用单一 Dexie version，直接声明 MVP 所需表，不保留旧版本迁移/backfill 路径。
@@ -865,7 +865,7 @@ type WorkspacePresetContribution = {
 }
 ```
 
-preset applier 只在创建新 workspace 时生成 workspace 与 plugin instances；已有 workspace 不做 backfill、不覆盖数据，也不为旧 seed 做迁移。preset widget instance 缺少 `size` 会被 schema 与 applier 拒绝，非 widget instance 不写入 `size`。
+preset applier 只在创建新 workspace 时生成 workspace 与 plugin instances；已有 workspace 不做 backfill、不覆盖数据，也不为旧 seed 做迁移。preset widget instance 缺少 `size` 会被 schema 与 applier 拒绝，非 widget instance 不写入 `size`。官方默认 preset 额外通过 contract test 锁定 `pluginId / contributionId / layoutId / themeId / backgroundProviderId / search provider` 全链路引用必须命中当前 builtin 贡献，避免旧 ID 残留再次混入事实源。
 
 Workspace 当前协议要求保存 `activeBackgroundProviderId`。导入 / 导出只接受当前 schema；缺失 `activeBackgroundProviderId` 的 workspace JSON 被拒绝，不按默认背景做补齐。搜索配置同样要求显式满足当前 `WorkbenchSearchSettings` 协议；缺失 `defaultProviderId`、缺失 `enabledProviderIds`、或二者不一致的旧 workspace / export 数据都会被拒绝。背景 provider 找不到时仍由背景 resolver 使用安全页面样式兜底，这是错误恢复机制，不是旧数据迁移。
 

@@ -69,6 +69,3 @@ export function HeadlessIconButton(props: HeadlessIconButtonProps) {
     </button>
   )
 }
-
-export type ButtonProps = HeadlessButtonProps
-export type IconButtonProps = HeadlessIconButtonProps

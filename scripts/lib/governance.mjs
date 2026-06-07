@@ -138,6 +138,7 @@ const SEARCH_FALLBACK_PATTERNS = [
   },
 ]
 const WIDGET_REGION_FALLBACK_PATTERN = /\?\?\s*(?:"mainGrid"|'mainGrid')/g
+const DEPRECATED_LAYOUT_ID_PATTERN = /\bofficial\.layout\.dashboard\b/g
 const WORKBENCH_APP_EXPORT_PATTERN =
   /export\s+(?:type\s+)?(?:\*|\{[\s\S]*?\})\s+from\s+["']@tabora\/workbench-app["'];?/g
 const PLUGIN_EXTERNAL_OPEN_PATTERN = /window\.open|target="_blank"|target='_blank'/g
@@ -305,6 +306,19 @@ export function findWidgetRegionFallbackViolations(options) {
     source: options.source,
     pattern: WIDGET_REGION_FALLBACK_PATTERN,
     reason: 'widget region resolution must not fall back to "mainGrid"',
+  })
+}
+
+export function findDeprecatedLayoutIdViolations(options) {
+  if (isTestFile(options.filePath)) {
+    return []
+  }
+
+  return collectPatternMatches({
+    filePath: options.filePath,
+    source: options.source,
+    pattern: DEPRECATED_LAYOUT_ID_PATTERN,
+    reason: "deprecated layout id official.layout.dashboard must not appear in production source",
   })
 }
 
@@ -777,6 +791,30 @@ export async function scanAppWorkbenchPassThroughBoundaries(rootDir) {
   return scanFiles(repositoryRoot, files, findPassThroughWorkbenchAppExports)
 }
 
+export async function scanDeprecatedLayoutIdBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => {
+      if (!IMPORT_SOURCE_EXTENSIONS.has(path.extname(filePath))) {
+        return false
+      }
+
+      if (isTestFile(filePath)) {
+        return false
+      }
+
+      return filePath.includes(`${path.sep}src${path.sep}`)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findDeprecatedLayoutIdViolations)
+}
+
 export async function scanWindowOpenBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles(
@@ -863,6 +901,7 @@ export async function scanArchitecture(rootDir) {
     ...(await scanTypeEscapeBoundaries(rootDir)),
     ...(await scanSearchFallbackBoundaries(rootDir)),
     ...(await scanWidgetRegionFallbackBoundaries(rootDir)),
+    ...(await scanDeprecatedLayoutIdBoundaries(rootDir)),
     ...(await scanAppWorkbenchPassThroughBoundaries(rootDir)),
     ...(await scanWindowOpenBoundaries(rootDir)),
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),

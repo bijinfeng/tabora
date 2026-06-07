@@ -5,7 +5,6 @@ import type {
   PluginInstance,
   PluginRecord,
   SearchHistoryEntry,
-  SearchViewProps,
   SettingsPanelViewProps,
   WidgetContextMenuContribution,
   WidgetSize,
@@ -14,11 +13,8 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import {
-  buildSearchUrl,
   createLayoutEngine,
   createToastManager,
-  findProviderByToken,
-  routeSearchQuery,
   type InstanceRenderer,
   type LayoutSwitchPlan,
   type ToastOptions,
@@ -72,10 +68,7 @@ import {
   setWorkbenchDefaultSearchProvider,
   setWorkbenchSearchProviderEnabled,
 } from "./WorkbenchShellSearchState"
-import {
-  buildWorkbenchSearchSurfaceState,
-  moveWorkbenchSearchSelection,
-} from "./WorkbenchSearchSurfaceState"
+import { buildWorkbenchInlineSearchViewProps } from "./WorkbenchInlineSearchViewProps"
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import {
   buildWorkbenchContextMenuModel,
@@ -322,7 +315,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         instance.contributionId,
       )
       if (!search) return <div class="settings-empty">搜索贡献未找到</div>
-      const View = resolveWorkbenchView<SearchViewProps>(kernel.registry.views, search.view)
+      const View = resolveWorkbenchView(kernel.registry.views, search.view)
       if (!View) return <div class="settings-empty">搜索视图不可用：{search.id}</div>
       const providers = resolveEnabledSearchProviders(
         searchSettings(),
@@ -332,130 +325,28 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         searchSettings(),
         pluginCatalog.listSearchProviders(),
       )
-      const searchSurfaceState = buildWorkbenchSearchSurfaceState({
+      const searchViewProps = buildWorkbenchInlineSearchViewProps({
+        pluginId: instance.pluginId,
         query: inlineSearchQuery(),
+        isOpen: inlineSearchOpen(),
+        activeResultIndex: inlineSearchActiveResultIndex(),
         providers,
         defaultProviderId,
         commands: commandItems(),
         widgets: searchableWidgets(),
         history: searchHistory(),
-        onProviderTokenSelect: (token) => {
-          setInlineSearchQuery(`@${token} `)
-          setInlineSearchActiveResultIndex(-1)
-          setInlineSearchOpen(true)
-        },
-        onWebSearch: (provider, query) => {
-          void submitInlineSearch(query, provider.id)
-        },
+        setQuery: setInlineSearchQuery,
+        setOpen: setInlineSearchOpen,
+        setActiveResultIndex: setInlineSearchActiveResultIndex,
+        setDefaultProvider: setDefaultSearchProvider,
+        saveHistory: saveSearchHistory,
+        openExternal: openExternalForPlugin,
+        showToast,
       })
-
-      async function submitInlineSearch(searchQuery: string, providerId?: string) {
-        const trimmed = searchQuery.trim()
-        if (!trimmed) {
-          return
-        }
-
-        const provider = providerId
-          ? providers.find((candidate) => candidate.id === providerId)
-          : undefined
-        const targetProvider =
-          provider ??
-          (() => {
-            const route = routeSearchQuery(trimmed, providers, defaultProviderId)
-            if (route?.type === "provider" || route?.type === "web") {
-              return route.provider
-            }
-            return undefined
-          })()
-        const targetQuery = providerId
-          ? trimmed
-          : (() => {
-              const route = routeSearchQuery(trimmed, providers, defaultProviderId)
-              if (route?.type === "provider" || route?.type === "web") {
-                return route.query
-              }
-              return ""
-            })()
-
-        if (!targetProvider || !targetQuery) {
-          return
-        }
-
-        const opened = openExternalForPlugin(
-          instance.pluginId,
-          buildSearchUrl(targetProvider, targetQuery),
-        )
-        if (!opened) {
-          showToast("无法打开该搜索源，请检查插件权限", { type: "error" })
-          return
-        }
-
-        await saveSearchHistory({ query: targetQuery, providerId: targetProvider.id })
-        setInlineSearchQuery("")
-        setInlineSearchActiveResultIndex(-1)
-        setInlineSearchOpen(false)
-      }
 
       return (
         <PluginViewBoundary instanceId={instance.id} title={search.title}>
-          {View({
-            entry: "inline",
-            providers,
-            defaultProviderId,
-            activeProviderId: searchSurfaceState.activeProviderId,
-            query: inlineSearchQuery(),
-            providerToken: searchSurfaceState.providerToken,
-            recentSearches: searchHistory().map((entry) => entry.query),
-            results: searchSurfaceState.results,
-            activeResultIndex: inlineSearchActiveResultIndex(),
-            isOpen: inlineSearchOpen(),
-            host: {
-              setQuery: (query) => {
-                setInlineSearchQuery(query)
-                setInlineSearchActiveResultIndex(-1)
-              },
-              submit: async (query, providerId) => {
-                await submitInlineSearch(query, providerId)
-              },
-              setActiveProvider: (providerId) => {
-                void setDefaultSearchProvider(providerId)
-              },
-              resolveProvider: (keyword) => findProviderByToken(providers, keyword) ?? null,
-              moveSelection: (direction) => {
-                setInlineSearchOpen(true)
-                setInlineSearchActiveResultIndex((currentIndex) =>
-                  moveWorkbenchSearchSelection(
-                    currentIndex,
-                    direction,
-                    searchSurfaceState.items.length,
-                  ),
-                )
-              },
-              executeSelection: async (resultIndex) => {
-                const nextIndex = resultIndex ?? inlineSearchActiveResultIndex()
-                const item = searchSurfaceState.items[nextIndex]
-                if (item) {
-                  item.action()
-                  if (item.closeAfterAction !== false) {
-                    setInlineSearchQuery("")
-                    setInlineSearchActiveResultIndex(-1)
-                    setInlineSearchOpen(false)
-                  }
-                  return
-                }
-
-                await submitInlineSearch(inlineSearchQuery())
-              },
-              open: () => {
-                setInlineSearchOpen(true)
-              },
-              close: () => {
-                setInlineSearchOpen(false)
-                setInlineSearchActiveResultIndex(-1)
-              },
-              showToast: (message) => showToast(message),
-            },
-          })}
+          {View(searchViewProps)}
         </PluginViewBoundary>
       )
     },

@@ -7,6 +7,7 @@ import {
   classifyWorkbenchRawColorDebt,
   findCrossAppSourceImports,
   findCorePackageAppImports,
+  findDeprecatedLayoutIdViolations,
   findForbiddenSearchFallbacks,
   findForbiddenPluginDependencies,
   findForbiddenPluginImports,
@@ -305,6 +306,33 @@ describe("governance rules", () => {
         reason: 'widget region resolution must not fall back to "mainGrid"',
       },
     ])
+  })
+
+  it("detects deprecated layout ids in production source", () => {
+    expect(
+      findDeprecatedLayoutIdViolations({
+        filePath: "packages/official-plugins/src/workspace-default-preset.ts",
+        source: `
+          export const preset = {
+            plugins: ["official.layout.dashboard"],
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/official-plugins/src/workspace-default-preset.ts",
+        match: "official.layout.dashboard",
+        reason:
+          "deprecated layout id official.layout.dashboard must not appear in production source",
+      },
+    ])
+
+    expect(
+      findDeprecatedLayoutIdViolations({
+        filePath: "packages/official-plugins/src/workspace-default-preset.test.ts",
+        source: `expect("official.layout.dashboard").toBe("official.layout.dashboard")`,
+      }),
+    ).toEqual([])
   })
 
   it("detects pure app pass-through exports from workbench-app", () => {

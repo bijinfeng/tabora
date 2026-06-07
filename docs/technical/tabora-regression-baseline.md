@@ -211,7 +211,7 @@ git diff --stat
 pnpm check:architecture
 ```
 
-脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、搜索配置首项 provider 兜底、`enabledProviderIds ?? providers.map(...)` backfill、widget region `?? "mainGrid"` 推断、app 层纯 `@tabora/workbench-app` pass-through wrapper、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
+脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、搜索配置首项 provider 兜底、`enabledProviderIds ?? providers.map(...)` backfill、widget region `?? "mainGrid"` 推断、废弃 `official.layout.dashboard` 回流、app 层纯 `@tabora/workbench-app` pass-through wrapper、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
 
 ### L3：自动化基础门禁
 
@@ -545,14 +545,14 @@ Nightly CI 已覆盖：
 - `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 信号报告；raw color 当前按 `workbench production / generated backgrounds / site styles / test fixtures` 分组，external-open 当前按 `host execution / manifest declaration / runtime method reference / test fixture / bypass risk` 分组，并按文件级信号去重计数。截止 2026-06-06，raw color 四类命中均已清零，当前仓库已没有剩余 raw color / `!important` 报告项。
 - `pnpm check:architecture` 已于 2026-06-06 将 `workbench production` raw color 基线收敛到 0，重新引入任何字面量颜色或 `!important` 都会直接失败；其余类别继续通过 `pnpm quality` 审计是否回归。
 - `pnpm check:architecture` 同时禁止 workbench 生产样式里的零透明度 `rgba(...)` 和宿主题色变量字面量 fallback；前者统一改为 `transparent`，后者直接依赖宿主主题 token。
-- `pnpm check:architecture` 已于 2026-06-07 新增守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper。
+- `pnpm check:architecture` 已于 2026-06-07 新增守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止废弃 `official.layout.dashboard` 回流到生产源码、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper。
 
 建议后续逐步补齐：
 
 1. 按路径触发策略把 `pnpm test:e2e` 从 nightly 继续推进到 PR 强门禁。
 2. 为 permission bridge 增加专门回归测试。
 3. 继续拆分 `packages/workbench-app/src/WorkbenchShellApp.tsx` 的宿主编排职责，降低单文件维护成本。
-4. 为 workspace preset 的 plugin id / contribution id 增加 contract test。
+4. 已于 2026-06-07 为官方默认 workspace preset 增加 plugin id / contribution id contract test，并额外覆盖 layout/theme/background/search 引用完整性。
 5. 将 `pnpm test:e2e` 从单一 dashboard smoke 扩展到更多 layout / settings / import-export 场景。
 6. 为 layout failure fallback 的更多变体和触屏拖拽策略补细粒度浏览器断言。
 7. 在 `check:architecture` / `quality` 之上继续扩展 mobile layout 和 layout failure fallback 的自动化守卫。
@@ -761,7 +761,7 @@ Agent 必须：
 | `SearchViewProps` 尚未升级到技术方案描述的状态机 contract                              | 已于 2026-06-07 升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，`SearchCommandBar` 退化为纯渲染层，suggestions / `@` 路由 / provider token 解析统一收敛到 `@tabora/orchestrator` / `@tabora/workbench-app` 共享模型                                                                                                                                                                                  | 已解决     |
 | 拖拽未实现 5px 阈值、实时交换、触屏策略                                                | 与交互原型和技术方案不完全一致                                                                                                                                                                                                                                                                                                                                                                                                              | P2         |
 | Expand 不是独立 contribution contract                                                  | 展开能力可用但协议不完整                                                                                                                                                                                                                                                                                                                                                                                                                    | P2         |
-| workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id                       | 默认装配协议校验不完整                                                                                                                                                                                                                                                                                                                                                                                                                      | P2         |
+| workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id                       | 已于 2026-06-07 为官方默认 preset 增加 `pluginId / contributionId / layoutId / themeId / backgroundProviderId / search provider` contract test，并清理旧 `official.layout.dashboard` 残留                                                                                                                                                                                                                                                   | 已解决     |
 | `pnpm test:e2e` 未进入 CI                                                              | 已于 2026-06-06 接入 nightly workflow；PR 路径强门禁仍待按路径策略推进                                                                                                                                                                                                                                                                                                                                                                      | 已解决     |
 | L7 质量扫描尚未脚本化                                                                  | 已于 2026-06-06 通过 `pnpm check:architecture` / `pnpm quality` 收口高信号扫描                                                                                                                                                                                                                                                                                                                                                              | 已解决     |
 
