@@ -52,8 +52,7 @@ export type WidgetContribution = {
   defaultConfig?: Record<string, unknown>
   views: {
     card: string
-    modal?: string
-    fullscreen?: string
+    expand?: string
     settings?: string
   }
   contextMenus?: WidgetContextMenuContribution[]

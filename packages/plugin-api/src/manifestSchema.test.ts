@@ -35,7 +35,36 @@ describe("pluginManifestSchema", () => {
             supportedSizes: ["S", "M", "L"],
             defaultSize: "M",
             allowMultipleInstances: true,
-            views: { card: "official.notes.card", modal: "official.notes.modal" },
+            views: { card: "official.notes.card", expand: "official.notes.expand" },
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts a widget with an explicit expand view contract", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.widgets.notes",
+      name: "Notes Widget",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        widgets: [
+          {
+            id: "notes",
+            title: "便签",
+            supportedSizes: ["S", "M", "L"],
+            defaultSize: "M",
+            allowMultipleInstances: true,
+            views: {
+              card: "official.notes.card",
+              expand: "official.notes.expand",
+              settings: "official.notes.settings",
+            },
           },
         ],
       },

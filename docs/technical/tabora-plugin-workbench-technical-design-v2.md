@@ -732,8 +732,7 @@ type WidgetContribution = {
   allowMultipleInstances: boolean
   views: {
     card: string
-    modal?: string
-    fullscreen?: string
+    expand?: string
     settings?: string
   }
 }

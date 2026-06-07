@@ -1,5 +1,5 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { NotesCard, NotesModal } from "./notes-card"
+import { NotesCard, NotesExpand } from "./notes-card"
 
 export const officialPluginNotes: BuiltinPlugin = {
   enabled: true,
@@ -20,13 +20,13 @@ export const officialPluginNotes: BuiltinPlugin = {
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,
-          views: { card: "official.widgets.notes.card", modal: "official.widgets.notes.modal" },
+          views: { card: "official.widgets.notes.card", expand: "official.widgets.notes.expand" },
         },
       ],
     },
   },
   activate(context) {
     context.registry.views.register("official.widgets.notes.card", NotesCard)
-    context.registry.views.register("official.widgets.notes.modal", NotesModal)
+    context.registry.views.register("official.widgets.notes.expand", NotesExpand)
   },
 }

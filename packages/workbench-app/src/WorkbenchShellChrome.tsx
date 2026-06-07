@@ -28,7 +28,7 @@ type ExpandState = {
   instanceId: string
   title: string
   viewId: string
-  mode: "card" | "modal" | "fullscreen" | "settings"
+  mode: "expand" | "settings"
   props: WidgetViewProps
 }
 
@@ -192,27 +192,14 @@ export function WorkbenchExpandOverlay(props: {
     <Show when={props.expandState}>
       {(expand) => (
         <div class="expand-overlay" onClick={props.onClose}>
-          <div
-            class="expand-shell"
-            classList={{
-              "is-card-fallback": expand().mode === "card",
-              "is-fullscreen": expand().mode === "fullscreen",
-            }}
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div class="expand-shell" onClick={(event) => event.stopPropagation()}>
             <div class="expand-header">
               <div class="expand-title">
                 <span class="expand-title-icon">{props.widgetIconForProps(expand().props)}</span>
                 <div class="expand-title-texts">
                   <span class="expand-title-text">{expand().title}</span>
                   <span class="expand-title-meta">
-                    {expand().mode === "fullscreen"
-                      ? "全屏视图"
-                      : expand().mode === "modal"
-                        ? "插件展开视图"
-                        : expand().mode === "settings"
-                          ? "实例设置"
-                          : "卡片放大视图"}
+                    {expand().mode === "settings" ? "实例设置" : "插件展开视图"}
                   </span>
                 </div>
               </div>

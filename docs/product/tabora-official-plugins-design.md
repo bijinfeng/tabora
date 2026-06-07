@@ -1264,14 +1264,14 @@ V1.5：
 3. 内容自动保存。
 4. 刷新页面后内容恢复。
 
-打开弹窗编辑：
+打开展开编辑：
 
 1. 用户点击卡片 header 的展开按钮。
-2. 宿主打开 modal。
-3. 插件渲染 `official.widgets.notes.modal`。
+2. 宿主打开统一 expand overlay。
+3. 插件渲染 `official.widgets.notes.expand`。
 4. 用户在更大的编辑区输入。
 5. 自动保存。
-6. 关闭弹窗后卡片内容同步更新。
+6. 关闭展开视图后卡片内容同步更新。
 
 清空内容：
 
@@ -1892,15 +1892,14 @@ widget header size control
 - 尺寸变化不破坏其他卡片。
 - 移动端尺寸可被布局折叠，但语义尺寸保留。
 
-### 14.4 打开弹窗流程
+### 14.4 打开展开流程
 
 ```txt
 widget header expand
-  -> check contribution.views.modal
-  -> context.ui.openModal(viewId, props)
-  -> host modal container
+  -> check contribution.views.expand
+  -> host expand overlay
   -> PluginViewBoundary
-  -> plugin modal view
+  -> plugin expand view
 ```
 
 关键要求：

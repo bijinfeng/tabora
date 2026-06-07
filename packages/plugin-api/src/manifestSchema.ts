@@ -71,8 +71,7 @@ const widgetContributionSchema = z
     defaultConfig: z.record(z.string(), z.unknown()).optional(),
     views: z.object({
       card: z.string().min(1),
-      modal: z.string().min(1).optional(),
-      fullscreen: z.string().min(1).optional(),
+      expand: z.string().min(1).optional(),
       settings: z.string().min(1).optional(),
     }),
     contextMenus: z

@@ -74,17 +74,16 @@ describe("isWorkbenchInteractiveElement", () => {
 })
 
 describe("buildWorkbenchWidgetExpandState", () => {
-  it("prefers fullscreen, then modal, then card views", () => {
+  it("uses the explicit expand view contract", () => {
     const viewProps = props()
     const result = buildWorkbenchWidgetExpandState({
       instance: instance(),
       model: model(),
       widget: widget({
         card: "widget.notes.card",
-        modal: "widget.notes.modal",
-        fullscreen: "widget.notes.fullscreen",
+        expand: "widget.notes.expand",
       }),
-      hasView: (viewId) => viewId !== "widget.notes.modal",
+      hasView: () => true,
       buildWidgetViewProps: () => viewProps,
     })
 
@@ -92,21 +91,21 @@ describe("buildWorkbenchWidgetExpandState", () => {
       expandState: {
         instanceId: "widget-1",
         title: "便签",
-        viewId: "widget.notes.fullscreen",
-        mode: "fullscreen",
+        viewId: "widget.notes.expand",
+        mode: "expand",
         props: viewProps,
       },
       errorMessage: null,
     })
   })
 
-  it("reports a localized error when no expand-capable view is available", () => {
+  it("reports a localized error when the widget does not declare an expand view", () => {
     const viewProps = props()
     const result = buildWorkbenchWidgetExpandState({
       instance: instance(),
       model: model(),
       widget: widget({ card: "widget.notes.card" }),
-      hasView: () => false,
+      hasView: () => true,
       buildWidgetViewProps: () => viewProps,
     })
 

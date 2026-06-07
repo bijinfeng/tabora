@@ -30,7 +30,7 @@ export function NotesCard(props: WidgetViewProps) {
   )
 }
 
-export function NotesModal(props: WidgetViewProps) {
+export function NotesExpand(props: WidgetViewProps) {
   const [text, setText] = createSignal("")
   const storageKey = "notes-content"
 
@@ -49,7 +49,7 @@ export function NotesModal(props: WidgetViewProps) {
           await props.data.save(storageKey, v)
         }}
         placeholder="尽情书写..."
-        aria-label="便签弹窗内容"
+        aria-label="便签展开内容"
         rows={12}
       />
     </div>

@@ -42,6 +42,7 @@ import {
   buildWorkbenchWidgetInstanceSettingsState,
   isWorkbenchInteractiveElement,
   resolveWorkbenchInstanceSettingsView,
+  type WorkbenchExpandState,
 } from "./WorkbenchShellInteractions"
 import {
   focusWorkbenchWidgetInstance,
@@ -143,13 +144,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
-  const [expandState, setExpandState] = createSignal<{
-    instanceId: string
-    title: string
-    viewId: string
-    mode: "card" | "modal" | "fullscreen" | "settings"
-    props: WidgetViewProps
-  } | null>(null)
+  const [expandState, setExpandState] = createSignal<WorkbenchExpandState | null>(null)
   const [dragId, setDragId] = createSignal<string | null>(null)
   const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
     null,

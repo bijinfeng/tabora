@@ -6,7 +6,7 @@ export type WorkbenchExpandState = {
   instanceId: string
   title: string
   viewId: string
-  mode: "card" | "modal" | "fullscreen" | "settings"
+  mode: "expand" | "settings"
   props: WidgetViewProps
 }
 
@@ -37,16 +37,10 @@ export function isWorkbenchInteractiveElement(target: EventTarget | null): boole
 export function resolveWorkbenchExpandView(
   widget: Pick<WidgetContribution, "views"> | undefined,
   hasView: WidgetViewLookup,
-): { viewId: string; mode: "card" | "modal" | "fullscreen" } | null {
+): { viewId: string; mode: "expand" } | null {
   if (!widget) return null
-  if (widget.views.fullscreen && hasView(widget.views.fullscreen)) {
-    return { viewId: widget.views.fullscreen, mode: "fullscreen" }
-  }
-  if (widget.views.modal && hasView(widget.views.modal)) {
-    return { viewId: widget.views.modal, mode: "modal" }
-  }
-  if (hasView(widget.views.card)) {
-    return { viewId: widget.views.card, mode: "card" }
+  if (widget.views.expand && hasView(widget.views.expand)) {
+    return { viewId: widget.views.expand, mode: "expand" }
   }
   return null
 }
