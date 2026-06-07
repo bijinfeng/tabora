@@ -21,14 +21,14 @@ type SearchResultIndexSetter = (next: number | ((current: number) => number)) =>
 
 export function buildWorkbenchInlineSearchViewProps(options: {
   pluginId: string
-  query: string
-  isOpen: boolean
-  activeResultIndex: number
-  providers: SearchProviderContribution[]
-  defaultProviderId: string
-  commands: SearchCommandEntry[]
-  widgets: SearchWidgetEntry[]
-  history: SearchHistoryEntry[]
+  getQuery: () => string
+  getIsOpen: () => boolean
+  getActiveResultIndex: () => number
+  getProviders: () => SearchProviderContribution[]
+  getDefaultProviderId: () => string
+  getCommands: () => SearchCommandEntry[]
+  getWidgets: () => SearchWidgetEntry[]
+  getHistory: () => SearchHistoryEntry[]
   setQuery: (query: string) => void
   setOpen: (open: boolean) => void
   setActiveResultIndex: SearchResultIndexSetter
@@ -37,22 +37,24 @@ export function buildWorkbenchInlineSearchViewProps(options: {
   openExternal: (pluginId: string, url: string) => boolean
   showToast: (message: string, options?: ToastOptions) => void
 }): SearchViewProps {
-  const searchSurfaceState = buildWorkbenchSearchSurfaceState({
-    query: options.query,
-    providers: options.providers,
-    defaultProviderId: options.defaultProviderId,
-    commands: options.commands,
-    widgets: options.widgets,
-    history: options.history,
-    onProviderTokenSelect: (token) => {
-      options.setQuery(`@${token} `)
-      options.setActiveResultIndex(-1)
-      options.setOpen(true)
-    },
-    onWebSearch: (provider, query) => {
-      void submitInlineSearch(query, provider.id)
-    },
-  })
+  function searchSurfaceState() {
+    return buildWorkbenchSearchSurfaceState({
+      query: options.getQuery(),
+      providers: options.getProviders(),
+      defaultProviderId: options.getDefaultProviderId(),
+      commands: options.getCommands(),
+      widgets: options.getWidgets(),
+      history: options.getHistory(),
+      onProviderTokenSelect: (token) => {
+        options.setQuery(`@${token} `)
+        options.setActiveResultIndex(-1)
+        options.setOpen(true)
+      },
+      onWebSearch: (provider, query) => {
+        void submitInlineSearch(query, provider.id)
+      },
+    })
+  }
 
   async function submitInlineSearch(searchQuery: string, providerId?: string) {
     const trimmed = searchQuery.trim()
@@ -60,12 +62,12 @@ export function buildWorkbenchInlineSearchViewProps(options: {
       return
     }
 
+    const providers = options.getProviders()
+    const defaultProviderId = options.getDefaultProviderId()
     const provider = providerId
-      ? options.providers.find((candidate) => candidate.id === providerId)
+      ? providers.find((candidate) => candidate.id === providerId)
       : undefined
-    const route = provider
-      ? null
-      : routeSearchQuery(trimmed, options.providers, options.defaultProviderId)
+    const route = provider ? null : routeSearchQuery(trimmed, providers, defaultProviderId)
     const targetProvider =
       provider ?? (route?.type === "provider" || route?.type === "web" ? route.provider : undefined)
     const targetQuery = providerId
@@ -95,15 +97,33 @@ export function buildWorkbenchInlineSearchViewProps(options: {
 
   return {
     entry: "inline",
-    providers: options.providers,
-    defaultProviderId: options.defaultProviderId,
-    activeProviderId: searchSurfaceState.activeProviderId,
-    query: options.query,
-    providerToken: searchSurfaceState.providerToken,
-    recentSearches: options.history.map((entry) => entry.query),
-    results: searchSurfaceState.results,
-    activeResultIndex: options.activeResultIndex,
-    isOpen: options.isOpen,
+    get providers() {
+      return options.getProviders()
+    },
+    get defaultProviderId() {
+      return options.getDefaultProviderId()
+    },
+    get activeProviderId() {
+      return searchSurfaceState().activeProviderId
+    },
+    get query() {
+      return options.getQuery()
+    },
+    get providerToken() {
+      return searchSurfaceState().providerToken
+    },
+    get recentSearches() {
+      return options.getHistory().map((entry) => entry.query)
+    },
+    get results() {
+      return searchSurfaceState().results
+    },
+    get activeResultIndex() {
+      return options.getActiveResultIndex()
+    },
+    get isOpen() {
+      return options.getIsOpen()
+    },
     host: {
       setQuery: (query) => {
         options.setQuery(query)
@@ -115,16 +135,17 @@ export function buildWorkbenchInlineSearchViewProps(options: {
       setActiveProvider: (providerId) => {
         void options.setDefaultProvider(providerId)
       },
-      resolveProvider: (keyword) => findProviderByToken(options.providers, keyword) ?? null,
+      resolveProvider: (keyword) => findProviderByToken(options.getProviders(), keyword) ?? null,
       moveSelection: (direction) => {
         options.setOpen(true)
+        const items = searchSurfaceState().items
         options.setActiveResultIndex((currentIndex) =>
-          moveWorkbenchSearchSelection(currentIndex, direction, searchSurfaceState.items.length),
+          moveWorkbenchSearchSelection(currentIndex, direction, items.length),
         )
       },
       executeSelection: async (resultIndex) => {
-        const nextIndex = resultIndex ?? options.activeResultIndex
-        const item = searchSurfaceState.items[nextIndex]
+        const nextIndex = resultIndex ?? options.getActiveResultIndex()
+        const item = searchSurfaceState().items[nextIndex]
         if (item) {
           item.action()
           if (item.closeAfterAction !== false) {
@@ -135,7 +156,7 @@ export function buildWorkbenchInlineSearchViewProps(options: {
           return
         }
 
-        await submitInlineSearch(options.query)
+        await submitInlineSearch(options.getQuery())
       },
       open: () => {
         options.setOpen(true)
