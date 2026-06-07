@@ -1,7 +1,6 @@
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createSignal, onCleanup, Show } from "solid-js"
 import type {
-  LayoutHostAPI,
   PluginInstance,
   PluginRecord,
   SearchHistoryEntry,
@@ -15,21 +14,17 @@ import type {
 import {
   createLayoutEngine,
   createToastManager,
-  type InstanceRenderer,
   type LayoutSwitchPlan,
   type ToastOptions,
   type ToastRecord,
 } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 import {
-  PluginViewBoundary,
   CommandPalette,
   SettingsHost,
-  WidgetCardShell,
   LayoutBoundary,
   ToastHost,
   type SettingsSectionId,
-  type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
 
 import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
@@ -40,10 +35,11 @@ import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
 import {
   buildWorkbenchWidgetExpandState,
   buildWorkbenchWidgetInstanceSettingsState,
-  isWorkbenchInteractiveElement,
   resolveWorkbenchInstanceSettingsView,
   type WorkbenchExpandState,
 } from "./WorkbenchShellInteractions"
+import { createWorkbenchInstanceRenderer } from "./WorkbenchShellInstanceRenderer"
+import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
 import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
 import {
@@ -258,61 +254,19 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       runPluginCommand,
     })
 
-  // Create InstanceRenderer for layout engine
-  const instanceRenderer: InstanceRenderer = {
-    renderWidget(instance: PluginInstance) {
-      const widget = widgetContribution(instance)
-      const model = resolveWidgetRenderModel(instance, widget)
-      if (!model) return <div class="settings-empty">卡片实例无效：{instance.id}</div>
-      const View = widget
-        ? resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, widget.views.card)
-        : undefined
-      if (!View) return <div class="settings-empty">Widget view not available</div>
-
-      // Construct host callbacks for this instance
-      const hostCallbacks: WidgetHostCallbacks = {
-        onPointerDown: (event: PointerEvent) => dragHandlers.onPointerDown(event, instance.id),
-        onPointerMove: dragHandlers.onPointerMove,
-        onPointerUp: dragHandlers.onPointerUp,
-        onPointerCancel: dragHandlers.onPointerCancel,
-        onDblClick: (e: MouseEvent) => {
-          const target = e.target as HTMLElement
-          if (isWorkbenchInteractiveElement(target)) return
-          openWidgetExpand(instance)
-        },
-        onContextMenu: (e: MouseEvent) => {
-          e.preventDefault()
-          setCtxMenu({ x: e.clientX, y: e.clientY, instanceId: instance.id })
-        },
-        onResize: (size: WidgetSize) => changeWidgetSize(instance.id, size),
-        onRemove: () => removeWidget(instance.id),
-        onExpand: () => openWidgetExpand(instance),
-        isDragging: dragHandlers.isDragging(instance.id),
-      }
-
-      return (
-        <WidgetCardShell
-          instance={instance}
-          title={model.title}
-          icon={renderWorkbenchWidgetIcon(model.icon)}
-          supportedSizes={model.supportedSizes}
-          currentSize={model.currentSize}
-          callbacks={hostCallbacks}
-        >
-          <PluginViewBoundary instanceId={instance.id} title={model.title}>
-            {View(buildWidgetViewProps(instance, model))}
-          </PluginViewBoundary>
-        </WidgetCardShell>
-      )
-    },
-    renderSearch(instance: PluginInstance) {
-      const search = pluginCatalog.findSearchContribution(
-        instance.pluginId,
-        instance.contributionId,
-      )
-      if (!search) return <div class="settings-empty">搜索贡献未找到</div>
-      const View = resolveWorkbenchView(kernel.registry.views, search.view)
-      if (!View) return <div class="settings-empty">搜索视图不可用：{search.id}</div>
+  const instanceRenderer = createWorkbenchInstanceRenderer({
+    registryViews: kernel.registry.views,
+    widgetContribution: (instance) =>
+      pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId),
+    widgetRenderModel: (instance) =>
+      resolveWidgetRenderModel(
+        instance,
+        pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId),
+      ),
+    findSearchContribution: (pluginId, contributionId) =>
+      pluginCatalog.findSearchContribution(pluginId, contributionId),
+    buildWidgetViewProps: (instance, model) => buildWidgetViewProps(instance, model),
+    buildSearchViewProps: (instance) => {
       const providers = resolveEnabledSearchProviders(
         searchSettings(),
         pluginCatalog.listSearchProviders(),
@@ -321,7 +275,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         searchSettings(),
         pluginCatalog.listSearchProviders(),
       )
-      const searchViewProps = buildWorkbenchInlineSearchViewProps({
+      return buildWorkbenchInlineSearchViewProps({
         pluginId: instance.pluginId,
         query: inlineSearchQuery(),
         isOpen: inlineSearchOpen(),
@@ -339,88 +293,40 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         openExternal: openExternalForPlugin,
         showToast,
       })
+    },
+    renderWidgetIcon: renderWorkbenchWidgetIcon,
+    onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
+    onPointerMove: (event) => dragHandlers.onPointerMove(event),
+    onPointerUp: (event) => dragHandlers.onPointerUp(event),
+    onPointerCancel: (event) => dragHandlers.onPointerCancel(event),
+    onOpenWidgetExpand: openWidgetExpand,
+    onOpenWidgetContextMenu: (event, instanceId) => {
+      event.preventDefault()
+      setCtxMenu({ x: event.clientX, y: event.clientY, instanceId })
+    },
+    onChangeWidgetSize: (instanceId, size) => {
+      void changeWidgetSize(instanceId, size)
+    },
+    onRemoveWidget: (instanceId) => {
+      void removeWidget(instanceId)
+    },
+    isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
+  })
 
-      return (
-        <PluginViewBoundary instanceId={instance.id} title={search.title}>
-          {View(searchViewProps)}
-        </PluginViewBoundary>
-      )
+  const layoutHostAPI = createWorkbenchLayoutHostAPI({
+    activeLayoutId,
+    isDark,
+    setCommandPaletteOpen: setCmdPaletteOpen,
+    setAddWidgetOpen,
+    openSettings,
+    switchLayout: (layoutId) => {
+      void switchLayout(layoutId)
     },
-  }
-
-  // Create LayoutHostAPI for layout engine
-  const layoutHostAPI: LayoutHostAPI = {
-    getGlobalActions: (surface) => {
-      const layoutToggle = {
-        id: "layout-switch" as const,
-        label:
-          activeLayoutId() === "official.layout.workbench-dashboard"
-            ? "切换到流式"
-            : "切换到仪表盘",
-        icon:
-          activeLayoutId() === "official.layout.workbench-dashboard"
-            ? "layout-stream"
-            : "layout-dashboard",
-        shortcut: "⌘L",
-        run: () => {
-          const next =
-            activeLayoutId() === "official.layout.workbench-dashboard"
-              ? "official.layout.workbench-stream"
-              : "official.layout.workbench-dashboard"
-          void switchLayout(next)
-        },
-      }
-      if (surface === "rail") {
-        return [
-          {
-            id: "home",
-            label: "主页",
-            icon: "⌂",
-            isActive: true,
-            run: () => runRailAction("home"),
-          },
-          {
-            id: "add-widget",
-            label: "添加卡片",
-            icon: "+",
-            run: () => runRailAction("add-widget"),
-          },
-          { id: "theme", label: "切换主题", icon: "☼", run: () => runRailAction("theme") },
-          { id: "settings", label: "设置", icon: "⚙", run: () => runRailAction("settings") },
-        ]
-      }
-      if (surface === "toolbar") {
-        return [
-          {
-            id: "command",
-            label: "命令",
-            icon: "⌘K",
-            shortcut: "⌘K",
-            run: () => setCmdPaletteOpen(true),
-          },
-          layoutToggle,
-          {
-            id: "theme",
-            label: isDark() ? "明亮" : "暗色",
-            icon: isDark() ? "☀" : "☾",
-            shortcut: "⌘T",
-            run: () => {
-              void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
-            },
-          },
-          { id: "settings", label: "设置", icon: "⚙", run: () => runRailAction("settings") },
-        ]
-      }
-      return []
+    switchTheme: (themeId) => {
+      void switchTheme(themeId)
     },
-    openSettings: (panelId?: string) => openSettings(panelId),
-    openCommandPalette: () => setCmdPaletteOpen(true),
-    openAddWidget: () => setAddWidgetOpen(true),
-    toggleTheme: () => {
-      void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
-    },
-    isDark: () => isDark(),
-  }
+    runRailAction: (actionId) => runRailAction(actionId),
+  })
 
   // Create layout engine
   const layoutEngine = createLayoutEngine({
