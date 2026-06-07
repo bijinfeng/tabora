@@ -19,13 +19,7 @@ import {
   type ToastRecord,
 } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
-import {
-  CommandPalette,
-  SettingsHost,
-  LayoutBoundary,
-  ToastHost,
-  type SettingsSectionId,
-} from "@tabora/workbench-shell"
+import { LayoutBoundary, type SettingsSectionId } from "@tabora/workbench-shell"
 
 import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
 import { applyBackgroundStyle, FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
@@ -71,7 +65,8 @@ import {
   setWorkbenchDefaultSearchProvider,
   setWorkbenchSearchProviderEnabled,
 } from "./WorkbenchShellSearchState"
-import { buildWorkbenchInlineSearchViewProps } from "./WorkbenchInlineSearchViewProps"
+import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
+import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import {
   buildWorkbenchContextMenuModel,
@@ -82,15 +77,7 @@ import {
   removeWorkbenchWidget,
   resizeWorkbenchWidget,
 } from "./WorkbenchShellWidgetState"
-import {
-  SafeWorkbenchLayout,
-  WorkbenchAddWidgetModal,
-  WorkbenchContextMenuOverlay,
-  WorkbenchExpandOverlay,
-  WorkbenchFullscreenOverlay,
-  WorkbenchPluginModal,
-  WorkbenchSettingsAboutContent,
-} from "./WorkbenchShellChrome"
+import { SafeWorkbenchLayout, WorkbenchSettingsAboutContent } from "./WorkbenchShellChrome"
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
 import { canPluginOpenExternal, createLayoutSwitchExecution } from "./shellController"
 import {
@@ -254,6 +241,29 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       runPluginCommand,
     })
 
+  const searchSurfaces = createWorkbenchSearchSurfaces({
+    getProviders: () =>
+      resolveEnabledSearchProviders(searchSettings(), pluginCatalog.listSearchProviders()),
+    getDefaultProviderId: () =>
+      resolveDefaultProviderId(searchSettings(), pluginCatalog.listSearchProviders()),
+    getCommands: commandItems,
+    getWidgets: () => searchableWidgets(),
+    getHistory: searchHistory,
+    getInlineSearchQuery: inlineSearchQuery,
+    getInlineSearchOpen: inlineSearchOpen,
+    getInlineSearchActiveResultIndex: inlineSearchActiveResultIndex,
+    setInlineSearchQuery,
+    setInlineSearchOpen,
+    setInlineSearchActiveResultIndex,
+    setDefaultProvider: setDefaultSearchProvider,
+    saveHistory: saveSearchHistory,
+    openExternalForPlugin: (pluginId, url) => openExternalForPlugin(pluginId, url),
+    openExternal: (url) => openExternal(url),
+    showToast,
+    isCommandPaletteOpen: cmdPaletteOpen,
+    closeCommandPalette: () => setCmdPaletteOpen(false),
+  })
+
   const instanceRenderer = createWorkbenchInstanceRenderer({
     registryViews: kernel.registry.views,
     widgetContribution: (instance) =>
@@ -266,34 +276,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     findSearchContribution: (pluginId, contributionId) =>
       pluginCatalog.findSearchContribution(pluginId, contributionId),
     buildWidgetViewProps: (instance, model) => buildWidgetViewProps(instance, model),
-    buildSearchViewProps: (instance) => {
-      const providers = resolveEnabledSearchProviders(
-        searchSettings(),
-        pluginCatalog.listSearchProviders(),
-      )
-      const defaultProviderId = resolveDefaultProviderId(
-        searchSettings(),
-        pluginCatalog.listSearchProviders(),
-      )
-      return buildWorkbenchInlineSearchViewProps({
-        pluginId: instance.pluginId,
-        query: inlineSearchQuery(),
-        isOpen: inlineSearchOpen(),
-        activeResultIndex: inlineSearchActiveResultIndex(),
-        providers,
-        defaultProviderId,
-        commands: commandItems(),
-        widgets: searchableWidgets(),
-        history: searchHistory(),
-        setQuery: setInlineSearchQuery,
-        setOpen: setInlineSearchOpen,
-        setActiveResultIndex: setInlineSearchActiveResultIndex,
-        setDefaultProvider: setDefaultSearchProvider,
-        saveHistory: saveSearchHistory,
-        openExternal: openExternalForPlugin,
-        showToast,
-      })
-    },
+    buildSearchViewProps: (instance) => searchSurfaces.buildInlineSearchViewProps(instance),
     renderWidgetIcon: renderWorkbenchWidgetIcon,
     onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
     onPointerMove: (event) => dragHandlers.onPointerMove(event),
@@ -800,81 +783,69 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       tabIndex={-1}
     >
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
-        {renderActiveLayout()}
-        <WorkbenchAddWidgetModal
-          open={addWidgetOpen()}
-          availableWidgets={pluginCatalog.listWidgetContributions()}
-          widgetIconLabel={resolveWidgetIconLabel}
-          onAdd={(pluginId, widgetId) => {
-            void addWidget(pluginId, widgetId)
-            setAddWidgetOpen(false)
+        <WorkbenchShellSurfaceHost
+          content={renderActiveLayout()}
+          addWidgetModal={{
+            open: addWidgetOpen(),
+            availableWidgets: pluginCatalog.listWidgetContributions(),
+            widgetIconLabel: resolveWidgetIconLabel,
+            onAdd: (pluginId, widgetId) => {
+              void addWidget(pluginId, widgetId)
+              setAddWidgetOpen(false)
+            },
+            onClose: () => setAddWidgetOpen(false),
           }}
-          onClose={() => setAddWidgetOpen(false)}
+          settingsHost={{
+            open: settingsOpen(),
+            panels: pluginCatalog.listSettingsPanels(),
+            activeSectionId: activeSettingsSectionId(),
+            onSectionChange: setActiveSettingsSectionId,
+            onClose: () => setSettingsOpen(false),
+            getView: (viewId) =>
+              resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId),
+            panelProps: buildSettingsPanelProps,
+            aboutContent: (
+              <WorkbenchSettingsAboutContent
+                workspaceName={workspaceState()?.name ?? "未加载"}
+                enabledPluginCount={
+                  pluginCatalog.pluginSummaries(pluginRecords()).filter((plugin) => plugin.enabled)
+                    .length
+                }
+              />
+            ),
+          }}
+          expandOverlay={{
+            expandState: expandState(),
+            getView: (viewId) =>
+              resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
+            widgetIconForProps: (viewProps) =>
+              renderWorkbenchWidgetIcon(widgetContribution(viewProps)?.icon),
+            onClose: closeExpand,
+          }}
+          pluginModal={{
+            viewId: modalViewId(),
+            modalProps: modalProps(),
+            getView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
+            onClose: () => setModalViewId(null),
+          }}
+          fullscreenOverlay={{
+            viewId: fullscreenViewId(),
+            fullscreenProps: fullscreenProps(),
+            getView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
+            onClose: () => setFullscreenViewId(null),
+          }}
+          contextMenuOverlay={{
+            menu: ctxMenu(),
+            sections: contextMenuModel()?.sections ?? [],
+            onClose: () => setCtxMenu(null),
+          }}
+          toastHost={{
+            toasts: toasts(),
+            onAction: (commandId) => runCommand(commandId, {}),
+          }}
+          commandPalette={searchSurfaces.buildCommandPaletteProps()}
         />
-        <SettingsHost
-          open={settingsOpen()}
-          panels={pluginCatalog.listSettingsPanels()}
-          activeSectionId={activeSettingsSectionId()}
-          onSectionChange={setActiveSettingsSectionId}
-          onClose={() => setSettingsOpen(false)}
-          getView={(viewId) =>
-            resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId)
-          }
-          panelProps={buildSettingsPanelProps}
-          aboutContent={
-            <WorkbenchSettingsAboutContent
-              workspaceName={workspaceState()?.name ?? "未加载"}
-              enabledPluginCount={
-                pluginCatalog.pluginSummaries(pluginRecords()).filter((plugin) => plugin.enabled)
-                  .length
-              }
-            />
-          }
-        />
-        <WorkbenchExpandOverlay
-          expandState={expandState()}
-          getView={(viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId)}
-          widgetIconForProps={(viewProps) =>
-            renderWorkbenchWidgetIcon(widgetContribution(viewProps)?.icon)
-          }
-          onClose={closeExpand}
-        />
-        <WorkbenchPluginModal
-          viewId={modalViewId()}
-          modalProps={modalProps()}
-          getView={(viewId) => resolveWorkbenchView(kernel.registry.views, viewId)}
-          onClose={() => setModalViewId(null)}
-        />
-        <WorkbenchFullscreenOverlay
-          viewId={fullscreenViewId()}
-          fullscreenProps={fullscreenProps()}
-          getView={(viewId) => resolveWorkbenchView(kernel.registry.views, viewId)}
-          onClose={() => setFullscreenViewId(null)}
-        />
-        <WorkbenchContextMenuOverlay
-          menu={ctxMenu()}
-          sections={contextMenuModel()?.sections ?? []}
-          onClose={() => setCtxMenu(null)}
-        />
-        <ToastHost toasts={toasts()} onAction={(commandId) => runCommand(commandId, {})} />
       </Show>
-      <CommandPalette
-        isOpen={cmdPaletteOpen()}
-        onClose={() => setCmdPaletteOpen(false)}
-        commands={commandItems()}
-        widgets={searchableWidgets()}
-        providers={resolveEnabledSearchProviders(
-          searchSettings(),
-          pluginCatalog.listSearchProviders(),
-        )}
-        defaultProviderId={resolveDefaultProviderId(
-          searchSettings(),
-          pluginCatalog.listSearchProviders(),
-        )}
-        searchHistory={searchHistory()}
-        openExternal={openExternal}
-        onSaveHistory={saveSearchHistory}
-      />
     </div>
   )
 }
