@@ -8,7 +8,6 @@ import { describe, expect, it, vi } from "vitest"
 
 import {
   buildWorkbenchContextMenuModel,
-  buildWorkbenchDragDropPlan,
   buildWorkbenchSearchableWidgets,
   findWorkbenchWidgetInstance,
   mergeWorkbenchGridOrder,
@@ -124,7 +123,7 @@ describe("workbench widget helpers", () => {
     })
   })
 
-  it("builds drop plans and merges persisted grid order back into the current instances", () => {
+  it("merges persisted grid order back into the current instances", () => {
     const currentInstances = [
       instance({ id: "widget-1", updatedAt: "2026-06-06T00:00:00.000Z" }),
       instance({
@@ -133,20 +132,6 @@ describe("workbench widget helpers", () => {
         updatedAt: "2026-06-06T00:00:00.000Z",
       }),
     ]
-    const plan = buildWorkbenchDragDropPlan({
-      dragId: "widget-1",
-      targetId: "widget-2",
-      instances: currentInstances,
-    })
-
-    expect(plan?.changed).toBe(true)
-    expect(
-      buildWorkbenchDragDropPlan({
-        dragId: null,
-        targetId: "widget-2",
-        instances: currentInstances,
-      }),
-    ).toBeNull()
 
     const orderedInstances = [
       { ...currentInstances[1]!, updatedAt: "2026-06-06T12:00:00.000Z" },

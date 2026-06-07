@@ -23,7 +23,7 @@
 
 - PRD V2 的新增需求：布局即插件、至少两种布局验证、全局可达性约束、插件自由度/约束体系
 - 设计原型中验证的交互模式：实时搜索内联建议、拖拽实时换位、双击展开卡片、右键上下文菜单、设置侧栏导航、Toast 堆叠、@语法搜索源切换
-- 当前仓库实现的差距：rail/topbar 硬编码、单一布局假设、搜索无内联交互、无拖拽、无展开视图、无右键菜单、无通知系统
+- 当前仓库剩余差距：共享宿主根组件编排仍偏重，browser-mode 交互断言覆盖仍不足，少数工作台交互仍需继续压缩到更清晰的状态切片中
 
 以下方案完全从零架构师视角出发，不预设当前实现是唯一正确方案。
 
@@ -122,7 +122,7 @@ packages/
 - 2026-06-06 治理收口补充：`@tabora/workbench-app` 已新增 `shellController` 纯 helper，统一承接 plugin owner `external-open` 权限判断，以及基于切换前 workspace/instances 生成 layout switch plan 与 snapshot 的纯模型，避免 shell 在实例迁移后再生成失真的 snapshot；同日又承接了 theme/background/grid/workspace session/import-export 等共享 shell helper，extension 不再通过相对路径直接 import playground 源码。
 - 2026-06-07 搜索与主题治理补充：`@tabora/workbench-app` 的 search helper / state、`@tabora/orchestrator` 的搜索模型、以及官方 search/settings 插件已统一删除“首项 provider”隐式兜底。theme resolver 仅在精确命中 theme 时返回对应 token；未命中时应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再回退到 `themes[0]`。同日 `CommandPalette` 与 `SearchCommandBar` 的 provider token、`@` 路由和 suggestions 生成进一步收敛到 `@tabora/orchestrator` 的共享 model，官方插件不再维护独立的 search-model 转导出层；`SearchViewProps` 也已升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，搜索栏只负责渲染和事件转发。
 - 2026-06-06 治理自动化补充：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 额外跑 architecture job，nightly workflow 跑 `pnpm test:e2e`，release/deploy workflow 在打包前输出 regression summary。
-- playground 当前通过 `apps/playground/src/workbenchComposition.ts` 组装 `@tabora/workbench-app`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`；playground / extension 的 `App.tsx` 已收敛为薄 wrapper，共享宿主交互编排统一落在 `@tabora/workbench-app` 的 `WorkbenchShellApp.tsx`，其中 safe layout、add widget modal、expand/fullscreen/modal/context menu overlays、settings about chrome 已继续拆到 `WorkbenchShellChrome`，command/shortcut orchestration 已拆到 `WorkbenchShellCommands`，settings host 的 section 解析与 panel props 装配已拆到 `WorkbenchShellSettings`，expand / instance settings 的 view 解析与 state 构造已拆到 `WorkbenchShellInteractions`，widget 右键菜单模型 / 可搜索条目 / 拖拽排序计划已拆到 `WorkbenchShellWidgets`，网格持久化 / 焦点定位 / rail action 分发已拆到 `WorkbenchShellHostActions`，widget data / view lookup / host bridge 已拆到 `WorkbenchShellViewBridge`，搜索源配置 / 搜索历史持久化已拆到 `WorkbenchShellSearchState`，主题背景应用已拆到 `WorkbenchShellAppearanceState`，workspace session hydration 已拆到 `WorkbenchShellSessionState`，layout 切换编排已拆到 `WorkbenchShellLayoutState`，通用 shortcut / workspace guard 与 icon 映射已拆到 `WorkbenchShellUtils` / `WorkbenchShellIcons`；当前治理测试把共享宿主根组件压到 1090 行阈值以内。
+- playground 当前通过 `apps/playground/src/workbenchComposition.ts` 组装 `@tabora/workbench-app`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`；playground / extension 的 `App.tsx` 已收敛为薄 wrapper，共享宿主交互编排统一落在 `@tabora/workbench-app` 的 `WorkbenchShellApp.tsx`，其中 safe layout、add widget modal、expand/fullscreen/modal/context menu overlays、settings about chrome 已继续拆到 `WorkbenchShellChrome`，command/shortcut orchestration 已拆到 `WorkbenchShellCommands`，settings host 的 section 解析与 panel props 装配已拆到 `WorkbenchShellSettings`，expand / instance settings 的 view 解析与 state 构造已拆到 `WorkbenchShellInteractions`，widget 右键菜单模型 / 可搜索条目已拆到 `WorkbenchShellWidgets`，拖拽阈值与实时交换控制已拆到 `WorkbenchDragController`，pointer 事件到宿主排序持久化的桥接已拆到 `WorkbenchShellDragState`，网格持久化 / 焦点定位 / rail action 分发已拆到 `WorkbenchShellHostActions`，widget data / view lookup / host bridge 已拆到 `WorkbenchShellViewBridge`，搜索源配置 / 搜索历史持久化已拆到 `WorkbenchShellSearchState`，主题背景应用已拆到 `WorkbenchShellAppearanceState`，workspace session hydration 已拆到 `WorkbenchShellSessionState`，layout 切换编排已拆到 `WorkbenchShellLayoutState`，通用 shortcut / workspace guard 与 icon 映射已拆到 `WorkbenchShellUtils` / `WorkbenchShellIcons`；当前治理测试把共享宿主根组件压到 1090 行阈值以内。
 - extension newtab 已拥有自己的 shell entry，不再直接 import `@tabora/playground/src/App`；共享 shell helper 已统一由 `@tabora/workbench-app` 暴露，`pnpm check:architecture` 额外禁止 app 间直接 import 对方源码路径。
 
 `@tabora/orchestrator` 的职责边界：
@@ -414,57 +414,52 @@ type SearchNavigationState = {
 
 ### 6.1 实时交换算法
 
-V2 原型采用实时交换而非占位符方案：拖拽悬停到目标卡片时，两张卡片立即交换数组位置并重新渲染。
+V2 原型采用实时交换而非占位符方案：拖拽悬停到目标卡片时，两张卡片立即交换数组位置并重新渲染。当前实现已落地为两层：
+
+- `@tabora/orchestrator/createDragSortPlan()` 负责纯数组交换计划。
+- `@tabora/workbench-app/WorkbenchDragController` 负责 5px 阈值、preview instances、重复悬停去抖，以及只在 pointer release 时提交持久化。
 
 ```ts
-// orchestrator 提供
-class DragSortController {
-  private dragState: DragState | null = null
+type WorkbenchDragControllerState = {
+  pointerId: number
+  sourceId: string
+  phase: "pending" | "dragging"
+  startPoint: Point
+  currentPoint: Point
+  overId: string | null
+  initialInstances: PluginInstance[]
+  previewInstances: PluginInstance[]
+}
 
-  startDrag(instanceId: string, startPosition: Point): void {
-    this.dragState = {
-      instanceId,
-      origIndex: this.instances.findIndex((i) => i.id === instanceId),
-      lastSwapIndex: -1,
-      isActive: true,
-    }
-  }
+const state = beginWorkbenchDragController({
+  pointerId,
+  sourceId: "widget-a",
+  point: { x: 10, y: 10 },
+  instances,
+})
 
-  onDragOver(clientPosition: Point): void {
-    if (!this.dragState) return
-    const targetCard = this.hitTestCard(clientPosition)
-    if (!targetCard || targetCard.id === this.dragState.instanceId) return
+const next = updateWorkbenchDragController({
+  state,
+  point: { x: 20, y: 20 },
+  overId: "widget-b",
+})
 
-    const targetIdx = this.instances.findIndex((i) => i.id === targetCard.id)
-    if (targetIdx !== this.dragState.lastSwapIndex) {
-      this.dragState.lastSwapIndex = targetIdx
-      this.swapInstances(this.dragState.instanceId, targetCard.id)
-      this.emitReorder()
-    }
-  }
-
-  endDrag(): void {
-    if (this.dragState?.isActive) {
-      this.persistOrder()
-      this.showConfirmation()
-    }
-    this.dragState = null
-  }
-
-  private swapInstances(idA: string, idB: string): void {
-    const idxA = this.instances.findIndex((i) => i.id === idA)
-    const idxB = this.instances.findIndex((i) => i.id === idB)
-    ;[this.instances[idxA], this.instances[idxB]] = [this.instances[idxB], this.instances[idxA]]
-  }
+const completed = completeWorkbenchDragController(next)
+if (completed.instances) {
+  await persistGridOrder(completed.instances)
 }
 ```
 
 ### 6.2 拖拽交互约束
 
 - 5px 移动阈值：防止点击误触拖拽
-- 不触发拖拽的元素：`button, input, textarea, .todo-check, .card-action`
+- 统一使用 Pointer Events；鼠标与触屏不再分两套拖拽实现
+- drag handle 限定为 `.card-header`，避免卡片内容区滚动被拖拽手势劫持
+- 不触发拖拽的元素：`button, input, textarea, select, a, [role="button"]`
+- `card-header` 使用 `touch-action: none`，并通过 pointer capture 持续接收 move/up/cancel
+- 命中目标实例通过 `document.elementFromPoint()` + `[data-widget-instance-id]` 解析
 - 拖拽中禁止文字选择：`body.drag-active { user-select: none }`
-- 触屏支持：`touchstart → touchmove → touchend`，passive: false 防止页面滚动
+- 只在 `pointerup` 时持久化排序；未发生 reorder 时直接取消，不写库不提示
 
 ## 7. 卡片展开子系统
 
@@ -1103,7 +1098,7 @@ plugins/
 
 ### Phase D: 交互增强（部分已由 Phase X4/X5 覆盖）
 
-1. 实现 `DragSortController`：实时交换算法、5px 阈值、触屏支持
+1. 已于 2026-06-07 实现 `WorkbenchDragController` + `WorkbenchShellDragState`：实时交换算法、5px 阈值、pointer 统一输入与松手持久化
 2. 实现 `ExpandManager`：6 种类型的展开视图渲染器
 3. 实现 `ContextMenuManager`：事件委托、默认 + 插件自定义菜单。已完成模型与 UI 消费路径。
 4. 实现 `ToastManager`：堆叠、自动消失、带 action

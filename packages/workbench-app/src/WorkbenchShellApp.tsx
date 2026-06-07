@@ -44,6 +44,8 @@ import {
   resolveWorkbenchInstanceSettingsView,
   type WorkbenchExpandState,
 } from "./WorkbenchShellInteractions"
+import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
+import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
 import {
   focusWorkbenchWidgetInstance,
   persistWorkbenchGridOrder,
@@ -73,7 +75,6 @@ import { buildWorkbenchInlineSearchViewProps } from "./WorkbenchInlineSearchView
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import {
   buildWorkbenchContextMenuModel,
-  buildWorkbenchDragDropPlan,
   buildWorkbenchSearchableWidgets,
 } from "./WorkbenchShellWidgets"
 import {
@@ -145,7 +146,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
   const [expandState, setExpandState] = createSignal<WorkbenchExpandState | null>(null)
-  const [dragId, setDragId] = createSignal<string | null>(null)
+  const [dragState, setDragState] = createSignal<WorkbenchDragControllerState | null>(null)
   const [ctxMenu, setCtxMenu] = createSignal<{ x: number; y: number; instanceId: string } | null>(
     null,
   )
@@ -271,9 +272,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
       // Construct host callbacks for this instance
       const hostCallbacks: WidgetHostCallbacks = {
-        onDragStart: (e: DragEvent) => onDragStart(e, instance.id),
-        onDragOver: (e: DragEvent) => onDragOver(e),
-        onDrop: (e: DragEvent) => onDrop(e, instance.id, instance.regionId),
+        onPointerDown: (event: PointerEvent) => dragHandlers.onPointerDown(event, instance.id),
+        onPointerMove: dragHandlers.onPointerMove,
+        onPointerUp: dragHandlers.onPointerUp,
+        onPointerCancel: dragHandlers.onPointerCancel,
         onDblClick: (e: MouseEvent) => {
           const target = e.target as HTMLElement
           if (isWorkbenchInteractiveElement(target)) return
@@ -286,7 +288,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         onResize: (size: WidgetSize) => changeWidgetSize(instance.id, size),
         onRemove: () => removeWidget(instance.id),
         onExpand: () => openWidgetExpand(instance),
-        isDragging: dragId() === instance.id,
+        isDragging: dragHandlers.isDragging(instance.id),
       }
 
       return (
@@ -714,6 +716,14 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const widgetRenderModel = (instance: PluginInstance): WidgetRenderModel | null =>
     resolveWidgetRenderModel(instance, widgetContribution(instance))
 
+  const dragHandlers = createWorkbenchPointerDragHandlers({
+    getPersistedInstances: instances,
+    getDragState: dragState,
+    setDragState,
+    persistGridOrder: (orderedInstances) => persistGridOrder(orderedInstances),
+    showToast,
+  })
+
   const contextMenuContributions = (instance: PluginInstance): WidgetContextMenuContribution[] =>
     widgetContribution(instance)?.contextMenus ?? []
 
@@ -804,17 +814,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setExpandState(result.expandState)
   }
 
-  function onDragStart(e: DragEvent, instanceId: string) {
-    setDragId(instanceId)
-    e.dataTransfer!.effectAllowed = "move"
-    e.dataTransfer!.setData("text/plain", instanceId)
-  }
-
-  function onDragOver(e: DragEvent) {
-    e.preventDefault()
-    e.dataTransfer!.dropEffect = "move"
-  }
-
   function contextMenuModel() {
     return buildWorkbenchContextMenuModel({
       menu: ctxMenu(),
@@ -864,20 +863,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     })
   }
 
-  function onDrop(e: DragEvent, targetId: string, _regionId: string) {
-    e.preventDefault()
-    const plan = buildWorkbenchDragDropPlan({
-      dragId: dragId(),
-      targetId,
-      instances: instances(),
-    })
-    if (!plan) return
-    setDragId(null)
-    if (!plan.changed) return
-    void persistGridOrder(plan.instances)
-    showToast("排序已更新")
-  }
-
   const openExternalForPlugin = (pluginId: string, url: string): boolean =>
     canPluginOpenExternal({ pluginId, url, plugins: kernel.plugins }) && openExternal(url)
 
@@ -900,7 +885,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     return (
       <SafeWorkbenchLayout
         isDark={isDark()}
-        instances={instances()}
+        instances={dragHandlers.displayedInstances()}
         widgetContribution={widgetContribution}
         resolveWidgetModel={(instance) =>
           resolveWidgetRenderModel(instance, widgetContribution(instance))
@@ -913,8 +898,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
           void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
         }
         onOpenSettings={() => openSettings()}
-        onDragStart={setDragId}
-        onDragEnd={() => setDragId(null)}
+        onPointerDown={(event, instanceId) => dragHandlers.onPointerDown(event, instanceId)}
+        onPointerMove={dragHandlers.onPointerMove}
+        onPointerUp={dragHandlers.onPointerUp}
+        onPointerCancel={dragHandlers.onPointerCancel}
         onOpenExpand={openWidgetExpand}
         onOpenContextMenu={(event, instanceId) => {
           event.preventDefault()
@@ -926,7 +913,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         onRemove={(instanceId) => {
           void removeWidget(instanceId)
         }}
-        isDragging={(instanceId) => dragId() === instanceId}
+        isDragging={(instanceId) => dragHandlers.isDragging(instanceId)}
       />
     )
   }
@@ -942,7 +929,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     }
     layoutFallback.clearLayoutError()
 
-    const regions = layoutEngine.buildRegionSlots(activeLayoutId(), instances())
+    const regions = layoutEngine.buildRegionSlots(
+      activeLayoutId(),
+      dragHandlers.displayedInstances(),
+    )
     const host = layoutEngine.buildHostAPI()
 
     return (

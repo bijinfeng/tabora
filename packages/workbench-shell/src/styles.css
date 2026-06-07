@@ -146,13 +146,9 @@
   flex-direction: column;
   transition: border-color 120ms ease;
   position: relative;
-  cursor: grab;
 }
 .widget-card:hover {
   border-color: rgb(var(--color-line-strong));
-}
-.widget-card:active {
-  cursor: grabbing;
 }
 .grid-item.dragging .widget-card {
   opacity: 0.92;
@@ -167,6 +163,11 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  cursor: grab;
+  touch-action: none;
+}
+.grid-item.dragging .card-header {
+  cursor: grabbing;
 }
 .card-title {
   font-size: 13px;

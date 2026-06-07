@@ -4,7 +4,7 @@ import type {
   WidgetContextMenuContribution,
   WidgetSize,
 } from "@tabora/plugin-api"
-import { createDragSortPlan, createWidgetContextMenuModel } from "@tabora/orchestrator"
+import { createWidgetContextMenuModel } from "@tabora/orchestrator"
 
 import {
   buildSearchableWidgetEntries,
@@ -78,19 +78,6 @@ export function buildWorkbenchSearchableWidgets(
   options: BuildSearchableWidgetEntriesOptions,
 ): SearchWidgetEntry[] {
   return buildSearchableWidgetEntries(options)
-}
-
-export function buildWorkbenchDragDropPlan(options: {
-  dragId: string | null
-  targetId: string
-  instances: PluginInstance[]
-}) {
-  if (!options.dragId || options.dragId === options.targetId) return null
-  return createDragSortPlan({
-    sourceId: options.dragId,
-    targetId: options.targetId,
-    instances: options.instances,
-  })
 }
 
 export function mergeWorkbenchGridOrder(
