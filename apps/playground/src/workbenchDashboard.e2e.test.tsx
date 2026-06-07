@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { page } from "vitest/browser"
+import { page, userEvent } from "vitest/browser"
+import { render } from "solid-js/web"
+
+import { App } from "./App"
 
 type WorkbenchSnapshot = {
   rail: boolean
@@ -12,12 +15,17 @@ type WorkbenchSnapshot = {
   overflowX: boolean
 }
 
+let disposeApp: (() => void) | undefined
+
 describe("workbench dashboard layout", () => {
-  afterEach(() => {
+  afterEach(async () => {
+    disposeApp?.()
+    disposeApp = undefined
     document.body.innerHTML = ""
     document.documentElement.removeAttribute("style")
     document.body.removeAttribute("style")
     localStorage.clear()
+    await deleteDatabase("tabora")
   })
 
   it("renders the plugin-provided dashboard shell and supports core widget interactions", async () => {
@@ -65,6 +73,30 @@ describe("workbench dashboard layout", () => {
       expect(document.querySelector("#settings-search-provider-select")).toBeTruthy(),
     )
 
+    const pluginsNavBtn = findButtonByText(".settings-nav", "插件")
+    expect(pluginsNavBtn).toBeTruthy()
+    ;(pluginsNavBtn as HTMLElement).click()
+    await waitFor(() =>
+      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("插件"),
+    )
+    await waitFor(() => expect(document.querySelector(".plugin-list")).toBeTruthy())
+
+    clickRequired(".settings-close")
+    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+
+    clickRequired('.workbench-rail button[aria-label="设置"]')
+    await waitFor(() => expect(document.querySelectorAll(".settings-drawer")).toHaveLength(1))
+    const aboutNavBtn = findButtonByText(".settings-nav", "关于")
+    expect(aboutNavBtn).toBeTruthy()
+    ;(aboutNavBtn as HTMLElement).click()
+    await waitFor(() =>
+      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("关于"),
+    )
+    await waitFor(() =>
+      expect(document.querySelector(".settings-host")?.textContent).toContain(
+        "当前工作区：默认工作区",
+      ),
+    )
     clickRequired(".settings-close")
     await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
 
@@ -78,14 +110,35 @@ describe("workbench dashboard layout", () => {
     await expectNoHorizontalOverflow({ width: 1280, height: 900 })
     await expectNoHorizontalOverflow({ width: 768, height: 900 })
     await expectNoHorizontalOverflow({ width: 390, height: 844 })
+
+    clickRequired('.workbench-rail button[aria-label="设置"]')
+    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
+    clickRequired(".settings-close")
+    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+
+    clickRequired(".layout-switch .tb-btn:not(.active)")
+    await waitFor(() => expect(document.querySelector('[data-layout="stream"]')).toBeTruthy())
+    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
+
+    clickRequired('[data-layout="stream"] .stream-toolbar-btn[aria-label="设置"]')
+    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
+    clickRequired(".settings-close")
+    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
   }, 45_000)
 })
 
 async function mountFreshWorkbench(): Promise<void> {
+  await page.viewport(1280, 900)
   localStorage.clear()
   await deleteDatabase("tabora")
   document.body.innerHTML = '<div id="root"></div>'
-  await import("./bootstrap")
+  const root = document.getElementById("root")
+  if (!root) {
+    throw new Error("Root element #root was not found")
+  }
+  disposeApp = render(() => <App />, root)
   await vi.waitFor(() => expect(document.querySelector(".workbench-grid")).toBeTruthy(), {
     timeout: 5_000,
   })
@@ -165,23 +218,13 @@ async function dragFirstGridItemToSecond(): Promise<{ before: string[]; after: s
     throw new Error("At least two grid items are required for drag sorting")
   }
 
+  const sourceHeader = source.querySelector<HTMLElement>(".card-header")
+  if (!sourceHeader) {
+    throw new Error("Source widget header was not found for pointer drag")
+  }
+
   const before = readGridOrder()
-  const data = new DataTransfer()
-  source.dispatchEvent(new DragEvent("dragstart", { bubbles: true, dataTransfer: data }))
-  target.dispatchEvent(
-    new DragEvent("dragover", {
-      bubbles: true,
-      cancelable: true,
-      dataTransfer: data,
-    }),
-  )
-  target.dispatchEvent(
-    new DragEvent("drop", {
-      bubbles: true,
-      cancelable: true,
-      dataTransfer: data,
-    }),
-  )
+  await userEvent.dragAndDrop(sourceHeader, target)
 
   await waitFor(() => expect(readGridOrder()).toEqual([before[1], before[0], ...before.slice(2)]))
 

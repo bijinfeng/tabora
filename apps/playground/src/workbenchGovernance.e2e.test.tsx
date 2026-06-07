@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { page } from "vitest/browser"
+import { page, userEvent } from "vitest/browser"
 import { render } from "solid-js/web"
 import { builtinPlugins } from "@tabora/builtin-plugin-registry"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
@@ -52,7 +52,7 @@ describe("workbench governance smoke", () => {
     quickLinkButton?.click()
     await waitFor(() => expect(openSpy).toHaveBeenNthCalledWith(1, "https://github.com", "_blank"))
 
-    enterSearchQuery("tabora governance")
+    await enterSearchQuery("tabora governance")
     await waitFor(() =>
       expect(openSpy).toHaveBeenNthCalledWith(
         2,
@@ -62,7 +62,7 @@ describe("workbench governance smoke", () => {
     )
   })
 
-  it("shows an inline error when search external-open permission is denied", async () => {
+  it("shows a toast when search external-open permission is denied", async () => {
     patchPluginPermissions("official.search.command-bar", [
       { type: "external-open", hosts: ["example.com"] },
     ])
@@ -71,10 +71,10 @@ describe("workbench governance smoke", () => {
 
     await mountFreshWorkbench()
 
-    enterSearchQuery("blocked query")
+    await enterSearchQuery("blocked query")
 
     await waitFor(() =>
-      expect(document.querySelector(".tbr-inline-error")?.textContent).toContain(
+      expect(document.querySelector(".toast-item")?.textContent).toContain(
         "无法打开该搜索源，请检查插件权限",
       ),
     )
@@ -100,9 +100,28 @@ describe("workbench governance smoke", () => {
     findButtonByText(".safe-layout-toolbar .toolbar-btn", "搜索")?.click()
     await waitFor(() => expect(document.querySelector(".cmd-panel")).toBeTruthy())
     clickRequired(".cmd-overlay")
+    await waitFor(() => expect(document.querySelector(".cmd-panel")).toBeFalsy())
 
     findButtonByText(".safe-layout-toolbar .toolbar-btn", "设置")?.click()
     await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    const searchNavBtn = findButtonByText(".settings-nav", "搜索")
+    expect(searchNavBtn).toBeTruthy()
+    ;(searchNavBtn as HTMLElement).click()
+    await waitFor(() =>
+      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("搜索"),
+    )
+    await waitFor(() =>
+      expect(document.querySelector("#settings-search-provider-select")).toBeTruthy(),
+    )
+    clickRequired(".settings-close")
+    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+
+    await page.viewport(390, 844)
+    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
+
+    findButtonByText(".safe-layout-toolbar .toolbar-btn", "设置")?.click()
+    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
   })
 })
 
@@ -180,14 +199,17 @@ function clonePermissions(
   })
 }
 
-function enterSearchQuery(query: string): void {
+async function enterSearchQuery(query: string): Promise<void> {
   const input = document.querySelector<HTMLInputElement>('.search-bar input[type="search"]')
   if (!input) {
     throw new Error("Search input was not found")
   }
-  input.value = query
-  input.dispatchEvent(new InputEvent("input", { bubbles: true, data: query }))
-  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+  await userEvent.click(input)
+  input.focus()
+  input.value = ""
+  input.dispatchEvent(new InputEvent("input", { bubbles: true, data: "" }))
+  await userEvent.type(input, query)
+  await userEvent.keyboard("{Enter}")
 }
 
 function findButtonByText(selector: string, text: string): HTMLElement | null {
@@ -204,6 +226,10 @@ function clickRequired(selector: string): void {
     throw new Error(`Clickable element was not found: ${selector}`)
   }
   node.click()
+}
+
+function hasHorizontalOverflow(): boolean {
+  return document.documentElement.scrollWidth > document.documentElement.clientWidth
 }
 
 function deleteDatabase(name: string): Promise<void> {

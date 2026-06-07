@@ -6,6 +6,7 @@ const engineHostApi = { sentinel: "engine-host" }
 const buildRegionSlots = vi.fn(() => ({ main: { regionId: "main" } }))
 const buildHostAPI = vi.fn(() => engineHostApi)
 const renderActiveLayout = vi.fn(() => "layout-content")
+const renderSafeLayout = vi.fn(() => "safe-layout-content")
 
 const mocks = vi.hoisted(() => ({
   createWorkbenchLayoutHostAPI: vi.fn(() => hostApi),
@@ -14,6 +15,7 @@ const mocks = vi.hoisted(() => ({
     buildHostAPI,
   })),
   createWorkbenchLayoutRenderer: vi.fn(() => ({
+    renderSafeLayout,
     renderActiveLayout,
   })),
 }))
@@ -54,6 +56,7 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     vi.clearAllMocks()
     buildRegionSlots.mockClear()
     buildHostAPI.mockClear()
+    renderSafeLayout.mockClear()
     renderActiveLayout.mockClear()
   })
 
@@ -142,6 +145,60 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     ])
     expect(rendererOptions?.buildHostAPI()).toEqual(engineHostApi)
     expect(buildHostAPI).toHaveBeenCalledTimes(1)
+  })
+
+  it("forwards failed layout state and safe layout rendering through the runtime", () => {
+    const runtime = createWorkbenchShellLayoutRuntime({
+      activeLayoutId: () => "official.layout.workbench-dashboard",
+      failedLayoutId: () => "official.layout.workbench-dashboard",
+      isDark: () => false,
+      setCommandPaletteOpen: vi.fn(),
+      setAddWidgetOpen: vi.fn(),
+      openSettings: vi.fn(),
+      switchLayout: vi.fn(),
+      switchTheme: vi.fn(),
+      runRailAction: vi.fn(),
+      catalog: {
+        findLayoutContribution: vi.fn(() => undefined),
+      } as unknown as Parameters<typeof createWorkbenchShellLayoutRuntime>[0]["catalog"],
+      instanceRenderer: vi.fn() as unknown as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["instanceRenderer"],
+      displayedInstances: () => [instance()],
+      resolveLayoutView: vi.fn() as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["resolveLayoutView"],
+      isMobile: () => false,
+      clearLayoutError: vi.fn(),
+      recordLayoutError: vi.fn(),
+      setContextMenu: vi.fn(),
+      widgetContribution: vi.fn(),
+      resolveWidgetModel: vi.fn(),
+      getWidgetView: vi.fn(),
+      renderWidgetIcon: vi.fn(),
+      buildWidgetViewProps: vi.fn(),
+      onPointerDown: vi.fn(),
+      onPointerMove: vi.fn(),
+      onPointerUp: vi.fn(),
+      onPointerCancel: vi.fn(),
+      openWidgetExpand: vi.fn(),
+      changeWidgetSize: vi.fn(async () => {}),
+      removeWidget: vi.fn(async () => {}),
+      isDragging: vi.fn(() => false),
+    })
+
+    expect(runtime.renderSafeLayout()).toBe("safe-layout-content")
+
+    const rendererCalls = mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
+      [
+        {
+          failedLayoutId?: () => string | null
+        },
+      ]
+    >
+    const rendererOptions = rendererCalls[0]?.[0]
+
+    expect(rendererOptions?.failedLayoutId?.()).toBe("official.layout.workbench-dashboard")
   })
 
   it("bridges safe layout callbacks through the runtime host actions", () => {

@@ -19,6 +19,7 @@ export type WorkbenchSafeLayoutOptions = Omit<SafeLayoutProps, "instances" | "is
 
 export function createWorkbenchLayoutRenderer(options: {
   activeLayoutId: () => string
+  failedLayoutId?: () => string | null
   displayedInstances: () => PluginInstance[]
   findLayoutContribution: (layoutId: string) => LayoutContribution | undefined
   resolveLayoutView: (viewId: string) => LayoutViewComponent | undefined
@@ -35,6 +36,10 @@ export function createWorkbenchLayoutRenderer(options: {
   }
 
   function renderActiveLayout() {
+    if (options.failedLayoutId?.() === options.activeLayoutId()) {
+      return renderSafeLayout()
+    }
+
     const layout = options.findLayoutContribution(options.activeLayoutId())
     const LayoutView = layout?.view ? options.resolveLayoutView(layout.view) : undefined
 

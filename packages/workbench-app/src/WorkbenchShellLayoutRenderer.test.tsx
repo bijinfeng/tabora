@@ -165,4 +165,43 @@ describe("createWorkbenchLayoutRenderer", () => {
     dispose()
     host.remove()
   })
+
+  it("uses the safe layout without retrying the broken layout when the active layout already failed", () => {
+    const buildRegionSlots = vi.fn()
+    const buildHostAPI = vi.fn()
+    const clearLayoutError = vi.fn()
+    const LayoutView = vi.fn(() => <div>broken layout</div>)
+
+    const renderer = createWorkbenchLayoutRenderer({
+      activeLayoutId: () => "layout.dashboard",
+      failedLayoutId: () => "layout.dashboard",
+      displayedInstances: () => [instance()],
+      findLayoutContribution: () => ({
+        id: "layout.dashboard",
+        title: "Dashboard",
+        view: "layout.dashboard.view",
+        regions: [{ id: "main", title: "Main", accepts: ["widget"] }],
+        defaultRegions: {},
+        supportsResponsive: true,
+      }),
+      resolveLayoutView: (viewId) => (viewId === "layout.dashboard.view" ? LayoutView : undefined),
+      buildRegionSlots,
+      buildHostAPI,
+      isMobile: () => false,
+      clearLayoutError,
+      recordLayoutError: vi.fn(),
+      safeLayout: safeLayoutProps(),
+    })
+
+    const { host, dispose } = mount(renderer.renderActiveLayout())
+
+    expect(host.textContent).toContain("Tabora")
+    expect(LayoutView).not.toHaveBeenCalled()
+    expect(buildRegionSlots).not.toHaveBeenCalled()
+    expect(buildHostAPI).not.toHaveBeenCalled()
+    expect(clearLayoutError).not.toHaveBeenCalled()
+
+    dispose()
+    host.remove()
+  })
 })

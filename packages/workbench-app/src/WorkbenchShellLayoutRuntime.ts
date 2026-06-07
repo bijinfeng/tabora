@@ -32,6 +32,7 @@ type SafeLayoutBridges = {
 type LayoutRendererBridges = Pick<
   LayoutRendererOptions,
   | "activeLayoutId"
+  | "failedLayoutId"
   | "displayedInstances"
   | "resolveLayoutView"
   | "isMobile"
@@ -66,7 +67,7 @@ export function createWorkbenchShellLayoutRuntime(
     hostActions: layoutHostAPI,
   })
 
-  const layoutRenderer = createWorkbenchLayoutRenderer({
+  const layoutRendererOptions: Omit<LayoutRendererOptions, "failedLayoutId"> = {
     activeLayoutId: options.activeLayoutId,
     displayedInstances: options.displayedInstances,
     findLayoutContribution: (layoutId) => options.catalog.findLayoutContribution(layoutId),
@@ -106,9 +107,16 @@ export function createWorkbenchShellLayoutRuntime(
       },
       isDragging: options.isDragging,
     },
-  })
+  }
+
+  const layoutRenderer = createWorkbenchLayoutRenderer(
+    options.failedLayoutId
+      ? { ...layoutRendererOptions, failedLayoutId: options.failedLayoutId }
+      : layoutRendererOptions,
+  )
 
   return {
+    renderSafeLayout: layoutRenderer.renderSafeLayout,
     renderActiveLayout: layoutRenderer.renderActiveLayout,
   }
 }
