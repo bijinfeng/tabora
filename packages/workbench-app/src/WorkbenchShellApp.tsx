@@ -16,7 +16,6 @@ import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
 import { createWorkbenchShellHostRuntime } from "./WorkbenchShellHostRuntime"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
-import { createWorkbenchInstanceRenderer } from "./WorkbenchShellInstanceRenderer"
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 import { createWorkbenchLayoutRenderer } from "./WorkbenchShellLayoutRenderer"
 import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
@@ -29,7 +28,8 @@ import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
 import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
 import { createWorkbenchShellState } from "./WorkbenchShellState"
-import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
+import { createWorkbenchShellViewRuntime } from "./WorkbenchShellViewRuntime"
+import { resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import { createWorkbenchWidgetController } from "./WorkbenchShellWidgetController"
 import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
@@ -39,7 +39,6 @@ import {
   resolveEnabledSearchProviders,
   resolveWidgetIconLabel,
   resolveWidgetRenderModel,
-  type WidgetRenderModel,
 } from "./shellHelpers"
 import { assignGridOrder } from "./workbenchGrid"
 
@@ -253,7 +252,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId),
       ),
     hasView: (viewId) => kernel.registry.views.has(viewId),
-    buildWidgetViewProps: (instance, model) => buildWidgetViewProps(instance, model),
+    buildWidgetViewProps: (instance, model) => viewRuntime.buildWidgetViewProps(instance, model),
     assignGridOrder,
     saveInstance: (instance) => instanceRepo.save(instance),
     removeInstance: (instanceId) => instanceRepo.remove(instanceId),
@@ -286,33 +285,38 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     closeCommandPalette: () => setCmdPaletteOpen(false),
   })
 
-  const instanceRenderer = createWorkbenchInstanceRenderer({
+  const dragHandlers = createWorkbenchPointerDragHandlers({
+    getPersistedInstances: instances,
+    getDragState: dragState,
+    setDragState,
+    persistGridOrder: (orderedInstances) => widgetController.persistGridOrder(orderedInstances),
+    showToast,
+  })
+  const viewRuntime = createWorkbenchShellViewRuntime({
     registryViews: kernel.registry.views,
     widgetContribution: (instance) => widgetController.widgetContribution(instance),
     widgetRenderModel: (instance) => widgetController.widgetRenderModel(instance),
     findSearchContribution: (pluginId, contributionId) =>
       pluginCatalog.findSearchContribution(pluginId, contributionId),
-    buildWidgetViewProps: (instance, model) => buildWidgetViewProps(instance, model),
-    buildSearchViewProps: (instance) => searchSurfaces.buildInlineSearchViewProps(instance),
+    buildInlineSearchViewProps: (instance) => searchSurfaces.buildInlineSearchViewProps(instance),
     renderWidgetIcon: renderWorkbenchWidgetIcon,
     onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
     onPointerMove: (event) => dragHandlers.onPointerMove(event),
     onPointerUp: (event) => dragHandlers.onPointerUp(event),
     onPointerCancel: (event) => dragHandlers.onPointerCancel(event),
-    onOpenWidgetExpand: widgetController.openWidgetExpand,
-    onOpenWidgetContextMenu: (event, instanceId) => {
-      event.preventDefault()
-      setCtxMenu({ x: event.clientX, y: event.clientY, instanceId })
-    },
-    onChangeWidgetSize: (instanceId, size) => {
-      void widgetController.changeWidgetSize(instanceId, size)
-    },
-    onRemoveWidget: (instanceId) => {
-      void widgetController.removeWidget(instanceId)
-    },
+    openWidgetExpand: widgetController.openWidgetExpand,
+    setContextMenu: setCtxMenu,
+    changeWidgetSize: widgetController.changeWidgetSize,
+    removeWidget: widgetController.removeWidget,
     isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
+    pluginDataRepo,
+    saveInstance: (updated) => instanceRepo.save(updated),
+    setInstances,
+    setModalViewId,
+    setModalProps,
+    showToast,
+    openExternalForPlugin: hostRuntime.openExternalForPlugin,
   })
-
   const layoutHostAPI = createWorkbenchLayoutHostAPI({
     activeLayoutId,
     isDark,
@@ -331,32 +335,8 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   // Create layout engine
   const layoutEngine = createLayoutEngine({
     catalog: pluginCatalog,
-    instanceRenderer,
+    instanceRenderer: viewRuntime.instanceRenderer,
     hostActions: layoutHostAPI,
-  })
-
-  const buildWidgetViewProps = (instance: PluginInstance, model: WidgetRenderModel) =>
-    buildWorkbenchWidgetViewProps({
-      instance,
-      model,
-      pluginDataRepo,
-      saveInstance: (updated) => instanceRepo.save(updated),
-      setInstances,
-      removeWidget: widgetController.removeWidget,
-      changeWidgetSize: widgetController.changeWidgetSize,
-      setModalViewId,
-      setModalProps,
-      openWidgetExpand: widgetController.openWidgetExpand,
-      showToast,
-      openExternalForPlugin: hostRuntime.openExternalForPlugin,
-    })
-
-  const dragHandlers = createWorkbenchPointerDragHandlers({
-    getPersistedInstances: instances,
-    getDragState: dragState,
-    setDragState,
-    persistGridOrder: (orderedInstances) => widgetController.persistGridOrder(orderedInstances),
-    showToast,
   })
 
   const layoutRenderer = createWorkbenchLayoutRenderer({
@@ -377,7 +357,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       resolveWidgetModel: widgetController.widgetRenderModel,
       getView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
       renderWidgetIcon: renderWorkbenchWidgetIcon,
-      buildWidgetViewProps: (instance, model) => buildWidgetViewProps(instance, model),
+      buildWidgetViewProps: (instance, model) => viewRuntime.buildWidgetViewProps(instance, model),
       onOpenCommandPalette: () => setCmdPaletteOpen(true),
       onToggleTheme: () =>
         void workspaceController.switchTheme(
