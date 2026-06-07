@@ -1,5 +1,5 @@
 import type { HostAdapter } from "@tabora/host-adapters"
-import { onCleanup, Show } from "solid-js"
+import { createMemo, onCleanup, Show } from "solid-js"
 import type {
   PluginInstance,
   SettingsPanelViewProps,
@@ -242,6 +242,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   })
   const layoutRuntime = createWorkbenchShellLayoutRuntime({
     activeLayoutId,
+    failedLayoutId: () => layoutFallback.status()?.layoutId ?? null,
     isDark,
     setCommandPaletteOpen: setCmdPaletteOpen,
     setAddWidgetOpen,
@@ -276,46 +277,54 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   void hostRuntime.initialize()
 
-  const surfaceProps = createWorkbenchShellSurfaceProps({
-    content: layoutRuntime.renderActiveLayout(),
-    availableWidgets: pluginCatalog.listWidgetContributions(),
-    widgetIconLabel: resolveWidgetIconLabel,
-    addWidgetOpen: addWidgetOpen(),
-    addWidget: controllerRuntime.widgetController.addWidget,
-    closeAddWidget: () => setAddWidgetOpen(false),
-    settingsOpen: settingsOpen(),
-    settingsPanels: pluginCatalog.listSettingsPanels(),
-    activeSettingsSectionId: activeSettingsSectionId(),
-    onSettingsSectionChange: setActiveSettingsSectionId,
-    closeSettings: () => setSettingsOpen(false),
-    getSettingsView: (viewId) =>
-      resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId),
-    buildSettingsPanelProps,
-    workspaceName: workspaceState()?.name ?? "未加载",
-    enabledPluginCount: pluginCatalog
-      .pluginSummaries(pluginRecords())
-      .filter((plugin) => plugin.enabled).length,
-    expandState: expandState(),
-    getWidgetView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
-    widgetIconForProps: (viewProps) =>
-      renderWorkbenchWidgetIcon(
-        controllerRuntime.widgetController.widgetContribution(viewProps)?.icon,
-      ),
-    closeExpand: controllerRuntime.widgetController.closeExpand,
-    modalViewId: modalViewId(),
-    modalProps: modalProps(),
-    getModalView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-    closeModal: () => setModalViewId(null),
-    fullscreenViewId: fullscreenViewId(),
-    fullscreenProps: fullscreenProps(),
-    getFullscreenView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-    closeFullscreen: () => setFullscreenViewId(null),
-    contextMenu: ctxMenu(),
-    contextSections: controllerRuntime.widgetController.buildContextMenuModel()?.sections,
-    closeContextMenu: () => setCtxMenu(null),
-    toasts: toasts(),
-    runCommand: controllerRuntime.runCommand,
-    commandPalette: controllerRuntime.searchSurfaces.buildCommandPaletteProps(),
+  const layoutContent = createMemo(() => {
+    kernelReady()
+    return layoutRuntime.renderActiveLayout()
+  })
+
+  const surfaceProps = createMemo(() => {
+    return createWorkbenchShellSurfaceProps({
+      content: layoutContent(),
+      availableWidgets: pluginCatalog.listWidgetContributions(),
+      widgetIconLabel: resolveWidgetIconLabel,
+      addWidgetOpen: addWidgetOpen(),
+      addWidget: controllerRuntime.widgetController.addWidget,
+      closeAddWidget: () => setAddWidgetOpen(false),
+      settingsOpen: settingsOpen(),
+      settingsPanels: pluginCatalog.listSettingsPanels(),
+      activeSettingsSectionId: activeSettingsSectionId(),
+      onSettingsSectionChange: setActiveSettingsSectionId,
+      closeSettings: () => setSettingsOpen(false),
+      getSettingsView: (viewId) =>
+        resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId),
+      buildSettingsPanelProps,
+      workspaceName: workspaceState()?.name ?? "未加载",
+      enabledPluginCount: pluginCatalog
+        .pluginSummaries(pluginRecords())
+        .filter((plugin) => plugin.enabled).length,
+      expandState: expandState(),
+      getWidgetView: (viewId) =>
+        resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
+      widgetIconForProps: (viewProps) =>
+        renderWorkbenchWidgetIcon(
+          controllerRuntime.widgetController.widgetContribution(viewProps)?.icon,
+        ),
+      closeExpand: controllerRuntime.widgetController.closeExpand,
+      modalViewId: modalViewId(),
+      modalProps: modalProps(),
+      getModalView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
+      closeModal: () => setModalViewId(null),
+      fullscreenViewId: fullscreenViewId(),
+      fullscreenProps: fullscreenProps(),
+      getFullscreenView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
+      closeFullscreen: () => setFullscreenViewId(null),
+      contextMenu: ctxMenu(),
+      contextSections: controllerRuntime.widgetController.buildContextMenuModel()?.sections,
+      closeContextMenu: () => setCtxMenu(null),
+      toasts: toasts(),
+      runCommand: controllerRuntime.runCommand,
+      commandPalette: controllerRuntime.searchSurfaces.buildCommandPaletteProps(),
+    })
   })
 
   return (
@@ -334,7 +343,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       tabIndex={-1}
     >
       <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
-        <WorkbenchShellSurfaceHost {...surfaceProps} />
+        <WorkbenchShellSurfaceHost {...surfaceProps()} />
       </Show>
     </div>
   )

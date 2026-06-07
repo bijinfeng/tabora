@@ -95,6 +95,59 @@ describe("createWorkbenchSearchSurfaces", () => {
     expect(setInlineSearchActiveResultIndex).toHaveBeenCalledWith(-1)
   })
 
+  it("executes inline search with the latest query from the backing getters", async () => {
+    let inlineSearchQuery = ""
+    let inlineSearchOpen = false
+    let inlineSearchActiveResultIndex = -1
+    const saveHistory = vi.fn(async () => {})
+    const openExternalForPlugin = vi.fn(() => true)
+
+    const surfaces = createWorkbenchSearchSurfaces({
+      getProviders: () => providers,
+      getDefaultProviderId: () => "official.search.google",
+      getCommands: () => commands,
+      getWidgets: () => widgets,
+      getHistory: () => history,
+      getInlineSearchQuery: () => inlineSearchQuery,
+      getInlineSearchOpen: () => inlineSearchOpen,
+      getInlineSearchActiveResultIndex: () => inlineSearchActiveResultIndex,
+      setInlineSearchQuery: (query) => {
+        inlineSearchQuery = query
+      },
+      setInlineSearchOpen: (open) => {
+        inlineSearchOpen = open
+      },
+      setInlineSearchActiveResultIndex: (next) => {
+        inlineSearchActiveResultIndex =
+          typeof next === "function" ? next(inlineSearchActiveResultIndex) : next
+      },
+      setDefaultProvider: vi.fn(),
+      saveHistory,
+      openExternalForPlugin,
+      openExternal: vi.fn(() => true),
+      showToast: vi.fn(),
+      isCommandPaletteOpen: () => false,
+      closeCommandPalette: vi.fn(),
+    })
+
+    const props = surfaces.buildInlineSearchViewProps(instance())
+
+    props.host.setQuery("tabora governance")
+    await props.host.executeSelection()
+
+    expect(openExternalForPlugin).toHaveBeenCalledWith(
+      "official.search.command-bar",
+      "https://google.example/search?q=tabora%20governance",
+    )
+    expect(saveHistory).toHaveBeenCalledWith({
+      query: "tabora governance",
+      providerId: "official.search.google",
+    })
+    expect(props.query).toBe("")
+    expect(props.isOpen).toBe(false)
+    expect(props.activeResultIndex).toBe(-1)
+  })
+
   it("builds command palette props from the same search data sources", () => {
     const closeCommandPalette = vi.fn()
     const saveHistory = vi.fn(async () => {})

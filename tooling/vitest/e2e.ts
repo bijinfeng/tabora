@@ -7,6 +7,7 @@ export function defineBrowserE2eConfig(config: UserConfig = {}) {
       test: {
         environment: "happy-dom",
         include: ["src/**/*.e2e.test.tsx"],
+        fileParallelism: false,
         testTimeout: 45_000,
       },
     }),
