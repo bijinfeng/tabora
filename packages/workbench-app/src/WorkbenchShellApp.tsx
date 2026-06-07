@@ -1,5 +1,5 @@
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createSignal, Show } from "solid-js"
+import { createSignal, onCleanup, Show } from "solid-js"
 import type {
   LayoutHostAPI,
   PluginInstance,
@@ -55,7 +55,11 @@ import {
   reconcileWorkbenchLayoutInstances,
   switchWorkbenchLayout,
 } from "./WorkbenchShellLayoutState"
-import { hydrateWorkbenchSessionState } from "./WorkbenchShellSessionState"
+import {
+  initializeWorkbenchShellRuntime,
+  wireWorkbenchRuntimeEvents,
+} from "./WorkbenchShellRuntimeState"
+import { createWorkbenchWorkspaceState } from "./WorkbenchShellWorkspaceState"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
@@ -104,15 +108,10 @@ import {
 import { requireWorkspace } from "./WorkbenchShellUtils"
 import { assignGridOrder } from "./workbenchGrid"
 import {
-  createWorkspaceSession,
-  deleteWorkspaceSession,
-  ensureWorkspaceSession,
-  readSearchSettings,
   updateWorkspaceBackground,
   updateWorkspaceRecord,
   updateWorkspaceTheme,
 } from "./workspaceSession"
-import { exportWorkspaceData, importWorkspaceData } from "./workspaceTransfer"
 
 export type WorkbenchShellAppProps = {
   composition: {
@@ -446,53 +445,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       openExternalForPlugin,
     })
 
-  void kernel.discover(plugins).then(async () => {
-    await kernel.activateEnabledPlugins()
-    setPluginRecords(await repositories.pluginRecordRepo.getAll())
-
-    const session = await ensureWorkspaceSession({
-      workspaceRepo,
-      instanceRepo,
-      pluginDataRepo,
-    })
-
-    await hydrateWorkbenchSessionState({
-      session,
-      setWorkspaceState,
-      setActiveLayoutId,
-      setSearchSettings,
-      setSearchHistory,
-      setInstances,
-      applyThemeSelection,
-      applyBackgroundSelection,
-      reconcileInstancesForLayout,
-    })
-    const allWorkspaces = await workspaceRepo.getAll()
-    setWorkspaceList(allWorkspaces)
-    setKernelReady(true)
-  })
-
-  kernel.events.on("ui.modal.open", (payload: any) => {
-    setModalViewId(payload.viewId)
-    setModalProps(payload.props ?? {})
-  })
-  kernel.events.on("ui.modal.close", () => setModalViewId(null))
-  kernel.events.on("ui.fullscreen.open", (payload: any) => {
-    setFullscreenViewId(payload.viewId)
-    setFullscreenProps(payload.props ?? {})
-  })
-  kernel.events.on("ui.fullscreen.close", () => setFullscreenViewId(null))
-  kernel.events.on("ui.toast.show", (payload: any) => {
-    if (typeof payload.message === "string") {
-      showToast(payload.message, payload.options)
-    }
-  })
-  kernel.events.on("host.external.open", (payload: any) => {
-    if (typeof payload.url === "string") {
-      window.open(payload.url, "_blank")
-    }
-  })
-
   async function reconcileInstancesForLayout(
     layoutId: string,
     currentInstances: PluginInstance[],
@@ -513,6 +465,26 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       saveInstance: (instance) => instanceRepo.save(instance),
     })
   }
+
+  const workspaceStateActions = createWorkbenchWorkspaceState({
+    workspaceRepo,
+    instanceRepo,
+    pluginDataRepo,
+    database,
+    availablePluginIds: () => pluginCatalog.pluginIds(),
+    getWorkspaceState: workspaceState,
+    setWorkspaceState,
+    setWorkspaceList,
+    setActiveLayoutId,
+    setSearchSettings,
+    setSearchHistory,
+    setInstances,
+    applyThemeSelection,
+    applyBackgroundSelection,
+    reconcileInstancesForLayout,
+    clearContextMenu: () => setCtxMenu(null),
+    clearExpandState: () => setExpandState(null),
+  })
 
   async function switchLayout(layoutId: string) {
     await switchWorkbenchLayout({
@@ -541,15 +513,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
-    const activeWorkspace = requireWorkspace(workspaceState())
-    const updated = await updateWorkspaceRecord({
-      workspaceRepo,
-      workspaceId: activeWorkspace.id,
-      mutator,
-    })
-    if (updated) {
-      setWorkspaceState(updated)
-    }
+    await workspaceStateActions.updateWorkspace(mutator)
   }
 
   async function setDefaultSearchProvider(providerId: string) {
@@ -591,89 +555,23 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   }
 
   async function exportWorkspace(): Promise<string> {
-    const workspace = workspaceState()
-    if (!workspace) throw new Error("Workspace not loaded")
-    return exportWorkspaceData({
-      workspace,
-      instanceRepo,
-      database,
-    })
+    return workspaceStateActions.exportWorkspace()
   }
 
   async function importWorkspace(json: string): Promise<{ warnings: string[] }> {
-    const result = await importWorkspaceData({
-      json,
-      workspaceRepo,
-      instanceRepo,
-      pluginDataRepo,
-      database,
-      availablePluginIds: pluginCatalog.pluginIds(),
-    })
-
-    setCtxMenu(null)
-    setExpandState(null)
-    setWorkspaceState(result.workspace)
-    const { instances: nextInstances } = await reconcileInstancesForLayout(
-      result.workspace.activeLayoutId,
-      result.instances,
-    )
-    setInstances(nextInstances)
-    setActiveLayoutId(result.workspace.activeLayoutId)
-    applyThemeSelection(result.workspace.activeThemeId)
-    applyBackgroundSelection(result.workspace.activeBackgroundProviderId)
-    setSearchSettings(readSearchSettings(result.workspace))
-    setWorkspaceList((prev) => [...prev, result.workspace])
-
-    return { warnings: result.warnings }
+    return workspaceStateActions.importWorkspace(json)
   }
 
   async function createWorkspace(name: string): Promise<Workspace> {
-    const ws = await createWorkspaceSession({
-      workspaceRepo,
-      instanceRepo,
-      name,
-    })
-    setWorkspaceList((prev) => [...prev, ws])
-    return ws
+    return workspaceStateActions.createWorkspace(name)
   }
 
   async function switchWorkspace(id: string) {
-    if (id === workspaceState()?.id) return
-    const session = await ensureWorkspaceSession({
-      workspaceRepo,
-      instanceRepo,
-      pluginDataRepo,
-      workspaceId: id,
-    })
-    setCtxMenu(null)
-    setExpandState(null)
-    await hydrateWorkbenchSessionState({
-      session,
-      setWorkspaceState,
-      setActiveLayoutId,
-      setSearchSettings,
-      setSearchHistory,
-      setInstances,
-      applyThemeSelection,
-      applyBackgroundSelection,
-      reconcileInstancesForLayout,
-    })
+    await workspaceStateActions.switchWorkspace(id)
   }
 
   async function deleteWorkspace(id: string) {
-    await deleteWorkspaceSession({
-      workspaceRepo,
-      instanceRepo,
-      pluginDataRepo,
-      workspaceId: id,
-    })
-    setWorkspaceList((prev) => prev.filter((w) => w.id !== id))
-    if (workspaceState()?.id === id) {
-      const fallback = await workspaceRepo.get("default")
-      if (fallback) {
-        await switchWorkspace("default")
-      }
-    }
+    await workspaceStateActions.deleteWorkspace(id)
   }
 
   async function switchTheme(newThemeId: string) {
@@ -880,6 +778,34 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       },
       onOpenSettings: () => openSettings("official.settings.workspace.appearance"),
     })
+
+  const disposeRuntimeEvents = wireWorkbenchRuntimeEvents({
+    runtime,
+    setModalViewId,
+    setModalProps,
+    setFullscreenViewId,
+    setFullscreenProps,
+    showToast,
+    openExternal: (url) => {
+      window.open(url, "_blank")
+    },
+  })
+  onCleanup(disposeRuntimeEvents)
+
+  void initializeWorkbenchShellRuntime({
+    runtime,
+    setPluginRecords,
+    setKernelReady,
+    setWorkspaceList,
+    setWorkspaceState,
+    setActiveLayoutId,
+    setSearchSettings,
+    setSearchHistory,
+    setInstances,
+    applyThemeSelection,
+    applyBackgroundSelection,
+    reconcileInstancesForLayout,
+  })
 
   function renderSafeLayout() {
     return (
