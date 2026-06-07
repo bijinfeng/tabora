@@ -14,16 +14,13 @@ import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
 import { applyBackgroundStyle } from "./backgroundResolver"
 import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
+import { createWorkbenchShellHostRuntime } from "./WorkbenchShellHostRuntime"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
 import { createWorkbenchInstanceRenderer } from "./WorkbenchShellInstanceRenderer"
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 import { createWorkbenchLayoutRenderer } from "./WorkbenchShellLayoutRenderer"
 import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
-import { focusWorkbenchWidgetInstance, runWorkbenchRailAction } from "./WorkbenchShellHostActions"
-import {
-  initializeWorkbenchShellRuntime,
-  wireWorkbenchRuntimeEvents,
-} from "./WorkbenchShellRuntimeState"
+import { focusWorkbenchWidgetInstance } from "./WorkbenchShellHostActions"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
@@ -36,7 +33,6 @@ import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./Workbench
 import { createWorkbenchWidgetController } from "./WorkbenchShellWidgetController"
 import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
-import { canPluginOpenExternal } from "./shellController"
 import {
   type CommandExecutionContext,
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
@@ -154,6 +150,34 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     clearExpandState: () => setExpandState(null),
     assignGridOrder,
   })
+  const hostRuntime = createWorkbenchShellHostRuntime({
+    runtime,
+    hostPlatform: composition.host.platform,
+    isDark,
+    setAddWidgetOpen,
+    openSettings,
+    switchTheme: workspaceController.switchTheme,
+    windowOpen: (url, target) => {
+      window.open(url, target)
+    },
+    setPluginRecords,
+    setKernelReady,
+    setWorkspaceList,
+    setWorkspaceState,
+    setActiveLayoutId,
+    setSearchSettings,
+    setSearchHistory,
+    setInstances,
+    applyThemeSelection: workspaceController.applyThemeSelection,
+    applyBackgroundSelection: workspaceController.applyBackgroundSelection,
+    reconcileInstancesForLayout: workspaceController.reconcileInstancesForLayout,
+    setModalViewId,
+    setModalProps,
+    setFullscreenViewId,
+    setFullscreenProps,
+    showToast,
+  })
+  onCleanup(hostRuntime.dispose)
   const buildSettingsPanelProps = createWorkbenchSettingsPanelPropsBuilder({
     getWorkspace: workspaceState,
     getWorkspaces: workspaceList,
@@ -255,8 +279,8 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setInlineSearchActiveResultIndex,
     setDefaultProvider: workspaceController.setDefaultSearchProvider,
     saveHistory: workspaceController.saveSearchHistory,
-    openExternalForPlugin: (pluginId, url) => openExternalForPlugin(pluginId, url),
-    openExternal: (url) => openExternal(url),
+    openExternalForPlugin: hostRuntime.openExternalForPlugin,
+    openExternal: hostRuntime.openExternal,
     showToast,
     isCommandPaletteOpen: cmdPaletteOpen,
     closeCommandPalette: () => setCmdPaletteOpen(false),
@@ -301,7 +325,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     switchTheme: (themeId) => {
       void workspaceController.switchTheme(themeId)
     },
-    runRailAction: (actionId) => runRailAction(actionId),
+    runRailAction: hostRuntime.runRailAction,
   })
 
   // Create layout engine
@@ -324,7 +348,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       setModalProps,
       openWidgetExpand: widgetController.openWidgetExpand,
       showToast,
-      openExternalForPlugin,
+      openExternalForPlugin: hostRuntime.openExternalForPlugin,
     })
 
   const dragHandlers = createWorkbenchPointerDragHandlers({
@@ -379,53 +403,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     },
   })
 
-  const openExternalForPlugin = (pluginId: string, url: string): boolean =>
-    canPluginOpenExternal({ pluginId, url, plugins: kernel.plugins }) && openExternal(url)
-
-  const openExternal = (url: string): boolean => (
-    kernel.events.emit("host.external.open", { url }),
-    true
-  )
-
-  const runRailAction = (actionId: string) =>
-    runWorkbenchRailAction(actionId, {
-      platform: composition.host.platform,
-      onAddWidget: () => setAddWidgetOpen(true),
-      onToggleTheme: () => {
-        void workspaceController.switchTheme(
-          isDark() ? "official.theme.light" : "official.theme.dark",
-        )
-      },
-      onOpenSettings: () => openSettings("official.settings.workspace.appearance"),
-    })
-
-  const disposeRuntimeEvents = wireWorkbenchRuntimeEvents({
-    runtime,
-    setModalViewId,
-    setModalProps,
-    setFullscreenViewId,
-    setFullscreenProps,
-    showToast,
-    openExternal: (url) => {
-      window.open(url, "_blank")
-    },
-  })
-  onCleanup(disposeRuntimeEvents)
-
-  void initializeWorkbenchShellRuntime({
-    runtime,
-    setPluginRecords,
-    setKernelReady,
-    setWorkspaceList,
-    setWorkspaceState,
-    setActiveLayoutId,
-    setSearchSettings,
-    setSearchHistory,
-    setInstances,
-    applyThemeSelection: workspaceController.applyThemeSelection,
-    applyBackgroundSelection: workspaceController.applyBackgroundSelection,
-    reconcileInstancesForLayout: workspaceController.reconcileInstancesForLayout,
-  })
+  void hostRuntime.initialize()
 
   const surfaceProps = createWorkbenchShellSurfaceProps({
     content: layoutRenderer.renderActiveLayout(),
