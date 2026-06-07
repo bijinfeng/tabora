@@ -7,7 +7,6 @@ import type {
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
-import { createLayoutEngine } from "@tabora/orchestrator"
 import { applyThemeTokens } from "@tabora/theme"
 
 import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
@@ -16,9 +15,8 @@ import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
 import { createWorkbenchShellHostRuntime } from "./WorkbenchShellHostRuntime"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
-import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
-import { createWorkbenchLayoutRenderer } from "./WorkbenchShellLayoutRenderer"
 import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
+import { createWorkbenchShellLayoutRuntime } from "./WorkbenchShellLayoutRuntime"
 import { focusWorkbenchWidgetInstance } from "./WorkbenchShellHostActions"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
@@ -317,76 +315,42 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     showToast,
     openExternalForPlugin: hostRuntime.openExternalForPlugin,
   })
-  const layoutHostAPI = createWorkbenchLayoutHostAPI({
+  const layoutRuntime = createWorkbenchShellLayoutRuntime({
     activeLayoutId,
     isDark,
     setCommandPaletteOpen: setCmdPaletteOpen,
     setAddWidgetOpen,
     openSettings,
-    switchLayout: (layoutId) => {
-      void workspaceController.switchLayout(layoutId)
-    },
-    switchTheme: (themeId) => {
-      void workspaceController.switchTheme(themeId)
-    },
+    switchLayout: workspaceController.switchLayout,
+    switchTheme: workspaceController.switchTheme,
     runRailAction: hostRuntime.runRailAction,
-  })
-
-  // Create layout engine
-  const layoutEngine = createLayoutEngine({
     catalog: pluginCatalog,
     instanceRenderer: viewRuntime.instanceRenderer,
-    hostActions: layoutHostAPI,
-  })
-
-  const layoutRenderer = createWorkbenchLayoutRenderer({
-    activeLayoutId,
     displayedInstances: dragHandlers.displayedInstances,
-    findLayoutContribution: (layoutId) => pluginCatalog.findLayoutContribution(layoutId),
     resolveLayoutView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-    buildRegionSlots: (layoutId, currentInstances) =>
-      layoutEngine.buildRegionSlots(layoutId, currentInstances),
-    buildHostAPI: () => layoutEngine.buildHostAPI(),
     isMobile: responsive.isMobile,
     clearLayoutError: () => layoutFallback.clearLayoutError(),
     recordLayoutError: (layoutId, error) => layoutFallback.recordLayoutError(layoutId, error),
-    safeLayout: {
-      isDark,
-      instances: dragHandlers.displayedInstances,
-      widgetContribution: widgetController.widgetContribution,
-      resolveWidgetModel: widgetController.widgetRenderModel,
-      getView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
-      renderWidgetIcon: renderWorkbenchWidgetIcon,
-      buildWidgetViewProps: (instance, model) => viewRuntime.buildWidgetViewProps(instance, model),
-      onOpenCommandPalette: () => setCmdPaletteOpen(true),
-      onToggleTheme: () =>
-        void workspaceController.switchTheme(
-          isDark() ? "official.theme.light" : "official.theme.dark",
-        ),
-      onOpenSettings: () => openSettings(),
-      onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
-      onPointerMove: dragHandlers.onPointerMove,
-      onPointerUp: dragHandlers.onPointerUp,
-      onPointerCancel: dragHandlers.onPointerCancel,
-      onOpenExpand: widgetController.openWidgetExpand,
-      onOpenContextMenu: (event, instanceId) => {
-        event.preventDefault()
-        setCtxMenu({ x: event.clientX, y: event.clientY, instanceId })
-      },
-      onResize: (instanceId, size) => {
-        void widgetController.changeWidgetSize(instanceId, size)
-      },
-      onRemove: (instanceId) => {
-        void widgetController.removeWidget(instanceId)
-      },
-      isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
-    },
+    setContextMenu: setCtxMenu,
+    widgetContribution: widgetController.widgetContribution,
+    resolveWidgetModel: widgetController.widgetRenderModel,
+    getWidgetView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
+    renderWidgetIcon: renderWorkbenchWidgetIcon,
+    buildWidgetViewProps: (instance, model) => viewRuntime.buildWidgetViewProps(instance, model),
+    onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
+    onPointerMove: dragHandlers.onPointerMove,
+    onPointerUp: dragHandlers.onPointerUp,
+    onPointerCancel: dragHandlers.onPointerCancel,
+    openWidgetExpand: widgetController.openWidgetExpand,
+    changeWidgetSize: widgetController.changeWidgetSize,
+    removeWidget: widgetController.removeWidget,
+    isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
   })
 
   void hostRuntime.initialize()
 
   const surfaceProps = createWorkbenchShellSurfaceProps({
-    content: layoutRenderer.renderActiveLayout(),
+    content: layoutRuntime.renderActiveLayout(),
     availableWidgets: pluginCatalog.listWidgetContributions(),
     widgetIconLabel: resolveWidgetIconLabel,
     addWidgetOpen: addWidgetOpen(),
