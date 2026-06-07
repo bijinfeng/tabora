@@ -12,7 +12,6 @@ import type {
 import {
   createLayoutEngine,
   createToastManager,
-  type LayoutSwitchPlan,
   type ToastOptions,
   type ToastRecord,
 } from "@tabora/orchestrator"
@@ -31,36 +30,21 @@ import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
 import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
 import { focusWorkbenchWidgetInstance, runWorkbenchRailAction } from "./WorkbenchShellHostActions"
 import {
-  reconcileWorkbenchLayoutInstances,
-  switchWorkbenchLayout,
-} from "./WorkbenchShellLayoutState"
-import {
   initializeWorkbenchShellRuntime,
   wireWorkbenchRuntimeEvents,
 } from "./WorkbenchShellRuntimeState"
-import { createWorkbenchWorkspaceState } from "./WorkbenchShellWorkspaceState"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
-import {
-  applyWorkbenchBackgroundSelection,
-  applyWorkbenchThemeSelection,
-  switchWorkbenchBackground,
-  switchWorkbenchTheme,
-} from "./WorkbenchShellAppearanceState"
-import {
-  saveWorkbenchSearchHistory,
-  setWorkbenchDefaultSearchProvider,
-  setWorkbenchSearchProviderEnabled,
-} from "./WorkbenchShellSearchState"
 import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
 import { buildWorkbenchWidgetViewProps, resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import { createWorkbenchWidgetController } from "./WorkbenchShellWidgetController"
+import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
 import { SafeWorkbenchLayout, WorkbenchSettingsAboutContent } from "./WorkbenchShellChrome"
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
-import { canPluginOpenExternal, createLayoutSwitchExecution } from "./shellController"
+import { canPluginOpenExternal } from "./shellController"
 import {
   type CommandExecutionContext,
   resolveDefaultProviderForSearch as resolveDefaultProviderId,
@@ -69,13 +53,7 @@ import {
   resolveWidgetRenderModel,
   type WidgetRenderModel,
 } from "./shellHelpers"
-import { requireWorkspace } from "./WorkbenchShellUtils"
 import { assignGridOrder } from "./workbenchGrid"
-import {
-  updateWorkspaceBackground,
-  updateWorkspaceRecord,
-  updateWorkspaceTheme,
-} from "./workspaceSession"
 
 export type WorkbenchShellAppProps = {
   composition: {
@@ -142,20 +120,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
   const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
-  const applyThemeSelection = (themeId: string) =>
-    applyWorkbenchThemeSelection({
-      themeId,
-      themes: pluginCatalog.listThemes(),
-      setThemeId,
-      applyTheme: (tokens) => applyThemeTokens(document.documentElement, tokens),
-    })
-  const applyBackgroundSelection = (backgroundId: string) =>
-    applyWorkbenchBackgroundSelection({
-      backgroundId,
-      backgrounds: pluginCatalog.listBackgroundProviders(),
-      setBackgroundId,
-      applyBackground: applyBackgroundStyle,
-    })
   const openSettings = (panelId?: string) =>
     openWorkbenchSettings(
       {
@@ -165,6 +129,32 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       },
       panelId,
     )
+  const workspaceController = createWorkbenchWorkspaceController({
+    workspaceRepo,
+    instanceRepo,
+    pluginDataRepo,
+    workspaceSnapshotRepo,
+    database,
+    kernel,
+    pluginCatalog,
+    getWorkspaceState: workspaceState,
+    getInstances: instances,
+    getSearchSettings: searchSettings,
+    getSearchHistory: searchHistory,
+    setWorkspaceState,
+    setWorkspaceList,
+    setActiveLayoutId,
+    setSearchSettings,
+    setSearchHistory,
+    setInstances,
+    setThemeId,
+    setBackgroundId,
+    applyTheme: (tokens) => applyThemeTokens(document.documentElement, tokens),
+    applyBackground: applyBackgroundStyle,
+    clearContextMenu: () => setCtxMenu(null),
+    clearExpandState: () => setExpandState(null),
+    assignGridOrder,
+  })
   const buildSettingsPanelProps = createWorkbenchSettingsPanelPropsBuilder({
     getWorkspace: workspaceState,
     getWorkspaces: workspaceList,
@@ -177,20 +167,20 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     host: {
       close: () => setSettingsOpen(false),
       setDirty: () => {},
-      switchLayout,
-      switchTheme,
-      switchBackground,
-      setDefaultSearchProvider,
-      setSearchProviderEnabled,
-      togglePluginEnabled,
-      exportWorkspace,
-      importWorkspace,
+      switchLayout: workspaceController.switchLayout,
+      switchTheme: workspaceController.switchTheme,
+      switchBackground: workspaceController.switchBackground,
+      setDefaultSearchProvider: workspaceController.setDefaultSearchProvider,
+      setSearchProviderEnabled: workspaceController.setSearchProviderEnabled,
+      togglePluginEnabled: workspaceController.togglePluginEnabled,
+      exportWorkspace: workspaceController.exportWorkspace,
+      importWorkspace: workspaceController.importWorkspace,
       createWorkspace: async (name) => {
-        const ws = await createWorkspace(name)
-        await switchWorkspace(ws.id)
+        const ws = await workspaceController.createWorkspace(name)
+        await workspaceController.switchWorkspace(ws.id)
       },
-      switchWorkspace,
-      deleteWorkspace,
+      switchWorkspace: workspaceController.switchWorkspace,
+      deleteWorkspace: workspaceController.deleteWorkspace,
     },
   })
 
@@ -213,10 +203,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       openSettings,
       showToast,
       switchTheme: (themeId) => {
-        void switchTheme(themeId)
+        void workspaceController.switchTheme(themeId)
       },
       switchLayout: (layoutId) => {
-        void switchLayout(layoutId)
+        void workspaceController.switchLayout(layoutId)
       },
       runPluginCommand,
     })
@@ -264,8 +254,8 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setInlineSearchQuery,
     setInlineSearchOpen,
     setInlineSearchActiveResultIndex,
-    setDefaultProvider: setDefaultSearchProvider,
-    saveHistory: saveSearchHistory,
+    setDefaultProvider: workspaceController.setDefaultSearchProvider,
+    saveHistory: workspaceController.saveSearchHistory,
     openExternalForPlugin: (pluginId, url) => openExternalForPlugin(pluginId, url),
     openExternal: (url) => openExternal(url),
     showToast,
@@ -307,10 +297,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setAddWidgetOpen,
     openSettings,
     switchLayout: (layoutId) => {
-      void switchLayout(layoutId)
+      void workspaceController.switchLayout(layoutId)
     },
     switchTheme: (themeId) => {
-      void switchTheme(themeId)
+      void workspaceController.switchTheme(themeId)
     },
     runRailAction: (actionId) => runRailAction(actionId),
   })
@@ -338,169 +328,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       openExternalForPlugin,
     })
 
-  async function reconcileInstancesForLayout(
-    layoutId: string,
-    currentInstances: PluginInstance[],
-  ): Promise<{ instances: PluginInstance[]; plan: LayoutSwitchPlan | null }> {
-    return reconcileWorkbenchLayoutInstances({
-      layoutId,
-      currentInstances,
-      activeWorkspace: requireWorkspace(workspaceState()),
-      findLayout: (targetLayoutId) => pluginCatalog.findLayoutContribution(targetLayoutId),
-      executeLayoutSwitch: ({ workspace, instances, targetLayout }) =>
-        createLayoutSwitchExecution({
-          workspace,
-          instances,
-          targetLayout,
-          now: new Date().toISOString(),
-        }),
-      assignGridOrder,
-      saveInstance: (instance) => instanceRepo.save(instance),
-    })
-  }
-
-  const workspaceStateActions = createWorkbenchWorkspaceState({
-    workspaceRepo,
-    instanceRepo,
-    pluginDataRepo,
-    database,
-    availablePluginIds: () => pluginCatalog.pluginIds(),
-    getWorkspaceState: workspaceState,
-    setWorkspaceState,
-    setWorkspaceList,
-    setActiveLayoutId,
-    setSearchSettings,
-    setSearchHistory,
-    setInstances,
-    applyThemeSelection,
-    applyBackgroundSelection,
-    reconcileInstancesForLayout,
-    clearContextMenu: () => setCtxMenu(null),
-    clearExpandState: () => setExpandState(null),
-  })
-
-  async function switchLayout(layoutId: string) {
-    await switchWorkbenchLayout({
-      layoutId,
-      activeWorkspace: requireWorkspace(workspaceState()),
-      currentInstances: instances(),
-      findLayout: (targetLayoutId) => pluginCatalog.findLayoutContribution(targetLayoutId),
-      reconcileInstances: reconcileInstancesForLayout,
-      clearContextMenu: () => setCtxMenu(null),
-      clearExpandState: () => setExpandState(null),
-      setInstances,
-      setActiveLayoutId,
-      saveSnapshot: (snapshot) => workspaceSnapshotRepo.save(snapshot),
-      persistWorkspaceLayout: (workspaceId, nextLayoutId, regions) =>
-        updateWorkspaceRecord({
-          workspaceRepo,
-          workspaceId,
-          mutator(workspace) {
-            workspace.activeLayoutId = nextLayoutId
-            workspace.regions = regions
-            return workspace
-          },
-        }),
-      setWorkspaceState,
-    })
-  }
-
-  async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
-    await workspaceStateActions.updateWorkspace(mutator)
-  }
-
-  async function setDefaultSearchProvider(providerId: string) {
-    await setWorkbenchDefaultSearchProvider({
-      providerId,
-      providers: pluginCatalog.listSearchProviders(),
-      updateWorkspace,
-      setSearchSettings,
-      warn: console.warn,
-    })
-  }
-
-  async function setSearchProviderEnabled(providerId: string, enabled: boolean) {
-    await setWorkbenchSearchProviderEnabled({
-      providerId,
-      enabled,
-      currentSettings: searchSettings(),
-      providers: pluginCatalog.listSearchProviders(),
-      updateWorkspace,
-      setSearchSettings,
-      warn: console.warn,
-    })
-  }
-
-  async function togglePluginEnabled(pluginId: string, enabled: boolean) {
-    await kernel.setPluginEnabled(pluginId, enabled)
-  }
-
-  async function saveSearchHistory(entry: { query: string; providerId: string }) {
-    const workspace = requireWorkspace(workspaceState())
-    await saveWorkbenchSearchHistory({
-      workspaceId: workspace.id,
-      history: searchHistory(),
-      entry,
-      setSearchHistory,
-      saveForWorkspace: (pluginId, workspaceId, key, value) =>
-        pluginDataRepo.saveForWorkspace(pluginId, workspaceId, key, value),
-    })
-  }
-
-  async function exportWorkspace(): Promise<string> {
-    return workspaceStateActions.exportWorkspace()
-  }
-
-  async function importWorkspace(json: string): Promise<{ warnings: string[] }> {
-    return workspaceStateActions.importWorkspace(json)
-  }
-
-  async function createWorkspace(name: string): Promise<Workspace> {
-    return workspaceStateActions.createWorkspace(name)
-  }
-
-  async function switchWorkspace(id: string) {
-    await workspaceStateActions.switchWorkspace(id)
-  }
-
-  async function deleteWorkspace(id: string) {
-    await workspaceStateActions.deleteWorkspace(id)
-  }
-
-  async function switchTheme(newThemeId: string) {
-    await switchWorkbenchTheme({
-      workspace: requireWorkspace(workspaceState()),
-      themeId: newThemeId,
-      themes: pluginCatalog.listThemes(),
-      setThemeId,
-      applyTheme: (tokens) => applyThemeTokens(document.documentElement, tokens),
-      persistTheme: (workspaceId, themeId) =>
-        updateWorkspaceTheme({
-          workspaceRepo,
-          workspaceId,
-          themeId,
-        }),
-      setWorkspaceState,
-    })
-  }
-
-  async function switchBackground(bgId: string) {
-    await switchWorkbenchBackground({
-      workspace: requireWorkspace(workspaceState()),
-      backgroundId: bgId,
-      backgrounds: pluginCatalog.listBackgroundProviders(),
-      setBackgroundId,
-      applyBackground: applyBackgroundStyle,
-      persistBackground: (workspaceId, backgroundId) =>
-        updateWorkspaceBackground({
-          workspaceRepo,
-          workspaceId,
-          backgroundId,
-        }),
-      setWorkspaceState,
-    })
-  }
-
   const dragHandlers = createWorkbenchPointerDragHandlers({
     getPersistedInstances: instances,
     getDragState: dragState,
@@ -522,7 +349,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       platform: composition.host.platform,
       onAddWidget: () => setAddWidgetOpen(true),
       onToggleTheme: () => {
-        void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+        void workspaceController.switchTheme(
+          isDark() ? "official.theme.light" : "official.theme.dark",
+        )
       },
       onOpenSettings: () => openSettings("official.settings.workspace.appearance"),
     })
@@ -550,9 +379,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setSearchSettings,
     setSearchHistory,
     setInstances,
-    applyThemeSelection,
-    applyBackgroundSelection,
-    reconcileInstancesForLayout,
+    applyThemeSelection: workspaceController.applyThemeSelection,
+    applyBackgroundSelection: workspaceController.applyBackgroundSelection,
+    reconcileInstancesForLayout: workspaceController.reconcileInstancesForLayout,
   })
 
   function renderSafeLayout() {
@@ -567,7 +396,9 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         buildWidgetViewProps={buildWidgetViewProps}
         onOpenCommandPalette={() => setCmdPaletteOpen(true)}
         onToggleTheme={() =>
-          void switchTheme(isDark() ? "official.theme.light" : "official.theme.dark")
+          void workspaceController.switchTheme(
+            isDark() ? "official.theme.light" : "official.theme.dark",
+          )
         }
         onOpenSettings={() => openSettings()}
         onPointerDown={(event, instanceId) => dragHandlers.onPointerDown(event, instanceId)}
