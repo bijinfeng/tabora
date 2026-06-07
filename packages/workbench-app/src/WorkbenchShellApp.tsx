@@ -13,31 +13,21 @@ import type { WorkbenchRuntimeBootstrap } from "./bootstrap"
 import { applyBackgroundStyle } from "./backgroundResolver"
 import { createLayoutFallbackTracker } from "./layoutFallback"
 import { createWorkbenchResponsiveState } from "./responsive"
+import { createWorkbenchShellControllerRuntime } from "./WorkbenchShellControllerRuntime"
 import { createWorkbenchShellHostRuntime } from "./WorkbenchShellHostRuntime"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
-import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
 import { createWorkbenchShellLayoutRuntime } from "./WorkbenchShellLayoutRuntime"
-import { focusWorkbenchWidgetInstance } from "./WorkbenchShellHostActions"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
-import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
 import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
 import { createWorkbenchShellState } from "./WorkbenchShellState"
-import { createWorkbenchShellViewRuntime } from "./WorkbenchShellViewRuntime"
 import { resolveWorkbenchView } from "./WorkbenchShellViewBridge"
-import { createWorkbenchWidgetController } from "./WorkbenchShellWidgetController"
 import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
-import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
-import {
-  type CommandExecutionContext,
-  resolveDefaultProviderForSearch as resolveDefaultProviderId,
-  resolveEnabledSearchProviders,
-  resolveWidgetIconLabel,
-  resolveWidgetRenderModel,
-} from "./shellHelpers"
+import { focusWorkbenchWidgetInstance } from "./WorkbenchShellHostActions"
+import { resolveWidgetIconLabel } from "./shellHelpers"
 import { assignGridOrder } from "./workbenchGrid"
 
 export type WorkbenchShellAppProps = {
@@ -204,116 +194,51 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     },
   })
 
-  const pluginCommands = plugins.flatMap((plugin) => plugin.manifest.contributes.commands ?? [])
-  const pluginKeybindings = plugins.flatMap(
-    (plugin) => plugin.manifest.contributes.keybindings ?? [],
-  )
-
-  const runPluginCommand = (_commandId: string, _context: CommandExecutionContext) => {
-    // Plugin command execution is routed here so widget context stays available for the future bus.
-  }
-  const { availableCommandIds, commandItems, runCommand, shortcutRegistry } =
-    createWorkbenchShellCommandModels({
-      isDark,
+  const controllerRuntime = createWorkbenchShellControllerRuntime({
+    services: {
+      plugins,
+      pluginCatalog,
+      registryViews: kernel.registry.views,
+      instanceRepo,
+      pluginDataRepo,
+    },
+    state: {
+      workspace: workspaceState,
       activeLayoutId,
-      pluginCommands,
-      pluginKeybindings,
+      instances,
+      expandState,
+      contextMenu: ctxMenu,
+      dragState,
+      searchSettings,
+      searchHistory,
+      inlineSearchQuery,
+      inlineSearchOpen,
+      inlineSearchActiveResultIndex,
+      commandPaletteOpen: cmdPaletteOpen,
+      isDark,
+    },
+    setters: {
+      setInstances,
+      setExpandState,
+      setContextMenu: setCtxMenu,
+      setDragState,
       setCommandPaletteOpen: setCmdPaletteOpen,
       setAddWidgetOpen,
+      setInlineSearchQuery,
+      setInlineSearchOpen,
+      setInlineSearchActiveResultIndex,
+      setModalViewId,
+      setModalProps,
+    },
+    actions: {
       openSettings,
       showToast,
-      switchTheme: (themeId) => {
-        void workspaceController.switchTheme(themeId)
-      },
-      switchLayout: (layoutId) => {
-        void workspaceController.switchLayout(layoutId)
-      },
-      runPluginCommand,
-    })
-
-  const widgetController = createWorkbenchWidgetController({
-    getWorkspace: workspaceState,
-    getActiveLayoutId: activeLayoutId,
-    getInstances: instances,
-    getExpandState: expandState,
-    getContextMenu: ctxMenu,
-    setInstances,
-    setExpandState,
-    setContextMenu: setCtxMenu,
-    resolveLayoutRegions: (layoutId) =>
-      pluginCatalog.findLayoutContribution(layoutId)?.regions ?? [],
-    resolveWidgetContribution: (pluginId, contributionId) =>
-      pluginCatalog.findWidgetContribution(pluginId, contributionId),
-    resolveWidgetRenderModel: (instance) =>
-      resolveWidgetRenderModel(
-        instance,
-        pluginCatalog.findWidgetContribution(instance.pluginId, instance.contributionId),
-      ),
-    hasView: (viewId) => kernel.registry.views.has(viewId),
-    buildWidgetViewProps: (instance, model) => viewRuntime.buildWidgetViewProps(instance, model),
-    assignGridOrder,
-    saveInstance: (instance) => instanceRepo.save(instance),
-    removeInstance: (instanceId) => instanceRepo.remove(instanceId),
-    showToast,
-    focusWidgetInstance: focusWorkbenchWidgetInstance,
-    availableCommandIds,
-    runCommand,
-  })
-
-  const searchSurfaces = createWorkbenchSearchSurfaces({
-    getProviders: () =>
-      resolveEnabledSearchProviders(searchSettings(), pluginCatalog.listSearchProviders()),
-    getDefaultProviderId: () =>
-      resolveDefaultProviderId(searchSettings(), pluginCatalog.listSearchProviders()),
-    getCommands: commandItems,
-    getWidgets: () => widgetController.buildSearchableWidgets(),
-    getHistory: searchHistory,
-    getInlineSearchQuery: inlineSearchQuery,
-    getInlineSearchOpen: inlineSearchOpen,
-    getInlineSearchActiveResultIndex: inlineSearchActiveResultIndex,
-    setInlineSearchQuery,
-    setInlineSearchOpen,
-    setInlineSearchActiveResultIndex,
-    setDefaultProvider: workspaceController.setDefaultSearchProvider,
-    saveHistory: workspaceController.saveSearchHistory,
-    openExternalForPlugin: hostRuntime.openExternalForPlugin,
-    openExternal: hostRuntime.openExternal,
-    showToast,
-    isCommandPaletteOpen: cmdPaletteOpen,
-    closeCommandPalette: () => setCmdPaletteOpen(false),
-  })
-
-  const dragHandlers = createWorkbenchPointerDragHandlers({
-    getPersistedInstances: instances,
-    getDragState: dragState,
-    setDragState,
-    persistGridOrder: (orderedInstances) => widgetController.persistGridOrder(orderedInstances),
-    showToast,
-  })
-  const viewRuntime = createWorkbenchShellViewRuntime({
-    registryViews: kernel.registry.views,
-    widgetContribution: (instance) => widgetController.widgetContribution(instance),
-    widgetRenderModel: (instance) => widgetController.widgetRenderModel(instance),
-    findSearchContribution: (pluginId, contributionId) =>
-      pluginCatalog.findSearchContribution(pluginId, contributionId),
-    buildInlineSearchViewProps: (instance) => searchSurfaces.buildInlineSearchViewProps(instance),
-    renderWidgetIcon: renderWorkbenchWidgetIcon,
-    onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
-    onPointerMove: (event) => dragHandlers.onPointerMove(event),
-    onPointerUp: (event) => dragHandlers.onPointerUp(event),
-    onPointerCancel: (event) => dragHandlers.onPointerCancel(event),
-    openWidgetExpand: widgetController.openWidgetExpand,
-    setContextMenu: setCtxMenu,
-    changeWidgetSize: widgetController.changeWidgetSize,
-    removeWidget: widgetController.removeWidget,
-    isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
-    pluginDataRepo,
-    saveInstance: (updated) => instanceRepo.save(updated),
-    setInstances,
-    setModalViewId,
-    setModalProps,
-    showToast,
-    openExternalForPlugin: hostRuntime.openExternalForPlugin,
+      focusWidgetInstance: focusWorkbenchWidgetInstance,
+    },
+    controllers: {
+      workspaceController,
+      hostRuntime,
+    },
   })
   const layoutRuntime = createWorkbenchShellLayoutRuntime({
     activeLayoutId,
@@ -325,26 +250,28 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     switchTheme: workspaceController.switchTheme,
     runRailAction: hostRuntime.runRailAction,
     catalog: pluginCatalog,
-    instanceRenderer: viewRuntime.instanceRenderer,
-    displayedInstances: dragHandlers.displayedInstances,
+    instanceRenderer: controllerRuntime.viewRuntime.instanceRenderer,
+    displayedInstances: controllerRuntime.dragHandlers.displayedInstances,
     resolveLayoutView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
     isMobile: responsive.isMobile,
     clearLayoutError: () => layoutFallback.clearLayoutError(),
     recordLayoutError: (layoutId, error) => layoutFallback.recordLayoutError(layoutId, error),
     setContextMenu: setCtxMenu,
-    widgetContribution: widgetController.widgetContribution,
-    resolveWidgetModel: widgetController.widgetRenderModel,
+    widgetContribution: controllerRuntime.widgetController.widgetContribution,
+    resolveWidgetModel: controllerRuntime.widgetController.widgetRenderModel,
     getWidgetView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
     renderWidgetIcon: renderWorkbenchWidgetIcon,
-    buildWidgetViewProps: (instance, model) => viewRuntime.buildWidgetViewProps(instance, model),
-    onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
-    onPointerMove: dragHandlers.onPointerMove,
-    onPointerUp: dragHandlers.onPointerUp,
-    onPointerCancel: dragHandlers.onPointerCancel,
-    openWidgetExpand: widgetController.openWidgetExpand,
-    changeWidgetSize: widgetController.changeWidgetSize,
-    removeWidget: widgetController.removeWidget,
-    isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
+    buildWidgetViewProps: (instance, model) =>
+      controllerRuntime.viewRuntime.buildWidgetViewProps(instance, model),
+    onPointerDown: (event, instanceId) =>
+      controllerRuntime.dragHandlers.onPointerDown(event, instanceId),
+    onPointerMove: controllerRuntime.dragHandlers.onPointerMove,
+    onPointerUp: controllerRuntime.dragHandlers.onPointerUp,
+    onPointerCancel: controllerRuntime.dragHandlers.onPointerCancel,
+    openWidgetExpand: controllerRuntime.widgetController.openWidgetExpand,
+    changeWidgetSize: controllerRuntime.widgetController.changeWidgetSize,
+    removeWidget: controllerRuntime.widgetController.removeWidget,
+    isDragging: (instanceId) => controllerRuntime.dragHandlers.isDragging(instanceId),
   })
 
   void hostRuntime.initialize()
@@ -354,7 +281,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     availableWidgets: pluginCatalog.listWidgetContributions(),
     widgetIconLabel: resolveWidgetIconLabel,
     addWidgetOpen: addWidgetOpen(),
-    addWidget: widgetController.addWidget,
+    addWidget: controllerRuntime.widgetController.addWidget,
     closeAddWidget: () => setAddWidgetOpen(false),
     settingsOpen: settingsOpen(),
     settingsPanels: pluginCatalog.listSettingsPanels(),
@@ -371,8 +298,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     expandState: expandState(),
     getWidgetView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
     widgetIconForProps: (viewProps) =>
-      renderWorkbenchWidgetIcon(widgetController.widgetContribution(viewProps)?.icon),
-    closeExpand: widgetController.closeExpand,
+      renderWorkbenchWidgetIcon(
+        controllerRuntime.widgetController.widgetContribution(viewProps)?.icon,
+      ),
+    closeExpand: controllerRuntime.widgetController.closeExpand,
     modalViewId: modalViewId(),
     modalProps: modalProps(),
     getModalView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
@@ -382,22 +311,22 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     getFullscreenView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
     closeFullscreen: () => setFullscreenViewId(null),
     contextMenu: ctxMenu(),
-    contextSections: widgetController.buildContextMenuModel()?.sections,
+    contextSections: controllerRuntime.widgetController.buildContextMenuModel()?.sections,
     closeContextMenu: () => setCtxMenu(null),
     toasts: toasts(),
-    runCommand,
-    commandPalette: searchSurfaces.buildCommandPaletteProps(),
+    runCommand: controllerRuntime.runCommand,
+    commandPalette: controllerRuntime.searchSurfaces.buildCommandPaletteProps(),
   })
 
   return (
     <div
       class="tabora-root"
       onKeyDown={(e) => {
-        if (shortcutRegistry().executeKeydown(e)) {
+        if (controllerRuntime.shortcutRegistry().executeKeydown(e)) {
           e.preventDefault()
         }
         if (e.key === "Escape") {
-          widgetController.closeExpand()
+          controllerRuntime.widgetController.closeExpand()
           setCtxMenu(null)
           setAddWidgetOpen(false)
         }
