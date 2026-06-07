@@ -27,9 +27,9 @@
   border-radius: 50%;
   border: none;
   background: rgb(var(--color-accent));
-  color: #fff;
+  color: rgb(var(--color-inverse));
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(var(--color-shadow) / 0.15);
 }
 .masonry-menu {
   position: absolute;
@@ -40,8 +40,8 @@
   gap: 4px;
   padding: 8px;
   border-radius: 12px;
-  background: var(--color-surface, #fff);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  background: rgb(var(--color-surface));
+  box-shadow: 0 8px 24px rgb(var(--color-shadow) / 0.18);
 }
 .masonry-menu-item {
   display: flex;
@@ -54,12 +54,12 @@
   cursor: pointer;
   border-radius: 8px;
   white-space: nowrap;
-  color: rgb(var(--color-text, 28 30 28));
+  color: rgb(var(--color-text));
 }
 .masonry-menu-item svg {
   flex-shrink: 0;
-  color: rgb(var(--color-muted, 107 110 106));
+  color: rgb(var(--color-muted));
 }
 .masonry-menu-item:hover {
-  background: var(--color-surface-hover, #f3f4f6);
+  background: rgb(var(--color-surface-hover));
 }

@@ -18,12 +18,16 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@tabora/brand": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
+    "@tabora/official-plugins": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",
     "@tabora/theme": "workspace:*",
+    "@tabora/workbench-shell": "workspace:*",
+    "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

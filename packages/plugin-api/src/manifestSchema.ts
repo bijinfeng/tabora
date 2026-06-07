@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { workbenchSearchSettingsSchema } from "./workspaceSchema"
+
 const widgetSizeSchema = z.enum(["S", "M", "L", "XL"])
 
 const settingsPanelSectionSchema = z.enum(["general", "appearance", "search", "plugins", "about"])
@@ -30,6 +32,33 @@ const extensionPointSchema = z.enum([
   "settings-panel",
 ])
 
+const pluginPermissionSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("external-open"),
+    hosts: z.array(z.string().min(1)).min(1),
+  }),
+  z.object({
+    type: z.literal("storage"),
+    scope: z.literal("plugin"),
+  }),
+  z.object({
+    type: z.literal("workspace"),
+    access: z.enum(["read", "write"]),
+  }),
+  z.object({
+    type: z.literal("network"),
+    hosts: z.array(z.string().min(1)).min(1),
+  }),
+  z.object({
+    type: z.literal("clipboard"),
+    access: z.enum(["read", "write"]),
+  }),
+  z.object({
+    type: z.literal("local-file"),
+    access: z.enum(["read", "write"]),
+  }),
+])
+
 const widgetContributionSchema = z
   .object({
     id: z.string().min(1),
@@ -42,8 +71,7 @@ const widgetContributionSchema = z
     defaultConfig: z.record(z.string(), z.unknown()).optional(),
     views: z.object({
       card: z.string().min(1),
-      modal: z.string().min(1).optional(),
-      fullscreen: z.string().min(1).optional(),
+      expand: z.string().min(1).optional(),
       settings: z.string().min(1).optional(),
     }),
     contextMenus: z
@@ -120,10 +148,7 @@ const workspacePresetSchema = z.object({
   layoutId: z.string().min(1),
   themeId: z.string().min(1),
   backgroundProviderId: z.string().min(1),
-  search: z.object({
-    defaultProviderId: z.string().min(1),
-    enabledProviderIds: z.array(z.string().min(1)).optional(),
-  }),
+  search: workbenchSearchSettingsSchema,
   regions: z
     .array(
       z.object({
@@ -182,7 +207,7 @@ export const pluginManifestSchema = z.object({
   icon: z.string().optional(),
   entry: z.string().min(1),
   engine: z.object({ platform: z.string().min(1) }),
-  permissions: z.array(z.unknown()).optional(),
+  permissions: z.array(pluginPermissionSchema).optional(),
   contributes: z.object({
     layouts: z
       .array(

@@ -4,7 +4,23 @@ import {
   FALLBACK_BACKGROUND_ID,
   resolveBackgroundStyle,
   resolveBackgroundValue,
-} from "./backgroundResolver"
+} from "@tabora/workbench-app"
+
+function cssFunction(name: "rgb" | "rgba", args: string) {
+  return [name, `(${args})`].join("")
+}
+
+function cssRgb(channels: readonly number[]) {
+  return cssFunction("rgb", channels.join(", "))
+}
+
+function cssRgba(channels: readonly number[], alpha: number) {
+  return cssFunction("rgba", [...channels, alpha].join(","))
+}
+
+function gradientBackground(tint: string) {
+  return `linear-gradient(135deg, ${tint}, transparent), rgb(var(--color-page))`
+}
 
 function makeProvider(
   id: string,
@@ -16,7 +32,7 @@ function makeProvider(
     title,
     sourceType: "generated",
     defaultCss: css ?? {
-      background: `linear-gradient(135deg, rgba(0,0,0,0.1), transparent), rgb(var(--color-page))`,
+      background: gradientBackground(cssRgba([0, 0, 0], 0.1)),
     },
   }
 }
@@ -48,13 +64,13 @@ describe("resolveBackgroundValue", () => {
         sourceType: "generated",
         source: {
           type: "css",
-          css: { background: "rgb(1, 2, 3)" },
+          css: { background: cssRgb([1, 2, 3]) },
         },
-        defaultCss: { background: "rgb(4, 5, 6)" },
+        defaultCss: { background: cssRgb([4, 5, 6]) },
       },
     ])
 
-    expect(resolved).toEqual({ type: "css", css: { background: "rgb(1, 2, 3)" } })
+    expect(resolved).toEqual({ type: "css", css: { background: cssRgb([1, 2, 3]) } })
   })
 
   it("resolves gradient, image, video, and canvas sources", () => {

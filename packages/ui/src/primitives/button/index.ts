@@ -5,8 +5,3 @@ export type {
   ButtonVariant,
   ButtonSize,
 } from "./button"
-// 向后兼容
-export type {
-  HeadlessButtonProps as ButtonProps,
-  HeadlessIconButtonProps as IconButtonProps,
-} from "./button"

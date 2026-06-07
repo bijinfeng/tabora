@@ -3,9 +3,10 @@ import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 import { Maximize2, X } from "lucide-solid"
 
 export type WidgetHostCallbacks = {
-  onDragStart: (e: DragEvent) => void
-  onDragOver: (e: DragEvent) => void
-  onDrop: (e: DragEvent) => void
+  onPointerDown: (e: PointerEvent) => void
+  onPointerMove: (e: PointerEvent) => void
+  onPointerUp: (e: PointerEvent) => void
+  onPointerCancel: (e: PointerEvent) => void
   onDblClick: (e: MouseEvent) => void
   onContextMenu: (e: MouseEvent) => void
   onResize: (size: WidgetSize) => void
@@ -41,22 +42,51 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       class="grid-item"
       classList={{ dragging: props.callbacks.isDragging }}
       style={{
-        "grid-column": `span ${gridColumnSpan(props.currentSize)}`,
-        "grid-row": `span ${gridRowSpan(props.currentSize)}`,
+        "--widget-col-span": `${gridColumnSpan(props.currentSize)}`,
+        "--widget-row-span": `${gridRowSpan(props.currentSize)}`,
       }}
       data-widget-size={props.currentSize}
       data-widget-instance-id={props.instance.id}
       aria-label={props.title}
       tabIndex={0}
-      draggable="true"
-      onDragStart={props.callbacks.onDragStart}
-      onDragOver={props.callbacks.onDragOver}
-      onDrop={props.callbacks.onDrop}
+      onPointerMove={props.callbacks.onPointerMove}
+      onPointerUp={(event) => {
+        if (
+          event.target instanceof HTMLElement &&
+          event.target.hasPointerCapture?.(event.pointerId)
+        ) {
+          event.target.releasePointerCapture(event.pointerId)
+        }
+        props.callbacks.onPointerUp(event)
+      }}
+      onPointerCancel={(event) => {
+        if (
+          event.target instanceof HTMLElement &&
+          event.target.hasPointerCapture?.(event.pointerId)
+        ) {
+          event.target.releasePointerCapture(event.pointerId)
+        }
+        props.callbacks.onPointerCancel(event)
+      }}
       onDblClick={props.callbacks.onDblClick}
       onContextMenu={props.callbacks.onContextMenu}
     >
       <div class="widget-card">
-        <div class="card-header">
+        <div
+          class="card-header"
+          onPointerDown={(event) => {
+            const target = event.target
+            if (
+              target instanceof HTMLElement &&
+              target.closest("button, input, textarea, select, a, [role='button']")
+            ) {
+              return
+            }
+
+            event.currentTarget.setPointerCapture?.(event.pointerId)
+            props.callbacks.onPointerDown(event)
+          }}
+        >
           <div class="card-title">
             {props.icon}
             <span class="card-title-text">{props.title}</span>

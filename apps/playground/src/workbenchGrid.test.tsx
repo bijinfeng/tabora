@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
-import { assignGridOrder } from "./workbenchGrid"
+import { assignGridOrder } from "@tabora/workbench-app"
 
 function instance(id: string, size?: WidgetSize): PluginInstance {
   return {

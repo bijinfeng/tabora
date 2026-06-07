@@ -40,13 +40,13 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
   }
 
   return {
-    async get(pluginId, key) {
+    async get<T = unknown>(pluginId: string, key: string): Promise<T | undefined> {
       const row = await database.pluginData.get(idFor(pluginId, key))
-      return row?.value as any
+      return row?.value as T | undefined
     },
-    async getAll(pluginId) {
+    async getAll<T = unknown>(pluginId: string): Promise<T[]> {
       const rows = await database.pluginData.where("pluginId").equals(pluginId).toArray()
-      return rows.map((r) => r.value) as any[]
+      return rows.map((r) => r.value as T)
     },
     async save(pluginId, key, value) {
       await database.pluginData.put({
@@ -60,17 +60,21 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     async remove(pluginId, key) {
       await database.pluginData.delete(idFor(pluginId, key))
     },
-    async getByWorkspace(pluginId, workspaceId, key) {
+    async getByWorkspace<T = unknown>(
+      pluginId: string,
+      workspaceId: string,
+      key: string,
+    ): Promise<T | undefined> {
       const row = await database.pluginData.get(idFor(pluginId, key, workspaceId))
-      return row?.value as any
+      return row?.value as T | undefined
     },
-    async getAllByWorkspace(pluginId, workspaceId) {
+    async getAllByWorkspace<T = unknown>(pluginId: string, workspaceId: string): Promise<T[]> {
       const rows = await database.pluginData
         .where("pluginId")
         .equals(pluginId)
         .and((row) => row.workspaceId === workspaceId && !row.instanceId)
         .toArray()
-      return rows.map((r) => r.value) as any[]
+      return rows.map((r) => r.value as T)
     },
     async saveForWorkspace(pluginId, workspaceId, key, value) {
       await database.pluginData.put({
@@ -88,17 +92,21 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     async removeByWorkspace(workspaceId) {
       await database.pluginData.where("workspaceId").equals(workspaceId).delete()
     },
-    async getByInstance(pluginId, instanceId, key) {
+    async getByInstance<T = unknown>(
+      pluginId: string,
+      instanceId: string,
+      key: string,
+    ): Promise<T | undefined> {
       const row = await database.pluginData.get(idFor(pluginId, key, instanceId))
-      return row?.value as any
+      return row?.value as T | undefined
     },
-    async getAllByInstance(pluginId, instanceId) {
+    async getAllByInstance<T = unknown>(pluginId: string, instanceId: string): Promise<T[]> {
       const rows = await database.pluginData
         .where("pluginId")
         .equals(pluginId)
         .and((row) => row.instanceId === instanceId)
         .toArray()
-      return rows.map((r) => r.value) as any[]
+      return rows.map((r) => r.value as T)
     },
     async saveForInstance(pluginId, instanceId, key, value) {
       await database.pluginData.put({

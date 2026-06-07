@@ -75,7 +75,7 @@
 
 .layout-switch .tb-btn:hover,
 .stream-toolbar-btn:hover {
-  background: rgb(var(--color-surface-soft, 250 250 248));
+  background: rgb(var(--color-surface-soft));
   color: rgb(var(--color-text));
 }
 

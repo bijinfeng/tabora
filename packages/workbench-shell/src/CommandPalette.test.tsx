@@ -95,4 +95,37 @@ describe("CommandPalette", () => {
     expect(onClose).toHaveBeenCalled()
     root.remove()
   })
+
+  it("does not fall back to the first provider when defaultProviderId is missing", () => {
+    const openExternal = vi.fn(() => true)
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <CommandPalette
+          isOpen={true}
+          onClose={vi.fn()}
+          commands={commands}
+          providers={[
+            {
+              id: "official.search.google",
+              title: "Google",
+              shortcut: "g",
+              urlTemplate: "https://google.example/search?q={query}",
+            },
+          ]}
+          openExternal={openExternal}
+        />
+      ),
+      root,
+    )
+
+    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    input.value = "tabora"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+
+    expect(openExternal).not.toHaveBeenCalled()
+    root.remove()
+  })
 })

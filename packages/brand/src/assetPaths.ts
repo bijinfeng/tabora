@@ -1,6 +1,5 @@
-import path from "node:path"
-import { fileURLToPath } from "node:url"
+const assetUrl = new URL("../assets/tabora-app-icon.svg", import.meta.url)
+const assetPath = decodeURIComponent(assetUrl.pathname)
 
-const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-
-export const taboraAppIconPath = path.join(packageDir, "assets", "tabora-app-icon.svg")
+export const taboraAppIconPath =
+  process.platform === "win32" && assetPath.startsWith("/") ? assetPath.slice(1) : assetPath

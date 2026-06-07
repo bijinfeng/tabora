@@ -47,7 +47,6 @@ export function IconButton(props: HeadlessIconButtonProps) {
   return <HeadlessIconButton {...props} class={iconButtonVariants({ size: props.size })} />
 }
 
-// 向后兼容类型
 export type ButtonProps = HeadlessButtonProps
 export type IconButtonProps = HeadlessIconButtonProps
 export type ButtonVariant = HeadlessButtonProps["variant"]

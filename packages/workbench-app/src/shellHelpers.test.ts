@@ -111,32 +111,42 @@ describe("shell helper widget resolvers", () => {
 })
 
 describe("shell helper search settings resolvers", () => {
-  it("enables every provider when settings do not specify ids", () => {
-    const settings: WorkbenchSearchSettings = { defaultProviderId: "" }
+  it("returns the explicit enabled provider ids", () => {
+    const settings: WorkbenchSearchSettings = {
+      defaultProviderId: "google",
+      enabledProviderIds: ["google", "duck"],
+    }
 
-    expect(resolveEnabledProviderIds(settings, providers)).toEqual(["google", "duck"])
+    expect(resolveEnabledProviderIds(settings)).toEqual(["google", "duck"])
     expect(resolveEnabledSearchProviders(settings, providers)).toEqual(providers)
   })
 
   it("uses explicit enabled provider ids and preserves provider order", () => {
     const settings: WorkbenchSearchSettings = {
-      defaultProviderId: "",
+      defaultProviderId: "duck",
       enabledProviderIds: ["duck"],
     }
 
-    expect(resolveEnabledProviderIds(settings, providers)).toEqual(["duck"])
+    expect(resolveEnabledProviderIds(settings)).toEqual(["duck"])
     expect(resolveEnabledSearchProviders(settings, providers)).toEqual([providers[1]])
   })
 
-  it("resolves the configured default provider before falling back to enabled providers", () => {
+  it("returns an empty default provider when the configured id is unavailable", () => {
     expect(
       resolveDefaultProviderForSearch(
         { defaultProviderId: "google", enabledProviderIds: ["duck"] },
         providers,
       ),
     ).toBe("google")
-    expect(resolveDefaultProviderForSearch({ defaultProviderId: "" }, providers)).toBe("google")
-    expect(resolveDefaultProviderForSearch({ defaultProviderId: "" }, [])).toBe("")
+    expect(
+      resolveDefaultProviderForSearch(
+        { defaultProviderId: "missing", enabledProviderIds: ["google", "duck"] },
+        providers,
+      ),
+    ).toBe("")
+    expect(
+      resolveDefaultProviderForSearch({ defaultProviderId: "google", enabledProviderIds: [] }, []),
+    ).toBe("")
   })
 })
 

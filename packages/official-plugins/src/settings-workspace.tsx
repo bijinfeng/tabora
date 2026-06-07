@@ -65,12 +65,26 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
 }
 
 export function SearchSettingsPanel(props: SettingsPanelViewProps) {
-  const enabledIds = () =>
-    props.searchSettings.enabledProviderIds ?? props.searchProviders.map((p) => p.id)
+  const enabledIds = () => props.searchSettings.enabledProviderIds
 
   const enabledProviders = createMemo(() =>
     props.searchProviders.filter((p) => enabledIds().includes(p.id)),
   )
+
+  const configurationError = createMemo(() => {
+    if (enabledIds().length === 0) return "至少启用一个搜索源"
+    if (!enabledIds().includes(props.searchSettings.defaultProviderId)) {
+      return "默认搜索源未启用，请重新选择"
+    }
+    if (
+      !props.searchProviders.some(
+        (provider) => provider.id === props.searchSettings.defaultProviderId,
+      )
+    ) {
+      return "默认搜索源不可用，请重新选择"
+    }
+    return null
+  })
 
   function enabledProviderOptions() {
     return enabledProviders().map((p) => ({
@@ -79,26 +93,23 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
     }))
   }
 
-  const defaultId = () => props.searchSettings.defaultProviderId || enabledProviders()[0]?.id || ""
+  const defaultId = () => props.searchSettings.defaultProviderId
 
   function handleToggle(providerId: string) {
     const currentlyEnabled = enabledIds().includes(providerId)
     void props.host.setSearchProviderEnabled?.(providerId, !currentlyEnabled)
-    if (currentlyEnabled && providerId === defaultId()) {
-      const remaining = enabledProviders().filter((p) => p.id !== providerId)
-      if (remaining[0]) {
-        void props.host.setDefaultSearchProvider(remaining[0].id)
-      }
-    }
   }
 
   return (
     <CardSection title="搜索">
       <div class="settings-panel-stack">
+        <Show when={configurationError()}>
+          <InlineError>{configurationError()!}</InlineError>
+        </Show>
         <Field label="默认搜索源" htmlFor="settings-search-provider-select">
           <Select
             id="settings-search-provider-select"
-            value={defaultId()}
+            value={configurationError() ? "" : defaultId()}
             options={enabledProviderOptions()}
             onChange={(providerId) => void props.host.setDefaultSearchProvider(providerId)}
             aria-label="选择默认搜索源"

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import type { WorkspaceExport } from "./workspacePortability"
-import { parseExport, prepareImport } from "./workspacePortability"
+import type { WorkspaceExport } from "@tabora/workbench-app"
+import { parseExport, prepareImport } from "@tabora/workbench-app"
 
 describe("prepareImport", () => {
   it("rejects current schema exports without an explicit active background provider", () => {
@@ -23,6 +23,32 @@ describe("prepareImport", () => {
     expect(parseExport(JSON.stringify(data))).toBeNull()
   })
 
+  it("rejects current schema exports without explicit enabled search providers", () => {
+    const data = {
+      schemaVersion: 1,
+      exportedAt: "2026-06-01T00:00:00.000Z",
+      workspace: {
+        id: "workspace-imported",
+        name: "导入工作区",
+        activeLayoutId: "official.layout.workbench-dashboard",
+        activeThemeId: "official.theme.light",
+        activeBackgroundProviderId: "background.gradient-green",
+        config: {
+          search: {
+            defaultProviderId: "official.search.google",
+          },
+        },
+        regions: {},
+        createdAt: "2026-06-01T00:00:00.000Z",
+        updatedAt: "2026-06-01T00:00:00.000Z",
+      },
+      instances: [],
+      pluginData: [],
+    }
+
+    expect(parseExport(JSON.stringify(data))).toBeNull()
+  })
+
   it("rebinds imported instances and plugin data rows to the target workspace", () => {
     const data: WorkspaceExport = {
       schemaVersion: 1,
@@ -33,6 +59,12 @@ describe("prepareImport", () => {
         activeLayoutId: "official.layout.workbench-dashboard",
         activeThemeId: "official.theme.light",
         activeBackgroundProviderId: "background.gradient-green",
+        config: {
+          search: {
+            defaultProviderId: "official.search.google",
+            enabledProviderIds: ["official.search.google"],
+          },
+        },
         regions: {},
         createdAt: "2026-06-01T00:00:00.000Z",
         updatedAt: "2026-06-01T00:00:00.000Z",
@@ -82,6 +114,12 @@ describe("prepareImport", () => {
         activeLayoutId: "official.layout.workbench-dashboard",
         activeThemeId: "official.theme.light",
         activeBackgroundProviderId: "background.gradient-green",
+        config: {
+          search: {
+            defaultProviderId: "official.search.google",
+            enabledProviderIds: ["official.search.google"],
+          },
+        },
         regions: {},
         createdAt: "2026-06-01T00:00:00.000Z",
         updatedAt: "2026-06-01T00:00:00.000Z",

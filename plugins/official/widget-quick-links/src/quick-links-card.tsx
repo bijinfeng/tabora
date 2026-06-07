@@ -137,10 +137,22 @@ export function QuickLinksCard(props: WidgetViewProps) {
                 when={editId() === link.id}
                 fallback={
                   <>
-                    <a class="link-anchor" href={link.url} target="_blank" rel="noreferrer">
+                    <button
+                      class="link-anchor"
+                      type="button"
+                      style={{
+                        width: "100%",
+                        padding: "0",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        font: "inherit",
+                      }}
+                      onClick={() => void props.host.openExternal(link.url)}
+                    >
                       <span class="link-icon">{link.title.slice(0, 1).toUpperCase()}</span>
                       <span class="link-label">{link.title}</span>
-                    </a>
+                    </button>
                     <div class="link-actions">
                       <button
                         class="link-mini-btn"

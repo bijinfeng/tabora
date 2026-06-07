@@ -5,6 +5,7 @@ import type {
   TaboraDatabase,
   WorkspaceRepository,
 } from "@tabora/storage"
+
 import {
   createWorkspaceExport,
   parseExport,
@@ -46,8 +47,8 @@ export async function importWorkspaceData(options: {
   if (existing) {
     result.workspace.id = `${result.workspace.id}-import-${Date.now()}`
     result.workspace.name = `${result.workspace.name} (导入)`
-    for (const inst of result.instances) {
-      inst.workspaceId = result.workspace.id
+    for (const instance of result.instances) {
+      instance.workspaceId = result.workspace.id
     }
     for (const row of result.pluginDataRows) {
       row.workspaceId = result.workspace.id
@@ -55,8 +56,8 @@ export async function importWorkspaceData(options: {
   }
 
   await options.workspaceRepo.save(result.workspace)
-  for (const inst of result.instances) {
-    await options.instanceRepo.save(inst)
+  for (const instance of result.instances) {
+    await options.instanceRepo.save(instance)
   }
   for (const row of result.pluginDataRows) {
     await options.database.pluginData.put(row)

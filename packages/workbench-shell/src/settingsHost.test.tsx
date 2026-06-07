@@ -189,7 +189,10 @@ describe("settings host composition", () => {
           themes: [],
           backgrounds: [],
           searchProviders: [],
-          searchSettings: { defaultProviderId: "official.search.google" },
+          searchSettings: {
+            defaultProviderId: "official.search.google",
+            enabledProviderIds: ["official.search.google"],
+          },
           plugins: [],
         }),
       }),
@@ -253,7 +256,10 @@ describe("settings host composition", () => {
           themes: [],
           backgrounds: [],
           searchProviders: [],
-          searchSettings: { defaultProviderId: "official.search.google" },
+          searchSettings: {
+            defaultProviderId: "official.search.google",
+            enabledProviderIds: ["official.search.google"],
+          },
           plugins: [],
         }),
       }),

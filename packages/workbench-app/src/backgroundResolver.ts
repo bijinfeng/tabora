@@ -7,7 +7,7 @@ export function resolveBackgroundValue(
   providerId: string,
   providers: BackgroundProviderContribution[],
 ): ResolvedBackgroundValue | null {
-  const provider = providers.find((p) => p.id === providerId)
+  const provider = providers.find((item) => item.id === providerId)
   if (!provider) return null
 
   if (provider.source) return provider.source

@@ -459,9 +459,15 @@ importers:
 
   packages/workbench-app:
     dependencies:
+      '@tabora/brand':
+        specifier: workspace:*
+        version: link:../brand
       '@tabora/host-adapters':
         specifier: workspace:*
         version: link:../host-adapters
+      '@tabora/official-plugins':
+        specifier: workspace:*
+        version: link:../official-plugins
       '@tabora/orchestrator':
         specifier: workspace:*
         version: link:../orchestrator
@@ -477,6 +483,12 @@ importers:
       '@tabora/theme':
         specifier: workspace:*
         version: link:../theme
+      '@tabora/workbench-shell':
+        specifier: workspace:*
+        version: link:../workbench-shell
+      lucide-solid:
+        specifier: catalog:ui
+        version: 1.16.0(solid-js@1.9.13)
       solid-js:
         specifier: catalog:ui
         version: 1.9.13

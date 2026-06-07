@@ -75,8 +75,9 @@ describe("workbench dashboard layout", () => {
       ...dragOrder.before.slice(2),
     ])
 
-    await page.viewport(390, 844)
-    await vi.waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
+    await expectNoHorizontalOverflow({ width: 1280, height: 900 })
+    await expectNoHorizontalOverflow({ width: 768, height: 900 })
+    await expectNoHorizontalOverflow({ width: 390, height: 844 })
   }, 45_000)
 })
 
@@ -220,6 +221,14 @@ function findButtonByText(selector: string, text: string): HTMLElement | null {
 
 function hasHorizontalOverflow(): boolean {
   return document.documentElement.scrollWidth > document.documentElement.clientWidth
+}
+
+async function expectNoHorizontalOverflow(viewport: {
+  width: number
+  height: number
+}): Promise<void> {
+  await page.viewport(viewport.width, viewport.height)
+  await vi.waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
 }
 
 async function waitFor(assertion: () => void | Promise<void>): Promise<void> {

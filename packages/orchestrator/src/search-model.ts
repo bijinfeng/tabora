@@ -43,7 +43,7 @@ export function resolveDefaultProvider(
   providers: SearchProviderContribution[],
   defaultProviderId: string,
 ): SearchProviderContribution | undefined {
-  return providers.find((provider) => provider.id === defaultProviderId) ?? providers[0]
+  return providers.find((provider) => provider.id === defaultProviderId)
 }
 
 export function routeSearchQuery(

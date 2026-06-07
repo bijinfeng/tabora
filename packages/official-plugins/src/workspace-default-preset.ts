@@ -7,7 +7,7 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   plugins: [
     "official.theme.default-pack",
     "official.background.basic",
-    "official.layout.dashboard",
+    "official.layout.workbench-dashboard",
     "official.search.command-bar",
     "official.search-providers.basic",
     "official.widgets.today-focus",
@@ -23,6 +23,13 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   backgroundProviderId: "background.gradient-green",
   search: {
     defaultProviderId: "official.search.google",
+    enabledProviderIds: [
+      "official.search.google",
+      "official.search.bing",
+      "official.search.baidu",
+      "official.search.duckduckgo",
+      "official.search.github",
+    ],
   },
   regions: [
     { regionId: "topbar", accepts: ["search"] },

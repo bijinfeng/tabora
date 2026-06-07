@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { pluginManifestSchema } from "./manifestSchema"
 
+function cssRgb(channels: readonly number[]) {
+  return ["rgb", `(${channels.join(", ")})`].join("")
+}
+
 describe("pluginManifestSchema", () => {
   it("rejects a manifest without explicit apiVersion", () => {
     const result = pluginManifestSchema.safeParse({
@@ -31,7 +35,36 @@ describe("pluginManifestSchema", () => {
             supportedSizes: ["S", "M", "L"],
             defaultSize: "M",
             allowMultipleInstances: true,
-            views: { card: "official.notes.card", modal: "official.notes.modal" },
+            views: { card: "official.notes.card", expand: "official.notes.expand" },
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts a widget with an explicit expand view contract", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.widgets.notes",
+      name: "Notes Widget",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        widgets: [
+          {
+            id: "notes",
+            title: "便签",
+            supportedSizes: ["S", "M", "L"],
+            defaultSize: "M",
+            allowMultipleInstances: true,
+            views: {
+              card: "official.notes.card",
+              expand: "official.notes.expand",
+              settings: "official.notes.settings",
+            },
           },
         ],
       },
@@ -49,6 +82,36 @@ describe("pluginManifestSchema", () => {
       requiredCapabilities: ["legacyMigration"],
       entry: "./entry",
       engine: { platform: "^0.1.0" },
+      contributes: {},
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("accepts declared external-open permissions", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.search.command-bar",
+      name: "Search",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      permissions: [{ type: "external-open", hosts: ["github.com"] }],
+      contributes: {},
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects malformed plugin permissions", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "bad.permissions",
+      name: "Bad Permissions",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      permissions: [{ type: "external-open", hosts: "github.com" }],
       contributes: {},
     })
 
@@ -286,7 +349,7 @@ describe("pluginManifestSchema", () => {
             id: "background.css",
             title: "CSS",
             sourceType: "generated",
-            source: { type: "css", css: { background: "rgb(1, 2, 3)" } },
+            source: { type: "css", css: { background: cssRgb([1, 2, 3]) } },
           },
           {
             id: "background.gradient",

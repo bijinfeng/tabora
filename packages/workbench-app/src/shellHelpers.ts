@@ -111,19 +111,15 @@ export function createCommandExecutor(options: CreateCommandExecutorOptions): Co
   }
 }
 
-export function resolveEnabledProviderIds(
-  settings: WorkbenchSearchSettings,
-  providers: SearchProviderContribution[],
-): string[] {
-  if (settings.enabledProviderIds) return settings.enabledProviderIds
-  return providers.map((provider) => provider.id)
+export function resolveEnabledProviderIds(settings: WorkbenchSearchSettings): string[] {
+  return settings.enabledProviderIds
 }
 
 export function resolveEnabledSearchProviders(
   settings: WorkbenchSearchSettings,
   providers: SearchProviderContribution[],
 ): SearchProviderContribution[] {
-  const ids = new Set(resolveEnabledProviderIds(settings, providers))
+  const ids = new Set(resolveEnabledProviderIds(settings))
   return providers.filter((provider) => ids.has(provider.id))
 }
 
@@ -131,8 +127,7 @@ export function resolveDefaultProviderForSearch(
   settings: WorkbenchSearchSettings,
   providers: SearchProviderContribution[],
 ): string {
-  if (settings.defaultProviderId) return settings.defaultProviderId
-  const enabled = resolveEnabledSearchProviders(settings, providers)
-  if (enabled[0]) return enabled[0].id
-  return ""
+  return providers.some((provider) => provider.id === settings.defaultProviderId)
+    ? settings.defaultProviderId
+    : ""
 }

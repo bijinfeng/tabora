@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Regression summary
+        run: pnpm regression:summary
+
       - name: Build Chrome zip
         run: pnpm --filter @tabora/extension zip
 

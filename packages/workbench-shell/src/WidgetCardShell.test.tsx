@@ -21,9 +21,10 @@ function makeInstance(): PluginInstance {
 
 function makeCallbacks(): WidgetHostCallbacks {
   return {
-    onDragStart: vi.fn(),
-    onDragOver: vi.fn(),
-    onDrop: vi.fn(),
+    onPointerDown: vi.fn(),
+    onPointerMove: vi.fn(),
+    onPointerUp: vi.fn(),
+    onPointerCancel: vi.fn(),
     onDblClick: vi.fn(),
     onContextMenu: vi.fn(),
     onResize: vi.fn(),
@@ -61,10 +62,13 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  it("按当前尺寸设置网格列跨度", () => {
+  it("通过 CSS 变量暴露当前尺寸跨度，而不是写死内联网格属性", () => {
     const { host, dispose } = mount(makeCallbacks())
     const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
-    expect(card.style.gridColumn).toBe("span 2")
+    expect(card.style.getPropertyValue("--widget-col-span")).toBe("2")
+    expect(card.style.getPropertyValue("--widget-row-span")).toBe("1")
+    expect(card.style.gridColumn).toBe("")
+    expect(card.style.gridRow).toBe("")
     dispose()
   })
 
@@ -98,6 +102,19 @@ describe("WidgetCardShell", () => {
     const expandBtn = host.querySelector("button[aria-label^='展开']") as HTMLButtonElement
     expandBtn.click()
     expect(cb.onExpand).toHaveBeenCalled()
+    dispose()
+  })
+
+  it("在标题栏按下指针时触发 onPointerDown，但操作按钮不会触发拖拽启动", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const header = host.querySelector(".card-header") as HTMLElement
+    const expandBtn = host.querySelector("button[aria-label^='展开']") as HTMLButtonElement
+
+    header.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
+    expandBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
+
+    expect(cb.onPointerDown).toHaveBeenCalledTimes(1)
     dispose()
   })
 })

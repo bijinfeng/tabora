@@ -101,9 +101,7 @@ export function applyWorkspacePreset(
       config: {
         search: {
           defaultProviderId: options.preset.search.defaultProviderId,
-          ...(options.preset.search.enabledProviderIds
-            ? { enabledProviderIds: [...options.preset.search.enabledProviderIds] }
-            : {}),
+          enabledProviderIds: [...options.preset.search.enabledProviderIds],
         },
       },
       regions,

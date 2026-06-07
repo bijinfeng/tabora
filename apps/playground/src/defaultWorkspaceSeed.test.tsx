@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   createDefaultWorkspaceFromPreset,
   OFFICIAL_DEFAULT_WORKSPACE_PRESET,
-} from "./defaultWorkspaceSeed"
+} from "@tabora/workbench-app"
 
 describe("createDefaultWorkspaceFromPreset", () => {
   it("creates workspace and instances from the official preset", () => {

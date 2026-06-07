@@ -1,10 +1,21 @@
 import type { PluginInstance, WorkbenchSearchSettings, Workspace } from "@tabora/plugin-api"
 import type { HostAdapter } from "@tabora/host-adapters"
 
+import { OFFICIAL_DEFAULT_WORKSPACE_PRESET } from "./defaultWorkspaceSeed"
+
 export * from "./bootstrap"
+export * from "./backgroundResolver"
+export * from "./defaultWorkspaceSeed"
 export * from "./layoutFallback"
 export * from "./responsive"
+export * from "./WorkbenchShellApp"
+export * from "./shellController"
 export * from "./shellHelpers"
+export * from "./themeResolver"
+export * from "./workbenchGrid"
+export * from "./workspacePortability"
+export * from "./workspaceSession"
+export * from "./workspaceTransfer"
 
 export type WorkbenchCompositionState = {
   workspace: Workspace | null
@@ -23,7 +34,8 @@ export type CreateWorkbenchCompositionOptions = {
 }
 
 const DEFAULT_SEARCH_SETTINGS: WorkbenchSearchSettings = {
-  defaultProviderId: "",
+  defaultProviderId: OFFICIAL_DEFAULT_WORKSPACE_PRESET.search.defaultProviderId,
+  enabledProviderIds: [...OFFICIAL_DEFAULT_WORKSPACE_PRESET.search.enabledProviderIds],
 }
 
 export function createWorkbenchComposition(
