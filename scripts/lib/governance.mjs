@@ -123,12 +123,12 @@ const ISSUE_MARKER_PATTERN = /\b(?:TODO|FIXME|HACK)\b|console\.(?:log|debug|info
 const SEARCH_FALLBACK_PATTERNS = [
   {
     pattern:
-      /defaultProviderId\s*(?:\|\||\?\?)\s*providers(?:\(\))?\s*\[\s*0\s*\]\??\.(?:id|value)/g,
+      /defaultProviderId\s*(?:\|\||\?\?)\s*(?:[A-Za-z_$][\w$.]*\.)?providers(?:\(\))?(?:\?\.)?\[\s*0\s*\]\??\.(?:id|value)/g,
     reason: "search settings must not fall back from defaultProviderId to the first provider",
   },
   {
     pattern:
-      /defaultProviderId\s*(?:\|\||\?\?)\s*enabledProviders(?:\(\))?\s*\[\s*0\s*\](?:\??\.(?:id|value))?/g,
+      /defaultProviderId\s*(?:\|\||\?\?)\s*(?:[A-Za-z_$][\w$.]*\.)?enabledProviders(?:\(\))?(?:\?\.)?\[\s*0\s*\](?:\??\.(?:id|value))?/g,
     reason:
       "search settings must not fall back from defaultProviderId to the first enabled provider",
   },

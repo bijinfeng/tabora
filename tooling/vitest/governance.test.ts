@@ -273,6 +273,21 @@ describe("governance rules", () => {
         reason: "search settings must not backfill enabledProviderIds from all providers",
       },
     ])
+
+    expect(
+      findForbiddenSearchFallbacks({
+        filePath: "packages/workbench-shell/src/CommandPalette.tsx",
+        source: `
+          const providerId = props.defaultProviderId ?? props.providers?.[0]?.id ?? ""
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/workbench-shell/src/CommandPalette.tsx",
+        match: "defaultProviderId ?? props.providers?.[0]?.id",
+        reason: "search settings must not fall back from defaultProviderId to the first provider",
+      },
+    ])
   })
 
   it("detects widget region fallback to mainGrid", () => {

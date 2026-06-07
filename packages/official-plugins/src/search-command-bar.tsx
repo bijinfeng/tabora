@@ -1,41 +1,15 @@
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js"
-import type {
-  SearchHistoryEntry,
-  SearchProviderContribution,
-  SearchViewProps,
-} from "@tabora/plugin-api"
+import type { SearchProviderContribution, SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { InlineError, Kbd } from "@tabora/ui"
-
 import {
   buildSearchUrl,
-  matchProvidersByToken,
+  createCommandPaletteItems,
+  providerToken,
   resolveDefaultProvider,
   routeSearchQuery,
-} from "./search-model"
-
-type Suggestion = {
-  id: string
-  icon: string
-  name: string
-  desc: string
-  group: string
-  hint: string | undefined
-  action: () => void
-  clearAfterAction: boolean | undefined
-}
-
-function includesText(value: string, query: string): boolean {
-  return value.toLowerCase().includes(query.toLowerCase())
-}
-
-function providerToken(provider: SearchProviderContribution): string {
-  return provider.shortcut || provider.id.split(".").at(-1) || provider.title.toLowerCase()
-}
-
-function historyLabel(entry: SearchHistoryEntry, providers: SearchProviderContribution[]): string {
-  return providers.find((provider) => provider.id === entry.providerId)?.title ?? entry.providerId
-}
+  type CommandPaletteItem,
+} from "@tabora/orchestrator"
 
 export function safelyHandleProviderChange(
   onChange: ((id: string) => void | Promise<void>) | undefined,
@@ -101,154 +75,25 @@ export function SearchCommandBar(props: SearchViewProps) {
     void props.onSaveHistory?.({ query: trimmed, providerId: provider.id })
   }
 
-  function createHistorySuggestion(entry: SearchHistoryEntry): Suggestion {
-    return {
-      id: `history-${entry.providerId}-${entry.timestamp}`,
-      icon: "🕘",
-      name: entry.query,
-      desc: `最近搜索 · ${historyLabel(entry, providers())}`,
-      group: "最近搜索",
-      hint: providers().find((provider) => provider.id === entry.providerId)?.shortcut,
-      action: () => {
-        const provider = providers().find((item) => item.id === entry.providerId)
-        if (provider) {
-          doSearch(entry.query, provider)
-        }
+  const suggestions = createMemo((): CommandPaletteItem[] =>
+    createCommandPaletteItems({
+      surface: "inline",
+      query: query(),
+      commands: commands(),
+      widgets: widgets(),
+      providers: providers(),
+      defaultProviderId: providerId(),
+      history: props.searchHistory,
+      onProviderTokenSelect: (token) => {
+        setQuery(`@${token} `)
+        setSuggestIdx(-1)
       },
-      clearAfterAction: true,
-    }
-  }
-
-  const suggestions = createMemo((): Suggestion[] => {
-    const trimmed = query().trim()
-    const history = (props.searchHistory ?? []).slice().reverse()
-
-    if (!trimmed) {
-      return [
-        ...commands()
-          .slice(0, 4)
-          .map((command) => ({
-            ...command,
-            group: "常用命令",
-            hint: command.shortcut,
-            clearAfterAction: true,
-          })),
-        ...history.slice(0, 3).map(createHistorySuggestion),
-        ...providers()
-          .slice(0, 4)
-          .map((provider) => ({
-            id: `provider-${provider.id}`,
-            icon: "＠",
-            name: `@${providerToken(provider)}`,
-            desc: `搜索源 · ${provider.title}`,
-            group: "搜索源",
-            hint: provider.shortcut,
-            action: () => {
-              setQuery(`@${providerToken(provider)} `)
-              setSuggestIdx(-1)
-            },
-            clearAfterAction: false,
-          })),
-        ...widgets()
-          .slice(0, 4)
-          .map((widget) => ({
-            id: `widget-${widget.instanceId}`,
-            icon: widget.icon,
-            name: widget.name,
-            desc: widget.desc,
-            action: widget.action,
-            group: "核心卡片",
-            hint: undefined,
-            clearAfterAction: true,
-          })),
-      ]
-    }
-
-    const nextSuggestions: Suggestion[] = []
-    const currentRoute = route()
-    if (currentRoute?.type === "provider-pending") {
-      return matchProvidersByToken(providers(), currentRoute.token).map((provider) => ({
-        id: `provider-pending-${provider.id}`,
-        icon: "＠",
-        name: `@${providerToken(provider)}`,
-        desc: `搜索源 · ${provider.title}`,
-        group: "搜索源",
-        hint: provider.shortcut,
-        action: () => {
-          setQuery(`@${providerToken(provider)} `)
-          setSuggestIdx(-1)
-        },
-        clearAfterAction: false,
-      }))
-    }
-
-    if (currentRoute?.type === "provider") {
-      return [
-        {
-          id: `search-${currentRoute.provider.id}`,
-          icon: "🔍",
-          name: `在 ${currentRoute.provider.title} 中搜索 "${currentRoute.query}"`,
-          desc: "临时搜索源",
-          group: "搜索",
-          hint: currentRoute.provider.shortcut,
-          action: () => doSearch(currentRoute.query, currentRoute.provider),
-          clearAfterAction: true,
-        },
-      ]
-    }
-
-    const commandMatches = commands().filter(
-      (command) => includesText(command.name, trimmed) || includesText(command.desc, trimmed),
-    )
-    const widgetMatches = widgets().filter(
-      (widget) => includesText(widget.name, trimmed) || includesText(widget.desc, trimmed),
-    )
-    const historyMatches = history.filter(
-      (entry) =>
-        includesText(entry.query, trimmed) ||
-        includesText(historyLabel(entry, providers()), trimmed),
-    )
-
-    nextSuggestions.push(
-      ...commandMatches.map((command) => ({
-        ...command,
-        group: "命令",
-        hint: command.shortcut,
-        clearAfterAction: true,
-      })),
-    )
-    nextSuggestions.push(
-      ...widgetMatches.map((widget) => ({
-        id: `widget-${widget.instanceId}`,
-        icon: widget.icon,
-        name: widget.name,
-        desc: widget.desc,
-        action: widget.action,
-        group: "卡片",
-        hint: undefined,
-        clearAfterAction: true,
-      })),
-    )
-    nextSuggestions.push(...historyMatches.slice(0, 3).map(createHistorySuggestion))
-
-    if (currentRoute?.type === "web") {
-      nextSuggestions.push({
-        id: `web-${currentRoute.provider.id}-${currentRoute.query}`,
-        icon: "🔍",
-        name: `在 ${currentRoute.provider.title} 中搜索 "${currentRoute.query}"`,
-        desc: "网页搜索",
-        group: "搜索",
-        hint: currentRoute.provider.shortcut,
-        action: () => doSearch(currentRoute.query, currentRoute.provider),
-        clearAfterAction: true,
-      })
-    }
-
-    return nextSuggestions
-  })
+      onWebSearch: (provider, targetQuery) => doSearch(targetQuery, provider),
+    }),
+  )
 
   const groupedSuggestions = createMemo(() => {
-    const groups: Record<string, Suggestion[]> = {}
+    const groups: Record<string, CommandPaletteItem[]> = {}
     for (const suggestion of suggestions()) {
       const bucket = groups[suggestion.group] ?? (groups[suggestion.group] = [])
       bucket.push(suggestion)
@@ -292,7 +137,7 @@ export function SearchCommandBar(props: SearchViewProps) {
       const activeSuggestion = suggestions()[suggestIdx()]
       if (activeSuggestion) {
         activeSuggestion.action()
-        if (activeSuggestion.clearAfterAction !== false) {
+        if (activeSuggestion.closeAfterAction !== false) {
           setQuery("")
           setSuggestIdx(-1)
         }
@@ -419,7 +264,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                         onMouseDown={(event) => {
                           event.preventDefault()
                           item.action()
-                          if (item.clearAfterAction !== false) {
+                          if (item.closeAfterAction !== false) {
                             setQuery("")
                             setSuggestIdx(-1)
                           }

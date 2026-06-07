@@ -54,6 +54,26 @@ describe("createCommandPaletteItems", () => {
     ])
   })
 
+  it("includes widgets for inline search surface when query is empty", () => {
+    const items = createCommandPaletteItems({
+      query: "",
+      commands,
+      providers,
+      history,
+      widgets,
+      surface: "inline",
+    })
+
+    expect(items.map((item) => [item.group, item.name])).toEqual([
+      ["常用命令", "切换主题"],
+      ["常用命令", "打开设置"],
+      ["最近搜索", "solidjs"],
+      ["搜索源", "@g"],
+      ["搜索源", "@b"],
+      ["核心卡片", "待办"],
+    ])
+  })
+
   it("returns provider suggestions while typing an @ token", () => {
     const items = createCommandPaletteItems({ query: "@b", commands, providers })
 
@@ -85,6 +105,23 @@ describe("createCommandPaletteItems", () => {
     expect(items.map((item) => [item.group, item.name])).toEqual([
       ["卡片", "待办"],
       ["搜索", '在 Bing 中搜索 "待办"'],
+    ])
+  })
+
+  it("includes history matches for inline search surface when query is not empty", () => {
+    const items = createCommandPaletteItems({
+      query: "solid",
+      commands,
+      widgets,
+      providers,
+      history,
+      defaultProviderId: "official.search.bing",
+      surface: "inline",
+    })
+
+    expect(items.map((item) => [item.group, item.name])).toEqual([
+      ["最近搜索", "solidjs"],
+      ["搜索", '在 Bing 中搜索 "solid"'],
     ])
   })
 

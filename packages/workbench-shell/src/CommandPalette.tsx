@@ -88,7 +88,7 @@ export function CommandPalette(props: CommandPaletteProps) {
         const route = routeSearchQuery(
           query(),
           props.providers ?? [],
-          props.defaultProviderId ?? props.providers?.[0]?.id ?? "",
+          props.defaultProviderId ?? "",
         )
         if (route?.type === "provider") {
           runWebSearch(route.provider, route.query)

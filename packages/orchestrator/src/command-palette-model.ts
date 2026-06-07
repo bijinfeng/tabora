@@ -18,6 +18,7 @@ export type CommandPaletteItem = {
 }
 
 export type CommandPaletteModelOptions = {
+  surface?: "palette" | "inline" | undefined
   query: string
   commands: SearchCommandEntry[]
   widgets?: SearchWidgetEntry[] | undefined
@@ -32,6 +33,10 @@ function includesText(value: string, query: string): boolean {
   return value.toLowerCase().includes(query.toLowerCase())
 }
 
+function historyLabel(entry: SearchHistoryEntry, providers: SearchProviderContribution[]): string {
+  return providers.find((provider) => provider.id === entry.providerId)?.title ?? entry.providerId
+}
+
 export function providerToken(provider: SearchProviderContribution): string {
   return provider.shortcut || provider.id.split(".").at(-1) || provider.title.toLowerCase()
 }
@@ -39,6 +44,7 @@ export function providerToken(provider: SearchProviderContribution): string {
 export function createCommandPaletteItems(
   options: CommandPaletteModelOptions,
 ): CommandPaletteItem[] {
+  const surface = options.surface ?? "palette"
   const trimmed = options.query.trim()
   const history = (options.history ?? []).slice().reverse()
   const providers = options.providers ?? []
@@ -61,7 +67,7 @@ export function createCommandPaletteItems(
         hint: command.shortcut,
         closeAfterAction: true,
       })),
-      ...history.slice(0, 4).map((entry) => {
+      ...history.slice(0, surface === "inline" ? 3 : 4).map((entry) => {
         const provider = providers.find((item) => item.id === entry.providerId)
         return {
           id: `history-${entry.providerId}-${entry.timestamp}`,
@@ -86,6 +92,18 @@ export function createCommandPaletteItems(
         action: () => selectProvider(provider),
         closeAfterAction: false,
       })),
+      ...(surface === "inline"
+        ? widgets.slice(0, 4).map((widget) => ({
+            id: `widget-${widget.instanceId}`,
+            icon: widget.icon,
+            name: widget.name,
+            desc: widget.desc,
+            action: widget.action,
+            group: "核心卡片",
+            hint: undefined,
+            closeAfterAction: true,
+          }))
+        : []),
     ]
   }
 
@@ -145,6 +163,32 @@ export function createCommandPaletteItems(
         closeAfterAction: true,
       })),
   )
+  if (surface === "inline") {
+    results.push(
+      ...history
+        .filter(
+          (entry) =>
+            includesText(entry.query, trimmed) ||
+            includesText(historyLabel(entry, providers), trimmed),
+        )
+        .slice(0, 3)
+        .map((entry) => {
+          const provider = providers.find((item) => item.id === entry.providerId)
+          return {
+            id: `history-${entry.providerId}-${entry.timestamp}`,
+            icon: "🕘",
+            name: entry.query,
+            desc: `最近搜索 · ${historyLabel(entry, providers)}`,
+            group: "最近搜索",
+            hint: provider?.shortcut,
+            action: () => {
+              if (provider) runWebSearch(provider, entry.query)
+            },
+            closeAfterAction: true,
+          }
+        }),
+    )
+  }
 
   if (route?.type === "web") {
     results.push({

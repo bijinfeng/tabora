@@ -34,8 +34,6 @@ export {
   officialWorkspacePresetPack,
 }
 
-export * from "./search-model"
-
 export const officialPlugins = [
   officialWorkspacePresetPack,
   officialThemeDefaultPack,
