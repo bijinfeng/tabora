@@ -1,0 +1,104 @@
+[data-tabora-plugin-id="official.settings.workspace"] .settings-panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-provider-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .provider-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-current,
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-create {
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-active-name {
+  color: rgb(var(--color-text));
+  font-size: 13px;
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-title {
+  color: rgb(var(--color-muted));
+  font-size: 12px;
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface-soft));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-name {
+  min-width: 0;
+  color: rgb(var(--color-muted));
+  font-size: 13px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-name.active {
+  color: rgb(var(--color-text));
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-actions,
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-actions,
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-create-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-create-input {
+  min-width: 0;
+  flex: 1;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-create-input:focus {
+  border-color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.08);
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-import-success {
+  color: rgb(var(--color-success));
+  font-size: 12px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-import-warnings {
+  margin: 0;
+  padding-left: 18px;
+  color: rgb(var(--color-muted));
+  font-size: 12px;
+}

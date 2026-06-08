@@ -29,6 +29,33 @@ describe("createBuiltinPluginLoader", () => {
     expect(result.rejected).toEqual([])
   })
 
+  it("resolves builtin plugin stylesheet asset urls", async () => {
+    const styledPlugin: BuiltinPlugin = {
+      ...plugin,
+      manifest: {
+        ...plugin.manifest,
+        styles: [{ href: "./styles.css", scope: "plugin", order: 20 }],
+      },
+      styleAssetUrls: {
+        "./styles.css": "/assets/test-plugin.css",
+      },
+    }
+    const loader = createBuiltinPluginLoader([styledPlugin])
+
+    const result = await loader.load()
+
+    expect(result.loaded[0]?.styles).toEqual([
+      {
+        pluginId: "test.plugin",
+        href: "/assets/test-plugin.css",
+        sourceHref: "./styles.css",
+        scope: "plugin",
+        order: 20,
+        source: "builtin",
+      },
+    ])
+  })
+
   it("rejects invalid manifests", async () => {
     const loader = createBuiltinPluginLoader([
       {
@@ -113,16 +140,33 @@ describe("createBuiltinPluginLoader", () => {
         name: "@local/test-plugin",
         version: "1.0.0",
       },
-      tabora: plugin.manifest,
+      tabora: {
+        ...plugin.manifest,
+        styles: [{ href: "./styles.css" }],
+      },
       entry: "./dist/index.js",
+      baseUrl: "https://plugins.local/@local/test-plugin/",
     })
 
     expect(parsed).toEqual({
       packageName: "@local/test-plugin",
       packageVersion: "1.0.0",
-      manifest: plugin.manifest,
+      manifest: {
+        ...plugin.manifest,
+        styles: [{ href: "./styles.css" }],
+      },
       entry: "./dist/index.js",
       source: "local-trusted",
+      styles: [
+        {
+          pluginId: "test.plugin",
+          href: "https://plugins.local/@local/test-plugin/styles.css",
+          sourceHref: "./styles.css",
+          scope: "plugin",
+          order: 0,
+          source: "local-trusted",
+        },
+      ],
     })
   })
 })

@@ -1,0 +1,160 @@
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-links {
+  height: 100%;
+  min-height: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-item {
+  position: relative;
+  height: 52px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface-soft));
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-item:hover {
+  background: rgb(var(--color-surface-hover));
+  border-color: rgb(var(--color-line-strong));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-anchor {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+  font-size: 10px;
+  font-weight: 700;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-label {
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgb(var(--color-muted));
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-actions {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: none;
+  gap: 2px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-item:hover .link-actions,
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-item:focus-within .link-actions {
+  display: flex;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 4px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn:hover {
+  background: rgb(var(--color-accent) / 0.08);
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn svg {
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-delete:hover {
+  background: rgb(var(--color-danger) / 0.08);
+  color: rgb(var(--color-danger));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-error {
+  margin-top: 6px;
+  color: rgb(var(--color-danger));
+  font-size: 11px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-add-btn {
+  margin-top: 8px;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-add-btn:hover {
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-edit-form,
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-add-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 4px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-edit-fields,
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-add-form {
+  min-width: 0;
+  flex: 1;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-edit-fields input,
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-add-form input {
+  width: 100%;
+  height: 22px;
+  margin-bottom: 3px;
+  padding: 0 6px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 5px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 11px;
+  outline: none;
+}

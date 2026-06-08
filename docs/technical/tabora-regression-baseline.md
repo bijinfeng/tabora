@@ -432,7 +432,7 @@ pnpm check:architecture
 - 新依赖必须说明用途、所属层级和替代方案；优先 workspace 现有能力。
 - app / shell 依赖可以比核心包更宽；核心包依赖必须保守。
 - 插件不得依赖宿主容器、storage 或 app 源码；`@tabora/ui` 不得依赖 kernel/storage/official plugins/apps。
-- package `exports` 和 `publishConfig.exports` 保持一致；未来可发布包不能只靠源码路径隐式消费。
+- package `exports` 和 `publishConfig.exports` 保持一致；凡是导出 `./*.css` subpath 的包，也必须显式声明对应 `publishConfig.exports`，未来可发布包不能只靠源码路径隐式消费。
 - catalog 依赖优先沿用 workspace catalog，不随意散落具体版本。
 
 建议检查：

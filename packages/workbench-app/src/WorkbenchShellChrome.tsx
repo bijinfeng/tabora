@@ -224,7 +224,9 @@ export function WorkbenchExpandOverlay(props: {
 
                 return (
                   <PluginViewBoundary instanceId={expand().instanceId} title={expand().title}>
-                    {View(expand().props)}
+                    <div data-tabora-plugin-id={expand().props.pluginId}>
+                      {View(expand().props)}
+                    </div>
                   </PluginViewBoundary>
                 )
               })()}
@@ -265,7 +267,9 @@ export function WorkbenchPluginModal(props: {
                   instanceId={resolvePluginBoundaryId(props.modalProps, viewId)}
                   title={viewId}
                 >
-                  {View(props.modalProps)}
+                  <div data-tabora-plugin-id={resolvePluginScopeId(props.modalProps)}>
+                    {View(props.modalProps)}
+                  </div>
                 </PluginViewBoundary>
               )
             })()}
@@ -300,7 +304,9 @@ export function WorkbenchFullscreenOverlay(props: {
                 instanceId={resolvePluginBoundaryId(props.fullscreenProps, viewId)}
                 title={viewId}
               >
-                {View(props.fullscreenProps)}
+                <div data-tabora-plugin-id={resolvePluginScopeId(props.fullscreenProps)}>
+                  {View(props.fullscreenProps)}
+                </div>
               </PluginViewBoundary>
             )
           })()}
@@ -312,6 +318,10 @@ export function WorkbenchFullscreenOverlay(props: {
 
 function resolvePluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
   return typeof props.instanceId === "string" ? props.instanceId : fallback
+}
+
+function resolvePluginScopeId(props: Record<string, unknown>): string | undefined {
+  return typeof props.pluginId === "string" ? props.pluginId : undefined
 }
 
 export function WorkbenchContextMenuOverlay(props: {

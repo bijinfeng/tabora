@@ -248,41 +248,53 @@ export function findCrossAppSourceImports(options) {
 }
 
 export function findPackageExportViolations(options) {
-  const buildScript = options.manifest.scripts?.build
-
-  if (typeof buildScript !== "string" || !buildScript.includes("vp pack")) {
-    return []
-  }
-
   const exportsMap = normalizeExportMap(options.manifest.exports)
   const publishExportsMap = normalizeExportMap(options.manifest.publishConfig?.exports)
+  const findings = []
+  const buildScript = options.manifest.scripts?.build
 
-  return extractVpPackEntrypoints(buildScript).flatMap((entryPath) => {
-    const expected = buildExpectedExports(entryPath)
-    if (!expected) {
-      return []
-    }
+  if (typeof buildScript === "string" && buildScript.includes("vp pack")) {
+    findings.push(
+      ...extractVpPackEntrypoints(buildScript).flatMap((entryPath) => {
+        const expected = buildExpectedExports(entryPath)
+        if (!expected) {
+          return []
+        }
 
-    const findings = []
+        const entryFindings = []
 
-    if (exportsMap[expected.exportKey] !== expected.sourceTarget) {
+        if (exportsMap[expected.exportKey] !== expected.sourceTarget) {
+          entryFindings.push({
+            filePath: options.filePath,
+            match: `exports["${expected.exportKey}"]`,
+            reason: `missing or incorrect export for build entry "${entryPath}"; expected "${expected.sourceTarget}"`,
+          })
+        }
+
+        if (publishExportsMap[expected.exportKey] !== expected.publishTarget) {
+          entryFindings.push({
+            filePath: options.filePath,
+            match: `publishConfig.exports["${expected.exportKey}"]`,
+            reason: `missing or incorrect publish export for build entry "${entryPath}"; expected "${expected.publishTarget}"`,
+          })
+        }
+
+        return entryFindings
+      }),
+    )
+  }
+
+  for (const exportKey of Object.keys(exportsMap)) {
+    if (exportKey.endsWith(".css") && publishExportsMap[exportKey] === undefined) {
       findings.push({
         filePath: options.filePath,
-        match: `exports["${expected.exportKey}"]`,
-        reason: `missing or incorrect export for build entry "${entryPath}"; expected "${expected.sourceTarget}"`,
+        match: `publishConfig.exports["${exportKey}"]`,
+        reason: `missing publish export for stylesheet subpath "${exportKey}"; packages must declare publish CSS targets explicitly`,
       })
     }
+  }
 
-    if (publishExportsMap[expected.exportKey] !== expected.publishTarget) {
-      findings.push({
-        filePath: options.filePath,
-        match: `publishConfig.exports["${expected.exportKey}"]`,
-        reason: `missing or incorrect publish export for build entry "${entryPath}"; expected "${expected.publishTarget}"`,
-      })
-    }
-
-    return findings
-  })
+  return findings
 }
 
 export function findTypeEscapeViolations(options) {

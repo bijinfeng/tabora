@@ -1,7 +1,45 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { layoutDiyMasonry } from "@tabora/layout-diy-masonry"
 import { officialPlugins } from "@tabora/official-plugins"
+import officialPluginManagerStylesHref from "@tabora/official-plugins/plugin-manager-entry.css?url"
+import officialSettingsWorkspaceStylesHref from "@tabora/official-plugins/settings-workspace.css?url"
+import officialSearchCommandBarStylesHref from "@tabora/official-plugins/search-command-bar.css?url"
+import layoutDashboardStylesHref from "@tabora/layout-dashboard/styles.css?url"
+import layoutStreamStylesHref from "@tabora/layout-stream/styles.css?url"
+import layoutDiyMasonryStylesHref from "@tabora/layout-diy-masonry/styles.css?url"
+import notesStylesHref from "@tabora/plugin-notes/styles.css?url"
+import quickLinksStylesHref from "@tabora/plugin-quick-links/styles.css?url"
+import todayFocusStylesHref from "@tabora/plugin-today-focus/styles.css?url"
+import todoStylesHref from "@tabora/plugin-todo/styles.css?url"
+import weatherStylesHref from "@tabora/plugin-weather/styles.css?url"
 
 export { officialPlugins }
 
-export const builtinPlugins: BuiltinPlugin[] = [...officialPlugins, layoutDiyMasonry]
+const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
+  "official.layout.workbench-dashboard": { "./styles.css": layoutDashboardStylesHref },
+  "official.layout.workbench-stream": { "./styles.css": layoutStreamStylesHref },
+  "official.search.command-bar": {
+    "./search-command-bar.css": officialSearchCommandBarStylesHref,
+  },
+  "official.widgets.notes": { "./styles.css": notesStylesHref },
+  "official.widgets.quick-links": { "./styles.css": quickLinksStylesHref },
+  "official.widgets.today-focus": { "./styles.css": todayFocusStylesHref },
+  "official.widgets.todo": { "./styles.css": todoStylesHref },
+  "official.widgets.weather": { "./styles.css": weatherStylesHref },
+  "official.plugin-manager": {
+    "./plugin-manager-entry.css": officialPluginManagerStylesHref,
+  },
+  "official.settings.workspace": {
+    "./settings-workspace.css": officialSettingsWorkspaceStylesHref,
+  },
+  "community.layout.diy-masonry": { "./styles.css": layoutDiyMasonryStylesHref },
+}
+
+function attachStyleAssets(plugin: BuiltinPlugin): BuiltinPlugin {
+  const styleAssetUrls = styleAssetUrlsByPluginId[plugin.manifest.id]
+  return styleAssetUrls ? { ...plugin, styleAssetUrls } : plugin
+}
+
+export const builtinPlugins: BuiltinPlugin[] = [...officialPlugins, layoutDiyMasonry].map(
+  attachStyleAssets,
+)

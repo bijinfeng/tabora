@@ -1,53 +1,69 @@
+import path from "node:path"
 import solid from "vite-plugin-solid"
 import { defineConfig } from "vite-plus"
 import type { PackUserConfig } from "vite-plus/pack"
 
 type PackageExports = Record<string, unknown>
 
-function withStylesExport(exports: PackageExports, stylesExport: string): PackageExports {
-  const orderedExports: PackageExports = {}
-
-  if ("." in exports) {
-    orderedExports["."] = exports["."]
+type PackageManifestLike = {
+  exports?: unknown
+  publishConfig?: {
+    exports?: unknown
   }
-  orderedExports["./styles.css"] = stylesExport
+}
 
-  for (const [key, value] of Object.entries(exports)) {
-    if (key !== "." && key !== "./styles.css") {
-      orderedExports[key] = value
-    }
+function cssExportsFrom(exportsField: unknown): Record<string, string> {
+  if (!exportsField || typeof exportsField !== "object" || Array.isArray(exportsField)) {
+    return {}
   }
 
-  return orderedExports
+  return Object.fromEntries(
+    Object.entries(exportsField as PackageExports).flatMap(([key, value]) =>
+      key.endsWith(".css") && typeof value === "string" ? [[key, value]] : [],
+    ),
+  )
+}
+
+function packageCssAssets(pkg?: PackageManifestLike) {
+  const sourceCss = cssExportsFrom(pkg?.exports)
+  const publishCss = cssExportsFrom(pkg?.publishConfig?.exports)
+
+  return Object.entries(sourceCss).flatMap(([key, source]) => {
+    const publish = publishCss[key]
+    return publish ? [{ source, publish }] : []
+  })
+}
+
+function packageCssCopyEntries(pkg?: PackageManifestLike) {
+  return packageCssAssets(pkg)
+    .filter(({ source, publish }) => source.startsWith("./src/") && publish.startsWith("./dist/"))
+    .map(({ source, publish }) => {
+      const from = source.slice(2)
+      const publishPath = publish.slice(2)
+      const sourceName = path.posix.basename(from)
+      const publishName = path.posix.basename(publishPath)
+
+      return {
+        from,
+        to: path.posix.dirname(publishPath),
+        flatten: true,
+        ...(sourceName === publishName ? {} : { rename: publishName }),
+      }
+    })
 }
 
 const pack = {
   dts: true,
-  copy: (options) => {
-    if (options.pkg?.name === "@tabora/ui") {
-      return [{ from: "src/tokens/theme.css", to: "dist/theme.css", flatten: true }]
-    }
-    if (options.pkg?.name === "@tabora/official-plugins") {
-      return [{ from: "src/styles.css", to: "dist", flatten: true }]
-    }
-    return []
-  },
+  copy: (options) => packageCssCopyEntries(options.pkg),
   exports: {
     devExports: true,
     customExports(exports, context) {
-      if (context.pkg.name === "@tabora/ui") {
-        return withStylesExport(
-          exports,
-          context.isPublish ? "./dist/theme.css" : "./src/tokens/theme.css",
-        )
+      return {
+        ...exports,
+        ...cssExportsFrom(
+          context.isPublish ? context.pkg?.publishConfig?.exports : context.pkg?.exports,
+        ),
       }
-      if (context.pkg.name === "@tabora/official-plugins") {
-        return withStylesExport(
-          exports,
-          context.isPublish ? "./dist/styles.css" : "./src/styles.css",
-        )
-      }
-      return exports
     },
   },
   platform: "browser",

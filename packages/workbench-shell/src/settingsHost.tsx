@@ -111,7 +111,7 @@ export function SettingsHost(props: SettingsHostProps) {
                         }
                         return (
                           <PluginViewBoundary instanceId={panel.id} title={panel.title}>
-                            {content}
+                            <div data-tabora-plugin-id={panel.pluginId}>{content}</div>
                           </PluginViewBoundary>
                         )
                       }}

@@ -1,0 +1,240 @@
+[data-tabora-plugin-id="official.search.command-bar"] .search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 12px;
+  background: color-mix(in srgb, rgb(var(--color-surface)) 92%, rgb(var(--color-page)));
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  box-shadow:
+    0 2px 8px rgb(var(--color-text) / 0.035),
+    inset 0 1px 0 rgb(var(--color-inverse) / 0.45);
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-bar:hover {
+  background: color-mix(in srgb, rgb(var(--color-surface)) 96%, rgb(var(--color-page)));
+  border-color: rgb(var(--color-line-strong, var(--color-line)));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-bar:focus-within {
+  border-color: color-mix(in srgb, rgb(var(--color-accent)) 34%, rgb(var(--color-line)));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, rgb(var(--color-accent-soft)) 72%, transparent),
+    0 12px 32px rgb(var(--color-accent) / 0.08),
+    inset 0 1px 0 rgb(var(--color-inverse) / 0.45);
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-bar input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 13.5px;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-bar input::placeholder {
+  color: rgb(var(--color-subtle, var(--color-muted)));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider {
+  position: relative;
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 7px 0 6px;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, rgb(var(--color-surface-soft)) 88%, transparent);
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 550;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider-btn:hover {
+  background: rgb(var(--color-surface-hover));
+  border-color: rgb(var(--color-line-strong));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider-caret {
+  color: rgb(var(--color-muted));
+  font-size: 10px;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  min-width: 148px;
+  padding: 4px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface));
+  box-shadow: 0 10px 26px rgb(var(--color-shadow-strong) / 0.12);
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .sp-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .sp-option:hover,
+[data-tabora-plugin-id="official.search.command-bar"] .sp-option.active {
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .sp-check {
+  width: 12px;
+  color: rgb(var(--color-accent));
+  font-size: 10px;
+  font-weight: 700;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-scope-divider {
+  width: 1px;
+  height: 18px;
+  background: rgb(var(--color-line));
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-kbd {
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgb(var(--color-subtle, var(--color-muted)));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.68;
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider-state {
+  margin-top: 5px;
+  padding: 0 2px;
+  font-size: 11px;
+  color: rgb(var(--color-muted));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-provider-state strong {
+  color: rgb(var(--color-text));
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .search-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: rgb(var(--color-surface));
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgb(var(--color-shadow) / 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .suggestions-label {
+  padding: 6px 14px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--color-muted));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 14px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  color: rgb(var(--color-text));
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .suggestion-item:hover,
+[data-tabora-plugin-id="official.search.command-bar"] .suggestion-item.active {
+  background: rgb(var(--color-accent) / 0.06);
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .suggestion-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgb(var(--color-accent) / 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .suggestion-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .suggestion-name {
+  display: block;
+}
+
+[data-tabora-plugin-id="official.search.command-bar"] .suggestion-desc {
+  font-size: 11px;
+  color: rgb(var(--color-muted));
+}

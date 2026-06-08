@@ -4,16 +4,16 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./styles.css": "./src/tokens/theme.css",
     "./package.json": "./package.json",
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/style.css",
+    "./styles.css": "./src/tokens/theme.css"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
-      "./styles.css": "./dist/theme.css",
       "./package.json": "./package.json",
-      "./style.css": "./dist/style.css"
+      "./style.css": "./dist/style.css",
+      "./styles.css": "./dist/theme.css"
     }
   },
   "scripts": {

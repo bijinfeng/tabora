@@ -1,0 +1,86 @@
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-stats {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat:hover {
+  background: rgb(var(--color-surface-hover));
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat-val {
+  color: rgb(var(--color-muted));
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat-val.accent {
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-id-mono {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-audit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-audit-title {
+  color: rgb(var(--color-muted));
+  font-size: 12px;
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-audit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid rgb(var(--color-line));
+  font-size: 12px;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-audit-name {
+  color: rgb(var(--color-text));
+  font-weight: 600;
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-audit-none {
+  color: rgb(var(--color-muted));
+}
+
+[data-tabora-plugin-id="official.plugin-manager"] .plugin-audit-risk {
+  color: rgb(var(--color-danger));
+  font-weight: 650;
+}

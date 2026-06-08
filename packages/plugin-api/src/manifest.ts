@@ -20,6 +20,14 @@ export type PluginPermission =
   | { type: "local-file"; access: "read" | "write" }
   | { type: "external-open"; hosts: string[] }
 
+export type PluginStyleScope = "plugin" | "global"
+
+export type PluginStyleContribution = {
+  href: string
+  scope?: PluginStyleScope
+  order?: number
+}
+
 export type HostPlatform = "web" | "extension" | "desktop-webview"
 
 export type HostCapabilityId =
@@ -357,6 +365,7 @@ export type PluginManifest = {
   description?: string
   icon?: string
   entry: string
+  styles?: PluginStyleContribution[]
   engine: {
     platform: string
   }

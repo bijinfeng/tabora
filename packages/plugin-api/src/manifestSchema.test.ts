@@ -103,6 +103,47 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(true)
   })
 
+  it("accepts plugin stylesheet declarations", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.widgets.productivity",
+      name: "Productivity Widgets",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      styles: [
+        {
+          href: "./styles.css",
+          scope: "plugin",
+          order: 10,
+        },
+      ],
+      contributes: {},
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects malformed plugin stylesheet declarations", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "bad.styles",
+      name: "Bad Styles",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      styles: [
+        {
+          href: "",
+          scope: "document",
+        },
+      ],
+      contributes: {},
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it("rejects malformed plugin permissions", () => {
     const result = pluginManifestSchema.safeParse({
       id: "bad.permissions",

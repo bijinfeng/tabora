@@ -80,13 +80,19 @@ export function createPluginRuntimeContext(options: {
     registry: options.registry,
     ui: {
       openModal(viewId, props) {
-        options.events.emit("ui.modal.open", { viewId, props })
+        options.events.emit("ui.modal.open", {
+          viewId,
+          props: { ...(props ?? {}), pluginId: options.pluginId },
+        })
       },
       closeModal() {
         options.events.emit("ui.modal.close", null)
       },
       openFullscreen(viewId, props) {
-        options.events.emit("ui.fullscreen.open", { viewId, props })
+        options.events.emit("ui.fullscreen.open", {
+          viewId,
+          props: { ...(props ?? {}), pluginId: options.pluginId },
+        })
       },
       closeFullscreen() {
         options.events.emit("ui.fullscreen.close", null)

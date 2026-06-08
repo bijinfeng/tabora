@@ -1,5 +1,5 @@
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createMemo, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, onCleanup, Show } from "solid-js"
 import type {
   PluginInstance,
   SettingsPanelViewProps,
@@ -17,6 +17,7 @@ import { createWorkbenchShellControllerRuntime } from "./WorkbenchShellControlle
 import { createWorkbenchShellHostRuntime } from "./WorkbenchShellHostRuntime"
 import { renderWorkbenchWidgetIcon } from "./WorkbenchShellIcons"
 import { createWorkbenchShellLayoutRuntime } from "./WorkbenchShellLayoutRuntime"
+import { activePluginStyles, createPluginStyleManager } from "./pluginStyleManager"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
@@ -102,6 +103,22 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const runtime = props.runtime
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
+  const pluginStyleManager = createPluginStyleManager(document)
+  const refreshPluginRecords = async () => {
+    setPluginRecords(await repositories.pluginRecordRepo.getAll())
+  }
+  createEffect(() => {
+    pluginStyleManager.apply(
+      activePluginStyles({
+        styles: runtime.pluginStyles,
+        plugins,
+        records: pluginRecords(),
+      }),
+    )
+  })
+  onCleanup(() => {
+    pluginStyleManager.dispose()
+  })
   const openSettings = (panelId?: string) =>
     openWorkbenchSettings(
       {
@@ -136,6 +153,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     clearContextMenu: () => setCtxMenu(null),
     clearExpandState: () => setExpandState(null),
     assignGridOrder,
+    syncPluginStyles: refreshPluginRecords,
   })
   const hostRuntime = createWorkbenchShellHostRuntime({
     runtime,

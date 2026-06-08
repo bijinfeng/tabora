@@ -15,7 +15,11 @@ const testPlugins: BuiltinPlugin[] = [
       apiVersion: "1.0.0",
       entry: "./index.ts",
       engine: { platform: "^0.1.0" },
+      styles: [{ href: "./styles.css" }],
       contributes: {},
+    },
+    styleAssetUrls: {
+      "./styles.css": "/assets/test-plugin.css",
     },
     enabled: true,
     activate() {},
@@ -38,6 +42,16 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.repositories.instanceRepo).toBeDefined()
     expect(runtime.repositories.pluginDataRepo).toBeDefined()
     expect(runtime.repositories.pluginRecordRepo).toBeDefined()
+    expect(runtime.pluginStyles).toEqual([
+      {
+        pluginId: "test.plugin",
+        href: "/assets/test-plugin.css",
+        sourceHref: "./styles.css",
+        scope: "plugin",
+        order: 0,
+        source: "builtin",
+      },
+    ])
   })
 
   it("accepts a storage adapter from the host", () => {

@@ -24,4 +24,24 @@ describe("builtinPlugins", () => {
       "community.layout.diy-masonry",
     )
   })
+
+  it("attaches resolved stylesheet assets to styled builtin plugins", () => {
+    const styledPlugins = builtinPlugins.filter((plugin) => plugin.manifest.styles?.length)
+    const missingStyleAssets = styledPlugins.flatMap((plugin) =>
+      (plugin.manifest.styles ?? [])
+        .filter((style) => !Object.hasOwn(plugin.styleAssetUrls ?? {}, style.href))
+        .map((style) => ({ pluginId: plugin.manifest.id, href: style.href })),
+    )
+
+    expect(styledPlugins.map((plugin) => plugin.manifest.id)).toEqual(
+      expect.arrayContaining([
+        "official.layout.workbench-dashboard",
+        "official.layout.workbench-stream",
+        "official.search.command-bar",
+        "official.widgets.notes",
+        "community.layout.diy-masonry",
+      ]),
+    )
+    expect(missingStyleAssets).toEqual([])
+  })
 })

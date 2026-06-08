@@ -59,6 +59,12 @@ const pluginPermissionSchema = z.discriminatedUnion("type", [
   }),
 ])
 
+const pluginStyleSchema = z.object({
+  href: z.string().min(1),
+  scope: z.enum(["plugin", "global"]).optional(),
+  order: z.number().int().optional(),
+})
+
 const widgetContributionSchema = z
   .object({
     id: z.string().min(1),
@@ -206,6 +212,7 @@ export const pluginManifestSchema = z.object({
   description: z.string().optional(),
   icon: z.string().optional(),
   entry: z.string().min(1),
+  styles: z.array(pluginStyleSchema).optional(),
   engine: z.object({ platform: z.string().min(1) }),
   permissions: z.array(pluginPermissionSchema).optional(),
   contributes: z.object({

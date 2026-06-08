@@ -1,14 +1,29 @@
-import { pluginManifestSchema, type PluginManifest } from "@tabora/plugin-api"
+import {
+  pluginManifestSchema,
+  type PluginManifest,
+  type PluginStyleContribution,
+  type PluginStyleScope,
+} from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "./pluginKernel"
 
 export const TABORA_PLUGIN_API_VERSION = "1.0.0"
 
 export type PluginSource = "builtin" | "local-trusted" | "remote-untrusted"
 
+export type ResolvedPluginStyle = {
+  pluginId: string
+  href: string
+  sourceHref: string
+  scope: PluginStyleScope
+  order: number
+  source: Exclude<PluginSource, "remote-untrusted">
+}
+
 export type PluginLoadRecord = {
   plugin: BuiltinPlugin
   manifest: PluginManifest
   source: PluginSource
+  styles: ResolvedPluginStyle[]
 }
 
 export type PluginLoadRejectedRecord = {
@@ -33,6 +48,7 @@ export type TrustedLocalPluginPackage = {
   }
   tabora: PluginManifest
   entry: string
+  baseUrl?: string
 }
 
 export type ParsedTrustedLocalPluginPackage = {
@@ -41,6 +57,37 @@ export type ParsedTrustedLocalPluginPackage = {
   manifest: PluginManifest
   entry: string
   source: "local-trusted"
+  styles: ResolvedPluginStyle[]
+}
+
+function resolveStyleHref(
+  style: PluginStyleContribution,
+  options: {
+    baseUrl?: string
+    styleAssetUrls?: Record<string, string>
+  },
+): string {
+  if (options.styleAssetUrls && Object.hasOwn(options.styleAssetUrls, style.href)) {
+    return options.styleAssetUrls[style.href] ?? style.href
+  }
+  if (options.baseUrl) return new URL(style.href, options.baseUrl).toString()
+  return style.href
+}
+
+function resolveManifestStyles(options: {
+  manifest: PluginManifest
+  source: Exclude<PluginSource, "remote-untrusted">
+  baseUrl?: string
+  styleAssetUrls?: Record<string, string>
+}): ResolvedPluginStyle[] {
+  return (options.manifest.styles ?? []).map((style) => ({
+    pluginId: options.manifest.id,
+    href: resolveStyleHref(style, options),
+    sourceHref: style.href,
+    scope: style.scope ?? "plugin",
+    order: style.order ?? 0,
+    source: options.source,
+  }))
 }
 
 function majorVersion(version: string): number | null {
@@ -97,6 +144,11 @@ export function loadBuiltinPlugins(plugins: BuiltinPlugin[]): PluginLoadResult {
       plugin,
       manifest: parsed.data as PluginManifest,
       source: "builtin",
+      styles: resolveManifestStyles({
+        manifest: parsed.data as PluginManifest,
+        source: "builtin",
+        ...(plugin.styleAssetUrls ? { styleAssetUrls: plugin.styleAssetUrls } : {}),
+      }),
     })
   }
 
@@ -133,5 +185,10 @@ export function parseTrustedLocalPluginPackage(
     manifest: parsedManifest,
     entry: value.entry,
     source: "local-trusted",
+    styles: resolveManifestStyles({
+      manifest: parsedManifest,
+      source: "local-trusted",
+      ...(value.baseUrl ? { baseUrl: value.baseUrl } : {}),
+    }),
   }
 }

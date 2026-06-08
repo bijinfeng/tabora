@@ -1,0 +1,39 @@
+[data-tabora-plugin-id="official.widgets.today-focus"] .today-focus-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.today-focus"] .focus-input {
+  width: 100%;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-text));
+  outline: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+[data-tabora-plugin-id="official.widgets.today-focus"] .focus-input::placeholder {
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.today-focus"] .focus-check-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.widgets.today-focus"] .focus-check {
+  width: 15px;
+  height: 15px;
+  accent-color: rgb(var(--color-accent));
+  cursor: pointer;
+}

@@ -85,6 +85,7 @@ export function createWorkbenchWorkspaceController(options: {
   clearContextMenu: () => void
   clearExpandState: () => void
   assignGridOrder: (instances: PluginInstance[]) => PluginInstance[]
+  syncPluginStyles?: () => Promise<void> | void
   warn?: (message: string) => void
 }) {
   const warn = options.warn ?? console.warn
@@ -200,6 +201,7 @@ export function createWorkbenchWorkspaceController(options: {
 
   async function togglePluginEnabled(pluginId: string, enabled: boolean) {
     await options.kernel.setPluginEnabled(pluginId, enabled)
+    await options.syncPluginStyles?.()
   }
 
   async function saveSearchHistory(entry: { query: string; providerId: string }) {

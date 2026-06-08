@@ -4,14 +4,18 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./styles.css": "./src/styles.css",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./plugin-manager-entry.css": "./src/plugin-manager-entry.css",
+    "./settings-workspace.css": "./src/settings-workspace.css",
+    "./search-command-bar.css": "./src/search-command-bar.css"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
-      "./styles.css": "./dist/styles.css",
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./plugin-manager-entry.css": "./dist/plugin-manager-entry.css",
+      "./settings-workspace.css": "./dist/settings-workspace.css",
+      "./search-command-bar.css": "./dist/search-command-bar.css"
     }
   },
   "scripts": {

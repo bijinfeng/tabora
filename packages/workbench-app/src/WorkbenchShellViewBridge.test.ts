@@ -142,7 +142,7 @@ describe("buildWorkbenchWidgetViewProps", () => {
     expect(removeWidget).toHaveBeenCalledWith("widget-1")
     expect(changeWidgetSize).toHaveBeenCalledWith("widget-1", "L")
     expect(setModalViewId).toHaveBeenNthCalledWith(1, "widget.notes.modal")
-    expect(setModalProps).toHaveBeenCalledWith({})
+    expect(setModalProps).toHaveBeenCalledWith({ pluginId: "plugin.widgets" })
     expect(setModalViewId).toHaveBeenNthCalledWith(2, null)
     expect(openWidgetExpand).toHaveBeenCalledWith(currentInstance)
     expect(showToast).toHaveBeenCalledWith("已保存", undefined)

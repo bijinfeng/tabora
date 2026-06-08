@@ -70,6 +70,7 @@ export const layoutStream: BuiltinPlugin = {
     version: "1.0.0",
     apiVersion: "1.0.0",
     entry: "./index",
+    styles: [{ href: "./styles.css", scope: "global", order: 20 }],
     engine: { platform: "^0.1.0" },
     contributes: {
       layouts: [

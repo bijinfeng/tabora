@@ -18,9 +18,16 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@tabora/layout-dashboard": "workspace:*",
     "@tabora/layout-diy-masonry": "workspace:*",
+    "@tabora/layout-stream": "workspace:*",
     "@tabora/official-plugins": "workspace:*",
-    "@tabora/platform-kernel": "workspace:*"
+    "@tabora/platform-kernel": "workspace:*",
+    "@tabora/plugin-notes": "workspace:*",
+    "@tabora/plugin-quick-links": "workspace:*",
+    "@tabora/plugin-today-focus": "workspace:*",
+    "@tabora/plugin-todo": "workspace:*",
+    "@tabora/plugin-weather": "workspace:*"
   },
   "devDependencies": {
     "@tabora/tsconfig": "workspace:*"

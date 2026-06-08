@@ -9,6 +9,7 @@ export const officialPluginQuickLinks: BuiltinPlugin = {
     version: "1.0.0",
     apiVersion: "1.0.0",
     entry: "./index",
+    styles: [{ href: "./styles.css", scope: "plugin", order: 40 }],
     engine: { platform: "^0.1.0" },
     permissions: [{ type: "external-open", hosts: ["*"] }],
     contributes: {

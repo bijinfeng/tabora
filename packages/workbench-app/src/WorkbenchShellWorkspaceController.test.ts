@@ -205,6 +205,7 @@ function controllerSetup() {
   const saveInstance = vi.fn(async () => {})
   const saveForWorkspace = vi.fn(async () => {})
   const kernel = { setPluginEnabled: vi.fn(async () => {}) }
+  const syncPluginStyles = vi.fn()
 
   const controller = createWorkbenchWorkspaceController({
     workspaceRepo: {} as any,
@@ -243,6 +244,7 @@ function controllerSetup() {
     clearExpandState,
     assignGridOrder: (instances) => instances,
     warn: vi.fn(),
+    syncPluginStyles,
   })
 
   return {
@@ -256,6 +258,7 @@ function controllerSetup() {
     setSearchSettings,
     setWorkspaceState,
     saveForWorkspace,
+    syncPluginStyles,
   }
 }
 
@@ -363,7 +366,7 @@ describe("createWorkbenchWorkspaceController", () => {
   })
 
   it("delegates workspace theme/background switching and plugin enable toggles", async () => {
-    const { controller, kernel } = controllerSetup()
+    const { controller, kernel, syncPluginStyles } = controllerSetup()
 
     await controller.switchTheme("official.theme.dark")
     await controller.switchBackground("official.background.dark")
@@ -382,6 +385,7 @@ describe("createWorkbenchWorkspaceController", () => {
       }),
     )
     expect(kernel.setPluginEnabled).toHaveBeenCalledWith("plugin.widgets", false)
+    expect(syncPluginStyles).toHaveBeenCalled()
   })
 
   it("proxies workspace lifecycle methods through the shared workspace state actions", async () => {

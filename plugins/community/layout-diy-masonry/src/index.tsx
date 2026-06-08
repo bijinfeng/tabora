@@ -73,6 +73,7 @@ export const layoutDiyMasonry: BuiltinPlugin = {
     apiVersion: "1.0.0",
     publisher: "community",
     entry: "./index",
+    styles: [{ href: "./styles.css", scope: "global", order: 20 }],
     engine: { platform: "^0.1.0" },
     contributes: {
       layouts: [

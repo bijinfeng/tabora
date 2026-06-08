@@ -300,15 +300,36 @@ importers:
 
   packages/builtin-plugin-registry:
     dependencies:
+      '@tabora/layout-dashboard':
+        specifier: workspace:*
+        version: link:../../plugins/official/layout-dashboard
       '@tabora/layout-diy-masonry':
         specifier: workspace:*
         version: link:../../plugins/community/layout-diy-masonry
+      '@tabora/layout-stream':
+        specifier: workspace:*
+        version: link:../../plugins/official/layout-stream
       '@tabora/official-plugins':
         specifier: workspace:*
         version: link:../official-plugins
       '@tabora/platform-kernel':
         specifier: workspace:*
         version: link:../platform-kernel
+      '@tabora/plugin-notes':
+        specifier: workspace:*
+        version: link:../../plugins/official/widget-notes
+      '@tabora/plugin-quick-links':
+        specifier: workspace:*
+        version: link:../../plugins/official/widget-quick-links
+      '@tabora/plugin-today-focus':
+        specifier: workspace:*
+        version: link:../../plugins/official/widget-today-focus
+      '@tabora/plugin-todo':
+        specifier: workspace:*
+        version: link:../../plugins/official/widget-todo
+      '@tabora/plugin-weather':
+        specifier: workspace:*
+        version: link:../../plugins/official/widget-weather
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*

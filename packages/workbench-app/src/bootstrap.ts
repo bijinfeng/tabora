@@ -6,6 +6,7 @@ import {
   type BuiltinPlugin,
   type PluginLoadRejectedRecord,
   type PluginKernel,
+  type ResolvedPluginStyle,
 } from "@tabora/platform-kernel"
 import {
   createInstanceRepository,
@@ -38,6 +39,7 @@ export type WorkbenchRuntimeBootstrap = {
   catalog: PluginCatalog
   kernel: PluginKernel
   plugins: BuiltinPlugin[]
+  pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
 }
 
@@ -63,6 +65,7 @@ export function createWorkbenchRuntimeBootstrap(
   const { pluginRecordRepo } = repositories
   const loadResult = loadBuiltinPlugins(options.plugins)
   const loadedPlugins = loadResult.loaded.map((record) => record.plugin)
+  const pluginStyles = loadResult.loaded.flatMap((record) => record.styles)
   const catalog = createPluginCatalog(loadedPlugins)
   const kernel = createPluginKernel({
     lifecycleStore: pluginRecordRepo,
@@ -78,6 +81,7 @@ export function createWorkbenchRuntimeBootstrap(
     catalog,
     kernel,
     plugins: loadedPlugins,
+    pluginStyles,
     rejectedPlugins: loadResult.rejected,
   }
 }

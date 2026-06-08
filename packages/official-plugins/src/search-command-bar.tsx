@@ -200,6 +200,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     version: "0.0.0",
     apiVersion: "1.0.0",
     entry: "./search-command-bar",
+    styles: [{ href: "./search-command-bar.css", scope: "plugin", order: 30 }],
     engine: { platform: "^0.1.0" },
     permissions: [{ type: "external-open", hosts: ["*"] }],
     contributes: {

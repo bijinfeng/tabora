@@ -312,6 +312,7 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
     version: "0.0.0",
     apiVersion: "1.0.0",
     entry: "./settings-workspace",
+    styles: [{ href: "./settings-workspace.css", scope: "plugin", order: 40 }],
     engine: { platform: "^0.1.0" },
     contributes: {
       settingsPanels: [

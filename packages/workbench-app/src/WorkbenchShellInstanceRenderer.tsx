@@ -95,7 +95,9 @@ export function createWorkbenchInstanceRenderer(options: {
           callbacks={hostCallbacks}
         >
           <PluginViewBoundary instanceId={instance.id} title={model.title}>
-            {View(options.buildWidgetViewProps(instance, model))}
+            <div data-tabora-plugin-id={instance.pluginId}>
+              {View(options.buildWidgetViewProps(instance, model))}
+            </div>
           </PluginViewBoundary>
         </WidgetCardShell>
       )
@@ -113,7 +115,9 @@ export function createWorkbenchInstanceRenderer(options: {
 
       return (
         <PluginViewBoundary instanceId={instance.id} title={search.title}>
-          {View(options.buildSearchViewProps(instance))}
+          <div data-tabora-plugin-id={instance.pluginId}>
+            {View(options.buildSearchViewProps(instance))}
+          </div>
         </PluginViewBoundary>
       )
     },

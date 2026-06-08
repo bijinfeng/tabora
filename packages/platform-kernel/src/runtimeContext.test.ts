@@ -63,4 +63,34 @@ describe("createPluginRuntimeContext permissions", () => {
       },
     ])
   })
+
+  it("tags modal and fullscreen UI events with the owner plugin id", () => {
+    const events = createEventBus()
+    const modals: unknown[] = []
+    const fullscreens: unknown[] = []
+    events.on("ui.modal.open", (payload) => modals.push(payload))
+    events.on("ui.fullscreen.open", (payload) => fullscreens.push(payload))
+
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+    })
+
+    context.ui.openModal("plugin.example.modal", { tab: "a", pluginId: "spoofed" })
+    context.ui.openFullscreen("plugin.example.fullscreen", { mode: "detail" })
+
+    expect(modals).toEqual([
+      {
+        viewId: "plugin.example.modal",
+        props: { tab: "a", pluginId: "plugin.example" },
+      },
+    ])
+    expect(fullscreens).toEqual([
+      {
+        viewId: "plugin.example.fullscreen",
+        props: { mode: "detail", pluginId: "plugin.example" },
+      },
+    ])
+  })
 })

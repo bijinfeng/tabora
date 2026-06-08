@@ -92,9 +92,12 @@ export function buildWorkbenchWidgetViewProps(
       },
       openModal(viewId, props) {
         options.setModalViewId(viewId)
-        options.setModalProps(
-          typeof props === "object" && props !== null ? (props as Record<string, unknown>) : {},
-        )
+        options.setModalProps({
+          ...(typeof props === "object" && props !== null
+            ? (props as Record<string, unknown>)
+            : {}),
+          pluginId: options.instance.pluginId,
+        })
       },
       closeModal() {
         options.setModalViewId(null)

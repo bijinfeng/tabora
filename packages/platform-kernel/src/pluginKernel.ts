@@ -10,6 +10,7 @@ import { createPluginRuntimeContext, type PluginRuntimeContext } from "./runtime
 
 export type BuiltinPlugin = {
   manifest: PluginManifest
+  styleAssetUrls?: Record<string, string>
   enabled: boolean
   activate(context: PluginRuntimeContext): void | Promise<void>
 }

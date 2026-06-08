@@ -31,6 +31,19 @@ import {
   summarizeWorkbenchRawColorDebt,
 } from "../../scripts/lib/governance.mjs"
 
+const officialPluginStyleFiles = [
+  "packages/official-plugins/src/plugin-manager-entry.css",
+  "packages/official-plugins/src/search-command-bar.css",
+  "packages/official-plugins/src/settings-workspace.css",
+  "plugins/official/layout-dashboard/src/styles.css",
+  "plugins/official/layout-stream/src/styles.css",
+  "plugins/official/widget-notes/src/styles.css",
+  "plugins/official/widget-quick-links/src/styles.css",
+  "plugins/official/widget-today-focus/src/styles.css",
+  "plugins/official/widget-todo/src/styles.css",
+  "plugins/official/widget-weather/src/styles.css",
+]
+
 describe("governance rules", () => {
   it("detects forbidden plugin imports and dependencies", () => {
     expect(
@@ -470,6 +483,37 @@ describe("governance rules", () => {
     ])
   })
 
+  it("detects stylesheet exports without explicit publish targets", () => {
+    expect(
+      findPackageExportViolations({
+        filePath: "plugins/example/package.json",
+        manifest: {
+          exports: {
+            ".": "./src/index.ts",
+            "./styles.css": "./src/styles.css",
+            "./package.json": "./package.json",
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        filePath: "plugins/example/package.json",
+        match: 'publishConfig.exports["./styles.css"]',
+        reason:
+          'missing publish export for stylesheet subpath "./styles.css"; packages must declare publish CSS targets explicitly',
+      },
+    ])
+  })
+
+  it("keeps root pack config free of official plugin stylesheet special cases", async () => {
+    const source = await readRepositoryText(".", "vite.config.ts")
+
+    expect(source).not.toContain("@tabora/official-plugins")
+    expect(source).not.toContain("plugin-manager-entry.css")
+    expect(source).not.toContain("settings-workspace.css")
+    expect(source).not.toContain("search-command-bar.css")
+  })
+
   it("detects type escapes in production source", () => {
     expect(
       findTypeEscapeViolations({
@@ -650,7 +694,7 @@ describe("governance rules", () => {
 
     expect(
       findWorkbenchAvoidableStyleViolations({
-        filePath: "packages/official-plugins/src/styles.css",
+        filePath: "packages/official-plugins/src/search-command-bar.css",
         source: `
           .search {
             color: rgb(var(--color-subtle, var(--color-muted)));
@@ -689,7 +733,7 @@ describe("governance rules", () => {
 
     expect(
       classifyWorkbenchRawColorDebt({
-        filePath: "packages/official-plugins/src/styles.css",
+        filePath: "packages/official-plugins/src/search-command-bar.css",
         match: "rgba(255, 255, 255, 0.45)",
       }),
     ).toBe("glow-highlight")
@@ -713,7 +757,7 @@ describe("governance rules", () => {
         { filePath: "packages/ui/src/styled/button/styles.css", match: "#fff" },
         { filePath: "packages/workbench-shell/src/styles.css", match: "rgba(0, 0, 0, 0.12)" },
         {
-          filePath: "packages/official-plugins/src/styles.css",
+          filePath: "packages/official-plugins/src/search-command-bar.css",
           match: "rgba(255, 255, 255, 0.45)",
         },
         { filePath: "packages/workbench-shell/src/styles.css", match: "!important" },
@@ -728,7 +772,7 @@ describe("governance rules", () => {
 
   it("tokenizes shared inverse foreground styles instead of keeping raw white literals", async () => {
     const targetFiles = [
-      "packages/official-plugins/src/styles.css",
+      ...officialPluginStyleFiles,
       "packages/ui/src/styled/button/styles.css",
       "packages/ui/src/styled/checkbox/styles.css",
       "packages/ui/src/styled/switch/styles.css",
@@ -761,7 +805,7 @@ describe("governance rules", () => {
 
   it("tokenizes shared shadow and scrim styles instead of keeping raw overlay colors", async () => {
     const targetFiles = [
-      "packages/official-plugins/src/styles.css",
+      ...officialPluginStyleFiles,
       "packages/ui/src/styled/combobox/styles.css",
       "packages/ui/src/styled/dialog/styles.css",
       "packages/ui/src/styled/dropdownMenu/styles.css",
@@ -809,7 +853,10 @@ describe("governance rules", () => {
   })
 
   it("reuses semantic tokens for glow and highlight treatments", async () => {
-    const source = await readRepositoryText(".", "packages/official-plugins/src/styles.css")
+    const source = await readRepositoryText(
+      ".",
+      "packages/official-plugins/src/search-command-bar.css",
+    )
 
     expect(source).not.toContain("rgba(255, 255, 255, 0.45)")
     expect(source).not.toContain("rgba(26, 144, 112, 0.08)")
