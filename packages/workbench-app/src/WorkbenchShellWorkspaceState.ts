@@ -38,6 +38,7 @@ export function createWorkbenchWorkspaceState(options: {
   clearContextMenu: () => void
   clearExpandState: () => void
   defaultWorkspacePreset: Parameters<typeof createWorkspaceSession>[0]["defaultWorkspacePreset"]
+  searchHistoryStorage: Parameters<typeof ensureWorkspaceSession>[0]["searchHistoryStorage"]
 }) {
   const resetTransientShellState = () => {
     options.clearContextMenu()
@@ -112,6 +113,7 @@ export function createWorkbenchWorkspaceState(options: {
       instanceRepo: options.instanceRepo,
       pluginDataRepo: options.pluginDataRepo,
       defaultWorkspacePreset: options.defaultWorkspacePreset,
+      searchHistoryStorage: options.searchHistoryStorage,
       workspaceId: id,
     })
 

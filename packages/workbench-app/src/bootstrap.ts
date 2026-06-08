@@ -25,6 +25,8 @@ import {
   type WorkspaceSnapshotRepository,
 } from "@tabora/storage"
 
+import type { WorkbenchShellConfig } from "./shellConfig"
+
 export type WorkbenchRuntimeRepositories = {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
@@ -41,6 +43,7 @@ export type WorkbenchRuntimeBootstrap = {
   kernel: PluginKernel
   plugins: BuiltinPlugin[]
   defaultWorkspacePreset: WorkspacePresetContribution
+  shellConfig: WorkbenchShellConfig
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
 }
@@ -49,6 +52,7 @@ export type CreateWorkbenchRuntimeBootstrapOptions = {
   host: HostAdapter
   plugins: BuiltinPlugin[]
   defaultWorkspacePreset: WorkspacePresetContribution
+  shellConfig: WorkbenchShellConfig
   databaseName?: string
   storageAdapter?: StorageAdapter
 }
@@ -85,6 +89,7 @@ export function createWorkbenchRuntimeBootstrap(
     kernel,
     plugins: loadedPlugins,
     defaultWorkspacePreset: options.defaultWorkspacePreset,
+    shellConfig: options.shellConfig,
     pluginStyles,
     rejectedPlugins: loadResult.rejected,
   }

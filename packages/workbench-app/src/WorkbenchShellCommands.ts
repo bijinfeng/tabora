@@ -6,15 +6,18 @@ import {
   type ShortcutRegistry,
 } from "@tabora/orchestrator"
 
+import {
+  resolveWorkbenchLayoutToggleTarget,
+  resolveWorkbenchThemeToggleTarget,
+  type WorkbenchShellConfig,
+} from "./shellConfig"
 import { createCommandExecutor, type CommandExecutionContext } from "./shellHelpers"
 import { currentShortcutPlatform, shortcutDisplay } from "./WorkbenchShellUtils"
-
-const DASHBOARD_LAYOUT_ID = "official.layout.workbench-dashboard"
-const STREAM_LAYOUT_ID = "official.layout.workbench-stream"
 
 export type WorkbenchShellCommandModelsOptions = {
   isDark: () => boolean
   activeLayoutId: () => string
+  shellConfig: WorkbenchShellConfig
   pluginCommands: CommandContribution[]
   pluginKeybindings: KeybindingContribution[]
   setCommandPaletteOpen: (open: boolean) => void
@@ -49,7 +52,9 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       icon: "L",
       title: "切换布局",
       description:
-        options.activeLayoutId() === DASHBOARD_LAYOUT_ID ? "仪表盘 → 流式" : "流式 → 仪表盘",
+        options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
+          ? "仪表盘 → 流式"
+          : "流式 → 仪表盘",
       category: "workspace",
       defaultShortcut: "⌘L",
     },
@@ -89,10 +94,6 @@ function platformKeybindings(): KeybindingContribution[] {
   ]
 }
 
-function nextLayoutId(activeLayoutId: string): string {
-  return activeLayoutId === DASHBOARD_LAYOUT_ID ? STREAM_LAYOUT_ID : DASHBOARD_LAYOUT_ID
-}
-
 export function createWorkbenchShellCommandModels(options: WorkbenchShellCommandModelsOptions): {
   commandItems: () => ReturnType<typeof createCommandPaletteCommands>
   availableCommandIds: () => string[]
@@ -102,10 +103,15 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
   const actions = (): CommandActionMap => ({
     "open-command-palette": () => options.setCommandPaletteOpen(true),
     "toggle-theme": () =>
-      options.switchTheme(options.isDark() ? "official.theme.light" : "official.theme.dark"),
-    "toggle-layout": () => options.switchLayout(nextLayoutId(options.activeLayoutId())),
+      options.switchTheme(
+        resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
+      ),
+    "toggle-layout": () =>
+      options.switchLayout(
+        resolveWorkbenchLayoutToggleTarget(options.activeLayoutId(), options.shellConfig.layoutIds),
+      ),
     "add-widget": () => options.setAddWidgetOpen(true),
-    "open-settings": () => options.openSettings("official.settings.workspace.appearance"),
+    "open-settings": () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
     "open-shortcuts": () => {
       const shortcuts = shortcutRegistry()
         .listShortcutReferences()

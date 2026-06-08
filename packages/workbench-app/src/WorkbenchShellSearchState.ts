@@ -12,6 +12,10 @@ type SearchSettingsUpdater = (
   updater: (previous: WorkbenchSearchSettings) => WorkbenchSearchSettings,
 ) => void
 type SearchHistorySetter = (history: SearchHistoryEntry[]) => void
+type SearchHistoryStorage = {
+  pluginId: string
+  key: string
+}
 type WorkspaceSearchDataSaver = (
   pluginId: string,
   workspaceId: string,
@@ -96,6 +100,7 @@ export async function saveWorkbenchSearchHistory(options: {
   workspaceId: string
   history: SearchHistoryEntry[]
   entry: { query: string; providerId: string }
+  storage: SearchHistoryStorage
   now?: string
   setSearchHistory: SearchHistorySetter
   saveForWorkspace: WorkspaceSearchDataSaver
@@ -116,23 +121,24 @@ export async function saveWorkbenchSearchHistory(options: {
 
   options.setSearchHistory(nextHistory)
   await options.saveForWorkspace(
-    "official.search.command-bar",
+    options.storage.pluginId,
     options.workspaceId,
-    "search-history",
+    options.storage.key,
     nextHistory,
   )
 }
 
 export async function clearWorkbenchSearchHistory(options: {
   workspaceId: string
+  storage: SearchHistoryStorage
   setSearchHistory: SearchHistorySetter
   saveForWorkspace: WorkspaceSearchDataSaver
 }) {
   options.setSearchHistory([])
   await options.saveForWorkspace(
-    "official.search.command-bar",
+    options.storage.pluginId,
     options.workspaceId,
-    "search-history",
+    options.storage.key,
     [],
   )
 }

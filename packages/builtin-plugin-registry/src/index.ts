@@ -18,6 +18,24 @@ export {
   officialDefaultWorkspacePreset as builtinDefaultWorkspacePreset,
 } from "@tabora/official-plugins"
 
+export const builtinWorkbenchShellConfig = {
+  themeIds: {
+    light: "official.theme.light",
+    dark: "official.theme.dark",
+  },
+  layoutIds: {
+    dashboard: "official.layout.workbench-dashboard",
+    stream: "official.layout.workbench-stream",
+  },
+  settingsPanelIds: {
+    appearance: "official.settings.workspace.appearance",
+  },
+  searchHistory: {
+    pluginId: "official.search.command-bar",
+    key: "search-history",
+  },
+} as const
+
 const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "official.layout.workbench-dashboard": { "./styles.css": layoutDashboardStylesHref },
   "official.layout.workbench-stream": { "./styles.css": layoutStreamStylesHref },

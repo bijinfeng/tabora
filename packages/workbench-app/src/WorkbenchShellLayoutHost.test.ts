@@ -6,7 +6,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
   it("builds stable rail actions and routes them through rail action handlers", () => {
     const runRailAction = vi.fn()
     const host = createWorkbenchLayoutHostAPI({
-      activeLayoutId: () => "official.layout.workbench-dashboard",
+      activeLayoutId: () => "layout.dashboard.custom",
       isDark: () => false,
       setCommandPaletteOpen: vi.fn(),
       setAddWidgetOpen: vi.fn(),
@@ -14,7 +14,24 @@ describe("createWorkbenchLayoutHostAPI", () => {
       switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction,
-    })
+      shellConfig: {
+        themeIds: {
+          light: "theme.light.custom",
+          dark: "theme.dark.custom",
+        },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          stream: "layout.stream.custom",
+        },
+        settingsPanelIds: {
+          appearance: "settings.appearance.custom",
+        },
+        searchHistory: {
+          pluginId: "search.plugin.custom",
+          key: "search-history-custom",
+        },
+      },
+    } as any)
 
     const railActions = host.getGlobalActions("rail")
     expect(railActions.map((action) => action.id)).toEqual([
@@ -39,7 +56,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
     const switchTheme = vi.fn()
 
     const host = createWorkbenchLayoutHostAPI({
-      activeLayoutId: () => "official.layout.workbench-dashboard",
+      activeLayoutId: () => "layout.dashboard.custom",
       isDark: () => true,
       setCommandPaletteOpen,
       setAddWidgetOpen,
@@ -47,7 +64,24 @@ describe("createWorkbenchLayoutHostAPI", () => {
       switchLayout,
       switchTheme,
       runRailAction: vi.fn(),
-    })
+      shellConfig: {
+        themeIds: {
+          light: "theme.light.custom",
+          dark: "theme.dark.custom",
+        },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          stream: "layout.stream.custom",
+        },
+        settingsPanelIds: {
+          appearance: "settings.appearance.custom",
+        },
+        searchHistory: {
+          pluginId: "search.plugin.custom",
+          key: "search-history-custom",
+        },
+      },
+    } as any)
 
     const toolbarActions = host.getGlobalActions("toolbar")
     expect(toolbarActions.map((action) => action.id)).toEqual([
@@ -62,18 +96,18 @@ describe("createWorkbenchLayoutHostAPI", () => {
     toolbarActions[1]?.run()
     toolbarActions[2]?.run()
 
-    host.openSettings("official.settings.workspace.search")
+    host.openSettings("settings.search.custom")
     host.openCommandPalette()
     host.openAddWidget()
     host.toggleTheme()
 
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(1, true)
-    expect(switchLayout).toHaveBeenCalledWith("official.layout.workbench-stream")
-    expect(switchTheme).toHaveBeenNthCalledWith(1, "official.theme.light")
-    expect(openSettings).toHaveBeenCalledWith("official.settings.workspace.search")
+    expect(switchLayout).toHaveBeenCalledWith("layout.stream.custom")
+    expect(switchTheme).toHaveBeenNthCalledWith(1, "theme.light.custom")
+    expect(openSettings).toHaveBeenCalledWith("settings.search.custom")
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(2, true)
     expect(setAddWidgetOpen).toHaveBeenCalledWith(true)
-    expect(switchTheme).toHaveBeenNthCalledWith(2, "official.theme.light")
+    expect(switchTheme).toHaveBeenNthCalledWith(2, "theme.light.custom")
     expect(host.isDark()).toBe(true)
   })
 })

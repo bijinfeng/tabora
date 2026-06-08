@@ -42,6 +42,24 @@ const defaultWorkspacePreset: WorkspacePresetContribution = {
   instances: [],
 }
 
+const shellConfig = {
+  themeIds: {
+    light: "theme.light.custom",
+    dark: "theme.dark.custom",
+  },
+  layoutIds: {
+    dashboard: "layout.dashboard.custom",
+    stream: "layout.stream.custom",
+  },
+  settingsPanelIds: {
+    appearance: "settings.appearance.custom",
+  },
+  searchHistory: {
+    pluginId: "search.plugin.custom",
+    key: "search-history-custom",
+  },
+}
+
 describe("createWorkbenchRuntimeBootstrap", () => {
   it("creates kernel, catalog, database, and repositories together", () => {
     const runtime = createWorkbenchRuntimeBootstrap({
@@ -49,6 +67,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       plugins: testPlugins,
       databaseName: "tabora-workbench-app-bootstrap-test",
       defaultWorkspacePreset,
+      shellConfig,
     } as any)
 
     expect(runtime.host.id).toBe("host.test")
@@ -60,6 +79,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.repositories.pluginDataRepo).toBeDefined()
     expect(runtime.repositories.pluginRecordRepo).toBeDefined()
     expect(runtime.defaultWorkspacePreset).toBe(defaultWorkspacePreset)
+    expect(runtime.shellConfig).toBe(shellConfig)
     expect(runtime.pluginStyles).toEqual([
       {
         pluginId: "test.plugin",
@@ -153,6 +173,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       plugins: testPlugins,
       storageAdapter,
       defaultWorkspacePreset,
+      shellConfig,
     } as any)
 
     expect(runtime.repositories).toBe(storageAdapter.repositories)

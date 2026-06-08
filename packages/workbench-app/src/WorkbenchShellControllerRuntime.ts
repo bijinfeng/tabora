@@ -17,6 +17,7 @@ import { createWorkbenchWidgetController } from "./WorkbenchShellWidgetControlle
 import type { WorkbenchExpandState } from "./WorkbenchShellInteractions"
 import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
+import type { WorkbenchShellConfig } from "./shellConfig"
 import type { WorkbenchContextMenuState } from "./WorkbenchShellState"
 import {
   resolveDefaultProviderForSearch,
@@ -76,6 +77,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     commandPaletteOpen: () => boolean
     isDark: () => boolean
   }
+  shellConfig: WorkbenchShellConfig
   setters: {
     setInstances: SetInstances
     setExpandState: (state: WorkbenchExpandState | null) => void
@@ -121,6 +123,7 @@ export function createWorkbenchShellControllerRuntime(options: {
   const commandRuntime: CommandRuntime = createWorkbenchShellCommandModels({
     isDark: options.state.isDark,
     activeLayoutId: options.state.activeLayoutId,
+    shellConfig: options.shellConfig,
     pluginCommands,
     pluginKeybindings,
     setCommandPaletteOpen: options.setters.setCommandPaletteOpen,

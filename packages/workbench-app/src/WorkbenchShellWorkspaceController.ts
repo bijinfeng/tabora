@@ -29,6 +29,7 @@ import {
 } from "./WorkbenchShellSearchState"
 import { requireWorkspace } from "./WorkbenchShellUtils"
 import { createWorkbenchWorkspaceState } from "./WorkbenchShellWorkspaceState"
+import type { WorkbenchShellConfig } from "./shellConfig"
 import { createLayoutSwitchExecution } from "./shellController"
 import {
   updateWorkspaceBackground,
@@ -86,6 +87,7 @@ export function createWorkbenchWorkspaceController(options: {
   clearContextMenu: () => void
   clearExpandState: () => void
   defaultWorkspacePreset: WorkspacePresetContribution
+  shellConfig: WorkbenchShellConfig
   assignGridOrder: (instances: PluginInstance[]) => PluginInstance[]
   syncPluginStyles?: () => Promise<void> | void
   warn?: (message: string) => void
@@ -148,6 +150,7 @@ export function createWorkbenchWorkspaceController(options: {
     clearContextMenu: options.clearContextMenu,
     clearExpandState: options.clearExpandState,
     defaultWorkspacePreset: options.defaultWorkspacePreset,
+    searchHistoryStorage: options.shellConfig.searchHistory,
   })
 
   async function switchLayout(layoutId: string) {
@@ -213,6 +216,7 @@ export function createWorkbenchWorkspaceController(options: {
       workspaceId: workspace.id,
       history: options.getSearchHistory(),
       entry,
+      storage: options.shellConfig.searchHistory,
       setSearchHistory: options.setSearchHistory,
       saveForWorkspace: (pluginId, workspaceId, key, value) =>
         options.pluginDataRepo.saveForWorkspace(pluginId, workspaceId, key, value),

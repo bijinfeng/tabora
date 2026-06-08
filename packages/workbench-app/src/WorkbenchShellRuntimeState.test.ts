@@ -71,6 +71,23 @@ function createRuntime(records: PluginRecord[] = []) {
     regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
     instances: [],
   }
+  const shellConfig = {
+    themeIds: {
+      light: "theme.light.custom",
+      dark: "theme.dark.custom",
+    },
+    layoutIds: {
+      dashboard: "layout.dashboard.custom",
+      stream: "layout.stream.custom",
+    },
+    settingsPanelIds: {
+      appearance: "settings.appearance.custom",
+    },
+    searchHistory: {
+      pluginId: "search.plugin.custom",
+      key: "search-history-custom",
+    },
+  }
   const handlers = new Map<string, Set<(payload: unknown) => void>>()
   const events = {
     on: vi.fn((eventName: string, handler: (payload: unknown) => void) => {
@@ -91,6 +108,7 @@ function createRuntime(records: PluginRecord[] = []) {
         events,
       },
       defaultWorkspacePreset,
+      shellConfig,
       plugins: [],
       repositories: {
         workspaceRepo: { get: vi.fn(), getAll: vi.fn(async () => [workspace()]) },
@@ -101,6 +119,7 @@ function createRuntime(records: PluginRecord[] = []) {
       },
     },
     defaultWorkspacePreset,
+    shellConfig,
     emit: (eventName: string, payload: unknown) => {
       for (const handler of handlers.get(eventName) ?? []) {
         handler(payload)
@@ -148,7 +167,7 @@ describe("initializeWorkbenchShellRuntime", () => {
       activeThemeId: "official.theme.light",
       activeBackgroundId: "official.background.default",
     }
-    const { runtime, defaultWorkspacePreset } = createRuntime(pluginRecords)
+    const { runtime, defaultWorkspacePreset, shellConfig } = createRuntime(pluginRecords)
     mocks.ensureWorkspaceSession.mockResolvedValue(session)
 
     const setPluginRecords = vi.fn()
@@ -184,6 +203,7 @@ describe("initializeWorkbenchShellRuntime", () => {
     expect(mocks.ensureWorkspaceSession).toHaveBeenCalledWith(
       expect.objectContaining({
         defaultWorkspacePreset,
+        searchHistoryStorage: shellConfig.searchHistory,
         workspaceRepo: runtime.repositories.workspaceRepo,
         instanceRepo: runtime.repositories.instanceRepo,
         pluginDataRepo: runtime.repositories.pluginDataRepo,

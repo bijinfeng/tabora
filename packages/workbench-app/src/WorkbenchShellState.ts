@@ -14,6 +14,7 @@ import {
 } from "@tabora/orchestrator"
 import type { SettingsSectionId } from "@tabora/workbench-shell"
 
+import { isWorkbenchDarkTheme } from "./shellConfig"
 import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
 import type { WorkbenchExpandState } from "./WorkbenchShellInteractions"
 
@@ -32,6 +33,7 @@ export type CreateWorkbenchShellStateOptions = {
     themeId: string
     backgroundId: string
   }
+  darkThemeId: string
   createToastManager?: () => ToastManager
   scheduleTimeout?: ScheduleTimeout
 }
@@ -84,7 +86,7 @@ export function createWorkbenchShellState(options: CreateWorkbenchShellStateOpti
     }, toast?.duration ?? 2500)
   }
 
-  const isDark = () => themeId() === "official.theme.dark"
+  const isDark = () => isWorkbenchDarkTheme(themeId(), options.darkThemeId)
 
   return {
     kernelReady,

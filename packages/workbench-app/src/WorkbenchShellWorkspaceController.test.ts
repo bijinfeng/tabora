@@ -131,6 +131,26 @@ function defaultWorkspacePreset(): WorkspacePresetContribution {
   }
 }
 
+function shellConfig() {
+  return {
+    themeIds: {
+      light: "theme.light.custom",
+      dark: "theme.dark.custom",
+    },
+    layoutIds: {
+      dashboard: "layout.dashboard.custom",
+      stream: "layout.stream.custom",
+    },
+    settingsPanelIds: {
+      appearance: "settings.appearance.custom",
+    },
+    searchHistory: {
+      pluginId: "search.plugin.custom",
+      key: "search-history-custom",
+    },
+  }
+}
+
 function controllerSetup() {
   let currentWorkspace: Workspace | null = workspace()
   let currentInstances = [instance()]
@@ -258,6 +278,7 @@ function controllerSetup() {
     clearContextMenu,
     clearExpandState,
     defaultWorkspacePreset: defaultWorkspacePreset(),
+    shellConfig: shellConfig(),
     assignGridOrder: (instances) => instances,
     warn: vi.fn(),
     syncPluginStyles,

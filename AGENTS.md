@@ -257,7 +257,7 @@ workspace / instance / pluginData 要分层。插件业务数据不要混入 wor
 当前 shell 默认 builtin 装配入口：
 
 - 聚合 `@tabora/official-plugins` 与当前需要一起验证的 community builtin 插件。
-- playground / extension / 未来 desktop shell 通过它拿默认 builtin plugin 列表和默认 workspace preset。
+- playground / extension / 未来 desktop shell 通过它拿默认 builtin plugin 列表、默认 workspace preset 和 shell 装配配置。
 - 不承载插件运行时逻辑，不替代官方插件 pack。
 
 ### `apps/playground`

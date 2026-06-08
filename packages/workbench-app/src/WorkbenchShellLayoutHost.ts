@@ -1,15 +1,15 @@
 import type { LayoutHostAPI } from "@tabora/plugin-api"
 
-const DASHBOARD_LAYOUT_ID = "official.layout.workbench-dashboard"
-const STREAM_LAYOUT_ID = "official.layout.workbench-stream"
-
-function nextLayoutId(activeLayoutId: string): string {
-  return activeLayoutId === DASHBOARD_LAYOUT_ID ? STREAM_LAYOUT_ID : DASHBOARD_LAYOUT_ID
-}
+import {
+  resolveWorkbenchLayoutToggleTarget,
+  resolveWorkbenchThemeToggleTarget,
+  type WorkbenchShellConfig,
+} from "./shellConfig"
 
 export function createWorkbenchLayoutHostAPI(options: {
   activeLayoutId: () => string
   isDark: () => boolean
+  shellConfig: WorkbenchShellConfig
   setCommandPaletteOpen: (open: boolean) => void
   setAddWidgetOpen: (open: boolean) => void
   openSettings: (panelId?: string) => void
@@ -21,12 +21,22 @@ export function createWorkbenchLayoutHostAPI(options: {
     getGlobalActions: (surface) => {
       const layoutToggle = {
         id: "layout-switch" as const,
-        label: options.activeLayoutId() === DASHBOARD_LAYOUT_ID ? "切换到流式" : "切换到仪表盘",
+        label:
+          options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
+            ? "切换到流式"
+            : "切换到仪表盘",
         icon:
-          options.activeLayoutId() === DASHBOARD_LAYOUT_ID ? "layout-stream" : "layout-dashboard",
+          options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
+            ? "layout-stream"
+            : "layout-dashboard",
         shortcut: "⌘L",
         run: () => {
-          options.switchLayout(nextLayoutId(options.activeLayoutId()))
+          options.switchLayout(
+            resolveWorkbenchLayoutToggleTarget(
+              options.activeLayoutId(),
+              options.shellConfig.layoutIds,
+            ),
+          )
         },
       }
 
@@ -76,7 +86,9 @@ export function createWorkbenchLayoutHostAPI(options: {
             icon: options.isDark() ? "☀" : "☾",
             shortcut: "⌘T",
             run: () => {
-              options.switchTheme(options.isDark() ? "official.theme.light" : "official.theme.dark")
+              options.switchTheme(
+                resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
+              )
             },
           },
           {
@@ -94,7 +106,9 @@ export function createWorkbenchLayoutHostAPI(options: {
     openCommandPalette: () => options.setCommandPaletteOpen(true),
     openAddWidget: () => options.setAddWidgetOpen(true),
     toggleTheme: () => {
-      options.switchTheme(options.isDark() ? "official.theme.light" : "official.theme.dark")
+      options.switchTheme(
+        resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
+      )
     },
     isDark: () => options.isDark(),
   }

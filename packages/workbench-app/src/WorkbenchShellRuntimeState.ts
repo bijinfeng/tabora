@@ -6,7 +6,7 @@ import { ensureWorkspaceSession } from "./workspaceSession"
 
 type RuntimeBootstrap = Pick<
   WorkbenchRuntimeBootstrap,
-  "kernel" | "plugins" | "repositories" | "defaultWorkspacePreset"
+  "kernel" | "plugins" | "repositories" | "defaultWorkspacePreset" | "shellConfig"
 >
 
 export async function initializeWorkbenchShellRuntime(options: {
@@ -27,7 +27,7 @@ export async function initializeWorkbenchShellRuntime(options: {
     typeof hydrateWorkbenchSessionState
   >[0]["reconcileInstancesForLayout"]
 }) {
-  const { kernel, plugins, repositories, defaultWorkspacePreset } = options.runtime
+  const { kernel, plugins, repositories, defaultWorkspacePreset, shellConfig } = options.runtime
 
   await kernel.discover(plugins)
   await kernel.activateEnabledPlugins()
@@ -38,6 +38,7 @@ export async function initializeWorkbenchShellRuntime(options: {
     instanceRepo: repositories.instanceRepo,
     pluginDataRepo: repositories.pluginDataRepo,
     defaultWorkspacePreset,
+    searchHistoryStorage: shellConfig.searchHistory,
   })
 
   await hydrateWorkbenchSessionState({

@@ -1,15 +1,12 @@
 import type { HostPlatform } from "@tabora/host-adapters"
 
 import { runWorkbenchRailAction } from "./WorkbenchShellHostActions"
+import { resolveWorkbenchThemeToggleTarget, type WorkbenchShellConfig } from "./shellConfig"
 import {
   initializeWorkbenchShellRuntime,
   wireWorkbenchRuntimeEvents,
 } from "./WorkbenchShellRuntimeState"
 import { canPluginOpenExternal } from "./shellController"
-
-const DARK_THEME_ID = "official.theme.dark"
-const LIGHT_THEME_ID = "official.theme.light"
-const APPEARANCE_SETTINGS_PANEL_ID = "official.settings.workspace.appearance"
 
 type RuntimeBootstrap = Parameters<typeof initializeWorkbenchShellRuntime>[0]["runtime"]
 type RuntimeInitializationOptions = Omit<
@@ -27,6 +24,7 @@ export function createWorkbenchShellHostRuntime(
     runtime: RuntimeBootstrap
     hostPlatform: HostPlatform
     isDark: () => boolean
+    shellConfig: WorkbenchShellConfig
     setAddWidgetOpen: (open: boolean) => void
     openSettings: (panelId?: string) => void
     switchTheme: (themeId: string) => Promise<void> | void
@@ -51,9 +49,11 @@ export function createWorkbenchShellHostRuntime(
       platform: options.hostPlatform,
       onAddWidget: () => options.setAddWidgetOpen(true),
       onToggleTheme: () => {
-        void options.switchTheme(options.isDark() ? LIGHT_THEME_ID : DARK_THEME_ID)
+        void options.switchTheme(
+          resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
+        )
       },
-      onOpenSettings: () => options.openSettings(APPEARANCE_SETTINGS_PANEL_ID),
+      onOpenSettings: () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
     })
 
   const dispose = wireWorkbenchRuntimeEvents({

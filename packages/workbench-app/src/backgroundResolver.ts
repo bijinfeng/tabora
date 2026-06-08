@@ -1,6 +1,5 @@
 import type { BackgroundProviderContribution, ResolvedBackgroundValue } from "@tabora/plugin-api"
 
-export const FALLBACK_BACKGROUND_ID = "background.gradient-green"
 const SAFE_BACKGROUND_STYLE = { background: "rgb(var(--color-page))" }
 
 export function resolveBackgroundValue(
@@ -26,9 +25,6 @@ export function resolveBackgroundStyle(
 ): Record<string, string> {
   const value = resolveBackgroundValue(providerId, providers)
   if (value) return styleForResolvedValue(value)
-
-  const fallbackValue = resolveBackgroundValue(FALLBACK_BACKGROUND_ID, providers)
-  if (fallbackValue) return styleForResolvedValue(fallbackValue)
 
   return SAFE_BACKGROUND_STYLE
 }

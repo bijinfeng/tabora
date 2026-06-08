@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { BackgroundProviderContribution } from "@tabora/plugin-api"
-import {
-  FALLBACK_BACKGROUND_ID,
-  resolveBackgroundStyle,
-  resolveBackgroundValue,
-} from "@tabora/workbench-app"
+import { resolveBackgroundStyle, resolveBackgroundValue } from "@tabora/workbench-app"
 
 function cssFunction(name: "rgb" | "rgba", args: string) {
   return [name, `(${args})`].join("")
@@ -156,9 +152,9 @@ describe("resolveBackgroundStyle", () => {
     expect(style.background).toContain("linear-gradient")
   })
 
-  it("falls back to default when provider ID is unknown", () => {
+  it("falls back to safe background when provider ID is unknown", () => {
     const style = resolveBackgroundStyle("unknown.bg", providers)
-    expect(style).toHaveProperty("background")
+    expect(style).toEqual({ background: "rgb(var(--color-page))" })
   })
 
   it("returns minimal fallback when no providers match", () => {
@@ -197,11 +193,5 @@ describe("resolveBackgroundStyle", () => {
     ])
 
     expect(style).toEqual({ background: "linear-gradient(135deg, red, blue)" })
-  })
-})
-
-describe("FALLBACK_BACKGROUND_ID", () => {
-  it("is a known provider ID", () => {
-    expect(FALLBACK_BACKGROUND_ID).toBe("background.gradient-green")
   })
 })

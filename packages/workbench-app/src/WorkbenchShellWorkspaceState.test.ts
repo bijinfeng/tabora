@@ -90,6 +90,13 @@ function defaultWorkspacePreset(): WorkspacePresetContribution {
   }
 }
 
+function searchHistoryStorage() {
+  return {
+    pluginId: "search.plugin.custom",
+    key: "search-history-custom",
+  }
+}
+
 describe("createWorkbenchWorkspaceState", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -107,6 +114,7 @@ describe("createWorkbenchWorkspaceState", () => {
       instance({ id: "widget-reconciled", workspaceId: importedWorkspace.id }),
     ]
     const preset = defaultWorkspacePreset()
+    const storage = searchHistoryStorage()
     mocks.importWorkspaceData.mockResolvedValue({
       workspace: importedWorkspace,
       instances: importedInstances,
@@ -147,6 +155,7 @@ describe("createWorkbenchWorkspaceState", () => {
       clearContextMenu,
       clearExpandState,
       defaultWorkspacePreset: preset,
+      searchHistoryStorage: storage,
     })
 
     const result = await actions.importWorkspace('{"workspace":{}}')
@@ -178,6 +187,7 @@ describe("createWorkbenchWorkspaceState", () => {
   it("skips switching when the requested workspace is already active", async () => {
     const currentWorkspace = workspace()
     const preset = defaultWorkspacePreset()
+    const storage = searchHistoryStorage()
     const actions = createWorkbenchWorkspaceState({
       workspaceRepo: { get: vi.fn() } as any,
       instanceRepo: {} as any,
@@ -197,6 +207,7 @@ describe("createWorkbenchWorkspaceState", () => {
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
       defaultWorkspacePreset: preset,
+      searchHistoryStorage: storage,
     })
 
     await actions.switchWorkspace(currentWorkspace.id)
@@ -209,6 +220,7 @@ describe("createWorkbenchWorkspaceState", () => {
     const currentWorkspace = workspace()
     const defaultWorkspace = workspace({ id: "default", name: "Default" })
     const preset = defaultWorkspacePreset()
+    const storage = searchHistoryStorage()
     const defaultSession = {
       workspace: defaultWorkspace,
       instances: [instance({ workspaceId: defaultWorkspace.id })],
@@ -247,6 +259,7 @@ describe("createWorkbenchWorkspaceState", () => {
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
       defaultWorkspacePreset: preset,
+      searchHistoryStorage: storage,
     })
 
     await actions.deleteWorkspace(currentWorkspace.id)
@@ -273,6 +286,7 @@ describe("createWorkbenchWorkspaceState", () => {
       workspaceList = updater(workspaceList)
     })
     const preset = defaultWorkspacePreset()
+    const storage = searchHistoryStorage()
 
     const actions = createWorkbenchWorkspaceState({
       workspaceRepo: { get: vi.fn() } as any,
@@ -293,6 +307,7 @@ describe("createWorkbenchWorkspaceState", () => {
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
       defaultWorkspacePreset: preset,
+      searchHistoryStorage: storage,
     } as any)
 
     const result = await actions.createWorkspace("Workspace New")

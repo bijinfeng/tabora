@@ -85,8 +85,25 @@ function createOptions(
     setFullscreenProps: vi.fn(),
     showToast: vi.fn(),
     windowOpen: vi.fn(),
+    shellConfig: {
+      themeIds: {
+        light: "theme.light.custom",
+        dark: "theme.dark.custom",
+      },
+      layoutIds: {
+        dashboard: "layout.dashboard.custom",
+        stream: "layout.stream.custom",
+      },
+      settingsPanelIds: {
+        appearance: "settings.appearance.custom",
+      },
+      searchHistory: {
+        pluginId: "search.plugin.custom",
+        key: "search-history-custom",
+      },
+    },
     ...overrides,
-  }
+  } as any
 }
 
 describe("createWorkbenchShellHostRuntime", () => {
@@ -157,7 +174,7 @@ describe("createWorkbenchShellHostRuntime", () => {
     hostRuntime.runRailAction("settings")
 
     expect(options.setAddWidgetOpen).toHaveBeenCalledWith(true)
-    expect(options.switchTheme).toHaveBeenCalledWith("official.theme.dark")
-    expect(options.openSettings).toHaveBeenCalledWith("official.settings.workspace.appearance")
+    expect(options.switchTheme).toHaveBeenCalledWith("theme.dark.custom")
+    expect(options.openSettings).toHaveBeenCalledWith("settings.appearance.custom")
   })
 })

@@ -12,7 +12,7 @@ const initialSearchSettings: WorkbenchSearchSettings = {
 
 const initialVisualState = {
   layoutId: "community.layout.board",
-  themeId: "theme.sunset",
+  themeId: "theme.light.custom",
   backgroundId: "background.clouds",
 }
 
@@ -22,6 +22,7 @@ describe("createWorkbenchShellState", () => {
       const state = createWorkbenchShellState({
         initialSearchSettings,
         initialVisualState,
+        darkThemeId: "theme.dark.custom",
       })
 
       expect(state.kernelReady()).toBe(false)
@@ -30,7 +31,7 @@ describe("createWorkbenchShellState", () => {
       expect(state.searchSettings()).toEqual(initialSearchSettings)
       expect(state.isDark()).toBe(false)
 
-      state.setThemeId("official.theme.dark")
+      state.setThemeId("theme.dark.custom")
       expect(state.isDark()).toBe(true)
 
       dispose()
@@ -43,6 +44,7 @@ describe("createWorkbenchShellState", () => {
       const state = createWorkbenchShellState({
         initialSearchSettings,
         initialVisualState,
+        darkThemeId: "theme.dark.custom",
         scheduleTimeout: (callback, delay) => {
           scheduled.push({ callback, delay })
           return 1 as ReturnType<typeof setTimeout>
@@ -75,6 +77,7 @@ describe("createWorkbenchShellState", () => {
       const state = createWorkbenchShellState({
         initialSearchSettings,
         initialVisualState,
+        darkThemeId: "theme.dark.custom",
         scheduleTimeout,
       })
 
@@ -114,6 +117,7 @@ describe("createWorkbenchShellState", () => {
       const state = createWorkbenchShellState({
         initialSearchSettings,
         initialVisualState,
+        darkThemeId: "theme.dark.custom",
         createToastManager: () => manager,
       })
 

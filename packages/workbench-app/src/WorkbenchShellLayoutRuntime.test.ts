@@ -66,7 +66,7 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     }
 
     const runtime = createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "official.layout.workbench-dashboard",
+      activeLayoutId: () => "layout.dashboard.custom",
       isDark: () => false,
       setCommandPaletteOpen: vi.fn(),
       setAddWidgetOpen: vi.fn(),
@@ -74,6 +74,23 @@ describe("createWorkbenchShellLayoutRuntime", () => {
       switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction: vi.fn(),
+      shellConfig: {
+        themeIds: {
+          light: "theme.light.custom",
+          dark: "theme.dark.custom",
+        },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          stream: "layout.stream.custom",
+        },
+        settingsPanelIds: {
+          appearance: "settings.appearance.custom",
+        },
+        searchHistory: {
+          pluginId: "search.plugin.custom",
+          key: "search-history-custom",
+        },
+      },
       catalog: catalog as unknown as Parameters<
         typeof createWorkbenchShellLayoutRuntime
       >[0]["catalog"],
@@ -134,7 +151,7 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     >
     const rendererOptions = rendererCalls[0]?.[0]
 
-    expect(rendererOptions?.activeLayoutId()).toBe("official.layout.workbench-dashboard")
+    expect(rendererOptions?.activeLayoutId()).toBe("layout.dashboard.custom")
     expect(rendererOptions?.findLayoutContribution("layout.dashboard")).toBeUndefined()
     expect(catalog.findLayoutContribution).toHaveBeenCalledWith("layout.dashboard")
     expect(rendererOptions?.buildRegionSlots("layout.dashboard", [instance()])).toEqual({
@@ -149,8 +166,8 @@ describe("createWorkbenchShellLayoutRuntime", () => {
 
   it("forwards failed layout state and safe layout rendering through the runtime", () => {
     const runtime = createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "official.layout.workbench-dashboard",
-      failedLayoutId: () => "official.layout.workbench-dashboard",
+      activeLayoutId: () => "layout.dashboard.custom",
+      failedLayoutId: () => "layout.dashboard.custom",
       isDark: () => false,
       setCommandPaletteOpen: vi.fn(),
       setAddWidgetOpen: vi.fn(),
@@ -158,6 +175,23 @@ describe("createWorkbenchShellLayoutRuntime", () => {
       switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction: vi.fn(),
+      shellConfig: {
+        themeIds: {
+          light: "theme.light.custom",
+          dark: "theme.dark.custom",
+        },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          stream: "layout.stream.custom",
+        },
+        settingsPanelIds: {
+          appearance: "settings.appearance.custom",
+        },
+        searchHistory: {
+          pluginId: "search.plugin.custom",
+          key: "search-history-custom",
+        },
+      },
       catalog: {
         findLayoutContribution: vi.fn(() => undefined),
       } as unknown as Parameters<typeof createWorkbenchShellLayoutRuntime>[0]["catalog"],
@@ -198,7 +232,7 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     >
     const rendererOptions = rendererCalls[0]?.[0]
 
-    expect(rendererOptions?.failedLayoutId?.()).toBe("official.layout.workbench-dashboard")
+    expect(rendererOptions?.failedLayoutId?.()).toBe("layout.dashboard.custom")
   })
 
   it("bridges safe layout callbacks through the runtime host actions", () => {
@@ -210,7 +244,7 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     const removeWidget = vi.fn(async () => {})
 
     createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "official.layout.workbench-dashboard",
+      activeLayoutId: () => "layout.dashboard.custom",
       isDark: () => false,
       setCommandPaletteOpen,
       setAddWidgetOpen: vi.fn(),
@@ -218,6 +252,23 @@ describe("createWorkbenchShellLayoutRuntime", () => {
       switchLayout: vi.fn(),
       switchTheme,
       runRailAction: vi.fn(),
+      shellConfig: {
+        themeIds: {
+          light: "theme.light.custom",
+          dark: "theme.dark.custom",
+        },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          stream: "layout.stream.custom",
+        },
+        settingsPanelIds: {
+          appearance: "settings.appearance.custom",
+        },
+        searchHistory: {
+          pluginId: "search.plugin.custom",
+          key: "search-history-custom",
+        },
+      },
       catalog: {
         findLayoutContribution: vi.fn(() => undefined),
       } as unknown as Parameters<typeof createWorkbenchShellLayoutRuntime>[0]["catalog"],
@@ -275,7 +326,7 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     safeLayout?.onRemove("widget-1")
 
     expect(setCommandPaletteOpen).toHaveBeenCalledWith(true)
-    expect(switchTheme).toHaveBeenCalledWith("official.theme.dark")
+    expect(switchTheme).toHaveBeenCalledWith("theme.dark.custom")
     expect(openSettings).toHaveBeenCalledWith()
     expect(preventDefault).toHaveBeenCalledTimes(1)
     expect(setContextMenu).toHaveBeenCalledWith({ x: 16, y: 24, instanceId: "widget-1" })

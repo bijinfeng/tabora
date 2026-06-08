@@ -33,6 +33,10 @@ export async function ensureWorkspaceSession(options: {
   instanceRepo: InstanceRepository
   pluginDataRepo: PluginDataRepository
   defaultWorkspacePreset: Parameters<typeof createDefaultWorkspaceFromPreset>[0]["preset"]
+  searchHistoryStorage: {
+    pluginId: string
+    key: string
+  }
   workspaceId?: string
 }): Promise<WorkspaceSessionState> {
   let workspace = await options.workspaceRepo.get(options.workspaceId ?? "default")
@@ -53,9 +57,9 @@ export async function ensureWorkspaceSession(options: {
 
   const searchHistory =
     (await options.pluginDataRepo.getByWorkspace<SearchHistoryEntry[]>(
-      "official.search.command-bar",
+      options.searchHistoryStorage.pluginId,
       workspace.id,
-      "search-history",
+      options.searchHistoryStorage.key,
     )) ?? []
 
   return {

@@ -160,6 +160,10 @@ describe("search history helpers", () => {
       history: previousHistory,
       entry: { query: "tabora", providerId: "official.google" },
       now: "2026-06-06T01:03:00.000Z",
+      storage: {
+        pluginId: "search.plugin.custom",
+        key: "search-history-custom",
+      },
       setSearchHistory: (history) => {
         currentHistory = history
       },
@@ -179,9 +183,9 @@ describe("search history helpers", () => {
       },
     ])
     expect(saveForWorkspace).toHaveBeenCalledWith(
-      "official.search.command-bar",
+      "search.plugin.custom",
       "workspace-1",
-      "search-history",
+      "search-history-custom",
       currentHistory,
     )
   })
@@ -198,6 +202,10 @@ describe("search history helpers", () => {
 
     await clearWorkbenchSearchHistory({
       workspaceId: "workspace-1",
+      storage: {
+        pluginId: "search.plugin.custom",
+        key: "search-history-custom",
+      },
       setSearchHistory: (history) => {
         currentHistory = history
       },
@@ -206,9 +214,9 @@ describe("search history helpers", () => {
 
     expect(currentHistory).toEqual([])
     expect(saveForWorkspace).toHaveBeenCalledWith(
-      "official.search.command-bar",
+      "search.plugin.custom",
       "workspace-1",
-      "search-history",
+      "search-history-custom",
       [],
     )
   })

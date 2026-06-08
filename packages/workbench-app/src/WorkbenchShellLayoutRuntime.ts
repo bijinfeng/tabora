@@ -1,6 +1,7 @@
 import { createLayoutEngine } from "@tabora/orchestrator"
 import type { WidgetSize } from "@tabora/plugin-api"
 
+import { resolveWorkbenchThemeToggleTarget, type WorkbenchShellConfig } from "./shellConfig"
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 import {
   createWorkbenchLayoutRenderer,
@@ -41,7 +42,9 @@ type LayoutRendererBridges = Pick<
 >
 
 export function createWorkbenchShellLayoutRuntime(
-  options: LayoutHostOptions &
+  options: {
+    shellConfig: WorkbenchShellConfig
+  } & LayoutHostOptions &
     Pick<LayoutEngineOptions, "catalog" | "instanceRenderer"> &
     LayoutRendererBridges &
     SafeLayoutBridges,
@@ -49,6 +52,7 @@ export function createWorkbenchShellLayoutRuntime(
   const layoutHostAPI = createWorkbenchLayoutHostAPI({
     activeLayoutId: options.activeLayoutId,
     isDark: options.isDark,
+    shellConfig: options.shellConfig,
     setCommandPaletteOpen: options.setCommandPaletteOpen,
     setAddWidgetOpen: options.setAddWidgetOpen,
     openSettings: options.openSettings,
@@ -87,7 +91,9 @@ export function createWorkbenchShellLayoutRuntime(
       buildWidgetViewProps: options.buildWidgetViewProps,
       onOpenCommandPalette: () => options.setCommandPaletteOpen(true),
       onToggleTheme: () => {
-        options.switchTheme(options.isDark() ? "official.theme.light" : "official.theme.dark")
+        options.switchTheme(
+          resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
+        )
       },
       onOpenSettings: () => options.openSettings(),
       onPointerDown: options.onPointerDown,

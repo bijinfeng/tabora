@@ -1,5 +1,9 @@
 import { createExtensionHostAdapter } from "@tabora/host-adapters"
-import { builtinDefaultWorkspacePreset, builtinPlugins } from "@tabora/builtin-plugin-registry"
+import {
+  builtinDefaultWorkspacePreset,
+  builtinPlugins,
+  builtinWorkbenchShellConfig,
+} from "@tabora/builtin-plugin-registry"
 import { createWorkbenchComposition, createWorkbenchRuntimeBootstrap } from "@tabora/workbench-app"
 
 export function createExtensionWorkbenchComposition() {
@@ -18,6 +22,7 @@ export function createExtensionRuntimeBootstrap() {
     host: composition.host,
     plugins: builtinPlugins,
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
+    shellConfig: builtinWorkbenchShellConfig,
     databaseName: "tabora-extension",
   })
 }

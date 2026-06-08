@@ -150,6 +150,23 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
   }
 
   return {
+    shellConfig: {
+      themeIds: {
+        light: "theme.light.custom",
+        dark: "theme.dark.custom",
+      },
+      layoutIds: {
+        dashboard: "layout.dashboard.custom",
+        stream: "layout.stream.custom",
+      },
+      settingsPanelIds: {
+        appearance: "settings.appearance.custom",
+      },
+      searchHistory: {
+        pluginId: "search.plugin.custom",
+        key: "search-history-custom",
+      },
+    },
     services: {
       plugins: [
         {

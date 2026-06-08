@@ -108,6 +108,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         composition.initialState.workspace?.activeBackgroundProviderId ??
         runtime.defaultWorkspacePreset.backgroundProviderId,
     },
+    darkThemeId: runtime.shellConfig.themeIds.dark,
   })
   const responsive = createWorkbenchResponsiveState()
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
@@ -163,6 +164,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     clearContextMenu: () => setCtxMenu(null),
     clearExpandState: () => setExpandState(null),
     defaultWorkspacePreset: runtime.defaultWorkspacePreset,
+    shellConfig: runtime.shellConfig,
     assignGridOrder,
     syncPluginStyles: refreshPluginRecords,
   })
@@ -170,6 +172,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     runtime,
     hostPlatform: composition.host.platform,
     isDark,
+    shellConfig: runtime.shellConfig,
     setAddWidgetOpen,
     openSettings,
     switchTheme: workspaceController.switchTheme,
@@ -246,6 +249,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       commandPaletteOpen: cmdPaletteOpen,
       isDark,
     },
+    shellConfig: runtime.shellConfig,
     setters: {
       setInstances,
       setExpandState,
@@ -273,6 +277,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     activeLayoutId,
     failedLayoutId: () => layoutFallback.status()?.layoutId ?? null,
     isDark,
+    shellConfig: runtime.shellConfig,
     setCommandPaletteOpen: setCmdPaletteOpen,
     setAddWidgetOpen,
     openSettings,
