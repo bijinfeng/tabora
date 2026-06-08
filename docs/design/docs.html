@@ -1,0 +1,2720 @@
+<!doctype html>
+<html lang="zh-CN"><head><script data-od-sandbox-shim="">(function(){
+  function makeStore(){
+    var data = {};
+    var api = {
+      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function(k, v){ data[k] = String(v); },
+      removeItem: function(k){ delete data[k]; },
+      clear: function(){ data = {}; },
+      key: function(i){ return Object.keys(data)[i] || null; }
+    };
+    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
+    return api;
+  }
+  function tryShim(name){
+    var works = false;
+    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
+    catch (_) { works = false; }
+    if (works) return;
+    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
+    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
+  }
+  tryShim('localStorage');
+  tryShim('sessionStorage');
+  document.addEventListener('click', (e) => {
+    if (!e.target || !(e.target instanceof Element)) return;
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (href === null) return;
+    var isAnchor = href.startsWith('#') || href === '';
+    if (isAnchor) {
+      e.preventDefault();
+      if (href === '' || href === '#') {
+        window.scrollTo({ top: 0 });
+        history.replaceState(null, '', ' ');
+      } else {
+        var targetId = href.slice(1);
+        var target = targetId ? document.getElementById(targetId) : null;
+        if (target) {
+          target.scrollIntoView();
+          location.hash === href && history.replaceState(null, '', ' ');
+          location.hash = href;
+        }
+      }
+    } else if (link.getAttribute('target') === '_blank') {
+      e.preventDefault();
+      let safe = false;
+      try {
+        var url = new URL(href, location.href);
+        safe =
+          url.protocol === 'http:' ||
+          url.protocol === 'https:' ||
+          url.protocol === 'mailto:';
+      } catch (_) {}
+      safe && window.open(href, '_blank', 'noopener,noreferrer');
+    }
+  });
+})();</script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tabora 文档 · 插件协议与基础组件</title>
+    <meta name="description" content="Tabora 文档：快速开始、插件 manifest、runtime API、完整基础组件库示例。">
+    <style>
+      :root {
+        --cp-page: #f6f7f4;
+        --cp-surface: #ffffff;
+        --cp-surface-soft: #fafaf8;
+        --cp-surface-hover: #f2f4f0;
+        --cp-text: #1c1e1c;
+        --cp-text-muted: #6b6e6a;
+        --cp-text-subtle: #949792;
+        --cp-line: #e6e8e3;
+        --cp-line-strong: #d1d4ce;
+        --cp-accent: #1a9070;
+        --cp-accent-hover: #15785c;
+        --cp-accent-soft: #eaf5f0;
+        --cp-danger: #c94545;
+        --cp-danger-soft: #fef0f0;
+        --cp-success: #2d8a5e;
+        --cp-warning: #a66a12;
+        --cp-info: #3d7ba8;
+        --cp-radius-control: 8px;
+        --cp-radius-card: 8px;
+        --cp-radius-panel: 12px;
+        --cp-radius-pill: 999px;
+        --cp-shadow-floating: 0 4px 16px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.06);
+        --cp-space-2: 4px;
+        --cp-space-3: 8px;
+        --cp-space-4: 12px;
+        --cp-space-5: 16px;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--cp-text);
+        background: var(--cp-page);
+        -webkit-font-smoothing: antialiased;
+      }
+      .dark {
+        --cp-page: #191c1a;
+        --cp-surface: #252927;
+        --cp-surface-soft: #2a2e2c;
+        --cp-surface-hover: #323734;
+        --cp-text: #edf0ed;
+        --cp-text-muted: #b6bab6;
+        --cp-text-subtle: #868b86;
+        --cp-line: #3b403c;
+        --cp-line-strong: #535954;
+        --cp-accent: #34d19e;
+        --cp-accent-hover: #5ce0b6;
+        --cp-accent-soft: #1a2e26;
+        --cp-danger: #ef8b8b;
+        --cp-danger-soft: #2a1e1e;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      body { display: grid; grid-template-rows: auto 1fr; min-height: 100vh; transition: background 0.3s; }
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: var(--cp-line); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--cp-line-strong); }
+      /* Inline code in prose */
+      .section-head code, .comp-header code, .anatomy-box code, p code {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.88em;
+        background: var(--cp-accent-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: var(--cp-accent);
+      }
+      /* ---- TOP NAV ---- */
+      .topnav {
+        position: sticky; top: 0; z-index: 100;
+        height: 56px; display: flex; align-items: center;
+        padding: 0 28px; gap: 24px;
+        background: var(--cp-surface);
+        border-bottom: 1px solid var(--cp-line);
+        backdrop-filter: blur(12px);
+      }
+      .topnav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--cp-text); font-weight: 700; font-size: 15px; }
+      .topnav-logo-mark { width: 28px; height: 28px; background: var(--cp-accent); border-radius: 7px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
+      .topnav-links { display: flex; gap: 4px; flex: 1; }
+      .topnav-links a { padding: 6px 12px; border-radius: 6px; font-size: 13px; color: var(--cp-text-muted); text-decoration: none; font-weight: 500; transition: all 0.15s; }
+      .topnav-links a:hover { background: var(--cp-surface-hover); color: var(--cp-text); }
+      .topnav-links a.active { background: var(--cp-accent-soft); color: var(--cp-accent); font-weight: 650; }
+      .topnav-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+      /* ---- PAGE LAYOUT ---- */
+      .page-body { display: grid; grid-template-columns: 250px 1fr; }
+      .sidebar {
+        position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto;
+        padding: 24px 20px; background: var(--cp-surface); border-right: 1px solid var(--cp-line);
+        display: flex; flex-direction: column; gap: 2px;
+      }
+      .sidebar-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--cp-text); }
+      .sidebar-title span { color: var(--cp-accent); }
+      .sidebar-section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cp-text-subtle); padding: 14px 0 4px; }
+      .sidebar-link { display: block; padding: 6px 12px; border-radius: 6px; font-size: 12px; color: var(--cp-text-muted); text-decoration: none; font-weight: 500; transition: all 0.15s ease; }
+      .sidebar-link:hover { background: var(--cp-surface-hover); color: var(--cp-text); }
+      .sidebar-link.active { background: var(--cp-accent-soft); color: var(--cp-accent); font-weight: 650; }
+      .sidebar-bottom { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--cp-line); }
+      /* ---- MAIN CONTENT ---- */
+      .main { padding: 32px; max-width: 1100px; display: flex; flex-direction: column; gap: 40px; }
+      /* ---- SECTION HEADERS ---- */
+      .section-head { margin-bottom: 20px; }
+      .eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cp-accent); margin-bottom: 8px; }
+      .section-head h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 6px; }
+      .section-head p { font-size: 13px; color: var(--cp-text-muted); max-width: 640px; line-height: 1.6; }
+      /* ---- COMP SPEC CARDS ---- */
+      .comp-spec { scroll-margin-top: 20px; }
+      .comp-header { margin-bottom: 20px; }
+      .comp-header h3 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 6px; }
+      .comp-header p { font-size: 13px; color: var(--cp-text-muted); max-width: 640px; line-height: 1.55; }
+      .comp-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+      .comp-meta-tag { font-size: 10px; color: var(--cp-text-subtle); background: var(--cp-surface); border: 1px solid var(--cp-line); padding: 2px 8px; border-radius: var(--cp-radius-pill); font-weight: 500; white-space: nowrap; }
+      /* ---- DEMO SECTIONS ---- */
+      .demo-section { margin-bottom: 18px; }
+      .demo-section-head { padding: 0 0 8px 0; margin-bottom: 14px; border-bottom: 1px solid var(--cp-line); display: flex; align-items: center; justify-content: space-between; }
+      .demo-section-head h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cp-text-subtle); }
+      .demo-body { padding: 0 0 16px 0; }
+      .demo-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+      .demo-row:last-child { margin-bottom: 0; }
+      .demo-col { display: flex; flex-direction: column; gap: 12px; }
+      .demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+      /* ---- CODE BLOCK ---- */
+      .code-block { border: 1px solid var(--cp-line); border-radius: var(--cp-radius-card); overflow: hidden; margin-bottom: 18px; background: var(--cp-surface); }
+      .code-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: var(--cp-surface-soft); border-bottom: 1px solid var(--cp-line); }
+      .code-head span { font-size: 11px; color: var(--cp-text-subtle); font-family: "SFMono-Regular", Consolas, monospace; font-weight: 500; }
+      .code-window pre { padding: 16px 18px; overflow-x: auto; background: var(--cp-surface); }
+      .code-window code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 12px; line-height: 1.7; color: var(--cp-text); white-space: pre; }
+      .copy-btn { font-size: 11px; padding: 4px 10px; border: 1px solid var(--cp-line); border-radius: 5px; background: var(--cp-surface); color: var(--cp-text-muted); cursor: pointer; font-family: inherit; font-weight: 500; transition: all 0.15s; }
+      .copy-btn:hover { background: var(--cp-surface-hover); color: var(--cp-text); border-color: var(--cp-line-strong); }
+      /* ---- SPEC TABLE ---- */
+      .spec-table { width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid var(--cp-line); border-radius: 8px; overflow: hidden; background: var(--cp-surface); margin-bottom: 18px; }
+      .spec-table thead { background: var(--cp-surface-soft); }
+      .spec-table th { padding: 9px 12px; text-align: left; font-weight: 650; border-bottom: 1px solid var(--cp-line); color: var(--cp-text); font-size: 11px; }
+      .spec-table td { padding: 8px 12px; border-bottom: 1px solid var(--cp-line); color: var(--cp-text-muted); line-height: 1.5; }
+      .spec-table tr:last-child td { border-bottom: none; }
+      .spec-table tbody tr:hover td { background: var(--cp-surface-soft); }
+      .spec-table td code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 10.5px; background: var(--cp-accent-soft); padding: 1px 5px; border-radius: 3px; color: var(--cp-accent); }
+      /* ---- DO/DON'T ---- */
+      .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+      .do, .dont { padding: 14px 16px; border-radius: var(--cp-radius-card); border: 1px solid var(--cp-line); background: var(--cp-surface-soft); }
+      .do { border-left: 3px solid var(--cp-success); }
+      .dont { border-left: 3px solid var(--cp-danger); }
+      .do h5 { color: var(--cp-success); font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+      .dont h5 { color: var(--cp-danger); font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+      .do p, .dont p { font-size: 12px; color: var(--cp-text-muted); line-height: 1.55; }
+      /* ---- ANATOMY BOX ---- */
+      .anatomy-box { background: var(--cp-surface); border: 1px solid var(--cp-line); border-radius: var(--cp-radius-card); padding: 14px 16px; margin-bottom: 18px; }
+      .anatomy-box h4 { font-size: 12px; font-weight: 650; margin-bottom: 8px; color: var(--cp-text); }
+      .anatomy-box ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+      .anatomy-box li { font-size: 12px; color: var(--cp-text-muted); padding: 3px 0; line-height: 1.5; }
+      .anatomy-box li code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 10.5px; background: var(--cp-accent-soft); padding: 2px 6px; border-radius: 3px; color: var(--cp-accent); }
+      /* ---- HINT / DIVIDER ---- */
+      .hint { font-size: 11px; color: var(--cp-text-subtle); margin-top: 6px; line-height: 1.5; }
+      .divider { border: none; border-top: 1px solid var(--cp-line); margin: 8px 0; }
+      /* ---- TABS (docs nav) ---- */
+      .docs-tab-list { display: flex; gap: 0; border-bottom: 1px solid var(--cp-line); margin-bottom: 0; }
+      .docs-tab-btn { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--cp-text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+      .docs-tab-btn:hover { color: var(--cp-text); }
+      .docs-tab-btn.active { color: var(--cp-accent); border-bottom-color: var(--cp-accent); }
+      .docs-tab-panel { padding: 0; }
+      /* ---- COMP SECTION SEPARATOR ---- */
+      .comp-spec + .comp-spec { padding-top: 48px; border-top: 1px solid var(--cp-line); }
+      /* ---- INLINE BADGE ---- */
+      .ibadge { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: var(--cp-radius-pill); font-size: 10px; font-weight: 700; }
+      .ibadge-default { background: var(--cp-surface-hover); color: var(--cp-text-muted); border: 1px solid var(--cp-line); }
+      .ibadge-accent { background: var(--cp-accent-soft); color: var(--cp-accent); }
+      .ibadge-danger { background: var(--cp-danger-soft); color: var(--cp-danger); }
+      /* ---- COMPONENT CSS ---- */
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid transparent; border-radius: var(--cp-radius-control); font-family: inherit; font-weight: 600; cursor: pointer; transition: all 120ms ease; white-space: nowrap; user-select: none; }
+      .btn:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 2px; box-shadow: 0 0 0 4px rgba(26,144,112,0.18); }
+      .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+      .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; border-radius: 6px; }
+      .btn-md { height: 36px; padding: 0 14px; font-size: 13px; }
+      .btn-lg { height: 44px; padding: 0 18px; font-size: 14px; }
+      .btn-primary { background: var(--cp-accent); color: #fff; border-color: var(--cp-accent); }
+      .btn-primary:hover { background: var(--cp-accent-hover); border-color: var(--cp-accent-hover); }
+      .btn-secondary { background: var(--cp-surface); color: var(--cp-text); border-color: var(--cp-line); }
+      .btn-secondary:hover { background: var(--cp-surface-hover); border-color: var(--cp-line-strong); }
+      .btn-subtle { background: var(--cp-accent-soft); color: var(--cp-accent); border-color: transparent; }
+      .btn-subtle:hover { background: color-mix(in oklch, var(--cp-accent-soft) 78%, var(--cp-surface-hover)); }
+      .btn-ghost { background: transparent; color: var(--cp-text-muted); border-color: transparent; }
+      .btn-ghost:hover { background: var(--cp-surface-hover); color: var(--cp-text); }
+      .btn-danger { background: var(--cp-danger); color: #fff; border-color: var(--cp-danger); }
+      .btn-danger:hover { background: color-mix(in oklch, var(--cp-danger) 86%, var(--cp-text)); }
+      .btn-danger-subtle { background: var(--cp-danger-soft); color: var(--cp-danger); border-color: transparent; }
+      .btn-full { width: 100%; justify-content: center; }
+      .btn-group { display: inline-flex; }
+      .btn-group .btn { border-radius: 0; margin-left: -1px; }
+      .btn-group .btn:first-child { border-radius: var(--cp-radius-control) 0 0 var(--cp-radius-control); }
+      .btn-group .btn:last-child { border-radius: 0 var(--cp-radius-control) var(--cp-radius-control) 0; }
+      .icbtn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid transparent; border-radius: var(--cp-radius-control); background: transparent; color: var(--cp-text-muted); cursor: pointer; transition: all 120ms ease; }
+      .icbtn:hover { background: var(--cp-surface-hover); color: var(--cp-text); }
+      .icbtn-sm { width: 26px; height: 26px; border-radius: 6px; }
+      .icbtn-lg { width: 38px; height: 38px; }
+      /* INPUT */
+      .inp-wrap { position: relative; display: inline-flex; align-items: center; }
+      .inp { height: 36px; padding: 0 12px; border: 1px solid var(--cp-line); border-radius: var(--cp-radius-control); background: var(--cp-surface); font-size: 13px; font-family: inherit; color: var(--cp-text); width: 200px; transition: border-color 120ms, box-shadow 120ms; }
+      .inp::placeholder { color: var(--cp-text-subtle); }
+      .inp:focus { outline: none; border-color: var(--cp-accent); box-shadow: 0 0 0 3px rgba(26,144,112,0.12); }
+      .inp:disabled { opacity: 0.5; background: var(--cp-surface-soft); cursor: not-allowed; }
+      .inp.invalid { border-color: var(--cp-danger); }
+      .inp-sm { height: 28px; font-size: 12px; padding: 0 10px; border-radius: 6px; }
+      .inp-leading { padding-left: 34px; }
+      .inp-trailing { padding-right: 34px; }
+      .inp-leading-icon, .inp-trailing-icon { position: absolute; top: 50%; transform: translateY(-50%); color: var(--cp-text-muted); pointer-events: none; display: flex; align-items: center; font-size: 13px; }
+      .inp-leading-icon { left: 10px; }
+      .inp-trailing-icon { right: 10px; }
+      /* TEXTAREA */
+      .txta { padding: 10px 12px; border: 1px solid var(--cp-line); border-radius: var(--cp-radius-control); background: var(--cp-surface); font-size: 13px; font-family: inherit; color: var(--cp-text); width: 280px; min-height: 80px; resize: vertical; transition: border-color 120ms, box-shadow 120ms; line-height: 1.5; }
+      .txta:focus { outline: none; border-color: var(--cp-accent); box-shadow: 0 0 0 3px rgba(26,144,112,0.12); }
+      .txta:disabled { opacity: 0.5; background: var(--cp-surface-soft); cursor: not-allowed; }
+      /* CHECKBOX / SWITCH / RADIO */
+      .chk-wrap, .sw-wrap, .radio-wrap { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; user-select: none; position: relative; }
+      .chk { width: 16px; height: 16px; border: 1.5px solid var(--cp-line-strong); border-radius: 4px; flex-shrink: 0; transition: all 120ms; display: flex; align-items: center; justify-content: center; }
+      .chk-wrap:hover .chk { border-color: var(--cp-accent); }
+      .chk-wrap input, .sw-wrap input, .radio-wrap input { position: absolute; opacity: 0; width: 0; height: 0; }
+      .chk-wrap input:checked + .chk { background: var(--cp-accent); border-color: var(--cp-accent); }
+      .chk-wrap input:checked + .chk::after { content: ""; width: 4px; height: 8px; border: solid #fff; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg) translateY(-0.5px); }
+      .chk-wrap.disabled, .sw-wrap.disabled, .radio-wrap.disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+      .sw-track { width: 36px; height: 20px; background: var(--cp-line-strong); border-radius: 999px; position: relative; transition: background 180ms; flex-shrink: 0; }
+      .sw-thumb { width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 180ms; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+      .sw-wrap input:checked + .sw-track { background: var(--cp-accent); }
+      .sw-wrap input:checked + .sw-track .sw-thumb { left: 18px; }
+      .radio-circle { width: 18px; height: 18px; border: 1.5px solid var(--cp-line-strong); border-radius: 50%; flex-shrink: 0; transition: all 120ms; display: flex; align-items: center; justify-content: center; }
+      .radio-wrap:hover .radio-circle { border-color: var(--cp-accent); }
+      .radio-wrap input:checked + .radio-circle { border-color: var(--cp-accent); }
+      .radio-wrap input:checked + .radio-circle::after { content: ""; width: 8px; height: 8px; background: var(--cp-accent); border-radius: 50%; }
+      /* SELECT */
+      .sel-demo { position: relative; display: inline-block; }
+      .sel-btn { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px solid var(--cp-line); border-radius: var(--cp-radius-control); background: var(--cp-surface); font-size: 13px; cursor: pointer; font-family: inherit; color: var(--cp-text); min-width: 180px; transition: border-color 120ms, box-shadow 120ms; white-space: nowrap; }
+      .sel-btn:hover { border-color: var(--cp-line-strong); }
+      .sel-placeholder { color: var(--cp-text-subtle); flex: 1; text-align: left; }
+      .sel-value { flex: 1; text-align: left; font-weight: 500; }
+      .sel-arrow { color: var(--cp-text-muted); font-size: 10px; }
+      .sel-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--cp-surface); border: 1px solid var(--cp-line); border-radius: var(--cp-radius-control); box-shadow: var(--cp-shadow-floating); z-index: 10; overflow: hidden; }
+      .sel-option { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; cursor: pointer; transition: background 120ms; color: var(--cp-text); }
+      .sel-option:hover { background: var(--cp-surface-hover); }
+      .sel-option.selected { background: var(--cp-accent-soft); color: var(--cp-accent); font-weight: 600; }
+      /* BADGE / CHIP */
+      .badge { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: var(--cp-radius-pill); font-size: 11px; font-weight: 600; background: var(--cp-surface-hover); color: var(--cp-text-muted); border: 1px solid var(--cp-line); }
+      .badge-accent { background: var(--cp-accent-soft); color: var(--cp-accent); border-color: transparent; }
+      .badge-danger { background: var(--cp-danger-soft); color: var(--cp-danger); border-color: transparent; }
+      .badge-success { background: color-mix(in oklch, var(--cp-success) 12%, transparent); color: var(--cp-success); border-color: transparent; }
+      .badge-warning { background: color-mix(in oklch, var(--cp-warning) 12%, transparent); color: var(--cp-warning); border-color: transparent; }
+      .badge-lg { height: 24px; padding: 0 10px; font-size: 12px; }
+      .chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--cp-radius-pill); border: 1px solid var(--cp-line); background: var(--cp-surface); font-size: 12px; font-weight: 500; color: var(--cp-text); cursor: pointer; transition: all 120ms; }
+      .chip:hover { border-color: var(--cp-line-strong); background: var(--cp-surface-hover); }
+      .chip.selected { background: var(--cp-accent-soft); border-color: var(--cp-accent); color: var(--cp-accent); font-weight: 600; }
+      .chip-remove { font-size: 10px; opacity: 0.6; cursor: pointer; }
+      .chip-remove:hover { opacity: 1; }
+      /* AVATAR */
+      .avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cp-accent-soft); color: var(--cp-accent); font-weight: 700; font-size: 12px; overflow: hidden; flex-shrink: 0; }
+      .avatar-xs { width: 24px; height: 24px; font-size: 10px; }
+      .avatar-sm { width: 32px; height: 32px; font-size: 12px; }
+      .avatar-md { width: 40px; height: 40px; font-size: 14px; }
+      .avatar-lg { width: 52px; height: 52px; font-size: 18px; }
+      .avatar img { width: 100%; height: 100%; object-fit: cover; }
+      .avatar-group { display: flex; }
+      .avatar-group .avatar { border: 2px solid var(--cp-surface); margin-left: -8px; }
+      .avatar-group .avatar:first-child { margin-left: 0; }
+      /* TABS */
+      .tabs { display: flex; flex-direction: column; }
+      .tabs-list { display: flex; border-bottom: 1px solid var(--cp-line); }
+      .tabs-trigger { padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--cp-text-muted); background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
+      .tabs-trigger:hover { color: var(--cp-text); }
+      .tabs-trigger[aria-selected="true"] { color: var(--cp-accent); border-bottom-color: var(--cp-accent); }
+      .tabs-trigger.pill { border-radius: var(--cp-radius-pill); border-bottom: none; padding: 5px 12px; font-size: 12px; }
+      .tabs-trigger.pill:hover { background: var(--cp-surface-hover); }
+      .tabs-trigger.pill[aria-selected="true"] { background: var(--cp-accent-soft); color: var(--cp-accent); }
+      .tabs-content { padding: 14px 0; }
+      /* SPINNER / SKELETON / PROGRESS */
+      .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--cp-line); border-top-color: var(--cp-accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+      .spinner-sm { width: 14px; height: 14px; border-width: 1.5px; }
+      .spinner-lg { width: 28px; height: 28px; border-width: 2.5px; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .skeleton { background: linear-gradient(90deg, var(--cp-surface-hover) 25%, var(--cp-surface-soft) 50%, var(--cp-surface-hover) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      .skel-line { height: 12px; border-radius: 4px; }
+      .skel-circle { border-radius: 50%; }
+      .progress-bar { height: 6px; background: var(--cp-line); border-radius: var(--cp-radius-pill); overflow: hidden; }
+      .progress-fill { height: 100%; background: var(--cp-accent); border-radius: var(--cp-radius-pill); transition: width 0.3s ease; }
+      .progress-sm { height: 4px; }
+      .progress-lg { height: 10px; }
+      /* TOAST */
+      .toast { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--cp-surface); border: 1px solid var(--cp-line); border-radius: var(--cp-radius-panel); box-shadow: var(--cp-shadow-floating); min-width: 280px; max-width: 360px; }
+      .toast-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+      .toast-body { flex: 1; }
+      .toast-title { font-size: 13px; font-weight: 650; margin-bottom: 2px; }
+      .toast-desc { font-size: 12px; color: var(--cp-text-muted); line-height: 1.4; }
+      .toast-close { font-size: 12px; color: var(--cp-text-subtle); cursor: pointer; padding: 2px; }
+      .toast-success { border-left: 3px solid var(--cp-success); }
+      .toast-danger { border-left: 3px solid var(--cp-danger); }
+      .toast-warning { border-left: 3px solid var(--cp-warning); }
+      .toast-info { border-left: 3px solid var(--cp-info); }
+      /* DIALOG */
+      .dialog-backdrop { background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; padding: 24px; border-radius: var(--cp-radius-panel); }
+      .dialog { background: var(--cp-surface); border: 1px solid var(--cp-line); border-radius: var(--cp-radius-panel); box-shadow: var(--cp-shadow-floating); max-width: 440px; width: 100%; }
+      .dialog-header { padding: 20px 20px 0; }
+      .dialog-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+      .dialog-desc { font-size: 13px; color: var(--cp-text-muted); line-height: 1.5; }
+      .dialog-body { padding: 14px 20px; }
+      .dialog-footer { padding: 0 20px 20px; display: flex; justify-content: flex-end; gap: 8px; }
+      /* TABLE */
+      .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      .data-table thead { background: var(--cp-surface-soft); }
+      .data-table th { padding: 9px 12px; text-align: left; font-weight: 650; border-bottom: 1px solid var(--cp-line); white-space: nowrap; }
+      .data-table td { padding: 9px 12px; border-bottom: 1px solid var(--cp-line); }
+      .data-table tr:last-child td { border-bottom: none; }
+      .data-table tr:hover td { background: var(--cp-surface-hover); }
+      .table-wrap { border: 1px solid var(--cp-line); border-radius: var(--cp-radius-card); overflow: hidden; }
+      /* FIELD / LABEL */
+      .field { display: flex; flex-direction: column; gap: 5px; }
+      .field-label { font-size: 12px; font-weight: 650; color: var(--cp-text); }
+      .field-desc { font-size: 11px; color: var(--cp-text-muted); line-height: 1.4; }
+      .field-error { font-size: 11px; color: var(--cp-danger); }
+      .field-required { color: var(--cp-danger); margin-left: 2px; }
+      /* KBD */
+      kbd { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border: 1px solid var(--cp-line-strong); border-bottom-width: 2px; border-radius: 4px; background: var(--cp-surface); font-family: "SFMono-Regular", monospace; font-size: 10px; font-weight: 600; color: var(--cp-text-muted); white-space: nowrap; }
+      /* CARD */
+      .card { background: var(--cp-surface); border: 1px solid var(--cp-line); border-radius: var(--cp-radius-card); overflow: hidden; }
+      .card-header { padding: 14px 16px; border-bottom: 1px solid var(--cp-line); }
+      .card-title { font-size: 14px; font-weight: 650; }
+      .card-body { padding: 16px; }
+      .card-footer { padding: 12px 16px; border-top: 1px solid var(--cp-line); background: var(--cp-surface-soft); display: flex; align-items: center; gap: 8px; }
+      /* TOOLTIP */
+      .tooltip-demo { position: relative; display: inline-block; }
+      .tooltip-tip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--cp-text); color: var(--cp-surface); font-size: 11px; padding: 4px 8px; border-radius: 5px; white-space: nowrap; pointer-events: none; }
+      /* DARK MODE TOGGLE */
+      .icbtn-dark { border: 1px solid var(--cp-line); background: var(--cp-surface); }
+      .icon-moon, .icon-sun { transition: opacity 0.2s; }
+      body:not(.dark) .icon-sun { display: none; }
+      body.dark .icon-moon { display: none; }
+      /* ====== DOCS COMPONENT DEMO ADDITIONS ====== */
+      .ipt { display:block;width:100%;height:36px;padding:0 12px;border:1px solid var(--cp-line);border-radius:var(--cp-radius-control);background:var(--cp-surface);font-size:13px;font-family:inherit;color:var(--cp-text);transition:border-color 120ms,box-shadow 120ms; }
+      .ipt:focus { outline:none;border-color:var(--cp-accent);box-shadow:0 0 0 3px rgba(26,144,112,0.12); }
+      .ipt-sm { height:28px;padding:0 10px;font-size:12px; }
+      .ipt-lg { height:44px;padding:0 14px;font-size:14px; }
+      .ipt-success { border-color:var(--cp-success); }
+      .ipt-error { border-color:var(--cp-danger); }
+      .ipt:disabled { opacity:0.5;background:var(--cp-surface-soft);cursor:not-allowed; }
+      .ipt-wrap { position:relative;display:flex;align-items:center; }
+      .ipt-wrap .ipt { padding-left:32px; }
+      .ipt-wrap .ipt:has(~ .ipt-suffix),
+      .ipt-wrap .ipt:has(~ .ipt-clear) { padding-right:32px; }
+      .ipt-prefix { position:absolute;left:10px;color:var(--cp-text-muted);font-size:13px; }
+      .ipt-suffix { position:absolute;right:10px;color:var(--cp-text-muted);font-size:13px; }
+      .ipt-clear { position:absolute;right:8px;border:none;background:none;color:var(--cp-text-muted);cursor:pointer;font-size:12px; }
+      .field-hint { font-size:11px;color:var(--cp-text-muted); }
+      .field-counter { text-align:right; }
+      .txa { display:block;width:100%;padding:10px 12px;border:1px solid var(--cp-line);border-radius:var(--cp-radius-control);background:var(--cp-surface);font-size:13px;font-family:inherit;color:var(--cp-text);line-height:1.5;resize:vertical;transition:border-color 120ms,box-shadow 120ms; }
+      .txa:focus { outline:none;border-color:var(--cp-accent);box-shadow:0 0 0 3px rgba(26,144,112,0.12); }
+      .txa-error { border-color:var(--cp-danger); }
+      .sel { display:block;width:100%;height:36px;padding:0 12px;border:1px solid var(--cp-line);border-radius:var(--cp-radius-control);background:var(--cp-surface);font-size:13px;font-family:inherit;color:var(--cp-text);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6e6a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center; }
+      .sel-sm { height:28px;font-size:12px; }
+      .sel-lg { height:44px;font-size:14px; }
+      .sel-error { border-color:var(--cp-danger); }
+      .sel:disabled { opacity:0.5;background-color:var(--cp-surface-soft);cursor:not-allowed; }
+      /* Checkbox as label pattern */
+      label.chk { display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;user-select:none; }
+      label.chk input[type="checkbox"] { width:16px;height:16px;accent-color:var(--cp-accent);cursor:pointer; }
+      label.chk input:disabled { opacity:0.45;cursor:not-allowed; }
+      .chk-indeterminate input { opacity:0.7; }
+      .chk-box { display:none; }
+      /* Switch as label pattern */
+      label.swi { display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px; }
+      label.swi input[type="checkbox"] { appearance:none;width:36px;height:20px;background:var(--cp-line-strong);border-radius:999px;position:relative;cursor:pointer;transition:background 180ms;flex-shrink:0; }
+      label.swi input[type="checkbox"]::after { content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 180ms;box-shadow:0 1px 2px rgba(0,0,0,0.12); }
+      label.swi input:checked { background:var(--cp-accent); }
+      label.swi input:checked::after { left:18px; }
+      label.swi input:disabled { opacity:0.45;cursor:not-allowed; }
+      .swi-track { display:none; }
+      .swi-sm input[type="checkbox"] { width:30px;height:16px; }
+      .swi-sm input[type="checkbox"]::after { width:12px;height:12px; }
+      .swi-sm input:checked::after { left:16px; }
+      /* Radio as label pattern */
+      label.rad { display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px; }
+      label.rad input[type="radio"] { width:16px;height:16px;accent-color:var(--cp-accent);cursor:pointer; }
+      label.rad input:disabled { opacity:0.45;cursor:not-allowed; }
+      .rad-dot { display:none; }
+      /* Tabs (docs demo) */
+      .comp-spec .tabs { display:flex;gap:0;border-bottom:1px solid var(--cp-line);flex-direction:row; }
+      .comp-spec .tabs .tab { padding:8px 14px;font-size:13px;font-weight:600;color:var(--cp-text-muted);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;font-family:inherit;transition:all 120ms;white-space:nowrap; }
+      .comp-spec .tabs .tab:hover { color:var(--cp-text); }
+      .comp-spec .tabs .tab.tab-active { color:var(--cp-accent);border-bottom-color:var(--cp-accent); }
+      .comp-spec .tabs .tab:disabled { opacity:0.45;cursor:not-allowed; }
+      .comp-spec .tabs.tabs-pill { border-bottom:none;gap:4px;background:var(--cp-surface-soft);padding:4px;border-radius:var(--cp-radius-control); }
+      .comp-spec .tabs.tabs-pill .tab { border-bottom:none;border-radius:var(--cp-radius-control);padding:5px 12px;font-size:12px; }
+      .comp-spec .tabs.tabs-pill .tab.tab-active { background:var(--cp-surface);box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+      .tab-badge { display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--cp-accent-soft);color:var(--cp-accent);font-size:10px;font-weight:700;margin-left:4px; }
+      /* Table (.tbl) */
+      .tbl { width:100%;border-collapse:collapse;font-size:13px; }
+      .tbl thead { background:var(--cp-surface-soft); }
+      .tbl th { padding:9px 12px;text-align:left;font-weight:650;border-bottom:1px solid var(--cp-line);white-space:nowrap; }
+      .tbl td { padding:9px 12px;border-bottom:1px solid var(--cp-line); }
+      .tbl tr:last-child td { border-bottom:none; }
+      .tbl-striped tbody tr:nth-child(even) { background:var(--cp-surface-soft); }
+      .tbl-hover tbody tr:hover td { background:var(--cp-surface-hover); }
+      /* Toast extras */
+      .toast-msg { flex:1;font-size:13px; }
+      .toast-error { border-left:3px solid var(--cp-danger); }
+      /* Badge extras */
+      .badge-default { background:var(--cp-surface-hover);color:var(--cp-text-muted);border:1px solid var(--cp-line); }
+      .badge-primary { background:var(--cp-accent-soft);color:var(--cp-accent);border-color:transparent; }
+      .badge-dot { position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%; }
+      .badge-dot-danger { background:var(--cp-danger); }
+      .badge-dot-primary { background:var(--cp-accent); }
+      /* Card extras */
+      .card-head { padding:14px 16px;border-bottom:1px solid var(--cp-line);display:flex;align-items:center;justify-content:space-between; }
+      .card-foot { padding:12px 16px;border-top:1px solid var(--cp-line);display:flex;gap:8px; }
+      .card-clickable { cursor:pointer;transition:box-shadow 120ms,border-color 120ms; }
+      .card-clickable:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06);border-color:var(--cp-line-strong); }
+      .card-selected { border-color:var(--cp-accent);box-shadow:0 0 0 2px var(--cp-accent-soft); }
+      /* Progress (docs demo) */
+      .progress { height:6px;background:var(--cp-line);border-radius:var(--cp-radius-pill);overflow:hidden;width:100%; }
+      .progress .progress-bar { height:100%;background:var(--cp-accent);border-radius:var(--cp-radius-pill);transition:width 0.3s; }
+      .progress .progress-bar-success { background:var(--cp-success); }
+      .progress .progress-bar-danger { background:var(--cp-danger); }
+      /* Tooltip (.tip-wrap) */
+      .tip-wrap { position:relative;display:inline-block; }
+      .tip { position:absolute;background:var(--cp-text);color:var(--cp-page);font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 150ms; }
+      .tip-wrap:hover .tip { opacity:1; }
+      .tip-top { bottom:calc(100% + 6px);left:50%;transform:translateX(-50%); }
+      .tip-bottom { top:calc(100% + 6px);left:50%;transform:translateX(-50%); }
+      .tip-left { right:calc(100% + 6px);top:50%;transform:translateY(-50%); }
+      .tip-right { left:calc(100% + 6px);top:50%;transform:translateY(-50%); }
+      /* Skeleton extras */
+      .skeleton-text { border-radius:4px; }
+      .skeleton-rect { border-radius:8px; }
+      .skeleton-circle { border-radius:50%; }
+    </style>
+  <style data-od-tweaks-bridge-style="">
+[data-od-tweaks-hidden] .tw-panel {
+  transform: translateX(calc(100% + 32px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.tw-restore { display: none !important; }
+</style><script data-od-tweaks-bridge="">(function(){
+  // Synchronously hide BEFORE the artifact body parses so the panel never
+  // flashes on initial paint. The host removes the attribute via postMessage
+  // once it knows the desired state.
+  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
+
+  var suppressEcho = false;
+  var observer = null;
+
+  function panelEl(){ return document.querySelector('.tw-panel'); }
+
+  function applyClassesToPanel(visible){
+    var panel = panelEl();
+    if (panel) panel.classList.toggle('tw-hidden', !visible);
+  }
+
+  function setPanelVisible(visible){
+    suppressEcho = true;
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
+    applyClassesToPanel(visible);
+    // Clear flag after the MutationObserver has had a chance to fire for this
+    // change so we don't echo our own host-driven toggles back to the host.
+    Promise.resolve().then(function(){ suppressEcho = false; });
+  }
+
+  function postState(){
+    var panel = panelEl();
+    if (!panel) return;
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-panel-state',
+        visible: !panel.classList.contains('tw-hidden'),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function postAvailability(){
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-available',
+        available: !!panelEl(),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function attachObserver(){
+    var panel = panelEl();
+    if (!panel || observer) return;
+    observer = new MutationObserver(function(){
+      if (suppressEcho) return;
+      postState();
+    });
+    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function onReady(){
+    // Capture the panel authored visibility BEFORE we apply the host hidden
+    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
+    // (before the body parses), so on entry to onReady the attribute is
+    // always present even though the artifact may have authored the panel
+    // as default-visible. Reading the panel class first is the only place
+    // we can still observe the author intent. Then drive the attribute,
+    // classes, and posted state from that captured value so a default
+    // visible tw-panel reports visible:true and the toolbar toggle starts
+    // ON. Issue surfaced in PR #1643 review.
+    var panel = panelEl();
+    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
+    applyClassesToPanel(initialVisible);
+    attachObserver();
+    postAvailability();
+    // Post the captured initial visibility so the toolbar toggle reflects
+    // the default state on mount. Without this the toggle reads OFF while
+    // a default-visible tw-panel artifact clearly shows its panel and the
+    // user would have to click toggle-on then toggle-off to actually hide.
+    postState();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+  } else {
+    onReady();
+  }
+
+  window.addEventListener('message', function(ev){
+    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
+    setPanelVisible(!!ev.data.visible);
+  });
+})();</script></head>
+  <body>
+    <!-- TOP NAV -->
+    <header class="topnav" data-od-id="path-0">
+      <a class="topnav-logo" href="landing.html" aria-label="Tabora 首页" data-od-id="path-0-0">
+        <span class="topnav-logo-mark">T</span>
+        <span>Tabora</span>
+      </a>
+      <nav class="topnav-links" aria-label="主导航" data-od-id="path-0-1">
+        <a href="landing.html" data-od-id="path-0-1-0">首页</a>
+        <a href="landing.html#product" data-od-id="path-0-1-1">产品</a>
+        <a href="download.html" data-od-id="path-0-1-2">下载</a>
+        <a href="docs.html" class="active" data-od-id="path-0-1-3">文档</a>
+        <a href="landing.html#plugins" data-od-id="path-0-1-4">官方插件</a>
+      </nav>
+      <div class="topnav-actions" data-od-id="path-0-2">
+        <button class="icbtn icbtn-dark" type="button" data-dark-toggle="" aria-label="切换深色模式" data-od-id="path-0-2-0">
+          <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-body" data-od-id="path-1">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" aria-label="文档目录" data-od-id="path-1-0">
+        <div class="sidebar-title" data-od-id="path-1-0-0">Tabora <span>Docs</span></div>
+        <div class="sidebar-section" data-od-id="path-1-0-1">开始</div>
+        <a class="sidebar-link" href="#quickstart" data-od-id="path-1-0-2">快速开始</a>
+        <a class="sidebar-link" href="#manifest" data-od-id="path-1-0-3">Manifest</a>
+        <a class="sidebar-link" href="#runtime" data-od-id="path-1-0-4">Runtime API</a>
+        <a class="sidebar-link" href="#contributions" data-od-id="path-1-0-5">贡献点类型</a>
+        <a class="sidebar-link" href="#tokens" data-od-id="path-1-0-6">Design Tokens</a>
+        <div class="sidebar-section" data-od-id="path-1-0-7">输入控件</div>
+        <a class="sidebar-link" href="#button" data-od-id="path-1-0-8">Button 按钮</a>
+        <a class="sidebar-link" href="#input" data-od-id="path-1-0-9">Input 输入框</a>
+        <a class="sidebar-link" href="#textarea" data-od-id="path-1-0-10">Textarea 多行输入</a>
+        <div class="sidebar-section" data-od-id="path-1-0-11">选择控件</div>
+        <a class="sidebar-link" href="#select" data-od-id="path-1-0-12">Select 选择器</a>
+        <a class="sidebar-link" href="#checkbox" data-od-id="path-1-0-13">Checkbox 复选框</a>
+        <a class="sidebar-link" href="#switch" data-od-id="path-1-0-14">Switch 开关</a>
+        <a class="sidebar-link" href="#radio" data-od-id="path-1-0-15">Radio 单选框</a>
+        <div class="sidebar-section" data-od-id="path-1-0-16">浮层与菜单</div>
+        <a class="sidebar-link" href="#tabs" data-od-id="path-1-0-17">Tabs 标签页</a>
+        <a class="sidebar-link" href="#dialog" data-od-id="path-1-0-18">Dialog 对话框</a>
+        <a class="sidebar-link" href="#drawer" data-od-id="path-1-0-19">Drawer 抽屉</a>
+        <a class="sidebar-link" href="#tooltip" data-od-id="path-1-0-20">Tooltip 工具提示</a>
+        <div class="sidebar-section" data-od-id="path-1-0-21">反馈与通知</div>
+        <a class="sidebar-link" href="#toast" data-od-id="path-1-0-22">Toast 轻提示</a>
+        <a class="sidebar-link" href="#progress" data-od-id="path-1-0-23">Spinner / Progress</a>
+        <a class="sidebar-link" href="#skeleton" data-od-id="path-1-0-24">Skeleton 骨架屏</a>
+        <a class="sidebar-link" href="#empty" data-od-id="path-1-0-25">Empty State 空状态</a>
+        <div class="sidebar-section" data-od-id="path-1-0-26">标签与结构</div>
+        <a class="sidebar-link" href="#badge" data-od-id="path-1-0-27">Badge 徽标</a>
+        <a class="sidebar-link" href="#table" data-od-id="path-1-0-28">Table 表格</a>
+        <a class="sidebar-link" href="#card" data-od-id="path-1-0-29">Card 卡片</a>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main" data-od-id="path-1-1">
+
+        <!-- ====== QUICKSTART ====== -->
+        <section class="comp-spec" id="quickstart" data-od-id="path-1-1-0">
+          <div class="section-head" data-od-id="path-1-1-0-0">
+            <p class="eyebrow">QUICKSTART</p>
+            <h2 data-od-id="path-1-1-0-0-1">三步创建第一个 Tabora 插件</h2>
+            <p>Tabora 插件目录保持极简：manifest 声明贡献点，组件文件只负责插件内容区，宿主能力通过 runtime context 请求，不存在直接 DOM 操控。</p>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-0-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-0-1-0-0">1 — 创建目录结构</h4></div>
+            <div class="demo-body">
+              <div class="code-block">
+                <div class="code-head"><span>terminal</span><button class="copy-btn" type="button" data-copy="qs-cmd" data-od-id="path-1-1-0-1-1-0-0-1">复制</button></div>
+                <div class="code-window"><pre><code id="qs-cmd" data-od-id="path-1-1-0-1-1-0-1-0-0">mkdir plugins/today-focus
+cd plugins/today-focus
+touch tabora.plugin.json TodayFocusWidget.tsx</code></pre></div>
+              </div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-0-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-0-2-0-0">2 — 目录结构</h4></div>
+            <div class="demo-body">
+              <div class="code-block">
+                <div class="code-head"><span>文件树</span></div>
+                <div class="code-window"><pre><code>plugins/today-focus/
+├── tabora.plugin.json      # 插件 manifest
+├── TodayFocusWidget.tsx    # widget 入口组件
+├── TodayFocusSettings.tsx  # 设置面板（可选）
+└── assets/                 # 私有资源目录（可选）</code></pre></div>
+              </div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-0-3">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-0-3-0-0">3 — 最小 manifest</h4></div>
+            <div class="demo-body">
+              <div class="code-block">
+                <div class="code-head"><span>tabora.plugin.json</span><button class="copy-btn" type="button" data-copy="qs-manifest" data-od-id="path-1-1-0-3-1-0-0-1">复制</button></div>
+                <div class="code-window"><pre><code id="qs-manifest" data-od-id="path-1-1-0-3-1-0-1-0-0">{
+  "id": "official.widgets.today-focus",
+  "name": "Today Focus",
+  "version": "1.0.0",
+  "contributions": {
+    "widgets": [{ "id": "today-focus", "title": "今日重点", "entry": "./TodayFocusWidget.tsx", "sizes": ["medium", "large"] }]
+  },
+  "permissions": ["storage:read", "storage:write"]
+}</code></pre></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====== MANIFEST ====== -->
+        <section class="comp-spec" id="manifest" data-od-id="path-1-1-1">
+          <div class="section-head" data-od-id="path-1-1-1-0">
+            <p class="eyebrow">MANIFEST</p>
+            <h2 data-od-id="path-1-1-1-0-1">Manifest 只描述能力，不写宿主实现</h2>
+            <p>所有贡献点通过 <code>contributions</code> 字段声明。插件不能直接创建全局容器，只能请求 runtime 提供的宿主能力。</p>
+          </div>
+          <div class="anatomy-box" data-od-id="path-1-1-1-1">
+            <h4 data-od-id="path-1-1-1-1-0">字段结构</h4>
+            <ul>
+              <li><code>id</code> — 全局唯一，格式 <code>namespace.category.name</code></li>
+              <li><code>name</code> — 用户可见的显示名称</li>
+              <li><code>version</code> — 遵循 semver，宿主用于更新判断</li>
+              <li><code>contributions</code> — 声明贡献点对象，支持 widgets / layouts / searchProviders / settingsPanels</li>
+              <li><code>permissions</code> — 需要的宿主权限列表，用户可在设置中撤销</li>
+            </ul>
+          </div>
+          <div class="code-block" data-od-id="path-1-1-1-2">
+            <div class="code-head"><span>完整 manifest 示例</span><button class="copy-btn" type="button" data-copy="manifest-full" data-od-id="path-1-1-1-2-0-1">复制</button></div>
+            <div class="code-window"><pre><code id="manifest-full" data-od-id="path-1-1-1-2-1-0-0">{
+  "id": "official.widgets.today-focus",
+  "name": "Today Focus",
+  "version": "1.0.0",
+  "contributions": {
+    "widgets": [
+      {
+        "id": "today-focus",
+        "title": "今日重点",
+        "entry": "./TodayFocusWidget.tsx",
+        "sizes": ["medium", "large"],
+        "settingsPanel": "today-focus-settings"
+      }
+    ],
+    "settingsPanels": [
+      {
+        "id": "today-focus-settings",
+        "title": "今日重点设置",
+        "entry": "./TodayFocusSettings.tsx"
+      }
+    ]
+  },
+  "permissions": ["storage:read", "storage:write"]
+}</code></pre></div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>字段</th><th>类型</th><th>必须</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>string</td><td>✓</td><td>全局唯一标识符，推荐三段式命名</td></tr>
+              <tr><td><code>name</code></td><td>string</td><td>✓</td><td>用户可见名称，不超过 32 字符</td></tr>
+              <tr><td><code>version</code></td><td>string</td><td>✓</td><td>semver 格式：1.0.0</td></tr>
+              <tr><td><code>contributions</code></td><td>object</td><td>✓</td><td>贡献点声明对象，至少一个子字段</td></tr>
+              <tr><td><code>permissions</code></td><td>string[]</td><td>—</td><td>需要的权限列表，默认空数组</td></tr>
+              <tr><td><code>description</code></td><td>string</td><td>—</td><td>插件描述，显示在设置面板和商店</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ====== RUNTIME API ====== -->
+        <section class="comp-spec" id="runtime" data-od-id="path-1-1-2">
+          <div class="section-head" data-od-id="path-1-1-2-0">
+            <p class="eyebrow">RUNTIME API</p>
+            <h2 data-od-id="path-1-1-2-0-1">插件通过 runtime context 使用宿主能力</h2>
+            <p>每类贡献点的入口组件都收到 <code>runtime</code> prop，提供存储、外部链接、Toast、全局状态等宿主能力。</p>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-2-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-2-1-0-0">Widget 示例</h4></div>
+            <div class="demo-body">
+              <div class="code-block">
+                <div class="code-head"><span>TodayFocusWidget.tsx</span><button class="copy-btn" type="button" data-copy="rt-widget" data-od-id="path-1-1-2-1-1-0-0-1">复制</button></div>
+                <div class="code-window"><pre><code id="rt-widget" data-od-id="path-1-1-2-1-1-0-1-0-0">export function TodayFocusWidget({ runtime }) {
+  const tasks = runtime.storage.useList("tasks")
+
+  return (
+    &lt;CardSection title="今日重点"&gt;
+      {tasks.map((task) =&gt; (
+        &lt;ListRow key={task.id} title={task.title}&gt;
+          &lt;Checkbox checked={task.done} onCheckedChange={(v) =&gt; runtime.storage.update(task.id, { done: v })} /&gt;
+        &lt;/ListRow&gt;
+      ))}
+      &lt;Button variant="secondary" size="sm" onClick={() =&gt; runtime.toast.show({ title: "已添加" })}&gt;
+        添加任务
+      &lt;/Button&gt;
+    &lt;/CardSection&gt;
+  )
+}</code></pre></div>
+              </div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-2-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-2-2-0-0">Search Provider 示例</h4></div>
+            <div class="demo-body">
+              <div class="code-block">
+                <div class="code-head"><span>githubProvider.ts</span><button class="copy-btn" type="button" data-copy="rt-search" data-od-id="path-1-1-2-2-1-0-0-1">复制</button></div>
+                <div class="code-window"><pre><code id="rt-search" data-od-id="path-1-1-2-2-1-0-1-0-0">export const githubProvider = {
+  id: "github",
+  label: "GitHub",
+  prefix: "@github",
+  async query(input: string, runtime) {
+    if (!input.trim()) return []
+    const url = `https://github.com/search?q=${encodeURIComponent(input)}`
+    return [{
+      id: "github-search",
+      title: input,
+      subtitle: "在 GitHub 搜索",
+      action: () =&gt; runtime.external.open(url)
+    }]
+  }
+}</code></pre></div>
+              </div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-2-3">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-2-3-0-0">Settings Panel 示例</h4></div>
+            <div class="demo-body">
+              <div class="code-block">
+                <div class="code-head"><span>TodayFocusSettings.tsx</span><button class="copy-btn" type="button" data-copy="rt-settings" data-od-id="path-1-1-2-3-1-0-0-1">复制</button></div>
+                <div class="code-window"><pre><code id="rt-settings" data-od-id="path-1-1-2-3-1-0-1-0-0">export function TodayFocusSettings({ runtime }) {
+  const compact = runtime.settings.useBoolean("compact", false)
+  const maxItems = runtime.settings.useNumber("maxItems", 5)
+
+  return (
+    &lt;&gt;
+      &lt;Field label="紧凑模式" description="减少卡片内留白，适合小尺寸 widget。"&gt;
+        &lt;Switch checked={compact.value} onCheckedChange={compact.set} /&gt;
+      &lt;/Field&gt;
+      &lt;Field label="最多显示条目"&gt;
+        &lt;Select value={maxItems.value.toString()} onValueChange={(v) =&gt; maxItems.set(Number(v))}&gt;
+          &lt;SelectItem value="3"&gt;3 条&lt;/SelectItem&gt;
+          &lt;SelectItem value="5"&gt;5 条&lt;/SelectItem&gt;
+          &lt;SelectItem value="10"&gt;10 条&lt;/SelectItem&gt;
+        &lt;/Select&gt;
+      &lt;/Field&gt;
+    &lt;/&gt;
+  )
+}</code></pre></div>
+              </div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>runtime 命名空间</th><th>说明</th><th>常用方法</th></tr></thead>
+            <tbody>
+              <tr><td><code>runtime.storage</code></td><td>持久化键值与列表存储</td><td>useList, get, set, update, remove</td></tr>
+              <tr><td><code>runtime.toast</code></td><td>触发宿主全局 Toast</td><td>show({ title, variant })</td></tr>
+              <tr><td><code>runtime.external</code></td><td>安全打开外部链接</td><td>open(url)</td></tr>
+              <tr><td><code>runtime.settings</code></td><td>插件级设置持久化</td><td>useBoolean, useString, useNumber</td></tr>
+              <tr><td><code>runtime.theme</code></td><td>读取当前主题状态</td><td>useColorScheme()</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ====== CONTRIBUTIONS ====== -->
+        <section class="comp-spec" id="contributions" data-od-id="path-1-1-3">
+          <div class="section-head" data-od-id="path-1-1-3-0">
+            <p class="eyebrow">CONTRIBUTION TYPES</p>
+            <h2 data-od-id="path-1-1-3-0-1">四类贡献点覆盖工作台全部可见体验</h2>
+            <p>每类贡献点都在 manifest 的 contributions 字段声明。宿主在启动时发现并挂载它们。</p>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>贡献点</th><th>字段名</th><th>用途</th><th>尺寸约束</th></tr></thead>
+            <tbody>
+              <tr><td>Widget</td><td><code>widgets</code></td><td>工作台卡片内容区</td><td>small / medium / large</td></tr>
+              <tr><td>Layout</td><td><code>layouts</code></td><td>自定义整体布局方案</td><td>全屏，宿主管理容器</td></tr>
+              <tr><td>Search Provider</td><td><code>searchProviders</code></td><td>搜索框自定义数据源</td><td>下拉列表，宿主渲染</td></tr>
+              <tr><td>Settings Panel</td><td><code>settingsPanels</code></td><td>插件专属设置界面</td><td>宿主 modal 内</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-3-2">
+            <div class="do"><h5 data-od-id="path-1-1-3-2-0-0">✓ 应当</h5><p>每类贡献点只写内容逻辑，不接管外壳。widget 只关心卡片内部 DOM，layout 只关心插槽排布。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-3-2-1-0">✗ 不应</h5><p>不要在 widget 内部创建全局 modal 或独立 toast，这些都由 runtime.toast 和宿主提供，避免 z-index 冲突。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== DESIGN TOKENS ====== -->
+        <section class="comp-spec" id="tokens" data-od-id="path-1-1-4">
+          <div class="section-head" data-od-id="path-1-1-4-0">
+            <p class="eyebrow">DESIGN TOKENS</p>
+            <h2 data-od-id="path-1-1-4-0-1">Refined Sage V2.3 — CSS 自定义属性</h2>
+            <p>所有组件通过 CSS 变量消费设计令牌，深色模式由 <code>.dark</code> 类自动切换，插件内容区继承宿主令牌，无需额外处理。</p>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-4-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-4-1-0-0">色彩令牌预览</h4></div>
+            <div class="demo-body">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">
+                <div style="padding:10px 12px;background:var(--cp-accent);color:#fff;border-radius:8px;font-size:12px;font-weight:600;">--cp-accent</div>
+                <div style="padding:10px 12px;background:var(--cp-accent-soft);color:var(--cp-accent);border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--cp-line);">--cp-accent-soft</div>
+                <div style="padding:10px 12px;background:var(--cp-surface);color:var(--cp-text);border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--cp-line);">--cp-surface</div>
+                <div style="padding:10px 12px;background:var(--cp-surface-soft);color:var(--cp-text);border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--cp-line);">--cp-surface-soft</div>
+                <div style="padding:10px 12px;background:var(--cp-surface-hover);color:var(--cp-text);border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--cp-line);">--cp-surface-hover</div>
+                <div style="padding:10px 12px;background:var(--cp-page);color:var(--cp-text);border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--cp-line);">--cp-page</div>
+                <div style="padding:10px 12px;background:var(--cp-danger);color:#fff;border-radius:8px;font-size:12px;font-weight:600;">--cp-danger</div>
+                <div style="padding:10px 12px;background:var(--cp-success);color:#fff;border-radius:8px;font-size:12px;font-weight:600;">--cp-success</div>
+              </div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>令牌</th><th>亮色值</th><th>暗色值</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>--cp-accent</code></td><td>#1a9070</td><td>#34d19e</td><td>主强调色，按钮、链接、焦点环</td></tr>
+              <tr><td><code>--cp-accent-soft</code></td><td>#eaf5f0</td><td>#1a2e26</td><td>柔和强调背景，chip 选中态</td></tr>
+              <tr><td><code>--cp-surface</code></td><td>#ffffff</td><td>#252927</td><td>卡片、输入框、浮层背景</td></tr>
+              <tr><td><code>--cp-text</code></td><td>#1c1e1c</td><td>#edf0ed</td><td>主文本</td></tr>
+              <tr><td><code>--cp-text-muted</code></td><td>#6b6e6a</td><td>#b6bab6</td><td>次级文本、占位符</td></tr>
+              <tr><td><code>--cp-line</code></td><td>#e6e8e3</td><td>#3b403c</td><td>分隔线、边框</td></tr>
+              <tr><td><code>--cp-danger</code></td><td>#c94545</td><td>#ef8b8b</td><td>危险/错误状态</td></tr>
+              <tr><td><code>--cp-radius-control</code></td><td colspan="2">8px</td><td>按钮、输入框等控件圆角</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ====== BUTTON ====== -->
+        <section class="comp-spec" id="button" data-od-id="path-1-1-5">
+          <div class="comp-header" data-od-id="path-1-1-5-0">
+            <h3 data-od-id="path-1-1-5-0-0">Button 按钮</h3>
+            <p>主操作触发器。6 种变体 × 3 尺寸 × 2 状态。插件内容区优先使用 primary 和 secondary，危险操作必须搭配二次确认 Dialog。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">6 变体</span><span class="comp-meta-tag">3 尺寸</span>
+              <span class="comp-meta-tag">按钮组</span><span class="comp-meta-tag">图标按钮</span>
+            </div>
+          </div>
+          <div class="anatomy-box" data-od-id="path-1-1-5-1">
+            <h4 data-od-id="path-1-1-5-1-0">解剖结构</h4>
+            <ul>
+              <li><code>.btn</code> — 基础类，所有变体必须搭配</li>
+              <li><code>.btn-{variant}</code> — primary / secondary / subtle / ghost / danger / danger-subtle</li>
+              <li><code>.btn-{size}</code> — sm (28px) / md (36px) / lg (44px)</li>
+              <li><code>.btn-full</code> — 拉伸至父容器宽度</li>
+              <li><code>.btn-group</code> — 包裹容器，连接为一组</li>
+            </ul>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-5-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-5-2-0-0">变体</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <button class="btn btn-primary btn-md" data-od-id="path-1-1-5-2-1-0-0">主要</button>
+                <button class="btn btn-secondary btn-md" data-od-id="path-1-1-5-2-1-0-1">次要</button>
+                <button class="btn btn-subtle btn-md" data-od-id="path-1-1-5-2-1-0-2">柔和</button>
+                <button class="btn btn-ghost btn-md" data-od-id="path-1-1-5-2-1-0-3">幽灵</button>
+                <button class="btn btn-danger btn-md" data-od-id="path-1-1-5-2-1-0-4">危险</button>
+                <button class="btn btn-danger-subtle btn-md" data-od-id="path-1-1-5-2-1-0-5">危险柔和</button>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-5-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;button class="btn btn-primary btn-md"&gt;主要&lt;/button&gt;
+&lt;button class="btn btn-secondary btn-md"&gt;次要&lt;/button&gt;
+&lt;button class="btn btn-subtle btn-md"&gt;柔和&lt;/button&gt;
+&lt;button class="btn btn-ghost btn-md"&gt;幽灵&lt;/button&gt;
+&lt;button class="btn btn-danger btn-md"&gt;危险&lt;/button&gt;
+&lt;button class="btn btn-danger-subtle btn-md"&gt;危险柔和&lt;/button&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-5-3">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-5-3-0-0">尺寸</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <button class="btn btn-primary btn-sm" data-od-id="path-1-1-5-3-1-0-0">小 sm</button>
+                <button class="btn btn-primary btn-md" data-od-id="path-1-1-5-3-1-0-1">中 md</button>
+                <button class="btn btn-primary btn-lg" data-od-id="path-1-1-5-3-1-0-2">大 lg</button>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-5-3-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;button class="btn btn-primary btn-sm"&gt;小 sm&lt;/button&gt;
+&lt;button class="btn btn-primary btn-md"&gt;中 md&lt;/button&gt;
+&lt;button class="btn btn-primary btn-lg"&gt;大 lg&lt;/button&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-5-4">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-5-4-0-0">禁用 &amp; 全宽</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <button class="btn btn-primary btn-md" disabled="" data-od-id="path-1-1-5-4-1-0-0">禁用主要</button>
+                <button class="btn btn-secondary btn-md" disabled="" data-od-id="path-1-1-5-4-1-0-1">禁用次要</button>
+              </div>
+              <div style="max-width:240px;margin-top:8px;">
+                <button class="btn btn-primary btn-md btn-full" data-od-id="path-1-1-5-4-1-1-0">全宽按钮</button>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-5-4-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;button class="btn btn-primary btn-md" disabled&gt;禁用主要&lt;/button&gt;
+&lt;button class="btn btn-secondary btn-md" disabled&gt;禁用次要&lt;/button&gt;
+
+&lt;button class="btn btn-primary btn-md btn-full"&gt;全宽按钮&lt;/button&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-5-5">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-5-5-0-0">按钮组 &amp; 图标按钮</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <div class="btn-group">
+                  <button class="btn btn-secondary btn-md" data-od-id="path-1-1-5-5-1-0-0-0">左</button>
+                  <button class="btn btn-secondary btn-md" data-od-id="path-1-1-5-5-1-0-0-1">中</button>
+                  <button class="btn btn-secondary btn-md" data-od-id="path-1-1-5-5-1-0-0-2">右</button>
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-subtle btn-sm" data-od-id="path-1-1-5-5-1-0-1-0">日</button>
+                  <button class="btn btn-primary btn-sm" data-od-id="path-1-1-5-5-1-0-1-1">周</button>
+                  <button class="btn btn-subtle btn-sm" data-od-id="path-1-1-5-5-1-0-1-2">月</button>
+                </div>
+              </div>
+              <div class="demo-row">
+                <button class="icbtn icbtn-sm" title="更多" data-od-id="path-1-1-5-5-1-1-0">⋯</button>
+                <button class="icbtn" title="设置" data-od-id="path-1-1-5-5-1-1-1">⚙</button>
+                <button class="icbtn icbtn-lg" title="关闭" data-od-id="path-1-1-5-5-1-1-2">✕</button>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-5-5-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;!-- 按钮组 --&gt;
+&lt;div class="btn-group"&gt;
+  &lt;button class="btn btn-secondary btn-md"&gt;左&lt;/button&gt;
+  &lt;button class="btn btn-secondary btn-md"&gt;中&lt;/button&gt;
+  &lt;button class="btn btn-secondary btn-md"&gt;右&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- 图标按钮 --&gt;
+&lt;button class="icbtn icbtn-sm" title="更多"&gt;⋯&lt;/button&gt;
+&lt;button class="icbtn" title="设置"&gt;⚙&lt;/button&gt;
+&lt;button class="icbtn icbtn-lg" title="关闭"&gt;✕&lt;/button&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>变体</th><th>背景</th><th>文字色</th><th>适用场景</th></tr></thead>
+            <tbody>
+              <tr><td><code>.btn-primary</code></td><td>--cp-accent</td><td>#fff</td><td>每屏唯一最重要操作</td></tr>
+              <tr><td><code>.btn-secondary</code></td><td>--cp-surface</td><td>--cp-text</td><td>次级操作、取消、导航</td></tr>
+              <tr><td><code>.btn-subtle</code></td><td>--cp-accent-soft</td><td>--cp-accent</td><td>工具栏、筛选区低权重操作</td></tr>
+              <tr><td><code>.btn-ghost</code></td><td>transparent</td><td>--cp-text-muted</td><td>内联操作、卡片内辅助按钮</td></tr>
+              <tr><td><code>.btn-danger</code></td><td>--cp-danger</td><td>#fff</td><td>不可逆破坏操作，需二次确认</td></tr>
+              <tr><td><code>.btn-danger-subtle</code></td><td>--cp-danger-soft</td><td>--cp-danger</td><td>危险低强度版本，可直接展示</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-5-7">
+            <div class="do"><h5 data-od-id="path-1-1-5-7-0-0">✓ 应当</h5><p>每个功能区最多一个 primary 按钮。用 secondary 或 ghost 做辅助操作，保持视觉层级清晰。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-5-7-1-0">✗ 不应</h5><p>不要在同一行放多个 primary 按钮。danger 操作不能是第一步——必须搭配确认 Dialog。</p></div>
+          </div>
+          <div class="code-block" data-od-id="path-1-1-5-8">
+            <div class="code-head"><span>插件使用示例</span><button class="copy-btn" type="button" data-copy="btn-code" data-od-id="path-1-1-5-8-0-1">复制</button></div>
+            <div class="code-window"><pre><code id="btn-code" data-od-id="path-1-1-5-8-1-0-0">// 基础用法
+&lt;Button variant="primary"&gt;确认&lt;/Button&gt;
+&lt;Button variant="secondary"&gt;取消&lt;/Button&gt;
+&lt;Button variant="ghost" size="sm"&gt;查看详情&lt;/Button&gt;
+
+// 危险操作（搭配 Dialog）
+&lt;Button variant="danger" onClick={() =&gt; setConfirmOpen(true)}&gt;删除记录&lt;/Button&gt;
+
+// 全宽
+&lt;Button variant="primary" fullWidth&gt;开始同步&lt;/Button&gt;</code></pre></div>
+          </div>
+        </section>
+
+        <!-- ====== INPUT ====== -->
+        <section class="comp-spec" id="input" data-od-id="path-1-1-6">
+          <div class="comp-header" data-od-id="path-1-1-6-0">
+            <h3 data-od-id="path-1-1-6-0-0">Input 输入框</h3>
+            <p>单行文本输入控件。支持 3 种尺寸、前后缀插槽、4 种验证状态。所有输入组件共享相同圆角和边框令牌。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">3 尺寸</span><span class="comp-meta-tag">4 状态</span>
+              <span class="comp-meta-tag">前后缀</span><span class="comp-meta-tag">可清除</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-6-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-6-1-0-0">尺寸</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;">
+                <input class="ipt ipt-sm" placeholder="Small — 28px 高度">
+                <input class="ipt" placeholder="Medium（默认）— 36px 高度">
+                <input class="ipt ipt-lg" placeholder="Large — 44px 高度">
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-6-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;input class="ipt ipt-sm" placeholder="Small — 28px 高度" /&gt;
+&lt;input class="ipt" placeholder="Medium（默认）— 36px 高度" /&gt;
+&lt;input class="ipt ipt-lg" placeholder="Large — 44px 高度" /&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-6-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-6-2-0-0">状态</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;">
+                <input class="ipt" placeholder="默认状态">
+                <input class="ipt ipt-success" value="验证通过">
+                <input class="ipt ipt-error" value="输入有误">
+                <input class="ipt" disabled="" value="禁用状态">
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-6-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;input class="ipt" placeholder="默认状态" /&gt;
+&lt;input class="ipt ipt-success" value="验证通过" /&gt;
+&lt;input class="ipt ipt-error" value="输入有误" /&gt;
+&lt;input class="ipt" disabled value="禁用状态" /&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-6-3">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-6-3-0-0">前后缀 &amp; 可清除</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;">
+                <div class="ipt-wrap">
+                  <span class="ipt-prefix">🔍</span>
+                  <input class="ipt" placeholder="搜索插件...">
+                </div>
+                <div class="ipt-wrap">
+                  <input class="ipt" placeholder="输入标签">
+                  <span class="ipt-suffix">⏎</span>
+                </div>
+                <div class="ipt-wrap">
+                  <input class="ipt" value="可清除内容">
+                  <button class="ipt-clear" type="button" data-od-id="path-1-1-6-3-1-0-2-1">✕</button>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-6-3-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;!-- 前缀 --&gt;
+&lt;div class="ipt-wrap"&gt;
+  &lt;span class="ipt-prefix"&gt;🔍&lt;/span&gt;
+  &lt;input class="ipt" placeholder="搜索插件..." /&gt;
+&lt;/div&gt;
+
+&lt;!-- 后缀 --&gt;
+&lt;div class="ipt-wrap"&gt;
+  &lt;input class="ipt" placeholder="输入标签" /&gt;
+  &lt;span class="ipt-suffix"&gt;⏎&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;!-- 可清除 --&gt;
+&lt;div class="ipt-wrap"&gt;
+  &lt;input class="ipt" value="可清除内容" /&gt;
+  &lt;button class="ipt-clear" type="button"&gt;✕&lt;/button&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-6-4">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-6-4-0-0">带标签 &amp; 提示</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;">
+                <div class="field">
+                  <label class="field-label">用户名 <span class="field-required">*</span></label>
+                  <input class="ipt" placeholder="请输入用户名">
+                  <span class="field-hint">3-20 个字符，仅支持字母和数字</span>
+                </div>
+                <div class="field">
+                  <label class="field-label">描述</label>
+                  <input class="ipt ipt-error" value="内容过长">
+                  <span class="field-error">超出最大长度限制（100 字符）</span>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-6-4-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="field"&gt;
+  &lt;label class="field-label"&gt;用户名 &lt;span class="field-required"&gt;*&lt;/span&gt;&lt;/label&gt;
+  &lt;input class="ipt" placeholder="请输入用户名" /&gt;
+  &lt;span class="field-hint"&gt;3-20 个字符，仅支持字母和数字&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;div class="field"&gt;
+  &lt;label class="field-label"&gt;描述&lt;/label&gt;
+  &lt;input class="ipt ipt-error" value="内容过长" /&gt;
+  &lt;span class="field-error"&gt;超出最大长度限制（100 字符）&lt;/span&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>尺寸</td><td><code>.ipt-sm</code> / 默认 / <code>.ipt-lg</code></td><td>28px / 36px / 44px 高度</td></tr>
+              <tr><td>验证态</td><td><code>.ipt-success</code> / <code>.ipt-error</code></td><td>绿色 / 红色边框反馈</td></tr>
+              <tr><td>禁用</td><td><code>disabled</code> 属性</td><td>降低透明度，阻止交互</td></tr>
+              <tr><td>容器</td><td><code>.ipt-wrap</code></td><td>用于前后缀定位</td></tr>
+              <tr><td>前缀</td><td><code>.ipt-prefix</code></td><td>图标或文字，位于左侧</td></tr>
+              <tr><td>后缀</td><td><code>.ipt-suffix</code></td><td>图标或文字，位于右侧</td></tr>
+              <tr><td>清除</td><td><code>.ipt-clear</code></td><td>内容非空时显示清除按钮</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-6-6">
+            <div class="do"><h5 data-od-id="path-1-1-6-6-0-0">✓ 应当</h5><p>始终提供 placeholder 暗示预期格式。错误状态必须同步显示 .field-error 提示文字。对表单类输入必须包裹 label。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-6-6-1-0">✗ 不应</h5><p>不要用 title 属性替代 label——屏幕阅读器无法可靠获取。禁止在 placeholder 里放关键说明——用户输入后它就消失了。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== TEXTAREA ====== -->
+        <section class="comp-spec" id="textarea" data-od-id="path-1-1-7">
+          <div class="comp-header" data-od-id="path-1-1-7-0">
+            <h3 data-od-id="path-1-1-7-0-0">Textarea 多行输入</h3>
+            <p>多行文本输入控件。支持自动增高、字符计数和尺寸调节。与 Input 共享验证状态和标签模式。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">自动增高</span><span class="comp-meta-tag">字符计数</span>
+              <span class="comp-meta-tag">可调节</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-7-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-7-1-0-0">基础 &amp; 自动增高</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;">
+                <textarea class="txa" rows="3" placeholder="固定高度，3 行"></textarea>
+                <textarea class="txa txa-auto" rows="1" placeholder="自动增高——随内容撑开"></textarea>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-7-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;textarea class="txa" rows="3" placeholder="固定高度，3 行"&gt;&lt;/textarea&gt;
+&lt;textarea class="txa txa-auto" rows="1" placeholder="自动增高——随内容撑开"&gt;&lt;/textarea&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-7-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-7-2-0-0">字符计数 &amp; 验证</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;">
+                <div class="field">
+                  <label class="field-label">备注</label>
+                  <textarea class="txa" rows="3" maxlength="200" placeholder="最多 200 字符"></textarea>
+                  <span class="field-hint field-counter">0 / 200</span>
+                </div>
+                <div class="field">
+                  <label class="field-label">错误示例</label>
+                  <textarea class="txa txa-error" rows="2">内容超出限制</textarea>
+                  <span class="field-error">已超出最大字符数</span>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-7-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="field"&gt;
+  &lt;label class="field-label"&gt;备注&lt;/label&gt;
+  &lt;textarea class="txa" rows="3" maxlength="200" placeholder="最多 200 字符"&gt;&lt;/textarea&gt;
+  &lt;span class="field-hint field-counter"&gt;0 / 200&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;div class="field"&gt;
+  &lt;label class="field-label"&gt;错误示例&lt;/label&gt;
+  &lt;textarea class="txa txa-error" rows="2"&gt;内容超出限制&lt;/textarea&gt;
+  &lt;span class="field-error"&gt;已超出最大字符数&lt;/span&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>基础</td><td><code>.txa</code></td><td>多行输入基础类</td></tr>
+              <tr><td>自动增高</td><td><code>.txa-auto</code></td><td>内容增加时自动撑高</td></tr>
+              <tr><td>错误态</td><td><code>.txa-error</code></td><td>红色边框反馈</td></tr>
+              <tr><td>调节</td><td><code>resize: vertical</code></td><td>默认纵向可调</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-7-4">
+            <div class="do"><h5 data-od-id="path-1-1-7-4-0-0">✓ 应当</h5><p>对有字数限制的输入显示实时计数器。长文本建议使用 txa-auto 提升输入体验。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-7-4-1-0">✗ 不应</h5><p>不要设置 resize:none——始终允许用户调节高度。rows 不要低于 2，否则与 Input 无区别。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== SELECT ====== -->
+        <section class="comp-spec" id="select" data-od-id="path-1-1-8">
+          <div class="comp-header" data-od-id="path-1-1-8-0">
+            <h3 data-od-id="path-1-1-8-0-0">Select 选择器</h3>
+            <p>单选下拉控件。原生 &lt;select&gt; 增强样式，保持键盘可访问性和移动端原生体验。复杂场景可替换为 Combobox。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">3 尺寸</span><span class="comp-meta-tag">分组</span>
+              <span class="comp-meta-tag">禁用项</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-8-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-8-1-0-0">基础 &amp; 尺寸</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;">
+                <select class="sel sel-sm">
+                  <option value="">Small — 请选择</option>
+                  <option>选项 A</option><option>选项 B</option>
+                </select>
+                <select class="sel">
+                  <option value="">Medium（默认）— 请选择</option>
+                  <option>选项 A</option><option>选项 B</option><option>选项 C</option>
+                </select>
+                <select class="sel sel-lg">
+                  <option value="">Large — 请选择</option>
+                  <option>选项 A</option><option>选项 B</option>
+                </select>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-8-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;select class="sel sel-sm"&gt;
+  &lt;option value=""&gt;Small — 请选择&lt;/option&gt;
+  &lt;option&gt;选项 A&lt;/option&gt;
+&lt;/select&gt;
+
+&lt;select class="sel"&gt;
+  &lt;option value=""&gt;Medium（默认）— 请选择&lt;/option&gt;
+  &lt;option&gt;选项 A&lt;/option&gt;
+&lt;/select&gt;
+
+&lt;select class="sel sel-lg"&gt;
+  &lt;option value=""&gt;Large — 请选择&lt;/option&gt;
+  &lt;option&gt;选项 A&lt;/option&gt;
+&lt;/select&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-8-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-8-2-0-0">分组 &amp; 禁用</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;">
+                <select class="sel">
+                  <option value="">请选择插件类型</option>
+                  <optgroup label="布局类">
+                    <option>sidebar</option><option>panel</option>
+                  </optgroup>
+                  <optgroup label="功能类">
+                    <option>widget</option><option>searchProvider</option>
+                  </optgroup>
+                </select>
+                <select class="sel" disabled="">
+                  <option>禁用状态</option>
+                </select>
+                <select class="sel sel-error">
+                  <option value="">必选 — 错误状态</option>
+                </select>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-8-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;!-- 分组 --&gt;
+&lt;select class="sel"&gt;
+  &lt;option value=""&gt;请选择插件类型&lt;/option&gt;
+  &lt;optgroup label="布局类"&gt;
+    &lt;option&gt;sidebar&lt;/option&gt;
+    &lt;option&gt;panel&lt;/option&gt;
+  &lt;/optgroup&gt;
+  &lt;optgroup label="功能类"&gt;
+    &lt;option&gt;widget&lt;/option&gt;
+    &lt;option&gt;searchProvider&lt;/option&gt;
+  &lt;/optgroup&gt;
+&lt;/select&gt;
+
+&lt;!-- 禁用 --&gt;
+&lt;select class="sel" disabled&gt;
+  &lt;option&gt;禁用状态&lt;/option&gt;
+&lt;/select&gt;
+
+&lt;!-- 错误态 --&gt;
+&lt;select class="sel sel-error"&gt;
+  &lt;option value=""&gt;必选 — 错误状态&lt;/option&gt;
+&lt;/select&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>尺寸</td><td><code>.sel-sm</code> / 默认 / <code>.sel-lg</code></td><td>28px / 36px / 44px 高度</td></tr>
+              <tr><td>错误态</td><td><code>.sel-error</code></td><td>红色边框，表示未选择必选项</td></tr>
+              <tr><td>禁用</td><td><code>disabled</code></td><td>灰色背景，阻止交互</td></tr>
+              <tr><td>分组</td><td><code>&lt;optgroup&gt;</code></td><td>原生分组，可嵌套使用</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-8-4">
+            <div class="do"><h5 data-od-id="path-1-1-8-4-0-0">✓ 应当</h5><p>选项不超过 15 个时使用 Select。第一项为空值占位（"请选择…"）以暗示未选状态。分组清晰地组织相关选项。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-8-4-1-0">✗ 不应</h5><p>选项超过 15 个应改用 Combobox（可搜索）。不要用 Select 做多选——改用 Checkbox 组或 Tag 输入。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== CHECKBOX ====== -->
+        <section class="comp-spec" id="checkbox" data-od-id="path-1-1-9">
+          <div class="comp-header" data-od-id="path-1-1-9-0">
+            <h3 data-od-id="path-1-1-9-0-0">Checkbox 复选框</h3>
+            <p>多选切换控件。支持选中、未选中、半选三态。常用于设置面板和批量操作场景。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">3 状态</span><span class="comp-meta-tag">2 尺寸</span>
+              <span class="comp-meta-tag">组合使用</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-9-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-9-1-0-0">状态</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <label class="chk"><input type="checkbox"><span class="chk-box"></span><span>未选中</span></label>
+                <label class="chk"><input type="checkbox" checked=""><span class="chk-box"></span><span>选中</span></label>
+                <label class="chk chk-indeterminate"><input type="checkbox"><span class="chk-box"></span><span>半选</span></label>
+                <label class="chk"><input type="checkbox" disabled=""><span class="chk-box"></span><span>禁用</span></label>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-9-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;label class="chk"&gt;
+  &lt;input type="checkbox" /&gt;
+  &lt;span class="chk-box"&gt;&lt;/span&gt;
+  &lt;span&gt;未选中&lt;/span&gt;
+&lt;/label&gt;
+
+&lt;label class="chk"&gt;
+  &lt;input type="checkbox" checked /&gt;
+  &lt;span class="chk-box"&gt;&lt;/span&gt;
+  &lt;span&gt;选中&lt;/span&gt;
+&lt;/label&gt;
+
+&lt;label class="chk chk-indeterminate"&gt;
+  &lt;input type="checkbox" /&gt;
+  &lt;span class="chk-box"&gt;&lt;/span&gt;
+  &lt;span&gt;半选&lt;/span&gt;
+&lt;/label&gt;
+
+&lt;label class="chk"&gt;
+  &lt;input type="checkbox" disabled /&gt;
+  &lt;span class="chk-box"&gt;&lt;/span&gt;
+  &lt;span&gt;禁用&lt;/span&gt;
+&lt;/label&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-9-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-9-2-0-0">组合使用</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:8px;">
+                <label class="chk chk-indeterminate"><input type="checkbox"><span class="chk-box"></span><span style="font-weight:600;">全选通知类型</span></label>
+                <div style="padding-left:24px;display:flex;flex-direction:column;gap:6px;">
+                  <label class="chk"><input type="checkbox" checked=""><span class="chk-box"></span><span>系统更新</span></label>
+                  <label class="chk"><input type="checkbox" checked=""><span class="chk-box"></span><span>安全告警</span></label>
+                  <label class="chk"><input type="checkbox"><span class="chk-box"></span><span>营销推送</span></label>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-9-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;!-- 全选 + 子选项 --&gt;
+&lt;label class="chk chk-indeterminate"&gt;
+  &lt;input type="checkbox" /&gt;
+  &lt;span class="chk-box"&gt;&lt;/span&gt;
+  &lt;span&gt;全选通知类型&lt;/span&gt;
+&lt;/label&gt;
+&lt;div style="padding-left:24px;"&gt;
+  &lt;label class="chk"&gt;
+    &lt;input type="checkbox" checked /&gt;
+    &lt;span class="chk-box"&gt;&lt;/span&gt;
+    &lt;span&gt;系统更新&lt;/span&gt;
+  &lt;/label&gt;
+  &lt;label class="chk"&gt;
+    &lt;input type="checkbox" /&gt;
+    &lt;span class="chk-box"&gt;&lt;/span&gt;
+    &lt;span&gt;营销推送&lt;/span&gt;
+  &lt;/label&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>基础</td><td><code>.chk</code></td><td>复选框容器（label 包裹）</td></tr>
+              <tr><td>选框</td><td><code>.chk-box</code></td><td>自定义选框视觉元素</td></tr>
+              <tr><td>半选</td><td><code>.chk-indeterminate</code></td><td>全选/部分选中时的中间态</td></tr>
+              <tr><td>禁用</td><td><code>disabled</code> on input</td><td>降低透明度，阻止交互</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-9-4">
+            <div class="do"><h5 data-od-id="path-1-1-9-4-0-0">✓ 应当</h5><p>列表项超过 5 个时提供"全选"复选框。label 必须描述操作结果而非状态（"开启通知" 而非 "通知已开启"）。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-9-4-1-0">✗ 不应</h5><p>不要用 Checkbox 做二选一切换——改用 Switch。不要在复选框组里混入其他表单控件。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== SWITCH ====== -->
+        <section class="comp-spec" id="switch" data-od-id="path-1-1-10">
+          <div class="comp-header" data-od-id="path-1-1-10-0">
+            <h3 data-od-id="path-1-1-10-0-0">Switch 开关</h3>
+            <p>二态切换控件。操作即时生效，无需额外提交。适用于设置面板中的开关类选项。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">2 尺寸</span><span class="comp-meta-tag">即时生效</span>
+              <span class="comp-meta-tag">带标签</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-10-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-10-1-0-0">状态 &amp; 尺寸</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <label class="swi"><input type="checkbox"><span class="swi-track"></span><span>关闭</span></label>
+                <label class="swi"><input type="checkbox" checked=""><span class="swi-track"></span><span>开启</span></label>
+                <label class="swi"><input type="checkbox" disabled=""><span class="swi-track"></span><span>禁用</span></label>
+              </div>
+              <div class="demo-row">
+                <label class="swi swi-sm"><input type="checkbox" checked=""><span class="swi-track"></span><span>小尺寸</span></label>
+                <label class="swi"><input type="checkbox" checked=""><span class="swi-track"></span><span>默认尺寸</span></label>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-10-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;label class="swi"&gt;
+  &lt;input type="checkbox" /&gt;
+  &lt;span class="swi-track"&gt;&lt;/span&gt;
+  &lt;span&gt;关闭&lt;/span&gt;
+&lt;/label&gt;
+
+&lt;label class="swi"&gt;
+  &lt;input type="checkbox" checked /&gt;
+  &lt;span class="swi-track"&gt;&lt;/span&gt;
+  &lt;span&gt;开启&lt;/span&gt;
+&lt;/label&gt;
+
+&lt;label class="swi swi-sm"&gt;
+  &lt;input type="checkbox" checked /&gt;
+  &lt;span class="swi-track"&gt;&lt;/span&gt;
+  &lt;span&gt;小尺寸&lt;/span&gt;
+&lt;/label&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-10-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-10-2-0-0">设置面板场景</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;max-width:320px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>深色模式</span>
+                  <label class="swi"><input type="checkbox" checked=""><span class="swi-track"></span></label>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>自动更新</span>
+                  <label class="swi"><input type="checkbox"><span class="swi-track"></span></label>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>开发者模式</span>
+                  <label class="swi"><input type="checkbox" disabled=""><span class="swi-track"></span></label>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-10-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div style="display:flex;justify-content:space-between;align-items:center;"&gt;
+  &lt;span&gt;深色模式&lt;/span&gt;
+  &lt;label class="swi"&gt;
+    &lt;input type="checkbox" checked /&gt;
+    &lt;span class="swi-track"&gt;&lt;/span&gt;
+  &lt;/label&gt;
+&lt;/div&gt;
+
+&lt;div style="display:flex;justify-content:space-between;align-items:center;"&gt;
+  &lt;span&gt;自动更新&lt;/span&gt;
+  &lt;label class="swi"&gt;
+    &lt;input type="checkbox" /&gt;
+    &lt;span class="swi-track"&gt;&lt;/span&gt;
+  &lt;/label&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>基础</td><td><code>.swi</code></td><td>开关容器（label 包裹）</td></tr>
+              <tr><td>轨道</td><td><code>.swi-track</code></td><td>滑动轨道视觉元素</td></tr>
+              <tr><td>小尺寸</td><td><code>.swi-sm</code></td><td>紧凑尺寸，用于密集列表</td></tr>
+              <tr><td>禁用</td><td><code>disabled</code> on input</td><td>降低透明度，阻止交互</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-10-4">
+            <div class="do"><h5 data-od-id="path-1-1-10-4-0-0">✓ 应当</h5><p>Switch 仅用于即时生效的二选一操作。文字 label 放左侧，Switch 右侧对齐。设置面板中统一使用 Switch。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-10-4-1-0">✗ 不应</h5><p>需要"保存"才生效的选项用 Checkbox 而非 Switch。不要用 Switch 做多选——一行一个 Switch 对应一个独立设置。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== RADIO ====== -->
+        <section class="comp-spec" id="radio" data-od-id="path-1-1-11">
+          <div class="comp-header" data-od-id="path-1-1-11-0">
+            <h3 data-od-id="path-1-1-11-0-0">Radio 单选框</h3>
+            <p>互斥选择控件。同组内只能选中一项。适用于选项较少（2-5 个）且需可见所有选项的场景。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">互斥</span><span class="comp-meta-tag">分组</span>
+              <span class="comp-meta-tag">横向/纵向</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-11-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-11-1-0-0">纵向排列</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:8px;">
+                <label class="rad"><input type="radio" name="theme" checked=""><span class="rad-dot"></span><span>浅色模式</span></label>
+                <label class="rad"><input type="radio" name="theme"><span class="rad-dot"></span><span>深色模式</span></label>
+                <label class="rad"><input type="radio" name="theme"><span class="rad-dot"></span><span>跟随系统</span></label>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-11-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;label class="rad"&gt;
+  &lt;input type="radio" name="theme" checked /&gt;
+  &lt;span class="rad-dot"&gt;&lt;/span&gt;
+  &lt;span&gt;浅色模式&lt;/span&gt;
+&lt;/label&gt;
+&lt;label class="rad"&gt;
+  &lt;input type="radio" name="theme" /&gt;
+  &lt;span class="rad-dot"&gt;&lt;/span&gt;
+  &lt;span&gt;深色模式&lt;/span&gt;
+&lt;/label&gt;
+&lt;label class="rad"&gt;
+  &lt;input type="radio" name="theme" /&gt;
+  &lt;span class="rad-dot"&gt;&lt;/span&gt;
+  &lt;span&gt;跟随系统&lt;/span&gt;
+&lt;/label&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-11-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-11-2-0-0">横向排列 &amp; 禁用</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <label class="rad"><input type="radio" name="size2" checked=""><span class="rad-dot"></span><span>小</span></label>
+                <label class="rad"><input type="radio" name="size2"><span class="rad-dot"></span><span>中</span></label>
+                <label class="rad"><input type="radio" name="size2"><span class="rad-dot"></span><span>大</span></label>
+                <label class="rad"><input type="radio" name="size2" disabled=""><span class="rad-dot"></span><span>特大（不可用）</span></label>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-11-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;!-- 横向排列，同 name 自动互斥 --&gt;
+&lt;label class="rad"&gt;
+  &lt;input type="radio" name="size" checked /&gt;
+  &lt;span class="rad-dot"&gt;&lt;/span&gt;
+  &lt;span&gt;小&lt;/span&gt;
+&lt;/label&gt;
+&lt;label class="rad"&gt;
+  &lt;input type="radio" name="size" /&gt;
+  &lt;span class="rad-dot"&gt;&lt;/span&gt;
+  &lt;span&gt;中&lt;/span&gt;
+&lt;/label&gt;
+&lt;label class="rad"&gt;
+  &lt;input type="radio" name="size" disabled /&gt;
+  &lt;span class="rad-dot"&gt;&lt;/span&gt;
+  &lt;span&gt;特大（不可用）&lt;/span&gt;
+&lt;/label&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>基础</td><td><code>.rad</code></td><td>单选框容器（label 包裹）</td></tr>
+              <tr><td>圆点</td><td><code>.rad-dot</code></td><td>自定义圆形选中指示器</td></tr>
+              <tr><td>分组</td><td><code>name</code> 属性相同</td><td>浏览器自动互斥</td></tr>
+              <tr><td>禁用</td><td><code>disabled</code> on input</td><td>降低透明度，阻止交互</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-11-4">
+            <div class="do"><h5 data-od-id="path-1-1-11-4-0-0">✓ 应当</h5><p>2-5 个选项时使用 Radio 使所有选项可见。提供一个默认选中项——避免"未选择"初始状态。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-11-4-1-0">✗ 不应</h5><p>超过 5 个选项改用 Select 或 Combobox。不要把 Radio 和 Checkbox 混用——它们语义完全不同。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== TABS ====== -->
+        <section class="comp-spec" id="tabs" data-od-id="path-1-1-12">
+          <div class="comp-header" data-od-id="path-1-1-12-0">
+            <h3 data-od-id="path-1-1-12-0-0">Tabs 标签页</h3>
+            <p>内容分区导航。在同一视图内切换不同面板。支持横向滚动和图标前缀。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">线性风格</span><span class="comp-meta-tag">胶囊风格</span>
+              <span class="comp-meta-tag">可滚动</span><span class="comp-meta-tag">图标</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-12-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-12-1-0-0">线性风格（默认）</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;">
+                <div class="tabs">
+                  <button class="tab tab-active" data-od-id="path-1-1-12-1-1-0-0-0">概览</button>
+                  <button class="tab" data-od-id="path-1-1-12-1-1-0-0-1">插件</button>
+                  <button class="tab" data-od-id="path-1-1-12-1-1-0-0-2">设置</button>
+                  <button class="tab" disabled="" data-od-id="path-1-1-12-1-1-0-0-3">日志（禁用）</button>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-12-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="tabs"&gt;
+  &lt;button class="tab tab-active"&gt;概览&lt;/button&gt;
+  &lt;button class="tab"&gt;插件&lt;/button&gt;
+  &lt;button class="tab"&gt;设置&lt;/button&gt;
+  &lt;button class="tab" disabled&gt;日志（禁用）&lt;/button&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-12-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-12-2-0-0">胶囊风格</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;">
+                <div class="tabs tabs-pill">
+                  <button class="tab tab-active" data-od-id="path-1-1-12-2-1-0-0-0">全部</button>
+                  <button class="tab" data-od-id="path-1-1-12-2-1-0-0-1">布局</button>
+                  <button class="tab" data-od-id="path-1-1-12-2-1-0-0-2">小组件</button>
+                  <button class="tab" data-od-id="path-1-1-12-2-1-0-0-3">搜索</button>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-12-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="tabs tabs-pill"&gt;
+  &lt;button class="tab tab-active"&gt;全部&lt;/button&gt;
+  &lt;button class="tab"&gt;布局&lt;/button&gt;
+  &lt;button class="tab"&gt;小组件&lt;/button&gt;
+  &lt;button class="tab"&gt;搜索&lt;/button&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-12-3">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-12-3-0-0">带图标 &amp; 计数</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;">
+                <div class="tabs">
+                  <button class="tab tab-active" data-od-id="path-1-1-12-3-1-0-0-0">📦 已安装 <span class="tab-badge">12</span></button>
+                  <button class="tab" data-od-id="path-1-1-12-3-1-0-0-1">🔍 发现</button>
+                  <button class="tab" data-od-id="path-1-1-12-3-1-0-0-2">⬆ 更新 <span class="tab-badge">3</span></button>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-12-3-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="tabs"&gt;
+  &lt;button class="tab tab-active"&gt;📦 已安装 &lt;span class="tab-badge"&gt;12&lt;/span&gt;&lt;/button&gt;
+  &lt;button class="tab"&gt;🔍 发现&lt;/button&gt;
+  &lt;button class="tab"&gt;⬆ 更新 &lt;span class="tab-badge"&gt;3&lt;/span&gt;&lt;/button&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>容器</td><td><code>.tabs</code></td><td>标签栏容器，flex 横向排列</td></tr>
+              <tr><td>单项</td><td><code>.tab</code></td><td>单个标签按钮</td></tr>
+              <tr><td>激活</td><td><code>.tab-active</code></td><td>当前选中标签</td></tr>
+              <tr><td>胶囊</td><td><code>.tabs-pill</code></td><td>圆角胶囊风格变体</td></tr>
+              <tr><td>徽标</td><td><code>.tab-badge</code></td><td>标签内计数小徽标</td></tr>
+              <tr><td>禁用</td><td><code>disabled</code></td><td>不可点击的标签</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-12-5">
+            <div class="do"><h5 data-od-id="path-1-1-12-5-0-0">✓ 应当</h5><p>标签数量 2-6 个。当前激活项必须有视觉区分。标签文字简短（2-4 字）。内容切换不应导致页面跳动。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-12-5-1-0">✗ 不应</h5><p>不要嵌套 Tabs——两层标签会让用户迷失。不要用 Tabs 做导航（那是 Nav 的职责）。标签内容懒加载时需显示骨架屏。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== DIALOG ====== -->
+        <section class="comp-spec" id="dialog" data-od-id="path-1-1-13">
+          <div class="comp-header" data-od-id="path-1-1-13-0">
+            <h3 data-od-id="path-1-1-13-0-0">Dialog 对话框</h3>
+            <p>模态浮层。阻断主流程，聚焦用户注意力于关键决策或表单。ESC 或点击遮罩关闭。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">3 尺寸</span><span class="comp-meta-tag">确认型</span>
+              <span class="comp-meta-tag">表单型</span><span class="comp-meta-tag">危险型</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-13-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-13-1-0-0">确认型对话框</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;">
+                <div class="dialog-demo" style="position:relative;border:1px solid var(--cp-line);border-radius:12px;padding:24px;max-width:400px;background:var(--cp-surface);">
+                  <h4 style="margin:0 0 8px;font-size:16px;" data-od-id="path-1-1-13-1-1-0-0-0">确认删除？</h4>
+                  <p style="margin:0 0 20px;color:var(--cp-text-muted);font-size:14px;">此操作不可撤销。该插件的所有配置数据将被永久删除。</p>
+                  <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="btn btn-secondary btn-md" data-od-id="path-1-1-13-1-1-0-0-2-0">取消</button>
+                    <button class="btn btn-danger btn-md" data-od-id="path-1-1-13-1-1-0-0-2-1">确认删除</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-13-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="dialog-overlay"&gt;
+  &lt;div class="dialog dialog-sm"&gt;
+    &lt;h4&gt;确认删除？&lt;/h4&gt;
+    &lt;p&gt;此操作不可撤销。该插件的所有配置数据将被永久删除。&lt;/p&gt;
+    &lt;div class="dialog-footer"&gt;
+      &lt;button class="btn btn-secondary btn-md"&gt;取消&lt;/button&gt;
+      &lt;button class="btn btn-danger btn-md"&gt;确认删除&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-13-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-13-2-0-0">表单型对话框</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;">
+                <div class="dialog-demo" style="position:relative;border:1px solid var(--cp-line);border-radius:12px;padding:24px;max-width:440px;background:var(--cp-surface);">
+                  <h4 style="margin:0 0 16px;font-size:16px;" data-od-id="path-1-1-13-2-1-0-0-0">新建工作区</h4>
+                  <div class="field" style="margin-bottom:12px;">
+                    <label class="field-label">工作区名称 <span class="field-required">*</span></label>
+                    <input class="ipt" placeholder="例：我的项目">
+                  </div>
+                  <div class="field" style="margin-bottom:20px;">
+                    <label class="field-label">描述</label>
+                    <textarea class="txa" rows="2" placeholder="可选"></textarea>
+                  </div>
+                  <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="btn btn-secondary btn-md" data-od-id="path-1-1-13-2-1-0-0-3-0">取消</button>
+                    <button class="btn btn-primary btn-md" data-od-id="path-1-1-13-2-1-0-0-3-1">创建</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-13-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="dialog-overlay"&gt;
+  &lt;div class="dialog"&gt;
+    &lt;h4&gt;新建工作区&lt;/h4&gt;
+    &lt;div class="field"&gt;
+      &lt;label class="field-label"&gt;工作区名称 &lt;span class="field-required"&gt;*&lt;/span&gt;&lt;/label&gt;
+      &lt;input class="ipt" placeholder="例：我的项目" /&gt;
+    &lt;/div&gt;
+    &lt;div class="field"&gt;
+      &lt;label class="field-label"&gt;描述&lt;/label&gt;
+      &lt;textarea class="txa" rows="2" placeholder="可选"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;div class="dialog-footer"&gt;
+      &lt;button class="btn btn-secondary btn-md"&gt;取消&lt;/button&gt;
+      &lt;button class="btn btn-primary btn-md"&gt;创建&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>遮罩</td><td><code>.dialog-overlay</code></td><td>半透明黑色背景层</td></tr>
+              <tr><td>容器</td><td><code>.dialog</code></td><td>居中白色面板</td></tr>
+              <tr><td>小尺寸</td><td><code>.dialog-sm</code></td><td>max-width: 360px，用于简短确认</td></tr>
+              <tr><td>中尺寸</td><td>默认</td><td>max-width: 480px，表单类</td></tr>
+              <tr><td>大尺寸</td><td><code>.dialog-lg</code></td><td>max-width: 640px，复杂内容</td></tr>
+              <tr><td>关闭</td><td>ESC / 遮罩点击 / 关闭按钮</td><td>三种关闭方式并存</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-13-4">
+            <div class="do"><h5 data-od-id="path-1-1-13-4-0-0">✓ 应当</h5><p>危险操作必须使用 Dialog 做二次确认。表单提交后自动关闭并显示 Toast 反馈。焦点锁定在 Dialog 内部。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-13-4-1-0">✗ 不应</h5><p>不要嵌套 Dialog。内容过多（超过一屏）改用独立页面或 Drawer。不要在 Dialog 内放导航或深层链接。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== TOAST ====== -->
+        <section class="comp-spec" id="toast" data-od-id="path-1-1-14">
+          <div class="comp-header" data-od-id="path-1-1-14-0">
+            <h3 data-od-id="path-1-1-14-0-0">Toast 轻提示</h3>
+            <p>非阻断性反馈。短暂出现后自动消失。用于操作结果通知，不打断用户流程。4 种语义变体。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">4 变体</span><span class="comp-meta-tag">自动消失</span>
+              <span class="comp-meta-tag">可关闭</span><span class="comp-meta-tag">可堆叠</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-14-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-14-1-0-0">语义变体</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:10px;">
+                <div class="toast toast-success"><span class="toast-icon">✓</span><span class="toast-msg">插件安装成功</span><button class="toast-close" data-od-id="path-1-1-14-1-1-0-0-2">✕</button></div>
+                <div class="toast toast-error"><span class="toast-icon">✕</span><span class="toast-msg">网络连接失败，请重试</span><button class="toast-close" data-od-id="path-1-1-14-1-1-0-1-2">✕</button></div>
+                <div class="toast toast-warning"><span class="toast-icon">⚠</span><span class="toast-msg">存储空间不足，部分数据未同步</span><button class="toast-close" data-od-id="path-1-1-14-1-1-0-2-2">✕</button></div>
+                <div class="toast toast-info"><span class="toast-icon">ℹ</span><span class="toast-msg">新版本 v2.4 已发布</span><button class="toast-close" data-od-id="path-1-1-14-1-1-0-3-2">✕</button></div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-14-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="toast toast-success"&gt;
+  &lt;span class="toast-icon"&gt;✓&lt;/span&gt;
+  &lt;span class="toast-msg"&gt;插件安装成功&lt;/span&gt;
+  &lt;button class="toast-close"&gt;✕&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;div class="toast toast-error"&gt;
+  &lt;span class="toast-icon"&gt;✕&lt;/span&gt;
+  &lt;span class="toast-msg"&gt;网络连接失败，请重试&lt;/span&gt;
+  &lt;button class="toast-close"&gt;✕&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;div class="toast toast-warning"&gt;
+  &lt;span class="toast-icon"&gt;⚠&lt;/span&gt;
+  &lt;span class="toast-msg"&gt;存储空间不足&lt;/span&gt;
+  &lt;button class="toast-close"&gt;✕&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;div class="toast toast-info"&gt;
+  &lt;span class="toast-icon"&gt;ℹ&lt;/span&gt;
+  &lt;span class="toast-msg"&gt;新版本 v2.4 已发布&lt;/span&gt;
+  &lt;button class="toast-close"&gt;✕&lt;/button&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-14-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-14-2-0-0">带操作按钮</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:10px;">
+                <div class="toast toast-info"><span class="toast-icon">ℹ</span><span class="toast-msg">文件已移到回收站</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;" data-od-id="path-1-1-14-2-1-0-0-2">撤销</button><button class="toast-close" data-od-id="path-1-1-14-2-1-0-0-3">✕</button></div>
+                <div class="toast toast-success"><span class="toast-icon">✓</span><span class="toast-msg">导出完成</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;" data-od-id="path-1-1-14-2-1-0-1-2">下载</button><button class="toast-close" data-od-id="path-1-1-14-2-1-0-1-3">✕</button></div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-14-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="toast toast-info"&gt;
+  &lt;span class="toast-icon"&gt;ℹ&lt;/span&gt;
+  &lt;span class="toast-msg"&gt;文件已移到回收站&lt;/span&gt;
+  &lt;button class="btn btn-ghost btn-sm"&gt;撤销&lt;/button&gt;
+  &lt;button class="toast-close"&gt;✕&lt;/button&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>成功</td><td><code>.toast-success</code></td><td>绿色，操作成功反馈</td></tr>
+              <tr><td>错误</td><td><code>.toast-error</code></td><td>红色，操作失败反馈</td></tr>
+              <tr><td>警告</td><td><code>.toast-warning</code></td><td>橙色，需注意但非阻断</td></tr>
+              <tr><td>信息</td><td><code>.toast-info</code></td><td>蓝色，中性通知</td></tr>
+              <tr><td>时长</td><td>3000ms（默认）</td><td>success/info 3s，error/warning 5s</td></tr>
+              <tr><td>位置</td><td>视口右上角</td><td>多条时从上往下堆叠</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-14-4">
+            <div class="do"><h5 data-od-id="path-1-1-14-4-0-0">✓ 应当</h5><p>操作成功/失败后立即显示 Toast 反馈。错误类 Toast 延长显示时间。可撤销操作提供"撤销"按钮。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-14-4-1-0">✗ 不应</h5><p>不要用 Toast 展示长文本或复杂信息——那是 Banner 或 Dialog 的职责。同时显示不超过 3 条 Toast。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== BADGE ====== -->
+        <section class="comp-spec" id="badge" data-od-id="path-1-1-15">
+          <div class="comp-header" data-od-id="path-1-1-15-0">
+            <h3 data-od-id="path-1-1-15-0-0">Badge 徽标</h3>
+            <p>状态标记和数字计数。用于标签页、列表项等位置展示额外信息。支持语义色彩和 dot 模式。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">5 变体</span><span class="comp-meta-tag">dot 模式</span>
+              <span class="comp-meta-tag">计数</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-15-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-15-1-0-0">语义变体</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <span class="badge badge-default">默认</span>
+                <span class="badge badge-primary">主要</span>
+                <span class="badge badge-success">成功</span>
+                <span class="badge badge-warning">警告</span>
+                <span class="badge badge-danger">危险</span>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-15-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;span class="badge badge-default"&gt;默认&lt;/span&gt;
+&lt;span class="badge badge-primary"&gt;主要&lt;/span&gt;
+&lt;span class="badge badge-success"&gt;成功&lt;/span&gt;
+&lt;span class="badge badge-warning"&gt;警告&lt;/span&gt;
+&lt;span class="badge badge-danger"&gt;危险&lt;/span&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-15-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-15-2-0-0">dot &amp; 计数</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="gap:24px;">
+                <span style="position:relative;">通知 <span class="badge-dot badge-dot-danger"></span></span>
+                <span style="position:relative;">消息 <span class="badge-dot badge-dot-primary"></span></span>
+                <span class="badge badge-danger">3</span>
+                <span class="badge badge-primary">99+</span>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-15-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;!-- Dot 模式 --&gt;
+&lt;span style="position:relative;"&gt;
+  通知 &lt;span class="badge-dot badge-dot-danger"&gt;&lt;/span&gt;
+&lt;/span&gt;
+
+&lt;!-- 计数 --&gt;
+&lt;span class="badge badge-danger"&gt;3&lt;/span&gt;
+&lt;span class="badge badge-primary"&gt;99+&lt;/span&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-15-3">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-15-3-0-0">应用场景</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <div class="tabs">
+                  <button class="tab tab-active" data-od-id="path-1-1-15-3-1-0-0-0">已安装 <span class="badge badge-primary" style="margin-left:4px;">12</span></button>
+                  <button class="tab" data-od-id="path-1-1-15-3-1-0-0-1">更新 <span class="badge badge-warning" style="margin-left:4px;">3</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>默认</td><td><code>.badge-default</code></td><td>灰色，中性信息标记</td></tr>
+              <tr><td>主要</td><td><code>.badge-primary</code></td><td>强调色，活跃/选中状态</td></tr>
+              <tr><td>成功</td><td><code>.badge-success</code></td><td>绿色，完成/正常状态</td></tr>
+              <tr><td>警告</td><td><code>.badge-warning</code></td><td>橙色，需注意</td></tr>
+              <tr><td>危险</td><td><code>.badge-danger</code></td><td>红色，错误/紧急</td></tr>
+              <tr><td>圆点</td><td><code>.badge-dot</code></td><td>无文字的小圆点指示器</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-15-5">
+            <div class="do"><h5 data-od-id="path-1-1-15-5-0-0">✓ 应当</h5><p>数字超过 99 时显示"99+"。用 dot 模式做纯粹的"有/无"状态提示。颜色语义保持全局一致。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-15-5-1-0">✗ 不应</h5><p>不要在 Badge 内放长文本（超过 4 字）。不要把 Badge 用作按钮——它不可交互。避免同一行超过 2 个 Badge。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== SPINNER & PROGRESS ====== -->
+        <section class="comp-spec" id="progress" data-od-id="path-1-1-16">
+          <div class="comp-header" data-od-id="path-1-1-16-0">
+            <h3 data-od-id="path-1-1-16-0-0">Spinner &amp; Progress 加载指示</h3>
+            <p>异步操作反馈。Spinner 用于不确定时长的加载，Progress 用于可量化进度的操作。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">旋转动画</span><span class="comp-meta-tag">进度条</span>
+              <span class="comp-meta-tag">3 尺寸</span><span class="comp-meta-tag">行内/全屏</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-16-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-16-1-0-0">Spinner 尺寸</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="align-items:center;">
+                <span class="spinner spinner-sm"></span>
+                <span class="spinner"></span>
+                <span class="spinner spinner-lg"></span>
+                <span style="color:var(--cp-text-muted);font-size:13px;margin-left:8px;">sm / md / lg</span>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-16-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;span class="spinner spinner-sm"&gt;&lt;/span&gt;
+&lt;span class="spinner"&gt;&lt;/span&gt;
+&lt;span class="spinner spinner-lg"&gt;&lt;/span&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-16-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-16-2-0-0">按钮内 Spinner</h4></div>
+            <div class="demo-body">
+              <div class="demo-row">
+                <button class="btn btn-primary btn-md" disabled="" data-od-id="path-1-1-16-2-1-0-0"><span class="spinner spinner-sm" style="border-color:rgba(255,255,255,.3);border-top-color:#fff;"></span> 提交中...</button>
+                <button class="btn btn-secondary btn-md" disabled="" data-od-id="path-1-1-16-2-1-0-1"><span class="spinner spinner-sm"></span> 加载中</button>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-16-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;button class="btn btn-primary btn-md" disabled&gt;
+  &lt;span class="spinner spinner-sm" style="border-color:rgba(255,255,255,.3);border-top-color:#fff;"&gt;&lt;/span&gt;
+  提交中...
+&lt;/button&gt;
+
+&lt;button class="btn btn-secondary btn-md" disabled&gt;
+  &lt;span class="spinner spinner-sm"&gt;&lt;/span&gt;
+  加载中
+&lt;/button&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-16-3">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-16-3-0-0">Progress 进度条</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:12px;width:100%;">
+                <div class="progress"><div class="progress-bar" style="width:25%;"></div></div>
+                <div class="progress"><div class="progress-bar" style="width:60%;"></div></div>
+                <div class="progress"><div class="progress-bar progress-bar-success" style="width:100%;"></div></div>
+                <div class="progress"><div class="progress-bar progress-bar-danger" style="width:80%;"></div></div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-16-3-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="progress"&gt;
+  &lt;div class="progress-bar" style="width:25%;"&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="progress"&gt;
+  &lt;div class="progress-bar progress-bar-success" style="width:100%;"&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="progress"&gt;
+  &lt;div class="progress-bar progress-bar-danger" style="width:80%;"&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>旋转</td><td><code>.spinner</code></td><td>圆形旋转加载指示器</td></tr>
+              <tr><td>尺寸</td><td><code>.spinner-sm</code> / 默认 / <code>.spinner-lg</code></td><td>16px / 24px / 32px</td></tr>
+              <tr><td>进度容器</td><td><code>.progress</code></td><td>进度条背景轨道</td></tr>
+              <tr><td>进度填充</td><td><code>.progress-bar</code></td><td>通过 width 百分比控制进度</td></tr>
+              <tr><td>成功</td><td><code>.progress-bar-success</code></td><td>绿色，完成状态</td></tr>
+              <tr><td>错误</td><td><code>.progress-bar-danger</code></td><td>红色，失败/警告</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-16-5">
+            <div class="do"><h5 data-od-id="path-1-1-16-5-0-0">✓ 应当</h5><p>200ms 以上的操作显示加载指示。可量化进度时优先用 Progress 而非 Spinner。按钮内加载时禁用按钮并显示文字。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-16-5-1-0">✗ 不应</h5><p>不要在已有骨架屏的区域额外加 Spinner。Progress 达到 100% 后需立即切换为完成状态或消失——不要停留在 100%。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== TABLE ====== -->
+        <section class="comp-spec" id="table" data-od-id="path-1-1-17">
+          <div class="comp-header" data-od-id="path-1-1-17-0">
+            <h3 data-od-id="path-1-1-17-0-0">Table 表格</h3>
+            <p>结构化数据展示。支持排序、行选择和响应式折叠。适用于插件列表、日志查看等数据密集场景。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">排序</span><span class="comp-meta-tag">选择</span>
+              <span class="comp-meta-tag">斑马纹</span><span class="comp-meta-tag">响应式</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-17-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-17-1-0-0">基础表格</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="width:100%;overflow-x:auto;">
+                <table class="tbl">
+                  <thead>
+                    <tr><th>插件名称</th><th>类型</th><th>版本</th><th>状态</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Weather Widget</td><td>widget</td><td>1.2.0</td><td><span class="badge badge-success">启用</span></td></tr>
+                    <tr><td>Sidebar Nav</td><td>layout</td><td>2.0.1</td><td><span class="badge badge-success">启用</span></td></tr>
+                    <tr><td>Search Pro</td><td>searchProvider</td><td>0.9.3</td><td><span class="badge badge-warning">测试</span></td></tr>
+                    <tr><td>Old Panel</td><td>settingsPanel</td><td>1.0.0</td><td><span class="badge badge-default">禁用</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-17-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;table class="tbl"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;&lt;th&gt;插件名称&lt;/th&gt;&lt;th&gt;类型&lt;/th&gt;&lt;th&gt;版本&lt;/th&gt;&lt;th&gt;状态&lt;/th&gt;&lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Weather Widget&lt;/td&gt;
+      &lt;td&gt;widget&lt;/td&gt;
+      &lt;td&gt;1.2.0&lt;/td&gt;
+      &lt;td&gt;&lt;span class="badge badge-success"&gt;启用&lt;/span&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-17-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-17-2-0-0">斑马纹 &amp; 行悬停</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="width:100%;overflow-x:auto;">
+                <table class="tbl tbl-striped tbl-hover">
+                  <thead>
+                    <tr><th><label class="chk"><input type="checkbox"><span class="chk-box"></span></label></th><th>文件名</th><th>大小</th><th>修改时间</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><label class="chk"><input type="checkbox" checked=""><span class="chk-box"></span></label></td><td>manifest.json</td><td>2.1 KB</td><td>2 分钟前</td></tr>
+                    <tr><td><label class="chk"><input type="checkbox"><span class="chk-box"></span></label></td><td>index.js</td><td>14.8 KB</td><td>1 小时前</td></tr>
+                    <tr><td><label class="chk"><input type="checkbox" checked=""><span class="chk-box"></span></label></td><td>styles.css</td><td>6.3 KB</td><td>昨天</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-17-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;table class="tbl tbl-striped tbl-hover"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;&lt;label class="chk"&gt;&lt;input type="checkbox" /&gt;&lt;span class="chk-box"&gt;&lt;/span&gt;&lt;/label&gt;&lt;/th&gt;
+      &lt;th&gt;文件名&lt;/th&gt;
+      &lt;th&gt;大小&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;label class="chk"&gt;&lt;input type="checkbox" checked /&gt;&lt;span class="chk-box"&gt;&lt;/span&gt;&lt;/label&gt;&lt;/td&gt;
+      &lt;td&gt;manifest.json&lt;/td&gt;
+      &lt;td&gt;2.1 KB&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>基础</td><td><code>.tbl</code></td><td>表格基础样式（全宽、边框分离）</td></tr>
+              <tr><td>斑马纹</td><td><code>.tbl-striped</code></td><td>奇偶行交替背景色</td></tr>
+              <tr><td>悬停</td><td><code>.tbl-hover</code></td><td>行悬停高亮</td></tr>
+              <tr><td>紧凑</td><td><code>.tbl-compact</code></td><td>减少 padding，数据密集场景</td></tr>
+              <tr><td>响应式</td><td>外层 <code>overflow-x:auto</code></td><td>窄屏横向滚动</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-17-4">
+            <div class="do"><h5 data-od-id="path-1-1-17-4-0-0">✓ 应当</h5><p>列宽按内容优先级分配——重要列固定宽度，次要列自适应。长列表提供排序。操作列靠右对齐。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-17-4-1-0">✗ 不应</h5><p>列数不超过 7——太多列请改用详情展开或分页。不要在表格内嵌套表格。空数据状态必须有占位提示。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== CARD ====== -->
+        <section class="comp-spec" id="card" data-od-id="path-1-1-18">
+          <div class="comp-header" data-od-id="path-1-1-18-0">
+            <h3 data-od-id="path-1-1-18-0-0">Card 卡片</h3>
+            <p>内容容器。将相关信息分组展示，支持头部、主体、底部三区域布局。Tabora 插件面板的基础容器。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">3 区域</span><span class="comp-meta-tag">可点击</span>
+              <span class="comp-meta-tag">带阴影</span><span class="comp-meta-tag">边框模式</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-18-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-18-1-0-0">基础卡片</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;max-width:360px;">
+                <div class="card">
+                  <div class="card-head"><h4 style="margin:0;font-size:14px;" data-od-id="path-1-1-18-1-1-0-0-0-0">Weather Widget</h4><span class="badge badge-success">v1.2.0</span></div>
+                  <div class="card-body"><p style="margin:0;font-size:13px;color:var(--cp-text-muted);">实时天气展示组件，支持多城市切换和 5 天预报。</p></div>
+                  <div class="card-foot"><button class="btn btn-subtle btn-sm" data-od-id="path-1-1-18-1-1-0-0-2-0">配置</button><button class="btn btn-ghost btn-sm" data-od-id="path-1-1-18-1-1-0-0-2-1">卸载</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-18-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="card"&gt;
+  &lt;div class="card-head"&gt;
+    &lt;h4&gt;Weather Widget&lt;/h4&gt;
+    &lt;span class="badge badge-success"&gt;v1.2.0&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="card-body"&gt;
+    &lt;p&gt;实时天气展示组件，支持多城市切换和 5 天预报。&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class="card-foot"&gt;
+    &lt;button class="btn btn-subtle btn-sm"&gt;配置&lt;/button&gt;
+    &lt;button class="btn btn-ghost btn-sm"&gt;卸载&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-18-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-18-2-0-0">可点击 &amp; 选中态</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="gap:12px;flex-wrap:wrap;">
+                <div class="card card-clickable" style="width:160px;padding:16px;text-align:center;">
+                  <span style="font-size:24px;">📦</span>
+                  <p style="margin:8px 0 0;font-size:13px;font-weight:600;">Widget</p>
+                </div>
+                <div class="card card-clickable card-selected" style="width:160px;padding:16px;text-align:center;">
+                  <span style="font-size:24px;">📐</span>
+                  <p style="margin:8px 0 0;font-size:13px;font-weight:600;">Layout</p>
+                </div>
+                <div class="card card-clickable" style="width:160px;padding:16px;text-align:center;">
+                  <span style="font-size:24px;">🔍</span>
+                  <p style="margin:8px 0 0;font-size:13px;font-weight:600;">Search</p>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-18-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="card card-clickable"&gt;
+  &lt;span&gt;📦&lt;/span&gt;
+  &lt;p&gt;Widget&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div class="card card-clickable card-selected"&gt;
+  &lt;span&gt;📐&lt;/span&gt;
+  &lt;p&gt;Layout&lt;/p&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>基础</td><td><code>.card</code></td><td>白色背景 + 边框 + 圆角容器</td></tr>
+              <tr><td>头部</td><td><code>.card-head</code></td><td>flex 布局，标题 + 操作区</td></tr>
+              <tr><td>主体</td><td><code>.card-body</code></td><td>主内容区域</td></tr>
+              <tr><td>底部</td><td><code>.card-foot</code></td><td>操作按钮区域</td></tr>
+              <tr><td>可点击</td><td><code>.card-clickable</code></td><td>cursor:pointer + hover 阴影</td></tr>
+              <tr><td>选中</td><td><code>.card-selected</code></td><td>强调色边框标识选中态</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-18-4">
+            <div class="do"><h5 data-od-id="path-1-1-18-4-0-0">✓ 应当</h5><p>卡片内操作按钮放底部区域。可点击卡片需要 hover 视觉反馈。内容区保持简洁——详情用展开或跳转。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-18-4-1-0">✗ 不应</h5><p>不要在卡片内嵌套卡片。避免卡片高度差异过大（同组卡片尽量等高）。不要省略边框——纯阴影在浅色背景下对比度不足。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== TOOLTIP ====== -->
+        <section class="comp-spec" id="tooltip" data-od-id="path-1-1-19">
+          <div class="comp-header" data-od-id="path-1-1-19-0">
+            <h3 data-od-id="path-1-1-19-0-0">Tooltip 工具提示</h3>
+            <p>悬停或聚焦时显示的简短说明。用于图标按钮、截断文字等需补充信息的场景。不可交互。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">4 方向</span><span class="comp-meta-tag">延迟显示</span>
+              <span class="comp-meta-tag">非交互</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-19-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-19-1-0-0">方向</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="gap:32px;padding:32px 0;">
+                <span class="tip-wrap">
+                  <button class="icbtn" title="" data-od-id="path-1-1-19-1-1-0-0-0">⬆</button>
+                  <span class="tip tip-top">上方提示</span>
+                </span>
+                <span class="tip-wrap">
+                  <button class="icbtn" title="" data-od-id="path-1-1-19-1-1-0-1-0">⬇</button>
+                  <span class="tip tip-bottom">下方提示</span>
+                </span>
+                <span class="tip-wrap">
+                  <button class="icbtn" title="" data-od-id="path-1-1-19-1-1-0-2-0">⬅</button>
+                  <span class="tip tip-left">左侧提示</span>
+                </span>
+                <span class="tip-wrap">
+                  <button class="icbtn" title="" data-od-id="path-1-1-19-1-1-0-3-0">➡</button>
+                  <span class="tip tip-right">右侧提示</span>
+                </span>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-19-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;span class="tip-wrap"&gt;
+  &lt;button class="icbtn"&gt;⬆&lt;/button&gt;
+  &lt;span class="tip tip-top"&gt;上方提示&lt;/span&gt;
+&lt;/span&gt;
+
+&lt;span class="tip-wrap"&gt;
+  &lt;button class="icbtn"&gt;⬇&lt;/button&gt;
+  &lt;span class="tip tip-bottom"&gt;下方提示&lt;/span&gt;
+&lt;/span&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-19-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-19-2-0-0">实际场景</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="gap:16px;">
+                <span class="tip-wrap">
+                  <button class="icbtn" title="" data-od-id="path-1-1-19-2-1-0-0-0">⚙</button>
+                  <span class="tip tip-bottom">设置</span>
+                </span>
+                <span class="tip-wrap">
+                  <button class="icbtn" title="" data-od-id="path-1-1-19-2-1-0-1-0">🔔</button>
+                  <span class="tip tip-bottom">通知</span>
+                </span>
+                <span class="tip-wrap">
+                  <button class="icbtn" title="" data-od-id="path-1-1-19-2-1-0-2-0">📋</button>
+                  <span class="tip tip-bottom">复制到剪贴板</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>容器</td><td><code>.tip-wrap</code></td><td>position:relative 包裹层</td></tr>
+              <tr><td>提示</td><td><code>.tip</code></td><td>悬停时 opacity:1 显示</td></tr>
+              <tr><td>上</td><td><code>.tip-top</code></td><td>显示在触发元素上方</td></tr>
+              <tr><td>下</td><td><code>.tip-bottom</code></td><td>显示在触发元素下方</td></tr>
+              <tr><td>左</td><td><code>.tip-left</code></td><td>显示在触发元素左侧</td></tr>
+              <tr><td>右</td><td><code>.tip-right</code></td><td>显示在触发元素右侧</td></tr>
+              <tr><td>延迟</td><td>300ms</td><td>悬停 300ms 后显示，避免闪烁</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-19-4">
+            <div class="do"><h5 data-od-id="path-1-1-19-4-0-0">✓ 应当</h5><p>所有纯图标按钮必须有 Tooltip。内容限制 1 行（20 字以内）。触摸设备降级为 aria-label。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-19-4-1-0">✗ 不应</h5><p>不要在 Tooltip 里放可交互内容（链接/按钮）——改用 Popover。不要给已有可见文字标签的按钮加 Tooltip。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== DRAWER ====== -->
+        <section class="comp-spec" id="drawer" data-od-id="path-1-1-20">
+          <div class="comp-header" data-od-id="path-1-1-20-0">
+            <h3 data-od-id="path-1-1-20-0-0">Drawer 抽屉</h3>
+            <p>侧滑浮层面板。不离开当前页面的前提下展示详情或表单。从右侧滑入，适合内容较多的编辑场景。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">右侧滑入</span><span class="comp-meta-tag">可嵌套表单</span>
+              <span class="comp-meta-tag">遮罩关闭</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-20-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-20-1-0-0">结构示意</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="width:100%;">
+                <div style="display:flex;width:100%;height:200px;border:1px solid var(--cp-line);border-radius:8px;overflow:hidden;">
+                  <div style="flex:1;background:var(--cp-surface-soft);display:flex;align-items:center;justify-content:center;color:var(--cp-text-muted);font-size:13px;">主页面内容（被遮罩覆盖）</div>
+                  <div style="width:280px;background:var(--cp-surface);border-left:1px solid var(--cp-line);padding:16px;display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;"><strong style="font-size:14px;">插件详情</strong><button class="icbtn icbtn-sm" data-od-id="path-1-1-20-1-1-0-0-1-0-1">✕</button></div>
+                    <div class="field"><label class="field-label">名称</label><input class="ipt ipt-sm" value="Weather Widget"></div>
+                    <div class="field"><label class="field-label">版本</label><input class="ipt ipt-sm" value="1.2.0"></div>
+                    <div style="margin-top:auto;display:flex;gap:8px;justify-content:flex-end;">
+                      <button class="btn btn-secondary btn-sm" data-od-id="path-1-1-20-1-1-0-0-1-3-0">取消</button>
+                      <button class="btn btn-primary btn-sm" data-od-id="path-1-1-20-1-1-0-0-1-3-1">保存</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-20-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="drawer-overlay"&gt;
+  &lt;div class="drawer"&gt;
+    &lt;div class="drawer-head"&gt;
+      &lt;strong&gt;插件详情&lt;/strong&gt;
+      &lt;button class="icbtn icbtn-sm"&gt;✕&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="drawer-body"&gt;
+      &lt;div class="field"&gt;
+        &lt;label class="field-label"&gt;名称&lt;/label&gt;
+        &lt;input class="ipt" value="Weather Widget" /&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="drawer-foot"&gt;
+      &lt;button class="btn btn-secondary btn-sm"&gt;取消&lt;/button&gt;
+      &lt;button class="btn btn-primary btn-sm"&gt;保存&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>遮罩</td><td><code>.drawer-overlay</code></td><td>半透明背景，点击关闭</td></tr>
+              <tr><td>面板</td><td><code>.drawer</code></td><td>右侧滑入面板，默认 360px 宽</td></tr>
+              <tr><td>头部</td><td><code>.drawer-head</code></td><td>标题 + 关闭按钮</td></tr>
+              <tr><td>主体</td><td><code>.drawer-body</code></td><td>可滚动内容区</td></tr>
+              <tr><td>底部</td><td><code>.drawer-foot</code></td><td>固定操作按钮区</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-20-3">
+            <div class="do"><h5 data-od-id="path-1-1-20-3-0-0">✓ 应当</h5><p>编辑类表单优先用 Drawer 而非全屏跳转。底部操作按钮固定，不随内容滚动。关闭时需检查未保存更改。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-20-3-1-0">✗ 不应</h5><p>内容简单（1-2 个字段）用 Dialog 即可，不需要 Drawer。不要在 Drawer 内打开另一个 Drawer——改用 Dialog 确认。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== SKELETON ====== -->
+        <section class="comp-spec" id="skeleton" data-od-id="path-1-1-21">
+          <div class="comp-header" data-od-id="path-1-1-21-0">
+            <h3 data-od-id="path-1-1-21-0-0">Skeleton 骨架屏</h3>
+            <p>内容加载占位。在数据到达前展示页面结构轮廓，减少感知等待时间。比 Spinner 更优的首屏加载体验。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">文本行</span><span class="comp-meta-tag">圆形</span>
+              <span class="comp-meta-tag">矩形</span><span class="comp-meta-tag">动画</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-21-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-21-1-0-0">基础形状</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="flex-direction:column;gap:16px;">
+                <div style="display:flex;gap:12px;align-items:center;">
+                  <div class="skeleton skeleton-circle" style="width:40px;height:40px;"></div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                    <div class="skeleton skeleton-text" style="width:60%;height:14px;"></div>
+                    <div class="skeleton skeleton-text" style="width:40%;height:12px;"></div>
+                  </div>
+                </div>
+                <div class="skeleton skeleton-rect" style="width:100%;height:120px;border-radius:8px;"></div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div class="skeleton skeleton-text" style="width:100%;height:12px;"></div>
+                  <div class="skeleton skeleton-text" style="width:90%;height:12px;"></div>
+                  <div class="skeleton skeleton-text" style="width:75%;height:12px;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-21-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;!-- 头像 + 文字 --&gt;
+&lt;div class="skeleton skeleton-circle" style="width:40px;height:40px;"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-text" style="width:60%;height:14px;"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-text" style="width:40%;height:12px;"&gt;&lt;/div&gt;
+
+&lt;!-- 矩形图片占位 --&gt;
+&lt;div class="skeleton skeleton-rect" style="width:100%;height:120px;"&gt;&lt;/div&gt;
+
+&lt;!-- 多行文本 --&gt;
+&lt;div class="skeleton skeleton-text" style="width:100%;height:12px;"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-text" style="width:90%;height:12px;"&gt;&lt;/div&gt;
+&lt;div class="skeleton skeleton-text" style="width:75%;height:12px;"&gt;&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-21-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-21-2-0-0">卡片骨架</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="gap:12px;flex-wrap:wrap;">
+                <div class="card" style="width:200px;padding:16px;">
+                  <div class="skeleton skeleton-rect" style="width:100%;height:80px;border-radius:6px;margin-bottom:12px;"></div>
+                  <div class="skeleton skeleton-text" style="width:70%;height:14px;margin-bottom:8px;"></div>
+                  <div class="skeleton skeleton-text" style="width:50%;height:12px;"></div>
+                </div>
+                <div class="card" style="width:200px;padding:16px;">
+                  <div class="skeleton skeleton-rect" style="width:100%;height:80px;border-radius:6px;margin-bottom:12px;"></div>
+                  <div class="skeleton skeleton-text" style="width:80%;height:14px;margin-bottom:8px;"></div>
+                  <div class="skeleton skeleton-text" style="width:45%;height:12px;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-21-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="card" style="width:200px;padding:16px;"&gt;
+  &lt;div class="skeleton skeleton-rect" style="width:100%;height:80px;"&gt;&lt;/div&gt;
+  &lt;div class="skeleton skeleton-text" style="width:70%;height:14px;"&gt;&lt;/div&gt;
+  &lt;div class="skeleton skeleton-text" style="width:50%;height:12px;"&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>属性</th><th>类名 / 值</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>基础</td><td><code>.skeleton</code></td><td>灰色背景 + 脉冲动画</td></tr>
+              <tr><td>文本</td><td><code>.skeleton-text</code></td><td>圆角矩形，模拟文本行</td></tr>
+              <tr><td>矩形</td><td><code>.skeleton-rect</code></td><td>通用矩形占位</td></tr>
+              <tr><td>圆形</td><td><code>.skeleton-circle</code></td><td>头像/图标占位</td></tr>
+              <tr><td>动画</td><td>CSS @keyframes pulse</td><td>opacity 0.4→1 脉冲呼吸</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-21-4">
+            <div class="do"><h5 data-od-id="path-1-1-21-4-0-0">✓ 应当</h5><p>骨架形状尽量匹配真实内容布局。首屏加载统一使用骨架屏替代空白。多个骨架宽度应有变化，模拟真实文本长短不一。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-21-4-1-0">✗ 不应</h5><p>数据已到达时不要闪烁骨架屏——设最小显示时间 200ms。不要在小区域（如单个按钮）使用骨架屏——用 Spinner。</p></div>
+          </div>
+        </section>
+
+        <!-- ====== EMPTY STATE ====== -->
+        <section class="comp-spec" id="empty" data-od-id="path-1-1-22">
+          <div class="comp-header" data-od-id="path-1-1-22-0">
+            <h3 data-od-id="path-1-1-22-0-0">Empty State 空状态</h3>
+            <p>列表、表格或区域无数据时的占位提示。包含插图、说明文字和可选操作按钮，引导用户下一步。</p>
+            <div class="comp-meta">
+              <span class="comp-meta-tag">引导操作</span><span class="comp-meta-tag">插图</span>
+              <span class="comp-meta-tag">自适应</span>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-22-1">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-22-1-0-0">基础空状态</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="justify-content:center;">
+                <div style="text-align:center;padding:40px 20px;max-width:300px;">
+                  <div style="font-size:48px;margin-bottom:12px;opacity:0.6;">📭</div>
+                  <h4 style="margin:0 0 8px;font-size:15px;color:var(--cp-text);" data-od-id="path-1-1-22-1-1-0-0-1">暂无已安装插件</h4>
+                  <p style="margin:0 0 16px;font-size:13px;color:var(--cp-text-muted);">从插件市场发现适合你的效率工具</p>
+                  <button class="btn btn-primary btn-sm" data-od-id="path-1-1-22-1-1-0-0-3">浏览插件市场</button>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-22-1-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="empty-state"&gt;
+  &lt;div class="empty-icon"&gt;📭&lt;/div&gt;
+  &lt;h4&gt;暂无已安装插件&lt;/h4&gt;
+  &lt;p&gt;从插件市场发现适合你的效率工具&lt;/p&gt;
+  &lt;button class="btn btn-primary btn-sm"&gt;浏览插件市场&lt;/button&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <div class="demo-section" data-od-id="path-1-1-22-2">
+            <div class="demo-section-head"><h4 data-od-id="path-1-1-22-2-0-0">搜索无结果</h4></div>
+            <div class="demo-body">
+              <div class="demo-row" style="justify-content:center;">
+                <div style="text-align:center;padding:32px 20px;max-width:280px;">
+                  <div style="font-size:36px;margin-bottom:8px;opacity:0.6;">🔍</div>
+                  <h4 style="margin:0 0 6px;font-size:14px;color:var(--cp-text);" data-od-id="path-1-1-22-2-1-0-0-1">未找到匹配结果</h4>
+                  <p style="margin:0;font-size:13px;color:var(--cp-text-muted);">尝试调整搜索关键词或筛选条件</p>
+                </div>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-head"><span>HTML</span><button class="copy-btn" type="button" data-od-id="path-1-1-22-2-2-0-1">复制</button></div>
+              <div class="code-window"><pre><code>&lt;div class="empty-state"&gt;
+  &lt;div class="empty-icon"&gt;🔍&lt;/div&gt;
+  &lt;h4&gt;未找到匹配结果&lt;/h4&gt;
+  &lt;p&gt;尝试调整搜索关键词或筛选条件&lt;/p&gt;
+&lt;/div&gt;</code></pre></div>
+            </div>
+          </div>
+          <table class="spec-table">
+            <thead><tr><th>元素</th><th>必须</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>插图/图标</td><td>推荐</td><td>48-64px 视觉元素，降低空白感</td></tr>
+              <tr><td>标题</td><td>必须</td><td>简短说明当前状态（如"暂无数据"）</td></tr>
+              <tr><td>描述</td><td>推荐</td><td>1 行引导文字，暗示解决方案</td></tr>
+              <tr><td>操作按钮</td><td>可选</td><td>引导用户创建/添加/导入</td></tr>
+            </tbody>
+          </table>
+          <div class="do-dont" data-od-id="path-1-1-22-4">
+            <div class="do"><h5 data-od-id="path-1-1-22-4-0-0">✓ 应当</h5><p>提供明确的下一步操作。插图风格与产品整体视觉一致。标题用"暂无"开头保持一致性。</p></div>
+            <div class="dont"><h5 data-od-id="path-1-1-22-4-1-0">✗ 不应</h5><p>不要让空状态显得像 bug——避免用"Error"或"404"措辞。不要省略占位——空白区域让用户困惑。</p></div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  
+
+  <script src="assets/tabora-landing.js"></script>
+  <script>
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const block = btn.closest('.code-block') || btn.closest('.code-head')?.parentElement;
+        const code = block?.querySelector('code');
+        if (code) {
+          navigator.clipboard.writeText(code.textContent).then(() => {
+            btn.textContent = '已复制';
+            setTimeout(() => btn.textContent = '复制', 1500);
+          });
+        }
+      });
+    });
+  </script>
+
+
+<script data-od-snapshot-bridge="">(function(){
+  var SNAPSHOT_STYLE_PROPS = [
+    'display','position','box-sizing','width','height','min-width','max-width','min-height','max-height',
+    'margin','margin-top','margin-right','margin-bottom','margin-left',
+    'padding','padding-top','padding-right','padding-bottom','padding-left',
+    'border','border-top','border-right','border-bottom','border-left','border-radius',
+    'font','font-family','font-size','font-weight','font-style','line-height','letter-spacing',
+    'color','background-color','opacity','transform','transform-origin','overflow','overflow-x','overflow-y',
+    'white-space','text-align','vertical-align','object-fit','object-position',
+    'flex','flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
+    'grid','grid-template-columns','grid-template-rows','grid-column','grid-row',
+    'gap','row-gap','column-gap','align-items','align-content','align-self',
+    'justify-items','justify-content','justify-self','inset','top','right','bottom','left',
+    'z-index','box-shadow','text-shadow'
+  ];
+  function copyComputedStyle(source, target){
+    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
+    var computed = window.getComputedStyle(source);
+    var style = target.getAttribute('style') || '';
+    for (var i = 0; i < SNAPSHOT_STYLE_PROPS.length; i++){
+      var prop = SNAPSHOT_STYLE_PROPS[i];
+      var value = computed.getPropertyValue(prop);
+      if (value) style += prop + ':' + value + ';';
+    }
+    target.setAttribute('style', style);
+  }
+  function syncElementState(source, target){
+    var tag = source.tagName ? source.tagName.toLowerCase() : '';
+    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
+    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
+    if (tag === 'canvas') {
+      try {
+        var img = document.createElement('img');
+        img.setAttribute('src', source.toDataURL('image/png'));
+        img.setAttribute('style', target.getAttribute('style') || '');
+        target.parentNode && target.parentNode.replaceChild(img, target);
+      } catch (_) {}
+    }
+  }
+  function inlineSnapshotStyles(originalRoot, cloneRoot){
+    copyComputedStyle(originalRoot, cloneRoot);
+    syncElementState(originalRoot, cloneRoot);
+    var originals = originalRoot.querySelectorAll('*');
+    var clones = cloneRoot.querySelectorAll('*');
+    var count = Math.min(originals.length, clones.length, 3500);
+    for (var i = 0; i < count; i++){
+      copyComputedStyle(originals[i], clones[i]);
+      syncElementState(originals[i], clones[i]);
+    }
+    var scripts = cloneRoot.querySelectorAll('script');
+    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
+    var links = cloneRoot.querySelectorAll('link[rel~="stylesheet"], link[rel~="preload"], link[rel~="preconnect"]');
+    for (var l = links.length - 1; l >= 0; l--) links[l].remove();
+    var styles = cloneRoot.querySelectorAll('style');
+    for (var st = 0; st < styles.length; st++) {
+      styles[st].textContent = (styles[st].textContent || '')
+        .replace(/@import[^;]+;/gi, '')
+        .replace(/@font-face\s*\{[^}]*\}/gi, '');
+    }
+  }
+  function waitForImages(){
+    var imgs = Array.prototype.slice.call(document.images || []);
+    return Promise.all(imgs.map(function(img){
+      if (img.complete) return Promise.resolve();
+      return new Promise(function(resolve){
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    }));
+  }
+  function scrollOffset(){
+    var doc = document.documentElement;
+    var body = document.body;
+    return {
+      x: Math.max(window.scrollX || 0, doc ? doc.scrollLeft || 0 : 0, body ? body.scrollLeft || 0 : 0),
+      y: Math.max(window.scrollY || 0, doc ? doc.scrollTop || 0 : 0, body ? body.scrollTop || 0 : 0)
+    };
+  }
+  function escapeAttribute(value){
+    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+  function renderSnapshot(id){
+    var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+    var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+    var dpr = window.devicePixelRatio || 1;
+    var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
+    var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
+    var clone = document.documentElement.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    inlineSnapshotStyles(document.documentElement, clone);
+    var scroll = scrollOffset();
+    var cloneBody = clone.querySelector('body');
+    var rootStyle = clone.getAttribute('style') || '';
+    var bodyStyle = cloneBody ? cloneBody.getAttribute('style') || '' : '';
+    var bodyContent = cloneBody ? cloneBody.innerHTML : clone.innerHTML;
+    var wrapperStyle = rootStyle + bodyStyle +
+      'margin:0;position:relative;left:' + (-scroll.x) + 'px;top:' + (-scroll.y) + 'px;' +
+      'width:' + docW + 'px;height:' + docH + 'px;overflow:visible;';
+    var html = '<div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeAttribute(wrapperStyle) + '">' + bodyContent + '</div>';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+      '<foreignObject x="0" y="0" width="' + docW + '" height="' + docH + '">' +
+      html +
+      '</foreignObject></svg>';
+    var img = new Image();
+    img.onload = function(){
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.floor(w * dpr));
+        canvas.height = Math.max(1, Math.floor(h * dpr));
+        var ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('no 2d context');
+        ctx.scale(dpr, dpr);
+        ctx.drawImage(img, 0, 0, w, h);
+        window.parent.postMessage({ type: 'od:snapshot:result', id: id, dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }, '*');
+      } catch (err) {
+        window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: String(err && err.message || err) }, '*');
+      }
+    };
+    function encodedSvgDataUrl(){
+      var encoded = encodeURIComponent(svg);
+      return 'data:image/svg+xml;charset=utf-8,' + encoded;
+    }
+    img.onerror = function(){
+      window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'snapshot image failed' }, '*');
+    };
+    img.src = encodedSvgDataUrl();
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:snapshot' || !data.id) return;
+    waitForImages().then(function(){ renderSnapshot(String(data.id)); });
+  });
+})();</script><script data-od-srcdoc-transport-activation="">(function(){
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string') return;
+    document.open();
+    document.write(data.html);
+    document.close();
+  });
+})();</script></body></html>
