@@ -2,9 +2,9 @@
 
 版本：V2.5
 
-日期：2026-06-07
+日期：2026-06-08
 
-状态：Phase A.1 与 Phase X1-X8 插件系统可扩展性收尾已完成；后续 Phase 见 §17。
+状态：当前架构与协议事实源；实施阶段见 §17。
 
 关联文档：
 
@@ -12,20 +12,17 @@
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - V2 设计事实源：`DESIGN.md`
 - V2 交互原型参考：`docs/design/03-工作台交互原型.html`
-- UI 重构历史方案（非默认事实源）：`docs/technical/tabora-ui-refactoring-plan.md`
-- 插件拆分历史方案（非默认事实源）：`docs/technical/tabora-plugin-package-splitting-plan.md`
 - 回归基准与 Agent 工程治理：`docs/technical/tabora-regression-baseline.md`
 - 文档地图：`docs/README.md`
 
 ## 0. 评审起点
 
-本轮评审基于以下输入：
+本方案基于以下输入：
 
 - PRD V2 的新增需求：布局即插件、至少两种布局验证、全局可达性约束、插件自由度/约束体系
 - 设计原型中验证的交互模式：实时搜索内联建议、拖拽实时换位、双击展开卡片、右键上下文菜单、设置侧栏导航、Toast 堆叠、@语法搜索源切换
-- 当前仓库剩余差距：共享宿主根组件编排仍偏重，browser-mode 交互断言覆盖仍不足，少数工作台交互仍需继续压缩到更清晰的状态切片中
 
-以下方案完全从零架构师视角出发，不预设当前实现是唯一正确方案。
+以下方案从架构师视角出发，定义分层架构、扩展点协议、数据模型和测试策略，不预设具体实现路径。
 
 ## 1. 架构总体设计
 

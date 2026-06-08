@@ -137,9 +137,6 @@
 
 | 路径                                                                 | 状态                               | 读取条件                                             |
 | -------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------- |
-| `docs/technical/tabora-plugin-workbench-technical-design.md`         | V1 归档技术方案                    | 追溯 V1 设计背景                                     |
-| `docs/technical/tabora-ui-refactoring-plan.md`                       | UI 重构历史方案                    | 追溯 `@tabora/ui` 架构讨论                           |
-| `docs/technical/tabora-plugin-package-splitting-plan.md`             | 插件拆包历史方案                   | 追溯插件包拆分讨论                                   |
 | `docs/superpowers/plans/2026-06-06-regression-governance-roadmap.md` | 回归治理实施计划（已完成归档）     | 用户要求复盘回归治理、审计自动化门禁或追溯债务收口时 |
 | `docs/superpowers/specs/**`                                          | 阶段规格和问题台账                 | 用户指定某个 spec，或需要追溯设计决策                |
 | `docs/superpowers/plans/**`                                          | 已完成或阶段性 implementation plan | 用户明确要求继续/审查某个计划                        |
