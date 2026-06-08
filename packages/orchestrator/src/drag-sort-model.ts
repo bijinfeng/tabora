@@ -1,5 +1,5 @@
-import type { GridPlacement, PluginInstance } from "@tabora/plugin-api"
-import type { WidgetSize } from "@tabora/plugin-api"
+import { sortBy } from "es-toolkit/array"
+import type { GridPlacement, PluginInstance, WidgetSize } from "@tabora/plugin-api"
 
 export type DragSortPlanOptions = {
   sourceId: string
@@ -41,13 +41,13 @@ function withGridOrder(instance: PluginInstance, x: number): PluginInstance {
   }
 }
 
-function visualOrder(left: PluginInstance, right: PluginInstance): number {
-  return (
-    (left.grid?.y ?? 0) - (right.grid?.y ?? 0) ||
-    (left.grid?.x ?? 0) - (right.grid?.x ?? 0) ||
-    left.createdAt.localeCompare(right.createdAt) ||
-    left.id.localeCompare(right.id)
-  )
+function visualSort(instances: PluginInstance[]): PluginInstance[] {
+  return sortBy(instances, [
+    (i) => i.grid?.y ?? 0,
+    (i) => i.grid?.x ?? 0,
+    (i) => i.createdAt,
+    (i) => i.id,
+  ])
 }
 
 export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
@@ -71,15 +71,15 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
     return { changed: false, instances: options.instances }
   }
 
-  const sortableRegionInstances = options.instances
-    .filter(
+  const sortableRegionInstances = visualSort(
+    options.instances.filter(
       (instance) =>
         instance.enabled &&
         instance.regionId === source.regionId &&
         instance.extensionPoint === "widget" &&
         Boolean(instance.size),
-    )
-    .sort(visualOrder)
+    ),
+  )
   const fromIndex = sortableRegionInstances.findIndex((instance) => instance.id === source.id)
   const toIndex = sortableRegionInstances.findIndex((instance) => instance.id === target.id)
 
@@ -93,11 +93,11 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
   const reorderedById = new Map(
     reordered.map((instance, index) => [instance.id, withGridOrder(instance, index)]),
   )
-  const affectedSlots = options.instances
-    .filter(
+  const affectedSlots = visualSort(
+    options.instances.filter(
       (instance) => instance.regionId === source.regionId && instance.extensionPoint === "widget",
-    )
-    .sort(visualOrder)
+    ),
+  )
   const reorderedQueue = [...reordered]
   const nextAffectedById = new Map<string, PluginInstance>()
 

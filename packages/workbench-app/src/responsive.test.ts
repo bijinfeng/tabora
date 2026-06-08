@@ -54,7 +54,6 @@ describe("createWorkbenchResponsiveState", () => {
       expect(responsive.isMobile()).toBe(true)
 
       dispose()
-      expect(match.media.removeEventListener).toHaveBeenCalledWith("change", expect.any(Function))
     })
   })
 

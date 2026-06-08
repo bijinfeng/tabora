@@ -1,3 +1,5 @@
+import { createEmitter } from "@solid-primitives/event-bus"
+
 export type EventPayloads = {
   "ui.modal.open": { viewId: string; props?: Record<string, unknown> }
   "ui.modal.close": null
@@ -23,21 +25,14 @@ export interface EventBus {
 }
 
 export function createEventBus(): EventBus {
-  const handlers = new Map<string, Set<EventHandler>>()
+  const emitter = createEmitter<EventPayloads>()
 
   return {
     emit(eventName, payload) {
-      for (const handler of handlers.get(eventName) ?? []) {
-        handler(payload)
-      }
+      emitter.emit(eventName as keyof EventPayloads, payload as EventPayloads[keyof EventPayloads])
     },
     on(eventName, handler) {
-      const eventHandlers = handlers.get(eventName) ?? new Set<EventHandler>()
-      eventHandlers.add(handler)
-      handlers.set(eventName, eventHandlers)
-      return () => {
-        eventHandlers.delete(handler)
-      }
+      return emitter.on(eventName as keyof EventPayloads, handler as EventHandler)
     },
   }
 }

@@ -1,3 +1,4 @@
+import { intersectionWith } from "es-toolkit/array"
 import type {
   PluginInstance,
   SearchProviderContribution,
@@ -119,8 +120,11 @@ export function resolveEnabledSearchProviders(
   settings: WorkbenchSearchSettings,
   providers: SearchProviderContribution[],
 ): SearchProviderContribution[] {
-  const ids = new Set(resolveEnabledProviderIds(settings))
-  return providers.filter((provider) => ids.has(provider.id))
+  return intersectionWith(
+    providers,
+    resolveEnabledProviderIds(settings),
+    (provider, id) => provider.id === id,
+  )
 }
 
 export function resolveDefaultProviderForSearch(

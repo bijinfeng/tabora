@@ -1,3 +1,4 @@
+import { uniq } from "es-toolkit/array"
 import type { SearchProviderContribution } from "@tabora/plugin-api"
 
 export type SearchRoute =
@@ -15,7 +16,7 @@ function normalizeToken(value: string): string {
 
 function providerTokens(provider: SearchProviderContribution): string[] {
   const suffix = provider.id.split(".").at(-1) ?? provider.id
-  return [...new Set([provider.id, provider.title, suffix, provider.shortcut ?? ""])]
+  return uniq([provider.id, provider.title, suffix, provider.shortcut ?? ""])
     .map(normalizeToken)
     .filter(Boolean)
 }

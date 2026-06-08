@@ -1,5 +1,5 @@
 import { createRoot } from "solid-js"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { WorkbenchSearchSettings } from "@tabora/plugin-api"
 import type { ToastManager } from "@tabora/orchestrator"
 
@@ -17,6 +17,14 @@ const initialVisualState = {
 }
 
 describe("createWorkbenchShellState", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("initializes shell signals from injected visual defaults", () => {
     createRoot((dispose) => {
       const state = createWorkbenchShellState({
@@ -40,15 +48,10 @@ describe("createWorkbenchShellState", () => {
 
   it("shows and auto-dismisses plain toasts through the toast manager", () => {
     createRoot((dispose) => {
-      const scheduled: Array<{ callback: () => void; delay: number }> = []
       const state = createWorkbenchShellState({
         initialSearchSettings,
         initialVisualState,
         darkThemeId: "theme.dark.custom",
-        scheduleTimeout: (callback, delay) => {
-          scheduled.push({ callback, delay })
-          return 1 as ReturnType<typeof setTimeout>
-        },
       })
 
       state.showToast("已保存")
@@ -61,10 +64,8 @@ describe("createWorkbenchShellState", () => {
           duration: 2500,
         },
       ])
-      expect(scheduled).toHaveLength(1)
-      expect(scheduled[0]?.delay).toBe(2500)
 
-      scheduled[0]?.callback()
+      vi.advanceTimersByTime(2500)
       expect(state.toasts()).toEqual([])
 
       dispose()
@@ -73,12 +74,10 @@ describe("createWorkbenchShellState", () => {
 
   it("does not auto-dismiss action toasts", () => {
     createRoot((dispose) => {
-      const scheduleTimeout = vi.fn()
       const state = createWorkbenchShellState({
         initialSearchSettings,
         initialVisualState,
         darkThemeId: "theme.dark.custom",
-        scheduleTimeout,
       })
 
       state.showToast("查看详情", {
@@ -94,7 +93,9 @@ describe("createWorkbenchShellState", () => {
           action: { label: "打开", commandId: "open-details" },
         },
       ])
-      expect(scheduleTimeout).not.toHaveBeenCalled()
+
+      vi.runAllTimers()
+      expect(state.toasts()).toHaveLength(1)
 
       dispose()
     })

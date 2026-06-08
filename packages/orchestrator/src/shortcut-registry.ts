@@ -1,3 +1,4 @@
+import { uniq } from "es-toolkit/array"
 import type { KeybindingContribution } from "@tabora/plugin-api"
 
 export type ShortcutCommandMap = Record<string, (() => void) | undefined>
@@ -100,7 +101,7 @@ export function shortcutKeysFromEvent(
 
   const modModifiers = modifiers.map((modifier) => (modifier === "ctrl" ? "mod" : modifier))
   const modKey = normalizeShortcutKey([...modModifiers, event.key].join("+"))
-  return [...new Set([explicitKey, modKey])]
+  return uniq([explicitKey, modKey])
 }
 
 export function createShortcutRegistry(options: ShortcutRegistryOptions): ShortcutRegistry {

@@ -17,6 +17,7 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@solid-primitives/event-bus": "catalog:ui",
     "@tabora/plugin-api": "workspace:*"
   },
   "devDependencies": {

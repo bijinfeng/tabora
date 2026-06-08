@@ -26,16 +26,17 @@
 
 ## 当前事实源
 
-| 领域            | 当前事实源                                                      | 什么时候读                                     |
-| --------------- | --------------------------------------------------------------- | ---------------------------------------------- |
-| 产品范围        | `docs/product/tabora-plugin-workbench-prd.md`                   | 判断 MVP 范围、用户流程、验收标准、非目标      |
-| 官方插件        | `docs/product/tabora-official-plugins-design.md`                | 修改官方插件、默认装配、插件交互和插件验收     |
-| 视觉与交互      | `DESIGN.md`                                                     | 修改 UI、token、布局视觉、组件语义、可访问性   |
-| 设计实现映射    | `docs/product/tabora-design-system.md`                          | 判断 `DESIGN.md` 如何映射到 `@tabora/ui/theme` |
-| 技术架构        | `docs/technical/tabora-plugin-workbench-technical-design-v2.md` | 修改协议、runtime、storage、shell、包边界      |
-| 回归治理        | `docs/technical/tabora-regression-baseline.md`                  | 每轮迭代后选择回归层级、验证命令、报告模板     |
-| Playground 部署 | `docs/technical/playground-github-actions-deploy.md`            | 修改 playground 发布链路或服务器部署           |
-| Extension 分发  | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow          |
+| 领域            | 当前事实源                                                           | 什么时候读                                     |
+| --------------- | -------------------------------------------------------------------- | ---------------------------------------------- |
+| 产品范围        | `docs/product/tabora-plugin-workbench-prd.md`                        | 判断 MVP 范围、用户流程、验收标准、非目标      |
+| 官方插件        | `docs/product/tabora-official-plugins-design.md`                     | 修改官方插件、默认装配、插件交互和插件验收     |
+| 视觉与交互      | `DESIGN.md`                                                          | 修改 UI、token、布局视觉、组件语义、可访问性   |
+| 设计实现映射    | `docs/product/tabora-design-system.md`                               | 判断 `DESIGN.md` 如何映射到 `@tabora/ui/theme` |
+| 技术架构        | `docs/technical/tabora-plugin-workbench-technical-design-v2.md`      | 修改协议、runtime、storage、shell、包边界      |
+| 架构优化建议    | `docs/technical/tabora-architecture-optimization-recommendations.md` | 审查架构/工程问题时参考已知问题与优化方向      |
+| 回归治理        | `docs/technical/tabora-regression-baseline.md`                       | 每轮迭代后选择回归层级、验证命令、报告模板     |
+| Playground 部署 | `docs/technical/playground-github-actions-deploy.md`                 | 修改 playground 发布链路或服务器部署           |
+| Extension 分发  | `docs/technical/extension-github-actions-publish.md`                 | 修改扩展 zip、商店提交、发布 workflow          |
 
 ## 按任务选择文档
 

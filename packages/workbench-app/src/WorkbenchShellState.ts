@@ -1,3 +1,4 @@
+import { makeTimer } from "@solid-primitives/timer"
 import { createSignal } from "solid-js"
 import type {
   PluginInstance,
@@ -24,8 +25,6 @@ export type WorkbenchContextMenuState = {
   instanceId: string
 }
 
-type ScheduleTimeout = (callback: () => void, delay: number) => ReturnType<typeof setTimeout>
-
 export type CreateWorkbenchShellStateOptions = {
   initialSearchSettings: WorkbenchSearchSettings
   initialVisualState: {
@@ -35,7 +34,6 @@ export type CreateWorkbenchShellStateOptions = {
   }
   darkThemeId: string
   createToastManager?: () => ToastManager
-  scheduleTimeout?: ScheduleTimeout
 }
 
 export function createWorkbenchShellState(options: CreateWorkbenchShellStateOptions) {
@@ -79,11 +77,14 @@ export function createWorkbenchShellState(options: CreateWorkbenchShellStateOpti
     }
 
     const toast = toastManager.list().find((item) => item.id === id)
-    const scheduleTimeout = options.scheduleTimeout ?? setTimeout
-    scheduleTimeout(() => {
-      toastManager.dismiss(id)
-      refreshToasts()
-    }, toast?.duration ?? 2500)
+    makeTimer(
+      () => {
+        toastManager.dismiss(id)
+        refreshToasts()
+      },
+      toast?.duration ?? 2500,
+      setTimeout,
+    )
   }
 
   const isDark = () => isWorkbenchDarkTheme(themeId(), options.darkThemeId)

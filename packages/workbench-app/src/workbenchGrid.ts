@@ -1,3 +1,4 @@
+import { groupBy } from "es-toolkit/array"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 
 const SIZE_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 2 }
@@ -15,15 +16,19 @@ export function assignGridOrder(
   instances: PluginInstance[],
   updatedAt = new Date().toISOString(),
 ): PluginInstance[] {
-  const regionIndex = new Map<string, number>()
+  const widgetsByRegion = groupBy(
+    instances.filter((i) => i.extensionPoint === "widget" && i.size),
+    (i) => i.regionId,
+  )
+  const regionCounters = new Map(Object.keys(widgetsByRegion).map((regionId) => [regionId, 0]))
 
   return instances.map((instance) => {
     if (instance.extensionPoint !== "widget" || !instance.size) {
       return instance
     }
 
-    const x = regionIndex.get(instance.regionId) ?? 0
-    regionIndex.set(instance.regionId, x + 1)
+    const x = regionCounters.get(instance.regionId) ?? 0
+    regionCounters.set(instance.regionId, x + 1)
 
     return {
       ...instance,

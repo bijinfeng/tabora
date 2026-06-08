@@ -18,6 +18,8 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@solid-primitives/media": "catalog:ui",
+    "@solid-primitives/timer": "catalog:ui",
     "@tabora/brand": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
@@ -26,6 +28,7 @@
     "@tabora/storage": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/workbench-shell": "workspace:*",
+    "es-toolkit": "catalog:toolkit",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
   },

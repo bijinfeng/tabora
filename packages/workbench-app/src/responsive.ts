@@ -1,4 +1,4 @@
-import { createSignal, onCleanup } from "solid-js"
+import { createMediaQuery } from "@solid-primitives/media"
 
 const MOBILE_QUERY = "(max-width: 768px)"
 
@@ -7,16 +7,6 @@ export type WorkbenchResponsiveState = {
 }
 
 export function createWorkbenchResponsiveState(query = MOBILE_QUERY): WorkbenchResponsiveState {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return { isMobile: () => false }
-  }
-
-  const media = window.matchMedia(query)
-  const [isMobile, setIsMobile] = createSignal(media.matches)
-  const update = (event: MediaQueryListEvent) => setIsMobile(event.matches)
-
-  media.addEventListener("change", update)
-  onCleanup(() => media.removeEventListener("change", update))
-
+  const isMobile = createMediaQuery(query, false)
   return { isMobile }
 }
