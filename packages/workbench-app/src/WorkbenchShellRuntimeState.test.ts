@@ -1,4 +1,9 @@
-import type { PluginInstance, PluginRecord, Workspace } from "@tabora/plugin-api"
+import type {
+  PluginInstance,
+  PluginRecord,
+  Workspace,
+  WorkspacePresetContribution,
+} from "@tabora/plugin-api"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
@@ -52,6 +57,20 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
 }
 
 function createRuntime(records: PluginRecord[] = []) {
+  const defaultWorkspacePreset: WorkspacePresetContribution = {
+    id: "preset.default",
+    title: "Default Workspace",
+    plugins: ["plugin.widgets"],
+    layoutId: "official.layout.workbench-dashboard",
+    themeId: "official.theme.light",
+    backgroundProviderId: "official.background.default",
+    search: {
+      defaultProviderId: "official.search.google",
+      enabledProviderIds: ["official.search.google"],
+    },
+    regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
+    instances: [],
+  }
   const handlers = new Map<string, Set<(payload: unknown) => void>>()
   const events = {
     on: vi.fn((eventName: string, handler: (payload: unknown) => void) => {
@@ -71,6 +90,7 @@ function createRuntime(records: PluginRecord[] = []) {
         activateEnabledPlugins: vi.fn(async () => {}),
         events,
       },
+      defaultWorkspacePreset,
       plugins: [],
       repositories: {
         workspaceRepo: { get: vi.fn(), getAll: vi.fn(async () => [workspace()]) },
@@ -80,6 +100,7 @@ function createRuntime(records: PluginRecord[] = []) {
         workspaceSnapshotRepo: { save: vi.fn(), getLast: vi.fn() },
       },
     },
+    defaultWorkspacePreset,
     emit: (eventName: string, payload: unknown) => {
       for (const handler of handlers.get(eventName) ?? []) {
         handler(payload)
@@ -127,7 +148,7 @@ describe("initializeWorkbenchShellRuntime", () => {
       activeThemeId: "official.theme.light",
       activeBackgroundId: "official.background.default",
     }
-    const { runtime } = createRuntime(pluginRecords)
+    const { runtime, defaultWorkspacePreset } = createRuntime(pluginRecords)
     mocks.ensureWorkspaceSession.mockResolvedValue(session)
 
     const setPluginRecords = vi.fn()
@@ -162,6 +183,7 @@ describe("initializeWorkbenchShellRuntime", () => {
     expect(setPluginRecords).toHaveBeenCalledWith(pluginRecords)
     expect(mocks.ensureWorkspaceSession).toHaveBeenCalledWith(
       expect.objectContaining({
+        defaultWorkspacePreset,
         workspaceRepo: runtime.repositories.workspaceRepo,
         instanceRepo: runtime.repositories.instanceRepo,
         pluginDataRepo: runtime.repositories.pluginDataRepo,

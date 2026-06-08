@@ -1,5 +1,6 @@
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createPluginCatalog, type PluginCatalog } from "@tabora/orchestrator"
+import type { WorkspacePresetContribution } from "@tabora/plugin-api"
 import {
   createPluginKernel,
   loadBuiltinPlugins,
@@ -39,6 +40,7 @@ export type WorkbenchRuntimeBootstrap = {
   catalog: PluginCatalog
   kernel: PluginKernel
   plugins: BuiltinPlugin[]
+  defaultWorkspacePreset: WorkspacePresetContribution
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
 }
@@ -46,6 +48,7 @@ export type WorkbenchRuntimeBootstrap = {
 export type CreateWorkbenchRuntimeBootstrapOptions = {
   host: HostAdapter
   plugins: BuiltinPlugin[]
+  defaultWorkspacePreset: WorkspacePresetContribution
   databaseName?: string
   storageAdapter?: StorageAdapter
 }
@@ -81,6 +84,7 @@ export function createWorkbenchRuntimeBootstrap(
     catalog,
     kernel,
     plugins: loadedPlugins,
+    defaultWorkspacePreset: options.defaultWorkspacePreset,
     pluginStyles,
     rejectedPlugins: loadResult.rejected,
   }

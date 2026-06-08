@@ -95,7 +95,7 @@
 
 - 官方插件也必须走 manifest、contribution、registry、runtime context、permission 和 storage 协议。
 - `@tabora/official-plugins` 是官方插件集合，不决定 shell 默认 builtin 装配。
-- `@tabora/builtin-plugin-registry` 才是当前 shell 默认 builtin 聚合入口。
+- `@tabora/builtin-plugin-registry` 才是当前 shell 默认 builtin 聚合入口，并向 shell 暴露默认 builtin plugin 列表与默认 workspace preset。
 
 ### 协议 / Kernel / Storage / Shell
 

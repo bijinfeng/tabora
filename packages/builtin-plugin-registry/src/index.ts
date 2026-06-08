@@ -13,7 +13,10 @@ import todayFocusStylesHref from "@tabora/plugin-today-focus/styles.css?url"
 import todoStylesHref from "@tabora/plugin-todo/styles.css?url"
 import weatherStylesHref from "@tabora/plugin-weather/styles.css?url"
 
-export { officialPlugins }
+export {
+  officialPlugins,
+  officialDefaultWorkspacePreset as builtinDefaultWorkspacePreset,
+} from "@tabora/official-plugins"
 
 const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "official.layout.workbench-dashboard": { "./styles.css": layoutDashboardStylesHref },

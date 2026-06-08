@@ -32,12 +32,15 @@ export async function ensureWorkspaceSession(options: {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
   pluginDataRepo: PluginDataRepository
+  defaultWorkspacePreset: Parameters<typeof createDefaultWorkspaceFromPreset>[0]["preset"]
   workspaceId?: string
 }): Promise<WorkspaceSessionState> {
   let workspace = await options.workspaceRepo.get(options.workspaceId ?? "default")
   let instances: PluginInstance[] = []
   if (!workspace) {
-    const seed = createDefaultWorkspaceFromPreset({})
+    const seed = createDefaultWorkspaceFromPreset({
+      preset: options.defaultWorkspacePreset,
+    })
     workspace = seed.workspace
     instances = seed.instances
     await options.workspaceRepo.save(workspace)
@@ -69,9 +72,11 @@ export async function ensureWorkspaceSession(options: {
 export async function createWorkspaceSession(options: {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
+  defaultWorkspacePreset: Parameters<typeof createDefaultWorkspaceFromPreset>[0]["preset"]
   name: string
 }): Promise<Workspace> {
   const seed = createDefaultWorkspaceFromPreset({
+    preset: options.defaultWorkspacePreset,
     workspaceId: `ws-${Date.now()}`,
     workspaceName: options.name,
   })

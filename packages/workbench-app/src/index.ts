@@ -1,7 +1,10 @@
-import type { PluginInstance, WorkbenchSearchSettings, Workspace } from "@tabora/plugin-api"
+import type {
+  PluginInstance,
+  WorkbenchSearchSettings,
+  Workspace,
+  WorkspacePresetContribution,
+} from "@tabora/plugin-api"
 import type { HostAdapter } from "@tabora/host-adapters"
-
-import { OFFICIAL_DEFAULT_WORKSPACE_PRESET } from "./defaultWorkspaceSeed"
 
 export * from "./bootstrap"
 export * from "./backgroundResolver"
@@ -31,12 +34,17 @@ export type WorkbenchComposition = {
 
 export type CreateWorkbenchCompositionOptions = {
   host: HostAdapter
+  defaultWorkspacePreset: WorkspacePresetContribution
   initialState?: Partial<WorkbenchCompositionState>
 }
 
-const DEFAULT_SEARCH_SETTINGS: WorkbenchSearchSettings = {
-  defaultProviderId: OFFICIAL_DEFAULT_WORKSPACE_PRESET.search.defaultProviderId,
-  enabledProviderIds: [...OFFICIAL_DEFAULT_WORKSPACE_PRESET.search.enabledProviderIds],
+function deriveSearchSettingsFromPreset(
+  preset: WorkspacePresetContribution,
+): WorkbenchSearchSettings {
+  return {
+    defaultProviderId: preset.search.defaultProviderId,
+    enabledProviderIds: [...preset.search.enabledProviderIds],
+  }
 }
 
 export function createWorkbenchComposition(
@@ -47,7 +55,9 @@ export function createWorkbenchComposition(
     initialState: {
       workspace: options.initialState?.workspace ?? null,
       instances: options.initialState?.instances ?? [],
-      searchSettings: options.initialState?.searchSettings ?? DEFAULT_SEARCH_SETTINGS,
+      searchSettings:
+        options.initialState?.searchSettings ??
+        deriveSearchSettingsFromPreset(options.defaultWorkspacePreset),
     },
   }
 }

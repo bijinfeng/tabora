@@ -14,7 +14,6 @@ import {
 } from "@tabora/orchestrator"
 import type { SettingsSectionId } from "@tabora/workbench-shell"
 
-import { FALLBACK_BACKGROUND_ID } from "./backgroundResolver"
 import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
 import type { WorkbenchExpandState } from "./WorkbenchShellInteractions"
 
@@ -28,19 +27,21 @@ type ScheduleTimeout = (callback: () => void, delay: number) => ReturnType<typeo
 
 export type CreateWorkbenchShellStateOptions = {
   initialSearchSettings: WorkbenchSearchSettings
+  initialVisualState: {
+    layoutId: string
+    themeId: string
+    backgroundId: string
+  }
   createToastManager?: () => ToastManager
   scheduleTimeout?: ScheduleTimeout
 }
 
-const DEFAULT_LAYOUT_ID = "official.layout.workbench-dashboard"
-const DEFAULT_THEME_ID = "official.theme.light"
-
 export function createWorkbenchShellState(options: CreateWorkbenchShellStateOptions) {
   const [kernelReady, setKernelReady] = createSignal(false)
   const [instances, setInstances] = createSignal<PluginInstance[]>([])
-  const [activeLayoutId, setActiveLayoutId] = createSignal(DEFAULT_LAYOUT_ID)
-  const [themeId, setThemeId] = createSignal(DEFAULT_THEME_ID)
-  const [backgroundId, setBackgroundId] = createSignal(FALLBACK_BACKGROUND_ID)
+  const [activeLayoutId, setActiveLayoutId] = createSignal(options.initialVisualState.layoutId)
+  const [themeId, setThemeId] = createSignal(options.initialVisualState.themeId)
+  const [backgroundId, setBackgroundId] = createSignal(options.initialVisualState.backgroundId)
   const [workspaceState, setWorkspaceState] = createSignal<Workspace | null>(null)
   const [workspaceList, setWorkspaceList] = createSignal<Workspace[]>([])
   const [settingsOpen, setSettingsOpen] = createSignal(false)

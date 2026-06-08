@@ -1,5 +1,6 @@
 import "fake-indexeddb/auto"
 import { beforeEach, describe, expect, it } from "vitest"
+import { builtinDefaultWorkspacePreset } from "@tabora/builtin-plugin-registry"
 import {
   createTaboraDatabase,
   createInstanceRepository,
@@ -83,6 +84,7 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
     })
 
     expect(session.workspace.id).toBe("default")
@@ -146,6 +148,7 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
     })
 
     expect(session.instances.some((instance) => instance.id === "weather-1")).toBe(false)
@@ -184,6 +187,7 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
     })
 
     expect(session.workspace.name).toBe("空工作区")
@@ -199,6 +203,7 @@ describe("workspaceSession", () => {
     const workspace = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "新的工作区",
     })
 
@@ -217,6 +222,7 @@ describe("workspaceSession", () => {
     const workspace = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "待删除工作区",
     })
     await pluginDataRepo.saveForWorkspace(
@@ -249,11 +255,13 @@ describe("workspaceSession", () => {
     const workspaceA = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "工作区 A",
     })
     const workspaceB = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "工作区 B",
     })
 
@@ -286,12 +294,14 @@ describe("workspaceSession", () => {
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       workspaceId: workspaceA.id,
     })
     const sessionB = await ensureWorkspaceSession({
       workspaceRepo,
       instanceRepo,
       pluginDataRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       workspaceId: workspaceB.id,
     })
 
@@ -327,6 +337,7 @@ describe("workspaceSession", () => {
     const workspace = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "设置工作区",
     })
 
@@ -357,6 +368,7 @@ describe("workspaceSession", () => {
     const workspace = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "外观工作区",
     })
 

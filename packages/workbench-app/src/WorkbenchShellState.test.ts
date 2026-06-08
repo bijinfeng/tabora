@@ -10,13 +10,23 @@ const initialSearchSettings: WorkbenchSearchSettings = {
   enabledProviderIds: ["official.search.google"],
 }
 
+const initialVisualState = {
+  layoutId: "community.layout.board",
+  themeId: "theme.sunset",
+  backgroundId: "background.clouds",
+}
+
 describe("createWorkbenchShellState", () => {
-  it("initializes shell signals from the current protocol defaults", () => {
+  it("initializes shell signals from injected visual defaults", () => {
     createRoot((dispose) => {
-      const state = createWorkbenchShellState({ initialSearchSettings })
+      const state = createWorkbenchShellState({
+        initialSearchSettings,
+        initialVisualState,
+      })
 
       expect(state.kernelReady()).toBe(false)
-      expect(state.activeLayoutId()).toBe("official.layout.workbench-dashboard")
+      expect(state.activeLayoutId()).toBe("community.layout.board")
+      expect(state.backgroundId()).toBe("background.clouds")
       expect(state.searchSettings()).toEqual(initialSearchSettings)
       expect(state.isDark()).toBe(false)
 
@@ -32,6 +42,7 @@ describe("createWorkbenchShellState", () => {
       const scheduled: Array<{ callback: () => void; delay: number }> = []
       const state = createWorkbenchShellState({
         initialSearchSettings,
+        initialVisualState,
         scheduleTimeout: (callback, delay) => {
           scheduled.push({ callback, delay })
           return 1 as ReturnType<typeof setTimeout>
@@ -63,6 +74,7 @@ describe("createWorkbenchShellState", () => {
       const scheduleTimeout = vi.fn()
       const state = createWorkbenchShellState({
         initialSearchSettings,
+        initialVisualState,
         scheduleTimeout,
       })
 
@@ -101,6 +113,7 @@ describe("createWorkbenchShellState", () => {
       }
       const state = createWorkbenchShellState({
         initialSearchSettings,
+        initialVisualState,
         createToastManager: () => manager,
       })
 

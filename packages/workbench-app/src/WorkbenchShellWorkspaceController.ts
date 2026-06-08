@@ -8,6 +8,7 @@ import type {
   ThemeTokenSet,
   WorkbenchSearchSettings,
   Workspace,
+  WorkspacePresetContribution,
 } from "@tabora/plugin-api"
 import type { LayoutSwitchPlan } from "@tabora/orchestrator"
 
@@ -84,6 +85,7 @@ export function createWorkbenchWorkspaceController(options: {
   applyBackground: BackgroundApplier
   clearContextMenu: () => void
   clearExpandState: () => void
+  defaultWorkspacePreset: WorkspacePresetContribution
   assignGridOrder: (instances: PluginInstance[]) => PluginInstance[]
   syncPluginStyles?: () => Promise<void> | void
   warn?: (message: string) => void
@@ -145,6 +147,7 @@ export function createWorkbenchWorkspaceController(options: {
     reconcileInstancesForLayout,
     clearContextMenu: options.clearContextMenu,
     clearExpandState: options.clearExpandState,
+    defaultWorkspacePreset: options.defaultWorkspacePreset,
   })
 
   async function switchLayout(layoutId: string) {

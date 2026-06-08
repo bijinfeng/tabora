@@ -37,6 +37,7 @@ export function createWorkbenchWorkspaceState(options: {
   ) => Promise<{ instances: PluginInstance[] }>
   clearContextMenu: () => void
   clearExpandState: () => void
+  defaultWorkspacePreset: Parameters<typeof createWorkspaceSession>[0]["defaultWorkspacePreset"]
 }) {
   const resetTransientShellState = () => {
     options.clearContextMenu()
@@ -94,6 +95,7 @@ export function createWorkbenchWorkspaceState(options: {
     const workspace = await createWorkspaceSession({
       workspaceRepo: options.workspaceRepo,
       instanceRepo: options.instanceRepo,
+      defaultWorkspacePreset: options.defaultWorkspacePreset,
       name,
     })
     options.setWorkspaceList((prev) => [...prev, workspace])
@@ -109,6 +111,7 @@ export function createWorkbenchWorkspaceState(options: {
       workspaceRepo: options.workspaceRepo,
       instanceRepo: options.instanceRepo,
       pluginDataRepo: options.pluginDataRepo,
+      defaultWorkspacePreset: options.defaultWorkspacePreset,
       workspaceId: id,
     })
 

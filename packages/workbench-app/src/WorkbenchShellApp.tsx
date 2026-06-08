@@ -45,6 +45,7 @@ export type WorkbenchShellAppProps = {
 
 export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const composition = props.composition
+  const runtime = props.runtime
   const {
     kernelReady,
     setKernelReady,
@@ -97,10 +98,19 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     showToast,
   } = createWorkbenchShellState({
     initialSearchSettings: composition.initialState.searchSettings,
+    initialVisualState: {
+      layoutId:
+        composition.initialState.workspace?.activeLayoutId ??
+        runtime.defaultWorkspacePreset.layoutId,
+      themeId:
+        composition.initialState.workspace?.activeThemeId ?? runtime.defaultWorkspacePreset.themeId,
+      backgroundId:
+        composition.initialState.workspace?.activeBackgroundProviderId ??
+        runtime.defaultWorkspacePreset.backgroundProviderId,
+    },
   })
   const responsive = createWorkbenchResponsiveState()
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
-  const runtime = props.runtime
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
   const pluginStyleManager = createPluginStyleManager(document)
@@ -152,6 +162,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     applyBackground: applyBackgroundStyle,
     clearContextMenu: () => setCtxMenu(null),
     clearExpandState: () => setExpandState(null),
+    defaultWorkspacePreset: runtime.defaultWorkspacePreset,
     assignGridOrder,
     syncPluginStyles: refreshPluginRecords,
   })

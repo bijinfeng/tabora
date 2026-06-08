@@ -1,6 +1,7 @@
 import "fake-indexeddb/auto"
 import { describe, expect, it } from "vitest"
 import { createWebHostAdapter } from "@tabora/host-adapters"
+import type { WorkspacePresetContribution } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { StorageAdapter } from "@tabora/storage"
 
@@ -26,13 +27,29 @@ const testPlugins: BuiltinPlugin[] = [
   },
 ]
 
+const defaultWorkspacePreset: WorkspacePresetContribution = {
+  id: "preset.default",
+  title: "Default Workspace",
+  plugins: ["test.plugin"],
+  layoutId: "official.layout.workbench-dashboard",
+  themeId: "official.theme.light",
+  backgroundProviderId: "official.background.default",
+  search: {
+    defaultProviderId: "official.search.google",
+    enabledProviderIds: ["official.search.google"],
+  },
+  regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
+  instances: [],
+}
+
 describe("createWorkbenchRuntimeBootstrap", () => {
   it("creates kernel, catalog, database, and repositories together", () => {
     const runtime = createWorkbenchRuntimeBootstrap({
       host: createWebHostAdapter({ id: "host.test" }),
       plugins: testPlugins,
       databaseName: "tabora-workbench-app-bootstrap-test",
-    })
+      defaultWorkspacePreset,
+    } as any)
 
     expect(runtime.host.id).toBe("host.test")
     expect(runtime.kernel.plugins).toEqual([])
@@ -42,6 +59,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.repositories.instanceRepo).toBeDefined()
     expect(runtime.repositories.pluginDataRepo).toBeDefined()
     expect(runtime.repositories.pluginRecordRepo).toBeDefined()
+    expect(runtime.defaultWorkspacePreset).toBe(defaultWorkspacePreset)
     expect(runtime.pluginStyles).toEqual([
       {
         pluginId: "test.plugin",
@@ -134,7 +152,8 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       host: createWebHostAdapter({ id: "host.test" }),
       plugins: testPlugins,
       storageAdapter,
-    })
+      defaultWorkspacePreset,
+    } as any)
 
     expect(runtime.repositories).toBe(storageAdapter.repositories)
   })

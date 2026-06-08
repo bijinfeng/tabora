@@ -6,6 +6,7 @@ import type {
   ThemeContribution,
   WorkbenchSearchSettings,
   Workspace,
+  WorkspacePresetContribution,
 } from "@tabora/plugin-api"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -113,6 +114,20 @@ function searchSettings(overrides: Partial<WorkbenchSearchSettings> = {}): Workb
     defaultProviderId: "official.search.google",
     enabledProviderIds: ["official.search.google"],
     ...overrides,
+  }
+}
+
+function defaultWorkspacePreset(): WorkspacePresetContribution {
+  return {
+    id: "preset.default",
+    title: "Default Workspace",
+    plugins: ["plugin.widgets"],
+    layoutId: "official.layout.workbench-dashboard",
+    themeId: "official.theme.light",
+    backgroundProviderId: "official.background.default",
+    search: searchSettings(),
+    regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
+    instances: [],
   }
 }
 
@@ -242,6 +257,7 @@ function controllerSetup() {
     applyBackground,
     clearContextMenu,
     clearExpandState,
+    defaultWorkspacePreset: defaultWorkspacePreset(),
     assignGridOrder: (instances) => instances,
     warn: vi.fn(),
     syncPluginStyles,

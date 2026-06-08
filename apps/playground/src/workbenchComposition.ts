@@ -1,5 +1,5 @@
 import { createWebHostAdapter } from "@tabora/host-adapters"
-import { builtinPlugins } from "@tabora/builtin-plugin-registry"
+import { builtinDefaultWorkspacePreset, builtinPlugins } from "@tabora/builtin-plugin-registry"
 import {
   createWorkbenchComposition,
   createWorkbenchRuntimeBootstrap,
@@ -12,6 +12,7 @@ export function createPlaygroundWorkbenchComposition(): WorkbenchComposition {
     host: createWebHostAdapter({
       id: "host.playground",
     }),
+    defaultWorkspacePreset: builtinDefaultWorkspacePreset,
   })
 }
 
@@ -21,5 +22,6 @@ export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
       id: "host.playground",
     }),
     plugins: builtinPlugins,
+    defaultWorkspacePreset: builtinDefaultWorkspacePreset,
   })
 }

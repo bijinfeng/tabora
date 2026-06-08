@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
-import {
-  createDefaultWorkspaceFromPreset,
-  OFFICIAL_DEFAULT_WORKSPACE_PRESET,
-} from "@tabora/workbench-app"
+import { builtinDefaultWorkspacePreset } from "@tabora/builtin-plugin-registry"
+import { createDefaultWorkspaceFromPreset } from "@tabora/workbench-app"
 
 describe("createDefaultWorkspaceFromPreset", () => {
   it("creates workspace and instances from the official preset", () => {
-    const { workspace } = createDefaultWorkspaceFromPreset({})
+    const { workspace } = createDefaultWorkspaceFromPreset({
+      preset: builtinDefaultWorkspacePreset,
+    })
 
     expect(workspace.id).toBe("default")
     expect(workspace.name).toBe("默认工作区")
@@ -38,7 +38,9 @@ describe("createDefaultWorkspaceFromPreset", () => {
   })
 
   it("assigns correct extension points and region IDs to instances", () => {
-    const { instances } = createDefaultWorkspaceFromPreset({})
+    const { instances } = createDefaultWorkspaceFromPreset({
+      preset: builtinDefaultWorkspacePreset,
+    })
 
     const searchInstance = instances.find((i) => i.regionId === "topbar")
     expect(searchInstance).toBeDefined()
@@ -60,7 +62,9 @@ describe("createDefaultWorkspaceFromPreset", () => {
   })
 
   it("each instance has createdAt and updatedAt timestamps", () => {
-    const { instances, workspace } = createDefaultWorkspaceFromPreset({})
+    const { instances, workspace } = createDefaultWorkspaceFromPreset({
+      preset: builtinDefaultWorkspacePreset,
+    })
 
     expect(workspace.createdAt).toBeTruthy()
     expect(workspace.updatedAt).toBeTruthy()
@@ -72,9 +76,11 @@ describe("createDefaultWorkspaceFromPreset", () => {
   })
 
   it("seed does not hardcode token values or background styles", () => {
-    const { workspace } = createDefaultWorkspaceFromPreset({})
+    const { workspace } = createDefaultWorkspaceFromPreset({
+      preset: builtinDefaultWorkspacePreset,
+    })
 
-    expect(workspace.config).toEqual({ search: OFFICIAL_DEFAULT_WORKSPACE_PRESET.search })
+    expect(workspace.config).toEqual({ search: builtinDefaultWorkspacePreset.search })
     expect(workspace).not.toHaveProperty("tokens")
     expect(workspace).not.toHaveProperty("backgrounds")
   })

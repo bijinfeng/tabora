@@ -1,5 +1,6 @@
 import "fake-indexeddb/auto"
 import { beforeEach, describe, expect, it } from "vitest"
+import { builtinDefaultWorkspacePreset } from "@tabora/builtin-plugin-registry"
 import {
   createTaboraDatabase,
   createInstanceRepository,
@@ -32,11 +33,13 @@ describe("workspaceTransfer", () => {
     const workspaceA = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "工作区 A",
     })
     const workspaceB = await createWorkspaceSession({
       workspaceRepo,
       instanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "工作区 B",
     })
 
@@ -81,6 +84,7 @@ describe("workspaceTransfer", () => {
     const workspace = await createWorkspaceSession({
       workspaceRepo: sourceWorkspaceRepo,
       instanceRepo: sourceInstanceRepo,
+      defaultWorkspacePreset: builtinDefaultWorkspacePreset,
       name: "导出工作区",
     })
 

@@ -3,6 +3,7 @@ import type {
   SearchHistoryEntry,
   WorkbenchSearchSettings,
   Workspace,
+  WorkspacePresetContribution,
 } from "@tabora/plugin-api"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -75,6 +76,20 @@ function searchSettings(): WorkbenchSearchSettings {
   }
 }
 
+function defaultWorkspacePreset(): WorkspacePresetContribution {
+  return {
+    id: "preset.default",
+    title: "Default Workspace",
+    plugins: ["plugin.widgets"],
+    layoutId: "official.layout.workbench-dashboard",
+    themeId: "official.theme.light",
+    backgroundProviderId: "official.background.default",
+    search: searchSettings(),
+    regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
+    instances: [],
+  }
+}
+
 describe("createWorkbenchWorkspaceState", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -91,6 +106,7 @@ describe("createWorkbenchWorkspaceState", () => {
     const reconciledInstances = [
       instance({ id: "widget-reconciled", workspaceId: importedWorkspace.id }),
     ]
+    const preset = defaultWorkspacePreset()
     mocks.importWorkspaceData.mockResolvedValue({
       workspace: importedWorkspace,
       instances: importedInstances,
@@ -130,6 +146,7 @@ describe("createWorkbenchWorkspaceState", () => {
       reconcileInstancesForLayout,
       clearContextMenu,
       clearExpandState,
+      defaultWorkspacePreset: preset,
     })
 
     const result = await actions.importWorkspace('{"workspace":{}}')
@@ -160,6 +177,7 @@ describe("createWorkbenchWorkspaceState", () => {
 
   it("skips switching when the requested workspace is already active", async () => {
     const currentWorkspace = workspace()
+    const preset = defaultWorkspacePreset()
     const actions = createWorkbenchWorkspaceState({
       workspaceRepo: { get: vi.fn() } as any,
       instanceRepo: {} as any,
@@ -178,6 +196,7 @@ describe("createWorkbenchWorkspaceState", () => {
       reconcileInstancesForLayout: vi.fn(async () => ({ instances: [] })),
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
+      defaultWorkspacePreset: preset,
     })
 
     await actions.switchWorkspace(currentWorkspace.id)
@@ -189,6 +208,7 @@ describe("createWorkbenchWorkspaceState", () => {
   it("falls back to the default workspace after deleting the active workspace", async () => {
     const currentWorkspace = workspace()
     const defaultWorkspace = workspace({ id: "default", name: "Default" })
+    const preset = defaultWorkspacePreset()
     const defaultSession = {
       workspace: defaultWorkspace,
       instances: [instance({ workspaceId: defaultWorkspace.id })],
@@ -226,6 +246,7 @@ describe("createWorkbenchWorkspaceState", () => {
       reconcileInstancesForLayout: vi.fn(async () => ({ instances: [] })),
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
+      defaultWorkspacePreset: preset,
     })
 
     await actions.deleteWorkspace(currentWorkspace.id)
@@ -241,5 +262,48 @@ describe("createWorkbenchWorkspaceState", () => {
     expect(mocks.hydrateWorkbenchSessionState).toHaveBeenCalledWith(
       expect.objectContaining({ session: defaultSession }),
     )
+  })
+
+  it("passes the injected default workspace preset when creating a workspace", async () => {
+    const createdWorkspace = workspace({ id: "workspace-new", name: "Workspace New" })
+    mocks.createWorkspaceSession.mockResolvedValue(createdWorkspace)
+
+    let workspaceList = [workspace()]
+    const setWorkspaceList = vi.fn((updater: (prev: Workspace[]) => Workspace[]) => {
+      workspaceList = updater(workspaceList)
+    })
+    const preset = defaultWorkspacePreset()
+
+    const actions = createWorkbenchWorkspaceState({
+      workspaceRepo: { get: vi.fn() } as any,
+      instanceRepo: {} as any,
+      pluginDataRepo: {} as any,
+      database: {} as any,
+      availablePluginIds: () => [],
+      getWorkspaceState: () => workspace(),
+      setWorkspaceState: vi.fn(),
+      setWorkspaceList,
+      setActiveLayoutId: vi.fn(),
+      setSearchSettings: vi.fn(),
+      setSearchHistory: vi.fn(),
+      setInstances: vi.fn(),
+      applyThemeSelection: vi.fn(),
+      applyBackgroundSelection: vi.fn(),
+      reconcileInstancesForLayout: vi.fn(async () => ({ instances: [] })),
+      clearContextMenu: vi.fn(),
+      clearExpandState: vi.fn(),
+      defaultWorkspacePreset: preset,
+    } as any)
+
+    const result = await actions.createWorkspace("Workspace New")
+
+    expect(mocks.createWorkspaceSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Workspace New",
+        defaultWorkspacePreset: preset,
+      }),
+    )
+    expect(workspaceList).toEqual([workspace(), createdWorkspace])
+    expect(result).toBe(createdWorkspace)
   })
 })
