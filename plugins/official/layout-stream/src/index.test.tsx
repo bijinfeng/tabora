@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
+import type { JSX } from "solid-js"
 import type { LayoutHostAPI, RegionSlot } from "@tabora/plugin-api"
 import { StreamLayout, layoutStream } from "./index"
 
@@ -14,7 +15,7 @@ function makeHost(): LayoutHostAPI {
   }
 }
 
-function makeSlot(): RegionSlot {
+function makeSlot(): RegionSlot<JSX.Element> {
   return {
     regionId: "stream",
     title: "stream",

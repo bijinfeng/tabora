@@ -1,5 +1,6 @@
 import { sortBy } from "es-toolkit/array"
-import type { GridPlacement, PluginInstance, WidgetSize } from "@tabora/plugin-api"
+import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
+import type { GridPlacement, PluginInstance } from "@tabora/plugin-api"
 
 export type DragSortPlanOptions = {
   sourceId: string
@@ -12,16 +13,13 @@ export type DragSortPlan = {
   instances: PluginInstance[]
 }
 
-const SIZE_COLUMN_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 2 }
-const SIZE_ROW_SPAN: Record<WidgetSize, number> = { S: 1, M: 1, L: 2, XL: 2 }
-
 function gridShape(instance: PluginInstance): Omit<GridPlacement, "x" | "y"> {
   if (!instance.size) {
     throw new Error(`Widget instance "${instance.id}" must declare size before sorting`)
   }
   return {
-    colSpan: instance.grid?.colSpan ?? SIZE_COLUMN_SPAN[instance.size],
-    rowSpan: instance.grid?.rowSpan ?? SIZE_ROW_SPAN[instance.size],
+    colSpan: instance.grid?.colSpan ?? widgetGridColumnSpan(instance.size),
+    rowSpan: instance.grid?.rowSpan ?? widgetGridRowSpan(instance.size),
     ...(instance.grid?.locked === undefined ? {} : { locked: instance.grid.locked }),
   }
 }

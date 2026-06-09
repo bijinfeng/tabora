@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
+import type { JSX } from "solid-js"
 import type { LayoutHostAPI, PluginInstance, RegionSlot } from "@tabora/plugin-api"
 import { MasonryLayout, layoutDiyMasonry } from "./index"
 
@@ -35,7 +36,7 @@ function makeHost(settingsRun: () => void): LayoutHostAPI {
   }
 }
 
-function makeSlot(instances: PluginInstance[], rendered: string[]): RegionSlot {
+function makeSlot(instances: PluginInstance[], rendered: string[]): RegionSlot<JSX.Element> {
   return {
     regionId: "masonry",
     title: "瀑布流",

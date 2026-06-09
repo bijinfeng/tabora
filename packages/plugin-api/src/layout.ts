@@ -1,15 +1,14 @@
-import type { JSX } from "solid-js"
 import type { ExtensionPoint } from "./manifest"
 import type { PluginInstance } from "./workspace"
 
-export type RegionSlot = {
+export type RegionSlot<TRendered = unknown> = {
   regionId: string
   title: string
   accepts: ExtensionPoint[]
   instances: PluginInstance[]
   isEmpty: boolean
-  render: () => JSX.Element
-  renderInstance: (instance: PluginInstance) => JSX.Element
+  render: () => TRendered
+  renderInstance: (instance: PluginInstance) => TRendered
 }
 
 export type HostSurface = "rail" | "toolbar" | "menu"
@@ -43,8 +42,8 @@ export type LayoutHostAPI = {
   isDark: () => boolean
 }
 
-export type LayoutViewProps = {
-  regions: Record<string, RegionSlot>
+export type LayoutViewProps<TRendered = unknown> = {
+  regions: Record<string, RegionSlot<TRendered>>
   isMobile: boolean
   host: LayoutHostAPI
 }

@@ -1,15 +1,17 @@
 import { groupBy } from "es-toolkit/array"
-import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
-
-const SIZE_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 2 }
-const SIZE_ROW_SPAN: Record<WidgetSize, number> = { S: 1, M: 1, L: 2, XL: 2 }
+import {
+  widgetGridColumnSpan,
+  widgetGridRowSpan,
+  type PluginInstance,
+  type WidgetSize,
+} from "@tabora/plugin-api"
 
 export function gridColumnSpan(size: WidgetSize): number {
-  return SIZE_SPAN[size]
+  return widgetGridColumnSpan(size)
 }
 
 export function gridRowSpan(size: WidgetSize): number {
-  return SIZE_ROW_SPAN[size]
+  return widgetGridRowSpan(size)
 }
 
 export function assignGridOrder(

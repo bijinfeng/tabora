@@ -1,10 +1,11 @@
 import { For, Show } from "solid-js"
+import type { JSX } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { AlignJustify } from "lucide-solid"
 import { HostActionIcon } from "./host-action-icon"
 
-export function StreamLayout(props: LayoutViewProps) {
+export function StreamLayout(props: LayoutViewProps<JSX.Element>) {
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
 
   return (

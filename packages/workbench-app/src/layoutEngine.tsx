@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js"
 import type { LayoutHostAPI, PluginInstance, RegionSlot } from "@tabora/plugin-api"
-import type { PluginCatalog } from "./plugin-catalog"
+import type { PluginCatalog } from "@tabora/orchestrator"
 
 export type InstanceRenderer = {
   renderWidget: (instance: PluginInstance, callbacks?: unknown) => JSX.Element
@@ -34,9 +34,9 @@ export function createLayoutEngine(deps: LayoutEngineDeps) {
   function buildRegionSlots(
     layoutId: string,
     instances: PluginInstance[],
-  ): Record<string, RegionSlot> {
+  ): Record<string, RegionSlot<JSX.Element>> {
     const layout = deps.catalog.findLayoutContribution(layoutId)
-    const slots: Record<string, RegionSlot> = {}
+    const slots: Record<string, RegionSlot<JSX.Element>> = {}
     for (const region of layout?.regions ?? []) {
       const regionInstances = instances
         .filter(

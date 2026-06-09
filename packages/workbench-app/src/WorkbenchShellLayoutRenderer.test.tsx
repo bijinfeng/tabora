@@ -1,6 +1,8 @@
 import type { LayoutHostAPI, PluginInstance, RegionSlot, WidgetSize } from "@tabora/plugin-api"
+import type { LayoutViewProps } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
+import type { JSX } from "solid-js"
 
 import {
   createWorkbenchLayoutRenderer,
@@ -96,7 +98,7 @@ describe("createWorkbenchLayoutRenderer", () => {
 
   it("renders the plugin-provided layout view with computed regions and host api", () => {
     const buildRegionSlots = vi.fn(
-      (): Record<string, RegionSlot> => ({
+      (): Record<string, RegionSlot<JSX.Element>> => ({
         main: {
           regionId: "main",
           title: "Main",
@@ -117,9 +119,9 @@ describe("createWorkbenchLayoutRenderer", () => {
       isDark: vi.fn(() => false),
     }
     const buildHostAPI = vi.fn(() => hostApi)
-    const LayoutView = vi.fn((props: any) => (
+    const LayoutView = vi.fn((props: LayoutViewProps<JSX.Element>) => (
       <div>
-        layout {String(props.isMobile)} {props.regions.main.regionId}
+        layout {String(props.isMobile)} {props.regions.main!.regionId}
       </div>
     ))
     const clearLayoutError = vi.fn()

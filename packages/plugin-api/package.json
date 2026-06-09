@@ -20,11 +20,6 @@
     "zod": "catalog:data"
   },
   "devDependencies": {
-    "@tabora/tsconfig": "workspace:*",
-    "solid-js": "catalog:ui"
-  },
-  "inlinedDependencies": {
-    "csstype": "3.2.3",
-    "solid-js": "1.9.13"
+    "@tabora/tsconfig": "workspace:*"
   }
 }

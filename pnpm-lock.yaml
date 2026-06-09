@@ -126,42 +126,12 @@ importers:
 
   apps/extension:
     dependencies:
-      '@tabora/brand':
-        specifier: workspace:*
-        version: link:../../packages/brand
       '@tabora/builtin-plugin-registry':
         specifier: workspace:*
         version: link:../../packages/builtin-plugin-registry
       '@tabora/host-adapters':
         specifier: workspace:*
         version: link:../../packages/host-adapters
-      '@tabora/layout-dashboard':
-        specifier: workspace:*
-        version: link:../../plugins/official/layout-dashboard
-      '@tabora/layout-diy-masonry':
-        specifier: workspace:*
-        version: link:../../plugins/community/layout-diy-masonry
-      '@tabora/layout-stream':
-        specifier: workspace:*
-        version: link:../../plugins/official/layout-stream
-      '@tabora/official-plugins':
-        specifier: workspace:*
-        version: link:../../packages/official-plugins
-      '@tabora/orchestrator':
-        specifier: workspace:*
-        version: link:../../packages/orchestrator
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      '@tabora/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage
-      '@tabora/theme':
-        specifier: workspace:*
-        version: link:../../packages/theme
       '@tabora/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -171,13 +141,13 @@ importers:
       '@tabora/workbench-shell':
         specifier: workspace:*
         version: link:../../packages/workbench-shell
-      lucide-solid:
-        specifier: catalog:ui
-        version: 1.16.0(solid-js@1.9.13)
       solid-js:
         specifier: catalog:ui
         version: 1.9.13
     devDependencies:
+      '@tabora/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@tabora/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
@@ -205,42 +175,12 @@ importers:
 
   apps/playground:
     dependencies:
-      '@tabora/brand':
-        specifier: workspace:*
-        version: link:../../packages/brand
       '@tabora/builtin-plugin-registry':
         specifier: workspace:*
         version: link:../../packages/builtin-plugin-registry
       '@tabora/host-adapters':
         specifier: workspace:*
         version: link:../../packages/host-adapters
-      '@tabora/layout-dashboard':
-        specifier: workspace:*
-        version: link:../../plugins/official/layout-dashboard
-      '@tabora/layout-diy-masonry':
-        specifier: workspace:*
-        version: link:../../plugins/community/layout-diy-masonry
-      '@tabora/layout-stream':
-        specifier: workspace:*
-        version: link:../../plugins/official/layout-stream
-      '@tabora/official-plugins':
-        specifier: workspace:*
-        version: link:../../packages/official-plugins
-      '@tabora/orchestrator':
-        specifier: workspace:*
-        version: link:../../packages/orchestrator
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      '@tabora/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage
-      '@tabora/theme':
-        specifier: workspace:*
-        version: link:../../packages/theme
       '@tabora/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -250,13 +190,22 @@ importers:
       '@tabora/workbench-shell':
         specifier: workspace:*
         version: link:../../packages/workbench-shell
-      lucide-solid:
-        specifier: catalog:ui
-        version: 1.16.0(solid-js@1.9.13)
       solid-js:
         specifier: catalog:ui
         version: 1.9.13
     devDependencies:
+      '@tabora/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
+      '@tabora/platform-kernel':
+        specifier: workspace:*
+        version: link:../../packages/platform-kernel
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../../packages/plugin-api
+      '@tabora/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@tabora/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
@@ -412,15 +361,9 @@ importers:
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../plugin-api
-      '@tabora/storage':
-        specifier: workspace:*
-        version: link:../storage
       es-toolkit:
         specifier: catalog:toolkit
         version: 1.47.0
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
@@ -448,9 +391,6 @@ importers:
       '@tabora/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
 
   packages/storage:
     dependencies:

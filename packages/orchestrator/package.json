@@ -20,9 +20,7 @@
   "dependencies": {
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
-    "@tabora/storage": "workspace:*",
-    "es-toolkit": "catalog:toolkit",
-    "solid-js": "catalog:ui"
+    "es-toolkit": "catalog:toolkit"
   },
   "devDependencies": {
     "@tabora/tsconfig": "workspace:*"

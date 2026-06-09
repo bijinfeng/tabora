@@ -1,4 +1,5 @@
 import { createSignal, For, Show } from "solid-js"
+import type { JSX } from "solid-js"
 import type { LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { Menu } from "lucide-solid"
@@ -14,7 +15,7 @@ function splitIntoColumns(instances: PluginInstance[]): PluginInstance[][] {
   return columns
 }
 
-export function MasonryLayout(props: LayoutViewProps) {
+export function MasonryLayout(props: LayoutViewProps<JSX.Element>) {
   const [menuOpen, setMenuOpen] = createSignal(false)
   const masonry = () => props.regions["masonry"]
   const columns = () => splitIntoColumns(masonry()?.instances ?? [])

@@ -1,6 +1,6 @@
-import { createLayoutEngine } from "@tabora/orchestrator"
 import type { WidgetSize } from "@tabora/plugin-api"
 
+import { createLayoutEngine } from "./layoutEngine"
 import { resolveWorkbenchThemeToggleTarget, type WorkbenchShellConfig } from "./shellConfig"
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 import {

@@ -10,7 +10,7 @@ import { LayoutBoundary } from "@tabora/workbench-shell"
 
 import { SafeWorkbenchLayout } from "./WorkbenchShellChrome"
 
-type LayoutViewComponent = (props: LayoutViewProps) => JSX.Element
+type LayoutViewComponent = (props: LayoutViewProps<JSX.Element>) => JSX.Element
 type SafeLayoutProps = Parameters<typeof SafeWorkbenchLayout>[0]
 export type WorkbenchSafeLayoutOptions = Omit<SafeLayoutProps, "instances" | "isDark"> & {
   isDark: () => boolean
@@ -23,7 +23,10 @@ export function createWorkbenchLayoutRenderer(options: {
   displayedInstances: () => PluginInstance[]
   findLayoutContribution: (layoutId: string) => LayoutContribution | undefined
   resolveLayoutView: (viewId: string) => LayoutViewComponent | undefined
-  buildRegionSlots: (layoutId: string, instances: PluginInstance[]) => Record<string, RegionSlot>
+  buildRegionSlots: (
+    layoutId: string,
+    instances: PluginInstance[],
+  ) => Record<string, RegionSlot<JSX.Element>>
   buildHostAPI: () => LayoutHostAPI
   isMobile: () => boolean
   clearLayoutError: () => void

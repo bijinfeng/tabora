@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js"
+import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 import { Maximize2, X } from "lucide-solid"
 
@@ -25,15 +26,12 @@ export type WidgetCardShellProps = {
   callbacks: WidgetHostCallbacks
 }
 
-const SIZE_SPAN: Record<WidgetSize, number> = { S: 1, M: 2, L: 2, XL: 2 }
-const SIZE_ROW_SPAN: Record<WidgetSize, number> = { S: 1, M: 1, L: 2, XL: 2 }
-
 function gridColumnSpan(size: WidgetSize): number {
-  return SIZE_SPAN[size] ?? 2
+  return widgetGridColumnSpan(size)
 }
 
 function gridRowSpan(size: WidgetSize): number {
-  return SIZE_ROW_SPAN[size] ?? 1
+  return widgetGridRowSpan(size)
 }
 
 export function WidgetCardShell(props: WidgetCardShellProps) {

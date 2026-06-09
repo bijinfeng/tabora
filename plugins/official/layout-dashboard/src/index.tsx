@@ -1,11 +1,12 @@
 import { TaboraMark } from "@tabora/brand"
 import { For, Show } from "solid-js"
+import type { JSX } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { AlignJustify, LayoutGrid, Plus } from "lucide-solid"
 import { HostActionIcon } from "./host-action-icon"
 
-export function DashboardLayout(props: LayoutViewProps) {
+export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
   const addWidgetAction = () =>
     props.host.getGlobalActions("rail").find((action) => action.id === "add-widget")

@@ -187,6 +187,7 @@ git diff --stat
 - `@tabora/ui` 只提供插件内容区基础组件，不提供宿主容器。
 - `@tabora/official-plugins` 只表达官方插件 pack，不决定 shell 默认 builtin 装配。
 - `@tabora/builtin-plugin-registry` 是 shell 默认 builtin 聚合入口，不承载 runtime。
+- `@tabora/orchestrator` 只承接跨插件纯模型和编排计划，不依赖 `@tabora/storage` 或 Solid renderer；JSX 布局渲染桥属于 `@tabora/workbench-app`。
 
 #### 插件边界
 
@@ -204,6 +205,7 @@ git diff --stat
 - extension 不应长期通过相对路径 import playground helper。
 - 仓库内部 refactor 不为旧调用方式保留兼容层；允许同步修改 helper 签名、模块出口和调用方。
 - app 层不保留纯 pass-through `@tabora/workbench-app` 兼容模块；只有真实装配工厂或宿主入口文件可以继续存在。
+- playground / extension 生产依赖只保留 host composition、宿主样式和 Solid；官方插件、layout package 与 core runtime package 通过 `@tabora/builtin-plugin-registry` 和 `@tabora/workbench-app` 间接进入。
 
 建议检查命令：
 
@@ -211,7 +213,7 @@ git diff --stat
 pnpm check:architecture
 ```
 
-脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、搜索配置首项 provider 兜底、`enabledProviderIds ?? providers.map(...)` backfill、widget region `?? "mainGrid"` 推断、废弃 `official.layout.dashboard` 回流、app 层纯 `@tabora/workbench-app` pass-through wrapper、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
+脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、shell app 生产依赖收口、`@tabora/orchestrator` 禁用 UI / storage 依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、搜索配置首项 provider 兜底、`enabledProviderIds ?? providers.map(...)` backfill、widget region `?? "mainGrid"` 推断、废弃 `official.layout.dashboard` 回流、app 层纯 `@tabora/workbench-app` pass-through wrapper、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
 
 ### L3：自动化基础门禁
 
@@ -549,7 +551,7 @@ Nightly CI 已覆盖：
 - `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 信号报告；raw color 按 `workbench production / generated backgrounds / site styles / test fixtures` 分组，external-open 按 `host execution / manifest declaration / runtime method reference / test fixture / bypass risk` 分组，并按文件级信号去重计数。生产侧 raw color / `!important` 报告项应保持为 0。
 - `pnpm check:architecture` 将 `workbench production` raw color 基线锁定为 0，重新引入任何字面量颜色或 `!important` 都会直接失败；其余类别通过 `pnpm quality` 审计是否回归。
 - `pnpm check:architecture` 同时禁止 workbench 生产样式里的零透明度 `rgba(...)` 和宿主题色变量字面量 fallback；前者统一用 `transparent`，后者直接依赖宿主主题 token。
-- `pnpm check:architecture` 守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止废弃 `official.layout.dashboard` 回流到生产源码、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper，并校验 PR browser smoke workflow 的路径门禁、Playwright Chromium 安装与 `pnpm test:e2e` 执行契约。
+- `pnpm check:architecture` 守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止废弃 `official.layout.dashboard` 回流到生产源码、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper、禁止 shell app 生产依赖直接声明官方插件 / layout / core runtime package、禁止 `@tabora/orchestrator` 依赖 `@tabora/storage` 或 `solid-js`，并校验 PR browser smoke workflow 的路径门禁、Playwright Chromium 安装与 `pnpm test:e2e` 执行契约。
 
 建议后续逐步补齐：
 

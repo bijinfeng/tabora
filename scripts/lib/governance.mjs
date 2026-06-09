@@ -90,6 +90,74 @@ const UI_DEPENDENCY_RULES = [
   },
 ]
 
+const SHELL_APP_ALLOWED_PRODUCTION_DEPENDENCIES = new Set([
+  "@tabora/builtin-plugin-registry",
+  "@tabora/host-adapters",
+  "@tabora/ui",
+  "@tabora/workbench-app",
+  "@tabora/workbench-shell",
+  "solid-js",
+])
+
+const SHELL_APP_FORBIDDEN_PRODUCTION_DEPENDENCIES = [
+  {
+    matches: isBuiltinPluginDependency,
+    reason:
+      "shell app production dependencies must enter builtin plugins through @tabora/builtin-plugin-registry",
+  },
+  {
+    matches: isCoreRuntimeDependency,
+    reason:
+      "shell app production dependencies must use @tabora/workbench-app and host adapters instead of core runtime packages",
+  },
+  {
+    matches: (dependency) =>
+      dependency.startsWith("@tabora/") &&
+      !SHELL_APP_ALLOWED_PRODUCTION_DEPENDENCIES.has(dependency) &&
+      !isBuiltinPluginDependency(dependency) &&
+      !isCoreRuntimeDependency(dependency),
+    reason:
+      "shell app production dependencies must be limited to host composition packages and shell styles",
+  },
+]
+
+const ORCHESTRATOR_FORBIDDEN_DEPENDENCIES = [
+  {
+    matches: (dependency) =>
+      dependency === "@tabora/storage" ||
+      dependency.startsWith("@tabora/storage/") ||
+      dependency === "solid-js" ||
+      dependency.startsWith("solid-js/"),
+    reason: "@tabora/orchestrator must stay UI- and infrastructure-free",
+  },
+]
+
+function isBuiltinPluginDependency(dependency) {
+  return (
+    dependency === "@tabora/official-plugins" ||
+    dependency.startsWith("@tabora/official-plugins/") ||
+    dependency.startsWith("@tabora/layout-") ||
+    dependency.startsWith("@tabora/plugin-")
+  )
+}
+
+function isCoreRuntimeDependency(dependency) {
+  return (
+    dependency === "@tabora/brand" ||
+    dependency.startsWith("@tabora/brand/") ||
+    dependency === "@tabora/orchestrator" ||
+    dependency.startsWith("@tabora/orchestrator/") ||
+    dependency === "@tabora/platform-kernel" ||
+    dependency.startsWith("@tabora/platform-kernel/") ||
+    dependency === "@tabora/plugin-api" ||
+    dependency.startsWith("@tabora/plugin-api/") ||
+    dependency === "@tabora/storage" ||
+    dependency.startsWith("@tabora/storage/") ||
+    dependency === "@tabora/theme" ||
+    dependency.startsWith("@tabora/theme/")
+  )
+}
+
 const CORE_PACKAGE_APP_IMPORT_RULES = [
   {
     matches: (specifier) =>
@@ -237,6 +305,22 @@ export function findForbiddenUiImports(options) {
 
 export function findForbiddenUiDependencies(options) {
   return findForbiddenDependencies(options, UI_DEPENDENCY_RULES)
+}
+
+export function findForbiddenShellAppDependencies(options) {
+  return findForbiddenDependencies(
+    {
+      filePath: options.filePath,
+      manifest: {
+        dependencies: options.manifest.dependencies,
+      },
+    },
+    SHELL_APP_FORBIDDEN_PRODUCTION_DEPENDENCIES,
+  )
+}
+
+export function findForbiddenOrchestratorDependencies(options) {
+  return findForbiddenDependencies(options, ORCHESTRATOR_FORBIDDEN_DEPENDENCIES)
 }
 
 export function findCorePackageAppImports(options) {
@@ -706,6 +790,27 @@ export async function scanUiPackageBoundaries(rootDir) {
   )
 }
 
+export async function scanShellAppPackageBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  return scanPackageFiles(
+    repositoryRoot,
+    [
+      path.join(repositoryRoot, "apps", "playground", "package.json"),
+      path.join(repositoryRoot, "apps", "extension", "package.json"),
+    ],
+    findForbiddenShellAppDependencies,
+  )
+}
+
+export async function scanOrchestratorPackageBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  return scanPackageFiles(
+    repositoryRoot,
+    [path.join(repositoryRoot, "packages", "orchestrator", "package.json")],
+    findForbiddenOrchestratorDependencies,
+  )
+}
+
 export async function scanPluginExternalOpenBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles([path.join(repositoryRoot, "plugins")], (filePath) =>
@@ -978,6 +1083,8 @@ export async function scanArchitecture(rootDir) {
     ...(await scanPluginPackageBoundaries(rootDir)),
     ...(await scanUiSourceBoundaries(rootDir)),
     ...(await scanUiPackageBoundaries(rootDir)),
+    ...(await scanShellAppPackageBoundaries(rootDir)),
+    ...(await scanOrchestratorPackageBoundaries(rootDir)),
     ...(await scanPluginExternalOpenBoundaries(rootDir)),
     ...(await scanTestModeBoundaries(rootDir)),
     ...(await scanCorePackageAppImportBoundaries(rootDir)),

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
+import type { JSX } from "solid-js"
 import type { LayoutHostAPI, RegionSlot } from "@tabora/plugin-api"
 import { DashboardLayout, layoutDashboard } from "./index"
 
@@ -20,7 +21,7 @@ function makeHost(): LayoutHostAPI {
   }
 }
 
-function makeSlot(id: string): RegionSlot {
+function makeSlot(id: string): RegionSlot<JSX.Element> {
   return {
     regionId: id,
     title: id,

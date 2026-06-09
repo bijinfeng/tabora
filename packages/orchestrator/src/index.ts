@@ -5,8 +5,6 @@ export type {
   SettingsPanelDescriptor,
   WidgetContributionDescriptor,
 } from "./plugin-catalog"
-export { createLayoutEngine } from "./layout-engine"
-export type { InstanceRenderer, HostActionsSource, LayoutEngineDeps } from "./layout-engine"
 export {
   buildSearchUrl,
   findProviderByToken,

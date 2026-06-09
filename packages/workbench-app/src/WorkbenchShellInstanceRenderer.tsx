@@ -5,13 +5,13 @@ import type {
   WidgetSize,
   WidgetViewProps,
 } from "@tabora/plugin-api"
-import type { InstanceRenderer } from "@tabora/orchestrator"
 import {
   PluginViewBoundary,
   WidgetCardShell,
   type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
 
+import type { InstanceRenderer } from "./layoutEngine"
 import { isWorkbenchInteractiveElement } from "./WorkbenchShellInteractions"
 import { resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import type { WidgetRenderModel } from "./shellHelpers"

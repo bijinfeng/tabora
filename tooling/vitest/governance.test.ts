@@ -10,8 +10,10 @@ import {
   findCorePackageAppImports,
   findDeprecatedLayoutIdViolations,
   findForbiddenSearchFallbacks,
+  findForbiddenOrchestratorDependencies,
   findForbiddenPluginDependencies,
   findForbiddenPluginImports,
+  findForbiddenShellAppDependencies,
   findPackageExportViolations,
   findPassThroughWorkbenchAppExports,
   findForbiddenUiDependencies,
@@ -163,6 +165,69 @@ describe("governance rules", () => {
         dependency: "@tabora/playground",
         section: "dependencies",
         reason: "@tabora/ui must not depend on app packages",
+      },
+    ])
+  })
+
+  it("detects forbidden shell app production package dependencies", () => {
+    expect(
+      findForbiddenShellAppDependencies({
+        filePath: "apps/playground/package.json",
+        manifest: {
+          dependencies: {
+            "@tabora/builtin-plugin-registry": "workspace:*",
+            "@tabora/host-adapters": "workspace:*",
+            "@tabora/workbench-app": "workspace:*",
+            "@tabora/official-plugins": "workspace:*",
+            "@tabora/storage": "workspace:*",
+          },
+          devDependencies: {
+            "@tabora/storage": "workspace:*",
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        filePath: "apps/playground/package.json",
+        dependency: "@tabora/official-plugins",
+        section: "dependencies",
+        reason:
+          "shell app production dependencies must enter builtin plugins through @tabora/builtin-plugin-registry",
+      },
+      {
+        filePath: "apps/playground/package.json",
+        dependency: "@tabora/storage",
+        section: "dependencies",
+        reason:
+          "shell app production dependencies must use @tabora/workbench-app and host adapters instead of core runtime packages",
+      },
+    ])
+  })
+
+  it("detects forbidden orchestrator package dependencies", () => {
+    expect(
+      findForbiddenOrchestratorDependencies({
+        filePath: "packages/orchestrator/package.json",
+        manifest: {
+          dependencies: {
+            "@tabora/plugin-api": "workspace:*",
+            "@tabora/storage": "workspace:*",
+            "solid-js": "catalog:ui",
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/orchestrator/package.json",
+        dependency: "@tabora/storage",
+        section: "dependencies",
+        reason: "@tabora/orchestrator must stay UI- and infrastructure-free",
+      },
+      {
+        filePath: "packages/orchestrator/package.json",
+        dependency: "solid-js",
+        section: "dependencies",
+        reason: "@tabora/orchestrator must stay UI- and infrastructure-free",
       },
     ])
   })

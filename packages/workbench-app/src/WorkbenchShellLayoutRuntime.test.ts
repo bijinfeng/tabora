@@ -24,7 +24,7 @@ vi.mock("./WorkbenchShellLayoutHost", () => ({
   createWorkbenchLayoutHostAPI: mocks.createWorkbenchLayoutHostAPI,
 }))
 
-vi.mock("@tabora/orchestrator", () => ({
+vi.mock("./layoutEngine", () => ({
   createLayoutEngine: mocks.createLayoutEngine,
 }))
 
