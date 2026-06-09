@@ -4,7 +4,7 @@
 
 日期：2026-06-09
 
-状态：当前架构审查建议事实源；用于 `docs/README.md` 中“架构优化建议”入口。
+状态：**本轮建议已全部落地**（截至 2026-06-09 commit e6023d4）。本文档保留作为架构演进事实源与决策记录。
 
 关联文档：
 
@@ -75,15 +75,21 @@ playground / extension 的生产依赖只保留真实宿主入口需要的 host 
 - 面板关闭时（`isOpen` 变 false 或按 Escape/点击遮罩）通过 `createEffect` 自动重置宿主状态。
 - `buildCommandPaletteProps`（`@tabora/workbench-app/search/WorkbenchShellSearchSurfaces`）传入 `inlineSearchQuery` / `inlineSearchActiveResultIndex` 作为受控 state，两个 surface 共用同一 search store 的 query/index 字段，行为分叉风险消除。
 
-## 2. 后续建议
+## 2. 下一轮可选方向
+
+以下方向当前已充分或可暂缓，供未来架构 review 评估。
 
 ### 2.1 继续收薄 `WorkbenchShellApp`
 
 状态分片（见 1.7）、切片重组（见 1.8）与 runtime 提取（见 1.9）已落地。`WorkbenchShellApp` 当前仍在组件内内联创建 `workspaceController` 和 `hostRuntime`——前者是纯计算工厂，后者因 `onCleanup(dispose)` 和 `void initialize()` 需要 Solid 生命周期上下文，短期内建议保留在组件内。若未来需要进一步拆分，可评估把 `hostRuntime.dispose` 和 `initialize` 的 Solid 绑定提取为一个微薄的 `useWorkbenchHostRuntime` hook。
 
+**当前结论**：已充分收薄，暂无必要进一步拆分。
+
 ### 2.2 统一搜索 surface 的受控状态
 
 CommandPalette 改为受控 surface 已落地（见 1.10）。inline search 与 command palette 现共用同一 `inlineSearchQuery` / `inlineSearchActiveResultIndex` 字段，行为分叉风险已消除。后续如需进一步统一，可评估把 command palette 的 providers / history 也走同一 search store 切片，而非每次调用时从 catalog 重新读取。
+
+**当前结论**：关键分叉风险已消除，providers/history 从 catalog 读取符合当前职责划分，暂无必要强行统一。
 
 ### 2.3 保持协议层无 UI runtime 依赖
 
