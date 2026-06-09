@@ -2,7 +2,6 @@ import type { HostAdapter } from "@tabora/host-adapters"
 import { createEffect, createMemo, onCleanup, Show } from "solid-js"
 import type {
   PluginInstance,
-  SettingsPanelViewProps,
   WidgetViewProps,
   WorkbenchSearchSettings,
   Workspace,
@@ -22,13 +21,12 @@ import {
   createWorkbenchSettingsPanelPropsBuilder,
   openWorkbenchSettings,
 } from "./WorkbenchShellSettings"
+import { WorkbenchShellProvider, type WorkbenchShell } from "./WorkbenchShellContext"
 import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
-import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
 import { createWorkbenchShellState } from "./WorkbenchShellState"
 import { resolveWorkbenchView } from "./WorkbenchShellViewBridge"
 import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
 import { focusWorkbenchWidgetInstance } from "./WorkbenchShellHostActions"
-import { resolveWidgetIconLabel } from "./shellHelpers"
 import { assignGridOrder } from "./workbenchGrid"
 
 export type WorkbenchShellAppProps = {
@@ -46,57 +44,7 @@ export type WorkbenchShellAppProps = {
 export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const composition = props.composition
   const runtime = props.runtime
-  const {
-    kernelReady,
-    setKernelReady,
-    instances,
-    setInstances,
-    activeLayoutId,
-    setActiveLayoutId,
-    setThemeId,
-    setBackgroundId,
-    workspaceState,
-    setWorkspaceState,
-    workspaceList,
-    setWorkspaceList,
-    settingsOpen,
-    setSettingsOpen,
-    activeSettingsSectionId,
-    setActiveSettingsSectionId,
-    searchSettings,
-    setSearchSettings,
-    modalViewId,
-    setModalViewId,
-    modalProps,
-    setModalProps,
-    fullscreenViewId,
-    setFullscreenViewId,
-    fullscreenProps,
-    setFullscreenProps,
-    expandState,
-    setExpandState,
-    dragState,
-    setDragState,
-    ctxMenu,
-    setCtxMenu,
-    addWidgetOpen,
-    setAddWidgetOpen,
-    cmdPaletteOpen,
-    setCmdPaletteOpen,
-    pluginRecords,
-    setPluginRecords,
-    toasts,
-    searchHistory,
-    setSearchHistory,
-    inlineSearchQuery,
-    setInlineSearchQuery,
-    inlineSearchOpen,
-    setInlineSearchOpen,
-    inlineSearchActiveResultIndex,
-    setInlineSearchActiveResultIndex,
-    isDark,
-    showToast,
-  } = createWorkbenchShellState({
+  const state = createWorkbenchShellState({
     initialSearchSettings: composition.initialState.searchSettings,
     initialVisualState: {
       layoutId:
@@ -110,6 +58,42 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     },
     darkThemeId: runtime.shellConfig.themeIds.dark,
   })
+  const { kernelReady, setKernelReady, pluginRecords, setPluginRecords, showToast } = state.runtime
+  const { workspaceState, setWorkspaceState, workspaceList, setWorkspaceList } = state.workspace
+  const { activeLayoutId, setActiveLayoutId, setThemeId, setBackgroundId, isDark } =
+    state.appearance
+  const { instances, setInstances } = state.widgets
+  // 仅保留 app 主体（controllers / effects / onKeyDown / openSettings / settings panel 装配）实际使用的
+  // accessor/setter；纯供 surface 装配读取的 overlay 状态由 shell bundle 经 context 提供。
+  const {
+    setSettingsOpen,
+    setActiveSettingsSectionId,
+    setModalViewId,
+    setModalProps,
+    setFullscreenViewId,
+    setFullscreenProps,
+    expandState,
+    setExpandState,
+    dragState,
+    setDragState,
+    ctxMenu,
+    setCtxMenu,
+    setAddWidgetOpen,
+    cmdPaletteOpen,
+    setCmdPaletteOpen,
+  } = state.overlays
+  const {
+    searchSettings,
+    setSearchSettings,
+    searchHistory,
+    setSearchHistory,
+    inlineSearchQuery,
+    setInlineSearchQuery,
+    inlineSearchOpen,
+    setInlineSearchOpen,
+    inlineSearchActiveResultIndex,
+    setInlineSearchActiveResultIndex,
+  } = state.search
   const responsive = createWorkbenchResponsiveState()
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
   const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
@@ -316,69 +300,35 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     return layoutRuntime.renderActiveLayout()
   })
 
-  const surfaceProps = createMemo(() => {
-    return createWorkbenchShellSurfaceProps({
-      content: layoutContent(),
-      availableWidgets: pluginCatalog.listWidgetContributions(),
-      widgetIconLabel: resolveWidgetIconLabel,
-      addWidgetOpen: addWidgetOpen(),
-      addWidget: controllerRuntime.widgetController.addWidget,
-      closeAddWidget: () => setAddWidgetOpen(false),
-      settingsOpen: settingsOpen(),
-      settingsPanels: pluginCatalog.listSettingsPanels(),
-      activeSettingsSectionId: activeSettingsSectionId(),
-      onSettingsSectionChange: setActiveSettingsSectionId,
-      closeSettings: () => setSettingsOpen(false),
-      getSettingsView: (viewId) =>
-        resolveWorkbenchView<SettingsPanelViewProps>(kernel.registry.views, viewId),
-      buildSettingsPanelProps,
-      workspaceName: workspaceState()?.name ?? "未加载",
-      enabledPluginCount: pluginCatalog
-        .pluginSummaries(pluginRecords())
-        .filter((plugin) => plugin.enabled).length,
-      expandState: expandState(),
-      getWidgetView: (viewId) =>
-        resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
-      widgetIconForProps: (viewProps) =>
-        renderWorkbenchWidgetIcon(
-          controllerRuntime.widgetController.widgetContribution(viewProps)?.icon,
-        ),
-      closeExpand: controllerRuntime.widgetController.closeExpand,
-      modalViewId: modalViewId(),
-      modalProps: modalProps(),
-      getModalView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-      closeModal: () => setModalViewId(null),
-      fullscreenViewId: fullscreenViewId(),
-      fullscreenProps: fullscreenProps(),
-      getFullscreenView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-      closeFullscreen: () => setFullscreenViewId(null),
-      contextMenu: ctxMenu(),
-      contextSections: controllerRuntime.widgetController.buildContextMenuModel()?.sections,
-      closeContextMenu: () => setCtxMenu(null),
-      toasts: toasts(),
-      runCommand: controllerRuntime.runCommand,
-      commandPalette: controllerRuntime.searchSurfaces.buildCommandPaletteProps(),
-    })
-  })
+  const shell: WorkbenchShell = {
+    state,
+    catalog: pluginCatalog,
+    views: kernel.registry.views,
+    controllerRuntime,
+    buildSettingsPanelProps,
+    layoutContent,
+  }
 
   return (
-    <div
-      class="tabora-root"
-      onKeyDown={(e) => {
-        if (controllerRuntime.shortcutRegistry().executeKeydown(e)) {
-          e.preventDefault()
-        }
-        if (e.key === "Escape") {
-          controllerRuntime.widgetController.closeExpand()
-          setCtxMenu(null)
-          setAddWidgetOpen(false)
-        }
-      }}
-      tabIndex={-1}
-    >
-      <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
-        <WorkbenchShellSurfaceHost {...surfaceProps()} />
-      </Show>
-    </div>
+    <WorkbenchShellProvider shell={shell}>
+      <div
+        class="tabora-root"
+        onKeyDown={(e) => {
+          if (controllerRuntime.shortcutRegistry().executeKeydown(e)) {
+            e.preventDefault()
+          }
+          if (e.key === "Escape") {
+            controllerRuntime.widgetController.closeExpand()
+            setCtxMenu(null)
+            setAddWidgetOpen(false)
+          }
+        }}
+        tabIndex={-1}
+      >
+        <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
+          <WorkbenchShellSurfaceHost />
+        </Show>
+      </div>
+    </WorkbenchShellProvider>
   )
 }

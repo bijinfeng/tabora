@@ -1,9 +1,10 @@
 import type { JSX } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { Workspace } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 
 import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
+import { createWorkbenchShellSurfaceStub } from "./WorkbenchShellSurfaceStub"
 
 function mount(element: JSX.Element) {
   const host = document.createElement("div")
@@ -12,54 +13,14 @@ function mount(element: JSX.Element) {
   return { host, dispose }
 }
 
-function baseOptions(
-  overrides: Partial<Parameters<typeof createWorkbenchShellSurfaceProps>[0]> = {},
-): Parameters<typeof createWorkbenchShellSurfaceProps>[0] {
-  return {
-    content: <div>layout-content</div>,
-    availableWidgets: [],
-    widgetIconLabel: (icon) => icon ?? "",
-    addWidgetOpen: true,
-    addWidget: vi.fn(async () => {}),
-    closeAddWidget: vi.fn(),
-    settingsOpen: true,
-    settingsPanels: [],
-    activeSettingsSectionId: "general",
-    onSettingsSectionChange: vi.fn(),
-    closeSettings: vi.fn(),
-    getSettingsView: () => undefined,
-    buildSettingsPanelProps: vi.fn(),
-    workspaceName: "默认工作区",
-    enabledPluginCount: 2,
-    expandState: null,
-    getWidgetView: () => undefined,
-    widgetIconForProps: (_props: WidgetViewProps) => <span>icon</span>,
-    closeExpand: vi.fn(),
-    modalViewId: null,
-    modalProps: {},
-    getModalView: () => undefined,
-    closeModal: vi.fn(),
-    fullscreenViewId: null,
-    fullscreenProps: {},
-    getFullscreenView: () => undefined,
-    closeFullscreen: vi.fn(),
-    contextMenu: null,
-    contextSections: undefined,
-    closeContextMenu: vi.fn(),
-    toasts: [],
-    runCommand: vi.fn(),
-    commandPalette: {
-      isOpen: false,
-      onClose: vi.fn(),
-      commands: [],
-    },
-    ...overrides,
-  }
-}
-
 describe("createWorkbenchShellSurfaceProps", () => {
   it("renders settings about content from shell summaries", () => {
-    const props = createWorkbenchShellSurfaceProps(baseOptions())
+    const shell = createWorkbenchShellSurfaceStub({
+      pluginSummaries: () => [{ enabled: true }, { enabled: true }],
+    })
+    shell.state.workspace.setWorkspaceState({ name: "默认工作区" } as unknown as Workspace)
+
+    const props = createWorkbenchShellSurfaceProps(shell)
     const { host, dispose } = mount(props.settingsHost.aboutContent)
 
     expect(host.textContent).toContain("当前工作区：默认工作区")
@@ -71,29 +32,22 @@ describe("createWorkbenchShellSurfaceProps", () => {
 
   it("closes add widget after dispatching add and defaults empty context sections", () => {
     const addWidget = vi.fn(async () => {})
-    const closeAddWidget = vi.fn()
-    const props = createWorkbenchShellSurfaceProps(
-      baseOptions({
-        addWidget,
-        closeAddWidget,
-      }),
-    )
+    const shell = createWorkbenchShellSurfaceStub({ addWidget })
+    shell.state.overlays.setAddWidgetOpen(true)
 
+    const props = createWorkbenchShellSurfaceProps(shell)
     props.addWidgetModal.onAdd("plugin.widgets", "widget.notes")
 
     expect(addWidget).toHaveBeenCalledWith("plugin.widgets", "widget.notes")
-    expect(closeAddWidget).toHaveBeenCalledTimes(1)
+    expect(shell.state.overlays.addWidgetOpen()).toBe(false)
     expect(props.contextMenuOverlay.sections).toEqual([])
   })
 
   it("routes toast actions into command execution", () => {
     const runCommand = vi.fn()
-    const props = createWorkbenchShellSurfaceProps(
-      baseOptions({
-        runCommand,
-      }),
-    )
+    const shell = createWorkbenchShellSurfaceStub({ runCommand })
 
+    const props = createWorkbenchShellSurfaceProps(shell)
     props.toastHost.onAction("open-settings")
 
     expect(runCommand).toHaveBeenCalledWith("open-settings", {})

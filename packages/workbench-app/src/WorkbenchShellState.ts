@@ -1,29 +1,15 @@
-import { makeTimer } from "@solid-primitives/timer"
-import { createSignal } from "solid-js"
-import type {
-  PluginInstance,
-  PluginRecord,
-  SearchHistoryEntry,
-  WorkbenchSearchSettings,
-  Workspace,
-} from "@tabora/plugin-api"
-import {
-  createToastManager,
-  type ToastManager,
-  type ToastOptions,
-  type ToastRecord,
-} from "@tabora/orchestrator"
-import type { SettingsSectionId } from "@tabora/workbench-shell"
+import type { WorkbenchSearchSettings } from "@tabora/plugin-api"
+import type { ToastManager } from "@tabora/orchestrator"
 
-import { isWorkbenchDarkTheme } from "./shellConfig"
-import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
-import type { WorkbenchExpandState } from "./WorkbenchShellInteractions"
+import { createWorkbenchAppearanceStore } from "./WorkbenchAppearanceStore"
+import { createWorkbenchOverlayStore } from "./WorkbenchOverlayStore"
+import { createWorkbenchRuntimeStore } from "./WorkbenchRuntimeStore"
+import { createWorkbenchSearchStore } from "./WorkbenchSearchStore"
+import { createWorkbenchWidgetStore } from "./WorkbenchWidgetStore"
+import { createWorkbenchWorkspaceStore } from "./WorkbenchWorkspaceStore"
 
-export type WorkbenchContextMenuState = {
-  x: number
-  y: number
-  instanceId: string
-}
+// 既有类型导入点（ControllerRuntime / LayoutRuntime / ViewRuntime）继续从这里取，保持零改动。
+export type { WorkbenchContextMenuState } from "./WorkbenchOverlayStore"
 
 export type CreateWorkbenchShellStateOptions = {
   initialSearchSettings: WorkbenchSearchSettings
@@ -36,111 +22,24 @@ export type CreateWorkbenchShellStateOptions = {
   createToastManager?: () => ToastManager
 }
 
+// 组合根：把 shell 状态按 domain 分片为独立 store 模块，统一对外暴露 { runtime, workspace, appearance, widgets, overlays, search }。
+// 各模块对外契约仍是 `() => T` accessor + setter，调用方无需感知内部是 signal 还是 store。
 export function createWorkbenchShellState(options: CreateWorkbenchShellStateOptions) {
-  const [kernelReady, setKernelReady] = createSignal(false)
-  const [instances, setInstances] = createSignal<PluginInstance[]>([])
-  const [activeLayoutId, setActiveLayoutId] = createSignal(options.initialVisualState.layoutId)
-  const [themeId, setThemeId] = createSignal(options.initialVisualState.themeId)
-  const [backgroundId, setBackgroundId] = createSignal(options.initialVisualState.backgroundId)
-  const [workspaceState, setWorkspaceState] = createSignal<Workspace | null>(null)
-  const [workspaceList, setWorkspaceList] = createSignal<Workspace[]>([])
-  const [settingsOpen, setSettingsOpen] = createSignal(false)
-  const [activeSettingsSectionId, setActiveSettingsSectionId] =
-    createSignal<SettingsSectionId>("general")
-  const [searchSettings, setSearchSettings] = createSignal(options.initialSearchSettings)
-  const [modalViewId, setModalViewId] = createSignal<string | null>(null)
-  const [modalProps, setModalProps] = createSignal<Record<string, unknown>>({})
-  const [fullscreenViewId, setFullscreenViewId] = createSignal<string | null>(null)
-  const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
-  const [expandState, setExpandState] = createSignal<WorkbenchExpandState | null>(null)
-  const [dragState, setDragState] = createSignal<WorkbenchDragControllerState | null>(null)
-  const [ctxMenu, setCtxMenu] = createSignal<WorkbenchContextMenuState | null>(null)
-  const [addWidgetOpen, setAddWidgetOpen] = createSignal(false)
-  const [cmdPaletteOpen, setCmdPaletteOpen] = createSignal(false)
-  const [pluginRecords, setPluginRecords] = createSignal<PluginRecord[]>([])
-  const toastManager = options.createToastManager?.() ?? createToastManager()
-  const [toasts, setToasts] = createSignal<ToastRecord[]>([])
-  const [searchHistory, setSearchHistory] = createSignal<SearchHistoryEntry[]>([])
-  const [inlineSearchQuery, setInlineSearchQuery] = createSignal("")
-  const [inlineSearchOpen, setInlineSearchOpen] = createSignal(false)
-  const [inlineSearchActiveResultIndex, setInlineSearchActiveResultIndex] = createSignal(-1)
+  const runtime = createWorkbenchRuntimeStore({ createToastManager: options.createToastManager })
+  const workspace = createWorkbenchWorkspaceStore()
+  const appearance = createWorkbenchAppearanceStore({
+    initialLayoutId: options.initialVisualState.layoutId,
+    initialThemeId: options.initialVisualState.themeId,
+    initialBackgroundId: options.initialVisualState.backgroundId,
+    darkThemeId: options.darkThemeId,
+  })
+  const widgets = createWorkbenchWidgetStore()
+  const overlays = createWorkbenchOverlayStore()
+  const search = createWorkbenchSearchStore({
+    initialSearchSettings: options.initialSearchSettings,
+  })
 
-  const refreshToasts = () => {
-    setToasts(toastManager.list())
-  }
-
-  const showToast = (message: string, toastOptions?: ToastOptions) => {
-    const id = toastManager.show(message, toastOptions)
-    refreshToasts()
-    if (!toastManager.shouldAutoDismiss(id)) {
-      return
-    }
-
-    const toast = toastManager.list().find((item) => item.id === id)
-    makeTimer(
-      () => {
-        toastManager.dismiss(id)
-        refreshToasts()
-      },
-      toast?.duration ?? 2500,
-      setTimeout,
-    )
-  }
-
-  const isDark = () => isWorkbenchDarkTheme(themeId(), options.darkThemeId)
-
-  return {
-    kernelReady,
-    setKernelReady,
-    instances,
-    setInstances,
-    activeLayoutId,
-    setActiveLayoutId,
-    themeId,
-    setThemeId,
-    backgroundId,
-    setBackgroundId,
-    workspaceState,
-    setWorkspaceState,
-    workspaceList,
-    setWorkspaceList,
-    settingsOpen,
-    setSettingsOpen,
-    activeSettingsSectionId,
-    setActiveSettingsSectionId,
-    searchSettings,
-    setSearchSettings,
-    modalViewId,
-    setModalViewId,
-    modalProps,
-    setModalProps,
-    fullscreenViewId,
-    setFullscreenViewId,
-    fullscreenProps,
-    setFullscreenProps,
-    expandState,
-    setExpandState,
-    dragState,
-    setDragState,
-    ctxMenu,
-    setCtxMenu,
-    addWidgetOpen,
-    setAddWidgetOpen,
-    cmdPaletteOpen,
-    setCmdPaletteOpen,
-    pluginRecords,
-    setPluginRecords,
-    toasts,
-    searchHistory,
-    setSearchHistory,
-    inlineSearchQuery,
-    setInlineSearchQuery,
-    inlineSearchOpen,
-    setInlineSearchOpen,
-    inlineSearchActiveResultIndex,
-    setInlineSearchActiveResultIndex,
-    isDark,
-    refreshToasts,
-    showToast,
-  }
+  return { runtime, workspace, appearance, widgets, overlays, search }
 }
+
+export type WorkbenchShellStateBundle = ReturnType<typeof createWorkbenchShellState>

@@ -1,4 +1,4 @@
-import type { JSX } from "solid-js"
+import { createMemo } from "solid-js"
 import { CommandPalette, SettingsHost, ToastHost } from "@tabora/workbench-shell"
 
 import {
@@ -8,29 +8,24 @@ import {
   WorkbenchFullscreenOverlay,
   WorkbenchPluginModal,
 } from "./WorkbenchShellChrome"
+import { useWorkbenchShell } from "./WorkbenchShellContext"
+import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
 
-export function WorkbenchShellSurfaceHost(props: {
-  content: JSX.Element
-  addWidgetModal: Parameters<typeof WorkbenchAddWidgetModal>[0]
-  settingsHost: Parameters<typeof SettingsHost>[0]
-  expandOverlay: Parameters<typeof WorkbenchExpandOverlay>[0]
-  pluginModal: Parameters<typeof WorkbenchPluginModal>[0]
-  fullscreenOverlay: Parameters<typeof WorkbenchFullscreenOverlay>[0]
-  contextMenuOverlay: Parameters<typeof WorkbenchContextMenuOverlay>[0]
-  toastHost: Parameters<typeof ToastHost>[0]
-  commandPalette: Parameters<typeof CommandPalette>[0]
-}) {
+export function WorkbenchShellSurfaceHost() {
+  const shell = useWorkbenchShell()
+  const surface = createMemo(() => createWorkbenchShellSurfaceProps(shell))
+
   return (
     <>
-      {props.content}
-      <WorkbenchAddWidgetModal {...props.addWidgetModal} />
-      <SettingsHost {...props.settingsHost} />
-      <WorkbenchExpandOverlay {...props.expandOverlay} />
-      <WorkbenchPluginModal {...props.pluginModal} />
-      <WorkbenchFullscreenOverlay {...props.fullscreenOverlay} />
-      <WorkbenchContextMenuOverlay {...props.contextMenuOverlay} />
-      <ToastHost {...props.toastHost} />
-      <CommandPalette {...props.commandPalette} />
+      {surface().content}
+      <WorkbenchAddWidgetModal {...surface().addWidgetModal} />
+      <SettingsHost {...surface().settingsHost} />
+      <WorkbenchExpandOverlay {...surface().expandOverlay} />
+      <WorkbenchPluginModal {...surface().pluginModal} />
+      <WorkbenchFullscreenOverlay {...surface().fullscreenOverlay} />
+      <WorkbenchContextMenuOverlay {...surface().contextMenuOverlay} />
+      <ToastHost {...surface().toastHost} />
+      <CommandPalette {...surface().commandPalette} />
     </>
   )
 }
