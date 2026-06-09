@@ -65,7 +65,15 @@ export function createWorkbenchShellSurfaceStub(
   const searchSurfaces = {
     buildCommandPaletteProps:
       overrides.buildCommandPaletteProps ??
-      (() => ({ isOpen: false, onClose: () => {}, commands: [] })),
+      (() => ({
+        isOpen: false,
+        query: "",
+        activeIdx: 0,
+        onQueryChange: () => {},
+        onActiveIdxChange: () => {},
+        onClose: () => {},
+        commands: [],
+      })),
   } as unknown as WorkbenchSearchSurfaces
 
   const controllerRuntime = {

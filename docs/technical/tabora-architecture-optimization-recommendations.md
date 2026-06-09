@@ -52,20 +52,38 @@ playground / extension 的生产依赖只保留真实宿主入口需要的 host 
 
 净效果：`WorkbenchShellApp` 与 `WorkbenchShellState` 合计减少约 350 行，组合根降为「装配 + provide」。行为不变（393 单测、`pnpm build`、`pnpm check:architecture` 通过）。
 
+### 1.8 workbench-app/src 按垂直切片重组
+
+`packages/workbench-app/src` 原本 ~57 个非测试文件全部扁平排布，按技术层（state/controller/runtime/view/helper）横向散落。现已按功能域重组为 11 个子目录，move-only 保留文件名，行为零变更：
+
+- `shell/`：组合根与跨切片装配——`WorkbenchShellApp.tsx`、`WorkbenchShellContext.tsx`、`WorkbenchShellState.ts`（聚合 6 store）、`WorkbenchShellControllerRuntime.ts`、`WorkbenchShellViewRuntime.ts`、`WorkbenchShellInstanceRenderer.tsx`、`createWorkbenchShellRuntimes.ts`（见 §1.9）。
+- `runtime/`：bootstrap + kernel 运行时——`bootstrap.ts`、`WorkbenchRuntimeStore.ts`、`WorkbenchShellRuntimeState.ts`、`WorkbenchShellHostRuntime.ts`、`WorkbenchShellHostActions.ts`。
+- `widget/ search/ workspace/ layout/ appearance/ surface/ command/ drag/`：各功能域的 store + state-fns + controller + view/surface 就近共置。
+- `shared/`：跨切片基础设施——`shellConfig`、`shellHelpers`、`workbenchGrid`、`responsive`、`WorkbenchShellViewBridge`、`WorkbenchShellIcons`、`pluginStyleManager`、`shellController`、`WorkbenchShellUtils`。
+- `index.ts` 保持单入口，re-export 路径更新为各子目录前缀；`tsconfig`/vitest 递归 glob 无需改动。
+- 同步更新了 `scripts/lib/governance.mjs`、`regressionSummary.mjs`、`tooling/vitest/governance.test.ts` 中硬编码的 `WorkbenchShellApp.tsx` 路径至 `shell/WorkbenchShellApp.tsx`。
+
+### 1.9 收薄 WorkbenchShellApp：controllerRuntime + layoutRuntime 提取
+
+`WorkbenchShellApp` 原本在组件内联创建 4 个 runtime 对象。`workspaceController` 和 `hostRuntime` 因需要 Solid `onCleanup` / 异步 `initialize()` 仍留在组件内；`controllerRuntime` 和 `layoutRuntime` 不含响应式追踪依赖，已提取到 `shell/createWorkbenchShellRuntimes.ts`，入参为 `{ state, runtime, workspaceController, hostRuntime, layoutFallback, responsive, openSettings, showToast }`，组合根只调一次工厂。`WorkbenchShellApp` 从 ~330 行收薄至 ~200 行，装配逻辑与组件生命周期绑定清晰分离。
+
+### 1.10 CommandPalette 改为受控 surface
+
+`CommandPalette`（`@tabora/workbench-shell`）原本本地维护 `query` / `activeIdx` 两个 signal，无法复用 inline search 的宿主状态机。现已改为纯受控组件：
+
+- `CommandPaletteProps` 新增必需属性：`query: string`、`activeIdx: number`、`onQueryChange: (q: string) => void`、`onActiveIdxChange: (i: number | (prev) => number) => void`。
+- 面板关闭时（`isOpen` 变 false 或按 Escape/点击遮罩）通过 `createEffect` 自动重置宿主状态。
+- `buildCommandPaletteProps`（`@tabora/workbench-app/search/WorkbenchShellSearchSurfaces`）传入 `inlineSearchQuery` / `inlineSearchActiveResultIndex` 作为受控 state，两个 surface 共用同一 search store 的 query/index 字段，行为分叉风险消除。
+
 ## 2. 后续建议
 
 ### 2.1 继续收薄 `WorkbenchShellApp`
 
-状态分片与 surface context 收口已落地（见 1.7）。`WorkbenchShellApp` 仍在组合根内联创建 workspace controller、host runtime、controller runtime、layout runtime。可继续按生命周期把这部分 runtime/kernel wiring 拆成独立 composition unit：
-
-- runtime / kernel wiring
-- workspace session controller 装配
-
-拆分时应保持现有 helper API、store 模块边界和测试覆盖，不做无行为收益的大重构。
+状态分片（见 1.7）、切片重组（见 1.8）与 runtime 提取（见 1.9）已落地。`WorkbenchShellApp` 当前仍在组件内内联创建 `workspaceController` 和 `hostRuntime`——前者是纯计算工厂，后者因 `onCleanup(dispose)` 和 `void initialize()` 需要 Solid 生命周期上下文，短期内建议保留在组件内。若未来需要进一步拆分，可评估把 `hostRuntime.dispose` 和 `initialize` 的 Solid 绑定提取为一个微薄的 `useWorkbenchHostRuntime` hook。
 
 ### 2.2 统一搜索 surface 的受控状态
 
-inline search 已走宿主注入状态机；`CommandPalette` 仍维护本地 query / active index。建议后续把 command palette 改为受控 surface，复用 `SearchViewProps` 或同源 search surface model，降低 inline / palette 行为分叉风险。
+CommandPalette 改为受控 surface 已落地（见 1.10）。inline search 与 command palette 现共用同一 `inlineSearchQuery` / `inlineSearchActiveResultIndex` 字段，行为分叉风险已消除。后续如需进一步统一，可评估把 command palette 的 providers / history 也走同一 search store 切片，而非每次调用时从 catalog 重新读取。
 
 ### 2.3 保持协议层无 UI runtime 依赖
 

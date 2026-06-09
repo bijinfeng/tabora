@@ -178,6 +178,8 @@ describe("createWorkbenchSearchSurfaces", () => {
 
     expect(props).toMatchObject({
       isOpen: true,
+      query: "",
+      activeIdx: -1,
       commands,
       widgets,
       providers,

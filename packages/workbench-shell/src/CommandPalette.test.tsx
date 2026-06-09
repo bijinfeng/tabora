@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js"
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import { CommandPalette, type CommandItem } from "./CommandPalette"
@@ -22,11 +23,35 @@ const commands: CommandItem[] = [
   { id: "search-web", icon: "🔍", name: "搜索网页", desc: "直接搜索", action: vi.fn() },
 ]
 
+function Controlled(props: {
+  isOpen?: boolean
+  onClose?: () => void
+  commands?: CommandItem[]
+  [key: string]: unknown
+}) {
+  const [query, setQuery] = createSignal("")
+  const [activeIdx, setActiveIdx] = createSignal(0)
+  return (
+    <CommandPalette
+      isOpen={props.isOpen ?? true}
+      query={query()}
+      activeIdx={activeIdx()}
+      onQueryChange={setQuery}
+      onActiveIdxChange={(next) =>
+        setActiveIdx(typeof next === "function" ? next(activeIdx()) : next)
+      }
+      onClose={props.onClose ?? vi.fn()}
+      commands={props.commands ?? commands}
+      {...(props as object)}
+    />
+  )
+}
+
 describe("CommandPalette", () => {
   it("renders when open", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <CommandPalette isOpen={true} onClose={vi.fn()} commands={commands} />, root)
+    render(() => <Controlled isOpen={true} />, root)
     expect(root.querySelector(".cmd-panel")).toBeTruthy()
     root.remove()
   })
@@ -34,7 +59,7 @@ describe("CommandPalette", () => {
   it("does not render when closed", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <CommandPalette isOpen={false} onClose={vi.fn()} commands={commands} />, root)
+    render(() => <Controlled isOpen={false} />, root)
     expect(root.querySelector(".cmd-panel")).toBeNull()
     root.remove()
   })
@@ -42,7 +67,7 @@ describe("CommandPalette", () => {
   it("shows favorites when query is empty", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <CommandPalette isOpen={true} onClose={vi.fn()} commands={commands} />, root)
+    render(() => <Controlled isOpen={true} />, root)
     expect(root.textContent).toContain("常用命令")
     expect(root.textContent).toContain("切换主题")
     root.remove()
@@ -51,7 +76,7 @@ describe("CommandPalette", () => {
   it("filters commands by query", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <CommandPalette isOpen={true} onClose={vi.fn()} commands={commands} />, root)
+    render(() => <Controlled isOpen={true} />, root)
     const input = root.querySelector(".cmd-input") as HTMLInputElement
     input.value = "设置"
     input.dispatchEvent(new Event("input", { bubbles: true }))
@@ -64,7 +89,7 @@ describe("CommandPalette", () => {
     const onClose = vi.fn()
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <CommandPalette isOpen={true} onClose={onClose} commands={commands} />, root)
+    render(() => <Controlled isOpen={true} onClose={onClose} />, root)
     const overlay = root.querySelector(".cmd-overlay")!
     overlay.dispatchEvent(new MouseEvent("click", { bubbles: true }))
     expect(onClose).toHaveBeenCalled()
@@ -74,7 +99,7 @@ describe("CommandPalette", () => {
   it("navigates with ArrowDown and executes with Enter", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <CommandPalette isOpen={true} onClose={vi.fn()} commands={commands} />, root)
+    render(() => <Controlled isOpen={true} />, root)
     const input = root.querySelector(".cmd-input") as HTMLInputElement
     input.value = "搜索"
     input.dispatchEvent(new Event("input", { bubbles: true }))
@@ -89,7 +114,7 @@ describe("CommandPalette", () => {
     const onClose = vi.fn()
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <CommandPalette isOpen={true} onClose={onClose} commands={commands} />, root)
+    render(() => <Controlled isOpen={true} onClose={onClose} />, root)
     const input = root.querySelector(".cmd-input") as HTMLInputElement
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
     expect(onClose).toHaveBeenCalled()
@@ -102,10 +127,8 @@ describe("CommandPalette", () => {
     document.body.appendChild(root)
     render(
       () => (
-        <CommandPalette
+        <Controlled
           isOpen={true}
-          onClose={vi.fn()}
-          commands={commands}
           providers={[
             {
               id: "official.search.google",

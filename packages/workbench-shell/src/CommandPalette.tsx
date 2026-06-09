@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createEffect, createMemo, For, Show } from "solid-js"
 import type {
   SearchCommandEntry,
   SearchHistoryEntry,
@@ -17,6 +17,10 @@ export type CommandItem = SearchCommandEntry
 
 export type CommandPaletteProps = {
   isOpen: boolean
+  query: string
+  activeIdx: number
+  onQueryChange: (query: string) => void
+  onActiveIdxChange: (index: number | ((current: number) => number)) => void
   onClose: () => void
   commands: SearchCommandEntry[]
   widgets?: SearchWidgetEntry[]
@@ -28,12 +32,15 @@ export type CommandPaletteProps = {
 }
 
 export function CommandPalette(props: CommandPaletteProps) {
-  const [query, setQuery] = createSignal("")
-  const [activeIdx, setActiveIdx] = createSignal(0)
+  // 面板关闭时由宿主重置状态，同时确保外部直接关闭时状态也清零
+  createEffect(() => {
+    if (!props.isOpen) {
+      props.onQueryChange("")
+      props.onActiveIdxChange(0)
+    }
+  })
 
   function close() {
-    setQuery("")
-    setActiveIdx(0)
     props.onClose()
   }
 
@@ -46,15 +53,15 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   const items = createMemo((): CommandPaletteItem[] =>
     createCommandPaletteItems({
-      query: query(),
+      query: props.query,
       commands: props.commands,
       widgets: props.widgets,
       providers: props.providers,
       defaultProviderId: props.defaultProviderId,
       history: props.searchHistory,
       onProviderTokenSelect: (token) => {
-        setQuery(`@${token} `)
-        setActiveIdx(0)
+        props.onQueryChange(`@${token} `)
+        props.onActiveIdxChange(0)
       },
       onWebSearch: runWebSearch,
     }),
@@ -72,13 +79,13 @@ export function CommandPalette(props: CommandPaletteProps) {
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "ArrowDown") {
       event.preventDefault()
-      setActiveIdx((index) => Math.min(index + 1, items().length - 1))
+      props.onActiveIdxChange((index) => Math.min(index + 1, items().length - 1))
     } else if (event.key === "ArrowUp") {
       event.preventDefault()
-      setActiveIdx((index) => Math.max(index - 1, 0))
+      props.onActiveIdxChange((index) => Math.max(index - 1, 0))
     } else if (event.key === "Enter") {
       event.preventDefault()
-      const item = items()[activeIdx()]
+      const item = items()[props.activeIdx]
       if (item) {
         item.action()
         if (item.closeAfterAction !== false) {
@@ -86,7 +93,7 @@ export function CommandPalette(props: CommandPaletteProps) {
         }
       } else {
         const route = routeSearchQuery(
-          query(),
+          props.query,
           props.providers ?? [],
           props.defaultProviderId ?? "",
         )
@@ -123,12 +130,12 @@ export function CommandPalette(props: CommandPaletteProps) {
             <input
               class="cmd-input"
               type="text"
-              value={query()}
+              value={props.query}
               placeholder="搜索命令、卡片或输入 @bing 天气"
               autofocus
               onInput={(event) => {
-                setQuery(event.currentTarget.value)
-                setActiveIdx(0)
+                props.onQueryChange(event.currentTarget.value)
+                props.onActiveIdxChange(0)
               }}
               onKeyDown={handleKeyDown}
             />
@@ -148,7 +155,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                         return (
                           <button
                             class="cmd-item"
-                            classList={{ active: index === activeIdx() }}
+                            classList={{ active: index === props.activeIdx }}
                             onMouseDown={(event) => {
                               event.preventDefault()
                               item.action()
