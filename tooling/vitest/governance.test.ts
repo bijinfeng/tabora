@@ -373,14 +373,14 @@ describe("governance rules", () => {
   it("detects widget region fallback to mainGrid", () => {
     expect(
       findWidgetRegionFallbackViolations({
-        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+        filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
         source: `
           const widgetRegionId = region?.regionId ?? "mainGrid"
         `,
       }),
     ).toEqual([
       {
-        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+        filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
         match: '?? "mainGrid"',
         reason: 'widget region resolution must not fall back to "mainGrid"',
       },
@@ -618,8 +618,7 @@ describe("governance rules", () => {
 
     expect(
       findWindowOpenViolations({
-        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
-        source: `window.open(payload.url, "_blank")`,
+        filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
       }),
     ).toEqual([])
   })
@@ -999,7 +998,7 @@ describe("governance rules", () => {
   it("keeps the shared shell root under the current governance threshold", async () => {
     const shellRoot = await readRepositoryText(
       ".",
-      "packages/workbench-app/src/WorkbenchShellApp.tsx",
+      "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
     )
 
     expect(shellRoot.split("\n").length).toBeLessThan(420)
@@ -1008,7 +1007,7 @@ describe("governance rules", () => {
   it("builds a grouped quality report", () => {
     expect(
       classifyExternalOpenMatch({
-        filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+        filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
         match: "window.open",
       }),
     ).toBe("host-execution")
@@ -1044,11 +1043,11 @@ describe("governance rules", () => {
     expect(
       summarizeExternalOpenMatches([
         {
-          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
           match: "window.open",
         },
         {
-          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
           match: "openExternal",
         },
         {
@@ -1087,11 +1086,11 @@ describe("governance rules", () => {
       },
       externalOpenPatterns: [
         {
-          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
           match: "window.open",
         },
         {
-          filePath: "packages/workbench-app/src/WorkbenchShellApp.tsx",
+          filePath: "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
           match: "openExternal",
         },
         {
@@ -1125,7 +1124,9 @@ describe("governance rules", () => {
     expect(report).toContain("potential bypass paths: 1")
     expect(report).toContain("test fixtures: 1")
     expect(report).toContain('plugins/example/src/view.tsx: target="_blank", window.open')
-    expect(report).not.toContain("packages/workbench-app/src/WorkbenchShellApp.tsx: window.open")
+    expect(report).not.toContain(
+      "packages/workbench-app/src/shell/WorkbenchShellApp.tsx: window.open",
+    )
     expect(report).not.toContain(
       "apps/playground/src/workbenchGovernance.e2e.test.tsx: window.open",
     )

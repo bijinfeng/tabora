@@ -91,7 +91,7 @@ const KNOWN_DEBT_RULES = [
   {
     label: "`WorkbenchShellApp.tsx` 仍是重型共享宿主编排",
     matches: (filePath) =>
-      filePath === "packages/workbench-app/src/WorkbenchShellApp.tsx" ||
+      filePath === "packages/workbench-app/src/shell/WorkbenchShellApp.tsx" ||
       filePath === "apps/playground/src/App.tsx" ||
       filePath === "apps/extension/entrypoints/newtab/App.tsx",
   },
