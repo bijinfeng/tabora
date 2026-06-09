@@ -1,21 +1,13 @@
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createEffect, createMemo, onCleanup, Show } from "solid-js"
-import type {
-  PluginInstance,
-  WidgetViewProps,
-  WorkbenchSearchSettings,
-  Workspace,
-} from "@tabora/plugin-api"
+import type { PluginInstance, WorkbenchSearchSettings, Workspace } from "@tabora/plugin-api"
 import { applyThemeTokens } from "@tabora/theme"
 
 import type { WorkbenchRuntimeBootstrap } from "../runtime/bootstrap"
 import { applyBackgroundStyle } from "../appearance/backgroundResolver"
 import { createLayoutFallbackTracker } from "../layout/layoutFallback"
 import { createWorkbenchResponsiveState } from "../shared/responsive"
-import { createWorkbenchShellControllerRuntime } from "./WorkbenchShellControllerRuntime"
 import { createWorkbenchShellHostRuntime } from "../runtime/WorkbenchShellHostRuntime"
-import { renderWorkbenchWidgetIcon } from "../shared/WorkbenchShellIcons"
-import { createWorkbenchShellLayoutRuntime } from "../layout/WorkbenchShellLayoutRuntime"
 import { activePluginStyles, createPluginStyleManager } from "../shared/pluginStyleManager"
 import {
   createWorkbenchSettingsPanelPropsBuilder,
@@ -24,10 +16,9 @@ import {
 import { WorkbenchShellProvider, type WorkbenchShell } from "./WorkbenchShellContext"
 import { WorkbenchShellSurfaceHost } from "../surface/WorkbenchShellSurfaceHost"
 import { createWorkbenchShellState } from "./WorkbenchShellState"
-import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import { createWorkbenchWorkspaceController } from "../workspace/WorkbenchShellWorkspaceController"
-import { focusWorkbenchWidgetInstance } from "../runtime/WorkbenchShellHostActions"
 import { assignGridOrder } from "../shared/workbenchGrid"
+import { createWorkbenchShellRuntimes } from "./createWorkbenchShellRuntimes"
 
 export type WorkbenchShellAppProps = {
   composition: {
@@ -210,87 +201,15 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     },
   })
 
-  const controllerRuntime = createWorkbenchShellControllerRuntime({
-    services: {
-      plugins,
-      pluginCatalog,
-      registryViews: kernel.registry.views,
-      instanceRepo,
-      pluginDataRepo,
-    },
-    state: {
-      workspace: workspaceState,
-      activeLayoutId,
-      instances,
-      expandState,
-      contextMenu: ctxMenu,
-      dragState,
-      searchSettings,
-      searchHistory,
-      inlineSearchQuery,
-      inlineSearchOpen,
-      inlineSearchActiveResultIndex,
-      commandPaletteOpen: cmdPaletteOpen,
-      isDark,
-    },
-    shellConfig: runtime.shellConfig,
-    setters: {
-      setInstances,
-      setExpandState,
-      setContextMenu: setCtxMenu,
-      setDragState,
-      setCommandPaletteOpen: setCmdPaletteOpen,
-      setAddWidgetOpen,
-      setInlineSearchQuery,
-      setInlineSearchOpen,
-      setInlineSearchActiveResultIndex,
-      setModalViewId,
-      setModalProps,
-    },
-    actions: {
-      openSettings,
-      showToast,
-      focusWidgetInstance: focusWorkbenchWidgetInstance,
-    },
-    controllers: {
-      workspaceController,
-      hostRuntime,
-    },
-  })
-  const layoutRuntime = createWorkbenchShellLayoutRuntime({
-    activeLayoutId,
-    failedLayoutId: () => layoutFallback.status()?.layoutId ?? null,
-    isDark,
-    shellConfig: runtime.shellConfig,
-    setCommandPaletteOpen: setCmdPaletteOpen,
-    setAddWidgetOpen,
+  const { controllerRuntime, layoutRuntime } = createWorkbenchShellRuntimes({
+    state,
+    runtime,
+    workspaceController,
+    hostRuntime,
+    layoutFallback,
+    responsive,
     openSettings,
-    switchLayout: workspaceController.switchLayout,
-    switchTheme: workspaceController.switchTheme,
-    runRailAction: hostRuntime.runRailAction,
-    catalog: pluginCatalog,
-    instanceRenderer: controllerRuntime.viewRuntime.instanceRenderer,
-    displayedInstances: controllerRuntime.dragHandlers.displayedInstances,
-    resolveLayoutView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
-    isMobile: responsive.isMobile,
-    clearLayoutError: () => layoutFallback.clearLayoutError(),
-    recordLayoutError: (layoutId, error) => layoutFallback.recordLayoutError(layoutId, error),
-    setContextMenu: setCtxMenu,
-    widgetContribution: controllerRuntime.widgetController.widgetContribution,
-    resolveWidgetModel: controllerRuntime.widgetController.widgetRenderModel,
-    getWidgetView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
-    renderWidgetIcon: renderWorkbenchWidgetIcon,
-    buildWidgetViewProps: (instance, model) =>
-      controllerRuntime.viewRuntime.buildWidgetViewProps(instance, model),
-    onPointerDown: (event, instanceId) =>
-      controllerRuntime.dragHandlers.onPointerDown(event, instanceId),
-    onPointerMove: controllerRuntime.dragHandlers.onPointerMove,
-    onPointerUp: controllerRuntime.dragHandlers.onPointerUp,
-    onPointerCancel: controllerRuntime.dragHandlers.onPointerCancel,
-    openWidgetExpand: controllerRuntime.widgetController.openWidgetExpand,
-    changeWidgetSize: controllerRuntime.widgetController.changeWidgetSize,
-    removeWidget: controllerRuntime.widgetController.removeWidget,
-    isDragging: (instanceId) => controllerRuntime.dragHandlers.isDragging(instanceId),
+    showToast,
   })
 
   void hostRuntime.initialize()

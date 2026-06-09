@@ -25,6 +25,10 @@ describe("WorkbenchShellSurfaceHost", () => {
       ],
       buildCommandPaletteProps: () => ({
         isOpen: true,
+        query: "",
+        activeIdx: 0,
+        onQueryChange: vi.fn(),
+        onActiveIdxChange: vi.fn(),
         onClose: vi.fn(),
         commands: [
           {

@@ -55,6 +55,10 @@ export function createWorkbenchSearchSurfaces(options: {
     buildCommandPaletteProps(): CommandPaletteProps {
       return {
         isOpen: options.isCommandPaletteOpen(),
+        query: options.getInlineSearchQuery(),
+        activeIdx: options.getInlineSearchActiveResultIndex(),
+        onQueryChange: options.setInlineSearchQuery,
+        onActiveIdxChange: options.setInlineSearchActiveResultIndex,
         onClose: options.closeCommandPalette,
         commands: options.getCommands(),
         widgets: options.getWidgets(),
