@@ -28,11 +28,17 @@ export type { SegmentedControlProps, SegmentedControlOption } from "./styled/seg
 export { Combobox } from "./styled/combobox"
 export type { ComboboxProps, ComboboxOption } from "./styled/combobox"
 
+export { TagInput } from "./styled/tagInput"
+export type { TagInputProps } from "./styled/tagInput"
+
 export { Chip } from "./styled/chip"
 export type { ChipProps } from "./styled/chip"
 
 export { Tabs } from "./styled/tabs"
 export type { TabsProps } from "./styled/tabs"
+
+export { ToggleGroup } from "./styled/toggleGroup"
+export type { ToggleGroupOption, ToggleGroupProps } from "./styled/toggleGroup"
 
 export { Tooltip } from "./styled/tooltip"
 export type { TooltipProps, TooltipPlacement } from "./styled/tooltip"
@@ -43,8 +49,30 @@ export type { DialogProps } from "./styled/dialog"
 export { DropdownMenu } from "./styled/dropdownMenu"
 export type { DropdownMenuProps, DropdownMenuItem } from "./styled/dropdownMenu"
 
+export { ContextMenu } from "./styled/contextMenu"
+export type { ContextMenuItem, ContextMenuProps } from "./styled/contextMenu"
+
+export { Drawer } from "./styled/drawer"
+export type { DrawerProps } from "./styled/drawer"
+
 export { Popover } from "./styled/popover"
 export type { PopoverProps } from "./styled/popover"
+
+export { HoverCard } from "./styled/hoverCard"
+export type { HoverCardProps } from "./styled/hoverCard"
+
+export { CommandPalette } from "./styled/commandPalette"
+export type {
+  CommandPaletteGroup,
+  CommandPaletteItem,
+  CommandPaletteProps,
+} from "./styled/commandPalette"
+
+export { Toast } from "./styled/toast"
+export type { ToastProps, ToastVariant } from "./styled/toast"
+
+export { Alert, Banner } from "./styled/callout"
+export type { AlertProps, BannerProps, CalloutVariant } from "./styled/callout"
 
 export { Accordion } from "./styled/accordion"
 export type { AccordionProps, AccordionItem } from "./styled/accordion"
@@ -79,6 +107,9 @@ export type { EmptyStateProps } from "./styled/emptyState"
 export { Progress } from "./styled/progress"
 export type { ProgressProps } from "./styled/progress"
 
+export { ScrollArea } from "./styled/scrollArea"
+export type { ScrollAreaProps } from "./styled/scrollArea"
+
 export { Avatar } from "./styled/avatar"
 export type { AvatarProps } from "./styled/avatar"
 
@@ -90,6 +121,21 @@ export type { SliderProps } from "./styled/slider"
 
 export { Pagination } from "./styled/pagination"
 export type { PaginationProps } from "./styled/pagination"
+
+export { Table } from "./styled/table"
+export type { TableColumn, TableProps } from "./styled/table"
+
+export { TreeView } from "./styled/treeView"
+export type { TreeViewItem, TreeViewProps } from "./styled/treeView"
+
+export { Menubar } from "./styled/menubar"
+export type { MenubarItem, MenubarProps } from "./styled/menubar"
+
+export { Steps } from "./styled/steps"
+export type { StepItem, StepsProps } from "./styled/steps"
+
+export { Timeline } from "./styled/timeline"
+export type { TimelineItem, TimelineProps } from "./styled/timeline"
 
 export { Divider } from "./styled/divider"
 export type { DividerProps } from "./styled/divider"

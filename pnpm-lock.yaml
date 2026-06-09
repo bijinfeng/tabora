@@ -67,6 +67,9 @@ catalogs:
     '@solid-primitives/timer':
       specifier: ^1.4.4
       version: 1.4.4
+    '@solidjs/router':
+      specifier: ^0.16.1
+      version: 0.16.1
     lucide-solid:
       specifier: ^1.16.0
       version: 1.16.0
@@ -218,6 +221,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@solidjs/router':
+        specifier: catalog:ui
+        version: 0.16.1(solid-js@1.9.13)
       '@tabora/brand':
         specifier: workspace:*
         version: link:../../packages/brand
@@ -1672,6 +1678,11 @@ packages:
     resolution: {integrity: sha512-AeGTBg8Wtkh/0s+evyLtP8piQoS4wyqqQaAFs2HJcFMMjYAtUgo+ZPduRXLjPlqKVc2ejeR544oeqpbn8Egn8A==}
     peerDependencies:
       solid-js: ^1.6.12
+
+  '@solidjs/router@0.16.1':
+    resolution: {integrity: sha512-IhyjedgC6LRpw/8CPGGI89FrV+r0xTHzOl2c4CRyzYQ1bLepJxbVI1LLKvsavMWY5TRBRacV7hAeOhuTXkjiqg==}
+    peerDependencies:
+      solid-js: ^1.8.6
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -4549,6 +4560,10 @@ snapshots:
       solid-js: 1.9.13
 
   '@solid-primitives/utils@6.4.0(solid-js@1.9.13)':
+    dependencies:
+      solid-js: 1.9.13
+
+  '@solidjs/router@0.16.1(solid-js@1.9.13)':
     dependencies:
       solid-js: 1.9.13
 

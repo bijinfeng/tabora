@@ -28,7 +28,7 @@ function taboraBrandFavicon(): Plugin {
         '    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n  </head>',
       )
     },
-    buildStart() {
+    generateBundle() {
       this.emitFile({
         type: "asset",
         fileName: "favicon.svg",

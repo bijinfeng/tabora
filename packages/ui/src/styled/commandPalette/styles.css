@@ -1,0 +1,117 @@
+@layer tabora-ui {
+  .tbr-command {
+    display: block;
+    width: min(100%, 560px);
+  }
+
+  .tbr-command-box {
+    overflow: hidden;
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-panel);
+    background: rgb(var(--tbr-color-surface));
+    box-shadow:
+      0 20px 48px rgb(var(--tbr-color-shadow-strong) / 0.16),
+      0 0 1px rgb(var(--tbr-color-shadow) / 0.08);
+  }
+
+  .tbr-command-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 0;
+    border-bottom: 1px solid rgb(var(--tbr-color-line));
+    outline: none;
+    background: transparent;
+    color: rgb(var(--tbr-color-text));
+    font: inherit;
+    font-size: 14px;
+  }
+
+  .tbr-command-input::placeholder {
+    color: rgb(var(--tbr-color-text-subtle));
+  }
+
+  .tbr-command-list {
+    max-height: 320px;
+    overflow: auto;
+    padding: 8px;
+  }
+
+  .tbr-command-group + .tbr-command-group {
+    margin-top: 8px;
+  }
+
+  .tbr-command-group-label {
+    padding: 6px 8px;
+    color: rgb(var(--tbr-color-text-subtle));
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .tbr-command-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 42px;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: var(--tbr-radius-control);
+    background: transparent;
+    color: rgb(var(--tbr-color-text));
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+  }
+
+  .tbr-command-item:hover,
+  .tbr-command-item:focus-visible {
+    outline: none;
+    background: rgb(var(--tbr-color-surface-hover));
+  }
+
+  .tbr-command-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--tbr-radius-2);
+    background: rgb(var(--tbr-color-accent-soft));
+    color: rgb(var(--tbr-color-accent));
+    font-size: 12px;
+    flex: none;
+  }
+
+  .tbr-command-text {
+    display: grid;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tbr-command-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .tbr-command-desc {
+    color: rgb(var(--tbr-color-text-muted));
+    font-size: 11px;
+  }
+
+  .tbr-command-kbd {
+    color: rgb(var(--tbr-color-text-subtle));
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 10px;
+  }
+
+  .tbr-command-empty {
+    padding: 28px 12px;
+    color: rgb(var(--tbr-color-text-muted));
+    font-size: 13px;
+    text-align: center;
+  }
+}

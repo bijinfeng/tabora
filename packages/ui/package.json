@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./component-docs": "./src/component-docs/index.ts",
     "./package.json": "./package.json",
     "./style.css": "./dist/style.css",
     "./styles.css": "./src/tokens/theme.css"
@@ -11,13 +12,14 @@
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
+      "./component-docs": "./dist/component-docs/index.js",
       "./package.json": "./package.json",
       "./style.css": "./dist/style.css",
       "./styles.css": "./dist/theme.css"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts",
+    "build": "vp pack src/index.ts src/component-docs/index.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

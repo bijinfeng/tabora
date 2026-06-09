@@ -2,6 +2,7 @@ export const TOKEN = {
   color: {
     page: "tbr-color-page",
     surface: "tbr-color-surface",
+    surfaceHover: "tbr-color-surface-hover",
     text: "tbr-color-text",
     muted: "tbr-color-text-muted",
     subtle: "tbr-color-text-subtle",
@@ -14,6 +15,7 @@ export const TOKEN = {
     accentSoft: "tbr-color-accent-soft",
     line: "tbr-color-line",
     danger: "tbr-color-danger",
+    dangerSoft: "tbr-color-danger-soft",
     success: "tbr-color-success",
     warning: "tbr-color-warning",
     info: "tbr-color-info",
@@ -23,6 +25,7 @@ export const TOKEN = {
     control: "tbr-radius-control",
     card: "tbr-radius-card",
     panel: "tbr-radius-panel",
+    pill: "tbr-radius-pill",
   },
   space: {
     xs: "tbr-space-2",

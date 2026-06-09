@@ -1,6 +1,12 @@
 import type { JSX } from "solid-js"
 
-export type ButtonVariant = "primary" | "secondary" | "subtle" | "ghost" | "danger"
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "subtle"
+  | "ghost"
+  | "danger"
+  | "danger-subtle"
 export type ButtonSize = "sm" | "md" | "lg"
 
 export type HeadlessButtonProps = {

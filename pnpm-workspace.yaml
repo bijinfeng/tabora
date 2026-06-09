@@ -33,6 +33,7 @@ catalogs:
     "@solid-primitives/event-bus": ^1.1.3
     "@solid-primitives/media": ^2.3.5
     "@solid-primitives/timer": ^1.4.4
+    "@solidjs/router": ^0.16.1
     lucide-solid: ^1.16.0
     solid-js: ^1.9.13
   toolkit:

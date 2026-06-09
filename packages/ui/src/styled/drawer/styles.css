@@ -1,0 +1,103 @@
+@layer tabora-ui {
+  .tbr-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    pointer-events: none;
+  }
+
+  .tbr-drawer-scrim {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgb(var(--tbr-color-scrim) / 0.28);
+    pointer-events: auto;
+  }
+
+  .tbr-drawer-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    width: min(90vw, 420px);
+    border: 1px solid rgb(var(--tbr-color-line));
+    background: rgb(var(--tbr-color-surface));
+    box-shadow:
+      0 20px 48px rgb(var(--tbr-color-shadow-strong) / 0.18),
+      0 0 1px rgb(var(--tbr-color-shadow) / 0.08);
+    pointer-events: auto;
+  }
+
+  .tbr-drawer-panel[data-side="right"] {
+    right: 0;
+    border-radius: var(--tbr-radius-panel) 0 0 var(--tbr-radius-panel);
+  }
+
+  .tbr-drawer-panel[data-side="left"] {
+    left: 0;
+    border-radius: 0 var(--tbr-radius-panel) var(--tbr-radius-panel) 0;
+  }
+
+  .tbr-drawer-panel[data-size="sm"] {
+    width: min(90vw, 340px);
+  }
+
+  .tbr-drawer-panel[data-size="lg"] {
+    width: min(90vw, 560px);
+  }
+
+  .tbr-drawer-header,
+  .tbr-drawer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid rgb(var(--tbr-color-line));
+  }
+
+  .tbr-drawer-footer {
+    justify-content: flex-end;
+    border-top: 1px solid rgb(var(--tbr-color-line));
+    border-bottom: 0;
+  }
+
+  .tbr-drawer-title {
+    margin: 0;
+    color: rgb(var(--tbr-color-text));
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.35;
+  }
+
+  .tbr-drawer-desc {
+    margin: 3px 0 0;
+    color: rgb(var(--tbr-color-text-muted));
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .tbr-drawer-close {
+    width: 28px;
+    height: 28px;
+    border: 1px solid transparent;
+    border-radius: var(--tbr-radius-2);
+    background: transparent;
+    color: rgb(var(--tbr-color-text-muted));
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .tbr-drawer-close:hover {
+    background: rgb(var(--tbr-color-surface-hover));
+    color: rgb(var(--tbr-color-text));
+  }
+
+  .tbr-drawer-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+  }
+}

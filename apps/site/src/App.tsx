@@ -1,41 +1,62 @@
 import { TaboraMark } from "@tabora/brand"
 import { Button } from "@tabora/ui"
 import { applyThemeTokens } from "@tabora/theme"
-import { createEffect, createMemo, createSignal, For, Show } from "solid-js"
+import { A, useLocation, useNavigate } from "@solidjs/router"
+import { createEffect, createMemo, createSignal, For, type JSX, Show } from "solid-js"
 
+import { ComponentDocsPage, DocsHomePage } from "./ComponentDocsPage"
 import workbenchScreenshot from "../../playground/src/__screenshots__/workbenchDashboard.e2e.test.tsx/workbench-dashboard-layout-renders-the-plugin-provided-dashboard-shell-and-supports-core-widget-interactions-1.png"
 
-type Page = "home" | "download"
 type LayoutMode = "dashboard" | "stream"
 
 const lightTokens = {
-  "tbr-color-page": "247 248 246",
+  "tbr-color-page": "246 247 244",
   "tbr-color-surface": "255 255 255",
-  "tbr-color-surface-soft": "240 242 238",
-  "tbr-color-text": "23 27 24",
-  "tbr-color-text-muted": "95 103 95",
-  "tbr-color-text-subtle": "138 146 138",
-  "tbr-color-line": "223 228 220",
-  "tbr-color-line-strong": "191 200 189",
-  "tbr-color-accent": "21 155 118",
-  "tbr-color-accent-hover": "18 128 98",
-  "tbr-color-accent-soft": "228 245 239",
-  "tbr-color-focus": "21 155 118",
+  "tbr-color-surface-soft": "250 250 248",
+  "tbr-color-surface-hover": "242 244 240",
+  "tbr-color-text": "28 30 28",
+  "tbr-color-text-muted": "107 110 106",
+  "tbr-color-text-subtle": "148 151 146",
+  "tbr-color-line": "230 232 227",
+  "tbr-color-line-strong": "209 212 206",
+  "tbr-color-inverse": "255 255 255",
+  "tbr-color-shadow": "0 0 0",
+  "tbr-color-shadow-strong": "15 23 18",
+  "tbr-color-scrim": "8 10 8",
+  "tbr-color-accent": "26 144 112",
+  "tbr-color-accent-hover": "21 120 92",
+  "tbr-color-accent-soft": "234 245 240",
+  "tbr-color-danger": "201 69 69",
+  "tbr-color-danger-soft": "254 240 240",
+  "tbr-color-success": "45 138 94",
+  "tbr-color-warning": "166 106 18",
+  "tbr-color-info": "61 123 168",
+  "tbr-color-focus": "26 144 112",
 }
 
 const darkTokens = {
-  "tbr-color-page": "16 20 17",
-  "tbr-color-surface": "23 28 24",
-  "tbr-color-surface-soft": "32 38 32",
-  "tbr-color-text": "239 243 239",
-  "tbr-color-text-muted": "170 178 170",
-  "tbr-color-text-subtle": "127 136 127",
-  "tbr-color-line": "45 53 47",
-  "tbr-color-line-strong": "86 96 87",
-  "tbr-color-accent": "53 211 158",
+  "tbr-color-page": "25 28 26",
+  "tbr-color-surface": "37 41 39",
+  "tbr-color-surface-soft": "42 46 44",
+  "tbr-color-surface-hover": "50 55 52",
+  "tbr-color-text": "237 240 237",
+  "tbr-color-text-muted": "182 186 182",
+  "tbr-color-text-subtle": "134 139 134",
+  "tbr-color-line": "59 64 60",
+  "tbr-color-line-strong": "83 89 84",
+  "tbr-color-inverse": "25 28 26",
+  "tbr-color-shadow": "0 0 0",
+  "tbr-color-shadow-strong": "15 23 18",
+  "tbr-color-scrim": "8 10 8",
+  "tbr-color-accent": "52 209 158",
   "tbr-color-accent-hover": "92 224 182",
-  "tbr-color-accent-soft": "23 51 38",
-  "tbr-color-focus": "53 211 158",
+  "tbr-color-accent-soft": "26 46 38",
+  "tbr-color-danger": "239 139 139",
+  "tbr-color-danger-soft": "42 30 30",
+  "tbr-color-success": "79 196 154",
+  "tbr-color-warning": "213 161 74",
+  "tbr-color-info": "127 183 223",
+  "tbr-color-focus": "52 209 158",
 }
 
 const signals = [
@@ -87,77 +108,75 @@ const supportRows = [
   ["Firefox", "浏览器扩展入口规划中，后续补充适配。", "Planned"],
 ]
 
-function routeFromPath(pathname: string): Page {
-  return pathname.includes("/download") ? "download" : "home"
-}
-
-export function App() {
-  const [page, setPage] = createSignal<Page>(routeFromPath(window.location.pathname))
+export function App(props: { children?: JSX.Element }) {
   const [dark, setDark] = createSignal(false)
+  const location = useLocation()
 
   createEffect(() => {
     applyThemeTokens(document.documentElement, dark() ? darkTokens : lightTokens)
     document.documentElement.classList.toggle("site-dark", dark())
   })
 
-  function navigate(next: Page, hash?: string) {
-    const path = next === "download" ? "/download" : "/"
-    window.history.pushState({}, "", `${path}${hash ?? ""}`)
-    setPage(next)
-    queueMicrotask(() => {
-      if (hash) document.querySelector(hash)?.scrollIntoView()
-      else window.scrollTo({ top: 0 })
-    })
-  }
-
-  window.onpopstate = () => setPage(routeFromPath(window.location.pathname))
+  createEffect(() => {
+    const hash = location.hash
+    if (hash) queueMicrotask(() => document.querySelector(hash)?.scrollIntoView())
+    else queueMicrotask(() => window.scrollTo({ top: 0 }))
+  })
 
   return (
     <div class="site" id="top">
-      <Topbar page={page()} onNavigate={navigate} onToggleTheme={() => setDark((v) => !v)} />
-      <Show when={page() === "home"} fallback={<DownloadPage onNavigate={navigate} />}>
-        <HomePage onNavigate={navigate} />
-      </Show>
+      <Topbar onToggleTheme={() => setDark((v) => !v)} />
+      {props.children}
     </div>
   )
 }
 
-function Topbar(props: {
-  page: Page
-  onNavigate: (page: Page, hash?: string) => void
-  onToggleTheme: () => void
-}) {
+export function HomeRoute() {
+  return <HomePage />
+}
+
+export function DownloadRoute() {
+  return <DownloadPage />
+}
+
+export function DocsHomeRoute() {
+  return <DocsHomePage />
+}
+
+export function ComponentDocsRoute() {
+  return <ComponentDocsPage />
+}
+
+function scrollToHash(hash: string) {
+  queueMicrotask(() => document.querySelector(hash)?.scrollIntoView())
+}
+
+function Topbar(props: { onToggleTheme: () => void }) {
+  const location = useLocation()
+  const isDocs = () => location.pathname.startsWith("/docs")
   return (
     <header class="topbar">
-      <button
-        class="brand"
-        type="button"
-        aria-label="Tabora 首页"
-        onClick={() => props.onNavigate("home")}
-      >
+      <A class="brand" aria-label="Tabora 首页" href="/">
         <TaboraMark class="brand-mark" />
         <span>Tabora</span>
-      </button>
+      </A>
       <nav class="nav" aria-label="主导航">
-        <button type="button" onClick={() => props.onNavigate("home", "#workbench")}>
+        <A href="/#workbench" onClick={() => scrollToHash("#workbench")}>
           工作台
-        </button>
-        <button type="button" onClick={() => props.onNavigate("home", "#anatomy")}>
+        </A>
+        <A href="/#anatomy" onClick={() => scrollToHash("#anatomy")}>
           界面
-        </button>
-        <button type="button" onClick={() => props.onNavigate("home", "#layouts")}>
+        </A>
+        <A href="/#layouts" onClick={() => scrollToHash("#layouts")}>
           布局
-        </button>
-        <button type="button" onClick={() => props.onNavigate("home", "#plugins")}>
+        </A>
+        <A href="/#plugins" onClick={() => scrollToHash("#plugins")}>
           插件
-        </button>
-        <button
-          type="button"
-          classList={{ active: props.page === "download" }}
-          onClick={() => props.onNavigate("download")}
-        >
-          下载
-        </button>
+        </A>
+        <A href="/download">下载</A>
+        <A href="/docs" classList={{ active: isDocs() }}>
+          文档
+        </A>
       </nav>
       <button
         class="theme-toggle"
@@ -171,7 +190,8 @@ function Topbar(props: {
   )
 }
 
-function HomePage(props: { onNavigate: (page: Page, hash?: string) => void }) {
+function HomePage() {
+  const navigate = useNavigate()
   return (
     <main>
       <section class="hero" aria-labelledby="hero-title">
@@ -182,10 +202,10 @@ function HomePage(props: { onNavigate: (page: Page, hash?: string) => void }) {
             一个插件优先的个人工作台新标签页。把今日重点、快捷入口、便签、待办和命令搜索放进同一个极简界面。
           </p>
           <div class="hero-actions">
-            <Button variant="primary" onClick={() => props.onNavigate("download")}>
+            <Button variant="primary" onClick={() => navigate("/download")}>
               下载 Tabora
             </Button>
-            <Button variant="secondary" onClick={() => props.onNavigate("home", "#anatomy")}>
+            <Button variant="secondary" onClick={() => scrollToHash("#anatomy")}>
               查看界面
             </Button>
           </div>
@@ -242,15 +262,16 @@ function HomePage(props: { onNavigate: (page: Page, hash?: string) => void }) {
       </section>
 
       <LayoutsSection />
-      <PluginsSection onNavigate={props.onNavigate} />
+      <PluginsSection />
       <StartSection />
-      <Cta onNavigate={props.onNavigate} />
-      <Footer onNavigate={props.onNavigate} />
+      <Cta />
+      <Footer />
     </main>
   )
 }
 
-function DownloadPage(props: { onNavigate: (page: Page, hash?: string) => void }) {
+function DownloadPage() {
+  const navigate = useNavigate()
   return (
     <main>
       <section class="download-hero" id="download" aria-labelledby="download-title">
@@ -267,7 +288,7 @@ function DownloadPage(props: { onNavigate: (page: Page, hash?: string) => void }
             >
               选择平台
             </Button>
-            <Button variant="secondary" onClick={() => props.onNavigate("home", "#anatomy")}>
+            <Button variant="secondary" onClick={() => navigate("/#anatomy")}>
               查看界面
             </Button>
           </div>
@@ -350,12 +371,12 @@ function DownloadPage(props: { onNavigate: (page: Page, hash?: string) => void }
           >
             选择平台
           </Button>
-          <Button variant="secondary" onClick={() => props.onNavigate("home")}>
+          <Button variant="secondary" onClick={() => navigate("/")}>
             返回首页
           </Button>
         </div>
       </section>
-      <Footer onNavigate={props.onNavigate} />
+      <Footer />
     </main>
   )
 }
@@ -506,7 +527,8 @@ function StreamShot() {
   )
 }
 
-function PluginsSection(props: { onNavigate: (page: Page, hash?: string) => void }) {
+function PluginsSection() {
+  const navigate = useNavigate()
   return (
     <section class="section" id="plugins">
       <div class="plugin-grid">
@@ -517,10 +539,10 @@ function PluginsSection(props: { onNavigate: (page: Page, hash?: string) => void
             用户先获得稳定的默认工作台。搜索源、卡片、背景、主题和设置面板可以继续由插件贡献，让新标签页不会被固定模板锁死。
           </p>
           <div class="inline-actions">
-            <Button variant="secondary" onClick={() => props.onNavigate("download")}>
+            <Button variant="secondary" onClick={() => navigate("/download")}>
               下载 Tabora
             </Button>
-            <Button variant="secondary" onClick={() => props.onNavigate("home", "#anatomy")}>
+            <Button variant="secondary" onClick={() => navigate("/#anatomy")}>
               查看界面
             </Button>
           </div>
@@ -572,7 +594,8 @@ function StartSection() {
   )
 }
 
-function Cta(props: { onNavigate: (page: Page, hash?: string) => void }) {
+function Cta() {
+  const navigate = useNavigate()
   return (
     <section class="cta" aria-label="开始使用 Tabora">
       <div class="copy">
@@ -580,10 +603,10 @@ function Cta(props: { onNavigate: (page: Page, hash?: string) => void }) {
         <p>Tabora 让新标签页成为一个可扩展、可持续整理的个人工作台。</p>
       </div>
       <div class="footer-actions">
-        <Button variant="primary" onClick={() => props.onNavigate("download")}>
+        <Button variant="primary" onClick={() => navigate("/download")}>
           下载 Tabora
         </Button>
-        <Button variant="secondary" onClick={() => props.onNavigate("home", "#anatomy")}>
+        <Button variant="secondary" onClick={() => navigate("/#anatomy")}>
           查看界面
         </Button>
       </div>
@@ -591,23 +614,16 @@ function Cta(props: { onNavigate: (page: Page, hash?: string) => void }) {
   )
 }
 
-function Footer(props: { onNavigate: (page: Page, hash?: string) => void }) {
+function Footer() {
   return (
     <footer class="footer">
       <span>Tabora</span>
       <div class="footer-links">
-        <button type="button" onClick={() => props.onNavigate("home", "#workbench")}>
-          工作台
-        </button>
-        <button type="button" onClick={() => props.onNavigate("home", "#anatomy")}>
-          界面
-        </button>
-        <button type="button" onClick={() => props.onNavigate("home", "#plugins")}>
-          插件
-        </button>
-        <button type="button" onClick={() => props.onNavigate("download")}>
-          下载
-        </button>
+        <A href="/#workbench">工作台</A>
+        <A href="/#anatomy">界面</A>
+        <A href="/#plugins">插件</A>
+        <A href="/download">下载</A>
+        <A href="/docs">文档</A>
       </div>
     </footer>
   )

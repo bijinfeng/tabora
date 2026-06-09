@@ -1,0 +1,48 @@
+@layer tabora-ui {
+  .tbr-toggle-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tbr-toggle-group-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-control);
+    background: rgb(var(--tbr-color-surface));
+    color: rgb(var(--tbr-color-text-muted));
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    transition:
+      background-color var(--tbr-dur-fast) var(--tbr-ease),
+      border-color var(--tbr-dur-fast) var(--tbr-ease),
+      color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+
+  .tbr-toggle-group-item:hover {
+    background: rgb(var(--tbr-color-surface-hover));
+    color: rgb(var(--tbr-color-text));
+  }
+
+  .tbr-toggle-group-item[data-selected] {
+    border-color: rgb(var(--tbr-color-accent));
+    background: rgb(var(--tbr-color-accent-soft));
+    color: rgb(var(--tbr-color-accent));
+  }
+
+  .tbr-toggle-group-item:focus-visible {
+    outline: 2px solid rgb(var(--tbr-color-focus));
+    outline-offset: 2px;
+  }
+
+  .tbr-toggle-group-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}

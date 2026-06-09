@@ -122,6 +122,19 @@
     transform: scale(0.98);
   }
 
+  .tbr-btn--danger-subtle {
+    background: rgb(var(--tbr-color-danger-soft));
+    color: rgb(var(--tbr-color-danger));
+    border-color: transparent;
+  }
+  .tbr-btn--danger-subtle:not([disabled]):hover {
+    background: color-mix(
+      in srgb,
+      rgb(var(--tbr-color-danger-soft)) 84%,
+      rgb(var(--tbr-color-surface-hover))
+    );
+  }
+
   /* Icon Button */
   .tbr-icon-btn {
     display: inline-flex;

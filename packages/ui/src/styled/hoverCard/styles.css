@@ -1,0 +1,73 @@
+@layer tabora-ui {
+  .tbr-hover-card {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .tbr-hover-card-trigger {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 2px 8px;
+    border-radius: var(--tbr-radius-control);
+    background: rgb(var(--tbr-color-accent-soft));
+    color: rgb(var(--tbr-color-accent));
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .tbr-hover-card-content {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 8px);
+    z-index: 55;
+    display: grid;
+    gap: 6px;
+    width: 280px;
+    padding: 14px;
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-panel);
+    background: rgb(var(--tbr-color-surface));
+    box-shadow:
+      0 4px 16px rgb(var(--tbr-color-shadow) / 0.08),
+      0 0 1px rgb(var(--tbr-color-shadow) / 0.06);
+    color: rgb(var(--tbr-color-text));
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition:
+      opacity var(--tbr-dur-fast) var(--tbr-ease),
+      transform var(--tbr-dur-fast) var(--tbr-ease);
+  }
+
+  .tbr-hover-card:hover .tbr-hover-card-content,
+  .tbr-hover-card:focus-within .tbr-hover-card-content {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .tbr-hover-card-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 88px;
+    border-radius: var(--tbr-radius-control);
+    background: rgb(var(--tbr-color-surface-soft));
+  }
+
+  .tbr-hover-card-title {
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  .tbr-hover-card-desc {
+    color: rgb(var(--tbr-color-text-muted));
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .tbr-hover-card-meta {
+    color: rgb(var(--tbr-color-text-subtle));
+    font-size: 10px;
+  }
+}

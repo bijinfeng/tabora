@@ -1,0 +1,23 @@
+@layer tabora-ui {
+  .tbr-scroll-area {
+    overflow: auto;
+    max-width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--tbr-color-line-strong)) transparent;
+  }
+
+  .tbr-scroll-area:focus-visible {
+    outline: 2px solid rgb(var(--tbr-color-focus));
+    outline-offset: 2px;
+  }
+
+  .tbr-scroll-area::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .tbr-scroll-area::-webkit-scrollbar-thumb {
+    border-radius: var(--tbr-radius-pill);
+    background: rgb(var(--tbr-color-line-strong));
+  }
+}

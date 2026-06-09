@@ -1,0 +1,72 @@
+@layer tabora-ui {
+  .tbr-toast {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 360px;
+    min-height: 40px;
+    padding: 10px 14px;
+    border: 1px solid rgb(var(--tbr-color-line));
+    border-radius: var(--tbr-radius-control);
+    background: rgb(var(--tbr-color-surface));
+    box-shadow:
+      0 4px 16px rgb(var(--tbr-color-shadow) / 0.08),
+      0 0 1px rgb(var(--tbr-color-shadow) / 0.06);
+    color: rgb(var(--tbr-color-text));
+    font-size: 13px;
+  }
+
+  .tbr-toast-icon::before {
+    display: inline-flex;
+    width: 16px;
+    font-weight: 700;
+  }
+
+  .tbr-toast[data-variant="success"] .tbr-toast-icon::before {
+    content: "✓";
+    color: rgb(var(--tbr-color-success));
+  }
+
+  .tbr-toast[data-variant="danger"] .tbr-toast-icon::before {
+    content: "!";
+    color: rgb(var(--tbr-color-danger));
+  }
+
+  .tbr-toast[data-variant="warning"] .tbr-toast-icon::before {
+    content: "!";
+    color: rgb(var(--tbr-color-warning));
+  }
+
+  .tbr-toast[data-variant="info"] .tbr-toast-icon::before {
+    content: "i";
+    color: rgb(var(--tbr-color-info));
+  }
+
+  .tbr-toast-body {
+    display: grid;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tbr-toast-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .tbr-toast-desc {
+    color: rgb(var(--tbr-color-text-muted));
+    font-size: 12px;
+  }
+
+  .tbr-toast-action {
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    color: rgb(var(--tbr-color-accent));
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+  }
+}

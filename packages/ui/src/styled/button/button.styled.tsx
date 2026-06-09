@@ -12,6 +12,7 @@ const buttonVariants = tv({
       subtle: "tbr-btn--subtle",
       ghost: "tbr-btn--ghost",
       danger: "tbr-btn--danger",
+      "danger-subtle": "tbr-btn--danger-subtle",
     },
     size: {
       sm: "tbr-btn--sm",
