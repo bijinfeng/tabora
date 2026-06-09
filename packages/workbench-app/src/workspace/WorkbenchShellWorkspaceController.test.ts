@@ -408,6 +408,7 @@ describe("createWorkbenchWorkspaceController", () => {
     await controller.switchTheme("official.theme.dark")
     await controller.switchBackground("official.background.dark")
     await controller.togglePluginEnabled("plugin.widgets", false)
+    await controller.togglePluginEnabled("plugin.widgets", true)
 
     expect(mocks.switchWorkbenchTheme).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -421,8 +422,9 @@ describe("createWorkbenchWorkspaceController", () => {
         workspace: expect.objectContaining({ id: "workspace-1" }),
       }),
     )
-    expect(kernel.setPluginEnabled).toHaveBeenCalledWith("plugin.widgets", false)
-    expect(syncPluginStyles).toHaveBeenCalled()
+    expect(kernel.setPluginEnabled).toHaveBeenNthCalledWith(1, "plugin.widgets", false)
+    expect(kernel.setPluginEnabled).toHaveBeenNthCalledWith(2, "plugin.widgets", true)
+    expect(syncPluginStyles).toHaveBeenCalledTimes(2)
   })
 
   it("proxies workspace lifecycle methods through the shared workspace state actions", async () => {

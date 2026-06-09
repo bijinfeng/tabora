@@ -1,11 +1,6 @@
 import type { PluginPermission } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
-import type { ExtensionRegistry } from "./extensionRegistry"
-
-export type RuntimeConfigScope =
-  | { type: "plugin" }
-  | { type: "instance"; instanceId: string }
-  | { type: "workspace" }
+import type { ExtensionRegistry, ViewRegistrationDisposer } from "./extensionRegistry"
 
 export type PluginUiBridge = {
   openModal(viewId: string, props?: Record<string, unknown>): void
@@ -37,13 +32,6 @@ export type PluginRuntimeContext = {
     warn(message: string): void
     error(message: string): void
   }
-  getConfig<T = unknown>(scope: RuntimeConfigScope): T | undefined
-  setConfig<T = unknown>(scope: RuntimeConfigScope, value: T): Promise<void>
-}
-
-export type RuntimeConfigStore = {
-  get(key: string): Promise<unknown>
-  set(key: string, value: unknown): Promise<void>
 }
 
 export function createPluginRuntimeContext(options: {
@@ -51,14 +39,19 @@ export function createPluginRuntimeContext(options: {
   events: EventBus
   registry: ExtensionRegistry
   grantedPermissions?: PluginPermission[]
-  configStore?: RuntimeConfigStore
+  registrationDisposers?: ViewRegistrationDisposer[]
 }): PluginRuntimeContext {
-  const config = new Map<string, unknown>()
   const grantedPermissions = options.grantedPermissions ?? []
-
-  function keyFor(scope: RuntimeConfigScope): string {
-    if (scope.type === "instance") return `instance:${scope.instanceId}`
-    return scope.type
+  const registry: ExtensionRegistry = {
+    ...options.registry,
+    views: {
+      ...options.registry.views,
+      register(viewId, view) {
+        const dispose = options.registry.views.register(viewId, view)
+        options.registrationDisposers?.push(dispose)
+        return dispose
+      },
+    },
   }
 
   function canOpenExternal(url: string): boolean {
@@ -77,7 +70,7 @@ export function createPluginRuntimeContext(options: {
   return {
     pluginId: options.pluginId,
     events: options.events,
-    registry: options.registry,
+    registry,
     ui: {
       openModal(viewId, props) {
         options.events.emit("ui.modal.open", {
@@ -116,14 +109,6 @@ export function createPluginRuntimeContext(options: {
       error(message) {
         console.error(`[${options.pluginId}] ${message}`)
       },
-    },
-    getConfig<T = unknown>(scope: RuntimeConfigScope): T | undefined {
-      return config.get(keyFor(scope)) as T | undefined
-    },
-    async setConfig(scope, value) {
-      const key = keyFor(scope)
-      config.set(key, value)
-      await options.configStore?.set(key, value)
     },
   }
 }

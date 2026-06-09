@@ -2,6 +2,7 @@ export { createPluginCatalog } from "./plugin-catalog"
 export type {
   PluginCatalog,
   PluginCatalogOptions,
+  SearchProviderContributionDescriptor,
   SettingsPanelDescriptor,
   WidgetContributionDescriptor,
 } from "./plugin-catalog"

@@ -18,6 +18,7 @@ import {
   findPassThroughWorkbenchAppExports,
   findForbiddenUiDependencies,
   findForbiddenUiImports,
+  findSourceInvariantViolations,
   findPluginExternalOpenViolations,
   findRawColorMatches,
   findTypeEscapeViolations,
@@ -28,6 +29,7 @@ import {
   findWindowOpenViolations,
   rankFilesByLineCount,
   readRepositoryText,
+  scanSourceInvariantBoundaries,
   summarizeExternalOpenMatches,
   summarizeRawColorMatches,
   summarizeWorkbenchRawColorDebt,
@@ -230,6 +232,78 @@ describe("governance rules", () => {
         reason: "@tabora/orchestrator must stay UI- and infrastructure-free",
       },
     ])
+  })
+
+  it("detects source invariant regressions for owner open, layout menu, runtime config, and safe layout scope", async () => {
+    expect(
+      findSourceInvariantViolations({
+        filePath: "packages/workbench-shell/src/CommandPalette.tsx",
+        source: `
+          export type CommandPaletteProps = {
+            openExternal?: (url: string) => boolean
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/workbench-shell/src/CommandPalette.tsx",
+        match: "CommandPaletteProps.openExternal",
+        reason: "CommandPalette external open callback must be owner-aware and object-shaped",
+      },
+    ])
+
+    expect(
+      findSourceInvariantViolations({
+        filePath: "packages/workbench-app/src/layout/WorkbenchShellLayoutHost.ts",
+        source: `export function createWorkbenchLayoutHostAPI() { return [] }`,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/workbench-app/src/layout/WorkbenchShellLayoutHost.ts",
+        match: 'surface === "menu"',
+        reason: "layout host must expose the menu global actions surface",
+      },
+    ])
+
+    expect(
+      findSourceInvariantViolations({
+        filePath: "packages/platform-kernel/src/runtimeContext.ts",
+        source: `
+          getConfig(scope)
+          setConfig(scope, value)
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/platform-kernel/src/runtimeContext.ts",
+        match: "getConfig",
+        reason: "runtime context must not expose stale getConfig/setConfig APIs",
+      },
+      {
+        filePath: "packages/platform-kernel/src/runtimeContext.ts",
+        match: "setConfig",
+        reason: "runtime context must not expose stale getConfig/setConfig APIs",
+      },
+    ])
+
+    expect(
+      findSourceInvariantViolations({
+        filePath: "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx",
+        source: `
+          export function SafeWorkbenchLayout() {
+            return <PluginViewBoundary>{View(props)}</PluginViewBoundary>
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx",
+        match: "data-tabora-plugin-id",
+        reason: "safe layout fallback must preserve plugin style scope around widget views",
+      },
+    ])
+
+    await expect(scanSourceInvariantBoundaries(".")).resolves.toEqual([])
   })
 
   it("detects raw external open paths in plugin production source but ignores tests", () => {

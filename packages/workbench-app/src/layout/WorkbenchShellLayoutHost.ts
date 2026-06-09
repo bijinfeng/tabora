@@ -100,6 +100,42 @@ export function createWorkbenchLayoutHostAPI(options: {
         ]
       }
 
+      if (surface === "menu") {
+        return [
+          {
+            id: "command",
+            label: "命令",
+            icon: "⌘K",
+            shortcut: "⌘K",
+            run: () => options.setCommandPaletteOpen(true),
+          },
+          {
+            id: "add-widget",
+            label: "添加卡片",
+            icon: "+",
+            run: () => options.setAddWidgetOpen(true),
+          },
+          layoutToggle,
+          {
+            id: "theme",
+            label: options.isDark() ? "明亮" : "暗色",
+            icon: options.isDark() ? "☀" : "☾",
+            shortcut: "⌘T",
+            run: () => {
+              options.switchTheme(
+                resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
+              )
+            },
+          },
+          {
+            id: "settings",
+            label: "设置",
+            icon: "⚙",
+            run: () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
+          },
+        ]
+      }
+
       return []
     },
     openSettings: (panelId?: string) => options.openSettings(panelId),

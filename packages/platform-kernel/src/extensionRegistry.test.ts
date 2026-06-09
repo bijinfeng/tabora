@@ -16,4 +16,26 @@ describe("createExtensionRegistry", () => {
 
     expect(() => registry.views.get("missing.view")).toThrow("View not registered: missing.view")
   })
+
+  it("returns a disposer that removes the registered view", () => {
+    const registry = createExtensionRegistry()
+    const view = () => null
+
+    const dispose = registry.views.register("official.notes.card", view)
+    dispose()
+
+    expect(registry.views.has("official.notes.card")).toBe(false)
+  })
+
+  it("does not let an old disposer remove a replacement view", () => {
+    const registry = createExtensionRegistry()
+    const firstView = () => null
+    const replacementView = () => null
+
+    const disposeFirst = registry.views.register("official.notes.card", firstView)
+    registry.views.register("official.notes.card", replacementView)
+    disposeFirst()
+
+    expect(registry.views.get("official.notes.card")).toBe(replacementView)
+  })
 })

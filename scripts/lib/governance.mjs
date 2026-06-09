@@ -226,7 +226,9 @@ const REQUIRED_BROWSER_SMOKE_PATHS = [
 ]
 const QUALITY_EXTERNAL_OPEN_PATTERN =
   /window\.open|target="_blank"|target='_blank'|openExternal|external-open/g
-const ALLOWED_WINDOW_OPEN_FILES = new Set(["packages/workbench-app/src/shell/WorkbenchShellApp.tsx"])
+const ALLOWED_WINDOW_OPEN_FILES = new Set([
+  "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
+])
 const EXTERNAL_OPEN_SIGNAL_ORDER = [
   "host-execution",
   "manifest-declaration",
@@ -263,6 +265,12 @@ const WORKBENCH_AVOIDABLE_STYLE_PATTERNS = [
   },
 ]
 const WORKBENCH_RAW_COLOR_BASELINE = new Set()
+const SOURCE_INVARIANT_FILES = [
+  "packages/workbench-shell/src/CommandPalette.tsx",
+  "packages/workbench-app/src/layout/WorkbenchShellLayoutHost.ts",
+  "packages/platform-kernel/src/runtimeContext.ts",
+  "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx",
+]
 
 export function resolveRepositoryRoot(startDir) {
   if (existsSync(path.join(startDir, "pnpm-workspace.yaml"))) {
@@ -321,6 +329,64 @@ export function findForbiddenShellAppDependencies(options) {
 
 export function findForbiddenOrchestratorDependencies(options) {
   return findForbiddenDependencies(options, ORCHESTRATOR_FORBIDDEN_DEPENDENCIES)
+}
+
+export function findSourceInvariantViolations(options) {
+  if (options.filePath === "packages/workbench-shell/src/CommandPalette.tsx") {
+    const hasObjectShapedOpen =
+      /openExternalForPlugin\?:\s*\(\s*request:\s*\{\s*pluginId:\s*string;\s*url:\s*string\s*\}\s*\)\s*=>\s*boolean/.test(
+        options.source,
+      )
+    const hasUrlOnlyOpen = /openExternal\?:\s*\(\s*url:\s*string\s*\)\s*=>\s*boolean/.test(
+      options.source,
+    )
+
+    if (!hasObjectShapedOpen || hasUrlOnlyOpen) {
+      return [
+        {
+          filePath: options.filePath,
+          match: "CommandPaletteProps.openExternal",
+          reason: "CommandPalette external open callback must be owner-aware and object-shaped",
+        },
+      ]
+    }
+  }
+
+  if (
+    options.filePath === "packages/workbench-app/src/layout/WorkbenchShellLayoutHost.ts" &&
+    !/surface\s*===\s*["']menu["']/.test(options.source)
+  ) {
+    return [
+      {
+        filePath: options.filePath,
+        match: 'surface === "menu"',
+        reason: "layout host must expose the menu global actions surface",
+      },
+    ]
+  }
+
+  if (options.filePath === "packages/platform-kernel/src/runtimeContext.ts") {
+    return [...options.source.matchAll(/\b(?:getConfig|setConfig)\b/g)].map((match) => ({
+      filePath: options.filePath,
+      match: match[0],
+      reason: "runtime context must not expose stale getConfig/setConfig APIs",
+    }))
+  }
+
+  if (
+    options.filePath === "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx" &&
+    !/data-tabora-plugin-id=\{instance\.pluginId\}/.test(options.source)
+  ) {
+    return [
+      {
+        filePath: options.filePath,
+        match: "data-tabora-plugin-id",
+        reason: "safe layout fallback must preserve plugin style scope around widget views",
+      },
+    ]
+  }
+
+  return []
 }
 
 export function findCorePackageAppImports(options) {
@@ -811,6 +877,13 @@ export async function scanOrchestratorPackageBoundaries(rootDir) {
   )
 }
 
+export async function scanSourceInvariantBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = SOURCE_INVARIANT_FILES.map((filePath) => path.join(repositoryRoot, filePath))
+
+  return scanFiles(repositoryRoot, files, findSourceInvariantViolations)
+}
+
 export async function scanPluginExternalOpenBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles([path.join(repositoryRoot, "plugins")], (filePath) =>
@@ -1099,6 +1172,7 @@ export async function scanArchitecture(rootDir) {
     ...(await scanBrowserSmokeWorkflowBoundaries(rootDir)),
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),
     ...(await scanWorkbenchAvoidableStyleBoundaries(rootDir)),
+    ...(await scanSourceInvariantBoundaries(rootDir)),
   ]
 
   return findings.sort(compareFindings)

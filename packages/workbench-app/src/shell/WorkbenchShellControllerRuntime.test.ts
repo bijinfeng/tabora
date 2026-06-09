@@ -4,12 +4,12 @@ import type {
   SearchCommandEntry,
   SearchContribution,
   SearchHistoryEntry,
-  SearchProviderContribution,
   SearchViewProps,
   SearchWidgetEntry,
   WidgetSize,
   WorkbenchSearchSettings,
 } from "@tabora/plugin-api"
+import type { SearchProviderContributionDescriptor } from "@tabora/orchestrator"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { createWorkbenchPointerDragHandlers } from "../drag/WorkbenchShellDragState"
@@ -128,12 +128,14 @@ function searchSettings(): WorkbenchSearchSettings {
 }
 
 function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] {
-  const searchProviders: SearchProviderContribution[] = [
+  const searchProviders: SearchProviderContributionDescriptor[] = [
     {
       id: "official.search.google",
       title: "Google",
       shortcut: "g",
       urlTemplate: "https://google.example/search?q={query}",
+      pluginId: "official.search-providers.basic",
+      pluginName: "基础搜索源",
     },
   ]
   const layoutContribution: LayoutContribution = {
@@ -255,7 +257,6 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
         saveSearchHistory: vi.fn(async () => {}),
       },
       hostRuntime: {
-        openExternal: vi.fn(() => true),
         openExternalForPlugin: vi.fn(() => true),
       },
     },

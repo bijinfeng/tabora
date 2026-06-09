@@ -5,14 +5,18 @@ import type {
   PluginRecord,
 } from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
-import { createExtensionRegistry } from "./extensionRegistry"
+import { createExtensionRegistry, type ViewRegistrationDisposer } from "./extensionRegistry"
 import { createPluginRuntimeContext, type PluginRuntimeContext } from "./runtimeContext"
+
+export type PluginActivationDisposer = () => void
 
 export type BuiltinPlugin = {
   manifest: PluginManifest
   styleAssetUrls?: Record<string, string>
   enabled: boolean
-  activate(context: PluginRuntimeContext): void | Promise<void>
+  activate(
+    context: PluginRuntimeContext,
+  ): void | PluginActivationDisposer | Promise<void | PluginActivationDisposer>
 }
 
 export type PluginLifecycleStore = {
@@ -41,6 +45,14 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
   const plugins: BuiltinPlugin[] = []
   const lifecycleStore = options.lifecycleStore
   const recordSource = options.recordSource ?? "builtin"
+  const activePlugins = new Map<
+    string,
+    {
+      plugin: BuiltinPlugin
+      explicitDisposer: PluginActivationDisposer | undefined
+      registrationDisposers: ViewRegistrationDisposer[]
+    }
+  >()
 
   function compatibilityReason(plugin: BuiltinPlugin): string | undefined {
     const { supportedPlatforms, requiredCapabilities } = plugin.manifest
@@ -77,12 +89,95 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     }
   }
 
+  function logDisposerError(pluginId: string, label: string, error: unknown): void {
+    console.error(
+      `Plugin "${pluginId}" ${label} failed:`,
+      error instanceof Error ? error.message : String(error),
+    )
+  }
+
+  function runPluginDisposers(pluginId: string): void {
+    const active = activePlugins.get(pluginId)
+    if (!active) return
+
+    if (active.explicitDisposer) {
+      try {
+        active.explicitDisposer()
+      } catch (error: unknown) {
+        logDisposerError(pluginId, "activation disposer", error)
+      }
+    }
+
+    for (let index = active.registrationDisposers.length - 1; index >= 0; index -= 1) {
+      const dispose = active.registrationDisposers[index]
+      if (!dispose) continue
+      try {
+        dispose()
+      } catch (error: unknown) {
+        logDisposerError(pluginId, "view registration disposer", error)
+      }
+    }
+
+    activePlugins.delete(pluginId)
+  }
+
+  async function activatePlugin(plugin: BuiltinPlugin): Promise<boolean> {
+    const pluginId = plugin.manifest.id
+    if (activePlugins.has(pluginId)) return false
+
+    const registrationDisposers: ViewRegistrationDisposer[] = []
+    const context = createPluginRuntimeContext({
+      pluginId,
+      events,
+      registry,
+      grantedPermissions: plugin.manifest.permissions ?? [],
+      registrationDisposers,
+    })
+
+    try {
+      const explicitDisposer = await plugin.activate(context)
+      activePlugins.set(pluginId, {
+        plugin,
+        explicitDisposer: explicitDisposer ?? undefined,
+        registrationDisposers,
+      })
+      return true
+    } catch (error: unknown) {
+      for (let index = registrationDisposers.length - 1; index >= 0; index -= 1) {
+        const dispose = registrationDisposers[index]
+        if (!dispose) continue
+        try {
+          dispose()
+        } catch (disposerError: unknown) {
+          logDisposerError(pluginId, "view registration disposer", disposerError)
+        }
+      }
+      throw error
+    }
+  }
+
   return {
     registry,
     events,
     plugins,
     async discover(discoveredPlugins) {
+      const nextPluginsById = new Map(
+        discoveredPlugins.map((plugin) => [plugin.manifest.id, plugin]),
+      )
+      for (const [pluginId, active] of activePlugins) {
+        const nextPlugin = nextPluginsById.get(pluginId)
+        if (!nextPlugin || nextPlugin !== active.plugin || compatibilityReason(nextPlugin)) {
+          runPluginDisposers(pluginId)
+        }
+      }
+
       plugins.splice(0, plugins.length, ...discoveredPlugins)
+
+      for (const plugin of discoveredPlugins) {
+        if (compatibilityReason(plugin)) {
+          plugin.enabled = false
+        }
+      }
 
       if (lifecycleStore) {
         for (const plugin of discoveredPlugins) {
@@ -108,6 +203,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         }
         const reason = compatibilityReason(plugin)
         if (reason) {
+          plugin.enabled = false
           if (lifecycleStore) {
             await lifecycleStore.save(
               buildRecord(plugin, {
@@ -120,15 +216,9 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
           continue
         }
         try {
-          const context = createPluginRuntimeContext({
-            pluginId: plugin.manifest.id,
-            events,
-            registry,
-            grantedPermissions: plugin.manifest.permissions ?? [],
-          })
-          await plugin.activate(context)
+          const activated = await activatePlugin(plugin)
 
-          if (lifecycleStore) {
+          if (lifecycleStore && activated) {
             await lifecycleStore.save(
               buildRecord(plugin, {
                 status: "active",
@@ -158,6 +248,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       if (!plugin) return
       const reason = compatibilityReason(plugin)
       if (enabled && reason) {
+        runPluginDisposers(pluginId)
         plugin.enabled = false
         if (lifecycleStore) {
           await lifecycleStore.save(
@@ -171,33 +262,57 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         }
         return
       }
-      plugin.enabled = enabled
 
-      if (lifecycleStore) {
-        const overrides: Partial<PluginRecord> = {
-          enabled,
-          status: enabled ? "active" : "disabled",
-          updatedAt: new Date().toISOString(),
+      if (!enabled) {
+        runPluginDisposers(pluginId)
+        plugin.enabled = false
+
+        if (lifecycleStore) {
+          await lifecycleStore.save(
+            buildRecord(plugin, {
+              enabled: false,
+              status: "disabled",
+              updatedAt: new Date().toISOString(),
+              disabledReason: "用户手动禁用",
+            }),
+          )
         }
-        if (!enabled) {
-          overrides.disabledReason = "用户手动禁用"
-        }
-        await lifecycleStore.save(buildRecord(plugin, overrides))
+        return
       }
 
-      if (enabled) {
-        try {
-          const context = createPluginRuntimeContext({
-            pluginId: plugin.manifest.id,
-            events,
-            registry,
-            grantedPermissions: plugin.manifest.permissions ?? [],
-          })
-          await plugin.activate(context)
-        } catch (error: unknown) {
-          console.error(
-            `Plugin "${pluginId}" failed to activate:`,
-            error instanceof Error ? error.message : String(error),
+      if (activePlugins.has(pluginId)) {
+        plugin.enabled = true
+        return
+      }
+
+      plugin.enabled = true
+
+      try {
+        await activatePlugin(plugin)
+        if (lifecycleStore) {
+          await lifecycleStore.save(
+            buildRecord(plugin, {
+              enabled: true,
+              status: "active",
+              lastActivatedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }),
+          )
+        }
+      } catch (error: unknown) {
+        console.error(
+          `Plugin "${pluginId}" failed to activate:`,
+          error instanceof Error ? error.message : String(error),
+        )
+        if (lifecycleStore) {
+          await lifecycleStore.save(
+            buildRecord(plugin, {
+              enabled: true,
+              status: "error",
+              lastError: error instanceof Error ? error.message : String(error),
+              lastActivatedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }),
           )
         }
       }

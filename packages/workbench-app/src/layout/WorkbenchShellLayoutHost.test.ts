@@ -110,4 +110,61 @@ describe("createWorkbenchLayoutHostAPI", () => {
     expect(switchTheme).toHaveBeenNthCalledWith(2, "theme.light.custom")
     expect(host.isDark()).toBe(true)
   })
+
+  it("builds menu actions for layouts without rail or toolbar", () => {
+    const setCommandPaletteOpen = vi.fn()
+    const setAddWidgetOpen = vi.fn()
+    const openSettings = vi.fn()
+    const switchLayout = vi.fn()
+    const switchTheme = vi.fn()
+
+    const host = createWorkbenchLayoutHostAPI({
+      activeLayoutId: () => "layout.dashboard.custom",
+      isDark: () => false,
+      setCommandPaletteOpen,
+      setAddWidgetOpen,
+      openSettings,
+      switchLayout,
+      switchTheme,
+      runRailAction: vi.fn(),
+      shellConfig: {
+        themeIds: {
+          light: "theme.light.custom",
+          dark: "theme.dark.custom",
+        },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          stream: "layout.stream.custom",
+        },
+        settingsPanelIds: {
+          appearance: "settings.appearance.custom",
+        },
+        searchHistory: {
+          pluginId: "search.plugin.custom",
+          key: "search-history-custom",
+        },
+      },
+    } as any)
+
+    const menuActions = host.getGlobalActions("menu")
+    expect(menuActions.map((action) => action.id)).toEqual([
+      "command",
+      "add-widget",
+      "layout-switch",
+      "theme",
+      "settings",
+    ])
+
+    menuActions[0]?.run()
+    menuActions[1]?.run()
+    menuActions[2]?.run()
+    menuActions[3]?.run()
+    menuActions[4]?.run()
+
+    expect(setCommandPaletteOpen).toHaveBeenCalledWith(true)
+    expect(setAddWidgetOpen).toHaveBeenCalledWith(true)
+    expect(switchLayout).toHaveBeenCalledWith("layout.stream.custom")
+    expect(switchTheme).toHaveBeenCalledWith("theme.dark.custom")
+    expect(openSettings).toHaveBeenCalledWith("settings.appearance.custom")
+  })
 })

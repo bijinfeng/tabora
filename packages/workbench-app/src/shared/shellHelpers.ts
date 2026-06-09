@@ -116,10 +116,10 @@ export function resolveEnabledProviderIds(settings: WorkbenchSearchSettings): st
   return settings.enabledProviderIds
 }
 
-export function resolveEnabledSearchProviders(
+export function resolveEnabledSearchProviders<TProvider extends SearchProviderContribution>(
   settings: WorkbenchSearchSettings,
-  providers: SearchProviderContribution[],
-): SearchProviderContribution[] {
+  providers: TProvider[],
+): TProvider[] {
   return intersectionWith(
     providers,
     resolveEnabledProviderIds(settings),

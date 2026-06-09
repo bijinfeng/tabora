@@ -21,14 +21,10 @@ describe("TaboraDatabase", () => {
     await database.open()
 
     expect(database.tables.map((table) => table.name).sort()).toEqual([
-      "eventLogs",
       "meta",
-      "permissionGrants",
       "pluginData",
       "pluginInstances",
       "plugins",
-      "searchHistory",
-      "shortcutBindings",
       "workspaceSnapshots",
       "workspaces",
     ])

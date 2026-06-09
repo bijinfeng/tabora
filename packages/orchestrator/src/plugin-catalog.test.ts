@@ -14,6 +14,43 @@ const plugins: BuiltinPlugin[] = [
       engine: { platform: "^0.1.0" },
       permissions: [{ type: "storage", scope: "plugin" }],
       contributes: {
+        layouts: [
+          {
+            id: "alpha.layout",
+            title: "Alpha Layout",
+            regions: [],
+            defaultRegions: {},
+            supportsResponsive: true,
+          },
+        ],
+        searchProviders: [
+          {
+            id: "alpha.search.google",
+            title: "Google",
+            urlTemplate: "https://google.com/search?q={query}",
+          },
+        ],
+        searches: [
+          {
+            id: "shared.search",
+            title: "Alpha Search",
+            view: "alpha.search.view",
+          },
+        ],
+        backgroundProviders: [
+          {
+            id: "alpha.background",
+            title: "Alpha Background",
+            sourceType: "collection",
+          },
+        ],
+        themes: [
+          {
+            id: "alpha.theme",
+            title: "Alpha Theme",
+            tokens: {},
+          },
+        ],
         widgets: [
           {
             id: "shared",
@@ -50,6 +87,43 @@ const plugins: BuiltinPlugin[] = [
       entry: "./beta",
       engine: { platform: "^0.1.0" },
       contributes: {
+        layouts: [
+          {
+            id: "beta.layout",
+            title: "Beta Layout",
+            regions: [],
+            defaultRegions: {},
+            supportsResponsive: true,
+          },
+        ],
+        searchProviders: [
+          {
+            id: "beta.search.duck",
+            title: "DuckDuckGo",
+            urlTemplate: "https://duckduckgo.com/?q={query}",
+          },
+        ],
+        searches: [
+          {
+            id: "shared.search",
+            title: "Beta Search",
+            view: "beta.search.view",
+          },
+        ],
+        backgroundProviders: [
+          {
+            id: "beta.background",
+            title: "Beta Background",
+            sourceType: "collection",
+          },
+        ],
+        themes: [
+          {
+            id: "beta.theme",
+            title: "Beta Theme",
+            tokens: {},
+          },
+        ],
         widgets: [
           {
             id: "shared",
@@ -81,7 +155,16 @@ describe("createPluginCatalog", () => {
     const catalog = createPluginCatalog(plugins)
 
     expect(catalog.findWidgetContribution("plugin.alpha", "shared")?.views.card).toBe("alpha.card")
-    expect(catalog.findWidgetContribution("plugin.beta", "shared")?.views.card).toBe("beta.card")
+    expect(catalog.findWidgetContribution("plugin.beta", "shared")).toBeUndefined()
+  })
+
+  it("resolves search contributions from enabled plugins only", () => {
+    const catalog = createPluginCatalog(plugins)
+
+    expect(catalog.findSearchContribution("plugin.alpha", "shared.search")?.view).toBe(
+      "alpha.search.view",
+    )
+    expect(catalog.findSearchContribution("plugin.beta", "shared.search")).toBeUndefined()
   })
 
   it("applies widget presentation fallbacks from the catalog boundary", () => {
@@ -90,18 +173,12 @@ describe("createPluginCatalog", () => {
     expect(catalog.findWidgetContribution("plugin.alpha", "shared")?.description).toBe(
       "Owned by alpha",
     )
-    expect(catalog.findWidgetContribution("plugin.beta", "shared")?.description).toBe(
-      "添加 Beta Widget 卡片",
-    )
   })
 
   it("returns sorted settings panels and plugin summaries", () => {
     const catalog = createPluginCatalog(plugins)
 
-    expect(catalog.listSettingsPanels().map((panel) => panel.id)).toEqual([
-      "beta.settings",
-      "alpha.settings",
-    ])
+    expect(catalog.listSettingsPanels().map((panel) => panel.id)).toEqual(["alpha.settings"])
     expect(catalog.pluginSummaries()).toMatchObject([
       { id: "plugin.alpha", enabled: true },
       { id: "plugin.beta", enabled: false },
@@ -128,5 +205,50 @@ describe("createPluginCatalog", () => {
         disabledReason: "Missing host capabilities: network",
       },
     ])
+  })
+
+  it("lists search providers with owner metadata", () => {
+    const catalog = createPluginCatalog(plugins)
+
+    expect(catalog.listSearchProviders()).toEqual([
+      {
+        id: "alpha.search.google",
+        title: "Google",
+        urlTemplate: "https://google.com/search?q={query}",
+        pluginId: "plugin.alpha",
+        pluginName: "Alpha",
+      },
+    ])
+  })
+
+  it("excludes disabled plugin contributions while retaining plugin summaries", () => {
+    const catalog = createPluginCatalog(plugins)
+    const widgets = catalog.listWidgetContributions()
+    const panels = catalog.listSettingsPanels()
+    const summaries = catalog.pluginSummaries()
+
+    expect(catalog.listThemes().map((theme) => theme.id)).toEqual(["alpha.theme"])
+    expect(catalog.listBackgroundProviders().map((provider) => provider.id)).toEqual([
+      "alpha.background",
+    ])
+    expect(catalog.listLayouts().map((layout) => layout.id)).toEqual(["alpha.layout"])
+    expect(widgets.map((widget) => `${widget.pluginId}:${widget.title}`)).toEqual([
+      "plugin.alpha:Alpha Widget",
+    ])
+    expect(widgets).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ pluginId: "plugin.beta" })]),
+    )
+    expect(panels.map((panel) => `${panel.pluginId}:${panel.id}`)).toEqual([
+      "plugin.alpha:alpha.settings",
+    ])
+    expect(panels).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "beta.settings" })]),
+    )
+    expect(summaries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "plugin.alpha", enabled: true }),
+        expect.objectContaining({ id: "plugin.beta", enabled: false }),
+      ]),
+    )
   })
 })

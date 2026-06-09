@@ -1,15 +1,11 @@
 import { createEffect, createMemo, For, Show } from "solid-js"
-import type {
-  SearchCommandEntry,
-  SearchHistoryEntry,
-  SearchProviderContribution,
-  SearchWidgetEntry,
-} from "@tabora/plugin-api"
+import type { SearchCommandEntry, SearchHistoryEntry, SearchWidgetEntry } from "@tabora/plugin-api"
 import {
   buildSearchUrl,
   createCommandPaletteItems,
   routeSearchQuery,
   type CommandPaletteItem,
+  type SearchProviderContributionDescriptor,
 } from "@tabora/orchestrator"
 import { Kbd } from "@tabora/ui"
 
@@ -24,10 +20,10 @@ export type CommandPaletteProps = {
   onClose: () => void
   commands: SearchCommandEntry[]
   widgets?: SearchWidgetEntry[]
-  providers?: SearchProviderContribution[]
+  providers?: SearchProviderContributionDescriptor[]
   defaultProviderId?: string
   searchHistory?: SearchHistoryEntry[]
-  openExternal?: (url: string) => boolean
+  openExternalForPlugin?: (request: { pluginId: string; url: string }) => boolean
   onSaveHistory?: (entry: { query: string; providerId: string }) => Promise<void>
 }
 
@@ -44,10 +40,17 @@ export function CommandPalette(props: CommandPaletteProps) {
     props.onClose()
   }
 
-  function runWebSearch(provider: SearchProviderContribution, searchQuery: string) {
+  function runWebSearch(provider: SearchProviderContributionDescriptor, searchQuery: string) {
     const trimmed = searchQuery.trim()
     if (!trimmed) return
-    if (!props.openExternal?.(buildSearchUrl(provider, trimmed))) return
+    if (
+      !props.openExternalForPlugin?.({
+        pluginId: provider.pluginId,
+        url: buildSearchUrl(provider, trimmed),
+      })
+    ) {
+      return
+    }
     void props.onSaveHistory?.({ query: trimmed, providerId: provider.id })
   }
 

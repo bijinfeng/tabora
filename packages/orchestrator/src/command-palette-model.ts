@@ -17,23 +17,28 @@ export type CommandPaletteItem = {
   closeAfterAction: boolean | undefined
 }
 
-export type CommandPaletteModelOptions = {
+export type CommandPaletteModelOptions<
+  TProvider extends SearchProviderContribution = SearchProviderContribution,
+> = {
   surface?: "palette" | "inline" | undefined
   query: string
   commands: SearchCommandEntry[]
   widgets?: SearchWidgetEntry[] | undefined
-  providers?: SearchProviderContribution[] | undefined
+  providers?: TProvider[] | undefined
   defaultProviderId?: string | undefined
   history?: SearchHistoryEntry[] | undefined
   onProviderTokenSelect?: ((token: string) => void) | undefined
-  onWebSearch?: ((provider: SearchProviderContribution, query: string) => void) | undefined
+  onWebSearch?: ((provider: TProvider, query: string) => void) | undefined
 }
 
 function includesText(value: string, query: string): boolean {
   return value.toLowerCase().includes(query.toLowerCase())
 }
 
-function historyLabel(entry: SearchHistoryEntry, providers: SearchProviderContribution[]): string {
+function historyLabel<TProvider extends SearchProviderContribution>(
+  entry: SearchHistoryEntry,
+  providers: TProvider[],
+): string {
   return providers.find((provider) => provider.id === entry.providerId)?.title ?? entry.providerId
 }
 
@@ -41,8 +46,8 @@ export function providerToken(provider: SearchProviderContribution): string {
   return provider.shortcut || provider.id.split(".").at(-1) || provider.title.toLowerCase()
 }
 
-export function createCommandPaletteItems(
-  options: CommandPaletteModelOptions,
+export function createCommandPaletteItems<TProvider extends SearchProviderContribution>(
+  options: CommandPaletteModelOptions<TProvider>,
 ): CommandPaletteItem[] {
   const surface = options.surface ?? "palette"
   const trimmed = options.query.trim()
@@ -51,11 +56,11 @@ export function createCommandPaletteItems(
   const widgets = options.widgets ?? []
   const defaultProviderId = options.defaultProviderId ?? ""
 
-  function selectProvider(provider: SearchProviderContribution) {
+  function selectProvider(provider: TProvider) {
     options.onProviderTokenSelect?.(providerToken(provider))
   }
 
-  function runWebSearch(provider: SearchProviderContribution, query: string) {
+  function runWebSearch(provider: TProvider, query: string) {
     options.onWebSearch?.(provider, query)
   }
 

@@ -1,7 +1,6 @@
 import type {
   SearchCommandEntry,
   SearchHistoryEntry,
-  SearchProviderContribution,
   SearchViewProps,
   SearchWidgetEntry,
 } from "@tabora/plugin-api"
@@ -9,6 +8,7 @@ import {
   buildSearchUrl,
   findProviderByToken,
   routeSearchQuery,
+  type SearchProviderContributionDescriptor,
   type ToastOptions,
 } from "@tabora/orchestrator"
 
@@ -20,11 +20,10 @@ import {
 type SearchResultIndexSetter = (next: number | ((current: number) => number)) => void
 
 export function buildWorkbenchInlineSearchViewProps(options: {
-  pluginId: string
   getQuery: () => string
   getIsOpen: () => boolean
   getActiveResultIndex: () => number
-  getProviders: () => SearchProviderContribution[]
+  getProviders: () => SearchProviderContributionDescriptor[]
   getDefaultProviderId: () => string
   getCommands: () => SearchCommandEntry[]
   getWidgets: () => SearchWidgetEntry[]
@@ -81,7 +80,7 @@ export function buildWorkbenchInlineSearchViewProps(options: {
     }
 
     const opened = options.openExternal(
-      options.pluginId,
+      targetProvider.pluginId,
       buildSearchUrl(targetProvider, targetQuery),
     )
     if (!opened) {

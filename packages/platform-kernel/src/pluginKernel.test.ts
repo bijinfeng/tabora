@@ -29,6 +29,233 @@ describe("createPluginKernel", () => {
     expect(kernel.registry.views.has("official.test.view")).toBe(true)
   })
 
+  it("unregisters plugin views when the plugin is disabled", async () => {
+    const manifest: PluginManifest = {
+      id: "official.cleanup",
+      name: "Official Cleanup",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+
+    const kernel = createPluginKernel()
+    await kernel.discover([
+      {
+        manifest,
+        enabled: true,
+        activate(context) {
+          context.registry.views.register("official.cleanup.view", () => null)
+        },
+      },
+    ])
+    await kernel.activateEnabledPlugins()
+
+    expect(kernel.registry.views.has("official.cleanup.view")).toBe(true)
+
+    await kernel.setPluginEnabled("official.cleanup", false)
+
+    expect(kernel.registry.views.has("official.cleanup.view")).toBe(false)
+  })
+
+  it("does not activate an already active plugin twice", async () => {
+    const manifest: PluginManifest = {
+      id: "official.idempotent",
+      name: "Official Idempotent",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+    let activationCount = 0
+
+    const kernel = createPluginKernel()
+    await kernel.discover([
+      {
+        manifest,
+        enabled: true,
+        activate() {
+          activationCount += 1
+        },
+      },
+    ])
+
+    await kernel.activateEnabledPlugins()
+    await kernel.activateEnabledPlugins()
+    await kernel.setPluginEnabled("official.idempotent", true)
+
+    expect(activationCount).toBe(1)
+  })
+
+  it("runs an explicit activation disposer when the plugin is disabled", async () => {
+    const manifest: PluginManifest = {
+      id: "official.explicit-dispose",
+      name: "Official Explicit Dispose",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+    let disposeCount = 0
+
+    const kernel = createPluginKernel()
+    await kernel.discover([
+      {
+        manifest,
+        enabled: true,
+        activate() {
+          return () => {
+            disposeCount += 1
+          }
+        },
+      },
+    ])
+
+    await kernel.activateEnabledPlugins()
+    await kernel.setPluginEnabled("official.explicit-dispose", false)
+
+    expect(disposeCount).toBe(1)
+  })
+
+  it("persists an error record when manually enabled plugin activation fails", async () => {
+    const saved: Array<{ id: string; enabled: boolean; status: string; lastError?: string }> = []
+    const manifest: PluginManifest = {
+      id: "official.enable-fails",
+      name: "Official Enable Fails",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+
+    const kernel = createPluginKernel({
+      lifecycleStore: {
+        async save(record) {
+          saved.push({
+            id: record.id,
+            enabled: record.enabled,
+            status: record.status,
+            ...(record.lastError ? { lastError: record.lastError } : {}),
+          })
+        },
+      },
+    })
+
+    await kernel.discover([
+      {
+        manifest,
+        enabled: false,
+        activate() {
+          throw new Error("activation exploded")
+        },
+      },
+    ])
+    await kernel.setPluginEnabled("official.enable-fails", true)
+
+    expect(saved.some((record) => record.status === "active")).toBe(false)
+    expect(saved.at(-1)).toEqual({
+      id: "official.enable-fails",
+      enabled: true,
+      status: "error",
+      lastError: "activation exploded",
+    })
+  })
+
+  it("disposes active plugin registrations when plugins are rediscovered", async () => {
+    const firstManifest: PluginManifest = {
+      id: "official.rediscover",
+      name: "Official Rediscover",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+    const replacementManifest: PluginManifest = {
+      ...firstManifest,
+      version: "0.0.1",
+    }
+    let replacementActivated = false
+
+    const kernel = createPluginKernel()
+    await kernel.discover([
+      {
+        manifest: firstManifest,
+        enabled: true,
+        activate(context) {
+          context.registry.views.register("official.rediscover.view", () => null)
+        },
+      },
+    ])
+    await kernel.activateEnabledPlugins()
+
+    expect(kernel.registry.views.has("official.rediscover.view")).toBe(true)
+
+    await kernel.discover([
+      {
+        manifest: replacementManifest,
+        enabled: true,
+        activate(context) {
+          replacementActivated = true
+          context.registry.views.register("official.rediscover.replacement", () => null)
+        },
+      },
+    ])
+
+    expect(kernel.registry.views.has("official.rediscover.view")).toBe(false)
+
+    await kernel.activateEnabledPlugins()
+
+    expect(replacementActivated).toBe(true)
+    expect(kernel.registry.views.has("official.rediscover.replacement")).toBe(true)
+  })
+
+  it("disposes active plugin registrations when rediscovery makes them incompatible", async () => {
+    const compatibleManifest: PluginManifest = {
+      id: "official.rediscover-incompatible",
+      name: "Official Rediscover Incompatible",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      supportedPlatforms: ["web"],
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    }
+    const incompatibleManifest: PluginManifest = {
+      ...compatibleManifest,
+      supportedPlatforms: ["desktop-webview"],
+    }
+
+    const kernel = createPluginKernel({ hostPlatform: "web" })
+    await kernel.discover([
+      {
+        manifest: compatibleManifest,
+        enabled: true,
+        activate(context) {
+          context.registry.views.register("official.rediscover-incompatible.view", () => null)
+        },
+      },
+    ])
+    await kernel.activateEnabledPlugins()
+
+    expect(kernel.registry.views.has("official.rediscover-incompatible.view")).toBe(true)
+
+    await kernel.discover([
+      {
+        manifest: incompatibleManifest,
+        enabled: true,
+        activate() {},
+      },
+    ])
+
+    expect(kernel.plugins[0]!.enabled).toBe(false)
+    expect(kernel.registry.views.has("official.rediscover-incompatible.view")).toBe(false)
+  })
+
   it("skips plugins when the host platform is unsupported", async () => {
     const saved: Array<{ id: string; status: string; disabledReason: string | undefined }> = []
     const manifest: PluginManifest = {
@@ -78,6 +305,7 @@ describe("createPluginKernel", () => {
     await kernel.activateEnabledPlugins()
 
     expect(activated).toBe(false)
+    expect(kernel.plugins[0]!.enabled).toBe(false)
     expect(saved.at(-1)).toEqual({
       id: "desktop.only",
       status: "skipped",
@@ -135,6 +363,7 @@ describe("createPluginKernel", () => {
     await kernel.activateEnabledPlugins()
 
     expect(activated).toBe(false)
+    expect(kernel.plugins[0]!.enabled).toBe(false)
     expect(saved.at(-1)).toEqual({
       id: "network.plugin",
       status: "skipped",

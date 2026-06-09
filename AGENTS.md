@@ -155,7 +155,7 @@ tooling/
 环境：
 
 - Node.js `>=24`
-- pnpm `11.3.0`
+- pnpm `11.5.2`
 - 包管理器只用 pnpm，不使用 npm 或 yarn。
 
 常用命令：
@@ -239,7 +239,7 @@ workspace / instance / pluginData 要分层。插件业务数据不要混入 wor
 - `@tabora/official-plugins`
 - `apps/playground`
 
-`@tabora/ui` 不提供 `WidgetCard`、`Modal`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid` 等宿主级容器。这些容器由 shell / host 统一提供，插件只渲染内容区。
+`@tabora/ui` 可以提供低层可访问 primitive，例如 `Dialog`、`Drawer`、`Popover`、`ContextMenu`、`Toast`、通用 `CommandPalette` 等。`@tabora/ui` 不提供 Tabora 宿主级容器，例如 `WidgetCardShell`、全局 `ModalHost`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid`、shell 拥有的全局 `CommandPalette` 等。这些容器由 shell / host 统一提供，插件只渲染内容区。
 
 ### `@tabora/official-plugins`
 
@@ -348,7 +348,7 @@ MVP 面板：
 - UI 工作以根目录 `DESIGN.md` 为视觉、token、基础组件、交互模式、宿主容器和可访问性单一事实源。
 - 使用主题 token 和 CSS variables。
 - 插件内容区控件优先使用 `@tabora/ui`，避免在每个插件中重复实现基础按钮、输入、选择器和错误状态。
-- 不要把宿主级容器放入 `@tabora/ui`；widget 卡片壳、modal、fullscreen、settings host、workbench rail/grid 由 shell 提供。
+- 不要把 Tabora 宿主级容器放入 `@tabora/ui`；widget 卡片壳、modal/fullscreen/settings/toast host、workbench rail/grid、shell 全局命令面板由 shell 提供。`@tabora/ui` 中的 Dialog/Drawer/Toast/ContextMenu/CommandPalette 只作为插件内容区可复用的低层 primitive。
 - 明暗主题都要保证可读。
 - 卡片尺寸稳定，hover / focus / 拖拽不造成布局跳动。
 - 不嵌套卡片。

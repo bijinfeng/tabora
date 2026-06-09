@@ -18,15 +18,17 @@ export type WorkbenchSearchSurfaceState = {
   items: CommandPaletteItem[]
 }
 
-export function buildWorkbenchSearchSurfaceState(options: {
+export function buildWorkbenchSearchSurfaceState<
+  TProvider extends SearchProviderContribution,
+>(options: {
   query: string
-  providers: SearchProviderContribution[]
+  providers: TProvider[]
   defaultProviderId: string
   commands: SearchCommandEntry[]
   widgets: SearchWidgetEntry[]
   history: SearchHistoryEntry[]
   onProviderTokenSelect: (token: string) => void
-  onWebSearch: (provider: SearchProviderContribution, query: string) => void
+  onWebSearch: (provider: TProvider, query: string) => void
 }): WorkbenchSearchSurfaceState {
   const items = createCommandPaletteItems({
     surface: "inline",

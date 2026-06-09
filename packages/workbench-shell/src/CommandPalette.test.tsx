@@ -122,7 +122,7 @@ describe("CommandPalette", () => {
   })
 
   it("does not fall back to the first provider when defaultProviderId is missing", () => {
-    const openExternal = vi.fn(() => true)
+    const openExternalForPlugin = vi.fn(() => true)
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(
@@ -135,9 +135,11 @@ describe("CommandPalette", () => {
               title: "Google",
               shortcut: "g",
               urlTemplate: "https://google.example/search?q={query}",
+              pluginId: "official.search-providers.basic",
+              pluginName: "基础搜索源",
             },
           ]}
-          openExternal={openExternal}
+          openExternalForPlugin={openExternalForPlugin}
         />
       ),
       root,
@@ -148,7 +150,44 @@ describe("CommandPalette", () => {
     input.dispatchEvent(new Event("input", { bubbles: true }))
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
 
-    expect(openExternal).not.toHaveBeenCalled()
+    expect(openExternalForPlugin).not.toHaveBeenCalled()
+    root.remove()
+  })
+
+  it("opens web search through the selected provider owner", () => {
+    const openExternalForPlugin = vi.fn(() => true)
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Controlled
+          isOpen={true}
+          providers={[
+            {
+              id: "official.search.google",
+              title: "Google",
+              shortcut: "g",
+              urlTemplate: "https://google.example/search?q={query}",
+              pluginId: "official.search-providers.basic",
+              pluginName: "基础搜索源",
+            },
+          ]}
+          defaultProviderId="official.search.google"
+          openExternalForPlugin={openExternalForPlugin}
+        />
+      ),
+      root,
+    )
+
+    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    input.value = "tabora governance"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+
+    expect(openExternalForPlugin).toHaveBeenCalledWith({
+      pluginId: "official.search-providers.basic",
+      url: "https://google.example/search?q=tabora%20governance",
+    })
     root.remove()
   })
 })

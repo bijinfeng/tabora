@@ -171,7 +171,9 @@ export function SafeWorkbenchLayout(props: {
                 }}
               >
                 <PluginViewBoundary instanceId={instance.id} title={model.title}>
-                  {View(props.buildWidgetViewProps(instance, model))}
+                  <div data-tabora-plugin-id={instance.pluginId}>
+                    {View(props.buildWidgetViewProps(instance, model))}
+                  </div>
                 </PluginViewBoundary>
               </WidgetCardShell>
             )

@@ -93,4 +93,25 @@ describe("createPluginRuntimeContext permissions", () => {
       },
     ])
   })
+
+  it("collects view registration disposers for plugin-owned cleanup", () => {
+    const registrationDisposers: Array<() => void> = []
+    const registry = createExtensionRegistry()
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry,
+      registrationDisposers,
+    })
+    const view = () => null
+
+    context.registry.views.register("plugin.example.view", view)
+
+    expect(registrationDisposers).toHaveLength(1)
+    expect(registry.views.has("plugin.example.view")).toBe(true)
+
+    registrationDisposers[0]!()
+
+    expect(registry.views.has("plugin.example.view")).toBe(false)
+  })
 })

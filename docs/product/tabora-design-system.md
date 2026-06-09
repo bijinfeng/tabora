@@ -74,7 +74,7 @@
 - 仪表盘式布局：`rail + 常驻搜索 + 主网格`。
 - 流式布局：`⌘K 命令面板 + 双列流式内容区 + 更轻的工具入口`。
 - 设置中心：左侧分类导航，右侧内容区，支持焦点管理和局部错误隔离。
-- 展开视图、Dialog、Drawer、Toast、快捷键面板都属于宿主容器，不放入 `@tabora/ui`。
+- 展开视图、快捷键面板、全局 modal/fullscreen/settings/toast host 都属于宿主容器，不放入 `@tabora/ui`。`Dialog`、`Drawer`、`Toast`、`ContextMenu`、通用 `CommandPalette` 可以作为低层 primitive 存在于 `@tabora/ui`，但不能替代 shell 拥有的全局宿主。
 
 ### 4.3 交互模式
 
@@ -87,7 +87,7 @@
 
 ### 4.4 组件边界
 
-- `@tabora/ui` 只承载插件内容区基础组件，不承载 `WidgetCardShell`、`Modal`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid` 等宿主级容器。
+- `@tabora/ui` 承载插件内容区基础组件和低层可访问 primitive，不承载 `WidgetCardShell`、全局 `ModalHost`、`FullscreenHost`、`SettingsHost`、`ToastHost`、`WorkbenchRail`、`WorkbenchGrid`、shell 全局 `CommandPalette` 等 Tabora 宿主级容器。
 - 官方插件内容区优先复用 `@tabora/ui` 组件，不在各插件中重复实现按钮、输入、选择器、字段包装、错误状态等基础控件。
 - `@tabora/ui` 的组件实现、测试和消费方式应能追溯到 `DESIGN.md`。
 

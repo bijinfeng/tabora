@@ -27,6 +27,11 @@ export type WidgetContributionDescriptor = WidgetContribution & {
   description: string
 }
 
+export type SearchProviderContributionDescriptor = SearchProviderContribution & {
+  pluginId: string
+  pluginName: string
+}
+
 export type SettingsPanelDescriptor = NavigatorSettingsPanelDescriptor
 
 function byContributionOrder<T extends { title: string }>(left: T, right: T): number {
@@ -38,29 +43,38 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
   const fallbackWidgetDescription =
     options.fallbackWidgetDescription ??
     ((widget: WidgetContribution) => `添加 ${widget.title} 卡片`)
+  const activePlugins = () => plugins.filter((plugin) => plugin.enabled)
 
   function pluginIds(): string[] {
     return plugins.map((plugin) => plugin.manifest.id)
   }
 
   function listThemes(): ThemeContribution[] {
-    return plugins.flatMap((plugin) => plugin.manifest.contributes.themes ?? [])
+    return activePlugins().flatMap((plugin) => plugin.manifest.contributes.themes ?? [])
   }
 
-  function listSearchProviders(): SearchProviderContribution[] {
-    return plugins.flatMap((plugin) => plugin.manifest.contributes.searchProviders ?? [])
+  function listSearchProviders(): SearchProviderContributionDescriptor[] {
+    return activePlugins().flatMap((plugin) =>
+      (plugin.manifest.contributes.searchProviders ?? []).map((provider) => ({
+        ...provider,
+        pluginId: plugin.manifest.id,
+        pluginName: plugin.manifest.name,
+      })),
+    )
   }
 
   function listBackgroundProviders(): BackgroundProviderContribution[] {
-    return plugins.flatMap((plugin) => plugin.manifest.contributes.backgroundProviders ?? [])
+    return activePlugins().flatMap(
+      (plugin) => plugin.manifest.contributes.backgroundProviders ?? [],
+    )
   }
 
   function listLayouts(): LayoutContribution[] {
-    return plugins.flatMap((plugin) => plugin.manifest.contributes.layouts ?? [])
+    return activePlugins().flatMap((plugin) => plugin.manifest.contributes.layouts ?? [])
   }
 
   function listWidgetContributions(): WidgetContributionDescriptor[] {
-    return plugins
+    return activePlugins()
       .flatMap((plugin) =>
         (plugin.manifest.contributes.widgets ?? []).map((widget) => ({
           ...widget,
@@ -74,7 +88,7 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
   }
 
   function listSettingsPanels(): SettingsPanelDescriptor[] {
-    return plugins
+    return activePlugins()
       .flatMap((plugin) =>
         (plugin.manifest.contributes.settingsPanels ?? []).map((panel) => ({
           ...normalizeSettingsPanelDescriptor({ ...panel, pluginId: plugin.manifest.id }),
@@ -103,7 +117,7 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
     pluginId: string,
     contributionId: string,
   ): SearchContribution | undefined {
-    const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
+    const plugin = activePlugins().find((candidate) => candidate.manifest.id === pluginId)
     return plugin?.manifest.contributes.searches?.find((search) => search.id === contributionId)
   }
 

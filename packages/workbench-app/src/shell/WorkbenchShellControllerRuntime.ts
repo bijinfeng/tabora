@@ -104,7 +104,6 @@ export function createWorkbenchShellControllerRuntime(options: {
       saveSearchHistory: (entry: { query: string; providerId: string }) => Promise<void>
     }
     hostRuntime: {
-      openExternal: (url: string) => boolean
       openExternalForPlugin: (pluginId: string, url: string) => boolean
     }
   }
@@ -197,7 +196,6 @@ export function createWorkbenchShellControllerRuntime(options: {
     setDefaultProvider: options.controllers.workspaceController.setDefaultSearchProvider,
     saveHistory: options.controllers.workspaceController.saveSearchHistory,
     openExternalForPlugin: options.controllers.hostRuntime.openExternalForPlugin,
-    openExternal: options.controllers.hostRuntime.openExternal,
     showToast: options.actions.showToast,
     isCommandPaletteOpen: options.state.commandPaletteOpen,
     closeCommandPalette: () => options.setters.setCommandPaletteOpen(false),

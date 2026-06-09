@@ -1,4 +1,10 @@
-import type { LayoutHostAPI, PluginInstance, RegionSlot, WidgetSize } from "@tabora/plugin-api"
+import type {
+  LayoutHostAPI,
+  PluginInstance,
+  RegionSlot,
+  WidgetSize,
+  WidgetViewProps,
+} from "@tabora/plugin-api"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
@@ -91,6 +97,57 @@ describe("createWorkbenchLayoutRenderer", () => {
     const { host, dispose } = mount(renderer.renderActiveLayout())
 
     expect(host.textContent).toContain("Tabora")
+
+    dispose()
+    host.remove()
+  })
+
+  it("preserves plugin style scope when rendering safe layout widget views", () => {
+    const safeLayout = safeLayoutProps()
+    safeLayout.getView = vi.fn(() => (props: WidgetViewProps) => (
+      <div>widget view {props.instanceId}</div>
+    ))
+    safeLayout.buildWidgetViewProps = vi.fn(
+      (widgetInstance): WidgetViewProps => ({
+        pluginId: widgetInstance.pluginId,
+        instanceId: widgetInstance.id,
+        contributionId: widgetInstance.contributionId,
+        size: widgetInstance.size ?? "M",
+        supportedSizes: ["S", "M", "L"],
+        config: {},
+        data: {
+          get: vi.fn(async () => undefined),
+          save: vi.fn(async () => {}),
+        },
+        host: {
+          updateConfig: vi.fn(async () => {}),
+          removeInstance: vi.fn(async () => {}),
+          requestResize: vi.fn(async () => {}),
+          openModal: vi.fn(),
+          closeModal: vi.fn(),
+          openExpand: vi.fn(),
+          showToast: vi.fn(),
+          openExternal: vi.fn(async () => true),
+        },
+      }),
+    )
+
+    const renderer = createWorkbenchLayoutRenderer({
+      activeLayoutId: () => "layout.missing",
+      displayedInstances: () => [instance()],
+      findLayoutContribution: () => undefined,
+      resolveLayoutView: () => undefined,
+      buildRegionSlots: vi.fn(),
+      buildHostAPI: vi.fn(),
+      isMobile: () => false,
+      clearLayoutError: vi.fn(),
+      recordLayoutError: vi.fn(),
+      safeLayout,
+    })
+
+    const { host, dispose } = mount(renderer.renderActiveLayout())
+
+    expect(host.querySelector('[data-tabora-plugin-id="plugin.widgets"]')).toBeTruthy()
 
     dispose()
     host.remove()

@@ -96,7 +96,7 @@ Firefox：
 workflow 执行顺序：
 
 1. `actions/checkout`
-2. 安装 pnpm `11.3.0`
+2. 安装 pnpm `11.5.2`
 3. 安装 Node.js `24`
 4. `pnpm install --frozen-lockfile`
 5. `pnpm --filter @tabora/extension zip`

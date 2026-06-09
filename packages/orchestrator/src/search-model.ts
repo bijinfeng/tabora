@@ -1,10 +1,10 @@
 import { uniq } from "es-toolkit/array"
 import type { SearchProviderContribution } from "@tabora/plugin-api"
 
-export type SearchRoute =
-  | { type: "provider-pending"; token: string; provider: SearchProviderContribution | undefined }
-  | { type: "provider"; token: string; provider: SearchProviderContribution; query: string }
-  | { type: "web"; provider: SearchProviderContribution; query: string }
+export type SearchRoute<TProvider extends SearchProviderContribution = SearchProviderContribution> =
+    | { type: "provider-pending"; token: string; provider: TProvider | undefined }
+    | { type: "provider"; token: string; provider: TProvider; query: string }
+    | { type: "web"; provider: TProvider; query: string }
 
 export function buildSearchUrl(provider: SearchProviderContribution, query: string): string {
   return provider.urlTemplate.replaceAll("{query}", encodeURIComponent(query.trim()))
@@ -21,18 +21,18 @@ function providerTokens(provider: SearchProviderContribution): string[] {
     .filter(Boolean)
 }
 
-export function findProviderByToken(
-  providers: SearchProviderContribution[],
+export function findProviderByToken<TProvider extends SearchProviderContribution>(
+  providers: TProvider[],
   token: string,
-): SearchProviderContribution | undefined {
+): TProvider | undefined {
   const normalized = normalizeToken(token)
   return providers.find((provider) => providerTokens(provider).includes(normalized))
 }
 
-export function matchProvidersByToken(
-  providers: SearchProviderContribution[],
+export function matchProvidersByToken<TProvider extends SearchProviderContribution>(
+  providers: TProvider[],
   token: string,
-): SearchProviderContribution[] {
+): TProvider[] {
   const normalized = normalizeToken(token)
   if (!normalized) return providers
   return providers.filter((provider) =>
@@ -40,18 +40,18 @@ export function matchProvidersByToken(
   )
 }
 
-export function resolveDefaultProvider(
-  providers: SearchProviderContribution[],
+export function resolveDefaultProvider<TProvider extends SearchProviderContribution>(
+  providers: TProvider[],
   defaultProviderId: string,
-): SearchProviderContribution | undefined {
+): TProvider | undefined {
   return providers.find((provider) => provider.id === defaultProviderId)
 }
 
-export function routeSearchQuery(
+export function routeSearchQuery<TProvider extends SearchProviderContribution>(
   query: string,
-  providers: SearchProviderContribution[],
+  providers: TProvider[],
   defaultProviderId: string,
-): SearchRoute | null {
+): SearchRoute<TProvider> | null {
   const trimmed = query.trim()
   if (!trimmed) return null
 

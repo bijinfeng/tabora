@@ -4,7 +4,7 @@
 
 日期：2026-06-09
 
-状态：**本轮建议已全部落地**（截至 2026-06-09 commit e6023d4）。本文档保留作为架构演进事实源与决策记录。
+状态：**2026-06-09 架构优化轮次已落地**。本文档保留作为架构演进事实源与决策记录。
 
 关联文档：
 
@@ -75,6 +75,22 @@ playground / extension 的生产依赖只保留真实宿主入口需要的 host 
 - 面板关闭时（`isOpen` 变 false 或按 Escape/点击遮罩）通过 `createEffect` 自动重置宿主状态。
 - `buildCommandPaletteProps`（`@tabora/workbench-app/search/WorkbenchShellSearchSurfaces`）传入 `inlineSearchQuery` / `inlineSearchActiveResultIndex` 作为受控 state，两个 surface 共用同一 search store 的 query/index 字段，行为分叉风险消除。
 
+### 1.11 Contribution ownership 与搜索权限路径收口
+
+runtime catalog 中的 search provider 现在返回 owner-aware descriptor，包含 `pluginId` / `pluginName`。inline search 和 shell `CommandPalette` 不再走 URL-only 外部打开路径，而是使用 provider owner pluginId 调用 `external-open` 权限桥。`CommandPaletteProps` 使用对象形态的 `openExternalForPlugin({ pluginId, url })`，降低旧 `(url) => boolean` callback 被误接回来的风险。
+
+### 1.12 插件生命周期与 active runtime graph 收口
+
+`ViewRegistry.register()` 返回 disposable registration。plugin runtime context 会收集插件 activation 阶段注册的 view disposer，kernel 禁用插件或重新 discover 时会清理 active plugin 的显式 disposer 与 view registrations。重复 activation 会被跳过，兼容性失败会把 in-memory plugin 标记为 disabled，使 catalog active contribution list 与 lifecycle state 对齐。
+
+### 1.13 Layout host contract 与 fallback 隔离
+
+`LayoutHostAPI.getGlobalActions("menu")` 已成为第一等全局入口 surface，供 DIY masonry 这类不使用 rail / toolbar 的布局显示命令、添加卡片、布局切换、主题和设置动作。safe layout fallback 渲染 widget view 时也会注入 `data-tabora-plugin-id`，确保插件 scoped styles 在 fallback 中继续生效。
+
+### 1.14 Stale API 与 storage drift 清理
+
+runtime context 的临时 `getConfig/setConfig` API 已删除，实例数据改由 widget props 的 `data` 和 scoped data host 明确传递。Dexie schema 只保留当前有 repository/runtime path 的 MVP 表：`plugins`、`workspaces`、`pluginInstances`、`pluginData`、`meta`、`workspaceSnapshots`。搜索历史继续作为 plugin-owned workspace data 存入 `pluginData`，未落地 port 的 `permissionGrants`、`eventLogs`、`searchHistory`、`shortcutBindings` 暂不进入 schema。
+
 ## 2. 下一轮可选方向
 
 以下方向当前已充分或可暂缓，供未来架构 review 评估。
@@ -94,6 +110,12 @@ CommandPalette 改为受控 surface 已落地（见 1.10）。inline search 与 
 ### 2.3 保持协议层无 UI runtime 依赖
 
 新增扩展点 contract 时，优先使用泛型、结构化数据和 host callback contract。只有具体 renderer 包或 shell 包可以绑定 Solid / JSX / DOM 类型。
+
+### 2.4 延期项
+
+- 第三方远程插件市场、不可信远程插件沙箱、在线安装/升级仍不进入 MVP。
+- `network`、`clipboard`、`local-file`、workspace write 等权限 port 仍待后续按能力逐个设计。
+- 完整插件开发者工具、复杂 WebGL 背景编辑器、云同步和账号系统仍延期。
 
 ## 3. 验证入口
 

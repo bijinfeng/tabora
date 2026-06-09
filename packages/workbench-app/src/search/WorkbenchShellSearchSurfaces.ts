@@ -2,17 +2,16 @@ import type {
   PluginInstance,
   SearchCommandEntry,
   SearchHistoryEntry,
-  SearchProviderContribution,
   SearchViewProps,
   SearchWidgetEntry,
 } from "@tabora/plugin-api"
 import type { CommandPaletteProps } from "@tabora/workbench-shell"
-import type { ToastOptions } from "@tabora/orchestrator"
+import type { SearchProviderContributionDescriptor, ToastOptions } from "@tabora/orchestrator"
 
 import { buildWorkbenchInlineSearchViewProps } from "./WorkbenchInlineSearchViewProps"
 
 export function createWorkbenchSearchSurfaces(options: {
-  getProviders: () => SearchProviderContribution[]
+  getProviders: () => SearchProviderContributionDescriptor[]
   getDefaultProviderId: () => string
   getCommands: () => SearchCommandEntry[]
   getWidgets: () => SearchWidgetEntry[]
@@ -26,15 +25,13 @@ export function createWorkbenchSearchSurfaces(options: {
   setDefaultProvider: (providerId: string) => void | Promise<void>
   saveHistory: (entry: { query: string; providerId: string }) => Promise<void>
   openExternalForPlugin: (pluginId: string, url: string) => boolean
-  openExternal: (url: string) => boolean
   showToast: (message: string, options?: ToastOptions) => void
   isCommandPaletteOpen: () => boolean
   closeCommandPalette: () => void
 }) {
   return {
-    buildInlineSearchViewProps(instance: PluginInstance): SearchViewProps {
+    buildInlineSearchViewProps(_instance: PluginInstance): SearchViewProps {
       return buildWorkbenchInlineSearchViewProps({
-        pluginId: instance.pluginId,
         getQuery: options.getInlineSearchQuery,
         getIsOpen: options.getInlineSearchOpen,
         getActiveResultIndex: options.getInlineSearchActiveResultIndex,
@@ -65,7 +62,8 @@ export function createWorkbenchSearchSurfaces(options: {
         providers: options.getProviders(),
         defaultProviderId: options.getDefaultProviderId(),
         searchHistory: options.getHistory(),
-        openExternal: options.openExternal,
+        openExternalForPlugin: (request) =>
+          options.openExternalForPlugin(request.pluginId, request.url),
         onSaveHistory: options.saveHistory,
       }
     },

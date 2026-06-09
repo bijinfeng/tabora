@@ -9,12 +9,14 @@ import { describe, expect, it, vi } from "vitest"
 
 import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 
-const providers: SearchProviderContribution[] = [
+const providers: (SearchProviderContribution & { pluginId: string; pluginName: string })[] = [
   {
     id: "official.search.google",
     title: "Google",
     shortcut: "g",
     urlTemplate: "https://google.example/search?q={query}",
+    pluginId: "official.search-providers.basic",
+    pluginName: "基础搜索源",
   },
 ]
 
@@ -58,7 +60,6 @@ describe("createWorkbenchSearchSurfaces", () => {
     const setDefaultProvider = vi.fn()
     const saveHistory = vi.fn(async () => {})
     const openExternalForPlugin = vi.fn(() => true)
-    const openExternal = vi.fn(() => true)
     const showToast = vi.fn()
 
     const surfaces = createWorkbenchSearchSurfaces({
@@ -76,7 +77,6 @@ describe("createWorkbenchSearchSurfaces", () => {
       setDefaultProvider,
       saveHistory,
       openExternalForPlugin,
-      openExternal,
       showToast,
       isCommandPaletteOpen: () => false,
       closeCommandPalette: vi.fn(),
@@ -124,7 +124,6 @@ describe("createWorkbenchSearchSurfaces", () => {
       setDefaultProvider: vi.fn(),
       saveHistory,
       openExternalForPlugin,
-      openExternal: vi.fn(() => true),
       showToast: vi.fn(),
       isCommandPaletteOpen: () => false,
       closeCommandPalette: vi.fn(),
@@ -136,7 +135,7 @@ describe("createWorkbenchSearchSurfaces", () => {
     await props.host.executeSelection()
 
     expect(openExternalForPlugin).toHaveBeenCalledWith(
-      "official.search.command-bar",
+      "official.search-providers.basic",
       "https://google.example/search?q=tabora%20governance",
     )
     expect(saveHistory).toHaveBeenCalledWith({
@@ -151,7 +150,7 @@ describe("createWorkbenchSearchSurfaces", () => {
   it("builds command palette props from the same search data sources", () => {
     const closeCommandPalette = vi.fn()
     const saveHistory = vi.fn(async () => {})
-    const openExternal = vi.fn(() => true)
+    const openExternalForPlugin = vi.fn(() => true)
 
     const surfaces = createWorkbenchSearchSurfaces({
       getProviders: () => providers,
@@ -167,8 +166,7 @@ describe("createWorkbenchSearchSurfaces", () => {
       setInlineSearchActiveResultIndex: vi.fn(),
       setDefaultProvider: vi.fn(),
       saveHistory,
-      openExternalForPlugin: vi.fn(() => true),
-      openExternal,
+      openExternalForPlugin,
       showToast: vi.fn(),
       isCommandPaletteOpen: () => true,
       closeCommandPalette,
@@ -185,9 +183,18 @@ describe("createWorkbenchSearchSurfaces", () => {
       providers,
       defaultProviderId: "official.search.google",
       searchHistory: history,
-      openExternal,
+      openExternalForPlugin: expect.any(Function),
       onSaveHistory: saveHistory,
     })
+
+    props.openExternalForPlugin?.({
+      pluginId: "official.search-providers.basic",
+      url: "https://google.example/search?q=tabora",
+    })
+    expect(openExternalForPlugin).toHaveBeenCalledWith(
+      "official.search-providers.basic",
+      "https://google.example/search?q=tabora",
+    )
 
     props.onClose()
     expect(closeCommandPalette).toHaveBeenCalled()
