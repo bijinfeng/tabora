@@ -41,18 +41,27 @@ playground / extension 的生产依赖只保留真实宿主入口需要的 host 
 - shell app 生产依赖不能直接声明官方插件、layout package、插件 package 或 core runtime package。
 - `@tabora/orchestrator` 不能依赖 `@tabora/storage` 或 `solid-js`。
 
+### 1.7 WorkbenchShellApp 状态分片与 surface context 收口
+
+`WorkbenchShellApp` 原本一次性创建 27 个扁平 `createSignal` 并解构约 50 个 accessor/setter 手工接线，且用一个 44 行 `createMemo` 把 ~50 个本地变量拍平成 surface props 再透传。现已按 domain 分片：
+
+- 状态拆为 6 个 co-located store 模块：`WorkbenchRuntimeStore` / `WorkbenchWorkspaceStore` / `WorkbenchAppearanceStore` / `WorkbenchWidgetStore` / `WorkbenchOverlayStore` / `WorkbenchSearchStore`。`createWorkbenchShellState` 退化为组合根，返回 `{ runtime, workspace, appearance, widgets, overlays, search }`。
+- 原语按数据性质选择：纯 UI 域（overlay flags、appearance、runtime）用 `createStore`；会写入 Dexie/IndexedDB 的数据域（workspace、instances、searchSettings、searchHistory）保留 `createSignal`，避免 store proxy 进入结构化克隆。`modalProps` 等需整体替换语义的对象字段也用 signal（`setStore(key, objectValue)` 是 merge 而非 replace）。
+- 各模块统一对外暴露 `() => T` accessor + setter，controller 工厂与其单测**零改动**。
+- 新增 `WorkbenchShellContext`：组合根装配出 shell bundle（`state` / `catalog` / `views` / `controllerRuntime` / `buildSettingsPanelProps` / `layoutContent`）并经 `WorkbenchShellProvider` 下发；`WorkbenchShellSurfaceHost` 改为 `useWorkbenchShell()` 消费，`createWorkbenchShellSurfaceProps` 直接读 shell bundle，消除 57 参数拍平。叶子组件（CommandPalette / SettingsHost / ToastHost 等）继续保持纯 props 驱动，不下沉 context 到 `@tabora/workbench-shell`。
+
+净效果：`WorkbenchShellApp` 与 `WorkbenchShellState` 合计减少约 350 行，组合根降为「装配 + provide」。行为不变（393 单测、`pnpm build`、`pnpm check:architecture` 通过）。
+
 ## 2. 后续建议
 
 ### 2.1 继续收薄 `WorkbenchShellApp`
 
-当前 `WorkbenchShellApp` 已是组合根，但仍集中创建 signal cluster、workspace controller、host runtime、controller runtime、layout runtime 和 surface props。建议后续按生命周期拆成更小的 composition unit：
+状态分片与 surface context 收口已落地（见 1.7）。`WorkbenchShellApp` 仍在组合根内联创建 workspace controller、host runtime、controller runtime、layout runtime。可继续按生命周期把这部分 runtime/kernel wiring 拆成独立 composition unit：
 
 - runtime / kernel wiring
-- workspace session state
-- shell interaction state
-- surface props composer
+- workspace session controller 装配
 
-拆分时应保持现有 helper API 和测试覆盖，不做无行为收益的大重构。
+拆分时应保持现有 helper API、store 模块边界和测试覆盖，不做无行为收益的大重构。
 
 ### 2.2 统一搜索 surface 的受控状态
 
