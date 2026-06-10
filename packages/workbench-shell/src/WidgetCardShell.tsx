@@ -39,6 +39,11 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
   let lastPointerUpAt = 0
   let lastPointerDownAt = 0
   let headerRef: HTMLDivElement | undefined
+  let pendingDrag: {
+    event: PointerEvent
+    x: number
+    y: number
+  } | null = null
 
   function releasePointerCapture(event: PointerEvent) {
     if (event.target instanceof HTMLElement && event.target.hasPointerCapture?.(event.pointerId)) {
@@ -48,6 +53,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
 
   function handlePointerUp(event: PointerEvent) {
     releasePointerCapture(event)
+    pendingDrag = null
     const now = performance.now()
     if (event.detail === 2 || (lastPointerUpAt > 0 && now - lastPointerUpAt < 320)) {
       props.callbacks.onExpand()
@@ -60,6 +66,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
 
   function handlePointerCancel(event: PointerEvent) {
     releasePointerCapture(event)
+    pendingDrag = null
     props.callbacks.onPointerCancel(event)
   }
 
@@ -79,10 +86,26 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       return
     }
     lastPointerDownAt = now
-    if (event.currentTarget instanceof HTMLElement) {
-      event.currentTarget.setPointerCapture?.(event.pointerId)
+    pendingDrag = {
+      event,
+      x: event.clientX,
+      y: event.clientY,
     }
-    props.callbacks.onPointerDown(event)
+  }
+
+  function handlePointerMove(event: PointerEvent) {
+    const drag = pendingDrag
+    if (drag) {
+      const distance = Math.hypot(event.clientX - drag.x, event.clientY - drag.y)
+      if (distance >= 4) {
+        pendingDrag = null
+        if (event.currentTarget instanceof HTMLElement) {
+          event.currentTarget.setPointerCapture?.(event.pointerId)
+        }
+        props.callbacks.onPointerDown(drag.event)
+      }
+    }
+    props.callbacks.onPointerMove(event)
   }
 
   onMount(() => {
@@ -96,16 +119,22 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       handlePointerUp(event)
       event.stopPropagation()
     }
+    const handleNativePointerMove = (event: PointerEvent) => {
+      handlePointerMove(event)
+      event.stopPropagation()
+    }
     const handleNativePointerCancel = (event: PointerEvent) => {
       handlePointerCancel(event)
       event.stopPropagation()
     }
 
     header.addEventListener("pointerdown", handleNativePointerDown)
+    header.addEventListener("pointermove", handleNativePointerMove)
     header.addEventListener("pointerup", handleNativePointerUp)
     header.addEventListener("pointercancel", handleNativePointerCancel)
     onCleanup(() => {
       header.removeEventListener("pointerdown", handleNativePointerDown)
+      header.removeEventListener("pointermove", handleNativePointerMove)
       header.removeEventListener("pointerup", handleNativePointerUp)
       header.removeEventListener("pointercancel", handleNativePointerCancel)
     })
@@ -123,7 +152,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       data-widget-instance-id={props.instance.id}
       aria-label={props.title}
       tabIndex={0}
-      onPointerMove={props.callbacks.onPointerMove}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onClick={(event) => {

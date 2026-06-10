@@ -149,13 +149,17 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  it("在标题栏按下指针时触发 onPointerDown，但操作按钮不会触发拖拽启动", () => {
+  it("标题栏移动超过阈值才触发 onPointerDown，操作按钮不会触发拖拽启动", () => {
     const cb = makeCallbacks()
     const { host, dispose } = mount(cb)
     const header = host.querySelector(".card-header") as HTMLElement
     const removeBtn = host.querySelector("button.card-danger") as HTMLButtonElement
 
-    header.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
+    header.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, button: 0, clientX: 0, clientY: 0 }),
+    )
+    expect(cb.onPointerDown).not.toHaveBeenCalled()
+    header.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: 8, clientY: 0 }))
     removeBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
 
     expect(cb.onPointerDown).toHaveBeenCalledTimes(1)
