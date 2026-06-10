@@ -22,6 +22,7 @@ describe("assetPaths build", () => {
     expect(packageJson.exports).toMatchObject({
       ".": "./src/index.ts",
       "./assetPaths": "./src/assetPaths.ts",
+      "./vite": "./src/vite.ts",
       "./package.json": "./package.json",
     })
   })
