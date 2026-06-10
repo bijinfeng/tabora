@@ -16,29 +16,28 @@
     font-size: 13px;
   }
 
-  .tbr-toast-icon::before {
+  .tbr-toast-icon {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 16px;
-    font-weight: 700;
+    height: 16px;
+    flex: none;
   }
 
-  .tbr-toast[data-variant="success"] .tbr-toast-icon::before {
-    content: "✓";
+  .tbr-toast[data-variant="success"] .tbr-toast-icon {
     color: rgb(var(--tbr-color-success));
   }
 
-  .tbr-toast[data-variant="danger"] .tbr-toast-icon::before {
-    content: "!";
+  .tbr-toast[data-variant="danger"] .tbr-toast-icon {
     color: rgb(var(--tbr-color-danger));
   }
 
-  .tbr-toast[data-variant="warning"] .tbr-toast-icon::before {
-    content: "!";
+  .tbr-toast[data-variant="warning"] .tbr-toast-icon {
     color: rgb(var(--tbr-color-warning));
   }
 
-  .tbr-toast[data-variant="info"] .tbr-toast-icon::before {
-    content: "i";
+  .tbr-toast[data-variant="info"] .tbr-toast-icon {
     color: rgb(var(--tbr-color-info));
   }
 

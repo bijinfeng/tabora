@@ -432,6 +432,9 @@ importers:
       '@tabora/theme':
         specifier: workspace:*
         version: link:../theme
+      lucide-solid:
+        specifier: catalog:ui
+        version: 1.16.0(solid-js@1.9.13)
       solid-js:
         specifier: catalog:ui
         version: 1.9.13

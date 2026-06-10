@@ -1,4 +1,5 @@
 import { For } from "solid-js"
+import { ChevronLeft, ChevronRight } from "lucide-solid"
 
 export type PaginationProps = {
   page: number
@@ -24,7 +25,7 @@ export function Pagination(props: PaginationProps) {
         onClick={() => props.onChange(props.page - 1)}
         aria-label="上一页"
       >
-        ‹
+        <ChevronLeft size={16} strokeWidth={2} />
       </button>
       <For each={pages()}>
         {(p) =>
@@ -48,7 +49,7 @@ export function Pagination(props: PaginationProps) {
         onClick={() => props.onChange(props.page + 1)}
         aria-label="下一页"
       >
-        ›
+        <ChevronRight size={16} strokeWidth={2} />
       </button>
     </div>
   )

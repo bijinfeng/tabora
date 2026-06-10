@@ -1,4 +1,5 @@
 import { Button, IconButton } from "./button.styled"
+import { Ellipsis, Plus, Trash2 } from "lucide-solid"
 
 export function ButtonDemo() {
   return (
@@ -16,12 +17,14 @@ export function ButtonDemo() {
 export function IconButtonDemo() {
   return (
     <div class="docs-row">
-      <IconButton aria-label="添加">+</IconButton>
+      <IconButton aria-label="添加">
+        <Plus size={16} strokeWidth={2} />
+      </IconButton>
       <IconButton aria-label="更多" variant="secondary">
-        ...
+        <Ellipsis size={16} strokeWidth={2} />
       </IconButton>
       <IconButton aria-label="删除" variant="danger">
-        x
+        <Trash2 size={16} strokeWidth={2} />
       </IconButton>
     </div>
   )

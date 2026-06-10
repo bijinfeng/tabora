@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { Show, createSignal } from "solid-js"
+import { ChevronRight } from "lucide-solid"
 
 export type CollapsibleProps = {
   open?: boolean
@@ -19,7 +20,7 @@ export function Collapsible(props: CollapsibleProps) {
       >
         {props.title}
         <span class="tbr-collapsible-arrow" data-open={open() ? "" : undefined}>
-          ▸
+          <ChevronRight size={16} strokeWidth={2} />
         </span>
       </button>
       <Show when={open()}>

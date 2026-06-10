@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { For, Show } from "solid-js"
+import { ChevronRight } from "lucide-solid"
 
 export type TreeViewItem = {
   id: string
@@ -48,7 +49,7 @@ function TreeNode(props: { item: TreeViewItem; root: TreeViewProps; level: numbe
           aria-label={expanded() ? "折叠" : "展开"}
           onClick={toggle}
         >
-          ›
+          <ChevronRight size={16} strokeWidth={2} />
         </button>
         <button
           type="button"

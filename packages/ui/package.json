@@ -25,6 +25,7 @@
   "dependencies": {
     "@kobalte/core": "catalog:ui",
     "@tabora/theme": "workspace:*",
+    "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { For, createSignal } from "solid-js"
+import { ChevronDown } from "lucide-solid"
 
 export type AccordionItem = {
   id: string
@@ -41,7 +42,7 @@ export function Accordion(props: AccordionProps) {
                 class="tbr-accordion-arrow"
                 data-open={openItems().has(item.id) ? "" : undefined}
               >
-                ▾
+                <ChevronDown size={16} strokeWidth={2} />
               </span>
             </button>
             {openItems().has(item.id) && <div class="tbr-accordion-content">{item.content}</div>}

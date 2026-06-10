@@ -51,9 +51,13 @@
     justify-content: center;
   }
   .tbr-dropdown-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 16px;
+    height: 16px;
+    flex: none;
     color: rgb(var(--tbr-color-accent));
-    font-size: 10px;
   }
   .tbr-dropdown-label {
     flex: 1;

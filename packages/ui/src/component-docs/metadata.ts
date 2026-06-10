@@ -100,8 +100,8 @@ export const componentDocItems: ComponentDocItem[] = [
     name: "IconButton",
     title: "IconButton 图标按钮",
     purpose: "用于仅图标动作，必须提供 aria-label。",
-    usage: "适合编辑、删除、更多等紧凑工具按钮。图标来自产品图标体系；这里用文本符号保持示例轻量。",
-    code: `<IconButton aria-label="添加">+</IconButton>`,
+    usage: "适合编辑、删除、更多等紧凑工具按钮。图标使用 lucide-solid，默认内容区尺寸为 16px。",
+    code: `<IconButton aria-label="添加"><Plus size={16} strokeWidth={2} /></IconButton>`,
   },
   {
     id: "input",
@@ -277,7 +277,7 @@ export const componentDocItems: ComponentDocItem[] = [
     title: "Tooltip 提示",
     purpose: "hover/focus 简短说明。纯文本，不可交互。",
     usage: "解释图标按钮、状态缩写、紧凑控件。",
-    code: `<Tooltip content="设置"><IconButton aria-label="设置">...</IconButton></Tooltip>`,
+    code: `<Tooltip content="设置"><IconButton aria-label="设置"><Settings size={16} strokeWidth={2} /></IconButton></Tooltip>`,
   },
   {
     id: "toast",

@@ -1,6 +1,7 @@
 import { Checkbox as KCheckbox } from "@kobalte/core/checkbox"
 import type { JSX } from "solid-js"
 import { Show } from "solid-js"
+import { Check, Minus } from "lucide-solid"
 
 export type CheckboxProps = {
   checked: boolean | "indeterminate"
@@ -23,8 +24,11 @@ export function Checkbox(props: CheckboxProps) {
       <KCheckbox.Input class="tbr-checkbox-input" aria-label={props["aria-label"]} />
       <KCheckbox.Control class="tbr-checkbox-control">
         <KCheckbox.Indicator>
-          <Show when={props.checked === "indeterminate"} fallback={"✓"}>
-            –
+          <Show
+            when={props.checked === "indeterminate"}
+            fallback={<Check size={16} strokeWidth={2} />}
+          >
+            <Minus size={16} strokeWidth={2} />
           </Show>
         </KCheckbox.Indicator>
       </KCheckbox.Control>

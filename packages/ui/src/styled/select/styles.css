@@ -69,12 +69,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 16px;
+    height: 16px;
     color: rgb(var(--tbr-color-text-muted));
-    font-size: 10px;
     flex: none;
-  }
-  .tbr-select-chevron {
-    line-height: 1;
   }
   .tbr-select-content {
     box-sizing: border-box;
@@ -141,11 +139,13 @@
     cursor: not-allowed;
   }
   .tbr-select-item-check {
-    width: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
     flex: none;
     color: rgb(var(--tbr-color-accent));
-    font-size: 12px;
-    line-height: 1;
   }
   .tbr-select-item-label {
     flex: 1;

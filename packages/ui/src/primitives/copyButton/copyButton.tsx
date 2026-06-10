@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { createSignal } from "solid-js"
+import { Check, Copy } from "lucide-solid"
 
 export type CopyButtonProps = {
   value: string
@@ -19,7 +20,12 @@ export function CopyButton(props: CopyButtonProps) {
       }}
       data-copied={copied() ? "" : undefined}
     >
-      {props.children || (copied() ? "✓ 已复制" : "📋 复制")}
+      {props.children || (
+        <>
+          {copied() ? <Check size={16} strokeWidth={2} /> : <Copy size={16} strokeWidth={2} />}
+          {copied() ? "已复制" : "复制"}
+        </>
+      )}
     </button>
   )
 }

@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { createSignal, For } from "solid-js"
+import { X } from "lucide-solid"
 
 export type TagInputProps = {
   value: string[]
@@ -36,7 +37,7 @@ export function TagInput(props: TagInputProps) {
               disabled={props.disabled}
               onClick={() => removeTag(tag)}
             >
-              x
+              <X size={16} strokeWidth={2} />
             </button>
           </span>
         )}

@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { Show } from "solid-js"
+import { X } from "lucide-solid"
 
 export type DrawerProps = {
   open: boolean
@@ -36,7 +37,7 @@ export function Drawer(props: DrawerProps) {
               aria-label="关闭"
               onClick={props.onClose}
             >
-              x
+              <X size={16} strokeWidth={2} />
             </button>
           </header>
           <div class="tbr-drawer-body">{props.children}</div>

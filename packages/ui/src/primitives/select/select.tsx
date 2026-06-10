@@ -1,6 +1,7 @@
 import { Select as KSelect } from "@kobalte/core/select"
-import { splitProps } from "solid-js"
+import { Show, splitProps } from "solid-js"
 import type { JSX } from "solid-js"
+import { Check, ChevronDown } from "lucide-solid"
 
 export type SelectOption<V extends string> = { value: V; label: string; disabled?: boolean }
 
@@ -47,7 +48,9 @@ export function Select<V extends string>(props: SelectProps<V>) {
       itemComponent={(p) => (
         <KSelect.Item item={p.item} class="tbr-select-item">
           <span class="tbr-select-item-check" aria-hidden="true">
-            {p.item.rawValue.value === local.value ? "✓" : ""}
+            <Show when={p.item.rawValue.value === local.value}>
+              <Check size={16} strokeWidth={2} />
+            </Show>
           </span>
           <KSelect.ItemLabel class="tbr-select-item-label">
             {p.item.rawValue.label}
@@ -69,7 +72,7 @@ export function Select<V extends string>(props: SelectProps<V>) {
           </KSelect.Value>
         </span>
         <KSelect.Icon class="tbr-select-icon" aria-hidden="true">
-          <span class="tbr-select-chevron">▼</span>
+          <ChevronDown size={16} strokeWidth={2} />
         </KSelect.Icon>
       </KSelect.Trigger>
       <KSelect.Portal>

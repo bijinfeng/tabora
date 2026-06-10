@@ -23,7 +23,11 @@
     background: rgba(var(--tbr-color-accent), 0.04);
   }
   .tbr-collapsible-arrow {
-    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
     color: rgb(var(--tbr-color-text-muted));
     transition: transform var(--tbr-dur-normal) var(--tbr-ease);
   }

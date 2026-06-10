@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { Show } from "solid-js"
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-solid"
 
 export type ToastVariant = "info" | "success" | "warning" | "danger"
 
@@ -12,10 +13,27 @@ export type ToastProps = {
   class?: string
 }
 
+function ToastIcon(props: { variant: ToastVariant }) {
+  switch (props.variant) {
+    case "success":
+      return <CircleCheck size={16} strokeWidth={2} />
+    case "warning":
+      return <TriangleAlert size={16} strokeWidth={2} />
+    case "danger":
+      return <CircleAlert size={16} strokeWidth={2} />
+    case "info":
+      return <Info size={16} strokeWidth={2} />
+  }
+}
+
 export function Toast(props: ToastProps) {
+  const variant = () => props.variant ?? "info"
+
   return (
-    <div class={props.class} data-variant={props.variant ?? "info"} role="status">
-      <span class="tbr-toast-icon" aria-hidden="true" />
+    <div class={props.class} data-variant={variant()} role="status">
+      <span class="tbr-toast-icon" aria-hidden="true">
+        <ToastIcon variant={variant()} />
+      </span>
       <span class="tbr-toast-body">
         <strong class="tbr-toast-title">{props.title}</strong>
         <Show when={props.description}>
