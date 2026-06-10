@@ -159,14 +159,19 @@
       /* ====== DASHBOARD LAYOUT ====== */
       .layout-dashboard {
         display: none;
-        grid-template-columns: 56px 1fr;
         min-height: 100vh;
+        padding-left: 56px;
       }
       .layout-dashboard.active {
-        display: grid;
+        display: block;
       }
 
       .rail {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 56px;
         background: var(--wb-surface);
         border-right: 1px solid var(--wb-line);
         display: flex;
@@ -174,6 +179,7 @@
         align-items: center;
         gap: 6px;
         padding: 14px 8px;
+        z-index: 200;
       }
       .rail-logo {
         width: 36px;
@@ -221,6 +227,291 @@
       }
       .rail-spacer {
         flex: 1;
+      }
+      .rail-divider {
+        width: 24px;
+        height: 1px;
+        background: var(--wb-line);
+        margin: 4px 0;
+      }
+      /* Plan B: rail-group is a wrapper for the rail-btn + tooltip */
+      .rail-group {
+        position: relative;
+      }
+      .rail-group .rail-btn {
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+      }
+      .group-tip {
+        position: absolute;
+        left: 46px;
+        top: 50%;
+        transform: translateY(-50%) translateX(-4px);
+        background: var(--wb-text);
+        color: var(--wb-page);
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 5px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 120ms ease,
+          transform 120ms ease;
+        z-index: 60;
+      }
+      .rail-group:hover .group-tip,
+      .rail-group:focus-within .group-tip {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+      }
+      .rail-group-shortcut {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 14px;
+        height: 14px;
+        padding: 0 3px;
+        border-radius: 7px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        font-size: 9px;
+        line-height: 12px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        color: var(--wb-text-subtle);
+        opacity: 0;
+        transition: opacity 120ms ease;
+        pointer-events: none;
+      }
+      .rail:hover .rail-group-shortcut,
+      .rail-group:focus-within .rail-group-shortcut {
+        opacity: 1;
+      }
+      /* + button reuses .rail-btn with .rail-add modifier */
+      .rail-btn.rail-add {
+        color: var(--wb-text-subtle);
+      }
+      .rail-btn.rail-add:hover {
+        color: var(--wb-accent);
+        background: var(--wb-accent-soft);
+      }
+      .rail-btn.rail-add svg {
+        width: 16px;
+        height: 16px;
+      }
+      /* Pulsing placeholder while inline naming */
+      .rail-btn.placeholder {
+        background: var(--wb-accent-soft);
+        border-color: var(--wb-accent);
+        color: var(--wb-accent);
+        animation: railPulse 1.6s var(--wb-ease) infinite;
+      }
+      @keyframes railPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 var(--wb-accent-soft);
+        }
+        50% {
+          box-shadow: 0 0 0 4px var(--wb-accent-soft);
+        }
+      }
+      /* Inline naming popover */
+      .inline-pop {
+        position: absolute;
+        left: 56px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 8px 24px var(--wb-shadow-raised);
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 80;
+        opacity: 0;
+        transform: translateX(-6px);
+        pointer-events: none;
+        transition: all 160ms var(--wb-ease);
+        margin-left: 6px;
+      }
+      .inline-pop.open {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+      .inline-pop::before {
+        content: "";
+        position: absolute;
+        left: -5px;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        background: var(--wb-surface);
+        border-left: 1px solid var(--wb-line);
+        border-bottom: 1px solid var(--wb-line);
+        transform: translateY(-50%) rotate(45deg);
+      }
+      .inline-pop input {
+        width: 160px;
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 6px;
+        background: var(--wb-surface);
+        font-size: 12px;
+        font-family: inherit;
+        color: var(--wb-text);
+        outline: none;
+        transition: border-color 120ms ease;
+      }
+      .inline-pop input:focus {
+        border-color: var(--wb-accent);
+        box-shadow: 0 0 0 2px var(--wb-accent-soft);
+      }
+      .inline-pop .hint {
+        font-size: 10px;
+        color: var(--wb-text-subtle);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        white-space: nowrap;
+      }
+      .inline-pop .hint kbd {
+        background: var(--wb-surface-soft);
+        border: 1px solid var(--wb-line);
+        padding: 1px 4px;
+        border-radius: 3px;
+        margin: 0 1px;
+      }
+      /* Layout switch popover (rail) */
+      .layout-switch-pop {
+        position: absolute;
+        left: 56px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 8px 24px var(--wb-shadow-raised);
+        padding: 6px;
+        min-width: 240px;
+        z-index: 80;
+        opacity: 0;
+        transform: translateX(-6px);
+        pointer-events: none;
+        transition: all 160ms var(--wb-ease);
+        margin-left: 6px;
+      }
+      .layout-switch-pop.open {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+      .layout-switch-pop::before {
+        content: "";
+        position: absolute;
+        left: -5px;
+        top: 26px;
+        width: 9px;
+        height: 9px;
+        background: var(--wb-surface);
+        border-left: 1px solid var(--wb-line);
+        border-bottom: 1px solid var(--wb-line);
+        transform: rotate(45deg);
+      }
+      .lsp-header {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--wb-text-subtle);
+        padding: 6px 10px 4px;
+      }
+      .lsp-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        transition: background 120ms ease;
+      }
+      .lsp-item:hover {
+        background: var(--wb-surface-hover);
+      }
+      .lsp-item.active {
+        background: var(--wb-accent-soft);
+      }
+      .lsp-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        background: var(--wb-surface-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--wb-text-muted);
+        flex-shrink: 0;
+      }
+      .lsp-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .lsp-item.active .lsp-icon {
+        background: var(--wb-accent);
+        color: var(--wb-on-accent);
+      }
+      .lsp-text {
+        flex: 1;
+        min-width: 0;
+      }
+      .lsp-name {
+        font-size: 12px;
+        font-weight: 650;
+        color: var(--wb-text);
+      }
+      .lsp-item.active .lsp-name {
+        color: var(--wb-accent);
+      }
+      .lsp-desc {
+        font-size: 10px;
+        color: var(--wb-text-muted);
+        margin-top: 1px;
+      }
+      .lsp-check {
+        color: var(--wb-accent);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      /* Icon cell (for context menu icon grid) */
+      .icon-cell {
+        aspect-ratio: 1;
+        border: 1px solid var(--wb-line);
+        background: var(--wb-surface);
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--wb-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 120ms ease;
+        font-family: inherit;
+      }
+      .icon-cell:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+      .icon-cell.active {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+      .ctx-icons {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 3px;
+        padding: 4px 6px 6px;
       }
 
       .dash-content {
@@ -287,11 +578,6 @@
         width: min(100%, 720px);
         max-width: 720px;
       }
-      .search-stage.stream-stage {
-        max-width: 480px;
-        margin: 0 auto;
-      }
-
       /* Search (Dashboard) */
       .search-bar {
         display: flex;
@@ -533,13 +819,6 @@
         font-size: 9px;
         opacity: 0.58;
       }
-      .stream-search-bar {
-        width: min(440px, 100%);
-        margin: 0 auto;
-        cursor: text;
-      }
-
-      /* Extension point status styles */
       .ext-panel {
         background: var(--wb-surface);
         border: 1px solid var(--wb-line);
@@ -967,12 +1246,10 @@
       }
 
       /* Layout transition */
-      .layout-dashboard,
-      .layout-stream {
+      .layout-dashboard {
         transition: opacity 180ms ease;
       }
-      .layout-dashboard.switching,
-      .layout-stream.switching {
+      .layout-dashboard.switching {
         opacity: 0;
       }
 
@@ -989,113 +1266,6 @@
       }
       .widget-card.card-enter {
         animation: cardEnter 250ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
-      }
-
-      /* ====== STREAM LAYOUT ====== */
-      .layout-stream {
-        display: none;
-        min-height: 100vh;
-      }
-      .layout-stream.active {
-        display: block;
-      }
-
-      .stream-top {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        padding: 8px 24px 0;
-      }
-      .stream-top-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-        opacity: 0.76;
-        transition: opacity 140ms ease;
-      }
-      .stream-top:hover .stream-top-actions,
-      .stream-top:focus-within .stream-top-actions {
-        opacity: 1;
-      }
-      .stream-top-secondary {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 6px;
-        padding: 2px 0;
-      }
-      .stream-toolbar-btn {
-        height: 26px;
-        padding: 0 9px;
-        border: 1px solid transparent;
-        border-radius: 7px;
-        background: transparent;
-        color: color-mix(in srgb, var(--wb-text-subtle) 88%, transparent);
-        font-size: 11px;
-        transition:
-          background 120ms ease,
-          color 120ms ease,
-          border-color 120ms ease;
-      }
-      .stream-toolbar-btn:hover {
-        background: color-mix(in srgb, var(--wb-surface-soft) 92%, transparent);
-        color: var(--wb-text-muted);
-      }
-      .stream-toolbar-icon {
-        width: 26px;
-        height: 26px;
-        font-size: 12px;
-      }
-      .stream-top .layout-switch {
-        border-color: color-mix(in srgb, var(--wb-line) 54%, transparent);
-        background: transparent;
-      }
-      .stream-top .layout-switch .tb-btn {
-        color: color-mix(in srgb, var(--wb-text-subtle) 86%, transparent);
-      }
-      .stream-top .layout-switch .tb-btn.active {
-        color: var(--wb-accent);
-        background: color-mix(in srgb, var(--wb-accent-soft) 72%, transparent);
-      }
-      .stream-top-icon-group {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding-left: 6px;
-        margin-left: 2px;
-        border-left: 1px solid color-mix(in srgb, var(--wb-line) 64%, transparent);
-      }
-
-      .stream-content {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px 24px 80px;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-      }
-      .stream-hero {
-        text-align: center;
-        padding: 30px 0 18px;
-      }
-      .stream-hero-greeting {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 6px;
-      }
-      .stream-hero-date {
-        font-size: 13px;
-        color: var(--wb-text-muted);
-      }
-      .stream-cards {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
       }
 
       /* Command palette (stream) */
@@ -1278,7 +1448,16 @@
         align-items: center;
         justify-content: center;
         font-size: 12px;
-        transition: all 120ms ease;
+        opacity: 0;
+        transition:
+          opacity 120ms ease,
+          background 120ms ease,
+          color 120ms ease;
+      }
+      .widget-card:hover .card-action,
+      .widget-card:focus-within .card-action,
+      .card-action:focus-visible {
+        opacity: 1;
       }
       .card-action:hover {
         background: var(--wb-surface-hover);
@@ -1959,25 +2138,24 @@
         .widget-card.span-2 {
           grid-column: span 2;
         }
-        .stream-cards {
-          grid-template-columns: 1fr;
-        }
       }
       @media (max-width: 768px) {
         .layout-dashboard {
-          grid-template-columns: 1fr;
+          padding-left: 0;
         }
         .rail {
           position: fixed;
           bottom: 0;
           left: 0;
           right: 0;
+          top: auto;
+          width: 100%;
+          height: 50px;
           flex-direction: row;
           justify-content: space-around;
           padding: 6px 12px;
           border-right: none;
           border-top: 1px solid var(--wb-line);
-          height: 50px;
           z-index: 100;
         }
         .rail-logo,
@@ -2013,11 +2191,6 @@
         }
         .stream-content {
           padding: 16px 16px 80px;
-        }
-        .review-bar {
-          flex-wrap: wrap;
-          gap: 4px;
-          justify-content: center;
         }
       }
       @media (max-width: 500px) {
@@ -2097,20 +2270,6 @@
               <div class="cmd-item-desc">明亮 ⇄ 暗色</div>
             </div>
             <span class="suggest-item-hint">⌘T</span>
-          </div>
-          <div
-            class="cmd-item"
-            onclick="
-              switchLayout(layout === 'dashboard' ? 'stream' : 'dashboard')
-              closeCmd()
-            "
-          >
-            <div class="cmd-item-icon">⇄</div>
-            <div class="cmd-item-text">
-              <div>切换布局</div>
-              <div class="cmd-item-desc">仪表盘 ⇄ 流式</div>
-            </div>
-            <span class="suggest-item-hint">⌘L</span>
           </div>
           <div
             class="cmd-item"
@@ -2324,37 +2483,9 @@
                     line-height: 1.5;
                   "
                 >
-                  布局是插件。切换布局保留所有卡片数据。仪表盘式是创建者的偏好——不同的布局适合不同的使用习惯。
+                  布局是插件。当前原型仅展示仪表盘布局；Focus 布局见独立原型页面。
                 </div>
-                <div class="layout-picker" style="grid-template-columns: 1fr 1fr; gap: 10px">
-                  <div
-                    class="layout-option active"
-                    id="settingLayoutDashboard"
-                    onclick="settingsSwitchLayout('dashboard')"
-                    style="text-align: left; display: flex; gap: 10px; align-items: flex-start"
-                  >
-                    <div style="font-size: 24px; flex-shrink: 0">◧</div>
-                    <div>
-                      <div class="layout-option-name">仪表盘式</div>
-                      <div class="layout-option-desc">
-                        Rail + 搜索栏 + 4列网格。多卡片并行查看。
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    class="layout-option"
-                    id="settingLayoutStream"
-                    onclick="settingsSwitchLayout('stream')"
-                    style="text-align: left; display: flex; gap: 10px; align-items: flex-start"
-                  >
-                    <div style="font-size: 24px; flex-shrink: 0">☰</div>
-                    <div>
-                      <div class="layout-option-name">流式</div>
-                      <div class="layout-option-desc">双列流式 · ⌘K 搜索。专注单一任务。</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="set-hint">切换后卡片数据保留。区域不匹配的卡片进入待放置列表。</div>
+                <div class="set-hint">不同的布局适合不同的使用习惯和工作流程。</div>
               </div>
               <div class="set-group">
                 <div class="set-group-title">工作区</div>
@@ -2607,41 +2738,6 @@
                       ></label>
                     </div>
                   </div>
-                  <div class="plugin-card" id="pcard-stream">
-                    <div style="flex: 1">
-                      <div style="font-size: 13px; font-weight: 650">流式布局</div>
-                      <div
-                        style="
-                          font-size: 11px;
-                          color: var(--wb-text-subtle);
-                          font-family: monospace;
-                        "
-                      >
-                        official.layout.workbench-stream
-                      </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px">
-                      <span style="font-size: 10px; color: var(--wb-text-subtle)">v1.0</span
-                      ><span
-                        style="
-                          font-size: 10px;
-                          padding: 2px 6px;
-                          border-radius: 10px;
-                          background: var(--wb-success-soft);
-                          color: var(--wb-success);
-                        "
-                        >layout · stream</span
-                      ><label class="sw-wrap"
-                        ><input type="checkbox" checked /><span
-                          class="sw-track"
-                          style="width: 32px; height: 18px"
-                          ><span
-                            class="sw-thumb"
-                            style="width: 14px; height: 14px; top: 2px; left: 2px"
-                          ></span></span
-                      ></label>
-                    </div>
-                  </div>
                   <div class="plugin-card">
                     <div style="flex: 1">
                       <div style="font-size: 13px; font-weight: 650">命令搜索</div>
@@ -2857,71 +2953,109 @@
       </div>
     </div>
 
+    <!-- ====== RAIL (SHARED) ====== -->
+    <nav class="rail" id="rail">
+      <div class="rail-logo">T</div>
+      <div
+        id="railGroups"
+        style="display: flex; flex-direction: column; gap: 6px; align-items: center"
+      ></div>
+      <div class="rail-divider"></div>
+      <button
+        class="rail-btn rail-add"
+        id="railAddBtn"
+        type="button"
+        onclick="startCreateGroup()"
+        aria-label="新建分组"
+        title="新建分组（⌘ ⇧ N）"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
+      <!-- Inline naming popover for new group (Plan B) -->
+      <div class="inline-pop" id="inlinePop">
+        <input type="text" id="inlineInput" placeholder="分组名 · Enter 创建" maxlength="20" />
+        <span class="hint"><kbd>Enter</kbd>建 <kbd>Esc</kbd>退</span>
+      </div>
+      <div class="rail-spacer"></div>
+      <button
+        class="rail-btn"
+        id="layoutSwitchBtn"
+        type="button"
+        aria-label="切换布局"
+        onclick="toggleLayoutSwitch(event)"
+        title="切换布局"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1.2" />
+          <rect x="14" y="3" width="7" height="7" rx="1.2" />
+          <rect x="3" y="14" width="7" height="7" rx="1.2" />
+          <rect x="14" y="14" width="7" height="7" rx="1.2" />
+        </svg>
+      </button>
+      <div class="layout-switch-pop" id="layoutSwitchPop">
+        <div class="lsp-header">布局</div>
+        <a
+          class="lsp-item active"
+          href="#"
+          onclick="
+            event.preventDefault()
+            closeLayoutSwitch()
+          "
+        >
+          <div class="lsp-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+          </div>
+          <div class="lsp-text">
+            <div class="lsp-name">Dashboard</div>
+            <div class="lsp-desc">控制面板：多卡片并列</div>
+          </div>
+          <span class="lsp-check">✓</span>
+        </a>
+        <a class="lsp-item" href="focus-layout-prototype.html">
+          <div class="lsp-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </div>
+          <div class="lsp-text">
+            <div class="lsp-name">Focus</div>
+            <div class="lsp-desc">深度专注：主卡 + 卫星</div>
+          </div>
+        </a>
+      </div>
+      <button class="rail-btn" aria-label="切换主题" onclick="toggleTheme()" title="主题切换">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+        </svg>
+      </button>
+      <button
+        class="rail-btn"
+        aria-label="设置"
+        onclick="openSettings()"
+        title="设置（全局约束：所有布局必须可达）"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+          />
+        </svg>
+      </button>
+    </nav>
+
     <!-- ====== DASHBOARD -->
     <div class="layout-dashboard active" id="layoutDashboard">
-      <nav class="rail">
-        <div class="rail-logo">T</div>
-        <button
-          class="rail-btn active"
-          aria-label="主页"
-          onclick="renderWidgets()"
-          title="主页（全局约束：所有布局必须可达）"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        </button>
-        <button
-          class="rail-btn"
-          aria-label="添加卡片"
-          onclick="openAddWidget()"
-          title="添加卡片（全局约束：所有布局必须可达）"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </button>
-        <button
-          class="rail-btn"
-          aria-label="插件"
-          onclick="openSettings('plugins')"
-          title="插件管理（全局约束：所有布局必须可达）"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
-            <path d="M12 22v-6.5M22 8.5l-10 7-10-7" />
-          </svg>
-        </button>
-        <div class="rail-spacer"></div>
-        <button class="rail-btn" aria-label="切换主题" onclick="toggleTheme()" title="主题切换">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-          </svg>
-        </button>
-        <button
-          class="rail-btn"
-          aria-label="设置"
-          onclick="openSettings()"
-          title="设置（全局约束：所有布局必须可达）"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-            />
-          </svg>
-        </button>
-      </nav>
       <div class="dash-content">
         <div class="dash-greeting">
           <div class="dash-greeting-title">
@@ -2929,37 +3063,6 @@
           </div>
           <div class="dash-greeting-actions">
             <button class="tb-btn dash-toolbar-btn" onclick="openAddWidget()">+ 添加卡片</button>
-            <div class="layout-switch" aria-label="布局切换">
-              <button
-                class="tb-btn active"
-                data-layout-target="dashboard"
-                type="button"
-                onclick="switchLayout('dashboard')"
-                title="仪表盘布局"
-                aria-label="切换到仪表盘布局"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                </svg>
-              </button>
-              <button
-                class="tb-btn"
-                data-layout-target="stream"
-                type="button"
-                onclick="switchLayout('stream')"
-                title="流式布局"
-                aria-label="切换到流式布局"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <line x1="5" y1="7" x2="19" y2="7" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <line x1="5" y1="17" x2="19" y2="17" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
         <div class="search-command-band">
@@ -3019,145 +3122,6 @@
       </div>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- STREAM LAYOUT -->
-    <div class="layout-stream" id="layoutStream">
-      <div class="stream-top">
-        <div class="stream-top-actions">
-          <div class="stream-top-secondary">
-            <button class="tb-btn stream-toolbar-btn" onclick="openAddWidget()">+ 添加卡片</button>
-            <div class="layout-switch" aria-label="布局切换">
-              <button
-                class="tb-btn"
-                data-layout-target="dashboard"
-                type="button"
-                onclick="switchLayout('dashboard')"
-                title="仪表盘布局"
-                aria-label="切换到仪表盘布局"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                </svg>
-              </button>
-              <button
-                class="tb-btn active"
-                data-layout-target="stream"
-                type="button"
-                onclick="switchLayout('stream')"
-                title="流式布局"
-                aria-label="切换到流式布局"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <line x1="5" y1="7" x2="19" y2="7" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <line x1="5" y1="17" x2="19" y2="17" />
-                </svg>
-              </button>
-            </div>
-            <div class="stream-top-icon-group">
-              <button
-                class="tb-btn tb-btn-icon stream-toolbar-btn stream-toolbar-icon"
-                onclick="toggleTheme()"
-                aria-label="切换主题"
-              >
-                明
-              </button>
-              <button
-                class="tb-btn tb-btn-icon stream-toolbar-btn stream-toolbar-icon"
-                onclick="openSettings()"
-                aria-label="打开设置"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="3" />
-                  <path
-                    d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7.1 4.3l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="stream-content">
-        <div class="stream-hero">
-          <div class="stream-hero-greeting">下午好</div>
-          <div class="stream-hero-date">5月30日 星期六 · 北京</div>
-          <div style="margin-top: 16px">
-            <div class="search-stage stream-stage">
-              <div
-                class="search-bar stream-search-bar"
-                onclick="document.getElementById('streamSearchInput').focus()"
-              >
-                <div class="search-provider">
-                  <button
-                    class="search-provider-btn"
-                    type="button"
-                    onclick="toggleSearchProvider('streamSpDropdown', event)"
-                    aria-label="切换搜索引擎"
-                  >
-                    <span class="search-provider-dot" aria-hidden="true"></span>
-                    <span class="search-provider-label" id="streamSpLabel">Google</span>
-                    <span class="search-provider-caret">▾</span>
-                  </button>
-                  <div class="search-provider-dropdown" id="streamSpDropdown">
-                    <div
-                      class="sp-option active"
-                      data-provider-option="google"
-                      onclick="selectProvider('google')"
-                    >
-                      <span class="sp-check">✓</span><span>Google</span>
-                    </div>
-                    <div
-                      class="sp-option"
-                      data-provider-option="bing"
-                      onclick="selectProvider('bing')"
-                    >
-                      <span class="sp-check"></span><span>Bing</span>
-                    </div>
-                    <div
-                      class="sp-option"
-                      data-provider-option="ddg"
-                      onclick="selectProvider('ddg')"
-                    >
-                      <span class="sp-check"></span><span>DuckDuckGo</span>
-                    </div>
-                    <div
-                      class="sp-option"
-                      data-provider-option="github"
-                      onclick="selectProvider('github')"
-                    >
-                      <span class="sp-check"></span><span>GitHub</span>
-                    </div>
-                  </div>
-                </div>
-                <span class="search-scope-divider" aria-hidden="true"></span>
-                <input
-                  type="text"
-                  id="streamSearchInput"
-                  placeholder="搜索网页、命令或卡片"
-                  style="
-                    flex: 1;
-                    border: none;
-                    outline: none;
-                    background: transparent;
-                    font-size: 13px;
-                    font-family: inherit;
-                    color: var(--wb-text);
-                  "
-                />
-                <span class="search-kbd">⌘K</span>
-              </div>
-              <div class="search-suggestions" id="streamSuggestions"></div>
-            </div>
-          </div>
-        </div>
-        <div class="stream-cards" id="streamGrid"></div>
-      </div>
-    </div>
-
     <!-- ================================================================ -->
     <script>
       // ====== STATE ======
@@ -3168,17 +3132,247 @@
       let background = "solid1"
       let expandedWidgetId = null
 
-      // Widget instances (multi-instance support)
-      // Each instance: { id, type, size, label }
-      let widgetInstances = [
-        { id: "focus-1", type: "focus", size: "M", label: "今日重点" },
-        { id: "links-1", type: "links", size: "M", label: "快捷入口" },
-        { id: "todo-1", type: "todo", size: "S", label: "待办" },
-        { id: "notes-1", type: "notes", size: "L", label: "便签" },
-        { id: "weather-1", type: "weather", size: "S", label: "天气" },
-        { id: "plugins-1", type: "plugins", size: "S", label: "插件状态" },
+      // Groups (workspaces). Each group owns its own widgets and layout.
+      // Default group ("我的工作台") cannot be deleted but can be renamed and re-iconed.
+      const GROUP_ICONS = [
+        "T",
+        "◐",
+        "◇",
+        "★",
+        "◈",
+        "⌘",
+        "⚡",
+        "◔",
+        "♥",
+        "■",
+        "◆",
+        "▲",
+        "●",
+        "✦",
+        "✿",
+        "♪",
       ]
-      let instanceCounter = { focus: 1, links: 1, todo: 1, notes: 1, weather: 1, plugins: 1 }
+      let groups = [
+        {
+          id: "default",
+          name: "我的工作台",
+          icon: "T",
+          layout: "dashboard",
+          isDefault: true,
+          widgets: [
+            { id: "focus-1", type: "focus", size: "M", label: "今日重点" },
+            { id: "links-1", type: "links", size: "M", label: "快捷入口" },
+            { id: "todo-1", type: "todo", size: "S", label: "待办" },
+            { id: "notes-1", type: "notes", size: "L", label: "便签" },
+            { id: "weather-1", type: "weather", size: "S", label: "天气" },
+            { id: "plugins-1", type: "plugins", size: "S", label: "插件状态" },
+          ],
+          instanceCounter: { focus: 1, links: 1, todo: 1, notes: 1, weather: 1, plugins: 1 },
+        },
+      ]
+      let activeGroupId = "default"
+      let groupCounter = 1
+      let inlinePopOpen = false
+
+      function getActiveGroup() {
+        return groups.find((g) => g.id === activeGroupId) || groups[0]
+      }
+      // 兼容旧代码：访问当前分组的 widgets。
+      Object.defineProperty(window, "widgetInstances", {
+        get() {
+          return getActiveGroup().widgets
+        },
+        set(v) {
+          getActiveGroup().widgets = v
+        },
+      })
+
+      // ====== GROUP MANAGEMENT (Plan B: inline naming popover) ======
+      function renderRailGroups(showPlaceholder = false) {
+        const railGroups = document.getElementById("railGroups")
+        if (!railGroups) return
+        const items = groups
+          .map((g, idx) => {
+            const shortcut = idx < 9 ? `⌘${idx + 1}` : ""
+            const active = g.id === activeGroupId ? " active" : ""
+            const layoutLabel = g.layout === "dashboard" ? "Dashboard" : "Stream"
+            return `
+              <div class="rail-group" oncontextmenu="event.preventDefault();openGroupCtxMenu(event,'${g.id}')">
+                <button class="rail-btn${active}" type="button"
+                        data-group-id="${g.id}"
+                        onclick="switchToGroup('${g.id}')"
+                        title="${e(g.name)} · 右键菜单${shortcut ? " · " + shortcut : ""}"
+                        aria-label="分组 ${e(g.name)}">
+                  ${e(g.icon || "◐")}
+                  ${shortcut ? `<span class="rail-group-shortcut">${shortcut}</span>` : ""}
+                </button>
+                <span class="group-tip">${e(g.name)} · ${layoutLabel}</span>
+              </div>`
+          })
+          .join("")
+        const placeholder = showPlaceholder
+          ? `<button class="rail-btn placeholder" id="placeholderBtn" type="button" aria-label="正在命名">●</button>`
+          : ""
+        railGroups.innerHTML = items + placeholder
+      }
+
+      function startCreateGroup() {
+        if (inlinePopOpen) {
+          document.getElementById("inlineInput")?.focus()
+          return
+        }
+        inlinePopOpen = true
+        renderRailGroups(true)
+        const placeholder = document.getElementById("placeholderBtn")
+        const pop = document.getElementById("inlinePop")
+        const rail = document.getElementById("rail")
+        if (placeholder && pop && rail) {
+          const railRect = rail.getBoundingClientRect()
+          const phRect = placeholder.getBoundingClientRect()
+          pop.style.top = phRect.top - railRect.top + phRect.height / 2 - 24 + "px"
+        }
+        pop.classList.add("open")
+        const input = document.getElementById("inlineInput")
+        input.value = ""
+        setTimeout(() => input.focus(), 80)
+      }
+
+      function commitGroupName(rawValue) {
+        const value = (rawValue || "").trim()
+        if (!value) {
+          cancelGroupCreate()
+          return
+        }
+        groupCounter += 1
+        const newId = "g-" + Date.now()
+        const icon = pickDefaultIcon(value)
+        groups.push({
+          id: newId,
+          name: value,
+          icon,
+          layout: layout,
+          isDefault: false,
+          widgets: [],
+          instanceCounter: { focus: 0, links: 0, todo: 0, notes: 0, weather: 0, plugins: 0 },
+        })
+        inlinePopOpen = false
+        document.getElementById("inlinePop").classList.remove("open")
+        activeGroupId = newId
+        renderRailGroups(false)
+        renderWidgets()
+        renderExtPanel()
+        toast("已创建分组「" + value + "」 · 右键可改图标和布局")
+        setTimeout(() => document.getElementById("railAddBtn")?.focus(), 0)
+      }
+
+      function cancelGroupCreate() {
+        if (!inlinePopOpen) return
+        inlinePopOpen = false
+        document.getElementById("inlinePop")?.classList.remove("open")
+        renderRailGroups(false)
+      }
+
+      function pickDefaultIcon(name) {
+        const c = (name || "")[0]
+        if (/[A-Za-z]/.test(c)) return c.toUpperCase()
+        return "◐"
+      }
+
+      function switchToGroup(id) {
+        if (inlinePopOpen) return
+        const g = groups.find((x) => x.id === id)
+        if (!g || g.id === activeGroupId) return
+        activeGroupId = id
+        renderRailGroups()
+        renderWidgets()
+        renderExtPanel()
+        toast("已切换到「" + g.name + "」")
+      }
+
+      function applyLayout(l) {
+        // Layout switching removed; only Dashboard exists now
+        document.getElementById("layoutDashboard")?.classList.add("active")
+      }
+
+      function renameGroup(id) {
+        const g = groups.find((x) => x.id === id)
+        if (!g) return
+        const next = prompt("新名称", g.name)
+        if (next == null) return
+        const trimmed = next.trim().slice(0, 20)
+        if (!trimmed) return
+        g.name = trimmed
+        renderRailGroups()
+        toast("已重命名为「" + trimmed + "」")
+      }
+
+      function setGroupIcon(id, icon) {
+        const g = groups.find((x) => x.id === id)
+        if (!g) return
+        g.icon = icon
+        renderRailGroups()
+        document
+          .querySelectorAll("#ctxMenu .icon-cell")
+          .forEach((c) => c.classList.remove("active"))
+        const target = Array.from(document.querySelectorAll("#ctxMenu .icon-cell")).find(
+          (c) => c.textContent.trim() === icon,
+        )
+        target?.classList.add("active")
+      }
+
+      function setGroupLayout(id, l) {
+        // Layout switching removed; this function is now a no-op
+        const g = groups.find((x) => x.id === id)
+        if (!g) return
+        toast("当前原型仅支持 Dashboard 布局")
+      }
+
+      function deleteGroup(id) {
+        const g = groups.find((x) => x.id === id)
+        if (!g || g.isDefault) return
+        if (
+          g.widgets.length > 0 &&
+          !confirm(`确认删除分组「${g.name}」?其中的 ${g.widgets.length} 张卡片实例会一并移除。`)
+        ) {
+          return
+        }
+        const wasActive = g.id === activeGroupId
+        groups = groups.filter((x) => x.id !== id)
+        if (wasActive) {
+          activeGroupId = groups[0].id
+          const next = getActiveGroup()
+          layout = next.layout || "dashboard"
+          applyLayout(layout)
+        }
+        renderRailGroups()
+        renderWidgets()
+        renderExtPanel()
+        toast("已删除「" + g.name + "」")
+      }
+
+      function openGroupCtxMenu(event, id) {
+        const g = groups.find((x) => x.id === id)
+        if (!g) return
+        const menu = document.getElementById("ctxMenu")
+        const iconsHtml = GROUP_ICONS.map(
+          (icon) =>
+            `<button class="icon-cell ${icon === g.icon ? "active" : ""}" type="button" onclick="setGroupIcon('${id}','${icon}')">${e(icon)}</button>`,
+        ).join("")
+        menu.innerHTML =
+          `<div class="ctx-item" onclick="renameGroup('${id}');closeCtxMenu()">重命名 <kbd>F2</kbd></div>` +
+          `<div class="ctx-sep"></div>` +
+          `<div style="font-size:10px;color:var(--wb-text-subtle);padding:6px 10px 2px;text-transform:uppercase;letter-spacing:0.06em">图标</div>` +
+          `<div class="ctx-icons">${iconsHtml}</div>` +
+          `<div class="ctx-sep"></div>` +
+          (g.isDefault
+            ? `<div class="ctx-item" style="opacity:.4;pointer-events:none;color:var(--wb-text-subtle)">删除分组 <kbd>默认</kbd></div>`
+            : `<div class="ctx-item danger" onclick="deleteGroup('${id}');closeCtxMenu()">删除分组</div>`)
+        const left = Math.min(event.clientX, window.innerWidth - 220)
+        const top = Math.min(event.clientY, window.innerHeight - 320)
+        menu.style.left = Math.max(8, left) + "px"
+        menu.style.top = Math.max(8, top) + "px"
+        menu.classList.add("show")
+      }
 
       let todos = [
         { text: "复核 Dashboard / Stream 布局协议", done: true },
@@ -3220,34 +3414,12 @@
 
       // ====== LAYOUT SWITCHING ======
       function switchLayout(l) {
-        if (layout === l && !errorMode) return
-        const oldEl = document.getElementById(
-          "layout" + (layout === "dashboard" ? "Dashboard" : "Stream"),
-        )
-        oldEl.classList.add("switching")
-        setTimeout(() => {
-          layout = l
-          errorMode = false
-          document.getElementById("layoutDashboard").classList.toggle("active", l === "dashboard")
-          document.getElementById("layoutStream").classList.toggle("active", l === "stream")
-          document.querySelectorAll("[data-layout-target]").forEach((button) => {
-            button.classList.toggle("active", button.dataset.layoutTarget === l)
-          })
-          document
-            .getElementById("settingLayoutDashboard")
-            .classList.toggle("active", l === "dashboard")
-          document.getElementById("settingLayoutStream").classList.toggle("active", l === "stream")
-          renderWidgets()
-          renderExtPanel()
-          document
-            .getElementById("layout" + (l === "dashboard" ? "Dashboard" : "Stream"))
-            .classList.remove("switching")
-          oldEl.classList.remove("switching")
-          toast("布局 → " + (l === "dashboard" ? "仪表盘式" : "流式") + " · 卡片保留")
-        }, 180)
+        // Layout switching removed; only Dashboard exists now
+        toast("当前原型仅支持 Dashboard 布局")
       }
       function settingsSwitchLayout(l) {
-        switchLayout(l)
+        // No-op
+        toast("当前原型仅支持 Dashboard 布局")
       }
 
       // ====== OVERLAYS & SETTINGS ======
@@ -3265,13 +3437,6 @@
           hint: "⌘T",
           icon: "明",
           run: () => toggleTheme(),
-        },
-        {
-          label: "切换布局",
-          desc: "Dashboard / Stream",
-          hint: "⌘L",
-          icon: "⇄",
-          run: () => switchLayout(layout === "dashboard" ? "stream" : "dashboard"),
         },
         {
           label: "添加卡片",
@@ -3415,13 +3580,9 @@
       // ====== RENDER ======
       function renderWidgets() {
         const dashGrid = document.getElementById("dashGrid")
-        const streamGrid = document.getElementById("streamGrid")
         dashGrid.innerHTML = widgetInstances.length
           ? widgetInstances.map((inst) => renderCard(inst, true)).join("")
           : emptyGrid()
-        streamGrid.innerHTML = widgetInstances.length
-          ? widgetInstances.map((inst) => renderCard(inst, false)).join("")
-          : emptyStream()
         updateBadge()
       }
 
@@ -3469,7 +3630,7 @@
   <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg><span class="card-title-text">${inst.label}</span></div><div class="card-actions">${controls}</div></div>
   <div class="card-body"><div class="plugin-stats">
     <div class="plugin-stat"><span>Widget 活跃</span><span class="plugin-stat-val accent">${widgetInstances.length}</span></div>
-    <div class="plugin-stat"><span>布局</span><span class="plugin-stat-val accent">${layout === "dashboard" ? "Dashboard" : "Stream"}</span></div>
+    <div class="plugin-stat"><span>布局</span><span class="plugin-stat-val accent">Dashboard</span></div>
     <div class="plugin-stat"><span>搜索源</span><span class="plugin-stat-val accent">${searchProvider}</span></div>
     <div class="plugin-stat"><span>背景</span><span class="plugin-stat-val">${background}</span></div>
   </div></div></div>`
@@ -3518,9 +3679,6 @@
       function emptyGrid() {
         return '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--wb-text-muted);font-size:13px">暂无卡片 · <span style="color:var(--wb-accent);cursor:pointer;font-weight:600" onclick="openAddWidget()">添加第一个</span></div>'
       }
-      function emptyStream() {
-        return '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--wb-text-muted);font-size:13px">暂无卡片 · <span style="color:var(--wb-accent);cursor:pointer;font-weight:600" onclick="openAddWidget()">添加第一个</span></div>'
-      }
 
       // ====== WIDGET ACTIONS ======
       function setSize(id, size) {
@@ -3532,11 +3690,17 @@
       }
 
       function addWidget(type) {
-        instanceCounter[type]++
-        const num = instanceCounter[type]
+        const g = getActiveGroup()
+        g.instanceCounter[type] = (g.instanceCounter[type] || 0) + 1
+        const num = g.instanceCounter[type]
         const label = typeNames[type] + (num > 1 ? " #" + num : "")
         const defaultSize = supportedSizes[type][0]
-        widgetInstances.push({ id: type + "-" + num, type, size: defaultSize, label })
+        widgetInstances.push({
+          id: type + "-" + num + "-" + Date.now(),
+          type,
+          size: defaultSize,
+          label,
+        })
         renderWidgets()
         renderExtPanel()
         updateBadge()
@@ -3617,7 +3781,7 @@
           const check = option.querySelector(".sp-check")
           if (check) check.textContent = active ? "✓" : ""
         })
-        document.querySelectorAll("#dashSpLabel, #streamSpLabel").forEach((label) => {
+        document.querySelectorAll("#dashSpLabel").forEach((label) => {
           label.textContent = providerNames[p]
         })
         renderWidgets()
@@ -3735,6 +3899,9 @@
             .querySelectorAll(".search-suggestions")
             .forEach((panel) => panel.classList.remove("show"))
         }
+        if (!e.target.closest("#layoutSwitchPop") && !e.target.closest("#layoutSwitchBtn")) {
+          closeLayoutSwitch()
+        }
       })
       document.addEventListener("contextmenu", (event) => {
         const card = event.target.closest(".widget-card")
@@ -3750,6 +3917,26 @@
       function closeShortcuts(e) {
         if (e && e.target !== document.getElementById("shortcutsPanel")) return
         document.getElementById("shortcutsPanel").classList.remove("show")
+      }
+
+      // Layout switch popover
+      function toggleLayoutSwitch(event) {
+        event?.stopPropagation()
+        const pop = document.getElementById("layoutSwitchPop")
+        const btn = document.getElementById("layoutSwitchBtn")
+        const rail = document.getElementById("rail")
+        if (!pop || !btn || !rail) return
+        if (pop.classList.contains("open")) {
+          pop.classList.remove("open")
+          return
+        }
+        const railRect = rail.getBoundingClientRect()
+        const btnRect = btn.getBoundingClientRect()
+        pop.style.top = btnRect.top - railRect.top - 6 + "px"
+        pop.classList.add("open")
+      }
+      function closeLayoutSwitch() {
+        document.getElementById("layoutSwitchPop")?.classList.remove("open")
       }
 
       // Focus/Expand mode
@@ -3788,7 +3975,7 @@
           case "plugins":
             bodyHtml = `<div style="display:flex;flex-direction:column;gap:4px">
         <div class="plugin-stat" style="padding:8px"><span>活跃 Widget 实例</span><span class="plugin-stat-val accent">${widgetInstances.length}</span></div>
-        <div class="plugin-stat" style="padding:8px"><span>当前布局</span><span class="plugin-stat-val accent">${layout === "dashboard" ? "Dashboard" : "Stream"}</span></div>
+        <div class="plugin-stat" style="padding:8px"><span>当前布局</span><span class="plugin-stat-val accent">Dashboard</span></div>
         <div class="plugin-stat" style="padding:8px"><span>活跃搜索源</span><span class="plugin-stat-val">${searchProvider}</span></div>
         <div class="plugin-stat" style="padding:8px"><span>主题</span><span class="plugin-stat-val accent">${isDark ? "Sage Dark" : "Sage Light"}</span></div>
         <div class="plugin-stat" style="padding:8px"><span>背景</span><span class="plugin-stat-val">${background}</span></div>
@@ -3842,25 +4029,39 @@
         if ((e.metaKey || e.ctrlKey) && e.key === "k") {
           e.preventDefault()
           openCmd()
+          return
         }
         if ((e.metaKey || e.ctrlKey) && e.key === "t") {
           e.preventDefault()
           toggleTheme()
+          return
         }
-        if ((e.metaKey || e.ctrlKey) && e.key === "l") {
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "n") {
           e.preventDefault()
-          switchLayout(layout === "dashboard" ? "stream" : "dashboard")
+          startCreateGroup()
+          return
         }
-        if ((e.metaKey || e.ctrlKey) && e.key === "n") {
+        if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === "n") {
           e.preventDefault()
           openAddWidget()
+          return
+        }
+        if ((e.metaKey || e.ctrlKey) && !e.shiftKey && /^[1-9]$/.test(e.key)) {
+          const idx = parseInt(e.key, 10) - 1
+          if (groups[idx]) {
+            e.preventDefault()
+            switchToGroup(groups[idx].id)
+          }
+          return
         }
         if ((e.metaKey || e.ctrlKey) && e.key === ",") {
           e.preventDefault()
           openSettings()
+          return
         }
         if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
           openShortcuts()
+          return
         }
         if (e.key === "Escape") {
           closeCmd()
@@ -3869,6 +4070,8 @@
           closeCtxMenu()
           closeShortcuts()
           closeExpand()
+          closeLayoutSwitch()
+          if (inlinePopOpen) cancelGroupCreate()
         }
       })
 
@@ -3876,10 +4079,29 @@
       document.getElementById("cmdInput").addEventListener("input", (event) => {
         renderCommandResults(event.target.value)
       })
+      // Inline-naming popover keyboard handlers (Plan B)
+      const inlineInputEl = document.getElementById("inlineInput")
+      if (inlineInputEl) {
+        inlineInputEl.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault()
+            commitGroupName(inlineInputEl.value)
+          } else if (event.key === "Escape") {
+            event.preventDefault()
+            cancelGroupCreate()
+          }
+        })
+        inlineInputEl.addEventListener("blur", () => {
+          // small delay so Enter handler can fire first
+          setTimeout(() => {
+            if (inlinePopOpen) cancelGroupCreate()
+          }, 150)
+        })
+      }
       bindSearchBox("dashSearchInput", "dashSuggestions")
-      bindSearchBox("streamSearchInput", "streamSuggestions")
       renderCommandResults()
       syncThemeCards()
+      renderRailGroups()
       renderWidgets()
       renderExtPanel()
     </script>

@@ -75,9 +75,11 @@
 
 只在需要看原型效果时读：
 
-- `docs/design/工作台交互原型.html`
-- `docs/design/04-官网预览.html`
-- `docs/design/05-官网下载.html`
+- `docs/design/workbench-prototype.html`
+- `docs/design/focus-layout-prototype.html`
+- `docs/design/component-spec.html`
+- `docs/design/landing.html`
+- `docs/design/download.html`
 
 这些 HTML 是预览资产，不承载规范事实。与 `DESIGN.md` 冲突时以 `DESIGN.md` 为准。
 

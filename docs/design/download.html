@@ -1,230 +1,108 @@
 <!doctype html>
-<html lang="zh-CN"><head><script data-od-sandbox-shim="">(function(){
-  function makeStore(){
-    var data = {};
-    var api = {
-      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
-      setItem: function(k, v){ data[k] = String(v); },
-      removeItem: function(k){ delete data[k]; },
-      clear: function(){ data = {}; },
-      key: function(i){ return Object.keys(data)[i] || null; }
-    };
-    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
-    return api;
-  }
-  function tryShim(name){
-    var works = false;
-    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
-    catch (_) { works = false; }
-    if (works) return;
-    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
-    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
-  }
-  tryShim('localStorage');
-  tryShim('sessionStorage');
-  document.addEventListener('click', (e) => {
-    if (!e.target || !(e.target instanceof Element)) return;
-    var link = e.target.closest('a[href]');
-    if (!link) return;
-    var href = link.getAttribute('href');
-    if (href === null) return;
-    var isAnchor = href.startsWith('#') || href === '';
-    if (isAnchor) {
-      e.preventDefault();
-      if (href === '' || href === '#') {
-        window.scrollTo({ top: 0 });
-        history.replaceState(null, '', ' ');
-      } else {
-        var targetId = href.slice(1);
-        var target = targetId ? document.getElementById(targetId) : null;
-        if (target) {
-          target.scrollIntoView();
-          location.hash === href && history.replaceState(null, '', ' ');
-          location.hash = href;
-        }
-      }
-    } else if (link.getAttribute('target') === '_blank') {
-      e.preventDefault();
-      let safe = false;
-      try {
-        var url = new URL(href, location.href);
-        safe =
-          url.protocol === 'http:' ||
-          url.protocol === 'https:' ||
-          url.protocol === 'mailto:';
-      } catch (_) {}
-      safe && window.open(href, '_blank', 'noopener,noreferrer');
-    }
-  });
-})();</script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>下载 Tabora · 插件优先的个人工作台</title>
-    <meta name="description" content="下载 Tabora 浏览器新标签页工作台，选择扩展、本地预览或源码构建入口。">
-    <link rel="stylesheet" href="assets/tabora-landing.css">
-  <style data-od-tweaks-bridge-style="">
-[data-od-tweaks-hidden] .tw-panel {
-  transform: translateX(calc(100% + 32px)) !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-.tw-restore { display: none !important; }
-</style><script data-od-tweaks-bridge="">(function(){
-  // Synchronously hide BEFORE the artifact body parses so the panel never
-  // flashes on initial paint. The host removes the attribute via postMessage
-  // once it knows the desired state.
-  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
-
-  var suppressEcho = false;
-  var observer = null;
-
-  function panelEl(){ return document.querySelector('.tw-panel'); }
-
-  function applyClassesToPanel(visible){
-    var panel = panelEl();
-    if (panel) panel.classList.toggle('tw-hidden', !visible);
-  }
-
-  function setPanelVisible(visible){
-    suppressEcho = true;
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
-    applyClassesToPanel(visible);
-    // Clear flag after the MutationObserver has had a chance to fire for this
-    // change so we don't echo our own host-driven toggles back to the host.
-    Promise.resolve().then(function(){ suppressEcho = false; });
-  }
-
-  function postState(){
-    var panel = panelEl();
-    if (!panel) return;
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-panel-state',
-        visible: !panel.classList.contains('tw-hidden'),
-      }, '*');
-    } catch (e) {}
-  }
-
-  function postAvailability(){
-    try {
-      parent.postMessage({
-        type: 'od:tweaks-available',
-        available: !!panelEl(),
-      }, '*');
-    } catch (e) {}
-  }
-
-  function attachObserver(){
-    var panel = panelEl();
-    if (!panel || observer) return;
-    observer = new MutationObserver(function(){
-      if (suppressEcho) return;
-      postState();
-    });
-    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
-  }
-
-  function onReady(){
-    // Capture the panel authored visibility BEFORE we apply the host hidden
-    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
-    // (before the body parses), so on entry to onReady the attribute is
-    // always present even though the artifact may have authored the panel
-    // as default-visible. Reading the panel class first is the only place
-    // we can still observe the author intent. Then drive the attribute,
-    // classes, and posted state from that captured value so a default
-    // visible tw-panel reports visible:true and the toolbar toggle starts
-    // ON. Issue surfaced in PR #1643 review.
-    var panel = panelEl();
-    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
-    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
-    applyClassesToPanel(initialVisible);
-    attachObserver();
-    postAvailability();
-    // Post the captured initial visibility so the toolbar toggle reflects
-    // the default state on mount. Without this the toggle reads OFF while
-    // a default-visible tw-panel artifact clearly shows its panel and the
-    // user would have to click toggle-on then toggle-off to actually hide.
-    postState();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onReady);
-  } else {
-    onReady();
-  }
-
-  window.addEventListener('message', function(ev){
-    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
-    setPanelVisible(!!ev.data.visible);
-  });
-})();</script></head>
+    <meta
+      name="description"
+      content="下载 Tabora 浏览器新标签页工作台，选择扩展、本地预览或源码构建入口。"
+    />
+    <link rel="stylesheet" href="assets/tabora-landing.css" />
+  </head>
   <body>
     <header class="site-topnav" data-od-id="topnav" data-component="SiteTopnav">
-      <div class="site-container site-topnav-inner" data-od-id="path-0-0">
-        <a class="site-logo" href="landing.html" aria-label="Tabora 首页" data-od-id="path-0-0-0">
+      <div class="site-container site-topnav-inner">
+        <a class="site-logo" href="landing.html" aria-label="Tabora 首页">
           <span class="site-logo-mark" aria-hidden="true">T</span>
           <span>Tabora</span>
         </a>
-        <nav class="site-navlinks" aria-label="主导航" data-od-id="path-0-0-1">
-          <a href="landing.html" data-od-id="path-0-0-1-0">首页</a>
-          <a href="landing.html#product" data-od-id="path-0-0-1-1">产品</a>
-          <a class="active" href="download.html" data-od-id="path-0-0-1-2">下载</a>
-          <a href="docs.html" data-od-id="path-0-0-1-3">文档</a>
-          <a href="landing.html#plugins" data-od-id="path-0-0-1-4">官方插件</a>
+        <nav class="site-navlinks" aria-label="主导航">
+          <a href="landing.html">首页</a>
+          <a href="landing.html#product">产品</a>
+          <a class="active" href="download.html">下载</a>
+          <a href="docs.html">文档</a>
+          <a href="landing.html#plugins">官方插件</a>
         </nav>
         <div class="site-nav-actions">
-          <a class="btn btn-secondary" href="docs.html" data-od-id="path-0-0-2-0">安装文档</a>
-          <a class="btn btn-secondary" href="#platforms" data-od-id="path-0-0-2-1">选择平台</a>
-          <button class="btn btn-icon" type="button" data-dark-toggle="" aria-label="切换深色模式" data-od-id="path-0-0-2-2">
-            <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          <a class="btn btn-secondary" href="docs.html">安装文档</a>
+          <a class="btn btn-secondary" href="#platforms">选择平台</a>
+          <button class="btn btn-icon" type="button" data-dark-toggle aria-label="切换深色模式">
+            <svg
+              class="icon-moon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
-            <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+            <svg
+              class="icon-sun"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <path
+                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+              />
             </svg>
           </button>
         </div>
       </div>
     </header>
 
-    <main data-od-id="path-1">
-      <section class="site-section site-page-hero" data-od-id="download-hero" data-component="SiteHero SiteDownloadPanel">
-        <div class="site-container site-page-grid" data-od-id="path-1-0-0">
+    <main>
+      <section
+        class="site-section site-page-hero"
+        data-od-id="download-hero"
+        data-component="SiteHero SiteDownloadPanel"
+      >
+        <div class="site-container site-page-grid">
           <div class="site-page-copy">
             <p class="site-eyebrow">DOWNLOAD TABORA</p>
-            <h1 data-od-id="path-1-0-0-0-1">把新标签页换成一个安静的插件工作台。</h1>
+            <h1>把新标签页换成一个安静的插件工作台。</h1>
             <p class="site-lead">
-              Tabora 优先作为浏览器扩展使用。下载页把稳定入口、预览入口和源码入口拆开，用户可以先安装默认工作台，再逐步接入卡片、搜索源和主题。
+              Tabora
+              优先作为浏览器扩展使用。下载页把稳定入口、预览入口和源码入口拆开，用户可以先安装默认工作台，再逐步接入卡片、搜索源和主题。
             </p>
             <div class="site-cta-row">
-              <a class="btn btn-primary" href="#platforms" data-od-id="path-1-0-0-0-3-0">选择平台</a>
-              <a class="btn btn-secondary" href="docs.html#quickstart" data-od-id="path-1-0-0-0-3-1">查看快速开始</a>
+              <a class="btn btn-primary" href="#platforms">选择平台</a>
+              <a class="btn btn-secondary" href="docs.html#quickstart">查看快速开始</a>
             </div>
           </div>
 
-          <aside class="download-panel" aria-label="发布通道" data-od-id="path-1-0-0-1">
-            <div class="download-panel-head" data-od-id="path-1-0-0-1-0">
+          <aside class="download-panel" aria-label="发布通道">
+            <div class="download-panel-head">
               <span>release channel</span>
               <span>tabora.newtab</span>
             </div>
-            <div class="download-panel-body" data-od-id="path-1-0-0-1-1">
+            <div class="download-panel-body">
               <div class="download-row">
                 <div>
-                  <h3 data-od-id="path-1-0-0-1-1-0-0-0">浏览器扩展</h3>
+                  <h3>浏览器扩展</h3>
                   <p>推荐入口。安装后打开新标签页即可进入默认工作台。</p>
                 </div>
                 <span class="badge">Recommended</span>
               </div>
               <div class="download-row">
                 <div>
-                  <h3 data-od-id="path-1-0-0-1-1-1-0-0">本地预览包</h3>
+                  <h3>本地预览包</h3>
                   <p>适合产品评审和早期体验，先验证 Dashboard / Stream 布局。</p>
                 </div>
                 <span class="badge">Preview</span>
               </div>
               <div class="download-row">
                 <div>
-                  <h3 data-od-id="path-1-0-0-1-1-2-0-0">源码构建</h3>
+                  <h3>源码构建</h3>
                   <p>适合开发者查看插件协议、基础组件和 runtime context。</p>
                 </div>
                 <span class="badge">Open</span>
@@ -234,17 +112,22 @@
         </div>
       </section>
 
-      <section class="site-section" id="platforms" data-od-id="platforms" data-component="SiteDownloadCard">
-        <div class="site-container" data-od-id="path-1-1-0">
+      <section
+        class="site-section"
+        id="platforms"
+        data-od-id="platforms"
+        data-component="SiteDownloadCard"
+      >
+        <div class="site-container">
           <div class="site-section-head">
             <div>
               <p class="site-eyebrow">PLATFORMS</p>
-              <h2 data-od-id="path-1-1-0-0-0-1">先选入口，再进入工作台。</h2>
+              <h2>先选入口，再进入工作台。</h2>
             </div>
             <p>下载卡片只说明真实可用路径和状态，不用虚假的版本号或商店评分填充页面。</p>
           </div>
 
-          <div class="site-stat-strip" aria-label="平台信息" style="margin-bottom: 32px;">
+          <div class="site-stat-strip" aria-label="平台信息" style="margin-bottom: 32px">
             <div class="site-stat">
               <strong>Chrome</strong>
               <span>主力入口，商店发布中</span>
@@ -260,30 +143,37 @@
           </div>
 
           <div class="download-grid">
-            <article class="download-card featured" data-od-id="path-1-1-0-2-0">
+            <article class="download-card featured">
               <span class="download-mark">CR</span>
-              <h3 data-od-id="path-1-1-0-2-0-1">Chrome / Chromium 扩展</h3>
-              <p>主入口。安装后 Tabora 接管新标签页，默认包含今日重点、快捷入口、便签、待办和搜索。</p>
-              <div class="download-actions" data-od-id="path-1-1-0-2-0-3">
+              <h3>Chrome / Chromium 扩展</h3>
+              <p>
+                主入口。安装后 Tabora 接管新标签页，默认包含今日重点、快捷入口、便签、待办和搜索。
+              </p>
+              <div class="download-actions">
                 <span class="badge">商店发布中</span>
                 <span class="badge">推荐</span>
               </div>
             </article>
-            <article class="download-card" data-od-id="path-1-1-0-2-1">
+            <article class="download-card">
               <span class="download-mark">ED</span>
-              <h3 data-od-id="path-1-1-0-2-1-1">Microsoft Edge 扩展</h3>
-              <p>Edge 用户使用同一套工作台、插件协议和基础组件约束，扩展发布节奏与 Chrome 保持一致。</p>
-              <div class="download-actions" data-od-id="path-1-1-0-2-1-3">
+              <h3>Microsoft Edge 扩展</h3>
+              <p>
+                Edge 用户使用同一套工作台、插件协议和基础组件约束，扩展发布节奏与 Chrome 保持一致。
+              </p>
+              <div class="download-actions">
                 <span class="badge">即将开放</span>
                 <span class="badge">浏览器</span>
               </div>
             </article>
-            <article class="download-card" data-od-id="path-1-1-0-2-2">
+            <article class="download-card">
               <span class="download-mark">SRC</span>
-              <h3 data-od-id="path-1-1-0-2-2-1">源码和本地构建</h3>
-              <p>适合想先走查协议边界的开发者：manifest、contributions、runtime API 和组件库文档都在文档页。</p>
-              <div class="download-actions" data-od-id="path-1-1-0-2-2-3">
-                <a class="btn btn-secondary" href="docs.html#quickstart" data-od-id="path-1-1-0-2-2-3-0">构建说明</a>
+              <h3>源码和本地构建</h3>
+              <p>
+                适合想先走查协议边界的开发者：manifest、contributions、runtime API
+                和组件库文档都在文档页。
+              </p>
+              <div class="download-actions">
+                <a class="btn btn-secondary" href="docs.html#quickstart">构建说明</a>
                 <span class="badge">Developer</span>
               </div>
             </article>
@@ -292,29 +182,29 @@
       </section>
 
       <section class="site-section" data-od-id="install" data-component="SiteInstallSteps">
-        <div class="site-container" data-od-id="path-1-2-0">
+        <div class="site-container">
           <div class="site-section-head">
             <div>
               <p class="site-eyebrow">INSTALL</p>
-              <h2 data-od-id="path-1-2-0-0-0-1">三步进入默认工作台。</h2>
+              <h2>三步进入默认工作台。</h2>
             </div>
             <p>安装流程强调用户能马上看到什么，避免让下载页变成完整技术文档。</p>
           </div>
 
           <div class="install-grid">
-            <article class="install-card" data-od-id="path-1-2-0-1-0">
+            <article class="install-card">
               <span class="meta">01</span>
-              <h3 data-od-id="path-1-2-0-1-0-1">安装扩展</h3>
+              <h3>安装扩展</h3>
               <p>选择浏览器入口，允许 Tabora 作为新标签页运行。</p>
             </article>
-            <article class="install-card" data-od-id="path-1-2-0-1-1">
+            <article class="install-card">
               <span class="meta">02</span>
-              <h3 data-od-id="path-1-2-0-1-1-1">打开新标签页</h3>
+              <h3>打开新标签页</h3>
               <p>默认工作台会加载 Dashboard 布局和官方生产力插件包。</p>
             </article>
-            <article class="install-card" data-od-id="path-1-2-0-1-2">
+            <article class="install-card">
               <span class="meta">03</span>
-              <h3 data-od-id="path-1-2-0-1-2-1">整理第一屏</h3>
+              <h3>整理第一屏</h3>
               <p>添加快捷入口、搜索源和卡片实例；布局切换不会丢失实例数据。</p>
             </article>
           </div>
@@ -322,13 +212,16 @@
       </section>
 
       <section class="site-section" data-od-id="developer-install" data-component="DocsCodeBlock">
-        <div class="site-container site-split" data-od-id="path-1-3-0">
+        <div class="site-container site-split">
           <div class="site-principles">
             <p class="site-eyebrow">DEVELOPER PREVIEW</p>
-            <h2 data-od-id="path-1-3-0-0-1">开发者可以先用本地构建验证协议。</h2>
+            <h2>开发者可以先用本地构建验证协议。</h2>
             <div class="site-principle">
               <strong>不跳过组件约束</strong>
-              <span>官方插件内容区优先使用基础组件，不直接创建宿主级 modal、toast 或 settings 容器。</span>
+              <span
+                >官方插件内容区优先使用基础组件，不直接创建宿主级 modal、toast 或 settings
+                容器。</span
+              >
             </div>
             <div class="site-principle">
               <strong>先验证贡献点</strong>
@@ -339,10 +232,12 @@
           <div class="docs-code">
             <div class="code-head">
               <span>local preview</span>
-              <button class="copy-btn" type="button" data-copy-target="#download-install-code" data-od-id="path-1-3-0-1-0-1">复制</button>
+              <button class="copy-btn" type="button" data-copy-target="#download-install-code">
+                复制
+              </button>
             </div>
             <div class="code-window">
-              <pre><code id="download-install-code" data-od-id="path-1-3-0-1-1-0-0">pnpm install
+              <pre><code id="download-install-code">pnpm install
 pnpm dev
 
 # 打开浏览器扩展开发者模式
@@ -354,11 +249,11 @@ pnpm dev
       </section>
 
       <section class="site-section" data-od-id="support" data-component="SiteSupportTable">
-        <div class="site-container" data-od-id="path-1-4-0">
+        <div class="site-container">
           <div class="site-section-head">
             <div>
               <p class="site-eyebrow">SUPPORT</p>
-              <h2 data-od-id="path-1-4-0-0-0-1">支持范围写清楚，避免用户误判。</h2>
+              <h2>支持范围写清楚，避免用户误判。</h2>
             </div>
             <p>下载页只给用户决策需要的信息；协议、API 和组件细节进入文档页。</p>
           </div>
@@ -384,59 +279,77 @@ pnpm dev
       </section>
 
       <section class="site-section" data-od-id="faq" data-component="SiteFAQ">
-        <div class="site-container" data-od-id="path-1-5-0">
+        <div class="site-container">
           <div class="site-section-head">
             <div>
               <p class="site-eyebrow">FAQ</p>
-              <h2 data-od-id="path-1-5-0-0-0-1">常见问题。</h2>
+              <h2>常见问题。</h2>
             </div>
             <p>安装前最常被问到的几个问题，给出直接答案。</p>
           </div>
 
           <div class="faq-list" aria-label="常见问题">
-            <div class="faq-item" data-faq-item="">
-              <button class="faq-trigger" type="button" data-faq-trigger="" aria-expanded="false" data-od-id="path-1-5-0-1-0-0">
+            <div class="faq-item" data-faq-item>
+              <button class="faq-trigger" type="button" data-faq-trigger aria-expanded="false">
                 Tabora 会访问我的浏览记录吗？
                 <span class="faq-icon" aria-hidden="true">+</span>
               </button>
-              <div class="faq-body" data-faq-body="">
-                <p>不会。Tabora 只使用新标签页权限，使用 localStorage 本地存储插件数据，不读取浏览历史、书签或账号信息。搜索源切换使用 external-open 权限桥，外部请求显式经过权限确认。</p>
+              <div class="faq-body" data-faq-body>
+                <p>
+                  不会。Tabora 只使用新标签页权限，使用 localStorage
+                  本地存储插件数据，不读取浏览历史、书签或账号信息。搜索源切换使用 external-open
+                  权限桥，外部请求显式经过权限确认。
+                </p>
               </div>
             </div>
-            <div class="faq-item" data-faq-item="">
-              <button class="faq-trigger" type="button" data-faq-trigger="" aria-expanded="false" data-od-id="path-1-5-0-1-1-0">
+            <div class="faq-item" data-faq-item>
+              <button class="faq-trigger" type="button" data-faq-trigger aria-expanded="false">
                 安装后我的默认搜索引擎会改变吗？
                 <span class="faq-icon" aria-hidden="true">+</span>
               </button>
-              <div class="faq-body" data-faq-body="">
-                <p>不会。Tabora 只接管新标签页，不修改搜索引擎、主页或其他浏览器设置。命令搜索是工作台内的快捷入口，不影响浏览器的地址栏搜索行为。</p>
+              <div class="faq-body" data-faq-body>
+                <p>
+                  不会。Tabora
+                  只接管新标签页，不修改搜索引擎、主页或其他浏览器设置。命令搜索是工作台内的快捷入口，不影响浏览器的地址栏搜索行为。
+                </p>
               </div>
             </div>
-            <div class="faq-item" data-faq-item="">
-              <button class="faq-trigger" type="button" data-faq-trigger="" aria-expanded="false" data-od-id="path-1-5-0-1-2-0">
+            <div class="faq-item" data-faq-item>
+              <button class="faq-trigger" type="button" data-faq-trigger aria-expanded="false">
                 如果某个插件崩溃，整个工作台会白屏吗？
                 <span class="faq-icon" aria-hidden="true">+</span>
               </button>
-              <div class="faq-body" data-faq-body="">
-                <p>不会。每个 widget、搜索插件、布局插件和设置面板都有独立错误边界。贡献点失败只影响该实例，宿主容器和其他插件保持正常运行。错误信息只在该实例位置显示，不会扩散。</p>
+              <div class="faq-body" data-faq-body>
+                <p>
+                  不会。每个
+                  widget、搜索插件、布局插件和设置面板都有独立错误边界。贡献点失败只影响该实例，宿主容器和其他插件保持正常运行。错误信息只在该实例位置显示，不会扩散。
+                </p>
               </div>
             </div>
-            <div class="faq-item" data-faq-item="">
-              <button class="faq-trigger" type="button" data-faq-trigger="" aria-expanded="false" data-od-id="path-1-5-0-1-3-0">
+            <div class="faq-item" data-faq-item>
+              <button class="faq-trigger" type="button" data-faq-trigger aria-expanded="false">
                 我可以写自己的插件吗？
                 <span class="faq-icon" aria-hidden="true">+</span>
               </button>
-              <div class="faq-body" data-faq-body="">
-                <p>可以。Tabora 的插件协议是公开的：创建 <code>tabora.plugin.json</code> 声明贡献点，用 TSX 实现 widget 或 settings panel 组件，通过 runtime context 请求存储和宿主能力。详细说明在文档页的快速开始和 manifest 章节。</p>
+              <div class="faq-body" data-faq-body>
+                <p>
+                  可以。Tabora 的插件协议是公开的：创建
+                  <code>tabora.plugin.json</code> 声明贡献点，用 TSX 实现 widget 或 settings panel
+                  组件，通过 runtime context 请求存储和宿主能力。详细说明在文档页的快速开始和
+                  manifest 章节。
+                </p>
               </div>
             </div>
-            <div class="faq-item" data-faq-item="">
-              <button class="faq-trigger" type="button" data-faq-trigger="" aria-expanded="false" data-od-id="path-1-5-0-1-4-0">
+            <div class="faq-item" data-faq-item>
+              <button class="faq-trigger" type="button" data-faq-trigger aria-expanded="false">
                 目前是否有 Firefox 版本？
                 <span class="faq-icon" aria-hidden="true">+</span>
               </button>
-              <div class="faq-body" data-faq-body="">
-                <p>暂时没有。MVP 阶段优先 Chrome/Chromium，Edge 和 Firefox 在路线图中。Firefox 的新标签页扩展权限和打包方式与 Chrome 有差异，会在验证完 MVP 协议后单独处理。</p>
+              <div class="faq-body" data-faq-body>
+                <p>
+                  暂时没有。MVP 阶段优先 Chrome/Chromium，Edge 和 Firefox 在路线图中。Firefox
+                  的新标签页扩展权限和打包方式与 Chrome 有差异，会在验证完 MVP 协议后单独处理。
+                </p>
               </div>
             </div>
           </div>
@@ -444,169 +357,31 @@ pnpm dev
       </section>
 
       <section class="site-section site-cta" data-od-id="download-cta" data-component="SiteCTA">
-        <div class="site-container site-cta-panel" data-od-id="path-1-6-0">
+        <div class="site-container site-cta-panel">
           <p class="site-eyebrow">NEXT STEP</p>
-          <h2 data-od-id="path-1-6-0-1">下载后从文档页接入第一个插件。</h2>
-          <p class="site-lead" style="margin-inline: auto;">
+          <h2>下载后从文档页接入第一个插件。</h2>
+          <p class="site-lead" style="margin-inline: auto">
             文档页包含快速开始、manifest 示例、runtime API、基础组件说明和组件库式示例。
           </p>
           <div class="site-cta-row" style="justify-content: center">
-            <a class="btn btn-primary" href="docs.html" data-od-id="path-1-6-0-3-0">阅读文档</a>
-            <a class="btn btn-secondary" href="landing.html" data-od-id="path-1-6-0-3-1">返回首页</a>
+            <a class="btn btn-primary" href="docs.html">阅读文档</a>
+            <a class="btn btn-secondary" href="landing.html">返回首页</a>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="site-footer" data-od-id="footer" data-component="SiteFooter">
-      <div class="site-container site-footer-inner" data-od-id="path-2-0">
+      <div class="site-container site-footer-inner">
         <span>© 2026 Tabora</span>
-        <span class="meta"><a href="landing.html" data-od-id="path-2-0-1-0">首页</a> · <a href="download.html" data-od-id="path-2-0-1-1">下载</a> · <a href="docs.html" data-od-id="path-2-0-1-2">文档</a> · <a href="mq0luc9v-02-基础组件规范.html" data-od-id="path-2-0-1-3">组件规范</a></span>
+        <span class="meta"
+          ><a href="landing.html">首页</a> · <a href="download.html">下载</a> ·
+          <a href="docs.html">文档</a> · <a href="component-spec.html">组件规范</a></span
+        >
       </div>
     </footer>
 
-    <div class="toast" role="status" aria-live="polite" data-toast="" data-component="SiteToast" data-od-id="path-3"></div>
+    <div class="toast" role="status" aria-live="polite" data-toast data-component="SiteToast"></div>
     <script src="assets/tabora-landing.js"></script>
-  
-
-<script data-od-snapshot-bridge="">(function(){
-  var SNAPSHOT_STYLE_PROPS = [
-    'display','position','box-sizing','width','height','min-width','max-width','min-height','max-height',
-    'margin','margin-top','margin-right','margin-bottom','margin-left',
-    'padding','padding-top','padding-right','padding-bottom','padding-left',
-    'border','border-top','border-right','border-bottom','border-left','border-radius',
-    'font','font-family','font-size','font-weight','font-style','line-height','letter-spacing',
-    'color','background-color','opacity','transform','transform-origin','overflow','overflow-x','overflow-y',
-    'white-space','text-align','vertical-align','object-fit','object-position',
-    'flex','flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
-    'grid','grid-template-columns','grid-template-rows','grid-column','grid-row',
-    'gap','row-gap','column-gap','align-items','align-content','align-self',
-    'justify-items','justify-content','justify-self','inset','top','right','bottom','left',
-    'z-index','box-shadow','text-shadow'
-  ];
-  function copyComputedStyle(source, target){
-    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
-    var computed = window.getComputedStyle(source);
-    var style = target.getAttribute('style') || '';
-    for (var i = 0; i < SNAPSHOT_STYLE_PROPS.length; i++){
-      var prop = SNAPSHOT_STYLE_PROPS[i];
-      var value = computed.getPropertyValue(prop);
-      if (value) style += prop + ':' + value + ';';
-    }
-    target.setAttribute('style', style);
-  }
-  function syncElementState(source, target){
-    var tag = source.tagName ? source.tagName.toLowerCase() : '';
-    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
-    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
-    if (tag === 'canvas') {
-      try {
-        var img = document.createElement('img');
-        img.setAttribute('src', source.toDataURL('image/png'));
-        img.setAttribute('style', target.getAttribute('style') || '');
-        target.parentNode && target.parentNode.replaceChild(img, target);
-      } catch (_) {}
-    }
-  }
-  function inlineSnapshotStyles(originalRoot, cloneRoot){
-    copyComputedStyle(originalRoot, cloneRoot);
-    syncElementState(originalRoot, cloneRoot);
-    var originals = originalRoot.querySelectorAll('*');
-    var clones = cloneRoot.querySelectorAll('*');
-    var count = Math.min(originals.length, clones.length, 3500);
-    for (var i = 0; i < count; i++){
-      copyComputedStyle(originals[i], clones[i]);
-      syncElementState(originals[i], clones[i]);
-    }
-    var scripts = cloneRoot.querySelectorAll('script');
-    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
-    var links = cloneRoot.querySelectorAll('link[rel~="stylesheet"], link[rel~="preload"], link[rel~="preconnect"]');
-    for (var l = links.length - 1; l >= 0; l--) links[l].remove();
-    var styles = cloneRoot.querySelectorAll('style');
-    for (var st = 0; st < styles.length; st++) {
-      styles[st].textContent = (styles[st].textContent || '')
-        .replace(/@import[^;]+;/gi, '')
-        .replace(/@font-face\s*\{[^}]*\}/gi, '');
-    }
-  }
-  function waitForImages(){
-    var imgs = Array.prototype.slice.call(document.images || []);
-    return Promise.all(imgs.map(function(img){
-      if (img.complete) return Promise.resolve();
-      return new Promise(function(resolve){
-        img.addEventListener('load', resolve, { once: true });
-        img.addEventListener('error', resolve, { once: true });
-      });
-    }));
-  }
-  function scrollOffset(){
-    var doc = document.documentElement;
-    var body = document.body;
-    return {
-      x: Math.max(window.scrollX || 0, doc ? doc.scrollLeft || 0 : 0, body ? body.scrollLeft || 0 : 0),
-      y: Math.max(window.scrollY || 0, doc ? doc.scrollTop || 0 : 0, body ? body.scrollTop || 0 : 0)
-    };
-  }
-  function escapeAttribute(value){
-    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  }
-  function renderSnapshot(id){
-    var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
-    var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
-    var dpr = window.devicePixelRatio || 1;
-    var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
-    var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
-    var clone = document.documentElement.cloneNode(true);
-    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    inlineSnapshotStyles(document.documentElement, clone);
-    var scroll = scrollOffset();
-    var cloneBody = clone.querySelector('body');
-    var rootStyle = clone.getAttribute('style') || '';
-    var bodyStyle = cloneBody ? cloneBody.getAttribute('style') || '' : '';
-    var bodyContent = cloneBody ? cloneBody.innerHTML : clone.innerHTML;
-    var wrapperStyle = rootStyle + bodyStyle +
-      'margin:0;position:relative;left:' + (-scroll.x) + 'px;top:' + (-scroll.y) + 'px;' +
-      'width:' + docW + 'px;height:' + docH + 'px;overflow:visible;';
-    var html = '<div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeAttribute(wrapperStyle) + '">' + bodyContent + '</div>';
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
-      '<foreignObject x="0" y="0" width="' + docW + '" height="' + docH + '">' +
-      html +
-      '</foreignObject></svg>';
-    var img = new Image();
-    img.onload = function(){
-      try {
-        var canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.floor(w * dpr));
-        canvas.height = Math.max(1, Math.floor(h * dpr));
-        var ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('no 2d context');
-        ctx.scale(dpr, dpr);
-        ctx.drawImage(img, 0, 0, w, h);
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }, '*');
-      } catch (err) {
-        window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: String(err && err.message || err) }, '*');
-      }
-    };
-    function encodedSvgDataUrl(){
-      var encoded = encodeURIComponent(svg);
-      return 'data:image/svg+xml;charset=utf-8,' + encoded;
-    }
-    img.onerror = function(){
-      window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'snapshot image failed' }, '*');
-    };
-    img.src = encodedSvgDataUrl();
-  }
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:snapshot' || !data.id) return;
-    waitForImages().then(function(){ renderSnapshot(String(data.id)); });
-  });
-})();</script><script data-od-srcdoc-transport-activation="">(function(){
-  window.addEventListener('message', function(ev){
-    var data = ev && ev.data;
-    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string') return;
-    document.open();
-    document.write(data.html);
-    document.close();
-  });
-})();</script></body></html>
+  </body>
+</html>

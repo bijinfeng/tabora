@@ -11,7 +11,7 @@
 - 产品 PRD V2：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - V2 设计事实源：`DESIGN.md`
-- V2 交互原型参考：`docs/design/工作台交互原型.html`
+- V2 交互原型参考：`docs/design/workbench-prototype.html`
 - 回归基准与 Agent 工程治理：`docs/technical/tabora-regression-baseline.md`
 - 文档地图：`docs/README.md`
 

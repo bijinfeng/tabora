@@ -9,7 +9,7 @@
 关联文档：
 
 - 设计事实源：`DESIGN.md`
-- 工作台原型参考：`docs/design/工作台交互原型.html`
+- 工作台原型参考：`docs/design/workbench-prototype.html`
 - 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
@@ -20,7 +20,7 @@
 自 2026-06-04 起，Tabora 的视觉、组件和交互事实源收敛到根目录 `DESIGN.md`：
 
 - `DESIGN.md`：视觉语言、token、基础组件语义、宿主容器视觉、交互模式和可访问性规则。
-- `docs/design/工作台交互原型.html`：双布局、命令搜索、拖拽、展开、右键菜单、设置导航、Toast、快捷键等可交互原型参考，不再承载规范事实。
+- `docs/design/workbench-prototype.html`：双布局、命令搜索、拖拽、展开、右键菜单、设置导航、Toast、快捷键等可交互原型参考，不再承载规范事实。
 
 本文件不再复刻上述内容，而是回答三个实现问题：
 
@@ -36,7 +36,7 @@
    用于视觉语言、token、基础组件语义、宿主容器视觉、交互模式和可访问性规则。
 2. 本文件
    只用于说明仓库中的实现映射、同步清单和历史文件定位。
-3. `docs/design/工作台交互原型.html`、`docs/design/04-官网预览.html`、`docs/design/05-官网下载.html`
+3. `docs/design/workbench-prototype.html`、`docs/design/landing.html`、`docs/design/download.html`
    只作为可视原型或静态预览参考。
 
 如果本文件或可视原型资产与 `DESIGN.md` 冲突，以 `DESIGN.md` 为准，并应立即回写对应文档或原型。
@@ -116,7 +116,7 @@
 - 官方插件设计中的交互示例。
 - 技术方案 V2 中的 orchestrator、runtime context 和宿主渲染描述。
 - shell / playground 中的搜索、布局切换、设置、Toast、快捷键、展开、右键、拖拽实现。
-- `docs/design/工作台交互原型.html` 是否仍能作为当前交互参考。
+- `docs/design/workbench-prototype.html` 是否仍能作为当前交互参考。
 
 ## 6. 视觉验收速查
 
@@ -132,7 +132,7 @@
 
 ## 7. 历史文件定位
 
-- `docs/design/工作台交互原型.html`、`docs/design/04-官网预览.html`、`docs/design/05-官网下载.html`
+- `docs/design/workbench-prototype.html`、`docs/design/landing.html`、`docs/design/download.html`
   这些文件只作为可视原型或静态预览资产，不再作为当前设计事实源。
 - 旧版设计体系与组件规范大文档已由 `DESIGN.md` 接管职责，避免双写双维护。
 
