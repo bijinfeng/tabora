@@ -4,7 +4,6 @@ import type { HostActionId } from "@tabora/plugin-api"
 import {
   Boxes,
   CircleHelp,
-  House,
   LayoutDashboard,
   Moon,
   PanelLeft,
@@ -28,7 +27,9 @@ export function HostActionIcon(props: {
   return (
     <Switch fallback={<span aria-hidden="true">{props.icon}</span>}>
       <Match when={props.id === "home"}>
-        <House size={size()} />
+        <span class="dash-rail-home-mark" aria-hidden="true">
+          T
+        </span>
       </Match>
       <Match when={props.id === "add-widget"}>
         <Plus size={size()} />

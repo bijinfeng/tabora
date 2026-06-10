@@ -29,11 +29,28 @@ function makeProps(): WidgetViewProps {
 }
 
 describe("NotesCard", () => {
+  async function flushMount() {
+    await Promise.resolve()
+    await Promise.resolve()
+  }
+
   it("renders textarea with placeholder", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesCard {...makeProps()} />, root)
     expect(root.querySelector("textarea")).toBeTruthy()
+    root.remove()
+  })
+
+  it("uses prototype default note when storage is empty", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesCard {...makeProps()} />, root)
+    await flushMount()
+    const textarea = root.querySelector("textarea") as HTMLTextAreaElement
+    expect(textarea.value).toBe(
+      "MVP 重点：布局本身也是插件。平台只提供运行时、权限桥、持久化与安全回退。",
+    )
     root.remove()
   })
 

@@ -42,6 +42,9 @@ export function resolveWorkbenchExpandView(
   if (widget.views.expand && hasView(widget.views.expand)) {
     return { viewId: widget.views.expand, mode: "expand" }
   }
+  if (hasView(widget.views.card)) {
+    return { viewId: widget.views.card, mode: "expand" }
+  }
   return null
 }
 

@@ -121,4 +121,47 @@ describe("SearchCommandBar", () => {
     expect(executeSelection).toHaveBeenCalledWith(0)
     root.remove()
   })
+
+  it("closes the provider dropdown with Escape and outside click", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+              {
+                id: "official.search.bing",
+                title: "Bing",
+                shortcut: "b",
+                urlTemplate: "https://bing.example/search?q={query}",
+              },
+            ],
+          })}
+        />
+      ),
+      root,
+    )
+
+    const button = root.querySelector(".search-provider-btn") as HTMLButtonElement
+    button.click()
+    expect(root.querySelector(".search-provider-dropdown")).toBeTruthy()
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+    expect(root.querySelector(".search-provider-dropdown")).toBeNull()
+
+    button.click()
+    expect(root.querySelector(".search-provider-dropdown")).toBeTruthy()
+    document.body.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }))
+    expect(root.querySelector(".search-provider-dropdown")).toBeNull()
+
+    root.remove()
+  })
 })

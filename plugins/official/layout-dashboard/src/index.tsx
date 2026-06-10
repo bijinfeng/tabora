@@ -3,14 +3,11 @@ import { For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { LayoutViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { AlignJustify, LayoutGrid, Plus } from "lucide-solid"
 import { HostActionIcon } from "./host-action-icon"
 
 export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
-  const toolbarActions = () => props.host.getGlobalActions("toolbar")
   const addWidgetAction = () =>
     props.host.getGlobalActions("rail").find((action) => action.id === "add-widget")
-  const layoutAction = () => toolbarActions().find((action) => action.id === "layout-switch")
   const greeting = () => {
     const h = new Date().getHours()
     return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
@@ -59,31 +56,10 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
                     type="button"
                     onClick={() => action().run()}
                   >
-                    <Plus size={14} />
-                    <span>添加卡片</span>
+                    <span>+ 添加卡片</span>
                   </button>
                 )}
               </Show>
-              <div class="layout-switch" aria-label="布局切换">
-                <button
-                  class="tb-btn active"
-                  type="button"
-                  aria-label="切换到仪表盘布局"
-                  title="仪表盘布局"
-                  onClick={() => undefined}
-                >
-                  <LayoutGrid size={15} />
-                </button>
-                <button
-                  class="tb-btn"
-                  type="button"
-                  aria-label={layoutAction()?.label ?? "切换到流式布局"}
-                  title="流式布局"
-                  onClick={() => layoutAction()?.run()}
-                >
-                  <AlignJustify size={15} />
-                </button>
-              </div>
             </div>
           </div>
           <div class="dash-search-stage">

@@ -14,11 +14,6 @@
   text-align: center;
 }
 
-[data-tabora-plugin-id="official.widgets.weather"] .weather-icon {
-  color: rgb(var(--color-accent));
-  font-size: 18px;
-}
-
 [data-tabora-plugin-id="official.widgets.weather"] .weather-temp {
   font-size: 24px;
   font-weight: 700;
@@ -31,6 +26,5 @@
 }
 
 [data-tabora-plugin-id="official.widgets.weather"] .weather-extra {
-  color: rgb(var(--color-subtle));
-  font-size: 10px;
+  display: none;
 }

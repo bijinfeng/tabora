@@ -39,13 +39,23 @@ describe("WeatherCard", () => {
     root.remove()
   })
 
-  it("renders temperature and humidity", () => {
+  it("keeps card weather content compact like the prototype", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <WeatherCard {...makeProps()} />, root)
     const text = root.textContent ?? ""
-    expect(text).toMatch(/湿度/)
-    expect(text).toMatch(/风速/)
+    expect(text).toContain("22°C")
+    expect(text).not.toMatch(/湿度/)
+    expect(text).not.toMatch(/风速/)
+    root.remove()
+  })
+
+  it("renders the stable prototype demo weather", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <WeatherCard {...makeProps()} />, root)
+    expect(root.textContent).toContain("22°C")
+    expect(root.textContent).toContain("晴朗 · 北京")
     root.remove()
   })
 })

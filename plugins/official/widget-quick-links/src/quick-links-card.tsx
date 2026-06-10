@@ -27,8 +27,27 @@ function getDefaultLinks(config: Record<string, unknown>): QuickLink[] {
   }
   return [
     { id: crypto.randomUUID(), title: "GitHub", url: "https://github.com" },
-    { id: crypto.randomUUID(), title: "Vite+", url: "https://viteplus.dev" },
+    { id: crypto.randomUUID(), title: "Notion", url: "https://notion.so" },
+    { id: crypto.randomUUID(), title: "Linear", url: "https://linear.app" },
+    { id: crypto.randomUUID(), title: "Figma", url: "https://figma.com" },
+    { id: crypto.randomUUID(), title: "YouTube", url: "https://youtube.com" },
   ]
+}
+
+function linkIcon(title: string): string {
+  const prototypeIcons: Record<string, string> = {
+    GitHub: "Gh",
+    Notion: "No",
+    Linear: "Li",
+    Figma: "Fg",
+    YouTube: "Yt",
+  }
+  if (prototypeIcons[title]) return prototypeIcons[title]
+  const trimmed = title.trim()
+  if (!trimmed) return "?"
+  const first = trimmed.charAt(0).toUpperCase()
+  const second = trimmed.charAt(1).toLowerCase()
+  return `${first}${second}`
 }
 
 export function QuickLinksCard(props: WidgetViewProps) {
@@ -150,7 +169,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                       }}
                       onClick={() => void props.host.openExternal(link.url)}
                     >
-                      <span class="link-icon">{link.title.slice(0, 1).toUpperCase()}</span>
+                      <span class="link-icon">{linkIcon(link.title)}</span>
                       <span class="link-label">{link.title}</span>
                     </button>
                     <div class="link-actions">
@@ -230,20 +249,21 @@ export function QuickLinksCard(props: WidgetViewProps) {
             </li>
           )}
         </For>
+        <Show when={!editing()}>
+          <li class="link-item link-add-item">
+            <button class="link-anchor link-add-anchor" type="button" onClick={startAdd}>
+              <span class="link-add-symbol">+</span>
+              <span class="link-label">添加</span>
+            </button>
+          </li>
+        </Show>
       </ul>
       <Show when={urlError()}>
         <div class="quick-link-error" role="alert">
           {urlError()}
         </div>
       </Show>
-      <Show
-        when={editing()}
-        fallback={
-          <button class="quick-link-add-btn" type="button" onClick={startAdd}>
-            + 添加快捷入口
-          </button>
-        }
-      >
+      <Show when={editing()} fallback={null}>
         <div class="quick-link-add-form">
           <input
             id={`ql-title-${props.instanceId}`}

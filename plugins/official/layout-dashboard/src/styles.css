@@ -48,6 +48,12 @@
   height: 18px;
 }
 
+.dash-rail-home-mark {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1;
+}
+
 .dash-rail-btn:hover,
 .dash-rail-btn.active {
   background: rgb(var(--color-accent-soft));

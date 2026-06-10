@@ -23,6 +23,11 @@
     border-color 120ms ease;
 }
 
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-add-item {
+  border-style: dashed;
+  color: rgb(var(--color-subtle));
+}
+
 [data-tabora-plugin-id="official.widgets.quick-links"] .link-item:hover {
   background: rgb(var(--color-surface-hover));
   border-color: rgb(var(--color-line-strong));
@@ -39,6 +44,15 @@
   text-decoration: none;
 }
 
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-add-anchor {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
 [data-tabora-plugin-id="official.widgets.quick-links"] .link-icon {
   display: inline-flex;
   align-items: center;
@@ -50,6 +64,12 @@
   color: rgb(var(--color-accent));
   font-size: 10px;
   font-weight: 700;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .link-add-symbol {
+  color: rgb(var(--color-subtle));
+  font-size: 16px;
+  line-height: 1;
 }
 
 [data-tabora-plugin-id="official.widgets.quick-links"] .link-label {

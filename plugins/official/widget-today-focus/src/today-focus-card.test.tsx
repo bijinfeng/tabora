@@ -29,14 +29,28 @@ function makeProps(): WidgetViewProps {
 }
 
 describe("TodayFocusCard", () => {
-  it("renders input with placeholder", () => {
+  async function flushMount() {
+    await Promise.resolve()
+    await Promise.resolve()
+  }
+
+  it("renders input with prototype placeholder", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <TodayFocusCard {...makeProps()} />, root)
     const input = root.querySelector("input.focus-input") as HTMLInputElement
     expect(input).toBeTruthy()
-    expect(input.placeholder).toBe("写下今日重点")
-    expect(root.textContent).toContain("尚未完成")
+    expect(input.placeholder).toBe("今天最重要的一件事是什么？")
+    root.remove()
+  })
+
+  it("uses prototype default focus text when storage is empty", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <TodayFocusCard {...makeProps()} />, root)
+    await flushMount()
+    const input = root.querySelector("input.focus-input") as HTMLInputElement
+    expect(input.value).toBe("把默认新标签页做成可组合的个人工作入口")
     root.remove()
   })
 })

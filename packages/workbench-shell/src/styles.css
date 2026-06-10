@@ -179,7 +179,7 @@
 .card-title svg {
   width: 14px;
   height: 14px;
-  color: rgb(var(--color-accent));
+  color: rgb(var(--color-subtle));
   flex-shrink: 0;
 }
 .card-body {

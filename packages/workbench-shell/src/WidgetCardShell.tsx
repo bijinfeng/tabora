@@ -1,7 +1,8 @@
 import type { JSX } from "solid-js"
+import { onCleanup, onMount } from "solid-js"
 import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
-import { Maximize2, X } from "lucide-solid"
+import { X } from "lucide-solid"
 
 export type WidgetHostCallbacks = {
   onPointerDown: (e: PointerEvent) => void
@@ -35,6 +36,81 @@ function gridRowSpan(size: WidgetSize): number {
 }
 
 export function WidgetCardShell(props: WidgetCardShellProps) {
+  let lastPointerUpAt = 0
+  let lastPointerDownAt = 0
+  let headerRef: HTMLDivElement | undefined
+
+  function releasePointerCapture(event: PointerEvent) {
+    if (event.target instanceof HTMLElement && event.target.hasPointerCapture?.(event.pointerId)) {
+      event.target.releasePointerCapture(event.pointerId)
+    }
+  }
+
+  function handlePointerUp(event: PointerEvent) {
+    releasePointerCapture(event)
+    const now = performance.now()
+    if (event.detail === 2 || (lastPointerUpAt > 0 && now - lastPointerUpAt < 320)) {
+      props.callbacks.onExpand()
+      lastPointerUpAt = 0
+    } else {
+      lastPointerUpAt = now
+    }
+    props.callbacks.onPointerUp(event)
+  }
+
+  function handlePointerCancel(event: PointerEvent) {
+    releasePointerCapture(event)
+    props.callbacks.onPointerCancel(event)
+  }
+
+  function handlePointerDown(event: PointerEvent) {
+    const target = event.target
+    if (
+      target instanceof HTMLElement &&
+      target.closest("button, input, textarea, select, a, [role='button']")
+    ) {
+      return
+    }
+
+    const now = performance.now()
+    if (lastPointerDownAt > 0 && now - lastPointerDownAt < 320) {
+      props.callbacks.onExpand()
+      lastPointerDownAt = 0
+      return
+    }
+    lastPointerDownAt = now
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    }
+    props.callbacks.onPointerDown(event)
+  }
+
+  onMount(() => {
+    const header = headerRef
+    if (!header) return
+    const handleNativePointerDown = (event: PointerEvent) => {
+      handlePointerDown(event)
+      event.stopPropagation()
+    }
+    const handleNativePointerUp = (event: PointerEvent) => {
+      handlePointerUp(event)
+      event.stopPropagation()
+    }
+    const handleNativePointerCancel = (event: PointerEvent) => {
+      handlePointerCancel(event)
+      event.stopPropagation()
+    }
+
+    header.addEventListener("pointerdown", handleNativePointerDown)
+    header.addEventListener("pointerup", handleNativePointerUp)
+    header.addEventListener("pointercancel", handleNativePointerCancel)
+    onCleanup(() => {
+      header.removeEventListener("pointerdown", handleNativePointerDown)
+      header.removeEventListener("pointerup", handleNativePointerUp)
+      header.removeEventListener("pointercancel", handleNativePointerCancel)
+    })
+  })
+
   return (
     <div
       class="grid-item"
@@ -48,55 +124,21 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       aria-label={props.title}
       tabIndex={0}
       onPointerMove={props.callbacks.onPointerMove}
-      onPointerUp={(event) => {
-        if (
-          event.target instanceof HTMLElement &&
-          event.target.hasPointerCapture?.(event.pointerId)
-        ) {
-          event.target.releasePointerCapture(event.pointerId)
-        }
-        props.callbacks.onPointerUp(event)
-      }}
-      onPointerCancel={(event) => {
-        if (
-          event.target instanceof HTMLElement &&
-          event.target.hasPointerCapture?.(event.pointerId)
-        ) {
-          event.target.releasePointerCapture(event.pointerId)
-        }
-        props.callbacks.onPointerCancel(event)
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      onClick={(event) => {
+        if (event.detail === 2) props.callbacks.onExpand()
       }}
       onDblClick={props.callbacks.onDblClick}
       onContextMenu={props.callbacks.onContextMenu}
     >
       <div class="widget-card">
-        <div
-          class="card-header"
-          onPointerDown={(event) => {
-            const target = event.target
-            if (
-              target instanceof HTMLElement &&
-              target.closest("button, input, textarea, select, a, [role='button']")
-            ) {
-              return
-            }
-
-            event.currentTarget.setPointerCapture?.(event.pointerId)
-            props.callbacks.onPointerDown(event)
-          }}
-        >
+        <div class="card-header" ref={(element) => (headerRef = element)}>
           <div class="card-title">
             {props.icon}
             <span class="card-title-text">{props.title}</span>
           </div>
           <div class="card-actions">
-            <button
-              class="card-action-btn"
-              aria-label={`展开 ${props.title}`}
-              onClick={() => props.callbacks.onExpand()}
-            >
-              <Maximize2 size={14} />
-            </button>
             <button
               class="card-action-btn card-danger"
               aria-label={`移除 ${props.title}`}

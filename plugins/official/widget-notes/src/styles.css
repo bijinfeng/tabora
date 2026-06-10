@@ -24,11 +24,7 @@
 }
 
 [data-tabora-plugin-id="official.widgets.notes"] .notes-footer {
-  margin-top: 4px;
-  color: rgb(var(--color-success));
-  font-size: 10px;
-  text-align: right;
-  opacity: 0.72;
+  display: none;
 }
 
 [data-tabora-plugin-id="official.widgets.notes"] .notes-modal {

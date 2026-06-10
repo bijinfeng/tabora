@@ -99,7 +99,7 @@ describe("buildWorkbenchWidgetExpandState", () => {
     })
   })
 
-  it("reports a localized error when the widget does not declare an expand view", () => {
+  it("falls back to the card view when the widget does not declare an expand view", () => {
     const viewProps = props()
     const result = buildWorkbenchWidgetExpandState({
       instance: instance(),
@@ -110,8 +110,14 @@ describe("buildWorkbenchWidgetExpandState", () => {
     })
 
     expect(result).toEqual({
-      expandState: null,
-      errorMessage: "当前卡片暂不支持展开：便签",
+      expandState: {
+        instanceId: "widget-1",
+        title: "便签",
+        viewId: "widget.notes.card",
+        mode: "expand",
+        props: viewProps,
+      },
+      errorMessage: null,
     })
   })
 })

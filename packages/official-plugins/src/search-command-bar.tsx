@@ -1,10 +1,11 @@
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { InlineError, Kbd } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
 
 export function SearchCommandBar(props: SearchViewProps) {
+  let wrapperRef: HTMLDivElement | undefined
   const providers = createMemo(() => props.providers)
   const [providerOpen, setProviderOpen] = createSignal(false)
   const activeProvider = createMemo(() =>
@@ -67,8 +68,27 @@ export function SearchCommandBar(props: SearchViewProps) {
     }
   }
 
+  onMount(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!providerOpen()) return
+      const target = event.target
+      if (target instanceof Node && wrapperRef?.contains(target)) return
+      setProviderOpen(false)
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setProviderOpen(false)
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+    document.addEventListener("keydown", handleKeyDown)
+    onCleanup(() => {
+      document.removeEventListener("pointerdown", handlePointerDown)
+      document.removeEventListener("keydown", handleKeyDown)
+    })
+  })
+
   return (
-    <div class="search-wrapper">
+    <div class="search-wrapper" ref={(element) => (wrapperRef = element)}>
       <Show
         when={!configurationError()}
         fallback={

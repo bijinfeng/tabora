@@ -11,7 +11,7 @@ function makeProps(overrides?: Partial<WidgetViewProps>): WidgetViewProps {
     size: "M",
     supportedSizes: ["S", "M", "L"],
     config: {
-      links: [{ title: "GitHub", url: "https://github.com" }],
+      links: [],
     },
     data: {
       get: vi.fn().mockResolvedValue(undefined),
@@ -54,6 +54,21 @@ describe("QuickLinksCard", () => {
     button.click()
 
     expect(openExternal).toHaveBeenCalledWith("https://github.com")
+    root.remove()
+  })
+
+  it("uses the prototype default quick links when no config is provided", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(() => <QuickLinksCard {...makeProps()} />, root)
+    await flushMount()
+
+    expect(root.textContent).toContain("GitHub")
+    expect(root.textContent).toContain("Notion")
+    expect(root.textContent).toContain("Linear")
+    expect(root.textContent).toContain("Figma")
+    expect(root.textContent).toContain("YouTube")
     root.remove()
   })
 

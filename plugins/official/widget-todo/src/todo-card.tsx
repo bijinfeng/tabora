@@ -1,6 +1,6 @@
 import { createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Check, Plus, X } from "lucide-solid"
+import { Check, X } from "lucide-solid"
 
 type TodoItem = { id: string; text: string; done: boolean }
 
@@ -18,9 +18,9 @@ export function TodoCard(props: WidgetViewProps) {
       setItems(saved)
     } else {
       setItems([
-        { id: "seed-read", text: "整理今天的重点", done: false },
-        { id: "seed-mail", text: "回复关键消息", done: false },
-        { id: "seed-plan", text: "检查晚间计划", done: true },
+        { id: "seed-layout", text: "复核 Dashboard / Stream 布局协议", done: true },
+        { id: "seed-size", text: "补齐 widget 尺寸菜单与展开态", done: false },
+        { id: "seed-settings", text: "清理插件设置中的导入导出后置项", done: false },
       ])
     }
   })
@@ -73,12 +73,6 @@ export function TodoCard(props: WidgetViewProps) {
     setEditingId(null)
   }
 
-  async function clearCompleted() {
-    const next = items().filter((i) => !i.done)
-    setItems(next)
-    await persist(next)
-  }
-
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === "Enter") void addItem()
   }
@@ -87,9 +81,6 @@ export function TodoCard(props: WidgetViewProps) {
     if (e.key === "Enter") void confirmEdit()
     if (e.key === "Escape") cancelEdit()
   }
-
-  const doneCount = () => items().filter((i) => i.done).length
-  const activeCount = () => items().length - doneCount()
 
   return (
     <div class="todo-widget">
@@ -167,7 +158,7 @@ export function TodoCard(props: WidgetViewProps) {
           value={input()}
           onInput={(event) => setInput(event.currentTarget.value)}
           onKeyDown={handleKeyDown}
-          placeholder="添加待办..."
+          placeholder="新任务..."
           aria-label="新待办内容"
         />
         <button
@@ -176,18 +167,8 @@ export function TodoCard(props: WidgetViewProps) {
           type="button"
           onClick={() => void addItem()}
         >
-          <Plus size={16} />
+          添加
         </button>
-        <Show when={doneCount() > 0}>
-          <button
-            class="todo-clear-btn"
-            type="button"
-            aria-label={`清空 ${doneCount()} 项已完成待办`}
-            onClick={() => void clearCompleted()}
-          >
-            {activeCount()} 剩余
-          </button>
-        </Show>
       </div>
     </div>
   )

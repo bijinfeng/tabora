@@ -1,8 +1,10 @@
 import { createSignal, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 
+const defaultFocusText = "把默认新标签页做成可组合的个人工作入口"
+
 export function TodayFocusCard(props: WidgetViewProps) {
-  const [focus, setFocus] = createSignal("")
+  const [focus, setFocus] = createSignal(defaultFocusText)
   const [done, setDone] = createSignal(false)
   const contentKey = "focus-content"
   const doneKey = "focus-done"
@@ -26,7 +28,7 @@ export function TodayFocusCard(props: WidgetViewProps) {
           setFocus(value)
           await props.data.save(contentKey, value)
         }}
-        placeholder="写下今日重点"
+        placeholder="今天最重要的一件事是什么？"
         aria-label="今日重点内容"
       />
       <label class="focus-check-row" for={`${inputId()}-done`}>

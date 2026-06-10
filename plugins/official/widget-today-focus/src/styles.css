@@ -22,7 +22,7 @@
 }
 
 [data-tabora-plugin-id="official.widgets.today-focus"] .focus-check-row {
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 7px;
   margin-top: 12px;

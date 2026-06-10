@@ -96,12 +96,56 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  it("点击展开按钮触发 onExpand", () => {
+  it("does not render a visible expand button because prototype uses double-click", () => {
+    const { host, dispose } = mount(makeCallbacks())
+    expect(host.querySelector("button[aria-label^='展开']")).toBeNull()
+    dispose()
+  })
+
+  it("双击卡片区域触发展开，即使浏览器只提供 click detail", () => {
     const cb = makeCallbacks()
     const { host, dispose } = mount(cb)
-    const expandBtn = host.querySelector("button[aria-label^='展开']") as HTMLButtonElement
-    expandBtn.click()
-    expect(cb.onExpand).toHaveBeenCalled()
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    card.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 2 }))
+
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
+    dispose()
+  })
+
+  it("双击标题拖拽区域在 pointerup detail 为 2 时也触发展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, detail: 2 }))
+
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
+    dispose()
+  })
+
+  it("在拖拽标题区域连续两次 pointerup 时识别为双击展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, detail: 0 }))
+    card.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, detail: 0 }))
+
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
+    dispose()
+  })
+
+  it("在标题区域连续两次 pointerdown 时立即识别为双击展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const header = host.querySelector(".card-header") as HTMLElement
+
+    header.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
+    header.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
+
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
     dispose()
   })
 
@@ -109,10 +153,10 @@ describe("WidgetCardShell", () => {
     const cb = makeCallbacks()
     const { host, dispose } = mount(cb)
     const header = host.querySelector(".card-header") as HTMLElement
-    const expandBtn = host.querySelector("button[aria-label^='展开']") as HTMLButtonElement
+    const removeBtn = host.querySelector("button.card-danger") as HTMLButtonElement
 
     header.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
-    expandBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
+    removeBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
 
     expect(cb.onPointerDown).toHaveBeenCalledTimes(1)
     dispose()

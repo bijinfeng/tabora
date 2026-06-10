@@ -29,11 +29,27 @@ function makeProps(): WidgetViewProps {
 }
 
 describe("TodoCard", () => {
+  async function flushMount() {
+    await Promise.resolve()
+    await Promise.resolve()
+  }
+
   it("renders add input", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <TodoCard {...makeProps()} />, root)
     expect(root.querySelector("input")).toBeTruthy()
+    root.remove()
+  })
+
+  it("uses prototype default task copy", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <TodoCard {...makeProps()} />, root)
+    await flushMount()
+    expect(root.textContent).toContain("复核 Dashboard / Stream 布局协议")
+    expect(root.textContent).toContain("补齐 widget 尺寸菜单与展开态")
+    expect(root.textContent).toContain("清理插件设置中的导入导出后置项")
     root.remove()
   })
 })
