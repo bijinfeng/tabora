@@ -126,12 +126,22 @@ export function createWorkbenchInstanceRenderer(options: {
     renderSearch(instance: PluginInstance) {
       const search = options.findSearchContribution(instance.pluginId, instance.contributionId)
       if (!search) {
-        return <div class="settings-empty">搜索贡献未找到</div>
+        return (
+          <div class="settings-empty">
+            {options.tShell?.("placeholders.searchContributionMissing") ?? "搜索贡献未找到"}
+          </div>
+        )
       }
 
       const View = resolveWorkbenchView<SearchViewProps>(options.registryViews, search.view)
       if (!View) {
-        return <div class="settings-empty">搜索视图不可用：{search.id}</div>
+        return (
+          <div class="settings-empty">
+            {options.tShell
+              ? options.tShell("placeholders.searchViewUnavailable", { id: search.id })
+              : `搜索视图不可用：${search.id}`}
+          </div>
+        )
       }
 
       return (

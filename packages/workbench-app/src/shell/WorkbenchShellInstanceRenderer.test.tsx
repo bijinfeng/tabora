@@ -153,6 +153,29 @@ describe("createWorkbenchInstanceRenderer", () => {
     dispose()
   })
 
+  it("renders localized missing search placeholder when a shell translation function is provided", () => {
+    const renderer = createWorkbenchInstanceRenderer({
+      ...baseOptions(),
+      findSearchContribution: () => undefined,
+      tShell: (key: string) => {
+        if (key === "placeholders.searchContributionMissing") return "Search contribution not found"
+        return key
+      },
+    } as Parameters<typeof createWorkbenchInstanceRenderer>[0])
+
+    const { host, dispose } = mount(
+      renderer.renderSearch(
+        instance({
+          id: "search-1",
+          extensionPoint: "search",
+          contributionId: "official.search.command-bar",
+        }),
+      ),
+    )
+    expect(host.textContent).toContain("Search contribution not found")
+    dispose()
+  })
+
   it("passes injected copy to the widget shell", () => {
     const renderer = createWorkbenchInstanceRenderer({
       ...baseOptions(),
