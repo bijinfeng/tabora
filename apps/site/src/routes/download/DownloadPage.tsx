@@ -1,8 +1,9 @@
 import { A } from "@solidjs/router"
-import { createSignal, onCleanup, onMount } from "solid-js"
+import { createMemo, createSignal, onCleanup, onMount } from "solid-js"
 
-import { useSiteI18n, useSiteTheme } from "../../app/AppShell"
-import { LocaleToggleButton } from "../../shared/LocaleToggleButton"
+import { useSiteI18n } from "../../app/AppShell"
+import { PrototypeTopnav } from "../../shared/PrototypeTopnav"
+import { downloadPrototypeContent } from "../../shared/prototypeContent"
 
 const escapeHtml = (value: string) => {
   return value
@@ -102,8 +103,8 @@ const highlightCode = (value: string) => {
 }
 
 export function DownloadPage() {
-  const theme = useSiteTheme()
   const i18n = useSiteI18n()
+  const content = createMemo(() => downloadPrototypeContent[i18n.locale()])
   const [toastMessage, setToastMessage] = createSignal("")
   const [toastVisible, setToastVisible] = createSignal(false)
   let toastTimer = 0
@@ -140,70 +141,14 @@ export function DownloadPage() {
 
   return (
     <>
-      <header class="site-topnav" data-od-id="topnav" data-component="SiteTopnav">
-        <div class="site-container site-topnav-inner">
-          <A class="site-logo" href="/" aria-label="Tabora 首页">
-            <span class="site-logo-mark" aria-hidden="true">
-              T
-            </span>
-            <span>Tabora</span>
-          </A>
-          <nav class="site-navlinks" aria-label="主导航">
-            <A href="/">{i18n.t("nav.home")}</A>
-            <A href="/#product">{i18n.t("nav.product")}</A>
-            <A class="active" href="/download">
-              {i18n.t("nav.download")}
-            </A>
-            <A href="/docs">{i18n.t("nav.docs")}</A>
-            <A href="/#plugins">{i18n.t("nav.officialPlugins")}</A>
-          </nav>
-          <div class="site-nav-actions">
-            <A class="btn btn-secondary" href="/docs#quickstart">
-              {i18n.t("action.installDocs")}
-            </A>
-            <a class="btn btn-secondary" href="#platforms">
-              {i18n.t("action.choosePlatform")}
-            </a>
-            <LocaleToggleButton class="btn btn-secondary btn-sm" />
-            <button
-              class="btn btn-icon"
-              type="button"
-              data-dark-toggle
-              aria-label={i18n.t("a11y.toggleTheme")}
-              onClick={() => {
-                theme.toggleDark()
-                showToast(theme.dark() ? i18n.t("toast.theme.dark") : i18n.t("toast.theme.light"))
-              }}
-            >
-              <svg
-                class="icon-moon"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-              <svg
-                class="icon-sun"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="5" />
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
+      <PrototypeTopnav
+        active="download"
+        actions={[
+          { href: "/docs#quickstart", label: i18n.t("action.installDocs"), variant: "secondary" },
+          { href: "#platforms", label: i18n.t("action.choosePlatform"), variant: "secondary" },
+        ]}
+        onThemeToggled={showToast}
+      />
 
       <main>
         <section
@@ -214,17 +159,14 @@ export function DownloadPage() {
           <div class="site-container site-page-grid">
             <div class="site-page-copy">
               <p class="site-eyebrow">DOWNLOAD TABORA</p>
-              <h1>把新标签页换成一个安静的插件工作台。</h1>
-              <p class="site-lead">
-                Tabora
-                优先作为浏览器扩展使用。下载页把稳定入口、预览入口和源码入口拆开，用户可以先安装默认工作台，再逐步接入卡片、搜索源和主题。
-              </p>
+              <h1>{content().hero.title}</h1>
+              <p class="site-lead">{content().hero.lead}</p>
               <div class="site-cta-row">
                 <a class="btn btn-primary" href="#platforms">
-                  选择平台
+                  {content().hero.primary}
                 </a>
                 <A class="btn btn-secondary" href="/docs#quickstart">
-                  查看快速开始
+                  {content().hero.secondary}
                 </A>
               </div>
             </div>
@@ -235,27 +177,15 @@ export function DownloadPage() {
                 <span>tabora.newtab</span>
               </div>
               <div class="download-panel-body">
-                <div class="download-row">
-                  <div>
-                    <h3>浏览器扩展</h3>
-                    <p>推荐入口。安装后打开新标签页即可进入默认工作台。</p>
+                {content().panel.rows.map((row: [string, string, string]) => (
+                  <div class="download-row">
+                    <div>
+                      <h3>{row[0]}</h3>
+                      <p>{row[1]}</p>
+                    </div>
+                    <span class="badge">{row[2]}</span>
                   </div>
-                  <span class="badge">Recommended</span>
-                </div>
-                <div class="download-row">
-                  <div>
-                    <h3>本地预览包</h3>
-                    <p>适合产品评审和早期体验，先验证 Dashboard / Stream 布局。</p>
-                  </div>
-                  <span class="badge">Preview</span>
-                </div>
-                <div class="download-row">
-                  <div>
-                    <h3>源码构建</h3>
-                    <p>适合开发者查看插件协议、基础组件和 runtime context。</p>
-                  </div>
-                  <span class="badge">Open</span>
-                </div>
+                ))}
               </div>
             </aside>
           </div>
@@ -271,64 +201,45 @@ export function DownloadPage() {
             <div class="site-section-head">
               <div>
                 <p class="site-eyebrow">PLATFORMS</p>
-                <h2>先选入口，再进入工作台。</h2>
+                <h2>{content().platforms.title}</h2>
               </div>
-              <p>下载卡片只说明真实可用路径和状态，不用虚假的版本号或商店评分填充页面。</p>
+              <p>{content().platforms.body}</p>
             </div>
 
             <div class="site-stat-strip" aria-label="平台信息" style="margin-bottom: 32px">
-              <div class="site-stat">
-                <strong>Chrome</strong>
-                <span>主力入口，商店发布中</span>
-              </div>
-              <div class="site-stat">
-                <strong>本地构建</strong>
-                <span>开发者预览，源码公开</span>
-              </div>
-              <div class="site-stat">
-                <strong>Edge / Firefox</strong>
-                <span>路线图中，节奏待定</span>
-              </div>
+              {content().platforms.stats.map((item: [string, string]) => (
+                <div class="site-stat">
+                  <strong>{item[0]}</strong>
+                  <span>{item[1]}</span>
+                </div>
+              ))}
             </div>
 
             <div class="download-grid">
-              <article class="download-card featured">
-                <span class="download-mark">CR</span>
-                <h3>Chrome / Chromium 扩展</h3>
-                <p>
-                  主入口。安装后 Tabora 接管新标签页，默认包含今日重点、快捷入口、便签、待办和搜索。
-                </p>
-                <div class="download-actions">
-                  <span class="badge">商店发布中</span>
-                  <span class="badge">推荐</span>
-                </div>
-              </article>
-              <article class="download-card">
-                <span class="download-mark">ED</span>
-                <h3>Microsoft Edge 扩展</h3>
-                <p>
-                  Edge 用户使用同一套工作台、插件协议和基础组件约束，扩展发布节奏与 Chrome
-                  保持一致。
-                </p>
-                <div class="download-actions">
-                  <span class="badge">即将开放</span>
-                  <span class="badge">浏览器</span>
-                </div>
-              </article>
-              <article class="download-card">
-                <span class="download-mark">SRC</span>
-                <h3>源码和本地构建</h3>
-                <p>
-                  适合想先走查协议边界的开发者：manifest、contributions、runtime API
-                  和组件库文档都在文档页。
-                </p>
-                <div class="download-actions">
-                  <A class="btn btn-secondary" href="/docs#quickstart">
-                    构建说明
-                  </A>
-                  <span class="badge">Developer</span>
-                </div>
-              </article>
+              {content().platforms.cards.map(
+                (card: [string, string, string, [string, string]], index: number) => (
+                  <article class="download-card" classList={{ featured: index === 0 }}>
+                    <span class="download-mark">{card[0]}</span>
+                    <h3>{card[1]}</h3>
+                    <p>{card[2]}</p>
+                    <div class="download-actions">
+                      {index === 2 ? (
+                        <>
+                          <A class="btn btn-secondary" href="/docs#quickstart">
+                            {card[3][0]}
+                          </A>
+                          <span class="badge">{card[3][1]}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span class="badge">{card[3][0]}</span>
+                          <span class="badge">{card[3][1]}</span>
+                        </>
+                      )}
+                    </div>
+                  </article>
+                ),
+              )}
             </div>
           </div>
         </section>
@@ -338,27 +249,19 @@ export function DownloadPage() {
             <div class="site-section-head">
               <div>
                 <p class="site-eyebrow">INSTALL</p>
-                <h2>三步进入默认工作台。</h2>
+                <h2>{content().install.title}</h2>
               </div>
-              <p>安装流程强调用户能马上看到什么，避免让下载页变成完整技术文档。</p>
+              <p>{content().install.body}</p>
             </div>
 
             <div class="install-grid">
-              <article class="install-card">
-                <span class="meta">01</span>
-                <h3>安装扩展</h3>
-                <p>选择浏览器入口，允许 Tabora 作为新标签页运行。</p>
-              </article>
-              <article class="install-card">
-                <span class="meta">02</span>
-                <h3>打开新标签页</h3>
-                <p>默认工作台会加载 Dashboard 布局和官方生产力插件包。</p>
-              </article>
-              <article class="install-card">
-                <span class="meta">03</span>
-                <h3>整理第一屏</h3>
-                <p>添加快捷入口、搜索源和卡片实例；布局切换不会丢失实例数据。</p>
-              </article>
+              {content().install.steps.map((step: [string, string, string]) => (
+                <article class="install-card">
+                  <span class="meta">{step[0]}</span>
+                  <h3>{step[1]}</h3>
+                  <p>{step[2]}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
@@ -367,17 +270,13 @@ export function DownloadPage() {
           <div class="site-container site-split">
             <div class="site-principles">
               <p class="site-eyebrow">DEVELOPER PREVIEW</p>
-              <h2>开发者可以先用本地构建验证协议。</h2>
-              <div class="site-principle">
-                <strong>不跳过组件约束</strong>
-                <span>
-                  官方插件内容区优先使用基础组件，不直接创建宿主级 modal、toast 或 settings 容器。
-                </span>
-              </div>
-              <div class="site-principle">
-                <strong>先验证贡献点</strong>
-                <span>从 manifest、widget、settings panel 和 search provider 四类贡献点开始。</span>
-              </div>
+              <h2>{content().dev.title}</h2>
+              {content().dev.principles.map((item: [string, string]) => (
+                <div class="site-principle">
+                  <strong>{item[0]}</strong>
+                  <span>{item[1]}</span>
+                </div>
+              ))}
             </div>
 
             <div class="docs-code">
@@ -394,13 +293,13 @@ export function DownloadPage() {
                     if (!code) return
                     try {
                       await navigator.clipboard?.writeText(code)
-                      showToast("代码已复制。")
+                      showToast(content().dev.copied)
                     } catch {
-                      showToast("复制失败，请手动选择代码。")
+                      showToast(content().dev.copyFailed)
                     }
                   }}
                 >
-                  复制
+                  {content().dev.copyLabel}
                 </button>
               </div>
               <div class="code-window">
@@ -422,27 +321,19 @@ pnpm dev
             <div class="site-section-head">
               <div>
                 <p class="site-eyebrow">SUPPORT</p>
-                <h2>支持范围写清楚，避免用户误判。</h2>
+                <h2>{content().support.title}</h2>
               </div>
-              <p>下载页只给用户决策需要的信息；协议、API 和组件细节进入文档页。</p>
+              <p>{content().support.body}</p>
             </div>
 
             <div class="support-table" aria-label="平台支持范围">
-              <div class="support-row">
-                <strong>Chrome / Chromium</strong>
-                <span>推荐使用方式，支持新标签页扩展体验。</span>
-                <span class="badge">Ready</span>
-              </div>
-              <div class="support-row">
-                <strong>Microsoft Edge</strong>
-                <span>同样的扩展能力和工作台体验，发布节奏随后同步。</span>
-                <span class="badge">Preview</span>
-              </div>
-              <div class="support-row">
-                <strong>Firefox</strong>
-                <span>规划中。需要补充新标签页权限和扩展打包差异。</span>
-                <span class="badge">Planned</span>
-              </div>
+              {content().support.rows.map((row: [string, string, string]) => (
+                <div class="support-row">
+                  <strong>{row[0]}</strong>
+                  <span>{row[1]}</span>
+                  <span class="badge">{row[2]}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -452,114 +343,31 @@ pnpm dev
             <div class="site-section-head">
               <div>
                 <p class="site-eyebrow">FAQ</p>
-                <h2>常见问题。</h2>
+                <h2>{content().faq.title}</h2>
               </div>
-              <p>安装前最常被问到的几个问题，给出直接答案。</p>
+              <p>{content().faq.body}</p>
             </div>
 
             <div class="faq-list" aria-label="常见问题">
-              <div class="faq-item" classList={{ open: openFaq().has(0) }} data-faq-item>
-                <button
-                  class="faq-trigger"
-                  type="button"
-                  data-faq-trigger
-                  aria-expanded={openFaq().has(0)}
-                  onClick={() => toggleFaq(0)}
-                >
-                  Tabora 会访问我的浏览记录吗？
-                  <span class="faq-icon" aria-hidden="true">
-                    +
-                  </span>
-                </button>
-                <div class="faq-body" data-faq-body hidden={!openFaq().has(0)}>
-                  <p>
-                    不会。Tabora 只使用新标签页权限，使用 localStorage
-                    本地存储插件数据，不读取浏览历史、书签或账号信息。搜索源切换使用 external-open
-                    权限桥，外部请求显式经过权限确认。
-                  </p>
+              {content().faq.items.map((item: [string, string], index: number) => (
+                <div class="faq-item" classList={{ open: openFaq().has(index) }} data-faq-item>
+                  <button
+                    class="faq-trigger"
+                    type="button"
+                    data-faq-trigger
+                    aria-expanded={openFaq().has(index)}
+                    onClick={() => toggleFaq(index)}
+                  >
+                    {item[0]}
+                    <span class="faq-icon" aria-hidden="true">
+                      +
+                    </span>
+                  </button>
+                  <div class="faq-body" data-faq-body hidden={!openFaq().has(index)}>
+                    <p>{item[1]}</p>
+                  </div>
                 </div>
-              </div>
-              <div class="faq-item" classList={{ open: openFaq().has(1) }} data-faq-item>
-                <button
-                  class="faq-trigger"
-                  type="button"
-                  data-faq-trigger
-                  aria-expanded={openFaq().has(1)}
-                  onClick={() => toggleFaq(1)}
-                >
-                  安装后我的默认搜索引擎会改变吗？
-                  <span class="faq-icon" aria-hidden="true">
-                    +
-                  </span>
-                </button>
-                <div class="faq-body" data-faq-body hidden={!openFaq().has(1)}>
-                  <p>
-                    不会。Tabora
-                    只接管新标签页，不修改搜索引擎、主页或其他浏览器设置。命令搜索是工作台内的快捷入口，不影响浏览器的地址栏搜索行为。
-                  </p>
-                </div>
-              </div>
-              <div class="faq-item" classList={{ open: openFaq().has(2) }} data-faq-item>
-                <button
-                  class="faq-trigger"
-                  type="button"
-                  data-faq-trigger
-                  aria-expanded={openFaq().has(2)}
-                  onClick={() => toggleFaq(2)}
-                >
-                  如果某个插件崩溃，整个工作台会白屏吗？
-                  <span class="faq-icon" aria-hidden="true">
-                    +
-                  </span>
-                </button>
-                <div class="faq-body" data-faq-body hidden={!openFaq().has(2)}>
-                  <p>
-                    不会。每个
-                    widget、搜索插件、布局插件和设置面板都有独立错误边界。贡献点失败只影响该实例，宿主容器和其他插件保持正常运行。错误信息只在该实例位置显示，不会扩散。
-                  </p>
-                </div>
-              </div>
-              <div class="faq-item" classList={{ open: openFaq().has(3) }} data-faq-item>
-                <button
-                  class="faq-trigger"
-                  type="button"
-                  data-faq-trigger
-                  aria-expanded={openFaq().has(3)}
-                  onClick={() => toggleFaq(3)}
-                >
-                  我可以写自己的插件吗？
-                  <span class="faq-icon" aria-hidden="true">
-                    +
-                  </span>
-                </button>
-                <div class="faq-body" data-faq-body hidden={!openFaq().has(3)}>
-                  <p>
-                    可以。Tabora 的插件协议是公开的：创建 <code>tabora.plugin.json</code>{" "}
-                    声明贡献点，用 TSX 实现 widget 或 settings panel 组件，通过 runtime context
-                    请求存储和宿主能力。详细说明在文档页的快速开始和 manifest 章节。
-                  </p>
-                </div>
-              </div>
-              <div class="faq-item" classList={{ open: openFaq().has(4) }} data-faq-item>
-                <button
-                  class="faq-trigger"
-                  type="button"
-                  data-faq-trigger
-                  aria-expanded={openFaq().has(4)}
-                  onClick={() => toggleFaq(4)}
-                >
-                  目前是否有 Firefox 版本？
-                  <span class="faq-icon" aria-hidden="true">
-                    +
-                  </span>
-                </button>
-                <div class="faq-body" data-faq-body hidden={!openFaq().has(4)}>
-                  <p>
-                    暂时没有。MVP 阶段优先 Chrome/Chromium，Edge 和 Firefox 在路线图中。Firefox
-                    的新标签页扩展权限和打包方式与 Chrome 有差异，会在验证完 MVP 协议后单独处理。
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -567,16 +375,16 @@ pnpm dev
         <section class="site-section site-cta" data-od-id="download-cta" data-component="SiteCTA">
           <div class="site-container site-cta-panel">
             <p class="site-eyebrow">NEXT STEP</p>
-            <h2>下载后从文档页接入第一个插件。</h2>
+            <h2>{content().cta.title}</h2>
             <p class="site-lead" style="margin-inline: auto">
-              文档页包含快速开始、manifest 示例、runtime API、基础组件说明和组件库式示例。
+              {content().cta.body}
             </p>
             <div class="site-cta-row" style="justify-content: center">
               <A class="btn btn-primary" href="/docs">
-                阅读文档
+                {content().cta.primary}
               </A>
               <A class="btn btn-secondary" href="/">
-                返回首页
+                {content().cta.secondary}
               </A>
             </div>
           </div>
@@ -587,8 +395,9 @@ pnpm dev
         <div class="site-container site-footer-inner">
           <span>© 2026 Tabora</span>
           <span class="meta">
-            <A href="/">首页</A> · <A href="/download">下载</A> · <A href="/docs">文档</A> ·{" "}
-            <A href="/docs/components">组件规范</A>
+            <A href="/">{i18n.t("nav.home")}</A> · <A href="/download">{i18n.t("nav.download")}</A>{" "}
+            · <A href="/docs">{i18n.t("nav.docs")}</A> ·{" "}
+            <A href="/docs/components">{i18n.t("footer.componentSpec")}</A>
           </span>
         </div>
       </footer>
