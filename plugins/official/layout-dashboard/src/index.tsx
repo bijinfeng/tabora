@@ -555,10 +555,9 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
                         type="button"
                         onClick={() => props.host.openAddWidget()}
                       >
-                        <span class="dash-empty-group-title">空分组</span>
-                        <span class="dash-empty-group-desc">
-                          为「{activeGroup().name}」添加第一张卡片
-                        </span>
+                        <span>暂无卡片</span>
+                        <span aria-hidden="true"> · </span>
+                        <span class="dash-empty-group-action">添加第一个</span>
                       </button>
                     }
                   >

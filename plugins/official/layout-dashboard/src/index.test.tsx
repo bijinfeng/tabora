@@ -112,8 +112,8 @@ describe("DashboardLayout", () => {
     input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
 
     expect(host.querySelector('button[aria-label="分组 Research"]')).toBeTruthy()
-    expect(host.textContent).toContain("空分组")
-    expect(host.textContent).toContain("为「Research」添加第一张卡片")
+    expect(host.textContent).toContain("暂无卡片")
+    expect(host.textContent).toContain("添加第一个")
     expect(layoutHost.openAddWidget).not.toHaveBeenCalled()
     dispose()
   })

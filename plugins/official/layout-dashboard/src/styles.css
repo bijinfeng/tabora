@@ -574,42 +574,26 @@
 }
 
 .dash-empty-group {
-  display: flex;
+  display: block;
   grid-column: 1 / -1;
-  min-height: 180px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px dashed rgb(var(--color-line));
-  border-radius: var(--radius-card, var(--radius));
-  background: color-mix(in srgb, rgb(var(--color-surface)) 72%, transparent);
+  padding: 48px;
+  border: 0;
+  background: transparent;
   color: rgb(var(--color-muted));
   font-family: inherit;
+  font-size: 13px;
   text-align: center;
   cursor: pointer;
   appearance: none;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease;
 }
 
 .dash-empty-group:hover {
-  border-color: rgb(var(--color-line-strong));
-  background: rgb(var(--color-surface));
+  background: transparent;
 }
 
-.dash-empty-group-title {
-  color: rgb(var(--color-text));
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.2;
-}
-
-.dash-empty-group-desc {
-  color: rgb(var(--color-muted));
-  font-size: 12px;
-  line-height: 1.2;
+.dash-empty-group-action {
+  color: rgb(var(--color-accent));
+  font-weight: 600;
 }
 
 .focus-shell {
