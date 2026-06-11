@@ -5,6 +5,7 @@ import { WorkbenchSettingsAboutContent } from "./WorkbenchShellChrome"
 import { renderWorkbenchWidgetIcon } from "../shared/WorkbenchShellIcons"
 import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import { resolveWidgetIconLabel } from "../shared/shellHelpers"
+import { createWorkbenchShellSettingsHostCopy } from "../i18n"
 
 // 直接从 shell bundle 读取，产出 surface host 子组件所需的 8 组 props。
 // 替代了原先「组合根把 ~50 个本地变量拍平成 57 个参数」的中间层。
@@ -36,6 +37,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
       onClose: () => overlays.setSettingsOpen(false),
       getView: (viewId: string) => resolveWorkbenchView<SettingsPanelViewProps>(views, viewId),
       panelProps: buildSettingsPanelProps,
+      ...(tShell ? { copy: createWorkbenchShellSettingsHostCopy(tShell) } : {}),
       aboutContent: (
         <WorkbenchSettingsAboutContent
           workspaceName={workspace.workspaceState()?.name ?? "未加载"}
@@ -43,6 +45,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
             catalog.pluginSummaries(runtime.pluginRecords()).filter((plugin) => plugin.enabled)
               .length
           }
+          {...(tShell ? { tShell } : {})}
         />
       ),
     },

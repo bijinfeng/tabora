@@ -193,9 +193,11 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     )
     expect(runtime.i18n.t("tabora.shell", "chrome.toolbar.search")).toBe("Search")
     expect(runtime.i18n.t("tabora.shell", "chrome.settings.about.title")).toBe("About Tabora")
+    expect(runtime.i18n.t("tabora.shell", "settingsHost.sidebarTitle")).toBe("Settings")
 
     runtime.i18n.setLocale("zh-CN")
     expect(runtime.i18n.t("tabora.shell", "pluginView.retry")).toBe("重试")
     expect(runtime.i18n.t("tabora.shell", "chrome.toolbar.settings")).toBe("设置")
+    expect(runtime.i18n.t("tabora.shell", "settingsHost.closeAriaLabel")).toBe("关闭设置")
   })
 })

@@ -6,6 +6,7 @@ export {
   resolveInitialSettingsPanelId,
   resolveInitialSettingsSectionId,
   resolveSettingsSectionId,
+  type SettingsHostCopy,
   type SettingsHostProps,
   type SettingsPanelDescriptor,
   type SettingsSectionId,

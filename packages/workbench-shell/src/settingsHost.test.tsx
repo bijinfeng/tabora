@@ -226,6 +226,49 @@ describe("settings host composition", () => {
     expect(root.querySelector(".settings-tab-title")?.textContent).toContain("已安装插件")
   })
 
+  it("renders injected copy when provided", () => {
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels: [],
+        activeSectionId: "plugins",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => undefined,
+        panelProps: () => ({}) as never,
+        copy: {
+          sidebarTitle: "Settings",
+          pluginGroupTitle: "Plugins",
+          pluginInstalledNav: "Installed",
+          pluginsActiveTitle: "Installed plugins",
+          closeAriaLabel: "Close settings",
+          aboutUnavailable: "About content unavailable",
+          emptySection: "No settings in this section",
+          panelMissing: (panelId: string) => `Settings panel unavailable: ${panelId}`,
+          sectionTitle: (id: string) => {
+            if (id === "general") return "General"
+            if (id === "appearance") return "Appearance"
+            if (id === "search") return "Search"
+            if (id === "about") return "About"
+            return id
+          },
+        },
+      } as any),
+    )
+
+    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("Settings")
+    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("Plugins")
+    expect([...root.querySelectorAll(".settings-nav")].map((node) => node.textContent)).toEqual([
+      "General",
+      "Appearance",
+      "Search",
+      "Installed",
+      "About",
+    ])
+    expect(root.querySelector(".settings-tab-title")?.textContent).toContain("Installed plugins")
+    expect(root.querySelector(".settings-close")?.getAttribute("aria-label")).toBe("Close settings")
+  })
+
   it("keeps the settings container open when a panel view fails", () => {
     const panels: SettingsPanelDescriptor[] = [
       {

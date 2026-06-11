@@ -26,6 +26,19 @@ export type SettingsHostProps = {
   getView: (viewId: string) => ((props: SettingsPanelViewProps) => JSX.Element) | undefined
   panelProps: (panel: SettingsPanelDescriptor) => SettingsPanelViewProps
   aboutContent?: JSX.Element
+  copy?: SettingsHostCopy
+}
+
+export type SettingsHostCopy = {
+  sidebarTitle: string
+  pluginGroupTitle: string
+  pluginInstalledNav: string
+  pluginsActiveTitle: string
+  closeAriaLabel: string
+  aboutUnavailable: string
+  emptySection: string
+  panelMissing: (panelId: string) => string
+  sectionTitle: (sectionId: SettingsSectionId) => string
 }
 
 export function collectSettingsPanels(plugins: PluginLike[]): SettingsPanelDescriptor[] {
@@ -53,8 +66,12 @@ export function SettingsHost(props: SettingsHostProps) {
   const activeSection = () => props.activeSectionId ?? "general"
   const activePanels = () => navigator().sections[activeSection()].panels
   const activeSectionTitle = () => {
-    if (activeSection() === "plugins") return "已安装插件"
-    return SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ?? "设置"
+    if (activeSection() === "plugins") return props.copy?.pluginsActiveTitle ?? "已安装插件"
+    return (
+      props.copy?.sectionTitle(activeSection()) ??
+      SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ??
+      "设置"
+    )
   }
   const workspaceSections = () =>
     SETTINGS_SECTIONS.filter((section) => ["general", "appearance", "search"].includes(section.id))
@@ -66,7 +83,7 @@ export function SettingsHost(props: SettingsHostProps) {
       <div class="settings-overlay settings-host" onClick={props.onClose}>
         <div class="settings-drawer" onClick={(e) => e.stopPropagation()}>
           <nav class="settings-sidebar">
-            <div class="settings-sidebar-title">设置</div>
+            <div class="settings-sidebar-title">{props.copy?.sidebarTitle ?? "设置"}</div>
             <For each={workspaceSections()}>
               {(section) => (
                 <button
@@ -74,20 +91,22 @@ export function SettingsHost(props: SettingsHostProps) {
                   classList={{ active: section.id === activeSection() }}
                   onClick={() => props.onSectionChange(section.id)}
                 >
-                  {section.title}
+                  {props.copy?.sectionTitle(section.id) ?? section.title}
                 </button>
               )}
             </For>
             <Show when={pluginSection()}>
               {(section) => (
                 <>
-                  <div class="settings-sidebar-title settings-sidebar-group-title">插件</div>
+                  <div class="settings-sidebar-title settings-sidebar-group-title">
+                    {props.copy?.pluginGroupTitle ?? "插件"}
+                  </div>
                   <button
                     class="settings-nav"
                     classList={{ active: section().id === activeSection() }}
                     onClick={() => props.onSectionChange(section().id)}
                   >
-                    已安装
+                    {props.copy?.pluginInstalledNav ?? "已安装"}
                   </button>
                 </>
               )}
@@ -100,7 +119,7 @@ export function SettingsHost(props: SettingsHostProps) {
                   classList={{ active: section().id === activeSection() }}
                   onClick={() => props.onSectionChange(section().id)}
                 >
-                  {section().title}
+                  {props.copy?.sectionTitle(section().id) ?? section().title}
                 </button>
               )}
             </Show>
@@ -111,7 +130,7 @@ export function SettingsHost(props: SettingsHostProps) {
               <button
                 class="settings-close-btn settings-close"
                 onClick={props.onClose}
-                aria-label="关闭设置"
+                aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
               >
                 <X size={16} />
               </button>
@@ -119,11 +138,21 @@ export function SettingsHost(props: SettingsHostProps) {
             <div class="settings-tab-body">
               <Show
                 when={activeSection() !== "about"}
-                fallback={props.aboutContent ?? <div class="settings-empty">关于信息暂不可用</div>}
+                fallback={
+                  props.aboutContent ?? (
+                    <div class="settings-empty">
+                      {props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
+                    </div>
+                  )
+                }
               >
                 <Show
                   when={activePanels().length > 0}
-                  fallback={<div class="settings-empty">该分类下暂无设置内容</div>}
+                  fallback={
+                    <div class="settings-empty">
+                      {props.copy?.emptySection ?? "该分类下暂无设置内容"}
+                    </div>
+                  }
                 >
                   <div class="settings-panel-stack-host">
                     <For each={activePanels()}>
@@ -132,7 +161,7 @@ export function SettingsHost(props: SettingsHostProps) {
                         if (!View)
                           return (
                             <div class="settings-panel-missing" role="alert">
-                              设置面板不可用：{panel.id}
+                              {props.copy?.panelMissing(panel.id) ?? `设置面板不可用：${panel.id}`}
                             </div>
                           )
                         let content: JSX.Element
