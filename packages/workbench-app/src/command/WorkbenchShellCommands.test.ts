@@ -45,9 +45,17 @@ describe("createWorkbenchShellCommandModels", () => {
     models.runCommand("toggle-theme", {})
     models.runCommand("toggle-layout", {})
     models.runCommand("open-settings", {})
+    models.runCommand("open-plugin-manager", {})
 
     expect(options.switchTheme).toHaveBeenCalledWith("theme.dark.custom")
     expect(options.switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(options.openSettings).toHaveBeenCalledWith("settings.appearance.custom")
+    expect(options.openSettings).toHaveBeenCalledWith("official.settings.plugins")
+  })
+
+  it("exposes plugin management as a first-class command", () => {
+    const models = createWorkbenchShellCommandModels(createOptions())
+
+    expect(models.commandItems().map((command) => command.name)).toContain("打开插件管理")
   })
 })

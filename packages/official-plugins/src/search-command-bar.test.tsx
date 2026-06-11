@@ -122,6 +122,71 @@ describe("SearchCommandBar", () => {
     root.remove()
   })
 
+  it("renders the empty inline state as four prototype-style suggestions", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+            ],
+            isOpen: true,
+            results: [
+              {
+                id: "commands",
+                label: "常用命令",
+                items: [
+                  { id: "open-command", icon: "⌘K", name: "打开命令", desc: "搜索命令" },
+                  { id: "toggle-theme", icon: "T", name: "切换主题", desc: "明亮 → 暗色" },
+                  { id: "toggle-layout", icon: "L", name: "切换布局", desc: "仪表盘 → 专注" },
+                  { id: "add-widget", icon: "+", name: "添加卡片", desc: "向工作台添加新卡片" },
+                  {
+                    id: "open-plugin-manager",
+                    icon: "P",
+                    name: "打开插件管理",
+                    desc: "查看 layout / widget / theme 贡献",
+                  },
+                ],
+              },
+              {
+                id: "providers",
+                label: "搜索源",
+                items: [
+                  { id: "provider-google", icon: "＠", name: "@g", desc: "搜索源 · Google" },
+                  { id: "provider-github", icon: "＠", name: "@github", desc: "搜索源 · GitHub" },
+                ],
+              },
+              {
+                id: "widgets",
+                label: "核心卡片",
+                items: [{ id: "widget-notes", icon: "N", name: "便签", desc: "快速记录" }],
+              },
+            ],
+          })}
+        />
+      ),
+      root,
+    )
+
+    expect(
+      Array.from(root.querySelectorAll(".suggestions-label")).map((node) => node.textContent),
+    ).toEqual(["建议"])
+    expect(
+      Array.from(root.querySelectorAll(".suggestion-name")).map((node) => node.textContent),
+    ).toEqual(["@github tabora runtime", "添加便签卡片", "打开插件管理", "切换到暗色主题"])
+    expect(root.textContent).not.toContain("常用命令")
+    expect(root.textContent).not.toContain("核心卡片")
+    root.remove()
+  })
+
   it("keeps typed inline query visible while notifying the host", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

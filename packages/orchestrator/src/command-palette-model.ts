@@ -66,7 +66,7 @@ export function createCommandPaletteItems<TProvider extends SearchProviderContri
 
   if (!trimmed) {
     return [
-      ...options.commands.slice(0, 4).map((command) => ({
+      ...options.commands.slice(0, surface === "inline" ? 6 : 4).map((command) => ({
         ...command,
         group: "常用命令",
         hint: command.shortcut,
@@ -87,7 +87,7 @@ export function createCommandPaletteItems<TProvider extends SearchProviderContri
           closeAfterAction: true,
         }
       }),
-      ...providers.slice(0, 4).map((provider) => ({
+      ...providers.slice(0, surface === "inline" ? 5 : 4).map((provider) => ({
         id: `provider-${provider.id}`,
         icon: "＠",
         name: `@${providerToken(provider)}`,

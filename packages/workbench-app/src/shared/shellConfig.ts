@@ -9,6 +9,7 @@ export type WorkbenchShellConfig = {
   }
   settingsPanelIds: {
     appearance: string
+    plugins?: string
   }
   searchHistory: {
     pluginId: string

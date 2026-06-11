@@ -4,6 +4,13 @@ import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { InlineError, Kbd } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
 
+type SearchResultItem = SearchViewProps["results"][number]["items"][number]
+type SearchSuggestionItem = SearchResultItem & {
+  submitQuery?: string
+  submitProviderId?: string
+  sourceResultId?: string
+}
+
 export function SearchCommandBar(props: SearchViewProps) {
   let wrapperRef: HTMLDivElement | undefined
   const providers = createMemo(() => props.providers)
@@ -31,7 +38,7 @@ export function SearchCommandBar(props: SearchViewProps) {
   })
   const visibleResults = createMemo(() => {
     const term = query().trim().toLowerCase()
-    if (!term) return props.results
+    if (!term) return emptyInlineSuggestions(props.results)
     const filtered = props.results
       .map((group) => ({
         ...group,
@@ -227,6 +234,10 @@ export function SearchCommandBar(props: SearchViewProps) {
                             void props.host.submit(query(), item.id.slice("web-search:".length))
                             return
                           }
+                          if (hasSubmitAction(item)) {
+                            void props.host.submit(item.submitQuery, item.submitProviderId)
+                            return
+                          }
                           void props.host.executeSelection(globalIdx)
                         }}
                         type="button"
@@ -249,6 +260,76 @@ export function SearchCommandBar(props: SearchViewProps) {
         </div>
       </Show>
     </div>
+  )
+}
+
+function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
+  id: string
+  label: string
+  items: SearchSuggestionItem[]
+}> {
+  const items = results.flatMap((group) => group.items)
+  const github = items.find(
+    (item) =>
+      item.id.includes("github") ||
+      item.name.toLowerCase().includes("github") ||
+      item.desc.toLowerCase().includes("github"),
+  )
+  const addWidget = findByText(items, ["添加", "卡片"])
+  const pluginManager = findByText(items, ["插件", "管理"])
+  const toggleTheme = findByText(items, ["切换", "主题"])
+  const suggestions = [
+    github && {
+      ...github,
+      id: `quick-github-runtime:${github.id}`,
+      icon: "↵",
+      name: "@github tabora runtime",
+      desc: "用 GitHub 搜索插件运行时相关内容",
+      submitQuery: "tabora plugin runtime",
+      submitProviderId: providerIdFromResult(github),
+      sourceResultId: github.id,
+    },
+    addWidget && {
+      ...addWidget,
+      name: "添加便签卡片",
+      desc: "创建一个新的 notes widget 实例",
+    },
+    pluginManager && {
+      ...pluginManager,
+      name: "打开插件管理",
+      desc: "查看 layout / widget / theme 贡献",
+    },
+    toggleTheme && {
+      ...toggleTheme,
+      name: "切换到暗色主题",
+      desc: "验证 Sage Dark token",
+    },
+  ].filter((item): item is SearchSuggestionItem => !!item)
+
+  const fallback = items.filter(
+    (item) =>
+      !suggestions.some((suggestion) => (suggestion.sourceResultId ?? suggestion.id) === item.id),
+  )
+  const limited = [...suggestions, ...fallback].slice(0, 4)
+  return limited.length > 0 ? [{ id: "suggestions", label: "建议", items: limited }] : []
+}
+
+function findByText(items: SearchResultItem[], parts: string[]): SearchResultItem | undefined {
+  return items.find((item) =>
+    parts.every((part) => `${item.name} ${item.desc}`.toLowerCase().includes(part.toLowerCase())),
+  )
+}
+
+function providerIdFromResult(item: SearchResultItem): string | undefined {
+  return item.id.startsWith("provider-") ? item.id.slice("provider-".length) : undefined
+}
+
+function hasSubmitAction(
+  item: unknown,
+): item is SearchSuggestionItem & { submitQuery: string; submitProviderId: string } {
+  return (
+    typeof (item as SearchSuggestionItem).submitQuery === "string" &&
+    typeof (item as SearchSuggestionItem).submitProviderId === "string"
   )
 }
 

@@ -28,6 +28,7 @@ export const builtinWorkbenchShellConfig = {
   },
   settingsPanelIds: {
     appearance: "official.settings.workspace.appearance",
+    plugins: "official.settings.plugins",
   },
   searchHistory: {
     pluginId: "official.search.command-bar",

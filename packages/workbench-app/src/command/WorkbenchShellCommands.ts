@@ -67,6 +67,13 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       defaultShortcut: "⌘N",
     },
     {
+      id: "open-plugin-manager",
+      icon: "P",
+      title: "打开插件管理",
+      description: "查看 layout / widget / theme 贡献",
+      category: "workspace",
+    },
+    {
       id: "open-settings",
       icon: "S",
       title: "打开设置",
@@ -111,6 +118,10 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
         resolveWorkbenchLayoutToggleTarget(options.activeLayoutId(), options.shellConfig.layoutIds),
       ),
     "add-widget": () => options.setAddWidgetOpen(true),
+    "open-plugin-manager": () =>
+      options.openSettings(
+        options.shellConfig.settingsPanelIds.plugins ?? "official.settings.plugins",
+      ),
     "open-settings": () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
     "open-shortcuts": () => {
       const shortcuts = shortcutRegistry()
