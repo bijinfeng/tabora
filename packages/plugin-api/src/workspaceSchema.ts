@@ -79,9 +79,16 @@ const regionStateSchema = z.object({
   ),
 })
 
+const workbenchAppearanceSchema = z
+  .object({
+    locale: z.enum(["zh-CN", "en-US"]).optional(),
+  })
+  .catchall(z.unknown())
+
 const workspaceConfigSchema = z
   .object({
     search: workbenchSearchSettingsSchema,
+    appearance: workbenchAppearanceSchema.optional(),
   })
   .catchall(z.unknown())
 

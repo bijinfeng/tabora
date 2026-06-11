@@ -6,7 +6,11 @@ import type {
 } from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry, type ViewRegistrationDisposer } from "./extensionRegistry"
-import { createPluginRuntimeContext, type PluginRuntimeContext } from "./runtimeContext"
+import {
+  createPluginRuntimeContext,
+  type PluginI18nService,
+  type PluginRuntimeContext,
+} from "./runtimeContext"
 
 export type PluginActivationDisposer = () => void
 
@@ -28,6 +32,7 @@ export type PluginKernelOptions = {
   recordSource?: PluginRecord["source"]
   hostPlatform?: HostPlatform
   hostCapabilities?: Partial<Record<HostCapabilityId, boolean>>
+  i18n?: PluginI18nService
 }
 
 export type PluginKernel = {
@@ -132,6 +137,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       registry,
       grantedPermissions: plugin.manifest.permissions ?? [],
       registrationDisposers,
+      ...(options.i18n ? { i18n: options.i18n } : {}),
     })
 
     try {

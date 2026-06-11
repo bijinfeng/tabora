@@ -45,6 +45,7 @@ function sessionState(overrides: Partial<WorkspaceSessionState> = {}): Workspace
       defaultProviderId: "official.google",
       enabledProviderIds: ["official.google"],
     },
+    locale: null,
     activeLayoutId: "official.layout.workbench-dashboard",
     activeThemeId: "official.theme.light",
     activeBackgroundId: "official.background.default",
@@ -59,6 +60,7 @@ describe("hydrateWorkbenchSessionState", () => {
       activeBackgroundId: "official.background.dark",
     })
     const setWorkspaceState = vi.fn()
+    const setLocale = vi.fn()
     const setActiveLayoutId = vi.fn()
     const setSearchSettings = vi.fn()
     const setSearchHistory = vi.fn()
@@ -73,6 +75,7 @@ describe("hydrateWorkbenchSessionState", () => {
     await hydrateWorkbenchSessionState({
       session,
       setWorkspaceState,
+      setLocale,
       setActiveLayoutId,
       setSearchSettings,
       setSearchHistory,

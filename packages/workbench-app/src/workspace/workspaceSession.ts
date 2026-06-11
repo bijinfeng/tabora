@@ -8,12 +8,14 @@ import { workbenchSearchSettingsSchema } from "@tabora/plugin-api"
 import type { InstanceRepository, PluginDataRepository, WorkspaceRepository } from "@tabora/storage"
 
 import { createDefaultWorkspaceFromPreset } from "./defaultWorkspaceSeed"
+import type { WorkbenchLocale } from "../i18n"
 
 export type WorkspaceSessionState = {
   workspace: Workspace
   instances: PluginInstance[]
   searchHistory: SearchHistoryEntry[]
   searchSettings: WorkbenchSearchSettings
+  locale: WorkbenchLocale | null
   activeLayoutId: string
   activeThemeId: string
   activeBackgroundId: string
@@ -26,6 +28,12 @@ export function readSearchSettings(workspace: Workspace): WorkbenchSearchSetting
   }
 
   return parsed.data
+}
+
+export function readLocale(workspace: Workspace): WorkbenchLocale | null {
+  const locale = (workspace.config as any)?.appearance?.locale
+  if (locale === "zh-CN" || locale === "en-US") return locale
+  return null
 }
 
 export async function ensureWorkspaceSession(options: {
@@ -67,6 +75,7 @@ export async function ensureWorkspaceSession(options: {
     instances,
     searchHistory,
     searchSettings: readSearchSettings(workspace),
+    locale: readLocale(workspace),
     activeLayoutId: workspace.activeLayoutId,
     activeThemeId: workspace.activeThemeId,
     activeBackgroundId: workspace.activeBackgroundProviderId,
@@ -159,6 +168,25 @@ export async function updateWorkspaceLayout(options: {
     workspaceId: options.workspaceId,
     mutator(workspace) {
       workspace.activeLayoutId = options.layoutId
+      return workspace
+    },
+  })
+}
+
+export async function updateWorkspaceLocale(options: {
+  workspaceRepo: WorkspaceRepository
+  workspaceId: string
+  locale: WorkbenchLocale
+}): Promise<Workspace | null> {
+  return updateWorkspaceRecord({
+    workspaceRepo: options.workspaceRepo,
+    workspaceId: options.workspaceId,
+    mutator(workspace) {
+      const config = (workspace.config ?? {}) as Record<string, unknown>
+      const appearance = (config.appearance ?? {}) as Record<string, unknown>
+      appearance.locale = options.locale
+      config.appearance = appearance
+      workspace.config = config
       return workspace
     },
   })

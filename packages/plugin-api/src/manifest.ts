@@ -286,12 +286,15 @@ export type SettingsPanelViewProps = {
   panelId: string
   pluginId: string
   scope: "global" | "workspace" | "plugin" | "instance"
+  locale?: "zh-CN" | "en-US"
+  availableLocales?: Array<{ value: "zh-CN" | "en-US"; label: string }>
   host: {
     close(): void
     setDirty(isDirty: boolean): void
     switchLayout?(layoutId: string): Promise<void>
     switchTheme(themeId: string): Promise<void>
     switchBackground(backgroundId: string): Promise<void>
+    switchLocale?(locale: "zh-CN" | "en-US"): Promise<void>
     setDefaultSearchProvider(providerId: string): Promise<void>
     setSearchProviderEnabled?(providerId: string, enabled: boolean): Promise<void>
     togglePluginEnabled?(pluginId: string, enabled: boolean): Promise<void>

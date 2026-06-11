@@ -22,12 +22,34 @@ export type PermissionBridge = {
   openExternal(url: string): boolean
 }
 
+export type I18nMessageBundle = {
+  locale: string
+  messages: Record<string, string>
+}
+
+export type PluginI18nService = {
+  locale(): string
+  registerMessages(pluginId: string, bundles: I18nMessageBundle[]): void
+  t(pluginId: string, key: string, vars?: Record<string, string | number>): string
+  formatDate(date: Date, options?: Intl.DateTimeFormatOptions): string
+  formatNumber(value: number, options?: Intl.NumberFormatOptions): string
+}
+
+export type PluginI18nBridge = {
+  locale(): string
+  registerMessages(bundles: I18nMessageBundle[]): void
+  t(key: string, vars?: Record<string, string | number>): string
+  formatDate(date: Date, options?: Intl.DateTimeFormatOptions): string
+  formatNumber(value: number, options?: Intl.NumberFormatOptions): string
+}
+
 export type PluginRuntimeContext = {
   pluginId: string
   events: EventBus
   registry: ExtensionRegistry
   ui: PluginUiBridge
   permissions: PermissionBridge
+  i18n?: PluginI18nBridge
   logger: {
     warn(message: string): void
     error(message: string): void
@@ -40,6 +62,7 @@ export function createPluginRuntimeContext(options: {
   registry: ExtensionRegistry
   grantedPermissions?: PluginPermission[]
   registrationDisposers?: ViewRegistrationDisposer[]
+  i18n?: PluginI18nService
 }): PluginRuntimeContext {
   const grantedPermissions = options.grantedPermissions ?? []
   const registry: ExtensionRegistry = {
@@ -66,6 +89,16 @@ export function createPluginRuntimeContext(options: {
       return permission.hosts.some((host) => host === "*" || host === hostname)
     })
   }
+
+  const i18n: PluginI18nBridge | undefined = options.i18n
+    ? {
+        locale: () => options.i18n!.locale(),
+        registerMessages: (bundles) => options.i18n!.registerMessages(options.pluginId, bundles),
+        t: (key, vars) => options.i18n!.t(options.pluginId, key, vars),
+        formatDate: (date, formatOptions) => options.i18n!.formatDate(date, formatOptions),
+        formatNumber: (value, formatOptions) => options.i18n!.formatNumber(value, formatOptions),
+      }
+    : undefined
 
   return {
     pluginId: options.pluginId,
@@ -102,6 +135,7 @@ export function createPluginRuntimeContext(options: {
         return true
       },
     },
+    ...(i18n ? { i18n } : {}),
     logger: {
       warn(message) {
         console.warn(`[${options.pluginId}] ${message}`)

@@ -33,9 +33,11 @@ import type { WorkbenchShellConfig } from "../shared/shellConfig"
 import { createLayoutSwitchExecution } from "../shared/shellController"
 import {
   updateWorkspaceBackground,
+  updateWorkspaceLocale,
   updateWorkspaceRecord,
   updateWorkspaceTheme,
 } from "./workspaceSession"
+import type { WorkbenchLocale } from "../i18n"
 
 type WorkspaceStateOptions = Parameters<typeof createWorkbenchWorkspaceState>[0]
 type WorkspaceRepo = WorkspaceStateOptions["workspaceRepo"]
@@ -84,6 +86,7 @@ export function createWorkbenchWorkspaceController(options: {
   setBackgroundId: (backgroundId: string) => void
   applyTheme: ThemeApplier
   applyBackground: BackgroundApplier
+  i18n: { locale: () => WorkbenchLocale; setLocale: (locale: WorkbenchLocale) => void }
   clearContextMenu: () => void
   clearExpandState: () => void
   defaultWorkspacePreset: WorkspacePresetContribution
@@ -140,6 +143,7 @@ export function createWorkbenchWorkspaceController(options: {
     getWorkspaceState: options.getWorkspaceState,
     setWorkspaceState: options.setWorkspaceState,
     setWorkspaceList: options.setWorkspaceList,
+    setLocale: (locale) => options.i18n.setLocale(locale),
     setActiveLayoutId: options.setActiveLayoutId,
     setSearchSettings: options.setSearchSettings,
     setSearchHistory: options.setSearchHistory,
@@ -257,6 +261,19 @@ export function createWorkbenchWorkspaceController(options: {
     })
   }
 
+  async function switchLocale(locale: WorkbenchLocale) {
+    options.i18n.setLocale(locale)
+    const workspace = requireWorkspace(options.getWorkspaceState())
+    const updated = await updateWorkspaceLocale({
+      workspaceRepo: options.workspaceRepo,
+      workspaceId: workspace.id,
+      locale,
+    })
+    if (updated) {
+      options.setWorkspaceState(updated)
+    }
+  }
+
   return {
     applyThemeSelection,
     applyBackgroundSelection,
@@ -274,5 +291,6 @@ export function createWorkbenchWorkspaceController(options: {
     deleteWorkspace: workspaceStateActions.deleteWorkspace,
     switchTheme,
     switchBackground,
+    switchLocale,
   }
 }

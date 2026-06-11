@@ -94,6 +94,35 @@ describe("createPluginRuntimeContext permissions", () => {
     ])
   })
 
+  it("exposes a plugin-scoped i18n bridge when provided", () => {
+    const events = createEventBus()
+    const calls: unknown[] = []
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+      i18n: {
+        locale: () => "en-US",
+        registerMessages: (pluginId, bundles) => calls.push({ pluginId, bundles }),
+        t: (pluginId, key) => `${pluginId}:${key}`,
+        formatDate: () => "DATE",
+        formatNumber: () => "NUM",
+      },
+    })
+
+    expect(context.i18n?.locale()).toBe("en-US")
+    context.i18n?.registerMessages([{ locale: "en-US", messages: { "plugin.example.k": "v" } }])
+    expect(calls).toEqual([
+      {
+        pluginId: "plugin.example",
+        bundles: [{ locale: "en-US", messages: { "plugin.example.k": "v" } }],
+      },
+    ])
+    expect(context.i18n?.t("greeting.morning")).toBe("plugin.example:greeting.morning")
+    expect(context.i18n?.formatDate(new Date())).toBe("DATE")
+    expect(context.i18n?.formatNumber(1)).toBe("NUM")
+  })
+
   it("collects view registration disposers for plugin-owned cleanup", () => {
     const registrationDisposers: Array<() => void> = []
     const registry = createExtensionRegistry()

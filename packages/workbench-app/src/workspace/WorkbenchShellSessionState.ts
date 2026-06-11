@@ -5,6 +5,7 @@ import type { WorkspaceSessionState } from "./workspaceSession"
 export async function hydrateWorkbenchSessionState(options: {
   session: WorkspaceSessionState
   setWorkspaceState: (workspace: WorkspaceSessionState["workspace"]) => void
+  setLocale: (locale: NonNullable<WorkspaceSessionState["locale"]>) => void
   setActiveLayoutId: (layoutId: string) => void
   setSearchSettings: (settings: WorkspaceSessionState["searchSettings"]) => void
   setSearchHistory: (history: WorkspaceSessionState["searchHistory"]) => void
@@ -17,6 +18,9 @@ export async function hydrateWorkbenchSessionState(options: {
   ) => Promise<{ instances: PluginInstance[] }>
 }) {
   options.setWorkspaceState(options.session.workspace)
+  if (options.session.locale) {
+    options.setLocale(options.session.locale)
+  }
   options.setActiveLayoutId(options.session.activeLayoutId)
   options.applyThemeSelection(options.session.activeThemeId)
   options.applyBackgroundSelection(options.session.activeBackgroundId)

@@ -51,8 +51,13 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   })
   const { kernelReady, setKernelReady, pluginRecords, setPluginRecords, showToast } = state.runtime
   const { workspaceState, setWorkspaceState, workspaceList, setWorkspaceList } = state.workspace
-  const { activeLayoutId, setActiveLayoutId, setThemeId, setBackgroundId, isDark } =
-    state.appearance
+  const {
+    activeLayoutId: _activeLayoutId,
+    setActiveLayoutId,
+    setThemeId,
+    setBackgroundId,
+    isDark,
+  } = state.appearance
   const { instances, setInstances } = state.widgets
   // 仅保留 app 主体（controllers / effects / onKeyDown / openSettings / settings panel 装配）实际使用的
   // accessor/setter；纯供 surface 装配读取的 overlay 状态由 shell bundle 经 context 提供。
@@ -63,27 +68,27 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setModalProps,
     setFullscreenViewId,
     setFullscreenProps,
-    expandState,
+    expandState: _expandState,
     setExpandState,
-    dragState,
-    setDragState,
-    ctxMenu,
+    dragState: _dragState,
+    setDragState: _setDragState,
+    ctxMenu: _ctxMenu,
     setCtxMenu,
     setAddWidgetOpen,
-    cmdPaletteOpen,
-    setCmdPaletteOpen,
+    cmdPaletteOpen: _cmdPaletteOpen,
+    setCmdPaletteOpen: _setCmdPaletteOpen,
   } = state.overlays
   const {
     searchSettings,
     setSearchSettings,
     searchHistory,
     setSearchHistory,
-    inlineSearchQuery,
-    setInlineSearchQuery,
-    inlineSearchOpen,
-    setInlineSearchOpen,
-    inlineSearchActiveResultIndex,
-    setInlineSearchActiveResultIndex,
+    inlineSearchQuery: _inlineSearchQuery,
+    setInlineSearchQuery: _setInlineSearchQuery,
+    inlineSearchOpen: _inlineSearchOpen,
+    setInlineSearchOpen: _setInlineSearchOpen,
+    inlineSearchActiveResultIndex: _inlineSearchActiveResultIndex,
+    setInlineSearchActiveResultIndex: _setInlineSearchActiveResultIndex,
   } = state.search
   const responsive = createWorkbenchResponsiveState()
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
@@ -136,6 +141,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setBackgroundId,
     applyTheme: (tokens) => applyThemeTokens(document.documentElement, tokens),
     applyBackground: applyBackgroundStyle,
+    i18n: runtime.i18n,
     clearContextMenu: () => setCtxMenu(null),
     clearExpandState: () => setExpandState(null),
     defaultWorkspacePreset: runtime.defaultWorkspacePreset,
@@ -158,6 +164,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setKernelReady,
     setWorkspaceList,
     setWorkspaceState,
+    setLocale: runtime.i18n.setLocale,
     setActiveLayoutId,
     setSearchSettings,
     setSearchHistory,
@@ -181,12 +188,18 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     getSearchProviders: () => pluginCatalog.listSearchProviders(),
     getSearchSettings: searchSettings,
     getPlugins: () => pluginCatalog.pluginSummaries(pluginRecords()),
+    getLocale: () => runtime.i18n.locale(),
+    getAvailableLocales: () => [
+      { value: "zh-CN", label: "中文（简体）" },
+      { value: "en-US", label: "English (US)" },
+    ],
     host: {
       close: () => setSettingsOpen(false),
       setDirty: () => {},
       switchLayout: workspaceController.switchLayout,
       switchTheme: workspaceController.switchTheme,
       switchBackground: workspaceController.switchBackground,
+      switchLocale: workspaceController.switchLocale,
       setDefaultSearchProvider: workspaceController.setDefaultSearchProvider,
       setSearchProviderEnabled: workspaceController.setSearchProviderEnabled,
       togglePluginEnabled: workspaceController.togglePluginEnabled,

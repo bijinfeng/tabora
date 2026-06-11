@@ -174,6 +174,7 @@ describe("initializeWorkbenchShellRuntime", () => {
     const setKernelReady = vi.fn()
     const setWorkspaceList = vi.fn()
     const setWorkspaceState = vi.fn()
+    const setLocale = vi.fn()
     const setActiveLayoutId = vi.fn()
     const setSearchSettings = vi.fn()
     const setSearchHistory = vi.fn()
@@ -188,6 +189,7 @@ describe("initializeWorkbenchShellRuntime", () => {
       setKernelReady,
       setWorkspaceList,
       setWorkspaceState,
+      setLocale,
       setActiveLayoutId,
       setSearchSettings,
       setSearchHistory,
@@ -213,6 +215,7 @@ describe("initializeWorkbenchShellRuntime", () => {
       expect.objectContaining({
         session,
         setWorkspaceState,
+        setLocale,
         setActiveLayoutId,
         setSearchSettings,
         setSearchHistory,

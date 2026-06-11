@@ -25,6 +25,7 @@ export function createWorkbenchWorkspaceState(options: {
   getWorkspaceState: () => Workspace | null
   setWorkspaceState: (workspace: Workspace) => void
   setWorkspaceList: (updater: (prev: Workspace[]) => Workspace[]) => void
+  setLocale: Parameters<typeof hydrateWorkbenchSessionState>[0]["setLocale"]
   setActiveLayoutId: (layoutId: string) => void
   setSearchSettings: (settings: ReturnType<typeof readSearchSettings>) => void
   setSearchHistory: Parameters<typeof hydrateWorkbenchSessionState>[0]["setSearchHistory"]
@@ -121,6 +122,7 @@ export function createWorkbenchWorkspaceState(options: {
     await hydrateWorkbenchSessionState({
       session,
       setWorkspaceState: options.setWorkspaceState,
+      setLocale: options.setLocale,
       setActiveLayoutId: options.setActiveLayoutId,
       setSearchSettings: options.setSearchSettings,
       setSearchHistory: options.setSearchHistory,

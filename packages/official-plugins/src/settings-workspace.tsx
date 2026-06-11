@@ -25,6 +25,10 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
     }))
   const themes = () => themeOptions(props)
   const backgrounds = () => backgroundOptions(props)
+  const localeValue = () => props.locale ?? "zh-CN"
+  const localeOptions = () => props.availableLocales ?? []
+  const canSwitchLocale = () =>
+    typeof props.host.switchLocale === "function" && localeOptions().length > 0
   const layoutValue = () => props.workspace.activeLayoutId
   const themeValue = () => props.workspace.activeThemeId
   const backgroundValue = () => props.workspace.activeBackgroundProviderId
@@ -59,6 +63,17 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
             aria-label="选择背景"
           />
         </Field>
+        <Show when={canSwitchLocale()}>
+          <Field label="语言" htmlFor="settings-locale-select">
+            <Select
+              id="settings-locale-select"
+              value={localeValue()}
+              options={localeOptions()}
+              onChange={(value) => void props.host.switchLocale?.(value as "zh-CN" | "en-US")}
+              aria-label="选择语言"
+            />
+          </Field>
+        </Show>
       </div>
     </CardSection>
   )

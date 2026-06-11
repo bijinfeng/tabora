@@ -26,6 +26,7 @@ import {
 } from "@tabora/storage"
 
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
+import { createWorkbenchI18nStore, type WorkbenchI18nStore } from "../i18n"
 
 export type WorkbenchRuntimeRepositories = {
   workspaceRepo: WorkspaceRepository
@@ -41,6 +42,7 @@ export type WorkbenchRuntimeBootstrap = {
   repositories: WorkbenchRuntimeRepositories
   catalog: PluginCatalog
   kernel: PluginKernel
+  i18n: WorkbenchI18nStore
   plugins: BuiltinPlugin[]
   defaultWorkspacePreset: WorkspacePresetContribution
   shellConfig: WorkbenchShellConfig
@@ -62,6 +64,7 @@ export function createWorkbenchRuntimeBootstrap(
 ): WorkbenchRuntimeBootstrap {
   const storageAdapter = options.storageAdapter
   const database = storageAdapter?.database ?? createTaboraDatabase(options.databaseName)
+  const i18n = createWorkbenchI18nStore()
   const repositories = storageAdapter?.repositories ?? {
     workspaceRepo: createWorkspaceRepository(database),
     instanceRepo: createInstanceRepository(database),
@@ -79,6 +82,7 @@ export function createWorkbenchRuntimeBootstrap(
     recordSource: "builtin",
     hostPlatform: options.host.platform,
     hostCapabilities: options.host.capabilities,
+    i18n,
   })
 
   return {
@@ -87,6 +91,7 @@ export function createWorkbenchRuntimeBootstrap(
     repositories,
     catalog,
     kernel,
+    i18n,
     plugins: loadedPlugins,
     defaultWorkspacePreset: options.defaultWorkspacePreset,
     shellConfig: options.shellConfig,

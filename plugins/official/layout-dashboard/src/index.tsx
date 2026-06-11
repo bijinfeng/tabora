@@ -5,19 +5,38 @@ import type { LayoutHostAPI, LayoutViewProps, PluginInstance } from "@tabora/plu
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { HostActionIcon } from "./host-action-icon"
 
-function greeting() {
-  const h = new Date().getHours()
-  return h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好"
+type LayoutI18n = {
+  locale(): string
+  t(key: string, vars?: Record<string, string | number>): string
+  registerMessages(bundles: Array<{ locale: string; messages: Record<string, string> }>): void
 }
 
-function dateLabel() {
+function greeting(t: (key: string) => string) {
+  const h = new Date().getHours()
+  return h < 12 ? t("greeting.morning") : h < 18 ? t("greeting.afternoon") : t("greeting.evening")
+}
+
+function dateLabel(locale: string) {
   const now = new Date()
-  const date = new Intl.DateTimeFormat("zh-CN", {
+  const date = new Intl.DateTimeFormat(locale, {
     month: "numeric",
     day: "numeric",
   }).format(now)
-  const weekday = new Intl.DateTimeFormat("zh-CN", { weekday: "long" }).format(now)
+  const weekday = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(now)
   return `${date} ${weekday}`
+}
+
+function fallbackText(key: string): string {
+  const messages: Record<string, string> = {
+    "greeting.morning": "早上好",
+    "greeting.afternoon": "下午好",
+    "greeting.evening": "晚上好",
+    "actions.addWidget": "+ 添加卡片",
+    "search.placeholder": "搜索或命令",
+    "focus.empty": "添加第一张卡片",
+    "focus.switchHero": "切换到主卡片",
+  }
+  return messages[key] ?? key
 }
 
 function WorkbenchRail(props: { host: LayoutHostAPI }) {
@@ -76,6 +95,9 @@ function widgetTitle(instance: PluginInstance) {
 }
 
 export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
+  const i18n = () => (props as LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }).i18n
+  const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
+  const locale = () => i18n()?.locale() ?? "zh-CN"
   const addWidgetAction = () =>
     props.host.getGlobalActions("rail").find((action) => action.id === "add-widget")
 
@@ -86,7 +108,7 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
         <header class="dash-topbar">
           <div class="dash-greeting">
             <div class="dash-greeting-title">
-              {greeting()} <span class="dash-greeting-muted">· {dateLabel()}</span>
+              {greeting(t)} <span class="dash-greeting-muted">· {dateLabel(locale())}</span>
             </div>
             <div class="dash-greeting-actions">
               <Show when={addWidgetAction()}>
@@ -96,7 +118,7 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
                     type="button"
                     onClick={() => action().run()}
                   >
-                    <span>+ 添加卡片</span>
+                    <span>{t("actions.addWidget")}</span>
                   </button>
                 )}
               </Show>
@@ -117,6 +139,9 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
 }
 
 export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
+  const i18n = () => (props as LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }).i18n
+  const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
+  const locale = () => i18n()?.locale() ?? "zh-CN"
   const [selectedHeroId, setSelectedHeroId] = createSignal<string | null>(null)
   const toolbarActions = () => props.host.getGlobalActions("toolbar")
   const commandAction = () => toolbarActions().find((action) => action.id === "command")
@@ -138,8 +163,8 @@ export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
         <div class="focus-content">
           <header class="focus-topbar">
             <div class="focus-greeting">
-              <span>{greeting()}</span>
-              <span class="focus-muted">· {dateLabel()}</span>
+              <span>{greeting(t)}</span>
+              <span class="focus-muted">· {dateLabel(locale())}</span>
             </div>
             <div class="focus-topbar-actions">
               <Show when={layoutSwitchAction()}>
@@ -160,7 +185,7 @@ export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
                 type="button"
                 onClick={() => commandAction()?.run() ?? props.host.openCommandPalette()}
               >
-                <span>搜索或命令</span>
+                <span>{t("search.placeholder")}</span>
                 <kbd>⌘K</kbd>
               </button>
             </div>
@@ -175,7 +200,7 @@ export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
                   type="button"
                   onClick={() => props.host.openAddWidget()}
                 >
-                  添加第一张卡片
+                  {t("focus.empty")}
                 </button>
               }
             >
@@ -197,7 +222,7 @@ export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
                     onClick={() => setSelectedHeroId(instance.id)}
                   >
                     <span class="focus-satellite-title">{widgetTitle(instance)}</span>
-                    <span class="focus-satellite-meta">切换到主卡片</span>
+                    <span class="focus-satellite-meta">{t("focus.switchHero")}</span>
                   </button>
                 )}
               </For>
@@ -271,7 +296,38 @@ export const layoutDashboard: BuiltinPlugin = {
     },
   },
   activate(context) {
-    context.registry.views.register("official.layout.workbench-dashboard.view", DashboardLayout)
-    context.registry.views.register("official.layout.workbench-focus.view", FocusLayout)
+    context.i18n?.registerMessages([
+      {
+        locale: "zh-CN",
+        messages: {
+          "greeting.morning": "早上好",
+          "greeting.afternoon": "下午好",
+          "greeting.evening": "晚上好",
+          "actions.addWidget": "+ 添加卡片",
+          "search.placeholder": "搜索或命令",
+          "focus.empty": "添加第一张卡片",
+          "focus.switchHero": "切换到主卡片",
+        },
+      },
+      {
+        locale: "en-US",
+        messages: {
+          "greeting.morning": "Good morning",
+          "greeting.afternoon": "Good afternoon",
+          "greeting.evening": "Good evening",
+          "actions.addWidget": "+ Add widget",
+          "search.placeholder": "Search or command",
+          "focus.empty": "Add your first widget",
+          "focus.switchHero": "Switch to main",
+        },
+      },
+    ])
+
+    context.registry.views.register("official.layout.workbench-dashboard.view", (props) =>
+      DashboardLayout({ ...(props as any), i18n: context.i18n }),
+    )
+    context.registry.views.register("official.layout.workbench-focus.view", (props) =>
+      FocusLayout({ ...(props as any), i18n: context.i18n }),
+    )
   },
 }
