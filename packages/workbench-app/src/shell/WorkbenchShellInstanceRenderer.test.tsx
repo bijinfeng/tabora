@@ -135,6 +135,43 @@ describe("createWorkbenchInstanceRenderer", () => {
     expect(host.textContent).toContain("搜索贡献未找到")
     dispose()
   })
+
+  it("passes injected copy to the widget shell", () => {
+    const renderer = createWorkbenchInstanceRenderer({
+      ...baseOptions(),
+      registryViews: new Map<string, unknown>([["widget.notes.card", () => <div>Notes body</div>]]),
+      widgetShellCopy: {
+        removeAriaLabel: (title: string) => `Remove ${title}`,
+      },
+    } as Parameters<typeof createWorkbenchInstanceRenderer>[0])
+
+    const { host, dispose } = mount(renderer.renderWidget(instance()))
+    expect(host.querySelector("button.card-danger")?.getAttribute("aria-label")).toBe("Remove 便签")
+    dispose()
+  })
+
+  it("passes injected copy to the plugin view boundary fallback", () => {
+    const renderer = createWorkbenchInstanceRenderer({
+      ...baseOptions(),
+      registryViews: new Map<string, unknown>([
+        [
+          "widget.notes.card",
+          () => {
+            throw new Error("boom")
+          },
+        ],
+      ]),
+      pluginViewBoundaryCopy: {
+        loadFailed: "Plugin view failed to load",
+        retry: "Retry",
+      },
+    } as Parameters<typeof createWorkbenchInstanceRenderer>[0])
+
+    const { host, dispose } = mount(renderer.renderWidget(instance()))
+    expect(host.textContent).toContain("Plugin view failed to load")
+    expect(host.querySelector(".plugin-error-retry-btn")?.textContent).toBe("Retry")
+    dispose()
+  })
 })
 
 describe("workbenchSortableCollisionDetector", () => {

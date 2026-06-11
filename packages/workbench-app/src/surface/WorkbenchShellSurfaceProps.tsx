@@ -12,6 +12,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
   const { state, catalog, views, controllerRuntime, buildSettingsPanelProps } = shell
   const { overlays, workspace, runtime } = state
   const widgetController = controllerRuntime.widgetController
+  const pluginViewBoundaryCopy = shell.shellCopy?.pluginViewBoundaryCopy
 
   return {
     content: shell.layoutContent(),
@@ -49,18 +50,21 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
       widgetIconForProps: (viewProps: WidgetViewProps) =>
         renderWorkbenchWidgetIcon(widgetController.widgetContribution(viewProps)?.icon),
       onClose: widgetController.closeExpand,
+      ...(pluginViewBoundaryCopy ? { pluginViewBoundaryCopy } : {}),
     },
     pluginModal: {
       viewId: overlays.modalViewId(),
       modalProps: overlays.modalProps(),
       getView: (viewId: string) => resolveWorkbenchView(views, viewId),
       onClose: () => overlays.setModalViewId(null),
+      ...(pluginViewBoundaryCopy ? { pluginViewBoundaryCopy } : {}),
     },
     fullscreenOverlay: {
       viewId: overlays.fullscreenViewId(),
       fullscreenProps: overlays.fullscreenProps(),
       getView: (viewId: string) => resolveWorkbenchView(views, viewId),
       onClose: () => overlays.setFullscreenViewId(null),
+      ...(pluginViewBoundaryCopy ? { pluginViewBoundaryCopy } : {}),
     },
     contextMenuOverlay: {
       menu: overlays.ctxMenu(),

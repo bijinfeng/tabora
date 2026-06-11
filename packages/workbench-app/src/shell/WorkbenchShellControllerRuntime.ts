@@ -27,6 +27,11 @@ import {
   resolveWidgetRenderModel,
 } from "../shared/shellHelpers"
 import { assignGridOrder } from "../shared/workbenchGrid"
+import type {
+  WorkbenchShellCommandPaletteCopy,
+  WorkbenchShellPluginViewBoundaryCopy,
+  WorkbenchShellWidgetCopy,
+} from "../i18n"
 
 type CommandExecutionContext = Parameters<
   ReturnType<typeof createWorkbenchShellCommandModels>["runCommand"]
@@ -97,6 +102,11 @@ export function createWorkbenchShellControllerRuntime(options: {
     openSettings: (sectionId?: string) => void
     showToast: (message: string, options?: ToastOptions) => void
     focusWidgetInstance: (instanceId: string) => boolean
+  }
+  copy?: {
+    getCommandPaletteCopy?: () => WorkbenchShellCommandPaletteCopy
+    widgetShellCopy?: WorkbenchShellWidgetCopy
+    pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
   }
   controllers: {
     workspaceController: {
@@ -201,6 +211,9 @@ export function createWorkbenchShellControllerRuntime(options: {
     showToast: options.actions.showToast,
     isCommandPaletteOpen: options.state.commandPaletteOpen,
     closeCommandPalette: () => options.setters.setCommandPaletteOpen(false),
+    ...(options.copy?.getCommandPaletteCopy
+      ? { getCommandPaletteCopy: options.copy.getCommandPaletteCopy }
+      : {}),
   })
 
   const dragHandlers: DragRuntime = createWorkbenchDndKitDragHandlers({
@@ -232,6 +245,10 @@ export function createWorkbenchShellControllerRuntime(options: {
     setModalProps: options.setters.setModalProps,
     showToast: options.actions.showToast,
     openExternalForPlugin: options.controllers.hostRuntime.openExternalForPlugin,
+    ...(options.copy?.widgetShellCopy ? { widgetShellCopy: options.copy.widgetShellCopy } : {}),
+    ...(options.copy?.pluginViewBoundaryCopy
+      ? { pluginViewBoundaryCopy: options.copy.pluginViewBoundaryCopy }
+      : {}),
   })
 
   return {

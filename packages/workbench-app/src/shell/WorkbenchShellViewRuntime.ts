@@ -64,6 +64,10 @@ export function createWorkbenchShellViewRuntime(
     },
     isDragging: options.isDragging,
     sortableIndex: options.sortableIndex,
+    ...(options.widgetShellCopy ? { widgetShellCopy: options.widgetShellCopy } : {}),
+    ...(options.pluginViewBoundaryCopy
+      ? { pluginViewBoundaryCopy: options.pluginViewBoundaryCopy }
+      : {}),
   })
 
   return {

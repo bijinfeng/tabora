@@ -170,6 +170,10 @@ describe("createWorkbenchSearchSurfaces", () => {
       showToast: vi.fn(),
       isCommandPaletteOpen: () => true,
       closeCommandPalette,
+      getCommandPaletteCopy: () => ({
+        placeholder: "Search commands, widgets, or type @bing weather",
+        empty: "No results found",
+      }),
     })
 
     const props = surfaces.buildCommandPaletteProps()
@@ -183,6 +187,10 @@ describe("createWorkbenchSearchSurfaces", () => {
       providers,
       defaultProviderId: "official.search.google",
       searchHistory: history,
+      copy: {
+        placeholder: "Search commands, widgets, or type @bing weather",
+        empty: "No results found",
+      },
       openExternalForPlugin: expect.any(Function),
       onSaveHistory: saveHistory,
     })

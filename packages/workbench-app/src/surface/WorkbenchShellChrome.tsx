@@ -4,6 +4,7 @@ import { PluginViewBoundary, WidgetCardShell } from "@tabora/workbench-shell"
 import { Moon, Sun, X } from "lucide-solid"
 import { For, Show } from "solid-js"
 import type { JSX } from "solid-js"
+import type { WorkbenchShellPluginViewBoundaryCopy, WorkbenchShellWidgetCopy } from "../i18n"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 
@@ -113,6 +114,8 @@ export function SafeWorkbenchLayout(props: {
   onResize: (instanceId: string, size: WidgetSize) => void
   onRemove: (instanceId: string) => void
   isDragging: (instanceId: string) => boolean
+  widgetShellCopy?: WorkbenchShellWidgetCopy
+  pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
   return (
     <div class="safe-layout">
@@ -153,6 +156,7 @@ export function SafeWorkbenchLayout(props: {
                 icon={props.renderWidgetIcon(model.icon)}
                 supportedSizes={model.supportedSizes}
                 currentSize={model.currentSize}
+                {...(props.widgetShellCopy ? { copy: props.widgetShellCopy } : {})}
                 callbacks={{
                   onDblClick: () => props.onOpenExpand(instance),
                   onContextMenu: (event: MouseEvent) => props.onOpenContextMenu(event, instance.id),
@@ -162,7 +166,11 @@ export function SafeWorkbenchLayout(props: {
                   isDragging: props.isDragging(instance.id),
                 }}
               >
-                <PluginViewBoundary instanceId={instance.id} title={model.title}>
+                <PluginViewBoundary
+                  instanceId={instance.id}
+                  title={model.title}
+                  {...(props.pluginViewBoundaryCopy ? { copy: props.pluginViewBoundaryCopy } : {})}
+                >
                   <div data-tabora-plugin-id={instance.pluginId}>
                     {View(props.buildWidgetViewProps(instance, model))}
                   </div>
@@ -181,6 +189,7 @@ export function WorkbenchExpandOverlay(props: {
   getView: (viewId: string) => SolidView<WidgetViewProps> | undefined
   widgetIconForProps: (props: WidgetViewProps) => JSX.Element
   onClose: () => void
+  pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
   return (
     <Show when={props.expandState}>
@@ -217,7 +226,13 @@ export function WorkbenchExpandOverlay(props: {
                 }
 
                 return (
-                  <PluginViewBoundary instanceId={expand().instanceId} title={expand().title}>
+                  <PluginViewBoundary
+                    instanceId={expand().instanceId}
+                    title={expand().title}
+                    {...(props.pluginViewBoundaryCopy
+                      ? { copy: props.pluginViewBoundaryCopy }
+                      : {})}
+                  >
                     <div data-tabora-plugin-id={expand().props.pluginId}>
                       {View(expand().props)}
                     </div>
@@ -241,6 +256,7 @@ export function WorkbenchPluginModal(props: {
   modalProps: Record<string, unknown>
   getView: (viewId: string) => SolidView | undefined
   onClose: () => void
+  pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
   return (
     <Show when={props.viewId}>
@@ -260,6 +276,7 @@ export function WorkbenchPluginModal(props: {
                 <PluginViewBoundary
                   instanceId={resolvePluginBoundaryId(props.modalProps, viewId)}
                   title={viewId}
+                  {...(props.pluginViewBoundaryCopy ? { copy: props.pluginViewBoundaryCopy } : {})}
                 >
                   <div data-tabora-plugin-id={resolvePluginScopeId(props.modalProps)}>
                     {View(props.modalProps)}
@@ -279,6 +296,7 @@ export function WorkbenchFullscreenOverlay(props: {
   fullscreenProps: Record<string, unknown>
   getView: (viewId: string) => SolidView | undefined
   onClose: () => void
+  pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
   return (
     <Show when={props.viewId}>
@@ -297,6 +315,7 @@ export function WorkbenchFullscreenOverlay(props: {
               <PluginViewBoundary
                 instanceId={resolvePluginBoundaryId(props.fullscreenProps, viewId)}
                 title={viewId}
+                {...(props.pluginViewBoundaryCopy ? { copy: props.pluginViewBoundaryCopy } : {})}
               >
                 <div data-tabora-plugin-id={resolvePluginScopeId(props.fullscreenProps)}>
                   {View(props.fullscreenProps)}

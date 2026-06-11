@@ -65,6 +65,28 @@ export function createWorkbenchRuntimeBootstrap(
   const storageAdapter = options.storageAdapter
   const database = storageAdapter?.database ?? createTaboraDatabase(options.databaseName)
   const i18n = createWorkbenchI18nStore()
+  i18n.registerMessages("tabora.shell", [
+    {
+      locale: "zh-CN",
+      messages: {
+        "commandPalette.placeholder": "搜索命令、卡片或输入 @bing 天气",
+        "commandPalette.empty": "未找到匹配结果",
+        "widget.removeAriaLabel": "移除 {{title}}",
+        "pluginView.loadFailed": "插件视图加载失败",
+        "pluginView.retry": "重试",
+      },
+    },
+    {
+      locale: "en-US",
+      messages: {
+        "commandPalette.placeholder": "Search commands, widgets, or type @bing weather",
+        "commandPalette.empty": "No results found",
+        "widget.removeAriaLabel": "Remove {{title}}",
+        "pluginView.loadFailed": "Plugin view failed to load",
+        "pluginView.retry": "Retry",
+      },
+    },
+  ])
   const repositories = storageAdapter?.repositories ?? {
     workspaceRepo: createWorkspaceRepository(database),
     instanceRepo: createInstanceRepository(database),

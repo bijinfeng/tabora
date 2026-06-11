@@ -64,6 +64,32 @@ describe("CommandPalette", () => {
     root.remove()
   })
 
+  it("uses injected copy for placeholder and empty state", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Controlled
+          isOpen={true}
+          commands={[]}
+          widgets={[]}
+          providers={[]}
+          searchHistory={[]}
+          copy={{
+            placeholder: "Search commands, widgets, or type @bing weather",
+            empty: "No results found",
+          }}
+        />
+      ),
+      root,
+    )
+
+    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    expect(input.placeholder).toBe("Search commands, widgets, or type @bing weather")
+    expect(root.textContent).toContain("No results found")
+    root.remove()
+  })
+
   it("shows favorites when query is empty", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

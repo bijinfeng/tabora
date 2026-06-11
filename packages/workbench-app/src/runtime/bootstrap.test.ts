@@ -178,4 +178,21 @@ describe("createWorkbenchRuntimeBootstrap", () => {
 
     expect(runtime.repositories).toBe(storageAdapter.repositories)
   })
+
+  it("registers shell message bundles for both locales", () => {
+    const runtime = createWorkbenchRuntimeBootstrap({
+      host: createWebHostAdapter({ id: "host.test" }),
+      plugins: testPlugins,
+      defaultWorkspacePreset,
+      shellConfig,
+    } as any)
+
+    runtime.i18n.setLocale("en-US")
+    expect(runtime.i18n.t("tabora.shell", "commandPalette.placeholder")).toBe(
+      "Search commands, widgets, or type @bing weather",
+    )
+
+    runtime.i18n.setLocale("zh-CN")
+    expect(runtime.i18n.t("tabora.shell", "pluginView.retry")).toBe("重试")
+  })
 })

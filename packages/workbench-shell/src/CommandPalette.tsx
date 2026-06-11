@@ -25,6 +25,10 @@ export type CommandPaletteProps = {
   searchHistory?: SearchHistoryEntry[]
   openExternalForPlugin?: (request: { pluginId: string; url: string }) => boolean
   onSaveHistory?: (entry: { query: string; providerId: string }) => Promise<void>
+  copy?: {
+    placeholder: string
+    empty: string
+  }
 }
 
 export function CommandPalette(props: CommandPaletteProps) {
@@ -134,7 +138,7 @@ export function CommandPalette(props: CommandPaletteProps) {
               class="cmd-input"
               type="text"
               value={props.query}
-              placeholder="搜索命令、卡片或输入 @bing 天气"
+              placeholder={props.copy?.placeholder ?? "搜索命令、卡片或输入 @bing 天气"}
               autofocus
               onInput={(event) => {
                 props.onQueryChange(event.currentTarget.value)
@@ -147,7 +151,10 @@ export function CommandPalette(props: CommandPaletteProps) {
             </span>
           </div>
           <div class="cmd-results">
-            <Show when={items().length > 0} fallback={<div class="cmd-empty">未找到匹配结果</div>}>
+            <Show
+              when={items().length > 0}
+              fallback={<div class="cmd-empty">{props.copy?.empty ?? "未找到匹配结果"}</div>}
+            >
               <For each={Object.entries(grouped())}>
                 {([group, groupItems]) => (
                   <>

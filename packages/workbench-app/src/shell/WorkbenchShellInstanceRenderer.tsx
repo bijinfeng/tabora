@@ -17,6 +17,7 @@ import type { InstanceRenderer } from "../layout/layoutEngine"
 import { isWorkbenchInteractiveElement } from "../surface/WorkbenchShellInteractions"
 import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import type { WidgetRenderModel } from "../shared/shellHelpers"
+import type { WorkbenchShellPluginViewBoundaryCopy, WorkbenchShellWidgetCopy } from "../i18n"
 
 type WorkbenchSortableCollisionDetector = NonNullable<
   Parameters<typeof useSortable>[0]["collisionDetector"]
@@ -56,6 +57,8 @@ export function createWorkbenchInstanceRenderer(options: {
   onRemoveWidget: (instanceId: string) => void
   isDragging: (instanceId: string) => boolean
   sortableIndex: (instanceId: string) => number
+  widgetShellCopy?: WorkbenchShellWidgetCopy
+  pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }): InstanceRenderer {
   return {
     renderWidget(instance: PluginInstance) {
@@ -80,6 +83,7 @@ export function createWorkbenchInstanceRenderer(options: {
           supportedSizes={model.supportedSizes}
           currentSize={model.currentSize}
           sortableIndex={() => options.sortableIndex(instance.id)}
+          {...(options.widgetShellCopy ? { copy: options.widgetShellCopy } : {})}
           callbacks={{
             onDblClick: (event: MouseEvent) => {
               const target = event.target as HTMLElement
@@ -96,7 +100,11 @@ export function createWorkbenchInstanceRenderer(options: {
             isDragging: options.isDragging(instance.id),
           }}
         >
-          <PluginViewBoundary instanceId={instance.id} title={model.title}>
+          <PluginViewBoundary
+            instanceId={instance.id}
+            title={model.title}
+            {...(options.pluginViewBoundaryCopy ? { copy: options.pluginViewBoundaryCopy } : {})}
+          >
             <div data-tabora-plugin-id={instance.pluginId}>
               {View(options.buildWidgetViewProps(instance, model))}
             </div>
@@ -116,7 +124,11 @@ export function createWorkbenchInstanceRenderer(options: {
       }
 
       return (
-        <PluginViewBoundary instanceId={instance.id} title={search.title}>
+        <PluginViewBoundary
+          instanceId={instance.id}
+          title={search.title}
+          {...(options.pluginViewBoundaryCopy ? { copy: options.pluginViewBoundaryCopy } : {})}
+        >
           <div data-tabora-plugin-id={instance.pluginId}>
             {createComponent(View, options.buildSearchViewProps(instance))}
           </div>
@@ -134,6 +146,7 @@ function SortableWidgetCard(props: {
   currentSize: WidgetSize
   sortableIndex: () => number
   callbacks: WidgetHostCallbacks
+  copy?: WorkbenchShellWidgetCopy
   children: JSX.Element
 }) {
   const sortable = useSortable({
@@ -153,6 +166,7 @@ function SortableWidgetCard(props: {
       icon={props.icon}
       supportedSizes={props.supportedSizes}
       currentSize={props.currentSize}
+      {...(props.copy ? { copy: props.copy } : {})}
       callbacks={{
         ...props.callbacks,
         isDragging: props.callbacks.isDragging || sortable.isDragging(),

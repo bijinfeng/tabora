@@ -30,7 +30,7 @@ function makeCallbacks(): WidgetHostCallbacks {
   }
 }
 
-function mount(cb: WidgetHostCallbacks) {
+function mount(cb: WidgetHostCallbacks, props?: Record<string, unknown>) {
   const host = document.createElement("div")
   document.body.appendChild(host)
   const dispose = render(
@@ -41,6 +41,7 @@ function mount(cb: WidgetHostCallbacks) {
         supportedSizes={["S", "M", "L"]}
         currentSize="M"
         callbacks={cb}
+        {...(props as object)}
       >
         <div data-testid="content">内容</div>
       </WidgetCardShell>
@@ -80,6 +81,18 @@ describe("WidgetCardShell", () => {
     const removeBtn = host.querySelector("button.card-danger") as HTMLButtonElement
     removeBtn.click()
     expect(cb.onRemove).toHaveBeenCalled()
+    dispose()
+  })
+
+  it("uses injected remove aria label", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb, {
+      copy: {
+        removeAriaLabel: (title: string) => `Remove ${title}`,
+      },
+    })
+    const removeBtn = host.querySelector("button.card-danger") as HTMLButtonElement
+    expect(removeBtn.getAttribute("aria-label")).toBe("Remove 便签")
     dispose()
   })
 

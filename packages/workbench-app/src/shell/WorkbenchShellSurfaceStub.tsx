@@ -26,6 +26,7 @@ export type WorkbenchShellSurfaceStubOverrides = {
   buildContextMenuModel?: () => { sections?: unknown[] } | undefined
   runCommand?: (commandId: string, context: unknown) => boolean | void
   buildCommandPaletteProps?: () => unknown
+  pluginViewBoundaryCopy?: { loadFailed: string; retry: string }
 }
 
 export function createWorkbenchShellSurfaceStub(
@@ -92,5 +93,8 @@ export function createWorkbenchShellSurfaceStub(
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent: overrides.layoutContent ?? (() => null),
+    ...(overrides.pluginViewBoundaryCopy
+      ? { shellCopy: { pluginViewBoundaryCopy: overrides.pluginViewBoundaryCopy } }
+      : {}),
   }
 }

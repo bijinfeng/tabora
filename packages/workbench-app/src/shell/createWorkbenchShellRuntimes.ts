@@ -12,6 +12,11 @@ import type { createWorkbenchWorkspaceController } from "../workspace/WorkbenchS
 import type { createWorkbenchShellHostRuntime } from "../runtime/WorkbenchShellHostRuntime"
 import type { createLayoutFallbackTracker } from "../layout/layoutFallback"
 import type { WorkbenchResponsiveState } from "../shared/responsive"
+import {
+  createWorkbenchShellCommandPaletteCopy,
+  createWorkbenchShellPluginViewBoundaryCopy,
+  createWorkbenchShellWidgetCopy,
+} from "../i18n"
 
 export type WorkbenchShellRuntimes = Pick<WorkbenchShell, "controllerRuntime"> & {
   layoutRuntime: ReturnType<typeof createWorkbenchShellLayoutRuntime>
@@ -40,6 +45,8 @@ export function createWorkbenchShellRuntimes(options: {
 
   const { plugins, catalog: pluginCatalog, kernel, repositories } = runtime
   const { instanceRepo, pluginDataRepo } = repositories
+  const t = (key: string, vars?: Record<string, string | number>) =>
+    runtime.i18n.t("tabora.shell", key, vars)
 
   const { appearance, widgets, overlays, search } = state
   const { activeLayoutId, isDark } = appearance
@@ -110,6 +117,11 @@ export function createWorkbenchShellRuntimes(options: {
       openSettings,
       showToast,
       focusWidgetInstance: focusWorkbenchWidgetInstance,
+    },
+    copy: {
+      getCommandPaletteCopy: () => createWorkbenchShellCommandPaletteCopy(t),
+      widgetShellCopy: createWorkbenchShellWidgetCopy(t),
+      pluginViewBoundaryCopy: createWorkbenchShellPluginViewBoundaryCopy(t),
     },
     controllers: {
       workspaceController,

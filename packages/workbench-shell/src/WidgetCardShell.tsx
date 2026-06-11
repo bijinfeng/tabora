@@ -23,6 +23,9 @@ export type WidgetCardShellProps = {
   currentSize: WidgetSize
   children: JSX.Element
   callbacks: WidgetHostCallbacks
+  copy?: {
+    removeAriaLabel: (title: string) => string
+  }
 }
 
 function gridColumnSpan(size: WidgetSize): number {
@@ -80,7 +83,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
           <div class="card-actions">
             <button
               class="card-action-btn card-danger"
-              aria-label={`移除 ${props.title}`}
+              aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
               onClick={() => props.callbacks.onRemove()}
             >
               <X size={15} />

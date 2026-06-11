@@ -9,6 +9,7 @@ import type { CommandPaletteProps } from "@tabora/workbench-shell"
 import type { SearchProviderContributionDescriptor, ToastOptions } from "@tabora/orchestrator"
 
 import { buildWorkbenchInlineSearchViewProps } from "./WorkbenchInlineSearchViewProps"
+import type { WorkbenchShellCommandPaletteCopy } from "../i18n"
 
 export function createWorkbenchSearchSurfaces(options: {
   getProviders: () => SearchProviderContributionDescriptor[]
@@ -28,6 +29,7 @@ export function createWorkbenchSearchSurfaces(options: {
   showToast: (message: string, options?: ToastOptions) => void
   isCommandPaletteOpen: () => boolean
   closeCommandPalette: () => void
+  getCommandPaletteCopy?: () => WorkbenchShellCommandPaletteCopy
 }) {
   return {
     buildInlineSearchViewProps(_instance: PluginInstance): SearchViewProps {
@@ -50,6 +52,7 @@ export function createWorkbenchSearchSurfaces(options: {
       })
     },
     buildCommandPaletteProps(): CommandPaletteProps {
+      const copy = options.getCommandPaletteCopy?.()
       return {
         isOpen: options.isCommandPaletteOpen(),
         query: options.getInlineSearchQuery(),
@@ -62,6 +65,7 @@ export function createWorkbenchSearchSurfaces(options: {
         providers: options.getProviders(),
         defaultProviderId: options.getDefaultProviderId(),
         searchHistory: options.getHistory(),
+        ...(copy ? { copy } : {}),
         openExternalForPlugin: (request) =>
           options.openExternalForPlugin(request.pluginId, request.url),
         onSaveHistory: options.saveHistory,

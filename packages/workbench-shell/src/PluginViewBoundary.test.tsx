@@ -11,12 +11,12 @@ afterEach(() => {
   }
 })
 
-function mount(view: () => JSX.Element): HTMLElement {
+function mount(view: () => JSX.Element, props?: Record<string, unknown>): HTMLElement {
   const root = document.createElement("div")
   document.body.append(root)
   render(
     () => (
-      <PluginViewBoundary instanceId="broken-widget" title="Broken Widget">
+      <PluginViewBoundary instanceId="broken-widget" title="Broken Widget" {...(props as object)}>
         {view()}
       </PluginViewBoundary>
     ),
@@ -43,6 +43,23 @@ describe("PluginViewBoundary", () => {
 
     expect(root.textContent).toContain("Healthy plugin")
     expect(root.textContent).not.toContain("插件视图加载失败")
+  })
+
+  it("uses injected fallback copy", () => {
+    const root = mount(
+      () => {
+        throw new Error("boom")
+      },
+      {
+        copy: {
+          loadFailed: "Plugin view failed to load",
+          retry: "Retry",
+        },
+      },
+    )
+
+    expect(root.textContent).toContain("Plugin view failed to load")
+    expect(root.querySelector("button")?.textContent).toBe("Retry")
   })
 
   it("renders a retry button without relying on full page reload", () => {

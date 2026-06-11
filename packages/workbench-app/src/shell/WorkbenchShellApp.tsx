@@ -19,6 +19,7 @@ import { createWorkbenchShellState } from "./WorkbenchShellState"
 import { createWorkbenchWorkspaceController } from "../workspace/WorkbenchShellWorkspaceController"
 import { assignGridOrder } from "../shared/workbenchGrid"
 import { createWorkbenchShellRuntimes } from "./createWorkbenchShellRuntimes"
+import { createWorkbenchShellPluginViewBoundaryCopy } from "../i18n"
 
 export type WorkbenchShellAppProps = {
   composition: {
@@ -239,6 +240,11 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent,
+    shellCopy: {
+      pluginViewBoundaryCopy: createWorkbenchShellPluginViewBoundaryCopy((key, vars) =>
+        runtime.i18n.t("tabora.shell", key, vars),
+      ),
+    },
   }
 
   return (
