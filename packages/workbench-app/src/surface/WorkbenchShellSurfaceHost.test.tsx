@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
+import type { WidgetViewProps } from "@tabora/plugin-api"
 
 import { WorkbenchShellProvider } from "../shell/WorkbenchShellContext"
 import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
@@ -109,6 +110,63 @@ describe("WorkbenchShellSurfaceHost", () => {
 
     expect(root.textContent).toContain("Add widget")
     expect(root.textContent).toContain("Current")
+
+    root.remove()
+  })
+
+  it("renders localized overlay copy for expand, modal, and fullscreen surfaces", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    const shell = createWorkbenchShellSurfaceStub({
+      tShell: (key: string, vars?: Record<string, string | number>) => {
+        if (key === "chrome.expand.viewMissing") {
+          return `Expanded view unavailable: ${String(vars?.viewId)}`
+        }
+        if (key === "chrome.expand.footerHint") return "Esc to close"
+        if (key === "chrome.modal.close") return "Close"
+        if (key === "chrome.fullscreen.close") return "Close fullscreen view"
+        return key
+      },
+      layoutContent: () => <div>layout-content</div>,
+    })
+
+    const expandProps = {
+      instanceId: "widget-1",
+      pluginId: "plugin.widgets",
+      contributionId: "widget.notes",
+      size: "M",
+      supportedSizes: ["S", "M", "L"],
+      config: {},
+      host: {} as WidgetViewProps["host"],
+      data: {} as WidgetViewProps["data"],
+    } satisfies WidgetViewProps
+
+    shell.state.overlays.setExpandState({
+      instanceId: "widget-1",
+      title: "Notes",
+      viewId: "missing.view",
+      mode: "expand",
+      props: expandProps,
+    })
+    shell.state.overlays.setModalViewId("missing.modal.view")
+    shell.state.overlays.setFullscreenViewId("missing.fullscreen.view")
+
+    render(
+      () => (
+        <WorkbenchShellProvider shell={shell}>
+          <WorkbenchShellSurfaceHost />
+        </WorkbenchShellProvider>
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("Expanded view unavailable: missing.view")
+    expect(root.textContent).toContain("Esc to close")
+    expect(root.querySelector(".modal-close")?.getAttribute("aria-label")).toBe("Close")
+    expect(root.querySelector(".fullscreen-close")?.getAttribute("aria-label")).toBe(
+      "Close fullscreen view",
+    )
 
     root.remove()
   })

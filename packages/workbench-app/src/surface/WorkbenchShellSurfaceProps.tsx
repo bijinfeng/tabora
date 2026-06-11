@@ -52,6 +52,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
       widgetIconForProps: (viewProps: WidgetViewProps) =>
         renderWorkbenchWidgetIcon(widgetController.widgetContribution(viewProps)?.icon),
       onClose: widgetController.closeExpand,
+      ...(tShell ? { tShell } : {}),
       ...(pluginViewBoundaryCopy ? { pluginViewBoundaryCopy } : {}),
     },
     pluginModal: {
@@ -59,6 +60,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
       modalProps: overlays.modalProps(),
       getView: (viewId: string) => resolveWorkbenchView(views, viewId),
       onClose: () => overlays.setModalViewId(null),
+      ...(tShell ? { tShell } : {}),
       ...(pluginViewBoundaryCopy ? { pluginViewBoundaryCopy } : {}),
     },
     fullscreenOverlay: {
@@ -66,6 +68,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
       fullscreenProps: overlays.fullscreenProps(),
       getView: (viewId: string) => resolveWorkbenchView(views, viewId),
       onClose: () => overlays.setFullscreenViewId(null),
+      ...(tShell ? { tShell } : {}),
       ...(pluginViewBoundaryCopy ? { pluginViewBoundaryCopy } : {}),
     },
     contextMenuOverlay: {
