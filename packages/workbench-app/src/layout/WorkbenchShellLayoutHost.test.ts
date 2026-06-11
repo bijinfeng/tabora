@@ -186,4 +186,56 @@ describe("createWorkbenchLayoutHostAPI", () => {
     expect(switchTheme).toHaveBeenCalledWith("theme.dark.custom")
     expect(openSettings).toHaveBeenCalledWith("settings.appearance.custom")
   })
+
+  it("uses tShell to localize global action labels", () => {
+    const host = createWorkbenchLayoutHostAPI({
+      activeLayoutId: () => "layout.dashboard.custom",
+      isDark: () => true,
+      tShell: (key: string) => {
+        const messages: Record<string, string> = {
+          "layoutHost.layoutToggle.toFocus": "Switch to focus",
+          "layoutHost.rail.home": "Group My workbench",
+          "layoutHost.common.command": "Commands",
+          "layoutHost.common.settings": "Settings",
+          "layoutHost.themeTarget.light": "Light",
+        }
+        return messages[key] ?? key
+      },
+      setCommandPaletteOpen: vi.fn(),
+      setAddWidgetOpen: vi.fn(),
+      openSettings: vi.fn(),
+      readLayoutState: vi.fn(),
+      writeLayoutState: vi.fn(),
+      showToast: vi.fn(),
+      switchLayout: vi.fn(),
+      switchTheme: vi.fn(),
+      runRailAction: vi.fn(),
+      shellConfig: {
+        themeIds: {
+          light: "theme.light.custom",
+          dark: "theme.dark.custom",
+        },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          focus: "layout.focus.custom",
+        },
+        settingsPanelIds: {
+          appearance: "settings.appearance.custom",
+        },
+        searchHistory: {
+          pluginId: "search.plugin.custom",
+          key: "search-history-custom",
+        },
+      },
+    } as any)
+
+    const railActions = host.getGlobalActions("rail")
+    expect(railActions[0]?.label).toBe("Group My workbench")
+
+    const toolbarActions = host.getGlobalActions("toolbar")
+    expect(toolbarActions[0]?.label).toBe("Commands")
+    expect(toolbarActions[1]?.label).toBe("Switch to focus")
+    expect(toolbarActions[2]?.label).toBe("Light")
+    expect(toolbarActions[3]?.label).toBe("Settings")
+  })
 })

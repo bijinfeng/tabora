@@ -5,10 +5,12 @@ import {
   resolveWorkbenchThemeToggleTarget,
   type WorkbenchShellConfig,
 } from "../shared/shellConfig"
+import type { ShellTranslation } from "../i18n"
 
 export function createWorkbenchLayoutHostAPI(options: {
   activeLayoutId: () => string
   isDark: () => boolean
+  tShell?: ShellTranslation
   shellConfig: WorkbenchShellConfig
   setCommandPaletteOpen: (open: boolean) => void
   setAddWidgetOpen: (open: boolean) => void
@@ -20,14 +22,15 @@ export function createWorkbenchLayoutHostAPI(options: {
   switchTheme: (themeId: string) => void
   runRailAction: (actionId: string) => void
 }): LayoutHostAPI {
+  const t = options.tShell
   return {
     getGlobalActions: (surface) => {
       const layoutToggle = {
         id: "layout-switch" as const,
         label:
           options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-            ? "切换到专注"
-            : "切换到仪表盘",
+            ? (t?.("layoutHost.layoutToggle.toFocus") ?? "切换到专注")
+            : (t?.("layoutHost.layoutToggle.toDashboard") ?? "切换到仪表盘"),
         icon:
           options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
             ? "layout-focus"
@@ -47,27 +50,27 @@ export function createWorkbenchLayoutHostAPI(options: {
         return [
           {
             id: "home",
-            label: "分组 我的工作台",
+            label: t?.("layoutHost.rail.home") ?? "分组 我的工作台",
             icon: "⌂",
             isActive: true,
             run: () => options.runRailAction("home"),
           },
           {
             id: "add-widget",
-            label: "添加卡片",
+            label: t?.("layoutHost.rail.addWidget") ?? "添加卡片",
             icon: "+",
             run: () => options.runRailAction("add-widget"),
           },
           layoutToggle,
           {
             id: "theme",
-            label: "切换主题",
+            label: t?.("layoutHost.rail.toggleTheme") ?? "切换主题",
             icon: "☼",
             run: () => options.runRailAction("theme"),
           },
           {
             id: "settings",
-            label: "设置",
+            label: t?.("layoutHost.common.settings") ?? "设置",
             icon: "⚙",
             run: () => options.runRailAction("settings"),
           },
@@ -78,7 +81,7 @@ export function createWorkbenchLayoutHostAPI(options: {
         return [
           {
             id: "command",
-            label: "命令",
+            label: t?.("layoutHost.common.command") ?? "命令",
             icon: "⌘K",
             shortcut: "⌘K",
             run: () => options.setCommandPaletteOpen(true),
@@ -86,7 +89,9 @@ export function createWorkbenchLayoutHostAPI(options: {
           layoutToggle,
           {
             id: "theme",
-            label: options.isDark() ? "明亮" : "暗色",
+            label: options.isDark()
+              ? (t?.("layoutHost.themeTarget.light") ?? "明亮")
+              : (t?.("layoutHost.themeTarget.dark") ?? "暗色"),
             icon: options.isDark() ? "☀" : "☾",
             shortcut: "⌘T",
             run: () => {
@@ -97,7 +102,7 @@ export function createWorkbenchLayoutHostAPI(options: {
           },
           {
             id: "settings",
-            label: "设置",
+            label: t?.("layoutHost.common.settings") ?? "设置",
             icon: "⚙",
             run: () => options.runRailAction("settings"),
           },
@@ -108,21 +113,23 @@ export function createWorkbenchLayoutHostAPI(options: {
         return [
           {
             id: "command",
-            label: "命令",
+            label: t?.("layoutHost.common.command") ?? "命令",
             icon: "⌘K",
             shortcut: "⌘K",
             run: () => options.setCommandPaletteOpen(true),
           },
           {
             id: "add-widget",
-            label: "添加卡片",
+            label: t?.("layoutHost.rail.addWidget") ?? "添加卡片",
             icon: "+",
             run: () => options.setAddWidgetOpen(true),
           },
           layoutToggle,
           {
             id: "theme",
-            label: options.isDark() ? "明亮" : "暗色",
+            label: options.isDark()
+              ? (t?.("layoutHost.themeTarget.light") ?? "明亮")
+              : (t?.("layoutHost.themeTarget.dark") ?? "暗色"),
             icon: options.isDark() ? "☀" : "☾",
             shortcut: "⌘T",
             run: () => {
@@ -133,7 +140,7 @@ export function createWorkbenchLayoutHostAPI(options: {
           },
           {
             id: "settings",
-            label: "设置",
+            label: t?.("layoutHost.common.settings") ?? "设置",
             icon: "⚙",
             run: () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
           },

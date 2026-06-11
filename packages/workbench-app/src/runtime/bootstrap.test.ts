@@ -207,6 +207,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(
       runtime.i18n.t("tabora.shell", "commands.openShortcuts.toast", { shortcuts: "⌘K" }),
     ).toBe("Shortcuts: ⌘K, Esc")
+    expect(runtime.i18n.t("tabora.shell", "layoutHost.common.command")).toBe("Commands")
 
     runtime.i18n.setLocale("zh-CN")
     expect(runtime.i18n.t("tabora.shell", "pluginView.retry")).toBe("重试")
@@ -222,5 +223,6 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(
       runtime.i18n.t("tabora.shell", "commands.openShortcuts.toast", { shortcuts: "⌘K" }),
     ).toBe("快捷键：⌘K、Esc")
+    expect(runtime.i18n.t("tabora.shell", "layoutHost.rail.home")).toBe("分组 我的工作台")
   })
 })

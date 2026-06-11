@@ -50,6 +50,7 @@ export function createWorkbenchShellLayoutRuntime(
   const layoutHostAPI = createWorkbenchLayoutHostAPI({
     activeLayoutId: options.activeLayoutId,
     isDark: options.isDark,
+    ...(options.tShell ? { tShell: options.tShell } : {}),
     shellConfig: options.shellConfig,
     setCommandPaletteOpen: options.setCommandPaletteOpen,
     setAddWidgetOpen: options.setAddWidgetOpen,
