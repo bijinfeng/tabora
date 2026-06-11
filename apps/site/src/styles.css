@@ -144,6 +144,38 @@ button {
   cursor: pointer;
 }
 
+.topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgb(var(--tbr-color-line));
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(var(--tbr-color-text-muted));
+  font-size: 12px;
+  font-weight: 680;
+  cursor: pointer;
+}
+
+.lang-toggle:hover {
+  border-color: rgb(var(--tbr-color-line-strong));
+  background: rgb(var(--tbr-color-surface));
+  color: rgb(var(--tbr-color-text));
+}
+
+.lang-toggle:focus-visible {
+  outline: 2px solid rgb(var(--tbr-color-focus));
+  outline-offset: 2px;
+}
+
 .theme-toggle:hover {
   border-color: rgb(var(--tbr-color-line-strong));
   background: rgb(var(--tbr-color-surface));

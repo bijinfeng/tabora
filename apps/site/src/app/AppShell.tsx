@@ -1,8 +1,10 @@
 import { applyThemeTokens } from "@tabora/theme"
 import { useLocation } from "@solidjs/router"
+import * as i18n from "@solid-primitives/i18n"
 import {
   createContext,
   createEffect,
+  createMemo,
   createSignal,
   useContext,
   type Accessor,
@@ -28,6 +30,75 @@ export function useSiteTheme(): SiteThemeApi {
   return context
 }
 
+export type SiteLocale = "zh-CN" | "en"
+
+export type SiteI18nApi = {
+  locale: Accessor<SiteLocale>
+  setLocale: (locale: SiteLocale) => void
+  toggleLocale: () => void
+  t: (key: string, params?: i18n.BaseTemplateArgs) => string
+}
+
+const SiteI18nContext = createContext<SiteI18nApi>()
+
+export function useSiteI18n(): SiteI18nApi {
+  const context = useContext(SiteI18nContext)
+  if (!context) {
+    throw new Error("useSiteI18n must be used within AppShell")
+  }
+  return context
+}
+
+const siteMessages: Record<SiteLocale, Record<string, string>> = {
+  "zh-CN": {
+    "a11y.toggleTheme": "切换主题",
+    "a11y.toggleLocale": "切换语言",
+    "locale.switch": "EN",
+    "nav.home": "首页",
+    "nav.product": "产品",
+    "nav.officialPlugins": "官方插件",
+    "nav.workbench": "工作台",
+    "nav.anatomy": "界面",
+    "nav.layouts": "布局",
+    "nav.plugins": "插件",
+    "nav.download": "下载",
+    "nav.docs": "文档",
+    "action.devDocs": "开发文档",
+    "action.installDocs": "安装文档",
+    "action.choosePlatform": "选择平台",
+    "toast.theme.dark": "已切换为暗色主题。",
+    "toast.theme.light": "已切换为明亮主题。",
+  },
+  en: {
+    "a11y.toggleTheme": "Toggle theme",
+    "a11y.toggleLocale": "Switch language",
+    "locale.switch": "中文",
+    "nav.home": "Home",
+    "nav.product": "Product",
+    "nav.officialPlugins": "Official plugins",
+    "nav.workbench": "Workbench",
+    "nav.anatomy": "UI",
+    "nav.layouts": "Layouts",
+    "nav.plugins": "Plugins",
+    "nav.download": "Download",
+    "nav.docs": "Docs",
+    "action.devDocs": "Docs",
+    "action.installDocs": "Install docs",
+    "action.choosePlatform": "Platforms",
+    "toast.theme.dark": "Switched to dark theme.",
+    "toast.theme.light": "Switched to light theme.",
+  },
+}
+
+const normalizeLocale = (raw: string | null): SiteLocale | null => {
+  if (!raw) return null
+  const value = raw.trim().toLowerCase()
+  if (value === "en" || value === "en-us" || value === "en_us") return "en"
+  if (value === "zh" || value === "zh-cn" || value === "zh_cn") return "zh-CN"
+  if (raw === "zh-CN") return "zh-CN"
+  return null
+}
+
 export function AppShell(props: { children?: JSX.Element }) {
   const initialDark = () => {
     const saved = localStorage.getItem("tabora-theme")
@@ -43,6 +114,23 @@ export function AppShell(props: { children?: JSX.Element }) {
     return path === "/" || path === "/download" || path === "/docs"
   }
 
+  const initialLocale = () => {
+    const paramLocale = normalizeLocale(new URLSearchParams(window.location.search).get("lang"))
+    if (paramLocale) return paramLocale
+    const saved = normalizeLocale(localStorage.getItem("tabora-site-lang"))
+    if (saved) return saved
+    const browser = normalizeLocale(navigator.language)
+    return browser ?? "zh-CN"
+  }
+
+  const [locale, setLocale] = createSignal<SiteLocale>(initialLocale())
+  const toggleLocale = () => setLocale((value) => (value === "zh-CN" ? "en" : "zh-CN"))
+  const dict = createMemo(() => i18n.flatten(siteMessages[locale()]))
+  const translator = i18n.translator(dict, i18n.resolveTemplate)
+  const t: SiteI18nApi["t"] = (key, params) => {
+    return translator(key, params) ?? siteMessages["zh-CN"][key] ?? key
+  }
+
   const toggleDark = () => {
     setDark((value) => {
       const next = !value
@@ -55,6 +143,16 @@ export function AppShell(props: { children?: JSX.Element }) {
     applyThemeTokens(document.documentElement, dark() ? darkTokens : lightTokens)
     document.documentElement.classList.toggle("site-dark", dark())
     document.documentElement.classList.toggle("dark", dark())
+  })
+
+  createEffect(() => {
+    const paramLocale = normalizeLocale(new URLSearchParams(location.search).get("lang"))
+    if (paramLocale) setLocale(paramLocale)
+  })
+
+  createEffect(() => {
+    localStorage.setItem("tabora-site-lang", locale())
+    document.documentElement.lang = locale()
   })
 
   createEffect(() => {
@@ -90,16 +188,18 @@ export function AppShell(props: { children?: JSX.Element }) {
 
   return (
     <SiteThemeContext.Provider value={{ dark, toggleDark }}>
-      {isPrototypePage() ? (
-        <div class="site-prototype-root" id="top">
-          {props.children}
-        </div>
-      ) : (
-        <div class="site" id="top">
-          <Topbar onToggleTheme={toggleDark} />
-          {props.children}
-        </div>
-      )}
+      <SiteI18nContext.Provider value={{ locale, setLocale, toggleLocale, t }}>
+        {isPrototypePage() ? (
+          <div class="site-prototype-root" id="top">
+            {props.children}
+          </div>
+        ) : (
+          <div class="site" id="top">
+            <Topbar onToggleTheme={toggleDark} />
+            {props.children}
+          </div>
+        )}
+      </SiteI18nContext.Provider>
     </SiteThemeContext.Provider>
   )
 }

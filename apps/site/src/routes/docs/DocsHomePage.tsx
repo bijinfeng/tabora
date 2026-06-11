@@ -1,6 +1,6 @@
-import { onCleanup, onMount } from "solid-js"
+import { createEffect, onCleanup, onMount } from "solid-js"
 
-import { useSiteTheme } from "../../app/AppShell"
+import { useSiteI18n, useSiteTheme } from "../../app/AppShell"
 
 import docsPrototypeHtml from "../../../../../docs/design/docs.html?raw"
 
@@ -124,12 +124,22 @@ const normalizeDocsPrototypeBody = () => {
 
 export function DocsHomePage() {
   const theme = useSiteTheme()
+  const i18n = useSiteI18n()
 
   onMount(() => {
     const styleTag = document.createElement("style")
     styleTag.dataset.docsPrototype = "true"
     styleTag.textContent = docsPrototypeCss
     document.head.append(styleTag)
+
+    const topnavActions = document.querySelector(".topnav-actions")
+    const localeButton = document.createElement("button")
+    localeButton.type = "button"
+    localeButton.className = "icbtn"
+    localeButton.setAttribute("aria-label", i18n.t("a11y.toggleLocale"))
+    localeButton.textContent = i18n.t("locale.switch")
+    localeButton.addEventListener("click", () => i18n.toggleLocale())
+    topnavActions?.append(localeButton)
 
     let resetCopyTimer = 0
 
@@ -163,6 +173,26 @@ export function DocsHomePage() {
 
     document.addEventListener("click", onClick)
 
+    const updatePrototypeTexts = () => {
+      localeButton.textContent = i18n.t("locale.switch")
+      localeButton.setAttribute("aria-label", i18n.t("a11y.toggleLocale"))
+
+      document.querySelectorAll<HTMLAnchorElement>(".topnav-links a").forEach((a) => {
+        const href = a.getAttribute("href") ?? ""
+        if (href === "/") a.textContent = i18n.t("nav.home")
+        else if (href === "/#product") a.textContent = i18n.t("nav.product")
+        else if (href === "/download") a.textContent = i18n.t("nav.download")
+        else if (href === "/docs") a.textContent = i18n.t("nav.docs")
+        else if (href === "/#plugins") a.textContent = i18n.t("nav.officialPlugins")
+      })
+    }
+
+    updatePrototypeTexts()
+    createEffect(() => {
+      i18n.locale()
+      updatePrototypeTexts()
+    })
+
     queueMicrotask(() => {
       document.querySelectorAll("pre > code").forEach((element) => {
         if (!(element instanceof HTMLElement)) return
@@ -175,6 +205,7 @@ export function DocsHomePage() {
     onCleanup(() => {
       document.removeEventListener("click", onClick)
       window.clearTimeout(resetCopyTimer)
+      localeButton.remove()
       styleTag.remove()
     })
   })

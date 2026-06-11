@@ -1,11 +1,14 @@
 import { TaboraMark } from "@tabora/brand"
 import { A, useLocation } from "@solidjs/router"
 
+import { useSiteI18n } from "./AppShell"
 import { scrollToHash } from "../shared/scrollToHash"
+import { LocaleToggleButton } from "../shared/LocaleToggleButton"
 
 export function Topbar(props: { onToggleTheme: () => void }) {
   const location = useLocation()
   const isDocs = () => location.pathname.startsWith("/docs")
+  const i18n = useSiteI18n()
 
   return (
     <header class="topbar">
@@ -15,30 +18,33 @@ export function Topbar(props: { onToggleTheme: () => void }) {
       </A>
       <nav class="nav" aria-label="主导航">
         <A href="/#workbench" onClick={() => scrollToHash("#workbench")}>
-          工作台
+          {i18n.t("nav.workbench")}
         </A>
         <A href="/#anatomy" onClick={() => scrollToHash("#anatomy")}>
-          界面
+          {i18n.t("nav.anatomy")}
         </A>
         <A href="/#layouts" onClick={() => scrollToHash("#layouts")}>
-          布局
+          {i18n.t("nav.layouts")}
         </A>
         <A href="/#plugins" onClick={() => scrollToHash("#plugins")}>
-          插件
+          {i18n.t("nav.plugins")}
         </A>
-        <A href="/download">下载</A>
+        <A href="/download">{i18n.t("nav.download")}</A>
         <A href="/docs" classList={{ active: isDocs() }}>
-          文档
+          {i18n.t("nav.docs")}
         </A>
       </nav>
-      <button
-        class="theme-toggle"
-        type="button"
-        aria-label="切换主题"
-        onClick={props.onToggleTheme}
-      >
-        <span class="theme-dot" aria-hidden="true" />
-      </button>
+      <div class="topbar-actions">
+        <LocaleToggleButton class="lang-toggle" />
+        <button
+          class="theme-toggle"
+          type="button"
+          aria-label={i18n.t("a11y.toggleTheme")}
+          onClick={props.onToggleTheme}
+        >
+          <span class="theme-dot" aria-hidden="true" />
+        </button>
+      </div>
     </header>
   )
 }

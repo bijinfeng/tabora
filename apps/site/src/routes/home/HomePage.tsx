@@ -1,7 +1,8 @@
 import { A } from "@solidjs/router"
 import { createEffect, createSignal, onCleanup, onMount } from "solid-js"
 
-import { useSiteTheme } from "../../app/AppShell"
+import { useSiteI18n, useSiteTheme } from "../../app/AppShell"
+import { LocaleToggleButton } from "../../shared/LocaleToggleButton"
 
 export function HomePage() {
   return <SiteLandingHome />
@@ -9,6 +10,7 @@ export function HomePage() {
 
 function SiteLandingHome() {
   const theme = useSiteTheme()
+  const i18n = useSiteI18n()
   const [commandOpen, setCommandOpen] = createSignal(false)
   const [toastMessage, setToastMessage] = createSignal("")
   const [toastVisible, setToastVisible] = createSignal(false)
@@ -55,7 +57,7 @@ function SiteLandingHome() {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "t") {
         event.preventDefault()
         theme.toggleDark()
-        showToast(theme.dark() ? "已切换为暗色主题。" : "已切换为明亮主题。")
+        showToast(theme.dark() ? i18n.t("toast.theme.dark") : i18n.t("toast.theme.light"))
       }
     }
 
@@ -79,28 +81,29 @@ function SiteLandingHome() {
           </A>
           <nav class="site-navlinks" aria-label="主导航">
             <A class="active" href="/">
-              首页
+              {i18n.t("nav.home")}
             </A>
-            <a href="#product">产品</a>
-            <A href="/download">下载</A>
-            <A href="/docs">文档</A>
-            <a href="#plugins">官方插件</a>
+            <a href="#product">{i18n.t("nav.product")}</a>
+            <A href="/download">{i18n.t("nav.download")}</A>
+            <A href="/docs">{i18n.t("nav.docs")}</A>
+            <a href="#plugins">{i18n.t("nav.officialPlugins")}</a>
           </nav>
           <div class="site-nav-actions">
             <A class="btn btn-secondary" href="/docs">
-              开发文档
+              {i18n.t("action.devDocs")}
             </A>
             <A class="btn btn-primary" href="/download">
-              下载
+              {i18n.t("nav.download")}
             </A>
+            <LocaleToggleButton class="btn btn-secondary btn-sm" />
             <button
               class="btn btn-icon"
               type="button"
               data-dark-toggle
-              aria-label="切换深色模式"
+              aria-label={i18n.t("a11y.toggleTheme")}
               onClick={() => {
                 theme.toggleDark()
-                showToast(theme.dark() ? "已切换为暗色主题。" : "已切换为明亮主题。")
+                showToast(theme.dark() ? i18n.t("toast.theme.dark") : i18n.t("toast.theme.light"))
               }}
             >
               <svg
