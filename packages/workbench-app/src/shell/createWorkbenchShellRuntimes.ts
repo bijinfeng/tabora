@@ -148,11 +148,6 @@ export function createWorkbenchShellRuntimes(options: {
     renderWidgetIcon: renderWorkbenchWidgetIcon,
     buildWidgetViewProps: (instance, model) =>
       controllerRuntime.viewRuntime.buildWidgetViewProps(instance, model),
-    onPointerDown: (event, instanceId) =>
-      controllerRuntime.dragHandlers.onPointerDown(event, instanceId),
-    onPointerMove: controllerRuntime.dragHandlers.onPointerMove,
-    onPointerUp: controllerRuntime.dragHandlers.onPointerUp,
-    onPointerCancel: controllerRuntime.dragHandlers.onPointerCancel,
     openWidgetExpand: controllerRuntime.widgetController.openWidgetExpand,
     changeWidgetSize: controllerRuntime.widgetController.changeWidgetSize,
     removeWidget: controllerRuntime.widgetController.removeWidget,

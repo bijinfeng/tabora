@@ -43,10 +43,6 @@ export function createWorkbenchInstanceRenderer(options: {
   buildWidgetViewProps: (instance: PluginInstance, model: WidgetRenderModel) => WidgetViewProps
   buildSearchViewProps: (instance: PluginInstance) => SearchViewProps
   renderWidgetIcon: (icon?: string) => JSX.Element
-  onPointerDown: (event: PointerEvent, instanceId: string) => void
-  onPointerMove: (event: PointerEvent) => void
-  onPointerUp: (event: PointerEvent) => void
-  onPointerCancel: (event: PointerEvent) => void
   onOpenWidgetExpand: (instance: PluginInstance) => void
   onOpenWidgetContextMenu: (event: MouseEvent, instanceId: string) => void
   onChangeWidgetSize: (instanceId: string, size: WidgetSize) => void
@@ -78,10 +74,6 @@ export function createWorkbenchInstanceRenderer(options: {
           currentSize={model.currentSize}
           sortableIndex={() => options.sortableIndex(instance.id)}
           callbacks={{
-            onPointerDown: (event: PointerEvent) => options.onPointerDown(event, instance.id),
-            onPointerMove: options.onPointerMove,
-            onPointerUp: options.onPointerUp,
-            onPointerCancel: options.onPointerCancel,
             onDblClick: (event: MouseEvent) => {
               const target = event.target as HTMLElement
               if (isWorkbenchInteractiveElement(target)) {

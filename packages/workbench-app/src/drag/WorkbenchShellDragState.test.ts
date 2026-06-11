@@ -1,8 +1,10 @@
 import type { PluginInstance } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 
-import { createWorkbenchPointerDragHandlers } from "./WorkbenchShellDragState"
-import type { WorkbenchDragControllerState } from "./WorkbenchDragController"
+import {
+  createWorkbenchDndKitDragHandlers,
+  type WorkbenchDndDragState,
+} from "./WorkbenchShellDragState"
 
 const baseDate = "2026-06-07T00:00:00.000Z"
 
@@ -34,7 +36,7 @@ function dragEvent(sourceId: string, targetId?: string, canceled = false) {
   }
 }
 
-describe("createWorkbenchPointerDragHandlers dnd-kit bridge", () => {
+describe("createWorkbenchDndKitDragHandlers", () => {
   it("persists the existing Tabora order model from dnd-kit drag end events", async () => {
     const targetElement = document.createElement("div")
     targetElement.dataset.widgetInstanceId = "widget-b"
@@ -45,8 +47,8 @@ describe("createWorkbenchPointerDragHandlers dnd-kit bridge", () => {
     ]
     const persistGridOrder = vi.fn(async (_instances: PluginInstance[]) => {})
     const showToast = vi.fn()
-    let dragState: WorkbenchDragControllerState | null = null
-    const handlers = createWorkbenchPointerDragHandlers({
+    let dragState: WorkbenchDndDragState | null = null
+    const handlers = createWorkbenchDndKitDragHandlers({
       getPersistedInstances: () => persisted,
       getDragState: () => dragState,
       setDragState: (state) => {
@@ -72,5 +74,42 @@ describe("createWorkbenchPointerDragHandlers dnd-kit bridge", () => {
     expect(orderedInstances.map((current) => current.id)).toEqual(["widget-b", "widget-a"])
     expect(showToast).toHaveBeenCalledWith("排序已更新")
     expect(dragState).toBeNull()
+    vi.restoreAllMocks()
+  })
+
+  it("falls back to document pointerup cleanup when dnd-kit misses drag end", async () => {
+    const targetElement = document.createElement("div")
+    targetElement.dataset.widgetInstanceId = "widget-b"
+    vi.spyOn(document, "elementFromPoint").mockReturnValue(targetElement)
+    const persisted = [
+      instance({ id: "widget-a", grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 } }),
+      instance({ id: "widget-b", grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 } }),
+    ]
+    const persistGridOrder = vi.fn(async (_instances: PluginInstance[]) => {})
+    let dragState: WorkbenchDndDragState | null = null
+    const handlers = createWorkbenchDndKitDragHandlers({
+      getPersistedInstances: () => persisted,
+      getDragState: () => dragState,
+      setDragState: (state) => {
+        dragState = state
+      },
+      persistGridOrder,
+      showToast: vi.fn(),
+    })
+
+    handlers.onDndDragStart(
+      dragEvent("widget-a") as unknown as Parameters<typeof handlers.onDndDragStart>[0],
+    )
+    expect(document.body.classList.contains("drag-active")).toBe(true)
+
+    document.dispatchEvent(new PointerEvent("pointerup", { clientX: 10, clientY: 10 }))
+    handlers.onDndDragEnd(
+      dragEvent("widget-a", "widget-b") as unknown as Parameters<typeof handlers.onDndDragEnd>[0],
+    )
+
+    await vi.waitFor(() => expect(persistGridOrder).toHaveBeenCalledTimes(1))
+    expect(document.body.classList.contains("drag-active")).toBe(false)
+    expect(dragState).toBeNull()
+    vi.restoreAllMocks()
   })
 })

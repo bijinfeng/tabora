@@ -108,10 +108,6 @@ export function SafeWorkbenchLayout(props: {
   onOpenCommandPalette: () => void
   onToggleTheme: () => void
   onOpenSettings: () => void
-  onPointerDown: (event: PointerEvent, instanceId: string) => void
-  onPointerMove: (event: PointerEvent) => void
-  onPointerUp: (event: PointerEvent) => void
-  onPointerCancel: (event: PointerEvent) => void
   onOpenExpand: (instance: PluginInstance) => void
   onOpenContextMenu: (event: MouseEvent, instanceId: string) => void
   onResize: (instanceId: string, size: WidgetSize) => void
@@ -158,10 +154,6 @@ export function SafeWorkbenchLayout(props: {
                 supportedSizes={model.supportedSizes}
                 currentSize={model.currentSize}
                 callbacks={{
-                  onPointerDown: (event: PointerEvent) => props.onPointerDown(event, instance.id),
-                  onPointerMove: props.onPointerMove,
-                  onPointerUp: props.onPointerUp,
-                  onPointerCancel: props.onPointerCancel,
                   onDblClick: () => props.onOpenExpand(instance),
                   onContextMenu: (event: MouseEvent) => props.onOpenContextMenu(event, instance.id),
                   onResize: (size: WidgetSize) => props.onResize(instance.id, size),

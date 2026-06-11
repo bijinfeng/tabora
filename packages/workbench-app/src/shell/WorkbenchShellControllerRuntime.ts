@@ -10,8 +10,10 @@ import type { ViewRegistry } from "@tabora/platform-kernel"
 import type { InstanceRepository, PluginDataRepository } from "@tabora/storage"
 
 import { renderWorkbenchWidgetIcon } from "../shared/WorkbenchShellIcons"
-import type { WorkbenchDragControllerState } from "../drag/WorkbenchDragController"
-import { createWorkbenchPointerDragHandlers } from "../drag/WorkbenchShellDragState"
+import {
+  createWorkbenchDndKitDragHandlers,
+  type WorkbenchDndDragState,
+} from "../drag/WorkbenchShellDragState"
 import { createWorkbenchShellViewRuntime } from "./WorkbenchShellViewRuntime"
 import { createWorkbenchWidgetController } from "../widget/WorkbenchShellWidgetController"
 import type { WorkbenchExpandState } from "../surface/WorkbenchShellInteractions"
@@ -33,7 +35,7 @@ type CommandExecutionContext = Parameters<
 type CommandRuntime = ReturnType<typeof createWorkbenchShellCommandModels>
 type WidgetRuntime = ReturnType<typeof createWorkbenchWidgetController>
 type SearchRuntime = ReturnType<typeof createWorkbenchSearchSurfaces>
-type DragRuntime = ReturnType<typeof createWorkbenchPointerDragHandlers>
+type DragRuntime = ReturnType<typeof createWorkbenchDndKitDragHandlers>
 type ViewRuntime = ReturnType<typeof createWorkbenchShellViewRuntime>
 type ControllerCatalog = Pick<
   PluginCatalog,
@@ -68,7 +70,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     instances: () => PluginInstance[]
     expandState: () => WorkbenchExpandState | null
     contextMenu: () => WorkbenchContextMenuState | null
-    dragState: () => WorkbenchDragControllerState | null
+    dragState: () => WorkbenchDndDragState | null
     searchSettings: () => WorkbenchSearchSettings
     searchHistory: () => SearchHistoryEntry[]
     inlineSearchQuery: () => string
@@ -82,7 +84,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     setInstances: SetInstances
     setExpandState: (state: WorkbenchExpandState | null) => void
     setContextMenu: (state: WorkbenchContextMenuState | null) => void
-    setDragState: (state: WorkbenchDragControllerState | null) => void
+    setDragState: (state: WorkbenchDndDragState | null) => void
     setCommandPaletteOpen: (open: boolean) => void
     setAddWidgetOpen: (open: boolean) => void
     setInlineSearchQuery: (query: string) => void
@@ -201,7 +203,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     closeCommandPalette: () => options.setters.setCommandPaletteOpen(false),
   })
 
-  const dragHandlers: DragRuntime = createWorkbenchPointerDragHandlers({
+  const dragHandlers: DragRuntime = createWorkbenchDndKitDragHandlers({
     getPersistedInstances: options.state.instances,
     getDragState: options.state.dragState,
     setDragState: options.setters.setDragState,
@@ -217,10 +219,6 @@ export function createWorkbenchShellControllerRuntime(options: {
       options.services.pluginCatalog.findSearchContribution(pluginId, contributionId),
     buildInlineSearchViewProps: (instance) => searchSurfaces.buildInlineSearchViewProps(instance),
     renderWidgetIcon: renderWorkbenchWidgetIcon,
-    onPointerDown: (event, instanceId) => dragHandlers.onPointerDown(event, instanceId),
-    onPointerMove: (event) => dragHandlers.onPointerMove(event),
-    onPointerUp: (event) => dragHandlers.onPointerUp(event),
-    onPointerCancel: (event) => dragHandlers.onPointerCancel(event),
     openWidgetExpand: widgetController.openWidgetExpand,
     setContextMenu: options.setters.setContextMenu,
     changeWidgetSize: widgetController.changeWidgetSize,

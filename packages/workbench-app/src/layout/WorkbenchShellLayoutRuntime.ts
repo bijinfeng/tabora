@@ -21,10 +21,6 @@ type SafeLayoutBridges = {
   getWidgetView: WorkbenchSafeLayoutOptions["getView"]
   renderWidgetIcon: WorkbenchSafeLayoutOptions["renderWidgetIcon"]
   buildWidgetViewProps: WorkbenchSafeLayoutOptions["buildWidgetViewProps"]
-  onPointerDown: WorkbenchSafeLayoutOptions["onPointerDown"]
-  onPointerMove: WorkbenchSafeLayoutOptions["onPointerMove"]
-  onPointerUp: WorkbenchSafeLayoutOptions["onPointerUp"]
-  onPointerCancel: WorkbenchSafeLayoutOptions["onPointerCancel"]
   openWidgetExpand: WorkbenchSafeLayoutOptions["onOpenExpand"]
   changeWidgetSize: (instanceId: string, size: WidgetSize) => Promise<void> | void
   removeWidget: (instanceId: string) => Promise<void> | void
@@ -97,10 +93,6 @@ export function createWorkbenchShellLayoutRuntime(
         )
       },
       onOpenSettings: () => options.openSettings(),
-      onPointerDown: options.onPointerDown,
-      onPointerMove: options.onPointerMove,
-      onPointerUp: options.onPointerUp,
-      onPointerCancel: options.onPointerCancel,
       onOpenExpand: options.openWidgetExpand,
       onOpenContextMenu: (event, instanceId) => {
         event.preventDefault()

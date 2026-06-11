@@ -51,10 +51,6 @@ export function createWorkbenchShellViewRuntime(
     buildWidgetViewProps,
     buildSearchViewProps: options.buildInlineSearchViewProps,
     renderWidgetIcon: options.renderWidgetIcon,
-    onPointerDown: options.onPointerDown,
-    onPointerMove: options.onPointerMove,
-    onPointerUp: options.onPointerUp,
-    onPointerCancel: options.onPointerCancel,
     onOpenWidgetExpand: options.openWidgetExpand,
     onOpenWidgetContextMenu: (event, instanceId) => {
       event.preventDefault()

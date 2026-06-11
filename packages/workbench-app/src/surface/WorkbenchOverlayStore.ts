@@ -2,7 +2,7 @@ import { createSignal } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { SettingsSectionId } from "@tabora/workbench-shell"
 
-import type { WorkbenchDragControllerState } from "../drag/WorkbenchDragController"
+import type { WorkbenchDndDragState } from "../drag/WorkbenchShellDragState"
 import type { WorkbenchExpandState } from "./WorkbenchShellInteractions"
 
 export type WorkbenchContextMenuState = {
@@ -37,7 +37,7 @@ export function createWorkbenchOverlayStore() {
   const [fullscreenProps, setFullscreenProps] = createSignal<Record<string, unknown>>({})
   const [ctxMenu, setCtxMenu] = createSignal<WorkbenchContextMenuState | null>(null)
   const [expandState, setExpandState] = createSignal<WorkbenchExpandState | null>(null)
-  const [dragState, setDragState] = createSignal<WorkbenchDragControllerState | null>(null)
+  const [dragState, setDragState] = createSignal<WorkbenchDndDragState | null>(null)
 
   return {
     settingsOpen: () => flags.settingsOpen,

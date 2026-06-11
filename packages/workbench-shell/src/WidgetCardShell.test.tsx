@@ -21,10 +21,6 @@ function makeInstance(): PluginInstance {
 
 function makeCallbacks(): WidgetHostCallbacks {
   return {
-    onPointerDown: vi.fn(),
-    onPointerMove: vi.fn(),
-    onPointerUp: vi.fn(),
-    onPointerCancel: vi.fn(),
     onDblClick: vi.fn(),
     onContextMenu: vi.fn(),
     onResize: vi.fn(),
@@ -114,58 +110,6 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  it("双击标题拖拽区域在 pointerup detail 为 2 时也触发展开", () => {
-    const cb = makeCallbacks()
-    const { host, dispose } = mount(cb)
-    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
-
-    card.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, detail: 2 }))
-
-    expect(cb.onExpand).toHaveBeenCalledTimes(1)
-    dispose()
-  })
-
-  it("在拖拽标题区域连续两次 pointerup 时识别为双击展开", () => {
-    const cb = makeCallbacks()
-    const { host, dispose } = mount(cb)
-    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
-
-    card.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, detail: 0 }))
-    card.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, detail: 0 }))
-
-    expect(cb.onExpand).toHaveBeenCalledTimes(1)
-    dispose()
-  })
-
-  it("在标题区域连续两次 pointerdown 时立即识别为双击展开", () => {
-    const cb = makeCallbacks()
-    const { host, dispose } = mount(cb)
-    const header = host.querySelector(".card-header") as HTMLElement
-
-    header.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
-    header.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
-
-    expect(cb.onExpand).toHaveBeenCalledTimes(1)
-    dispose()
-  })
-
-  it("标题栏移动超过阈值才触发 onPointerDown，操作按钮不会触发拖拽启动", () => {
-    const cb = makeCallbacks()
-    const { host, dispose } = mount(cb)
-    const header = host.querySelector(".card-header") as HTMLElement
-    const removeBtn = host.querySelector("button.card-danger") as HTMLButtonElement
-
-    header.dispatchEvent(
-      new PointerEvent("pointerdown", { bubbles: true, button: 0, clientX: 0, clientY: 0 }),
-    )
-    expect(cb.onPointerDown).not.toHaveBeenCalled()
-    header.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: 8, clientY: 0 }))
-    removeBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
-
-    expect(cb.onPointerDown).toHaveBeenCalledTimes(1)
-    dispose()
-  })
-
   it("启用 sortable 绑定时把根节点和标题拖拽手柄交给外部库", () => {
     const cb = {
       ...makeCallbacks(),
@@ -173,19 +117,11 @@ describe("WidgetCardShell", () => {
       bindSortableHandle: vi.fn(),
     }
     const { host, dispose } = mount(cb)
-    const header = host.querySelector(".card-header") as HTMLElement
 
     expect(cb.bindSortableRoot).toHaveBeenCalledWith(
       host.querySelector("[data-widget-instance-id='w1']"),
     )
     expect(cb.bindSortableHandle).toHaveBeenCalledWith(host.querySelector(".card-title"))
-
-    header.dispatchEvent(
-      new PointerEvent("pointerdown", { bubbles: true, button: 0, clientX: 0, clientY: 0 }),
-    )
-    header.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: 8, clientY: 0 }))
-
-    expect(cb.onPointerDown).not.toHaveBeenCalled()
     dispose()
   })
 })

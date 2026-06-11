@@ -2,37 +2,20 @@ import type { PluginInstance } from "@tabora/plugin-api"
 import type { DragDropProviderProps } from "@dnd-kit/solid"
 import { createDragSortPlan } from "@tabora/orchestrator"
 
-import {
-  beginWorkbenchDragController,
-  completeWorkbenchDragController,
-  type WorkbenchDragControllerState,
-  type WorkbenchDragPoint,
-  updateWorkbenchDragController,
-} from "./WorkbenchDragController"
-
-export function resolveWorkbenchDragTargetId(
-  point: WorkbenchDragPoint,
-  documentRoot: Document = document,
-): string | null {
-  const target = documentRoot.elementFromPoint(point.x, point.y)
-  if (!(target instanceof HTMLElement)) {
-    return null
-  }
-
-  return target.closest<HTMLElement>("[data-widget-instance-id]")?.dataset.widgetInstanceId ?? null
+export type WorkbenchDndDragState = {
+  sourceId: string
+  previewInstances: PluginInstance[]
+  overId: string | null
 }
 
-export function syncWorkbenchDragBodyState(
-  dragging: boolean,
-  documentRoot: Document = document,
-): void {
-  documentRoot.body.classList.toggle("drag-active", dragging)
-}
-
-export function createWorkbenchPointerDragHandlers(options: {
+type PersistedInstancesSource = {
   getPersistedInstances: () => PluginInstance[]
-  getDragState: () => WorkbenchDragControllerState | null
-  setDragState: (state: WorkbenchDragControllerState | null) => void
+}
+
+export function createWorkbenchDndKitDragHandlers(options: {
+  getPersistedInstances: () => PluginInstance[]
+  getDragState: () => WorkbenchDndDragState | null
+  setDragState: (state: WorkbenchDndDragState | null) => void
   persistGridOrder: (instances: PluginInstance[]) => Promise<void>
   showToast: (message: string) => void
   documentRoot?: Document
@@ -40,56 +23,40 @@ export function createWorkbenchPointerDragHandlers(options: {
   const documentRoot = options.documentRoot ?? document
   let stopDndPointerTracking: (() => void) | null = null
 
-  function persistedWidgetIndex(instanceId: string): number {
-    const instances = options.getPersistedInstances()
-    const source = instances.find((instance) => instance.id === instanceId)
-    if (!source) {
-      return -1
-    }
-
-    return instances
-      .filter(
-        (instance) =>
-          instance.extensionPoint === "widget" &&
-          instance.enabled !== false &&
-          instance.regionId === source.regionId,
-      )
-      .sort(byGrid)
-      .findIndex((instance) => instance.id === instanceId)
-  }
-
   function startDndDrag(sourceId: string | null): void {
-    if (!sourceId) {
-      return
-    }
+    if (!sourceId) return
 
     stopDndPointerTracking?.()
     options.setDragState({
-      ...beginWorkbenchDragController({
-        pointerId: -1,
-        sourceId,
-        point: { x: 0, y: 0 },
-        instances: options.getPersistedInstances(),
-      }),
-      phase: "dragging",
+      sourceId,
+      previewInstances: options.getPersistedInstances(),
+      overId: null,
     })
-    syncWorkbenchDragBodyState(true, documentRoot)
+    syncDndBodyState(true, documentRoot)
 
     const handlePointerMove = (event: PointerEvent) => {
       previewDndDrag(sourceId, resolveDndNativeEventTargetId(event, sourceId, documentRoot))
     }
+    const handlePointerUp = (event: PointerEvent) => {
+      finishDndDrag(sourceId, resolveDndNativeEventTargetId(event, sourceId, documentRoot), false)
+    }
+    const handlePointerCancel = () => {
+      finishDndDrag(sourceId, null, true)
+    }
     documentRoot.addEventListener("pointermove", handlePointerMove, true)
+    documentRoot.addEventListener("pointerup", handlePointerUp, true)
+    documentRoot.addEventListener("pointercancel", handlePointerCancel, true)
     stopDndPointerTracking = () => {
       documentRoot.removeEventListener("pointermove", handlePointerMove, true)
+      documentRoot.removeEventListener("pointerup", handlePointerUp, true)
+      documentRoot.removeEventListener("pointercancel", handlePointerCancel, true)
       stopDndPointerTracking = null
     }
   }
 
   function previewDndDrag(sourceId: string | null, targetId: string | null): void {
     const dragState = options.getDragState()
-    if (!dragState || !sourceId || !targetId || sourceId === targetId) {
-      return
-    }
+    if (!dragState || !sourceId || !targetId || sourceId === targetId) return
 
     const plan = createDragSortPlan({
       sourceId,
@@ -110,48 +77,33 @@ export function createWorkbenchPointerDragHandlers(options: {
     canceled: boolean,
   ): void {
     const dragState = options.getDragState()
-    const resolvedTargetId = targetId ?? dragState?.overId ?? null
     stopDndPointerTracking?.()
     options.setDragState(null)
-    syncWorkbenchDragBodyState(false, documentRoot)
+    syncDndBodyState(false, documentRoot)
+    if (!dragState) return
 
-    if (canceled || !sourceId || !resolvedTargetId || sourceId === resolvedTargetId) {
-      return
-    }
+    const resolvedTargetId = targetId ?? dragState.overId ?? null
+
+    if (canceled || !sourceId || !resolvedTargetId || sourceId === resolvedTargetId) return
 
     const plan = createDragSortPlan({
       sourceId,
       targetId: resolvedTargetId,
       instances: options.getPersistedInstances(),
     })
-
-    if (!plan.changed) {
-      return
-    }
+    if (!plan.changed) return
 
     void options.persistGridOrder(plan.instances)
     options.showToast("排序已更新")
   }
 
   return {
-    displayedInstances: (): PluginInstance[] => {
-      return options.getDragState()?.previewInstances ?? options.getPersistedInstances()
-    },
-    sortableIndex: (instanceId: string): number => {
-      return persistedWidgetIndex(instanceId)
-    },
-    isDragging: (instanceId: string): boolean => {
-      const dragState = options.getDragState()
-      return dragState?.phase === "dragging" && dragState.sourceId === instanceId
-    },
+    displayedInstances: (): PluginInstance[] =>
+      options.getDragState()?.previewInstances ?? options.getPersistedInstances(),
+    sortableIndex: (instanceId: string): number => persistedWidgetIndex(instanceId, options),
+    isDragging: (instanceId: string): boolean => options.getDragState()?.sourceId === instanceId,
     onDndDragStart: (event: Parameters<NonNullable<DragDropProviderProps["onDragStart"]>>[0]) => {
       startDndDrag(resolveDndEntityId(event.operation.source?.id))
-    },
-    onDndDragOver: (event: Parameters<NonNullable<DragDropProviderProps["onDragOver"]>>[0]) => {
-      previewDndDrag(
-        resolveDndEntityId(event.operation.source?.id),
-        resolveDndEntityId(event.operation.target?.id),
-      )
     },
     onDndDragMove: (event: Parameters<NonNullable<DragDropProviderProps["onDragMove"]>>[0]) => {
       const sourceId = resolveDndEntityId(event.operation.source?.id)
@@ -161,6 +113,12 @@ export function createWorkbenchPointerDragHandlers(options: {
           resolveDndNativeEventTargetId(event.nativeEvent, sourceId, documentRoot),
       )
     },
+    onDndDragOver: (event: Parameters<NonNullable<DragDropProviderProps["onDragOver"]>>[0]) => {
+      previewDndDrag(
+        resolveDndEntityId(event.operation.source?.id),
+        resolveDndEntityId(event.operation.target?.id),
+      )
+    },
     onDndDragEnd: (event: Parameters<NonNullable<DragDropProviderProps["onDragEnd"]>>[0]) => {
       finishDndDrag(
         resolveDndEntityId(event.operation.source?.id),
@@ -168,62 +126,23 @@ export function createWorkbenchPointerDragHandlers(options: {
         event.canceled,
       )
     },
-    onPointerDown: (event: PointerEvent, instanceId: string): void => {
-      if (event.button !== 0) {
-        return
-      }
-
-      options.setDragState(
-        beginWorkbenchDragController({
-          pointerId: event.pointerId,
-          sourceId: instanceId,
-          point: { x: event.clientX, y: event.clientY },
-          instances: options.getPersistedInstances(),
-        }),
-      )
-    },
-    onPointerMove: (event: PointerEvent): void => {
-      const dragState = options.getDragState()
-      if (!dragState || dragState.pointerId !== event.pointerId) {
-        return
-      }
-
-      const nextState = updateWorkbenchDragController({
-        state: dragState,
-        point: { x: event.clientX, y: event.clientY },
-        overId: resolveWorkbenchDragTargetId({ x: event.clientX, y: event.clientY }, documentRoot),
-      })
-
-      options.setDragState(nextState)
-      syncWorkbenchDragBodyState(nextState.phase === "dragging", documentRoot)
-    },
-    onPointerUp: (event: PointerEvent): void => {
-      const dragState = options.getDragState()
-      if (!dragState || dragState.pointerId !== event.pointerId) {
-        return
-      }
-
-      const completed = completeWorkbenchDragController(dragState)
-      options.setDragState(null)
-      syncWorkbenchDragBodyState(false, documentRoot)
-
-      if (!completed.instances) {
-        return
-      }
-
-      void options.persistGridOrder(completed.instances)
-      options.showToast("排序已更新")
-    },
-    onPointerCancel: (event: PointerEvent): void => {
-      const dragState = options.getDragState()
-      if (!dragState || dragState.pointerId !== event.pointerId) {
-        return
-      }
-
-      options.setDragState(null)
-      syncWorkbenchDragBodyState(false, documentRoot)
-    },
   }
+}
+
+function persistedWidgetIndex(instanceId: string, options: PersistedInstancesSource): number {
+  const instances = options.getPersistedInstances()
+  const source = instances.find((instance) => instance.id === instanceId)
+  if (!source) return -1
+
+  return instances
+    .filter(
+      (instance) =>
+        instance.extensionPoint === "widget" &&
+        instance.enabled !== false &&
+        instance.regionId === source.regionId,
+    )
+    .sort(byGrid)
+    .findIndex((instance) => instance.id === instanceId)
 }
 
 function resolveDndEntityId(id: unknown): string | null {
@@ -235,9 +154,7 @@ function resolveDndNativeEventTargetId(
   sourceId: string | null,
   documentRoot: Document,
 ): string | null {
-  if (!(event instanceof MouseEvent)) {
-    return null
-  }
+  if (!(event instanceof MouseEvent)) return null
 
   const pointedElements = documentRoot.elementsFromPoint?.(event.clientX, event.clientY) ?? []
   const elements =
@@ -249,12 +166,14 @@ function resolveDndNativeEventTargetId(
     if (!(element instanceof HTMLElement)) continue
     const targetId = element.closest<HTMLElement>("[data-widget-instance-id]")?.dataset
       .widgetInstanceId
-    if (targetId && targetId !== sourceId) {
-      return targetId
-    }
+    if (targetId && targetId !== sourceId) return targetId
   }
 
-  return resolveWorkbenchDragTargetId({ x: event.clientX, y: event.clientY }, documentRoot)
+  return null
+}
+
+function syncDndBodyState(dragging: boolean, documentRoot: Document): void {
+  documentRoot.body.classList.toggle("drag-active", dragging)
 }
 
 function byGrid(left: PluginInstance, right: PluginInstance): number {

@@ -12,7 +12,7 @@ import type {
 import type { SearchProviderContributionDescriptor } from "@tabora/orchestrator"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { createWorkbenchPointerDragHandlers } from "../drag/WorkbenchShellDragState"
+import type { createWorkbenchDndKitDragHandlers } from "../drag/WorkbenchShellDragState"
 import type { createWorkbenchSearchSurfaces } from "../search/WorkbenchShellSearchSurfaces"
 import type { createWorkbenchShellCommandModels } from "../command/WorkbenchShellCommands"
 import type { createWorkbenchShellViewRuntime } from "./WorkbenchShellViewRuntime"
@@ -38,10 +38,6 @@ const buildInlineSearchViewProps = vi.fn(() => ({ entry: "inline" }) as SearchVi
 const buildCommandPaletteProps = vi.fn(() => ({ isOpen: false }))
 
 const displayedInstances = vi.fn(() => [])
-const onPointerDown = vi.fn()
-const onPointerMove = vi.fn()
-const onPointerUp = vi.fn()
-const onPointerCancel = vi.fn()
 const onDndDragStart = vi.fn()
 const onDndDragMove = vi.fn()
 const onDndDragOver = vi.fn()
@@ -72,12 +68,8 @@ const mocks = vi.hoisted(() => ({
     buildInlineSearchViewProps,
     buildCommandPaletteProps,
   })),
-  createWorkbenchPointerDragHandlers: vi.fn((_options: unknown) => ({
+  createWorkbenchDndKitDragHandlers: vi.fn((_options: unknown) => ({
     displayedInstances,
-    onPointerDown,
-    onPointerMove,
-    onPointerUp,
-    onPointerCancel,
     onDndDragStart,
     onDndDragMove,
     onDndDragOver,
@@ -104,7 +96,7 @@ vi.mock("../search/WorkbenchShellSearchSurfaces", () => ({
 }))
 
 vi.mock("../drag/WorkbenchShellDragState", () => ({
-  createWorkbenchPointerDragHandlers: mocks.createWorkbenchPointerDragHandlers,
+  createWorkbenchDndKitDragHandlers: mocks.createWorkbenchDndKitDragHandlers,
 }))
 
 vi.mock("./WorkbenchShellViewRuntime", () => ({
@@ -299,10 +291,10 @@ describe("createWorkbenchShellControllerRuntime", () => {
     expect(runtime.dragHandlers).toEqual(
       expect.objectContaining({
         displayedInstances,
-        onPointerDown,
-        onPointerMove,
-        onPointerUp,
-        onPointerCancel,
+        onDndDragStart,
+        onDndDragMove,
+        onDndDragOver,
+        onDndDragEnd,
         isDragging,
       }),
     )
@@ -321,7 +313,7 @@ describe("createWorkbenchShellControllerRuntime", () => {
     expect(mocks.createWorkbenchShellCommandModels).toHaveBeenCalledTimes(1)
     expect(mocks.createWorkbenchWidgetController).toHaveBeenCalledTimes(1)
     expect(mocks.createWorkbenchSearchSurfaces).toHaveBeenCalledTimes(1)
-    expect(mocks.createWorkbenchPointerDragHandlers).toHaveBeenCalledTimes(1)
+    expect(mocks.createWorkbenchDndKitDragHandlers).toHaveBeenCalledTimes(1)
     expect(mocks.createWorkbenchShellViewRuntime).toHaveBeenCalledTimes(1)
 
     const commandOptions = mocks.createWorkbenchShellCommandModels.mock.calls[0]![0] as Parameters<
@@ -343,8 +335,8 @@ describe("createWorkbenchShellControllerRuntime", () => {
     const searchOptions = mocks.createWorkbenchSearchSurfaces.mock.calls[0]![0] as Parameters<
       typeof createWorkbenchSearchSurfaces
     >[0]
-    const dragOptions = mocks.createWorkbenchPointerDragHandlers.mock.calls[0]![0] as Parameters<
-      typeof createWorkbenchPointerDragHandlers
+    const dragOptions = mocks.createWorkbenchDndKitDragHandlers.mock.calls[0]![0] as Parameters<
+      typeof createWorkbenchDndKitDragHandlers
     >[0]
 
     const model: WidgetRenderModel = {
@@ -371,20 +363,12 @@ describe("createWorkbenchShellControllerRuntime", () => {
 
     viewOptions.widgetContribution(instance())
     viewOptions.widgetRenderModel(instance())
-    viewOptions.onPointerDown({} as PointerEvent, "widget-1")
-    viewOptions.onPointerMove({} as PointerEvent)
-    viewOptions.onPointerUp({} as PointerEvent)
-    viewOptions.onPointerCancel({} as PointerEvent)
     viewOptions.openWidgetExpand(instance())
     await viewOptions.changeWidgetSize("widget-1", "L" as WidgetSize)
     await viewOptions.removeWidget("widget-1")
 
     expect(widgetContribution).toHaveBeenCalledWith(expect.objectContaining({ id: "widget-1" }))
     expect(widgetRenderModel).toHaveBeenCalledWith(expect.objectContaining({ id: "widget-1" }))
-    expect(onPointerDown).toHaveBeenCalledWith(expect.anything(), "widget-1")
-    expect(onPointerMove).toHaveBeenCalledTimes(1)
-    expect(onPointerUp).toHaveBeenCalledTimes(1)
-    expect(onPointerCancel).toHaveBeenCalledTimes(1)
     expect(openWidgetExpand).toHaveBeenCalledWith(expect.objectContaining({ id: "widget-1" }))
     expect(changeWidgetSize).toHaveBeenCalledWith("widget-1", "L")
     expect(removeWidget).toHaveBeenCalledWith("widget-1")

@@ -5,10 +5,6 @@ import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 import { X } from "lucide-solid"
 
 export type WidgetHostCallbacks = {
-  onPointerDown: (e: PointerEvent) => void
-  onPointerMove: (e: PointerEvent) => void
-  onPointerUp: (e: PointerEvent) => void
-  onPointerCancel: (e: PointerEvent) => void
   onDblClick: (e: MouseEvent) => void
   onContextMenu: (e: MouseEvent) => void
   onResize: (size: WidgetSize) => void
@@ -38,78 +34,8 @@ function gridRowSpan(size: WidgetSize): number {
 }
 
 export function WidgetCardShell(props: WidgetCardShellProps) {
-  let lastPointerUpAt = 0
-  let lastPointerDownAt = 0
   let headerRef: HTMLDivElement | undefined
   let rootRef: HTMLDivElement | undefined
-  let pendingDrag: {
-    event: PointerEvent
-    x: number
-    y: number
-  } | null = null
-
-  function releasePointerCapture(event: PointerEvent) {
-    if (event.target instanceof HTMLElement && event.target.hasPointerCapture?.(event.pointerId)) {
-      event.target.releasePointerCapture(event.pointerId)
-    }
-  }
-
-  function handlePointerUp(event: PointerEvent) {
-    releasePointerCapture(event)
-    pendingDrag = null
-    const now = performance.now()
-    if (event.detail === 2 || (lastPointerUpAt > 0 && now - lastPointerUpAt < 320)) {
-      props.callbacks.onExpand()
-      lastPointerUpAt = 0
-    } else {
-      lastPointerUpAt = now
-    }
-    props.callbacks.onPointerUp(event)
-  }
-
-  function handlePointerCancel(event: PointerEvent) {
-    releasePointerCapture(event)
-    pendingDrag = null
-    props.callbacks.onPointerCancel(event)
-  }
-
-  function handlePointerDown(event: PointerEvent) {
-    const target = event.target
-    if (
-      target instanceof HTMLElement &&
-      target.closest("button, input, textarea, select, a, [role='button']")
-    ) {
-      return
-    }
-
-    const now = performance.now()
-    if (lastPointerDownAt > 0 && now - lastPointerDownAt < 320) {
-      props.callbacks.onExpand()
-      lastPointerDownAt = 0
-      return
-    }
-    lastPointerDownAt = now
-    pendingDrag = {
-      event,
-      x: event.clientX,
-      y: event.clientY,
-    }
-  }
-
-  function handlePointerMove(event: PointerEvent) {
-    const drag = pendingDrag
-    if (drag) {
-      const distance = Math.hypot(event.clientX - drag.x, event.clientY - drag.y)
-      if (distance >= 4) {
-        pendingDrag = null
-        if (event.currentTarget instanceof HTMLElement) {
-          event.currentTarget.setPointerCapture?.(event.pointerId)
-        }
-        props.callbacks.onPointerDown(drag.event)
-      }
-    }
-    props.callbacks.onPointerMove(event)
-  }
 
   onMount(() => {
     props.callbacks.bindSortableRoot?.(rootRef)
@@ -121,38 +47,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
         props.callbacks.bindSortableHandle?.(undefined)
         props.callbacks.bindSortableRoot?.(undefined)
       })
-      return
     }
-
-    const header = headerRef
-    if (!header) return
-    const handleNativePointerDown = (event: PointerEvent) => {
-      handlePointerDown(event)
-      event.stopPropagation()
-    }
-    const handleNativePointerUp = (event: PointerEvent) => {
-      handlePointerUp(event)
-      event.stopPropagation()
-    }
-    const handleNativePointerMove = (event: PointerEvent) => {
-      handlePointerMove(event)
-      event.stopPropagation()
-    }
-    const handleNativePointerCancel = (event: PointerEvent) => {
-      handlePointerCancel(event)
-      event.stopPropagation()
-    }
-
-    header.addEventListener("pointerdown", handleNativePointerDown)
-    header.addEventListener("pointermove", handleNativePointerMove)
-    header.addEventListener("pointerup", handleNativePointerUp)
-    header.addEventListener("pointercancel", handleNativePointerCancel)
-    onCleanup(() => {
-      header.removeEventListener("pointerdown", handleNativePointerDown)
-      header.removeEventListener("pointermove", handleNativePointerMove)
-      header.removeEventListener("pointerup", handleNativePointerUp)
-      header.removeEventListener("pointercancel", handleNativePointerCancel)
-    })
   })
 
   return (
@@ -170,9 +65,6 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       ref={(element) => {
         rootRef = element
       }}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
       onClick={(event) => {
         if (event.detail === 2) props.callbacks.onExpand()
       }}
