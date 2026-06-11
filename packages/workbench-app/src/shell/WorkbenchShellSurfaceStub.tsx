@@ -20,6 +20,7 @@ export type WorkbenchShellSurfaceStubOverrides = {
   listWidgetContributions?: () => unknown[]
   listSettingsPanels?: () => unknown[]
   pluginSummaries?: (...args: unknown[]) => Array<{ enabled: boolean }>
+  tShell?: WorkbenchShell["tShell"]
   addWidget?: (pluginId: string, widgetId: string) => Promise<void> | void
   widgetContribution?: (...args: unknown[]) => { icon?: unknown } | undefined
   closeExpand?: () => void
@@ -93,6 +94,7 @@ export function createWorkbenchShellSurfaceStub(
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent: overrides.layoutContent ?? (() => null),
+    ...(overrides.tShell ? { tShell: overrides.tShell } : {}),
     ...(overrides.pluginViewBoundaryCopy
       ? { shellCopy: { pluginViewBoundaryCopy: overrides.pluginViewBoundaryCopy } }
       : {}),

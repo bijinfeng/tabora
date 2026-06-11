@@ -4,7 +4,11 @@ import { PluginViewBoundary, WidgetCardShell } from "@tabora/workbench-shell"
 import { Moon, Sun, X } from "lucide-solid"
 import { For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import type { WorkbenchShellPluginViewBoundaryCopy, WorkbenchShellWidgetCopy } from "../i18n"
+import type {
+  ShellTranslation,
+  WorkbenchShellPluginViewBoundaryCopy,
+  WorkbenchShellWidgetCopy,
+} from "../i18n"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 
@@ -44,6 +48,7 @@ export function WorkbenchAddWidgetModal(props: {
   open: boolean
   availableWidgets: AvailableWidget[]
   widgetIconLabel: (icon?: string) => string
+  tShell?: ShellTranslation
   onAdd: (pluginId: string, widgetId: string) => void
   onClose: () => void
 }) {
@@ -51,7 +56,7 @@ export function WorkbenchAddWidgetModal(props: {
     <Show when={props.open}>
       <div class="modal-overlay" onClick={props.onClose}>
         <div class="modal-container" onClick={(event) => event.stopPropagation()}>
-          <div class="modal-title">添加卡片</div>
+          <div class="modal-title">{props.tShell?.("chrome.addWidget.title") ?? "添加卡片"}</div>
           <div class="modal-body">
             <For each={props.availableWidgets}>
               {(widget) => (
@@ -340,6 +345,7 @@ function resolvePluginScopeId(props: Record<string, unknown>): string | undefine
 export function WorkbenchContextMenuOverlay(props: {
   menu: { x: number; y: number; instanceId: string } | null
   sections: WidgetContextSection[]
+  tShell?: ShellTranslation
   onClose: () => void
 }) {
   return (
@@ -365,7 +371,9 @@ export function WorkbenchContextMenuOverlay(props: {
                       >
                         {item.label}
                         <Show when={item.isCurrent}>
-                          <span class="ctx-menu-check">当前</span>
+                          <span class="ctx-menu-check">
+                            {props.tShell?.("chrome.contextMenu.current") ?? "当前"}
+                          </span>
                         </Show>
                       </button>
                     )}

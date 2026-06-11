@@ -68,4 +68,48 @@ describe("WorkbenchShellSurfaceHost", () => {
 
     root.remove()
   })
+
+  it("renders localized host UI copy when a shell translation function is provided", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    const shell = createWorkbenchShellSurfaceStub({
+      tShell: (key: string) => {
+        if (key === "chrome.addWidget.title") return "Add widget"
+        if (key === "chrome.contextMenu.current") return "Current"
+        return key
+      },
+      layoutContent: () => <div>layout-content</div>,
+      buildContextMenuModel: () => ({
+        sections: [
+          {
+            items: [
+              {
+                label: "Small",
+                isCurrent: true,
+                run: () => {},
+              },
+            ],
+          },
+        ],
+      }),
+    })
+
+    shell.state.overlays.setAddWidgetOpen(true)
+    shell.state.overlays.setCtxMenu({ x: 8, y: 12, instanceId: "widget-1" })
+
+    render(
+      () => (
+        <WorkbenchShellProvider shell={shell}>
+          <WorkbenchShellSurfaceHost />
+        </WorkbenchShellProvider>
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("Add widget")
+    expect(root.textContent).toContain("Current")
+
+    root.remove()
+  })
 })

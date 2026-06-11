@@ -13,6 +13,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
   const { overlays, workspace, runtime } = state
   const widgetController = controllerRuntime.widgetController
   const pluginViewBoundaryCopy = shell.shellCopy?.pluginViewBoundaryCopy
+  const tShell = shell.tShell
 
   return {
     content: shell.layoutContent(),
@@ -20,6 +21,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
       open: overlays.addWidgetOpen(),
       availableWidgets: catalog.listWidgetContributions(),
       widgetIconLabel: resolveWidgetIconLabel,
+      ...(tShell ? { tShell } : {}),
       onAdd: (pluginId: string, widgetId: string) => {
         void widgetController.addWidget(pluginId, widgetId)
         overlays.setAddWidgetOpen(false)
@@ -69,6 +71,7 @@ export function createWorkbenchShellSurfaceProps(shell: WorkbenchShell) {
     contextMenuOverlay: {
       menu: overlays.ctxMenu(),
       sections: widgetController.buildContextMenuModel()?.sections ?? [],
+      ...(tShell ? { tShell } : {}),
       onClose: () => overlays.setCtxMenu(null),
     },
     toastHost: {
