@@ -17,7 +17,11 @@ import type { InstanceRenderer } from "../layout/layoutEngine"
 import { isWorkbenchInteractiveElement } from "../surface/WorkbenchShellInteractions"
 import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import type { WidgetRenderModel } from "../shared/shellHelpers"
-import type { WorkbenchShellPluginViewBoundaryCopy, WorkbenchShellWidgetCopy } from "../i18n"
+import type {
+  ShellTranslation,
+  WorkbenchShellPluginViewBoundaryCopy,
+  WorkbenchShellWidgetCopy,
+} from "../i18n"
 
 type WorkbenchSortableCollisionDetector = NonNullable<
   Parameters<typeof useSortable>[0]["collisionDetector"]
@@ -40,6 +44,7 @@ type SearchContributionLike = {
 
 export function createWorkbenchInstanceRenderer(options: {
   registryViews: ViewRegistry
+  tShell?: ShellTranslation
   widgetContribution: (
     instance: Pick<PluginInstance, "pluginId" | "contributionId">,
   ) => WidgetContributionLike | null | undefined
@@ -65,7 +70,13 @@ export function createWorkbenchInstanceRenderer(options: {
       const widget = options.widgetContribution(instance)
       const model = options.widgetRenderModel(instance)
       if (!model) {
-        return <div class="settings-empty">卡片实例无效：{instance.id}</div>
+        return (
+          <div class="settings-empty">
+            {options.tShell
+              ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: instance.id })
+              : `卡片实例无效：${instance.id}`}
+          </div>
+        )
       }
 
       const View = widget

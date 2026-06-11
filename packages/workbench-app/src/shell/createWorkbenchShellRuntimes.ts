@@ -98,6 +98,7 @@ export function createWorkbenchShellRuntimes(options: {
   }
 
   const controllerRuntime = createWorkbenchShellControllerRuntime({
+    tShell: t,
     services: {
       plugins,
       pluginCatalog,

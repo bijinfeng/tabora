@@ -45,6 +45,7 @@ export function createWorkbenchShellViewRuntime(
 
   const instanceRenderer = createWorkbenchInstanceRenderer({
     registryViews: options.registryViews,
+    ...(options.tShell ? { tShell: options.tShell } : {}),
     widgetContribution: options.widgetContribution,
     widgetRenderModel: options.widgetRenderModel,
     findSearchContribution: options.findSearchContribution,

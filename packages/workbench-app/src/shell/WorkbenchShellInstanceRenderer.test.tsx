@@ -83,6 +83,23 @@ describe("createWorkbenchInstanceRenderer", () => {
     dispose()
   })
 
+  it("renders localized widget error state when a shell translation function is provided", () => {
+    const renderer = createWorkbenchInstanceRenderer({
+      ...baseOptions(),
+      widgetRenderModel: () => null,
+      tShell: (key: string, vars?: Record<string, string | number>) => {
+        if (key === "placeholders.widgetInstanceInvalid") {
+          return `Invalid widget instance: ${String(vars?.instanceId)}`
+        }
+        return key
+      },
+    } as Parameters<typeof createWorkbenchInstanceRenderer>[0])
+
+    const { host, dispose } = mount(renderer.renderWidget(instance()))
+    expect(host.textContent).toContain("Invalid widget instance: widget-1")
+    dispose()
+  })
+
   it("renders the search contribution view when the view is registered", () => {
     const SearchView = (props: SearchViewProps) => <div>搜索 {props.entry}</div>
     const renderer = createWorkbenchInstanceRenderer({

@@ -28,6 +28,7 @@ import {
 } from "../shared/shellHelpers"
 import { assignGridOrder } from "../shared/workbenchGrid"
 import type {
+  ShellTranslation,
   WorkbenchShellCommandPaletteCopy,
   WorkbenchShellPluginViewBoundaryCopy,
   WorkbenchShellWidgetCopy,
@@ -62,6 +63,7 @@ type SetInstances = (
 ) => PluginInstance[] | void
 
 export function createWorkbenchShellControllerRuntime(options: {
+  tShell?: ShellTranslation
   services: {
     plugins: ControllerPlugins
     pluginCatalog: ControllerCatalog
@@ -180,6 +182,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     saveInstance: (instance) => options.services.instanceRepo.save(instance),
     removeInstance: (instanceId) => options.services.instanceRepo.remove(instanceId),
     showToast: options.actions.showToast,
+    ...(options.tShell ? { tShell: options.tShell } : {}),
     focusWidgetInstance: options.actions.focusWidgetInstance,
     availableCommandIds: commandRuntime.availableCommandIds,
     runCommand: commandRuntime.runCommand,
@@ -226,6 +229,7 @@ export function createWorkbenchShellControllerRuntime(options: {
 
   viewRuntime = createWorkbenchShellViewRuntime({
     registryViews: options.services.registryViews,
+    ...(options.tShell ? { tShell: options.tShell } : {}),
     widgetContribution: (instance) => widgetController.widgetContribution(instance),
     widgetRenderModel: (instance) => widgetController.widgetRenderModel(instance),
     findSearchContribution: (pluginId, contributionId) =>
