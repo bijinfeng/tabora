@@ -30,6 +30,26 @@ export type DocsTable = {
   rows: string[][]
 }
 
+export type DocsComponentSpec = {
+  id: string
+  title: string
+  description: string
+  metaTags: string[]
+  anatomyTitle?: string
+  anatomyItems?: string[]
+  demos: Array<{
+    title: string
+    previewHtml: string
+    codeBlock: DocsCodeBlock
+  }>
+  table: DocsTable
+  doTitle: string
+  doBody: string
+  dontTitle: string
+  dontBody: string
+  pluginExample?: DocsCodeBlock
+}
+
 export type DocsPageContent = {
   sidebarTitle: string
   sidebarGroups: DocsSidebarGroup[]
@@ -77,6 +97,9 @@ export type DocsPageContent = {
       }>
       table: DocsTable
     }
+  }
+  componentSpecs: {
+    inputControls: DocsComponentSpec[]
   }
 }
 
@@ -421,6 +444,286 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           ],
         },
       },
+    },
+    componentSpecs: {
+      inputControls: [
+        {
+          id: "button",
+          title: "Button 按钮",
+          description:
+            "主操作触发器。6 种变体 × 3 尺寸 × 2 状态。插件内容区优先使用 primary 和 secondary，危险操作必须搭配二次确认 Dialog。",
+          metaTags: ["6 变体", "3 尺寸", "按钮组", "图标按钮"],
+          anatomyTitle: "解剖结构",
+          anatomyItems: [
+            ".btn — 基础类，所有变体必须搭配",
+            ".btn-{variant} — primary / secondary / subtle / ghost / danger / danger-subtle",
+            ".btn-{size} — sm (28px) / md (36px) / lg (44px)",
+            ".btn-full — 拉伸至父容器宽度",
+            ".btn-group — 包裹容器，连接为一组",
+          ],
+          demos: [
+            {
+              title: "变体",
+              previewHtml:
+                '<div class="demo-row"><button class="btn btn-primary btn-md">主要</button><button class="btn btn-secondary btn-md">次要</button><button class="btn btn-subtle btn-md">柔和</button><button class="btn btn-ghost btn-md">幽灵</button><button class="btn btn-danger btn-md">危险</button><button class="btn btn-danger-subtle btn-md">危险柔和</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<button class="btn btn-primary btn-md">主要</button>
+<button class="btn btn-secondary btn-md">次要</button>
+<button class="btn btn-subtle btn-md">柔和</button>
+<button class="btn btn-ghost btn-md">幽灵</button>
+<button class="btn btn-danger btn-md">危险</button>
+<button class="btn btn-danger-subtle btn-md">危险柔和</button>`,
+              },
+            },
+            {
+              title: "尺寸",
+              previewHtml:
+                '<div class="demo-row"><button class="btn btn-primary btn-sm">小 sm</button><button class="btn btn-primary btn-md">中 md</button><button class="btn btn-primary btn-lg">大 lg</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<button class="btn btn-primary btn-sm">小 sm</button>
+<button class="btn btn-primary btn-md">中 md</button>
+<button class="btn btn-primary btn-lg">大 lg</button>`,
+              },
+            },
+            {
+              title: "禁用 & 全宽",
+              previewHtml:
+                '<div class="demo-row"><button class="btn btn-primary btn-md" disabled>禁用主要</button><button class="btn btn-secondary btn-md" disabled>禁用次要</button></div><div style="max-width: 240px; margin-top: 8px"><button class="btn btn-primary btn-md btn-full">全宽按钮</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<button class="btn btn-primary btn-md" disabled>禁用主要</button>
+<button class="btn btn-secondary btn-md" disabled>禁用次要</button>
+
+<button class="btn btn-primary btn-md btn-full">全宽按钮</button>`,
+              },
+            },
+            {
+              title: "按钮组 & 图标按钮",
+              previewHtml:
+                '<div class="demo-row"><div class="btn-group"><button class="btn btn-secondary btn-md">左</button><button class="btn btn-secondary btn-md">中</button><button class="btn btn-secondary btn-md">右</button></div><div class="btn-group"><button class="btn btn-subtle btn-sm">日</button><button class="btn btn-primary btn-sm">周</button><button class="btn btn-subtle btn-sm">月</button></div></div><div class="demo-row"><button class="icbtn icbtn-sm" title="更多">⋯</button><button class="icbtn" title="设置">⚙</button><button class="icbtn icbtn-lg" title="关闭">✕</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<!-- 按钮组 -->
+<div class="btn-group">
+  <button class="btn btn-secondary btn-md">左</button>
+  <button class="btn btn-secondary btn-md">中</button>
+  <button class="btn btn-secondary btn-md">右</button>
+</div>
+
+<!-- 图标按钮 -->
+<button class="icbtn icbtn-sm" title="更多">⋯</button>
+<button class="icbtn" title="设置">⚙</button>
+<button class="icbtn icbtn-lg" title="关闭">✕</button>`,
+              },
+            },
+          ],
+          table: {
+            columns: ["变体", "背景", "文字色", "适用场景"],
+            rows: [
+              [".btn-primary", "--cp-accent", "#fff", "每屏唯一最重要操作"],
+              [".btn-secondary", "--cp-surface", "--cp-text", "次级操作、取消、导航"],
+              [".btn-subtle", "--cp-accent-soft", "--cp-accent", "工具栏、筛选区低权重操作"],
+              [".btn-ghost", "transparent", "--cp-text-muted", "内联操作、卡片内辅助按钮"],
+              [".btn-danger", "--cp-danger", "#fff", "不可逆破坏操作，需二次确认"],
+              [
+                ".btn-danger-subtle",
+                "--cp-danger-soft",
+                "--cp-danger",
+                "危险低强度版本，可直接展示",
+              ],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody:
+            "每个功能区最多一个 primary 按钮。用 secondary 或 ghost 做辅助操作，保持视觉层级清晰。",
+          dontTitle: "✗ 不应",
+          dontBody:
+            "不要在同一行放多个 primary 按钮。danger 操作不能是第一步，必须搭配确认 Dialog。",
+          pluginExample: {
+            label: "插件使用示例",
+            copyLabel: "复制",
+            copiedLabel: "已复制",
+            copyId: "btn-code",
+            code: `// 基础用法
+<Button variant="primary">确认</Button>
+<Button variant="secondary">取消</Button>
+<Button variant="ghost" size="sm">查看详情</Button>
+
+// 危险操作（搭配 Dialog）
+<Button variant="danger" onClick={() => setConfirmOpen(true)}>删除记录</Button>
+
+// 全宽
+<Button variant="primary" fullWidth>开始同步</Button>`,
+          },
+        },
+        {
+          id: "input",
+          title: "Input 输入框",
+          description:
+            "单行文本输入控件。支持 3 种尺寸、前后缀插槽、4 种验证状态。所有输入组件共享相同圆角和边框令牌。",
+          metaTags: ["3 尺寸", "4 状态", "前后缀", "可清除"],
+          demos: [
+            {
+              title: "尺寸",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt ipt-sm" placeholder="Small — 28px 高度" /><input class="ipt" placeholder="Medium（默认）— 36px 高度" /><input class="ipt ipt-lg" placeholder="Large — 44px 高度" /></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<input class="ipt ipt-sm" placeholder="Small — 28px 高度" />
+<input class="ipt" placeholder="Medium（默认）— 36px 高度" />
+<input class="ipt ipt-lg" placeholder="Large — 44px 高度" />`,
+              },
+            },
+            {
+              title: "状态",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt" placeholder="默认状态" /><input class="ipt ipt-success" value="验证通过" /><input class="ipt ipt-error" value="输入有误" /><input class="ipt" disabled value="禁用状态" /></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<input class="ipt" placeholder="默认状态" />
+<input class="ipt ipt-success" value="验证通过" />
+<input class="ipt ipt-error" value="输入有误" />
+<input class="ipt" disabled value="禁用状态" />`,
+              },
+            },
+            {
+              title: "前后缀 & 可清除",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="ipt-wrap"><span class="ipt-prefix">🔍</span><input class="ipt" placeholder="搜索插件..." /></div><div class="ipt-wrap"><input class="ipt" placeholder="输入标签" /><span class="ipt-suffix">⏎</span></div><div class="ipt-wrap"><input class="ipt" value="可清除内容" /><button class="ipt-clear" type="button">✕</button></div></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<!-- 前缀 -->
+<div class="ipt-wrap">
+  <span class="ipt-prefix">🔍</span>
+  <input class="ipt" placeholder="搜索插件..." />
+</div>
+
+<!-- 后缀 -->
+<div class="ipt-wrap">
+  <input class="ipt" placeholder="输入标签" />
+  <span class="ipt-suffix">⏎</span>
+</div>
+
+<!-- 可清除 -->
+<div class="ipt-wrap">
+  <input class="ipt" value="可清除内容" />
+  <button class="ipt-clear" type="button">✕</button>
+</div>`,
+              },
+            },
+            {
+              title: "带标签 & 提示",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 16px"><div class="field"><label class="field-label">用户名 <span class="field-required">*</span></label><input class="ipt" placeholder="请输入用户名" /><span class="field-hint">3-20 个字符，仅支持字母和数字</span></div><div class="field"><label class="field-label">描述</label><input class="ipt ipt-error" value="内容过长" /><span class="field-error">超出最大长度限制（100 字符）</span></div></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<div class="field">
+  <label class="field-label">用户名 <span class="field-required">*</span></label>
+  <input class="ipt" placeholder="请输入用户名" />
+  <span class="field-hint">3-20 个字符，仅支持字母和数字</span>
+</div>
+
+<div class="field">
+  <label class="field-label">描述</label>
+  <input class="ipt ipt-error" value="内容过长" />
+  <span class="field-error">超出最大长度限制（100 字符）</span>
+</div>`,
+              },
+            },
+          ],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["尺寸", ".ipt-sm / 默认 / .ipt-lg", "28px / 36px / 44px 高度"],
+              ["验证态", ".ipt-success / .ipt-error", "绿色 / 红色边框反馈"],
+              ["禁用", "disabled", "降低透明度，阻止交互"],
+              ["容器", ".ipt-wrap", "用于前后缀定位"],
+              ["前缀", ".ipt-prefix", "图标或文字，位于左侧"],
+              ["后缀", ".ipt-suffix", "图标或文字，位于右侧"],
+              ["清除", ".ipt-clear", "内容非空时显示清除按钮"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody:
+            "始终提供 placeholder 暗示预期格式。错误状态必须同步显示 .field-error 提示文字。对表单类输入必须包裹 label。",
+          dontTitle: "✗ 不应",
+          dontBody:
+            "不要用 title 属性替代 label。禁止把关键说明只放在 placeholder 里，用户输入后它就消失了。",
+        },
+        {
+          id: "textarea",
+          title: "Textarea 多行输入",
+          description:
+            "多行文本输入控件。支持自动增高、字符计数和尺寸调节。与 Input 共享验证状态和标签模式。",
+          metaTags: ["自动增高", "字符计数", "可调节"],
+          demos: [
+            {
+              title: "基础 & 自动增高",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><textarea class="txa" rows="3" placeholder="固定高度，3 行"></textarea><textarea class="txa txa-auto" rows="1" placeholder="自动增高——随内容撑开"></textarea></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<textarea class="txa" rows="3" placeholder="固定高度，3 行"></textarea>
+<textarea class="txa txa-auto" rows="1" placeholder="自动增高——随内容撑开"></textarea>`,
+              },
+            },
+            {
+              title: "字符计数 & 验证",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="field"><label class="field-label">备注</label><textarea class="txa" rows="3" maxlength="200" placeholder="最多 200 字符"></textarea><span class="field-hint field-counter">0 / 200</span></div><div class="field"><label class="field-label">错误示例</label><textarea class="txa txa-error" rows="2">内容超出限制</textarea><span class="field-error">已超出最大字符数</span></div></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "复制",
+                copiedLabel: "已复制",
+                code: `<div class="field">
+  <label class="field-label">备注</label>
+  <textarea class="txa" rows="3" maxlength="200" placeholder="最多 200 字符"></textarea>
+  <span class="field-hint field-counter">0 / 200</span>
+</div>
+
+<div class="field">
+  <label class="field-label">错误示例</label>
+  <textarea class="txa txa-error" rows="2">内容超出限制</textarea>
+  <span class="field-error">已超出最大字符数</span>
+</div>`,
+              },
+            },
+          ],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["基础", ".txa", "多行输入基础类"],
+              ["自动增高", ".txa-auto", "内容增加时自动撑高"],
+              ["错误态", ".txa-error", "红色边框反馈"],
+              ["调节", "resize: vertical", "默认纵向可调"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "对有字数限制的输入显示实时计数器。长文本建议使用 txa-auto 提升输入体验。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要设置 resize:none。rows 也不要低于 2，否则与 Input 无区别。",
+        },
+      ],
     },
   },
   en: {
@@ -796,6 +1099,313 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           ],
         },
       },
+    },
+    componentSpecs: {
+      inputControls: [
+        {
+          id: "button",
+          title: "Button",
+          description:
+            "Primary action trigger. Six variants, three sizes, and clear action hierarchy. In plugin content, prefer primary and secondary, while dangerous actions must be paired with a confirmation dialog.",
+          metaTags: ["6 variants", "3 sizes", "Button group", "Icon button"],
+          anatomyTitle: "Anatomy",
+          anatomyItems: [
+            ".btn — base class required by every variant",
+            ".btn-{variant} — primary / secondary / subtle / ghost / danger / danger-subtle",
+            ".btn-{size} — sm (28px) / md (36px) / lg (44px)",
+            ".btn-full — stretches to parent width",
+            ".btn-group — wraps and visually connects buttons",
+          ],
+          demos: [
+            {
+              title: "Variants",
+              previewHtml:
+                '<div class="demo-row"><button class="btn btn-primary btn-md">Primary</button><button class="btn btn-secondary btn-md">Secondary</button><button class="btn btn-subtle btn-md">Subtle</button><button class="btn btn-ghost btn-md">Ghost</button><button class="btn btn-danger btn-md">Danger</button><button class="btn btn-danger-subtle btn-md">Danger subtle</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<button class="btn btn-primary btn-md">Primary</button>
+<button class="btn btn-secondary btn-md">Secondary</button>
+<button class="btn btn-subtle btn-md">Subtle</button>
+<button class="btn btn-ghost btn-md">Ghost</button>
+<button class="btn btn-danger btn-md">Danger</button>
+<button class="btn btn-danger-subtle btn-md">Danger subtle</button>`,
+              },
+            },
+            {
+              title: "Sizes",
+              previewHtml:
+                '<div class="demo-row"><button class="btn btn-primary btn-sm">Small</button><button class="btn btn-primary btn-md">Medium</button><button class="btn btn-primary btn-lg">Large</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<button class="btn btn-primary btn-sm">Small</button>
+<button class="btn btn-primary btn-md">Medium</button>
+<button class="btn btn-primary btn-lg">Large</button>`,
+              },
+            },
+            {
+              title: "Disabled & full width",
+              previewHtml:
+                '<div class="demo-row"><button class="btn btn-primary btn-md" disabled>Disabled primary</button><button class="btn btn-secondary btn-md" disabled>Disabled secondary</button></div><div style="max-width: 240px; margin-top: 8px"><button class="btn btn-primary btn-md btn-full">Full-width button</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<button class="btn btn-primary btn-md" disabled>Disabled primary</button>
+<button class="btn btn-secondary btn-md" disabled>Disabled secondary</button>
+
+<button class="btn btn-primary btn-md btn-full">Full-width button</button>`,
+              },
+            },
+            {
+              title: "Button group & icon button",
+              previewHtml:
+                '<div class="demo-row"><div class="btn-group"><button class="btn btn-secondary btn-md">Left</button><button class="btn btn-secondary btn-md">Middle</button><button class="btn btn-secondary btn-md">Right</button></div><div class="btn-group"><button class="btn btn-subtle btn-sm">Day</button><button class="btn btn-primary btn-sm">Week</button><button class="btn btn-subtle btn-sm">Month</button></div></div><div class="demo-row"><button class="icbtn icbtn-sm" title="More">⋯</button><button class="icbtn" title="Settings">⚙</button><button class="icbtn icbtn-lg" title="Close">✕</button></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<!-- Button group -->
+<div class="btn-group">
+  <button class="btn btn-secondary btn-md">Left</button>
+  <button class="btn btn-secondary btn-md">Middle</button>
+  <button class="btn btn-secondary btn-md">Right</button>
+</div>
+
+<!-- Icon button -->
+<button class="icbtn icbtn-sm" title="More">⋯</button>
+<button class="icbtn" title="Settings">⚙</button>
+<button class="icbtn icbtn-lg" title="Close">✕</button>`,
+              },
+            },
+          ],
+          table: {
+            columns: ["Variant", "Background", "Text", "Use case"],
+            rows: [
+              [
+                ".btn-primary",
+                "--cp-accent",
+                "#fff",
+                "The single most important action on a screen",
+              ],
+              [
+                ".btn-secondary",
+                "--cp-surface",
+                "--cp-text",
+                "Secondary actions, cancel, navigation",
+              ],
+              [
+                ".btn-subtle",
+                "--cp-accent-soft",
+                "--cp-accent",
+                "Low-emphasis toolbar and filter actions",
+              ],
+              [
+                ".btn-ghost",
+                "transparent",
+                "--cp-text-muted",
+                "Inline helpers and card-level utilities",
+              ],
+              [
+                ".btn-danger",
+                "--cp-danger",
+                "#fff",
+                "Irreversible destructive actions with confirmation",
+              ],
+              [
+                ".btn-danger-subtle",
+                "--cp-danger-soft",
+                "--cp-danger",
+                "Lower-intensity danger state",
+              ],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Keep at most one primary button per functional area. Use secondary or ghost for supporting actions so hierarchy stays clear.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not place multiple primary buttons in the same row. Danger actions must not be the first step without confirmation.",
+          pluginExample: {
+            label: "Plugin usage example",
+            copyLabel: "Copy",
+            copiedLabel: "Copied",
+            copyId: "btn-code",
+            code: `// Basic usage
+<Button variant="primary">Confirm</Button>
+<Button variant="secondary">Cancel</Button>
+<Button variant="ghost" size="sm">View details</Button>
+
+// Dangerous action with Dialog
+<Button variant="danger" onClick={() => setConfirmOpen(true)}>Delete record</Button>
+
+// Full width
+<Button variant="primary" fullWidth>Start sync</Button>`,
+          },
+        },
+        {
+          id: "input",
+          title: "Input",
+          description:
+            "Single-line text input. Supports three sizes, prefix and suffix slots, and four validation states. All input controls share the same radius and border tokens.",
+          metaTags: ["3 sizes", "4 states", "Prefix / suffix", "Clearable"],
+          demos: [
+            {
+              title: "Sizes",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt ipt-sm" placeholder="Small — 28px height" /><input class="ipt" placeholder="Medium — 36px height" /><input class="ipt ipt-lg" placeholder="Large — 44px height" /></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<input class="ipt ipt-sm" placeholder="Small — 28px height" />
+<input class="ipt" placeholder="Medium — 36px height" />
+<input class="ipt ipt-lg" placeholder="Large — 44px height" />`,
+              },
+            },
+            {
+              title: "States",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt" placeholder="Default state" /><input class="ipt ipt-success" value="Valid" /><input class="ipt ipt-error" value="Invalid" /><input class="ipt" disabled value="Disabled" /></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<input class="ipt" placeholder="Default state" />
+<input class="ipt ipt-success" value="Valid" />
+<input class="ipt ipt-error" value="Invalid" />
+<input class="ipt" disabled value="Disabled" />`,
+              },
+            },
+            {
+              title: "Prefix, suffix & clearable",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="ipt-wrap"><span class="ipt-prefix">🔍</span><input class="ipt" placeholder="Search plugins..." /></div><div class="ipt-wrap"><input class="ipt" placeholder="Enter tag" /><span class="ipt-suffix">⏎</span></div><div class="ipt-wrap"><input class="ipt" value="Clearable content" /><button class="ipt-clear" type="button">✕</button></div></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<!-- Prefix -->
+<div class="ipt-wrap">
+  <span class="ipt-prefix">🔍</span>
+  <input class="ipt" placeholder="Search plugins..." />
+</div>
+
+<!-- Suffix -->
+<div class="ipt-wrap">
+  <input class="ipt" placeholder="Enter tag" />
+  <span class="ipt-suffix">⏎</span>
+</div>
+
+<!-- Clearable -->
+<div class="ipt-wrap">
+  <input class="ipt" value="Clearable content" />
+  <button class="ipt-clear" type="button">✕</button>
+</div>`,
+              },
+            },
+            {
+              title: "Label & hint",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 16px"><div class="field"><label class="field-label">Username <span class="field-required">*</span></label><input class="ipt" placeholder="Enter username" /><span class="field-hint">3-20 characters, letters and numbers only</span></div><div class="field"><label class="field-label">Description</label><input class="ipt ipt-error" value="Too long" /><span class="field-error">Exceeds the 100 character limit</span></div></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<div class="field">
+  <label class="field-label">Username <span class="field-required">*</span></label>
+  <input class="ipt" placeholder="Enter username" />
+  <span class="field-hint">3-20 characters, letters and numbers only</span>
+</div>
+
+<div class="field">
+  <label class="field-label">Description</label>
+  <input class="ipt ipt-error" value="Too long" />
+  <span class="field-error">Exceeds the 100 character limit</span>
+</div>`,
+              },
+            },
+          ],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Size", ".ipt-sm / default / .ipt-lg", "28px / 36px / 44px height"],
+              ["Validation", ".ipt-success / .ipt-error", "Green or red border feedback"],
+              ["Disabled", "disabled", "Reduces opacity and blocks interaction"],
+              ["Wrapper", ".ipt-wrap", "Container for prefix and suffix positioning"],
+              ["Prefix", ".ipt-prefix", "Icon or text on the left side"],
+              ["Suffix", ".ipt-suffix", "Icon or text on the right side"],
+              ["Clear", ".ipt-clear", "Clear button shown when the input has content"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Always provide a placeholder that hints at the expected format. Error states must show field-error text, and form inputs must be paired with a label.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not use title as a label replacement, and do not hide essential guidance only inside placeholders.",
+        },
+        {
+          id: "textarea",
+          title: "Textarea",
+          description:
+            "Multiline text input. Supports auto-grow, character counting, and resizing. Shares validation and labeling patterns with Input.",
+          metaTags: ["Auto grow", "Counter", "Resizable"],
+          demos: [
+            {
+              title: "Base & auto grow",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><textarea class="txa" rows="3" placeholder="Fixed height, 3 rows"></textarea><textarea class="txa txa-auto" rows="1" placeholder="Auto grow with content"></textarea></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<textarea class="txa" rows="3" placeholder="Fixed height, 3 rows"></textarea>
+<textarea class="txa txa-auto" rows="1" placeholder="Auto grow with content"></textarea>`,
+              },
+            },
+            {
+              title: "Counter & validation",
+              previewHtml:
+                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="field"><label class="field-label">Notes</label><textarea class="txa" rows="3" maxlength="200" placeholder="Up to 200 characters"></textarea><span class="field-hint field-counter">0 / 200</span></div><div class="field"><label class="field-label">Error example</label><textarea class="txa txa-error" rows="2">Content exceeds the limit</textarea><span class="field-error">Character limit exceeded</span></div></div>',
+              codeBlock: {
+                label: "HTML",
+                copyLabel: "Copy",
+                copiedLabel: "Copied",
+                code: `<div class="field">
+  <label class="field-label">Notes</label>
+  <textarea class="txa" rows="3" maxlength="200" placeholder="Up to 200 characters"></textarea>
+  <span class="field-hint field-counter">0 / 200</span>
+</div>
+
+<div class="field">
+  <label class="field-label">Error example</label>
+  <textarea class="txa txa-error" rows="2">Content exceeds the limit</textarea>
+  <span class="field-error">Character limit exceeded</span>
+</div>`,
+              },
+            },
+          ],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Base", ".txa", "Base multiline input class"],
+              ["Auto grow", ".txa-auto", "Grows with content"],
+              ["Error state", ".txa-error", "Red border feedback"],
+              ["Resize", "resize: vertical", "Vertically resizable by default"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Show a live counter when the content has limits, and prefer txa-auto for longer input flows.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not disable resizing, and avoid rows below 2 because it collapses into an Input-like control.",
+        },
+      ],
     },
   },
 }

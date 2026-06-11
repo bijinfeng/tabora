@@ -2,7 +2,12 @@ import { createMemo, onCleanup, onMount } from "solid-js"
 
 import { useSiteI18n } from "../../app/AppShell"
 import { PrototypeTopnav } from "../../shared/PrototypeTopnav"
-import { getDocsPageContent, type DocsCodeBlock, type DocsTable } from "./docsPageContent"
+import {
+  getDocsPageContent,
+  type DocsCodeBlock,
+  type DocsComponentSpec,
+  type DocsTable,
+} from "./docsPageContent"
 
 import docsPrototypeHtml from "../../../../../docs/design/docs.html?raw"
 
@@ -59,7 +64,7 @@ const highlightBash = (value: string) => {
     return `<span class="tbr-syn-string">${match}</span>`
   })
 
-  return withStrings.replace(/(^|\s)(--?[\w-]+)/g, (match, space, flag) => {
+  return withStrings.replace(/(^|\s)(--?[\w-]+)/g, (_match, space, flag) => {
     return `${space}<span class="tbr-syn-keyword">${flag}</span>`
   })
 }
@@ -109,7 +114,7 @@ const getDocsPrototypeTailHtml = () => {
   const body = docsPrototypeHtml.match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? ""
   const withoutScripts = body.replace(/<script[\s\S]*?<\/script>/g, "")
   const tail =
-    withoutScripts.match(/<section class="comp-spec" id="button"[\s\S]*?(?=<\/main>)/)?.[0] ?? ""
+    withoutScripts.match(/<section class="comp-spec" id="select"[\s\S]*?(?=<\/main>)/)?.[0] ?? ""
 
   return tail.replace(/href="component-spec\.html(#.*?)?"/g, (_, hash: string | undefined) => {
     return `href="/docs/components${hash ?? ""}"`
@@ -305,6 +310,10 @@ export function DocsHomePage() {
             <DocsSpecTable table={content().sections.tokens.table} />
           </section>
 
+          {content().componentSpecs.inputControls.map((spec) => (
+            <DocsComponentSpecSection spec={spec} />
+          ))}
+
           <div innerHTML={tailHtml()} />
         </main>
       </div>
@@ -366,6 +375,55 @@ function DocsSpecTable(props: { table: DocsTable }) {
         ))}
       </tbody>
     </table>
+  )
+}
+
+function DocsComponentSpecSection(props: { spec: DocsComponentSpec }) {
+  return (
+    <section class="comp-spec" id={props.spec.id}>
+      <div class="comp-header">
+        <h3>{props.spec.title}</h3>
+        <p>{props.spec.description}</p>
+        <div class="comp-meta">
+          {props.spec.metaTags.map((tag) => (
+            <span class="comp-meta-tag">{tag}</span>
+          ))}
+        </div>
+      </div>
+      {props.spec.anatomyTitle ? (
+        <div class="anatomy-box">
+          <h4>{props.spec.anatomyTitle}</h4>
+          <ul>
+            {props.spec.anatomyItems?.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {props.spec.demos.map((demo) => (
+        <div class="demo-section">
+          <div class="demo-section-head">
+            <h4>{demo.title}</h4>
+          </div>
+          <div class="demo-body">
+            <div innerHTML={demo.previewHtml} />
+          </div>
+          <DocsCodeBlock block={demo.codeBlock} />
+        </div>
+      ))}
+      <DocsSpecTable table={props.spec.table} />
+      <div class="do-dont">
+        <div class="do">
+          <h5>{props.spec.doTitle}</h5>
+          <p>{props.spec.doBody}</p>
+        </div>
+        <div class="dont">
+          <h5>{props.spec.dontTitle}</h5>
+          <p>{props.spec.dontBody}</p>
+        </div>
+      </div>
+      {props.spec.pluginExample ? <DocsCodeBlock block={props.spec.pluginExample} /> : null}
+    </section>
   )
 }
 
