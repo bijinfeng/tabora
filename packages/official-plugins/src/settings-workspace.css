@@ -1,45 +1,318 @@
 [data-tabora-plugin-id="official.settings.workspace"] .settings-panel-stack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 2px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-group-title {
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-help {
+  margin: 0;
+  color: rgb(var(--color-muted));
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-help code {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgb(var(--color-accent) / 0.1);
+  color: rgb(var(--color-accent));
+  font-size: 11px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-hint {
+  color: rgb(var(--color-muted));
+  font-size: 10px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-row-info {
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-row-label {
+  color: rgb(var(--color-text));
+  font-size: 13px;
+  font-weight: 500;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-row-desc {
+  margin-top: 2px;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-row-meta {
+  flex-shrink: 0;
+  color: rgb(var(--color-muted));
+  font-size: 12px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .layout-picker,
+[data-tabora-plugin-id="official.settings.workspace"] .theme-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .layout-option,
+[data-tabora-plugin-id="official.settings.workspace"] .theme-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px;
+  border: 1.5px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    color 120ms ease;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .layout-option:hover,
+[data-tabora-plugin-id="official.settings.workspace"] .theme-card:hover {
+  border-color: rgb(var(--color-line-strong));
+  background: rgb(var(--color-surface-soft));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .layout-option.active,
+[data-tabora-plugin-id="official.settings.workspace"] .theme-card.active {
+  border-color: rgb(var(--color-accent));
+  background: rgb(var(--color-accent) / 0.1);
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .layout-option-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .layout-option-name,
+[data-tabora-plugin-id="official.settings.workspace"] .theme-card-name {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .theme-card-glyph {
+  font-size: 20px;
+  line-height: 1;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .theme-card-desc {
+  color: rgb(var(--color-muted));
+  font-size: 10px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item {
+  min-height: 54px;
+  padding: 8px;
+  border: 1.5px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item:hover {
+  border-color: rgb(var(--color-line-strong));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item.active {
+  border-color: rgb(var(--color-accent));
+  box-shadow: inset 0 0 0 1px rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item-1 {
+  background: linear-gradient(135deg, rgb(246 248 243), rgb(225 232 220));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item-2 {
+  background: linear-gradient(135deg, rgb(251 250 247), rgb(230 226 216));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item-3 {
+  background: linear-gradient(135deg, rgb(229 236 246), rgb(215 226 222));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item-4 {
+  background: linear-gradient(135deg, rgb(244 232 220), rgb(224 232 222));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .bg-item-5 {
+  background:
+    linear-gradient(rgb(255 255 255 / 0.24), rgb(255 255 255 / 0.24)),
+    linear-gradient(135deg, rgb(206 215 202), rgb(184 199 209));
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .settings-provider-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 6px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .provider-controls {
-  display: inline-flex;
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row {
+  display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .workspace-current,
-[data-tabora-plugin-id="official.settings.workspace"] .workspace-create {
+  justify-content: space-between;
+  gap: 12px;
   min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .workspace-active-name {
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.active {
+  border-color: rgb(var(--color-accent) / 0.45);
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.disabled {
+  opacity: 0.58;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-main:disabled {
+  cursor: not-allowed;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-kind {
+  flex-shrink: 0;
+  color: rgb(var(--color-muted));
+  font-size: 12px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-title {
   color: rgb(var(--color-text));
   font-size: 13px;
   font-weight: 650;
 }
 
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-alias {
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .provider-state {
+  min-width: 42px;
+  color: rgb(var(--color-accent));
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .sw-track {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgb(var(--color-line-strong));
+  transition: background 120ms ease;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .sw-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgb(var(--color-surface));
+  box-shadow: 0 1px 3px rgb(var(--color-shadow) / 0.18);
+  transition: transform 120ms ease;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap input:checked + .sw-track {
+  background: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap input:checked + .sw-track .sw-thumb {
+  transform: translateX(14px);
+}
+
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-title {
-  color: rgb(var(--color-muted));
-  font-size: 12px;
-  font-weight: 650;
+  gap: 6px;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-item {
@@ -47,16 +320,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px;
+  min-width: 0;
+  padding: 8px 12px;
   border: 1px solid rgb(var(--color-line));
-  border-radius: var(--radius);
-  background: rgb(var(--color-surface-soft));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-name {
   min-width: 0;
   color: rgb(var(--color-muted));
-  font-size: 13px;
+  font-size: 12px;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-name.active {
@@ -86,9 +360,67 @@
   outline: none;
 }
 
+[data-tabora-plugin-id="official.settings.workspace"] .settings-select {
+  flex-shrink: 0;
+  width: 160px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-create-input:focus {
   border-color: rgb(var(--color-accent));
   box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.08);
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-select:focus {
+  border-color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.08);
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: rgb(var(--color-accent) / 0.1);
+  color: rgb(var(--color-accent));
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn:hover {
+  background: rgb(var(--color-accent) / 0.16);
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn.danger {
+  background: rgb(var(--color-danger) / 0.1);
+  color: rgb(var(--color-danger));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-inline-error {
+  padding: 8px 10px;
+  border: 1px solid rgb(var(--color-danger) / 0.3);
+  border-radius: 8px;
+  background: rgb(var(--color-danger) / 0.08);
+  color: rgb(var(--color-danger));
+  font-size: 12px;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-import-success {
@@ -101,4 +433,23 @@
   padding-left: 18px;
   color: rgb(var(--color-muted));
   font-size: 12px;
+}
+
+@media (max-width: 500px) {
+  [data-tabora-plugin-id="official.settings.workspace"] .layout-picker,
+  [data-tabora-plugin-id="official.settings.workspace"] .theme-card-grid,
+  [data-tabora-plugin-id="official.settings.workspace"] .bg-grid {
+    grid-template-columns: 1fr;
+  }
+
+  [data-tabora-plugin-id="official.settings.workspace"] .set-row,
+  [data-tabora-plugin-id="official.settings.workspace"] .search-provider-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  [data-tabora-plugin-id="official.settings.workspace"] .search-provider-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
 }

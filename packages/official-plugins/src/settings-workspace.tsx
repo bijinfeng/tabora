@@ -1,81 +1,170 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { Badge, Button, CardSection, Field, InlineError, ListRow, Select, Switch } from "@tabora/ui"
-
-function backgroundOptions(props: SettingsPanelViewProps) {
-  return props.backgrounds.map((background) => ({
-    value: background.id,
-    label: background.title,
-  }))
-}
-
-function themeOptions(props: SettingsPanelViewProps) {
-  return props.themes.map((theme) => ({
-    value: theme.id,
-    label: theme.title,
-  }))
-}
 
 export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
-  const layouts = () =>
-    props.layouts.map((layout) => ({
-      value: layout.id,
-      label: layout.title,
-    }))
-  const themes = () => themeOptions(props)
-  const backgrounds = () => backgroundOptions(props)
+  const activeLayout = () =>
+    props.layouts.find((layout) => layout.id === props.workspace.activeLayoutId)
+  const activeTheme = () => props.workspace.activeThemeId
+  const activeBackground = () => props.workspace.activeBackgroundProviderId
   const localeValue = () => props.locale ?? "zh-CN"
   const localeOptions = () => props.availableLocales ?? []
   const canSwitchLocale = () =>
     typeof props.host.switchLocale === "function" && localeOptions().length > 0
-  const layoutValue = () => props.workspace.activeLayoutId
-  const themeValue = () => props.workspace.activeThemeId
-  const backgroundValue = () => props.workspace.activeBackgroundProviderId
+  const lightTheme = () =>
+    props.themes.find((theme) => /light|明|亮/i.test(`${theme.id} ${theme.title}`)) ??
+    props.themes[0]
+  const darkTheme = () =>
+    props.themes.find((theme) => /dark|暗/i.test(`${theme.id} ${theme.title}`)) ?? props.themes[1]
 
   return (
-    <CardSection title="外观">
-      <div class="settings-panel-stack">
-        <Field label="布局" htmlFor="settings-layout-select">
-          <Select
-            id="settings-layout-select"
-            value={layoutValue()}
-            options={layouts()}
-            onChange={(value) => void props.host.switchLayout?.(value)}
-            aria-label="选择布局"
-          />
-        </Field>
-        <Field label="主题" htmlFor="settings-theme-select">
-          <Select
-            id="settings-theme-select"
-            value={themeValue()}
-            options={themes()}
-            onChange={(value) => void props.host.switchTheme(value)}
-            aria-label="选择主题"
-          />
-        </Field>
-        <Field label="背景" htmlFor="settings-background-select">
-          <Select
-            id="settings-background-select"
-            value={backgroundValue()}
-            options={backgrounds()}
-            onChange={(value) => void props.host.switchBackground(value)}
-            aria-label="选择背景"
-          />
-        </Field>
-        <Show when={canSwitchLocale()}>
-          <Field label="语言" htmlFor="settings-locale-select">
-            <Select
+    <div class="settings-panel-stack">
+      <section class="set-group">
+        <div class="set-group-title">工作台布局</div>
+        <p class="settings-help">
+          布局是插件。当前可在 Dashboard 与 Focus 间切换，适配不同使用习惯和工作流程。
+        </p>
+        <div class="layout-picker" role="radiogroup" aria-label="工作台布局">
+          <For each={props.layouts}>
+            {(layout) => (
+              <button
+                type="button"
+                class="layout-option"
+                classList={{ active: layout.id === props.workspace.activeLayoutId }}
+                onClick={() => void props.host.switchLayout?.(layout.id)}
+                aria-pressed={layout.id === props.workspace.activeLayoutId}
+              >
+                <span class="layout-option-icon">{layout.id.includes("focus") ? "◎" : "▦"}</span>
+                <span class="layout-option-name">{layout.title}</span>
+              </button>
+            )}
+          </For>
+        </div>
+        <div class="set-hint">
+          当前布局：{activeLayout()?.title ?? props.workspace.activeLayoutId}
+        </div>
+      </section>
+
+      <section class="set-group">
+        <div class="set-group-title">主题</div>
+        <p class="settings-help">选择明亮或暗色主题。主题来自 theme 插件的 token 贡献。</p>
+        <div class="theme-card-grid">
+          <Show when={lightTheme()}>
+            {(theme) => (
+              <button
+                type="button"
+                id="themeLight"
+                class="theme-card"
+                classList={{ active: activeTheme() === theme().id }}
+                onClick={() => void props.host.switchTheme(theme().id)}
+              >
+                <span class="theme-card-glyph">明</span>
+                <span class="theme-card-name">{theme().title}</span>
+                <span class="theme-card-desc">浅色页面，白天使用</span>
+              </button>
+            )}
+          </Show>
+          <Show when={darkTheme()}>
+            {(theme) => (
+              <button
+                type="button"
+                id="themeDark"
+                class="theme-card"
+                classList={{ active: activeTheme() === theme().id }}
+                onClick={() => void props.host.switchTheme(theme().id)}
+              >
+                <span class="theme-card-glyph">暗</span>
+                <span class="theme-card-name">{theme().title}</span>
+                <span class="theme-card-desc">深色页面，夜间使用</span>
+              </button>
+            )}
+          </Show>
+        </div>
+      </section>
+
+      <section class="set-group">
+        <div class="set-group-title">背景</div>
+        <p class="settings-help">
+          选择页面背景。背景来源通过 background-provider 贡献，渲染由 background-renderer 执行。
+        </p>
+        <div class="bg-grid" role="radiogroup" aria-label="页面背景">
+          <For each={props.backgrounds}>
+            {(background, index) => (
+              <button
+                type="button"
+                class={`bg-item bg-item-${(index() % 5) + 1}`}
+                classList={{ active: activeBackground() === background.id }}
+                onClick={() => void props.host.switchBackground(background.id)}
+                aria-pressed={activeBackground() === background.id}
+              >
+                {background.title}
+              </button>
+            )}
+          </For>
+        </div>
+      </section>
+
+      <Show when={canSwitchLocale()}>
+        <section class="set-group">
+          <div class="set-group-title">语言</div>
+          <p class="settings-help">切换工作台界面语言。设置会写入当前工作区外观配置。</p>
+          <div class="set-row">
+            <div class="set-row-info">
+              <div class="set-row-label">当前语言</div>
+              <div class="set-row-desc">影响工作台宿主文案和官方插件面板文案</div>
+            </div>
+            <select
               id="settings-locale-select"
+              class="settings-select"
               value={localeValue()}
-              options={localeOptions()}
-              onChange={(value) => void props.host.switchLocale?.(value as "zh-CN" | "en-US")}
+              onChange={(event) =>
+                void props.host.switchLocale?.(event.currentTarget.value as "zh-CN" | "en-US")
+              }
               aria-label="选择语言"
-            />
-          </Field>
-        </Show>
-      </div>
-    </CardSection>
+            >
+              <For each={localeOptions()}>
+                {(option) => <option value={option.value}>{option.label}</option>}
+              </For>
+            </select>
+          </div>
+        </section>
+      </Show>
+    </div>
+  )
+}
+
+function SettingsInlineError(props: { children: string }) {
+  return <div class="settings-inline-error">{props.children}</div>
+}
+
+function providerShortcut(provider: SettingsPanelViewProps["searchProviders"][number]) {
+  return provider.shortcut ?? `@${provider.id.split(".").at(-1) ?? provider.id}`
+}
+
+function providerAlias(provider: SettingsPanelViewProps["searchProviders"][number]) {
+  return providerShortcut(provider).startsWith("@")
+    ? providerShortcut(provider)
+    : `@${providerShortcut(provider)}`
+}
+
+function providerKindLabel(provider: SettingsPanelViewProps["searchProviders"][number]) {
+  if (provider.id.includes("github")) return "代码"
+  return "搜索"
+}
+
+function SettingsSwitch(props: { checked: boolean; label: string; onChange: () => void }) {
+  return (
+    <label class="sw-wrap">
+      <input
+        type="checkbox"
+        checked={props.checked}
+        onChange={props.onChange}
+        aria-label={props.label}
+      />
+      <span class="sw-track">
+        <span class="sw-thumb" />
+      </span>
+    </label>
   )
 }
 
@@ -101,13 +190,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
     return null
   })
 
-  function enabledProviderOptions() {
-    return enabledProviders().map((p) => ({
-      value: p.id,
-      label: p.shortcut ? `${p.title} (${p.shortcut})` : p.title,
-    }))
-  }
-
   const defaultId = () => props.searchSettings.defaultProviderId
 
   function handleToggle(providerId: string) {
@@ -116,51 +198,53 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   return (
-    <CardSection title="搜索">
-      <div class="settings-panel-stack">
+    <div class="settings-panel-stack">
+      <section class="set-group">
+        <div class="set-group-title">默认搜索引擎</div>
+        <p class="settings-help">
+          搜索栏默认使用的搜索引擎。可在搜索框中用 <code>@引擎名</code> 临时切换。
+        </p>
         <Show when={configurationError()}>
-          <InlineError>{configurationError()!}</InlineError>
+          <SettingsInlineError>{configurationError()!}</SettingsInlineError>
         </Show>
-        <Field label="默认搜索源" htmlFor="settings-search-provider-select">
-          <Select
-            id="settings-search-provider-select"
-            value={configurationError() ? "" : defaultId()}
-            options={enabledProviderOptions()}
-            onChange={(providerId) => void props.host.setDefaultSearchProvider(providerId)}
-            aria-label="选择默认搜索源"
-          />
-        </Field>
-        <ul class="settings-provider-list">
+        <div class="settings-provider-list" id="settings-search-provider-select">
           <For each={props.searchProviders}>
             {(provider) => {
               const isEnabled = () => enabledIds().includes(provider.id)
+              const isDefault = () => provider.id === defaultId()
               return (
-                <li>
-                  <ListRow
-                    primary={provider.title}
-                    secondary={provider.urlTemplate}
-                    trailing={
-                      <div class="provider-controls">
-                        {provider.id === defaultId() ? (
-                          <Badge variant="accent">默认</Badge>
-                        ) : provider.shortcut ? (
-                          <Badge>{provider.shortcut}</Badge>
-                        ) : null}
-                        <Switch
-                          checked={isEnabled()}
-                          onChange={() => handleToggle(provider.id)}
-                          aria-label={`${isEnabled() ? "禁用" : "启用"} ${provider.title}`}
-                        />
-                      </div>
-                    }
-                  />
-                </li>
+                <div
+                  class="search-provider-row"
+                  classList={{ active: isDefault(), disabled: !isEnabled() }}
+                >
+                  <button
+                    type="button"
+                    class="search-provider-main"
+                    onClick={() => void props.host.setDefaultSearchProvider(provider.id)}
+                    disabled={!isEnabled()}
+                  >
+                    <span class="search-provider-kind">{providerKindLabel(provider)}</span>
+                    <span class="search-provider-text">
+                      <span class="search-provider-title">{provider.title}</span>
+                      <span class="search-provider-alias">{providerAlias(provider)}</span>
+                    </span>
+                  </button>
+                  <div class="search-provider-actions">
+                    <span class="provider-state">{isDefault() ? "✓ 当前" : ""}</span>
+                    <SettingsSwitch
+                      checked={isEnabled()}
+                      label={`${isEnabled() ? "禁用" : "启用"} ${provider.title}`}
+                      onChange={() => handleToggle(provider.id)}
+                    />
+                  </div>
+                </div>
               )
             }}
           </For>
-        </ul>
-      </div>
-    </CardSection>
+        </div>
+        <div class="set-hint">已启用 {enabledProviders().length} 个搜索源</div>
+      </section>
+    </div>
   )
 }
 
@@ -224,18 +308,26 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   const workspaces = () => props.workspaces ?? []
 
   return (
-    <CardSection title="工作区">
-      <div class="settings-panel-stack">
-        <div class="workspace-current">
-          <Field label="当前工作区" htmlFor="ws-current-name">
-            <span id="ws-current-name" class="workspace-active-name">
-              {props.workspace.name}
-            </span>
-          </Field>
+    <div class="settings-panel-stack">
+      <section class="set-group">
+        <div class="set-group-title">工作台布局</div>
+        <p class="settings-help">
+          布局是插件。当前可用布局来自 layout contribution，Focus 布局用于深度专注工作流。
+        </p>
+        <div class="set-hint">不同的布局适合不同的使用习惯和工作流程。</div>
+      </section>
+
+      <section class="set-group">
+        <div class="set-group-title">工作区</div>
+        <div class="set-row">
+          <div class="set-row-info">
+            <div class="set-row-label">当前工作区</div>
+            <div class="set-row-desc">存储布局、主题、背景和卡片配置</div>
+          </div>
+          <span class="settings-row-meta">{props.workspace.name}</span>
         </div>
         <Show when={workspaces().length > 1}>
           <div class="workspace-list">
-            <div class="workspace-list-title">所有工作区</div>
             <For each={workspaces()}>
               {(ws) => (
                 <div class="workspace-list-item">
@@ -246,26 +338,26 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
                     }}
                   >
                     {ws.name}
-                    {ws.id === props.workspace.id ? " (当前)" : ""}
+                    {ws.id === props.workspace.id ? " · 当前" : ""}
                   </span>
                   <div class="workspace-list-actions">
                     <Show when={ws.id !== props.workspace.id}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
+                        type="button"
+                        class="settings-mini-btn"
                         onClick={() => void props.host.switchWorkspace?.(ws.id)}
                       >
                         切换
-                      </Button>
+                      </button>
                     </Show>
                     <Show when={ws.id !== "default"}>
-                      <Button
-                        variant="danger"
-                        size="sm"
+                      <button
+                        type="button"
+                        class="settings-mini-btn danger"
                         onClick={() => void props.host.deleteWorkspace?.(ws.id)}
                       >
                         删除
-                      </Button>
+                      </button>
                     </Show>
                   </div>
                 </div>
@@ -273,38 +365,35 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
             </For>
           </div>
         </Show>
-        <div class="workspace-create">
-          <Field label="新建工作区" htmlFor="ws-new-name">
-            <div class="workspace-create-row">
-              <input
-                id="ws-new-name"
-                class="workspace-create-input"
-                value={newWorkspaceName()}
-                onInput={(e) => setNewWorkspaceName(e.currentTarget.value)}
-                onKeyDown={(e) => e.key === "Enter" && void handleCreate()}
-                placeholder="工作区名称"
-              />
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={!newWorkspaceName().trim()}
-                onClick={() => void handleCreate()}
-              >
-                创建
-              </Button>
-            </div>
-          </Field>
+        <div class="workspace-create-row">
+          <input
+            id="ws-new-name"
+            class="workspace-create-input"
+            value={newWorkspaceName()}
+            onInput={(e) => setNewWorkspaceName(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === "Enter" && void handleCreate()}
+            placeholder="新建工作区"
+            aria-label="新建工作区名称"
+          />
+          <button
+            type="button"
+            class="settings-mini-btn"
+            disabled={!newWorkspaceName().trim()}
+            onClick={() => void handleCreate()}
+          >
+            创建
+          </button>
         </div>
         <div class="workspace-actions">
-          <Button variant="secondary" size="sm" onClick={() => void handleExport()}>
-            导出工作区
-          </Button>
-          <Button variant="secondary" size="sm" onClick={handleImport}>
-            导入工作区
-          </Button>
+          <button type="button" class="settings-mini-btn" onClick={() => void handleExport()}>
+            导出
+          </button>
+          <button type="button" class="settings-mini-btn" onClick={handleImport}>
+            导入
+          </button>
         </div>
         <Show when={importError()}>
-          <InlineError>{importError()}</InlineError>
+          <SettingsInlineError>{importError()!}</SettingsInlineError>
         </Show>
         <Show when={importSuccess()}>
           <div class="workspace-import-success">导入成功</div>
@@ -314,8 +403,8 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
             <For each={importWarnings()}>{(warning) => <li>{warning}</li>}</For>
           </ul>
         </Show>
-      </div>
-    </CardSection>
+      </section>
+    </div>
   )
 }
 

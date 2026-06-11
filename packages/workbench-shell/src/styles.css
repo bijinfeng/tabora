@@ -506,7 +506,7 @@
 .settings-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 400;
   background: rgb(var(--color-shadow) / 0.2);
   backdrop-filter: blur(2px);
   display: flex;
@@ -515,11 +515,12 @@
 .settings-drawer {
   display: grid;
   grid-template-columns: 200px 1fr;
-  width: 680px;
-  max-width: 90vw;
+  width: min(680px, 100vw);
+  max-width: 92vw;
   height: 100vh;
   background: rgb(var(--color-surface));
   border-left: 1px solid rgb(var(--color-line));
+  transform: translateX(0);
 }
 .settings-sidebar {
   padding: 12px;
@@ -539,6 +540,10 @@
   letter-spacing: 0.06em;
   color: rgb(var(--color-muted));
   padding: 8px 10px 4px;
+}
+.settings-sidebar-group-title {
+  margin-top: 4px;
+  padding-top: 12px;
 }
 .settings-nav {
   display: block;
@@ -565,6 +570,7 @@
 }
 .settings-content {
   overflow-y: auto;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -576,6 +582,10 @@
   font-weight: 700;
   padding: 14px 16px;
   border-bottom: 1px solid rgb(var(--color-line));
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgb(var(--color-surface));
 }
 .settings-close-btn {
   width: 30px;
@@ -593,7 +603,7 @@
   background: rgba(var(--color-accent), 0.06);
 }
 .settings-tab-body {
-  padding: 20px 16px 16px;
+  padding: 16px;
   flex: 1;
   overflow-y: auto;
 }
@@ -641,6 +651,26 @@
   font-size: 10px;
   color: rgb(var(--color-muted));
   margin-top: 2px;
+}
+
+@media (max-width: 760px) {
+  .settings-drawer {
+    grid-template-columns: 160px minmax(0, 1fr);
+    max-width: 100vw;
+  }
+}
+
+@media (max-width: 500px) {
+  .settings-drawer {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-sidebar {
+    max-height: 170px;
+    overflow-y: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgb(var(--color-line));
+  }
 }
 
 /* ====== GENERAL BUTTONS (prototype) ====== */

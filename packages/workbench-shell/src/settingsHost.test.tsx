@@ -201,6 +201,31 @@ describe("settings host composition", () => {
     expect(root.querySelector(".settings-drawer")).toBeTruthy()
   })
 
+  it("renders prototype grouped settings navigation", () => {
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels: [],
+        activeSectionId: "plugins",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => undefined,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("设置")
+    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("插件")
+    expect([...root.querySelectorAll(".settings-nav")].map((node) => node.textContent)).toEqual([
+      "通用",
+      "外观",
+      "搜索",
+      "已安装",
+      "关于",
+    ])
+    expect(root.querySelector(".settings-tab-title")?.textContent).toContain("已安装插件")
+  })
+
   it("keeps the settings container open when a panel view fails", () => {
     const panels: SettingsPanelDescriptor[] = [
       {

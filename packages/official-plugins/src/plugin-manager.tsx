@@ -1,7 +1,6 @@
 import { For } from "solid-js"
 import type { PluginManifest, PluginPermission, SettingsPanelViewProps } from "@tabora/plugin-api"
 import { assessPermissionRisk } from "@tabora/plugin-api"
-import { Badge, CardSection, InlineError, ListRow, Switch } from "@tabora/ui"
 
 export type PluginSummary = SettingsPanelViewProps["plugins"][number]
 
@@ -58,115 +57,121 @@ function permissionType(permission: PluginPermission): string {
   }
 }
 
+function pluginStatus(plugin: PluginSummary) {
+  if (plugin.status === "error") return { label: "错误", tone: "danger" }
+  if (plugin.status === "skipped") return { label: "不兼容", tone: "danger" }
+  return plugin.enabled ? { label: "已启用", tone: "success" } : { label: "已禁用", tone: "muted" }
+}
+
+function PluginSwitch(props: {
+  checked: boolean
+  label: string
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <label class="plugin-switch">
+      <input
+        type="checkbox"
+        checked={props.checked}
+        onChange={(event) => props.onChange(event.currentTarget.checked)}
+        aria-label={props.label}
+      />
+      <span class="plugin-switch-track">
+        <span class="plugin-switch-thumb" />
+      </span>
+    </label>
+  )
+}
+
 export function PluginManagerCard(props: PluginManagerCardProps = {}) {
   const plugins = () => props.plugins ?? []
 
   return (
-    <CardSection title="官方插件">
-      <ul class="plugin-list">
-        <For each={plugins()}>
-          {(plugin) => {
-            const extensions = contributionLabels(plugin.contributes)
-            const permissions = plugin.permissions.map(permissionLabel)
-            return (
-              <li class="plugin-item">
-                <ListRow
-                  primary={plugin.name}
-                  secondary={
-                    <span>
-                      <span class="plugin-id-mono">{plugin.id}</span>
-                      <span> · v{plugin.version}</span>
-                      {extensions.length > 0 ? <span> · {extensions.join(" · ")}</span> : null}
-                      {permissions.length > 0 ? (
-                        <span> · 权限 {permissions.join(" / ")}</span>
-                      ) : null}
-                      {plugin.lastError ? (
-                        <span>
-                          {" "}
-                          · <InlineError>{plugin.lastError}</InlineError>
-                        </span>
-                      ) : null}
-                      {plugin.disabledReason ? (
-                        <span>
-                          {" "}
-                          · <InlineError>{plugin.disabledReason}</InlineError>
-                        </span>
-                      ) : null}
-                      {plugin.requiredCapabilities?.length ? (
-                        <span> · 需要能力 {plugin.requiredCapabilities.join(", ")}</span>
-                      ) : null}
-                    </span>
-                  }
-                  trailing={
-                    <div class="plugin-controls">
-                      {plugin.status === "error" ? (
-                        <Badge variant="danger">错误</Badge>
-                      ) : plugin.status === "skipped" ? (
-                        <Badge variant="danger">不兼容</Badge>
-                      ) : (
-                        <Badge variant={plugin.enabled ? "accent" : "neutral"}>
-                          {plugin.enabled ? "已启用" : "已禁用"}
-                        </Badge>
-                      )}
-                      <Switch
-                        checked={plugin.enabled}
-                        onChange={(enabled) => {
-                          void props.host?.togglePluginEnabled?.(plugin.id, enabled)
-                        }}
-                        aria-label={`${plugin.enabled ? "禁用" : "启用"} ${plugin.name}`}
-                      />
+    <div class="plugin-settings-stack">
+      <section class="set-group">
+        <div class="set-group-title">已安装插件</div>
+        <p class="plugin-settings-help">
+          每个插件贡献的能力、版本和运行状态。插件启用状态控制是否加载到当前工作台。
+        </p>
+        <div class="plugin-list">
+          <For each={plugins()}>
+            {(plugin) => {
+              const extensions = contributionLabels(plugin.contributes)
+              const permissions = plugin.permissions.map(permissionLabel)
+              const status = pluginStatus(plugin)
+              return (
+                <div class="plugin-card">
+                  <div class="plugin-main">
+                    <div class="plugin-name">{plugin.name}</div>
+                    <div class="plugin-id-mono">{plugin.id}</div>
+                    <div class="plugin-meta">
+                      {extensions.length > 0 ? extensions.join(" · ") : "无贡献能力"}
+                      {permissions.length > 0 ? ` · 权限 ${permissions.join(" / ")}` : ""}
+                      {plugin.disabledReason ? ` · ${plugin.disabledReason}` : ""}
+                      {plugin.lastError ? ` · ${plugin.lastError}` : ""}
+                      {plugin.requiredCapabilities?.length
+                        ? ` · 需要能力 ${plugin.requiredCapabilities.join(", ")}`
+                        : ""}
                     </div>
-                  }
-                />
-              </li>
-            )
-          }}
-        </For>
-      </ul>
-      <div class="plugin-audit-section">
-        <div class="plugin-audit-title">权限审计</div>
-        <For each={plugins()}>
-          {(plugin) => {
-            const risks = plugin.permissions.map(assessPermissionRisk)
-            const riskLevels: Record<string, number> = {
-              low: 0,
-              medium: 1,
-              high: 2,
-              critical: 3,
-            }
-            const maxRisk = risks.reduce(
-              (max: string, r) =>
-                (riskLevels[r.risk] ?? 0) > (riskLevels[max] ?? 0) ? r.risk : max,
-              "low",
-            )
-            return (
-              <div class="plugin-audit-item">
-                <span class="plugin-audit-name">{plugin.name}</span>
-                <For each={risks}>
-                  {(risk) => (
-                    <Badge
-                      variant={
-                        risk.risk === "low"
-                          ? "neutral"
-                          : risk.risk === "medium"
-                            ? "accent"
-                            : "danger"
-                      }
-                    >
-                      {permissionType(risk.permission)}
-                    </Badge>
-                  )}
-                </For>
-                {plugin.permissions.length === 0 ? (
-                  <span class="plugin-audit-none">无权限请求</span>
-                ) : (
-                  <span class="plugin-audit-risk">风险: {maxRisk}</span>
-                )}
-              </div>
-            )
-          }}
-        </For>
-      </div>
-    </CardSection>
+                  </div>
+                  <div class="plugin-controls">
+                    <span class="plugin-version">v{plugin.version}</span>
+                    <span class={`plugin-pill ${status.tone}`}>{status.label}</span>
+                    <PluginSwitch
+                      checked={plugin.enabled}
+                      label={`${plugin.enabled ? "禁用" : "启用"} ${plugin.name}`}
+                      onChange={(enabled) => {
+                        void props.host?.togglePluginEnabled?.(plugin.id, enabled)
+                      }}
+                    />
+                  </div>
+                </div>
+              )
+            }}
+          </For>
+        </div>
+      </section>
+
+      <section class="set-group">
+        <div class="set-group-title">权限审计</div>
+        <div class="plugin-audit-section">
+          <For each={plugins()}>
+            {(plugin) => {
+              const risks = plugin.permissions.map(assessPermissionRisk)
+              const riskLevels: Record<string, number> = {
+                low: 0,
+                medium: 1,
+                high: 2,
+                critical: 3,
+              }
+              const maxRisk = risks.reduce(
+                (max: string, r) =>
+                  (riskLevels[r.risk] ?? 0) > (riskLevels[max] ?? 0) ? r.risk : max,
+                "low",
+              )
+              return (
+                <div class="plugin-audit-item">
+                  <span class="plugin-audit-name">{plugin.name}</span>
+                  <div class="plugin-audit-tags">
+                    <For each={risks}>
+                      {(risk) => (
+                        <span class={`plugin-pill ${risk.risk}`}>
+                          {permissionType(risk.permission)}
+                        </span>
+                      )}
+                    </For>
+                    {plugin.permissions.length === 0 ? (
+                      <span class="plugin-audit-none">无权限请求</span>
+                    ) : (
+                      <span class="plugin-audit-risk">风险: {maxRisk}</span>
+                    )}
+                  </div>
+                </div>
+              )
+            }}
+          </For>
+        </div>
+      </section>
+    </div>
   )
 }

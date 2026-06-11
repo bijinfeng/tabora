@@ -52,9 +52,13 @@ export function SettingsHost(props: SettingsHostProps) {
 
   const activeSection = () => props.activeSectionId ?? "general"
   const activePanels = () => navigator().sections[activeSection()].panels
-  const activeSectionTitle = () =>
-    SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ?? "设置"
-  const mainSections = () => SETTINGS_SECTIONS.filter((section) => section.id !== "about")
+  const activeSectionTitle = () => {
+    if (activeSection() === "plugins") return "已安装插件"
+    return SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ?? "设置"
+  }
+  const workspaceSections = () =>
+    SETTINGS_SECTIONS.filter((section) => ["general", "appearance", "search"].includes(section.id))
+  const pluginSection = () => SETTINGS_SECTIONS.find((section) => section.id === "plugins")
   const aboutSection = () => SETTINGS_SECTIONS.find((section) => section.id === "about")
 
   return (
@@ -63,7 +67,7 @@ export function SettingsHost(props: SettingsHostProps) {
         <div class="settings-drawer" onClick={(e) => e.stopPropagation()}>
           <nav class="settings-sidebar">
             <div class="settings-sidebar-title">设置</div>
-            <For each={mainSections()}>
+            <For each={workspaceSections()}>
               {(section) => (
                 <button
                   class="settings-nav"
@@ -74,6 +78,20 @@ export function SettingsHost(props: SettingsHostProps) {
                 </button>
               )}
             </For>
+            <Show when={pluginSection()}>
+              {(section) => (
+                <>
+                  <div class="settings-sidebar-title settings-sidebar-group-title">插件</div>
+                  <button
+                    class="settings-nav"
+                    classList={{ active: section().id === activeSection() }}
+                    onClick={() => props.onSectionChange(section().id)}
+                  >
+                    已安装
+                  </button>
+                </>
+              )}
+            </Show>
             <div class="settings-sidebar-spacer" />
             <Show when={aboutSection()}>
               {(section) => (
