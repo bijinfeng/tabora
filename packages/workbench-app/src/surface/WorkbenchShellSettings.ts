@@ -30,6 +30,8 @@ export function buildWorkbenchSettingsPanelProps(
     searchProviders: SettingsPanelViewProps["searchProviders"]
     searchSettings: SettingsPanelViewProps["searchSettings"]
     plugins: SettingsPanelViewProps["plugins"]
+    locale: SettingsPanelViewProps["locale"]
+    availableLocales: SettingsPanelViewProps["availableLocales"]
     host: SettingsPanelViewProps["host"]
   },
 ): SettingsPanelViewProps {
@@ -37,6 +39,8 @@ export function buildWorkbenchSettingsPanelProps(
     panelId: panel.id,
     pluginId: panel.pluginId,
     scope: panel.scope,
+    ...(options.locale ? { locale: options.locale } : {}),
+    ...(options.availableLocales ? { availableLocales: options.availableLocales } : {}),
     host: options.host,
     workspace: requireWorkspace(options.workspace),
     workspaces: options.workspaces,
@@ -58,6 +62,8 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
   getSearchProviders: () => SettingsPanelViewProps["searchProviders"]
   getSearchSettings: () => SettingsPanelViewProps["searchSettings"]
   getPlugins: () => SettingsPanelViewProps["plugins"]
+  getLocale: () => SettingsPanelViewProps["locale"]
+  getAvailableLocales: () => SettingsPanelViewProps["availableLocales"]
   host: SettingsPanelViewProps["host"]
 }) {
   return (panel: SettingsPanelDescriptor): SettingsPanelViewProps =>
@@ -70,6 +76,8 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
       searchProviders: options.getSearchProviders(),
       searchSettings: options.getSearchSettings(),
       plugins: options.getPlugins(),
+      locale: options.getLocale(),
+      availableLocales: options.getAvailableLocales(),
       host: options.host,
     })
 }

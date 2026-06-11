@@ -6,7 +6,7 @@ import { ensureWorkspaceSession } from "../workspace/workspaceSession"
 
 type RuntimeBootstrap = Pick<
   WorkbenchRuntimeBootstrap,
-  "kernel" | "plugins" | "repositories" | "defaultWorkspacePreset" | "shellConfig"
+  "kernel" | "plugins" | "repositories" | "defaultWorkspacePreset" | "shellConfig" | "i18n"
 >
 
 export async function initializeWorkbenchShellRuntime(options: {
@@ -15,6 +15,7 @@ export async function initializeWorkbenchShellRuntime(options: {
   setKernelReady: (ready: boolean) => void
   setWorkspaceList: (workspaces: Workspace[]) => void
   setWorkspaceState: Parameters<typeof hydrateWorkbenchSessionState>[0]["setWorkspaceState"]
+  setLocale: Parameters<typeof hydrateWorkbenchSessionState>[0]["setLocale"]
   setActiveLayoutId: Parameters<typeof hydrateWorkbenchSessionState>[0]["setActiveLayoutId"]
   setSearchSettings: Parameters<typeof hydrateWorkbenchSessionState>[0]["setSearchSettings"]
   setSearchHistory: Parameters<typeof hydrateWorkbenchSessionState>[0]["setSearchHistory"]
@@ -44,6 +45,7 @@ export async function initializeWorkbenchShellRuntime(options: {
   await hydrateWorkbenchSessionState({
     session,
     setWorkspaceState: options.setWorkspaceState,
+    setLocale: options.setLocale,
     setActiveLayoutId: options.setActiveLayoutId,
     setSearchSettings: options.setSearchSettings,
     setSearchHistory: options.setSearchHistory,

@@ -75,6 +75,7 @@ export function createWorkbenchShellHostRuntime(
       setKernelReady: options.setKernelReady,
       setWorkspaceList: options.setWorkspaceList,
       setWorkspaceState: options.setWorkspaceState,
+      setLocale: options.setLocale,
       setActiveLayoutId: options.setActiveLayoutId,
       setSearchSettings: options.setSearchSettings,
       setSearchHistory: options.setSearchHistory,

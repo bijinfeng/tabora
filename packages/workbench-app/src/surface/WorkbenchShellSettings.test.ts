@@ -87,6 +87,8 @@ describe("buildWorkbenchSettingsPanelProps", () => {
           enabledProviderIds: ["official.search.google"],
         },
         plugins: [],
+        locale: "zh-CN",
+        availableLocales: [],
         host: settingsHost(),
       }),
     ).toThrow("Workspace is not ready")
@@ -120,6 +122,8 @@ describe("buildWorkbenchSettingsPanelProps", () => {
       searchProviders: [],
       searchSettings,
       plugins,
+      locale: "zh-CN",
+      availableLocales: [],
       host,
     })
 

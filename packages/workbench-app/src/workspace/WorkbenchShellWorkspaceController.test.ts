@@ -241,6 +241,7 @@ function controllerSetup() {
   const saveForWorkspace = vi.fn(async () => {})
   const kernel = { setPluginEnabled: vi.fn(async () => {}) }
   const syncPluginStyles = vi.fn()
+  const i18n = { locale: vi.fn(() => "zh-CN" as const), setLocale: vi.fn() }
 
   const controller = createWorkbenchWorkspaceController({
     workspaceRepo: {} as any,
@@ -275,6 +276,7 @@ function controllerSetup() {
     setBackgroundId,
     applyTheme,
     applyBackground,
+    i18n,
     clearContextMenu,
     clearExpandState,
     defaultWorkspacePreset: defaultWorkspacePreset(),
