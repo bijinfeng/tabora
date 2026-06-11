@@ -68,6 +68,7 @@ function baseOptions(): Parameters<typeof createWorkbenchInstanceRenderer>[0] {
     onChangeWidgetSize: vi.fn(),
     onRemoveWidget: vi.fn(),
     isDragging: () => false,
+    sortableIndex: () => 0,
   }
 }
 

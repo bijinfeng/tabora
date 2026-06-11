@@ -135,6 +135,12 @@ export function createWorkbenchShellRuntimes(options: {
     isMobile: responsive.isMobile,
     clearLayoutError: () => layoutFallback.clearLayoutError(),
     recordLayoutError: (layoutId, error) => layoutFallback.recordLayoutError(layoutId, error),
+    dndKit: {
+      onDragStart: controllerRuntime.dragHandlers.onDndDragStart,
+      onDragMove: controllerRuntime.dragHandlers.onDndDragMove,
+      onDragOver: controllerRuntime.dragHandlers.onDndDragOver,
+      onDragEnd: controllerRuntime.dragHandlers.onDndDragEnd,
+    },
     setContextMenu: setCtxMenu,
     widgetContribution: controllerRuntime.widgetController.widgetContribution,
     resolveWidgetModel: controllerRuntime.widgetController.widgetRenderModel,

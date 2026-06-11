@@ -165,4 +165,27 @@ describe("WidgetCardShell", () => {
     expect(cb.onPointerDown).toHaveBeenCalledTimes(1)
     dispose()
   })
+
+  it("启用 sortable 绑定时把根节点和标题拖拽手柄交给外部库", () => {
+    const cb = {
+      ...makeCallbacks(),
+      bindSortableRoot: vi.fn(),
+      bindSortableHandle: vi.fn(),
+    }
+    const { host, dispose } = mount(cb)
+    const header = host.querySelector(".card-header") as HTMLElement
+
+    expect(cb.bindSortableRoot).toHaveBeenCalledWith(
+      host.querySelector("[data-widget-instance-id='w1']"),
+    )
+    expect(cb.bindSortableHandle).toHaveBeenCalledWith(host.querySelector(".card-title"))
+
+    header.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, button: 0, clientX: 0, clientY: 0 }),
+    )
+    header.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: 8, clientY: 0 }))
+
+    expect(cb.onPointerDown).not.toHaveBeenCalled()
+    dispose()
+  })
 })

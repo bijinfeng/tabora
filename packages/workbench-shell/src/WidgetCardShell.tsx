@@ -15,6 +15,8 @@ export type WidgetHostCallbacks = {
   onRemove: () => void
   onExpand: () => void
   isDragging: boolean
+  bindSortableRoot?: (element: HTMLElement | undefined) => void
+  bindSortableHandle?: (element: HTMLElement | undefined) => void
 }
 
 export type WidgetCardShellProps = {
@@ -39,6 +41,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
   let lastPointerUpAt = 0
   let lastPointerDownAt = 0
   let headerRef: HTMLDivElement | undefined
+  let rootRef: HTMLDivElement | undefined
   let pendingDrag: {
     event: PointerEvent
     x: number
@@ -109,6 +112,18 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
   }
 
   onMount(() => {
+    props.callbacks.bindSortableRoot?.(rootRef)
+    props.callbacks.bindSortableHandle?.(
+      headerRef?.querySelector<HTMLElement>(".card-title") ?? undefined,
+    )
+    if (props.callbacks.bindSortableRoot || props.callbacks.bindSortableHandle) {
+      onCleanup(() => {
+        props.callbacks.bindSortableHandle?.(undefined)
+        props.callbacks.bindSortableRoot?.(undefined)
+      })
+      return
+    }
+
     const header = headerRef
     if (!header) return
     const handleNativePointerDown = (event: PointerEvent) => {
@@ -152,6 +167,9 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       data-widget-instance-id={props.instance.id}
       aria-label={props.title}
       tabIndex={0}
+      ref={(element) => {
+        rootRef = element
+      }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}

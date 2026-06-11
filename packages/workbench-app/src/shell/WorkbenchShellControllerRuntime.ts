@@ -226,6 +226,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     changeWidgetSize: widgetController.changeWidgetSize,
     removeWidget: widgetController.removeWidget,
     isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
+    sortableIndex: (instanceId) => dragHandlers.sortableIndex(instanceId),
     pluginDataRepo: options.services.pluginDataRepo,
     saveInstance: (updated) => options.services.instanceRepo.save(updated),
     setInstances: options.setters.setInstances,

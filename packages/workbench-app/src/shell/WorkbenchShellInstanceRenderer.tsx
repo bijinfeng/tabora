@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import { createComponent } from "solid-js"
+import { useSortable } from "@dnd-kit/solid/sortable"
 import type {
   PluginInstance,
   SearchViewProps,
@@ -51,6 +52,7 @@ export function createWorkbenchInstanceRenderer(options: {
   onChangeWidgetSize: (instanceId: string, size: WidgetSize) => void
   onRemoveWidget: (instanceId: string) => void
   isDragging: (instanceId: string) => boolean
+  sortableIndex: (instanceId: string) => number
 }): InstanceRenderer {
   return {
     renderWidget(instance: PluginInstance) {
@@ -67,40 +69,40 @@ export function createWorkbenchInstanceRenderer(options: {
         return <div class="settings-empty">Widget view not available</div>
       }
 
-      const hostCallbacks: WidgetHostCallbacks = {
-        onPointerDown: (event: PointerEvent) => options.onPointerDown(event, instance.id),
-        onPointerMove: options.onPointerMove,
-        onPointerUp: options.onPointerUp,
-        onPointerCancel: options.onPointerCancel,
-        onDblClick: (event: MouseEvent) => {
-          const target = event.target as HTMLElement
-          if (isWorkbenchInteractiveElement(target)) {
-            return
-          }
-          options.onOpenWidgetExpand(instance)
-        },
-        onContextMenu: (event: MouseEvent) => options.onOpenWidgetContextMenu(event, instance.id),
-        onResize: (size: WidgetSize) => options.onChangeWidgetSize(instance.id, size),
-        onRemove: () => options.onRemoveWidget(instance.id),
-        onExpand: () => options.onOpenWidgetExpand(instance),
-        isDragging: options.isDragging(instance.id),
-      }
-
       return (
-        <WidgetCardShell
+        <SortableWidgetCard
           instance={instance}
           title={model.title}
           icon={options.renderWidgetIcon(model.icon)}
           supportedSizes={model.supportedSizes}
           currentSize={model.currentSize}
-          callbacks={hostCallbacks}
+          sortableIndex={() => options.sortableIndex(instance.id)}
+          callbacks={{
+            onPointerDown: (event: PointerEvent) => options.onPointerDown(event, instance.id),
+            onPointerMove: options.onPointerMove,
+            onPointerUp: options.onPointerUp,
+            onPointerCancel: options.onPointerCancel,
+            onDblClick: (event: MouseEvent) => {
+              const target = event.target as HTMLElement
+              if (isWorkbenchInteractiveElement(target)) {
+                return
+              }
+              options.onOpenWidgetExpand(instance)
+            },
+            onContextMenu: (event: MouseEvent) =>
+              options.onOpenWidgetContextMenu(event, instance.id),
+            onResize: (size: WidgetSize) => options.onChangeWidgetSize(instance.id, size),
+            onRemove: () => options.onRemoveWidget(instance.id),
+            onExpand: () => options.onOpenWidgetExpand(instance),
+            isDragging: options.isDragging(instance.id),
+          }}
         >
           <PluginViewBoundary instanceId={instance.id} title={model.title}>
             <div data-tabora-plugin-id={instance.pluginId}>
               {View(options.buildWidgetViewProps(instance, model))}
             </div>
           </PluginViewBoundary>
-        </WidgetCardShell>
+        </SortableWidgetCard>
       )
     },
     renderSearch(instance: PluginInstance) {
@@ -123,4 +125,42 @@ export function createWorkbenchInstanceRenderer(options: {
       )
     },
   }
+}
+
+function SortableWidgetCard(props: {
+  instance: PluginInstance
+  title: string
+  icon?: JSX.Element
+  supportedSizes: WidgetSize[]
+  currentSize: WidgetSize
+  sortableIndex: () => number
+  callbacks: WidgetHostCallbacks
+  children: JSX.Element
+}) {
+  const sortable = useSortable({
+    id: props.instance.id,
+    get index() {
+      return props.sortableIndex()
+    },
+    group: props.instance.regionId,
+    transition: { duration: 180, easing: "cubic-bezier(0.2, 0, 0, 1)" },
+  })
+
+  return (
+    <WidgetCardShell
+      instance={props.instance}
+      title={props.title}
+      icon={props.icon}
+      supportedSizes={props.supportedSizes}
+      currentSize={props.currentSize}
+      callbacks={{
+        ...props.callbacks,
+        isDragging: props.callbacks.isDragging || sortable.isDragging(),
+        bindSortableRoot: (element) => sortable.ref(element),
+        bindSortableHandle: (element) => sortable.handleRef(element),
+      }}
+    >
+      {props.children}
+    </WidgetCardShell>
+  )
 }

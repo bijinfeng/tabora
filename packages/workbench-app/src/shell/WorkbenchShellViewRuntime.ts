@@ -67,6 +67,7 @@ export function createWorkbenchShellViewRuntime(
       void options.removeWidget(instanceId)
     },
     isDragging: options.isDragging,
+    sortableIndex: options.sortableIndex,
   })
 
   return {

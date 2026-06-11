@@ -1,4 +1,6 @@
 import type { JSX } from "solid-js"
+import { DragDropProvider } from "@dnd-kit/solid"
+import type { DragDropProviderProps } from "@dnd-kit/solid"
 import type {
   LayoutContribution,
   LayoutHostAPI,
@@ -16,6 +18,29 @@ export type WorkbenchSafeLayoutOptions = Omit<SafeLayoutProps, "instances" | "is
   isDark: () => boolean
   instances: () => PluginInstance[]
 }
+type WorkbenchDndKitOptions = Required<
+  Pick<DragDropProviderProps, "onDragStart" | "onDragMove" | "onDragOver" | "onDragEnd">
+>
+
+function WorkbenchDndProvider(props: {
+  dndKit: WorkbenchDndKitOptions | undefined
+  children: JSX.Element
+}) {
+  if (!props.dndKit) {
+    return <>{props.children}</>
+  }
+
+  return (
+    <DragDropProvider
+      onDragStart={props.dndKit.onDragStart}
+      onDragMove={props.dndKit.onDragMove}
+      onDragOver={props.dndKit.onDragOver}
+      onDragEnd={props.dndKit.onDragEnd}
+    >
+      {props.children}
+    </DragDropProvider>
+  )
+}
 
 export function createWorkbenchLayoutRenderer(options: {
   activeLayoutId: () => string
@@ -31,11 +56,16 @@ export function createWorkbenchLayoutRenderer(options: {
   isMobile: () => boolean
   clearLayoutError: () => void
   recordLayoutError: (layoutId: string, error: unknown) => void
+  dndKit?: WorkbenchDndKitOptions
   safeLayout: WorkbenchSafeLayoutOptions
 }) {
   function renderSafeLayout() {
     const { isDark, instances, ...rest } = options.safeLayout
-    return <SafeWorkbenchLayout {...rest} isDark={isDark()} instances={instances()} />
+    return (
+      <WorkbenchDndProvider dndKit={options.dndKit}>
+        <SafeWorkbenchLayout {...rest} isDark={isDark()} instances={instances()} />
+      </WorkbenchDndProvider>
+    )
   }
 
   function renderActiveLayout() {
@@ -56,19 +86,21 @@ export function createWorkbenchLayoutRenderer(options: {
     const host = options.buildHostAPI()
 
     return (
-      <LayoutBoundary
-        fallback={renderSafeLayout()}
-        onError={(error) => {
-          console.error("Layout error:", error)
-          options.recordLayoutError(options.activeLayoutId(), error)
-        }}
-      >
-        {LayoutView({
-          regions,
-          isMobile: options.isMobile(),
-          host,
-        })}
-      </LayoutBoundary>
+      <WorkbenchDndProvider dndKit={options.dndKit}>
+        <LayoutBoundary
+          fallback={renderSafeLayout()}
+          onError={(error) => {
+            console.error("Layout error:", error)
+            options.recordLayoutError(options.activeLayoutId(), error)
+          }}
+        >
+          {LayoutView({
+            regions,
+            isMobile: options.isMobile(),
+            host,
+          })}
+        </LayoutBoundary>
+      </WorkbenchDndProvider>
     )
   }
 

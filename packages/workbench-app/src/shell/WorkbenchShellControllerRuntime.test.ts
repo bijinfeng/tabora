@@ -42,7 +42,12 @@ const onPointerDown = vi.fn()
 const onPointerMove = vi.fn()
 const onPointerUp = vi.fn()
 const onPointerCancel = vi.fn()
+const onDndDragStart = vi.fn()
+const onDndDragMove = vi.fn()
+const onDndDragOver = vi.fn()
+const onDndDragEnd = vi.fn()
 const isDragging = vi.fn(() => false)
+const sortableIndex = vi.fn(() => 0)
 
 const buildWidgetViewProps = vi.fn(() => ({ sentinel: "view-props" }))
 const instanceRenderer = { renderWidget: vi.fn(), renderSearch: vi.fn() }
@@ -73,7 +78,12 @@ const mocks = vi.hoisted(() => ({
     onPointerMove,
     onPointerUp,
     onPointerCancel,
+    onDndDragStart,
+    onDndDragMove,
+    onDndDragOver,
+    onDndDragEnd,
     isDragging,
+    sortableIndex,
   })),
   createWorkbenchShellViewRuntime: vi.fn((_options: unknown) => ({
     buildWidgetViewProps,

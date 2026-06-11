@@ -15,6 +15,7 @@ type LayoutRendererOptions = Parameters<typeof createWorkbenchLayoutRenderer>[0]
 
 type SafeLayoutBridges = {
   setContextMenu: (menu: WorkbenchContextMenuState | null) => void
+  dndKit?: LayoutRendererOptions["dndKit"]
   widgetContribution: WorkbenchSafeLayoutOptions["widgetContribution"]
   resolveWidgetModel: WorkbenchSafeLayoutOptions["resolveWidgetModel"]
   getWidgetView: WorkbenchSafeLayoutOptions["getView"]
@@ -113,6 +114,7 @@ export function createWorkbenchShellLayoutRuntime(
       },
       isDragging: options.isDragging,
     },
+    ...(options.dndKit ? { dndKit: options.dndKit } : {}),
   }
 
   const layoutRenderer = createWorkbenchLayoutRenderer(
