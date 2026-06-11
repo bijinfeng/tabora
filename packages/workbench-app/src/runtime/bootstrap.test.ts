@@ -200,6 +200,13 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.i18n.t("tabora.shell", "widget.addNotSupported")).toBe(
       "This layout cannot add widgets",
     )
+    expect(runtime.i18n.t("tabora.shell", "commands.openSettings.title")).toBe("Open settings")
+    expect(runtime.i18n.t("tabora.shell", "commands.toggleLayout.description.toFocus")).toBe(
+      "Dashboard → Focus",
+    )
+    expect(
+      runtime.i18n.t("tabora.shell", "commands.openShortcuts.toast", { shortcuts: "⌘K" }),
+    ).toBe("Shortcuts: ⌘K, Esc")
 
     runtime.i18n.setLocale("zh-CN")
     expect(runtime.i18n.t("tabora.shell", "pluginView.retry")).toBe("重试")
@@ -211,5 +218,9 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.i18n.t("tabora.shell", "widget.instanceSettings.title", { title: "便签" })).toBe(
       "便签 设置",
     )
+    expect(runtime.i18n.t("tabora.shell", "commands.openShortcuts.separator")).toBe("、")
+    expect(
+      runtime.i18n.t("tabora.shell", "commands.openShortcuts.toast", { shortcuts: "⌘K" }),
+    ).toBe("快捷键：⌘K、Esc")
   })
 })

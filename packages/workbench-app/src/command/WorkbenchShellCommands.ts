@@ -13,10 +13,12 @@ import {
 } from "../shared/shellConfig"
 import { createCommandExecutor, type CommandExecutionContext } from "../shared/shellHelpers"
 import { currentShortcutPlatform, shortcutDisplay } from "../shared/WorkbenchShellUtils"
+import type { ShellTranslation } from "../i18n"
 
 export type WorkbenchShellCommandModelsOptions = {
   isDark: () => boolean
   activeLayoutId: () => string
+  tShell?: ShellTranslation
   shellConfig: WorkbenchShellConfig
   pluginCommands: CommandContribution[]
   pluginKeybindings: KeybindingContribution[]
@@ -30,62 +32,66 @@ export type WorkbenchShellCommandModelsOptions = {
 }
 
 function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandContribution[] {
+  const t = options.tShell
   return [
     {
       id: "open-command-palette",
       icon: "⌘K",
-      title: "打开命令",
-      description: "搜索命令、卡片和搜索源",
+      title: t?.("commands.openCommandPalette.title") ?? "打开命令",
+      description: t?.("commands.openCommandPalette.description") ?? "搜索命令、卡片和搜索源",
       category: "workspace",
       defaultShortcut: "⌘K",
     },
     {
       id: "toggle-theme",
       icon: "明",
-      title: "切换主题",
-      description: options.isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
+      title: t?.("commands.toggleTheme.title") ?? "切换主题",
+      description: options.isDark()
+        ? (t?.("commands.toggleTheme.description.toLight") ?? "暗色 → 明亮")
+        : (t?.("commands.toggleTheme.description.toDark") ?? "明亮 → 暗色"),
       category: "workspace",
       defaultShortcut: "⌘T",
     },
     {
       id: "toggle-layout",
       icon: "▦",
-      title: "切换布局",
+      title: t?.("commands.toggleLayout.title") ?? "切换布局",
       description:
         options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-          ? "仪表盘 → 专注"
-          : "专注 → 仪表盘",
+          ? (t?.("commands.toggleLayout.description.toFocus") ?? "仪表盘 → 专注")
+          : (t?.("commands.toggleLayout.description.toDashboard") ?? "专注 → 仪表盘"),
       category: "workspace",
       defaultShortcut: "⌘L",
     },
     {
       id: "add-widget",
       icon: "+",
-      title: "添加卡片",
-      description: "向工作台添加新卡片",
+      title: t?.("commands.addWidget.title") ?? "添加卡片",
+      description: t?.("commands.addWidget.description") ?? "向工作台添加新卡片",
       category: "workspace",
       defaultShortcut: "⌘N",
     },
     {
       id: "open-plugin-manager",
       icon: "◈",
-      title: "打开插件管理",
-      description: "查看 layout / widget / theme 贡献",
+      title: t?.("commands.openPluginManager.title") ?? "打开插件管理",
+      description:
+        t?.("commands.openPluginManager.description") ?? "查看 layout / widget / theme 贡献",
       category: "workspace",
     },
     {
       id: "open-settings",
       icon: "⚙",
-      title: "打开设置",
-      description: "配置工作台",
+      title: t?.("commands.openSettings.title") ?? "打开设置",
+      description: t?.("commands.openSettings.description") ?? "配置工作台",
       category: "workspace",
       defaultShortcut: "⌘,",
     },
     {
       id: "open-shortcuts",
       icon: "?",
-      title: "快捷键参考",
-      description: "查看所有快捷键",
+      title: t?.("commands.openShortcuts.title") ?? "快捷键参考",
+      description: t?.("commands.openShortcuts.description") ?? "查看所有快捷键",
       category: "workspace",
     },
   ]
@@ -124,11 +130,16 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
       ),
     "open-settings": () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
     "open-shortcuts": () => {
+      const separator = options.tShell?.("commands.openShortcuts.separator") ?? "、"
       const shortcuts = shortcutRegistry()
         .listShortcutReferences()
         .map((reference) => shortcutDisplay(reference.key))
-        .join("、")
-      options.showToast(`快捷键：${shortcuts}、Esc`)
+        .join(separator)
+      options.showToast(
+        options.tShell
+          ? options.tShell("commands.openShortcuts.toast", { shortcuts })
+          : `快捷键：${shortcuts}、Esc`,
+      )
     },
   })
 

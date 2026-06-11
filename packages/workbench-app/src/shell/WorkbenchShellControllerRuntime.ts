@@ -136,6 +136,7 @@ export function createWorkbenchShellControllerRuntime(options: {
   const commandRuntime: CommandRuntime = createWorkbenchShellCommandModels({
     isDark: options.state.isDark,
     activeLayoutId: options.state.activeLayoutId,
+    ...(options.tShell ? { tShell: options.tShell } : {}),
     shellConfig: options.shellConfig,
     pluginCommands,
     pluginKeybindings,

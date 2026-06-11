@@ -66,4 +66,38 @@ describe("createWorkbenchShellCommandModels", () => {
       ]),
     )
   })
+
+  it("uses tShell for platform command labels and shortcut toast", () => {
+    const showToast = vi.fn()
+    const models = createWorkbenchShellCommandModels(
+      createOptions({
+        showToast,
+        tShell: (key: string, vars?: Record<string, string | number>) => {
+          const messages: Record<string, string> = {
+            "commands.openPluginManager.title": "Open plugin manager",
+            "commands.toggleTheme.title": "Toggle theme",
+            "commands.toggleLayout.title": "Toggle layout",
+            "commands.openSettings.title": "Open settings",
+            "commands.openShortcuts.separator": ", ",
+            "commands.openShortcuts.toast": "Shortcuts: {{shortcuts}}, Esc",
+          }
+          const template = messages[key] ?? key
+          return template.replace(/\{\{(\w+)\}\}/g, (_, k) => String(vars?.[k] ?? ""))
+        },
+      }),
+    )
+
+    expect(models.commandItems().map((command) => command.name)).toContain("Open plugin manager")
+    expect(models.commandItems().map((command) => [command.name, command.icon])).toEqual(
+      expect.arrayContaining([
+        ["Toggle theme", "明"],
+        ["Toggle layout", "▦"],
+        ["Open plugin manager", "◈"],
+        ["Open settings", "⚙"],
+      ]),
+    )
+
+    models.runCommand("open-shortcuts", {})
+    expect(showToast).toHaveBeenCalledWith(expect.stringContaining("Shortcuts:"))
+  })
 })
