@@ -320,6 +320,8 @@ type LayoutHostAPI = {
   openSettings(panelId?: string): void
   openCommandPalette(): void
   openAddWidget(): void
+  readLayoutState<T = unknown>(key: string): T | undefined
+  writeLayoutState(key: string, value: unknown): void
   showToast(message: string, opts?: ToastOptions): void
   toggleTheme(): void
   isDark(): boolean

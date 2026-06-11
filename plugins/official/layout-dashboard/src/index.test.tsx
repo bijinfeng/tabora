@@ -25,6 +25,8 @@ function makeHost(overrides?: {
   layoutRun?: () => void
   layoutIcon?: string
   layoutLabel?: string
+  layoutState?: unknown
+  writeLayoutState?: (key: string, value: unknown) => void
 }): LayoutHostAPI {
   const addWidget = vi.fn()
   return {
@@ -49,6 +51,8 @@ function makeHost(overrides?: {
     openCommandPalette: vi.fn(),
     openAddWidget: vi.fn(),
     showToast: vi.fn(),
+    readLayoutState: <T = unknown,>() => overrides?.layoutState as T | undefined,
+    writeLayoutState: vi.fn((key, value) => overrides?.writeLayoutState?.(key, value)),
     toggleTheme: vi.fn(),
     isDark: () => false,
   }
@@ -88,6 +92,54 @@ describe("DashboardLayout", () => {
     expect(host.querySelectorAll("button.dash-rail-btn").length).toBe(5)
     expect(host.querySelector("[data-testid='region-mainGrid']")).toBeTruthy()
     dispose()
+  })
+
+  it("persists rail groups through the layout host state and restores them on remount", () => {
+    let stored: unknown
+    const firstRoot = document.createElement("div")
+    document.body.appendChild(firstRoot)
+    const firstHost = makeHost({
+      writeLayoutState: (_key, value) => {
+        stored = value
+      },
+    })
+    const disposeFirst = render(
+      () => (
+        <DashboardLayout
+          isMobile={false}
+          host={firstHost}
+          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+        />
+      ),
+      firstRoot,
+    )
+
+    firstRoot.querySelector<HTMLButtonElement>('button[aria-label="新建分组"]')?.click()
+    const input = firstRoot.querySelector<HTMLInputElement>(".dash-inline-pop input")
+    input!.value = "Research"
+    input!.dispatchEvent(new InputEvent("input", { bubbles: true }))
+    input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    disposeFirst()
+    firstRoot.remove()
+
+    const secondRoot = document.createElement("div")
+    document.body.appendChild(secondRoot)
+    const disposeSecond = render(
+      () => (
+        <DashboardLayout
+          isMobile={false}
+          host={makeHost({ layoutState: stored })}
+          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+        />
+      ),
+      secondRoot,
+    )
+
+    expect(secondRoot.querySelector('button[aria-label="分组 Research"]')).toBeTruthy()
+    expect(secondRoot.textContent).toContain("暂无卡片")
+
+    disposeSecond()
+    secondRoot.remove()
   })
 
   it("rail plus creates a group instead of opening add-widget", () => {

@@ -49,4 +49,16 @@ describe("assignGridOrder", () => {
     expect(ordered[0]).toEqual(withoutSize)
     expect(ordered[1]?.grid).toEqual({ x: 0, y: 0, colSpan: 2, rowSpan: 1 })
   })
+
+  it("preserves persisted grid placement and only appends widgets without grid", () => {
+    const persisted = instance("weather", "S")
+    persisted.grid = { x: 3, y: 0, colSpan: 1, rowSpan: 1 }
+    persisted.updatedAt = "2026-05-26T00:00:00.000Z"
+
+    const ordered = assignGridOrder([persisted, instance("notes", "M")], "2026-05-27T00:00:00.000Z")
+
+    expect(ordered[0]).toEqual(persisted)
+    expect(ordered[1]?.grid).toEqual({ x: 4, y: 0, colSpan: 2, rowSpan: 1 })
+    expect(ordered[1]?.updatedAt).toBe("2026-05-27T00:00:00.000Z")
+  })
 })

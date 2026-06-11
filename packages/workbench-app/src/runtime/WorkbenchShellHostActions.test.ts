@@ -50,8 +50,16 @@ describe("persistWorkbenchGridOrder", () => {
       }),
     ]
     const orderedInstances = [
-      { ...currentInstances[1]!, updatedAt: "2026-06-06T12:00:00.000Z" },
-      { ...currentInstances[0]!, updatedAt: "2026-06-06T12:00:00.000Z" },
+      {
+        ...currentInstances[1]!,
+        grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 },
+        updatedAt: "2026-06-06T12:00:00.000Z",
+      },
+      {
+        ...currentInstances[0]!,
+        grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 },
+        updatedAt: "2026-06-06T12:00:00.000Z",
+      },
     ]
     const saveInstance = vi.fn(async () => {})
     const setInstances = vi.fn()
@@ -64,9 +72,19 @@ describe("persistWorkbenchGridOrder", () => {
     })
 
     expect(saveInstance).toHaveBeenCalledTimes(2)
+    expect(saveInstance).toHaveBeenNthCalledWith(1, orderedInstances[0])
+    expect(saveInstance).toHaveBeenNthCalledWith(2, orderedInstances[1])
     expect(setInstances).toHaveBeenCalledWith([
-      { ...currentInstances[0]!, updatedAt: "2026-06-06T12:00:00.000Z" },
-      { ...currentInstances[1]!, updatedAt: "2026-06-06T12:00:00.000Z" },
+      {
+        ...currentInstances[0]!,
+        grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 },
+        updatedAt: "2026-06-06T12:00:00.000Z",
+      },
+      {
+        ...currentInstances[1]!,
+        grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 },
+        updatedAt: "2026-06-06T12:00:00.000Z",
+      },
     ])
   })
 })

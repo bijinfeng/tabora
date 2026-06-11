@@ -11,6 +11,8 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen: vi.fn(),
       setAddWidgetOpen: vi.fn(),
       openSettings: vi.fn(),
+      readLayoutState: vi.fn(),
+      writeLayoutState: vi.fn(),
       showToast: vi.fn(),
       switchLayout: vi.fn(),
       switchTheme: vi.fn(),
@@ -55,6 +57,8 @@ describe("createWorkbenchLayoutHostAPI", () => {
     const setAddWidgetOpen = vi.fn()
     const openSettings = vi.fn()
     const showToast = vi.fn()
+    const readLayoutState = vi.fn(() => ({ cached: true }))
+    const writeLayoutState = vi.fn()
     const switchLayout = vi.fn()
     const switchTheme = vi.fn()
 
@@ -64,6 +68,8 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen,
       setAddWidgetOpen,
       openSettings,
+      readLayoutState,
+      writeLayoutState,
       showToast,
       switchLayout,
       switchTheme,
@@ -103,6 +109,8 @@ describe("createWorkbenchLayoutHostAPI", () => {
     host.openSettings("settings.search.custom")
     host.openCommandPalette()
     host.openAddWidget()
+    expect(host.readLayoutState("dashboard")).toEqual({ cached: true })
+    host.writeLayoutState("dashboard", { groupCount: 2 })
     host.showToast("已保存", { type: "success" })
     host.toggleTheme()
 
@@ -112,6 +120,8 @@ describe("createWorkbenchLayoutHostAPI", () => {
     expect(openSettings).toHaveBeenCalledWith("settings.search.custom")
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(2, true)
     expect(setAddWidgetOpen).toHaveBeenCalledWith(true)
+    expect(readLayoutState).toHaveBeenCalledWith("dashboard")
+    expect(writeLayoutState).toHaveBeenCalledWith("dashboard", { groupCount: 2 })
     expect(showToast).toHaveBeenCalledWith("已保存", { type: "success" })
     expect(switchTheme).toHaveBeenNthCalledWith(2, "theme.light.custom")
     expect(host.isDark()).toBe(true)
@@ -130,6 +140,8 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen,
       setAddWidgetOpen,
       openSettings,
+      readLayoutState: vi.fn(),
+      writeLayoutState: vi.fn(),
       showToast: vi.fn(),
       switchLayout,
       switchTheme,

@@ -75,6 +75,27 @@ export function createWorkbenchShellRuntimes(options: {
     setInlineSearchActiveResultIndex,
   } = search
   const { workspaceState } = state.workspace
+  const readLayoutState = <T = unknown>(key: string): T | undefined => {
+    const layoutState = workspaceState()?.config?.layoutState
+    if (!layoutState || typeof layoutState !== "object" || Array.isArray(layoutState)) {
+      return undefined
+    }
+    return (layoutState as Record<string, T>)[key]
+  }
+  const writeLayoutState = (key: string, value: unknown) => {
+    void workspaceController.updateWorkspace((workspace) => {
+      const config = { ...(workspace.config ?? {}) } as Record<string, unknown>
+      const current = config.layoutState
+      const layoutState =
+        current && typeof current === "object" && !Array.isArray(current)
+          ? { ...(current as Record<string, unknown>) }
+          : {}
+      layoutState[key] = value
+      config.layoutState = layoutState
+      workspace.config = config
+      return workspace
+    })
+  }
 
   const controllerRuntime = createWorkbenchShellControllerRuntime({
     services: {
@@ -137,6 +158,8 @@ export function createWorkbenchShellRuntimes(options: {
     setCommandPaletteOpen: setCmdPaletteOpen,
     setAddWidgetOpen,
     openSettings,
+    readLayoutState,
+    writeLayoutState,
     showToast,
     switchLayout: workspaceController.switchLayout,
     switchTheme: workspaceController.switchTheme,

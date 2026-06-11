@@ -65,7 +65,10 @@ describe("createWorkbenchDndKitDragHandlers", () => {
       ...dragEvent("widget-a"),
       nativeEvent: new PointerEvent("pointermove", { clientX: 10, clientY: 10 }),
     } as unknown as Parameters<typeof handlers.onDndDragMove>[0])
-    expect(handlers.displayedInstances()).toBe(persisted)
+    expect(handlers.displayedInstances().map((current) => current.id)).toEqual([
+      "widget-a",
+      "widget-b",
+    ])
     expect(dragState).toEqual({ sourceId: "widget-a" })
 
     handlers.onDndDragEnd(
@@ -116,6 +119,69 @@ describe("createWorkbenchDndKitDragHandlers", () => {
     )
 
     expect(persistGridOrder).toHaveBeenCalledTimes(1)
+  })
+
+  it("displays persisted instances in grid order instead of raw state order", () => {
+    const persisted = [
+      instance({ id: "widget-b", grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 } }),
+      instance({ id: "widget-a", grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 } }),
+      instance({
+        id: "search-main",
+        extensionPoint: "search",
+        regionId: "topbar",
+      }),
+    ]
+    const handlers = createWorkbenchDndKitDragHandlers({
+      getPersistedInstances: () => persisted,
+      getDragState: () => null,
+      setDragState: vi.fn(),
+      persistGridOrder: vi.fn(async (_instances: PluginInstance[]) => {}),
+      showToast: vi.fn(),
+    })
+
+    expect(handlers.displayedInstances().map((current) => current.id)).toEqual([
+      "widget-a",
+      "widget-b",
+      "search-main",
+    ])
+  })
+
+  it("falls back to rendered DOM order when dnd-kit ends without a target", async () => {
+    const root = document.createElement("div")
+    root.innerHTML = `
+      <div class="grid-item" data-widget-instance-id="widget-b"></div>
+      <div class="grid-item" data-widget-instance-id="widget-a"></div>
+    `
+    document.body.append(root)
+    const persisted = [
+      instance({ id: "widget-a", grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 } }),
+      instance({ id: "widget-b", grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 } }),
+    ]
+    const persistGridOrder = vi.fn(async (_instances: PluginInstance[]) => {})
+    let dragState: WorkbenchDndDragState | null = null
+    const handlers = createWorkbenchDndKitDragHandlers({
+      getPersistedInstances: () => persisted,
+      getDragState: () => dragState,
+      setDragState: (state) => {
+        dragState = state
+      },
+      persistGridOrder,
+      showToast: vi.fn(),
+    })
+
+    handlers.onDndDragStart(
+      dragEvent("widget-a") as unknown as Parameters<typeof handlers.onDndDragStart>[0],
+    )
+    handlers.onDndDragEnd(
+      dragEvent("widget-a") as unknown as Parameters<typeof handlers.onDndDragEnd>[0],
+    )
+
+    await vi.waitFor(() => expect(persistGridOrder).toHaveBeenCalledTimes(1))
+    expect(persistGridOrder.mock.calls[0]![0].map((current) => current.id)).toEqual([
+      "widget-b",
+      "widget-a",
+    ])
+    root.remove()
   })
 
   it("falls back to document pointerup cleanup when dnd-kit misses drag end", async () => {

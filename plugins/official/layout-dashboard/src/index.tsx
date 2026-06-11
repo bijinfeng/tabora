@@ -1,6 +1,6 @@
 import { TaboraMark } from "@tabora/brand"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
-import type { JSX, Setter } from "solid-js"
+import type { JSX } from "solid-js"
 import type { LayoutHostAPI, LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { HostActionIcon } from "./host-action-icon"
@@ -20,6 +20,17 @@ type RailGroup = {
 }
 
 const groupIcons = ["T", "◐", "◇", "★", "◈", "⌘", "⚡", "◔", "♥", "■", "◆", "▲", "●", "✦"]
+const dashboardLayoutStateKey = "official.layout.workbench-dashboard.groups"
+
+type DashboardLayoutState = {
+  groups: RailGroup[]
+  activeGroupId: string
+}
+
+type RailGroupSetter = (
+  value: RailGroup[] | ((previous: RailGroup[]) => RailGroup[]),
+) => RailGroup[]
+type ActiveGroupSetter = (value: string | ((previous: string) => string)) => string
 
 type RailGroupContextMenu = {
   groupId: string
@@ -79,8 +90,8 @@ function WorkbenchRail(props: {
   host: LayoutHostAPI
   groups?: () => RailGroup[]
   activeGroupId?: () => string
-  setGroups?: Setter<RailGroup[]>
-  setActiveGroupId?: Setter<string>
+  setGroups?: RailGroupSetter
+  setActiveGroupId?: ActiveGroupSetter
 }) {
   const railActions = () => props.host.getGlobalActions("rail")
   const layoutAction = () => railActions().find((action) => action.id === "layout-switch")
@@ -102,8 +113,8 @@ function WorkbenchRail(props: {
   const [fallbackActiveGroupId, setFallbackActiveGroupId] = createSignal("default")
   const groups = props.groups ?? fallbackGroups
   const activeGroupId = props.activeGroupId ?? fallbackActiveGroupId
-  const setGroups = props.setGroups ?? setFallbackGroups
-  const setActiveGroupId = props.setActiveGroupId ?? setFallbackActiveGroupId
+  const setGroups = props.setGroups ?? ((value) => setFallbackGroups(value))
+  const setActiveGroupId = props.setActiveGroupId ?? ((value) => setFallbackActiveGroupId(value))
   let inlineInput: HTMLInputElement | undefined
   let layoutSwitchWrap: HTMLDivElement | undefined
   let groupMenuPanel: HTMLDivElement | undefined
@@ -496,6 +507,54 @@ function widgetTitle(instance: PluginInstance) {
   return titles[instance.contributionId] ?? instance.contributionId
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string")
+}
+
+function isStoredRailGroup(value: unknown): value is RailGroup {
+  if (!value || typeof value !== "object") return false
+  const candidate = value as Partial<RailGroup>
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.name === "string" &&
+    typeof candidate.icon === "string" &&
+    typeof candidate.isDefault === "boolean" &&
+    isStringArray(candidate.widgets)
+  )
+}
+
+function normalizeDashboardLayoutState(
+  value: unknown,
+  fallbackDefaultGroup: RailGroup,
+): DashboardLayoutState {
+  const raw =
+    value && typeof value === "object"
+      ? (value as Partial<{ groups: unknown; activeGroupId: unknown }>)
+      : {}
+  const storedGroups = Array.isArray(raw.groups) ? raw.groups.filter(isStoredRailGroup) : []
+  const storedDefault = storedGroups.find((group) => group.id === "default")
+  const defaultGroup = {
+    ...fallbackDefaultGroup,
+    ...(storedDefault
+      ? { name: storedDefault.name, icon: storedDefault.icon, widgets: storedDefault.widgets }
+      : {}),
+    id: "default",
+    isDefault: true,
+  }
+  const customGroups = storedGroups.filter((group) => group.id !== "default" && !group.isDefault)
+  const groups = [defaultGroup, ...customGroups]
+  const activeGroupId =
+    typeof raw.activeGroupId === "string" && groups.some((group) => group.id === raw.activeGroupId)
+      ? raw.activeGroupId
+      : "default"
+
+  return { groups, activeGroupId }
+}
+
+function resolveSetterValue<T>(previous: T, value: T | ((previous: T) => T)): T {
+  return typeof value === "function" ? (value as (previous: T) => T)(previous) : value
+}
+
 export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
   const i18n = () => (props as LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }).i18n
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
@@ -511,8 +570,30 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
     isDefault: true,
     widgets: [],
   })
-  const [groups, setGroups] = createSignal<RailGroup[]>([defaultGroup()])
-  const [activeGroupId, setActiveGroupId] = createSignal("default")
+  const initialState = normalizeDashboardLayoutState(
+    props.host.readLayoutState<DashboardLayoutState>(dashboardLayoutStateKey),
+    defaultGroup(),
+  )
+  const [groups, setGroups] = createSignal<RailGroup[]>(initialState.groups)
+  const [activeGroupId, setActiveGroupId] = createSignal(initialState.activeGroupId)
+  const persistDashboardState = (nextGroups: RailGroup[], nextActiveGroupId: string) => {
+    props.host.writeLayoutState(dashboardLayoutStateKey, {
+      groups: nextGroups,
+      activeGroupId: nextActiveGroupId,
+    } satisfies DashboardLayoutState)
+  }
+  const setPersistedGroups: RailGroupSetter = (value) => {
+    const next = resolveSetterValue(groups(), value)
+    setGroups(next)
+    persistDashboardState(next, activeGroupId())
+    return next
+  }
+  const setPersistedActiveGroupId: ActiveGroupSetter = (value) => {
+    const next = resolveSetterValue(activeGroupId(), value)
+    setActiveGroupId(next)
+    persistDashboardState(groups(), next)
+    return next
+  }
   const activeGroup = createMemo(
     () => groups().find((group) => group.id === activeGroupId()) ?? groups()[0] ?? defaultGroup(),
   )
@@ -531,8 +612,8 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
         host={props.host}
         groups={groups}
         activeGroupId={activeGroupId}
-        setGroups={setGroups}
-        setActiveGroupId={setActiveGroupId}
+        setGroups={setPersistedGroups}
+        setActiveGroupId={setPersistedActiveGroupId}
       />
       <section class="dash-content">
         <header class="dash-topbar">

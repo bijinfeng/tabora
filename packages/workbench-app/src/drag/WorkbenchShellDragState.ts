@@ -75,11 +75,19 @@ export function createWorkbenchDndKitDragHandlers(options: {
     const resolvedTargetId = targetId ?? lastTargetId
     lastTargetId = null
 
-    if (canceled || !sourceId || !resolvedTargetId || sourceId === resolvedTargetId) return
+    if (canceled || !sourceId) return
+    if (!resolvedTargetId || sourceId === resolvedTargetId) {
+      persistRenderedDomOrderFallback(sourceId)
+      return
+    }
 
+    persistDragSortPlan(sourceId, resolvedTargetId)
+  }
+
+  function persistDragSortPlan(sourceId: string, targetId: string): void {
     const plan = createDragSortPlan({
       sourceId,
-      targetId: resolvedTargetId,
+      targetId,
       instances: options.getPersistedInstances(),
     })
     if (!plan.changed) return
@@ -88,8 +96,41 @@ export function createWorkbenchDndKitDragHandlers(options: {
     options.showToast("排序已更新")
   }
 
+  function persistRenderedDomOrderFallback(sourceId: string): void {
+    const timeout = documentRoot.defaultView?.setTimeout ?? setTimeout
+    timeout(() => {
+      const instances = options.getPersistedInstances()
+      const source = instances.find((instance) => instance.id === sourceId)
+      if (!source) return
+
+      const visualOrder = instances
+        .filter(
+          (instance) =>
+            instance.regionId === source.regionId &&
+            instance.extensionPoint === "widget" &&
+            instance.enabled !== false,
+        )
+        .sort(byGrid)
+      const fromIndex = visualOrder.findIndex((instance) => instance.id === sourceId)
+      if (fromIndex < 0) return
+
+      const renderedOrder = Array.from(
+        documentRoot.querySelectorAll<HTMLElement>(".grid-item[data-widget-instance-id]"),
+      )
+        .map((element) => element.dataset.widgetInstanceId)
+        .filter((id): id is string =>
+          Boolean(id && visualOrder.some((instance) => instance.id === id)),
+        )
+
+      const targetId = renderedOrder[fromIndex]
+      if (!targetId || targetId === sourceId) return
+      persistDragSortPlan(sourceId, targetId)
+    }, 0)
+  }
+
   return {
-    displayedInstances: (): PluginInstance[] => options.getPersistedInstances(),
+    displayedInstances: (): PluginInstance[] =>
+      orderDisplayedInstances(options.getPersistedInstances()),
     sortableIndex: (instanceId: string): number => persistedWidgetIndex(instanceId, options),
     isDragging: (instanceId: string): boolean => options.getDragState()?.sourceId === instanceId,
     onDndDragStart: (event: Parameters<NonNullable<DragDropProviderProps["onDragStart"]>>[0]) => {
@@ -168,4 +209,19 @@ function syncDndBodyState(dragging: boolean, documentRoot: Document): void {
 
 function byGrid(left: PluginInstance, right: PluginInstance): number {
   return (left.grid?.y ?? 0) - (right.grid?.y ?? 0) || (left.grid?.x ?? 0) - (right.grid?.x ?? 0)
+}
+
+function orderDisplayedInstances(instances: PluginInstance[]): PluginInstance[] {
+  const sortedWidgetIds = new Map<string, number>()
+  instances
+    .filter((instance) => instance.extensionPoint === "widget" && instance.enabled !== false)
+    .sort(byGrid)
+    .forEach((instance, index) => sortedWidgetIds.set(instance.id, index))
+
+  return [...instances].sort((left, right) => {
+    const leftIndex = sortedWidgetIds.get(left.id)
+    const rightIndex = sortedWidgetIds.get(right.id)
+    if (leftIndex === undefined || rightIndex === undefined) return 0
+    return leftIndex - rightIndex
+  })
 }

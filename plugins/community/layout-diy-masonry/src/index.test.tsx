@@ -31,6 +31,8 @@ function makeHost(settingsRun: () => void): LayoutHostAPI {
     openSettings: vi.fn(),
     openCommandPalette: vi.fn(),
     openAddWidget: vi.fn(),
+    readLayoutState: vi.fn(),
+    writeLayoutState: vi.fn(),
     showToast: vi.fn(),
     toggleTheme: vi.fn(),
     isDark: () => false,

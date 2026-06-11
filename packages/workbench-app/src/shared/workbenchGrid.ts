@@ -1,4 +1,3 @@
-import { groupBy } from "es-toolkit/array"
 import {
   widgetGridColumnSpan,
   widgetGridRowSpan,
@@ -18,14 +17,21 @@ export function assignGridOrder(
   instances: PluginInstance[],
   updatedAt = new Date().toISOString(),
 ): PluginInstance[] {
-  const widgetsByRegion = groupBy(
-    instances.filter((i) => i.extensionPoint === "widget" && i.size),
-    (i) => i.regionId,
-  )
-  const regionCounters = new Map(Object.keys(widgetsByRegion).map((regionId) => [regionId, 0]))
+  const regionCounters = new Map<string, number>()
+  for (const instance of instances) {
+    if (instance.extensionPoint !== "widget" || !instance.size) continue
+    const next = instance.grid ? instance.grid.x + 1 : 0
+    regionCounters.set(
+      instance.regionId,
+      Math.max(regionCounters.get(instance.regionId) ?? 0, next),
+    )
+  }
 
   return instances.map((instance) => {
     if (instance.extensionPoint !== "widget" || !instance.size) {
+      return instance
+    }
+    if (instance.grid) {
       return instance
     }
 
