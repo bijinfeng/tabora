@@ -11,6 +11,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen: vi.fn(),
       setAddWidgetOpen: vi.fn(),
       openSettings: vi.fn(),
+      showToast: vi.fn(),
       switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction,
@@ -53,6 +54,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
     const setCommandPaletteOpen = vi.fn()
     const setAddWidgetOpen = vi.fn()
     const openSettings = vi.fn()
+    const showToast = vi.fn()
     const switchLayout = vi.fn()
     const switchTheme = vi.fn()
 
@@ -62,6 +64,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen,
       setAddWidgetOpen,
       openSettings,
+      showToast,
       switchLayout,
       switchTheme,
       runRailAction: vi.fn(),
@@ -100,6 +103,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
     host.openSettings("settings.search.custom")
     host.openCommandPalette()
     host.openAddWidget()
+    host.showToast("已保存", { type: "success" })
     host.toggleTheme()
 
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(1, true)
@@ -108,6 +112,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
     expect(openSettings).toHaveBeenCalledWith("settings.search.custom")
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(2, true)
     expect(setAddWidgetOpen).toHaveBeenCalledWith(true)
+    expect(showToast).toHaveBeenCalledWith("已保存", { type: "success" })
     expect(switchTheme).toHaveBeenNthCalledWith(2, "theme.light.custom")
     expect(host.isDark()).toBe(true)
   })
@@ -125,6 +130,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen,
       setAddWidgetOpen,
       openSettings,
+      showToast: vi.fn(),
       switchLayout,
       switchTheme,
       runRailAction: vi.fn(),

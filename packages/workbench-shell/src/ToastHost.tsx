@@ -13,7 +13,10 @@ export function ToastHost(props: {
         <For each={props.toasts}>
           {(toast) => (
             <div class="toast-item" data-toast-type={toast.type}>
-              <span>{toast.message}</span>
+              <span class="toast-icon" aria-hidden="true">
+                ✓
+              </span>
+              <span class="toast-message">{toast.message}</span>
               <Show when={toast.action}>
                 {(action) => (
                   <button

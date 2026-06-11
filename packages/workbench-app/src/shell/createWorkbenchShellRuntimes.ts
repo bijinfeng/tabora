@@ -125,6 +125,7 @@ export function createWorkbenchShellRuntimes(options: {
     setCommandPaletteOpen: setCmdPaletteOpen,
     setAddWidgetOpen,
     openSettings,
+    showToast,
     switchLayout: workspaceController.switchLayout,
     switchTheme: workspaceController.switchTheme,
     runRailAction: hostRuntime.runRailAction,

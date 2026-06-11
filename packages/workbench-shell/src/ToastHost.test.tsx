@@ -21,6 +21,8 @@ describe("ToastHost", () => {
 
     expect(root.textContent).toContain("A")
     expect(root.textContent).toContain("B")
+    expect(root.querySelectorAll(".toast-icon")[0]?.textContent).toBe("✓")
+    expect(root.querySelectorAll(".toast-message")[1]?.textContent).toBe("B")
 
     root.remove()
   })

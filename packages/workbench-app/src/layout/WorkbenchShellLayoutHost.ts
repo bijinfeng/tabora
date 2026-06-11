@@ -13,6 +13,7 @@ export function createWorkbenchLayoutHostAPI(options: {
   setCommandPaletteOpen: (open: boolean) => void
   setAddWidgetOpen: (open: boolean) => void
   openSettings: (panelId?: string) => void
+  showToast: LayoutHostAPI["showToast"]
   switchLayout: (layoutId: string) => void
   switchTheme: (themeId: string) => void
   runRailAction: (actionId: string) => void
@@ -142,6 +143,7 @@ export function createWorkbenchLayoutHostAPI(options: {
     openSettings: (panelId?: string) => options.openSettings(panelId),
     openCommandPalette: () => options.setCommandPaletteOpen(true),
     openAddWidget: () => options.setAddWidgetOpen(true),
+    showToast: options.showToast,
     toggleTheme: () => {
       options.switchTheme(
         resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),

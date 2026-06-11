@@ -48,6 +48,7 @@ function makeHost(overrides?: {
     openSettings: vi.fn(),
     openCommandPalette: vi.fn(),
     openAddWidget: vi.fn(),
+    showToast: vi.fn(),
     toggleTheme: vi.fn(),
     isDark: () => false,
   }
@@ -115,6 +116,10 @@ describe("DashboardLayout", () => {
     expect(host.textContent).toContain("暂无卡片")
     expect(host.textContent).toContain("添加第一个")
     expect(layoutHost.openAddWidget).not.toHaveBeenCalled()
+    expect(layoutHost.showToast).toHaveBeenCalledWith(
+      "已创建分组「Research」 · 右键可改图标和布局",
+      { type: "success" },
+    )
     dispose()
   })
 
@@ -123,11 +128,12 @@ describe("DashboardLayout", () => {
     document.body.appendChild(host)
     const prompt = vi.fn(() => "Lab")
     vi.stubGlobal("prompt", prompt)
+    const layoutHost = makeHost()
     const dispose = render(
       () => (
         <DashboardLayout
           isMobile={false}
-          host={makeHost()}
+          host={layoutHost}
           regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
         />
       ),
@@ -151,9 +157,15 @@ describe("DashboardLayout", () => {
     expect(
       host.querySelector<HTMLButtonElement>('button[aria-label="分组 Research"]')?.textContent,
     ).toContain("★")
+    expect(layoutHost.showToast).toHaveBeenCalledWith("已更新「Research」图标", {
+      type: "success",
+    })
 
     host.querySelector<HTMLButtonElement>(".dash-group-menu-item")?.click()
     expect(host.querySelector('button[aria-label="分组 Lab"]')).toBeTruthy()
+    expect(layoutHost.showToast).toHaveBeenCalledWith("已重命名为「Lab」", {
+      type: "success",
+    })
 
     host
       .querySelector<HTMLButtonElement>('button[aria-label="分组 Lab"]')
@@ -162,6 +174,7 @@ describe("DashboardLayout", () => {
 
     expect(host.querySelector('button[aria-label="分组 Lab"]')).toBeFalsy()
     expect(host.querySelector('button[aria-label="分组 我的工作台"]')).toBeTruthy()
+    expect(layoutHost.showToast).toHaveBeenCalledWith("已删除「Lab」", { type: "success" })
 
     vi.unstubAllGlobals()
     dispose()

@@ -38,6 +38,14 @@ export type LayoutHostAPI = {
   openSettings: (panelId?: string) => void
   openCommandPalette: () => void
   openAddWidget: () => void
+  showToast: (
+    message: string,
+    opts?: {
+      type?: "success" | "error" | "warning" | "info"
+      duration?: number
+      action?: { label: string; commandId: string }
+    },
+  ) => void
   toggleTheme: () => void
   isDark: () => boolean
 }

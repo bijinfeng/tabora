@@ -320,6 +320,7 @@ type LayoutHostAPI = {
   openSettings(panelId?: string): void
   openCommandPalette(): void
   openAddWidget(): void
+  showToast(message: string, opts?: ToastOptions): void
   toggleTheme(): void
   isDark(): boolean
 }
@@ -615,11 +616,11 @@ type ToastOptions = {
 
 Toast 行为：
 
-- 新 Toast 从右侧滑入（`translateX(20px)→0`，200ms ease）
+- 新 Toast 从下方轻微上浮（`translateY(8px)→0`，200ms ease）
 - 堆叠不超过 3 条，超出时移除最早的
 - 每条独立计时 2.5s 后淡出移除
 - 带 action 的 Toast 不自动消失
-- 插件通过 `context.ui.showToast(message, options)` 触发 runtime toast bridge；shell 监听 `ui.toast.show`，由 `ToastHost` 渲染并通过 `commandId` 回调到 command executor，不允许插件直接注入任意函数到 Toast action。
+- 插件通过 `context.ui.showToast(message, options)` 触发 runtime toast bridge；layout 通过 `LayoutHostAPI.showToast(message, options)` 请求同一个宿主 Toast；shell 监听 `ui.toast.show`，由 `ToastHost` 渲染并通过 `commandId` 回调到 command executor，不允许插件直接注入任意函数到 Toast action。
 
 ### 9.2 插件可访问性
 

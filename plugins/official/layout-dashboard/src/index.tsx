@@ -147,14 +147,19 @@ function WorkbenchRail(props: {
     setActiveGroupId(id)
     setGroupMenu(null)
     cancelGroupCreate()
+    props.host.showToast(`已创建分组「${name}」 · 右键可改图标和布局`, { type: "success" })
   }
 
   function switchGroup(groupId: string) {
     if (inlineOpen()) return
+    if (groupId === activeGroupId()) return
+    const group = groups().find((item) => item.id === groupId)
+    if (!group) return
     setLayoutPopOpen(false)
     setGroupMenu(null)
     setActiveGroupId(groupId)
     if (groupId === "default") homeAction()?.run()
+    props.host.showToast(`已切换到「${group.name}」`, { type: "success" })
   }
 
   function activeGroupMenu() {
@@ -184,10 +189,14 @@ function WorkbenchRail(props: {
     if (!name) return
     setGroups((items) => items.map((item) => (item.id === groupId ? { ...item, name } : item)))
     setGroupMenu(null)
+    props.host.showToast(`已重命名为「${name}」`, { type: "success" })
   }
 
   function setGroupIcon(groupId: string, icon: string) {
+    const group = groups().find((item) => item.id === groupId)
+    if (!group) return
     setGroups((items) => items.map((item) => (item.id === groupId ? { ...item, icon } : item)))
+    props.host.showToast(`已更新「${group.name}」图标`, { type: "success" })
   }
 
   function deleteGroup(groupId: string) {
@@ -199,6 +208,7 @@ function WorkbenchRail(props: {
       homeAction()?.run()
     }
     setGroupMenu(null)
+    props.host.showToast(`已删除「${group.name}」`, { type: "success" })
   }
 
   function toggleLayoutPopover() {
@@ -215,6 +225,12 @@ function WorkbenchRail(props: {
     }
     layoutAction()?.run()
     setLayoutPopOpen(false)
+    props.host.showToast(
+      target === "dashboard" ? "已切换到 Dashboard 布局" : "已切换到 Focus 布局",
+      {
+        type: "success",
+      },
+    )
   }
 
   onMount(() => {
@@ -610,7 +626,10 @@ export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
                     type="button"
                     aria-label={action().label}
                     title={action().label}
-                    onClick={() => action().run()}
+                    onClick={() => {
+                      action().run()
+                      props.host.showToast("已切换到 Dashboard 布局", { type: "success" })
+                    }}
                   >
                     <HostActionIcon id={action().id} icon={action().icon} size={15} />
                   </button>

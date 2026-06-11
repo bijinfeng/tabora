@@ -53,6 +53,7 @@ export function createWorkbenchShellLayoutRuntime(
     setCommandPaletteOpen: options.setCommandPaletteOpen,
     setAddWidgetOpen: options.setAddWidgetOpen,
     openSettings: options.openSettings,
+    showToast: options.showToast,
     switchLayout: (layoutId) => {
       options.switchLayout(layoutId)
     },
