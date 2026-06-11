@@ -12,7 +12,7 @@ function resolveI18n(props: SettingsPanelViewProps): InjectedI18n | undefined {
 
 function fallbackText(key: string, vars?: Record<string, string | number>) {
   const template =
-    ({
+    {
       "settings.appearance.layoutGroupTitle": "工作台布局",
       "settings.appearance.layoutHelp":
         "布局是插件。当前可在 Dashboard 与 Focus 间切换，适配不同使用习惯和工作流程。",
@@ -38,8 +38,7 @@ function fallbackText(key: string, vars?: Record<string, string | number>) {
       "settings.appearance.localeAria": "选择语言",
 
       "settings.search.sectionTitle": "搜索",
-      "settings.search.help":
-        "搜索栏默认使用的搜索引擎。可在搜索框中用 @引擎名 临时切换。",
+      "settings.search.help": "搜索栏默认使用的搜索引擎。可在搜索框中用 @引擎名 临时切换。",
       "settings.search.errors.atLeastOne": "至少启用一个搜索源",
       "settings.search.errors.defaultNotEnabled": "默认搜索源未启用，请重新选择",
       "settings.search.errors.defaultUnavailable": "默认搜索源不可用，请重新选择",
@@ -70,7 +69,7 @@ function fallbackText(key: string, vars?: Record<string, string | number>) {
       "settings.workbench.exportFailed": "导出失败",
       "settings.workbench.importFailed": "导入失败",
       "settings.workbench.importActionFailed": "导入操作失败",
-    })[key] ?? key
+    }[key] ?? key
 
   if (!vars) return template
   let result = template
@@ -145,9 +144,7 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
                 classList={{ active: activeTheme() === theme().id }}
                 onClick={() => void props.host.switchTheme(theme().id)}
               >
-                <span class="theme-card-glyph">
-                  {t("settings.appearance.themeGlyphLight")}
-                </span>
+                <span class="theme-card-glyph">{t("settings.appearance.themeGlyphLight")}</span>
                 <span class="theme-card-name">{theme().title}</span>
                 <span class="theme-card-desc">{t("settings.appearance.themeDescLight")}</span>
               </button>
@@ -292,9 +289,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
     <div class="settings-panel-stack">
       <section class="set-group">
         <div class="set-group-title">{t("settings.search.sectionTitle")}</div>
-        <p class="settings-help">
-          {t("settings.search.help")}
-        </p>
+        <p class="settings-help">{t("settings.search.help")}</p>
         <Show when={configurationError()}>
           <SettingsInlineError>{configurationError()!}</SettingsInlineError>
         </Show>
@@ -321,7 +316,9 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                     </span>
                   </button>
                   <div class="search-provider-actions">
-                    <span class="provider-state">{isDefault() ? t("settings.search.current") : ""}</span>
+                    <span class="provider-state">
+                      {isDefault() ? t("settings.search.current") : ""}
+                    </span>
                     <SettingsSwitch
                       checked={isEnabled()}
                       label={`${isEnabled() ? t("settings.search.toggle.disable") : t("settings.search.toggle.enable")} ${provider.title}`}
@@ -636,8 +633,10 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
           "settings.search.help":
             "Default provider for the search bar. Use @provider in the search box to switch temporarily.",
           "settings.search.errors.atLeastOne": "Enable at least one provider",
-          "settings.search.errors.defaultNotEnabled": "Default provider is disabled. Choose another one.",
-          "settings.search.errors.defaultUnavailable": "Default provider is unavailable. Choose another one.",
+          "settings.search.errors.defaultNotEnabled":
+            "Default provider is disabled. Choose another one.",
+          "settings.search.errors.defaultUnavailable":
+            "Default provider is unavailable. Choose another one.",
           "settings.search.kind.code": "Code",
           "settings.search.kind.search": "Web",
           "settings.search.current": "✓ Current",
@@ -652,7 +651,8 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
 
           "settings.workbench.workspaceGroupTitle": "Workspace",
           "settings.workbench.currentWorkspace": "Current workspace",
-          "settings.workbench.currentWorkspaceDesc": "Stores layout, theme, background, and widgets",
+          "settings.workbench.currentWorkspaceDesc":
+            "Stores layout, theme, background, and widgets",
           "settings.workbench.currentSuffix": " · current",
           "settings.workbench.switch": "Switch",
           "settings.workbench.delete": "Delete",
@@ -672,21 +672,23 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
     context.registry.views.register(
       "official.settings.workspace.appearance.view",
       (props: SettingsPanelViewProps) =>
-        AppearanceSettingsPanel(
-          { ...props, i18n: context.i18n } as SettingsPanelViewProps & { i18n?: InjectedI18n },
-        ),
+        AppearanceSettingsPanel({ ...props, i18n: context.i18n } as SettingsPanelViewProps & {
+          i18n?: InjectedI18n
+        }),
     )
-    context.registry.views.register("official.settings.workspace.search.view", (props: SettingsPanelViewProps) =>
-      SearchSettingsPanel(
-        { ...props, i18n: context.i18n } as SettingsPanelViewProps & { i18n?: InjectedI18n },
-      ),
+    context.registry.views.register(
+      "official.settings.workspace.search.view",
+      (props: SettingsPanelViewProps) =>
+        SearchSettingsPanel({ ...props, i18n: context.i18n } as SettingsPanelViewProps & {
+          i18n?: InjectedI18n
+        }),
     )
     context.registry.views.register(
       "official.settings.workspace.workbench.view",
       (props: SettingsPanelViewProps) =>
-        WorkbenchSettingsPanel(
-          { ...props, i18n: context.i18n } as SettingsPanelViewProps & { i18n?: InjectedI18n },
-        ),
+        WorkbenchSettingsPanel({ ...props, i18n: context.i18n } as SettingsPanelViewProps & {
+          i18n?: InjectedI18n
+        }),
     )
   },
 }
