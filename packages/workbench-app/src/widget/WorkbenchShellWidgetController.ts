@@ -14,6 +14,7 @@ import {
   resolveWorkbenchInstanceSettingsView,
   type WorkbenchExpandState,
 } from "../surface/WorkbenchShellInteractions"
+import type { ShellTranslation } from "../i18n"
 import { persistWorkbenchGridOrder } from "../runtime/WorkbenchShellHostActions"
 import {
   buildWorkbenchContextMenuModel,
@@ -56,6 +57,7 @@ export function createWorkbenchWidgetController(options: {
   saveInstance: (instance: PluginInstance) => Promise<void>
   removeInstance: (instanceId: string) => Promise<void>
   showToast: (message: string, options?: ToastOptions) => void
+  tShell?: ShellTranslation
   focusWidgetInstance: (instanceId: string) => boolean
   availableCommandIds: () => string[] | Set<string>
   runCommand: (commandId: string, context: { instance: PluginInstance }) => boolean
@@ -87,7 +89,9 @@ export function createWorkbenchWidgetController(options: {
     })
 
     if (!added) {
-      options.showToast("当前布局不支持添加卡片", { type: "warning" })
+      options.showToast(options.tShell?.("widget.addNotSupported") ?? "当前布局不支持添加卡片", {
+        type: "warning",
+      })
     }
   }
 
@@ -131,6 +135,7 @@ export function createWorkbenchWidgetController(options: {
       widget: widgetContribution(instance),
       hasView: options.hasView,
       buildWidgetViewProps: options.buildWidgetViewProps,
+      ...(options.tShell ? { tShell: options.tShell } : {}),
     })
 
     if (!result.expandState) {
@@ -151,6 +156,7 @@ export function createWorkbenchWidgetController(options: {
       widget: widgetContribution(instance),
       hasView: options.hasView,
       buildWidgetViewProps: options.buildWidgetViewProps,
+      ...(options.tShell ? { tShell: options.tShell } : {}),
     })
 
     if (!result.expandState) {
@@ -188,7 +194,7 @@ export function createWorkbenchWidgetController(options: {
       },
       onRemove: (instanceId) => {
         void removeWidget(instanceId)
-        options.showToast("实例已移除")
+        options.showToast(options.tShell?.("widget.instanceRemoved") ?? "实例已移除")
       },
     })
   }
@@ -199,7 +205,7 @@ export function createWorkbenchWidgetController(options: {
       resolveWidgetContribution: options.resolveWidgetContribution,
       buildFocusAction: (instanceId) => () => {
         if (options.focusWidgetInstance(instanceId)) {
-          options.showToast("已定位到对应卡片")
+          options.showToast(options.tShell?.("widget.focused") ?? "已定位到对应卡片")
         }
       },
     })

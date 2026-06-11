@@ -102,6 +102,7 @@ function createController(options: {
   layoutRegions?: LayoutRegion[]
   instances?: PluginInstance[]
   focusWidgetInstance?: (instanceId: string) => boolean
+  tShell?: (key: string, vars?: Record<string, string | number>) => string
 }) {
   let currentInstances = options.instances ?? [instance()]
   let currentExpandState: WorkbenchExpandState | null = null
@@ -139,14 +140,15 @@ function createController(options: {
     resolveWidgetRenderModel: () => renderModel(),
     hasView: () => true,
     buildWidgetViewProps: () => viewProps(),
-    assignGridOrder: (instances) => instances,
+    assignGridOrder: (instances: PluginInstance[]) => instances,
     saveInstance,
     removeInstance,
     showToast,
     focusWidgetInstance,
     availableCommandIds: () => [],
     runCommand: () => false,
-  })
+    ...(options.tShell ? { tShell: options.tShell } : {}),
+  } as any)
 
   return {
     controller,
@@ -180,6 +182,20 @@ describe("createWorkbenchWidgetController", () => {
     expect(showToast).toHaveBeenCalledWith("当前布局不支持添加卡片", { type: "warning" })
   })
 
+  it("shows a localized warning when the active layout has no widget region", async () => {
+    const { controller, showToast } = createController({
+      layoutRegions: [{ id: "toolbar", title: "Toolbar", accepts: ["search"], required: false }],
+      tShell: (key: string) => {
+        if (key === "widget.addNotSupported") return "This layout cannot add widgets"
+        return key
+      },
+    })
+
+    await controller.addWidget("plugin.widgets", "widget.notes")
+
+    expect(showToast).toHaveBeenCalledWith("This layout cannot add widgets", { type: "warning" })
+  })
+
   it("opens widget expand state and clears the active context menu", () => {
     const { controller, getExpandState, getContextMenu, setExpandState, setContextMenu } =
       createController({
@@ -211,5 +227,21 @@ describe("createWorkbenchWidgetController", () => {
 
     expect(focusWidgetInstance).toHaveBeenCalledWith("widget-1")
     expect(showToast).toHaveBeenCalledWith("已定位到对应卡片")
+  })
+
+  it("builds searchable widget actions that show a localized toast", () => {
+    const { controller, focusWidgetInstance, showToast } = createController({
+      focusWidgetInstance: () => true,
+      tShell: (key: string) => {
+        if (key === "widget.focused") return "Focused widget"
+        return key
+      },
+    })
+
+    const entries = controller.buildSearchableWidgets()
+    entries[0]?.action()
+
+    expect(focusWidgetInstance).toHaveBeenCalledWith("widget-1")
+    expect(showToast).toHaveBeenCalledWith("Focused widget")
   })
 })

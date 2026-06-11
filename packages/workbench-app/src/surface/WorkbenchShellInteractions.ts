@@ -1,6 +1,7 @@
 import type { PluginInstance, WidgetContribution, WidgetViewProps } from "@tabora/plugin-api"
 
 import type { WidgetRenderModel } from "../shared/shellHelpers"
+import type { ShellTranslation } from "../i18n"
 
 export type WorkbenchExpandState = {
   instanceId: string
@@ -18,6 +19,7 @@ type WorkbenchExpandBuildOptions = {
   widget: Pick<WidgetContribution, "views"> | undefined
   hasView: WidgetViewLookup
   buildWidgetViewProps: (instance: PluginInstance, model: WidgetRenderModel) => WidgetViewProps
+  tShell?: ShellTranslation
 }
 
 type WorkbenchExpandResult = {
@@ -63,7 +65,9 @@ export function buildWorkbenchWidgetExpandState(
   if (!options.model) {
     return {
       expandState: null,
-      errorMessage: `卡片实例无效：${options.instance.id}`,
+      errorMessage: options.tShell
+        ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: options.instance.id })
+        : `卡片实例无效：${options.instance.id}`,
     }
   }
 
@@ -71,7 +75,9 @@ export function buildWorkbenchWidgetExpandState(
   if (!target) {
     return {
       expandState: null,
-      errorMessage: `当前卡片暂不支持展开：${options.model.title}`,
+      errorMessage: options.tShell
+        ? options.tShell("widget.expandNotSupported", { title: options.model.title })
+        : `当前卡片暂不支持展开：${options.model.title}`,
     }
   }
 
@@ -93,7 +99,9 @@ export function buildWorkbenchWidgetInstanceSettingsState(
   if (!options.model) {
     return {
       expandState: null,
-      errorMessage: `卡片实例无效：${options.instance.id}`,
+      errorMessage: options.tShell
+        ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: options.instance.id })
+        : `卡片实例无效：${options.instance.id}`,
     }
   }
 
@@ -101,14 +109,18 @@ export function buildWorkbenchWidgetInstanceSettingsState(
   if (!viewId) {
     return {
       expandState: null,
-      errorMessage: `当前卡片暂不支持实例设置：${options.model.title}`,
+      errorMessage: options.tShell
+        ? options.tShell("widget.instanceSettingsNotSupported", { title: options.model.title })
+        : `当前卡片暂不支持实例设置：${options.model.title}`,
     }
   }
 
   return {
     expandState: {
       instanceId: options.instance.id,
-      title: `${options.model.title} 设置`,
+      title: options.tShell
+        ? options.tShell("widget.instanceSettings.title", { title: options.model.title })
+        : `${options.model.title} 设置`,
       viewId,
       mode: "settings",
       props: options.buildWidgetViewProps(options.instance, options.model),
