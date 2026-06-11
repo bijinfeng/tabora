@@ -4,63 +4,158 @@ import { assessPermissionRisk } from "@tabora/plugin-api"
 
 export type PluginSummary = SettingsPanelViewProps["plugins"][number]
 
+type InjectedI18n = {
+  t: (key: string, vars?: Record<string, string | number>) => string
+}
+
 export type PluginManagerCardProps = {
   plugins?: PluginSummary[]
   host?: SettingsPanelViewProps["host"]
+  i18n?: InjectedI18n
 }
 
-function contributionLabels(contributes: PluginManifest["contributes"]): string[] {
+function fallbackText(key: string, vars?: Record<string, string | number>) {
+  const template =
+    {
+      "pluginManager.installed.title": "已安装插件",
+      "pluginManager.installed.help":
+        "每个插件贡献的能力、版本和运行状态。插件启用状态控制是否加载到当前工作台。",
+      "pluginManager.installed.noContributions": "无贡献能力",
+      "pluginManager.installed.permissionsPrefix": "权限",
+      "pluginManager.installed.requiredCapabilitiesPrefix": "需要能力",
+      "pluginManager.installed.versionPrefix": "v",
+
+      "pluginManager.audit.title": "权限审计",
+      "pluginManager.audit.none": "无权限请求",
+      "pluginManager.audit.riskPrefix": "风险:",
+      "pluginManager.audit.risk.low": "低",
+      "pluginManager.audit.risk.medium": "中",
+      "pluginManager.audit.risk.high": "高",
+      "pluginManager.audit.risk.critical": "严重",
+
+      "pluginManager.status.error": "错误",
+      "pluginManager.status.incompatible": "不兼容",
+      "pluginManager.status.enabled": "已启用",
+      "pluginManager.status.disabled": "已禁用",
+
+      "pluginManager.switch.enable": "启用",
+      "pluginManager.switch.disable": "禁用",
+
+      "pluginManager.contribution.layout": "布局",
+      "pluginManager.contribution.widgets": "卡片 ({{count}})",
+      "pluginManager.contribution.search": "搜索",
+      "pluginManager.contribution.searchProvider": "搜索源",
+      "pluginManager.contribution.background": "背景",
+      "pluginManager.contribution.backgroundRenderer": "背景渲染",
+      "pluginManager.contribution.theme": "主题",
+      "pluginManager.contribution.settings": "设置",
+      "pluginManager.contribution.workspacePreset": "工作区预设",
+
+      "pluginManager.permission.type.externalOpen": "外部打开",
+      "pluginManager.permission.type.storage": "存储",
+      "pluginManager.permission.type.workspace": "工作区",
+      "pluginManager.permission.type.network": "网络",
+      "pluginManager.permission.type.clipboard": "剪贴板",
+      "pluginManager.permission.type.localFile": "本地文件",
+
+      "pluginManager.permission.externalOpen": "外部打开: {{hosts}}",
+      "pluginManager.permission.storage": "存储: {{scope}}",
+      "pluginManager.permission.workspace": "工作区: {{access}}",
+      "pluginManager.permission.network": "网络: {{hosts}}",
+      "pluginManager.permission.clipboard": "剪贴板: {{access}}",
+      "pluginManager.permission.localFile": "本地文件: {{access}}",
+    }[key] ?? key
+
+  if (!vars) return template
+  let result = template
+  for (const [varKey, value] of Object.entries(vars)) {
+    result = result.replaceAll(`{{${varKey}}}`, String(value))
+  }
+  return result
+}
+
+function createT(props: { i18n?: InjectedI18n }) {
+  return (key: string, vars?: Record<string, string | number>) =>
+    props.i18n?.t(key, vars) ?? fallbackText(key, vars)
+}
+
+function contributionLabels(
+  contributes: PluginManifest["contributes"],
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string[] {
   const extensions: string[] = []
-  if (contributes.layouts?.length) extensions.push("布局")
-  if (contributes.widgets?.length) extensions.push(`卡片 (${contributes.widgets.length})`)
-  if (contributes.searches?.length) extensions.push("搜索")
-  if (contributes.searchProviders?.length) extensions.push("搜索源")
-  if (contributes.backgroundProviders?.length) extensions.push("背景")
-  if (contributes.backgroundRenderers?.length) extensions.push("背景渲染")
-  if (contributes.themes?.length) extensions.push("主题")
-  if (contributes.settingsPanels?.length) extensions.push("设置")
-  if (contributes.workspacePresets?.length) extensions.push("工作区预设")
+  if (contributes.layouts?.length) extensions.push(t("pluginManager.contribution.layout"))
+  if (contributes.widgets?.length) {
+    extensions.push(t("pluginManager.contribution.widgets", { count: contributes.widgets.length }))
+  }
+  if (contributes.searches?.length) extensions.push(t("pluginManager.contribution.search"))
+  if (contributes.searchProviders?.length) {
+    extensions.push(t("pluginManager.contribution.searchProvider"))
+  }
+  if (contributes.backgroundProviders?.length)
+    extensions.push(t("pluginManager.contribution.background"))
+  if (contributes.backgroundRenderers?.length) {
+    extensions.push(t("pluginManager.contribution.backgroundRenderer"))
+  }
+  if (contributes.themes?.length) extensions.push(t("pluginManager.contribution.theme"))
+  if (contributes.settingsPanels?.length) extensions.push(t("pluginManager.contribution.settings"))
+  if (contributes.workspacePresets?.length) {
+    extensions.push(t("pluginManager.contribution.workspacePreset"))
+  }
   return extensions
 }
 
-function permissionLabel(permission: PluginPermission): string {
+function permissionLabel(
+  permission: PluginPermission,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
   switch (permission.type) {
     case "external-open":
-      return `外部打开: ${permission.hosts.join(", ")}`
+      return t("pluginManager.permission.externalOpen", { hosts: permission.hosts.join(", ") })
     case "storage":
-      return `存储: ${permission.scope}`
+      return t("pluginManager.permission.storage", { scope: permission.scope })
     case "workspace":
-      return `工作区: ${permission.access}`
+      return t("pluginManager.permission.workspace", { access: permission.access })
     case "network":
-      return `网络: ${permission.hosts.join(", ")}`
+      return t("pluginManager.permission.network", { hosts: permission.hosts.join(", ") })
     case "clipboard":
-      return `剪贴板: ${permission.access}`
+      return t("pluginManager.permission.clipboard", { access: permission.access })
     case "local-file":
-      return `本地文件: ${permission.access}`
+      return t("pluginManager.permission.localFile", { access: permission.access })
   }
 }
 
-function permissionType(permission: PluginPermission): string {
+function permissionType(
+  permission: PluginPermission,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
   switch (permission.type) {
     case "external-open":
-      return "外部打开"
+      return t("pluginManager.permission.type.externalOpen")
     case "storage":
-      return "存储"
+      return t("pluginManager.permission.type.storage")
     case "workspace":
-      return "工作区"
+      return t("pluginManager.permission.type.workspace")
     case "network":
-      return "网络"
+      return t("pluginManager.permission.type.network")
     case "clipboard":
-      return "剪贴板"
+      return t("pluginManager.permission.type.clipboard")
     case "local-file":
-      return "本地文件"
+      return t("pluginManager.permission.type.localFile")
   }
 }
 
-function pluginStatus(plugin: PluginSummary) {
-  if (plugin.status === "error") return { label: "错误", tone: "danger" }
-  if (plugin.status === "skipped") return { label: "不兼容", tone: "danger" }
-  return plugin.enabled ? { label: "已启用", tone: "success" } : { label: "已禁用", tone: "muted" }
+function pluginStatus(
+  plugin: PluginSummary,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+) {
+  if (plugin.status === "error") return { label: t("pluginManager.status.error"), tone: "danger" }
+  if (plugin.status === "skipped") {
+    return { label: t("pluginManager.status.incompatible"), tone: "danger" }
+  }
+  return plugin.enabled
+    ? { label: t("pluginManager.status.enabled"), tone: "success" }
+    : { label: t("pluginManager.status.disabled"), tone: "muted" }
 }
 
 function PluginSwitch(props: {
@@ -84,42 +179,50 @@ function PluginSwitch(props: {
 }
 
 export function PluginManagerCard(props: PluginManagerCardProps = {}) {
+  const t = createT(props)
   const plugins = () => props.plugins ?? []
 
   return (
     <div class="plugin-settings-stack">
       <section class="set-group">
-        <div class="set-group-title">已安装插件</div>
-        <p class="plugin-settings-help">
-          每个插件贡献的能力、版本和运行状态。插件启用状态控制是否加载到当前工作台。
-        </p>
+        <div class="set-group-title">{t("pluginManager.installed.title")}</div>
+        <p class="plugin-settings-help">{t("pluginManager.installed.help")}</p>
         <div class="plugin-list">
           <For each={plugins()}>
             {(plugin) => {
-              const extensions = contributionLabels(plugin.contributes)
-              const permissions = plugin.permissions.map(permissionLabel)
-              const status = pluginStatus(plugin)
+              const extensions = contributionLabels(plugin.contributes, t)
+              const permissions = plugin.permissions.map((permission) =>
+                permissionLabel(permission, t),
+              )
+              const status = pluginStatus(plugin, t)
               return (
                 <div class="plugin-card">
                   <div class="plugin-main">
                     <div class="plugin-name">{plugin.name}</div>
                     <div class="plugin-id-mono">{plugin.id}</div>
                     <div class="plugin-meta">
-                      {extensions.length > 0 ? extensions.join(" · ") : "无贡献能力"}
-                      {permissions.length > 0 ? ` · 权限 ${permissions.join(" / ")}` : ""}
+                      {extensions.length > 0
+                        ? extensions.join(" · ")
+                        : t("pluginManager.installed.noContributions")}
+                      {permissions.length > 0
+                        ? ` · ${t("pluginManager.installed.permissionsPrefix")} ${permissions.join(" / ")}`
+                        : ""}
                       {plugin.disabledReason ? ` · ${plugin.disabledReason}` : ""}
                       {plugin.lastError ? ` · ${plugin.lastError}` : ""}
                       {plugin.requiredCapabilities?.length
-                        ? ` · 需要能力 ${plugin.requiredCapabilities.join(", ")}`
+                        ? ` · ${t("pluginManager.installed.requiredCapabilitiesPrefix")} ${plugin.requiredCapabilities.join(", ")}`
                         : ""}
                     </div>
                   </div>
                   <div class="plugin-controls">
-                    <span class="plugin-version">v{plugin.version}</span>
+                    <span class="plugin-version">
+                      {t("pluginManager.installed.versionPrefix")}
+                      {plugin.version}
+                    </span>
                     <span class={`plugin-pill ${status.tone}`}>{status.label}</span>
                     <PluginSwitch
                       checked={plugin.enabled}
-                      label={`${plugin.enabled ? "禁用" : "启用"} ${plugin.name}`}
+                      label={`${plugin.enabled ? t("pluginManager.switch.disable") : t("pluginManager.switch.enable")} ${plugin.name}`}
                       onChange={(enabled) => {
                         void props.host?.togglePluginEnabled?.(plugin.id, enabled)
                       }}
@@ -133,7 +236,7 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
       </section>
 
       <section class="set-group">
-        <div class="set-group-title">权限审计</div>
+        <div class="set-group-title">{t("pluginManager.audit.title")}</div>
         <div class="plugin-audit-section">
           <For each={plugins()}>
             {(plugin) => {
@@ -149,6 +252,8 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
                   (riskLevels[r.risk] ?? 0) > (riskLevels[max] ?? 0) ? r.risk : max,
                 "low",
               )
+              const riskLabel = () =>
+                t(`pluginManager.audit.risk.${maxRisk}` as "pluginManager.audit.risk.low")
               return (
                 <div class="plugin-audit-item">
                   <span class="plugin-audit-name">{plugin.name}</span>
@@ -156,14 +261,16 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
                     <For each={risks}>
                       {(risk) => (
                         <span class={`plugin-pill ${risk.risk}`}>
-                          {permissionType(risk.permission)}
+                          {permissionType(risk.permission, t)}
                         </span>
                       )}
                     </For>
                     {plugin.permissions.length === 0 ? (
-                      <span class="plugin-audit-none">无权限请求</span>
+                      <span class="plugin-audit-none">{t("pluginManager.audit.none")}</span>
                     ) : (
-                      <span class="plugin-audit-risk">风险: {maxRisk}</span>
+                      <span class="plugin-audit-risk">
+                        {t("pluginManager.audit.riskPrefix")} {riskLabel()}
+                      </span>
                     )}
                   </div>
                 </div>
