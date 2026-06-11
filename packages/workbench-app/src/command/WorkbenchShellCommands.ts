@@ -41,7 +41,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "toggle-theme",
-      icon: "T",
+      icon: "明",
       title: "切换主题",
       description: options.isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
       category: "workspace",
@@ -49,7 +49,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "toggle-layout",
-      icon: "L",
+      icon: "▦",
       title: "切换布局",
       description:
         options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
@@ -68,14 +68,14 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "open-plugin-manager",
-      icon: "P",
+      icon: "◈",
       title: "打开插件管理",
       description: "查看 layout / widget / theme 贡献",
       category: "workspace",
     },
     {
       id: "open-settings",
-      icon: "S",
+      icon: "⚙",
       title: "打开设置",
       description: "配置工作台",
       category: "workspace",

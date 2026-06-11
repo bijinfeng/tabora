@@ -57,5 +57,13 @@ describe("createWorkbenchShellCommandModels", () => {
     const models = createWorkbenchShellCommandModels(createOptions())
 
     expect(models.commandItems().map((command) => command.name)).toContain("打开插件管理")
+    expect(models.commandItems().map((command) => [command.name, command.icon])).toEqual(
+      expect.arrayContaining([
+        ["切换主题", "明"],
+        ["切换布局", "▦"],
+        ["打开插件管理", "◈"],
+        ["打开设置", "⚙"],
+      ]),
+    )
   })
 })

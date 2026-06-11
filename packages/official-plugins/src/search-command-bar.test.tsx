@@ -182,6 +182,9 @@ describe("SearchCommandBar", () => {
     expect(
       Array.from(root.querySelectorAll(".suggestion-name")).map((node) => node.textContent),
     ).toEqual(["@github tabora runtime", "添加便签卡片", "打开插件管理", "切换到暗色主题"])
+    expect(
+      Array.from(root.querySelectorAll(".suggestion-icon")).map((node) => node.textContent),
+    ).toEqual(["↵", "↵", "↵", "↵"])
     expect(root.textContent).not.toContain("常用命令")
     expect(root.textContent).not.toContain("核心卡片")
     root.remove()

@@ -291,16 +291,19 @@ function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
     },
     addWidget && {
       ...addWidget,
+      icon: "↵",
       name: "添加便签卡片",
       desc: "创建一个新的 notes widget 实例",
     },
     pluginManager && {
       ...pluginManager,
+      icon: "↵",
       name: "打开插件管理",
       desc: "查看 layout / widget / theme 贡献",
     },
     toggleTheme && {
       ...toggleTheme,
+      icon: "↵",
       name: "切换到暗色主题",
       desc: "验证 Sage Dark token",
     },
