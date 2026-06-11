@@ -1,6 +1,6 @@
 import { TaboraMark } from "@tabora/brand"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
-import type { JSX } from "solid-js"
+import type { JSX, Setter } from "solid-js"
 import type { LayoutHostAPI, LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { HostActionIcon } from "./host-action-icon"
@@ -15,6 +15,16 @@ type RailGroup = {
   id: string
   name: string
   icon: string
+  isDefault: boolean
+  widgets: string[]
+}
+
+const groupIcons = ["T", "◐", "◇", "★", "◈", "⌘", "⚡", "◔", "♥", "■", "◆", "▲", "●", "✦"]
+
+type RailGroupContextMenu = {
+  groupId: string
+  x: number
+  y: number
 }
 
 function LayoutDashboardIcon() {
@@ -65,24 +75,38 @@ function fallbackText(key: string): string {
   return messages[key] ?? key
 }
 
-function WorkbenchRail(props: { host: LayoutHostAPI }) {
+function WorkbenchRail(props: {
+  host: LayoutHostAPI
+  groups?: () => RailGroup[]
+  activeGroupId?: () => string
+  setGroups?: Setter<RailGroup[]>
+  setActiveGroupId?: Setter<string>
+}) {
   const railActions = () => props.host.getGlobalActions("rail")
   const layoutAction = () => railActions().find((action) => action.id === "layout-switch")
   const utilityActions = () =>
     railActions().filter((action) => ["theme", "settings"].includes(action.id))
   const homeAction = () => railActions().find((action) => action.id === "home")
-  const defaultGroup = (): RailGroup => ({
-    id: "default",
-    name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
-    icon: "T",
-  })
-  const [groups, setGroups] = createSignal<RailGroup[]>([defaultGroup()])
-  const [activeGroupId, setActiveGroupId] = createSignal("default")
   const [inlineOpen, setInlineOpen] = createSignal(false)
   const [inlineName, setInlineName] = createSignal("")
   const [layoutPopOpen, setLayoutPopOpen] = createSignal(false)
+  const [groupMenu, setGroupMenu] = createSignal<RailGroupContextMenu | null>(null)
+  const fallbackDefaultGroup = (): RailGroup => ({
+    id: "default",
+    name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
+    icon: "T",
+    isDefault: true,
+    widgets: [],
+  })
+  const [fallbackGroups, setFallbackGroups] = createSignal<RailGroup[]>([fallbackDefaultGroup()])
+  const [fallbackActiveGroupId, setFallbackActiveGroupId] = createSignal("default")
+  const groups = props.groups ?? fallbackGroups
+  const activeGroupId = props.activeGroupId ?? fallbackActiveGroupId
+  const setGroups = props.setGroups ?? setFallbackGroups
+  const setActiveGroupId = props.setActiveGroupId ?? setFallbackActiveGroupId
   let inlineInput: HTMLInputElement | undefined
   let layoutSwitchWrap: HTMLDivElement | undefined
+  let groupMenuPanel: HTMLDivElement | undefined
   let groupCounter = 1
 
   const isDashboardLayout = () => layoutAction()?.icon === "layout-focus"
@@ -116,16 +140,65 @@ function WorkbenchRail(props: { host: LayoutHostAPI }) {
     }
     groupCounter += 1
     const id = `group-${groupCounter}`
-    setGroups((items) => [...items, { id, name, icon: pickDefaultIcon(name) }])
+    setGroups((items) => [
+      ...items,
+      { id, name, icon: pickDefaultIcon(name), isDefault: false, widgets: [] },
+    ])
     setActiveGroupId(id)
+    setGroupMenu(null)
     cancelGroupCreate()
   }
 
   function switchGroup(groupId: string) {
     if (inlineOpen()) return
     setLayoutPopOpen(false)
+    setGroupMenu(null)
     setActiveGroupId(groupId)
     if (groupId === "default") homeAction()?.run()
+  }
+
+  function activeGroupMenu() {
+    const menu = groupMenu()
+    if (!menu) return null
+    const group = groups().find((item) => item.id === menu.groupId)
+    return group ? { ...menu, group } : null
+  }
+
+  function openGroupMenu(event: MouseEvent, groupId: string) {
+    event.preventDefault()
+    setLayoutPopOpen(false)
+    cancelGroupCreate()
+    setGroupMenu({
+      groupId,
+      x: Math.min(event.clientX, window.innerWidth - 220),
+      y: Math.min(event.clientY, window.innerHeight - 320),
+    })
+  }
+
+  function renameGroup(groupId: string) {
+    const group = groups().find((item) => item.id === groupId)
+    if (!group) return
+    const next = window.prompt("新名称", group.name)
+    if (next == null) return
+    const name = next.trim().slice(0, 20)
+    if (!name) return
+    setGroups((items) => items.map((item) => (item.id === groupId ? { ...item, name } : item)))
+    setGroupMenu(null)
+  }
+
+  function setGroupIcon(groupId: string, icon: string) {
+    setGroups((items) => items.map((item) => (item.id === groupId ? { ...item, icon } : item)))
+  }
+
+  function deleteGroup(groupId: string) {
+    const group = groups().find((item) => item.id === groupId)
+    if (!group || group.isDefault) return
+    setGroups((items) => items.filter((item) => item.id !== groupId))
+    if (activeGroupId() === groupId) {
+      setActiveGroupId("default")
+      homeAction()?.run()
+    }
+    setGroupMenu(null)
   }
 
   function toggleLayoutPopover() {
@@ -167,12 +240,19 @@ function WorkbenchRail(props: { host: LayoutHostAPI }) {
         event.preventDefault()
         setLayoutPopOpen(false)
       }
+      if (event.key === "Escape" && groupMenu()) {
+        event.preventDefault()
+        setGroupMenu(null)
+      }
     }
     const onPointerDown = (event: PointerEvent) => {
-      if (!layoutPopOpen()) return
       const path = event.composedPath()
-      if (layoutSwitchWrap && path.includes(layoutSwitchWrap)) return
-      setLayoutPopOpen(false)
+      if (layoutPopOpen() && !(layoutSwitchWrap && path.includes(layoutSwitchWrap))) {
+        setLayoutPopOpen(false)
+      }
+      if (groupMenu() && !(groupMenuPanel && path.includes(groupMenuPanel))) {
+        setGroupMenu(null)
+      }
     }
     window.addEventListener("keydown", onKeyDown)
     window.addEventListener("pointerdown", onPointerDown)
@@ -190,7 +270,10 @@ function WorkbenchRail(props: { host: LayoutHostAPI }) {
           {(group, index) => {
             const shortcut = () => (index() < 9 ? `⌘${index() + 1}` : "")
             return (
-              <div class="dash-rail-group">
+              <div
+                class="dash-rail-group"
+                onContextMenu={(event) => openGroupMenu(event, group.id)}
+              >
                 <button
                   class="dash-rail-btn"
                   classList={{ active: group.id === activeGroupId() }}
@@ -330,6 +413,57 @@ function WorkbenchRail(props: { host: LayoutHostAPI }) {
           </button>
         )}
       </For>
+      <Show when={activeGroupMenu()}>
+        {(menu) => (
+          <div
+            class="dash-group-menu"
+            ref={(element) => {
+              groupMenuPanel = element
+            }}
+            style={{ left: `${Math.max(8, menu().x)}px`, top: `${Math.max(8, menu().y)}px` }}
+            role="menu"
+            aria-label={`分组 ${menu().group.name} 菜单`}
+          >
+            <button
+              class="dash-group-menu-item"
+              type="button"
+              onClick={() => renameGroup(menu().group.id)}
+            >
+              <span>重命名</span>
+              <kbd>F2</kbd>
+            </button>
+            <div class="dash-group-menu-sep" />
+            <div class="dash-group-menu-label">图标</div>
+            <div class="dash-group-menu-icons">
+              <For each={groupIcons}>
+                {(icon) => (
+                  <button
+                    class="dash-group-menu-icon"
+                    classList={{ active: icon === menu().group.icon }}
+                    type="button"
+                    onClick={() => setGroupIcon(menu().group.id, icon)}
+                  >
+                    {icon}
+                  </button>
+                )}
+              </For>
+            </div>
+            <div class="dash-group-menu-sep" />
+            <button
+              class="dash-group-menu-item danger"
+              classList={{ disabled: menu().group.isDefault }}
+              type="button"
+              disabled={menu().group.isDefault}
+              onClick={() => deleteGroup(menu().group.id)}
+            >
+              <span>删除分组</span>
+              <Show when={menu().group.isDefault}>
+                <kbd>默认</kbd>
+              </Show>
+            </button>
+          </div>
+        )}
+      </Show>
     </aside>
   )
 }
@@ -352,10 +486,38 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
   const locale = () => i18n()?.locale() ?? "zh-CN"
   const addWidgetAction = () =>
     props.host.getGlobalActions("menu").find((action) => action.id === "add-widget")
+  const homeAction = () =>
+    props.host.getGlobalActions("rail").find((action) => action.id === "home")
+  const defaultGroup = (): RailGroup => ({
+    id: "default",
+    name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
+    icon: "T",
+    isDefault: true,
+    widgets: [],
+  })
+  const [groups, setGroups] = createSignal<RailGroup[]>([defaultGroup()])
+  const [activeGroupId, setActiveGroupId] = createSignal("default")
+  const activeGroup = createMemo(
+    () => groups().find((group) => group.id === activeGroupId()) ?? groups()[0] ?? defaultGroup(),
+  )
+  const activeMainGridInstances = createMemo(() => {
+    const group = activeGroup()
+    const region = props.regions["mainGrid"]
+    if (!region || group.isDefault) return region?.instances ?? []
+
+    const allowed = new Set(group.widgets)
+    return region.instances.filter((instance) => allowed.has(instance.id))
+  })
 
   return (
     <main class="layout-dashboard" data-layout="dashboard">
-      <WorkbenchRail host={props.host} />
+      <WorkbenchRail
+        host={props.host}
+        groups={groups}
+        activeGroupId={activeGroupId}
+        setGroups={setGroups}
+        setActiveGroupId={setActiveGroupId}
+      />
       <section class="dash-content">
         <header class="dash-topbar">
           <div class="dash-greeting">
@@ -382,14 +544,37 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
         </header>
         <section class="dash-grid">
           <div class="workbench-grid">
-            <Show when={props.regions["mainGrid"]}>{props.regions["mainGrid"]!.render()}</Show>
+            <Show when={props.regions["mainGrid"]}>
+              {(region) => (
+                <Show when={!activeGroup().isDefault} fallback={region().render()}>
+                  <Show
+                    when={activeMainGridInstances().length > 0}
+                    fallback={
+                      <button
+                        class="dash-empty-group"
+                        type="button"
+                        onClick={() => props.host.openAddWidget()}
+                      >
+                        <span class="dash-empty-group-title">空分组</span>
+                        <span class="dash-empty-group-desc">
+                          为「{activeGroup().name}」添加第一张卡片
+                        </span>
+                      </button>
+                    }
+                  >
+                    <For each={activeMainGridInstances()}>
+                      {(instance) => region().renderInstance(instance)}
+                    </For>
+                  </Show>
+                </Show>
+              )}
+            </Show>
           </div>
         </section>
       </section>
     </main>
   )
 }
-
 export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
   const i18n = () => (props as LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }).i18n
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)

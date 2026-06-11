@@ -53,15 +53,15 @@ function makeHost(overrides?: {
   }
 }
 
-function makeSlot(id: string): RegionSlot<JSX.Element> {
+function makeSlot(id: string, instances: PluginInstance[] = []): RegionSlot<JSX.Element> {
   return {
     regionId: id,
     title: id,
     accepts: ["widget"],
-    instances: [],
-    isEmpty: true,
+    instances,
+    isEmpty: instances.length === 0,
     render: () => <div data-testid={`region-${id}`}>{id}</div>,
-    renderInstance: () => null,
+    renderInstance: (current) => <div data-testid={`instance-${current.id}`}>{current.id}</div>,
   }
 }
 
@@ -74,7 +74,12 @@ describe("DashboardLayout", () => {
         <DashboardLayout
           isMobile={false}
           host={makeHost()}
-          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+          regions={{
+            topbar: makeSlot("topbar"),
+            mainGrid: makeSlot("mainGrid", [
+              instance({ id: "today-focus-1", contributionId: "today-focus" }),
+            ]),
+          }}
         />
       ),
       host,
@@ -107,7 +112,58 @@ describe("DashboardLayout", () => {
     input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
 
     expect(host.querySelector('button[aria-label="分组 Research"]')).toBeTruthy()
+    expect(host.textContent).toContain("空分组")
+    expect(host.textContent).toContain("为「Research」添加第一张卡片")
     expect(layoutHost.openAddWidget).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it("rail group context menu supports icon changes, renaming, and deleting custom groups", () => {
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    const prompt = vi.fn(() => "Lab")
+    vi.stubGlobal("prompt", prompt)
+    const dispose = render(
+      () => (
+        <DashboardLayout
+          isMobile={false}
+          host={makeHost()}
+          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+        />
+      ),
+      host,
+    )
+
+    host.querySelector<HTMLButtonElement>('button[aria-label="新建分组"]')?.click()
+    const input = host.querySelector<HTMLInputElement>(".dash-inline-pop input")
+    input!.value = "Research"
+    input!.dispatchEvent(new InputEvent("input", { bubbles: true }))
+    input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+
+    const groupButton = host.querySelector<HTMLButtonElement>('button[aria-label="分组 Research"]')
+    groupButton?.dispatchEvent(
+      new MouseEvent("contextmenu", { bubbles: true, clientX: 72, clientY: 88 }),
+    )
+
+    expect(host.querySelector(".dash-group-menu")).toBeTruthy()
+    expect(host.querySelector(".dash-group-menu")?.textContent).toContain("重命名")
+    host.querySelectorAll<HTMLButtonElement>(".dash-group-menu-icon")[3]?.click()
+    expect(
+      host.querySelector<HTMLButtonElement>('button[aria-label="分组 Research"]')?.textContent,
+    ).toContain("★")
+
+    host.querySelector<HTMLButtonElement>(".dash-group-menu-item")?.click()
+    expect(host.querySelector('button[aria-label="分组 Lab"]')).toBeTruthy()
+
+    host
+      .querySelector<HTMLButtonElement>('button[aria-label="分组 Lab"]')
+      ?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: 72, clientY: 88 }))
+    host.querySelector<HTMLButtonElement>(".dash-group-menu-item.danger")?.click()
+
+    expect(host.querySelector('button[aria-label="分组 Lab"]')).toBeFalsy()
+    expect(host.querySelector('button[aria-label="分组 我的工作台"]')).toBeTruthy()
+
+    vi.unstubAllGlobals()
     dispose()
   })
 
