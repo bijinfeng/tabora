@@ -1,3 +1,8 @@
+.dash-rail-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
 .layout-dashboard,
 .layout-focus {
   display: grid;
@@ -18,35 +23,30 @@
 }
 
 .dash-rail-logo {
+  display: block;
   width: 36px;
   height: 36px;
-  display: block;
-  color: rgb(var(--color-accent));
   margin-bottom: 8px;
+  color: rgb(var(--color-accent));
 }
 
 .dash-rail-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
   border: 1px solid transparent;
+  border-radius: 10px;
   background: transparent;
   color: rgb(var(--color-muted));
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition:
     background 120ms ease,
     border-color 120ms ease,
     color 120ms ease;
-}
-
-.dash-rail-btn svg {
-  width: 18px;
-  height: 18px;
 }
 
 .dash-rail-home-mark {
@@ -62,14 +62,18 @@
   color: rgb(var(--color-accent));
 }
 
-.dash-rail-btn:focus-visible {
+.dash-rail-btn:focus-visible,
+.focus-command:focus-visible,
+.focus-icon-btn:focus-visible,
+.focus-satellite:focus-visible,
+.focus-empty:focus-visible {
   outline: 2px solid rgb(var(--color-accent));
   outline-offset: 2px;
 }
 
 .dash-rail-add {
-  margin-top: 15px;
   position: relative;
+  margin-top: 15px;
 }
 
 .dash-rail-add::before {
@@ -90,9 +94,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-width: 0;
   width: 100%;
   max-width: 1440px;
+  min-width: 0;
   margin: 0 auto;
   padding: 24px 32px;
 }
@@ -147,6 +151,11 @@
   max-width: 720px;
 }
 
+.dash-toolbar-btn svg,
+.tb-btn svg {
+  flex-shrink: 0;
+}
+
 .dash-toolbar-btn,
 .tb-btn {
   display: inline-flex;
@@ -162,17 +171,12 @@
   font-family: inherit;
   font-size: 11px;
   font-weight: 550;
-  cursor: pointer;
   white-space: nowrap;
+  cursor: pointer;
   transition:
     background 120ms ease,
     border-color 120ms ease,
     color 120ms ease;
-}
-
-.dash-toolbar-btn svg,
-.tb-btn svg {
-  flex-shrink: 0;
 }
 
 .dash-toolbar-btn:hover,
@@ -181,47 +185,29 @@
   color: rgb(var(--color-text));
 }
 
-.layout-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 1px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 7px;
-  background: rgb(var(--color-surface-soft));
-}
-
-.layout-switch .tb-btn {
-  width: 24px;
-  min-width: 24px;
-  height: 24px;
-  padding: 0;
-  border-radius: 5px;
-}
-
 .dash-grid {
   min-width: 0;
 }
 
 .focus-shell {
-  min-width: 0;
   display: flex;
   justify-content: center;
+  min-width: 0;
   padding: clamp(118px, 30vh, 306px) 24px 64px;
 }
 
 .focus-content {
-  width: min(100%, 616px);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: min(100%, 616px);
 }
 
 .focus-topbar {
-  min-height: 27px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 27px;
   gap: 16px;
   color: rgb(var(--color-muted));
   font-size: 13px;
@@ -242,22 +228,18 @@
   font-weight: 420;
 }
 
-.focus-command {
+.focus-topbar-actions {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 27px;
-  min-width: 142px;
-  padding: 0 10px 0 12px;
+  gap: 8px;
+}
+
+.focus-icon-btn,
+.focus-command,
+.focus-satellite {
   border: 1px solid rgb(var(--color-line));
-  border-radius: 999px;
-  background: color-mix(in srgb, rgb(var(--color-surface)) 82%, transparent);
   color: rgb(var(--color-muted));
   font-family: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: 0 10px 28px rgb(15 23 42 / 6%);
   transition:
     background 120ms ease,
     border-color 120ms ease,
@@ -265,27 +247,49 @@
     transform 120ms ease;
 }
 
-.focus-topbar-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .focus-icon-btn {
-  width: 27px;
-  height: 27px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgb(var(--color-line));
+  width: 27px;
+  height: 27px;
   border-radius: 999px;
-  background: color-mix(in srgb, rgb(var(--color-surface)) 82%, transparent);
-  color: rgb(var(--color-muted));
   cursor: pointer;
-  transition:
-    background 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+}
+
+.focus-icon-btn,
+.focus-command {
+  background: color-mix(in srgb, rgb(var(--color-surface)) 82%, transparent);
+}
+
+.focus-command {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 142px;
+  height: 27px;
+  padding: 0 10px 0 12px;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 6%);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.focus-satellite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 114px;
+  padding: 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, rgb(var(--color-surface)) 88%, transparent);
+  box-shadow: 0 10px 26px rgb(15 23 42 / 5%);
+  color: rgb(var(--color-text));
+  text-align: left;
+  cursor: pointer;
 }
 
 .focus-icon-btn:hover {
@@ -294,19 +298,12 @@
   color: rgb(var(--color-text));
 }
 
-.focus-command:hover {
+.focus-command:hover,
+.focus-satellite:hover {
   transform: translateY(-1px);
   border-color: rgb(var(--color-accent));
   background: rgb(var(--color-surface));
   color: rgb(var(--color-text));
-}
-
-.focus-command:focus-visible,
-.focus-icon-btn:focus-visible,
-.focus-satellite:focus-visible,
-.focus-empty:focus-visible {
-  outline: 2px solid rgb(var(--color-accent));
-  outline-offset: 2px;
 }
 
 .focus-command kbd {
@@ -323,10 +320,7 @@
   font-weight: 650;
 }
 
-.focus-hero {
-  min-height: 217px;
-}
-
+.focus-hero,
 .focus-hero-render {
   min-height: 217px;
 }
@@ -354,42 +348,14 @@
 }
 
 .focus-satellites {
-  height: 114px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-content: start;
   gap: 12px;
+  height: 114px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-}
-
-.focus-satellite {
-  min-height: 114px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 8px;
-  background: color-mix(in srgb, rgb(var(--color-surface)) 88%, transparent);
-  color: rgb(var(--color-text));
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 0 10px 26px rgb(15 23 42 / 5%);
-  transition:
-    background 120ms ease,
-    border-color 120ms ease,
-    transform 120ms ease;
-}
-
-.focus-satellite:hover {
-  transform: translateY(-1px);
-  border-color: rgb(var(--color-accent));
-  background: rgb(var(--color-surface));
 }
 
 .focus-satellite-title {
@@ -429,6 +395,14 @@
     display: none;
   }
 
+  .dash-rail-add {
+    margin-top: 0;
+  }
+
+  .dash-rail-add::before {
+    display: none;
+  }
+
   .dash-content {
     padding: 16px 16px 66px;
   }
@@ -436,10 +410,6 @@
   .dash-greeting {
     align-items: flex-start;
     flex-wrap: wrap;
-  }
-
-  .dash-greeting-muted {
-    display: inline;
   }
 
   .dash-greeting-actions {
