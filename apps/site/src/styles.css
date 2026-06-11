@@ -1120,3 +1120,44 @@ h3 {
     padding: 10px;
   }
 }
+
+html.site-prototype body::before {
+  display: none;
+}
+
+.site-prototype-root pre,
+.site-prototype-root code {
+  font-variant-ligatures: none;
+}
+
+.site-prototype-root code[data-syntax="true"] {
+  color: inherit;
+}
+
+.site-prototype-root .tbr-syn-comment {
+  color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+.site-prototype-root .tbr-syn-tag {
+  color: var(--cp-accent, var(--accent, rgb(var(--tbr-color-accent))));
+}
+
+.site-prototype-root .tbr-syn-attr {
+  color: var(--cp-info, var(--info, rgb(var(--tbr-color-accent))));
+}
+
+.site-prototype-root .tbr-syn-string {
+  color: var(--cp-warning, var(--warning, rgb(var(--tbr-color-accent))));
+}
+
+.site-prototype-root .tbr-syn-number {
+  color: var(--cp-info, var(--info, rgb(var(--tbr-color-accent))));
+}
+
+.site-prototype-root .tbr-syn-keyword {
+  color: var(--cp-success, var(--success, rgb(var(--tbr-color-accent))));
+}
+
+.site-prototype-root .tbr-syn-punct {
+  color: color-mix(in srgb, currentColor 82%, transparent);
+}
