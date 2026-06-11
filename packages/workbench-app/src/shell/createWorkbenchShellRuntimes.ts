@@ -154,6 +154,7 @@ export function createWorkbenchShellRuntimes(options: {
     activeLayoutId,
     failedLayoutId: () => layoutFallback.status()?.layoutId ?? null,
     isDark,
+    tShell: t,
     shellConfig: runtime.shellConfig,
     setCommandPaletteOpen: setCmdPaletteOpen,
     setAddWidgetOpen,

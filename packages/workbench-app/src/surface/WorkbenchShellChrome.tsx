@@ -104,6 +104,7 @@ export function WorkbenchSettingsAboutContent(props: {
 export function SafeWorkbenchLayout(props: {
   isDark: boolean
   instances: PluginInstance[]
+  tShell?: ShellTranslation
   widgetContribution: (
     instance: Pick<PluginInstance, "pluginId" | "contributionId">,
   ) => { icon?: string; views: { card: string } } | null | undefined
@@ -131,17 +132,21 @@ export function SafeWorkbenchLayout(props: {
         </span>
         <div style={{ flex: 1 }} />
         <button class="toolbar-btn" onClick={props.onOpenCommandPalette}>
-          搜索
+          {props.tShell?.("chrome.toolbar.search") ?? "搜索"}
         </button>
         <button
           class="toolbar-btn"
-          aria-label={props.isDark ? "切换到明亮主题" : "切换到暗色主题"}
+          aria-label={
+            props.isDark
+              ? (props.tShell?.("chrome.toolbar.toggleThemeToLight") ?? "切换到明亮主题")
+              : (props.tShell?.("chrome.toolbar.toggleThemeToDark") ?? "切换到暗色主题")
+          }
           onClick={props.onToggleTheme}
         >
           {props.isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         <button class="toolbar-btn" onClick={props.onOpenSettings}>
-          设置
+          {props.tShell?.("chrome.toolbar.settings") ?? "设置"}
         </button>
       </div>
       <div class="safe-layout-list">
@@ -149,7 +154,17 @@ export function SafeWorkbenchLayout(props: {
           {(instance) => {
             const widget = props.widgetContribution(instance)
             const model = props.resolveWidgetModel(instance)
-            if (!model) return <div class="settings-empty">卡片实例无效：{instance.id}</div>
+            if (!model) {
+              return (
+                <div class="settings-empty">
+                  {props.tShell
+                    ? props.tShell("placeholders.widgetInstanceInvalid", {
+                        instanceId: instance.id,
+                      })
+                    : `卡片实例无效：${instance.id}`}
+                </div>
+              )
+            }
             const viewId = widget?.views.card
             const View = viewId ? props.getView(viewId) : undefined
             if (!View) return null

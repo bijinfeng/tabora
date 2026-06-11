@@ -45,6 +45,13 @@ function safeLayoutProps(): WorkbenchSafeLayoutOptions {
   return {
     isDark: () => false,
     instances: () => [instance()],
+    tShell: (key: string) => {
+      if (key === "chrome.toolbar.search") return "Search"
+      if (key === "chrome.toolbar.settings") return "Settings"
+      if (key === "chrome.toolbar.toggleThemeToDark") return "Switch to dark theme"
+      if (key === "chrome.toolbar.toggleThemeToLight") return "Switch to light theme"
+      return key
+    },
     widgetContribution: vi.fn(() => ({
       views: { card: "widget.notes.card" },
     })),
@@ -93,6 +100,8 @@ describe("createWorkbenchLayoutRenderer", () => {
     const { host, dispose } = mount(renderer.renderActiveLayout())
 
     expect(host.textContent).toContain("Tabora")
+    expect(host.textContent).toContain("Search")
+    expect(host.textContent).toContain("Settings")
 
     dispose()
     host.remove()

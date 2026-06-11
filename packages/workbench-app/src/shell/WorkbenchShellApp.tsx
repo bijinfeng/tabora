@@ -240,6 +240,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent,
+    tShell: (key, vars) => runtime.i18n.t("tabora.shell", key, vars),
     shellCopy: {
       pluginViewBoundaryCopy: createWorkbenchShellPluginViewBoundaryCopy((key, vars) =>
         runtime.i18n.t("tabora.shell", key, vars),
