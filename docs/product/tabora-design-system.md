@@ -43,17 +43,17 @@
 
 ## 3. 设计到实现映射
 
-| 设计事实                          | 仓库落点                                                                              | 说明                                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Refined Sage 语义 token           | `packages/theme/`                                                                     | `@tabora/theme` 负责把主题贡献应用为 CSS custom properties，不在插件里硬编码大面积颜色。                   |
-| 应用品牌图标与 favicon / 扩展图标 | `packages/brand/` + `apps/site/vite.config.ts` + `apps/extension/wxt.config.ts`       | `@tabora/brand` 保存唯一 SVG 图标源；站点 favicon 由 Vite 注入，扩展图标由 `auto-icons` 从同一源自动生成。 |
-| 基础组件 API 与状态               | `packages/ui/`                                                                        | `@tabora/ui` 提供插件内容区基础组件；组件 API、状态和组合模式以源码、测试和消费方实现为准。                |
-| Dashboard / Stream 双布局宿主结构 | `plugins/layout-dashboard/` + `plugins/layout-stream/` + `packages/workbench-shell/`  | 布局壳体由 layout 插件贡献；卡片壳、设置宿主、展开层等通用宿主容器在 shell。                               |
-| 命令搜索、`@provider`、键盘导航   | `packages/official-plugins/` + `packages/platform-kernel/` + `packages/orchestrator/` | 搜索 UI 走插件协议；全局快捷键、搜索路由和建议编排走平台/编排层。                                          |
-| 拖拽、双击展开、右键菜单          | shell + orchestrator + official widgets                                               | 交互触发与宿主容器由平台负责，插件只声明支持能力并渲染内容。                                               |
-| 设置中心左侧导航 + 右侧内容区     | shell settings host + `settings-panel` contributions                                  | 设置容器、焦点管理、错误边界由宿主提供。                                                                   |
-| Toast 堆叠与快捷键面板            | shell / runtime context                                                               | 插件不直接挂全局通知系统或快捷键浮层。                                                                     |
-| Widget 卡片稳定性和滚动策略       | layout 插件的 `.workbench-grid` + `workbench-shell` 的 `WidgetCardShell`              | layout 插件提供网格容器；`WidgetCardShell` 按实例尺寸设置 grid span，交互不改变外部尺寸。                  |
+| 设计事实                          | 仓库落点                                                                              | 说明                                                                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Refined Sage 语义 token           | `packages/theme/`                                                                     | `@tabora/theme` 负责把主题贡献应用为 CSS custom properties，不在插件里硬编码大面积颜色。                                 |
+| 应用品牌图标与 favicon / 扩展图标 | `packages/brand/` + `apps/site/vite.config.ts` + `apps/extension/wxt.config.ts`       | `@tabora/brand` 保存唯一 SVG 图标源；站点 favicon 由 Vite 注入，扩展图标由 `auto-icons` 从同一源自动生成。               |
+| 基础组件 API 与状态               | `packages/ui/`                                                                        | `@tabora/ui` 提供插件内容区基础组件；组件 API、状态和组合模式以源码、测试和消费方实现为准。                              |
+| Dashboard / Focus 双布局宿主结构  | `plugins/official/layout-dashboard/` + `packages/workbench-app/`                      | Dashboard 与 Focus 由同一个官方布局插件贡献并复用 rail、动作入口和样式；卡片壳、设置宿主、展开层等通用宿主容器在 shell。 |
+| 命令搜索、`@provider`、键盘导航   | `packages/official-plugins/` + `packages/platform-kernel/` + `packages/orchestrator/` | 搜索 UI 走插件协议；全局快捷键、搜索路由和建议编排走平台/编排层。                                                        |
+| 拖拽、双击展开、右键菜单          | shell + orchestrator + official widgets                                               | 交互触发与宿主容器由平台负责，插件只声明支持能力并渲染内容。                                                             |
+| 设置中心左侧导航 + 右侧内容区     | shell settings host + `settings-panel` contributions                                  | 设置容器、焦点管理、错误边界由宿主提供。                                                                                 |
+| Toast 堆叠与快捷键面板            | shell / runtime context                                                               | 插件不直接挂全局通知系统或快捷键浮层。                                                                                   |
+| Widget 卡片稳定性和滚动策略       | layout 插件的 `.workbench-grid` + `workbench-shell` 的 `WidgetCardShell`              | layout 插件提供网格容器；`WidgetCardShell` 按实例尺寸设置 grid span，交互不改变外部尺寸。                                |
 
 ## 4. 当前实现必须遵守的 V2 规则
 
@@ -72,7 +72,7 @@
 ### 4.2 宿主容器
 
 - 仪表盘式布局：`rail + 常驻搜索 + 主网格`。
-- 流式布局：`⌘K 命令面板 + 双列流式内容区 + 更轻的工具入口`。
+- 专注布局：`rail + 居中命令入口 + 主卡片 + satellite 卡片切换区`。
 - 设置中心：左侧分类导航，右侧内容区，支持焦点管理和局部错误隔离。
 - 展开视图、快捷键面板、全局 modal/fullscreen/settings/toast host 都属于宿主容器，不放入 `@tabora/ui`。`Dialog`、`Drawer`、`Toast`、`ContextMenu`、通用 `CommandPalette` 可以作为低层 primitive 存在于 `@tabora/ui`，但不能替代 shell 拥有的全局宿主。
 
@@ -123,7 +123,7 @@
 提交 UI 相关改动前，至少确认：
 
 - 第一屏是可用工作台，不是 landing page。
-- 默认布局仍是仪表盘式；流式布局仍可切换并保留卡片数据。
+- 默认布局仍是仪表盘式；专注布局仍可切换并保留卡片数据。
 - 移动端无横向滚动。
 - 卡片 hover / focus / 拖拽时无布局跳动。
 - 命令搜索、设置、添加卡片、插件管理在所有布局下可达。

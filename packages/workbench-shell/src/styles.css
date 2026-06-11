@@ -529,6 +529,9 @@
   flex-direction: column;
   gap: 2px;
 }
+.settings-sidebar-spacer {
+  flex: 1;
+}
 .settings-sidebar-title {
   font-size: 11px;
   font-weight: 700;
@@ -590,7 +593,7 @@
   background: rgba(var(--color-accent), 0.06);
 }
 .settings-tab-body {
-  padding: 16px;
+  padding: 20px 16px 16px;
   flex: 1;
   overflow-y: auto;
 }

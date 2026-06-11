@@ -35,7 +35,7 @@ describe("workbench dashboard layout", () => {
 
     expect(initial).toMatchObject({
       rail: true,
-      railLabels: ["主页", "添加卡片", "切换主题", "设置"],
+      railLabels: ["分组 我的工作台", "添加卡片", "切换到专注", "切换主题", "设置"],
       topbar: true,
       globalToolbar: false,
       layoutSwitch: true,
@@ -117,11 +117,13 @@ describe("workbench dashboard layout", () => {
     clickRequired(".settings-close")
     await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
 
-    clickRequired(".layout-switch .tb-btn:not(.active)")
-    await waitFor(() => expect(document.querySelector('[data-layout="stream"]')).toBeTruthy())
+    clickRequired('.workbench-rail button[aria-label="切换到专注"]')
+    await waitFor(() => expect(document.querySelector('[data-layout="focus"]')).toBeTruthy())
+    await waitFor(() => expect(document.querySelector(".focus-hero")).toBeTruthy())
+    expect(document.querySelectorAll(".focus-satellite").length).toBeGreaterThan(0)
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
 
-    clickRequired('[data-layout="stream"] .stream-toolbar-btn[aria-label="设置"]')
+    clickRequired('[data-layout="focus"] .workbench-rail button[aria-label="设置"]')
     await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
     clickRequired(".settings-close")
@@ -163,7 +165,7 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
     ),
     topbar: !!document.querySelector(".dash-topbar .search-bar"),
     globalToolbar: !!document.querySelector(".toolbar"),
-    layoutSwitch: !!document.querySelector(".layout-switch"),
+    layoutSwitch: !!document.querySelector('.workbench-rail button[aria-label="切换到专注"]'),
     grid: !!document.querySelector(".workbench-grid"),
     cardTitles: [...document.querySelectorAll(".card-title-text")].map(
       (node) => node.textContent?.trim() ?? "",

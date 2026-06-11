@@ -21,7 +21,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
         },
         layoutIds: {
           dashboard: "layout.dashboard.custom",
-          stream: "layout.stream.custom",
+          focus: "layout.focus.custom",
         },
         settingsPanelIds: {
           appearance: "settings.appearance.custom",
@@ -37,12 +37,13 @@ describe("createWorkbenchLayoutHostAPI", () => {
     expect(railActions.map((action) => action.id)).toEqual([
       "home",
       "add-widget",
+      "layout-switch",
       "theme",
       "settings",
     ])
 
     railActions[1]?.run()
-    railActions[3]?.run()
+    railActions[4]?.run()
 
     expect(runRailAction).toHaveBeenNthCalledWith(1, "add-widget")
     expect(runRailAction).toHaveBeenNthCalledWith(2, "settings")
@@ -71,7 +72,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
         },
         layoutIds: {
           dashboard: "layout.dashboard.custom",
-          stream: "layout.stream.custom",
+          focus: "layout.focus.custom",
         },
         settingsPanelIds: {
           appearance: "settings.appearance.custom",
@@ -90,7 +91,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
       "theme",
       "settings",
     ])
-    expect(toolbarActions[1]?.label).toBe("切换到流式")
+    expect(toolbarActions[1]?.label).toBe("切换到专注")
 
     toolbarActions[0]?.run()
     toolbarActions[1]?.run()
@@ -102,7 +103,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
     host.toggleTheme()
 
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(1, true)
-    expect(switchLayout).toHaveBeenCalledWith("layout.stream.custom")
+    expect(switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(switchTheme).toHaveBeenNthCalledWith(1, "theme.light.custom")
     expect(openSettings).toHaveBeenCalledWith("settings.search.custom")
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(2, true)
@@ -134,7 +135,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
         },
         layoutIds: {
           dashboard: "layout.dashboard.custom",
-          stream: "layout.stream.custom",
+          focus: "layout.focus.custom",
         },
         settingsPanelIds: {
           appearance: "settings.appearance.custom",
@@ -163,7 +164,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
 
     expect(setCommandPaletteOpen).toHaveBeenCalledWith(true)
     expect(setAddWidgetOpen).toHaveBeenCalledWith(true)
-    expect(switchLayout).toHaveBeenCalledWith("layout.stream.custom")
+    expect(switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(switchTheme).toHaveBeenCalledWith("theme.dark.custom")
     expect(openSettings).toHaveBeenCalledWith("settings.appearance.custom")
   })

@@ -1,6 +1,5 @@
 import { officialBackgroundBasic } from "./background-basic"
 import { layoutDashboard } from "@tabora/layout-dashboard"
-import { layoutStream } from "@tabora/layout-stream"
 import { officialPluginManager } from "./plugin-manager-entry"
 import { officialSearchCommandBar } from "./search-command-bar"
 import { officialSettingsWorkspace } from "./settings-workspace"
@@ -19,7 +18,6 @@ import { officialPluginNotes } from "@tabora/plugin-notes"
 export {
   officialBackgroundBasic,
   layoutDashboard,
-  layoutStream,
   officialPluginManager,
   officialPluginNotes,
   officialPluginQuickLinks,
@@ -39,7 +37,6 @@ export const officialPlugins = [
   officialThemeDefaultPack,
   officialBackgroundBasic,
   layoutDashboard,
-  layoutStream,
   officialSearchCommandBar,
   officialSearchProvidersBasic,
   officialPluginWeather,

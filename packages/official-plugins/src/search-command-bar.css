@@ -50,6 +50,12 @@
   color: rgb(var(--color-subtle, var(--color-muted)));
 }
 
+[data-tabora-plugin-id="official.search.command-bar"]
+  .search-bar
+  input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
 [data-tabora-plugin-id="official.search.command-bar"] .search-provider {
   position: relative;
   flex-shrink: 0;

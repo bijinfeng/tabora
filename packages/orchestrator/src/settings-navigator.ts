@@ -58,6 +58,7 @@ export function createSettingsNavigator(panels: SettingsPanelInput[]) {
   }
 
   function initialSectionId(requested?: string | null): SettingsSectionId {
+    if (!requested) return "general"
     const panelId = resolveInitialSettingsPanelId(normalizedPanels, requested)
     const panel = normalizedPanels.find((candidate) => candidate.id === panelId)
     return panel ? resolveSettingsSectionId(panel.section) : "general"

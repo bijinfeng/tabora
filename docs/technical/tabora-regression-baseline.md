@@ -252,7 +252,7 @@ pnpm build
 
 - 默认工作台首屏渲染，不是 landing page。
 - Dashboard 布局可见：轻 rail、常驻搜索、主网格。
-- Stream 布局可切换，卡片数据保留。
+- Focus 布局可切换，卡片数据保留。
 - 添加 widget 成功，新卡片追加到网格末尾。
 - widget 支持多实例和多尺寸。
 - 右键菜单包含尺寸、展开、移除；当前尺寸高亮。
@@ -712,7 +712,7 @@ Agent 必须：
 - L1：PRD / 设计实现映射 / 技术方案是否需要同步。
 - L2：layout 只依赖公开 contract。
 - L3：`pnpm test` + `pnpm check` + `pnpm build`。
-- L4：Dashboard / Stream / 第三方 layout 切换。
+- L4：Dashboard / Focus / 第三方 layout 切换。
 - L5：横向滚动、卡片可读性、全局入口可达。
 - L7：layout 纯协议依赖、region 身份稳定、拖拽/resize 高频路径。
 

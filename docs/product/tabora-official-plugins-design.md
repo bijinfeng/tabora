@@ -116,17 +116,17 @@ dashboard
   modal / fullscreen host
   settings host
 
-stream
-  floating / compact toolbar
+focus
+  shared rail
     settings / layout switch / theme
   command palette (⌘K)
-  dual-column widget stream
+  hero widget + satellite switch cards
   expand / context-menu / toast / settings host
 ```
 
 设计要求：
 
-- 仪表盘式布局使用左侧 rail + 顶部常驻搜索，流式布局使用 `⌘K` 浮层搜索和更沉浸的内容流；两种布局都必须保持官方插件能力完整可达。
+- 仪表盘式布局使用左侧 rail + 顶部常驻搜索，专注布局复用 rail 并使用居中的命令入口、主卡片和 satellite 卡片切换区；两种布局都必须保持官方插件能力完整可达。
 - 主区域的卡片尺寸稳定，拖拽、hover、focus、双击展开和右键菜单都不能造成布局跳动。
 - 主区域允许纵向延展；卡片过多时通过页面滚动访问，不为了塞进首屏牺牲可读性。
 - 添加卡片、插件管理、设置、布局切换和主题切换入口要么在 rail / 工具条中可见，要么通过命令面板和快捷键始终可达。
@@ -479,44 +479,44 @@ workbench-shell
 - 卡片超过首屏时，主网格可纵向滚动且不压缩卡片到不可读。
 - layout 失败时有安全回退。
 
-## 6b. `official.layout.workbench-stream`（流式布局 · V2 新增）
+## 6b. `official.layout.workbench-focus`（专注布局）
 
 ### 6b.1 产品职责
 
-Stream 是 MVP 第二种官方布局插件，用于验证布局协议的通用性和不同结构范式下的平台可靠性。它采用全屏流式设计，适合专注型用户和移动端场景。
+Focus 是 MVP 第二种官方布局，由 `official.layout.workbench-dashboard` 同一个官方布局插件贡献，用于复用 Dashboard 的 rail、全局动作入口和卡片宿主能力，同时提供更聚焦的首屏节奏。
 
 与 Dashboard 的关键差异：
 
-| 维度     | Dashboard            | Stream                           |
-| -------- | -------------------- | -------------------------------- |
-| Rail     | 固定左侧 56px 图标栏 | 可折叠顶部工具条（仅含设置入口） |
-| 搜索     | 常驻搜索栏           | ⌘K 浮层唤起                      |
-| 卡片排列 | 4 列自适应网格       | 桌面双列 / 移动单列流式          |
-| 首屏     | 搜索 + 网格直接可见  | 大标题 hero + 下方滚动呈现卡片   |
-| 信息密度 | 高（并行多卡片）     | 中（专注少卡片）                 |
+| 维度     | Dashboard            | Focus                                   |
+| -------- | -------------------- | --------------------------------------- |
+| Rail     | 固定左侧 56px 图标栏 | 复用同一 rail，移动端同样收为底部工具栏 |
+| 搜索     | 常驻搜索栏           | 居中命令入口 + ⌘K 浮层唤起              |
+| 卡片排列 | 4 列自适应网格       | 一个主卡片 + 下方 satellite 切换卡片    |
+| 首屏     | 搜索 + 网格直接可见  | 问候 / 命令入口 + 主卡片直接可见        |
+| 信息密度 | 高（并行多卡片）     | 中低（当前卡片优先）                    |
 
 ### 6b.2 布局结构
 
 ```txt
-stream-layout
-  toolbar（可折叠）
-    logo / ⌘K 搜索触发 / 添加卡片 / 设置
+focus-layout
+  shared rail
+  topbar
+    greeting + date / command trigger / layout switch
   hero
-    greeting + date + search-mini
-  stream（双列流式区域）
-    widget instances
+    active widget instance
+  satellites
+    secondary widget instance switches
 ```
 
 ### 6b.3 区域定义
 
-| 区域 ID   | 接受扩展点 | 说明                                     |
-| --------- | ---------- | ---------------------------------------- |
-| `toolbar` | `layout`   | 顶部可折叠工具条，仅含设置入口和搜索触发 |
-| `stream`  | `widget`   | 双列（桌面）/ 单列（移动）卡片流式区域   |
+| 区域 ID | 接受扩展点 | 说明                                            |
+| ------- | ---------- | ----------------------------------------------- |
+| `focus` | `widget`   | 可在主卡片与 satellite 切换区之间轮换的卡片集合 |
 
 ### 6b.4 交互模式（V2 原型中验证）
 
-- **⌘K 全局搜索**：Stream 下搜索栏不常驻，完全通过 ⌘K 浮层唤起。⌘K 由平台注册为全局快捷键。
+- **⌘K 全局搜索**：Focus 下搜索栏不常驻，通过居中命令入口或 ⌘K 浮层唤起。⌘K 由平台注册为全局快捷键。
 - **双击卡片展开**：双击卡片弹出展开视图，每种卡片类型有定制化内容布局（今日重点→大号输入框，便签→全高文本域，待办→可交互列表等）。
 - **拖拽实时换位**：卡片可直接拖拽排序，悬停到目标位时实时交换位置，无需占位符。
 - **右键上下文菜单**：右键卡片弹出尺寸选择 + 展开 + 移除操作。
@@ -558,7 +558,7 @@ dashboard
     suggestions
       grouped results
 
-stream
+focus
   command-palette (⌘K)
     query input
     provider hint / token
@@ -568,7 +568,7 @@ stream
 MVP 控件：
 
 - Dashboard 常驻搜索栏。
-- Stream / 全局 `⌘K` 命令面板搜索表面。
+- Focus / 全局 `⌘K` 命令面板搜索表面。
 - 搜索源指示器或选择器。
 - 搜索输入框。
 - 分组结果列表。
@@ -616,10 +616,10 @@ Dashboard 内联建议：
 4. 用户按 `Enter`。
 5. 跳转到 GitHub 搜索 URL。
 
-Stream 搜索：
+Focus 搜索：
 
-1. 用户位于流式布局。
-2. 按 `⌘K` 打开命令面板。
+1. 用户位于专注布局。
+2. 点击居中命令入口或按 `⌘K` 打开命令面板。
 3. 输入 `theme` 或 `@bing 天气`。
 4. 面板实时显示分组结果，支持键盘导航。
 5. `Enter` 执行高亮命令或搜索。
@@ -692,7 +692,7 @@ MVP：
 
 - 搜索输入。
 - Dashboard 内联建议。
-- Stream 通过 `⌘K` 唤起搜索。
+- Focus 通过居中命令入口或 `⌘K` 唤起搜索。
 - 搜索源选择与状态指示。
 - 搜索 provider 从 registry 动态读取。
 - 默认搜索源设置和持久化。
@@ -716,7 +716,7 @@ V1.5：
 
 - 搜索 UI 来自 `search` contribution。
 - 搜索源来自 `search-provider` contribution。
-- Dashboard 提供实时内联建议；Stream 仅通过 `⌘K` 唤起搜索。
+- Dashboard 提供实时内联建议；Focus 通过居中命令入口或 `⌘K` 唤起搜索。
 - 支持 `@provider` 临时切换搜索源，并在 UI 中可理解地反馈当前 provider。
 - 支持 `↑/↓`、`Enter`、`Esc` 等键盘交互。
 - 外部打开必须通过 `context.permissions.openExternal`。

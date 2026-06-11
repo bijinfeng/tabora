@@ -78,6 +78,7 @@ describe("settings navigator", () => {
     ])
 
     expect(navigator.initialSectionId("official.settings.workspace.search")).toBe("search")
+    expect(navigator.initialSectionId()).toBe("general")
     expect(navigator.sections.search.panels.map((item) => item.id)).toEqual([
       "official.settings.workspace.search",
     ])

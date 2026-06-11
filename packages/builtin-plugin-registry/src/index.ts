@@ -5,7 +5,6 @@ import officialPluginManagerStylesHref from "@tabora/official-plugins/plugin-man
 import officialSettingsWorkspaceStylesHref from "@tabora/official-plugins/settings-workspace.css?url"
 import officialSearchCommandBarStylesHref from "@tabora/official-plugins/search-command-bar.css?url"
 import layoutDashboardStylesHref from "@tabora/layout-dashboard/styles.css?url"
-import layoutStreamStylesHref from "@tabora/layout-stream/styles.css?url"
 import layoutDiyMasonryStylesHref from "@tabora/layout-diy-masonry/styles.css?url"
 import notesStylesHref from "@tabora/plugin-notes/styles.css?url"
 import quickLinksStylesHref from "@tabora/plugin-quick-links/styles.css?url"
@@ -25,7 +24,7 @@ export const builtinWorkbenchShellConfig = {
   },
   layoutIds: {
     dashboard: "official.layout.workbench-dashboard",
-    stream: "official.layout.workbench-stream",
+    focus: "official.layout.workbench-focus",
   },
   settingsPanelIds: {
     appearance: "official.settings.workspace.appearance",
@@ -38,7 +37,6 @@ export const builtinWorkbenchShellConfig = {
 
 const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "official.layout.workbench-dashboard": { "./styles.css": layoutDashboardStylesHref },
-  "official.layout.workbench-stream": { "./styles.css": layoutStreamStylesHref },
   "official.search.command-bar": {
     "./search-command-bar.css": officialSearchCommandBarStylesHref,
   },

@@ -1,4 +1,5 @@
-.layout-dashboard {
+.layout-dashboard,
+.layout-focus {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
   min-height: 100vh;
@@ -64,6 +65,21 @@
 .dash-rail-btn:focus-visible {
   outline: 2px solid rgb(var(--color-accent));
   outline-offset: 2px;
+}
+
+.dash-rail-add {
+  margin-top: 15px;
+  position: relative;
+}
+
+.dash-rail-add::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: rgb(var(--color-line));
 }
 
 .dash-rail-spacer {
@@ -187,8 +203,210 @@
   min-width: 0;
 }
 
+.focus-shell {
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  padding: clamp(118px, 30vh, 306px) 24px 64px;
+}
+
+.focus-content {
+  width: min(100%, 616px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.focus-topbar {
+  min-height: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: rgb(var(--color-muted));
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.focus-greeting {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: rgb(var(--color-text));
+  font-weight: 620;
+}
+
+.focus-muted {
+  color: rgb(var(--color-muted));
+  font-weight: 420;
+}
+
+.focus-command {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 27px;
+  min-width: 142px;
+  padding: 0 10px 0 12px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 999px;
+  background: color-mix(in srgb, rgb(var(--color-surface)) 82%, transparent);
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 6%);
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    transform 120ms ease;
+}
+
+.focus-topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.focus-icon-btn {
+  width: 27px;
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 999px;
+  background: color-mix(in srgb, rgb(var(--color-surface)) 82%, transparent);
+  color: rgb(var(--color-muted));
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.focus-icon-btn:hover {
+  border-color: rgb(var(--color-accent));
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+}
+
+.focus-command:hover {
+  transform: translateY(-1px);
+  border-color: rgb(var(--color-accent));
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+}
+
+.focus-command:focus-visible,
+.focus-icon-btn:focus-visible,
+.focus-satellite:focus-visible,
+.focus-empty:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
+}
+
+.focus-command kbd {
+  min-width: 31px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgb(var(--color-surface-soft));
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.focus-hero {
+  min-height: 217px;
+}
+
+.focus-hero-render {
+  min-height: 217px;
+}
+
+.focus-hero-render > .grid-item,
+.focus-hero-render > .widget-card {
+  width: 100%;
+  min-height: 217px;
+}
+
+.focus-hero-render .widget-card {
+  min-height: 217px;
+}
+
+.focus-empty {
+  width: 100%;
+  min-height: 217px;
+  border: 1px dashed rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.focus-satellites {
+  height: 114px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.focus-satellite {
+  min-height: 114px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: color-mix(in srgb, rgb(var(--color-surface)) 88%, transparent);
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgb(15 23 42 / 5%);
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.focus-satellite:hover {
+  transform: translateY(-1px);
+  border-color: rgb(var(--color-accent));
+  background: rgb(var(--color-surface));
+}
+
+.focus-satellite-title {
+  font-size: 13px;
+  font-weight: 680;
+  line-height: 1.25;
+}
+
+.focus-satellite-meta {
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  line-height: 1.2;
+}
+
 @media (max-width: 768px) {
-  .layout-dashboard {
+  .layout-dashboard,
+  .layout-focus {
     display: block;
   }
 
@@ -228,5 +446,38 @@
     flex-wrap: wrap;
     justify-content: flex-start;
     opacity: 1;
+  }
+
+  .focus-shell {
+    padding: clamp(106px, 18.5vh, 156px) 16px 66px;
+  }
+
+  .focus-content {
+    width: 100%;
+    gap: 18px;
+  }
+
+  .focus-topbar {
+    gap: 12px;
+  }
+
+  .focus-greeting {
+    flex-wrap: wrap;
+  }
+
+  .focus-command {
+    min-width: 136px;
+  }
+
+  .focus-satellites {
+    height: 192px;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .focus-satellite {
+    min-height: 58px;
+    flex-direction: row;
+    align-items: center;
   }
 }

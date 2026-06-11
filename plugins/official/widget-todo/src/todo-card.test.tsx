@@ -47,7 +47,7 @@ describe("TodoCard", () => {
     document.body.appendChild(root)
     render(() => <TodoCard {...makeProps()} />, root)
     await flushMount()
-    expect(root.textContent).toContain("复核 Dashboard / Stream 布局协议")
+    expect(root.textContent).toContain("复核 Dashboard / Focus 布局协议")
     expect(root.textContent).toContain("补齐 widget 尺寸菜单与展开态")
     expect(root.textContent).toContain("清理插件设置中的导入导出后置项")
     root.remove()

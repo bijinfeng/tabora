@@ -54,6 +54,8 @@ export function SettingsHost(props: SettingsHostProps) {
   const activePanels = () => navigator().sections[activeSection()].panels
   const activeSectionTitle = () =>
     SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ?? "设置"
+  const mainSections = () => SETTINGS_SECTIONS.filter((section) => section.id !== "about")
+  const aboutSection = () => SETTINGS_SECTIONS.find((section) => section.id === "about")
 
   return (
     <Show when={props.open}>
@@ -61,7 +63,7 @@ export function SettingsHost(props: SettingsHostProps) {
         <div class="settings-drawer" onClick={(e) => e.stopPropagation()}>
           <nav class="settings-sidebar">
             <div class="settings-sidebar-title">设置</div>
-            <For each={SETTINGS_SECTIONS}>
+            <For each={mainSections()}>
               {(section) => (
                 <button
                   class="settings-nav"
@@ -72,6 +74,18 @@ export function SettingsHost(props: SettingsHostProps) {
                 </button>
               )}
             </For>
+            <div class="settings-sidebar-spacer" />
+            <Show when={aboutSection()}>
+              {(section) => (
+                <button
+                  class="settings-nav"
+                  classList={{ active: section().id === activeSection() }}
+                  onClick={() => props.onSectionChange(section().id)}
+                >
+                  {section().title}
+                </button>
+              )}
+            </Show>
           </nav>
           <div class="settings-content">
             <div class="settings-tab-title">

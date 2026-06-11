@@ -36,7 +36,6 @@ describe("builtinPlugins", () => {
     expect(styledPlugins.map((plugin) => plugin.manifest.id)).toEqual(
       expect.arrayContaining([
         "official.layout.workbench-dashboard",
-        "official.layout.workbench-stream",
         "official.search.command-bar",
         "official.widgets.notes",
         "community.layout.diy-masonry",

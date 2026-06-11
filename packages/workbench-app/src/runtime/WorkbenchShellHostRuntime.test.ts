@@ -92,7 +92,7 @@ function createOptions(
       },
       layoutIds: {
         dashboard: "layout.dashboard.custom",
-        stream: "layout.stream.custom",
+        focus: "layout.focus.custom",
       },
       settingsPanelIds: {
         appearance: "settings.appearance.custom",
@@ -175,6 +175,6 @@ describe("createWorkbenchShellHostRuntime", () => {
 
     expect(options.setAddWidgetOpen).toHaveBeenCalledWith(true)
     expect(options.switchTheme).toHaveBeenCalledWith("theme.dark.custom")
-    expect(options.openSettings).toHaveBeenCalledWith("settings.appearance.custom")
+    expect(options.openSettings).toHaveBeenCalledWith()
   })
 })

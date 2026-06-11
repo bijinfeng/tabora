@@ -25,7 +25,7 @@ describe("createLayoutFallbackTracker", () => {
     createRoot((dispose) => {
       const tracker = createLayoutFallbackTracker()
 
-      tracker.recordLayoutError("official.layout.workbench-stream", "broken")
+      tracker.recordLayoutError("official.layout.workbench-focus", "broken")
       tracker.clearLayoutError()
 
       expect(tracker.status()).toBeNull()

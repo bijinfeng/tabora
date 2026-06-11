@@ -8,6 +8,7 @@ export function SearchCommandBar(props: SearchViewProps) {
   let wrapperRef: HTMLDivElement | undefined
   const providers = createMemo(() => props.providers)
   const [providerOpen, setProviderOpen] = createSignal(false)
+  const [query, setQuery] = createSignal(props.query)
   const activeProvider = createMemo(() =>
     resolveDefaultProvider(providers(), props.activeProviderId),
   )
@@ -22,16 +23,49 @@ export function SearchCommandBar(props: SearchViewProps) {
     }
 
     const provider = props.host.resolveProvider(props.providerToken)
-    if (provider && /^@\S+\s+/.test(props.query.trim())) {
+    if (provider && /^@\S+\s+/.test(query().trim())) {
       return provider.title
     }
 
     return `@${props.providerToken}`
   })
+  const visibleResults = createMemo(() => {
+    const term = query().trim().toLowerCase()
+    if (!term) return props.results
+    const filtered = props.results
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          `${item.name} ${item.desc} ${item.hint ?? ""}`.toLowerCase().includes(term),
+        ),
+      }))
+      .filter((group) => group.items.length > 0)
+    const provider = activeProvider()
+    return [
+      ...filtered,
+      ...(provider
+        ? [
+            {
+              id: "web",
+              label: "搜索",
+              items: [
+                {
+                  id: `web-search:${provider.id}`,
+                  icon: "搜",
+                  name: `使用 ${provider.title} 搜索 “${query().trim()}”`,
+                  desc: "通过 external-open 权限桥打开",
+                  hint: provider.shortcut,
+                },
+              ],
+            },
+          ]
+        : []),
+    ]
+  })
 
   function handleSubmit(event: Event) {
     event.preventDefault()
-    void props.host.submit(props.query)
+    void props.host.submit(query())
   }
 
   function handleKeyDown(event: KeyboardEvent) {
@@ -136,9 +170,11 @@ export function SearchCommandBar(props: SearchViewProps) {
           </div>
           <span class="search-scope-divider" aria-hidden="true" />
           <input
-            value={props.query}
+            value={query()}
             onInput={(event) => {
-              props.host.setQuery(event.currentTarget.value)
+              const nextQuery = event.currentTarget.value
+              setQuery(nextQuery)
+              props.host.setQuery(nextQuery)
             }}
             onKeyDown={handleKeyDown}
             onFocus={() => props.host.open()}
@@ -156,23 +192,23 @@ export function SearchCommandBar(props: SearchViewProps) {
         </form>
       </Show>
 
-      <Show when={/^@\S+$/.test(props.query.trim())}>
+      <Show when={/^@\S+$/.test(query().trim())}>
         <div class="search-provider-state">
           继续输入查询以使用临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
-      <Show when={/^@\S+\s+/.test(props.query.trim()) && !!props.providerToken}>
+      <Show when={/^@\S+\s+/.test(query().trim()) && !!props.providerToken}>
         <div class="search-provider-state">
           当前临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
-      <Show when={props.isOpen && props.results.length > 0}>
+      <Show when={props.isOpen && visibleResults().length > 0}>
         <div class="search-suggestions">
-          <For each={props.results}>
+          <For each={visibleResults()}>
             {(group) => (
               <>
                 <div class="suggestions-label">{group.label}</div>
@@ -187,6 +223,10 @@ export function SearchCommandBar(props: SearchViewProps) {
                         classList={{ active: props.activeResultIndex === globalIdx }}
                         onMouseDown={(event) => {
                           event.preventDefault()
+                          if (item.id.startsWith("web-search:")) {
+                            void props.host.submit(query(), item.id.slice("web-search:".length))
+                            return
+                          }
                           void props.host.executeSelection(globalIdx)
                         }}
                         type="button"

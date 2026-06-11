@@ -18,7 +18,7 @@ export function TodoCard(props: WidgetViewProps) {
       setItems(saved)
     } else {
       setItems([
-        { id: "seed-layout", text: "复核 Dashboard / Stream 布局协议", done: true },
+        { id: "seed-layout", text: "复核 Dashboard / Focus 布局协议", done: true },
         { id: "seed-size", text: "补齐 widget 尺寸菜单与展开态", done: false },
         { id: "seed-settings", text: "清理插件设置中的导入导出后置项", done: false },
       ])

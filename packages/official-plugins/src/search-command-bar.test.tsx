@@ -122,6 +122,42 @@ describe("SearchCommandBar", () => {
     root.remove()
   })
 
+  it("keeps typed inline query visible while notifying the host", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const setQuery = vi.fn()
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+            ],
+            host: {
+              ...searchViewProps().host,
+              setQuery,
+            },
+          })}
+        />
+      ),
+      root,
+    )
+
+    const input = root.querySelector(".search-bar input") as HTMLInputElement
+    input.value = "theme"
+    input.dispatchEvent(new InputEvent("input", { bubbles: true }))
+
+    expect(setQuery).toHaveBeenCalledWith("theme")
+    expect(input.value).toBe("theme")
+    root.remove()
+  })
+
   it("closes the provider dropdown with Escape and outside click", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

@@ -23,11 +23,11 @@ export function createWorkbenchLayoutHostAPI(options: {
         id: "layout-switch" as const,
         label:
           options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-            ? "切换到流式"
+            ? "切换到专注"
             : "切换到仪表盘",
         icon:
           options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-            ? "layout-stream"
+            ? "layout-focus"
             : "layout-dashboard",
         shortcut: "⌘L",
         run: () => {
@@ -44,7 +44,7 @@ export function createWorkbenchLayoutHostAPI(options: {
         return [
           {
             id: "home",
-            label: "主页",
+            label: "分组 我的工作台",
             icon: "⌂",
             isActive: true,
             run: () => options.runRailAction("home"),
@@ -55,6 +55,7 @@ export function createWorkbenchLayoutHostAPI(options: {
             icon: "+",
             run: () => options.runRailAction("add-widget"),
           },
+          layoutToggle,
           {
             id: "theme",
             label: "切换主题",

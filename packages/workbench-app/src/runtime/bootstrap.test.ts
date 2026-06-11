@@ -49,7 +49,7 @@ const shellConfig = {
   },
   layoutIds: {
     dashboard: "layout.dashboard.custom",
-    stream: "layout.stream.custom",
+    focus: "layout.focus.custom",
   },
   settingsPanelIds: {
     appearance: "settings.appearance.custom",

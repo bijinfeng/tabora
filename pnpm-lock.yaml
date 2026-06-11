@@ -274,9 +274,6 @@ importers:
       '@tabora/layout-diy-masonry':
         specifier: workspace:*
         version: link:../../plugins/community/layout-diy-masonry
-      '@tabora/layout-stream':
-        specifier: workspace:*
-        version: link:../../plugins/official/layout-stream
       '@tabora/official-plugins':
         specifier: workspace:*
         version: link:../official-plugins
@@ -318,9 +315,6 @@ importers:
       '@tabora/layout-dashboard':
         specifier: workspace:*
         version: link:../../plugins/official/layout-dashboard
-      '@tabora/layout-stream':
-        specifier: workspace:*
-        version: link:../../plugins/official/layout-stream
       '@tabora/orchestrator':
         specifier: workspace:*
         version: link:../orchestrator
@@ -538,25 +532,6 @@ importers:
       '@tabora/brand':
         specifier: workspace:*
         version: link:../../../packages/brand
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../../packages/plugin-api
-      lucide-solid:
-        specifier: catalog:ui
-        version: 1.16.0(solid-js@1.9.13)
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.13
-    devDependencies:
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../../tooling/tsconfig
-
-  plugins/official/layout-stream:
-    dependencies:
       '@tabora/platform-kernel':
         specifier: workspace:*
         version: link:../../../packages/platform-kernel

@@ -53,8 +53,8 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       title: "切换布局",
       description:
         options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-          ? "仪表盘 → 流式"
-          : "流式 → 仪表盘",
+          ? "仪表盘 → 专注"
+          : "专注 → 仪表盘",
       category: "workspace",
       defaultShortcut: "⌘L",
     },

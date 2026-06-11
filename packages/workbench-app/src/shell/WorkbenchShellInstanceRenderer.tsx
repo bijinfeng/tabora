@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js"
+import { createComponent } from "solid-js"
 import type {
   PluginInstance,
   SearchViewProps,
@@ -116,7 +117,7 @@ export function createWorkbenchInstanceRenderer(options: {
       return (
         <PluginViewBoundary instanceId={instance.id} title={search.title}>
           <div data-tabora-plugin-id={instance.pluginId}>
-            {View(options.buildSearchViewProps(instance))}
+            {createComponent(View, options.buildSearchViewProps(instance))}
           </div>
         </PluginViewBoundary>
       )

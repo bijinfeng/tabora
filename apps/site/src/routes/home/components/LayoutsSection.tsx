@@ -12,7 +12,7 @@ export function LayoutsSection() {
       <SectionHead
         label="LAYOUTS"
         title="同一套内容，两种工作节奏"
-        description="仪表盘适合并行扫视，流式布局适合连续推进。切换布局不改变卡片语义，只改变你面对信息的方式。"
+        description="仪表盘适合并行扫视，专注布局适合把一张核心卡片放在当下。切换布局不改变卡片语义，只改变你面对信息的方式。"
       />
       <div class="layout-panel">
         <div class="layout-toolbar" aria-label="布局切换">
@@ -28,13 +28,13 @@ export function LayoutsSection() {
             class="layout-tab"
             type="button"
             data-active={!isDashboard()}
-            onClick={() => setMode("stream")}
+            onClick={() => setMode("focus")}
           >
-            Stream
+            Focus
           </button>
         </div>
         <div class="layout-stage">
-          <Show when={isDashboard()} fallback={<StreamShot />}>
+          <Show when={isDashboard()} fallback={<FocusShot />}>
             <DashboardShot />
           </Show>
         </div>
@@ -60,9 +60,9 @@ function DashboardShot() {
   )
 }
 
-function StreamShot() {
+function FocusShot() {
   return (
-    <div class="layout-shot stream-shot" aria-label="Stream 布局示意">
+    <div class="layout-shot stream-shot" aria-label="Focus 布局示意">
       <div class="v-bar" />
       <div class="v-columns">
         <div class="v-column" />

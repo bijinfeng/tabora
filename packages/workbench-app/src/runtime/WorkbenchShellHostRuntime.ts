@@ -53,7 +53,7 @@ export function createWorkbenchShellHostRuntime(
           resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
         )
       },
-      onOpenSettings: () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
+      onOpenSettings: () => options.openSettings(),
     })
 
   const dispose = wireWorkbenchRuntimeEvents({

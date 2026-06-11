@@ -23,7 +23,7 @@ function createOptions(
       },
       layoutIds: {
         dashboard: "layout.dashboard.custom",
-        stream: "layout.stream.custom",
+        focus: "layout.focus.custom",
       },
       settingsPanelIds: {
         appearance: "settings.appearance.custom",
@@ -47,7 +47,7 @@ describe("createWorkbenchShellCommandModels", () => {
     models.runCommand("open-settings", {})
 
     expect(options.switchTheme).toHaveBeenCalledWith("theme.dark.custom")
-    expect(options.switchLayout).toHaveBeenCalledWith("layout.stream.custom")
+    expect(options.switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(options.openSettings).toHaveBeenCalledWith("settings.appearance.custom")
   })
 })

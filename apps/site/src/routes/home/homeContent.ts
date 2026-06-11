@@ -1,4 +1,4 @@
-export type LayoutMode = "dashboard" | "stream"
+export type LayoutMode = "dashboard" | "focus"
 
 export const signals = [
   ["Focus", "打开浏览器后，第一眼看到今天要推进的事项。"],
@@ -21,6 +21,6 @@ export const plugins = [
 
 export const installSteps = [
   ["01", "安装浏览器扩展", "把 Tabora 设置为新标签页，每次打开浏览器都回到工作台。"],
-  ["02", "选择布局", "从 Dashboard 开始，也可以切换到更适合专注工作的 Stream。"],
+  ["02", "选择布局", "从 Dashboard 开始，也可以切换到更适合专注工作的 Focus。"],
   ["03", "添加卡片", "按项目和任务继续添加便签、待办、入口和未来插件。"],
 ]

@@ -95,7 +95,7 @@ describe("workbench governance smoke", () => {
         "布局加载失败，已切换到安全布局",
       ),
     )
-    expect(document.querySelectorAll(".safe-layout-stream .grid-item").length).toBeGreaterThan(0)
+    expect(document.querySelectorAll(".safe-layout-list .grid-item").length).toBeGreaterThan(0)
 
     findButtonByText(".safe-layout-toolbar .toolbar-btn", "搜索")?.click()
     await waitFor(() => expect(document.querySelector(".cmd-panel")).toBeTruthy())

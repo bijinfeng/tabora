@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@tabora/layout-dashboard": "workspace:*",
-    "@tabora/layout-stream": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",

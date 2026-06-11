@@ -140,7 +140,7 @@ export function SafeWorkbenchLayout(props: {
           设置
         </button>
       </div>
-      <div class="safe-layout-stream">
+      <div class="safe-layout-list">
         <For each={props.instances}>
           {(instance) => {
             const widget = props.widgetContribution(instance)

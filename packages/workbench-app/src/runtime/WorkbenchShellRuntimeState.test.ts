@@ -78,7 +78,7 @@ function createRuntime(records: PluginRecord[] = []) {
     },
     layoutIds: {
       dashboard: "layout.dashboard.custom",
-      stream: "layout.stream.custom",
+      focus: "layout.focus.custom",
     },
     settingsPanelIds: {
       appearance: "settings.appearance.custom",
