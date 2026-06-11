@@ -206,6 +206,15 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
         getByInstance: vi.fn(),
         saveForInstance: vi.fn(),
       },
+      i18n: {
+        locale: vi.fn(() => "zh-CN" as const),
+        setLocale: vi.fn(),
+        registerMessages: vi.fn(),
+        t: vi.fn((_pluginId: string, key: string) => key),
+        formatDate: vi.fn(() => "DATE"),
+        formatNumber: vi.fn(() => "NUM"),
+        defaultLocale: vi.fn(() => "zh-CN" as const),
+      },
     },
     state: {
       workspace: vi.fn(() => ({

@@ -32,6 +32,42 @@ function searchViewProps(overrides: Partial<SearchViewProps> = {}): SearchViewPr
 }
 
 describe("SearchCommandBar", () => {
+  it("uses injected i18n for placeholder copy when available", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    const messages = {
+      "search.placeholder": "Search the web, commands, or widgets",
+    }
+
+    const I18nSearchCommandBar = SearchCommandBar as unknown as (props: any) => any
+
+    render(
+      () => (
+        <I18nSearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+            ],
+          })}
+          i18n={{
+            t: (key: string) => messages[key as keyof typeof messages] ?? key,
+          }}
+        />
+      ),
+      root,
+    )
+
+    const input = root.querySelector(".search-bar input") as HTMLInputElement
+    expect(input.placeholder).toBe("Search the web, commands, or widgets")
+    root.remove()
+  })
+
   it("shows an inline error when no search providers are available", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
 
 function createOptions(
-  overrides: Partial<Parameters<typeof createWorkbenchShellCommandModels>[0]> = {},
+  overrides: Record<string, unknown> = {},
 ): Parameters<typeof createWorkbenchShellCommandModels>[0] {
   return {
     isDark: () => false,
@@ -51,6 +51,20 @@ describe("createWorkbenchShellCommandModels", () => {
     expect(options.switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(options.openSettings).toHaveBeenCalledWith("settings.appearance.custom")
     expect(options.openSettings).toHaveBeenCalledWith("official.settings.plugins")
+  })
+
+  it("localizes platform command labels when a translator is provided", () => {
+    const options = createOptions({
+      t: (key: string) =>
+        ({
+          "commands.openCommandPalette.title": "Open command palette",
+          "commands.openPluginManager.title": "Open plugins",
+        })[key] ?? key,
+    })
+    const models = createWorkbenchShellCommandModels(options)
+
+    expect(models.commandItems().map((command) => command.name)).toContain("Open command palette")
+    expect(models.commandItems().map((command) => command.name)).toContain("Open plugins")
   })
 
   it("exposes plugin management as a first-class command", () => {

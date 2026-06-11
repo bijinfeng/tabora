@@ -76,6 +76,7 @@ export function createWorkbenchShellRuntimes(options: {
       registryViews: kernel.registry.views,
       instanceRepo,
       pluginDataRepo,
+      i18n: runtime.i18n,
     },
     state: {
       workspace: workspaceState,

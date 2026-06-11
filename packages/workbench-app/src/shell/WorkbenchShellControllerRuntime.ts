@@ -10,6 +10,7 @@ import type { ViewRegistry } from "@tabora/platform-kernel"
 import type { InstanceRepository, PluginDataRepository } from "@tabora/storage"
 
 import { renderWorkbenchWidgetIcon } from "../shared/WorkbenchShellIcons"
+import type { WorkbenchI18nStore } from "../i18n"
 import type { WorkbenchDragControllerState } from "../drag/WorkbenchDragController"
 import { createWorkbenchPointerDragHandlers } from "../drag/WorkbenchShellDragState"
 import { createWorkbenchShellViewRuntime } from "./WorkbenchShellViewRuntime"
@@ -61,6 +62,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     registryViews: ControllerRegistryViews
     instanceRepo: ControllerInstanceRepo
     pluginDataRepo: ControllerPluginDataRepo
+    i18n: WorkbenchI18nStore
   }
   state: {
     workspace: () => Workspace | null
@@ -125,6 +127,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     shellConfig: options.shellConfig,
     pluginCommands,
     pluginKeybindings,
+    t: (key, vars) => options.services.i18n.t("tabora.shell", key, vars),
     setCommandPaletteOpen: options.setters.setCommandPaletteOpen,
     setAddWidgetOpen: options.setters.setAddWidgetOpen,
     openSettings: options.actions.openSettings,

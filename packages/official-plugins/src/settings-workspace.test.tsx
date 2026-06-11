@@ -37,6 +37,45 @@ function host(): SettingsPanelViewProps["host"] {
 }
 
 describe("SearchSettingsPanel", () => {
+  it("uses injected i18n for section title when available", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    const I18nSearchSettingsPanel = SearchSettingsPanel as unknown as (props: any) => any
+
+    render(
+      () => (
+        <I18nSearchSettingsPanel
+          panelId="official.settings.workspace.search"
+          pluginId="official.settings"
+          scope="workspace"
+          host={host()}
+          workspace={workspace()}
+          workspaces={[workspace()]}
+          layouts={[]}
+          themes={[]}
+          backgrounds={[]}
+          searchProviders={[]}
+          searchSettings={{
+            defaultProviderId: "official.search.google",
+            enabledProviderIds: ["official.search.google", "official.search.bing"],
+          }}
+          plugins={[]}
+          i18n={{
+            t: (key: string) =>
+              ({
+                "settings.search.sectionTitle": "Search",
+              })[key] ?? key,
+          }}
+        />
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("Search")
+    root.remove()
+  })
+
   it("renders prototype search provider rows", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

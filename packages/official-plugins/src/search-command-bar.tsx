@@ -11,8 +11,51 @@ type SearchSuggestionItem = SearchResultItem & {
   sourceResultId?: string
 }
 
+type InjectedI18n = {
+  t: (key: string, vars?: Record<string, string | number>) => string
+}
+
+function resolveI18n(props: SearchViewProps): InjectedI18n | undefined {
+  return (props as SearchViewProps & { i18n?: InjectedI18n }).i18n
+}
+
+function fallbackText(key: string, vars?: Record<string, string | number>) {
+  const template =
+    {
+      "search.errors.noProviders": "未配置可用搜索源",
+      "search.errors.defaultUnavailable": "默认搜索源不可用，请在设置中重新选择",
+      "search.group.web": "搜索",
+      "search.webSuggestion.icon": "搜",
+      "search.webSuggestion.name": "使用 {{provider}} 搜索 “{{query}}”",
+      "search.webSuggestion.desc": "通过 external-open 权限桥打开",
+      "search.unavailable": "搜索不可用",
+      "search.provider.switchAria": "切换搜索引擎",
+      "search.placeholder": "搜索网页、命令或卡片",
+      "search.ariaLabel": "搜索内容",
+      "search.providerState.continue": "继续输入查询以使用临时搜索源：",
+      "search.providerState.current": "当前临时搜索源：",
+      "search.suggestions.label": "建议",
+      "search.suggestions.githubRuntime.desc": "用 GitHub 搜索插件运行时相关内容",
+      "search.suggestions.addNotes.name": "添加便签卡片",
+      "search.suggestions.addNotes.desc": "创建一个新的 notes widget 实例",
+      "search.suggestions.openPluginManager.name": "打开插件管理",
+      "search.suggestions.openPluginManager.desc": "查看 layout / widget / theme 贡献",
+      "search.suggestions.switchToDark.name": "切换到暗色主题",
+      "search.suggestions.switchToDark.desc": "验证 Sage Dark token",
+    }[key] ?? key
+
+  if (!vars) return template
+  let result = template
+  for (const [varKey, value] of Object.entries(vars)) {
+    result = result.replaceAll(`{{${varKey}}}`, String(value))
+  }
+  return result
+}
+
 export function SearchCommandBar(props: SearchViewProps) {
   let wrapperRef: HTMLDivElement | undefined
+  const t = (key: string, vars?: Record<string, string | number>) =>
+    resolveI18n(props)?.t(key, vars) ?? fallbackText(key, vars)
   const providers = createMemo(() => props.providers)
   const [providerOpen, setProviderOpen] = createSignal(false)
   const [query, setQuery] = createSignal(props.query)
@@ -20,8 +63,8 @@ export function SearchCommandBar(props: SearchViewProps) {
     resolveDefaultProvider(providers(), props.activeProviderId),
   )
   const configurationError = createMemo(() => {
-    if (providers().length === 0) return "未配置可用搜索源"
-    if (!activeProvider()) return "默认搜索源不可用，请在设置中重新选择"
+    if (providers().length === 0) return t("search.errors.noProviders")
+    if (!activeProvider()) return t("search.errors.defaultUnavailable")
     return null
   })
   const providerStateLabel = createMemo(() => {
@@ -38,7 +81,7 @@ export function SearchCommandBar(props: SearchViewProps) {
   })
   const visibleResults = createMemo(() => {
     const term = query().trim().toLowerCase()
-    if (!term) return emptyInlineSuggestions(props.results)
+    if (!term) return emptyInlineSuggestions(props.results, t)
     const filtered = props.results
       .map((group) => ({
         ...group,
@@ -54,13 +97,16 @@ export function SearchCommandBar(props: SearchViewProps) {
         ? [
             {
               id: "web",
-              label: "搜索",
+              label: t("search.group.web"),
               items: [
                 {
                   id: `web-search:${provider.id}`,
-                  icon: "搜",
-                  name: `使用 ${provider.title} 搜索 “${query().trim()}”`,
-                  desc: "通过 external-open 权限桥打开",
+                  icon: t("search.webSuggestion.icon"),
+                  name: t("search.webSuggestion.name", {
+                    provider: provider.title,
+                    query: query().trim(),
+                  }),
+                  desc: t("search.webSuggestion.desc"),
                   hint: provider.shortcut,
                 },
               ],
@@ -134,7 +180,7 @@ export function SearchCommandBar(props: SearchViewProps) {
         when={!configurationError()}
         fallback={
           <InlineError>
-            搜索不可用
+            {t("search.unavailable")}
             <span>{`：${configurationError()}`}</span>
           </InlineError>
         }
@@ -144,7 +190,7 @@ export function SearchCommandBar(props: SearchViewProps) {
             <button
               class="search-provider-btn"
               type="button"
-              aria-label="切换搜索引擎"
+              aria-label={t("search.provider.switchAria")}
               aria-expanded={providerOpen()}
               onClick={() => setProviderOpen((open) => !open)}
             >
@@ -191,8 +237,8 @@ export function SearchCommandBar(props: SearchViewProps) {
                 props.host.close()
               }, 200)
             }
-            placeholder="搜索网页、命令或卡片"
-            aria-label="搜索内容"
+            placeholder={t("search.placeholder")}
+            aria-label={t("search.ariaLabel")}
             type="search"
           />
           <span class="search-kbd">⌘K</span>
@@ -201,14 +247,14 @@ export function SearchCommandBar(props: SearchViewProps) {
 
       <Show when={/^@\S+$/.test(query().trim())}>
         <div class="search-provider-state">
-          继续输入查询以使用临时搜索源：
+          {t("search.providerState.continue")}
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
       <Show when={/^@\S+\s+/.test(query().trim()) && !!props.providerToken}>
         <div class="search-provider-state">
-          当前临时搜索源：
+          {t("search.providerState.current")}
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
@@ -263,7 +309,10 @@ export function SearchCommandBar(props: SearchViewProps) {
   )
 }
 
-function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
+function emptyInlineSuggestions(
+  results: SearchViewProps["results"],
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): Array<{
   id: string
   label: string
   items: SearchSuggestionItem[]
@@ -275,16 +324,17 @@ function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
       item.name.toLowerCase().includes("github") ||
       item.desc.toLowerCase().includes("github"),
   )
-  const addWidget = findByText(items, ["添加", "卡片"])
-  const pluginManager = findByText(items, ["插件", "管理"])
-  const toggleTheme = findByText(items, ["切换", "主题"])
+  const addWidget = findByText(items, ["添加", "卡片"]) ?? findByText(items, ["add", "widget"])
+  const pluginManager =
+    findByText(items, ["插件", "管理"]) ?? findByText(items, ["plugin", "manager"])
+  const toggleTheme = findByText(items, ["切换", "主题"]) ?? findByText(items, ["toggle", "theme"])
   const suggestions = [
     github && {
       ...github,
       id: `quick-github-runtime:${github.id}`,
       icon: "↵",
       name: "@github tabora runtime",
-      desc: "用 GitHub 搜索插件运行时相关内容",
+      desc: t("search.suggestions.githubRuntime.desc"),
       submitQuery: "tabora plugin runtime",
       submitProviderId: providerIdFromResult(github),
       sourceResultId: github.id,
@@ -292,20 +342,20 @@ function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
     addWidget && {
       ...addWidget,
       icon: "↵",
-      name: "添加便签卡片",
-      desc: "创建一个新的 notes widget 实例",
+      name: t("search.suggestions.addNotes.name"),
+      desc: t("search.suggestions.addNotes.desc"),
     },
     pluginManager && {
       ...pluginManager,
       icon: "↵",
-      name: "打开插件管理",
-      desc: "查看 layout / widget / theme 贡献",
+      name: t("search.suggestions.openPluginManager.name"),
+      desc: t("search.suggestions.openPluginManager.desc"),
     },
     toggleTheme && {
       ...toggleTheme,
       icon: "↵",
-      name: "切换到暗色主题",
-      desc: "验证 Sage Dark token",
+      name: t("search.suggestions.switchToDark.name"),
+      desc: t("search.suggestions.switchToDark.desc"),
     },
   ].filter((item): item is SearchSuggestionItem => !!item)
 
@@ -314,7 +364,9 @@ function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
       !suggestions.some((suggestion) => (suggestion.sourceResultId ?? suggestion.id) === item.id),
   )
   const limited = [...suggestions, ...fallback].slice(0, 4)
-  return limited.length > 0 ? [{ id: "suggestions", label: "建议", items: limited }] : []
+  return limited.length > 0
+    ? [{ id: "suggestions", label: t("search.suggestions.label"), items: limited }]
+    : []
 }
 
 function findByText(items: SearchResultItem[], parts: string[]): SearchResultItem | undefined {
@@ -360,8 +412,64 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     },
   },
   activate(context) {
+    context.i18n?.registerMessages([
+      {
+        locale: "zh-CN",
+        messages: {
+          "search.errors.noProviders": "未配置可用搜索源",
+          "search.errors.defaultUnavailable": "默认搜索源不可用，请在设置中重新选择",
+          "search.group.web": "搜索",
+          "search.webSuggestion.icon": "搜",
+          "search.webSuggestion.name": "使用 {{provider}} 搜索 “{{query}}”",
+          "search.webSuggestion.desc": "通过 external-open 权限桥打开",
+          "search.unavailable": "搜索不可用",
+          "search.provider.switchAria": "切换搜索引擎",
+          "search.placeholder": "搜索网页、命令或卡片",
+          "search.ariaLabel": "搜索内容",
+          "search.providerState.continue": "继续输入查询以使用临时搜索源：",
+          "search.providerState.current": "当前临时搜索源：",
+          "search.suggestions.label": "建议",
+          "search.suggestions.githubRuntime.desc": "用 GitHub 搜索插件运行时相关内容",
+          "search.suggestions.addNotes.name": "添加便签卡片",
+          "search.suggestions.addNotes.desc": "创建一个新的 notes widget 实例",
+          "search.suggestions.openPluginManager.name": "打开插件管理",
+          "search.suggestions.openPluginManager.desc": "查看 layout / widget / theme 贡献",
+          "search.suggestions.switchToDark.name": "切换到暗色主题",
+          "search.suggestions.switchToDark.desc": "验证 Sage Dark token",
+        },
+      },
+      {
+        locale: "en-US",
+        messages: {
+          "search.errors.noProviders": "No search providers configured",
+          "search.errors.defaultUnavailable":
+            "Default provider is unavailable. Choose another one in Settings.",
+          "search.group.web": "Web",
+          "search.webSuggestion.icon": "Web",
+          "search.webSuggestion.name": "Search {{provider}} for “{{query}}”",
+          "search.webSuggestion.desc": "Opens via the external-open permission bridge",
+          "search.unavailable": "Search unavailable",
+          "search.provider.switchAria": "Switch search provider",
+          "search.placeholder": "Search the web, commands, or widgets",
+          "search.ariaLabel": "Search",
+          "search.providerState.continue": "Keep typing to use the temporary provider:",
+          "search.providerState.current": "Temporary provider:",
+          "search.suggestions.label": "Suggestions",
+          "search.suggestions.githubRuntime.desc": "Search plugin runtime topics on GitHub",
+          "search.suggestions.addNotes.name": "Add notes widget",
+          "search.suggestions.addNotes.desc": "Create a new notes widget instance",
+          "search.suggestions.openPluginManager.name": "Open plugins",
+          "search.suggestions.openPluginManager.desc": "View layout / widget / theme contributions",
+          "search.suggestions.switchToDark.name": "Switch to dark theme",
+          "search.suggestions.switchToDark.desc": "Verify Sage Dark tokens",
+        },
+      },
+    ])
+
     context.registry.views.register("official.search.command-bar.view", (props: SearchViewProps) =>
-      SearchCommandBar(props),
+      SearchCommandBar({ ...props, i18n: context.i18n } as SearchViewProps & {
+        i18n?: InjectedI18n
+      }),
     )
   },
 }

@@ -20,6 +20,7 @@ export type WorkbenchShellCommandModelsOptions = {
   shellConfig: WorkbenchShellConfig
   pluginCommands: CommandContribution[]
   pluginKeybindings: KeybindingContribution[]
+  t?: (key: string, vars?: Record<string, string | number>) => string
   setCommandPaletteOpen: (open: boolean) => void
   setAddWidgetOpen: (open: boolean) => void
   openSettings: (sectionId?: string) => void
@@ -30,62 +31,86 @@ export type WorkbenchShellCommandModelsOptions = {
 }
 
 function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandContribution[] {
+  const t =
+    options.t ??
+    ((key: string) =>
+      ({
+        "commands.openCommandPalette.title": "打开命令",
+        "commands.openCommandPalette.desc": "搜索命令、卡片和搜索源",
+        "commands.toggleTheme.title": "切换主题",
+        "commands.toggleTheme.descToLight": "暗色 → 明亮",
+        "commands.toggleTheme.descToDark": "明亮 → 暗色",
+        "commands.toggleLayout.title": "切换布局",
+        "commands.toggleLayout.descToFocus": "仪表盘 → 专注",
+        "commands.toggleLayout.descToDashboard": "专注 → 仪表盘",
+        "commands.addWidget.title": "添加卡片",
+        "commands.addWidget.desc": "向工作台添加新卡片",
+        "commands.openPluginManager.title": "打开插件管理",
+        "commands.openPluginManager.desc": "查看 layout / widget / theme 贡献",
+        "commands.openSettings.title": "打开设置",
+        "commands.openSettings.desc": "配置工作台",
+        "commands.openShortcuts.title": "快捷键参考",
+        "commands.openShortcuts.desc": "查看所有快捷键",
+      })[key] ?? key)
+
   return [
     {
       id: "open-command-palette",
       icon: "⌘K",
-      title: "打开命令",
-      description: "搜索命令、卡片和搜索源",
+      title: t("commands.openCommandPalette.title"),
+      description: t("commands.openCommandPalette.desc"),
       category: "workspace",
       defaultShortcut: "⌘K",
     },
     {
       id: "toggle-theme",
       icon: "明",
-      title: "切换主题",
-      description: options.isDark() ? "暗色 → 明亮" : "明亮 → 暗色",
+      title: t("commands.toggleTheme.title"),
+      description: options.isDark()
+        ? t("commands.toggleTheme.descToLight")
+        : t("commands.toggleTheme.descToDark"),
       category: "workspace",
       defaultShortcut: "⌘T",
     },
     {
       id: "toggle-layout",
       icon: "▦",
-      title: "切换布局",
+      title: t("commands.toggleLayout.title"),
       description:
         options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-          ? "仪表盘 → 专注"
-          : "专注 → 仪表盘",
+          ? t("commands.toggleLayout.descToFocus")
+          : t("commands.toggleLayout.descToDashboard"),
       category: "workspace",
       defaultShortcut: "⌘L",
     },
     {
       id: "add-widget",
       icon: "+",
-      title: "添加卡片",
-      description: "向工作台添加新卡片",
+      title: t("commands.addWidget.title"),
+      description: t("commands.addWidget.desc"),
       category: "workspace",
       defaultShortcut: "⌘N",
     },
     {
       id: "open-plugin-manager",
       icon: "◈",
-      title: "打开插件管理",
-      description: "查看 layout / widget / theme 贡献",
+      title: t("commands.openPluginManager.title"),
+      description: t("commands.openPluginManager.desc"),
       category: "workspace",
     },
     {
       id: "open-settings",
       icon: "⚙",
-      title: "打开设置",
-      description: "配置工作台",
+      title: t("commands.openSettings.title"),
+      description: t("commands.openSettings.desc"),
       category: "workspace",
       defaultShortcut: "⌘,",
     },
     {
       id: "open-shortcuts",
       icon: "?",
-      title: "快捷键参考",
-      description: "查看所有快捷键",
+      title: t("commands.openShortcuts.title"),
+      description: t("commands.openShortcuts.desc"),
       category: "workspace",
     },
   ]
@@ -107,6 +132,21 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
   shortcutRegistry: () => ShortcutRegistry
   runCommand: (commandId: string, context: CommandExecutionContext) => boolean
 } {
+  const t =
+    options.t ??
+    ((key: string, vars?: Record<string, string | number>) => {
+      const message =
+        {
+          "toast.shortcuts": "快捷键：{{list}}、Esc",
+        }[key] ?? key
+      if (!vars) return message
+      let result = message
+      for (const [varKey, value] of Object.entries(vars)) {
+        result = result.replaceAll(`{{${varKey}}}`, String(value))
+      }
+      return result
+    })
+
   const actions = (): CommandActionMap => ({
     "open-command-palette": () => options.setCommandPaletteOpen(true),
     "toggle-theme": () =>
@@ -128,7 +168,7 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
         .listShortcutReferences()
         .map((reference) => shortcutDisplay(reference.key))
         .join("、")
-      options.showToast(`快捷键：${shortcuts}、Esc`)
+      options.showToast(t("toast.shortcuts", { list: shortcuts }))
     },
   })
 
