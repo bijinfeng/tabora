@@ -1,5 +1,5 @@
 import { TaboraMark } from "@tabora/brand"
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { LayoutHostAPI, LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
@@ -9,6 +9,12 @@ type LayoutI18n = {
   locale(): string
   t(key: string, vars?: Record<string, string | number>): string
   registerMessages(bundles: Array<{ locale: string; messages: Record<string, string> }>): void
+}
+
+type RailGroup = {
+  id: string
+  name: string
+  icon: string
 }
 
 function greeting(t: (key: string) => string) {
@@ -41,28 +47,158 @@ function fallbackText(key: string): string {
 
 function WorkbenchRail(props: { host: LayoutHostAPI }) {
   const railActions = () => props.host.getGlobalActions("rail")
-  const primaryActions = () =>
-    railActions().filter((action) => ["home", "add-widget"].includes(action.id))
   const utilityActions = () =>
     railActions().filter((action) => ["layout-switch", "theme", "settings"].includes(action.id))
+  const homeAction = () => railActions().find((action) => action.id === "home")
+  const defaultGroup = (): RailGroup => ({
+    id: "default",
+    name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
+    icon: "T",
+  })
+  const [groups, setGroups] = createSignal<RailGroup[]>([defaultGroup()])
+  const [activeGroupId, setActiveGroupId] = createSignal("default")
+  const [inlineOpen, setInlineOpen] = createSignal(false)
+  const [inlineName, setInlineName] = createSignal("")
+  let inlineInput: HTMLInputElement | undefined
+  let groupCounter = 1
+
+  function pickDefaultIcon(name: string) {
+    const first = name.trim()[0] ?? ""
+    return /[A-Za-z]/.test(first) ? first.toUpperCase() : "◐"
+  }
+
+  function startCreateGroup() {
+    if (inlineOpen()) {
+      inlineInput?.focus()
+      return
+    }
+    setInlineOpen(true)
+    setInlineName("")
+    window.setTimeout(() => inlineInput?.focus(), 80)
+  }
+
+  function cancelGroupCreate() {
+    setInlineOpen(false)
+    setInlineName("")
+  }
+
+  function commitGroupName() {
+    const name = inlineName().trim()
+    if (!name) {
+      cancelGroupCreate()
+      return
+    }
+    groupCounter += 1
+    const id = `group-${groupCounter}`
+    setGroups((items) => [...items, { id, name, icon: pickDefaultIcon(name) }])
+    setActiveGroupId(id)
+    cancelGroupCreate()
+  }
+
+  function switchGroup(groupId: string) {
+    if (inlineOpen()) return
+    setActiveGroupId(groupId)
+    if (groupId === "default") homeAction()?.run()
+  }
+
+  onMount(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "n") {
+        event.preventDefault()
+        startCreateGroup()
+        return
+      }
+      if ((event.metaKey || event.ctrlKey) && !event.shiftKey && /^[1-9]$/.test(event.key)) {
+        const target = groups()[Number.parseInt(event.key, 10) - 1]
+        if (target) {
+          event.preventDefault()
+          switchGroup(target.id)
+        }
+        return
+      }
+      if (event.key === "Escape" && inlineOpen()) {
+        event.preventDefault()
+        cancelGroupCreate()
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    onCleanup(() => window.removeEventListener("keydown", onKeyDown))
+  })
 
   return (
     <aside class="dash-rail workbench-rail" aria-label="工作台导航">
       <TaboraMark class="dash-rail-logo" />
-      <For each={primaryActions()}>
-        {(action) => (
-          <button
-            class="dash-rail-btn"
-            classList={{ active: action.isActive, "dash-rail-add": action.id === "add-widget" }}
-            aria-label={action.label}
-            title={action.label}
-            type="button"
-            onClick={() => action.run()}
-          >
-            <HostActionIcon id={action.id} icon={action.icon} />
-          </button>
-        )}
-      </For>
+      <div class="dash-rail-groups">
+        <For each={groups()}>
+          {(group, index) => {
+            const shortcut = () => (index() < 9 ? `⌘${index() + 1}` : "")
+            return (
+              <div class="dash-rail-group">
+                <button
+                  class="dash-rail-btn"
+                  classList={{ active: group.id === activeGroupId() }}
+                  aria-label={`分组 ${group.name}`}
+                  title={`${group.name} · 右键菜单${shortcut() ? ` · ${shortcut()}` : ""}`}
+                  type="button"
+                  onClick={() => switchGroup(group.id)}
+                >
+                  <span class="dash-rail-group-icon">{group.icon}</span>
+                  <Show when={shortcut()}>
+                    {(label) => <span class="dash-rail-group-shortcut">{label()}</span>}
+                  </Show>
+                </button>
+                <span class="dash-rail-group-tip">{group.name} · Dashboard</span>
+              </div>
+            )
+          }}
+        </For>
+        <Show when={inlineOpen()}>
+          <div class="dash-rail-placeholder-wrap">
+            <button class="dash-rail-btn dash-rail-placeholder" type="button" aria-label="正在命名">
+              ●
+            </button>
+            <div class="dash-inline-pop open">
+              <input
+                ref={(element) => {
+                  inlineInput = element
+                }}
+                value={inlineName()}
+                onInput={(event) => setInlineName(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    commitGroupName()
+                  } else if (event.key === "Escape") {
+                    event.preventDefault()
+                    cancelGroupCreate()
+                  }
+                }}
+                onBlur={() => {
+                  window.setTimeout(() => {
+                    if (inlineOpen()) cancelGroupCreate()
+                  }, 150)
+                }}
+                placeholder="分组名 · Enter 创建"
+                maxlength={20}
+                aria-label="分组名"
+              />
+              <span class="dash-inline-hint">
+                <kbd>Enter</kbd>建 <kbd>Esc</kbd>退
+              </span>
+            </div>
+          </div>
+        </Show>
+      </div>
+      <div class="dash-rail-divider" />
+      <button
+        class="dash-rail-btn dash-rail-add"
+        aria-label="新建分组"
+        title="新建分组（⌘ ⇧ N）"
+        type="button"
+        onClick={startCreateGroup}
+      >
+        <HostActionIcon id="add-widget" icon="+" size={16} />
+      </button>
       <div class="dash-rail-spacer" />
       <For each={utilityActions()}>
         {(action) => (
@@ -99,7 +235,7 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
   const locale = () => i18n()?.locale() ?? "zh-CN"
   const addWidgetAction = () =>
-    props.host.getGlobalActions("rail").find((action) => action.id === "add-widget")
+    props.host.getGlobalActions("menu").find((action) => action.id === "add-widget")
 
   return (
     <main class="layout-dashboard" data-layout="dashboard">

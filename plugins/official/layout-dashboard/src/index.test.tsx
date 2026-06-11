@@ -22,6 +22,7 @@ function instance(overrides: Partial<PluginInstance>): PluginInstance {
 }
 
 function makeHost(): LayoutHostAPI {
+  const addWidget = vi.fn()
   return {
     getGlobalActions: (surface) =>
       surface === "rail"
@@ -32,7 +33,9 @@ function makeHost(): LayoutHostAPI {
             { id: "theme", label: "切换主题", icon: "☼", run: vi.fn() },
             { id: "settings", label: "设置", icon: "⚙", run: vi.fn() },
           ]
-        : [],
+        : surface === "menu"
+          ? [{ id: "add-widget", label: "添加卡片", icon: "+", run: addWidget }]
+          : [],
     openSettings: vi.fn(),
     openCommandPalette: vi.fn(),
     openAddWidget: vi.fn(),
@@ -69,6 +72,33 @@ describe("DashboardLayout", () => {
     )
     expect(host.querySelectorAll("button.dash-rail-btn").length).toBe(5)
     expect(host.querySelector("[data-testid='region-mainGrid']")).toBeTruthy()
+    dispose()
+  })
+
+  it("rail plus creates a group instead of opening add-widget", () => {
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    const layoutHost = makeHost()
+    const dispose = render(
+      () => (
+        <DashboardLayout
+          isMobile={false}
+          host={layoutHost}
+          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+        />
+      ),
+      host,
+    )
+
+    host.querySelector<HTMLButtonElement>('button[aria-label="新建分组"]')?.click()
+    expect(host.querySelector(".dash-inline-pop.open")).toBeTruthy()
+    const input = host.querySelector<HTMLInputElement>(".dash-inline-pop input")
+    input!.value = "Research"
+    input!.dispatchEvent(new InputEvent("input", { bubbles: true }))
+    input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+
+    expect(host.querySelector('button[aria-label="分组 Research"]')).toBeTruthy()
+    expect(layoutHost.openAddWidget).not.toHaveBeenCalled()
     dispose()
   })
 })

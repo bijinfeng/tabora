@@ -35,7 +35,7 @@ describe("workbench dashboard layout", () => {
 
     expect(initial).toMatchObject({
       rail: true,
-      railLabels: ["分组 我的工作台", "添加卡片", "切换到专注", "切换主题", "设置"],
+      railLabels: ["分组 我的工作台", "新建分组", "切换到专注", "切换主题", "设置"],
       topbar: true,
       globalToolbar: false,
       layoutSwitch: true,
@@ -44,8 +44,19 @@ describe("workbench dashboard layout", () => {
     })
     expect(initial.cardTitles).toEqual(["今日重点", "快捷入口", "待办", "便签", "天气", "插件状态"])
 
+    clickRequired('.workbench-rail button[aria-label="新建分组"]')
+    await waitFor(() => expect(document.querySelector(".dash-inline-pop.open")).toBeTruthy())
+    expect(document.querySelector(".modal-container")).toBeFalsy()
+    commitRailGroupName("Research")
+    await waitFor(() =>
+      expect(
+        document.querySelector('.workbench-rail button[aria-label="分组 Research"]'),
+      ).toBeTruthy(),
+    )
+    expect(document.querySelector(".dash-inline-pop.open")).toBeFalsy()
+
     const addBefore = countGridItems()
-    clickRequired('.workbench-rail button[aria-label="添加卡片"]')
+    clickRequired(".dash-add-widget-btn")
     await waitFor(() => expect(document.querySelector(".modal-container")).toBeTruthy())
     clickRequired(".add-widget-modal-item")
     await waitFor(() => expect(countGridItems()).toBe(addBefore + 1))
@@ -262,6 +273,16 @@ function findButtonByText(selector: string, text: string): HTMLElement | null {
       node.textContent?.includes(text),
     ) ?? null
   )
+}
+
+function commitRailGroupName(name: string): void {
+  const input = document.querySelector<HTMLInputElement>(".dash-inline-pop input")
+  if (!input) {
+    throw new Error("Rail inline group input was not found")
+  }
+  input.value = name
+  input.dispatchEvent(new InputEvent("input", { bubbles: true }))
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
 }
 
 function hasHorizontalOverflow(): boolean {
