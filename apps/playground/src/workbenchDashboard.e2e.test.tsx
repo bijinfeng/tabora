@@ -35,7 +35,7 @@ describe("workbench dashboard layout", () => {
 
     expect(initial).toMatchObject({
       rail: true,
-      railLabels: ["分组 我的工作台", "新建分组", "切换到专注", "切换主题", "设置"],
+      railLabels: ["分组 我的工作台", "新建分组", "切换布局", "切换主题", "设置"],
       topbar: true,
       globalToolbar: false,
       layoutSwitch: true,
@@ -128,7 +128,13 @@ describe("workbench dashboard layout", () => {
     clickRequired(".settings-close")
     await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
 
-    clickRequired('.workbench-rail button[aria-label="切换到专注"]')
+    clickRequired('.workbench-rail button[aria-label="切换布局"]')
+    await waitFor(() => expect(document.querySelector(".dash-layout-switch-pop.open")).toBeTruthy())
+    const focusLayoutButton = [
+      ...document.querySelectorAll<HTMLElement>(".dash-layout-switch-item"),
+    ].find((node) => node.textContent?.includes("Focus"))
+    expect(focusLayoutButton).toBeTruthy()
+    focusLayoutButton?.click()
     await waitFor(() => expect(document.querySelector('[data-layout="focus"]')).toBeTruthy())
     await waitFor(() => expect(document.querySelector(".focus-hero")).toBeTruthy())
     expect(document.querySelectorAll(".focus-satellite").length).toBeGreaterThan(0)
@@ -176,7 +182,7 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
     ),
     topbar: !!document.querySelector(".dash-topbar .search-bar"),
     globalToolbar: !!document.querySelector(".toolbar"),
-    layoutSwitch: !!document.querySelector('.workbench-rail button[aria-label="切换到专注"]'),
+    layoutSwitch: !!document.querySelector('.workbench-rail button[aria-label="切换布局"]'),
     grid: !!document.querySelector(".workbench-grid"),
     cardTitles: [...document.querySelectorAll(".card-title-text")].map(
       (node) => node.textContent?.trim() ?? "",

@@ -21,7 +21,11 @@ function instance(overrides: Partial<PluginInstance>): PluginInstance {
   }
 }
 
-function makeHost(): LayoutHostAPI {
+function makeHost(overrides?: {
+  layoutRun?: () => void
+  layoutIcon?: string
+  layoutLabel?: string
+}): LayoutHostAPI {
   const addWidget = vi.fn()
   return {
     getGlobalActions: (surface) =>
@@ -29,7 +33,12 @@ function makeHost(): LayoutHostAPI {
         ? [
             { id: "home", label: "分组 我的工作台", icon: "T", run: vi.fn() },
             { id: "add-widget", label: "添加卡片", icon: "+", run: vi.fn() },
-            { id: "layout-switch", label: "切换到专注", icon: "layout-focus", run: vi.fn() },
+            {
+              id: "layout-switch",
+              label: overrides?.layoutLabel ?? "切换到专注",
+              icon: overrides?.layoutIcon ?? "layout-focus",
+              run: overrides?.layoutRun ?? vi.fn(),
+            },
             { id: "theme", label: "切换主题", icon: "☼", run: vi.fn() },
             { id: "settings", label: "设置", icon: "⚙", run: vi.fn() },
           ]
@@ -99,6 +108,47 @@ describe("DashboardLayout", () => {
 
     expect(host.querySelector('button[aria-label="分组 Research"]')).toBeTruthy()
     expect(layoutHost.openAddWidget).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it("rail layout button opens prototype switch popover before running layout action", () => {
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    const layoutRun = vi.fn()
+    const dispose = render(
+      () => (
+        <DashboardLayout
+          isMobile={false}
+          host={makeHost({ layoutRun })}
+          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+        />
+      ),
+      host,
+    )
+
+    host.querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')?.click()
+    expect(host.querySelector(".dash-layout-switch-pop.open")).toBeTruthy()
+    expect(host.querySelector(".dash-layout-switch-header")?.textContent).toBe("布局")
+    expect(host.querySelector(".dash-layout-switch-item.active")?.textContent).toContain(
+      "Dashboard",
+    )
+    expect(host.querySelector(".dash-layout-switch-item.active")?.textContent).toContain("✓")
+    expect(host.querySelector(".dash-layout-switch-pop")?.textContent).toContain(
+      "控制面板：多卡片并列",
+    )
+    expect(host.querySelector(".dash-layout-switch-pop")?.textContent).toContain(
+      "深度专注：主卡 + 卫星",
+    )
+
+    const items = host.querySelectorAll<HTMLButtonElement>(".dash-layout-switch-item")
+    items[0]?.click()
+    expect(layoutRun).not.toHaveBeenCalled()
+    expect(host.querySelector(".dash-layout-switch-pop.open")).toBeFalsy()
+
+    host.querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')?.click()
+    items[1]?.click()
+    expect(layoutRun).toHaveBeenCalledTimes(1)
+    expect(host.querySelector(".dash-layout-switch-pop.open")).toBeFalsy()
     dispose()
   })
 })
