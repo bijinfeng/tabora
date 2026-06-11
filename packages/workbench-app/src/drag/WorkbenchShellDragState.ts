@@ -4,8 +4,6 @@ import { createDragSortPlan } from "@tabora/orchestrator"
 
 export type WorkbenchDndDragState = {
   sourceId: string
-  previewInstances: PluginInstance[]
-  overId: string | null
 }
 
 type PersistedInstancesSource = {
@@ -22,15 +20,15 @@ export function createWorkbenchDndKitDragHandlers(options: {
 }) {
   const documentRoot = options.documentRoot ?? document
   let stopDndPointerTracking: (() => void) | null = null
+  let lastTargetId: string | null = null
 
   function startDndDrag(sourceId: string | null): void {
     if (!sourceId) return
 
     stopDndPointerTracking?.()
+    lastTargetId = null
     options.setDragState({
       sourceId,
-      previewInstances: options.getPersistedInstances(),
-      overId: null,
     })
     syncDndBodyState(true, documentRoot)
 
@@ -57,18 +55,7 @@ export function createWorkbenchDndKitDragHandlers(options: {
   function previewDndDrag(sourceId: string | null, targetId: string | null): void {
     const dragState = options.getDragState()
     if (!dragState || !sourceId || !targetId || sourceId === targetId) return
-
-    const plan = createDragSortPlan({
-      sourceId,
-      targetId,
-      instances: dragState.previewInstances,
-    })
-
-    options.setDragState({
-      ...dragState,
-      previewInstances: plan.changed ? plan.instances : dragState.previewInstances,
-      overId: targetId,
-    })
+    lastTargetId = targetId
   }
 
   function finishDndDrag(
@@ -80,9 +67,13 @@ export function createWorkbenchDndKitDragHandlers(options: {
     stopDndPointerTracking?.()
     options.setDragState(null)
     syncDndBodyState(false, documentRoot)
-    if (!dragState) return
+    if (!dragState) {
+      lastTargetId = null
+      return
+    }
 
-    const resolvedTargetId = targetId ?? dragState.overId ?? null
+    const resolvedTargetId = targetId ?? lastTargetId
+    lastTargetId = null
 
     if (canceled || !sourceId || !resolvedTargetId || sourceId === resolvedTargetId) return
 
@@ -98,8 +89,7 @@ export function createWorkbenchDndKitDragHandlers(options: {
   }
 
   return {
-    displayedInstances: (): PluginInstance[] =>
-      options.getDragState()?.previewInstances ?? options.getPersistedInstances(),
+    displayedInstances: (): PluginInstance[] => options.getPersistedInstances(),
     sortableIndex: (instanceId: string): number => persistedWidgetIndex(instanceId, options),
     isDragging: (instanceId: string): boolean => options.getDragState()?.sourceId === instanceId,
     onDndDragStart: (event: Parameters<NonNullable<DragDropProviderProps["onDragStart"]>>[0]) => {

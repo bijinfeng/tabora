@@ -18,6 +18,13 @@ import { isWorkbenchInteractiveElement } from "../surface/WorkbenchShellInteract
 import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import type { WidgetRenderModel } from "../shared/shellHelpers"
 
+type WorkbenchSortableCollisionDetector = NonNullable<
+  Parameters<typeof useSortable>[0]["collisionDetector"]
+>
+
+const pointerIntersectionCollisionType = 2
+const highCollisionPriority = 3
+
 type WidgetContributionLike = {
   views: { card: string }
 }
@@ -135,6 +142,7 @@ function SortableWidgetCard(props: {
       return props.sortableIndex()
     },
     group: props.instance.regionId,
+    collisionDetector: workbenchSortableCollisionDetector,
     transition: { duration: 180, easing: "cubic-bezier(0.2, 0, 0, 1)" },
   })
 
@@ -155,4 +163,29 @@ function SortableWidgetCard(props: {
       {props.children}
     </WidgetCardShell>
   )
+}
+
+export const workbenchSortableCollisionDetector: WorkbenchSortableCollisionDetector = (input) => {
+  const pointer = input.dragOperation.position.current
+  const shape = input.droppable.shape
+  if (!pointer || !shape) return null
+
+  const rect = shape.boundingRectangle
+  const inset = Math.min(28, rect.width * 0.18, rect.height * 0.18)
+  if (
+    pointer.x < rect.left + inset ||
+    pointer.x > rect.right - inset ||
+    pointer.y < rect.top + inset ||
+    pointer.y > rect.bottom - inset
+  ) {
+    return null
+  }
+
+  const distance = Math.hypot(pointer.x - shape.center.x, pointer.y - shape.center.y)
+  return {
+    id: input.droppable.id,
+    value: 1 / Math.max(distance, 1),
+    type: pointerIntersectionCollisionType,
+    priority: highCollisionPriority,
+  }
 }

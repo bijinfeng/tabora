@@ -65,6 +65,9 @@ describe("createWorkbenchDndKitDragHandlers", () => {
       ...dragEvent("widget-a"),
       nativeEvent: new PointerEvent("pointermove", { clientX: 10, clientY: 10 }),
     } as unknown as Parameters<typeof handlers.onDndDragMove>[0])
+    expect(handlers.displayedInstances()).toBe(persisted)
+    expect(dragState).toEqual({ sourceId: "widget-a" })
+
     handlers.onDndDragEnd(
       dragEvent("widget-a") as unknown as Parameters<typeof handlers.onDndDragEnd>[0],
     )
@@ -75,6 +78,44 @@ describe("createWorkbenchDndKitDragHandlers", () => {
     expect(showToast).toHaveBeenCalledWith("排序已更新")
     expect(dragState).toBeNull()
     vi.restoreAllMocks()
+  })
+
+  it("keeps hover target outside reactive drag state during sorting", () => {
+    const persisted = [
+      instance({ id: "widget-a", grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 } }),
+      instance({ id: "widget-b", grid: { x: 1, y: 0, colSpan: 2, rowSpan: 1 } }),
+    ]
+    let dragState: WorkbenchDndDragState | null = null
+    const setDragState = vi.fn((state: WorkbenchDndDragState | null) => {
+      dragState = state
+    })
+    const persistGridOrder = vi.fn(async (_instances: PluginInstance[]) => {})
+    const handlers = createWorkbenchDndKitDragHandlers({
+      getPersistedInstances: () => persisted,
+      getDragState: () => dragState,
+      setDragState,
+      persistGridOrder,
+      showToast: vi.fn(),
+    })
+
+    handlers.onDndDragStart(
+      dragEvent("widget-a") as unknown as Parameters<typeof handlers.onDndDragStart>[0],
+    )
+    handlers.onDndDragOver(
+      dragEvent("widget-a", "widget-b") as unknown as Parameters<typeof handlers.onDndDragOver>[0],
+    )
+    handlers.onDndDragOver(
+      dragEvent("widget-a", "widget-b") as unknown as Parameters<typeof handlers.onDndDragOver>[0],
+    )
+
+    expect(setDragState).toHaveBeenCalledTimes(1)
+    expect(dragState).toEqual({ sourceId: "widget-a" })
+
+    handlers.onDndDragEnd(
+      dragEvent("widget-a") as unknown as Parameters<typeof handlers.onDndDragEnd>[0],
+    )
+
+    expect(persistGridOrder).toHaveBeenCalledTimes(1)
   })
 
   it("falls back to document pointerup cleanup when dnd-kit misses drag end", async () => {

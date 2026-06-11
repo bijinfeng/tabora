@@ -3,7 +3,10 @@ import type { PluginInstance, SearchViewProps, WidgetViewProps } from "@tabora/p
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 
-import { createWorkbenchInstanceRenderer } from "./WorkbenchShellInstanceRenderer"
+import {
+  createWorkbenchInstanceRenderer,
+  workbenchSortableCollisionDetector,
+} from "./WorkbenchShellInstanceRenderer"
 
 function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
@@ -131,5 +134,52 @@ describe("createWorkbenchInstanceRenderer", () => {
     )
     expect(host.textContent).toContain("搜索贡献未找到")
     dispose()
+  })
+})
+
+describe("workbenchSortableCollisionDetector", () => {
+  const baseInput = {
+    droppable: {
+      id: "target",
+      shape: {
+        center: { x: 100, y: 100 },
+        boundingRectangle: {
+          left: 0,
+          top: 0,
+          right: 200,
+          bottom: 200,
+          width: 200,
+          height: 200,
+        },
+      },
+    },
+  }
+
+  it("ignores the target edge so card swaps do not flicker at boundaries", () => {
+    const collision = workbenchSortableCollisionDetector({
+      ...baseInput,
+      dragOperation: {
+        position: { current: { x: 10, y: 100 } },
+      },
+    } as Parameters<typeof workbenchSortableCollisionDetector>[0])
+
+    expect(collision).toBeNull()
+  })
+
+  it("accepts the target interior for sortable card swaps", () => {
+    const collision = workbenchSortableCollisionDetector({
+      ...baseInput,
+      dragOperation: {
+        position: { current: { x: 100, y: 100 } },
+      },
+    } as Parameters<typeof workbenchSortableCollisionDetector>[0])
+
+    expect(collision).toEqual(
+      expect.objectContaining({
+        id: "target",
+        priority: 3,
+        type: 2,
+      }),
+    )
   })
 })
