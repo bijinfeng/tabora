@@ -9,113 +9,15 @@ import type {
   WorkbenchShellPluginViewBoundaryCopy,
   WorkbenchShellWidgetCopy,
 } from "../i18n"
+import type {
+  ExpandState,
+  SafeLayoutModel,
+  SolidView,
+  WidgetContextSection,
+} from "./WorkbenchShellChrome.types"
 
-type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
-
-type AvailableWidget = {
-  pluginId: string
-  id: string
-  icon?: string
-  title: string
-  description?: string
-}
-
-type WidgetContextSection = {
-  items: Array<{
-    label: string
-    danger?: boolean
-    isCurrent?: boolean
-    run: () => void
-  }>
-}
-
-type ExpandState = {
-  instanceId: string
-  title: string
-  viewId: string
-  mode: "expand" | "settings"
-  props: WidgetViewProps
-}
-
-type SafeLayoutModel = {
-  title: string
-  icon?: string
-  currentSize: WidgetSize
-  supportedSizes: WidgetSize[]
-}
-
-export function WorkbenchAddWidgetModal(props: {
-  open: boolean
-  availableWidgets: AvailableWidget[]
-  widgetIconLabel: (icon?: string) => string
-  tShell?: ShellTranslation
-  onAdd: (pluginId: string, widgetId: string) => void
-  onClose: () => void
-}) {
-  return (
-    <Show when={props.open}>
-      <div class="modal-overlay" onClick={props.onClose}>
-        <div class="modal-container" onClick={(event) => event.stopPropagation()}>
-          <div class="modal-title">{props.tShell?.("chrome.addWidget.title") ?? "添加卡片"}</div>
-          <div class="modal-body">
-            <For each={props.availableWidgets}>
-              {(widget) => (
-                <button
-                  class="add-widget-modal-item"
-                  onClick={() => props.onAdd(widget.pluginId, widget.id)}
-                >
-                  <span class="add-widget-modal-icon">{props.widgetIconLabel(widget.icon)}</span>
-                  <span class="add-widget-modal-info">
-                    <div class="add-widget-modal-name">{widget.title}</div>
-                    <div class="add-widget-modal-desc">{widget.description}</div>
-                  </span>
-                </button>
-              )}
-            </For>
-          </div>
-        </div>
-      </div>
-    </Show>
-  )
-}
-
-export function WorkbenchSettingsAboutContent(props: {
-  workspaceName: string
-  enabledPluginCount: number
-  tShell?: ShellTranslation
-}) {
-  return (
-    <div class="settings-panel-stack-host">
-      <section class="widget-card">
-        <div class="card-header">
-          <div class="card-title">
-            <span class="card-title-text">
-              {props.tShell?.("chrome.settings.about.title") ?? "关于 Tabora"}
-            </span>
-          </div>
-        </div>
-        <div class="card-body">
-          <p>
-            {props.tShell?.("chrome.settings.about.description") ??
-              "当前实现已切换到双布局工作台骨架，设置中心按固定分类组织插件设置内容。"}
-          </p>
-          <p>
-            {props.tShell
-              ? props.tShell("chrome.settings.about.workspaceLabel", { name: props.workspaceName })
-              : `当前工作区：${props.workspaceName}。`}
-          </p>
-          <p>
-            {props.tShell
-              ? props.tShell("chrome.settings.about.enabledPluginsLabel", {
-                  count: props.enabledPluginCount,
-                })
-              : `已启用官方插件：${props.enabledPluginCount}。`}
-          </p>
-        </div>
-      </section>
-    </div>
-  )
-}
+export { WorkbenchAddWidgetModal } from "./WorkbenchAddWidgetModal"
+export { WorkbenchSettingsAboutContent } from "./WorkbenchSettingsAboutContent"
 
 export function SafeWorkbenchLayout(props: {
   isDark: boolean
