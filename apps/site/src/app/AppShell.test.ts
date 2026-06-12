@@ -9,8 +9,17 @@ describe("AppShell route path handling", () => {
     expect(getSiteRoutePath("/tabora/docs", "/tabora/")).toBe("/docs")
   })
 
-  it("keeps nested docs routes outside the prototype shell under the GitHub Pages base", () => {
+  it("keeps public site routes in the prototype shell under the GitHub Pages base", () => {
+    expect(isPrototypeRoute("/tabora/", "/tabora/")).toBe(true)
+    expect(isPrototypeRoute("/tabora/download", "/tabora/")).toBe(true)
+    expect(isPrototypeRoute("/tabora/docs", "/tabora/")).toBe(true)
     expect(isPrototypeRoute("/tabora/docs/components", "/tabora/")).toBe(false)
+  })
+
+  it("loads design preview stylesheets only for public prototype routes", () => {
     expect(needsLandingStylesheet("/tabora/", "/tabora/")).toBe(true)
+    expect(needsLandingStylesheet("/tabora/download", "/tabora/")).toBe(true)
+    expect(needsLandingStylesheet("/tabora/docs", "/tabora/")).toBe(true)
+    expect(needsLandingStylesheet("/tabora/docs/components", "/tabora/")).toBe(false)
   })
 })

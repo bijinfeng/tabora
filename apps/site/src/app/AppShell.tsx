@@ -131,7 +131,7 @@ export const isPrototypeRoute = (pathname: string, base?: string) => {
 
 export const needsLandingStylesheet = (pathname: string, base?: string) => {
   const path = getSiteRoutePath(pathname, base)
-  return path === "/" || path === "/download"
+  return path === "/" || path === "/download" || path === "/docs"
 }
 
 export function AppShell(props: { children?: JSX.Element }) {
