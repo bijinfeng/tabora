@@ -7,6 +7,7 @@ import type {
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry, type ViewRegistrationDisposer } from "./extensionRegistry"
 import {
+  collectPluginManifestViewIds,
   createPluginRuntimeContext,
   type PluginI18nService,
   type PluginRuntimeContext,
@@ -59,41 +60,13 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     }
   >()
 
-  function collectManifestViewIds(manifest: PluginManifest): string[] {
-    const ids: string[] = []
-
-    for (const layout of manifest.contributes.layouts ?? []) {
-      if (layout.view) ids.push(layout.view)
-    }
-
-    for (const widget of manifest.contributes.widgets ?? []) {
-      ids.push(widget.views.card)
-      if (widget.views.expand) ids.push(widget.views.expand)
-      if (widget.views.settings) ids.push(widget.views.settings)
-    }
-
-    for (const search of manifest.contributes.searches ?? []) {
-      ids.push(search.view)
-    }
-
-    for (const renderer of manifest.contributes.backgroundRenderers ?? []) {
-      ids.push(renderer.view)
-    }
-
-    for (const panel of manifest.contributes.settingsPanels ?? []) {
-      ids.push(panel.view)
-    }
-
-    return ids
-  }
-
   function viewConflictReason(target: BuiltinPlugin, peers: BuiltinPlugin[]): string | undefined {
-    const targetViewIds = collectManifestViewIds(target.manifest)
+    const targetViewIds = Array.from(collectPluginManifestViewIds(target.manifest))
     if (targetViewIds.length === 0) return undefined
 
     const peerViewOwners = new Map<string, string>()
     for (const peer of peers) {
-      for (const viewId of collectManifestViewIds(peer.manifest)) {
+      for (const viewId of collectPluginManifestViewIds(peer.manifest)) {
         peerViewOwners.set(viewId, peer.manifest.id)
       }
     }

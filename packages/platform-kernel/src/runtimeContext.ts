@@ -55,7 +55,7 @@ export type PluginRuntimeContext = {
   }
 }
 
-function collectManifestViewIds(manifest: PluginManifest): Set<string> {
+export function collectPluginManifestViewIds(manifest: PluginManifest): Set<string> {
   const views = new Set<string>()
 
   for (const layout of manifest.contributes.layouts ?? []) {
@@ -93,16 +93,19 @@ export function createPluginRuntimeContext(options: {
   i18n?: PluginI18nService
 }): PluginRuntimeContext {
   const grantedPermissions = options.grantedPermissions ?? []
-  const declaredViews = options.manifest ? collectManifestViewIds(options.manifest) : null
+  const declaredViews = options.manifest ? collectPluginManifestViewIds(options.manifest) : null
+
+  function canAccessView(viewId: string): boolean {
+    if (viewId.startsWith(`${options.pluginId}.`)) return true
+    return declaredViews?.has(viewId) ?? false
+  }
+
   const registry: ExtensionRegistry = {
     ...options.registry,
     views: {
       ...options.registry.views,
       register(viewId, view) {
-        if (
-          !viewId.startsWith(`${options.pluginId}.`) &&
-          (!declaredViews || !declaredViews.has(viewId))
-        ) {
+        if (!canAccessView(viewId)) {
           throw new Error(
             `Plugin "${options.pluginId}" attempted to register undeclared view: ${viewId}`,
           )
@@ -142,6 +145,11 @@ export function createPluginRuntimeContext(options: {
     registry,
     ui: {
       openModal(viewId, props) {
+        if (!canAccessView(viewId)) {
+          throw new Error(
+            `Plugin "${options.pluginId}" attempted to open undeclared modal view: ${viewId}`,
+          )
+        }
         options.events.emit("ui.modal.open", {
           viewId,
           props: { ...(props ?? {}), pluginId: options.pluginId },
@@ -151,6 +159,11 @@ export function createPluginRuntimeContext(options: {
         options.events.emit("ui.modal.close", null)
       },
       openFullscreen(viewId, props) {
+        if (!canAccessView(viewId)) {
+          throw new Error(
+            `Plugin "${options.pluginId}" attempted to open undeclared fullscreen view: ${viewId}`,
+          )
+        }
         options.events.emit("ui.fullscreen.open", {
           viewId,
           props: { ...(props ?? {}), pluginId: options.pluginId },

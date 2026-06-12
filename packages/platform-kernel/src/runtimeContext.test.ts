@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { PluginPermission } from "@tabora/plugin-api"
+import type { PluginManifest, PluginPermission } from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry } from "./extensionRegistry"
 import { createPluginRuntimeContext } from "./runtimeContext"
@@ -90,6 +90,61 @@ describe("createPluginRuntimeContext permissions", () => {
       {
         viewId: "plugin.example.fullscreen",
         props: { mode: "detail", pluginId: "plugin.example" },
+      },
+    ])
+  })
+
+  it("blocks opening modal views that are neither namespaced nor declared in the manifest", () => {
+    const events = createEventBus()
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+    })
+
+    expect(() => context.ui.openModal("other.plugin.modal")).toThrow(
+      'Plugin "plugin.example" attempted to open undeclared modal view: other.plugin.modal',
+    )
+  })
+
+  it("allows opening declared modal views even if they are not prefixed with plugin id", () => {
+    const events = createEventBus()
+    const modals: unknown[] = []
+    events.on("ui.modal.open", (payload) => modals.push(payload))
+
+    const manifest: PluginManifest = {
+      id: "official.background.basic",
+      name: "Background Basic",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "builtin:official.background.basic",
+      engine: { platform: "tabora" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "official.background.panel",
+            title: "Background",
+            view: "official.background.css-renderer.view",
+            section: "appearance",
+            scope: "workspace",
+          },
+        ],
+      },
+    }
+
+    const context = createPluginRuntimeContext({
+      pluginId: manifest.id,
+      events,
+      registry: createExtensionRegistry(),
+      manifest,
+    })
+
+    context.ui.openModal("official.background.css-renderer.view")
+
+    expect(modals).toEqual([
+      {
+        viewId: "official.background.css-renderer.view",
+        props: { pluginId: "official.background.basic" },
       },
     ])
   })
