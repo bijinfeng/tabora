@@ -89,11 +89,12 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
         </p>
         <div class="bg-grid" role="radiogroup" aria-label="页面背景">
           <For each={props.backgrounds}>
-            {(background, index) => (
+            {(background) => (
               <button
                 type="button"
-                class={`bg-item bg-item-${(index() % 5) + 1}`}
+                class="bg-item"
                 classList={{ active: activeBackground() === background.id }}
+                style={background.defaultCss ?? {}}
                 onClick={() => void props.host.switchBackground(background.id)}
                 aria-pressed={activeBackground() === background.id}
               >

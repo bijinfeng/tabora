@@ -142,6 +142,7 @@
   padding: 8px;
   border: 1.5px solid rgb(var(--color-line));
   border-radius: var(--radius);
+  background: rgb(var(--color-surface-soft));
   color: rgb(var(--color-text));
   font-family: inherit;
   font-size: 11px;
@@ -159,28 +160,6 @@
 [data-tabora-plugin-id="official.settings.workspace"] .bg-item.active {
   border-color: rgb(var(--color-accent));
   box-shadow: inset 0 0 0 1px rgb(var(--color-accent));
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item-1 {
-  background: linear-gradient(135deg, rgb(246 248 243), rgb(225 232 220));
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item-2 {
-  background: linear-gradient(135deg, rgb(251 250 247), rgb(230 226 216));
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item-3 {
-  background: linear-gradient(135deg, rgb(229 236 246), rgb(215 226 222));
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item-4 {
-  background: linear-gradient(135deg, rgb(244 232 220), rgb(224 232 222));
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item-5 {
-  background:
-    linear-gradient(rgb(255 255 255 / 0.24), rgb(255 255 255 / 0.24)),
-    linear-gradient(135deg, rgb(206 215 202), rgb(184 199 209));
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .settings-provider-list {

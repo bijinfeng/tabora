@@ -45,6 +45,11 @@ function resolvePresetInstanceSize(
   return { size: presetInstance.size }
 }
 
+function resolvePresetInstanceId(workspaceId: string, instanceId: string): string {
+  if (workspaceId === "default") return instanceId
+  return `${workspaceId}:${instanceId}`
+}
+
 export function applyWorkspacePreset(
   options: WorkspacePresetApplyOptions,
 ): WorkspacePresetApplyResult {
@@ -63,6 +68,10 @@ export function applyWorkspacePreset(
   const instances: PluginInstance[] = []
 
   for (const presetInstance of options.preset.instances) {
+    const resolvedInstanceId = resolvePresetInstanceId(
+      options.workspaceId,
+      presetInstance.instanceId,
+    )
     const region = regions[presetInstance.regionId]
     if (!region) {
       throw new Error(
@@ -75,9 +84,9 @@ export function applyWorkspacePreset(
       )
     }
 
-    region.instances.push({ instanceId: presetInstance.instanceId })
+    region.instances.push({ instanceId: resolvedInstanceId })
     instances.push({
-      id: presetInstance.instanceId,
+      id: resolvedInstanceId,
       workspaceId: options.workspaceId,
       pluginId: presetInstance.pluginId,
       contributionId: presetInstance.contributionId,

@@ -59,6 +59,57 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     }
   >()
 
+  function collectManifestViewIds(manifest: PluginManifest): string[] {
+    const ids: string[] = []
+
+    for (const layout of manifest.contributes.layouts ?? []) {
+      if (layout.view) ids.push(layout.view)
+    }
+
+    for (const widget of manifest.contributes.widgets ?? []) {
+      ids.push(widget.views.card)
+      if (widget.views.expand) ids.push(widget.views.expand)
+      if (widget.views.settings) ids.push(widget.views.settings)
+    }
+
+    for (const search of manifest.contributes.searches ?? []) {
+      ids.push(search.view)
+    }
+
+    for (const renderer of manifest.contributes.backgroundRenderers ?? []) {
+      ids.push(renderer.view)
+    }
+
+    for (const panel of manifest.contributes.settingsPanels ?? []) {
+      ids.push(panel.view)
+    }
+
+    return ids
+  }
+
+  function viewConflictReason(target: BuiltinPlugin, peers: BuiltinPlugin[]): string | undefined {
+    const targetViewIds = collectManifestViewIds(target.manifest)
+    if (targetViewIds.length === 0) return undefined
+
+    const peerViewOwners = new Map<string, string>()
+    for (const peer of peers) {
+      for (const viewId of collectManifestViewIds(peer.manifest)) {
+        peerViewOwners.set(viewId, peer.manifest.id)
+      }
+    }
+
+    const conflicts = Array.from(
+      new Set(
+        targetViewIds
+          .map((viewId) => ({ viewId, owner: peerViewOwners.get(viewId) }))
+          .filter((entry): entry is { viewId: string; owner: string } => Boolean(entry.owner))
+          .map((entry) => `${entry.viewId} (already provided by "${entry.owner}")`),
+      ),
+    )
+
+    return conflicts.length > 0 ? `Conflicting view IDs: ${conflicts.join(", ")}` : undefined
+  }
+
   function compatibilityReason(plugin: BuiltinPlugin): string | undefined {
     const { supportedPlatforms, requiredCapabilities } = plugin.manifest
     if (
@@ -135,6 +186,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       pluginId,
       events,
       registry,
+      manifest: plugin.manifest,
       grantedPermissions: plugin.manifest.permissions ?? [],
       registrationDisposers,
       ...(options.i18n ? { i18n: options.i18n } : {}),
@@ -170,6 +222,14 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       const nextPluginsById = new Map(
         discoveredPlugins.map((plugin) => [plugin.manifest.id, plugin]),
       )
+      const conflictReasons = new Map<string, string>()
+      for (const plugin of discoveredPlugins) {
+        const reason = viewConflictReason(
+          plugin,
+          discoveredPlugins.filter((peer) => peer !== plugin),
+        )
+        if (reason) conflictReasons.set(plugin.manifest.id, reason)
+      }
       for (const [pluginId, active] of activePlugins) {
         const nextPlugin = nextPluginsById.get(pluginId)
         if (!nextPlugin || nextPlugin !== active.plugin || compatibilityReason(nextPlugin)) {
@@ -180,14 +240,14 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       plugins.splice(0, plugins.length, ...discoveredPlugins)
 
       for (const plugin of discoveredPlugins) {
-        if (compatibilityReason(plugin)) {
+        if (compatibilityReason(plugin) || conflictReasons.has(plugin.manifest.id)) {
           plugin.enabled = false
         }
       }
 
       if (lifecycleStore) {
         for (const plugin of discoveredPlugins) {
-          const reason = compatibilityReason(plugin)
+          const reason = compatibilityReason(plugin) ?? conflictReasons.get(plugin.manifest.id)
           const record = buildRecord(plugin, {
             installedAt: new Date().toISOString(),
             ...(reason
@@ -252,8 +312,15 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     async setPluginEnabled(pluginId, enabled) {
       const plugin = plugins.find((p) => p.manifest.id === pluginId)
       if (!plugin) return
+      const conflictReason = enabled
+        ? viewConflictReason(
+            plugin,
+            plugins.filter((peer) => peer.manifest.id !== pluginId && peer.enabled),
+          )
+        : undefined
       const reason = compatibilityReason(plugin)
-      if (enabled && reason) {
+      if (enabled && (reason || conflictReason)) {
+        const disabledReason = reason ?? conflictReason
         runPluginDisposers(pluginId)
         plugin.enabled = false
         if (lifecycleStore) {
@@ -261,7 +328,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
             buildRecord(plugin, {
               enabled: false,
               status: "skipped",
-              disabledReason: reason,
+              ...(disabledReason ? { disabledReason } : {}),
               updatedAt: new Date().toISOString(),
             }),
           )

@@ -11,6 +11,8 @@ type LayoutI18n = {
   registerMessages(bundles: Array<{ locale: string; messages: Record<string, string> }>): void
 }
 
+type LayoutViewPropsWithI18n<T> = LayoutViewProps<T> & { i18n?: LayoutI18n }
+
 type RailGroup = {
   id: string
   name: string
@@ -555,8 +557,8 @@ function resolveSetterValue<T>(previous: T, value: T | ((previous: T) => T)): T 
   return typeof value === "function" ? (value as (previous: T) => T)(previous) : value
 }
 
-export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
-  const i18n = () => (props as LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }).i18n
+export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
+  const i18n = () => props.i18n
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
   const locale = () => i18n()?.locale() ?? "zh-CN"
   const addWidgetAction = () =>
@@ -671,8 +673,8 @@ export function DashboardLayout(props: LayoutViewProps<JSX.Element>) {
     </main>
   )
 }
-export function FocusLayout(props: LayoutViewProps<JSX.Element>) {
-  const i18n = () => (props as LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }).i18n
+export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
+  const i18n = () => props.i18n
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
   const locale = () => i18n()?.locale() ?? "zh-CN"
   const [selectedHeroId, setSelectedHeroId] = createSignal<string | null>(null)
@@ -859,11 +861,15 @@ export const layoutDashboard: BuiltinPlugin = {
       },
     ])
 
-    context.registry.views.register("official.layout.workbench-dashboard.view", (props) =>
-      DashboardLayout({ ...(props as any), i18n: context.i18n }),
+    context.registry.views.register(
+      "official.layout.workbench-dashboard.view",
+      (props: LayoutViewProps<JSX.Element>) =>
+        DashboardLayout({ ...props, ...(context.i18n ? { i18n: context.i18n } : {}) }),
     )
-    context.registry.views.register("official.layout.workbench-focus.view", (props) =>
-      FocusLayout({ ...(props as any), i18n: context.i18n }),
+    context.registry.views.register(
+      "official.layout.workbench-focus.view",
+      (props: LayoutViewProps<JSX.Element>) =>
+        FocusLayout({ ...props, ...(context.i18n ? { i18n: context.i18n } : {}) }),
     )
   },
 }

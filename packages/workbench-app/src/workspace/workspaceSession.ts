@@ -31,7 +31,11 @@ export function readSearchSettings(workspace: Workspace): WorkbenchSearchSetting
 }
 
 export function readLocale(workspace: Workspace): WorkbenchLocale | null {
-  const locale = (workspace.config as any)?.appearance?.locale
+  const config = workspace.config
+  if (!config || typeof config !== "object") return null
+  const appearance = (config as Record<string, unknown>).appearance
+  if (!appearance || typeof appearance !== "object") return null
+  const locale = (appearance as Record<string, unknown>).locale
   if (locale === "zh-CN" || locale === "en-US") return locale
   return null
 }
@@ -47,11 +51,13 @@ export async function ensureWorkspaceSession(options: {
   }
   workspaceId?: string
 }): Promise<WorkspaceSessionState> {
-  let workspace = await options.workspaceRepo.get(options.workspaceId ?? "default")
+  const workspaceId = options.workspaceId ?? "default"
+  let workspace = await options.workspaceRepo.get(workspaceId)
   let instances: PluginInstance[] = []
   if (!workspace) {
     const seed = createDefaultWorkspaceFromPreset({
       preset: options.defaultWorkspacePreset,
+      workspaceId,
     })
     workspace = seed.workspace
     instances = seed.instances

@@ -70,6 +70,26 @@ describe("applyWorkspacePreset", () => {
     })
   })
 
+  it("namespaces preset instance ids for non-default workspaces", () => {
+    const result = applyWorkspacePreset({
+      preset,
+      workspaceId: "ws-1",
+      workspaceName: "Workspace 1",
+      now: "2026-06-05T00:00:00.000Z",
+    })
+
+    expect(result.workspace.regions["topbar"]?.instances).toEqual([
+      { instanceId: "ws-1:search-main" },
+    ])
+    expect(result.workspace.regions["mainGrid"]?.instances).toEqual([
+      { instanceId: "ws-1:notes-1" },
+    ])
+    expect(result.instances.map((instance) => instance.id)).toEqual([
+      "ws-1:search-main",
+      "ws-1:notes-1",
+    ])
+  })
+
   it("fails when a widget preset instance omits explicit size", () => {
     expect(() =>
       applyWorkspacePreset({

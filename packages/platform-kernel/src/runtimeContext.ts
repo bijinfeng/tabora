@@ -1,4 +1,4 @@
-import type { PluginPermission } from "@tabora/plugin-api"
+import type { PluginManifest, PluginPermission } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
 import type { ExtensionRegistry, ViewRegistrationDisposer } from "./extensionRegistry"
 
@@ -45,7 +45,6 @@ export type PluginI18nBridge = {
 
 export type PluginRuntimeContext = {
   pluginId: string
-  events: EventBus
   registry: ExtensionRegistry
   ui: PluginUiBridge
   permissions: PermissionBridge
@@ -56,20 +55,58 @@ export type PluginRuntimeContext = {
   }
 }
 
+function collectManifestViewIds(manifest: PluginManifest): Set<string> {
+  const views = new Set<string>()
+
+  for (const layout of manifest.contributes.layouts ?? []) {
+    if (layout.view) views.add(layout.view)
+  }
+
+  for (const widget of manifest.contributes.widgets ?? []) {
+    views.add(widget.views.card)
+    if (widget.views.expand) views.add(widget.views.expand)
+    if (widget.views.settings) views.add(widget.views.settings)
+  }
+
+  for (const search of manifest.contributes.searches ?? []) {
+    views.add(search.view)
+  }
+
+  for (const renderer of manifest.contributes.backgroundRenderers ?? []) {
+    views.add(renderer.view)
+  }
+
+  for (const panel of manifest.contributes.settingsPanels ?? []) {
+    views.add(panel.view)
+  }
+
+  return views
+}
+
 export function createPluginRuntimeContext(options: {
   pluginId: string
   events: EventBus
   registry: ExtensionRegistry
+  manifest?: PluginManifest
   grantedPermissions?: PluginPermission[]
   registrationDisposers?: ViewRegistrationDisposer[]
   i18n?: PluginI18nService
 }): PluginRuntimeContext {
   const grantedPermissions = options.grantedPermissions ?? []
+  const declaredViews = options.manifest ? collectManifestViewIds(options.manifest) : null
   const registry: ExtensionRegistry = {
     ...options.registry,
     views: {
       ...options.registry.views,
       register(viewId, view) {
+        if (
+          !viewId.startsWith(`${options.pluginId}.`) &&
+          (!declaredViews || !declaredViews.has(viewId))
+        ) {
+          throw new Error(
+            `Plugin "${options.pluginId}" attempted to register undeclared view: ${viewId}`,
+          )
+        }
         const dispose = options.registry.views.register(viewId, view)
         options.registrationDisposers?.push(dispose)
         return dispose
@@ -102,7 +139,6 @@ export function createPluginRuntimeContext(options: {
 
   return {
     pluginId: options.pluginId,
-    events: options.events,
     registry,
     ui: {
       openModal(viewId, props) {
