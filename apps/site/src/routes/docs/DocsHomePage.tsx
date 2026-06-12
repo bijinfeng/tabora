@@ -112,21 +112,9 @@ const highlightCode = (value: string) => {
     })
 }
 
-const getDocsPrototypeTailHtml = () => {
-  const body = docsPrototypeHtml.match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? ""
-  const withoutScripts = body.replace(/<script[\s\S]*?<\/script>/g, "")
-  const tail =
-    withoutScripts.match(/<section class="comp-spec" id="tabs"[\s\S]*?(?=<\/main>)/)?.[0] ?? ""
-
-  return tail.replace(/href="component-spec\.html(#.*?)?"/g, (_, hash: string | undefined) => {
-    return `href="${import.meta.env.BASE_URL}docs/components${hash ?? ""}"`
-  })
-}
-
 export function DocsHomePage() {
   const i18n = useSiteI18n()
   const content = createMemo(() => getDocsPageContent(i18n.locale()))
-  const tailHtml = createMemo(() => getDocsPrototypeTailHtml())
 
   onMount(() => {
     const styleTag = document.createElement("style")
@@ -316,7 +304,21 @@ export function DocsHomePage() {
             <DocsComponentSpecSection spec={spec} locale={i18n.locale()} />
           ))}
 
-          <div innerHTML={tailHtml()} />
+          {content().componentSpecs.selectionControls.map((spec) => (
+            <DocsComponentSpecSection spec={spec} locale={i18n.locale()} />
+          ))}
+
+          {content().componentSpecs.overlayControls.map((spec) => (
+            <DocsComponentSpecSection spec={spec} locale={i18n.locale()} />
+          ))}
+
+          {content().componentSpecs.feedbackControls.map((spec) => (
+            <DocsComponentSpecSection spec={spec} locale={i18n.locale()} />
+          ))}
+
+          {content().componentSpecs.structureControls.map((spec) => (
+            <DocsComponentSpecSection spec={spec} locale={i18n.locale()} />
+          ))}
         </main>
       </div>
     </>

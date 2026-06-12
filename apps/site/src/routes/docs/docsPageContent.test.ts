@@ -65,4 +65,23 @@ describe("getDocsPageContent", () => {
       }),
     )
   })
+
+  it("migrates overlays, feedback, and structure sections to example ids", () => {
+    const content = getDocsPageContent("zh-CN")
+    const componentSpecs = content.componentSpecs as typeof content.componentSpecs & {
+      overlayControls?: Array<{ demos: Array<{ exampleId?: string }> }>
+      feedbackControls?: Array<{ demos: Array<{ exampleId?: string }> }>
+      structureControls?: Array<{ demos: Array<{ exampleId?: string }> }>
+    }
+
+    expect(componentSpecs.overlayControls?.[0]?.demos[0]).toEqual(
+      expect.objectContaining({ exampleId: "tabs" }),
+    )
+    expect(componentSpecs.feedbackControls?.[0]?.demos[0]).toEqual(
+      expect.objectContaining({ exampleId: "toast" }),
+    )
+    expect(componentSpecs.structureControls?.[2]?.demos[0]).toEqual(
+      expect.objectContaining({ exampleId: "card" }),
+    )
+  })
 })

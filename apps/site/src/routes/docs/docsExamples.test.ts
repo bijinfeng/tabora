@@ -17,4 +17,10 @@ describe("getDocsExample", () => {
     expect(example?.source).toContain("export function SelectDemo")
     expect(example?.source).toContain("createSignal")
   })
+
+  it("loads remaining overlay and feedback examples from component demo files", () => {
+    expect(getDocsExample("dialog")?.language).toBe("tsx")
+    expect(getDocsExample("toast")?.source).toContain("export function ToastDemo")
+    expect(getDocsExample("table")?.source).toContain("export function TableDemo")
+  })
 })

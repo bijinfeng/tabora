@@ -112,6 +112,9 @@ export type DocsPageContent = {
   componentSpecs: {
     inputControls: DocsComponentSpec[]
     selectionControls: DocsComponentSpec[]
+    overlayControls: DocsComponentSpec[]
+    feedbackControls: DocsComponentSpec[]
+    structureControls: DocsComponentSpec[]
   }
 }
 
@@ -643,6 +646,256 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           doBody: "2-5 个选项时使用 Radio 使所有选项可见。提供一个默认选中项。",
           dontTitle: "✗ 不应",
           dontBody: "超过 5 个选项改用 Select 或 Combobox。不要把 Radio 和 Checkbox 混用。",
+        },
+      ],
+      overlayControls: [
+        {
+          id: "tabs",
+          title: "Tabs 标签页",
+          description: "内容分区导航。在同一视图内切换不同面板，适合设置分区和插件详情等并列内容。",
+          metaTags: ["线性风格", "胶囊风格", "可滚动", "图标"],
+          demos: [{ title: "示例", exampleId: "tabs" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["容器", ".tabs", "标签栏容器，横向排列"],
+              ["单项", ".tab", "单个标签按钮"],
+              ["激活", ".tab-active", "当前选中标签"],
+              ["胶囊", ".tabs-pill", "圆角胶囊风格变体"],
+              ["徽标", ".tab-badge", "标签内计数徽标"],
+              ["禁用", "disabled", "不可点击的标签"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "标签数量控制在 2-6 个，当前激活项必须有清晰区分，内容切换不应造成布局跳动。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要嵌套 Tabs，也不要把 Tabs 当全局导航；懒加载内容时要有骨架屏反馈。",
+        },
+        {
+          id: "dialog",
+          title: "Dialog 对话框",
+          description: "模态浮层。用于关键确认或短表单，阻断主流程并聚焦用户当前决策。",
+          metaTags: ["3 尺寸", "确认型", "表单型", "危险型"],
+          demos: [{ title: "示例", exampleId: "dialog" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["遮罩", ".dialog-overlay", "半透明背景层"],
+              ["容器", ".dialog", "居中面板"],
+              ["小尺寸", ".dialog-sm", "max-width: 360px，适合简短确认"],
+              ["中尺寸", "默认", "max-width: 480px，适合表单"],
+              ["大尺寸", ".dialog-lg", "max-width: 640px，适合复杂内容"],
+              ["关闭", "ESC / 遮罩点击 / 关闭按钮", "三种关闭方式并存"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody:
+            "危险操作必须二次确认；提交成功后关闭 Dialog 并用 Toast 反馈；焦点需要锁定在对话框内。",
+          dontTitle: "✗ 不应",
+          dontBody:
+            "不要嵌套 Dialog。内容超过一屏时应改用 Drawer 或独立页面，不要在 Dialog 中塞导航。",
+        },
+        {
+          id: "drawer",
+          title: "Drawer 抽屉",
+          description: "侧滑浮层面板。在不离开当前页面的前提下展示更多详情或编辑表单。",
+          metaTags: ["右侧滑入", "可嵌套表单", "遮罩关闭"],
+          demos: [{ title: "示例", exampleId: "drawer" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["遮罩", ".drawer-overlay", "半透明背景，点击关闭"],
+              ["面板", ".drawer", "右侧滑入面板，默认 360px 宽"],
+              ["头部", ".drawer-head", "标题和关闭按钮"],
+              ["主体", ".drawer-body", "可滚动内容区"],
+              ["底部", ".drawer-foot", "固定操作按钮区"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "编辑类表单优先用 Drawer，底部操作按钮保持固定，并在关闭时检查未保存更改。",
+          dontTitle: "✗ 不应",
+          dontBody: "简单的 1-2 个字段不要升级成 Drawer，也不要在 Drawer 内再打开另一个 Drawer。",
+        },
+        {
+          id: "tooltip",
+          title: "Tooltip 工具提示",
+          description: "悬停或聚焦时显示的简短说明，适合图标按钮、截断文字和紧凑控件补充信息。",
+          metaTags: ["4 方向", "延迟显示", "非交互"],
+          demos: [{ title: "示例", exampleId: "tooltip" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["容器", ".tip-wrap", "position: relative 包裹层"],
+              ["提示", ".tip", "hover / focus 时显示"],
+              ["上 / 下 / 左 / 右", ".tip-top / .tip-bottom / .tip-left / .tip-right", "气泡方向"],
+              ["延迟", "300ms", "避免闪烁"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "所有纯图标按钮都应提供 Tooltip，内容控制在一行内，触摸设备至少保留 aria-label。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要在 Tooltip 中放可交互内容；已有可见文字标签的按钮通常不需要再加 Tooltip。",
+        },
+      ],
+      feedbackControls: [
+        {
+          id: "toast",
+          title: "Toast 轻提示",
+          description: "非阻断性反馈。短暂出现后自动消失，用于操作结果通知，不打断主流程。",
+          metaTags: ["4 变体", "自动消失", "可关闭", "可堆叠"],
+          demos: [{ title: "示例", exampleId: "toast" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["成功", ".toast-success", "绿色，操作成功反馈"],
+              ["错误", ".toast-error", "红色，操作失败反馈"],
+              ["警告", ".toast-warning", "橙色，需注意但非阻断"],
+              ["信息", ".toast-info", "蓝色，中性通知"],
+              ["时长", "3000ms（默认）", "success / info 约 3s，error / warning 更长"],
+              ["位置", "视口右上角", "多条从上往下堆叠"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody:
+            "操作成功或失败后立即给 Toast 反馈；可撤销操作应提供行动按钮；错误提示应适当延长显示时间。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要用 Toast 承载长文本或复杂交互，同时显示的 Toast 数量也不要过多。",
+        },
+        {
+          id: "progress",
+          title: "Spinner / Progress 加载指示",
+          description: "异步操作反馈。Spinner 用于不确定时长的加载，Progress 用于可量化进度。",
+          metaTags: ["旋转动画", "进度条", "3 尺寸", "行内/全屏"],
+          demos: [{ title: "示例", exampleId: "progress" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["旋转", ".spinner", "圆形旋转加载指示器"],
+              ["尺寸", ".spinner-sm / 默认 / .spinner-lg", "16px / 24px / 32px"],
+              ["进度容器", ".progress", "进度条背景轨道"],
+              ["进度填充", ".progress-bar", "通过百分比控制宽度"],
+              ["成功 / 错误", ".progress-bar-success / .progress-bar-danger", "完成或失败语义色"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody:
+            "超过 200ms 的操作显示加载态；可量化进度时优先使用 Progress；按钮内加载要同时显示文字并禁用按钮。",
+          dontTitle: "✗ 不应",
+          dontBody:
+            "已有骨架屏的区域不要再叠加 Spinner；Progress 到 100% 后应立即切换完成状态或消失。",
+        },
+        {
+          id: "skeleton",
+          title: "Skeleton 骨架屏",
+          description:
+            "数据到达前展示内容轮廓，减少感知等待时间，是首屏加载比 Spinner 更稳妥的方案。",
+          metaTags: ["文本行", "圆形", "矩形", "动画"],
+          demos: [{ title: "示例", exampleId: "skeleton" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["基础", ".skeleton", "灰色背景和脉冲动画"],
+              ["文本", ".skeleton-text", "模拟文本行的圆角矩形"],
+              ["矩形", ".skeleton-rect", "通用内容占位"],
+              ["圆形", ".skeleton-circle", "头像或图标占位"],
+              ["动画", "pulse", "opacity 呼吸变化"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "骨架形状尽量贴近真实内容布局，并让多行宽度有变化，避免所有占位看起来完全一样。",
+          dontTitle: "✗ 不应",
+          dontBody: "数据已经到达时不要闪烁显示骨架；小范围操作反馈应使用 Spinner，而不是骨架屏。",
+        },
+        {
+          id: "empty",
+          title: "Empty State 空状态",
+          description:
+            "列表、表格或内容区无数据时的占位提示，用来解释当前状态并引导用户下一步动作。",
+          metaTags: ["引导操作", "插图", "自适应"],
+          demos: [{ title: "示例", exampleId: "empty" }],
+          table: {
+            columns: ["元素", "必须", "说明"],
+            rows: [
+              ["插图 / 图标", "推荐", "48-64px 视觉元素，降低空白感"],
+              ["标题", "必须", "简短说明当前状态"],
+              ["描述", "推荐", "1 行引导文字，暗示解决方案"],
+              ["操作按钮", "可选", "引导用户创建、添加或导入"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "提供明确的下一步操作，插图风格与产品保持一致，标题口吻统一且易于理解。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要让空状态像 bug 或错误页，也不要省略占位导致用户面对一片空白。",
+        },
+      ],
+      structureControls: [
+        {
+          id: "badge",
+          title: "Badge 徽标",
+          description:
+            "状态标记和数字计数。用于标签页、列表项等位置展示额外信息，也支持 dot 模式。",
+          metaTags: ["5 变体", "dot 模式", "计数"],
+          demos: [{ title: "示例", exampleId: "badge" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["默认", ".badge-default", "灰色中性信息标记"],
+              ["主要", ".badge-primary", "强调色，活跃或选中状态"],
+              [
+                "成功 / 警告 / 危险",
+                ".badge-success / .badge-warning / .badge-danger",
+                "语义状态色",
+              ],
+              ["圆点", ".badge-dot", "无文字的小圆点指示器"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "数字超过 99 时显示 99+，dot 模式适合纯粹的有/无状态提示，颜色语义要全局一致。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要在 Badge 中放长文本，也不要把 Badge 当按钮使用；同一行不要堆太多徽标。",
+        },
+        {
+          id: "table",
+          title: "Table 表格",
+          description: "结构化数据展示，适用于插件列表、日志和管理后台一类数据密集场景。",
+          metaTags: ["排序", "选择", "斑马纹", "响应式"],
+          demos: [{ title: "示例", exampleId: "table" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["基础", ".tbl", "表格基础样式"],
+              ["斑马纹", ".tbl-striped", "奇偶行交替背景"],
+              ["悬停", ".tbl-hover", "行悬停高亮"],
+              ["紧凑", ".tbl-compact", "减少 padding 的密集模式"],
+              ["响应式", "外层 overflow-x: auto", "窄屏时允许横向滚动"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "按信息优先级分配列宽，长列表提供排序或筛选，操作列建议靠右对齐。",
+          dontTitle: "✗ 不应",
+          dontBody: "列数不要过多，不要在表格中嵌套表格，空数据时必须提供明确占位提示。",
+        },
+        {
+          id: "card",
+          title: "Card 卡片",
+          description:
+            "内容容器。将相关信息分组展示，支持头部、主体、底部三区域布局，是工作台的基础组织单元。",
+          metaTags: ["3 区域", "可点击", "带阴影", "边框模式"],
+          demos: [{ title: "示例", exampleId: "card" }],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["基础", ".card", "带边框和圆角的容器"],
+              ["头部", ".card-head", "标题和操作区"],
+              ["主体", ".card-body", "主内容区域"],
+              ["底部", ".card-foot", "操作按钮区域"],
+              ["可点击 / 选中", ".card-clickable / .card-selected", "交互态和选中态"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "卡片内操作尽量放到底部区域，可点击卡片提供 hover 反馈，内容区保持简洁聚焦。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要在卡片中再嵌套卡片，同组卡片高度差异不要过大，也不要只靠阴影代替边框。",
         },
       ],
     },
@@ -1244,6 +1497,288 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           dontTitle: "✗ Don't",
           dontBody:
             "Switch to Select or Combobox when the list gets longer, and do not mix Radio with Checkbox semantics.",
+        },
+      ],
+      overlayControls: [
+        {
+          id: "tabs",
+          title: "Tabs",
+          description:
+            "Section navigation for sibling panels within the same view. Best for settings partitions and plugin detail panes.",
+          metaTags: ["Linear", "Pill", "Scrollable", "Icon"],
+          demos: [{ title: "Example", exampleId: "tabs" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Container", ".tabs", "Horizontal tab bar container"],
+              ["Item", ".tab", "Single tab button"],
+              ["Active", ".tab-active", "Currently selected tab"],
+              ["Pill", ".tabs-pill", "Rounded pill variant"],
+              ["Badge", ".tab-badge", "Inline count badge"],
+              ["Disabled", "disabled", "Non-interactive tab"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Keep tab counts tight, make the active state obvious, and switch content without causing layout jumps.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not nest Tabs or use them as top-level navigation. Lazy tab panels should still show loading feedback.",
+        },
+        {
+          id: "dialog",
+          title: "Dialog",
+          description:
+            "Modal overlay for critical confirmations and short forms. It interrupts the flow to focus the current decision.",
+          metaTags: ["3 sizes", "Confirmation", "Form", "Destructive"],
+          demos: [{ title: "Example", exampleId: "dialog" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Overlay", ".dialog-overlay", "Semi-transparent backdrop"],
+              ["Container", ".dialog", "Centered surface panel"],
+              ["Small", ".dialog-sm", "360px max width for short confirmations"],
+              ["Medium", "default", "480px max width for forms"],
+              ["Large", ".dialog-lg", "640px max width for denser content"],
+              ["Close", "ESC / backdrop / close button", "Three close paths"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Use Dialog for destructive confirmation, close it after successful submission, and keep focus trapped inside it.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not nest Dialogs. If content grows beyond one screen, switch to Drawer or a dedicated page.",
+        },
+        {
+          id: "drawer",
+          title: "Drawer",
+          description:
+            "Side panel that keeps users on the current page while exposing more details or a larger editing form.",
+          metaTags: ["Slide-in", "Embedded forms", "Backdrop close"],
+          demos: [{ title: "Example", exampleId: "drawer" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Overlay", ".drawer-overlay", "Backdrop that closes on click"],
+              ["Panel", ".drawer", "Right-side panel, 360px by default"],
+              ["Header", ".drawer-head", "Title and close action"],
+              ["Body", ".drawer-body", "Scrollable content area"],
+              ["Footer", ".drawer-foot", "Pinned action bar"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Prefer Drawer for editing flows, pin the actions to the bottom, and warn about unsaved changes on close.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not turn tiny 1-2 field forms into a Drawer and avoid opening another Drawer from inside one.",
+        },
+        {
+          id: "tooltip",
+          title: "Tooltip",
+          description:
+            "Short helper text shown on hover or focus. Ideal for icon buttons and compact UI where labels are hidden.",
+          metaTags: ["4 directions", "Delayed", "Non-interactive"],
+          demos: [{ title: "Example", exampleId: "tooltip" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Container", ".tip-wrap", "Relative positioning wrapper"],
+              ["Bubble", ".tip", "Shown on hover / focus"],
+              ["Direction", ".tip-top / .tip-bottom / .tip-left / .tip-right", "Bubble placement"],
+              ["Delay", "300ms", "Reduces flicker"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Give icon-only buttons a Tooltip, keep the content to one line, and preserve an aria-label on touch devices.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not place interactive controls inside Tooltip, and skip it when the button already has visible text.",
+        },
+      ],
+      feedbackControls: [
+        {
+          id: "toast",
+          title: "Toast",
+          description:
+            "Non-blocking feedback that appears briefly and then disappears. Best for action outcomes and lightweight notices.",
+          metaTags: ["4 variants", "Auto dismiss", "Dismissible", "Stackable"],
+          demos: [{ title: "Example", exampleId: "toast" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Success", ".toast-success", "Green success feedback"],
+              ["Error", ".toast-error", "Red failure feedback"],
+              ["Warning", ".toast-warning", "Orange caution notice"],
+              ["Info", ".toast-info", "Blue neutral notice"],
+              ["Duration", "3000ms default", "Success / info are shorter than error / warning"],
+              ["Position", "Top-right", "Stacks vertically"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Show Toast feedback immediately after actions, offer undo for reversible actions, and keep errors visible longer.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not use Toast for dense content or complex workflows, and avoid flooding the viewport with too many notices.",
+        },
+        {
+          id: "progress",
+          title: "Spinner / Progress",
+          description:
+            "Async feedback primitives. Spinner fits unknown waiting time, while Progress communicates measurable completion.",
+          metaTags: ["Spinner", "Progress bar", "3 sizes", "Inline / full area"],
+          demos: [{ title: "Example", exampleId: "progress" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Spinner", ".spinner", "Circular loading indicator"],
+              ["Sizes", ".spinner-sm / default / .spinner-lg", "16px / 24px / 32px"],
+              ["Track", ".progress", "Progress track"],
+              ["Fill", ".progress-bar", "Width reflects percentage"],
+              [
+                "Semantic fill",
+                ".progress-bar-success / .progress-bar-danger",
+                "Completion or failure color",
+              ],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Use loading feedback for operations above 200ms, prefer Progress when progress is measurable, and disable loading buttons.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not pile Spinner on top of an existing Skeleton region, and never leave Progress stuck at 100% without resolution.",
+        },
+        {
+          id: "skeleton",
+          title: "Skeleton",
+          description:
+            "Shape-matched loading placeholder that outlines incoming content before data arrives, reducing perceived wait time.",
+          metaTags: ["Text", "Circle", "Rectangle", "Animated"],
+          demos: [{ title: "Example", exampleId: "skeleton" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Base", ".skeleton", "Muted block with pulse animation"],
+              ["Text", ".skeleton-text", "Rounded line placeholder"],
+              ["Rectangle", ".skeleton-rect", "Generic media placeholder"],
+              ["Circle", ".skeleton-circle", "Avatar or icon placeholder"],
+              ["Animation", "pulse", "Opacity breathing motion"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Match the real layout as closely as possible and vary widths to avoid obviously fake placeholder text.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not flash Skeleton after data is ready, and avoid using it for tiny localized loading like a single button state.",
+        },
+        {
+          id: "empty",
+          title: "Empty state",
+          description:
+            "Fallback for empty lists, tables, or content regions that explains the state and points to the next action.",
+          metaTags: ["Guided action", "Illustration", "Responsive"],
+          demos: [{ title: "Example", exampleId: "empty" }],
+          table: {
+            columns: ["Element", "Required", "Description"],
+            rows: [
+              ["Illustration / icon", "Recommended", "48-64px visual anchor"],
+              ["Title", "Required", "Short explanation of the current state"],
+              ["Description", "Recommended", "One-line hint for resolution"],
+              ["Action", "Optional", "Guide users to create, add, or import"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Offer a clear next step, keep the illustration aligned with the product tone, and use a consistent empty-state voice.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not make empty states look like errors or dead ends, and never leave a large blank region unexplained.",
+        },
+      ],
+      structureControls: [
+        {
+          id: "badge",
+          title: "Badge",
+          description:
+            "Status label and count primitive. Useful in tabs, lists, and compact summaries, including dot-only status mode.",
+          metaTags: ["5 variants", "Dot mode", "Counter"],
+          demos: [{ title: "Example", exampleId: "badge" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Default", ".badge-default", "Neutral gray label"],
+              ["Primary", ".badge-primary", "Accent active label"],
+              [
+                "Success / warning / danger",
+                ".badge-success / .badge-warning / .badge-danger",
+                "Semantic states",
+              ],
+              ["Dot", ".badge-dot", "Indicator without text"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Clamp large counts to 99+, reserve dot mode for binary presence, and keep semantic colors consistent across the product.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not put long text inside Badge or turn it into a button, and avoid packing too many badges into one row.",
+        },
+        {
+          id: "table",
+          title: "Table",
+          description:
+            "Structured data layout for plugin lists, logs, and admin-style dense views where scanning rows matters.",
+          metaTags: ["Sorting", "Selection", "Striped", "Responsive"],
+          demos: [{ title: "Example", exampleId: "table" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Base", ".tbl", "Core table styling"],
+              ["Striped", ".tbl-striped", "Alternating row backgrounds"],
+              ["Hover", ".tbl-hover", "Hover emphasis for rows"],
+              ["Compact", ".tbl-compact", "Reduced padding for density"],
+              ["Responsive", "outer overflow-x: auto", "Horizontal scroll on narrow screens"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Allocate width by information priority, add sorting or filtering for long datasets, and align action columns consistently.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not overload the table with too many columns, avoid nested tables, and always provide an empty state when no rows exist.",
+        },
+        {
+          id: "card",
+          title: "Card",
+          description:
+            "Container that groups related content into header, body, and footer regions. It is the base unit for workbench content.",
+          metaTags: ["3 regions", "Clickable", "Shadow", "Bordered"],
+          demos: [{ title: "Example", exampleId: "card" }],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Base", ".card", "Rounded bordered container"],
+              ["Header", ".card-head", "Title and actions"],
+              ["Body", ".card-body", "Primary content area"],
+              ["Footer", ".card-foot", "Action row"],
+              [
+                "Clickable / selected",
+                ".card-clickable / .card-selected",
+                "Interactive and selected states",
+              ],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Keep actions grouped near the footer, give clickable cards visible hover feedback, and keep content focused.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not nest cards, avoid wildly uneven card heights within a group, and do not rely on shadow alone for separation.",
         },
       ],
     },
