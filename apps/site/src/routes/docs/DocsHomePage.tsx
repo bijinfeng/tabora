@@ -119,7 +119,7 @@ const getDocsPrototypeTailHtml = () => {
     withoutScripts.match(/<section class="comp-spec" id="tabs"[\s\S]*?(?=<\/main>)/)?.[0] ?? ""
 
   return tail.replace(/href="component-spec\.html(#.*?)?"/g, (_, hash: string | undefined) => {
-    return `href="/docs/components${hash ?? ""}"`
+    return `href="${import.meta.env.BASE_URL}docs/components${hash ?? ""}"`
   })
 }
 

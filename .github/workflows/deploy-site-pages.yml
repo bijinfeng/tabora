@@ -1,0 +1,69 @@
+name: Deploy Site (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-site-pages.yml"
+      - "apps/site/**"
+      - "packages/**"
+      - "plugins/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "vite.config.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: deploy-site-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        env:
+          VITE_BASE: ${{ vars.SITE_BASE }}
+        run: pnpm --filter @tabora/site build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: SPA fallback (404.html)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp apps/site/dist/index.html apps/site/dist/404.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/site/dist
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
