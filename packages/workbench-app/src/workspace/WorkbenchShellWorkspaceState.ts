@@ -71,7 +71,6 @@ export function createWorkbenchWorkspaceState(options: {
       json,
       workspaceRepo: options.workspaceRepo,
       instanceRepo: options.instanceRepo,
-      pluginDataRepo: options.pluginDataRepo,
       database: options.database,
       availablePluginIds: options.availablePluginIds(),
     })
