@@ -23,4 +23,10 @@ describe("getDocsExample", () => {
     expect(getDocsExample("toast")?.source).toContain("export function ToastDemo")
     expect(getDocsExample("table")?.source).toContain("export function TableDemo")
   })
+
+  it("keeps render functions available after helper-based registration", () => {
+    expect(typeof getDocsExample("dialog")?.render).toBe("function")
+    expect(typeof getDocsExample("toast")?.render).toBe("function")
+    expect(typeof getDocsExample("table")?.render).toBe("function")
+  })
 })

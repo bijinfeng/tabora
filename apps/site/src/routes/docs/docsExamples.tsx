@@ -1,4 +1,4 @@
-import { Suspense, lazy, type JSX } from "solid-js"
+import { Suspense, lazy, type Component, type JSX } from "solid-js"
 
 import badgeDemoSource from "../../../../../packages/ui/src/styled/badge/badge.demo.tsx?raw"
 import buttonDemoSource from "../../../../../packages/ui/src/styled/button/button.demo.tsx?raw"
@@ -159,97 +159,37 @@ const componentExample = (source: string, render: () => JSX.Element): DocsExampl
   render: () => <div class="docs-render">{render()}</div>,
 })
 
+const renderLazy = (DemoComponent: Component): (() => JSX.Element) => {
+  return () => (
+    <Suspense fallback={null}>
+      <DemoComponent />
+    </Suspense>
+  )
+}
+
+const registerExample = (source: string, DemoComponent: Component): DocsExample => {
+  return componentExample(source, renderLazy(DemoComponent))
+}
+
 const docsExamples: Record<DocsExampleId, DocsExample> = {
-  badge: componentExample(badgeDemoSource, () => (
-    <Suspense fallback={null}>
-      <BadgeDemo />
-    </Suspense>
-  )),
-  button: componentExample(buttonDemoSource, () => (
-    <Suspense fallback={null}>
-      <ButtonDemo />
-    </Suspense>
-  )),
-  card: componentExample(cardSectionDemoSource, () => (
-    <Suspense fallback={null}>
-      <CardSectionDemo />
-    </Suspense>
-  )),
-  dialog: componentExample(dialogDemoSource, () => (
-    <Suspense fallback={null}>
-      <DialogDemo />
-    </Suspense>
-  )),
-  drawer: componentExample(drawerDemoSource, () => (
-    <Suspense fallback={null}>
-      <DrawerDemo />
-    </Suspense>
-  )),
-  empty: componentExample(emptyStateDemoSource, () => (
-    <Suspense fallback={null}>
-      <EmptyStateDemo />
-    </Suspense>
-  )),
-  input: componentExample(inputDemoSource, () => (
-    <Suspense fallback={null}>
-      <InputDemo />
-    </Suspense>
-  )),
-  progress: componentExample(progressDemoSource, () => (
-    <Suspense fallback={null}>
-      <ProgressDemo />
-    </Suspense>
-  )),
-  textarea: componentExample(textareaDemoSource, () => (
-    <Suspense fallback={null}>
-      <TextareaDemo />
-    </Suspense>
-  )),
-  select: componentExample(selectDemoSource, () => (
-    <Suspense fallback={null}>
-      <SelectDemo />
-    </Suspense>
-  )),
-  checkbox: componentExample(checkboxDemoSource, () => (
-    <Suspense fallback={null}>
-      <CheckboxDemo />
-    </Suspense>
-  )),
-  switch: componentExample(switchDemoSource, () => (
-    <Suspense fallback={null}>
-      <SwitchDemo />
-    </Suspense>
-  )),
-  radio: componentExample(radioGroupDemoSource, () => (
-    <Suspense fallback={null}>
-      <RadioGroupDemo />
-    </Suspense>
-  )),
-  skeleton: componentExample(skeletonDemoSource, () => (
-    <Suspense fallback={null}>
-      <SkeletonDemo />
-    </Suspense>
-  )),
-  table: componentExample(tableDemoSource, () => (
-    <Suspense fallback={null}>
-      <TableDemo />
-    </Suspense>
-  )),
-  tabs: componentExample(tabsDemoSource, () => (
-    <Suspense fallback={null}>
-      <TabsDemo />
-    </Suspense>
-  )),
-  toast: componentExample(toastDemoSource, () => (
-    <Suspense fallback={null}>
-      <ToastDemo />
-    </Suspense>
-  )),
-  tooltip: componentExample(tooltipDemoSource, () => (
-    <Suspense fallback={null}>
-      <TooltipDemo />
-    </Suspense>
-  )),
+  badge: registerExample(badgeDemoSource, BadgeDemo),
+  button: registerExample(buttonDemoSource, ButtonDemo),
+  card: registerExample(cardSectionDemoSource, CardSectionDemo),
+  dialog: registerExample(dialogDemoSource, DialogDemo),
+  drawer: registerExample(drawerDemoSource, DrawerDemo),
+  empty: registerExample(emptyStateDemoSource, EmptyStateDemo),
+  input: registerExample(inputDemoSource, InputDemo),
+  progress: registerExample(progressDemoSource, ProgressDemo),
+  textarea: registerExample(textareaDemoSource, TextareaDemo),
+  select: registerExample(selectDemoSource, SelectDemo),
+  checkbox: registerExample(checkboxDemoSource, CheckboxDemo),
+  switch: registerExample(switchDemoSource, SwitchDemo),
+  radio: registerExample(radioGroupDemoSource, RadioGroupDemo),
+  skeleton: registerExample(skeletonDemoSource, SkeletonDemo),
+  table: registerExample(tableDemoSource, TableDemo),
+  tabs: registerExample(tabsDemoSource, TabsDemo),
+  toast: registerExample(toastDemoSource, ToastDemo),
+  tooltip: registerExample(tooltipDemoSource, TooltipDemo),
 }
 
 export function getDocsExample(id: DocsExampleId) {
