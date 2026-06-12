@@ -105,4 +105,48 @@ describe("createPluginDataRepository", () => {
     await expect(repo.getByWorkspace(pluginId, "workspace-b", "history")).resolves.toEqual(["b"])
     await expect(repo.getByInstance(pluginId, "instance-a", "draft")).resolves.toBe("keep")
   })
+
+  it("does not collide when workspaceId equals instanceId", async () => {
+    const sharedId = "same-id"
+
+    await repo.saveForWorkspace(pluginId, sharedId, "k", "workspace")
+    await repo.saveForInstance(pluginId, sharedId, "k", "instance")
+
+    await expect(repo.getByWorkspace(pluginId, sharedId, "k")).resolves.toBe("workspace")
+    await expect(repo.getByInstance(pluginId, sharedId, "k")).resolves.toBe("instance")
+  })
+
+  it("keeps backward compatibility for legacy instance/workspace ids without scope prefixes", async () => {
+    const legacyWorkspaceDb = createTaboraDatabase("test-plugin-data-legacy-workspace")
+    const legacyWorkspaceRepo = createPluginDataRepository(legacyWorkspaceDb)
+
+    await legacyWorkspaceDb.pluginData.put({
+      id: "test.plugin:k:legacy-scope",
+      pluginId: "test.plugin",
+      key: "k",
+      workspaceId: "legacy-scope",
+      value: "legacy-workspace",
+      updatedAt: new Date().toISOString(),
+    })
+
+    await expect(
+      legacyWorkspaceRepo.getByWorkspace("test.plugin", "legacy-scope", "k"),
+    ).resolves.toBe("legacy-workspace")
+
+    const legacyInstanceDb = createTaboraDatabase("test-plugin-data-legacy-instance")
+    const legacyInstanceRepo = createPluginDataRepository(legacyInstanceDb)
+
+    await legacyInstanceDb.pluginData.put({
+      id: "test.plugin:k:legacy-scope",
+      pluginId: "test.plugin",
+      key: "k",
+      instanceId: "legacy-scope",
+      value: "legacy-instance",
+      updatedAt: new Date().toISOString(),
+    })
+
+    await expect(
+      legacyInstanceRepo.getByInstance("test.plugin", "legacy-scope", "k"),
+    ).resolves.toBe("legacy-instance")
+  })
 })
