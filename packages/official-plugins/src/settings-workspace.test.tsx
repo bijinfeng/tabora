@@ -2,7 +2,11 @@ import { render } from "solid-js/web"
 import { describe, expect, it, vi } from "vitest"
 import type { SettingsPanelViewProps, Workspace } from "@tabora/plugin-api"
 
-import { AppearanceSettingsPanel, SearchSettingsPanel } from "./settings-workspace"
+import {
+  AppearanceSettingsPanel,
+  SearchSettingsPanel,
+  WorkbenchSettingsPanel,
+} from "./settings-workspace"
 
 function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
@@ -33,7 +37,22 @@ function host(): SettingsPanelViewProps["host"] {
     switchLayout: vi.fn(async () => {}),
     setDefaultSearchProvider: vi.fn(async () => {}),
     setSearchProviderEnabled: vi.fn(async () => {}),
+    createWorkspace: vi.fn(async () => undefined),
+    switchWorkspace: vi.fn(async () => {}),
+    deleteWorkspace: vi.fn(async () => {}),
+    exportWorkspace: vi.fn(async () => "{}"),
+    importWorkspace: vi.fn(async () => ({ warnings: [] })),
   }
+}
+
+function buttonByText(root: HTMLElement, text: string): HTMLButtonElement {
+  const button = [...root.querySelectorAll("button")].find(
+    (node) => node.textContent?.trim() === text,
+  )
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${text}`)
+  }
+  return button
 }
 
 describe("SearchSettingsPanel", () => {
@@ -240,6 +259,66 @@ describe("AppearanceSettingsPanel", () => {
     expect(root.querySelectorAll(".bg-item")).toHaveLength(2)
     expect(root.textContent).toContain("明")
     expect(root.textContent).toContain("暗")
+    root.remove()
+  })
+})
+
+describe("WorkbenchSettingsPanel", () => {
+  it("renders workspace actions and creates a new workspace from the input", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const currentWorkspace = workspace({ id: "default" })
+    const createWorkspace = vi.fn(async () => undefined)
+    const switchWorkspace = vi.fn(async () => {})
+    const deleteWorkspace = vi.fn(async () => {})
+    const panelHost: SettingsPanelViewProps["host"] = {
+      ...host(),
+      createWorkspace,
+      switchWorkspace,
+      deleteWorkspace,
+    }
+
+    render(
+      () => (
+        <WorkbenchSettingsPanel
+          panelId="official.settings.workspace.workbench"
+          pluginId="official.settings"
+          scope="workspace"
+          host={panelHost}
+          workspace={currentWorkspace}
+          workspaces={[currentWorkspace, workspace({ id: "workspace-2", name: "Focus Space" })]}
+          layouts={[]}
+          themes={[]}
+          backgrounds={[]}
+          searchProviders={[]}
+          searchSettings={{
+            defaultProviderId: "official.search.google",
+            enabledProviderIds: ["official.search.google"],
+          }}
+          plugins={[]}
+        />
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("Default")
+    expect(root.textContent).toContain("Focus Space")
+
+    buttonByText(root, "切换").click()
+    expect(switchWorkspace).toHaveBeenCalledWith("workspace-2")
+
+    buttonByText(root, "删除").click()
+    expect(deleteWorkspace).toHaveBeenCalledWith("workspace-2")
+
+    const input = root.querySelector("#ws-new-name") as HTMLInputElement
+    input.value = "  New Space  "
+    input.dispatchEvent(new InputEvent("input", { bubbles: true, data: "New Space" }))
+    buttonByText(root, "创建").click()
+
+    await Promise.resolve()
+
+    expect(createWorkspace).toHaveBeenCalledWith("New Space")
+    expect(input.value).toBe("")
     root.remove()
   })
 })
