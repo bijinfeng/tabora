@@ -1,1 +1,32 @@
-/* fullscreen overlay styles */
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgb(var(--color-page));
+  display: flex;
+  flex-direction: column;
+}
+
+.fullscreen-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  margin: 16px 24px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface));
+  cursor: pointer;
+  color: rgb(var(--color-muted));
+}
+
+.fullscreen-body {
+  flex: 1;
+  padding: 0 24px 24px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+}
