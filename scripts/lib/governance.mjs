@@ -274,7 +274,7 @@ const SOURCE_INVARIANT_FILES = [
   "packages/workbench-shell/src/CommandPalette.tsx",
   "packages/workbench-app/src/layout/WorkbenchShellLayoutHost.ts",
   "packages/platform-kernel/src/runtimeContext.ts",
-  "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx",
+  "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx",
 ]
 
 export function resolveRepositoryRoot(startDir) {
@@ -379,7 +379,7 @@ export function findSourceInvariantViolations(options) {
   }
 
   if (
-    options.filePath === "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx" &&
+    options.filePath === "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx" &&
     !/data-tabora-plugin-id=\{instance\.pluginId\}/.test(options.source)
   ) {
     return [

@@ -288,7 +288,7 @@ describe("governance rules", () => {
 
     expect(
       findSourceInvariantViolations({
-        filePath: "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx",
+        filePath: "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx",
         source: `
           export function SafeWorkbenchLayout() {
             return <PluginViewBoundary>{View(props)}</PluginViewBoundary>
@@ -297,7 +297,7 @@ describe("governance rules", () => {
       }),
     ).toEqual([
       {
-        filePath: "packages/workbench-app/src/surface/WorkbenchShellChrome.tsx",
+        filePath: "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx",
         match: "data-tabora-plugin-id",
         reason: "safe layout fallback must preserve plugin style scope around widget views",
       },
