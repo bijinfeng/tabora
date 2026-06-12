@@ -229,6 +229,11 @@ const QUALITY_EXTERNAL_OPEN_PATTERN =
 const ALLOWED_WINDOW_OPEN_FILES = new Set([
   "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
 ])
+const ARCHITECTURE_MAX_SOURCE_LINES = 1000
+const ARCHITECTURE_LARGE_FILE_ALLOWLIST = new Set([
+  "scripts/lib/governance.mjs",
+  "tooling/vitest/governance.test.ts",
+])
 const EXTERNAL_OPEN_SIGNAL_ORDER = [
   "host-execution",
   "manifest-declaration",
@@ -1173,6 +1178,7 @@ export async function scanArchitecture(rootDir) {
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),
     ...(await scanWorkbenchAvoidableStyleBoundaries(rootDir)),
     ...(await scanSourceInvariantBoundaries(rootDir)),
+    ...(await scanLargeFileBoundaries(rootDir)),
   ]
 
   return findings.sort(compareFindings)
@@ -1215,6 +1221,46 @@ export async function scanQuality(rootDir) {
     workbenchRawColorDebtSummary: summarizeWorkbenchRawColorDebt(rawColors),
     externalOpenPatterns,
   }
+}
+
+async function scanLargeFileBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+      path.join(repositoryRoot, "scripts"),
+      path.join(repositoryRoot, "tooling"),
+    ],
+    (filePath) => QUALITY_SOURCE_EXTENSIONS.has(path.extname(filePath)),
+  )
+
+  const findings = []
+
+  for (const filePath of files) {
+    const relativePath = path.relative(repositoryRoot, filePath)
+    if (relativePath.startsWith("apps/site/")) {
+      continue
+    }
+    if (ARCHITECTURE_LARGE_FILE_ALLOWLIST.has(relativePath)) {
+      continue
+    }
+
+    const source = await readFile(filePath, "utf8")
+    const lineCount = countLines(source)
+    if (lineCount <= ARCHITECTURE_MAX_SOURCE_LINES) {
+      continue
+    }
+
+    findings.push({
+      filePath: relativePath,
+      match: `${lineCount} lines`,
+      reason: `source file should be split (max ${ARCHITECTURE_MAX_SOURCE_LINES} lines)`,
+    })
+  }
+
+  return uniqueFindings(findings)
 }
 
 export function buildArchitectureFailureReport(findings) {
