@@ -107,6 +107,33 @@ const normalizeLocale = (raw: string | null): SiteLocale | null => {
   return null
 }
 
+const normalizePath = (raw: string) => {
+  const path = raw.trim() || "/"
+  const prefixed = path.startsWith("/") ? path : `/${path}`
+  return prefixed.length > 1 ? prefixed.replace(/\/+$/, "") : prefixed
+}
+
+export const getSiteRoutePath = (pathname: string, base = import.meta.env.BASE_URL) => {
+  const path = normalizePath(pathname)
+  const basePath = normalizePath(base || "/")
+
+  if (basePath === "/" || path === "/") return path
+  if (path === basePath) return "/"
+  if (path.startsWith(`${basePath}/`)) return normalizePath(path.slice(basePath.length))
+
+  return path
+}
+
+export const isPrototypeRoute = (pathname: string, base?: string) => {
+  const path = getSiteRoutePath(pathname, base)
+  return path === "/" || path === "/download" || path === "/docs"
+}
+
+export const needsLandingStylesheet = (pathname: string, base?: string) => {
+  const path = getSiteRoutePath(pathname, base)
+  return path === "/" || path === "/download"
+}
+
 export function AppShell(props: { children?: JSX.Element }) {
   const initialDark = () => {
     const saved = localStorage.getItem("tabora-theme")
@@ -117,10 +144,7 @@ export function AppShell(props: { children?: JSX.Element }) {
 
   const [dark, setDark] = createSignal(initialDark())
   const location = useLocation()
-  const isPrototypePage = () => {
-    const path = location.pathname
-    return path === "/" || path === "/download" || path === "/docs"
-  }
+  const isPrototypePage = () => isPrototypeRoute(location.pathname)
 
   const initialLocale = () => {
     const paramLocale = normalizeLocale(new URLSearchParams(window.location.search).get("lang"))
@@ -170,8 +194,7 @@ export function AppShell(props: { children?: JSX.Element }) {
   let landingStylesheet: HTMLLinkElement | null = null
 
   createEffect(() => {
-    const path = location.pathname
-    const needsLandingCss = path === "/" || path === "/download"
+    const needsLandingCss = needsLandingStylesheet(location.pathname)
 
     if (needsLandingCss) {
       if (!landingStylesheet) {
