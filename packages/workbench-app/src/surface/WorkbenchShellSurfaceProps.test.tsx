@@ -133,4 +133,29 @@ describe("createWorkbenchShellSurfaceProps", () => {
 
     expect(runCommand).toHaveBeenCalledWith("open-settings", {})
   })
+
+  it("maps plugin modal and fullscreen overlays from shell state", () => {
+    const shell = createWorkbenchShellSurfaceStub()
+    shell.state.overlays.setModalViewId("plugin.modal.view")
+    shell.state.overlays.setFullscreenViewId("plugin.fullscreen.view")
+
+    const props = createWorkbenchShellSurfaceProps(shell)
+
+    expect(props.pluginModal.viewId).toBe("plugin.modal.view")
+    expect(props.fullscreenOverlay.viewId).toBe("plugin.fullscreen.view")
+    expect(typeof props.pluginModal.getView).toBe("function")
+    expect(typeof props.fullscreenOverlay.getView).toBe("function")
+  })
+
+  it("exposes settings host close and section change handlers from overlays", () => {
+    const shell = createWorkbenchShellSurfaceStub()
+    shell.state.overlays.setSettingsOpen(true)
+
+    const props = createWorkbenchShellSurfaceProps(shell)
+    props.settingsHost.onSectionChange("search")
+    props.settingsHost.onClose()
+
+    expect(shell.state.overlays.activeSettingsSectionId()).toBe("search")
+    expect(shell.state.overlays.settingsOpen()).toBe(false)
+  })
 })
