@@ -8,6 +8,12 @@ import type {
   Workspace,
   WorkspacePresetContribution,
 } from "@tabora/plugin-api"
+import type {
+  InstanceRepository,
+  PluginDataRepository,
+  TaboraDatabase,
+  WorkspaceRepository,
+} from "@tabora/storage"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => {
@@ -242,13 +248,44 @@ function controllerSetup() {
   const kernel = { setPluginEnabled: vi.fn(async () => {}) }
   const syncPluginStyles = vi.fn()
   const i18n = { locale: vi.fn(() => "zh-CN" as const), setLocale: vi.fn() }
+  const database = {} as unknown as TaboraDatabase
+  const workspaceRepo: WorkspaceRepository = {
+    get: vi.fn(async () => undefined),
+    getAll: vi.fn(async () => []),
+    save: vi.fn(async () => {}),
+    remove: vi.fn(async () => {}),
+  }
+  const instanceRepo: InstanceRepository = {
+    getAll: vi.fn(async () => []),
+    getByWorkspace: vi.fn(async () => []),
+    getByRegion: vi.fn(async () => []),
+    get: vi.fn(async () => undefined),
+    save: saveInstance,
+    removeByWorkspace: vi.fn(async () => {}),
+    remove: vi.fn(async () => {}),
+  }
+  const pluginDataRepo: PluginDataRepository = {
+    get: vi.fn(async () => undefined),
+    getAll: vi.fn(async () => []),
+    save: vi.fn(async () => {}),
+    remove: vi.fn(async () => {}),
+    getByWorkspace: vi.fn(async () => undefined),
+    getAllByWorkspace: vi.fn(async () => []),
+    saveForWorkspace,
+    removeForWorkspace: vi.fn(async () => {}),
+    removeByWorkspace: vi.fn(async () => {}),
+    getByInstance: vi.fn(async () => undefined),
+    getAllByInstance: vi.fn(async () => []),
+    saveForInstance: vi.fn(async () => {}),
+    removeForInstance: vi.fn(async () => {}),
+  }
 
   const controller = createWorkbenchWorkspaceController({
-    workspaceRepo: {} as any,
-    instanceRepo: { save: saveInstance } as any,
-    pluginDataRepo: { saveForWorkspace } as any,
-    workspaceSnapshotRepo: { save: vi.fn(async () => {}) } as any,
-    database: {} as any,
+    workspaceRepo,
+    instanceRepo,
+    pluginDataRepo,
+    workspaceSnapshotRepo: { save: vi.fn(async () => {}) },
+    database,
     kernel,
     pluginCatalog: {
       pluginIds: () => ["plugin.widgets"],

@@ -23,6 +23,9 @@ import {
   initializeWorkbenchShellRuntime,
   wireWorkbenchRuntimeEvents,
 } from "./WorkbenchShellRuntimeState"
+import { createWorkbenchI18nStore } from "../i18n"
+
+type RuntimeBootstrap = Parameters<typeof initializeWorkbenchShellRuntime>[0]["runtime"]
 
 function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
@@ -89,7 +92,7 @@ function createRuntime(records: PluginRecord[] = []) {
     },
   }
   const handlers = new Map<string, Set<(payload: unknown) => void>>()
-  const events = {
+  const events: RuntimeBootstrap["kernel"]["events"] = {
     on: vi.fn((eventName: string, handler: (payload: unknown) => void) => {
       const eventHandlers = handlers.get(eventName) ?? new Set<(payload: unknown) => void>()
       eventHandlers.add(handler)
@@ -98,32 +101,81 @@ function createRuntime(records: PluginRecord[] = []) {
         eventHandlers.delete(handler)
       }
     }),
-  }
-
-  return {
-    runtime: {
-      kernel: {
-        discover: vi.fn(async () => {}),
-        activateEnabledPlugins: vi.fn(async () => {}),
-        events,
-      },
-      defaultWorkspacePreset,
-      shellConfig,
-      plugins: [],
-      repositories: {
-        workspaceRepo: { get: vi.fn(), getAll: vi.fn(async () => [workspace()]) },
-        instanceRepo: { getByWorkspace: vi.fn() },
-        pluginDataRepo: { getByWorkspace: vi.fn() },
-        pluginRecordRepo: { getAll: vi.fn(async () => records) },
-        workspaceSnapshotRepo: { save: vi.fn(), getLast: vi.fn() },
-      },
-    },
-    defaultWorkspacePreset,
-    shellConfig,
-    emit: (eventName: string, payload: unknown) => {
+    emit: vi.fn((eventName: string, payload: unknown) => {
       for (const handler of handlers.get(eventName) ?? []) {
         handler(payload)
       }
+    }),
+  }
+
+  const discover = vi.fn(async () => {})
+  const activateEnabledPlugins = vi.fn(async () => {})
+
+  const runtime: RuntimeBootstrap = {
+    kernel: {
+      registry: {} as unknown as RuntimeBootstrap["kernel"]["registry"],
+      plugins: [],
+      discover,
+      activateEnabledPlugins,
+      setPluginEnabled: vi.fn(async () => {}),
+      events,
+    },
+    defaultWorkspacePreset,
+    shellConfig,
+    plugins: [],
+    i18n: createWorkbenchI18nStore({ initialLocale: "zh-CN", fallbackLocale: "zh-CN" }),
+    repositories: {
+      workspaceRepo: {
+        get: vi.fn(async () => undefined),
+        getAll: vi.fn(async () => [workspace()]),
+        save: vi.fn(async () => {}),
+        remove: vi.fn(async () => {}),
+      },
+      instanceRepo: {
+        getAll: vi.fn(async () => []),
+        getByWorkspace: vi.fn(async () => []),
+        getByRegion: vi.fn(async () => []),
+        get: vi.fn(async () => undefined),
+        save: vi.fn(async () => {}),
+        removeByWorkspace: vi.fn(async () => {}),
+        remove: vi.fn(async () => {}),
+      },
+      pluginDataRepo: {
+        get: vi.fn(async () => undefined),
+        getAll: vi.fn(async () => []),
+        save: vi.fn(async () => {}),
+        remove: vi.fn(async () => {}),
+        getByWorkspace: vi.fn(async () => undefined),
+        getAllByWorkspace: vi.fn(async () => []),
+        saveForWorkspace: vi.fn(async () => {}),
+        removeForWorkspace: vi.fn(async () => {}),
+        removeByWorkspace: vi.fn(async () => {}),
+        getByInstance: vi.fn(async () => undefined),
+        getAllByInstance: vi.fn(async () => []),
+        saveForInstance: vi.fn(async () => {}),
+        removeForInstance: vi.fn(async () => {}),
+      },
+      pluginRecordRepo: {
+        get: vi.fn(async () => undefined),
+        getAll: vi.fn(async () => records),
+        save: vi.fn(async () => {}),
+        remove: vi.fn(async () => {}),
+      },
+      workspaceSnapshotRepo: {
+        save: vi.fn(async () => {}),
+        getLast: vi.fn(async () => undefined),
+      },
+    },
+  }
+
+  return {
+    runtime,
+    defaultWorkspacePreset,
+    shellConfig,
+    discover,
+    activateEnabledPlugins,
+    emit: (eventName: string, payload: unknown) => {
+      events.emit(eventName, payload)
     },
   }
 }
@@ -167,7 +219,8 @@ describe("initializeWorkbenchShellRuntime", () => {
       activeThemeId: "official.theme.light",
       activeBackgroundId: "official.background.default",
     }
-    const { runtime, defaultWorkspacePreset, shellConfig } = createRuntime(pluginRecords)
+    const { runtime, defaultWorkspacePreset, shellConfig, discover, activateEnabledPlugins } =
+      createRuntime(pluginRecords)
     mocks.ensureWorkspaceSession.mockResolvedValue(session)
 
     const setPluginRecords = vi.fn()
@@ -184,7 +237,7 @@ describe("initializeWorkbenchShellRuntime", () => {
     const reconcileInstancesForLayout = vi.fn(async () => ({ instances: [] }))
 
     await initializeWorkbenchShellRuntime({
-      runtime: runtime as any,
+      runtime,
       setPluginRecords,
       setKernelReady,
       setWorkspaceList,
@@ -199,8 +252,8 @@ describe("initializeWorkbenchShellRuntime", () => {
       reconcileInstancesForLayout,
     })
 
-    expect(runtime.kernel.discover).toHaveBeenCalledWith(runtime.plugins)
-    expect(runtime.kernel.activateEnabledPlugins).toHaveBeenCalled()
+    expect(discover).toHaveBeenCalledWith(runtime.plugins)
+    expect(activateEnabledPlugins).toHaveBeenCalled()
     expect(setPluginRecords).toHaveBeenCalledWith(pluginRecords)
     expect(mocks.ensureWorkspaceSession).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -245,7 +298,7 @@ describe("wireWorkbenchRuntimeEvents", () => {
     const openExternal = vi.fn()
 
     const dispose = wireWorkbenchRuntimeEvents({
-      runtime: runtime as any,
+      runtime,
       setModalViewId,
       setModalProps,
       setFullscreenViewId,

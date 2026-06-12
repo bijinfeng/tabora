@@ -5,7 +5,7 @@ import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
 function createOptions(
   overrides: Partial<Parameters<typeof createWorkbenchShellCommandModels>[0]> = {},
 ): Parameters<typeof createWorkbenchShellCommandModels>[0] {
-  return {
+  const base: Parameters<typeof createWorkbenchShellCommandModels>[0] = {
     isDark: () => false,
     activeLayoutId: () => "layout.dashboard.custom",
     pluginCommands: [],
@@ -33,8 +33,9 @@ function createOptions(
         key: "search-history-custom",
       },
     },
-    ...overrides,
-  } as any
+  }
+
+  return { ...base, ...overrides }
 }
 
 describe("createWorkbenchShellCommandModels", () => {

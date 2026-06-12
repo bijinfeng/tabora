@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { WorkspacePresetContribution } from "@tabora/plugin-api"
+import { createWebHostAdapter } from "@tabora/host-adapters"
 
 import { createWorkbenchComposition } from "./index"
 
@@ -29,16 +30,16 @@ const defaultWorkspacePreset: WorkspacePresetContribution = {
 describe("createWorkbenchComposition", () => {
   it("derives default search settings from the injected default workspace preset", () => {
     const composition = createWorkbenchComposition({
-      host: { id: "host.test", platform: "web", capabilities: {} } as any,
+      host: createWebHostAdapter({ id: "host.test" }),
       defaultWorkspacePreset,
-    } as any)
+    })
 
     expect(composition.initialState.searchSettings).toEqual(defaultWorkspacePreset.search)
   })
 
   it("preserves explicitly injected search settings", () => {
     const composition = createWorkbenchComposition({
-      host: { id: "host.test", platform: "web", capabilities: {} } as any,
+      host: createWebHostAdapter({ id: "host.test" }),
       defaultWorkspacePreset,
       initialState: {
         workspace: null,

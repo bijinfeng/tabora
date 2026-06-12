@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+import type { LayoutHostAPI } from "@tabora/plugin-api"
 
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 
@@ -11,9 +12,9 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen: vi.fn(),
       setAddWidgetOpen: vi.fn(),
       openSettings: vi.fn(),
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
+      readLayoutState: vi.fn() as unknown as LayoutHostAPI["readLayoutState"],
+      writeLayoutState: vi.fn() as unknown as LayoutHostAPI["writeLayoutState"],
+      showToast: vi.fn() as unknown as LayoutHostAPI["showToast"],
       switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction,
@@ -34,7 +35,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
           key: "search-history-custom",
         },
       },
-    } as any)
+    } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const railActions = host.getGlobalActions("rail")
     expect(railActions.map((action) => action.id)).toEqual([
@@ -56,9 +57,11 @@ describe("createWorkbenchLayoutHostAPI", () => {
     const setCommandPaletteOpen = vi.fn()
     const setAddWidgetOpen = vi.fn()
     const openSettings = vi.fn()
-    const showToast = vi.fn()
-    const readLayoutState = vi.fn(() => ({ cached: true }))
-    const writeLayoutState = vi.fn()
+    const showToast = vi.fn() as unknown as LayoutHostAPI["showToast"]
+    const readLayoutState = vi.fn(
+      (_key: string) => ({ cached: true }) as unknown,
+    ) as unknown as LayoutHostAPI["readLayoutState"]
+    const writeLayoutState = vi.fn() as unknown as LayoutHostAPI["writeLayoutState"]
     const switchLayout = vi.fn()
     const switchTheme = vi.fn()
 
@@ -91,7 +94,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
           key: "search-history-custom",
         },
       },
-    } as any)
+    } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const toolbarActions = host.getGlobalActions("toolbar")
     expect(toolbarActions.map((action) => action.id)).toEqual([
@@ -140,9 +143,9 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen,
       setAddWidgetOpen,
       openSettings,
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
+      readLayoutState: vi.fn() as unknown as LayoutHostAPI["readLayoutState"],
+      writeLayoutState: vi.fn() as unknown as LayoutHostAPI["writeLayoutState"],
+      showToast: vi.fn() as unknown as LayoutHostAPI["showToast"],
       switchLayout,
       switchTheme,
       runRailAction: vi.fn(),
@@ -163,7 +166,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
           key: "search-history-custom",
         },
       },
-    } as any)
+    } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const menuActions = host.getGlobalActions("menu")
     expect(menuActions.map((action) => action.id)).toEqual([
@@ -204,9 +207,9 @@ describe("createWorkbenchLayoutHostAPI", () => {
       setCommandPaletteOpen: vi.fn(),
       setAddWidgetOpen: vi.fn(),
       openSettings: vi.fn(),
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
+      readLayoutState: vi.fn() as unknown as LayoutHostAPI["readLayoutState"],
+      writeLayoutState: vi.fn() as unknown as LayoutHostAPI["writeLayoutState"],
+      showToast: vi.fn() as unknown as LayoutHostAPI["showToast"],
       switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction: vi.fn(),
@@ -227,7 +230,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
           key: "search-history-custom",
         },
       },
-    } as any)
+    } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const railActions = host.getGlobalActions("rail")
     expect(railActions[0]?.label).toBe("Group My workbench")

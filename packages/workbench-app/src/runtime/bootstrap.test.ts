@@ -6,6 +6,7 @@ import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import type { StorageAdapter } from "@tabora/storage"
 
 import { createWorkbenchRuntimeBootstrap } from "./bootstrap"
+import type { WorkbenchShellConfig } from "../shared/shellConfig"
 
 const testPlugins: BuiltinPlugin[] = [
   {
@@ -58,7 +59,7 @@ const shellConfig = {
     pluginId: "search.plugin.custom",
     key: "search-history-custom",
   },
-}
+} satisfies WorkbenchShellConfig
 
 describe("createWorkbenchRuntimeBootstrap", () => {
   it("creates kernel, catalog, database, and repositories together", () => {
@@ -68,7 +69,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       databaseName: "tabora-workbench-app-bootstrap-test",
       defaultWorkspacePreset,
       shellConfig,
-    } as any)
+    })
 
     expect(runtime.host.id).toBe("host.test")
     expect(runtime.kernel.plugins).toEqual([])
@@ -174,7 +175,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       storageAdapter,
       defaultWorkspacePreset,
       shellConfig,
-    } as any)
+    })
 
     expect(runtime.repositories).toBe(storageAdapter.repositories)
   })
@@ -185,7 +186,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       plugins: testPlugins,
       defaultWorkspacePreset,
       shellConfig,
-    } as any)
+    })
 
     runtime.i18n.setLocale("en-US")
     expect(runtime.i18n.t("tabora.shell", "commandPalette.placeholder")).toBe(

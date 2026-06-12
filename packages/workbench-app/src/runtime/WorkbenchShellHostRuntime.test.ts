@@ -61,7 +61,7 @@ function createOptions(
   overrides: Partial<Parameters<typeof createWorkbenchShellHostRuntime>[0]> = {},
 ): Parameters<typeof createWorkbenchShellHostRuntime>[0] {
   const runtime = createRuntimeStub()
-  return {
+  const base: Parameters<typeof createWorkbenchShellHostRuntime>[0] = {
     runtime: runtime as unknown as Parameters<typeof createWorkbenchShellHostRuntime>[0]["runtime"],
     hostPlatform: "web",
     isDark: () => false,
@@ -72,6 +72,7 @@ function createOptions(
     setKernelReady: vi.fn(),
     setWorkspaceList: vi.fn(),
     setWorkspaceState: vi.fn(),
+    setLocale: vi.fn(),
     setActiveLayoutId: vi.fn(),
     setSearchSettings: vi.fn(),
     setSearchHistory: vi.fn(),
@@ -102,8 +103,9 @@ function createOptions(
         key: "search-history-custom",
       },
     },
-    ...overrides,
-  } as any
+  }
+
+  return { ...base, ...overrides }
 }
 
 describe("createWorkbenchShellHostRuntime", () => {

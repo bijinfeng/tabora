@@ -5,6 +5,12 @@ import type {
   Workspace,
   WorkspacePresetContribution,
 } from "@tabora/plugin-api"
+import type {
+  InstanceRepository,
+  PluginDataRepository,
+  TaboraDatabase,
+  WorkspaceRepository,
+} from "@tabora/storage"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
@@ -36,6 +42,47 @@ vi.mock("./workspaceTransfer", () => ({
 }))
 
 import { createWorkbenchWorkspaceState } from "./WorkbenchShellWorkspaceState"
+
+const databaseStub = {} as unknown as TaboraDatabase
+
+function createWorkspaceRepo(overrides: Partial<WorkspaceRepository> = {}): WorkspaceRepository {
+  return {
+    get: overrides.get ?? vi.fn(async () => undefined),
+    getAll: overrides.getAll ?? vi.fn(async () => []),
+    save: overrides.save ?? vi.fn(async () => {}),
+    remove: overrides.remove ?? vi.fn(async () => {}),
+  }
+}
+
+function createInstanceRepo(overrides: Partial<InstanceRepository> = {}): InstanceRepository {
+  return {
+    getAll: overrides.getAll ?? vi.fn(async () => []),
+    getByWorkspace: overrides.getByWorkspace ?? vi.fn(async () => []),
+    getByRegion: overrides.getByRegion ?? vi.fn(async () => []),
+    get: overrides.get ?? vi.fn(async () => undefined),
+    save: overrides.save ?? vi.fn(async () => {}),
+    removeByWorkspace: overrides.removeByWorkspace ?? vi.fn(async () => {}),
+    remove: overrides.remove ?? vi.fn(async () => {}),
+  }
+}
+
+function createPluginDataRepo(overrides: Partial<PluginDataRepository> = {}): PluginDataRepository {
+  return {
+    get: overrides.get ?? vi.fn(async () => undefined),
+    getAll: overrides.getAll ?? vi.fn(async () => []),
+    save: overrides.save ?? vi.fn(async () => {}),
+    remove: overrides.remove ?? vi.fn(async () => {}),
+    getByWorkspace: overrides.getByWorkspace ?? vi.fn(async () => undefined),
+    getAllByWorkspace: overrides.getAllByWorkspace ?? vi.fn(async () => []),
+    saveForWorkspace: overrides.saveForWorkspace ?? vi.fn(async () => {}),
+    removeForWorkspace: overrides.removeForWorkspace ?? vi.fn(async () => {}),
+    removeByWorkspace: overrides.removeByWorkspace ?? vi.fn(async () => {}),
+    getByInstance: overrides.getByInstance ?? vi.fn(async () => undefined),
+    getAllByInstance: overrides.getAllByInstance ?? vi.fn(async () => []),
+    saveForInstance: overrides.saveForInstance ?? vi.fn(async () => {}),
+    removeForInstance: overrides.removeForInstance ?? vi.fn(async () => {}),
+  }
+}
 
 function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
@@ -137,10 +184,10 @@ describe("createWorkbenchWorkspaceState", () => {
     const reconcileInstancesForLayout = vi.fn(async () => ({ instances: reconciledInstances }))
 
     const actions = createWorkbenchWorkspaceState({
-      workspaceRepo: { get: vi.fn() } as any,
-      instanceRepo: {} as any,
-      pluginDataRepo: {} as any,
-      database: {} as any,
+      workspaceRepo: createWorkspaceRepo({ get: vi.fn(async () => undefined) }),
+      instanceRepo: createInstanceRepo(),
+      pluginDataRepo: createPluginDataRepo(),
+      database: databaseStub,
       availablePluginIds: () => ["plugin.widgets"],
       getWorkspaceState: () => workspace(),
       setWorkspaceState,
@@ -190,10 +237,10 @@ describe("createWorkbenchWorkspaceState", () => {
     const preset = defaultWorkspacePreset()
     const storage = searchHistoryStorage()
     const actions = createWorkbenchWorkspaceState({
-      workspaceRepo: { get: vi.fn() } as any,
-      instanceRepo: {} as any,
-      pluginDataRepo: {} as any,
-      database: {} as any,
+      workspaceRepo: createWorkspaceRepo({ get: vi.fn(async () => undefined) }),
+      instanceRepo: createInstanceRepo(),
+      pluginDataRepo: createPluginDataRepo(),
+      database: databaseStub,
       availablePluginIds: () => [],
       getWorkspaceState: () => currentWorkspace,
       setWorkspaceState: vi.fn(),
@@ -236,17 +283,17 @@ describe("createWorkbenchWorkspaceState", () => {
 
     let workspaceList = [currentWorkspace, defaultWorkspace]
     const workspaceRepo = {
-      get: vi.fn(async (id: string) => (id === "default" ? defaultWorkspace : null)),
+      get: vi.fn(async (id: string) => (id === "default" ? defaultWorkspace : undefined)),
     }
     const setWorkspaceList = vi.fn((updater: (prev: Workspace[]) => Workspace[]) => {
       workspaceList = updater(workspaceList)
     })
 
     const actions = createWorkbenchWorkspaceState({
-      workspaceRepo: workspaceRepo as any,
-      instanceRepo: {} as any,
-      pluginDataRepo: {} as any,
-      database: {} as any,
+      workspaceRepo: createWorkspaceRepo(workspaceRepo),
+      instanceRepo: createInstanceRepo(),
+      pluginDataRepo: createPluginDataRepo(),
+      database: databaseStub,
       availablePluginIds: () => [],
       getWorkspaceState: () => currentWorkspace,
       setWorkspaceState: vi.fn(),
@@ -292,14 +339,15 @@ describe("createWorkbenchWorkspaceState", () => {
     const storage = searchHistoryStorage()
 
     const actions = createWorkbenchWorkspaceState({
-      workspaceRepo: { get: vi.fn() } as any,
-      instanceRepo: {} as any,
-      pluginDataRepo: {} as any,
-      database: {} as any,
+      workspaceRepo: createWorkspaceRepo({ get: vi.fn(async () => undefined) }),
+      instanceRepo: createInstanceRepo(),
+      pluginDataRepo: createPluginDataRepo(),
+      database: databaseStub,
       availablePluginIds: () => [],
       getWorkspaceState: () => workspace(),
       setWorkspaceState: vi.fn(),
       setWorkspaceList,
+      setLocale: vi.fn(),
       setActiveLayoutId: vi.fn(),
       setSearchSettings: vi.fn(),
       setSearchHistory: vi.fn(),
@@ -311,7 +359,7 @@ describe("createWorkbenchWorkspaceState", () => {
       clearExpandState: vi.fn(),
       defaultWorkspacePreset: preset,
       searchHistoryStorage: storage,
-    } as any)
+    })
 
     const result = await actions.createWorkspace("Workspace New")
 

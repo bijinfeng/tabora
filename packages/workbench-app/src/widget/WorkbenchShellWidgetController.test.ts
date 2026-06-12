@@ -135,20 +135,20 @@ function createController(options: {
     setInstances,
     setExpandState,
     setContextMenu,
-    resolveLayoutRegions: () => options.layoutRegions ?? [],
+    resolveLayoutRegions: (_layoutId) => options.layoutRegions ?? [],
     resolveWidgetContribution: () => widgetContribution(),
     resolveWidgetRenderModel: () => renderModel(),
-    hasView: () => true,
-    buildWidgetViewProps: () => viewProps(),
+    hasView: (_viewId) => true,
+    buildWidgetViewProps: (_instance, _model) => viewProps(),
     assignGridOrder: (instances: PluginInstance[]) => instances,
     saveInstance,
     removeInstance,
     showToast,
     focusWidgetInstance,
     availableCommandIds: () => [],
-    runCommand: () => false,
+    runCommand: (_commandId, _context) => false,
     ...(options.tShell ? { tShell: options.tShell } : {}),
-  } as any)
+  })
 
   return {
     controller,

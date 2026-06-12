@@ -9,6 +9,7 @@ import {
   resolveInitialSettingsPanelId,
   resolveInitialSettingsSectionId,
   type SettingsPanelDescriptor,
+  type SettingsSectionId,
 } from "./settingsHost"
 
 const mounts: Array<{ dispose: () => void; root: HTMLElement }> = []
@@ -245,7 +246,7 @@ describe("settings host composition", () => {
           aboutUnavailable: "About content unavailable",
           emptySection: "No settings in this section",
           panelMissing: (panelId: string) => `Settings panel unavailable: ${panelId}`,
-          sectionTitle: (id: string) => {
+          sectionTitle: (id: SettingsSectionId) => {
             if (id === "general") return "General"
             if (id === "appearance") return "Appearance"
             if (id === "search") return "Search"
@@ -253,7 +254,7 @@ describe("settings host composition", () => {
             return id
           },
         },
-      } as any),
+      }),
     )
 
     expect(root.querySelector(".settings-sidebar")?.textContent).toContain("Settings")
