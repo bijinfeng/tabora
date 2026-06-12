@@ -1,5 +1,7 @@
 import type { SiteLocale } from "../../app/AppShell"
 
+import type { DocsExampleId } from "./docsExamples"
+
 export type DocsSidebarGroup = {
   title: string
   items: Array<{
@@ -30,6 +32,19 @@ export type DocsTable = {
   rows: string[][]
 }
 
+export type DocsRegisteredDemo = {
+  title: string
+  exampleId: DocsExampleId
+}
+
+export type DocsLegacyDemo = {
+  title: string
+  previewHtml: string
+  codeBlock: DocsCodeBlock
+}
+
+export type DocsComponentDemo = DocsRegisteredDemo | DocsLegacyDemo
+
 export type DocsComponentSpec = {
   id: string
   title: string
@@ -37,11 +52,7 @@ export type DocsComponentSpec = {
   metaTags: string[]
   anatomyTitle?: string
   anatomyItems?: string[]
-  demos: Array<{
-    title: string
-    previewHtml: string
-    codeBlock: DocsCodeBlock
-  }>
+  demos: DocsComponentDemo[]
   table: DocsTable
   doTitle: string
   doBody: string
@@ -100,6 +111,7 @@ export type DocsPageContent = {
   }
   componentSpecs: {
     inputControls: DocsComponentSpec[]
+    selectionControls: DocsComponentSpec[]
   }
 }
 
@@ -462,70 +474,10 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
             ".btn-group — 包裹容器，连接为一组",
           ],
           demos: [
-            {
-              title: "变体",
-              previewHtml:
-                '<div class="demo-row"><button class="btn btn-primary btn-md">主要</button><button class="btn btn-secondary btn-md">次要</button><button class="btn btn-subtle btn-md">柔和</button><button class="btn btn-ghost btn-md">幽灵</button><button class="btn btn-danger btn-md">危险</button><button class="btn btn-danger-subtle btn-md">危险柔和</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<button class="btn btn-primary btn-md">主要</button>
-<button class="btn btn-secondary btn-md">次要</button>
-<button class="btn btn-subtle btn-md">柔和</button>
-<button class="btn btn-ghost btn-md">幽灵</button>
-<button class="btn btn-danger btn-md">危险</button>
-<button class="btn btn-danger-subtle btn-md">危险柔和</button>`,
-              },
-            },
-            {
-              title: "尺寸",
-              previewHtml:
-                '<div class="demo-row"><button class="btn btn-primary btn-sm">小 sm</button><button class="btn btn-primary btn-md">中 md</button><button class="btn btn-primary btn-lg">大 lg</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<button class="btn btn-primary btn-sm">小 sm</button>
-<button class="btn btn-primary btn-md">中 md</button>
-<button class="btn btn-primary btn-lg">大 lg</button>`,
-              },
-            },
-            {
-              title: "禁用 & 全宽",
-              previewHtml:
-                '<div class="demo-row"><button class="btn btn-primary btn-md" disabled>禁用主要</button><button class="btn btn-secondary btn-md" disabled>禁用次要</button></div><div style="max-width: 240px; margin-top: 8px"><button class="btn btn-primary btn-md btn-full">全宽按钮</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<button class="btn btn-primary btn-md" disabled>禁用主要</button>
-<button class="btn btn-secondary btn-md" disabled>禁用次要</button>
-
-<button class="btn btn-primary btn-md btn-full">全宽按钮</button>`,
-              },
-            },
-            {
-              title: "按钮组 & 图标按钮",
-              previewHtml:
-                '<div class="demo-row"><div class="btn-group"><button class="btn btn-secondary btn-md">左</button><button class="btn btn-secondary btn-md">中</button><button class="btn btn-secondary btn-md">右</button></div><div class="btn-group"><button class="btn btn-subtle btn-sm">日</button><button class="btn btn-primary btn-sm">周</button><button class="btn btn-subtle btn-sm">月</button></div></div><div class="demo-row"><button class="icbtn icbtn-sm" title="更多">⋯</button><button class="icbtn" title="设置">⚙</button><button class="icbtn icbtn-lg" title="关闭">✕</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<!-- 按钮组 -->
-<div class="btn-group">
-  <button class="btn btn-secondary btn-md">左</button>
-  <button class="btn btn-secondary btn-md">中</button>
-  <button class="btn btn-secondary btn-md">右</button>
-</div>
-
-<!-- 图标按钮 -->
-<button class="icbtn icbtn-sm" title="更多">⋯</button>
-<button class="icbtn" title="设置">⚙</button>
-<button class="icbtn icbtn-lg" title="关闭">✕</button>`,
-              },
-            },
+            { title: "变体", exampleId: "button.variants" },
+            { title: "尺寸", exampleId: "button.sizes" },
+            { title: "禁用 & 全宽", exampleId: "button.disabled-full" },
+            { title: "按钮组 & 图标按钮", exampleId: "button.group-icon" },
           ],
           table: {
             columns: ["变体", "背景", "文字色", "适用场景"],
@@ -722,6 +674,102 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           doBody: "对有字数限制的输入显示实时计数器。长文本建议使用 txa-auto 提升输入体验。",
           dontTitle: "✗ 不应",
           dontBody: "不要设置 resize:none。rows 也不要低于 2，否则与 Input 无区别。",
+        },
+      ],
+      selectionControls: [
+        {
+          id: "select",
+          title: "Select 选择器",
+          description:
+            "单选下拉控件。原生 select 增强样式，保持键盘可访问性和移动端原生体验。复杂场景可替换为 Combobox。",
+          metaTags: ["3 尺寸", "分组", "禁用项"],
+          demos: [
+            { title: "基础 & 尺寸", exampleId: "select.base-sizes" },
+            { title: "分组 & 禁用", exampleId: "select.groups-disabled" },
+          ],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["尺寸", ".sel-sm / 默认 / .sel-lg", "28px / 36px / 44px 高度"],
+              ["错误态", ".sel-error", "红色边框，表示未选择必选项"],
+              ["禁用", "disabled", "灰色背景，阻止交互"],
+              ["分组", "<optgroup>", "原生分组，可嵌套使用"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody:
+            '选项不超过 15 个时使用 Select。第一项为空值占位（"请选择…"）以暗示未选状态。分组清晰地组织相关选项。',
+          dontTitle: "✗ 不应",
+          dontBody: "选项超过 15 个应改用 Combobox。不要用 Select 做多选。",
+        },
+        {
+          id: "checkbox",
+          title: "Checkbox 复选框",
+          description: "多选切换控件。支持选中、未选中、半选三态。常用于设置面板和批量操作场景。",
+          metaTags: ["3 状态", "2 尺寸", "组合使用"],
+          demos: [
+            { title: "状态", exampleId: "checkbox.states" },
+            { title: "组合使用", exampleId: "checkbox.grouped" },
+          ],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["基础", ".chk", "复选框容器（label 包裹）"],
+              ["选框", ".chk-box", "自定义选框视觉元素"],
+              ["半选", ".chk-indeterminate", "全选/部分选中时的中间态"],
+              ["禁用", "disabled on input", "降低透明度，阻止交互"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "列表项超过 5 个时提供“全选”复选框。label 必须描述操作结果而非状态。",
+          dontTitle: "✗ 不应",
+          dontBody: "不要用 Checkbox 做二选一切换，也不要在复选框组里混入其他表单控件。",
+        },
+        {
+          id: "switch",
+          title: "Switch 开关",
+          description: "二态切换控件。操作即时生效，无需额外提交。适用于设置面板中的开关类选项。",
+          metaTags: ["2 尺寸", "即时生效", "带标签"],
+          demos: [
+            { title: "状态 & 尺寸", exampleId: "switch.states-sizes" },
+            { title: "设置面板场景", exampleId: "switch.settings-panel" },
+          ],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["基础", ".swi", "开关容器（label 包裹）"],
+              ["轨道", ".swi-track", "滑动轨道视觉元素"],
+              ["小尺寸", ".swi-sm", "紧凑尺寸，用于密集列表"],
+              ["禁用", "disabled on input", "降低透明度，阻止交互"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "Switch 仅用于即时生效的二选一操作。文字 label 放左侧，Switch 右侧对齐。",
+          dontTitle: "✗ 不应",
+          dontBody: "需要“保存”才生效的选项用 Checkbox 而非 Switch。不要用 Switch 做多选。",
+        },
+        {
+          id: "radio",
+          title: "Radio 单选框",
+          description: "互斥选择控件。同组内只能选中一项。适用于选项较少且需可见所有选项的场景。",
+          metaTags: ["互斥", "分组", "横向/纵向"],
+          demos: [
+            { title: "纵向排列", exampleId: "radio.vertical" },
+            { title: "横向排列 & 禁用", exampleId: "radio.horizontal-disabled" },
+          ],
+          table: {
+            columns: ["属性", "类名 / 值", "说明"],
+            rows: [
+              ["基础", ".rad", "单选框容器（label 包裹）"],
+              ["圆点", ".rad-dot", "自定义圆形选中指示器"],
+              ["分组", "name 属性相同", "浏览器自动互斥"],
+              ["禁用", "disabled on input", "降低透明度，阻止交互"],
+            ],
+          },
+          doTitle: "✓ 应当",
+          doBody: "2-5 个选项时使用 Radio 使所有选项可见。提供一个默认选中项。",
+          dontTitle: "✗ 不应",
+          dontBody: "超过 5 个选项改用 Select 或 Combobox。不要把 Radio 和 Checkbox 混用。",
         },
       ],
     },
@@ -1117,70 +1165,10 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
             ".btn-group — wraps and visually connects buttons",
           ],
           demos: [
-            {
-              title: "Variants",
-              previewHtml:
-                '<div class="demo-row"><button class="btn btn-primary btn-md">Primary</button><button class="btn btn-secondary btn-md">Secondary</button><button class="btn btn-subtle btn-md">Subtle</button><button class="btn btn-ghost btn-md">Ghost</button><button class="btn btn-danger btn-md">Danger</button><button class="btn btn-danger-subtle btn-md">Danger subtle</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<button class="btn btn-primary btn-md">Primary</button>
-<button class="btn btn-secondary btn-md">Secondary</button>
-<button class="btn btn-subtle btn-md">Subtle</button>
-<button class="btn btn-ghost btn-md">Ghost</button>
-<button class="btn btn-danger btn-md">Danger</button>
-<button class="btn btn-danger-subtle btn-md">Danger subtle</button>`,
-              },
-            },
-            {
-              title: "Sizes",
-              previewHtml:
-                '<div class="demo-row"><button class="btn btn-primary btn-sm">Small</button><button class="btn btn-primary btn-md">Medium</button><button class="btn btn-primary btn-lg">Large</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<button class="btn btn-primary btn-sm">Small</button>
-<button class="btn btn-primary btn-md">Medium</button>
-<button class="btn btn-primary btn-lg">Large</button>`,
-              },
-            },
-            {
-              title: "Disabled & full width",
-              previewHtml:
-                '<div class="demo-row"><button class="btn btn-primary btn-md" disabled>Disabled primary</button><button class="btn btn-secondary btn-md" disabled>Disabled secondary</button></div><div style="max-width: 240px; margin-top: 8px"><button class="btn btn-primary btn-md btn-full">Full-width button</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<button class="btn btn-primary btn-md" disabled>Disabled primary</button>
-<button class="btn btn-secondary btn-md" disabled>Disabled secondary</button>
-
-<button class="btn btn-primary btn-md btn-full">Full-width button</button>`,
-              },
-            },
-            {
-              title: "Button group & icon button",
-              previewHtml:
-                '<div class="demo-row"><div class="btn-group"><button class="btn btn-secondary btn-md">Left</button><button class="btn btn-secondary btn-md">Middle</button><button class="btn btn-secondary btn-md">Right</button></div><div class="btn-group"><button class="btn btn-subtle btn-sm">Day</button><button class="btn btn-primary btn-sm">Week</button><button class="btn btn-subtle btn-sm">Month</button></div></div><div class="demo-row"><button class="icbtn icbtn-sm" title="More">⋯</button><button class="icbtn" title="Settings">⚙</button><button class="icbtn icbtn-lg" title="Close">✕</button></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<!-- Button group -->
-<div class="btn-group">
-  <button class="btn btn-secondary btn-md">Left</button>
-  <button class="btn btn-secondary btn-md">Middle</button>
-  <button class="btn btn-secondary btn-md">Right</button>
-</div>
-
-<!-- Icon button -->
-<button class="icbtn icbtn-sm" title="More">⋯</button>
-<button class="icbtn" title="Settings">⚙</button>
-<button class="icbtn icbtn-lg" title="Close">✕</button>`,
-              },
-            },
+            { title: "Variants", exampleId: "button.variants" },
+            { title: "Sizes", exampleId: "button.sizes" },
+            { title: "Disabled & full width", exampleId: "button.disabled-full" },
+            { title: "Button group & icon button", exampleId: "button.group-icon" },
           ],
           table: {
             columns: ["Variant", "Background", "Text", "Use case"],
@@ -1404,6 +1392,112 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           dontTitle: "✗ Don't",
           dontBody:
             "Do not disable resizing, and avoid rows below 2 because it collapses into an Input-like control.",
+        },
+      ],
+      selectionControls: [
+        {
+          id: "select",
+          title: "Select",
+          description:
+            "Single-choice dropdown. Styled on top of native select to preserve keyboard accessibility and mobile-native behavior. Replace with Combobox for complex cases.",
+          metaTags: ["3 sizes", "Grouped", "Disabled option"],
+          demos: [
+            { title: "Base & sizes", exampleId: "select.base-sizes" },
+            { title: "Groups & disabled", exampleId: "select.groups-disabled" },
+          ],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Size", ".sel-sm / default / .sel-lg", "28px / 36px / 44px height"],
+              ["Error", ".sel-error", "Red border for required-but-missing state"],
+              ["Disabled", "disabled", "Muted background and blocked interaction"],
+              ["Grouping", "<optgroup>", "Native grouping with nested options"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Use Select when options stay under 15. Keep the first option as an empty placeholder and group related choices clearly.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Switch to Combobox when options exceed 15, and never use Select for multi-select.",
+        },
+        {
+          id: "checkbox",
+          title: "Checkbox",
+          description:
+            "Multi-select toggle. Supports checked, unchecked, and indeterminate states. Useful in settings panels and bulk operations.",
+          metaTags: ["3 states", "2 sizes", "Grouped use"],
+          demos: [
+            { title: "States", exampleId: "checkbox.states" },
+            { title: "Grouped usage", exampleId: "checkbox.grouped" },
+          ],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Base", ".chk", "Checkbox container wrapped by label"],
+              ["Box", ".chk-box", "Custom checkbox visual element"],
+              ["Indeterminate", ".chk-indeterminate", "Middle state for partial selection"],
+              ["Disabled", "disabled on input", "Reduced opacity and blocked interaction"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            'Offer a "select all" checkbox when the list grows, and write labels around user intent rather than status.',
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Do not use Checkbox for binary toggles and do not mix unrelated form controls into one checkbox group.",
+        },
+        {
+          id: "switch",
+          title: "Switch",
+          description:
+            "Binary toggle that takes effect immediately. Best for settings-panel toggles that do not require an explicit save action.",
+          metaTags: ["2 sizes", "Immediate", "With labels"],
+          demos: [
+            { title: "States & sizes", exampleId: "switch.states-sizes" },
+            { title: "Settings panel example", exampleId: "switch.settings-panel" },
+          ],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Base", ".swi", "Switch container wrapped by label"],
+              ["Track", ".swi-track", "Track visual element"],
+              ["Small", ".swi-sm", "Compact size for dense lists"],
+              ["Disabled", "disabled on input", "Reduced opacity and blocked interaction"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Use Switch only for immediate binary toggles. Keep the label on the left and the control aligned on the right.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Use Checkbox instead when the change should wait for Save, and never use one Switch row to represent multi-select.",
+        },
+        {
+          id: "radio",
+          title: "Radio",
+          description:
+            "Mutually exclusive options. Best when the set stays small and all choices should remain visible at once.",
+          metaTags: ["Mutually exclusive", "Grouped", "Horizontal / vertical"],
+          demos: [
+            { title: "Vertical layout", exampleId: "radio.vertical" },
+            { title: "Horizontal & disabled", exampleId: "radio.horizontal-disabled" },
+          ],
+          table: {
+            columns: ["Property", "Class / value", "Description"],
+            rows: [
+              ["Base", ".rad", "Radio container wrapped by label"],
+              ["Dot", ".rad-dot", "Custom circular indicator"],
+              ["Grouping", "same name attribute", "Browser-managed mutual exclusion"],
+              ["Disabled", "disabled on input", "Reduced opacity and blocked interaction"],
+            ],
+          },
+          doTitle: "✓ Do",
+          doBody:
+            "Use Radio when there are only a few options and give the group a sensible default selection.",
+          dontTitle: "✗ Don't",
+          dontBody:
+            "Switch to Select or Combobox when the list gets longer, and do not mix Radio with Checkbox semantics.",
         },
       ],
     },

@@ -5,9 +5,11 @@ import { PrototypeTopnav } from "../../shared/PrototypeTopnav"
 import {
   getDocsPageContent,
   type DocsCodeBlock,
+  type DocsComponentDemo,
   type DocsComponentSpec,
   type DocsTable,
 } from "./docsPageContent"
+import { getDocsExample } from "./docsExamples"
 
 import docsPrototypeHtml from "../../../../../docs/design/docs.html?raw"
 
@@ -114,7 +116,7 @@ const getDocsPrototypeTailHtml = () => {
   const body = docsPrototypeHtml.match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? ""
   const withoutScripts = body.replace(/<script[\s\S]*?<\/script>/g, "")
   const tail =
-    withoutScripts.match(/<section class="comp-spec" id="select"[\s\S]*?(?=<\/main>)/)?.[0] ?? ""
+    withoutScripts.match(/<section class="comp-spec" id="tabs"[\s\S]*?(?=<\/main>)/)?.[0] ?? ""
 
   return tail.replace(/href="component-spec\.html(#.*?)?"/g, (_, hash: string | undefined) => {
     return `href="/docs/components${hash ?? ""}"`
@@ -311,7 +313,7 @@ export function DocsHomePage() {
           </section>
 
           {content().componentSpecs.inputControls.map((spec) => (
-            <DocsComponentSpecSection spec={spec} />
+            <DocsComponentSpecSection spec={spec} locale={i18n.locale()} />
           ))}
 
           <div innerHTML={tailHtml()} />
@@ -378,7 +380,7 @@ function DocsSpecTable(props: { table: DocsTable }) {
   )
 }
 
-function DocsComponentSpecSection(props: { spec: DocsComponentSpec }) {
+function DocsComponentSpecSection(props: { spec: DocsComponentSpec; locale: "zh-CN" | "en" }) {
   return (
     <section class="comp-spec" id={props.spec.id}>
       <div class="comp-header">
@@ -405,10 +407,7 @@ function DocsComponentSpecSection(props: { spec: DocsComponentSpec }) {
           <div class="demo-section-head">
             <h4>{demo.title}</h4>
           </div>
-          <div class="demo-body">
-            <div innerHTML={demo.previewHtml} />
-          </div>
-          <DocsCodeBlock block={demo.codeBlock} />
+          <DocsComponentDemoView demo={demo} locale={props.locale} />
         </div>
       ))}
       <DocsSpecTable table={props.spec.table} />
@@ -424,6 +423,36 @@ function DocsComponentSpecSection(props: { spec: DocsComponentSpec }) {
       </div>
       {props.spec.pluginExample ? <DocsCodeBlock block={props.spec.pluginExample} /> : null}
     </section>
+  )
+}
+
+function DocsComponentDemoView(props: { demo: DocsComponentDemo; locale: "zh-CN" | "en" }) {
+  if ("exampleId" in props.demo) {
+    const example = getDocsExample(props.demo.exampleId)
+    if (!example) return null
+
+    return (
+      <>
+        <div class="demo-body">{example.render()}</div>
+        <DocsCodeBlock
+          block={{
+            label: example.language.toUpperCase(),
+            copyLabel: props.locale === "en" ? "Copy" : "复制",
+            copiedLabel: props.locale === "en" ? "Copied" : "已复制",
+            code: example.source,
+          }}
+        />
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div class="demo-body">
+        <div innerHTML={props.demo.previewHtml} />
+      </div>
+      <DocsCodeBlock block={props.demo.codeBlock} />
+    </>
   )
 }
 
