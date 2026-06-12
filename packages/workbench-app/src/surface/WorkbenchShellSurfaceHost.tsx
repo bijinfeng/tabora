@@ -5,9 +5,8 @@ import {
   WorkbenchAddWidgetModal,
   WorkbenchContextMenuOverlay,
   WorkbenchExpandOverlay,
-  WorkbenchFullscreenOverlay,
-  WorkbenchPluginModal,
 } from "./WorkbenchShellChrome"
+import { WorkbenchFullscreenOverlay, WorkbenchPluginModal } from "./WorkbenchPluginOverlays"
 import { useWorkbenchShell } from "../shell/WorkbenchShellContext"
 import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
 
