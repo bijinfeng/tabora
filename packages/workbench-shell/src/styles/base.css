@@ -1,0 +1,315 @@
+/* ====== DESIGN TOKENS (aligned with prototype) ====== */
+:root {
+  --color-page: 246 247 244;
+  --color-surface: 255 255 255;
+  --color-surface-soft: 250 250 248;
+  --color-surface-hover: 242 244 240;
+  --color-text: 28 30 28;
+  --color-muted: 107 110 106;
+  --color-subtle: 148 151 146;
+  --color-line: 230 232 227;
+  --color-line-strong: 209 212 206;
+  --color-inverse: 255 255 255;
+  --color-shadow: 0 0 0;
+  --color-shadow-strong: 15 23 18;
+  --color-scrim: 8 10 8;
+  --color-accent: 26 144 112;
+  --color-accent-hover: 21 120 92;
+  --color-accent-soft: 234 245 240;
+  --color-danger: 201 69 69;
+  --color-success: 45 138 94;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --dur: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ====== ROOT ====== */
+.tabora-root {
+  min-height: 100vh;
+  background: rgb(var(--color-page));
+  color: rgb(var(--color-text));
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ====== TOOLBAR ====== */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 24px;
+  background: rgb(var(--color-surface));
+  border-bottom: 1px solid rgb(var(--color-line));
+  backdrop-filter: blur(12px);
+}
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toolbar-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.toolbar-logo-mark {
+  width: 20px;
+  height: 20px;
+  color: rgb(var(--color-accent));
+  flex-shrink: 0;
+}
+.toolbar-badge {
+  font-size: 10px;
+  color: rgb(var(--color-muted));
+  background: rgb(var(--color-surface-soft));
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgb(var(--color-line));
+}
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.toolbar-btn:hover {
+  background: rgba(var(--color-accent), 0.06);
+  color: rgb(var(--color-text));
+}
+.toolbar-btn.active {
+  background: rgba(var(--color-accent), 0.1);
+  color: rgb(var(--color-accent));
+  font-weight: 650;
+}
+.toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: rgb(var(--color-line));
+  margin: 0 4px;
+}
+
+/* ====== GRID ====== */
+.workbench-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: var(--grid-row, 180px);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.grid-item {
+  min-width: 0;
+  min-height: 0;
+  grid-column: span var(--widget-col-span, 1);
+  grid-row: span var(--widget-row-span, 1);
+}
+
+.workbench-grid .widget-card {
+  height: 100%;
+}
+
+/* ====== CARD (exact prototype values) ====== */
+.widget-card {
+  background: rgb(var(--color-surface));
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius-card, var(--radius));
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 120ms ease;
+  position: relative;
+}
+.widget-card:hover {
+  border-color: rgb(var(--color-line-strong));
+}
+.grid-item.dragging .widget-card {
+  opacity: 0.92;
+  box-shadow: 0 12px 40px rgb(var(--color-shadow) / 0.15);
+  transform: scale(1.03);
+  z-index: 50;
+  border-color: rgb(var(--color-accent));
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  cursor: grab;
+  touch-action: none;
+}
+.grid-item.dragging .card-header {
+  cursor: grabbing;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-title svg {
+  width: 14px;
+  height: 14px;
+  color: rgb(var(--color-subtle));
+  flex-shrink: 0;
+}
+.card-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.card-body::-webkit-scrollbar {
+  width: 6px;
+}
+.card-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(var(--color-line-strong));
+}
+.card-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.card-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.grid-item:hover .card-actions,
+.grid-item:focus-within .card-actions,
+.grid-item.dragging .card-actions {
+  opacity: 1;
+}
+/* Keep actions reachable on touch devices that lack hover. */
+@media (hover: none) {
+  .card-actions {
+    opacity: 1;
+  }
+}
+
+.card-action-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.12s;
+}
+.card-action-btn:hover {
+  background: rgb(var(--color-surface-hover));
+  color: rgb(var(--color-text));
+}
+.card-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.card-action-btn.card-danger:hover {
+  background: rgba(var(--color-danger), 0.08);
+  color: rgb(var(--color-danger));
+}
+
+/* ====== ADD WIDGET ====== */
+.add-widgets {
+  margin-top: 12px;
+  text-align: center;
+}
+.add-widget-trigger {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px dashed rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgba(var(--color-accent), 0.02);
+  font-size: 12px;
+  font-family: inherit;
+  color: rgb(var(--color-muted));
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.add-widget-trigger:hover {
+  border-color: rgb(var(--color-accent));
+  color: rgb(var(--color-accent));
+}
+.add-widget-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 2px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: var(--radius);
+  background: rgb(var(--color-surface-soft));
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: rgb(var(--color-text));
+  transition: all 0.12s;
+}
+.add-widget-modal-item:hover {
+  border-color: rgb(var(--color-muted));
+  background: rgba(var(--color-accent), 0.04);
+}
+.add-widget-modal-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: rgba(var(--color-accent), 0.1);
+  color: rgb(var(--color-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.add-widget-modal-info {
+  flex: 1;
+}
+.add-widget-modal-name {
+  font-size: 13px;
+  font-weight: 650;
+}
+.add-widget-modal-desc {
+  font-size: 11px;
+  color: rgb(var(--color-muted));
+  margin-top: 1px;
+}
