@@ -5,12 +5,16 @@
   "type": "module",
   "exports": {
     ".": "./src/index.tsx",
+    "./styles/dashboard.css": "./src/styles/dashboard.css",
+    "./styles/focus.css": "./src/styles/focus.css",
     "./styles.css": "./src/styles.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
+      "./styles/dashboard.css": "./dist/styles/dashboard.css",
+      "./styles/focus.css": "./dist/styles/focus.css",
       "./styles.css": "./dist/styles.css",
       "./package.json": "./package.json"
     }
