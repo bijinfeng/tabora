@@ -27,8 +27,8 @@ describe("getDocsPageContent", () => {
 
     expect(button?.demos[0]).toEqual(
       expect.objectContaining({
-        title: "Variants",
-        exampleId: "button.variants",
+        title: "Example",
+        exampleId: "button",
       }),
     )
     expect("previewHtml" in (button?.demos[0] ?? {})).toBe(false)
@@ -46,22 +46,22 @@ describe("getDocsPageContent", () => {
     expect(content.componentSpecs.selectionControls[0]?.id).toBe("select")
     expect(content.componentSpecs.selectionControls[0]?.demos[0]).toEqual(
       expect.objectContaining({
-        exampleId: "select.base-sizes",
+        exampleId: "select",
       }),
     )
     expect(content.componentSpecs.selectionControls[1]?.demos[0]).toEqual(
       expect.objectContaining({
-        exampleId: "checkbox.states",
+        exampleId: "checkbox",
       }),
     )
-    expect(content.componentSpecs.selectionControls[2]?.demos[1]).toEqual(
+    expect(content.componentSpecs.selectionControls[2]?.demos[0]).toEqual(
       expect.objectContaining({
-        exampleId: "switch.settings-panel",
+        exampleId: "switch",
       }),
     )
-    expect(content.componentSpecs.selectionControls[3]?.demos[1]).toEqual(
+    expect(content.componentSpecs.selectionControls[3]?.demos[0]).toEqual(
       expect.objectContaining({
-        exampleId: "radio.horizontal-disabled",
+        exampleId: "radio",
       }),
     )
   })

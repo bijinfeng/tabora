@@ -473,12 +473,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
             ".btn-full — 拉伸至父容器宽度",
             ".btn-group — 包裹容器，连接为一组",
           ],
-          demos: [
-            { title: "变体", exampleId: "button.variants" },
-            { title: "尺寸", exampleId: "button.sizes" },
-            { title: "禁用 & 全宽", exampleId: "button.disabled-full" },
-            { title: "按钮组 & 图标按钮", exampleId: "button.group-icon" },
-          ],
+          demos: [{ title: "示例", exampleId: "button" }],
           table: {
             columns: ["变体", "背景", "文字色", "适用场景"],
             rows: [
@@ -524,83 +519,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "单行文本输入控件。支持 3 种尺寸、前后缀插槽、4 种验证状态。所有输入组件共享相同圆角和边框令牌。",
           metaTags: ["3 尺寸", "4 状态", "前后缀", "可清除"],
-          demos: [
-            {
-              title: "尺寸",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt ipt-sm" placeholder="Small — 28px 高度" /><input class="ipt" placeholder="Medium（默认）— 36px 高度" /><input class="ipt ipt-lg" placeholder="Large — 44px 高度" /></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<input class="ipt ipt-sm" placeholder="Small — 28px 高度" />
-<input class="ipt" placeholder="Medium（默认）— 36px 高度" />
-<input class="ipt ipt-lg" placeholder="Large — 44px 高度" />`,
-              },
-            },
-            {
-              title: "状态",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt" placeholder="默认状态" /><input class="ipt ipt-success" value="验证通过" /><input class="ipt ipt-error" value="输入有误" /><input class="ipt" disabled value="禁用状态" /></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<input class="ipt" placeholder="默认状态" />
-<input class="ipt ipt-success" value="验证通过" />
-<input class="ipt ipt-error" value="输入有误" />
-<input class="ipt" disabled value="禁用状态" />`,
-              },
-            },
-            {
-              title: "前后缀 & 可清除",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="ipt-wrap"><span class="ipt-prefix">🔍</span><input class="ipt" placeholder="搜索插件..." /></div><div class="ipt-wrap"><input class="ipt" placeholder="输入标签" /><span class="ipt-suffix">⏎</span></div><div class="ipt-wrap"><input class="ipt" value="可清除内容" /><button class="ipt-clear" type="button">✕</button></div></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<!-- 前缀 -->
-<div class="ipt-wrap">
-  <span class="ipt-prefix">🔍</span>
-  <input class="ipt" placeholder="搜索插件..." />
-</div>
-
-<!-- 后缀 -->
-<div class="ipt-wrap">
-  <input class="ipt" placeholder="输入标签" />
-  <span class="ipt-suffix">⏎</span>
-</div>
-
-<!-- 可清除 -->
-<div class="ipt-wrap">
-  <input class="ipt" value="可清除内容" />
-  <button class="ipt-clear" type="button">✕</button>
-</div>`,
-              },
-            },
-            {
-              title: "带标签 & 提示",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 16px"><div class="field"><label class="field-label">用户名 <span class="field-required">*</span></label><input class="ipt" placeholder="请输入用户名" /><span class="field-hint">3-20 个字符，仅支持字母和数字</span></div><div class="field"><label class="field-label">描述</label><input class="ipt ipt-error" value="内容过长" /><span class="field-error">超出最大长度限制（100 字符）</span></div></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<div class="field">
-  <label class="field-label">用户名 <span class="field-required">*</span></label>
-  <input class="ipt" placeholder="请输入用户名" />
-  <span class="field-hint">3-20 个字符，仅支持字母和数字</span>
-</div>
-
-<div class="field">
-  <label class="field-label">描述</label>
-  <input class="ipt ipt-error" value="内容过长" />
-  <span class="field-error">超出最大长度限制（100 字符）</span>
-</div>`,
-              },
-            },
-          ],
+          demos: [{ title: "示例", exampleId: "input" }],
           table: {
             columns: ["属性", "类名 / 值", "说明"],
             rows: [
@@ -626,41 +545,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "多行文本输入控件。支持自动增高、字符计数和尺寸调节。与 Input 共享验证状态和标签模式。",
           metaTags: ["自动增高", "字符计数", "可调节"],
-          demos: [
-            {
-              title: "基础 & 自动增高",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><textarea class="txa" rows="3" placeholder="固定高度，3 行"></textarea><textarea class="txa txa-auto" rows="1" placeholder="自动增高——随内容撑开"></textarea></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<textarea class="txa" rows="3" placeholder="固定高度，3 行"></textarea>
-<textarea class="txa txa-auto" rows="1" placeholder="自动增高——随内容撑开"></textarea>`,
-              },
-            },
-            {
-              title: "字符计数 & 验证",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="field"><label class="field-label">备注</label><textarea class="txa" rows="3" maxlength="200" placeholder="最多 200 字符"></textarea><span class="field-hint field-counter">0 / 200</span></div><div class="field"><label class="field-label">错误示例</label><textarea class="txa txa-error" rows="2">内容超出限制</textarea><span class="field-error">已超出最大字符数</span></div></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "复制",
-                copiedLabel: "已复制",
-                code: `<div class="field">
-  <label class="field-label">备注</label>
-  <textarea class="txa" rows="3" maxlength="200" placeholder="最多 200 字符"></textarea>
-  <span class="field-hint field-counter">0 / 200</span>
-</div>
-
-<div class="field">
-  <label class="field-label">错误示例</label>
-  <textarea class="txa txa-error" rows="2">内容超出限制</textarea>
-  <span class="field-error">已超出最大字符数</span>
-</div>`,
-              },
-            },
-          ],
+          demos: [{ title: "示例", exampleId: "textarea" }],
           table: {
             columns: ["属性", "类名 / 值", "说明"],
             rows: [
@@ -683,10 +568,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "单选下拉控件。原生 select 增强样式，保持键盘可访问性和移动端原生体验。复杂场景可替换为 Combobox。",
           metaTags: ["3 尺寸", "分组", "禁用项"],
-          demos: [
-            { title: "基础 & 尺寸", exampleId: "select.base-sizes" },
-            { title: "分组 & 禁用", exampleId: "select.groups-disabled" },
-          ],
+          demos: [{ title: "示例", exampleId: "select" }],
           table: {
             columns: ["属性", "类名 / 值", "说明"],
             rows: [
@@ -707,10 +589,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           title: "Checkbox 复选框",
           description: "多选切换控件。支持选中、未选中、半选三态。常用于设置面板和批量操作场景。",
           metaTags: ["3 状态", "2 尺寸", "组合使用"],
-          demos: [
-            { title: "状态", exampleId: "checkbox.states" },
-            { title: "组合使用", exampleId: "checkbox.grouped" },
-          ],
+          demos: [{ title: "示例", exampleId: "checkbox" }],
           table: {
             columns: ["属性", "类名 / 值", "说明"],
             rows: [
@@ -730,10 +609,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           title: "Switch 开关",
           description: "二态切换控件。操作即时生效，无需额外提交。适用于设置面板中的开关类选项。",
           metaTags: ["2 尺寸", "即时生效", "带标签"],
-          demos: [
-            { title: "状态 & 尺寸", exampleId: "switch.states-sizes" },
-            { title: "设置面板场景", exampleId: "switch.settings-panel" },
-          ],
+          demos: [{ title: "示例", exampleId: "switch" }],
           table: {
             columns: ["属性", "类名 / 值", "说明"],
             rows: [
@@ -753,10 +629,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           title: "Radio 单选框",
           description: "互斥选择控件。同组内只能选中一项。适用于选项较少且需可见所有选项的场景。",
           metaTags: ["互斥", "分组", "横向/纵向"],
-          demos: [
-            { title: "纵向排列", exampleId: "radio.vertical" },
-            { title: "横向排列 & 禁用", exampleId: "radio.horizontal-disabled" },
-          ],
+          demos: [{ title: "示例", exampleId: "radio" }],
           table: {
             columns: ["属性", "类名 / 值", "说明"],
             rows: [
@@ -1164,12 +1037,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
             ".btn-full — stretches to parent width",
             ".btn-group — wraps and visually connects buttons",
           ],
-          demos: [
-            { title: "Variants", exampleId: "button.variants" },
-            { title: "Sizes", exampleId: "button.sizes" },
-            { title: "Disabled & full width", exampleId: "button.disabled-full" },
-            { title: "Button group & icon button", exampleId: "button.group-icon" },
-          ],
+          demos: [{ title: "Example", exampleId: "button" }],
           table: {
             columns: ["Variant", "Background", "Text", "Use case"],
             rows: [
@@ -1240,83 +1108,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "Single-line text input. Supports three sizes, prefix and suffix slots, and four validation states. All input controls share the same radius and border tokens.",
           metaTags: ["3 sizes", "4 states", "Prefix / suffix", "Clearable"],
-          demos: [
-            {
-              title: "Sizes",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt ipt-sm" placeholder="Small — 28px height" /><input class="ipt" placeholder="Medium — 36px height" /><input class="ipt ipt-lg" placeholder="Large — 44px height" /></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<input class="ipt ipt-sm" placeholder="Small — 28px height" />
-<input class="ipt" placeholder="Medium — 36px height" />
-<input class="ipt ipt-lg" placeholder="Large — 44px height" />`,
-              },
-            },
-            {
-              title: "States",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><input class="ipt" placeholder="Default state" /><input class="ipt ipt-success" value="Valid" /><input class="ipt ipt-error" value="Invalid" /><input class="ipt" disabled value="Disabled" /></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<input class="ipt" placeholder="Default state" />
-<input class="ipt ipt-success" value="Valid" />
-<input class="ipt ipt-error" value="Invalid" />
-<input class="ipt" disabled value="Disabled" />`,
-              },
-            },
-            {
-              title: "Prefix, suffix & clearable",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="ipt-wrap"><span class="ipt-prefix">🔍</span><input class="ipt" placeholder="Search plugins..." /></div><div class="ipt-wrap"><input class="ipt" placeholder="Enter tag" /><span class="ipt-suffix">⏎</span></div><div class="ipt-wrap"><input class="ipt" value="Clearable content" /><button class="ipt-clear" type="button">✕</button></div></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<!-- Prefix -->
-<div class="ipt-wrap">
-  <span class="ipt-prefix">🔍</span>
-  <input class="ipt" placeholder="Search plugins..." />
-</div>
-
-<!-- Suffix -->
-<div class="ipt-wrap">
-  <input class="ipt" placeholder="Enter tag" />
-  <span class="ipt-suffix">⏎</span>
-</div>
-
-<!-- Clearable -->
-<div class="ipt-wrap">
-  <input class="ipt" value="Clearable content" />
-  <button class="ipt-clear" type="button">✕</button>
-</div>`,
-              },
-            },
-            {
-              title: "Label & hint",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 16px"><div class="field"><label class="field-label">Username <span class="field-required">*</span></label><input class="ipt" placeholder="Enter username" /><span class="field-hint">3-20 characters, letters and numbers only</span></div><div class="field"><label class="field-label">Description</label><input class="ipt ipt-error" value="Too long" /><span class="field-error">Exceeds the 100 character limit</span></div></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<div class="field">
-  <label class="field-label">Username <span class="field-required">*</span></label>
-  <input class="ipt" placeholder="Enter username" />
-  <span class="field-hint">3-20 characters, letters and numbers only</span>
-</div>
-
-<div class="field">
-  <label class="field-label">Description</label>
-  <input class="ipt ipt-error" value="Too long" />
-  <span class="field-error">Exceeds the 100 character limit</span>
-</div>`,
-              },
-            },
-          ],
+          demos: [{ title: "Example", exampleId: "input" }],
           table: {
             columns: ["Property", "Class / value", "Description"],
             rows: [
@@ -1342,41 +1134,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "Multiline text input. Supports auto-grow, character counting, and resizing. Shares validation and labeling patterns with Input.",
           metaTags: ["Auto grow", "Counter", "Resizable"],
-          demos: [
-            {
-              title: "Base & auto grow",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><textarea class="txa" rows="3" placeholder="Fixed height, 3 rows"></textarea><textarea class="txa txa-auto" rows="1" placeholder="Auto grow with content"></textarea></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<textarea class="txa" rows="3" placeholder="Fixed height, 3 rows"></textarea>
-<textarea class="txa txa-auto" rows="1" placeholder="Auto grow with content"></textarea>`,
-              },
-            },
-            {
-              title: "Counter & validation",
-              previewHtml:
-                '<div class="demo-row" style="flex-direction: column; gap: 12px"><div class="field"><label class="field-label">Notes</label><textarea class="txa" rows="3" maxlength="200" placeholder="Up to 200 characters"></textarea><span class="field-hint field-counter">0 / 200</span></div><div class="field"><label class="field-label">Error example</label><textarea class="txa txa-error" rows="2">Content exceeds the limit</textarea><span class="field-error">Character limit exceeded</span></div></div>',
-              codeBlock: {
-                label: "HTML",
-                copyLabel: "Copy",
-                copiedLabel: "Copied",
-                code: `<div class="field">
-  <label class="field-label">Notes</label>
-  <textarea class="txa" rows="3" maxlength="200" placeholder="Up to 200 characters"></textarea>
-  <span class="field-hint field-counter">0 / 200</span>
-</div>
-
-<div class="field">
-  <label class="field-label">Error example</label>
-  <textarea class="txa txa-error" rows="2">Content exceeds the limit</textarea>
-  <span class="field-error">Character limit exceeded</span>
-</div>`,
-              },
-            },
-          ],
+          demos: [{ title: "Example", exampleId: "textarea" }],
           table: {
             columns: ["Property", "Class / value", "Description"],
             rows: [
@@ -1401,10 +1159,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "Single-choice dropdown. Styled on top of native select to preserve keyboard accessibility and mobile-native behavior. Replace with Combobox for complex cases.",
           metaTags: ["3 sizes", "Grouped", "Disabled option"],
-          demos: [
-            { title: "Base & sizes", exampleId: "select.base-sizes" },
-            { title: "Groups & disabled", exampleId: "select.groups-disabled" },
-          ],
+          demos: [{ title: "Example", exampleId: "select" }],
           table: {
             columns: ["Property", "Class / value", "Description"],
             rows: [
@@ -1427,10 +1182,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "Multi-select toggle. Supports checked, unchecked, and indeterminate states. Useful in settings panels and bulk operations.",
           metaTags: ["3 states", "2 sizes", "Grouped use"],
-          demos: [
-            { title: "States", exampleId: "checkbox.states" },
-            { title: "Grouped usage", exampleId: "checkbox.grouped" },
-          ],
+          demos: [{ title: "Example", exampleId: "checkbox" }],
           table: {
             columns: ["Property", "Class / value", "Description"],
             rows: [
@@ -1453,10 +1205,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "Binary toggle that takes effect immediately. Best for settings-panel toggles that do not require an explicit save action.",
           metaTags: ["2 sizes", "Immediate", "With labels"],
-          demos: [
-            { title: "States & sizes", exampleId: "switch.states-sizes" },
-            { title: "Settings panel example", exampleId: "switch.settings-panel" },
-          ],
+          demos: [{ title: "Example", exampleId: "switch" }],
           table: {
             columns: ["Property", "Class / value", "Description"],
             rows: [
@@ -1479,10 +1228,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           description:
             "Mutually exclusive options. Best when the set stays small and all choices should remain visible at once.",
           metaTags: ["Mutually exclusive", "Grouped", "Horizontal / vertical"],
-          demos: [
-            { title: "Vertical layout", exampleId: "radio.vertical" },
-            { title: "Horizontal & disabled", exampleId: "radio.horizontal-disabled" },
-          ],
+          demos: [{ title: "Example", exampleId: "radio" }],
           table: {
             columns: ["Property", "Class / value", "Description"],
             rows: [
