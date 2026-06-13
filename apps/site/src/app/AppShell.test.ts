@@ -13,6 +13,8 @@ describe("AppShell route path handling", () => {
     expect(isPrototypeRoute("/tabora/", "/tabora/")).toBe(true)
     expect(isPrototypeRoute("/tabora/download", "/tabora/")).toBe(true)
     expect(isPrototypeRoute("/tabora/docs", "/tabora/")).toBe(true)
+    expect(isPrototypeRoute("/tabora/docs/quickstart", "/tabora/")).toBe(true)
+    expect(isPrototypeRoute("/tabora/docs/button", "/tabora/")).toBe(true)
     expect(isPrototypeRoute("/tabora/docs/components", "/tabora/")).toBe(false)
   })
 
@@ -20,6 +22,8 @@ describe("AppShell route path handling", () => {
     expect(needsLandingStylesheet("/tabora/", "/tabora/")).toBe(true)
     expect(needsLandingStylesheet("/tabora/download", "/tabora/")).toBe(true)
     expect(needsLandingStylesheet("/tabora/docs", "/tabora/")).toBe(true)
+    expect(needsLandingStylesheet("/tabora/docs/quickstart", "/tabora/")).toBe(true)
+    expect(needsLandingStylesheet("/tabora/docs/button", "/tabora/")).toBe(true)
     expect(needsLandingStylesheet("/tabora/docs/components", "/tabora/")).toBe(false)
   })
 })

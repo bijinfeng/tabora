@@ -1,17 +1,29 @@
-import { createMemo, onCleanup, onMount } from "solid-js"
+import { A, useParams } from "@solidjs/router"
+import { createEffect, createMemo, onCleanup, onMount } from "solid-js"
 
 import { useSiteI18n } from "../../app/AppShell"
 import { PrototypeTopnav } from "../../shared/PrototypeTopnav"
 import { highlightCode } from "../../shared/codeHighlight"
 import { DocsGuideSections } from "./components/DocsGuideSections"
-import { getDocsPageContent } from "./docsPageContent"
+import { defaultDocsSectionId, getDocsPageContent, getDocsSectionPath } from "./docsPageContent"
 import docsPrototypeHtml from "../../../../../docs/design/docs.html?raw"
 
 const docsPrototypeCss = docsPrototypeHtml.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? ""
 
+const highlightVisibleCode = () => {
+  document.querySelectorAll("pre > code").forEach((element) => {
+    if (!(element instanceof HTMLElement)) return
+    if (element.dataset.syntax === "true") return
+    element.dataset.syntax = "true"
+    element.innerHTML = highlightCode(element.textContent ?? "")
+  })
+}
+
 export function DocsHomePage() {
   const i18n = useSiteI18n()
+  const params = useParams<{ sectionId?: string }>()
   const content = createMemo(() => getDocsPageContent(i18n.locale()))
+  const currentSectionId = createMemo(() => params.sectionId ?? defaultDocsSectionId)
 
   onMount(() => {
     const styleTag = document.createElement("style")
@@ -47,20 +59,16 @@ export function DocsHomePage() {
 
     document.addEventListener("click", onClick)
 
-    queueMicrotask(() => {
-      document.querySelectorAll("pre > code").forEach((element) => {
-        if (!(element instanceof HTMLElement)) return
-        if (element.dataset.syntax === "true") return
-        element.dataset.syntax = "true"
-        element.innerHTML = highlightCode(element.textContent ?? "")
-      })
-    })
-
     onCleanup(() => {
       document.removeEventListener("click", onClick)
       window.clearTimeout(resetCopyTimer)
       styleTag.remove()
     })
+  })
+
+  createEffect(() => {
+    currentSectionId()
+    queueMicrotask(highlightVisibleCode)
   })
 
   return (
@@ -75,15 +83,23 @@ export function DocsHomePage() {
             <>
               <div class="sidebar-section">{group.title}</div>
               {group.items.map((item) => (
-                <a class="sidebar-link" href={`#${item.id}`}>
+                <A
+                  class="sidebar-link"
+                  classList={{ active: currentSectionId() === item.id }}
+                  href={getDocsSectionPath(item.id)}
+                >
                   {item.label}
-                </a>
+                </A>
               ))}
             </>
           ))}
         </aside>
 
-        <DocsGuideSections content={content()} locale={i18n.locale()} />
+        <DocsGuideSections
+          content={content()}
+          locale={i18n.locale()}
+          sectionId={currentSectionId()}
+        />
       </div>
     </>
   )

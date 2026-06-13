@@ -4,4 +4,5 @@ export const siteRoutePaths = [
   "/docs",
   "/docs/components",
   "/docs/components/:componentId",
+  "/docs/:sectionId",
 ] as const

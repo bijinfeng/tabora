@@ -1,148 +1,205 @@
+import { createMemo, Match, Switch } from "solid-js"
+
 import {
   type DocsComponentDemo,
   type DocsComponentSpec,
   type DocsPageContent,
+  type DocsResolvedComponentPage,
+  defaultDocsSectionId,
+  getDocsSectionPath,
+  resolveDocsPage,
 } from "../docsPageContent"
 import { getDocsExample } from "../docsExamples"
 import { DocsCodeBlock, DocsSpecTable } from "./DocsCodeBlock"
 
-export function DocsGuideSections(props: { content: DocsPageContent; locale: "zh-CN" | "en" }) {
+export function DocsGuideSections(props: {
+  content: DocsPageContent
+  locale: "zh-CN" | "en"
+  sectionId?: string
+}) {
+  const page = createMemo(() =>
+    resolveDocsPage(props.content, props.sectionId ?? defaultDocsSectionId),
+  )
+
   return (
     <main class="main">
-      <section class="comp-spec" id="quickstart">
-        <DocsSectionHead
-          eyebrow={props.content.sections.quickstart.eyebrow}
-          title={props.content.sections.quickstart.title}
-          description={props.content.sections.quickstart.description}
-        />
-        {props.content.sections.quickstart.demos.map((demo) => (
-          <div class="demo-section">
-            <div class="demo-section-head">
-              <h4>{demo.title}</h4>
-            </div>
-            <div class="demo-body">
-              {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
-              {demo.treeBlock ? (
-                <div class="code-block">
-                  <div class="code-head">
-                    <span>{demo.treeBlock.label}</span>
-                  </div>
-                  <div class="code-window">
-                    <pre>
-                      <code>{demo.treeBlock.code}</code>
-                    </pre>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ))}
-      </section>
+      <Switch fallback={<MissingDocsSection id={page().id} locale={props.locale} />}>
+        <Match when={page().kind === "guide" && page().id === "quickstart"}>
+          <QuickstartSection section={props.content.sections.quickstart} />
+        </Match>
+        <Match when={page().kind === "guide" && page().id === "manifest"}>
+          <ManifestSection section={props.content.sections.manifest} />
+        </Match>
+        <Match when={page().kind === "guide" && page().id === "runtime"}>
+          <RuntimeSection section={props.content.sections.runtime} />
+        </Match>
+        <Match when={page().kind === "guide" && page().id === "contributions"}>
+          <ContributionsSection section={props.content.sections.contributions} />
+        </Match>
+        <Match when={page().kind === "guide" && page().id === "tokens"}>
+          <TokensSection section={props.content.sections.tokens} />
+        </Match>
+        <Match
+          when={page().kind === "component" ? (page() as DocsResolvedComponentPage) : undefined}
+        >
+          {(resolved) => <DocsComponentSpecSection spec={resolved().spec} locale={props.locale} />}
+        </Match>
+      </Switch>
+    </main>
+  )
+}
 
-      <section class="comp-spec" id="manifest">
-        <DocsSectionHead
-          eyebrow={props.content.sections.manifest.eyebrow}
-          title={props.content.sections.manifest.title}
-          description={props.content.sections.manifest.description}
-        />
-        <div class="anatomy-box">
-          <h4>{props.content.sections.manifest.anatomyTitle}</h4>
-          <ul>
-            {props.content.sections.manifest.anatomyItems.map((item) => (
-              <li>{item}</li>
-            ))}
-          </ul>
-        </div>
-        <DocsCodeBlock block={props.content.sections.manifest.codeBlock} />
-        <DocsSpecTable table={props.content.sections.manifest.table} />
-      </section>
-
-      <section class="comp-spec" id="runtime">
-        <DocsSectionHead
-          eyebrow={props.content.sections.runtime.eyebrow}
-          title={props.content.sections.runtime.title}
-          description={props.content.sections.runtime.description}
-        />
-        {props.content.sections.runtime.demos.map((demo) => (
-          <div class="demo-section">
-            <div class="demo-section-head">
-              <h4>{demo.title}</h4>
-            </div>
-            <div class="demo-body">
-              {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
-            </div>
-          </div>
-        ))}
-        <DocsSpecTable table={props.content.sections.runtime.table} />
-      </section>
-
-      <section class="comp-spec" id="contributions">
-        <DocsSectionHead
-          eyebrow={props.content.sections.contributions.eyebrow}
-          title={props.content.sections.contributions.title}
-          description={props.content.sections.contributions.description}
-        />
-        <DocsSpecTable table={props.content.sections.contributions.table} />
-        <div class="do-dont">
-          <div class="do">
-            <h5>{props.content.sections.contributions.doTitle}</h5>
-            <p>{props.content.sections.contributions.doBody}</p>
-          </div>
-          <div class="dont">
-            <h5>{props.content.sections.contributions.dontTitle}</h5>
-            <p>{props.content.sections.contributions.dontBody}</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="comp-spec" id="tokens">
-        <DocsSectionHead
-          eyebrow={props.content.sections.tokens.eyebrow}
-          title={props.content.sections.tokens.title}
-          description={props.content.sections.tokens.description}
-        />
+function QuickstartSection(props: { section: DocsPageContent["sections"]["quickstart"] }) {
+  return (
+    <section class="comp-spec" id="quickstart">
+      <DocsSectionHead
+        eyebrow={props.section.eyebrow}
+        title={props.section.title}
+        description={props.section.description}
+      />
+      {props.section.demos.map((demo) => (
         <div class="demo-section">
           <div class="demo-section-head">
-            <h4>{props.content.sections.tokens.previewTitle}</h4>
+            <h4>{demo.title}</h4>
           </div>
           <div class="demo-body">
-            <div
-              style="
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 8px;
-              "
-            >
-              {props.content.sections.tokens.swatches.map((swatch) => (
-                <div style={swatch.style}>{swatch.name}</div>
-              ))}
-            </div>
+            {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
+            {demo.treeBlock ? (
+              <div class="code-block">
+                <div class="code-head">
+                  <span>{demo.treeBlock.label}</span>
+                </div>
+                <div class="code-window">
+                  <pre>
+                    <code>{demo.treeBlock.code}</code>
+                  </pre>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
-        <DocsSpecTable table={props.content.sections.tokens.table} />
-      </section>
+      ))}
+    </section>
+  )
+}
 
-      <ComponentSpecSections
-        specs={props.content.componentSpecs.inputControls}
-        locale={props.locale}
+function ManifestSection(props: { section: DocsPageContent["sections"]["manifest"] }) {
+  return (
+    <section class="comp-spec" id="manifest">
+      <DocsSectionHead
+        eyebrow={props.section.eyebrow}
+        title={props.section.title}
+        description={props.section.description}
       />
-      <ComponentSpecSections
-        specs={props.content.componentSpecs.selectionControls}
-        locale={props.locale}
+      <div class="anatomy-box">
+        <h4>{props.section.anatomyTitle}</h4>
+        <ul>
+          {props.section.anatomyItems.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </div>
+      <DocsCodeBlock block={props.section.codeBlock} />
+      <DocsSpecTable table={props.section.table} />
+    </section>
+  )
+}
+
+function RuntimeSection(props: { section: DocsPageContent["sections"]["runtime"] }) {
+  return (
+    <section class="comp-spec" id="runtime">
+      <DocsSectionHead
+        eyebrow={props.section.eyebrow}
+        title={props.section.title}
+        description={props.section.description}
       />
-      <ComponentSpecSections
-        specs={props.content.componentSpecs.overlayControls}
-        locale={props.locale}
+      {props.section.demos.map((demo) => (
+        <div class="demo-section">
+          <div class="demo-section-head">
+            <h4>{demo.title}</h4>
+          </div>
+          <div class="demo-body">
+            {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
+          </div>
+        </div>
+      ))}
+      <DocsSpecTable table={props.section.table} />
+    </section>
+  )
+}
+
+function ContributionsSection(props: { section: DocsPageContent["sections"]["contributions"] }) {
+  return (
+    <section class="comp-spec" id="contributions">
+      <DocsSectionHead
+        eyebrow={props.section.eyebrow}
+        title={props.section.title}
+        description={props.section.description}
       />
-      <ComponentSpecSections
-        specs={props.content.componentSpecs.feedbackControls}
-        locale={props.locale}
+      <DocsSpecTable table={props.section.table} />
+      <div class="do-dont">
+        <div class="do">
+          <h5>{props.section.doTitle}</h5>
+          <p>{props.section.doBody}</p>
+        </div>
+        <div class="dont">
+          <h5>{props.section.dontTitle}</h5>
+          <p>{props.section.dontBody}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function TokensSection(props: { section: DocsPageContent["sections"]["tokens"] }) {
+  return (
+    <section class="comp-spec" id="tokens">
+      <DocsSectionHead
+        eyebrow={props.section.eyebrow}
+        title={props.section.title}
+        description={props.section.description}
       />
-      <ComponentSpecSections
-        specs={props.content.componentSpecs.structureControls}
-        locale={props.locale}
+      <div class="demo-section">
+        <div class="demo-section-head">
+          <h4>{props.section.previewTitle}</h4>
+        </div>
+        <div class="demo-body">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+              gap: 8px;
+            "
+          >
+            {props.section.swatches.map((swatch) => (
+              <div style={swatch.style}>{swatch.name}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <DocsSpecTable table={props.section.table} />
+    </section>
+  )
+}
+
+function MissingDocsSection(props: { id: string; locale: "zh-CN" | "en" }) {
+  const isEnglish = props.locale === "en"
+
+  return (
+    <section class="comp-spec">
+      <DocsSectionHead
+        eyebrow={isEnglish ? "NOT FOUND" : "未找到"}
+        title={isEnglish ? "This docs page does not exist" : "没有找到这个文档页面"}
+        description={
+          isEnglish
+            ? "Choose a page from the left navigation to continue."
+            : "请从左侧导航选择一个文档页面继续。"
+        }
       />
-    </main>
+      <a class="btn btn-secondary" href={getDocsSectionPath(defaultDocsSectionId)}>
+        {isEnglish ? "Back to quick start" : "返回快速开始"}
+      </a>
+    </section>
   )
 }
 
@@ -153,16 +210,6 @@ function DocsSectionHead(props: { eyebrow: string; title: string; description: s
       <h2>{props.title}</h2>
       <p>{props.description}</p>
     </div>
-  )
-}
-
-function ComponentSpecSections(props: { specs: DocsComponentSpec[]; locale: "zh-CN" | "en" }) {
-  return (
-    <>
-      {props.specs.map((spec) => (
-        <DocsComponentSpecSection spec={spec} locale={props.locale} />
-      ))}
-    </>
   )
 }
 

@@ -17,6 +17,7 @@ export const siteRoutes = [
   { path: siteRoutePaths[2], component: DocsHomePage },
   { path: siteRoutePaths[3], component: ComponentDocsPage },
   { path: siteRoutePaths[4], component: ComponentDocsPage },
+  { path: siteRoutePaths[5], component: DocsHomePage },
 ] satisfies SiteRoute[]
 
 export { siteRoutePaths }

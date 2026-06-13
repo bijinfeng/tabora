@@ -126,12 +126,16 @@ export const getSiteRoutePath = (pathname: string, base = import.meta.env.BASE_U
 
 export const isPrototypeRoute = (pathname: string, base?: string) => {
   const path = getSiteRoutePath(pathname, base)
-  return path === "/" || path === "/download" || path === "/docs"
+  return (
+    path === "/" ||
+    path === "/download" ||
+    path === "/docs" ||
+    (path.startsWith("/docs/") && !path.startsWith("/docs/components"))
+  )
 }
 
 export const needsLandingStylesheet = (pathname: string, base?: string) => {
-  const path = getSiteRoutePath(pathname, base)
-  return path === "/" || path === "/download" || path === "/docs"
+  return isPrototypeRoute(pathname, base)
 }
 
 export function AppShell(props: { children?: JSX.Element }) {

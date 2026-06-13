@@ -17,7 +17,7 @@ export function DownloadHero(props: { content: DownloadPageContent }) {
             <a class="btn btn-primary" href="#platforms">
               {props.content.hero.primary}
             </a>
-            <A class="btn btn-secondary" href="/docs#quickstart">
+            <A class="btn btn-secondary" href="/docs/quickstart">
               {props.content.hero.secondary}
             </A>
           </div>

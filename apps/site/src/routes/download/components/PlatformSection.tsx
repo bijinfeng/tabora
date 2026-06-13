@@ -37,7 +37,7 @@ export function PlatformSection(props: { content: DownloadPageContent }) {
                 <div class="download-actions">
                   {index === 2 ? (
                     <>
-                      <A class="btn btn-secondary" href="/docs#quickstart">
+                      <A class="btn btn-secondary" href="/docs/quickstart">
                         {card[3][0]}
                       </A>
                       <span class="badge">{card[3][1]}</span>

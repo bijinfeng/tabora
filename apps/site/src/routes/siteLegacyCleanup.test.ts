@@ -41,6 +41,11 @@ const requiredSlices = [
 ]
 
 const maxEntryLines = 160
+const routeFilesWithoutHashDocsLinks = [
+  "download/DownloadPage.tsx",
+  "download/components/DownloadHero.tsx",
+  "download/components/PlatformSection.tsx",
+]
 
 const lineCount = (relativePath: string) => {
   return readFileSync(resolve(siteSrcDir, relativePath), "utf8").trimEnd().split("\n").length
@@ -61,5 +66,13 @@ describe("site route slices", () => {
     expect(lineCount("home/HomePage.tsx")).toBeLessThanOrEqual(maxEntryLines)
     expect(lineCount("download/DownloadPage.tsx")).toBeLessThanOrEqual(maxEntryLines)
     expect(lineCount("docs/DocsHomePage.tsx")).toBeLessThanOrEqual(maxEntryLines)
+  })
+
+  it("does not keep hash-based docs quickstart links", () => {
+    expect(
+      routeFilesWithoutHashDocsLinks.filter((relativePath) =>
+        readFileSync(resolve(siteSrcDir, relativePath), "utf8").includes("/docs#quickstart"),
+      ),
+    ).toEqual([])
   })
 })

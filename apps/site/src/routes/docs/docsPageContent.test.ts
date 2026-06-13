@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { getDocsPageContent } from "./docsPageContent"
+import {
+  defaultDocsSectionId,
+  getDocsPageContent,
+  getDocsSectionPath,
+  resolveDocsPage,
+} from "./docsPageContent"
 
 describe("getDocsPageContent", () => {
   it("returns localized sidebar labels for English", () => {
@@ -82,6 +87,42 @@ describe("getDocsPageContent", () => {
     )
     expect(componentSpecs.structureControls?.[2]?.demos[0]).toEqual(
       expect.objectContaining({ exampleId: "card" }),
+    )
+  })
+
+  it("maps every sidebar item to a standalone docs route", () => {
+    const content = getDocsPageContent("zh-CN")
+    const sidebarIds = content.sidebarGroups.flatMap((group) => group.items.map((item) => item.id))
+
+    expect(defaultDocsSectionId).toBe("quickstart")
+    expect(new Set(sidebarIds).size).toBe(sidebarIds.length)
+    expect(sidebarIds.map(getDocsSectionPath)).toContain("/docs/quickstart")
+    expect(sidebarIds.map(getDocsSectionPath)).toContain("/docs/button")
+    expect(sidebarIds.map(getDocsSectionPath)).toContain("/docs/card")
+  })
+
+  it("resolves one sidebar item into one docs page payload", () => {
+    const content = getDocsPageContent("zh-CN")
+
+    expect(resolveDocsPage(content, "quickstart")).toEqual(
+      expect.objectContaining({
+        id: "quickstart",
+        kind: "guide",
+        title: "三步创建第一个 Tabora 插件",
+      }),
+    )
+    expect(resolveDocsPage(content, "button")).toEqual(
+      expect.objectContaining({
+        id: "button",
+        kind: "component",
+        title: "Button 按钮",
+      }),
+    )
+    expect(resolveDocsPage(content, "missing")).toEqual(
+      expect.objectContaining({
+        id: "missing",
+        kind: "missing",
+      }),
     )
   })
 })

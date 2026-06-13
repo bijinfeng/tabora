@@ -118,6 +118,88 @@ export type DocsPageContent = {
   }
 }
 
+export const defaultDocsSectionId = "quickstart"
+
+export const docsGuideSectionIds = [
+  "quickstart",
+  "manifest",
+  "runtime",
+  "contributions",
+  "tokens",
+] as const
+
+export type DocsGuideSectionId = (typeof docsGuideSectionIds)[number]
+
+export type DocsResolvedGuidePage = {
+  kind: "guide"
+  id: DocsGuideSectionId
+  title: string
+}
+
+export type DocsResolvedComponentPage = {
+  kind: "component"
+  id: string
+  title: string
+  spec: DocsComponentSpec
+}
+
+export type DocsResolvedMissingPage = {
+  kind: "missing"
+  id: string
+}
+
+export type DocsResolvedPage =
+  | DocsResolvedGuidePage
+  | DocsResolvedComponentPage
+  | DocsResolvedMissingPage
+
+export function getDocsSectionPath(id: string) {
+  return `/docs/${id}`
+}
+
+export function getDocsComponentSpecs(content: DocsPageContent) {
+  return [
+    ...content.componentSpecs.inputControls,
+    ...content.componentSpecs.selectionControls,
+    ...content.componentSpecs.overlayControls,
+    ...content.componentSpecs.feedbackControls,
+    ...content.componentSpecs.structureControls,
+  ]
+}
+
+export function resolveDocsPage(
+  content: DocsPageContent,
+  requestedId = defaultDocsSectionId,
+): DocsResolvedPage {
+  const id = requestedId || defaultDocsSectionId
+  if (isDocsGuideSectionId(id)) {
+    return {
+      kind: "guide",
+      id,
+      title: content.sections[id].title,
+    }
+  }
+
+  const spec = getDocsComponentSpecs(content).find((item) => item.id === id)
+  if (spec) {
+    return {
+      kind: "component",
+      id,
+      title: spec.title,
+      spec,
+    }
+  }
+
+  return {
+    kind: "missing",
+    id,
+  }
+}
+
+function isDocsGuideSectionId(id: string): id is DocsGuideSectionId {
+  return docsGuideSectionIds.includes(id as DocsGuideSectionId)
+}
+
 const docsPageContent: Record<SiteLocale, DocsPageContent> = {
   "zh-CN": {
     sidebarTitle: "Tabora Docs",
