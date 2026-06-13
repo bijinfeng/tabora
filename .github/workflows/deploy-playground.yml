@@ -26,12 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PLAYGROUND_DEPLOY_HOST: ${{ vars.PLAYGROUND_DEPLOY_HOST }}
-      PLAYGROUND_DEPLOY_PORT: ${{ vars.PLAYGROUND_DEPLOY_PORT }}
-      PLAYGROUND_DEPLOY_USER: ${{ vars.PLAYGROUND_DEPLOY_USER }}
-      PLAYGROUND_DEPLOY_PATH: ${{ vars.PLAYGROUND_DEPLOY_PATH }}
-      PLAYGROUND_DEPLOY_POST_COMMAND: ${{ vars.PLAYGROUND_DEPLOY_POST_COMMAND }}
-      PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY }}
+      PLAYGROUND_DEPLOY_HOST: ${{ secrets.PLAYGROUND_DEPLOY_HOST }}
+      PLAYGROUND_DEPLOY_PORT: ${{ secrets.PLAYGROUND_DEPLOY_PORT }}
+      PLAYGROUND_DEPLOY_USER: ${{ secrets.PLAYGROUND_DEPLOY_USER }}
+      PLAYGROUND_DEPLOY_PATH: ${{ secrets.PLAYGROUND_DEPLOY_PATH }}
+      PLAYGROUND_DEPLOY_POST_COMMAND: ${{ secrets.PLAYGROUND_DEPLOY_POST_COMMAND }}
+      PLAYGROUND_DEPLOY_PASSWORD: ${{ secrets.PLAYGROUND_DEPLOY_PASSWORD }}
       PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS }}
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
           set -euo pipefail
           missing=0
 
-          for name in PLAYGROUND_DEPLOY_HOST PLAYGROUND_DEPLOY_USER PLAYGROUND_DEPLOY_PATH PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY; do
+          for name in PLAYGROUND_DEPLOY_HOST PLAYGROUND_DEPLOY_USER PLAYGROUND_DEPLOY_PATH PLAYGROUND_DEPLOY_PASSWORD; do
             if [ -z "${!name:-}" ]; then
               echo "::error title=Missing configuration::$name is not configured"
               missing=1
@@ -69,15 +69,20 @@ jobs:
             exit 1
           fi
 
-      - name: Configure SSH
+      - name: Install SSH password helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+      - name: Configure SSH known hosts
         shell: bash
         run: |
           set -euo pipefail
           deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
 
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
 
           if [ -n "${PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS:-}" ]; then
             printf '%s\n' "$PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
@@ -92,14 +97,16 @@ jobs:
         run: |
           set -euo pipefail
           deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
-          ssh -p "$deploy_port" "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST" "mkdir -p \"$PLAYGROUND_DEPLOY_PATH\""
+          export SSHPASS="$PLAYGROUND_DEPLOY_PASSWORD"
+          sshpass -e ssh -p "$deploy_port" -o PreferredAuthentications=password -o PubkeyAuthentication=no "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST" "mkdir -p \"$PLAYGROUND_DEPLOY_PATH\""
 
       - name: Sync static files
         shell: bash
         run: |
           set -euo pipefail
           deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
-          rsync -az --delete -e "ssh -p $deploy_port" apps/playground/dist/ "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST:$PLAYGROUND_DEPLOY_PATH/"
+          export SSHPASS="$PLAYGROUND_DEPLOY_PASSWORD"
+          sshpass -e rsync -az --delete -e "ssh -p $deploy_port -o PreferredAuthentications=password -o PubkeyAuthentication=no" apps/playground/dist/ "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST:$PLAYGROUND_DEPLOY_PATH/"
 
       - name: Run post-deploy command
         if: ${{ env.PLAYGROUND_DEPLOY_POST_COMMAND != '' }}
@@ -107,4 +114,5 @@ jobs:
         run: |
           set -euo pipefail
           deploy_port="${PLAYGROUND_DEPLOY_PORT:-22}"
-          ssh -p "$deploy_port" "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST" "$PLAYGROUND_DEPLOY_POST_COMMAND"
+          export SSHPASS="$PLAYGROUND_DEPLOY_PASSWORD"
+          sshpass -e ssh -p "$deploy_port" -o PreferredAuthentications=password -o PubkeyAuthentication=no "$PLAYGROUND_DEPLOY_USER@$PLAYGROUND_DEPLOY_HOST" "$PLAYGROUND_DEPLOY_POST_COMMAND"
