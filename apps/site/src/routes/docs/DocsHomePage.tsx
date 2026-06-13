@@ -2,13 +2,10 @@ import { A, useParams } from "@solidjs/router"
 import { createEffect, createMemo, onCleanup, onMount } from "solid-js"
 
 import { useSiteI18n } from "../../app/AppShell"
-import { PrototypeTopnav } from "../../shared/PrototypeTopnav"
 import { highlightCode } from "../../shared/codeHighlight"
+import { DocsTopnav } from "./components/DocsTopnav"
 import { DocsGuideSections } from "./components/DocsGuideSections"
 import { defaultDocsSectionId, getDocsPageContent, getDocsSectionPath } from "./docsPageContent"
-import docsPrototypeHtml from "../../../../../docs/design/docs.html?raw"
-
-const docsPrototypeCss = docsPrototypeHtml.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? ""
 
 const highlightVisibleCode = () => {
   document.querySelectorAll("pre > code").forEach((element) => {
@@ -26,11 +23,6 @@ export function DocsHomePage() {
   const currentSectionId = createMemo(() => params.sectionId ?? defaultDocsSectionId)
 
   onMount(() => {
-    const styleTag = document.createElement("style")
-    styleTag.dataset.docsPrototype = "true"
-    styleTag.textContent = docsPrototypeCss
-    document.head.append(styleTag)
-
     let resetCopyTimer = 0
 
     const onClick = async (event: MouseEvent) => {
@@ -62,7 +54,6 @@ export function DocsHomePage() {
     onCleanup(() => {
       document.removeEventListener("click", onClick)
       window.clearTimeout(resetCopyTimer)
-      styleTag.remove()
     })
   })
 
@@ -73,7 +64,7 @@ export function DocsHomePage() {
 
   return (
     <>
-      <PrototypeTopnav active="docs" onThemeToggled={() => {}} />
+      <DocsTopnav />
       <div class="page-body">
         <aside class="sidebar" aria-label={content().sidebarTitle}>
           <div class="sidebar-title">

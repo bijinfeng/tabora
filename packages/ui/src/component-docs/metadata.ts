@@ -133,7 +133,13 @@ export const componentDocItems: ComponentDocItem[] = [
     title: "Combobox 搜索选择",
     purpose: "用于搜索选择或大量选项过滤。",
     usage: "插件、命令、搜索 provider 等选项较多且需要输入筛选的场景。",
-    code: `<Combobox value={query()} options={options} onInput={setQuery} onSelect={setValue} />`,
+    code: `<Combobox
+  value={query()}
+  options={options}
+  onInput={setQuery}
+  onSelect={(option) => setQuery(option.label)}
+  aria-label="搜索插件"
+/>`,
   },
   {
     id: "link",
@@ -213,7 +219,12 @@ export const componentDocItems: ComponentDocItem[] = [
     title: "Tabs 标签页",
     purpose: "切换同一容器内的内容视图。",
     usage: "设置分区、插件详情分面、同一上下文内的视图切换。",
-    code: `<Tabs value={tab()} tabs={tabs} onChange={setTab} aria-label="设置分区" />`,
+    code: `<Tabs
+  value={tab()}
+  tabs={[{ value: "overview", label: "概览", content: <Panel /> }]}
+  onChange={setTab}
+  aria-label="设置分区"
+/>`,
   },
   {
     id: "dropdown",

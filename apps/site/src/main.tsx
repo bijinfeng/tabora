@@ -1,7 +1,7 @@
 import { render } from "solid-js/web"
 import { Route, Router } from "@solidjs/router"
-import "@tabora/ui/styles.css"
 import "./styles.css"
+import "@tabora/ui/styles.css"
 import { AppShell } from "./app/AppShell"
 import { siteRoutes } from "./routes/siteRoutes"
 

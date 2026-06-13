@@ -5,7 +5,7 @@ import { For } from "solid-js"
 export type TabsProps = {
   value: string
   onChange: (value: string) => void
-  tabs: { value: string; label: JSX.Element; content: JSX.Element }[]
+  tabs: { value: string; label: JSX.Element; content: JSX.Element; disabled?: boolean }[]
   variant?: "underline" | "pills"
   size?: "sm" | "md"
   class?: string
@@ -24,7 +24,11 @@ export function Tabs(props: TabsProps) {
       <KTabs.List class="tbr-tabs-list" aria-label={props["aria-label"]}>
         <For each={props.tabs}>
           {(tab) => (
-            <KTabs.Trigger class="tbr-tabs-trigger" value={tab.value}>
+            <KTabs.Trigger
+              class="tbr-tabs-trigger"
+              value={tab.value}
+              {...(tab.disabled ? { disabled: true } : {})}
+            >
               {tab.label}
             </KTabs.Trigger>
           )}

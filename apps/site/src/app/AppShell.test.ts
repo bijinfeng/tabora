@@ -21,9 +21,9 @@ describe("AppShell route path handling", () => {
   it("loads design preview stylesheets only for public prototype routes", () => {
     expect(needsLandingStylesheet("/tabora/", "/tabora/")).toBe(true)
     expect(needsLandingStylesheet("/tabora/download", "/tabora/")).toBe(true)
-    expect(needsLandingStylesheet("/tabora/docs", "/tabora/")).toBe(true)
-    expect(needsLandingStylesheet("/tabora/docs/quickstart", "/tabora/")).toBe(true)
-    expect(needsLandingStylesheet("/tabora/docs/button", "/tabora/")).toBe(true)
+    expect(needsLandingStylesheet("/tabora/docs", "/tabora/")).toBe(false)
+    expect(needsLandingStylesheet("/tabora/docs/quickstart", "/tabora/")).toBe(false)
+    expect(needsLandingStylesheet("/tabora/docs/button", "/tabora/")).toBe(false)
     expect(needsLandingStylesheet("/tabora/docs/components", "/tabora/")).toBe(false)
   })
 })

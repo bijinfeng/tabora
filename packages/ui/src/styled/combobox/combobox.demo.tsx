@@ -9,7 +9,8 @@ export function ComboboxDemo() {
     <Combobox
       value={value()}
       onInput={setValue}
-      onSelect={(nextValue) => setValue(nextValue)}
+      onSelect={(option) => setValue(option.label)}
+      aria-label="搜索插件"
       placeholder="搜索插件..."
       options={[
         { value: "notes", label: "Notes" },

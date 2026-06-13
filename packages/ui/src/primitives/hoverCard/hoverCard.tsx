@@ -1,4 +1,4 @@
-import type { JSX } from "solid-js"
+import { createUniqueId, type JSX } from "solid-js"
 import { Show } from "solid-js"
 
 export type HoverCardProps = {
@@ -11,10 +11,14 @@ export type HoverCardProps = {
 }
 
 export function HoverCard(props: HoverCardProps) {
+  const contentId = createUniqueId()
+
   return (
     <span class={props.class}>
-      <span class="tbr-hover-card-trigger">{props.trigger}</span>
-      <span class="tbr-hover-card-content" role="tooltip">
+      <span class="tbr-hover-card-trigger" tabindex="0" aria-describedby={contentId}>
+        {props.trigger}
+      </span>
+      <span class="tbr-hover-card-content" id={contentId} role="tooltip">
         <Show when={props.media}>
           <span class="tbr-hover-card-media">{props.media}</span>
         </Show>

@@ -24,6 +24,14 @@ describe("getDocsExample", () => {
     expect(getDocsExample("table")?.source).toContain("export function TableDemo")
   })
 
+  it("keeps the tabs docs example aligned with the visual prototype states", () => {
+    const source = getDocsExample("tabs")?.source ?? ""
+
+    expect(source).toContain('variant="pills"')
+    expect(source).toContain("disabled: true")
+    expect(source).toContain("<Badge")
+  })
+
   it("keeps render functions available after helper-based registration", () => {
     expect(typeof getDocsExample("dialog")?.render).toBe("function")
     expect(typeof getDocsExample("toast")?.render).toBe("function")
