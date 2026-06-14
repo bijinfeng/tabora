@@ -10,9 +10,42 @@ const escapeHtml = (value: string) => {
 const guessLanguage = (value: string) => {
   const trimmed = value.trim()
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) return "json"
-  if (trimmed.includes("<") && trimmed.includes(">")) return "html"
   if (/(^|\n)\s*(pnpm|npm|yarn|bun)\s+/.test(value) || /(^|\n)\s*#/.test(value)) return "bash"
+  if (/(^|\n)\s*(import|export|type|interface|const|let|var|function)\b/.test(value)) {
+    return "tsx"
+  }
+  if (trimmed.includes("<") && trimmed.includes(">")) return "html"
   return "plain"
+}
+
+const tokenName = (index: number) => {
+  let value = ""
+  let current = index
+
+  do {
+    value = String.fromCharCode(65 + (current % 26)) + value
+    current = Math.floor(current / 26) - 1
+  } while (current >= 0)
+
+  return value
+}
+
+const createTokenStore = () => {
+  const tokens: string[] = []
+
+  const makeToken = (html: string) => {
+    const key = `@@TBRHL_${tokenName(tokens.length)}@@`
+    tokens.push(html)
+    return key
+  }
+
+  const restoreTokens = (value: string) => {
+    return tokens.reduceRight((output, html, index) => {
+      return output.replaceAll(`@@TBRHL_${tokenName(index)}@@`, html)
+    }, value)
+  }
+
+  return { makeToken, restoreTokens }
 }
 
 const highlightJson = (value: string) => {
@@ -54,6 +87,94 @@ const highlightBash = (value: string) => {
   })
 }
 
+const highlightJsxTags = (value: string, makeToken: (html: string) => string) => {
+  const tagStack: Array<{ braceDepth: number }> = []
+  let output = ""
+  let index = 0
+
+  while (index < value.length) {
+    const tagMatch = value.slice(index).match(/^&lt;\/?[\w.:-]+/)
+    if (tagMatch) {
+      const before = value.slice(0, index)
+      const after = value.slice(index + tagMatch[0].length)
+      const isClosingTag = tagMatch[0].startsWith("&lt;/")
+      const isJsxOpen =
+        (isClosingTag && after.startsWith("&gt;")) ||
+        (/(^|[\s([{:>,=])$/.test(before) && /^[\s/>]/.test(after))
+
+      if (isJsxOpen) {
+        output += makeToken(
+          `<span class="tbr-syn-punct">&lt;</span><span class="tbr-syn-tag">${tagMatch[0].slice(4)}</span>`,
+        )
+        tagStack.push({ braceDepth: 0 })
+        index += tagMatch[0].length
+        continue
+      }
+    }
+
+    const currentTag = tagStack[tagStack.length - 1]
+
+    if (currentTag) {
+      if (currentTag.braceDepth === 0 && value.startsWith("/&gt;", index)) {
+        output += makeToken('<span class="tbr-syn-punct">/&gt;</span>')
+        tagStack.pop()
+        index += 5
+        continue
+      }
+
+      if (currentTag.braceDepth === 0 && value.startsWith("&gt;", index)) {
+        output += makeToken('<span class="tbr-syn-punct">&gt;</span>')
+        tagStack.pop()
+        index += 4
+        continue
+      }
+
+      if (currentTag.braceDepth === 0) {
+        const attrMatch = value.slice(index).match(/^(\s)([\w:-]+)(?=\s*=)/)
+        if (attrMatch) {
+          output += `${attrMatch[1]}<span class="tbr-syn-attr">${attrMatch[2]}</span>`
+          index += attrMatch[0].length
+          continue
+        }
+      }
+
+      if (value[index] === "{") currentTag.braceDepth += 1
+      else if (value[index] === "}") currentTag.braceDepth = Math.max(0, currentTag.braceDepth - 1)
+    }
+
+    output += value[index]
+    index += 1
+  }
+
+  return output
+}
+
+const highlightTsx = (value: string) => {
+  const { makeToken, restoreTokens } = createTokenStore()
+  const escaped = escapeHtml(value)
+  const withStrings = escaped.replace(
+    /`(?:\\[\s\S]|[^`])*`|&quot;(?:\\[\s\S]|(?!&quot;)[\s\S])*?&quot;|&#39;(?:\\[\s\S]|(?!&#39;)[\s\S])*?&#39;/g,
+    (match) => {
+      return makeToken(`<span class="tbr-syn-string">${match}</span>`)
+    },
+  )
+  const withComments = withStrings.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n\r]*/g, (match) => {
+    return makeToken(`<span class="tbr-syn-comment">${match}</span>`)
+  })
+  const withJsx = highlightJsxTags(withComments, makeToken)
+  const withKeywords = withJsx.replace(
+    /(?<![.\w$])\b(import|from|export|default|type|interface|function|return|const|let|var|as|satisfies|if|else|for|while|new|true|false|null|undefined|async|await)\b(?!\s*:)/g,
+    (match) => {
+      return `<span class="tbr-syn-keyword">${match}</span>`
+    },
+  )
+  const withNumbers = withKeywords.replace(/\b-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g, (match) => {
+    return `<span class="tbr-syn-number">${match}</span>`
+  })
+
+  return restoreTokens(withNumbers)
+}
+
 const highlightHtmlCode = (value: string) => {
   const escaped = escapeHtml(value)
   const withComments = escaped.replace(/&lt;!--[\s\S]*?--&gt;/g, (match) => {
@@ -83,6 +204,7 @@ const highlightHtmlCode = (value: string) => {
 export const highlightCode = (value: string) => {
   const lang = guessLanguage(value)
   if (lang === "json") return highlightJson(value)
+  if (lang === "tsx") return highlightTsx(value)
   if (lang === "html") return highlightHtmlCode(value)
   if (lang === "bash") return highlightBash(value)
   const escaped = escapeHtml(value)

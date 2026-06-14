@@ -890,19 +890,19 @@ html.site-prototype body::before {
 }
 
 .site-prototype-root .tbr-syn-attr {
-  color: var(--cp-info, var(--info, rgb(var(--tbr-color-accent))));
+  color: var(--cp-info, var(--info, rgb(var(--tbr-color-info))));
 }
 
 .site-prototype-root .tbr-syn-string {
-  color: var(--cp-warning, var(--warning, rgb(var(--tbr-color-accent))));
+  color: var(--cp-warning, var(--warning, rgb(var(--tbr-color-warning))));
 }
 
 .site-prototype-root .tbr-syn-number {
-  color: var(--cp-info, var(--info, rgb(var(--tbr-color-accent))));
+  color: var(--cp-info, var(--info, rgb(var(--tbr-color-info))));
 }
 
 .site-prototype-root .tbr-syn-keyword {
-  color: var(--cp-success, var(--success, rgb(var(--tbr-color-accent))));
+  color: var(--cp-success, var(--success, rgb(var(--tbr-color-success))));
 }
 
 .site-prototype-root .tbr-syn-punct {
