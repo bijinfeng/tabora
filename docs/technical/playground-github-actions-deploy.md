@@ -6,9 +6,9 @@
 
 - `playground` 以静态站点方式部署。
 - 服务器已经有 Nginx、Caddy 或其他 Web Server，对某个目录做静态文件托管。
-- 你希望在 GitHub Actions 中自动构建，并通过 SSH 上传到服务器。
+- 你希望在 GitHub Actions 中自动构建，并通过 SSH 密码登录上传到服务器。
 
-当前 workflow 使用 `pnpm --filter @tabora/playground build` 生成产物，并通过 `rsync --delete` 同步 `apps/playground/dist/` 到目标目录。
+当前 workflow 使用 `pnpm --filter @tabora/playground build` 生成产物，并通过 `sshpass` + `rsync --delete` 同步 `apps/playground/dist/` 到目标目录。
 
 ## 触发方式
 
@@ -22,23 +22,26 @@
 - 目标目录已经规划好，例如 `/var/www/tabora-playground`
 - 用于部署的用户对目标目录有写权限
 - 服务器已安装 `ssh` 与 `rsync`
+- 服务器允许该部署用户使用 SSH 密码登录
 - Web Server 已把域名或端口指向该目录
 
 如果你还没配静态站点，最小 Nginx 思路可以是把站点根目录指向部署目录，并对 SPA 路由使用 `try_files $uri $uri/ /index.html;`
 
 ## GitHub 配置
 
-在仓库 Settings 中配置以下 Variables：
+在仓库 Settings 中进入 `Secrets and variables` -> `Actions`，并把 playground 部署配置全部放入 Secrets，不使用 Variables 存储服务器地址、账号、路径或部署命令。
+
+必填 Secrets：
 
 - `PLAYGROUND_DEPLOY_HOST`：服务器地址，例如 `example.com`
-- `PLAYGROUND_DEPLOY_PORT`：SSH 端口，可选；不填时默认 `22`
 - `PLAYGROUND_DEPLOY_USER`：部署用户，例如 `deploy`
 - `PLAYGROUND_DEPLOY_PATH`：服务器目标目录，例如 `/var/www/tabora-playground`
+- `PLAYGROUND_DEPLOY_PASSWORD`：部署用户的 SSH 登录密码
+
+可选 Secrets：
+
+- `PLAYGROUND_DEPLOY_PORT`：SSH 端口，可选；不填时默认 `22`
 - `PLAYGROUND_DEPLOY_POST_COMMAND`：可选，部署完成后在服务器执行的命令
-
-在仓库 Settings 中配置以下 Secrets：
-
-- `PLAYGROUND_DEPLOY_SSH_PRIVATE_KEY`：用于登录服务器的私钥内容，推荐单独创建部署 key
 - `PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS`：可选；服务器 host key。若不配置，workflow 会在运行时用 `ssh-keyscan` 拉取
 
 生成 `PLAYGROUND_DEPLOY_SSH_KNOWN_HOSTS` 的常用命令：
@@ -56,11 +59,13 @@ workflow 会按下面的顺序执行：
 1. 检出代码并安装 pnpm / Node.js 24
 2. 执行 `pnpm install --frozen-lockfile`
 3. 执行 `pnpm --filter @tabora/playground build`
-4. 校验部署所需 Variables / Secrets 是否完整
-5. 配置 SSH 私钥与 `known_hosts`
+4. 校验部署所需 Secrets 是否完整
+5. 安装 `sshpass`，并配置 SSH `known_hosts`
 6. 在服务器上创建目标目录
 7. 用 `rsync --delete` 同步 `apps/playground/dist/`
 8. 如果配置了 `PLAYGROUND_DEPLOY_POST_COMMAND`，则执行该命令
+
+workflow 会通过 `PLAYGROUND_DEPLOY_PASSWORD` 设置 `SSHPASS`，并对 `ssh` / `rsync` 使用密码认证。命令中不会主动打印密码。
 
 `rsync --delete` 会删除服务器目标目录里已经不存在于本次构建产物中的旧文件，所以目标目录最好只用于该站点。
 
@@ -79,5 +84,6 @@ sudo systemctl reload nginx
 ## 注意事项
 
 - 当前 workflow 假设 `PLAYGROUND_DEPLOY_PATH` 不包含空格。
+- `PLAYGROUND_DEPLOY_PASSWORD`、服务器地址、账号、路径和部署后命令都应只放在 GitHub Secrets 中。
 - 当前部署的是 `playground` 静态产物，不包含浏览器扩展。
 - 如果未来改成子路径部署，需要同步调整 `apps/playground/vite.config.ts` 中的 `base` 配置。
