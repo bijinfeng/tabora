@@ -3,10 +3,16 @@ import { EmptyState } from "./emptyState.styled"
 
 export function EmptyStateDemo() {
   return (
-    <EmptyState
-      title="暂无卡片"
-      description="添加第一张 widget 后会显示在这里。"
-      action={<Button size="sm">添加卡片</Button>}
-    />
+    <div class="docs-control-stack">
+      <div class="docs-stack compact">
+        <strong>固定卡片区域</strong>
+        <span>空状态不只告诉用户“没有内容”，还要给出下一步动作。</span>
+      </div>
+      <EmptyState
+        title="暂时没有固定卡片"
+        description="将常用 widget 固定到首页后，这里会始终保留它们，方便每天快速进入。"
+        action={<Button size="sm">添加固定卡片</Button>}
+      />
+    </div>
   )
 }

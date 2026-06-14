@@ -3,8 +3,19 @@ import { Tooltip } from "./tooltip.styled"
 
 export function TooltipDemo() {
   return (
-    <Tooltip content="打开设置">
-      <Button variant="secondary">悬停查看</Button>
-    </Tooltip>
+    <div class="docs-control-stack">
+      <div class="docs-stack compact">
+        <strong>图标与工具按钮提示</strong>
+        <span>适合补充紧凑按钮语义，而不是承载复杂交互。</span>
+      </div>
+      <div class="docs-row">
+        <Tooltip content="打开插件设置">
+          <Button variant="secondary">设置</Button>
+        </Tooltip>
+        <Tooltip content="切换为紧凑布局" placement="bottom">
+          <Button variant="ghost">布局</Button>
+        </Tooltip>
+      </div>
+    </div>
   )
 }

@@ -3,18 +3,30 @@ import { createSignal } from "solid-js"
 import { RadioGroup } from "./radioGroup.styled"
 
 export function RadioGroupDemo() {
-  const [value, setValue] = createSignal<"light" | "dark" | "system">("system")
+  const [value, setValue] = createSignal<"cards" | "list" | "compact">("cards")
 
   return (
-    <RadioGroup
-      name="docs-theme"
-      value={value()}
-      onChange={setValue}
-      options={[
-        { value: "light", label: "明亮主题", description: "白天使用" },
-        { value: "dark", label: "暗色主题", description: "夜间使用" },
-        { value: "system", label: "跟随系统", description: "自动匹配系统" },
-      ]}
-    />
+    <div class="docs-control-stack">
+      <div class="docs-stack compact">
+        <strong>搜索结果布局</strong>
+        <span>适合 3-5 个互斥方案，并直接展示每种方案的说明。</span>
+      </div>
+      <RadioGroup
+        name="docs-results-layout"
+        value={value()}
+        onChange={setValue}
+        options={[
+          { value: "cards", label: "卡片布局", description: "更适合展示 rich preview" },
+          { value: "list", label: "列表布局", description: "适合高密度快速扫描" },
+          { value: "compact", label: "紧凑布局", description: "为窄宽度或小屏预留更多内容空间" },
+        ]}
+      />
+      <div class="docs-stack compact">
+        <span>当前选择</span>
+        <strong>
+          {value() === "cards" ? "卡片布局" : value() === "list" ? "列表布局" : "紧凑布局"}
+        </strong>
+      </div>
+    </div>
   )
 }

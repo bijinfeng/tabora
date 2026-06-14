@@ -1,9 +1,44 @@
 import { createSignal } from "solid-js"
 
+import { Button } from "../button"
 import { Checkbox } from "./checkbox.styled"
 
 export function CheckboxDemo() {
-  const [checked, setChecked] = createSignal(false)
+  const [syncAll, setSyncAll] = createSignal(true)
+  const [includeShortcuts, setIncludeShortcuts] = createSignal(false)
+  const [includeTheme, setIncludeTheme] = createSignal(true)
 
-  return <Checkbox checked={checked()} onChange={setChecked} label="同步完成" />
+  return (
+    <div class="docs-control-stack">
+      <div class="docs-stack compact">
+        <strong>同步到所有工作区</strong>
+        <span>适合多选偏好项和批量同步场景。</span>
+      </div>
+      <Checkbox checked={syncAll()} onChange={setSyncAll} label="同步到所有工作区" />
+      <Checkbox
+        checked={includeShortcuts()}
+        onChange={setIncludeShortcuts}
+        label="包含快捷键配置"
+      />
+      <Checkbox checked={includeTheme()} onChange={setIncludeTheme} label="包含主题与背景" />
+      <div class="docs-row">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            setSyncAll(true)
+            setIncludeShortcuts(false)
+            setIncludeTheme(true)
+          }}
+        >
+          恢复推荐项
+        </Button>
+        <span>
+          将同步 {syncAll() ? "全部工作区" : "当前工作区"} ·
+          {includeShortcuts() ? " 含快捷键" : " 不含快捷键"} ·
+          {includeTheme() ? " 含主题" : " 不含主题"}
+        </span>
+      </div>
+    </div>
+  )
 }

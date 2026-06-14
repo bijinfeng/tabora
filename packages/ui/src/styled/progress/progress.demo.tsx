@@ -8,7 +8,11 @@ export function ProgressDemo() {
 
   return (
     <div class="docs-control-stack">
-      <Progress value={value()} aria-label="导入进度" />
+      <div class="docs-stack compact">
+        <strong>导入插件包</strong>
+        <span>适合确定进度任务，并在进度条附近同时给出阶段说明。</span>
+      </div>
+      <Progress value={value()} aria-label="导入插件包进度" />
       <div class="docs-row compact">
         <Button
           size="sm"
@@ -24,7 +28,10 @@ export function ProgressDemo() {
         >
           +20%
         </Button>
-        <span>{value()}%</span>
+        <span>
+          {value()}% ·
+          {value() < 40 ? " 校验 manifest" : value() < 80 ? " 写入本地数据" : " 完成收尾"}
+        </span>
       </div>
     </div>
   )
