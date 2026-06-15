@@ -1,4 +1,4 @@
-import { For } from "solid-js"
+import { Pagination as KPagination } from "@kobalte/core/pagination"
 import { ChevronLeft, ChevronRight } from "lucide-solid"
 
 export type PaginationProps = {
@@ -9,48 +9,31 @@ export type PaginationProps = {
 }
 
 export function Pagination(props: PaginationProps) {
-  const pages = () => {
-    const p: (number | "...")[] = []
-    for (let i = 1; i <= props.total; i++) {
-      if (i === 1 || i === props.total || (i >= props.page - 1 && i <= props.page + 1)) p.push(i)
-      else if (p[p.length - 1] !== "...") p.push("...")
-    }
-    return p
-  }
   return (
     <div class={`tbr-pagination ${props.class ?? ""}`}>
-      <button
-        class="tbr-page-btn"
-        disabled={props.page <= 1}
-        onClick={() => props.onChange(props.page - 1)}
-        aria-label="上一页"
+      <KPagination
+        page={props.page}
+        count={props.total}
+        onPageChange={props.onChange}
+        itemComponent={(itemProps) => (
+          <KPagination.Item page={itemProps.page} class="tbr-page-btn">
+            {itemProps.page}
+          </KPagination.Item>
+        )}
+        ellipsisComponent={() => (
+          <KPagination.Ellipsis class="tbr-page-ellipsis">...</KPagination.Ellipsis>
+        )}
+        showFirst={false}
+        showLast={false}
       >
-        <ChevronLeft size={16} strokeWidth={2} />
-      </button>
-      <For each={pages()}>
-        {(p) =>
-          p === "..." ? (
-            <span class="tbr-page-ellipsis">...</span>
-          ) : (
-            <button
-              class="tbr-page-btn"
-              data-active={p === props.page ? "" : undefined}
-              onClick={() => props.onChange(p as number)}
-              aria-current={p === props.page ? "page" : undefined}
-            >
-              {p}
-            </button>
-          )
-        }
-      </For>
-      <button
-        class="tbr-page-btn"
-        disabled={props.page >= props.total}
-        onClick={() => props.onChange(props.page + 1)}
-        aria-label="下一页"
-      >
-        <ChevronRight size={16} strokeWidth={2} />
-      </button>
+        <KPagination.Previous class="tbr-page-btn" aria-label="上一页">
+          <ChevronLeft size={16} strokeWidth={2} />
+        </KPagination.Previous>
+        <KPagination.Items />
+        <KPagination.Next class="tbr-page-btn" aria-label="下一页">
+          <ChevronRight size={16} strokeWidth={2} />
+        </KPagination.Next>
+      </KPagination>
     </div>
   )
 }

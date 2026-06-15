@@ -1,3 +1,5 @@
+import { Progress as KProgress } from "@kobalte/core/progress"
+
 export type ProgressProps = {
   value: number
   max?: number
@@ -7,26 +9,23 @@ export type ProgressProps = {
 }
 
 export function Progress(props: ProgressProps) {
-  const pct = Math.min(100, Math.max(0, (props.value / (props.max ?? 100)) * 100))
+  const rootProps = () => {
+    const p: Record<string, unknown> = {}
+    if (props["aria-label"] !== undefined) p["aria-label"] = props["aria-label"]
+    return p
+  }
+
   return (
-    <div
-      class={props.class}
+    <KProgress
+      {...rootProps()}
+      value={props.value}
+      maxValue={props.max ?? 100}
+      class={`tbr-progress ${props.class ?? ""}`}
       data-size={props.size ?? "md"}
-      role="progressbar"
-      aria-valuenow={props.value}
-      aria-valuemin={0}
-      aria-valuemax={props.max ?? 100}
-      aria-label={props["aria-label"]}
     >
-      <div
-        style={{
-          width: `${pct}%`,
-          height: "100%",
-          "border-radius": "999px",
-          background: "rgb(var(--tbr-color-accent))",
-          transition: "width 300ms ease",
-        }}
-      />
-    </div>
+      <KProgress.Track class="tbr-progress-track">
+        <KProgress.Fill class="tbr-progress-fill" />
+      </KProgress.Track>
+    </KProgress>
   )
 }

@@ -24,7 +24,8 @@
     background: rgba(var(--tbr-color-accent), 0.06);
     border-color: rgb(var(--tbr-color-line-strong));
   }
-  .tbr-page-btn[data-active] {
+  .tbr-page-btn[data-active],
+  .tbr-page-btn[data-selected] {
     background: rgb(var(--tbr-color-accent-soft));
     border-color: rgb(var(--tbr-color-accent));
     color: rgb(var(--tbr-color-accent));
