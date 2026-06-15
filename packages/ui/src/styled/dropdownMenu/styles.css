@@ -4,11 +4,18 @@
     min-width: 180px;
     background: rgb(var(--tbr-color-surface));
     border: 1px solid rgb(var(--tbr-color-line));
-    border-radius: var(--tbr-radius-control);
+    border-radius: var(--tbr-radius-panel);
     box-shadow: 0 4px 16px rgb(var(--tbr-color-shadow) / 0.08);
     z-index: 50;
-    padding: 4px;
+    padding: 8px;
     animation: tbr-scale-in 120ms var(--tbr-ease);
+  }
+  .tbr-dropdown-title {
+    padding: 10px 12px 8px;
+    margin-bottom: 2px;
+    color: rgb(var(--tbr-color-text-muted));
+    font-size: 12px;
+    font-weight: 650;
   }
   .tbr-dropdown[data-arrow]::before {
     position: absolute;
@@ -60,11 +67,12 @@
   .tbr-dropdown-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    padding: 7px 10px;
+    min-height: 48px;
+    padding: 10px 12px;
     border: none;
-    border-radius: var(--tbr-radius-2);
+    border-radius: 10px;
     background: none;
     font-size: 13px;
     font-family: inherit;
@@ -73,6 +81,12 @@
   }
   .tbr-dropdown-item:hover {
     background: rgba(var(--tbr-color-accent), 0.06);
+  }
+  .tbr-dropdown-item[data-checked] {
+    background: rgb(var(--tbr-color-accent-soft));
+  }
+  .tbr-dropdown-item[data-checked]:hover {
+    background: rgb(var(--tbr-color-accent-soft));
   }
   .tbr-dropdown-item[data-danger] {
     color: rgb(var(--tbr-color-danger));
@@ -87,13 +101,26 @@
   .tbr-dropdown-sep {
     height: 1px;
     background: rgb(var(--tbr-color-line));
-    margin: 4px 0;
+    margin: 6px 4px;
   }
   .tbr-dropdown-icon {
-    width: 16px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex: none;
+    border-radius: 10px;
+    background: rgb(var(--tbr-color-surface-soft));
+    color: rgb(var(--tbr-color-text-muted));
+  }
+  .tbr-dropdown-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+  .tbr-dropdown-item[data-checked] .tbr-dropdown-icon {
+    background: rgb(var(--tbr-color-accent));
+    color: rgb(var(--tbr-color-inverse));
   }
   .tbr-dropdown-check {
     display: flex;
@@ -106,9 +133,9 @@
   }
   .tbr-dropdown-label {
     flex: 1;
+    min-width: 0;
   }
   .tbr-dropdown-kbd {
-    margin-left: auto;
     font-family: "SFMono-Regular", Consolas, monospace;
     font-size: 10px;
     color: rgb(var(--tbr-color-text-subtle));
