@@ -83,6 +83,9 @@ export type { CollapsibleProps } from "./styled/collapsible"
 export { Field } from "./styled/field"
 export type { FieldProps } from "./styled/field"
 
+export { FieldRow } from "./styled/fieldRow"
+export type { FieldRowProps } from "./styled/fieldRow"
+
 export { ListRow } from "./styled/listRow"
 export type { ListRowProps } from "./styled/listRow"
 

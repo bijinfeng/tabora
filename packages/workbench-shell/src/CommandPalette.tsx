@@ -32,12 +32,28 @@ export type CommandPaletteProps = {
 }
 
 export function CommandPalette(props: CommandPaletteProps) {
+  let inputRef: HTMLInputElement | undefined
+  let previousFocusedElement: HTMLElement | null = null
   // 面板关闭时由宿主重置状态，同时确保外部直接关闭时状态也清零
   createEffect(() => {
     if (!props.isOpen) {
       props.onQueryChange("")
       props.onActiveIdxChange(0)
     }
+  })
+
+  createEffect(() => {
+    if (props.isOpen) {
+      previousFocusedElement =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null
+      inputRef?.focus()
+      return
+    }
+
+    if (previousFocusedElement && document.contains(previousFocusedElement)) {
+      previousFocusedElement.focus()
+    }
+    previousFocusedElement = null
   })
 
   function close() {
@@ -119,7 +135,13 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   return (
     <Show when={props.isOpen}>
-      <div class="cmd-overlay" onClick={close}>
+      <div
+        class="cmd-overlay"
+        onClick={close}
+        role="dialog"
+        aria-modal="true"
+        aria-label="命令面板"
+      >
         <div class="cmd-panel" onClick={(event) => event.stopPropagation()}>
           <div class="cmd-input-wrap">
             <svg
@@ -140,6 +162,9 @@ export function CommandPalette(props: CommandPaletteProps) {
               value={props.query}
               placeholder={props.copy?.placeholder ?? "搜索命令、卡片或输入 @bing 天气"}
               autofocus
+              ref={(element) => {
+                inputRef = element
+              }}
               onInput={(event) => {
                 props.onQueryChange(event.currentTarget.value)
                 props.onActiveIdxChange(0)

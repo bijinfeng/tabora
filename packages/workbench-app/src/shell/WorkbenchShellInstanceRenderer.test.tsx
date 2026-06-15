@@ -212,6 +212,37 @@ describe("createWorkbenchInstanceRenderer", () => {
     expect(host.querySelector(".plugin-error-retry-btn")?.textContent).toBe("Retry")
     dispose()
   })
+
+  it("opens the widget context menu when right-clicking the sortable title handle", () => {
+    const onOpenWidgetContextMenu = vi.fn()
+    const renderer = createWorkbenchInstanceRenderer({
+      ...baseOptions(),
+      registryViews: new Map<string, unknown>([["widget.notes.card", () => <div>Notes body</div>]]),
+      onOpenWidgetContextMenu,
+    })
+
+    const { host, dispose } = mount(renderer.renderWidget(instance()))
+    const title = host.querySelector(".card-title") as HTMLElement
+    const event = new MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 48,
+      clientY: 72,
+      button: 2,
+    })
+
+    title.dispatchEvent(event)
+
+    expect(onOpenWidgetContextMenu).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "contextmenu",
+        clientX: 48,
+        clientY: 72,
+      }),
+      "widget-1",
+    )
+    dispose()
+  })
 })
 
 describe("workbenchSortableCollisionDetector", () => {

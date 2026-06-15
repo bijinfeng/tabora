@@ -71,6 +71,15 @@ describe("isWorkbenchInteractiveElement", () => {
     expect(isWorkbenchInteractiveElement(span)).toBe(true)
     expect(isWorkbenchInteractiveElement(document.createElement("div"))).toBe(false)
   })
+
+  it("allows the widget title drag handle to keep double-click expand semantics", () => {
+    const title = document.createElement("div")
+    title.className = "card-title"
+    title.setAttribute("role", "button")
+    title.setAttribute("data-allow-expand", "true")
+
+    expect(isWorkbenchInteractiveElement(title)).toBe(false)
+  })
 })
 
 describe("buildWorkbenchWidgetExpandState", () => {

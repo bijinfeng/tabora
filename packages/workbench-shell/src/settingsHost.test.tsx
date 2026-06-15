@@ -202,6 +202,27 @@ describe("settings host composition", () => {
     expect(root.querySelector(".settings-drawer")).toBeTruthy()
   })
 
+  it("renders modal semantics and moves focus into the drawer when opened", () => {
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels: [],
+        activeSectionId: "general",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => undefined,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    const overlay = root.querySelector(".settings-overlay") as HTMLDivElement
+    const closeButton = root.querySelector(".settings-close") as HTMLButtonElement
+
+    expect(overlay.getAttribute("role")).toBe("dialog")
+    expect(overlay.getAttribute("aria-modal")).toBe("true")
+    expect(document.activeElement).toBe(closeButton)
+  })
+
   it("renders prototype grouped settings navigation", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
@@ -337,5 +358,30 @@ describe("settings host composition", () => {
     expect(root.querySelector(".settings-drawer")).toBeTruthy()
     expect(root.textContent).toContain("插件视图加载失败")
     expect(root.textContent).toContain("official.settings.workspace.workbench")
+  })
+
+  it("renders empty and missing states through shared ui blocks", () => {
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels: [
+          {
+            id: "missing.panel",
+            pluginId: "official.missing",
+            title: "缺失面板",
+            view: "missing.view",
+            section: "general",
+            scope: "workspace",
+          },
+        ],
+        activeSectionId: "general",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => undefined,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    expect(root.textContent).toContain("设置面板不可用：missing.panel")
   })
 })

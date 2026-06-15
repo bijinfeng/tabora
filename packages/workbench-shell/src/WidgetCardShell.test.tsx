@@ -100,8 +100,10 @@ describe("WidgetCardShell", () => {
     const cb = makeCallbacks()
     const { host, dispose } = mount(cb)
     const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
-    card.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }))
+    const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true })
+    card.dispatchEvent(event)
     expect(cb.onContextMenu).toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(true)
     dispose()
   })
 

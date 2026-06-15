@@ -1,7 +1,6 @@
+import { FieldRow, InlineError } from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-
-import { SettingsInlineError } from "./settings-workspace.shared"
 
 export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   const [importError, setImportError] = createSignal<string | null>(null)
@@ -73,13 +72,11 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
 
       <section class="set-group">
         <div class="set-group-title">工作区</div>
-        <div class="set-row">
-          <div class="set-row-info">
-            <div class="set-row-label">当前工作区</div>
-            <div class="set-row-desc">存储布局、主题、背景和卡片配置</div>
-          </div>
-          <span class="settings-row-meta">{props.workspace.name}</span>
-        </div>
+        <FieldRow
+          label="当前工作区"
+          description="存储布局、主题、背景和卡片配置"
+          trailing={<span class="settings-row-meta">{props.workspace.name}</span>}
+        />
         <Show when={workspaces().length > 1}>
           <div class="workspace-list">
             <For each={workspaces()}>
@@ -119,25 +116,31 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
             </For>
           </div>
         </Show>
-        <div class="workspace-create-row">
-          <input
-            id="ws-new-name"
-            class="workspace-create-input"
-            value={newWorkspaceName()}
-            onInput={(event) => setNewWorkspaceName(event.currentTarget.value)}
-            onKeyDown={(event) => event.key === "Enter" && void handleCreate()}
-            placeholder="新建工作区"
-            aria-label="新建工作区名称"
-          />
-          <button
-            type="button"
-            class="settings-mini-btn"
-            disabled={!newWorkspaceName().trim()}
-            onClick={() => void handleCreate()}
-          >
-            创建
-          </button>
-        </div>
+        <FieldRow
+          label="新建工作区"
+          description="创建独立的布局、主题和卡片配置"
+          trailing={
+            <div class="workspace-create-row">
+              <input
+                id="ws-new-name"
+                class="workspace-create-input"
+                value={newWorkspaceName()}
+                onInput={(event) => setNewWorkspaceName(event.currentTarget.value)}
+                onKeyDown={(event) => event.key === "Enter" && void handleCreate()}
+                placeholder="新建工作区"
+                aria-label="新建工作区名称"
+              />
+              <button
+                type="button"
+                class="settings-mini-btn"
+                disabled={!newWorkspaceName().trim()}
+                onClick={() => void handleCreate()}
+              >
+                创建
+              </button>
+            </div>
+          }
+        />
         <div class="workspace-actions">
           <button type="button" class="settings-mini-btn" onClick={() => void handleExport()}>
             导出
@@ -147,7 +150,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           </button>
         </div>
         <Show when={importError()}>
-          <SettingsInlineError>{importError()!}</SettingsInlineError>
+          <InlineError>{importError()!}</InlineError>
         </Show>
         <Show when={importSuccess()}>
           <div class="workspace-import-success">导入成功</div>

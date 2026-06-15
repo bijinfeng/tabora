@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+import { createCommandPaletteItems } from "@tabora/orchestrator"
 
 import { createWorkbenchShellCommandModels } from "./WorkbenchShellCommands"
 
@@ -66,6 +67,34 @@ describe("createWorkbenchShellCommandModels", () => {
         ["打开设置", "⚙"],
       ]),
     )
+  })
+
+  it("matches visible English layout labels in command search", () => {
+    const dashboardModels = createWorkbenchShellCommandModels(createOptions())
+    const focusModels = createWorkbenchShellCommandModels(
+      createOptions({
+        activeLayoutId: () => "layout.focus.custom",
+      }),
+    )
+
+    expect(
+      createCommandPaletteItems({
+        query: "Focus",
+        commands: dashboardModels.commandItems(),
+      }).map((item) => item.id),
+    ).toContain("toggle-layout")
+    expect(
+      createCommandPaletteItems({
+        query: "Dashboard",
+        commands: focusModels.commandItems(),
+      }).map((item) => item.id),
+    ).toContain("toggle-layout")
+    expect(
+      createCommandPaletteItems({
+        query: "plugin",
+        commands: dashboardModels.commandItems(),
+      }).map((item) => item.id),
+    ).toContain("open-plugin-manager")
   })
 
   it("uses tShell for platform command labels and shortcut toast", () => {

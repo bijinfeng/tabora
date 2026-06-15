@@ -202,6 +202,46 @@ describe("SearchSettingsPanel", () => {
     expect(setDefaultSearchProvider).not.toHaveBeenCalled()
     root.remove()
   })
+
+  it("renders provider rows with current marker and toggle switch", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchSettingsPanel
+          panelId="official.settings.workspace.search"
+          pluginId="official.settings"
+          scope="workspace"
+          host={host()}
+          workspace={workspace()}
+          workspaces={[workspace()]}
+          layouts={[]}
+          themes={[]}
+          backgrounds={[]}
+          searchProviders={[
+            {
+              id: "official.search.google",
+              title: "Google",
+              shortcut: "@google",
+              urlTemplate: "https://google.example/search?q={query}",
+            },
+          ]}
+          searchSettings={{
+            defaultProviderId: "official.search.google",
+            enabledProviderIds: ["official.search.google"],
+          }}
+          plugins={[]}
+        />
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("默认搜索引擎")
+    expect(root.textContent).toContain("✓ 当前")
+    expect(root.querySelector('[aria-label="禁用 Google"]')).toBeTruthy()
+    root.remove()
+  })
 })
 
 describe("AppearanceSettingsPanel", () => {

@@ -39,6 +39,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       icon: "⌘K",
       title: t?.("commands.openCommandPalette.title") ?? "打开命令",
       description: t?.("commands.openCommandPalette.description") ?? "搜索命令、卡片和搜索源",
+      keywords: ["command", "palette", "search", "cmd"],
       category: "workspace",
       defaultShortcut: "⌘K",
     },
@@ -49,6 +50,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       description: options.isDark()
         ? (t?.("commands.toggleTheme.description.toLight") ?? "暗色 → 明亮")
         : (t?.("commands.toggleTheme.description.toDark") ?? "明亮 → 暗色"),
+      keywords: ["theme", "dark", "light", "appearance"],
       category: "workspace",
       defaultShortcut: "⌘T",
     },
@@ -60,6 +62,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
         options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
           ? (t?.("commands.toggleLayout.description.toFocus") ?? "仪表盘 → 专注")
           : (t?.("commands.toggleLayout.description.toDashboard") ?? "专注 → 仪表盘"),
+      keywords: ["layout", "dashboard", "focus", "仪表盘", "专注"],
       category: "workspace",
       defaultShortcut: "⌘L",
     },
@@ -68,6 +71,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       icon: "+",
       title: t?.("commands.addWidget.title") ?? "添加卡片",
       description: t?.("commands.addWidget.description") ?? "向工作台添加新卡片",
+      keywords: ["widget", "card", "module"],
       category: "workspace",
       defaultShortcut: "⌘N",
     },
@@ -77,6 +81,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       title: t?.("commands.openPluginManager.title") ?? "打开插件管理",
       description:
         t?.("commands.openPluginManager.description") ?? "查看 layout / widget / theme 贡献",
+      keywords: ["plugin", "plugins", "extension", "layout", "widget", "theme"],
       category: "workspace",
     },
     {
@@ -84,6 +89,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       icon: "⚙",
       title: t?.("commands.openSettings.title") ?? "打开设置",
       description: t?.("commands.openSettings.description") ?? "配置工作台",
+      keywords: ["settings", "preferences", "config"],
       category: "workspace",
       defaultShortcut: "⌘,",
     },

@@ -3,7 +3,7 @@ import type { InlineErrorProps } from "../../primitives/inlineError/inlineError"
 import "./styles.css"
 
 export function InlineError(props: InlineErrorProps) {
-  return <Primitive {...props} class="tbr-inline-error" />
+  return <Primitive {...props} class={`tbr-inline-error ${props.class ?? ""}`.trim()} />
 }
 
 export type { InlineErrorProps }

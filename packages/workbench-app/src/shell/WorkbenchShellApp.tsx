@@ -248,22 +248,29 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     },
   }
 
+  const handleWorkbenchKeydown = (event: KeyboardEvent) => {
+    if (event.defaultPrevented) return
+
+    if (controllerRuntime.shortcutRegistry().executeKeydown(event)) {
+      event.preventDefault()
+      return
+    }
+
+    if (event.key === "Escape") {
+      controllerRuntime.widgetController.closeExpand()
+      setCtxMenu(null)
+      setAddWidgetOpen(false)
+    }
+  }
+
+  window.addEventListener("keydown", handleWorkbenchKeydown)
+  onCleanup(() => {
+    window.removeEventListener("keydown", handleWorkbenchKeydown)
+  })
+
   return (
     <WorkbenchShellProvider shell={shell}>
-      <div
-        class="tabora-root"
-        onKeyDown={(e) => {
-          if (controllerRuntime.shortcutRegistry().executeKeydown(e)) {
-            e.preventDefault()
-          }
-          if (e.key === "Escape") {
-            controllerRuntime.widgetController.closeExpand()
-            setCtxMenu(null)
-            setAddWidgetOpen(false)
-          }
-        }}
-        tabIndex={-1}
-      >
+      <div class="tabora-root" onKeyDown={handleWorkbenchKeydown} tabIndex={-1}>
         <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
           <WorkbenchShellSurfaceHost />
         </Show>

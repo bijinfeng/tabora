@@ -22,4 +22,16 @@ describe("ListRow", () => {
     expect(root.querySelector("button")).toBeNull()
     expect(root.querySelector("div")!.tagName).toBe("DIV")
   })
+
+  it("exposes selected and danger state via data attributes", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(() => <ListRow primary="删除实例" selected danger onClick={() => {}} />, root)
+
+    const button = root.querySelector("button")
+    expect(button?.dataset.selected).toBe("")
+    expect(button?.dataset.danger).toBe("")
+    expect(button?.getAttribute("aria-pressed")).toBe("true")
+  })
 })

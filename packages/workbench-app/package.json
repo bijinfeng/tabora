@@ -28,6 +28,7 @@
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",
     "@tabora/theme": "workspace:*",
+    "@tabora/ui": "workspace:*",
     "@tabora/workbench-shell": "workspace:*",
     "es-toolkit": "catalog:toolkit",
     "lucide-solid": "catalog:ui",

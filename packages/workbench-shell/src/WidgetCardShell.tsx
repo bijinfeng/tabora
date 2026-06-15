@@ -72,11 +72,14 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
         if (event.detail === 2) props.callbacks.onExpand()
       }}
       onDblClick={props.callbacks.onDblClick}
-      onContextMenu={props.callbacks.onContextMenu}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        props.callbacks.onContextMenu(event)
+      }}
     >
       <div class="widget-card">
         <div class="card-header" ref={(element) => (headerRef = element)}>
-          <div class="card-title">
+          <div class="card-title" data-allow-expand="true">
             {props.icon}
             <span class="card-title-text">{props.title}</span>
           </div>

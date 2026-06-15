@@ -8,10 +8,14 @@ export type ListRowProps = {
   trailing?: JSX.Element
   onClick?: () => void
   divider?: boolean
+  danger?: boolean
+  selected?: boolean
+  interactive?: boolean
   class?: string
 }
 
 export function ListRow(props: ListRowProps) {
+  const isInteractive = () => props.interactive ?? Boolean(props.onClick)
   const inner = (
     <>
       <Show when={props.leading}>
@@ -33,12 +37,22 @@ export function ListRow(props: ListRowProps) {
       type="button"
       class={props.class}
       data-divider={props.divider ? "" : undefined}
+      data-danger={props.danger ? "" : undefined}
+      data-selected={props.selected ? "" : undefined}
+      data-interactive={isInteractive() ? "" : undefined}
+      aria-pressed={props.selected ? true : undefined}
       onClick={() => props.onClick?.()}
     >
       {inner}
     </button>
   ) : (
-    <div class={props.class} data-divider={props.divider ? "" : undefined}>
+    <div
+      class={props.class}
+      data-divider={props.divider ? "" : undefined}
+      data-danger={props.danger ? "" : undefined}
+      data-selected={props.selected ? "" : undefined}
+      data-interactive={isInteractive() ? "" : undefined}
+    >
       {inner}
     </div>
   )

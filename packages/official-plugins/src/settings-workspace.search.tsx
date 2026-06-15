@@ -1,3 +1,4 @@
+import { ListRow } from "@tabora/ui"
 import { createMemo, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
@@ -53,31 +54,37 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
               const isEnabled = () => enabledIds().includes(provider.id)
               const isDefault = () => provider.id === defaultId()
               return (
-                <div
-                  class="search-provider-row"
-                  classList={{ active: isDefault(), disabled: !isEnabled() }}
-                >
-                  <button
-                    type="button"
-                    class="search-provider-main"
-                    onClick={() => void props.host.setDefaultSearchProvider(provider.id)}
-                    disabled={!isEnabled()}
-                  >
-                    <span class="search-provider-kind">{providerKindLabel(provider)}</span>
-                    <span class="search-provider-text">
-                      <span class="search-provider-title">{provider.title}</span>
-                      <span class="search-provider-alias">{providerAlias(provider)}</span>
-                    </span>
-                  </button>
-                  <div class="search-provider-actions">
-                    <span class="provider-state">{isDefault() ? "✓ 当前" : ""}</span>
-                    <SettingsSwitch
-                      checked={isEnabled()}
-                      label={`${isEnabled() ? "禁用" : "启用"} ${provider.title}`}
-                      onChange={() => handleToggle(provider.id)}
-                    />
-                  </div>
-                </div>
+                <ListRow
+                  class={`search-provider-row ${isDefault() ? "active" : ""} ${!isEnabled() ? "disabled" : ""}`.trim()}
+                  primary={
+                    <button
+                      type="button"
+                      class="search-provider-main"
+                      onClick={() => {
+                        if (!isEnabled()) return
+                        void props.host.setDefaultSearchProvider(provider.id)
+                      }}
+                      disabled={!isEnabled()}
+                    >
+                      <span class="search-provider-kind">{providerKindLabel(provider)}</span>
+                      <span class="search-provider-text">
+                        <span class="search-provider-title">{provider.title}</span>
+                        <span class="search-provider-alias">{providerAlias(provider)}</span>
+                      </span>
+                    </button>
+                  }
+                  trailing={
+                    <div class="search-provider-actions">
+                      <span class="provider-state">{isDefault() ? "✓ 当前" : ""}</span>
+                      <SettingsSwitch
+                        checked={isEnabled()}
+                        label={`${isEnabled() ? "禁用" : "启用"} ${provider.title}`}
+                        onChange={() => handleToggle(provider.id)}
+                      />
+                    </div>
+                  }
+                  selected={isDefault()}
+                />
               )
             }}
           </For>

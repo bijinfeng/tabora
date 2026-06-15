@@ -1,3 +1,4 @@
+import { ListRow } from "@tabora/ui"
 import { For, Show } from "solid-js"
 
 import type { ShellTranslation } from "../i18n"
@@ -22,21 +23,24 @@ export function WorkbenchContextMenuOverlay(props: {
                   </Show>
                   <For each={section.items}>
                     {(item) => (
-                      <button
-                        class="ctx-menu-item"
-                        classList={{ "ctx-menu-danger": item.danger }}
+                      <ListRow
+                        class={`ctx-menu-item ${item.danger ? "ctx-menu-danger" : ""}`.trim()}
+                        primary={item.label}
+                        trailing={
+                          <Show when={item.isCurrent}>
+                            <span class="ctx-menu-check">
+                              {props.tShell?.("chrome.contextMenu.current") ?? "当前"}
+                            </span>
+                          </Show>
+                        }
+                        danger={Boolean(item.danger)}
+                        interactive
+                        selected={Boolean(item.isCurrent)}
                         onClick={() => {
                           item.run()
                           props.onClose()
                         }}
-                      >
-                        {item.label}
-                        <Show when={item.isCurrent}>
-                          <span class="ctx-menu-check">
-                            {props.tShell?.("chrome.contextMenu.current") ?? "当前"}
-                          </span>
-                        </Show>
-                      </button>
+                      />
                     )}
                   </For>
                 </>

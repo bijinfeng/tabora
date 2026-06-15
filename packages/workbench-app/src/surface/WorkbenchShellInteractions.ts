@@ -28,8 +28,15 @@ type WorkbenchExpandResult = {
 }
 
 export function isWorkbenchInteractiveElement(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  if (target.closest("[data-allow-expand='true']")) {
+    return false
+  }
+
   return (
-    target instanceof HTMLElement &&
     target.closest(
       "button, input, textarea, select, a, [role='button'], [data-prevent-expand='true']",
     ) !== null

@@ -1,0 +1,39 @@
+/* Tabora Field Row */
+@layer tabora-ui {
+  .tbr-field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 0;
+  }
+  .tbr-field-row-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .tbr-field-row-info {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tbr-field-row-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--tbr-color-text));
+  }
+  .tbr-field-row-description,
+  .tbr-field-row-helper {
+    font-size: 12px;
+    color: rgb(var(--tbr-color-text-subtle));
+    line-height: 1.4;
+  }
+  .tbr-field-row-trailing {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+  }
+}

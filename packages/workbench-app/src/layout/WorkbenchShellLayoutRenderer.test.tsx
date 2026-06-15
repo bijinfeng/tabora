@@ -158,6 +158,78 @@ describe("createWorkbenchLayoutRenderer", () => {
     host.remove()
   })
 
+  it("keeps widget title handle context-menu access when wrapped by DragDropProvider", () => {
+    const safeLayout = safeLayoutProps()
+    safeLayout.getView = vi.fn(() => () => <div>widget body</div>)
+    safeLayout.buildWidgetViewProps = vi.fn(
+      (widgetInstance): WidgetViewProps => ({
+        pluginId: widgetInstance.pluginId,
+        instanceId: widgetInstance.id,
+        contributionId: widgetInstance.contributionId,
+        size: widgetInstance.size ?? "M",
+        supportedSizes: ["S", "M", "L"],
+        config: {},
+        data: {
+          get: vi.fn(async () => undefined),
+          save: vi.fn(async () => {}),
+        },
+        host: {
+          updateConfig: vi.fn(async () => {}),
+          removeInstance: vi.fn(async () => {}),
+          requestResize: vi.fn(async () => {}),
+          openModal: vi.fn(),
+          closeModal: vi.fn(),
+          openExpand: vi.fn(),
+          showToast: vi.fn(),
+          openExternal: vi.fn(async () => true),
+        },
+      }),
+    )
+
+    const renderer = createWorkbenchLayoutRenderer({
+      activeLayoutId: () => "layout.missing",
+      displayedInstances: () => [instance()],
+      findLayoutContribution: () => undefined,
+      resolveLayoutView: () => undefined,
+      buildRegionSlots: vi.fn(),
+      buildHostAPI: vi.fn(),
+      isMobile: () => false,
+      clearLayoutError: vi.fn(),
+      recordLayoutError: vi.fn(),
+      dndKit: {
+        onDragStart: vi.fn(),
+        onDragMove: vi.fn(),
+        onDragOver: vi.fn(),
+        onDragEnd: vi.fn(),
+      },
+      safeLayout,
+    })
+
+    const { host, dispose } = mount(renderer.renderActiveLayout())
+    const title = host.querySelector(".card-title") as HTMLElement
+    const event = new MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 48,
+      clientY: 72,
+      button: 2,
+    })
+
+    title.dispatchEvent(event)
+
+    expect(safeLayout.onOpenContextMenu).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "contextmenu",
+        clientX: 48,
+        clientY: 72,
+      }),
+      "widget-1",
+    )
+
+    dispose()
+    host.remove()
+  })
+
   it("renders the plugin-provided layout view with computed regions and host api", () => {
     const buildRegionSlots = vi.fn(
       (): Record<string, RegionSlot<JSX.Element>> => ({

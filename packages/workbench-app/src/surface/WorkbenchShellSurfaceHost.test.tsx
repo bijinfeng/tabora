@@ -170,4 +170,47 @@ describe("WorkbenchShellSurfaceHost", () => {
 
     root.remove()
   })
+
+  it("renders add-widget and context-menu rows through the host overlays", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    const shell = createWorkbenchShellSurfaceStub({
+      layoutContent: () => <div>layout-content</div>,
+      listWidgetContributions: () => [
+        {
+          pluginId: "official.widget.todo",
+          id: "todo",
+          icon: "✓",
+          title: "待办",
+          description: "记录当天任务",
+        },
+      ],
+      buildContextMenuModel: () => ({
+        sections: [
+          {
+            items: [{ label: "移除实例", danger: true, run: vi.fn() }],
+          },
+        ],
+      }),
+    })
+
+    shell.state.overlays.setAddWidgetOpen(true)
+    shell.state.overlays.setCtxMenu({ x: 12, y: 12, instanceId: "todo-1" })
+
+    render(
+      () => (
+        <WorkbenchShellProvider shell={shell}>
+          <WorkbenchShellSurfaceHost />
+        </WorkbenchShellProvider>
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("待办")
+    expect(root.textContent).toContain("记录当天任务")
+    expect(root.textContent).toContain("移除实例")
+
+    root.remove()
+  })
 })

@@ -1,3 +1,4 @@
+import { ListRow } from "@tabora/ui"
 import { For, Show } from "solid-js"
 
 import type { ShellTranslation } from "../i18n"
@@ -19,16 +20,20 @@ export function WorkbenchAddWidgetModal(props: {
           <div class="modal-body">
             <For each={props.availableWidgets}>
               {(widget) => (
-                <button
+                <ListRow
                   class="add-widget-modal-item"
+                  leading={
+                    <span class="add-widget-modal-icon">{props.widgetIconLabel(widget.icon)}</span>
+                  }
+                  primary={
+                    <span class="add-widget-modal-info">
+                      <div class="add-widget-modal-name">{widget.title}</div>
+                      <div class="add-widget-modal-desc">{widget.description}</div>
+                    </span>
+                  }
+                  interactive
                   onClick={() => props.onAdd(widget.pluginId, widget.id)}
-                >
-                  <span class="add-widget-modal-icon">{props.widgetIconLabel(widget.icon)}</span>
-                  <span class="add-widget-modal-info">
-                    <div class="add-widget-modal-name">{widget.title}</div>
-                    <div class="add-widget-modal-desc">{widget.description}</div>
-                  </span>
-                </button>
+                />
               )}
             </For>
           </div>

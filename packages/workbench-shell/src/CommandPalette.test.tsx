@@ -56,6 +56,20 @@ describe("CommandPalette", () => {
     root.remove()
   })
 
+  it("renders modal semantics and focuses the query input when opened", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <Controlled isOpen={true} />, root)
+
+    const overlay = root.querySelector(".cmd-overlay") as HTMLDivElement
+    const input = root.querySelector(".cmd-input") as HTMLInputElement
+
+    expect(overlay.getAttribute("role")).toBe("dialog")
+    expect(overlay.getAttribute("aria-modal")).toBe("true")
+    expect(document.activeElement).toBe(input)
+    root.remove()
+  })
+
   it("does not render when closed", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

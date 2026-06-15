@@ -1,4 +1,4 @@
-import { createComponent, For, Show } from "solid-js"
+import { createComponent, createEffect, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import { X } from "lucide-solid"
 import type { PluginManifest, SettingsPanelViewProps } from "@tabora/plugin-api"
@@ -9,6 +9,7 @@ import {
   type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
   type SettingsSectionId,
 } from "@tabora/orchestrator"
+import { EmptyState, InlineError } from "@tabora/ui"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
@@ -61,6 +62,8 @@ export function resolveInitialSettingsSectionId(
 }
 
 export function SettingsHost(props: SettingsHostProps) {
+  let closeButtonRef: HTMLButtonElement | undefined
+  let previousFocusedElement: HTMLElement | null = null
   const navigator = () => createSettingsNavigator(props.panels)
 
   const activeSection = () => props.activeSectionId ?? "general"
@@ -78,9 +81,29 @@ export function SettingsHost(props: SettingsHostProps) {
   const pluginSection = () => SETTINGS_SECTIONS.find((section) => section.id === "plugins")
   const aboutSection = () => SETTINGS_SECTIONS.find((section) => section.id === "about")
 
+  createEffect(() => {
+    if (props.open) {
+      previousFocusedElement =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null
+      closeButtonRef?.focus()
+      return
+    }
+
+    if (previousFocusedElement && document.contains(previousFocusedElement)) {
+      previousFocusedElement.focus()
+    }
+    previousFocusedElement = null
+  })
+
   return (
     <Show when={props.open}>
-      <div class="settings-overlay settings-host" onClick={props.onClose}>
+      <div
+        class="settings-overlay settings-host"
+        onClick={props.onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label={props.copy?.sidebarTitle ?? "设置"}
+      >
         <div class="settings-drawer" onClick={(e) => e.stopPropagation()}>
           <nav class="settings-sidebar">
             <div class="settings-sidebar-title">{props.copy?.sidebarTitle ?? "设置"}</div>
@@ -131,6 +154,9 @@ export function SettingsHost(props: SettingsHostProps) {
                 class="settings-close-btn settings-close"
                 onClick={props.onClose}
                 aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
+                ref={(element) => {
+                  closeButtonRef = element
+                }}
               >
                 <X size={16} />
               </button>
@@ -140,18 +166,22 @@ export function SettingsHost(props: SettingsHostProps) {
                 when={activeSection() !== "about"}
                 fallback={
                   props.aboutContent ?? (
-                    <div class="settings-empty">
-                      {props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
-                    </div>
+                    <EmptyState
+                      class="settings-empty"
+                      compact
+                      title={props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
+                    />
                   )
                 }
               >
                 <Show
                   when={activePanels().length > 0}
                   fallback={
-                    <div class="settings-empty">
-                      {props.copy?.emptySection ?? "该分类下暂无设置内容"}
-                    </div>
+                    <EmptyState
+                      class="settings-empty"
+                      compact
+                      title={props.copy?.emptySection ?? "该分类下暂无设置内容"}
+                    />
                   }
                 >
                   <div class="settings-panel-stack-host">
@@ -160,9 +190,9 @@ export function SettingsHost(props: SettingsHostProps) {
                         const View = props.getView(panel.view)
                         if (!View)
                           return (
-                            <div class="settings-panel-missing" role="alert">
+                            <InlineError class="settings-panel-missing">
                               {props.copy?.panelMissing(panel.id) ?? `设置面板不可用：${panel.id}`}
-                            </div>
+                            </InlineError>
                           )
                         let content: JSX.Element
                         try {
