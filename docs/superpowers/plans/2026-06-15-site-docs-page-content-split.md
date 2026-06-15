@@ -13,6 +13,7 @@
 ## 文件结构（将创建/修改）
 
 **创建：**
+
 - `apps/site/src/routes/docs/docsPageContent.types.ts`
 - `apps/site/src/routes/docs/docsPageContent.resolve.ts`
 - `apps/site/src/routes/docs/docsPageContent.content.zh-CN.ts`
@@ -20,9 +21,11 @@
 - `apps/site/src/routes/docs/docsPageContent.content.ts`
 
 **修改：**
+
 - `apps/site/src/routes/docs/docsPageContent.ts`
 
 **回归：**
+
 - `apps/site/src/routes/docs/docsPageContent.test.ts`
 - `apps/site/src/routes/docs/DocsHomePage.tsx`
 
@@ -33,6 +36,7 @@
 - [ ] **步骤 1：确认工作区干净**
 
 运行：
+
 ```bash
 git status --short --untracked-files=all
 ```
@@ -40,6 +44,7 @@ git status --short --untracked-files=all
 - [ ] **步骤 2：运行 docsPageContent 相关测试**
 
 运行：
+
 ```bash
 pnpm --filter @tabora/site test -- docsPageContent.test.ts
 ```
@@ -49,9 +54,11 @@ pnpm --filter @tabora/site test -- docsPageContent.test.ts
 - [ ] **步骤 3：记录当前入口导出（人工核对）**
 
 入口文件：
+
 - `apps/site/src/routes/docs/docsPageContent.ts`
 
 需要保持的导出（名称与签名不变）：
+
 ```ts
 export const defaultDocsSectionId
 export const docsGuideSectionIds
@@ -71,6 +78,7 @@ export function getDocsPageContent(locale: SiteLocale): DocsPageContent
 ## 任务 2：拆分类型（types）
 
 **文件：**
+
 - 创建：`apps/site/src/routes/docs/docsPageContent.types.ts`
 - 修改：`apps/site/src/routes/docs/docsPageContent.ts`
 - 测试：`apps/site/src/routes/docs/docsPageContent.test.ts`
@@ -78,6 +86,7 @@ export function getDocsPageContent(locale: SiteLocale): DocsPageContent
 - [ ] **步骤 1：新增 types 文件并迁移类型定义**
 
 目标结构（示意）：
+
 ```ts
 import type { DocsExampleId } from "./docsExamples"
 
@@ -96,6 +105,7 @@ export type DocsResolvedPage = /* ... */
 - [ ] **步骤 2：入口文件改为重导出 types（不改对外路径）**
 
 在 `docsPageContent.ts` 中保留：
+
 ```ts
 export type { DocsPageContent, DocsComponentSpec, DocsResolvedPage } from "./docsPageContent.types"
 ```
@@ -105,6 +115,7 @@ export type { DocsPageContent, DocsComponentSpec, DocsResolvedPage } from "./doc
 - [ ] **步骤 3：运行测试验证不回归**
 
 运行：
+
 ```bash
 pnpm --filter @tabora/site test -- docsPageContent.test.ts
 ```
@@ -123,6 +134,7 @@ git commit -m "refactor(site): split docs page content types"
 ## 任务 3：拆分解析逻辑（resolve）
 
 **文件：**
+
 - 创建：`apps/site/src/routes/docs/docsPageContent.resolve.ts`
 - 修改：`apps/site/src/routes/docs/docsPageContent.ts`
 - 测试：`apps/site/src/routes/docs/docsPageContent.test.ts`
@@ -130,16 +142,32 @@ git commit -m "refactor(site): split docs page content types"
 - [ ] **步骤 1：新增 resolve 文件并迁移常量与函数**
 
 目标结构（示意）：
+
 ```ts
 import type { DocsComponentSpec, DocsPageContent, DocsResolvedPage } from "./docsPageContent.types"
 
 export const defaultDocsSectionId = "quickstart"
-export const docsGuideSectionIds = ["quickstart", "manifest", "runtime", "contributions", "tokens"] as const
+export const docsGuideSectionIds = [
+  "quickstart",
+  "manifest",
+  "runtime",
+  "contributions",
+  "tokens",
+] as const
 export type DocsGuideSectionId = (typeof docsGuideSectionIds)[number]
 
-export function getDocsSectionPath(id: string) { /* ... */ }
-export function getDocsComponentSpecs(content: DocsPageContent): DocsComponentSpec[] { /* ... */ }
-export function resolveDocsPage(content: DocsPageContent, requestedId = defaultDocsSectionId): DocsResolvedPage { /* ... */ }
+export function getDocsSectionPath(id: string) {
+  /* ... */
+}
+export function getDocsComponentSpecs(content: DocsPageContent): DocsComponentSpec[] {
+  /* ... */
+}
+export function resolveDocsPage(
+  content: DocsPageContent,
+  requestedId = defaultDocsSectionId,
+): DocsResolvedPage {
+  /* ... */
+}
 ```
 
 - [ ] **步骤 2：入口文件重导出 resolve**
@@ -158,6 +186,7 @@ export type { DocsGuideSectionId } from "./docsPageContent.resolve"
 - [ ] **步骤 3：运行测试验证不回归**
 
 运行：
+
 ```bash
 pnpm --filter @tabora/site test -- docsPageContent.test.ts
 ```
@@ -176,6 +205,7 @@ git commit -m "refactor(site): split docs page content resolver"
 ## 任务 4：拆分 locale 内容数据（content）
 
 **文件：**
+
 - 创建：`apps/site/src/routes/docs/docsPageContent.content.zh-CN.ts`
 - 创建：`apps/site/src/routes/docs/docsPageContent.content.en.ts`
 - 创建：`apps/site/src/routes/docs/docsPageContent.content.ts`
@@ -205,6 +235,7 @@ export const enDocsPageContent: DocsPageContent = {
 - [ ] **步骤 3：聚合 content map**
 
 `docsPageContent.content.ts`：
+
 ```ts
 import type { SiteLocale } from "../../app/AppShell"
 import type { DocsPageContent } from "./docsPageContent.types"
@@ -220,6 +251,7 @@ export const docsPageContentByLocale: Record<SiteLocale, DocsPageContent> = {
 - [ ] **步骤 4：入口文件提供 `getDocsPageContent(locale)`**
 
 `docsPageContent.ts`：
+
 ```ts
 import type { SiteLocale } from "../../app/AppShell"
 import { docsPageContentByLocale } from "./docsPageContent.content"
@@ -232,6 +264,7 @@ export function getDocsPageContent(locale: SiteLocale) {
 - [ ] **步骤 5：运行测试验证不回归**
 
 运行：
+
 ```bash
 pnpm --filter @tabora/site test -- docsPageContent.test.ts
 ```
@@ -256,6 +289,7 @@ git commit -m "refactor(site): split docs page content by locale"
 - [ ] **步骤 1：跑 site 测试（如项目配置支持）**
 
 运行：
+
 ```bash
 pnpm --filter @tabora/site test
 ```
@@ -263,6 +297,7 @@ pnpm --filter @tabora/site test
 - [ ] **步骤 2：全仓门禁**
 
 运行：
+
 ```bash
 pnpm check
 ```
@@ -272,6 +307,7 @@ pnpm check
 - [ ] **步骤 3：最终状态检查**
 
 运行：
+
 ```bash
 git status --short --untracked-files=all
 ```
