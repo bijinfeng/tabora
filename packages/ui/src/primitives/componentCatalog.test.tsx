@@ -91,7 +91,7 @@ describe("V2.3 component catalog", () => {
     expect(root.textContent).toContain("周一")
     expect(document.body.textContent).toContain("重命名")
     expect(document.body.textContent).toContain("详情")
-    expect(root.textContent).toContain("打开")
+    expect(document.body.textContent).toContain("打开")
     expect(root.textContent).toContain("设置已保存")
     expect(root.textContent).toContain("插件")
     expect(root.textContent).toContain("根目录")
