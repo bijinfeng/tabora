@@ -1,9 +1,22 @@
 import { createSignal } from "solid-js"
 
+import { Badge } from "../badge"
 import { Pagination } from "./pagination.styled"
 
 export function PaginationDemo() {
-  const [page, setPage] = createSignal(1)
+  const [page, setPage] = createSignal(2)
 
-  return <Pagination page={page()} total={5} onChange={setPage} />
+  return (
+    <div class="docs-control-stack">
+      <div class="docs-stack compact">
+        <strong>插件日志分页</strong>
+        <span>适合浏览较长列表，同时保持当前筛选和上下文不丢失。</span>
+      </div>
+      <div class="docs-row">
+        <Badge variant="neutral">共 42 条</Badge>
+        <span>当前查看第 {page()} 页</span>
+      </div>
+      <Pagination page={page()} total={5} onChange={setPage} />
+    </div>
+  )
 }

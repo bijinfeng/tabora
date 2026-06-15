@@ -63,6 +63,21 @@ describe("getDocsExample", () => {
     expect(drawerSource).toContain("插件运行详情")
   })
 
+  it("keeps the third batch of docs examples rich enough to mirror workbench structure", () => {
+    const badgeSource = getDocsExample("badge")?.source ?? ""
+    const cardSource = getDocsExample("card")?.source ?? ""
+    const skeletonSource = getDocsExample("skeleton")?.source ?? ""
+    const buttonSource = getDocsExample("button")?.source ?? ""
+
+    expect(badgeSource).toContain("插件状态")
+    expect(badgeSource).toContain("权限摘要")
+    expect(cardSource).toContain("搜索配置")
+    expect(cardSource).toContain("最近活动")
+    expect(skeletonSource).toContain("加载工作区")
+    expect(skeletonSource).toContain("骨架")
+    expect(buttonSource).toContain("危险柔和")
+  })
+
   it("keeps the tabs docs example aligned with the visual prototype states", () => {
     const source = getDocsExample("tabs")?.source ?? ""
 
