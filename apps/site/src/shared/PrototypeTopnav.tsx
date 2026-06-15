@@ -35,13 +35,9 @@ export function PrototypeTopnav(props: {
             {i18n.t("nav.home")}
           </A>
           <A href="/#product">{i18n.t("nav.product")}</A>
-          <A classList={{ active: props.active === "download" }} href="/download">
-            {i18n.t("nav.download")}
-          </A>
           <A classList={{ active: props.active === "docs" }} href="/docs">
             {i18n.t("nav.docs")}
           </A>
-          <A href="/#plugins">{i18n.t("nav.officialPlugins")}</A>
         </nav>
         <div class="site-nav-actions">
           {props.actions?.map((action) => (
@@ -49,9 +45,9 @@ export function PrototypeTopnav(props: {
               {action.label}
             </A>
           ))}
-          <LocaleToggleButton class="btn btn-secondary btn-sm" />
+          <LocaleToggleButton class="btn btn-secondary site-nav-control" />
           <button
-            class="btn btn-icon"
+            class="btn btn-icon site-nav-control"
             type="button"
             data-dark-toggle
             aria-label={i18n.t("a11y.toggleTheme")}

@@ -124,6 +124,31 @@ export const getSiteRoutePath = (pathname: string, base = import.meta.env.BASE_U
   return path
 }
 
+export const getSiteHref = (href: string, base = import.meta.env.BASE_URL) => {
+  const value = href.trim()
+  if (
+    !value ||
+    value.startsWith("#") ||
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("mailto:") ||
+    value.startsWith("tel:")
+  ) {
+    return href
+  }
+
+  const [rawPath = "/", hash = ""] = value.split("#", 2)
+  const path = normalizePath(rawPath)
+  const basePath = normalizePath(base || "/")
+  const suffix = hash ? `#${hash}` : ""
+
+  if (basePath === "/") return `${path}${suffix}`
+  if (path === "/") return `${basePath}/${suffix}`
+  if (path === basePath || path.startsWith(`${basePath}/`)) return `${path}${suffix}`
+
+  return `${basePath}${path}${suffix}`
+}
+
 export const isPrototypeRoute = (pathname: string, base?: string) => {
   const path = getSiteRoutePath(pathname, base)
   return (

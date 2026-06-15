@@ -57,7 +57,6 @@ export function DownloadPage() {
         active="download"
         actions={[
           { href: "/docs/quickstart", label: i18n.t("action.installDocs"), variant: "secondary" },
-          { href: "#platforms", label: i18n.t("action.choosePlatform"), variant: "secondary" },
         ]}
         onThemeToggled={showToast}
       />

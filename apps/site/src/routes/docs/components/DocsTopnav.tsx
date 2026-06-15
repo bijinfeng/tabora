@@ -15,13 +15,12 @@ export function DocsTopnav() {
         <span>Tabora</span>
       </A>
       <nav class="topnav-links" aria-label="主导航">
-        <a href="/">{i18n.t("nav.home")}</a>
-        <a href="/#product">{i18n.t("nav.product")}</a>
-        <a href="/download">{i18n.t("nav.download")}</a>
-        <a href="/docs" class="active" aria-current="page">
+        <A href="/">{i18n.t("nav.home")}</A>
+        <A href="/#product">{i18n.t("nav.product")}</A>
+        <A href="/download">{i18n.t("nav.download")}</A>
+        <A href="/docs" class="active" aria-current="page">
           {i18n.t("nav.docs")}
-        </a>
-        <a href="/#plugins">{i18n.t("nav.officialPlugins")}</a>
+        </A>
       </nav>
       <div class="topnav-actions">
         <button

@@ -75,10 +75,7 @@ export function HomePage() {
     <>
       <PrototypeTopnav
         active="home"
-        actions={[
-          { href: "/docs", label: i18n.t("action.devDocs"), variant: "secondary" },
-          { href: "/download", label: i18n.t("nav.download"), variant: "primary" },
-        ]}
+        actions={[{ href: "/download", label: i18n.t("nav.download"), variant: "primary" }]}
         onThemeToggled={showToast}
       />
 

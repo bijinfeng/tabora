@@ -346,8 +346,8 @@ h3 {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 24px;
-  min-height: 64px;
+  gap: 20px;
+  min-height: 72px;
 }
 
 .site-logo {
@@ -373,13 +373,13 @@ h3 {
 .site-navlinks {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 18px;
 }
 
 .site-navlinks a {
   color: var(--muted);
   font-size: 13px;
-  font-weight: 560;
+  font-weight: 620;
 }
 
 .site-navlinks a:hover,
@@ -390,7 +390,21 @@ h3 {
 .site-nav-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.site-nav-actions .btn {
+  min-height: 44px;
+}
+
+.site-nav-actions .btn-primary,
+.site-nav-actions .btn-secondary:not(.site-nav-control) {
+  padding-inline: 18px;
+}
+
+.site-nav-control {
+  min-width: 44px;
+  padding-inline: 12px;
 }
 
 .site-eyebrow {
@@ -1920,10 +1934,10 @@ h3 {
   }
 
   .site-topnav-inner {
-    min-height: 58px;
+    min-height: 56px;
   }
 
-  .site-nav-actions .btn-secondary {
+  .site-nav-actions .btn-secondary:not(.site-nav-control) {
     display: none;
   }
 
@@ -1973,6 +1987,46 @@ h3 {
   .code-window pre {
     padding: 14px;
     font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-topnav-inner {
+    gap: 12px;
+    min-height: 56px;
+  }
+
+  .site-logo {
+    gap: 8px;
+  }
+
+  .site-logo-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+  }
+
+  .site-nav-actions {
+    gap: 6px;
+  }
+
+  .site-nav-actions .btn {
+    min-height: 36px;
+    font-size: 13px;
+  }
+
+  .site-nav-actions .btn-primary {
+    padding-inline: 12px;
+  }
+
+  .site-nav-control {
+    min-width: 36px;
+    padding-inline: 8px;
+  }
+
+  .site-nav-actions .btn-icon {
+    width: 36px;
+    min-width: 36px;
   }
 }
 
