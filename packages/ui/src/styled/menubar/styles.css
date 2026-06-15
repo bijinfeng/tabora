@@ -28,7 +28,7 @@
     color: rgb(var(--tbr-color-text));
   }
 
-  .tbr-menubar-item[data-active] {
+  .tbr-menubar-item[data-pressed] {
     background: rgb(var(--tbr-color-accent-soft));
     color: rgb(var(--tbr-color-accent));
     font-weight: 650;

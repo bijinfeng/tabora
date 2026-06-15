@@ -31,7 +31,7 @@
     color: rgb(var(--tbr-color-text-muted));
     transition: transform var(--tbr-dur-normal) var(--tbr-ease);
   }
-  .tbr-collapsible-arrow[data-open] {
+  .tbr-collapsible-trigger[data-expanded] .tbr-collapsible-arrow {
     transform: rotate(90deg);
   }
   .tbr-collapsible-content {

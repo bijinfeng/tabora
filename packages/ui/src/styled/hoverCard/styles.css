@@ -1,6 +1,5 @@
 @layer tabora-ui {
   .tbr-hover-card {
-    position: relative;
     display: inline-flex;
   }
 
@@ -17,9 +16,6 @@
   }
 
   .tbr-hover-card-content {
-    position: absolute;
-    left: 0;
-    top: calc(100% + 8px);
     z-index: 55;
     display: grid;
     gap: 6px;
@@ -32,18 +28,7 @@
       0 4px 16px rgb(var(--tbr-color-shadow) / 0.08),
       0 0 1px rgb(var(--tbr-color-shadow) / 0.06);
     color: rgb(var(--tbr-color-text));
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-2px);
-    transition:
-      opacity var(--tbr-dur-fast) var(--tbr-ease),
-      transform var(--tbr-dur-fast) var(--tbr-ease);
-  }
-
-  .tbr-hover-card:hover .tbr-hover-card-content,
-  .tbr-hover-card:focus-within .tbr-hover-card-content {
-    opacity: 1;
-    transform: translateY(0);
+    animation: tbr-scale-in 120ms var(--tbr-ease);
   }
 
   .tbr-hover-card-media {

@@ -42,7 +42,7 @@
     color: rgb(var(--tbr-color-text-muted));
     transition: transform var(--tbr-dur-normal) var(--tbr-ease);
   }
-  .tbr-accordion-arrow[data-open] {
+  .tbr-accordion-trigger[data-expanded] .tbr-accordion-arrow {
     transform: rotate(180deg);
   }
   .tbr-accordion-content {

@@ -1,3 +1,4 @@
+import { Dialog as KDialog } from "@kobalte/core/dialog"
 import type { JSX } from "solid-js"
 import { Show } from "solid-js"
 import { X } from "lucide-solid"
@@ -16,36 +17,40 @@ export type DrawerProps = {
 
 export function Drawer(props: DrawerProps) {
   return (
-    <Show when={props.open}>
-      <div class={props.class} role="dialog" aria-modal="true">
-        <button type="button" class="tbr-drawer-scrim" aria-label="关闭" onClick={props.onClose} />
-        <aside
-          class="tbr-drawer-panel"
-          data-side={props.side ?? "right"}
-          data-size={props.size ?? "md"}
-        >
-          <header class="tbr-drawer-header">
-            <div>
-              <h2 class="tbr-drawer-title">{props.title}</h2>
-              <Show when={props.description}>
-                <p class="tbr-drawer-desc">{props.description}</p>
-              </Show>
-            </div>
-            <button
-              type="button"
-              class="tbr-drawer-close"
-              aria-label="关闭"
-              onClick={props.onClose}
-            >
-              <X size={16} strokeWidth={2} />
-            </button>
-          </header>
-          <div class="tbr-drawer-body">{props.children}</div>
-          <Show when={props.footer}>
-            <footer class="tbr-drawer-footer">{props.footer}</footer>
-          </Show>
-        </aside>
-      </div>
-    </Show>
+    <KDialog
+      open={props.open}
+      onOpenChange={(open) => {
+        if (!open) props.onClose()
+      }}
+    >
+      <KDialog.Portal>
+        <div class={props.class ? `tbr-drawer ${props.class}` : "tbr-drawer"}>
+          <KDialog.Overlay class="tbr-drawer-scrim" aria-label="关闭" />
+          <KDialog.Content
+            class="tbr-drawer-panel"
+            data-side={props.side ?? "right"}
+            data-size={props.size ?? "md"}
+          >
+            <header class="tbr-drawer-header">
+              <div>
+                <KDialog.Title class="tbr-drawer-title">{props.title}</KDialog.Title>
+                <Show when={props.description}>
+                  <KDialog.Description class="tbr-drawer-desc">
+                    {props.description}
+                  </KDialog.Description>
+                </Show>
+              </div>
+              <KDialog.CloseButton type="button" class="tbr-drawer-close" aria-label="关闭">
+                <X size={16} strokeWidth={2} />
+              </KDialog.CloseButton>
+            </header>
+            <div class="tbr-drawer-body">{props.children}</div>
+            <Show when={props.footer}>
+              <footer class="tbr-drawer-footer">{props.footer}</footer>
+            </Show>
+          </KDialog.Content>
+        </div>
+      </KDialog.Portal>
+    </KDialog>
   )
 }

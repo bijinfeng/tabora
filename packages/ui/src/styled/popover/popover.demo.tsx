@@ -1,6 +1,5 @@
 import { createSignal } from "solid-js"
 
-import { Button } from "../button"
 import { Popover } from "./popover.styled"
 
 export function PopoverDemo() {
@@ -8,10 +7,13 @@ export function PopoverDemo() {
 
   return (
     <div class="docs-relative">
-      <Button variant="secondary" onClick={() => setOpen((value) => !value)}>
-        切换 Popover
-      </Button>
-      <Popover open={open()} onClose={() => setOpen(false)} title="背景来源">
+      <Popover
+        open={open()}
+        onOpenChange={setOpen}
+        title="背景来源"
+        triggerClass="tbr-btn tbr-btn--secondary tbr-btn--md"
+        trigger="切换 Popover"
+      >
         <p>当前使用默认 Refined Sage 背景。</p>
       </Popover>
     </div>

@@ -162,12 +162,6 @@ export function WorkbenchRail(props: {
     props.host.showToast(`已删除「${group.name}」`, { type: "success" })
   }
 
-  function toggleLayoutPopover() {
-    if (!layoutAction()) return
-    cancelGroupCreate()
-    setLayoutPopOpen((open) => !open)
-  }
-
   function selectLayout(target: "dashboard" | "focus") {
     const dashboardActive = isDashboardLayout()
     if ((target === "dashboard" && dashboardActive) || (target === "focus" && !dashboardActive)) {
@@ -308,12 +302,15 @@ export function WorkbenchRail(props: {
         {(action) => (
           <DropdownMenu
             open={layoutPopOpen()}
-            onClose={() => setLayoutPopOpen(false)}
+            onOpenChange={(open) => {
+              if (open) cancelGroupCreate()
+              setLayoutPopOpen(open)
+            }}
+            title="布局"
             side="right"
             align="start"
             sideOffset={14}
             alignOffset={-6}
-            showArrow={true}
             items={[
               {
                 id: "dashboard",
@@ -340,17 +337,12 @@ export function WorkbenchRail(props: {
                 onClick: () => selectLayout("focus"),
               },
             ]}
+            triggerClass="dash-rail-btn"
+            triggerClassList={{ active: layoutPopOpen() }}
+            triggerAriaLabel="切换布局"
+            triggerTitle="切换布局"
           >
-            <button
-              class="dash-rail-btn"
-              classList={{ active: layoutPopOpen() }}
-              aria-label="切换布局"
-              title="切换布局"
-              type="button"
-              onClick={toggleLayoutPopover}
-            >
-              <HostActionIcon id={action().id} icon={action().icon} />
-            </button>
+            <HostActionIcon id={action().id} icon={action().icon} />
           </DropdownMenu>
         )}
       </Show>

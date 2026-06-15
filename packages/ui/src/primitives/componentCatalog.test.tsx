@@ -37,7 +37,11 @@ describe("V2.3 component catalog", () => {
             items={[{ key: "rename", label: "重命名" }]}
             onSelect={vi.fn()}
             aria-label="卡片菜单"
-          />
+          >
+            <button type="button" aria-label="打开卡片菜单">
+              菜单
+            </button>
+          </ContextMenu>
           <Drawer open title="详情" onClose={vi.fn()}>
             内容
           </Drawer>
@@ -79,10 +83,14 @@ describe("V2.3 component catalog", () => {
       root,
     )
 
+    root
+      .querySelector<HTMLButtonElement>("button[aria-label='打开卡片菜单']")
+      ?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: 12, clientY: 12 }))
+
     expect(root.textContent).toContain("设计")
     expect(root.textContent).toContain("周一")
-    expect(root.textContent).toContain("重命名")
-    expect(root.textContent).toContain("详情")
+    expect(document.body.textContent).toContain("重命名")
+    expect(document.body.textContent).toContain("详情")
     expect(root.textContent).toContain("打开")
     expect(root.textContent).toContain("设置已保存")
     expect(root.textContent).toContain("插件")

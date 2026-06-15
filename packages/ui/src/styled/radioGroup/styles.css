@@ -2,13 +2,18 @@
   .tbr-radio-group {
     border: none;
     padding: 0;
+  }
+
+  .tbr-radio-group-list {
     display: flex;
     gap: 8px;
   }
-  .tbr-radio-group[data-direction="vertical"] {
+
+  .tbr-radio-group[data-direction="vertical"] .tbr-radio-group-list {
     flex-direction: column;
   }
-  .tbr-radio-group[data-direction="horizontal"] {
+
+  .tbr-radio-group[data-direction="horizontal"] .tbr-radio-group-list {
     flex-direction: row;
   }
   .tbr-radio-item {

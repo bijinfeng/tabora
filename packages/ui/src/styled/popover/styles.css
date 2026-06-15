@@ -1,8 +1,5 @@
 @layer tabora-ui {
   .tbr-popover {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
     min-width: 220px;
     background: rgb(var(--tbr-color-surface));
     border: 1px solid rgb(var(--tbr-color-line));
@@ -11,6 +8,9 @@
     z-index: 50;
     padding: 14px;
     animation: tbr-scale-in 120ms var(--tbr-ease);
+  }
+  .tbr-popover-arrow {
+    z-index: 1;
   }
   .tbr-popover-title {
     font-size: 13px;

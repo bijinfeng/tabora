@@ -30,7 +30,8 @@
     color: rgb(var(--tbr-color-text));
   }
 
-  .tbr-toggle-group-item[data-selected] {
+  .tbr-toggle-group-item[data-selected],
+  .tbr-toggle-group-item[data-pressed] {
     border-color: rgb(var(--tbr-color-accent));
     background: rgb(var(--tbr-color-accent-soft));
     color: rgb(var(--tbr-color-accent));

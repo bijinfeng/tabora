@@ -1,5 +1,5 @@
+import { Collapsible as KCollapsible } from "@kobalte/core/collapsible"
 import type { JSX } from "solid-js"
-import { Show, createSignal } from "solid-js"
 import { ChevronRight } from "lucide-solid"
 
 export type CollapsibleProps = {
@@ -10,22 +10,15 @@ export type CollapsibleProps = {
 }
 
 export function Collapsible(props: CollapsibleProps) {
-  const [open, setOpen] = createSignal(props.open ?? false)
   return (
-    <div class={`tbr-collapsible ${props.class ?? ""}`}>
-      <button
-        class="tbr-collapsible-trigger"
-        onClick={() => setOpen(!open())}
-        aria-expanded={open()}
-      >
+    <KCollapsible class={`tbr-collapsible ${props.class ?? ""}`} defaultOpen={props.open ?? false}>
+      <KCollapsible.Trigger class="tbr-collapsible-trigger">
         {props.title}
-        <span class="tbr-collapsible-arrow" data-open={open() ? "" : undefined}>
+        <span class="tbr-collapsible-arrow" aria-hidden="true">
           <ChevronRight size={16} strokeWidth={2} />
         </span>
-      </button>
-      <Show when={open()}>
-        <div class="tbr-collapsible-content">{props.children}</div>
-      </Show>
-    </div>
+      </KCollapsible.Trigger>
+      <KCollapsible.Content class="tbr-collapsible-content">{props.children}</KCollapsible.Content>
+    </KCollapsible>
   )
 }

@@ -1,6 +1,5 @@
 import { createSignal } from "solid-js"
 
-import { Button } from "../button"
 import { DropdownMenu } from "./dropdownMenu.styled"
 
 export function DropdownMenuDemo() {
@@ -9,16 +8,15 @@ export function DropdownMenuDemo() {
   return (
     <DropdownMenu
       open={open()}
-      onClose={() => setOpen(false)}
+      onOpenChange={setOpen}
       items={[
         { id: "expand", label: "展开" },
         { id: "resize", label: "调整尺寸", shortcut: "R" },
         { id: "remove", label: "移除", danger: true },
       ]}
+      triggerClass="tbr-btn tbr-btn--secondary tbr-btn--md"
     >
-      <Button variant="secondary" onClick={() => setOpen((value) => !value)}>
-        打开菜单
-      </Button>
+      打开菜单
     </DropdownMenu>
   )
 }

@@ -1,4 +1,5 @@
-import { createUniqueId, type JSX } from "solid-js"
+import { HoverCard as KHoverCard } from "@kobalte/core/hover-card"
+import type { JSX } from "solid-js"
 import { Show } from "solid-js"
 
 export type HoverCardProps = {
@@ -11,25 +12,25 @@ export type HoverCardProps = {
 }
 
 export function HoverCard(props: HoverCardProps) {
-  const contentId = createUniqueId()
-
   return (
     <span class={props.class}>
-      <span class="tbr-hover-card-trigger" tabindex="0" aria-describedby={contentId}>
-        {props.trigger}
-      </span>
-      <span class="tbr-hover-card-content" id={contentId} role="tooltip">
-        <Show when={props.media}>
-          <span class="tbr-hover-card-media">{props.media}</span>
-        </Show>
-        <strong class="tbr-hover-card-title">{props.title}</strong>
-        <Show when={props.description}>
-          <span class="tbr-hover-card-desc">{props.description}</span>
-        </Show>
-        <Show when={props.meta}>
-          <span class="tbr-hover-card-meta">{props.meta}</span>
-        </Show>
-      </span>
+      <KHoverCard>
+        <KHoverCard.Trigger class="tbr-hover-card-trigger">{props.trigger}</KHoverCard.Trigger>
+        <KHoverCard.Portal>
+          <KHoverCard.Content class="tbr-hover-card-content">
+            <Show when={props.media}>
+              <span class="tbr-hover-card-media">{props.media}</span>
+            </Show>
+            <strong class="tbr-hover-card-title">{props.title}</strong>
+            <Show when={props.description}>
+              <span class="tbr-hover-card-desc">{props.description}</span>
+            </Show>
+            <Show when={props.meta}>
+              <span class="tbr-hover-card-meta">{props.meta}</span>
+            </Show>
+          </KHoverCard.Content>
+        </KHoverCard.Portal>
+      </KHoverCard>
     </span>
   )
 }

@@ -1,3 +1,4 @@
+import { ToggleGroup as KToggleGroup } from "@kobalte/core/toggle-group"
 import type { JSX } from "solid-js"
 import { For } from "solid-js"
 
@@ -17,33 +18,29 @@ export type ToggleGroupProps = {
 }
 
 export function ToggleGroup(props: ToggleGroupProps) {
-  const toggle = (value: string) => {
-    props.onChange(
-      props.value.includes(value)
-        ? props.value.filter((item) => item !== value)
-        : [...props.value, value],
-    )
-  }
-
   return (
-    <div class={props.class} role="group" aria-label={props["aria-label"]}>
+    <KToggleGroup
+      {...(props.class ? { class: props.class } : {})}
+      aria-label={props["aria-label"]}
+      multiple={true}
+      {...(props.disabled !== undefined ? { disabled: props.disabled } : {})}
+      value={props.value}
+      onChange={(value) => {
+        if (Array.isArray(value)) props.onChange(value)
+        else props.onChange(value ? [value] : [])
+      }}
+    >
       <For each={props.options}>
-        {(option) => {
-          const selected = () => props.value.includes(option.value)
-          return (
-            <button
-              type="button"
-              class="tbr-toggle-group-item"
-              data-selected={selected() ? "" : undefined}
-              aria-pressed={selected()}
-              disabled={props.disabled || option.disabled}
-              onClick={() => toggle(option.value)}
-            >
-              {option.label}
-            </button>
-          )
-        }}
+        {(option) => (
+          <KToggleGroup.Item
+            class="tbr-toggle-group-item"
+            value={option.value}
+            disabled={Boolean(props.disabled || option.disabled)}
+          >
+            {option.label}
+          </KToggleGroup.Item>
+        )}
       </For>
-    </div>
+    </KToggleGroup>
   )
 }

@@ -34,7 +34,7 @@
     text-align: left;
   }
 
-  .tbr-context-menu-item:hover {
+  .tbr-context-menu-item[data-highlighted] {
     background: rgb(var(--tbr-color-surface-hover));
   }
 
@@ -42,11 +42,11 @@
     color: rgb(var(--tbr-color-danger));
   }
 
-  .tbr-context-menu-item[data-danger]:hover {
+  .tbr-context-menu-item[data-danger][data-highlighted] {
     background: rgb(var(--tbr-color-danger-soft));
   }
 
-  .tbr-context-menu-item:disabled {
+  .tbr-context-menu-item[data-disabled] {
     cursor: not-allowed;
     opacity: 0.45;
   }

@@ -46,10 +46,10 @@ describe("built-in component icons", () => {
           />
           <DropdownMenu
             open
-            onClose={() => {}}
+            onOpenChange={() => {}}
             items={[{ id: "enabled", label: "启用", checked: true }]}
           >
-            <button type="button">菜单</button>
+            菜单
           </DropdownMenu>
         </>
       ),
@@ -60,7 +60,7 @@ describe("built-in component icons", () => {
     expectLucideIcon(el.querySelector(".tbr-accordion-arrow"))
     expectLucideIcon(el.querySelector(".tbr-collapsible-arrow"))
     expectLucideIcon(el.querySelector(".tbr-select-icon"))
-    expectLucideIcon(el.querySelector(".tbr-dropdown-check"))
+    expectLucideIcon(document.body.querySelector(".tbr-dropdown-check"))
   })
 
   it("renders close, remove, navigation, and copy actions with lucide icons", () => {
@@ -88,7 +88,7 @@ describe("built-in component icons", () => {
 
     expectLucideIcon(el.querySelector(".tbr-chip-remove"))
     expectLucideIcon(el.querySelector(".tbr-tag-input-remove"))
-    expectLucideIcon(el.querySelector(".tbr-drawer-close"))
+    expectLucideIcon(document.body.querySelector(".tbr-drawer-close"))
     expectLucideIcon(el.querySelector("button[aria-label='上一页']"))
     expectLucideIcon(el.querySelector("button[aria-label='下一页']"))
     expectLucideIcon(el.querySelector(".tbr-tree-toggle"))

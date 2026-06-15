@@ -1,6 +1,9 @@
+import { DropdownMenu as KDropdownMenu } from "@kobalte/core/dropdown-menu"
 import type { JSX } from "solid-js"
-import { For } from "solid-js"
+import { For, Show, splitProps } from "solid-js"
 import { Check } from "lucide-solid"
+
+type KobalteDropdownMenuPlacement = NonNullable<Parameters<typeof KDropdownMenu>[0]["placement"]>
 
 export type DropdownMenuItem = {
   id: string
@@ -19,96 +22,127 @@ export type DropdownMenuSide = "top" | "bottom" | "left" | "right"
 export type DropdownMenuAlign = "start" | "end"
 
 export type DropdownMenuProps = {
-  open: boolean
-  onClose: () => void
+  open?: boolean
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  onClose?: () => void
+  title?: JSX.Element
   items: DropdownMenuItem[]
   side?: DropdownMenuSide
   align?: DropdownMenuAlign
   sideOffset?: number
   alignOffset?: number
   showArrow?: boolean
+  triggerClass?: string
+  triggerClassList?: Record<string, boolean>
+  triggerDisabled?: boolean
+  triggerId?: string
+  triggerTitle?: string
+  triggerAriaLabel?: string
   class?: string
   children: JSX.Element
 }
 
 export function DropdownMenu(props: DropdownMenuProps) {
-  const side = () => props.side ?? "bottom"
-  const align = () => props.align ?? "end"
-  const sideOffset = () => props.sideOffset ?? 4
-  const alignOffset = () => props.alignOffset ?? 0
-  const menuClass = () => (props.class ? `tbr-dropdown ${props.class}` : "tbr-dropdown")
-  const menuStyle = () => {
-    const so = `${sideOffset()}px`
-    const ao = `${alignOffset()}px`
-    if (side() === "top") {
-      return {
-        bottom: `calc(100% + ${so})`,
-        ...(align() === "start" ? { left: ao } : { right: ao }),
-      }
-    }
-    if (side() === "left") {
-      return {
-        right: `calc(100% + ${so})`,
-        ...(align() === "start" ? { top: ao } : { bottom: ao }),
-      }
-    }
-    if (side() === "right") {
-      return {
-        left: `calc(100% + ${so})`,
-        ...(align() === "start" ? { top: ao } : { bottom: ao }),
-      }
-    }
-    return {
-      top: `calc(100% + ${so})`,
-      ...(align() === "start" ? { left: ao } : { right: ao }),
-    }
+  const [local, others] = splitProps(props, [
+    "open",
+    "defaultOpen",
+    "onOpenChange",
+    "onClose",
+    "title",
+    "items",
+    "side",
+    "align",
+    "sideOffset",
+    "alignOffset",
+    "showArrow",
+    "triggerClass",
+    "triggerClassList",
+    "triggerDisabled",
+    "triggerId",
+    "triggerTitle",
+    "triggerAriaLabel",
+    "class",
+    "children",
+  ])
+
+  const placementMap = {
+    top: { start: "top-start", end: "top-end" },
+    bottom: { start: "bottom-start", end: "bottom-end" },
+    left: { start: "left-start", end: "left-end" },
+    right: { start: "right-start", end: "right-end" },
+  } satisfies Record<DropdownMenuSide, Record<DropdownMenuAlign, KobalteDropdownMenuPlacement>>
+
+  const placement = () => {
+    const side = local.side ?? "bottom"
+    const align = local.align ?? "end"
+    return placementMap[side][align]
   }
+
+  const contentClass = () => (local.class ? `tbr-dropdown ${local.class}` : "tbr-dropdown")
+
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      {props.children}
-      {props.open && (
-        <div
-          class={menuClass()}
-          style={menuStyle()}
-          data-side={side()}
-          data-align={align()}
-          data-arrow={props.showArrow ? "" : undefined}
-          onClick={(e) => e.stopPropagation()}
-          role="menu"
-        >
-          <For each={props.items}>
+    <KDropdownMenu
+      {...(local.open !== undefined ? { open: local.open } : {})}
+      {...(local.defaultOpen !== undefined ? { defaultOpen: local.defaultOpen } : {})}
+      placement={placement()}
+      gutter={local.sideOffset ?? 6}
+      shift={local.alignOffset ?? 0}
+      flip={true}
+      slide={true}
+      overflowPadding={8}
+      onOpenChange={(next) => {
+        local.onOpenChange?.(next)
+        if (!next) local.onClose?.()
+      }}
+      {...others}
+    >
+      <KDropdownMenu.Trigger
+        class={local.triggerClass}
+        classList={local.triggerClassList}
+        disabled={local.triggerDisabled}
+        {...(local.triggerId !== undefined ? { id: local.triggerId } : {})}
+        {...(local.triggerTitle !== undefined ? { title: local.triggerTitle } : {})}
+        {...(local.triggerAriaLabel !== undefined ? { "aria-label": local.triggerAriaLabel } : {})}
+      >
+        {local.children}
+      </KDropdownMenu.Trigger>
+      <KDropdownMenu.Portal>
+        <KDropdownMenu.Content class={contentClass()}>
+          <Show when={local.showArrow}>
+            <KDropdownMenu.Arrow class="tbr-dropdown-arrow" size={10} />
+          </Show>
+          <Show when={local.title}>
+            <div class="tbr-dropdown-title">{local.title}</div>
+          </Show>
+          <For each={local.items}>
             {(item) =>
               item.separator ? (
-                <div class="tbr-dropdown-sep" role="separator" />
+                <KDropdownMenu.Separator class="tbr-dropdown-sep" />
               ) : (
-                <button
+                <KDropdownMenu.Item
                   class="tbr-dropdown-item"
+                  {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
                   data-danger={item.danger ? "" : undefined}
-                  data-disabled={item.disabled ? "" : undefined}
-                  role="menuitem"
-                  disabled={item.disabled}
-                  onClick={() => {
+                  data-checked={item.checked ? "" : undefined}
+                  onSelect={() => {
                     item.onClick?.()
-                    props.onClose()
                   }}
                 >
                   {item.icon && <span class="tbr-dropdown-icon">{item.icon}</span>}
-                  {item.checked && (
-                    <span class="tbr-dropdown-check">
-                      <Check size={16} strokeWidth={2} />
-                    </span>
-                  )}
                   <span class="tbr-dropdown-label">{item.label}</span>
                   {item.shortcut && <kbd class="tbr-dropdown-kbd">{item.shortcut}</kbd>}
-                </button>
+                  <Show when={item.checked}>
+                    <span class="tbr-dropdown-check" aria-hidden="true">
+                      <Check size={16} strokeWidth={2} />
+                    </span>
+                  </Show>
+                </KDropdownMenu.Item>
               )
             }
           </For>
-        </div>
-      )}
-      {props.open && (
-        <div style={{ position: "fixed", inset: 0, "z-index": 49 }} onClick={props.onClose} />
-      )}
-    </div>
+        </KDropdownMenu.Content>
+      </KDropdownMenu.Portal>
+    </KDropdownMenu>
   )
 }

@@ -232,7 +232,7 @@ describe("DashboardLayout", () => {
     dispose()
   })
 
-  it("rail layout button opens prototype switch popover before running layout action", () => {
+  it("rail layout button opens prototype switch popover before running layout action", async () => {
     const host = document.createElement("div")
     document.body.appendChild(host)
     const layoutRun = vi.fn()
@@ -247,27 +247,43 @@ describe("DashboardLayout", () => {
       host,
     )
 
-    host.querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')?.click()
-    const menu = host.querySelector(".tbr-dropdown")
+    host
+      .querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')
+      ?.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, pointerType: "mouse", button: 0 }),
+      )
+    const menu = document.querySelector(".tbr-dropdown")
     expect(menu).toBeTruthy()
     expect(menu?.textContent).toContain("Dashboard")
     expect(menu?.textContent).toContain("控制面板：多卡片并列")
     expect(menu?.textContent).toContain("Focus")
     expect(menu?.textContent).toContain("深度专注：主卡 + 卫星")
 
-    const items = host.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
+    const items = document.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
     expect(items.length).toBe(2)
     expect(items[0]?.querySelector(".tbr-dropdown-check")).toBeTruthy()
 
-    items[0]?.click()
+    items[0]?.dispatchEvent(
+      new PointerEvent("pointerup", { bubbles: true, pointerType: "mouse", button: 0 }),
+    )
+    await Promise.resolve()
     expect(layoutRun).not.toHaveBeenCalled()
-    expect(host.querySelector(".tbr-dropdown")).toBeFalsy()
+    const menuAfterSelect = document.querySelector(".tbr-dropdown")
+    expect(!menuAfterSelect || menuAfterSelect.hasAttribute("data-closed")).toBe(true)
 
-    host.querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')?.click()
-    const items2 = host.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
-    items2[1]?.click()
+    host
+      .querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')
+      ?.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, pointerType: "mouse", button: 0 }),
+      )
+    const items2 = document.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
+    items2[1]?.dispatchEvent(
+      new PointerEvent("pointerup", { bubbles: true, pointerType: "mouse", button: 0 }),
+    )
+    await Promise.resolve()
     expect(layoutRun).toHaveBeenCalledTimes(1)
-    expect(host.querySelector(".tbr-dropdown")).toBeFalsy()
+    const menuAfterSelect2 = document.querySelector(".tbr-dropdown")
+    expect(!menuAfterSelect2 || menuAfterSelect2.hasAttribute("data-closed")).toBe(true)
     dispose()
   })
 })

@@ -10,6 +10,9 @@ export function ContextMenuDemo() {
         { key: "open", label: "展开视图" },
         { key: "remove", label: "移除卡片", danger: true },
       ]}
-    />
+      triggerClass="tbr-context-menu"
+    >
+      <div class="tbr-context-menu-content">右键打开菜单</div>
+    </ContextMenu>
   )
 }
