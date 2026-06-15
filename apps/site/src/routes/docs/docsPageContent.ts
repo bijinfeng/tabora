@@ -1,9 +1,6 @@
 import type { SiteLocale } from "../../app/AppShell"
 
-import { docsGuideSectionIds } from "./docsPageContent.types"
-import type { DocsGuideSectionId, DocsPageContent, DocsResolvedPage } from "./docsPageContent.types"
-
-export const defaultDocsSectionId = "quickstart"
+import type { DocsPageContent } from "./docsPageContent.types"
 
 export type {
   DocsCodeBlock,
@@ -22,53 +19,12 @@ export type {
   DocsTable,
 } from "./docsPageContent.types"
 export { docsGuideSectionIds } from "./docsPageContent.types"
-
-export function getDocsSectionPath(id: string) {
-  return `/docs/${id}`
-}
-
-export function getDocsComponentSpecs(content: DocsPageContent) {
-  return [
-    ...content.componentSpecs.inputControls,
-    ...content.componentSpecs.selectionControls,
-    ...content.componentSpecs.overlayControls,
-    ...content.componentSpecs.feedbackControls,
-    ...content.componentSpecs.structureControls,
-  ]
-}
-
-export function resolveDocsPage(
-  content: DocsPageContent,
-  requestedId = defaultDocsSectionId,
-): DocsResolvedPage {
-  const id = requestedId || defaultDocsSectionId
-  if (isDocsGuideSectionId(id)) {
-    return {
-      kind: "guide",
-      id,
-      title: content.sections[id].title,
-    }
-  }
-
-  const spec = getDocsComponentSpecs(content).find((item) => item.id === id)
-  if (spec) {
-    return {
-      kind: "component",
-      id,
-      title: spec.title,
-      spec,
-    }
-  }
-
-  return {
-    kind: "missing",
-    id,
-  }
-}
-
-function isDocsGuideSectionId(id: string): id is DocsGuideSectionId {
-  return docsGuideSectionIds.includes(id as DocsGuideSectionId)
-}
+export {
+  defaultDocsSectionId,
+  getDocsComponentSpecs,
+  getDocsSectionPath,
+  resolveDocsPage,
+} from "./docsPageContent.resolve"
 
 const docsPageContent: Record<SiteLocale, DocsPageContent> = {
   "zh-CN": {
