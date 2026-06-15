@@ -1,6 +1,7 @@
 import { TaboraMark } from "@tabora/brand"
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { LayoutHostAPI } from "@tabora/plugin-api"
+import { DropdownMenu } from "@tabora/ui"
 import { HostActionIcon } from "./host-action-icon"
 import type { ActiveGroupSetter, RailGroup, RailGroupContextMenu, RailGroupSetter } from "./types"
 
@@ -56,7 +57,6 @@ export function WorkbenchRail(props: {
   const setGroups = props.setGroups ?? ((value) => setFallbackGroups(value))
   const setActiveGroupId = props.setActiveGroupId ?? ((value) => setFallbackActiveGroupId(value))
   let inlineInput: HTMLInputElement | undefined
-  let layoutSwitchWrap: HTMLDivElement | undefined
   let groupMenuPanel: HTMLDivElement | undefined
   let groupCounter = 1
 
@@ -214,9 +214,6 @@ export function WorkbenchRail(props: {
     }
     const onPointerDown = (event: PointerEvent) => {
       const path = event.composedPath()
-      if (layoutPopOpen() && !(layoutSwitchWrap && path.includes(layoutSwitchWrap))) {
-        setLayoutPopOpen(false)
-      }
       if (groupMenu() && !(groupMenuPanel && path.includes(groupMenuPanel))) {
         setGroupMenu(null)
       }
@@ -309,61 +306,52 @@ export function WorkbenchRail(props: {
       <div class="dash-rail-spacer" />
       <Show when={layoutAction()}>
         {(action) => (
-          <div
-            class="dash-layout-switch-wrap"
-            ref={(element) => {
-              layoutSwitchWrap = element
-            }}
+          <DropdownMenu
+            open={layoutPopOpen()}
+            onClose={() => setLayoutPopOpen(false)}
+            side="right"
+            align="start"
+            sideOffset={14}
+            alignOffset={-6}
+            showArrow={true}
+            items={[
+              {
+                id: "dashboard",
+                label: (
+                  <span class="dash-layout-switch-text">
+                    <span class="dash-layout-switch-name">Dashboard</span>
+                    <span class="dash-layout-switch-desc">控制面板：多卡片并列</span>
+                  </span>
+                ),
+                icon: <LayoutDashboardIcon />,
+                checked: isDashboardLayout(),
+                onClick: () => selectLayout("dashboard"),
+              },
+              {
+                id: "focus",
+                label: (
+                  <span class="dash-layout-switch-text">
+                    <span class="dash-layout-switch-name">Focus</span>
+                    <span class="dash-layout-switch-desc">深度专注：主卡 + 卫星</span>
+                  </span>
+                ),
+                icon: <LayoutFocusIcon />,
+                checked: !isDashboardLayout(),
+                onClick: () => selectLayout("focus"),
+              },
+            ]}
           >
             <button
               class="dash-rail-btn"
               classList={{ active: layoutPopOpen() }}
               aria-label="切换布局"
-              aria-expanded={layoutPopOpen()}
               title="切换布局"
               type="button"
               onClick={toggleLayoutPopover}
             >
               <HostActionIcon id={action().id} icon={action().icon} />
             </button>
-            <div class="dash-layout-switch-pop" classList={{ open: layoutPopOpen() }}>
-              <div class="dash-layout-switch-header">布局</div>
-              <button
-                class="dash-layout-switch-item"
-                classList={{ active: isDashboardLayout() }}
-                type="button"
-                onClick={() => selectLayout("dashboard")}
-              >
-                <span class="dash-layout-switch-icon">
-                  <LayoutDashboardIcon />
-                </span>
-                <span class="dash-layout-switch-text">
-                  <span class="dash-layout-switch-name">Dashboard</span>
-                  <span class="dash-layout-switch-desc">控制面板：多卡片并列</span>
-                </span>
-                <Show when={isDashboardLayout()}>
-                  <span class="dash-layout-switch-check">✓</span>
-                </Show>
-              </button>
-              <button
-                class="dash-layout-switch-item"
-                classList={{ active: !isDashboardLayout() }}
-                type="button"
-                onClick={() => selectLayout("focus")}
-              >
-                <span class="dash-layout-switch-icon">
-                  <LayoutFocusIcon />
-                </span>
-                <span class="dash-layout-switch-text">
-                  <span class="dash-layout-switch-name">Focus</span>
-                  <span class="dash-layout-switch-desc">深度专注：主卡 + 卫星</span>
-                </span>
-                <Show when={!isDashboardLayout()}>
-                  <span class="dash-layout-switch-check">✓</span>
-                </Show>
-              </button>
-            </div>
-          </div>
+          </DropdownMenu>
         )}
       </Show>
       <For each={utilityActions()}>

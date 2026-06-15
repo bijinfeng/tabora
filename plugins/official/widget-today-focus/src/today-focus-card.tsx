@@ -1,5 +1,6 @@
 import { createSignal, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { Checkbox, Input } from "@tabora/ui"
 
 const defaultFocusText = "把默认新标签页做成可组合的个人工作入口"
 
@@ -19,32 +20,24 @@ export function TodayFocusCard(props: WidgetViewProps) {
 
   return (
     <div class="today-focus-widget">
-      <input
+      <Input
         id={inputId()}
-        class="focus-input"
         value={focus()}
-        onInput={async (event) => {
-          const value = event.currentTarget.value
+        onInput={(value) => {
           setFocus(value)
-          await props.data.save(contentKey, value)
+          void props.data.save(contentKey, value)
         }}
         placeholder="今天最重要的一件事是什么？"
         aria-label="今日重点内容"
       />
-      <label class="focus-check-row" for={`${inputId()}-done`}>
-        <input
-          id={`${inputId()}-done`}
-          class="focus-check"
-          type="checkbox"
-          checked={done()}
-          onChange={async (event) => {
-            const value = event.currentTarget.checked
-            setDone(value)
-            await props.data.save(doneKey, String(value))
-          }}
-        />
-        <span>{done() ? "已完成" : "尚未完成"}</span>
-      </label>
+      <Checkbox
+        checked={done()}
+        label={done() ? "已完成" : "尚未完成"}
+        onChange={async (checked) => {
+          setDone(checked)
+          await props.data.save(doneKey, String(checked))
+        }}
+      />
     </div>
   )
 }

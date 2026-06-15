@@ -1,4 +1,4 @@
-import { FieldRow, InlineError } from "@tabora/ui"
+import { FieldRow, InlineError, Input } from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
@@ -121,12 +121,12 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           description="创建独立的布局、主题和卡片配置"
           trailing={
             <div class="workspace-create-row">
-              <input
+              <Input
+                size="sm"
                 id="ws-new-name"
-                class="workspace-create-input"
                 value={newWorkspaceName()}
-                onInput={(event) => setNewWorkspaceName(event.currentTarget.value)}
-                onKeyDown={(event) => event.key === "Enter" && void handleCreate()}
+                onInput={(value: string) => setNewWorkspaceName(value)}
+                onKeyDown={(event: KeyboardEvent) => event.key === "Enter" && void handleCreate()}
                 placeholder="新建工作区"
                 aria-label="新建工作区名称"
               />

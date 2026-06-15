@@ -1,6 +1,7 @@
 import { For } from "solid-js"
 import type { PluginManifest, PluginPermission, SettingsPanelViewProps } from "@tabora/plugin-api"
 import { assessPermissionRisk } from "@tabora/plugin-api"
+import { Switch } from "@tabora/ui"
 
 export type PluginSummary = SettingsPanelViewProps["plugins"][number]
 
@@ -63,26 +64,6 @@ function pluginStatus(plugin: PluginSummary) {
   return plugin.enabled ? { label: "已启用", tone: "success" } : { label: "已禁用", tone: "muted" }
 }
 
-function PluginSwitch(props: {
-  checked: boolean
-  label: string
-  onChange: (checked: boolean) => void
-}) {
-  return (
-    <label class="plugin-switch">
-      <input
-        type="checkbox"
-        checked={props.checked}
-        onChange={(event) => props.onChange(event.currentTarget.checked)}
-        aria-label={props.label}
-      />
-      <span class="plugin-switch-track">
-        <span class="plugin-switch-thumb" />
-      </span>
-    </label>
-  )
-}
-
 export function PluginManagerCard(props: PluginManagerCardProps = {}) {
   const plugins = () => props.plugins ?? []
 
@@ -117,9 +98,10 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
                   <div class="plugin-controls">
                     <span class="plugin-version">v{plugin.version}</span>
                     <span class={`plugin-pill ${status.tone}`}>{status.label}</span>
-                    <PluginSwitch
+                    <Switch
                       checked={plugin.enabled}
-                      label={`${plugin.enabled ? "禁用" : "启用"} ${plugin.name}`}
+                      size="sm"
+                      aria-label={`${plugin.enabled ? "禁用" : "启用"} ${plugin.name}`}
                       onChange={(enabled) => {
                         void props.host?.togglePluginEnabled?.(plugin.id, enabled)
                       }}

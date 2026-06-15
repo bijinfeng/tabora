@@ -148,57 +148,6 @@
   color: rgb(var(--color-muted));
 }
 
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-switch {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-switch input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-switch-track {
-  position: relative;
-  width: 32px;
-  height: 18px;
-  border-radius: 999px;
-  background: rgb(var(--color-line-strong));
-  transition: background 120ms ease;
-}
-
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-switch-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: rgb(var(--color-surface));
-  box-shadow: 0 1px 3px rgb(var(--color-shadow) / 0.18);
-  transition: transform 120ms ease;
-}
-
-[data-tabora-plugin-id="official.plugin-manager"]
-  .plugin-switch
-  input:checked
-  + .plugin-switch-track {
-  background: rgb(var(--color-accent));
-}
-
-[data-tabora-plugin-id="official.plugin-manager"]
-  .plugin-switch
-  input:checked
-  + .plugin-switch-track
-  .plugin-switch-thumb {
-  transform: translateX(14px);
-}
-
 [data-tabora-plugin-id="official.plugin-manager"] .plugin-audit-section {
   display: flex;
   flex-direction: column;

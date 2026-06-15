@@ -1,7 +1,7 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { InlineError, Kbd } from "@tabora/ui"
+import { InlineError, Input, Kbd } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
 
 type SearchResultItem = SearchViewProps["results"][number]["items"][number]
@@ -176,10 +176,10 @@ export function SearchCommandBar(props: SearchViewProps) {
             </Show>
           </div>
           <span class="search-scope-divider" aria-hidden="true" />
-          <input
+          <Input
+            type="search"
             value={query()}
-            onInput={(event) => {
-              const nextQuery = event.currentTarget.value
+            onInput={(nextQuery) => {
               setQuery(nextQuery)
               props.host.setQuery(nextQuery)
             }}
@@ -193,7 +193,6 @@ export function SearchCommandBar(props: SearchViewProps) {
             }
             placeholder="搜索网页、命令或卡片"
             aria-label="搜索内容"
-            type="search"
           />
           <span class="search-kbd">⌘K</span>
         </form>

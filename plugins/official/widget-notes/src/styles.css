@@ -5,24 +5,6 @@
   min-height: 0;
 }
 
-[data-tabora-plugin-id="official.widgets.notes"] .notes-area {
-  width: 100%;
-  min-height: 40px;
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: rgb(var(--color-text));
-  outline: none;
-  resize: none;
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-area::placeholder {
-  color: rgb(var(--color-subtle));
-}
-
 [data-tabora-plugin-id="official.widgets.notes"] .notes-footer {
   display: none;
 }

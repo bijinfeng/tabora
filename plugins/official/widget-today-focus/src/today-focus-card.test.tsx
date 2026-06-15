@@ -38,7 +38,7 @@ describe("TodayFocusCard", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <TodayFocusCard {...makeProps()} />, root)
-    const input = root.querySelector("input.focus-input") as HTMLInputElement
+    const input = root.querySelector("#today-focus-focus-1") as HTMLInputElement
     expect(input).toBeTruthy()
     expect(input.placeholder).toBe("今天最重要的一件事是什么？")
     root.remove()
@@ -49,7 +49,7 @@ describe("TodayFocusCard", () => {
     document.body.appendChild(root)
     render(() => <TodayFocusCard {...makeProps()} />, root)
     await flushMount()
-    const input = root.querySelector("input.focus-input") as HTMLInputElement
+    const input = root.querySelector("#today-focus-focus-1") as HTMLInputElement
     expect(input.value).toBe("把默认新标签页做成可组合的个人工作入口")
     root.remove()
   })

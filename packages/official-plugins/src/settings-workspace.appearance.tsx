@@ -1,4 +1,4 @@
-import { FieldRow } from "@tabora/ui"
+import { FieldRow, Select } from "@tabora/ui"
 import { For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
@@ -113,19 +113,14 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
             label="当前语言"
             description="影响工作台宿主文案和官方插件面板文案"
             trailing={
-              <select
+              <Select
                 id="settings-locale-select"
-                class="settings-select"
+                size="sm"
                 value={localeValue()}
-                onChange={(event) =>
-                  void props.host.switchLocale?.(event.currentTarget.value as "zh-CN" | "en-US")
-                }
+                options={localeOptions()}
+                onChange={(value) => void props.host.switchLocale?.(value as "zh-CN" | "en-US")}
                 aria-label="选择语言"
-              >
-                <For each={localeOptions()}>
-                  {(option) => <option value={option.value}>{option.label}</option>}
-                </For>
-              </select>
+              />
             }
           />
         </section>

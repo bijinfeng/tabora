@@ -248,28 +248,26 @@ describe("DashboardLayout", () => {
     )
 
     host.querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')?.click()
-    expect(host.querySelector(".dash-layout-switch-pop.open")).toBeTruthy()
-    expect(host.querySelector(".dash-layout-switch-header")?.textContent).toBe("布局")
-    expect(host.querySelector(".dash-layout-switch-item.active")?.textContent).toContain(
-      "Dashboard",
-    )
-    expect(host.querySelector(".dash-layout-switch-item.active")?.textContent).toContain("✓")
-    expect(host.querySelector(".dash-layout-switch-pop")?.textContent).toContain(
-      "控制面板：多卡片并列",
-    )
-    expect(host.querySelector(".dash-layout-switch-pop")?.textContent).toContain(
-      "深度专注：主卡 + 卫星",
-    )
+    const menu = host.querySelector(".tbr-dropdown")
+    expect(menu).toBeTruthy()
+    expect(menu?.textContent).toContain("Dashboard")
+    expect(menu?.textContent).toContain("控制面板：多卡片并列")
+    expect(menu?.textContent).toContain("Focus")
+    expect(menu?.textContent).toContain("深度专注：主卡 + 卫星")
 
-    const items = host.querySelectorAll<HTMLButtonElement>(".dash-layout-switch-item")
+    const items = host.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
+    expect(items.length).toBe(2)
+    expect(items[0]?.querySelector(".tbr-dropdown-check")).toBeTruthy()
+
     items[0]?.click()
     expect(layoutRun).not.toHaveBeenCalled()
-    expect(host.querySelector(".dash-layout-switch-pop.open")).toBeFalsy()
+    expect(host.querySelector(".tbr-dropdown")).toBeFalsy()
 
     host.querySelector<HTMLButtonElement>('button[aria-label="切换布局"]')?.click()
-    items[1]?.click()
+    const items2 = host.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
+    items2[1]?.click()
     expect(layoutRun).toHaveBeenCalledTimes(1)
-    expect(host.querySelector(".dash-layout-switch-pop.open")).toBeFalsy()
+    expect(host.querySelector(".tbr-dropdown")).toBeFalsy()
     dispose()
   })
 })

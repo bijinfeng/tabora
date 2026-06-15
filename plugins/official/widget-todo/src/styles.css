@@ -25,33 +25,6 @@
   background: rgb(var(--color-accent) / 0.04);
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 15px;
-  height: 15px;
-  border: 1.5px solid rgb(var(--color-line-strong));
-  border-radius: 3px;
-  background: transparent;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-check.done {
-  background: rgb(var(--color-accent));
-  border-color: rgb(var(--color-accent));
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-check.done::after {
-  content: "";
-  width: 3px;
-  height: 7px;
-  border: solid rgb(var(--color-inverse));
-  border-width: 0 1.5px 1.5px 0;
-  transform: rotate(45deg) translateY(-1px);
-}
-
 [data-tabora-plugin-id="official.widgets.todo"] .todo-text {
   flex: 1;
   min-width: 0;
@@ -111,24 +84,6 @@
 
 [data-tabora-plugin-id="official.widgets.todo"] .todo-add-form {
   margin-top: 2px;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-add-input {
-  min-width: 0;
-  flex: 1;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 6px;
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-  font-family: inherit;
-  font-size: 12px;
-  outline: none;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-add-input:focus {
-  border-color: rgb(var(--color-accent));
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .todo-mini-btn,

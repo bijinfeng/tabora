@@ -1,5 +1,6 @@
 import { createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { Checkbox, Input } from "@tabora/ui"
 import { Check, X } from "lucide-solid"
 
 type TodoItem = { id: string; text: string; done: boolean }
@@ -93,13 +94,10 @@ export function TodoCard(props: WidgetViewProps) {
                   when={editingId() === item.id}
                   fallback={
                     <>
-                      <button
-                        class="todo-check"
-                        classList={{ done: item.done }}
-                        type="button"
+                      <Checkbox
+                        checked={item.done}
                         aria-label={`标记 ${item.text} 完成`}
-                        aria-pressed={item.done}
-                        onClick={() => void toggleItem(item.id)}
+                        onChange={() => void toggleItem(item.id)}
                       />
                       <button
                         class="todo-text"
@@ -121,10 +119,10 @@ export function TodoCard(props: WidgetViewProps) {
                   }
                 >
                   <div class="todo-edit-row">
-                    <input
-                      class="todo-add-input"
+                    <Input
+                      size="sm"
                       value={editText()}
-                      onInput={(event) => setEditText(event.currentTarget.value)}
+                      onInput={(value) => setEditText(value)}
                       onKeyDown={handleEditKeyDown}
                       aria-label={`编辑 ${item.text}`}
                     />
@@ -152,11 +150,11 @@ export function TodoCard(props: WidgetViewProps) {
         </ul>
       </Show>
       <div class="todo-add-form">
-        <input
+        <Input
+          size="sm"
           id={inputId()}
-          class="todo-add-input"
           value={input()}
-          onInput={(event) => setInput(event.currentTarget.value)}
+          onInput={(value) => setInput(value)}
           onKeyDown={handleKeyDown}
           placeholder="新任务..."
           aria-label="新待办内容"

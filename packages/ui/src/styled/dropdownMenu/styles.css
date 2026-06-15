@@ -1,8 +1,6 @@
 @layer tabora-ui {
   .tbr-dropdown {
     position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
     min-width: 180px;
     background: rgb(var(--tbr-color-surface));
     border: 1px solid rgb(var(--tbr-color-line));
@@ -11,6 +9,53 @@
     z-index: 50;
     padding: 4px;
     animation: tbr-scale-in 120ms var(--tbr-ease);
+  }
+  .tbr-dropdown[data-arrow]::before {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: rgb(var(--tbr-color-surface));
+    content: "";
+  }
+  .tbr-dropdown[data-arrow][data-side="bottom"]::before {
+    top: -6px;
+    border-top: 1px solid rgb(var(--tbr-color-line));
+    border-left: 1px solid rgb(var(--tbr-color-line));
+    transform: rotate(45deg);
+  }
+  .tbr-dropdown[data-arrow][data-side="top"]::before {
+    bottom: -6px;
+    border-right: 1px solid rgb(var(--tbr-color-line));
+    border-bottom: 1px solid rgb(var(--tbr-color-line));
+    transform: rotate(45deg);
+  }
+  .tbr-dropdown[data-arrow][data-side="right"]::before {
+    left: -6px;
+    border-bottom: 1px solid rgb(var(--tbr-color-line));
+    border-left: 1px solid rgb(var(--tbr-color-line));
+    transform: rotate(45deg);
+  }
+  .tbr-dropdown[data-arrow][data-side="left"]::before {
+    right: -6px;
+    border-top: 1px solid rgb(var(--tbr-color-line));
+    border-right: 1px solid rgb(var(--tbr-color-line));
+    transform: rotate(45deg);
+  }
+  .tbr-dropdown[data-arrow][data-side="bottom"][data-align="start"]::before,
+  .tbr-dropdown[data-arrow][data-side="top"][data-align="start"]::before {
+    left: 16px;
+  }
+  .tbr-dropdown[data-arrow][data-side="bottom"][data-align="end"]::before,
+  .tbr-dropdown[data-arrow][data-side="top"][data-align="end"]::before {
+    right: 16px;
+  }
+  .tbr-dropdown[data-arrow][data-side="right"][data-align="start"]::before,
+  .tbr-dropdown[data-arrow][data-side="left"][data-align="start"]::before {
+    top: 16px;
+  }
+  .tbr-dropdown[data-arrow][data-side="right"][data-align="end"]::before,
+  .tbr-dropdown[data-arrow][data-side="left"][data-align="end"]::before {
+    bottom: 16px;
   }
   .tbr-dropdown-item {
     display: flex;

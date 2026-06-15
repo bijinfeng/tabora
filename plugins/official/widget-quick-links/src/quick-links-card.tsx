@@ -1,5 +1,6 @@
 import { createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { InlineError, Input } from "@tabora/ui"
 import { ArrowDown, ArrowUp, Check, Pencil, X } from "lucide-solid"
 
 type QuickLink = {
@@ -213,15 +214,18 @@ export function QuickLinksCard(props: WidgetViewProps) {
               >
                 <div class="quick-link-edit-form">
                   <div class="quick-link-edit-fields">
-                    <input
+                    <Input
+                      size="sm"
                       value={editTitle()}
-                      onInput={(event) => setEditTitle(event.currentTarget.value)}
+                      onInput={(value) => setEditTitle(value)}
                       placeholder="标题"
                       aria-label="编辑链接标题"
                     />
-                    <input
+                    <Input
+                      size="sm"
+                      type="url"
                       value={editUrl()}
-                      onInput={(event) => setEditUrl(event.currentTarget.value)}
+                      onInput={(value) => setEditUrl(value)}
                       placeholder="https://..."
                       aria-label="编辑链接地址"
                     />
@@ -259,23 +263,24 @@ export function QuickLinksCard(props: WidgetViewProps) {
         </Show>
       </ul>
       <Show when={urlError()}>
-        <div class="quick-link-error" role="alert">
-          {urlError()}
-        </div>
+        <InlineError>{urlError()!}</InlineError>
       </Show>
       <Show when={editing()} fallback={null}>
         <div class="quick-link-add-form">
-          <input
+          <Input
+            size="sm"
             id={`ql-title-${props.instanceId}`}
             value={newTitle()}
-            onInput={(event) => setNewTitle(event.currentTarget.value)}
+            onInput={(value) => setNewTitle(value)}
             placeholder="链接标题"
             aria-label="新链接标题"
           />
-          <input
+          <Input
+            size="sm"
+            type="url"
             id={`ql-url-${props.instanceId}`}
             value={newUrl()}
-            onInput={(event) => setNewUrl(event.currentTarget.value)}
+            onInput={(value) => setNewUrl(value)}
             placeholder="https://..."
             aria-label="新链接地址"
           />

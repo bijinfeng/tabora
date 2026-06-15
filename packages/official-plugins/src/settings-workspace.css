@@ -325,44 +325,6 @@
   gap: 8px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .workspace-create-input {
-  min-width: 0;
-  flex: 1;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: var(--radius);
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-  font-family: inherit;
-  font-size: 13px;
-  outline: none;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .settings-select {
-  flex-shrink: 0;
-  width: 160px;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: var(--radius);
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-  font-family: inherit;
-  font-size: 12px;
-  outline: none;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .workspace-create-input:focus {
-  border-color: rgb(var(--color-accent));
-  box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.08);
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .settings-select:focus {
-  border-color: rgb(var(--color-accent));
-  box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.08);
-}
-
 [data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn {
   display: inline-flex;
   align-items: center;

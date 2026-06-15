@@ -15,13 +15,11 @@ export function NotesCard(props: WidgetViewProps) {
 
   return (
     <div class="notes-widget">
-      <textarea
-        class="notes-area"
+      <Textarea
         value={text()}
-        onInput={async (event) => {
-          const value = event.currentTarget.value
+        onInput={(value) => {
           setText(value)
-          await props.data.save(storageKey, value)
+          void props.data.save(storageKey, value)
         }}
         placeholder="快速记录想法..."
         aria-label="便签内容"
