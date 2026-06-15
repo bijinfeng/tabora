@@ -158,6 +158,78 @@ describe("component docs catalog", () => {
     root.remove()
   })
 
+  it("renders richer long-form and utility demos for component doc pages", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <>
+          <ComponentDocDemo id="taginput" />
+          <ComponentDocDemo id="scrollarea" />
+          <ComponentDocDemo id="divider" />
+          <ComponentDocDemo id="truncate" />
+        </>
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("插件标签编辑")
+    expect(root.textContent).toContain("更新日志滚动区域")
+    expect(root.textContent).toContain("设置分组分隔")
+    expect(root.textContent).toContain("长描述截断")
+
+    root.remove()
+  })
+
+  it("renders richer accessibility and feedback demos for component doc pages", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <>
+          <ComponentDocDemo id="field" />
+          <ComponentDocDemo id="inlineerror" />
+          <ComponentDocDemo id="spinner" />
+          <ComponentDocDemo id="visuallyhidden" />
+        </>
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("工作区显示名称")
+    expect(root.textContent).toContain("同步错误提示")
+    expect(root.textContent).toContain("插件同步中")
+    expect(root.textContent).toContain("无障碍补充说明")
+
+    root.remove()
+  })
+
+  it("renders richer docs and command demos for component doc pages", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <>
+          <ComponentDocDemo id="link" />
+          <ComponentDocDemo id="kbd" />
+          <ComponentDocDemo id="copybutton" />
+          <ComponentDocDemo id="tooltip" />
+        </>
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("文档与权限入口")
+    expect(root.textContent).toContain("常用快捷键")
+    expect(root.textContent).toContain("复制插件标识")
+    expect(root.textContent).toContain("图标与工具按钮提示")
+
+    root.remove()
+  })
+
   it("registers a demo renderer for every documented component", () => {
     const categoryIds = componentDocsCategories.flatMap((category) =>
       category.items.map((item) => item.id),
