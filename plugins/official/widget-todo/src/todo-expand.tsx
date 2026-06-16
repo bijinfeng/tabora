@@ -21,13 +21,6 @@ type TodoGroup = {
   collapsed: boolean
 }
 
-const PRIORITY_COLORS: Record<Priority, string> = {
-  high: "var(--tbr-color-danger)",
-  medium: "var(--tbr-color-warning)",
-  low: "var(--tbr-color-accent)",
-  none: "var(--tbr-color-subtle)",
-}
-
 const PRIORITY_LABELS: Record<Priority, string> = {
   high: "高",
   medium: "中",
@@ -289,9 +282,10 @@ export function TodoExpand(props: WidgetViewProps) {
                             <div class="expand-cell expand-cell-priority">
                               <span
                                 class="expand-priority-tag"
-                                style={{
-                                  color: PRIORITY_COLORS[item.priority],
-                                  background: `rgb(from ${PRIORITY_COLORS[item.priority]} r g b / 0.1)`,
+                                classList={{
+                                  "priority-high": item.priority === "high",
+                                  "priority-medium": item.priority === "medium",
+                                  "priority-low": item.priority === "low",
                                 }}
                               >
                                 ● {PRIORITY_LABELS[item.priority]}

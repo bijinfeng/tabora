@@ -1,5 +1,6 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { TodoCard } from "./todo-card"
+import { TodoExpand } from "./todo-expand"
 
 export const officialPluginTodo: BuiltinPlugin = {
   enabled: true,
@@ -21,12 +22,16 @@ export const officialPluginTodo: BuiltinPlugin = {
           supportedSizes: ["S", "M", "L", "XL"],
           defaultSize: "S",
           allowMultipleInstances: true,
-          views: { card: "official.widgets.todo.card" },
+          views: {
+            card: "official.widgets.todo.card",
+            expand: "official.widgets.todo.expand",
+          },
         },
       ],
     },
   },
   activate(context) {
     context.registry.views.register("official.widgets.todo.card", TodoCard)
+    context.registry.views.register("official.widgets.todo.expand", TodoExpand)
   },
 }
