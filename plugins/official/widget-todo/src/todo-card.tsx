@@ -40,9 +40,10 @@ export function TodoCard(props: WidgetViewProps) {
   const groupsKey = "v2_groups"
 
   void props.data.get<TodoItem[]>(storageKey).then(async (saved) => {
-    if (saved && saved.length > 0) {
-      setItems(saved)
+    if (saved !== null && saved !== undefined) {
+      setItems(saved) // 使用保存的数据，即使是空数组
     } else {
+      // 仅在从未保存过时才初始化种子数据
       setItems([
         {
           id: "seed-1",
@@ -71,9 +72,10 @@ export function TodoCard(props: WidgetViewProps) {
   })
 
   void props.data.get<TodoGroup[]>(groupsKey).then(async (saved) => {
-    if (saved && saved.length > 0) {
+    if (saved !== null && saved !== undefined) {
       setGroups(saved)
     }
+    // 不需要 else，已有默认值
   })
 
   async function persistItems(updated: TodoItem[]) {
@@ -106,10 +108,8 @@ export function TodoCard(props: WidgetViewProps) {
     const map = new Map<string, TodoItem[]>()
     for (const g of groups()) map.set(g.id, [])
     for (const item of filteredItems()) {
-      if (!map.has(item.groupId)) {
-        map.set(item.groupId, [])
-      }
-      map.get(item.groupId)!.push(item)
+      const existing = map.get(item.groupId) ?? []
+      map.set(item.groupId, [...existing, item])
     }
     return map
   })
@@ -124,7 +124,12 @@ export function TodoCard(props: WidgetViewProps) {
 
   function isOverdue(iso?: string) {
     if (!iso) return false
-    return new Date(iso) < new Date()
+    const dueDate = new Date(iso)
+    const today = new Date()
+    // 只比较日期部分，忽略时间
+    today.setHours(0, 0, 0, 0)
+    dueDate.setHours(0, 0, 0, 0)
+    return dueDate < today
   }
 
   return (
