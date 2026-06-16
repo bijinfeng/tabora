@@ -34,11 +34,25 @@ describe("TodoCard", () => {
     await Promise.resolve()
   }
 
-  it("renders add input", () => {
+  it("renders group header and filter tabs", async () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <TodoCard {...makeProps()} />, root)
-    expect(root.querySelector("input")).toBeTruthy()
+    await flushMount()
+    expect(root.textContent).toContain("未完成")
+    expect(root.textContent).toContain("全部")
+    expect(root.textContent).toContain("默认分组")
+    root.remove()
+  })
+
+  it("renders expand button", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const props = makeProps()
+    render(() => <TodoCard {...props} />, root)
+    const expandBtn = root.querySelector(".card-expand-btn")
+    expect(expandBtn).toBeTruthy()
+    expect(expandBtn?.textContent).toContain("展开")
     root.remove()
   })
 
@@ -47,9 +61,8 @@ describe("TodoCard", () => {
     document.body.appendChild(root)
     render(() => <TodoCard {...makeProps()} />, root)
     await flushMount()
-    expect(root.textContent).toContain("复核 Dashboard / Focus 布局协议")
-    expect(root.textContent).toContain("补齐 widget 尺寸菜单与展开态")
-    expect(root.textContent).toContain("清理插件设置中的导入导出后置项")
+    expect(root.textContent).toContain("补齐 widget 尺寸菜单")
+    expect(root.textContent).toContain("清理插件设置中的导入导出项")
     root.remove()
   })
 })
