@@ -1,150 +1,183 @@
-[data-tabora-plugin-id="official.widgets.todo"] .todo-widget {
+/* ===== 卡片视图样式 ===== */
+[data-tabora-plugin-id="official.widgets.todo"] .todo-card-widget {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   height: 100%;
   min-height: 0;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  overflow: auto;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  transition: background 120ms ease;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-item:hover {
-  background: rgb(var(--color-accent) / 0.04);
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-text {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: rgb(var(--color-text));
-  font-family: inherit;
   font-size: 12px;
-  text-align: left;
-  cursor: pointer;
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-text.done {
-  color: rgb(var(--color-muted));
-  text-decoration: line-through;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-delete {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 3px;
-  background: transparent;
-  color: rgb(var(--color-subtle));
-  cursor: pointer;
-  font-size: 10px;
-  opacity: 0;
-  transition: opacity 120ms ease;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-item:hover .todo-delete,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-item:focus-within .todo-delete {
-  opacity: 1;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-delete:hover {
-  background: rgb(var(--color-danger) / 0.08);
-  color: rgb(var(--color-danger));
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-input-row,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-edit-row,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-add-form {
+[data-tabora-plugin-id="official.widgets.todo"] .card-toolbar {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-edit-row,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-add-form {
-  padding: 4px 0;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-add-form {
+  padding: 7px 10px 5px;
+  border-bottom: 1px solid rgb(var(--tbr-color-line) / 0.5);
   flex-shrink: 0;
-  margin-top: 0;
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-mini-btn,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-clear-btn {
+[data-tabora-plugin-id="official.widgets.todo"] .card-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgb(var(--tbr-color-text-muted));
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-tab:hover {
+  background: rgb(var(--tbr-color-accent) / 0.06);
+  color: rgb(var(--tbr-color-text));
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-tab.active {
+  background: rgb(var(--tbr-color-accent) / 0.1);
+  color: rgb(var(--tbr-color-accent));
+  font-weight: 500;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-count-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 4px;
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-muted));
-  font-family: inherit;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: rgb(var(--tbr-color-accent) / 0.15);
+  color: rgb(var(--tbr-color-accent));
   font-size: 10px;
-  cursor: pointer;
-}
-
-[data-tabora-plugin-id="official.widgets.todo"] .todo-mini-btn {
-  width: auto;
-  height: 24px;
-  padding: 0 8px;
-  background: rgb(var(--color-accent-soft));
-  color: rgb(var(--color-accent));
   font-weight: 600;
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-clear-btn {
-  width: auto;
-  height: 24px;
-  padding: 0 6px;
-  white-space: nowrap;
+[data-tabora-plugin-id="official.widgets.todo"] .card-spacer {
+  flex: 1;
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-mini-btn:hover,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-clear-btn:hover {
-  background: rgb(var(--color-accent) / 0.08);
-  color: rgb(var(--color-accent));
+[data-tabora-plugin-id="official.widgets.todo"] .card-expand-btn {
+  padding: 2px 8px;
+  border: 1px solid rgb(var(--tbr-color-line));
+  border-radius: 4px;
+  background: transparent;
+  color: rgb(var(--tbr-color-text-muted));
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 100ms ease,
+    color 100ms ease;
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-mini-btn svg,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-delete svg {
+[data-tabora-plugin-id="official.widgets.todo"] .card-expand-btn:hover {
+  border-color: rgb(var(--tbr-color-accent));
+  color: rgb(var(--tbr-color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-group {
+  margin-bottom: 2px;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 100ms ease;
+  user-select: none;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-group-header:hover {
+  background: rgb(var(--tbr-color-accent) / 0.04);
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-group-arrow {
+  display: flex;
+  align-items: center;
+  color: rgb(var(--tbr-color-text-muted));
   flex-shrink: 0;
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-empty,
-[data-tabora-plugin-id="official.widgets.todo"] .todo-footer {
-  color: rgb(var(--color-muted));
-  font-size: 12px;
+[data-tabora-plugin-id="official.widgets.todo"] .card-group-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgb(var(--tbr-color-text-secondary));
+  flex: 1;
 }
 
-[data-tabora-plugin-id="official.widgets.todo"] .todo-footer {
+[data-tabora-plugin-id="official.widgets.todo"] .card-group-count {
+  font-size: 10px;
+  color: rgb(var(--tbr-color-text-muted));
+  background: rgb(var(--tbr-color-surface-soft));
+  padding: 1px 5px;
+  border-radius: 8px;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-group-items {
+  padding-left: 4px;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 8px;
-  font-size: 11px;
+  gap: 6px;
+  padding: 3px 10px 3px 18px;
+  border-radius: 4px;
+  transition: background 100ms ease;
+  min-height: 26px;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-item:hover {
+  background: rgb(var(--tbr-color-accent) / 0.04);
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-item.done {
+  opacity: 0.55;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-priority-dot {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 10px;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-text {
+  flex: 1;
+  font-size: 12px;
+  color: rgb(var(--tbr-color-text));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-text.done {
+  color: rgb(var(--tbr-color-text-muted));
+  text-decoration: line-through;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-due-date {
+  font-size: 10px;
+  color: rgb(var(--tbr-color-text-muted));
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-due-date.overdue {
+  color: rgb(var(--tbr-color-danger));
 }
