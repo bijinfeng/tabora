@@ -155,4 +155,7 @@ export type { TruncateProps } from "./styled/truncate"
 export { CopyButton } from "./styled/copyButton"
 export type { CopyButtonProps } from "./styled/copyButton"
 
+export { DatePicker } from "./styled/datePicker"
+export type { DatePickerProps } from "./styled/datePicker"
+
 export { VisuallyHidden } from "./primitives/visuallyHidden/visuallyHidden"

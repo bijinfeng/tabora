@@ -22,6 +22,7 @@
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/ui": "workspace:*",
+    "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

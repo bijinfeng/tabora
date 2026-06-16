@@ -1,57 +1,68 @@
-import { createSignal, onMount } from "solid-js"
+import { createSignal, For, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Textarea } from "@tabora/ui"
+import { Plus } from "lucide-solid"
 
-const defaultNoteText = "MVP 重点：布局本身也是插件。平台只提供运行时、权限桥、持久化与安全回退。"
+type Note = {
+  id: string
+  content: string
+  starred: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+function formatTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return "刚刚"
+  if (minutes < 60) return `${minutes}分钟前`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}天前`
+  return new Date(iso).toLocaleDateString("zh-CN", { month: "long", day: "numeric" })
+}
+
+function firstLine(content: string): string {
+  const line = content.split("\n")[0]
+  return line ?? "无标题"
+}
+
+const STORAGE_KEY = "notes-items"
 
 export function NotesCard(props: WidgetViewProps) {
-  const [text, setText] = createSignal(defaultNoteText)
-  const storageKey = "notes-content"
+  const [notes, setNotes] = createSignal<Note[]>([])
 
   onMount(async () => {
-    const saved = await props.data.get<string>(storageKey)
-    if (saved) setText(saved)
+    const saved = await props.data.get<Note[]>(STORAGE_KEY)
+    if (saved && saved.length > 0) setNotes(saved)
   })
+
+  const displayNotes = () => notes().slice(0, 4)
 
   return (
     <div class="notes-widget">
-      <Textarea
-        value={text()}
-        onInput={(value) => {
-          setText(value)
-          void props.data.save(storageKey, value)
+      <div class="notes-widget-body">
+        <For each={displayNotes()}>
+          {(note) => (
+            <div class="notes-widget-row" classList={{ starred: note.starred }}>
+              <span class="notes-widget-dot" />
+              <span class="notes-widget-text">{firstLine(note.content)}</span>
+              <span class="notes-widget-time">{formatTime(note.updatedAt)}</span>
+            </div>
+          )}
+        </For>
+      </div>
+      <button
+        class="notes-widget-plus"
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          props.host.openExpand()
         }}
-        placeholder="快速记录想法..."
-        aria-label="便签内容"
-        rows={4}
-      />
-      <div class="notes-footer">自动保存</div>
-    </div>
-  )
-}
-
-export function NotesExpand(props: WidgetViewProps) {
-  const [text, setText] = createSignal(defaultNoteText)
-  const storageKey = "notes-content"
-
-  onMount(async () => {
-    const saved = await props.data.get<string>(storageKey)
-    if (saved) setText(saved)
-  })
-
-  return (
-    <div class="notes-modal">
-      <h3>便签</h3>
-      <Textarea
-        value={text()}
-        onInput={async (v) => {
-          setText(v)
-          await props.data.save(storageKey, v)
-        }}
-        placeholder="尽情书写..."
-        aria-label="便签展开内容"
-        rows={12}
-      />
+      >
+        <Plus size={12} />
+        新建便签
+      </button>
     </div>
   )
 }

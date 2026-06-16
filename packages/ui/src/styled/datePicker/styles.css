@@ -1,0 +1,131 @@
+/* Tabora DatePicker — compact month calendar */
+@layer tabora-ui {
+  .tbr-date-picker {
+    font-family: inherit;
+  }
+
+  .tbr-date-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--tbr-space-2);
+  }
+
+  .tbr-date-picker-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--tbr-color-text-muted));
+  }
+
+  .tbr-date-picker-nav {
+    display: flex;
+    gap: 2px;
+  }
+
+  .tbr-date-picker-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: var(--tbr-radius-2);
+    background: transparent;
+    color: rgb(var(--tbr-color-text-subtle));
+    cursor: pointer;
+    transition:
+      background var(--tbr-dur-fast) var(--tbr-ease),
+      color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+
+  .tbr-date-picker-nav-btn:hover {
+    background: rgb(var(--tbr-color-surface-hover));
+    color: rgb(var(--tbr-color-text));
+  }
+
+  .tbr-date-picker-nav-btn:focus-visible {
+    outline: 2px solid rgb(var(--tbr-color-focus));
+    outline-offset: 2px;
+  }
+
+  .tbr-date-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    text-align: center;
+  }
+
+  .tbr-date-picker-dow {
+    font-size: 10px;
+    color: rgb(var(--tbr-color-text-subtle));
+    font-weight: 600;
+    padding: 2px 0;
+    line-height: 1;
+  }
+
+  .tbr-date-picker-day {
+    font-size: 11px;
+    line-height: 24px;
+    min-height: 24px;
+    border: none;
+    border-radius: var(--tbr-radius-pill);
+    background: transparent;
+    color: rgb(var(--tbr-color-text-muted));
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    transition:
+      background var(--tbr-dur-fast) var(--tbr-ease),
+      color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+
+  .tbr-date-picker-day.is-empty {
+    cursor: default;
+  }
+
+  .tbr-date-picker-day:not(.is-empty):hover {
+    background: rgb(var(--tbr-color-surface-hover));
+  }
+
+  .tbr-date-picker-day:not(.is-empty):focus-visible {
+    outline: 2px solid rgb(var(--tbr-color-focus));
+    outline-offset: 1px;
+  }
+
+  .tbr-date-picker-day.is-today {
+    background: rgb(var(--tbr-color-accent));
+    color: rgb(var(--tbr-color-inverse));
+    font-weight: 700;
+  }
+
+  .tbr-date-picker-day.is-active:not(.is-today) {
+    background: rgb(var(--tbr-color-accent-soft));
+    color: rgb(var(--tbr-color-accent));
+    font-weight: 600;
+  }
+
+  .tbr-date-picker-day.is-today.is-active {
+    background: rgb(var(--tbr-color-accent));
+    color: rgb(var(--tbr-color-inverse));
+  }
+
+  .tbr-date-picker-day.is-marked {
+    position: relative;
+  }
+
+  .tbr-date-picker-day.is-marked::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgb(var(--tbr-color-accent));
+  }
+
+  .tbr-date-picker-day.is-today.is-marked::after {
+    background: rgb(var(--tbr-color-inverse));
+  }
+}

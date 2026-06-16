@@ -1,3 +1,4 @@
+/* ══════════ 卡片视图（NotesCard）══════════ */
 [data-tabora-plugin-id="official.widgets.notes"] .notes-widget {
   display: flex;
   flex-direction: column;
@@ -5,12 +6,634 @@
   min-height: 0;
 }
 
-[data-tabora-plugin-id="official.widgets.notes"] .notes-footer {
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 2px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgb(var(--color-line));
+  cursor: pointer;
+  transition: opacity 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-row:last-child {
+  border-bottom: none;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-row:hover {
+  opacity: 0.7;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgb(var(--color-line-strong));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-row.starred .notes-widget-dot {
+  background: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-time {
+  font-size: 11px;
+  color: rgb(var(--color-subtle));
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-plus {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 2px 0;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-subtle));
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-plus:hover {
+  color: rgb(var(--color-accent));
+}
+
+/* ══════════ 展开视图（NotesExpand）══════════ */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-expand-root {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: rgb(var(--color-surface));
+}
+
+/* ── 左侧边栏 ── */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side {
+  width: 192px;
+  border-right: 1px solid rgb(var(--color-line));
+  background: rgb(var(--color-page));
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search {
+  padding: 8px 12px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  transition: border-color 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box:focus-within {
+  border-color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box svg {
+  color: rgb(var(--color-subtle));
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 12px;
+  color: rgb(var(--color-text));
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box input::placeholder {
+  color: rgb(var(--color-subtle));
+}
+
+/* 日历容器 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-cal {
+  padding: 0 12px 8px;
+}
+
+/* 侧边栏分组 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-section {
+  padding: 0 12px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-section-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgb(var(--color-subtle));
+  padding: 6px 0 2px;
+}
+
+/* 筛选项 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-filters {
+  padding: 2px 12px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  width: 100%;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background 120ms var(--ease),
+    color 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-filter:hover {
+  background: rgb(var(--color-surface-hover));
+  color: rgb(var(--color-text));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-filter.active {
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-filter svg {
+  flex-shrink: 0;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-filter-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"]
+  .notes-side-filter.active
+  .notes-side-filter-count {
+  color: rgb(var(--color-accent));
+}
+
+/* 标签列表 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tags {
+  padding: 0 12px 8px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  width: 100%;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background 120ms var(--ease),
+    color 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag:hover {
+  background: rgb(var(--color-surface-hover));
+  color: rgb(var(--color-text));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag.active {
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag-hash {
+  color: rgb(var(--color-subtle));
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag.active .notes-side-tag-hash {
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag.active .notes-side-tag-count {
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-side-tag-empty {
+  font-size: 11px;
+  color: rgb(var(--color-subtle));
+  padding: 3px 8px;
+}
+
+/* ── 右侧主内容 ── */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+/* 快速捕获 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture {
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  margin-bottom: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition:
+    border-color 120ms var(--ease),
+    box-shadow 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture:focus-within {
+  border-color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.08);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px 4px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-plus {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(var(--color-subtle));
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-plus:hover {
+  color: rgb(var(--color-accent));
+  background: rgb(var(--color-surface-hover));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture textarea {
+  flex: 1;
+  min-height: 36px;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: vertical;
+  outline: none;
+  padding: 2px 0;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture textarea::placeholder {
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px 8px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-vis {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface-soft));
+  color: rgb(var(--color-muted));
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-vis:hover {
+  border-color: rgb(var(--color-line-strong));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: rgb(var(--color-surface-soft));
+  color: rgb(var(--color-muted));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 便签列表 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 便签卡片 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card {
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card:hover {
+  border-color: rgb(var(--color-line-strong));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card.editing {
+  border-color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.08);
+}
+
+/* 显示模式 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-display {
+  padding: 12px 16px 8px;
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-time {
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgb(var(--color-subtle));
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-star {
+  color: rgb(var(--color-accent));
+  display: inline-flex;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-content {
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgb(var(--color-text));
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-tag {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-foot {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-meta {
+  font-size: 12px;
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-actions {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card:hover .notes-card-actions,
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card:focus-within .notes-card-actions {
+  opacity: 1;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(var(--color-subtle));
+  cursor: pointer;
+  transition:
+    background 120ms var(--ease),
+    color 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-act:hover {
+  background: rgb(var(--color-surface-hover));
+  color: rgb(var(--color-text));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-act.danger:hover {
+  background: rgb(var(--color-danger-soft));
+  color: rgb(var(--color-danger));
+}
+
+/* 原地编辑 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card.editing .notes-card-display {
   display: none;
 }
 
-[data-tabora-plugin-id="official.widgets.notes"] .notes-modal {
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit {
+  display: none;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card.editing .notes-card-edit {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-area {
+  padding: 12px 16px 8px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-area textarea {
+  width: 100%;
+  min-height: 100px;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: vertical;
+  outline: none;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-area textarea::placeholder {
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px 8px;
+  border-top: 1px solid rgb(var(--color-line));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-info {
+  font-size: 12px;
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-saved {
+  font-size: 12px;
+  color: rgb(var(--color-subtle));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-btns {
+  display: flex;
+  gap: 4px;
+}
+
+/* 通用按钮 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 120ms var(--ease),
+    border-color 120ms var(--ease);
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-btn:hover {
+  background: rgb(var(--color-surface-hover));
+  border-color: rgb(var(--color-line-strong));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-accent {
+  background: rgb(var(--color-accent));
+  color: rgb(var(--color-inverse));
+  border-color: rgb(var(--color-accent));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-accent:hover {
+  background: rgb(var(--color-accent-hover));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-red {
+  color: rgb(var(--color-danger));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-red:hover {
+  background: rgb(var(--color-danger-soft));
+  border-color: rgb(var(--color-danger));
+}
+
+/* 搜索高亮 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-hl {
+  background: rgb(var(--color-accent) / 0.15);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* 空状态 */
+[data-tabora-plugin-id="official.widgets.notes"] .notes-empty {
+  text-align: center;
+  padding: 40px 16px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-empty-icon {
+  color: rgb(var(--color-subtle));
+  opacity: 0.4;
+  margin-bottom: 8px;
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-empty-text {
+  font-size: 14px;
+  color: rgb(var(--color-muted));
+}
+
+[data-tabora-plugin-id="official.widgets.notes"] .notes-empty-hint {
+  font-size: 12px;
+  color: rgb(var(--color-subtle));
+  margin-top: 4px;
 }

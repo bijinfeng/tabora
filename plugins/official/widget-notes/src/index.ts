@@ -1,5 +1,6 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { NotesCard, NotesExpand } from "./notes-card"
+import { NotesCard } from "./notes-card"
+import { NotesExpand } from "./notes-expand"
 
 export const officialPluginNotes: BuiltinPlugin = {
   enabled: true,
@@ -18,10 +19,13 @@ export const officialPluginNotes: BuiltinPlugin = {
           title: "便签",
           icon: "pencil",
           description: "随手记下想法和灵感",
-          supportedSizes: ["S", "M", "L"],
-          defaultSize: "M",
+          supportedSizes: ["S", "M", "L", "XL"],
+          defaultSize: "L",
           allowMultipleInstances: true,
-          views: { card: "official.widgets.notes.card", expand: "official.widgets.notes.expand" },
+          views: {
+            card: "official.widgets.notes.card",
+            expand: "official.widgets.notes.expand",
+          },
         },
       ],
     },
