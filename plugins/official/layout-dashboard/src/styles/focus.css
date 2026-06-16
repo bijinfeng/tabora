@@ -1,8 +1,9 @@
 .focus-shell {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   min-width: 0;
-  padding: clamp(118px, 30vh, 306px) 24px 64px;
+  padding: clamp(48px, 10vh, 120px) 24px 64px;
 }
 
 .focus-content {
@@ -158,13 +159,9 @@
 
 .focus-satellites {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-content: start;
   gap: 12px;
-  height: 114px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
 }
 
 .focus-satellite-title {
@@ -275,7 +272,7 @@
   }
 
   .focus-shell {
-    padding: clamp(106px, 18.5vh, 156px) 16px 66px;
+    padding: clamp(40px, 8vh, 80px) 16px 66px;
   }
 
   .focus-content {
@@ -296,7 +293,6 @@
   }
 
   .focus-satellites {
-    height: 192px;
     grid-template-columns: 1fr;
     gap: 10px;
   }

@@ -58,6 +58,26 @@
   --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* ====== GLOBAL SCROLLBAR ====== */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--color-line-strong)) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(var(--color-line-strong));
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 /* ====== ROOT ====== */
 .tabora-root {
   min-height: 100vh;
@@ -222,16 +242,6 @@
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-}
-.card-body::-webkit-scrollbar {
-  width: 6px;
-}
-.card-body::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgb(var(--color-line-strong));
-}
-.card-body::-webkit-scrollbar-track {
-  background: transparent;
 }
 .card-actions {
   display: flex;

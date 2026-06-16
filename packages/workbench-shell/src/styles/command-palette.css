@@ -2,12 +2,10 @@
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgb(var(--color-shadow) / 0.15);
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding-top: 15vh;
-  backdrop-filter: blur(4px);
 }
 
 .cmd-panel {
@@ -15,8 +13,8 @@
   max-width: 90vw;
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
-  border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgb(var(--color-shadow) / 0.12);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgb(var(--color-shadow) / 0.1);
   overflow: hidden;
 }
 
@@ -24,26 +22,39 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 0 14px;
+  height: 48px;
   border-bottom: 1px solid rgb(var(--color-line));
+}
+
+.cmd-search-icon {
+  width: 16px;
+  height: 16px;
+  color: rgb(var(--color-muted));
+  flex-shrink: 0;
 }
 
 .cmd-input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-family: inherit;
   color: rgb(var(--color-text));
   background: transparent;
 }
 
 .cmd-input::placeholder {
-  color: rgb(var(--color-muted));
+  color: rgb(var(--color-subtle, var(--color-muted)));
+}
+
+.cmd-esc {
+  flex-shrink: 0;
+  opacity: 0.58;
 }
 
 .cmd-results {
-  max-height: 360px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -61,25 +72,27 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 9px 14px;
+  height: 48px;
+  padding: 0 14px;
   border: none;
   background: none;
   font-family: inherit;
   font-size: 13px;
+  text-align: left;
   cursor: pointer;
   color: rgb(var(--color-text));
 }
 
 .cmd-item:hover,
 .cmd-item.active {
-  background: rgba(var(--color-accent), 0.06);
+  background: rgb(var(--color-accent) / 0.06);
 }
 
 .cmd-item-icon {
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: rgba(var(--color-accent), 0.08);
+  background: rgb(var(--color-accent) / 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -89,6 +102,9 @@
 
 .cmd-item-text {
   flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+  text-align: left;
 }
 
 .cmd-item-name {
@@ -96,7 +112,9 @@
 }
 
 .cmd-item-desc {
+  display: block;
   font-size: 11px;
+  line-height: 1.25;
   color: rgb(var(--color-muted));
 }
 

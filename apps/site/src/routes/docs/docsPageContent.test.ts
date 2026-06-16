@@ -19,7 +19,7 @@ describe("getDocsPageContent", () => {
   it("includes componentized input-control specs", () => {
     const content = getDocsPageContent("zh-CN")
 
-    expect(content.componentSpecs.inputControls).toHaveLength(3)
+    expect(content.componentSpecs.inputControls).toHaveLength(9)
     expect(content.componentSpecs.inputControls[0]?.id).toBe("button")
     expect(content.componentSpecs.inputControls[1]?.title).toBe("Input 输入框")
   })
@@ -46,8 +46,8 @@ describe("getDocsPageContent", () => {
       content.sidebarGroups.find(
         (group: (typeof content.sidebarGroups)[number]) => group.title === "选择控件",
       )?.items,
-    ).toHaveLength(4)
-    expect(content.componentSpecs.selectionControls).toHaveLength(4)
+    ).toHaveLength(6)
+    expect(content.componentSpecs.selectionControls).toHaveLength(6)
     expect(content.componentSpecs.selectionControls[0]?.id).toBe("select")
     expect(content.componentSpecs.selectionControls[0]?.demos[0]).toEqual(
       expect.objectContaining({

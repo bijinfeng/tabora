@@ -114,7 +114,7 @@ describe("SearchCommandBar", () => {
       root,
     )
 
-    const button = root.querySelector(".suggestion-item") as HTMLButtonElement | null
+    const button = root.querySelector(".cmd-item") as HTMLButtonElement | null
     expect(button?.textContent).toContain("在 Google 中搜索")
     button?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }))
 
@@ -176,14 +176,14 @@ describe("SearchCommandBar", () => {
       root,
     )
 
+    expect(Array.from(root.querySelectorAll(".cmd-group")).map((node) => node.textContent)).toEqual(
+      ["建议"],
+    )
     expect(
-      Array.from(root.querySelectorAll(".suggestions-label")).map((node) => node.textContent),
-    ).toEqual(["建议"])
-    expect(
-      Array.from(root.querySelectorAll(".suggestion-name")).map((node) => node.textContent),
+      Array.from(root.querySelectorAll(".cmd-item-name")).map((node) => node.textContent),
     ).toEqual(["@github tabora runtime", "添加便签卡片", "打开插件管理", "切换到暗色主题"])
     expect(
-      Array.from(root.querySelectorAll(".suggestion-icon")).map((node) => node.textContent),
+      Array.from(root.querySelectorAll(".cmd-item-icon")).map((node) => node.textContent),
     ).toEqual(["↵", "↵", "↵", "↵"])
     expect(root.textContent).not.toContain("常用命令")
     expect(root.textContent).not.toContain("核心卡片")

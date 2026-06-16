@@ -111,6 +111,11 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   onCleanup(() => {
     pluginStyleManager.dispose()
   })
+  createEffect(() => {
+    if (_cmdPaletteOpen()) {
+      _setInlineSearchOpen(false)
+    }
+  })
   const openSettings = (panelId?: string) =>
     openWorkbenchSettings(
       {

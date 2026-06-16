@@ -217,7 +217,7 @@ export function SearchCommandBar(props: SearchViewProps) {
           <For each={visibleResults()}>
             {(group) => (
               <>
-                <div class="suggestions-label">{group.label}</div>
+                <div class="cmd-group">{group.label}</div>
                 <For each={group.items}>
                   {(item) => {
                     const globalIdx = props.results
@@ -225,7 +225,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                       .findIndex((candidate) => candidate.id === item.id)
                     return (
                       <button
-                        class="suggestion-item"
+                        class="cmd-item"
                         classList={{ active: props.activeResultIndex === globalIdx }}
                         onMouseDown={(event) => {
                           event.preventDefault()
@@ -241,10 +241,10 @@ export function SearchCommandBar(props: SearchViewProps) {
                         }}
                         type="button"
                       >
-                        <span class="suggestion-icon">{item.icon}</span>
-                        <span class="suggestion-text">
-                          <span class="suggestion-name">{item.name}</span>
-                          <span class="suggestion-desc">{item.desc}</span>
+                        <span class="cmd-item-icon">{item.icon}</span>
+                        <span class="cmd-item-text">
+                          <span class="cmd-item-name">{item.name}</span>
+                          <span class="cmd-item-desc">{item.desc}</span>
                         </span>
                         <Show when={item.hint}>
                           <Kbd>{item.hint!}</Kbd>
