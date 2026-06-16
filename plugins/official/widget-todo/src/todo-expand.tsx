@@ -37,6 +37,14 @@ const PRIORITY_LABELS: Record<Priority, string> = {
 
 const DEFAULT_GROUP_ID = "default"
 
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  // Fallback for environments without crypto.randomUUID
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+}
+
 export function TodoExpand(props: WidgetViewProps) {
   const [items, setItems] = createSignal<TodoItem[]>([])
   const [groups, setGroups] = createSignal<TodoGroup[]>([
@@ -52,9 +60,16 @@ export function TodoExpand(props: WidgetViewProps) {
   const storageKey = "v2_items"
   const groupsKey = "v2_groups"
 
-  void props.data.get<TodoItem[]>(storageKey).then(async (saved) => {
-    if (saved !== null && saved !== undefined && saved.length > 0) {
-      setItems(saved)
+  void Promise.all([
+    props.data.get<TodoItem[]>(storageKey),
+    props.data.get<TodoGroup[]>(groupsKey),
+  ]).then(([savedItems, savedGroups]) => {
+    if (savedGroups !== null && savedGroups !== undefined && savedGroups.length > 0) {
+      setGroups(savedGroups)
+    }
+
+    if (savedItems !== null && savedItems !== undefined && savedItems.length > 0) {
+      setItems(savedItems)
     } else {
       setItems([
         {
@@ -82,12 +97,6 @@ export function TodoExpand(props: WidgetViewProps) {
           assignee: "毕金风",
         },
       ])
-    }
-  })
-
-  void props.data.get<TodoGroup[]>(groupsKey).then(async (saved) => {
-    if (saved !== null && saved !== undefined && saved.length > 0) {
-      setGroups(saved)
     }
   })
 
@@ -120,7 +129,7 @@ export function TodoExpand(props: WidgetViewProps) {
     const next: TodoItem[] = [
       ...items(),
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         text,
         done: false,
         priority: "none",
@@ -139,7 +148,7 @@ export function TodoExpand(props: WidgetViewProps) {
       setAddingGroup(false)
       return
     }
-    const newGroup: TodoGroup = { id: crypto.randomUUID(), name, collapsed: false }
+    const newGroup: TodoGroup = { id: generateUUID(), name, collapsed: false }
     const next = [...groups(), newGroup]
     setGroups(next)
     setNewGroupName("")
