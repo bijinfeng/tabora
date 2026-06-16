@@ -1,4 +1,7 @@
 [data-tabora-plugin-id="official.widgets.todo"] .todo-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   height: 100%;
   min-height: 0;
 }
@@ -7,9 +10,12 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-height: 0;
   margin: 0;
   padding: 0;
   list-style: none;
+  overflow: auto;
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .todo-item {
@@ -83,7 +89,8 @@
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .todo-add-form {
-  margin-top: 2px;
+  flex-shrink: 0;
+  margin-top: 0;
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .todo-mini-btn,
