@@ -1,172 +1,210 @@
-import { createSignal, For, Show } from "solid-js"
+import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Checkbox, Input } from "@tabora/ui"
-import { Check, X } from "lucide-solid"
+import { Checkbox } from "@tabora/ui"
+import { ChevronDown, ChevronRight, Circle } from "lucide-solid"
 
-type TodoItem = { id: string; text: string; done: boolean }
+type Priority = "high" | "medium" | "low" | "none"
+
+type TodoItem = {
+  id: string
+  text: string
+  done: boolean
+  priority: Priority
+  dueDate?: string
+  groupId: string
+}
+
+type TodoGroup = {
+  id: string
+  name: string
+  collapsed: boolean
+}
+
+const PRIORITY_COLORS: Record<Priority, string> = {
+  high: "var(--tbr-color-danger)",
+  medium: "var(--tbr-color-warning)",
+  low: "var(--tbr-color-accent)",
+  none: "var(--tbr-color-subtle)",
+}
+
+const DEFAULT_GROUP_ID = "default"
 
 export function TodoCard(props: WidgetViewProps) {
   const [items, setItems] = createSignal<TodoItem[]>([])
-  const [input, setInput] = createSignal("")
-  const [editingId, setEditingId] = createSignal<string | null>(null)
-  const [editText, setEditText] = createSignal("")
+  const [groups, setGroups] = createSignal<TodoGroup[]>([
+    { id: DEFAULT_GROUP_ID, name: "默认分组", collapsed: false },
+  ])
+  const [filter, setFilter] = createSignal<"todo" | "all">("todo")
 
-  const storageKey = "items"
-  const inputId = () => `todo-input-${props.instanceId}`
+  const storageKey = "v2_items"
+  const groupsKey = "v2_groups"
 
   void props.data.get<TodoItem[]>(storageKey).then(async (saved) => {
     if (saved && saved.length > 0) {
       setItems(saved)
     } else {
       setItems([
-        { id: "seed-layout", text: "复核 Dashboard / Focus 布局协议", done: true },
-        { id: "seed-size", text: "补齐 widget 尺寸菜单与展开态", done: false },
-        { id: "seed-settings", text: "清理插件设置中的导入导出后置项", done: false },
+        {
+          id: "seed-1",
+          text: "复核 Dashboard 布局协议",
+          done: true,
+          priority: "high",
+          groupId: DEFAULT_GROUP_ID,
+        },
+        {
+          id: "seed-2",
+          text: "补齐 widget 尺寸菜单",
+          done: false,
+          priority: "medium",
+          dueDate: "2025-12-31",
+          groupId: DEFAULT_GROUP_ID,
+        },
+        {
+          id: "seed-3",
+          text: "清理插件设置中的导入导出项",
+          done: false,
+          priority: "low",
+          groupId: DEFAULT_GROUP_ID,
+        },
       ])
     }
   })
 
-  async function persist(updated: TodoItem[]) {
+  void props.data.get<TodoGroup[]>(groupsKey).then(async (saved) => {
+    if (saved && saved.length > 0) {
+      setGroups(saved)
+    }
+  })
+
+  async function persistItems(updated: TodoItem[]) {
     await props.data.save(storageKey, updated)
   }
 
-  async function addItem() {
-    const text = input().trim()
-    if (!text) return
-    const next: TodoItem[] = [...items(), { id: crypto.randomUUID(), text, done: false }]
-    setItems(next)
-    setInput("")
-    await persist(next)
+  async function persistGroups(updated: TodoGroup[]) {
+    await props.data.save(groupsKey, updated)
   }
 
   async function toggleItem(id: string) {
     const next = items().map((i) => (i.id === id ? { ...i, done: !i.done } : i))
     setItems(next)
-    await persist(next)
+    await persistItems(next)
   }
 
-  async function removeItem(id: string) {
-    const next = items().filter((i) => i.id !== id)
-    setItems(next)
-    await persist(next)
+  async function toggleGroup(groupId: string) {
+    const next = groups().map((g) => (g.id === groupId ? { ...g, collapsed: !g.collapsed } : g))
+    setGroups(next)
+    await persistGroups(next)
   }
 
-  function startEdit(item: TodoItem) {
-    setEditingId(item.id)
-    setEditText(item.text)
-  }
+  const filteredItems = createMemo(() => {
+    const all = items()
+    if (filter() === "todo") return all.filter((i) => !i.done)
+    return all
+  })
 
-  async function confirmEdit() {
-    const id = editingId()
-    if (!id) return
-    const text = editText().trim()
-    if (!text) {
-      setEditingId(null)
-      return
+  const itemsByGroup = createMemo(() => {
+    const map = new Map<string, TodoItem[]>()
+    for (const g of groups()) map.set(g.id, [])
+    for (const item of filteredItems()) {
+      if (!map.has(item.groupId)) {
+        map.set(item.groupId, [])
+      }
+      map.get(item.groupId)!.push(item)
     }
-    const next = items().map((i) => (i.id === id ? { ...i, text } : i))
-    setItems(next)
-    setEditingId(null)
-    await persist(next)
+    return map
+  })
+
+  const todoCount = createMemo(() => items().filter((i) => !i.done).length)
+
+  function formatDate(iso?: string) {
+    if (!iso) return ""
+    const d = new Date(iso)
+    return `${d.getMonth() + 1}/${d.getDate()}`
   }
 
-  function cancelEdit() {
-    setEditingId(null)
-  }
-
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Enter") void addItem()
-  }
-
-  function handleEditKeyDown(e: KeyboardEvent) {
-    if (e.key === "Enter") void confirmEdit()
-    if (e.key === "Escape") cancelEdit()
+  function isOverdue(iso?: string) {
+    if (!iso) return false
+    return new Date(iso) < new Date()
   }
 
   return (
-    <div class="todo-widget">
-      <Show when={items().length > 0} fallback={<div class="todo-empty">今天先写一件事</div>}>
-        <ul class="todo-list">
-          <For each={items()}>
-            {(item) => (
-              <li class="todo-item" classList={{ done: item.done }}>
-                <Show
-                  when={editingId() === item.id}
-                  fallback={
-                    <>
-                      <Checkbox
-                        checked={item.done}
-                        aria-label={`标记 ${item.text} 完成`}
-                        onChange={() => void toggleItem(item.id)}
-                      />
-                      <button
-                        class="todo-text"
-                        classList={{ done: item.done }}
-                        type="button"
-                        onClick={() => startEdit(item)}
-                      >
-                        {item.text}
-                      </button>
-                      <button
-                        class="todo-delete"
-                        aria-label={`删除 ${item.text}`}
-                        type="button"
-                        onClick={() => void removeItem(item.id)}
-                      >
-                        <X size={14} />
-                      </button>
-                    </>
-                  }
-                >
-                  <div class="todo-edit-row">
-                    <Input
-                      size="sm"
-                      value={editText()}
-                      onInput={(value) => setEditText(value)}
-                      onKeyDown={handleEditKeyDown}
-                      aria-label={`编辑 ${item.text}`}
-                    />
-                    <button
-                      class="todo-mini-btn"
-                      aria-label="确认编辑"
-                      type="button"
-                      onClick={() => void confirmEdit()}
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      class="todo-mini-btn"
-                      aria-label="取消编辑"
-                      type="button"
-                      onClick={cancelEdit}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                </Show>
-              </li>
-            )}
-          </For>
-        </ul>
-      </Show>
-      <div class="todo-add-form">
-        <Input
-          size="sm"
-          id={inputId()}
-          value={input()}
-          onInput={(value) => setInput(value)}
-          onKeyDown={handleKeyDown}
-          placeholder="新任务..."
-          aria-label="新待办内容"
-        />
+    <div class="todo-card-widget">
+      <div class="card-toolbar">
         <button
-          class="todo-mini-btn"
-          aria-label="添加待办"
+          class="card-tab"
+          classList={{ active: filter() === "todo" }}
           type="button"
-          onClick={() => void addItem()}
+          onClick={() => setFilter("todo")}
         >
-          添加
+          未完成
+          <span class="card-count-badge">{todoCount()}</span>
         </button>
+        <button
+          class="card-tab"
+          classList={{ active: filter() === "all" }}
+          type="button"
+          onClick={() => setFilter("all")}
+        >
+          全部
+        </button>
+        <div class="card-spacer" />
+        <button class="card-expand-btn" type="button" onClick={() => props.host.openExpand()}>
+          展开 ↗
+        </button>
+      </div>
+
+      <div class="card-list">
+        <For each={groups()}>
+          {(group) => {
+            const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
+            return (
+              <Show when={groupItems().length > 0}>
+                <div class="card-group">
+                  <div class="card-group-header" onClick={() => void toggleGroup(group.id)}>
+                    <span class="card-group-arrow">
+                      {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                    </span>
+                    <span class="card-group-name">{group.name}</span>
+                    <span class="card-group-count">{groupItems().length}</span>
+                  </div>
+
+                  <Show when={!group.collapsed}>
+                    <div class="card-group-items">
+                      <For each={groupItems()}>
+                        {(item) => (
+                          <div class="card-item" classList={{ done: item.done }}>
+                            <span
+                              class="card-priority-dot"
+                              style={{ color: PRIORITY_COLORS[item.priority] }}
+                            >
+                              <Circle size={7} fill="currentColor" />
+                            </span>
+                            <Checkbox
+                              checked={item.done}
+                              aria-label={`标记 ${item.text} 完成`}
+                              onChange={() => void toggleItem(item.id)}
+                            />
+                            <span class="card-text" classList={{ done: item.done }}>
+                              {item.text}
+                            </span>
+                            <Show when={item.dueDate}>
+                              <span
+                                class="card-due-date"
+                                classList={{ overdue: isOverdue(item.dueDate) }}
+                              >
+                                {formatDate(item.dueDate)}
+                              </span>
+                            </Show>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </div>
+              </Show>
+            )
+          }}
+        </For>
       </div>
     </div>
   )
