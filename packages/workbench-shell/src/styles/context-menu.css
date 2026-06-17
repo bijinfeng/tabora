@@ -23,7 +23,7 @@
   border-radius: 6px;
   background: none;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   text-align: left;
   cursor: pointer;
   color: rgb(var(--color-text));
@@ -35,12 +35,17 @@
 
 .ctx-menu-check {
   float: right;
-  font-size: 10px;
+  font-size: 11px;
   color: rgb(var(--color-accent));
 }
 
 .ctx-menu-danger {
   color: rgb(var(--color-danger));
+  font-weight: 500;
+}
+
+.ctx-menu-danger:hover {
+  background: rgba(var(--color-danger), 0.06);
 }
 
 .ctx-menu-sep {
