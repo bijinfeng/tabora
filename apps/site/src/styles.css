@@ -19,7 +19,9 @@ body {
   min-width: 320px;
   background: rgb(var(--tbr-color-page));
   color: rgb(var(--tbr-color-text));
-  font-family:
+  font-family: var(
+    --tbr-font-sans,
+    Geist,
     Inter,
     ui-sans-serif,
     system-ui,
@@ -28,7 +30,8 @@ body {
     "Segoe UI",
     "PingFang SC",
     "Microsoft YaHei",
-    sans-serif;
+    sans-serif
+  );
   -webkit-font-smoothing: antialiased;
 }
 
@@ -503,7 +506,15 @@ h3 {
 
 .docs-code-panel code {
   color: rgb(var(--tbr-color-text));
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: var(
+    --tbr-font-mono,
+    "Geist Mono",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    monospace
+  );
   font-size: 12px;
   line-height: 1.65;
   white-space: pre;
@@ -726,7 +737,15 @@ h3 {
 .code-window code,
 .spec-table code,
 .anatomy-box code {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: var(
+    --tbr-font-mono,
+    "Geist Mono",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    monospace
+  );
   font-size: 12px;
 }
 
@@ -1245,7 +1264,15 @@ html.site-prototype .code-head {
 
 html.site-prototype .code-head span {
   color: rgb(var(--tbr-color-text-subtle));
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: var(
+    --tbr-font-mono,
+    "Geist Mono",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    monospace
+  );
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0;
