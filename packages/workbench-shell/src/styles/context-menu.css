@@ -11,14 +11,21 @@
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);
   box-shadow: 0 4px 20px rgb(var(--color-shadow) / 0.12);
-  min-width: 160px;
-  padding: 4px;
+  min-width: 180px;
+  padding: 6px;
+
+  /* Override ListRow hover colors */
+  --tbr-list-row-hover-bg: rgb(var(--color-surface-hover));
+  --tbr-list-row-hover-border: transparent;
 }
 
+/* Context menu overrides - must override @layer tabora-ui styles */
 .ctx-menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-  padding: 7px 12px;
+  padding: 8px 12px;
   border: none;
   border-radius: 6px;
   background: none;
@@ -27,30 +34,27 @@
   text-align: left;
   cursor: pointer;
   color: rgb(var(--color-text));
-}
-
-.ctx-menu-item:hover {
-  background: rgba(var(--color-accent), 0.08);
+  transition: background 100ms ease;
 }
 
 .ctx-menu-check {
-  float: right;
+  margin-left: 16px;
   font-size: 11px;
-  color: rgb(var(--color-accent));
+  font-weight: 500;
+  color: rgb(var(--color-muted));
+  flex-shrink: 0;
 }
 
 .ctx-menu-danger {
   color: rgb(var(--color-danger));
   font-weight: 500;
-}
-
-.ctx-menu-danger:hover {
-  background: rgba(var(--color-danger), 0.06);
+  --tbr-list-row-hover-bg: rgba(var(--color-danger), 0.08);
+  --tbr-list-row-hover-border: transparent;
 }
 
 .ctx-menu-sep {
-  height: 1px;
-  background: rgb(var(--color-line));
-  margin: 4px 0;
+  height: 0;
   border: none;
+  border-top: 1px solid rgb(var(--color-line-subtle));
+  margin: 6px 0;
 }

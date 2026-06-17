@@ -20,14 +20,14 @@
   }
   button.tbr-list-row:hover,
   div.tbr-list-row:hover {
-    background: rgba(var(--tbr-color-accent), 0.06);
+    background: var(--tbr-list-row-hover-bg, rgba(var(--tbr-color-accent), 0.06));
   }
   .tbr-list-row[data-interactive] {
     cursor: pointer;
   }
   .tbr-list-row[data-interactive]:hover {
-    border-color: rgb(var(--tbr-color-line));
-    background: rgba(var(--tbr-color-accent), 0.06);
+    border-color: var(--tbr-list-row-hover-border, rgb(var(--tbr-color-line)));
+    background: var(--tbr-list-row-hover-bg, rgba(var(--tbr-color-accent), 0.06));
   }
   .tbr-list-row[data-selected] {
     border-color: rgba(var(--tbr-color-accent), 0.35);
