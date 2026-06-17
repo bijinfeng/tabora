@@ -19,21 +19,16 @@
   --tbr-list-row-hover-border: transparent;
 }
 
-/* Context menu overrides - must override @layer tabora-ui styles */
+/* Context menu item layout. Background/border are intentionally NOT set here:
+ * ListRow's hover styles live in @layer tabora-ui, and any unlayered
+ * `background` declaration would beat the entire layer (unlayered > layered),
+ * permanently suppressing hover. Hover colors are injected via the
+ * --tbr-list-row-hover-* CSS variables on .ctx-menu-panel / .ctx-menu-danger. */
 .ctx-menu-item {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  width: 100%;
   padding: 8px 12px;
-  border: none;
   border-radius: 6px;
-  background: none;
-  font-family: inherit;
   font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-  color: rgb(var(--color-text));
   transition: background 100ms ease;
 }
 
