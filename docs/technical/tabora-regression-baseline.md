@@ -252,7 +252,6 @@ pnpm build
 
 - 默认工作台首屏渲染，不是 landing page。
 - Dashboard 布局可见：轻 rail、常驻搜索、主网格。
-- Focus 布局可切换，卡片数据保留。
 - 添加 widget 成功，新卡片追加到网格末尾。
 - widget 支持多实例和多尺寸。
 - 右键菜单包含尺寸、展开、移除；当前尺寸高亮。
