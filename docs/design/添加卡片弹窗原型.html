@@ -1,0 +1,1480 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 添加卡片弹窗原型</title>
+    <style>
+      :root {
+        --tabora-color-page: #f6f7f4;
+        --tabora-color-page-muted: #f1f3ef;
+        --tabora-color-surface: #ffffff;
+        --tabora-color-surface-soft: #fafaf8;
+        --tabora-color-surface-hover: #f2f4f0;
+        --tabora-color-text: #1c1e1c;
+        --tabora-color-text-muted: #6b6e6a;
+        --tabora-color-text-subtle: #949792;
+        --tabora-color-line: #e6e8e3;
+        --tabora-color-line-strong: #d1d4ce;
+        --tabora-color-accent: #1a9070;
+        --tabora-color-accent-hover: #15785c;
+        --tabora-color-accent-soft: #eaf5f0;
+        --tabora-color-warning: #a66a12;
+        --tabora-color-warning-soft: color-mix(
+          in srgb,
+          var(--tabora-color-warning) 10%,
+          var(--tabora-color-surface)
+        );
+        --wb-page: var(--tabora-color-page);
+        --wb-page-muted: var(--tabora-color-page-muted);
+        --wb-surface: var(--tabora-color-surface);
+        --wb-surface-soft: var(--tabora-color-surface-soft);
+        --wb-surface-hover: var(--tabora-color-surface-hover);
+        --wb-text: var(--tabora-color-text);
+        --wb-text-muted: var(--tabora-color-text-muted);
+        --wb-text-subtle: var(--tabora-color-text-subtle);
+        --wb-line: var(--tabora-color-line);
+        --wb-line-strong: var(--tabora-color-line-strong);
+        --wb-accent: var(--tabora-color-accent);
+        --wb-accent-hover: var(--tabora-color-accent-hover);
+        --wb-accent-soft: var(--tabora-color-accent-soft);
+        --wb-warning: var(--tabora-color-warning);
+        --wb-warning-soft: var(--tabora-color-warning-soft);
+        --wb-on-accent: var(--tabora-color-surface);
+        --wb-overlay: rgba(28, 30, 28, 0.18);
+        --wb-shadow-soft: rgba(28, 30, 28, 0.05);
+        --wb-shadow-raised: rgba(28, 30, 28, 0.08);
+        --wb-shadow-floating: rgba(28, 30, 28, 0.12);
+        --wb-radius: 8px;
+        --wb-radius-lg: 12px;
+        --wb-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        --wb-dur: 180ms;
+        --wb-ease: cubic-bezier(0.2, 0, 0, 1);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        background: var(--wb-page);
+        color: var(--wb-text);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      /* Modal Overlay */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: var(--wb-overlay);
+        backdrop-filter: blur(4px);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 200ms var(--wb-ease);
+      }
+
+      /* Modal Container */
+      .add-card-modal {
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius-lg);
+        box-shadow: 0 18px 48px var(--wb-shadow-floating);
+        width: 780px;
+        height: 548px;
+        max-width: calc(100vw - 40px);
+        max-height: calc(100vh - 40px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUp 250ms cubic-bezier(0.05, 0.7, 0.1, 1);
+      }
+
+      /* Modal Header */
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 13px 16px 12px;
+        border-bottom: 1px solid var(--wb-line);
+        flex-shrink: 0;
+        background: var(--wb-surface);
+      }
+      .modal-title {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .modal-kicker {
+        margin-top: 3px;
+        font-size: 12px;
+        color: var(--wb-text-muted);
+      }
+      .header-context {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .group-pill {
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .modal-close {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        color: var(--wb-text-muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 120ms ease;
+      }
+      .modal-close:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+
+      /* Modal Body - Two Column Layout */
+      .modal-body {
+        display: grid;
+        grid-template-columns: minmax(294px, 0.46fr) minmax(354px, 0.54fr);
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      /* Left Column - Widget List */
+      .left-column {
+        border-right: 1px solid var(--wb-line);
+        display: flex;
+        flex-direction: column;
+        background: var(--wb-surface);
+      }
+      .search-box {
+        padding: 10px 10px 8px;
+        border-bottom: 1px solid var(--wb-line);
+      }
+      .search-input {
+        width: 100%;
+        height: 34px;
+        padding: 0 12px 0 34px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+        font-size: 13px;
+        font-family: inherit;
+        color: var(--wb-text);
+        outline: none;
+        transition: all 120ms ease;
+      }
+      .search-wrap {
+        position: relative;
+      }
+      .search-wrap::before {
+        content: "";
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid var(--wb-text-subtle);
+        border-radius: 999px;
+        transform: translateY(-55%);
+      }
+      .search-wrap::after {
+        content: "";
+        position: absolute;
+        left: 22px;
+        top: 23px;
+        width: 6px;
+        height: 1.5px;
+        background: var(--wb-text-subtle);
+        transform: rotate(45deg);
+        border-radius: 999px;
+      }
+      .search-input:focus {
+        border-color: var(--wb-accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--wb-accent) 12%, transparent);
+      }
+      .search-input::placeholder {
+        color: var(--wb-text-subtle);
+      }
+
+      /* Category Tabs */
+      .category-tabs {
+        display: flex;
+        gap: 3px;
+        padding: 7px 10px 8px;
+        border-bottom: 1px solid var(--wb-line);
+        overflow-x: auto;
+        flex-shrink: 0;
+      }
+      .category-tab {
+        height: 26px;
+        padding: 0 9px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 120ms ease;
+        white-space: nowrap;
+      }
+      .category-tab:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+      .category-tab.active {
+        background: var(--wb-accent-soft);
+        border-color: color-mix(in srgb, var(--wb-accent) 28%, var(--wb-line));
+        color: var(--wb-accent);
+        font-weight: 650;
+      }
+
+      /* Widget List */
+      .widget-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 6px 10px;
+      }
+      .widget-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 8px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 120ms ease;
+        margin-bottom: 2px;
+      }
+      .widget-item:hover {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .widget-item.selected {
+        background: var(--wb-accent-soft);
+        border-color: var(--wb-accent);
+        box-shadow: none;
+      }
+      .widget-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: var(--wb-surface-soft);
+        border: 1px solid var(--wb-line);
+        color: var(--wb-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .widget-item.selected .widget-icon {
+        background: var(--wb-surface);
+        border-color: color-mix(in srgb, var(--wb-accent) 32%, var(--wb-line));
+        color: var(--wb-accent);
+      }
+      .widget-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .widget-name {
+        font-size: 13px;
+        font-weight: 650;
+        margin-bottom: 1px;
+      }
+      .widget-desc {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+        line-height: 1.4;
+      }
+      .widget-source {
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: var(--wb-surface);
+        color: var(--wb-text-subtle);
+        border: 1px solid var(--wb-line);
+        margin-top: 4px;
+        display: inline-block;
+      }
+      .widget-source.official {
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        border-color: color-mix(in srgb, var(--wb-accent) 18%, var(--wb-line));
+      }
+      .empty-result {
+        padding: 38px 20px;
+        color: var(--wb-text-subtle);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      /* Right Column - Widget Preview */
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        padding: 14px;
+        overflow-y: auto;
+        background: var(--wb-page-muted);
+      }
+      .preview-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .preview-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--wb-text-subtle);
+        margin-bottom: 0;
+      }
+      .preview-title {
+        margin-top: 4px;
+        font-size: 17px;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+      }
+      .preview-status {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        padding: 4px 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface-soft);
+        white-space: nowrap;
+      }
+      .preview-area {
+        min-height: 214px;
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        padding: 10px;
+        background: var(--wb-surface-soft);
+        margin-bottom: 10px;
+        overflow: hidden;
+      }
+      .workspace-preview {
+        min-height: 192px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 8px;
+      }
+      .workspace-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+      .workspace-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 650;
+        color: var(--wb-text-muted);
+      }
+      .workspace-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--wb-accent);
+      }
+      .workspace-grid {
+        position: relative;
+        min-height: 166px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background:
+          linear-gradient(var(--wb-line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--wb-line) 1px, transparent 1px), var(--wb-surface);
+        background-size: 52px 52px;
+        padding: 11px;
+      }
+      .workspace-grid::before,
+      .workspace-grid::after {
+        content: "";
+        position: absolute;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+      .workspace-grid::before {
+        right: 12px;
+        top: 12px;
+        width: 86px;
+        height: 54px;
+      }
+      .workspace-grid::after {
+        right: 12px;
+        bottom: 12px;
+        width: 112px;
+        height: 58px;
+      }
+      .preview-widget {
+        position: relative;
+        z-index: 1;
+        width: 190px;
+        min-height: 104px;
+        display: grid;
+        gap: 9px;
+        padding: 12px;
+        border: 1px solid var(--wb-line-strong);
+        border-radius: 9px;
+        background: var(--wb-surface);
+        box-shadow: none;
+      }
+      .preview-widget.size-s {
+        width: 154px;
+        min-height: 84px;
+      }
+      .preview-widget.size-l {
+        width: 244px;
+        min-height: 134px;
+      }
+      .preview-widget.size-xl {
+        width: min(100%, 286px);
+        min-height: 150px;
+      }
+      .preview-widget-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .preview-widget-title {
+        min-width: 0;
+        font-size: 12px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .preview-widget-badge {
+        flex-shrink: 0;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 6px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 650;
+        color: var(--wb-accent);
+        background: var(--wb-accent-soft);
+      }
+      .preview-widget-badge.third-party {
+        color: var(--wb-warning);
+        background: var(--wb-warning-soft);
+      }
+      .preview-widget-body {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+      .preview-widget-body strong,
+      .preview-widget-body .metric {
+        color: var(--wb-text);
+        font-weight: 700;
+      }
+      .preview-widget-list {
+        display: grid;
+        gap: 5px;
+      }
+      .preview-widget-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .preview-widget-check {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        border: 1px solid var(--wb-line-strong);
+        background: var(--wb-surface-soft);
+      }
+      .preview-widget-check.done {
+        border-color: color-mix(in srgb, var(--wb-accent) 42%, var(--wb-line));
+        background: var(--wb-accent-soft);
+      }
+      .preview-empty {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 8px;
+        color: var(--wb-text-subtle);
+        font-size: 13px;
+      }
+
+      .review-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(142px, 0.72fr);
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .review-box {
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        padding: 10px;
+      }
+      .review-box-title {
+        font-size: 12px;
+        font-weight: 650;
+        margin-bottom: 7px;
+      }
+      .review-box-subtitle {
+        margin: -3px 0 8px;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.35;
+      }
+      .review-lines {
+        display: grid;
+        gap: 7px;
+      }
+      .review-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--wb-text-muted);
+      }
+      .review-line strong {
+        color: var(--wb-text);
+        font-weight: 600;
+        text-align: right;
+      }
+
+      /* Size Selector */
+      .size-selector {
+        margin-bottom: 0;
+      }
+      .size-options {
+        display: inline-flex;
+        gap: 2px;
+        padding: 3px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-page);
+      }
+      .size-btn {
+        height: 28px;
+        min-width: 36px;
+        padding: 0 11px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--wb-text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 120ms ease;
+      }
+      .size-btn:hover:not(.active) {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+      .size-btn.active {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+      .size-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* Widget Meta */
+      .widget-meta {
+        font-size: 11px;
+        color: var(--wb-text-muted);
+        min-height: 94px;
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+        border: 0;
+      }
+      .widget-meta-card {
+        height: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--wb-line);
+        background: var(--wb-surface);
+      }
+      .preview-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      /* Modal Footer */
+      .modal-footer {
+        padding: 10px 16px;
+        border-top: 1px solid var(--wb-line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .marketplace-link {
+        font-size: 12px;
+        color: var(--wb-text-muted);
+        text-decoration: none;
+        transition: color 120ms ease;
+      }
+      .marketplace-link:hover {
+        color: var(--wb-text);
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 13px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 120ms ease;
+      }
+      .btn:hover:not(:disabled) {
+        background: var(--wb-surface-hover);
+        border-color: var(--wb-line-strong);
+      }
+      .btn-primary {
+        background: var(--wb-accent);
+        color: var(--wb-on-accent);
+        border-color: var(--wb-accent);
+      }
+      .preview-actions .btn-primary {
+        width: fit-content;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--wb-accent-hover);
+        border-color: var(--wb-accent-hover);
+      }
+      .footer-hint {
+        font-size: 11px;
+        color: var(--wb-text-subtle);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 200;
+        padding: 10px 14px;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        box-shadow: 0 4px 16px var(--wb-shadow-soft);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: all var(--wb-dur) var(--wb-ease);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .toast-icon {
+        color: var(--wb-accent);
+        font-weight: 700;
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Scrollbar */
+      .widget-list::-webkit-scrollbar,
+      .right-column::-webkit-scrollbar {
+        width: 8px;
+      }
+      .widget-list::-webkit-scrollbar-track,
+      .right-column::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .widget-list::-webkit-scrollbar-thumb,
+      .right-column::-webkit-scrollbar-thumb {
+        background: var(--wb-line);
+        border-radius: 4px;
+      }
+      .widget-list::-webkit-scrollbar-thumb:hover,
+      .right-column::-webkit-scrollbar-thumb:hover {
+        background: var(--wb-line-strong);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .add-card-modal {
+          width: calc(100vw - 20px);
+          height: calc(100vh - 20px);
+        }
+        .modal-body {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(248px, 1fr) auto;
+        }
+        .left-column {
+          border-right: none;
+          border-bottom: 1px solid var(--wb-line);
+          min-height: 0;
+        }
+        .right-column {
+          display: flex;
+          max-height: 44vh;
+          padding: 14px;
+          border-top: 0;
+        }
+        .preview-area {
+          min-height: 150px;
+        }
+        .workspace-grid {
+          min-height: 128px;
+        }
+        .workspace-grid::before,
+        .workspace-grid::after {
+          display: none;
+        }
+        .preview-widget,
+        .preview-widget.size-s,
+        .preview-widget.size-l,
+        .preview-widget.size-xl {
+          width: 100%;
+          min-height: 96px;
+        }
+        .review-panel {
+          grid-template-columns: 1fr;
+        }
+        .modal-kicker {
+          display: none;
+        }
+        .group-pill {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Modal Overlay -->
+    <div class="modal-overlay">
+      <div class="add-card-modal">
+        <!-- Header -->
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">添加卡片</h2>
+            <div class="modal-kicker">从已安装插件中挑选一个组件，加入当前工作台分组。</div>
+          </div>
+          <div class="header-context">
+            <span class="group-pill">目标分组：今日</span>
+            <button class="modal-close" onclick="toast('ESC 关闭')" aria-label="关闭">×</button>
+          </div>
+        </div>
+
+        <!-- Body: Two Column Layout -->
+        <div class="modal-body">
+          <!-- Left Column: Widget List -->
+          <div class="left-column">
+            <div class="search-box">
+              <div class="search-wrap">
+                <input
+                  type="text"
+                  class="search-input"
+                  id="searchInput"
+                  placeholder="搜索卡片..."
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
+            <div class="category-tabs" id="categoryTabs">
+              <button class="category-tab active" data-category="推荐">推荐</button>
+              <button class="category-tab" data-category="信息">信息</button>
+              <button class="category-tab" data-category="生产力">生产力</button>
+              <button class="category-tab" data-category="工具">工具</button>
+              <button class="category-tab" data-category="已安装">已安装</button>
+            </div>
+
+            <div class="widget-list" id="widgetList"></div>
+          </div>
+
+          <!-- Right Column: Widget Preview -->
+          <div class="right-column">
+            <div class="preview-head">
+              <div>
+                <div class="preview-label">卡片预览</div>
+                <h3 class="preview-title" id="previewTitle">选择一张卡片</h3>
+              </div>
+              <div class="preview-status" id="previewStatus">等待选择</div>
+            </div>
+            <div class="preview-area" id="previewArea">
+              <div class="preview-empty">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  opacity="0.3"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="9" y1="9" x2="15" y2="9" />
+                  <line x1="9" y1="13" x2="15" y2="13" />
+                  <line x1="9" y1="17" x2="11" y2="17" />
+                </svg>
+                <span>选择卡片查看预览</span>
+              </div>
+            </div>
+
+            <div class="review-panel">
+              <div class="review-box">
+                <div class="review-box-title">尺寸</div>
+                <div class="review-box-subtitle">选择卡片在当前分组里的默认占位。</div>
+                <div class="size-selector" id="sizeSelector" style="display: none">
+                  <div class="size-options" id="sizeOptions"></div>
+                </div>
+              </div>
+
+              <div class="widget-meta" id="widgetMeta" style="display: none"></div>
+            </div>
+
+            <div class="preview-actions">
+              <button class="btn" type="button" onclick="toast('打开卡片详情')">查看详情</button>
+              <button class="btn btn-primary" id="addBtn" disabled onclick="handleAdd()">
+                添加到工作台
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <a
+            href="#"
+            class="marketplace-link"
+            onclick="
+              event.preventDefault()
+              toast('打开插件市场')
+            "
+          >
+            浏览插件市场 →
+          </a>
+          <span class="footer-hint"> ESC 关闭 · Enter 添加 </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <span class="toast-icon">✓</span>
+      <span id="toastMsg">已添加</span>
+    </div>
+
+    <script>
+      // Widget Database
+      const widgetDatabase = [
+        // 推荐
+        {
+          id: "focus",
+          name: "今日重点",
+          desc: "设定今天最重要的一件事",
+          icon: "F",
+          category: "推荐",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M", "L"],
+          defaultSize: "M",
+        },
+        {
+          id: "links",
+          name: "快捷入口",
+          desc: "常用网站一键触达",
+          icon: "L",
+          category: "推荐",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M", "L"],
+          defaultSize: "M",
+        },
+        {
+          id: "todo",
+          name: "待办列表",
+          desc: "跟踪任务并标记完成",
+          icon: "T",
+          category: "推荐",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M"],
+          defaultSize: "S",
+        },
+        // 信息
+        {
+          id: "weather",
+          name: "天气",
+          desc: "当前天气一目了然",
+          icon: "W",
+          category: "信息",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M"],
+          defaultSize: "S",
+        },
+        {
+          id: "clock",
+          name: "时钟",
+          desc: "显示当前时间和日期",
+          icon: "C",
+          category: "信息",
+          source: "third-party",
+          version: "v0.8",
+          supportedSizes: ["S", "M"],
+          defaultSize: "S",
+        },
+        {
+          id: "calendar",
+          name: "日历",
+          desc: "月视图日历与事件",
+          icon: "D",
+          category: "信息",
+          source: "third-party",
+          version: "v1.2",
+          supportedSizes: ["M", "L"],
+          defaultSize: "M",
+        },
+        // 生产力
+        {
+          id: "notes",
+          name: "便签",
+          desc: "快速记录灵感和想法",
+          icon: "N",
+          category: "生产力",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["M", "L", "XL"],
+          defaultSize: "L",
+        },
+        {
+          id: "pomodoro",
+          name: "番茄钟",
+          desc: "专注计时与休息提醒",
+          icon: "P",
+          category: "生产力",
+          source: "third-party",
+          version: "v2.1",
+          supportedSizes: ["S", "M"],
+          defaultSize: "S",
+        },
+        {
+          id: "habit",
+          name: "习惯追踪",
+          desc: "培养好习惯，每日打卡",
+          icon: "H",
+          category: "生产力",
+          source: "third-party",
+          version: "v1.5",
+          supportedSizes: ["M", "L"],
+          defaultSize: "M",
+        },
+        // 工具
+        {
+          id: "plugins",
+          name: "插件状态",
+          desc: "查看插件运行概况",
+          icon: "S",
+          category: "工具",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M"],
+          defaultSize: "S",
+        },
+        {
+          id: "monitor",
+          name: "系统监控",
+          desc: "CPU、内存、网络监控",
+          icon: "M",
+          category: "工具",
+          source: "third-party",
+          version: "v0.9",
+          supportedSizes: ["M", "L"],
+          defaultSize: "M",
+        },
+        {
+          id: "clipboard",
+          name: "剪贴板",
+          desc: "历史剪贴板管理",
+          icon: "B",
+          category: "工具",
+          source: "third-party",
+          version: "v1.3",
+          supportedSizes: ["S", "M", "L"],
+          defaultSize: "M",
+        },
+        // 已安装 (show currently added widgets)
+        {
+          id: "focus",
+          name: "今日重点",
+          desc: "设定今天最重要的一件事",
+          icon: "F",
+          category: "已安装",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M", "L"],
+          defaultSize: "M",
+        },
+        {
+          id: "links",
+          name: "快捷入口",
+          desc: "常用网站一键触达",
+          icon: "L",
+          category: "已安装",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M", "L"],
+          defaultSize: "M",
+        },
+        {
+          id: "todo",
+          name: "待办列表",
+          desc: "跟踪任务并标记完成",
+          icon: "T",
+          category: "已安装",
+          source: "official",
+          version: "v1.0",
+          supportedSizes: ["S", "M"],
+          defaultSize: "S",
+        },
+      ]
+
+      // State
+      let currentCategory = "推荐"
+      let selectedWidget = null
+      let selectedSize = null
+      let searchQuery = ""
+
+      // Utils
+      function escapeHtml(text) {
+        const div = document.createElement("div")
+        div.textContent = text || ""
+        return div.innerHTML
+      }
+
+      // Toast
+      let toastTimer
+      function toast(msg) {
+        document.getElementById("toastMsg").textContent = msg
+        document.getElementById("toast").classList.add("show")
+        clearTimeout(toastTimer)
+        toastTimer = setTimeout(() => {
+          document.getElementById("toast").classList.remove("show")
+        }, 2000)
+      }
+
+      // Filter widgets
+      function getFilteredWidgets() {
+        return widgetDatabase.filter((widget) => {
+          const matchesCategory = widget.category === currentCategory
+          const matchesSearch =
+            !searchQuery ||
+            widget.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            widget.desc.toLowerCase().includes(searchQuery.toLowerCase())
+          return matchesCategory && matchesSearch
+        })
+      }
+
+      // Render widget list
+      function renderWidgetList() {
+        const widgets = getFilteredWidgets()
+        const listEl = document.getElementById("widgetList")
+
+        if (widgets.length === 0) {
+          listEl.innerHTML = `
+            <div class="empty-result">
+              没有找到匹配的卡片
+            </div>`
+          return
+        }
+
+        listEl.innerHTML = widgets
+          .map((widget) => {
+            const isSelected =
+              selectedWidget &&
+              selectedWidget.id === widget.id &&
+              selectedWidget.category === widget.category
+            const sourceClass = widget.source === "official" ? "official" : ""
+            const sourceText = widget.source === "official" ? "官方" : "第三方"
+
+            return `
+            <div class="widget-item ${isSelected ? "selected" : ""}" data-widget-id="${widget.id}" data-widget-category="${widget.category}">
+              <div class="widget-icon">${escapeHtml(widget.icon)}</div>
+              <div class="widget-info">
+                <div class="widget-name">${escapeHtml(widget.name)}</div>
+                <div class="widget-desc">${escapeHtml(widget.desc)}</div>
+                <span class="widget-source ${sourceClass}">${sourceText}</span>
+              </div>
+            </div>`
+          })
+          .join("")
+
+        // Attach click handlers
+        listEl.querySelectorAll(".widget-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const widgetId = item.dataset.widgetId
+            const widgetCategory = item.dataset.widgetCategory
+            const widget = widgetDatabase.find(
+              (w) => w.id === widgetId && w.category === widgetCategory,
+            )
+            selectWidget(widget)
+          })
+        })
+      }
+
+      // Select widget
+      function selectWidget(widget) {
+        selectedWidget = widget
+        selectedSize = widget.defaultSize
+        renderWidgetList()
+        renderPreview()
+        renderSizeSelector()
+        renderMeta()
+
+        document.getElementById("sizeSelector").style.display = ""
+        document.getElementById("widgetMeta").style.display = ""
+        document.getElementById("addBtn").disabled = false
+      }
+
+      // Render preview
+      function renderPreview() {
+        const previewArea = document.getElementById("previewArea")
+        const previewStatus = document.getElementById("previewStatus")
+        const previewTitle = document.getElementById("previewTitle")
+
+        if (!selectedWidget) {
+          previewTitle.textContent = "选择一张卡片"
+          previewStatus.textContent = "选择后预览"
+          previewArea.innerHTML = `
+            <div class="preview-empty">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="9" y1="9" x2="15" y2="9" />
+                <line x1="9" y1="13" x2="15" y2="13" />
+                <line x1="9" y1="17" x2="11" y2="17" />
+              </svg>
+              <span>选择卡片查看预览</span>
+            </div>`
+          return
+        }
+
+        const sourceText = selectedWidget.source === "official" ? "官方" : "第三方"
+        const sourceClass = selectedWidget.source === "official" ? "" : "third-party"
+        const sizeClass = `size-${selectedSize.toLowerCase()}`
+        previewTitle.textContent = selectedWidget.name
+        previewStatus.textContent = `预览 · ${selectedSize}`
+        previewArea.innerHTML = `
+          <div class="workspace-preview">
+            <div class="workspace-bar">
+              <span class="workspace-group"><span class="workspace-dot"></span>今日</span>
+              <span>添加后放到分组末尾</span>
+            </div>
+            <div class="workspace-grid">
+              <div class="preview-widget ${sizeClass}">
+                <div class="preview-widget-head">
+                  <div class="preview-widget-title">${escapeHtml(selectedWidget.name)}</div>
+                  <span class="preview-widget-badge ${sourceClass}">${sourceText}</span>
+                </div>
+                ${renderWidgetBody(selectedWidget)}
+              </div>
+            </div>
+          </div>`
+      }
+
+      function renderWidgetBody(widget) {
+        const bodyMap = {
+          focus: `
+            <div class="preview-widget-body">
+              <strong>今天最重要的一件事</strong><br />
+              <span>把 Tabora 工作台整理成可复用的个人入口。</span>
+            </div>`,
+          links: `
+            <div class="preview-widget-body">
+              <strong>常用入口</strong><br />
+              <span>GitHub · Figma · Notion · Linear</span>
+            </div>`,
+          todo: `
+            <div class="preview-widget-body preview-widget-list">
+              <div class="preview-widget-row"><span class="preview-widget-check done"></span><span>复核布局协议</span></div>
+              <div class="preview-widget-row"><span class="preview-widget-check"></span><span>补齐卡片尺寸</span></div>
+              <div class="preview-widget-row"><span class="preview-widget-check"></span><span>清理插件设置</span></div>
+            </div>`,
+          weather: `
+            <div class="preview-widget-body">
+              <span>北京</span><br />
+              <span class="metric">22°C</span><span> · 晴 · 空气良</span>
+            </div>`,
+          clock: `
+            <div class="preview-widget-body">
+              <strong>14:32</strong><br />
+              <span>北京 · 东京 15:32 · 旧金山 22:32</span>
+            </div>`,
+          calendar: `
+            <div class="preview-widget-body">
+              <strong>本周安排</strong><br />
+              <span>周三 1:1 · 周五 Demo · 2 个待确认</span>
+            </div>`,
+          notes: `
+            <div class="preview-widget-body">
+              <strong>便签</strong><br />
+              <span>MVP 重点：布局本身也是插件，卡片只负责内容。</span>
+            </div>`,
+          pomodoro: `
+            <div class="preview-widget-body">
+              <span class="metric">25:00</span><br />
+              <span>专注 · 自动记录本轮工作</span>
+            </div>`,
+          habit: `
+            <div class="preview-widget-body">
+              <strong>习惯追踪</strong><br />
+              <span>阅读 5/7 · 运动 3/7 · 复盘 4/7</span>
+            </div>`,
+          plugins: `
+            <div class="preview-widget-body">
+              <strong>插件状态</strong><br />
+              <span>5 个运行中 · 1 个需更新 · 0 个错误</span>
+            </div>`,
+          monitor: `
+            <div class="preview-widget-body">
+              <span>CPU <strong>38%</strong> · 内存 <strong>62%</strong></span><br />
+              <span>网络 12.4 MB/s</span>
+            </div>`,
+          clipboard: `
+            <div class="preview-widget-body">
+              <strong>最近剪贴板</strong><br />
+              <span>3 条文本 · 1 张图片 · 2 个链接</span>
+            </div>`,
+        }
+        return (
+          bodyMap[widget.id] ||
+          `
+          <div class="preview-widget-body">
+            <strong>${escapeHtml(widget.name)}</strong><br />
+            <span>${escapeHtml(widget.desc)}</span>
+          </div>`
+        )
+      }
+
+      // Render size selector
+      function renderSizeSelector() {
+        if (!selectedWidget) return
+
+        const sizeOptionsEl = document.getElementById("sizeOptions")
+        const allSizes = ["S", "M", "L", "XL"]
+
+        sizeOptionsEl.innerHTML = allSizes
+          .map((size) => {
+            const isSupported = selectedWidget.supportedSizes.includes(size)
+            const isActive = size === selectedSize
+            return `
+            <button
+              class="size-btn ${isActive ? "active" : ""}"
+              ${!isSupported ? "disabled" : ""}
+              data-size="${size}"
+            >
+              ${size}
+            </button>`
+          })
+          .join("")
+
+        // Attach click handlers
+        sizeOptionsEl.querySelectorAll(".size-btn:not([disabled])").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            selectedSize = btn.dataset.size
+            renderSizeSelector()
+            renderPreview()
+          })
+        })
+      }
+
+      // Render meta info
+      function renderMeta() {
+        if (!selectedWidget) return
+
+        const sourceText = selectedWidget.source === "official" ? "官方插件" : "第三方插件"
+        document.getElementById("widgetMeta").innerHTML = `
+          <div class="widget-meta-card">
+            <div class="review-box-title">信息</div>
+            <div class="review-lines">
+              <div class="review-line">
+                <span>来源</span>
+                <strong>${sourceText}</strong>
+              </div>
+              <div class="review-line">
+                <span>版本</span>
+                <strong>${escapeHtml(selectedWidget.version)}</strong>
+              </div>
+              <div class="review-line">
+                <span>支持</span>
+                <strong>${selectedWidget.supportedSizes.join(" / ")}</strong>
+              </div>
+            </div>
+          </div>`
+      }
+
+      // Handle add
+      function handleAdd() {
+        if (!selectedWidget || !selectedSize) return
+
+        toast(`已添加「${selectedWidget.name}」· 尺寸 ${selectedSize}`)
+
+        // Keep the dialog useful after add: return to the first recommendation.
+        setTimeout(() => {
+          selectedWidget = getFilteredWidgets()[0] || null
+          selectedSize = selectedWidget?.defaultSize || null
+          renderWidgetList()
+          if (selectedWidget) {
+            renderPreview()
+            renderSizeSelector()
+            renderMeta()
+          }
+        }, 300)
+      }
+
+      // Category switching
+      document.getElementById("categoryTabs").addEventListener("click", (e) => {
+        if (e.target.classList.contains("category-tab")) {
+          document.querySelectorAll(".category-tab").forEach((tab) => {
+            tab.classList.remove("active")
+          })
+          e.target.classList.add("active")
+          currentCategory = e.target.dataset.category
+          selectedWidget = getFilteredWidgets()[0] || null
+          selectedSize = selectedWidget?.defaultSize || null
+          renderWidgetList()
+          renderPreview()
+          if (selectedWidget) {
+            renderSizeSelector()
+            renderMeta()
+            document.getElementById("sizeSelector").style.display = ""
+            document.getElementById("widgetMeta").style.display = ""
+            document.getElementById("addBtn").disabled = false
+          } else {
+            document.getElementById("sizeSelector").style.display = "none"
+            document.getElementById("widgetMeta").style.display = "none"
+            document.getElementById("addBtn").disabled = true
+          }
+        }
+      })
+
+      // Search
+      document.getElementById("searchInput").addEventListener("input", (e) => {
+        searchQuery = e.target.value
+        selectedWidget = getFilteredWidgets()[0] || null
+        selectedSize = selectedWidget?.defaultSize || null
+        renderWidgetList()
+        renderPreview()
+        if (selectedWidget) {
+          renderSizeSelector()
+          renderMeta()
+          document.getElementById("sizeSelector").style.display = ""
+          document.getElementById("widgetMeta").style.display = ""
+          document.getElementById("addBtn").disabled = false
+        } else {
+          document.getElementById("sizeSelector").style.display = "none"
+          document.getElementById("widgetMeta").style.display = "none"
+          document.getElementById("addBtn").disabled = true
+        }
+      })
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          toast("ESC 关闭（原型模式）")
+        }
+        if (e.key === "Enter" && selectedWidget) {
+          handleAdd()
+        }
+      })
+
+      // Initial render
+      selectedWidget = getFilteredWidgets()[0] || null
+      selectedSize = selectedWidget?.defaultSize || null
+      renderWidgetList()
+      if (selectedWidget) {
+        renderPreview()
+        renderSizeSelector()
+        renderMeta()
+        document.getElementById("sizeSelector").style.display = ""
+        document.getElementById("widgetMeta").style.display = ""
+        document.getElementById("addBtn").disabled = false
+      }
+    </script>
+  </body>
+</html>
