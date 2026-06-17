@@ -180,7 +180,7 @@ body {
 .workbench-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: var(--grid-row, 180px);
+  grid-auto-rows: auto;
   gap: 8px;
   align-items: stretch;
 }
