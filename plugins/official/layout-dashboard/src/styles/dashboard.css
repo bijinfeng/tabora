@@ -541,7 +541,7 @@
 .dash-search-stage {
   position: relative;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
   margin: 0;
 }
