@@ -68,6 +68,11 @@ html {
   scrollbar-color: rgb(var(--color-line-strong)) transparent;
 }
 
+body {
+  font-family: var(--tbr-font-sans, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
