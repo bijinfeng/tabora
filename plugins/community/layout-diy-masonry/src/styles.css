@@ -39,7 +39,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: var(--tbr-radius-panel, 8px);
   background: rgb(var(--color-surface));
   box-shadow: 0 8px 24px rgb(var(--color-shadow) / 0.18);
 }

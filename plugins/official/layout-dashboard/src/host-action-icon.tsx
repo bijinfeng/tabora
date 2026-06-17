@@ -18,6 +18,15 @@ function IconSvg(props: { size: number; children: JSX.Element }): JSX.Element {
   )
 }
 
+function HomeIcon(props: { size: number }): JSX.Element {
+  return (
+    <IconSvg size={props.size}>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </IconSvg>
+  )
+}
+
 function PlusIcon(props: { size: number }): JSX.Element {
   return (
     <IconSvg size={props.size}>
@@ -76,9 +85,7 @@ export function HostActionIcon(props: {
   return (
     <Switch fallback={<span aria-hidden="true">{props.icon}</span>}>
       <Match when={props.id === "home"}>
-        <span class="dash-rail-home-mark" aria-hidden="true">
-          T
-        </span>
+        <HomeIcon size={size()} />
       </Match>
       <Match when={props.id === "add-widget"}>
         <PlusIcon size={size()} />

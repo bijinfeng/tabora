@@ -1,7 +1,7 @@
 .fullscreen-overlay {
   position: fixed;
   inset: 0;
-  z-index: 250;
+  z-index: var(--tbr-z-overlay, 300);
   background: rgb(var(--color-page));
   display: flex;
   flex-direction: column;

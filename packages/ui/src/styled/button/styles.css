@@ -9,7 +9,7 @@
     border: 1px solid transparent;
     cursor: pointer;
     font: inherit;
-    font-weight: 600;
+    font-weight: var(--tbr-font-weight-semibold, 600);
     line-height: 1;
     white-space: nowrap;
     transition:
@@ -61,7 +61,7 @@
   }
   .tbr-btn--primary:not([disabled]):active {
     background: color-mix(in srgb, rgb(var(--tbr-color-accent-hover)) 90%, black);
-    transform: scale(0.98);
+    transform: translateY(1px);
   }
 
   .tbr-btn--secondary {
@@ -119,7 +119,7 @@
   }
   .tbr-btn--danger:not([disabled]):active {
     background: color-mix(in srgb, rgb(var(--tbr-color-danger)) 75%, black);
-    transform: scale(0.98);
+    transform: translateY(1px);
   }
 
   .tbr-btn--danger-subtle {

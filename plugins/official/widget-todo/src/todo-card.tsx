@@ -1,7 +1,7 @@
 import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Checkbox } from "@tabora/ui"
-import { ChevronDown, ChevronRight, Circle } from "lucide-solid"
+import { Checkbox, Skeleton } from "@tabora/ui"
+import { ChevronDown, ChevronRight, Circle, ArrowUpRight } from "lucide-solid"
 
 type Priority = "high" | "medium" | "low" | "none"
 
@@ -35,6 +35,7 @@ export function TodoCard(props: WidgetViewProps) {
     { id: DEFAULT_GROUP_ID, name: "默认分组", collapsed: false },
   ])
   const [filter, setFilter] = createSignal<"todo" | "all">("todo")
+  const [loading, setLoading] = createSignal(true)
 
   const storageKey = "v2_items"
   const groupsKey = "v2_groups"
@@ -69,6 +70,7 @@ export function TodoCard(props: WidgetViewProps) {
         },
       ])
     }
+    setLoading(false)
   })
 
   void props.data.get<TodoGroup[]>(groupsKey).then(async (saved) => {
@@ -154,62 +156,73 @@ export function TodoCard(props: WidgetViewProps) {
         </button>
         <div class="card-spacer" />
         <button class="card-expand-btn" type="button" onClick={() => props.host.openExpand()}>
-          展开 ↗
+          展开 <ArrowUpRight size={12} />
         </button>
       </div>
 
       <div class="card-list">
-        <For each={groups()}>
-          {(group) => {
-            const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
-            return (
-              <Show when={groupItems().length > 0}>
-                <div class="card-group">
-                  <div class="card-group-header" onClick={() => void toggleGroup(group.id)}>
-                    <span class="card-group-arrow">
-                      {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                    </span>
-                    <span class="card-group-name">{group.name}</span>
-                    <span class="card-group-count">{groupItems().length}</span>
-                  </div>
-
-                  <Show when={!group.collapsed}>
-                    <div class="card-group-items">
-                      <For each={groupItems()}>
-                        {(item) => (
-                          <div class="card-item" classList={{ done: item.done }}>
-                            <span
-                              class="card-priority-dot"
-                              style={{ color: PRIORITY_COLORS[item.priority] }}
-                            >
-                              <Circle size={7} fill="currentColor" />
-                            </span>
-                            <Checkbox
-                              checked={item.done}
-                              aria-label={`标记 ${item.text} 完成`}
-                              onChange={() => void toggleItem(item.id)}
-                            />
-                            <span class="card-text" classList={{ done: item.done }}>
-                              {item.text}
-                            </span>
-                            <Show when={item.dueDate}>
-                              <span
-                                class="card-due-date"
-                                classList={{ overdue: isOverdue(item.dueDate) }}
-                              >
-                                {formatDate(item.dueDate)}
-                              </span>
-                            </Show>
-                          </div>
-                        )}
-                      </For>
+        <Show
+          when={!loading()}
+          fallback={
+            <div class="card-skeleton">
+              <Skeleton height="24px" width="100%" />
+              <Skeleton height="24px" width="90%" />
+              <Skeleton height="24px" width="85%" />
+            </div>
+          }
+        >
+          <For each={groups()}>
+            {(group) => {
+              const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
+              return (
+                <Show when={groupItems().length > 0}>
+                  <div class="card-group">
+                    <div class="card-group-header" onClick={() => void toggleGroup(group.id)}>
+                      <span class="card-group-arrow">
+                        {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                      </span>
+                      <span class="card-group-name">{group.name}</span>
+                      <span class="card-group-count">{groupItems().length}</span>
                     </div>
-                  </Show>
-                </div>
-              </Show>
-            )
-          }}
-        </For>
+
+                    <Show when={!group.collapsed}>
+                      <div class="card-group-items">
+                        <For each={groupItems()}>
+                          {(item) => (
+                            <div class="card-item" classList={{ done: item.done }}>
+                              <span
+                                class="card-priority-dot"
+                                style={{ color: PRIORITY_COLORS[item.priority] }}
+                              >
+                                <Circle size={7} fill="currentColor" />
+                              </span>
+                              <Checkbox
+                                checked={item.done}
+                                aria-label={`标记 ${item.text} 完成`}
+                                onChange={() => void toggleItem(item.id)}
+                              />
+                              <span class="card-text" classList={{ done: item.done }}>
+                                {item.text}
+                              </span>
+                              <Show when={item.dueDate}>
+                                <span
+                                  class="card-due-date"
+                                  classList={{ overdue: isOverdue(item.dueDate) }}
+                                >
+                                  {formatDate(item.dueDate)}
+                                </span>
+                              </Show>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </div>
+                </Show>
+              )
+            }}
+          </For>
+        </Show>
       </div>
     </div>
   )

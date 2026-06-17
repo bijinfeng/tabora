@@ -21,6 +21,9 @@
     "quality": "node scripts/quality-report.mjs",
     "regression:summary": "node scripts/regression-summary.mjs"
   },
+  "dependencies": {
+    "geist": "^1.7.2"
+  },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:build",
     "@testing-library/jest-dom": "^6.9.1",

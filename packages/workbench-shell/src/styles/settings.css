@@ -1,7 +1,7 @@
 .settings-overlay {
   position: fixed;
   inset: 0;
-  z-index: 400;
+  z-index: var(--tbr-z-modal, 400);
   background: rgb(var(--color-shadow) / 0.2);
   backdrop-filter: blur(2px);
   display: flex;
@@ -117,7 +117,7 @@
 }
 
 .settings-empty {
-  padding: 32px;
+  padding: 24px 20px;
   text-align: center;
   font-size: 13px;
   color: rgb(var(--color-muted));

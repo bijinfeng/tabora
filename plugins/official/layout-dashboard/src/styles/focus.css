@@ -3,13 +3,13 @@
   justify-content: center;
   align-items: flex-start;
   min-width: 0;
-  padding: clamp(48px, 10vh, 120px) 24px 64px;
+  padding: clamp(24px, 6vh, 48px) 24px 32px;
 }
 
 .focus-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: min(100%, 616px);
 }
 
@@ -18,7 +18,7 @@
   align-items: center;
   justify-content: space-between;
   min-height: 27px;
-  gap: 16px;
+  gap: 12px;
   color: rgb(var(--color-muted));
   font-size: 13px;
   line-height: 1.2;
@@ -143,6 +143,11 @@
 
 .focus-hero-render .widget-card {
   min-height: 217px;
+  box-shadow: 0 2px 8px rgb(var(--color-shadow) / 0.08);
+}
+
+.focus-hero-render .widget-card:hover {
+  box-shadow: 0 4px 16px rgb(var(--color-shadow) / 0.12);
 }
 
 .focus-empty {

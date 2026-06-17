@@ -1,12 +1,12 @@
 .ctx-menu-overlay {
   position: fixed;
   inset: 0;
-  z-index: 500;
+  z-index: var(--tbr-z-dropdown, 200);
 }
 
 .ctx-menu-panel {
   position: fixed;
-  z-index: 501;
+  z-index: var(--tbr-z-dropdown, 200);
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius);

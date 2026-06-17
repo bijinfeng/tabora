@@ -1,5 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
+import { LayoutGrid } from "lucide-solid"
 
 import { dateLabel, fallbackText, greeting } from "./i18n"
 import { WorkbenchRail } from "./workbench-rail"
@@ -111,9 +112,13 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                         type="button"
                         onClick={() => props.host.openAddWidget()}
                       >
-                        <span>暂无卡片</span>
-                        <span aria-hidden="true"> · </span>
-                        <span class="dash-empty-group-action">添加第一个</span>
+                        <div class="dash-empty-icon">
+                          <LayoutGrid size={32} />
+                        </div>
+                        <div class="dash-empty-text">暂无卡片</div>
+                        <div class="dash-empty-hint">
+                          点击 <span class="dash-empty-group-action">添加第一个</span> 开始使用
+                        </div>
                       </button>
                     }
                   >

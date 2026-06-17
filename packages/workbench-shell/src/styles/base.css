@@ -1,4 +1,8 @@
 /* ====== DESIGN TOKENS (aligned with prototype) ====== */
+/*
+ * 推荐使用 --tbr-* 命名空间的变量
+ * --color-* 变量保留用于向后兼容,将在未来版本移除
+ */
 :root {
   --color-page: 246 247 244;
   --color-surface: 255 255 255;
@@ -41,7 +45,7 @@
   --tbr-color-info: 61 123 168;
   --tbr-color-focus: var(--color-accent);
   --tbr-radius-1: 4px;
-  --tbr-radius-2: 6px;
+  --tbr-radius-2: 5px;
   --tbr-radius-control: var(--radius);
   --tbr-radius-card: var(--radius);
   --tbr-radius-panel: var(--radius-lg);
@@ -52,8 +56,8 @@
   --tbr-dur-fast: 120ms;
   --tbr-dur-normal: var(--dur);
   --tbr-ease: var(--ease);
-  --radius: 8px;
-  --radius-lg: 12px;
+  --radius: 6px;
+  --radius-lg: 8px;
   --dur: 180ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
 }
@@ -83,12 +87,7 @@ html {
   min-height: 100vh;
   background: rgb(var(--color-page));
   color: rgb(var(--color-text));
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--tbr-font-sans, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -129,7 +128,7 @@ html {
   color: rgb(var(--color-muted));
   background: rgb(var(--color-surface-soft));
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: var(--tbr-radius-pill, 999px);
   border: 1px solid rgb(var(--color-line));
 }
 .toolbar-right {
@@ -152,7 +151,9 @@ html {
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.12s;
+  transition:
+    background-color var(--tbr-dur-fast) var(--ease),
+    color var(--tbr-dur-fast) var(--ease);
 }
 .toolbar-btn:hover {
   background: rgba(var(--color-accent), 0.06);
@@ -175,7 +176,7 @@ html {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: var(--grid-row, 180px);
-  gap: 12px;
+  gap: 8px;
   align-items: stretch;
 }
 
@@ -195,20 +196,25 @@ html {
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius-card, var(--radius));
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  transition: border-color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
   position: relative;
+  box-shadow: 0 2px 12px rgb(var(--color-shadow) / 0.12);
 }
+
 .widget-card:hover {
   border-color: rgb(var(--color-line-strong));
+  box-shadow: 0 6px 20px rgb(var(--color-shadow) / 0.16);
 }
 .grid-item.dragging .widget-card {
   opacity: 0.92;
-  box-shadow: 0 12px 40px rgb(var(--color-shadow) / 0.15);
-  transform: scale(1.03);
-  z-index: 50;
+  box-shadow: var(--tbr-shadow-dragging, 0 12px 40px rgb(var(--color-shadow) / 0.15));
+  transform: scale(1.01);
+  z-index: var(--tbr-z-sticky, 100);
   border-color: rgb(var(--color-accent));
 }
 
@@ -216,7 +222,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   cursor: grab;
   touch-action: none;
 }
@@ -225,16 +231,19 @@ html {
 }
 .card-title {
   font-size: 13px;
-  font-weight: 650;
+  font-weight: var(--tbr-font-weight-bold, 650);
   display: flex;
   align-items: center;
   gap: 6px;
+  letter-spacing: -0.005em;
 }
 .card-title svg {
   width: 14px;
   height: 14px;
   color: rgb(var(--color-subtle));
   flex-shrink: 0;
+  position: relative;
+  top: 0.5px;
 }
 .card-body {
   flex: 1;
@@ -243,6 +252,20 @@ html {
   overflow-x: hidden;
   overscroll-behavior: contain;
 }
+
+/* 卡片尺寸变体 - 确保内容区最小高度 */
+.grid-item[data-widget-size="small"] .card-body {
+  min-height: 80px;
+}
+
+.grid-item[data-widget-size="medium"] .card-body {
+  min-height: 120px;
+}
+
+.grid-item[data-widget-size="large"] .card-body {
+  min-height: 180px;
+}
+
 .card-actions {
   display: flex;
   gap: 2px;
@@ -273,7 +296,9 @@ html {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  transition: all 0.12s;
+  transition:
+    background-color var(--tbr-dur-fast) var(--ease),
+    color var(--tbr-dur-fast) var(--ease);
 }
 .card-action-btn:hover {
   background: rgb(var(--color-surface-hover));

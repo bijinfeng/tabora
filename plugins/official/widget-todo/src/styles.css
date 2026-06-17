@@ -56,6 +56,7 @@
   color: rgb(var(--tbr-color-accent));
   font-size: 10px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .card-spacer {
@@ -63,6 +64,9 @@
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .card-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   padding: 2px 8px;
   border: 1px solid rgb(var(--tbr-color-line));
   border-radius: 4px;
@@ -176,10 +180,18 @@
   font-size: 10px;
   color: rgb(var(--tbr-color-text-muted));
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .card-due-date.overdue {
   color: rgb(var(--tbr-color-danger));
+}
+
+[data-tabora-plugin-id="official.widgets.todo"] .card-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
 }
 
 /* ===== Expand 弹窗视图样式 ===== */
@@ -310,6 +322,7 @@
   color: rgb(var(--tbr-color-accent));
   font-size: 11px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .expand-spacer {
@@ -394,7 +407,7 @@
   color: rgb(var(--tbr-color-text-muted));
   background: rgb(var(--tbr-color-surface-soft));
   padding: 2px 6px;
-  border-radius: 10px;
+  border-radius: var(--tbr-radius-pill, 999px);
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .expand-group-items {
@@ -465,6 +478,7 @@
 [data-tabora-plugin-id="official.widgets.todo"] .expand-cell-due {
   font-size: 12px;
   color: rgb(var(--tbr-color-text-muted));
+  font-variant-numeric: tabular-nums;
 }
 
 [data-tabora-plugin-id="official.widgets.todo"] .expand-cell-due.overdue {
