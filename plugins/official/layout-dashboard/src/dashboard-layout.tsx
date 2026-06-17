@@ -26,7 +26,7 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
   const defaultGroup = (): RailGroup => ({
     id: "default",
     name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
-    icon: "T",
+    icon: "◐",
     isDefault: true,
     widgets: [],
   })

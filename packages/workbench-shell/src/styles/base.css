@@ -235,6 +235,7 @@ body {
   cursor: grabbing;
 }
 .card-title {
+  margin: 0;
   font-size: 13px;
   font-weight: var(--tbr-font-weight-bold, 650);
   display: flex;

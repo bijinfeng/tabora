@@ -79,10 +79,10 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
     >
       <div class="widget-card">
         <div class="card-header" ref={(element) => (headerRef = element)}>
-          <div class="card-title" data-allow-expand="true">
+          <h3 class="card-title" data-allow-expand="true">
             {props.icon}
             <span class="card-title-text">{props.title}</span>
-          </div>
+          </h3>
           <div class="card-actions">
             <button
               class="card-action-btn card-danger"
