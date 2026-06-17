@@ -36,19 +36,9 @@ function getDefaultLinks(config: Record<string, unknown>): QuickLink[] {
 }
 
 function linkIcon(title: string): string {
-  const prototypeIcons: Record<string, string> = {
-    GitHub: "Gh",
-    Notion: "No",
-    Linear: "Li",
-    Figma: "Fg",
-    YouTube: "Yt",
-  }
-  if (prototypeIcons[title]) return prototypeIcons[title]
   const trimmed = title.trim()
   if (!trimmed) return "?"
-  const first = trimmed.charAt(0).toUpperCase()
-  const second = trimmed.charAt(1).toLowerCase()
-  return `${first}${second}`
+  return trimmed.charAt(0).toUpperCase()
 }
 
 export function QuickLinksCard(props: WidgetViewProps) {
