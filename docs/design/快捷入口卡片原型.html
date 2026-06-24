@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 快捷入口卡片与弹窗独立原型</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-soft: #eaf5f0;
+        --wb-danger: #b4453f;
+        --wb-danger-soft: #f7e9e8;
+        --wb-shadow-floating: rgba(0, 0, 0, 0.14);
+        --wb-focus-ring: rgba(26, 144, 112, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        padding: 28px;
+        background:
+          linear-gradient(rgba(28, 30, 28, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(28, 30, 28, 0.035) 1px, transparent 1px), var(--wb-page);
+        background-size: 24px 24px;
+        color: var(--wb-text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .prototype {
+        width: min(100%, 1180px);
+        min-height: calc(100vh - 56px);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+
+      .preview-rail {
+        display: grid;
+        gap: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .toolbar strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .size-button {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: default;
+      }
+
+      .size-button::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-1px);
+        opacity: 0.55;
+      }
+
+      .size-button:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .card-stage {
+        min-height: 300px;
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        padding: 18px;
+        border: 1px solid var(--wb-line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--wb-surface) 70%, transparent);
+      }
+
+      .quick-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--wb-shadow-floating) 26%, transparent);
+      }
+
+      .quick-card.card-sm {
+        max-width: 224px;
+        min-height: 132px;
+      }
+
+      .quick-card.card-md {
+        max-width: 300px;
+        min-height: 190px;
+      }
+
+      .quick-card.card-lg {
+        max-width: 360px;
+        min-height: 248px;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 10px 7px;
+      }
+
+      .card-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .card-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--wb-accent);
+      }
+
+      .card-meta {
+        flex: 0 0 auto;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .quick-card-body {
+        flex: 1;
+        display: grid;
+        gap: 8px;
+        padding: 0 10px 10px;
+      }
+
+      .quick-search {
+        height: 30px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-subtle);
+        font-size: 11px;
+      }
+
+      .quick-search::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border: 1.5px solid currentColor;
+        border-radius: 999px;
+        box-shadow: 4px 4px 0 -2.8px currentColor;
+        opacity: 0.75;
+      }
+
+      .quick-grid {
+        display: grid;
+        gap: 6px;
+      }
+
+      .card-sm .quick-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .card-md .quick-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .card-lg .quick-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .quick-link {
+        min-width: 0;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 4px;
+        min-height: 44px;
+        padding: 6px 4px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .quick-link:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .link-mark {
+        width: 20px;
+        height: 20px;
+        display: grid;
+        place-items: center;
+        border-radius: 5px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-size: 9px;
+        line-height: 1;
+        font-weight: 700;
+      }
+
+      .link-name {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--wb-text);
+        font-size: 10px;
+        line-height: 1.1;
+        font-weight: 600;
+      }
+
+      .quick-card.card-sm .quick-search,
+      .quick-card.card-sm .quick-link:nth-child(n + 5),
+      .quick-card.card-sm .card-foot,
+      .quick-card.card-sm .link-name {
+        display: none;
+      }
+
+      .quick-card.card-sm .quick-card-body {
+        align-content: center;
+        padding-top: 0;
+      }
+
+      .quick-card.card-sm .quick-link {
+        min-height: 36px;
+      }
+
+      .quick-card.card-lg .link-mark {
+        width: 22px;
+        height: 22px;
+      }
+
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 2px;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .card-foot strong {
+        color: var(--wb-text-muted);
+        font-weight: 600;
+      }
+
+      .modal-stage {
+        display: grid;
+        gap: 10px;
+      }
+
+      .expand-modal {
+        width: 100%;
+        max-height: min(640px, calc(100vh - 96px));
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 12px;
+        background: var(--wb-surface);
+        box-shadow: 0 14px 36px color-mix(in srgb, var(--wb-shadow-floating) 72%, transparent);
+      }
+
+      .expand-modal.modal-sm {
+        width: 560px;
+        min-height: 330px;
+      }
+
+      .expand-modal.modal-md {
+        width: 680px;
+        min-height: 390px;
+      }
+
+      .expand-modal.modal-lg {
+        width: 800px;
+        min-height: 450px;
+      }
+
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--wb-line);
+        background: color-mix(in srgb, var(--wb-surface-soft) 78%, var(--wb-surface));
+      }
+
+      .modal-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .modal-title-icon {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border-radius: 6px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .modal-title-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .modal-title-main strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 650;
+      }
+
+      .modal-title-main span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .icon-close {
+        position: relative;
+        width: 28px;
+        height: 28px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--wb-text-muted);
+      }
+
+      .icon-close::before,
+      .icon-close::after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: 13px;
+        width: 12px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .icon-close::before {
+        transform: rotate(45deg);
+      }
+
+      .icon-close::after {
+        transform: rotate(-45deg);
+      }
+
+      .icon-close:hover {
+        background: var(--wb-surface-hover);
+        color: var(--wb-text);
+      }
+
+      .modal-body {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: 12px;
+        overflow: hidden;
+        padding: 12px;
+      }
+
+      .modal-main,
+      .modal-side {
+        min-width: 0;
+        display: grid;
+        align-content: start;
+        gap: 10px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .section-head strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .modal-search {
+        height: 36px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        color: var(--wb-text-subtle);
+        font-size: 12px;
+      }
+
+      .modal-search::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border: 1.5px solid currentColor;
+        border-radius: 999px;
+        box-shadow: 5px 5px 0 -3px currentColor;
+      }
+
+      .link-table {
+        display: grid;
+        gap: 6px;
+      }
+
+      .view-panel {
+        min-width: 0;
+        display: none;
+        align-content: start;
+        gap: 10px;
+      }
+
+      .view-panel.is-active {
+        display: grid;
+      }
+
+      .link-row {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 6px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .link-row:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .row-mark {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border-radius: 6px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .row-copy {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+
+      .row-copy strong,
+      .row-copy span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .row-copy strong {
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .row-copy span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .row-action {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--wb-line);
+        border-radius: 6px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        font-weight: 650;
+      }
+
+      .row-action.is-muted {
+        color: var(--wb-text-subtle);
+      }
+
+      .group-editor,
+      .entry-form {
+        display: grid;
+        gap: 8px;
+      }
+
+      .group-row {
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 6px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .drag-grip {
+        width: 18px;
+        height: 18px;
+        display: grid;
+        place-items: center;
+        color: var(--wb-text-subtle);
+      }
+
+      .drag-grip::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        background: radial-gradient(circle, currentColor 1.2px, transparent 1.4px) 0 0 / 5px 5px;
+        opacity: 0.58;
+      }
+
+      .group-copy {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+
+      .group-copy strong,
+      .group-copy span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .group-copy strong {
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .group-copy span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .switch-mini {
+        height: 24px;
+        min-width: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        font-weight: 650;
+      }
+
+      .switch-mini.is-on {
+        border-color: color-mix(in srgb, var(--wb-accent) 32%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+
+      .inline-create {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .field {
+        min-width: 0;
+        display: grid;
+        gap: 5px;
+      }
+
+      .field.is-wide {
+        grid-column: 1 / -1;
+      }
+
+      .field label {
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .input,
+      .select {
+        width: 100%;
+        height: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 12px;
+        outline: none;
+      }
+
+      .input:focus,
+      .select:focus {
+        border-color: var(--wb-accent);
+        box-shadow: 0 0 0 3px var(--wb-focus-ring);
+      }
+
+      .color-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .swatch {
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--swatch);
+      }
+
+      .swatch.is-active {
+        border-color: var(--wb-accent);
+        box-shadow: 0 0 0 3px var(--wb-focus-ring);
+      }
+
+      .form-note {
+        padding: 8px 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .modal-sm .modal-body {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+
+      .modal-sm .modal-side {
+        display: none;
+      }
+
+      .modal-sm .link-row:nth-child(n + 5) {
+        display: none;
+      }
+
+      .modal-lg .link-table {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .info-card {
+        display: grid;
+        gap: 8px;
+        padding: 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .info-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .info-line strong {
+        color: var(--wb-text);
+        font-weight: 650;
+      }
+
+      .group-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .group-chip {
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .group-chip::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--wb-accent);
+        opacity: 0.72;
+      }
+
+      .modal-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 12px;
+        border-top: 1px solid var(--wb-line);
+        background: color-mix(in srgb, var(--wb-surface-soft) 78%, var(--wb-surface));
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+
+      .footer-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn {
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .btn-primary {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent);
+        color: #fff;
+      }
+
+      @media (max-width: 980px) {
+        body {
+          padding: 16px;
+        }
+
+        .prototype {
+          min-height: auto;
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+
+        .expand-modal {
+          width: 100% !important;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .modal-body {
+          grid-template-columns: 1fr;
+          overflow-y: auto;
+        }
+
+        .modal-side {
+          display: none;
+        }
+
+        .modal-foot {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="prototype" aria-label="快捷入口卡片与弹窗独立原型">
+      <section class="preview-rail" aria-label="快捷入口卡片尺寸预览">
+        <div class="toolbar">
+          <div>
+            <strong id="cardSizeName">M 卡片</strong><span id="cardSizeSpec"> · 300 × 190</span>
+          </div>
+          <button class="size-button" id="cardSizeToggle" type="button">切换卡片尺寸</button>
+        </div>
+        <div class="card-stage">
+          <article class="quick-card card-md" id="quickCard" data-od-id="quick-links-card-md">
+            <header class="card-head">
+              <div class="card-title"><span class="card-dot"></span><span>快捷入口</span></div>
+              <div class="card-meta" id="cardMeta">6 个入口</div>
+            </header>
+            <div class="quick-card-body">
+              <div class="quick-search">搜索或粘贴链接</div>
+              <div class="quick-grid" id="quickGrid" aria-label="快捷入口列表">
+                <div class="quick-link">
+                  <span class="link-mark">Gh</span><span class="link-name">GitHub</span>
+                </div>
+                <div class="quick-link">
+                  <span class="link-mark">No</span><span class="link-name">Notion</span>
+                </div>
+                <div class="quick-link">
+                  <span class="link-mark">Li</span><span class="link-name">Linear</span>
+                </div>
+                <div class="quick-link">
+                  <span class="link-mark">Fg</span><span class="link-name">Figma</span>
+                </div>
+                <div class="quick-link">
+                  <span class="link-mark">Yt</span><span class="link-name">YouTube</span>
+                </div>
+                <div class="quick-link">
+                  <span class="link-mark">Gm</span><span class="link-name">Gmail</span>
+                </div>
+                <div class="quick-link">
+                  <span class="link-mark">Ca</span><span class="link-name">Calendar</span>
+                </div>
+                <div class="quick-link">
+                  <span class="link-mark">Ad</span><span class="link-name">添加</span>
+                </div>
+              </div>
+              <footer class="card-foot">
+                <span><strong>最近</strong> Linear · 2 分钟前</span>
+                <span id="cardFootSize">M · 2 列</span>
+              </footer>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="modal-stage" aria-label="快捷入口展开弹窗">
+        <div class="toolbar">
+          <div>
+            <strong id="modalSizeName">M 弹窗</strong><span id="modalSizeSpec"> · 680 × 390</span>
+          </div>
+          <button class="size-button" id="modalSizeToggle" type="button">切换弹窗尺寸</button>
+        </div>
+
+        <section class="expand-modal modal-md" id="expandModal" data-od-id="quick-links-modal-md">
+          <header class="modal-head">
+            <div class="modal-title">
+              <div class="modal-title-icon">快</div>
+              <div class="modal-title-main">
+                <strong>快捷入口</strong>
+                <span>Links Widget · 常用工作入口管理</span>
+              </div>
+            </div>
+            <button class="icon-close" type="button" aria-label="关闭"></button>
+          </header>
+
+          <div class="modal-body">
+            <div class="modal-main">
+              <div class="view-panel is-active" id="linksView" data-view="links">
+                <div class="section-head">
+                  <strong>常用入口</strong>
+                  <span>按最近访问排序</span>
+                </div>
+                <div class="modal-search">搜索入口、粘贴网址或输入命令</div>
+                <div class="link-table" id="linkTable" aria-label="展开后的快捷入口列表">
+                  <div class="link-row">
+                    <div class="row-mark">Gh</div>
+                    <div class="row-copy">
+                      <strong>GitHub</strong><span>github.com · 工作 · 代码与仓库</span>
+                    </div>
+                    <div class="row-action">开</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="row-mark">No</div>
+                    <div class="row-copy">
+                      <strong>Notion</strong><span>notion.so · 工作 · 项目文档</span>
+                    </div>
+                    <div class="row-action">开</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="row-mark">Li</div>
+                    <div class="row-copy">
+                      <strong>Linear</strong><span>linear.app · 工作 · 任务队列</span>
+                    </div>
+                    <div class="row-action">开</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="row-mark">Fg</div>
+                    <div class="row-copy">
+                      <strong>Figma</strong><span>figma.com · 设计 · 设计文件</span>
+                    </div>
+                    <div class="row-action">开</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="row-mark">Ca</div>
+                    <div class="row-copy">
+                      <strong>Calendar</strong><span>calendar.google.com · 个人 · 今天日程</span>
+                    </div>
+                    <div class="row-action">开</div>
+                  </div>
+                  <div class="link-row" id="addEntryShortcut">
+                    <div class="row-mark">Ad</div>
+                    <div class="row-copy">
+                      <strong>添加入口</strong><span>粘贴链接后自动补全标题与图标</span>
+                    </div>
+                    <div class="row-action">加</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="view-panel" id="groupsView" data-view="groups">
+                <div class="section-head">
+                  <strong>管理分组</strong>
+                  <span>拖拽排序 · 显示控制</span>
+                </div>
+                <div class="group-editor" id="groupEditor">
+                  <div class="group-row">
+                    <span class="drag-grip" aria-hidden="true"></span>
+                    <div class="group-copy">
+                      <strong>工作</strong><span>GitHub / Notion / Linear · 3 个入口</span>
+                    </div>
+                    <button class="switch-mini is-on" type="button">已显示</button>
+                  </div>
+                  <div class="group-row">
+                    <span class="drag-grip" aria-hidden="true"></span>
+                    <div class="group-copy">
+                      <strong>设计</strong><span>Figma / FigJam · 2 个入口</span>
+                    </div>
+                    <button class="switch-mini is-on" type="button">已显示</button>
+                  </div>
+                  <div class="group-row">
+                    <span class="drag-grip" aria-hidden="true"></span>
+                    <div class="group-copy">
+                      <strong>个人</strong><span>Calendar / Gmail · 2 个入口</span>
+                    </div>
+                    <button class="switch-mini" type="button">已隐藏</button>
+                  </div>
+                </div>
+                <div class="inline-create">
+                  <input
+                    class="input"
+                    id="groupNameInput"
+                    type="text"
+                    value="资料"
+                    aria-label="新分组名称"
+                  />
+                  <button class="btn" id="addGroupButton" type="button">新增分组</button>
+                </div>
+              </div>
+
+              <div class="view-panel" id="entryView" data-view="entry">
+                <div class="section-head">
+                  <strong>添加入口</strong>
+                  <span>保存后进入当前分组</span>
+                </div>
+                <form class="entry-form" id="entryForm">
+                  <div class="field-grid">
+                    <div class="field is-wide">
+                      <label for="entryUrl">入口链接</label>
+                      <input class="input" id="entryUrl" type="url" value="https://raycast.com" />
+                    </div>
+                    <div class="field">
+                      <label for="entryTitle">显示名称</label>
+                      <input class="input" id="entryTitle" type="text" value="Raycast" />
+                    </div>
+                    <div class="field">
+                      <label for="entryGroup">所属分组</label>
+                      <select class="select" id="entryGroup">
+                        <option>工作</option>
+                        <option>设计</option>
+                        <option>个人</option>
+                      </select>
+                    </div>
+                    <div class="field is-wide">
+                      <label>图标色</label>
+                      <div class="color-strip" aria-label="图标色">
+                        <button
+                          class="swatch is-active"
+                          type="button"
+                          style="--swatch: #1a9070"
+                          aria-label="绿色"
+                        ></button>
+                        <button
+                          class="swatch"
+                          type="button"
+                          style="--swatch: #3b82f6"
+                          aria-label="蓝色"
+                        ></button>
+                        <button
+                          class="swatch"
+                          type="button"
+                          style="--swatch: #8b5cf6"
+                          aria-label="紫色"
+                        ></button>
+                        <button
+                          class="swatch"
+                          type="button"
+                          style="--swatch: #d97706"
+                          aria-label="琥珀色"
+                        ></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-note">
+                    粘贴链接后保留手动编辑入口名称、分组和图标色。保存后会插入到入口列表顶部，并同步卡片里的入口数量。
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <aside class="modal-side" aria-label="快捷入口配置">
+              <div class="section-head">
+                <strong>配置</strong>
+                <span id="modalDefaultSize">M · 2 列</span>
+              </div>
+              <div class="info-card">
+                <div class="info-line">
+                  <span>入口数量</span><strong id="entryCountText">8 / 12</strong>
+                </div>
+                <div class="info-line"><span>打开方式</span><strong>当前标签页</strong></div>
+                <div class="info-line"><span>同步状态</span><strong>已同步</strong></div>
+              </div>
+              <div class="info-card">
+                <div class="section-head"><strong>分组</strong><span>3 组</span></div>
+                <div class="group-list" id="groupChipList">
+                  <span class="group-chip">工作</span>
+                  <span class="group-chip">设计</span>
+                  <span class="group-chip">个人</span>
+                </div>
+              </div>
+              <div class="info-card">
+                <div class="info-line"><span>最近访问</span><strong>Linear</strong></div>
+                <div class="info-line"><span>快捷键</span><strong>⌘ K</strong></div>
+              </div>
+            </aside>
+          </div>
+
+          <footer class="modal-foot">
+            <span id="modalDescription"
+              >中尺寸用于常规快捷入口管理，列表和配置区保持左右分区。</span
+            >
+            <div class="footer-actions">
+              <button class="btn" id="manageGroupsBtn" type="button">管理分组</button>
+              <button class="btn btn-primary" id="addEntryBtn" type="button">添加入口</button>
+            </div>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const cardSizes = [
+        {
+          key: "sm",
+          name: "S 卡片",
+          spec: " · 224 × 132",
+          meta: "4 个入口",
+          foot: "S · 1 行",
+          od: "quick-links-card-sm",
+        },
+        {
+          key: "md",
+          name: "M 卡片",
+          spec: " · 300 × 190",
+          meta: "6 个入口",
+          foot: "M · 2 列",
+          od: "quick-links-card-md",
+        },
+        {
+          key: "lg",
+          name: "L 卡片",
+          spec: " · 360 × 248",
+          meta: "8 个入口",
+          foot: "L · 4 列",
+          od: "quick-links-card-lg",
+        },
+      ]
+
+      const modalSizes = [
+        {
+          key: "sm",
+          name: "S 弹窗",
+          spec: " · 560 × 330",
+          defaultSize: "S · 1 列",
+          description: "小尺寸只保留核心入口列表，侧栏配置自动折叠。",
+        },
+        {
+          key: "md",
+          name: "M 弹窗",
+          spec: " · 680 × 390",
+          defaultSize: "M · 2 列",
+          description: "中尺寸用于常规快捷入口管理，列表和配置区保持左右分区。",
+        },
+        {
+          key: "lg",
+          name: "L 弹窗",
+          spec: " · 800 × 450",
+          defaultSize: "L · 3 列",
+          description: "大尺寸承载更多入口，主列表展开成双列，适合重度入口管理。",
+        },
+      ]
+
+      let cardIndex = 1
+      let modalIndex = 1
+
+      const quickCard = document.getElementById("quickCard")
+      const cardSizeName = document.getElementById("cardSizeName")
+      const cardSizeSpec = document.getElementById("cardSizeSpec")
+      const cardMeta = document.getElementById("cardMeta")
+      const cardFootSize = document.getElementById("cardFootSize")
+      const cardSizeToggle = document.getElementById("cardSizeToggle")
+
+      const expandModal = document.getElementById("expandModal")
+      const modalSizeName = document.getElementById("modalSizeName")
+      const modalSizeSpec = document.getElementById("modalSizeSpec")
+      const modalDefaultSize = document.getElementById("modalDefaultSize")
+      const modalDescription = document.getElementById("modalDescription")
+      const modalSizeToggle = document.getElementById("modalSizeToggle")
+      const linksView = document.getElementById("linksView")
+      const groupsView = document.getElementById("groupsView")
+      const entryView = document.getElementById("entryView")
+      const linkTable = document.getElementById("linkTable")
+      const addEntryShortcut = document.getElementById("addEntryShortcut")
+      const quickGrid = document.getElementById("quickGrid")
+      const entryCountText = document.getElementById("entryCountText")
+      const groupChipList = document.getElementById("groupChipList")
+      const manageGroupsBtn = document.getElementById("manageGroupsBtn")
+      const addEntryBtn = document.getElementById("addEntryBtn")
+      const addGroupButton = document.getElementById("addGroupButton")
+      const groupNameInput = document.getElementById("groupNameInput")
+      const entryTitle = document.getElementById("entryTitle")
+      const entryUrl = document.getElementById("entryUrl")
+      const entryGroup = document.getElementById("entryGroup")
+      const swatches = Array.from(document.querySelectorAll(".swatch"))
+      const views = {
+        links: linksView,
+        groups: groupsView,
+        entry: entryView,
+      }
+
+      let activeView = "links"
+      let entryCount = 8
+      let groupCount = 3
+
+      function initialsFromTitle(title) {
+        const normalized = title.trim()
+        if (!normalized) return "Ln"
+        if (/^[a-z0-9]/i.test(normalized)) return normalized.slice(0, 2).toUpperCase()
+        return normalized.slice(0, 1)
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+      }
+
+      function applyCardSize(size) {
+        quickCard.className = `quick-card card-${size.key}`
+        quickCard.dataset.odId = size.od
+        cardSizeName.textContent = size.name
+        cardSizeSpec.textContent = size.spec
+        cardMeta.textContent = size.meta
+        cardFootSize.textContent = size.foot
+        cardSizeToggle.setAttribute("aria-label", `切换卡片尺寸，当前为 ${size.name}`)
+      }
+
+      function applyModalSize(size) {
+        expandModal.className = `expand-modal modal-${size.key}`
+        expandModal.dataset.odId = `quick-links-modal-${size.key}`
+        modalSizeName.textContent = size.name
+        modalSizeSpec.textContent = size.spec
+        modalDefaultSize.textContent = size.defaultSize
+        if (activeView === "links") {
+          modalDescription.textContent = size.description
+        }
+        modalSizeToggle.setAttribute("aria-label", `切换弹窗尺寸，当前为 ${size.name}`)
+      }
+
+      function setView(view) {
+        activeView = view
+        Object.entries(views).forEach(([key, node]) => {
+          node.classList.toggle("is-active", key === view)
+        })
+
+        if (view === "groups") {
+          manageGroupsBtn.textContent = "完成"
+          addEntryBtn.textContent = "添加入口"
+          modalDescription.textContent = "正在管理分组：可调整显示状态，并快速新增一个入口分组。"
+        } else if (view === "entry") {
+          manageGroupsBtn.textContent = "取消"
+          addEntryBtn.textContent = "保存入口"
+          modalDescription.textContent = "正在添加入口：填写链接、名称、分组和图标色后保存到列表。"
+        } else {
+          manageGroupsBtn.textContent = "管理分组"
+          addEntryBtn.textContent = "添加入口"
+          modalDescription.textContent = modalSizes[modalIndex].description
+        }
+      }
+
+      function addEntry() {
+        const title = entryTitle.value.trim() || "新入口"
+        const url = entryUrl.value.trim().replace(/^https?:\/\//, "") || "example.com"
+        const group = entryGroup.value
+        const mark = initialsFromTitle(title)
+        const safeTitle = escapeHtml(title)
+        const safeUrl = escapeHtml(url)
+        const safeGroup = escapeHtml(group)
+        const safeMark = escapeHtml(mark)
+
+        const row = document.createElement("div")
+        row.className = "link-row"
+        row.innerHTML = `
+          <div class="row-mark">${safeMark}</div>
+          <div class="row-copy"><strong>${safeTitle}</strong><span>${safeUrl} · ${safeGroup} · 新增入口</span></div>
+          <div class="row-action">开</div>
+        `
+        linkTable.insertBefore(row, addEntryShortcut)
+
+        const cardItem = document.createElement("div")
+        cardItem.className = "quick-link"
+        cardItem.innerHTML = `<span class="link-mark">${safeMark}</span><span class="link-name">${safeTitle}</span>`
+        quickGrid.insertBefore(cardItem, quickGrid.lastElementChild)
+
+        entryCount += 1
+        entryCountText.textContent = `${entryCount} / 12`
+        cardMeta.textContent = `${entryCount} 个入口`
+        setView("links")
+      }
+
+      function addGroup() {
+        const name = groupNameInput.value.trim() || "新分组"
+        const safeName = escapeHtml(name)
+        const row = document.createElement("div")
+        row.className = "group-row"
+        row.innerHTML = `
+          <span class="drag-grip" aria-hidden="true"></span>
+          <div class="group-copy"><strong>${safeName}</strong><span>暂无入口 · 新增分组</span></div>
+          <button class="switch-mini is-on" type="button">已显示</button>
+        `
+        document.getElementById("groupEditor").appendChild(row)
+
+        const chip = document.createElement("span")
+        chip.className = "group-chip"
+        chip.textContent = name
+        groupChipList.appendChild(chip)
+
+        const option = document.createElement("option")
+        option.textContent = name
+        entryGroup.appendChild(option)
+        groupCount += 1
+        groupChipList.previousElementSibling.querySelector("span").textContent = `${groupCount} 组`
+        groupNameInput.value = "资料"
+      }
+
+      cardSizeToggle.addEventListener("click", () => {
+        cardIndex = (cardIndex + 1) % cardSizes.length
+        applyCardSize(cardSizes[cardIndex])
+      })
+
+      modalSizeToggle.addEventListener("click", () => {
+        modalIndex = (modalIndex + 1) % modalSizes.length
+        applyModalSize(modalSizes[modalIndex])
+      })
+
+      manageGroupsBtn.addEventListener("click", () => {
+        setView(activeView === "links" ? "groups" : "links")
+      })
+
+      addEntryBtn.addEventListener("click", () => {
+        if (activeView === "entry") {
+          addEntry()
+          return
+        }
+        setView("entry")
+      })
+
+      addEntryShortcut.addEventListener("click", () => {
+        setView("entry")
+      })
+
+      addGroupButton.addEventListener("click", addGroup)
+
+      document.addEventListener("click", (event) => {
+        const switchButton = event.target.closest(".switch-mini")
+        if (switchButton) {
+          const next = !switchButton.classList.contains("is-on")
+          switchButton.classList.toggle("is-on", next)
+          switchButton.textContent = next ? "已显示" : "已隐藏"
+        }
+
+        const swatch = event.target.closest(".swatch")
+        if (swatch) {
+          swatches.forEach((item) => item.classList.toggle("is-active", item === swatch))
+        }
+      })
+    </script>
+  </body>
+</html>

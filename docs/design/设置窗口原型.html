@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 设置窗口独立原型</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-soft: #eaf5f0;
+        --wb-warn: #b7791f;
+        --wb-warn-soft: #fff4dc;
+        --wb-danger: #b4453f;
+        --wb-danger-soft: #f7e9e8;
+        --wb-shadow-floating: rgba(0, 0, 0, 0.14);
+        --wb-focus-ring: rgba(26, 144, 112, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        padding: 28px;
+        background:
+          linear-gradient(rgba(28, 30, 28, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(28, 30, 28, 0.035) 1px, transparent 1px), var(--wb-page);
+        background-size: 24px 24px;
+        color: var(--wb-text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .prototype {
+        width: min(100%, 860px);
+        min-height: calc(100vh - 56px);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .modal-stage {
+        width: min(100%, 760px);
+        display: grid;
+        gap: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .toolbar strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .size-button,
+      .btn,
+      .btn-primary {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: default;
+      }
+
+      .size-button::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-1px);
+        opacity: 0.55;
+      }
+
+      .size-button:hover,
+      .btn:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .btn-primary {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent);
+        color: #fff;
+      }
+
+      .settings-window {
+        width: 680px;
+        height: 390px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line-strong);
+        border-radius: 10px;
+        background: var(--wb-surface);
+        box-shadow: 0 18px 44px color-mix(in srgb, var(--wb-shadow-floating) 76%, transparent);
+      }
+
+      .settings-window.modal-sm {
+        width: 560px;
+        height: 330px;
+      }
+
+      .settings-window.modal-lg {
+        width: 760px;
+        height: 440px;
+      }
+
+      .window-head,
+      .window-foot {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--wb-line);
+        background: var(--wb-surface-soft);
+      }
+
+      .window-foot {
+        border-top: 1px solid var(--wb-line);
+        border-bottom: 0;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .window-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .window-title-icon {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-accent);
+        font-size: 12px;
+        font-weight: 760;
+      }
+
+      .window-title-main {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+
+      .window-title-main strong {
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .window-title-main span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.25;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .icon-close {
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        position: relative;
+      }
+
+      .icon-close::before,
+      .icon-close::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        top: 50%;
+        height: 1.5px;
+        border-radius: 999px;
+        background: var(--wb-text-muted);
+      }
+
+      .icon-close::before {
+        transform: rotate(45deg);
+      }
+
+      .icon-close::after {
+        transform: rotate(-45deg);
+      }
+
+      .settings-body {
+        min-height: 0;
+        flex: 1;
+        display: grid;
+        grid-template-columns: 154px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px;
+        background: var(--wb-surface);
+      }
+
+      .settings-nav,
+      .settings-main {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+      }
+
+      .settings-nav {
+        padding: 8px;
+        gap: 3px;
+        background: var(--wb-surface-soft);
+      }
+
+      .nav-kicker {
+        padding: 6px 8px 4px;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .nav-button {
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .nav-button.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 28%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+
+      .nav-count {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .settings-main {
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .panel-head strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .panel-head span {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .panel-view {
+        display: none;
+        gap: 8px;
+      }
+
+      .panel-view.is-active {
+        display: grid;
+      }
+
+      .setting-group {
+        display: grid;
+        gap: 7px;
+        padding: 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .group-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .group-title span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .setting-line,
+      .plugin-line {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        padding: 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .setting-line-copy,
+      .plugin-copy {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+
+      .setting-line-copy strong,
+      .plugin-copy strong {
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 1.25;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .setting-line-copy span,
+      .plugin-copy span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.3;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .segmented {
+        display: inline-flex;
+        gap: 3px;
+        padding: 3px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .segmented button {
+        height: 23px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .segmented button.is-active {
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .select,
+      .input,
+      .textarea {
+        height: 30px;
+        min-width: 132px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        outline: none;
+      }
+
+      .select {
+        padding: 0 8px;
+      }
+
+      .input {
+        width: 100%;
+        padding: 0 9px;
+      }
+
+      .textarea {
+        width: 100%;
+        min-height: 54px;
+        padding: 7px 9px;
+        resize: none;
+        line-height: 1.35;
+      }
+
+      .select:focus,
+      .input:focus,
+      .textarea:focus {
+        border-color: var(--wb-accent);
+        box-shadow: 0 0 0 3px var(--wb-focus-ring);
+      }
+
+      .control-stack {
+        min-width: 180px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .control-inline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .range-control {
+        min-width: 170px;
+        display: grid;
+        grid-template-columns: minmax(92px, 1fr) 34px;
+        align-items: center;
+        gap: 8px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .range-control input {
+        width: 100%;
+        accent-color: var(--wb-accent);
+      }
+
+      .stepper {
+        display: inline-flex;
+        align-items: center;
+        height: 30px;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .stepper button {
+        width: 28px;
+        height: 100%;
+        border: 0;
+        background: transparent;
+        color: var(--wb-text-muted);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .stepper strong {
+        min-width: 42px;
+        padding: 0 8px;
+        border-inline: 1px solid var(--wb-line);
+        text-align: center;
+        font-size: 11px;
+      }
+
+      .checkbox-list {
+        min-width: 220px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .check-chip {
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .check-chip input {
+        width: 12px;
+        height: 12px;
+        margin: 0;
+        accent-color: var(--wb-accent);
+      }
+
+      .keybind {
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .keycap {
+        min-width: 18px;
+        height: 18px;
+        display: inline-grid;
+        place-items: center;
+        padding: 0 5px;
+        border: 1px solid var(--wb-line);
+        border-radius: 5px;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .path-field {
+        min-width: 220px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .path-field code {
+        max-width: 170px;
+        overflow: hidden;
+        padding: 6px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .danger-line {
+        border-color: color-mix(in srgb, var(--wb-danger) 28%, var(--wb-line));
+        background: var(--wb-danger-soft);
+      }
+
+      .btn-danger {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        border: 1px solid color-mix(in srgb, var(--wb-danger) 42%, var(--wb-line));
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-danger);
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .switch {
+        width: 32px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        padding: 2px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-line);
+      }
+
+      .switch.is-on {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent);
+      }
+
+      .switch::before {
+        content: "";
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 160ms ease;
+      }
+
+      .switch.is-on::before {
+        transform: translateX(14px);
+      }
+
+      .swatch-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .swatch {
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--tone);
+      }
+
+      .swatch.is-active {
+        outline: 3px solid var(--wb-focus-ring);
+        border-color: var(--wb-accent);
+      }
+
+      .plugin-meta {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .plugin-config-shell {
+        display: grid;
+        grid-template-columns: 116px minmax(0, 1fr);
+        gap: 8px;
+      }
+
+      .plugin-config-list,
+      .plugin-config-form {
+        min-width: 0;
+        display: grid;
+        gap: 7px;
+      }
+
+      .plugin-config-list {
+        align-content: start;
+      }
+
+      .plugin-select {
+        display: grid;
+        gap: 2px;
+        padding: 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        text-align: left;
+      }
+
+      .plugin-select strong {
+        color: var(--wb-text);
+        font-size: 11px;
+      }
+
+      .plugin-select span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .plugin-select.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 30%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+
+      .schema-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .schema-chip {
+        display: grid;
+        gap: 2px;
+        padding: 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .schema-chip strong {
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .schema-chip span {
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1.25;
+      }
+
+      .field-note {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.3;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-size: 10px;
+        font-weight: 650;
+      }
+
+      .toast {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--wb-text-muted);
+      }
+
+      .toast::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--wb-accent);
+      }
+
+      .footer-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .settings-window.modal-sm .settings-body {
+        grid-template-columns: 124px minmax(0, 1fr);
+      }
+
+      .settings-window.modal-sm .setting-line,
+      .settings-window.modal-sm .plugin-line {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .settings-window.modal-sm .plugin-meta {
+        justify-content: space-between;
+      }
+
+      .settings-window.modal-sm .plugin-config-shell,
+      .settings-window.modal-sm .schema-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .settings-window.modal-lg .panel-view[data-view="plugins"].is-active {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      @media (max-width: 980px) {
+        body {
+          padding: 18px;
+        }
+
+        .prototype {
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+
+        .settings-window {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="prototype" aria-label="设置窗口独立原型">
+      <section class="modal-stage" aria-label="设置窗口打开状态">
+        <div class="toolbar">
+          <div>
+            <strong id="modalSizeName">M 窗口</strong><span id="modalSizeSpec"> · 680 × 390</span>
+          </div>
+          <button class="size-button" id="modalSizeToggle" type="button">切换窗口尺寸</button>
+        </div>
+
+        <section
+          class="settings-window modal-md"
+          id="settingsWindow"
+          data-od-id="settings-window-md"
+        >
+          <header class="window-head">
+            <div class="window-title">
+              <div class="window-title-icon">设</div>
+              <div class="window-title-main">
+                <strong>设置</strong>
+                <span id="windowSubtitle">个人工作台配置 · 布局、外观、搜索与插件</span>
+              </div>
+            </div>
+            <button class="icon-close" type="button" aria-label="关闭"></button>
+          </header>
+
+          <div class="settings-body">
+            <nav class="settings-nav" aria-label="设置导航">
+              <div class="nav-kicker">工作台</div>
+              <button class="nav-button is-active" type="button" data-view="general">
+                <span>通用</span><span class="nav-count">8</span>
+              </button>
+              <button class="nav-button" type="button" data-view="appearance">
+                <span>外观</span><span class="nav-count">7</span>
+              </button>
+              <button class="nav-button" type="button" data-view="search">
+                <span>搜索</span><span class="nav-count">8</span>
+              </button>
+              <div class="nav-kicker">扩展</div>
+              <button class="nav-button" type="button" data-view="plugins">
+                <span>插件</span><span class="nav-count">14</span>
+              </button>
+              <button class="nav-button" type="button" data-view="about">
+                <span>关于</span><span class="nav-count">V2</span>
+              </button>
+            </nav>
+
+            <div class="settings-main">
+              <div class="panel-head">
+                <div>
+                  <strong id="panelTitle">通用</strong>
+                  <span id="panelDesc">工作区、布局和基础行为。所有设置只影响当前个人工作台。</span>
+                </div>
+                <button class="btn" type="button" id="resetButton">恢复默认</button>
+              </div>
+
+              <div class="panel-view is-active" id="view-general" data-view="general">
+                <section class="setting-group">
+                  <div class="group-title">工作区<span>本地保存</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>当前工作区</strong>
+                      <span>我的工作台 · 保存布局、卡片和背景配置</span>
+                    </div>
+                    <select class="select" aria-label="当前工作区">
+                      <option>我的工作台</option>
+                      <option>阅读工作台</option>
+                      <option>写作工作台</option>
+                    </select>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>默认布局</strong>
+                      <span>切换新标签页打开时使用的布局插件</span>
+                    </div>
+                    <div class="segmented" aria-label="默认布局">
+                      <button class="is-active" type="button">Dashboard</button>
+                      <button type="button">Stream</button>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>默认卡片列数</strong>
+                      <span>Dashboard 首次打开时使用的网格密度</span>
+                    </div>
+                    <div class="stepper" data-stepper="cols" aria-label="默认卡片列数">
+                      <button type="button" data-step="-1">−</button>
+                      <strong data-value>4</strong>
+                      <button type="button" data-step="1">+</button>
+                    </div>
+                  </div>
+                </section>
+                <section class="setting-group">
+                  <div class="group-title">启动行为<span>快捷入口</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>打开时聚焦搜索</strong>
+                      <span>新标签页加载后自动把焦点放到命令搜索框</span>
+                    </div>
+                    <button class="switch is-on" type="button" aria-label="打开时聚焦搜索"></button>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>保留上次卡片尺寸</strong>
+                      <span>刷新后恢复每张卡片的 S / M / L 状态</span>
+                    </div>
+                    <button
+                      class="switch is-on"
+                      type="button"
+                      aria-label="保留上次卡片尺寸"
+                    ></button>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>全局命令快捷键</strong>
+                      <span>从任意输入状态唤起命令搜索</span>
+                    </div>
+                    <button class="keybind" type="button" aria-label="全局命令快捷键">
+                      <span class="keycap">⌘</span><span class="keycap">K</span>
+                    </button>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>启动后恢复</strong>
+                      <span>选择刷新后要自动恢复的个人状态</span>
+                    </div>
+                    <div class="checkbox-list" aria-label="启动后恢复">
+                      <label class="check-chip"><input type="checkbox" checked />布局</label>
+                      <label class="check-chip"><input type="checkbox" checked />尺寸</label>
+                      <label class="check-chip"><input type="checkbox" />筛选</label>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div class="panel-view" id="view-appearance" data-view="appearance">
+                <section class="setting-group">
+                  <div class="group-title">主题<span id="themeStatus">Sage Light</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>界面模式</strong>
+                      <span>明亮、暗色或跟随系统</span>
+                    </div>
+                    <div class="segmented" aria-label="界面模式">
+                      <button class="is-active" type="button" data-theme="light">明亮</button>
+                      <button type="button" data-theme="dark">暗色</button>
+                      <button type="button" data-theme="system">系统</button>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>强调色</strong>
+                      <span>用于焦点、选中状态和主操作按钮</span>
+                    </div>
+                    <div class="swatch-row" aria-label="强调色">
+                      <button
+                        class="swatch is-active"
+                        style="--tone: #1a9070"
+                        type="button"
+                        aria-label="Sage"
+                      ></button>
+                      <button
+                        class="swatch"
+                        style="--tone: #316fd5"
+                        type="button"
+                        aria-label="Blue"
+                      ></button>
+                      <button
+                        class="swatch"
+                        style="--tone: #8a6a2f"
+                        type="button"
+                        aria-label="Olive"
+                      ></button>
+                      <button
+                        class="swatch"
+                        style="--tone: #8f4c45"
+                        type="button"
+                        aria-label="Clay"
+                      ></button>
+                    </div>
+                  </div>
+                </section>
+                <section class="setting-group">
+                  <div class="group-title">背景<span>轻网格</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>页面背景</strong>
+                      <span>纯色、轻网格或本地图片；背景由插件渲染</span>
+                    </div>
+                    <select class="select" aria-label="页面背景">
+                      <option>轻网格</option>
+                      <option>纯色</option>
+                      <option>本地图片</option>
+                    </select>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>界面密度</strong>
+                      <span>影响设置、弹窗、卡片列表的默认间距</span>
+                    </div>
+                    <div class="segmented" aria-label="界面密度">
+                      <button class="is-active" type="button">紧凑</button>
+                      <button type="button">标准</button>
+                      <button type="button">舒展</button>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>圆角半径</strong>
+                      <span>控制卡片、输入框和浮层的圆角基准</span>
+                    </div>
+                    <label class="range-control">
+                      <input
+                        type="range"
+                        min="4"
+                        max="14"
+                        value="8"
+                        data-range-label="radiusValue"
+                      />
+                      <span id="radiusValue">8px</span>
+                    </label>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>正文大小</strong>
+                      <span>仅调整工作台正文和卡片说明文字</span>
+                    </div>
+                    <label class="range-control">
+                      <input
+                        type="range"
+                        min="11"
+                        max="15"
+                        value="13"
+                        data-range-label="fontValue"
+                      />
+                      <span id="fontValue">13px</span>
+                    </label>
+                  </div>
+                </section>
+              </div>
+
+              <div class="panel-view" id="view-search" data-view="search">
+                <section class="setting-group">
+                  <div class="group-title">默认搜索源<span id="providerStatus">Google</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>搜索框占位</strong>
+                      <span>输入命令、网页或卡片名称时显示的提示</span>
+                    </div>
+                    <input class="input" value="搜索网页、命令或卡片" aria-label="搜索框占位" />
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>默认引擎</strong>
+                      <span>也可以在搜索框里输入 @github 临时切换</span>
+                    </div>
+                    <div class="segmented" aria-label="默认搜索引擎">
+                      <button class="is-active" type="button" data-provider="Google">Google</button>
+                      <button type="button" data-provider="Bing">Bing</button>
+                      <button type="button" data-provider="GitHub">GitHub</button>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>命令前缀</strong>
+                      <span>用短前缀区分网页、卡片和插件命令</span>
+                    </div>
+                    <input class="input" value="@ / # / :" aria-label="命令前缀" />
+                  </div>
+                </section>
+                <section class="setting-group">
+                  <div class="group-title">搜索范围<span>4 项</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>包含卡片动作</strong>
+                      <span>搜索结果显示添加卡片、打开详情等动作</span>
+                    </div>
+                    <button class="switch is-on" type="button" aria-label="包含卡片动作"></button>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>默认搜索范围</strong>
+                      <span>选择输入框默认纳入的内容来源</span>
+                    </div>
+                    <div class="checkbox-list" aria-label="默认搜索范围">
+                      <label class="check-chip"><input type="checkbox" checked />网页</label>
+                      <label class="check-chip"><input type="checkbox" checked />卡片</label>
+                      <label class="check-chip"><input type="checkbox" checked />命令</label>
+                      <label class="check-chip"><input type="checkbox" />历史</label>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>输入防抖</strong>
+                      <span>减少输入时过于频繁的搜索刷新</span>
+                    </div>
+                    <label class="range-control">
+                      <input
+                        type="range"
+                        min="80"
+                        max="420"
+                        step="20"
+                        value="180"
+                        data-range-label="debounceValue"
+                      />
+                      <span id="debounceValue">180ms</span>
+                    </label>
+                  </div>
+                </section>
+              </div>
+
+              <div class="panel-view" id="view-plugins" data-view="plugins">
+                <section class="setting-group">
+                  <div class="group-title">已安装插件<span>5 个启用</span></div>
+                  <div class="plugin-line">
+                    <div class="plugin-copy">
+                      <strong>Dashboard 布局</strong>
+                      <span>official.layout.dashboard · 工作台网格布局</span>
+                    </div>
+                    <div class="plugin-meta">
+                      <span class="badge">layout</span
+                      ><button class="switch is-on" type="button"></button>
+                    </div>
+                  </div>
+                  <div class="plugin-line">
+                    <div class="plugin-copy">
+                      <strong>快捷入口</strong>
+                      <span>official.widget.shortcuts · 链接分组与快速打开</span>
+                    </div>
+                    <div class="plugin-meta">
+                      <span class="badge">widget</span
+                      ><button class="switch is-on" type="button"></button>
+                    </div>
+                  </div>
+                  <div class="plugin-line">
+                    <div class="plugin-copy">
+                      <strong>个人待办</strong>
+                      <span>official.widget.todo · 清单、提醒和完成状态</span>
+                    </div>
+                    <div class="plugin-meta">
+                      <span class="badge">widget</span
+                      ><button class="switch is-on" type="button"></button>
+                    </div>
+                  </div>
+                  <div class="plugin-line">
+                    <div class="plugin-copy">
+                      <strong>天气</strong>
+                      <span>official.widget.weather · 城市、趋势和生活建议</span>
+                    </div>
+                    <div class="plugin-meta">
+                      <span class="badge">widget</span
+                      ><button class="switch is-on" type="button"></button>
+                    </div>
+                  </div>
+                  <div class="plugin-line">
+                    <div class="plugin-copy">
+                      <strong>今日重点</strong>
+                      <span>official.widget.focus · 当日目标、步骤和复盘</span>
+                    </div>
+                    <div class="plugin-meta">
+                      <span class="badge">widget</span
+                      ><button class="switch is-on" type="button"></button>
+                    </div>
+                  </div>
+                </section>
+                <section class="setting-group">
+                  <div class="group-title">设置表单协议<span>plugin.settings</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>插件声明设置项</strong>
+                      <span>运行插件通过 schema 注入设置，不直接改宿主窗口结构</span>
+                    </div>
+                    <span class="badge">runtime</span>
+                  </div>
+                  <div class="schema-grid" aria-label="插件设置表单字段类型">
+                    <div class="schema-chip">
+                      <strong>text / textarea</strong>
+                      <span>名称、URL、提示词、模板内容</span>
+                    </div>
+                    <div class="schema-chip">
+                      <strong>select / radio</strong>
+                      <span>城市、数据源、刷新策略</span>
+                    </div>
+                    <div class="schema-chip">
+                      <strong>switch / checkbox</strong>
+                      <span>开关能力、多选权限、显示字段</span>
+                    </div>
+                    <div class="schema-chip">
+                      <strong>range / stepper</strong>
+                      <span>刷新间隔、数量、阈值和密度</span>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>字段作用域</strong>
+                      <span>支持全局默认、插件默认、单个卡片实例三层覆盖</span>
+                    </div>
+                    <div class="segmented" aria-label="字段作用域">
+                      <button class="is-active" type="button">实例</button>
+                      <button type="button">插件</button>
+                      <button type="button">全局</button>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>校验反馈</strong>
+                      <span>协议字段可声明必填、范围、正则、权限依赖和帮助文案</span>
+                    </div>
+                    <span class="field-note">错误显示在字段下方，不阻塞其它插件设置</span>
+                  </div>
+                </section>
+                <section class="setting-group">
+                  <div class="group-title">
+                    运行插件配置<span id="pluginFormStatus">天气 · 当前实例</span>
+                  </div>
+                  <div class="plugin-config-shell">
+                    <div class="plugin-config-list" aria-label="选择插件配置">
+                      <button
+                        class="plugin-select is-active"
+                        type="button"
+                        data-plugin-form="天气"
+                        data-instance="weather-1"
+                      >
+                        <strong>天气</strong>
+                        <span>weather-1 · 城市与刷新</span>
+                      </button>
+                      <button
+                        class="plugin-select"
+                        type="button"
+                        data-plugin-form="快捷入口"
+                        data-instance="shortcuts-1"
+                      >
+                        <strong>快捷入口</strong>
+                        <span>shortcuts-1 · 分组与打开方式</span>
+                      </button>
+                      <button
+                        class="plugin-select"
+                        type="button"
+                        data-plugin-form="待办"
+                        data-instance="todo-1"
+                      >
+                        <strong>待办</strong>
+                        <span>todo-1 · 清单与提醒</span>
+                      </button>
+                    </div>
+                    <div class="plugin-config-form">
+                      <div class="setting-line">
+                        <div class="setting-line-copy">
+                          <strong>默认城市</strong>
+                          <span>字段 type=select，由天气插件提供城市候选</span>
+                        </div>
+                        <select class="select" aria-label="天气默认城市">
+                          <option>北京</option>
+                          <option>上海</option>
+                          <option>深圳</option>
+                          <option>杭州</option>
+                        </select>
+                      </div>
+                      <div class="setting-line">
+                        <div class="setting-line-copy">
+                          <strong>刷新间隔</strong>
+                          <span>字段 type=range，宿主负责保存和实时校验</span>
+                        </div>
+                        <label class="range-control">
+                          <input
+                            type="range"
+                            min="5"
+                            max="60"
+                            step="5"
+                            value="15"
+                            data-range-label="weatherRefreshValue"
+                          />
+                          <span id="weatherRefreshValue">15min</span>
+                        </label>
+                      </div>
+                      <div class="setting-line">
+                        <div class="setting-line-copy">
+                          <strong>卡片显示项</strong>
+                          <span>字段 type=checkbox-group，决定卡片紧凑态展示内容</span>
+                        </div>
+                        <div class="checkbox-list" aria-label="天气卡片显示项">
+                          <label class="check-chip"><input type="checkbox" checked />温度</label>
+                          <label class="check-chip"><input type="checkbox" checked />空气</label>
+                          <label class="check-chip"><input type="checkbox" />风力</label>
+                        </div>
+                      </div>
+                      <div class="setting-line">
+                        <div class="setting-line-copy">
+                          <strong>异常时提醒</strong>
+                          <span>字段 type=switch，依赖通知权限</span>
+                        </div>
+                        <button class="switch" type="button" aria-label="天气异常时提醒"></button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="setting-group">
+                  <div class="group-title">插件安全<span>本地权限</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>插件隔离运行</strong>
+                      <span>插件错误只影响自身实例，不中断整个工作台</span>
+                    </div>
+                    <button class="switch is-on" type="button"></button>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>允许的权限</strong>
+                      <span>插件默认只能请求勾选范围内的本地能力</span>
+                    </div>
+                    <div class="checkbox-list" aria-label="允许的权限">
+                      <label class="check-chip"><input type="checkbox" checked />存储</label>
+                      <label class="check-chip"><input type="checkbox" checked />网络</label>
+                      <label class="check-chip"><input type="checkbox" />通知</label>
+                      <label class="check-chip"><input type="checkbox" />剪贴板</label>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>插件数据目录</strong>
+                      <span>插件缓存和本地配置的存放位置</span>
+                    </div>
+                    <div class="path-field">
+                      <code>~/Library/Tabora/plugins</code>
+                      <button class="btn" type="button">更改</button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div class="panel-view" id="view-about" data-view="about">
+                <section class="setting-group">
+                  <div class="group-title">关于 Tabora<span>V2</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>插件优先的个人工作台</strong>
+                      <span>布局、卡片、搜索源、主题和背景都由插件贡献。</span>
+                    </div>
+                    <span class="badge">Refined Sage</span>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>本地数据</strong>
+                      <span>工作区配置、卡片尺寸和插件启用状态保存在本机。</span>
+                    </div>
+                    <span class="badge">local</span>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>数据位置</strong>
+                      <span>打开本地配置和插件缓存目录。</span>
+                    </div>
+                    <div class="path-field">
+                      <code>~/Library/Application Support/Tabora</code>
+                      <button class="btn" type="button">打开</button>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>反馈备注</strong>
+                      <span>用于记录本机设置问题，不会自动上传。</span>
+                    </div>
+                    <textarea class="textarea" aria-label="反馈备注">
+启动后偶尔需要恢复上次选择的布局。</textarea
+                    >
+                  </div>
+                  <div class="setting-line danger-line">
+                    <div class="setting-line-copy">
+                      <strong>重置本机设置</strong>
+                      <span>清空窗口尺寸、主题、搜索源和插件启用状态。</span>
+                    </div>
+                    <button class="btn-danger" type="button">重置</button>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <footer class="window-foot">
+            <span class="toast" id="statusText">设置已就绪</span>
+            <div class="footer-actions">
+              <button class="btn" type="button">取消</button>
+              <button class="btn-primary" type="button" id="saveButton">保存设置</button>
+            </div>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const modalSizes = [
+        { key: "sm", label: "S 窗口", spec: " · 560 × 330" },
+        { key: "md", label: "M 窗口", spec: " · 680 × 390" },
+        { key: "lg", label: "L 窗口", spec: " · 760 × 440" },
+      ]
+
+      const panelCopy = {
+        general: ["通用", "工作区、布局和基础行为。所有设置只影响当前个人工作台。"],
+        appearance: ["外观", "主题、背景和强调色。视觉配置来自主题插件。"],
+        search: ["搜索", "默认搜索源、搜索范围和命令入口。"],
+        plugins: ["插件", "已安装插件、运行配置、设置表单协议和本地权限。"],
+        about: ["关于", "版本、数据位置和插件化工作台说明。"],
+      }
+
+      let modalIndex = 1
+
+      const settingsWindow = document.getElementById("settingsWindow")
+      const modalSizeName = document.getElementById("modalSizeName")
+      const modalSizeSpec = document.getElementById("modalSizeSpec")
+      const panelTitle = document.getElementById("panelTitle")
+      const panelDesc = document.getElementById("panelDesc")
+      const statusText = document.getElementById("statusText")
+
+      function setStatus(text) {
+        statusText.textContent = text
+      }
+
+      function renderModal() {
+        const size = modalSizes[modalIndex]
+        settingsWindow.className = `settings-window modal-${size.key}`
+        settingsWindow.dataset.odId = `settings-window-${size.key}`
+        modalSizeName.textContent = size.label
+        modalSizeSpec.textContent = size.spec
+      }
+
+      document.getElementById("modalSizeToggle").addEventListener("click", () => {
+        modalIndex = (modalIndex + 1) % modalSizes.length
+        renderModal()
+      })
+
+      document.querySelectorAll(".nav-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const view = button.dataset.view
+          document
+            .querySelectorAll(".nav-button")
+            .forEach((item) => item.classList.remove("is-active"))
+          document
+            .querySelectorAll(".panel-view")
+            .forEach((item) => item.classList.remove("is-active"))
+          button.classList.add("is-active")
+          document.getElementById(`view-${view}`).classList.add("is-active")
+          panelTitle.textContent = panelCopy[view][0]
+          panelDesc.textContent = panelCopy[view][1]
+          setStatus(`已切换到${panelCopy[view][0]}`)
+        })
+      })
+
+      document.querySelectorAll(".segmented").forEach((group) => {
+        group.addEventListener("click", (event) => {
+          const button = event.target.closest("button")
+          if (!button) return
+          group.querySelectorAll("button").forEach((item) => item.classList.remove("is-active"))
+          button.classList.add("is-active")
+          if (button.dataset.theme) {
+            document.getElementById("themeStatus").textContent =
+              button.dataset.theme === "dark"
+                ? "Sage Dark"
+                : button.dataset.theme === "system"
+                  ? "跟随系统"
+                  : "Sage Light"
+            setStatus("主题偏好已更新")
+          }
+          if (button.dataset.provider) {
+            document.getElementById("providerStatus").textContent = button.dataset.provider
+            setStatus(`默认搜索源：${button.dataset.provider}`)
+          }
+        })
+      })
+
+      document.querySelectorAll(".switch").forEach((button) => {
+        button.addEventListener("click", () => {
+          button.classList.toggle("is-on")
+          setStatus(button.classList.contains("is-on") ? "设置已启用" : "设置已关闭")
+        })
+      })
+
+      document.querySelectorAll(".plugin-select").forEach((button) => {
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll(".plugin-select")
+            .forEach((item) => item.classList.remove("is-active"))
+          button.classList.add("is-active")
+          const formStatus = document.getElementById("pluginFormStatus")
+          if (formStatus)
+            formStatus.textContent = `${button.dataset.pluginForm} · ${button.dataset.instance}`
+          setStatus(`正在编辑 ${button.dataset.pluginForm} 插件设置`)
+        })
+      })
+
+      document.querySelectorAll(".swatch").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".swatch").forEach((item) => item.classList.remove("is-active"))
+          button.classList.add("is-active")
+          setStatus("强调色已选择")
+        })
+      })
+
+      document.querySelectorAll("[data-range-label]").forEach((input) => {
+        const label = document.getElementById(input.dataset.rangeLabel)
+        const unit =
+          input.dataset.rangeLabel === "debounceValue"
+            ? "ms"
+            : input.dataset.rangeLabel === "weatherRefreshValue"
+              ? "min"
+              : "px"
+        const renderValue = () => {
+          if (label) label.textContent = `${input.value}${unit}`
+        }
+        input.addEventListener("input", () => {
+          renderValue()
+          setStatus("数值设置已更新")
+        })
+        renderValue()
+      })
+
+      document.querySelectorAll(".stepper").forEach((stepper) => {
+        const valueNode = stepper.querySelector("[data-value]")
+        stepper.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-step]")
+          if (!button || !valueNode) return
+          const nextValue = Math.min(
+            8,
+            Math.max(2, Number(valueNode.textContent) + Number(button.dataset.step)),
+          )
+          valueNode.textContent = String(nextValue)
+          setStatus(`默认卡片列数：${nextValue}`)
+        })
+      })
+
+      document.querySelectorAll(".check-chip input").forEach((input) => {
+        input.addEventListener("change", () => setStatus("多选设置已更新"))
+      })
+
+      document.querySelectorAll(".keybind").forEach((button) => {
+        button.addEventListener("click", () => setStatus("等待录入新的快捷键"))
+      })
+
+      document.querySelectorAll(".path-field .btn").forEach((button) => {
+        button.addEventListener("click", () =>
+          setStatus(button.textContent.trim() === "打开" ? "已打开本地目录" : "请选择新的本地目录"),
+        )
+      })
+
+      document.querySelectorAll(".btn-danger").forEach((button) => {
+        button.addEventListener("click", () => setStatus("已请求重置本机设置"))
+      })
+
+      document
+        .getElementById("resetButton")
+        .addEventListener("click", () => setStatus("已恢复当前页默认值"))
+      document
+        .getElementById("saveButton")
+        .addEventListener("click", () => setStatus("设置已保存到本地"))
+
+      renderModal()
+    </script>
+  </body>
+</html>

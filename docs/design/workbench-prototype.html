@@ -1472,6 +1472,67 @@
         outline-offset: 2px;
       }
 
+      /* Dashboard-local compact card treatment */
+      .layout-dashboard .card-grid {
+        gap: 10px;
+      }
+      .layout-dashboard .widget-card {
+        padding: 10px 11px;
+        border-radius: 8px;
+      }
+      .layout-dashboard .card-header {
+        margin-bottom: 8px;
+        min-height: 22px;
+      }
+      .layout-dashboard .card-title {
+        gap: 5px;
+        font-size: 12px;
+      }
+      .layout-dashboard .card-title svg {
+        width: 13px;
+        height: 13px;
+      }
+      .layout-dashboard .card-action {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+      }
+      .layout-dashboard .focus-input {
+        padding: 2px 0;
+        font-size: 13px;
+      }
+      .layout-dashboard .link-grid {
+        gap: 6px;
+      }
+      .layout-dashboard .link-item {
+        height: 46px;
+        gap: 3px;
+        border-radius: 7px;
+      }
+      .layout-dashboard .link-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        font-size: 9px;
+      }
+      .layout-dashboard .todo-item {
+        gap: 6px;
+        padding: 3px 5px;
+      }
+      .layout-dashboard .todo-check {
+        width: 14px;
+        height: 14px;
+      }
+      .layout-dashboard .todo-delete {
+        width: 18px;
+        height: 18px;
+      }
+      .layout-dashboard .notes-area {
+        min-height: 32px;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
       /* Widget content styles (shared) */
       .focus-input {
         width: 100%;
@@ -3019,7 +3080,7 @@
           </div>
           <span class="lsp-check">✓</span>
         </a>
-        <a class="lsp-item" href="focus-layout-prototype.html">
+        <a class="lsp-item" href="06-Focus布局原型.html">
           <div class="lsp-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="8" />
@@ -3055,7 +3116,7 @@
     </nav>
 
     <!-- ====== DASHBOARD -->
-    <div class="layout-dashboard active" id="layoutDashboard">
+    <div class="layout-dashboard active" id="layoutDashboard" data-od-id="path-8">
       <div class="dash-content">
         <div class="dash-greeting">
           <div class="dash-greeting-title">

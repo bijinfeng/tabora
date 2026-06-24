@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 待办卡片与弹窗独立原型</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-soft: #eaf5f0;
+        --wb-warn: #b7791f;
+        --wb-warn-soft: #fff4dc;
+        --wb-danger: #b4453f;
+        --wb-danger-soft: #f7e9e8;
+        --wb-shadow-floating: rgba(0, 0, 0, 0.14);
+        --wb-focus-ring: rgba(26, 144, 112, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        padding: 28px;
+        background:
+          linear-gradient(rgba(28, 30, 28, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(28, 30, 28, 0.035) 1px, transparent 1px), var(--wb-page);
+        background-size: 24px 24px;
+        color: var(--wb-text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .prototype {
+        width: min(100%, 1180px);
+        min-height: calc(100vh - 56px);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+
+      .preview-rail,
+      .modal-stage {
+        display: grid;
+        gap: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .toolbar strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .size-button {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: default;
+      }
+
+      .size-button::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-1px);
+        opacity: 0.55;
+      }
+
+      .size-button:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .card-stage {
+        min-height: 300px;
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        padding: 18px;
+        border-radius: 12px;
+        background: transparent;
+      }
+
+      .todo-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--wb-shadow-floating) 26%, transparent);
+      }
+
+      .todo-card.card-sm {
+        max-width: 224px;
+        min-height: 132px;
+      }
+
+      .todo-card.card-md {
+        max-width: 300px;
+        min-height: 190px;
+      }
+
+      .todo-card.card-lg {
+        max-width: 360px;
+        min-height: 248px;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 10px 7px;
+      }
+
+      .card-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .card-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--wb-accent);
+      }
+
+      .card-meta {
+        flex: 0 0 auto;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .todo-card-body {
+        flex: 1;
+        display: grid;
+        gap: 7px;
+        padding: 0 10px 10px;
+      }
+
+      .todo-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .todo-stat {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+        padding: 6px 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .todo-stat span {
+        color: var(--wb-text-subtle);
+        font-size: 9.5px;
+        line-height: 1.1;
+      }
+
+      .todo-stat strong {
+        color: var(--wb-text);
+        font-size: 15px;
+        line-height: 1;
+        font-weight: 650;
+      }
+
+      .todo-mini-list {
+        display: grid;
+        gap: 5px;
+      }
+
+      .todo-mini-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 14px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 7px;
+        min-height: 28px;
+        padding: 6px 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .todo-mini-row:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .todo-check {
+        width: 13px;
+        height: 13px;
+        border: 1px solid var(--wb-line-strong);
+        border-radius: 999px;
+        background: var(--wb-surface);
+      }
+
+      .todo-check.done {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent);
+        box-shadow: inset 0 0 0 3px var(--wb-surface);
+      }
+
+      .todo-mini-row strong,
+      .todo-mini-row span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .todo-mini-row strong {
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 600;
+      }
+
+      .todo-mini-row span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 2px;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+        border-top: 1px solid var(--wb-line);
+      }
+
+      .card-foot strong {
+        color: var(--wb-text-muted);
+        font-weight: 600;
+      }
+
+      .todo-card.card-sm .todo-mini-row:nth-child(n + 4),
+      .todo-card.card-sm .card-foot {
+        display: none;
+      }
+
+      .todo-card.card-sm .todo-card-body {
+        align-content: start;
+        padding-top: 1px;
+      }
+
+      .todo-card.card-sm .todo-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .todo-card.card-sm .todo-stat:nth-child(3) {
+        display: none;
+      }
+
+      .todo-card.card-sm .todo-mini-row {
+        min-height: 25px;
+        padding: 5px 6px;
+      }
+
+      .todo-card.card-md .todo-mini-row:nth-child(n + 5) {
+        display: none;
+      }
+
+      .todo-card.card-lg .todo-mini-list {
+        gap: 0;
+      }
+
+      .expand-modal {
+        width: min(100%, 680px);
+        height: 390px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 12px;
+        background: var(--wb-surface);
+        box-shadow: 0 14px 36px color-mix(in srgb, var(--wb-shadow-floating) 72%, transparent);
+      }
+
+      .expand-modal.modal-sm {
+        width: min(100%, 560px);
+        height: 330px;
+      }
+
+      .expand-modal.modal-lg {
+        width: min(100%, 800px);
+        height: 450px;
+      }
+
+      .modal-head,
+      .modal-foot {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-color: var(--wb-line);
+        background: color-mix(in srgb, var(--wb-surface-soft) 78%, var(--wb-surface));
+      }
+
+      .modal-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--wb-line);
+      }
+
+      .modal-foot {
+        padding: 8px 12px;
+        border-top: 1px solid var(--wb-line);
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+
+      .modal-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .modal-title-icon {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border-radius: 6px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .modal-title-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .modal-title-main strong {
+        font-size: 14px;
+        line-height: 1.15;
+        font-weight: 680;
+      }
+
+      .modal-title-main span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .icon-close {
+        width: 28px;
+        height: 28px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--wb-text-muted);
+      }
+
+      .icon-close::before,
+      .icon-close::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 10px;
+        height: 1.5px;
+        background: currentColor;
+        transform: translate(-50%, -50%) rotate(45deg);
+      }
+
+      .icon-close {
+        position: relative;
+      }
+
+      .icon-close::after {
+        transform: translate(-50%, -50%) rotate(-45deg);
+      }
+
+      .modal-body {
+        min-height: 0;
+        flex: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 188px;
+        gap: 12px;
+        overflow: hidden;
+        padding: 12px;
+      }
+
+      .modal-main {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        align-content: start;
+      }
+
+      .modal-side {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        align-content: start;
+        gap: 10px;
+      }
+
+      .view-panel {
+        min-height: 0;
+        display: none;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        gap: 10px;
+        padding: 0;
+      }
+
+      .view-panel.is-active {
+        display: grid;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .section-head strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .modal-search,
+      .task-input,
+      .input,
+      .select {
+        width: 100%;
+        height: 34px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 12px;
+        outline: none;
+      }
+
+      .modal-search {
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        color: var(--wb-text-subtle);
+      }
+
+      .task-input,
+      .input,
+      .select {
+        padding: 0 10px;
+      }
+
+      .task-list {
+        min-height: 0;
+        overflow: auto;
+        display: grid;
+        align-content: start;
+        gap: 6px;
+        padding: 0 2px 2px 0;
+      }
+
+      .task-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 24px;
+        padding: 0 2px 3px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .task-list-filter-label {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+
+      .task-list-filter-options {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .task-list-filter-options::-webkit-scrollbar {
+        display: none;
+      }
+
+      .task-group-chip {
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .task-group-chip.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 32%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+
+      .task-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 16px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 9px;
+        min-height: 40px;
+        padding: 7px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .task-row:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .task-row .todo-check {
+        box-sizing: border-box;
+        display: block;
+        align-self: center;
+        width: 14px;
+        height: 14px;
+        padding: 0;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      .task-row.is-muted {
+        opacity: 0.65;
+      }
+
+      .task-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .task-meta {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .task-title-line {
+        min-width: 0;
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .task-copy strong {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 620;
+      }
+
+      .task-meta {
+        display: block;
+        min-width: 0;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .priority {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        font-weight: 620;
+        line-height: 1.2;
+      }
+
+      .priority.high::before {
+        background: var(--wb-danger);
+      }
+
+      .priority.medium::before {
+        background: var(--wb-warn);
+      }
+
+      .filter-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .filter-summary {
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .filter-summary::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--wb-line-strong);
+      }
+
+      .filter-summary.is-primary {
+        border-color: color-mix(in srgb, var(--wb-accent) 30%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+
+      .filter-summary.is-primary::before {
+        background: var(--wb-accent);
+      }
+
+      .btn {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        border-color: color-mix(in srgb, var(--wb-accent) 40%, var(--wb-line));
+        background: var(--wb-accent);
+        color: #fff;
+      }
+
+      .info-card {
+        display: grid;
+        gap: 8px;
+        padding: 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .info-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .info-line strong {
+        color: var(--wb-text);
+        font-weight: 620;
+      }
+
+      .list-chip-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .list-chip {
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 10px;
+      }
+
+      .list-editor {
+        display: grid;
+        align-content: start;
+        gap: 7px;
+      }
+
+      .list-row {
+        display: grid;
+        grid-template-columns: 14px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 6px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .drag-grip {
+        width: 10px;
+        height: 14px;
+        opacity: 0.45;
+        background:
+          radial-gradient(circle at 2px 2px, currentColor 1.2px, transparent 1.3px),
+          radial-gradient(circle at 8px 2px, currentColor 1.2px, transparent 1.3px),
+          radial-gradient(circle at 2px 7px, currentColor 1.2px, transparent 1.3px),
+          radial-gradient(circle at 8px 7px, currentColor 1.2px, transparent 1.3px),
+          radial-gradient(circle at 2px 12px, currentColor 1.2px, transparent 1.3px),
+          radial-gradient(circle at 8px 12px, currentColor 1.2px, transparent 1.3px);
+      }
+
+      .list-copy {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+
+      .list-copy strong {
+        font-size: 12px;
+        font-weight: 620;
+      }
+
+      .list-copy span {
+        overflow: hidden;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .switch-mini {
+        height: 24px;
+        padding: 0 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .switch-mini.is-on {
+        border-color: color-mix(in srgb, var(--wb-accent) 26%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+
+      .inline-create,
+      .task-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+      }
+
+      .task-form {
+        grid-template-columns: minmax(0, 1.4fr) 120px 110px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 8px;
+      }
+
+      .field {
+        display: grid;
+        gap: 5px;
+      }
+
+      .field.is-wide {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .form-note {
+        padding: 8px 9px;
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .footer-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .expand-modal.modal-sm .modal-body {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .expand-modal.modal-sm .modal-side {
+        display: none;
+      }
+
+      .expand-modal.modal-sm .task-form {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .expand-modal.modal-sm .task-form .select {
+        display: none;
+      }
+
+      .expand-modal.modal-lg .task-list {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      @media (max-width: 980px) {
+        body {
+          padding: 18px;
+        }
+
+        .prototype {
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+
+        .expand-modal {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="prototype" aria-label="待办卡片与弹窗独立原型">
+      <section class="preview-rail" aria-label="待办卡片尺寸预览">
+        <div class="toolbar">
+          <div>
+            <strong id="cardSizeName">M 卡片</strong><span id="cardSizeSpec"> · 300 × 190</span>
+          </div>
+          <button class="size-button" id="cardSizeToggle" type="button">切换卡片尺寸</button>
+        </div>
+        <div class="card-stage">
+          <article class="todo-card card-md" id="todoCard" data-od-id="todo-card-md">
+            <header class="card-head">
+              <div class="card-title"><span class="card-dot"></span><span>待办</span></div>
+              <div class="card-meta" id="cardMeta">4 个待办</div>
+            </header>
+            <div class="todo-card-body">
+              <div class="todo-stats" aria-label="待办统计">
+                <div class="todo-stat"><span>今天</span><strong id="todayCountText">3</strong></div>
+                <div class="todo-stat"><span>稍后</span><strong id="laterCountText">2</strong></div>
+                <div class="todo-stat"><span>完成</span><strong id="doneCountText">1</strong></div>
+              </div>
+              <div class="todo-mini-list" id="todoMiniList" aria-label="待办卡片列表"></div>
+              <footer class="card-foot">
+                <span><strong>Enter</strong> 添加 · <strong>Space</strong> 完成</span>
+                <span id="cardFootSize">M · 摘要</span>
+              </footer>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="modal-stage" aria-label="待办展开弹窗">
+        <div class="toolbar">
+          <div>
+            <strong id="modalSizeName">M 弹窗</strong><span id="modalSizeSpec"> · 680 × 390</span>
+          </div>
+          <button class="size-button" id="modalSizeToggle" type="button">切换弹窗尺寸</button>
+        </div>
+
+        <section class="expand-modal modal-md" id="expandModal" data-od-id="todo-modal-md">
+          <header class="modal-head">
+            <div class="modal-title">
+              <div class="modal-title-icon">待</div>
+              <div class="modal-title-main">
+                <strong>待办</strong>
+                <span>个人工作台任务 · 今天优先处理</span>
+              </div>
+            </div>
+            <button class="icon-close" type="button" aria-label="关闭"></button>
+          </header>
+
+          <div class="modal-body">
+            <div class="modal-main">
+              <div class="view-panel is-active" id="tasksView" data-view="tasks">
+                <div class="section-head">
+                  <strong>任务列表</strong>
+                  <div class="filter-tabs" aria-label="待办摘要">
+                    <span class="filter-summary is-primary" id="openSummary">5 项待办</span>
+                  </div>
+                </div>
+                <div class="modal-search">搜索任务、输入清单名或快速新增</div>
+                <div class="task-filter-bar" id="taskFilterBar" aria-label="按清单筛选"></div>
+                <div class="task-list" id="taskList" aria-label="展开后的待办列表"></div>
+              </div>
+
+              <div class="view-panel" id="listsView" data-view="lists">
+                <div class="section-head">
+                  <strong>管理清单</strong>
+                  <span>个人分组 · 显示控制</span>
+                </div>
+                <div class="list-editor" id="listEditor">
+                  <div class="list-row">
+                    <span class="drag-grip" aria-hidden="true"></span>
+                    <div class="list-copy">
+                      <strong>今天</strong><span>3 个任务 · 固定在顶部</span>
+                    </div>
+                    <button class="switch-mini is-on" type="button">已显示</button>
+                  </div>
+                  <div class="list-row">
+                    <span class="drag-grip" aria-hidden="true"></span>
+                    <div class="list-copy">
+                      <strong>稍后</strong><span>2 个任务 · 本周处理</span>
+                    </div>
+                    <button class="switch-mini is-on" type="button">已显示</button>
+                  </div>
+                  <div class="list-row">
+                    <span class="drag-grip" aria-hidden="true"></span>
+                    <div class="list-copy">
+                      <strong>灵感</strong><span>0 个任务 · 临时记录</span>
+                    </div>
+                    <button class="switch-mini" type="button">已隐藏</button>
+                  </div>
+                </div>
+                <div class="inline-create">
+                  <input
+                    class="input"
+                    id="listNameInput"
+                    type="text"
+                    value="本周"
+                    aria-label="新清单名称"
+                  />
+                  <button class="btn" id="addListButton" type="button">新增清单</button>
+                </div>
+              </div>
+
+              <div class="view-panel" id="taskView" data-view="task">
+                <div class="section-head">
+                  <strong>添加任务</strong>
+                  <span>保存后进入个人待办</span>
+                </div>
+                <form class="field-grid" id="taskForm">
+                  <div class="field is-wide">
+                    <label for="taskTitle">任务内容</label>
+                    <input class="input" id="taskTitle" type="text" value="整理插件卡片尺寸规范" />
+                  </div>
+                  <div class="field">
+                    <label for="taskListSelect">所属清单</label>
+                    <select class="select" id="taskListSelect">
+                      <option>今天</option>
+                      <option>稍后</option>
+                      <option>灵感</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="taskPriority">优先级</label>
+                    <select class="select" id="taskPriority">
+                      <option value="medium">中</option>
+                      <option value="high">高</option>
+                      <option value="low">低</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="taskDue">提醒</label>
+                    <input class="input" id="taskDue" type="text" value="今天 16:00" />
+                  </div>
+                  <div class="field">
+                    <label for="taskRepeat">重复</label>
+                    <select class="select" id="taskRepeat">
+                      <option>不重复</option>
+                      <option>每天</option>
+                      <option>每周</option>
+                    </select>
+                  </div>
+                </form>
+                <div class="form-note">
+                  这里保留个人整理需要的信息：清单、优先级、提醒和重复，保存后会进入当前筛选视图。
+                </div>
+              </div>
+            </div>
+
+            <aside class="modal-side" aria-label="待办配置">
+              <div class="section-head">
+                <strong>概览</strong>
+                <span id="modalDefaultSize">M · 常规</span>
+              </div>
+              <div class="info-card">
+                <div class="info-line">
+                  <span>今日任务</span><strong id="todaySideCountText">3</strong>
+                </div>
+                <div class="info-line">
+                  <span>已完成</span><strong id="doneSideCountText">1</strong>
+                </div>
+                <div class="info-line"><span>过期</span><strong>0</strong></div>
+              </div>
+              <div class="info-card">
+                <div class="section-head">
+                  <strong>清单</strong><span id="listCountText">3 组</span>
+                </div>
+                <div class="list-chip-group" id="listChipGroup">
+                  <span class="list-chip">今天</span>
+                  <span class="list-chip">稍后</span>
+                  <span class="list-chip">灵感</span>
+                </div>
+              </div>
+              <div class="info-card">
+                <div class="info-line"><span>默认提醒</span><strong>当天 09:00</strong></div>
+                <div class="info-line"><span>快捷键</span><strong>N 新建</strong></div>
+              </div>
+            </aside>
+          </div>
+
+          <footer class="modal-foot">
+            <span id="modalDescription"
+              >中尺寸用于常规待办整理，任务列表和个人配置保持左右分区。</span
+            >
+            <div class="footer-actions">
+              <button class="btn" id="manageListsBtn" type="button">管理清单</button>
+              <button class="btn btn-primary" id="addTaskBtn" type="button">添加任务</button>
+            </div>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const cardSizes = [
+        {
+          key: "sm",
+          name: "S 卡片",
+          spec: " · 224 × 132",
+          meta: "3 个待办",
+          foot: "S · 2 条任务",
+          od: "todo-card-sm",
+          visible: 2,
+        },
+        {
+          key: "md",
+          name: "M 卡片",
+          spec: " · 300 × 190",
+          meta: "4 个待办",
+          foot: "M · 3 条任务",
+          od: "todo-card-md",
+          visible: 3,
+        },
+        {
+          key: "lg",
+          name: "L 卡片",
+          spec: " · 360 × 248",
+          meta: "6 个待办",
+          foot: "L · 5 条任务",
+          od: "todo-card-lg",
+          visible: 5,
+        },
+      ]
+
+      const modalSizes = [
+        {
+          key: "sm",
+          name: "S 弹窗",
+          spec: " · 560 × 330",
+          defaultSize: "S · 轻量",
+          description: "小尺寸只保留任务列表和快速添加，适合单卡片轻操作。",
+        },
+        {
+          key: "md",
+          name: "M 弹窗",
+          spec: " · 680 × 390",
+          defaultSize: "M · 常规",
+          description: "中尺寸用于常规待办整理，任务列表和个人配置保持左右分区。",
+        },
+        {
+          key: "lg",
+          name: "L 弹窗",
+          spec: " · 800 × 450",
+          defaultSize: "L · 扩展",
+          description: "大尺寸承载更多任务，列表双列展开，适合批量整理清单。",
+        },
+      ]
+
+      let tasks = [
+        {
+          title: "复盘工作台插件 PRD",
+          list: "今天",
+          priority: "high",
+          due: "今天 16:00",
+          done: false,
+        },
+        {
+          title: "整理快捷入口卡片尺寸",
+          list: "今天",
+          priority: "medium",
+          due: "今天 18:00",
+          done: false,
+        },
+        {
+          title: "确认待办弹窗信息层级",
+          list: "今天",
+          priority: "medium",
+          due: "今晚",
+          done: false,
+        },
+        { title: "补充插件市场导入流程", list: "稍后", priority: "low", due: "本周", done: false },
+        { title: "记录 Stream 布局反馈", list: "稍后", priority: "low", due: "周五", done: false },
+        { title: "归档旧版任务字段", list: "今天", priority: "medium", due: "已完成", done: true },
+      ]
+
+      let cardIndex = 1
+      let modalIndex = 1
+      let activeView = "tasks"
+      let activeFilter = "today"
+      let listCount = 3
+
+      const todoCard = document.getElementById("todoCard")
+      const cardSizeName = document.getElementById("cardSizeName")
+      const cardSizeSpec = document.getElementById("cardSizeSpec")
+      const cardMeta = document.getElementById("cardMeta")
+      const cardFootSize = document.getElementById("cardFootSize")
+      const cardSizeToggle = document.getElementById("cardSizeToggle")
+      const todoMiniList = document.getElementById("todoMiniList")
+      const todayCountText = document.getElementById("todayCountText")
+      const laterCountText = document.getElementById("laterCountText")
+      const doneCountText = document.getElementById("doneCountText")
+      const todaySideCountText = document.getElementById("todaySideCountText")
+      const doneSideCountText = document.getElementById("doneSideCountText")
+      const openSummary = document.getElementById("openSummary")
+
+      const expandModal = document.getElementById("expandModal")
+      const modalSizeName = document.getElementById("modalSizeName")
+      const modalSizeSpec = document.getElementById("modalSizeSpec")
+      const modalDefaultSize = document.getElementById("modalDefaultSize")
+      const modalDescription = document.getElementById("modalDescription")
+      const modalSizeToggle = document.getElementById("modalSizeToggle")
+      const taskFilterBar = document.getElementById("taskFilterBar")
+      const taskList = document.getElementById("taskList")
+      const manageListsBtn = document.getElementById("manageListsBtn")
+      const addTaskBtn = document.getElementById("addTaskBtn")
+      const addListButton = document.getElementById("addListButton")
+      const listEditor = document.getElementById("listEditor")
+      const listNameInput = document.getElementById("listNameInput")
+      const listChipGroup = document.getElementById("listChipGroup")
+      const listCountText = document.getElementById("listCountText")
+      const taskTitle = document.getElementById("taskTitle")
+      const taskListSelect = document.getElementById("taskListSelect")
+      const taskPriority = document.getElementById("taskPriority")
+      const taskDue = document.getElementById("taskDue")
+      const views = {
+        tasks: document.getElementById("tasksView"),
+        lists: document.getElementById("listsView"),
+        task: document.getElementById("taskView"),
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+      }
+
+      function counts() {
+        return {
+          today: tasks.filter((task) => task.list === "今天" && !task.done).length,
+          later: tasks.filter((task) => task.list !== "今天" && !task.done).length,
+          done: tasks.filter((task) => task.done).length,
+          open: tasks.filter((task) => !task.done).length,
+        }
+      }
+
+      function priorityLabel(priority) {
+        if (priority === "high") return "高"
+        if (priority === "medium") return "中"
+        return "低"
+      }
+
+      function taskMetaText(task) {
+        const list = task.list.trim()
+        let due = task.due.trim()
+        if (due === list) {
+          due = ""
+        } else if (due.startsWith(`${list} `)) {
+          due = due.slice(list.length).trim()
+        }
+        return [list, due, task.done ? "已完成" : "未完成"].filter(Boolean).join(" · ")
+      }
+
+      function filteredTasks() {
+        if (activeFilter === "done") return tasks.filter((task) => task.done)
+        if (activeFilter.startsWith("list:")) {
+          const listName = activeFilter.slice(5)
+          return tasks.filter((task) => task.list === listName && !task.done)
+        }
+        if (activeFilter === "all") return tasks.filter((task) => !task.done)
+        if (activeFilter === "today")
+          return tasks.filter((task) => task.list === "今天" && !task.done)
+        if (activeFilter === "later")
+          return tasks.filter((task) => task.list !== "今天" && !task.done)
+        return tasks.filter((task) => !task.done)
+      }
+
+      function isFilterActive(filter) {
+        if (activeFilter === filter) return true
+        if (activeFilter === "today" && filter === "list:今天") return true
+        if (activeFilter === "later" && filter === "list:稍后") return true
+        return false
+      }
+
+      function renderStats() {
+        const data = counts()
+        todayCountText.textContent = data.today
+        laterCountText.textContent = data.later
+        doneCountText.textContent = data.done
+        todaySideCountText.textContent = data.today
+        doneSideCountText.textContent = data.done
+        openSummary.textContent = `${data.open} 项待办`
+        cardMeta.textContent = `${data.open} 个待办`
+      }
+
+      function renderMiniList() {
+        const visibleCount = cardSizes[cardIndex].visible
+        todoMiniList.innerHTML = tasks
+          .filter((task) => !task.done)
+          .slice(0, visibleCount)
+          .map(
+            (task) => `
+            <div class="todo-mini-row">
+              <span class="todo-check"></span>
+              <strong>${escapeHtml(task.title)}</strong>
+              <span>${escapeHtml(task.due)}</span>
+            </div>
+          `,
+          )
+          .join("")
+      }
+
+      function taskFilterItems() {
+        const listNames = Array.from(taskListSelect.options)
+          .map((option) => option.textContent.trim())
+          .filter(Boolean)
+        return [
+          { label: "全部", filter: "all" },
+          ...listNames.map((name) => ({ label: name, filter: `list:${name}` })),
+          { label: "已完成", filter: "done" },
+        ]
+      }
+
+      function renderTaskFilters() {
+        taskFilterBar.innerHTML = `
+          <span class="task-list-filter-label">按清单</span>
+          <div class="task-list-filter-options">
+            ${taskFilterItems()
+              .map(
+                (item) => `
+              <button class="task-group-chip ${isFilterActive(item.filter) ? "is-active" : ""}" type="button" data-list-filter="${escapeHtml(item.filter)}">${escapeHtml(item.label)}</button>
+            `,
+              )
+              .join("")}
+          </div>
+        `
+      }
+
+      function renderTaskList() {
+        const rows = filteredTasks()
+        const rowsMarkup = rows
+          .map(
+            (task, index) => `
+            <div class="task-row ${task.done ? "is-muted" : ""}">
+              <button class="todo-check ${task.done ? "done" : ""}" type="button" data-task-title="${escapeHtml(task.title)}" aria-label="切换完成"></button>
+              <div class="task-copy">
+                <div class="task-title-line">
+                  <strong>${escapeHtml(task.title)}</strong>
+                </div>
+                <span class="task-meta">${escapeHtml(taskMetaText(task))}</span>
+              </div>
+              <span class="priority ${escapeHtml(task.priority)}">${priorityLabel(task.priority)}</span>
+            </div>
+          `,
+          )
+          .join("")
+        taskList.innerHTML = rowsMarkup
+
+        if (!rows.length) {
+          taskList.innerHTML =
+            '<div class="task-row is-muted"><span class="todo-check done"></span><div class="task-copy"><div class="task-title-line"><strong>没有任务</strong></div><span class="task-meta">当前筛选下暂无内容</span></div><span class="priority">空</span></div>'
+        }
+      }
+
+      function refresh() {
+        renderStats()
+        renderMiniList()
+        renderTaskFilters()
+        renderTaskList()
+      }
+
+      function applyCardSize(size) {
+        todoCard.className = `todo-card card-${size.key}`
+        todoCard.dataset.odId = size.od
+        cardSizeName.textContent = size.name
+        cardSizeSpec.textContent = size.spec
+        cardFootSize.textContent = size.foot
+        cardSizeToggle.setAttribute("aria-label", `切换卡片尺寸，当前为 ${size.name}`)
+        renderStats()
+      }
+
+      function applyModalSize(size) {
+        expandModal.className = `expand-modal modal-${size.key}`
+        expandModal.dataset.odId = `todo-modal-${size.key}`
+        modalSizeName.textContent = size.name
+        modalSizeSpec.textContent = size.spec
+        modalDefaultSize.textContent = size.defaultSize
+        if (activeView === "tasks") {
+          modalDescription.textContent = size.description
+        }
+        modalSizeToggle.setAttribute("aria-label", `切换弹窗尺寸，当前为 ${size.name}`)
+      }
+
+      function setView(view) {
+        activeView = view
+        Object.entries(views).forEach(([key, node]) => {
+          node.classList.toggle("is-active", key === view)
+        })
+
+        if (view === "lists") {
+          manageListsBtn.textContent = "完成"
+          addTaskBtn.textContent = "添加任务"
+          modalDescription.textContent = "正在管理个人清单：调整显示状态，并快速新增一个任务分组。"
+        } else if (view === "task") {
+          manageListsBtn.textContent = "取消"
+          addTaskBtn.textContent = "保存任务"
+          modalDescription.textContent = "正在添加个人任务：设置清单、优先级、提醒和重复规则。"
+        } else {
+          manageListsBtn.textContent = "管理清单"
+          addTaskBtn.textContent = "添加任务"
+          modalDescription.textContent = modalSizes[modalIndex].description
+        }
+      }
+
+      function addTask() {
+        const title = taskTitle.value.trim() || "新任务"
+        tasks.unshift({
+          title,
+          list: taskListSelect.value,
+          priority: taskPriority.value,
+          due: taskDue.value.trim() || "今天",
+          done: false,
+        })
+        activeFilter = `list:${taskListSelect.value}`
+        refresh()
+        setView("tasks")
+      }
+
+      function addList() {
+        const name = listNameInput.value.trim() || "新清单"
+        const safeName = escapeHtml(name)
+        const row = document.createElement("div")
+        row.className = "list-row"
+        row.innerHTML = `
+          <span class="drag-grip" aria-hidden="true"></span>
+          <div class="list-copy"><strong>${safeName}</strong><span>0 个任务 · 新增清单</span></div>
+          <button class="switch-mini is-on" type="button">已显示</button>
+        `
+        listEditor.appendChild(row)
+
+        const chip = document.createElement("span")
+        chip.className = "list-chip"
+        chip.textContent = name
+        listChipGroup.appendChild(chip)
+
+        const option = document.createElement("option")
+        option.textContent = name
+        taskListSelect.appendChild(option)
+        listCount += 1
+        listCountText.textContent = `${listCount} 组`
+        listNameInput.value = "下周"
+      }
+
+      cardSizeToggle.addEventListener("click", () => {
+        cardIndex = (cardIndex + 1) % cardSizes.length
+        applyCardSize(cardSizes[cardIndex])
+      })
+
+      modalSizeToggle.addEventListener("click", () => {
+        modalIndex = (modalIndex + 1) % modalSizes.length
+        applyModalSize(modalSizes[modalIndex])
+      })
+
+      taskFilterBar.addEventListener("click", (event) => {
+        const filterButton = event.target.closest(".task-group-chip")
+        if (!filterButton) return
+        activeFilter = filterButton.dataset.listFilter
+        refresh()
+      })
+
+      taskList.addEventListener("click", (event) => {
+        const button = event.target.closest(".todo-check")
+        if (!button) return
+        const title = button.dataset.taskTitle
+        const task = tasks.find((item) => item.title === title)
+        if (task) {
+          task.done = !task.done
+          refresh()
+        }
+      })
+
+      manageListsBtn.addEventListener("click", () => {
+        if (activeView === "lists" || activeView === "task") {
+          setView("tasks")
+        } else {
+          setView("lists")
+        }
+      })
+
+      addTaskBtn.addEventListener("click", () => {
+        if (activeView === "task") {
+          addTask()
+        } else {
+          setView("task")
+        }
+      })
+
+      addListButton.addEventListener("click", addList)
+
+      applyCardSize(cardSizes[cardIndex])
+      applyModalSize(modalSizes[modalIndex])
+      refresh()
+    </script>
+  </body>
+</html>

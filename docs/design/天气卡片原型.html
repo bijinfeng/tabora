@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 天气卡片与弹窗独立原型</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-soft: #eaf5f0;
+        --wb-warn: #b7791f;
+        --wb-warn-soft: #fff4dc;
+        --wb-danger: #b4453f;
+        --wb-danger-soft: #f7e9e8;
+        --wb-shadow-floating: rgba(0, 0, 0, 0.14);
+        --wb-focus-ring: rgba(26, 144, 112, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        padding: 28px;
+        background:
+          linear-gradient(rgba(28, 30, 28, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(28, 30, 28, 0.035) 1px, transparent 1px), var(--wb-page);
+        background-size: 24px 24px;
+        color: var(--wb-text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      select {
+        font: inherit;
+      }
+
+      .prototype {
+        width: min(100%, 1180px);
+        min-height: calc(100vh - 56px);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+
+      .preview-rail,
+      .modal-stage {
+        display: grid;
+        gap: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .toolbar strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .size-button,
+      .ghost-button,
+      .primary-button {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: default;
+      }
+
+      .size-button::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-1px);
+        opacity: 0.55;
+      }
+
+      .size-button:hover,
+      .ghost-button:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .primary-button {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent);
+        color: #fff;
+      }
+
+      .card-stage {
+        min-height: 300px;
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        padding: 18px;
+        border: 1px solid var(--wb-line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--wb-surface) 70%, transparent);
+      }
+
+      .weather-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--wb-shadow-floating) 26%, transparent);
+      }
+
+      .weather-card.card-sm {
+        max-width: 224px;
+        min-height: 132px;
+      }
+
+      .weather-card.card-md {
+        max-width: 300px;
+        min-height: 190px;
+      }
+
+      .weather-card.card-lg {
+        max-width: 360px;
+        min-height: 248px;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 10px 7px;
+      }
+
+      .card-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .card-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--wb-accent);
+      }
+
+      .card-meta {
+        flex: 0 0 auto;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .weather-card-body {
+        flex: 1;
+        display: grid;
+        gap: 8px;
+        padding: 0 10px 10px;
+      }
+
+      .weather-now {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px;
+        align-items: center;
+        padding: 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .weather-temp {
+        font-size: 28px;
+        line-height: 0.95;
+        font-weight: 720;
+        letter-spacing: -0.02em;
+      }
+
+      .weather-state {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .weather-state strong {
+        overflow: hidden;
+        color: var(--wb-text);
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .weather-state span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .weather-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .metric {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+        padding: 6px 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .metric b {
+        overflow: hidden;
+        font-size: 11px;
+        line-height: 1.1;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .metric span {
+        color: var(--wb-text-subtle);
+        font-size: 9px;
+        line-height: 1.1;
+      }
+
+      .hour-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .hour-pill {
+        display: grid;
+        gap: 2px;
+        padding: 6px 5px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+        text-align: center;
+      }
+
+      .hour-pill b {
+        font-size: 10px;
+        line-height: 1.1;
+      }
+
+      .hour-pill span {
+        color: var(--wb-text-subtle);
+        font-size: 9px;
+        line-height: 1.1;
+      }
+
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 7px 10px 9px;
+        border-top: 1px solid var(--wb-line);
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .weather-card.card-sm .weather-metrics,
+      .weather-card.card-sm .hour-strip,
+      .weather-card.card-sm .card-foot {
+        display: none;
+      }
+
+      .weather-card.card-sm .weather-card-body {
+        align-content: center;
+      }
+
+      .weather-card.card-sm .weather-now {
+        padding: 8px;
+      }
+
+      .weather-card.card-sm .weather-temp {
+        font-size: 24px;
+      }
+
+      .weather-card.card-md .hour-pill:nth-child(n + 4),
+      .weather-card.card-md .metric:nth-child(3) {
+        display: none;
+      }
+
+      .weather-card.card-lg .hour-strip {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .expand-modal {
+        width: 640px;
+        min-height: 380px;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 10px;
+        background: var(--wb-surface);
+        box-shadow: 0 22px 54px color-mix(in srgb, var(--wb-shadow-floating) 72%, transparent);
+      }
+
+      .expand-modal.modal-sm {
+        width: 520px;
+        min-height: 320px;
+      }
+
+      .expand-modal.modal-lg {
+        width: 760px;
+        min-height: 440px;
+      }
+
+      .modal-head,
+      .modal-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        background: var(--wb-surface-soft);
+      }
+
+      .modal-head {
+        border-bottom: 1px solid var(--wb-line);
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--wb-line);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .modal-title {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .modal-title strong {
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .modal-title span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .head-actions,
+      .foot-actions {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .modal-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 210px;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .modal-main,
+      .modal-side {
+        min-width: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .now-panel,
+      .view-panel,
+      .side-panel {
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .now-panel {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+      }
+
+      .now-temp {
+        font-size: 44px;
+        line-height: 0.95;
+        font-weight: 750;
+        letter-spacing: -0.03em;
+      }
+
+      .now-copy {
+        display: grid;
+        gap: 4px;
+      }
+
+      .now-copy strong {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      .now-copy span,
+      .now-note {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .aqi {
+        display: grid;
+        gap: 3px;
+        justify-items: end;
+      }
+
+      .aqi b {
+        font-size: 13px;
+        line-height: 1.1;
+      }
+
+      .aqi span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+
+      .tab-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .tab-button {
+        height: 26px;
+        padding: 0 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .tab-button.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-text);
+      }
+
+      .view-panel {
+        padding: 10px;
+      }
+
+      .view-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .hour-list,
+      .forecast-list,
+      .advice-list,
+      .city-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .weather-row,
+      .city-row,
+      .advice-row {
+        display: grid;
+        grid-template-columns: 56px 1fr auto;
+        gap: 8px;
+        align-items: center;
+        min-height: 36px;
+        padding: 7px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .weather-row b,
+      .city-row b,
+      .advice-row b {
+        font-size: 12px;
+        line-height: 1.15;
+      }
+
+      .weather-row span,
+      .city-row span,
+      .advice-row span {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      .weather-row em,
+      .city-row em,
+      .advice-row em {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        font-style: normal;
+        white-space: nowrap;
+      }
+
+      .side-panel {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .side-title {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .select {
+        height: 32px;
+        width: 100%;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      .mini-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .mini-stat {
+        display: grid;
+        gap: 2px;
+        padding: 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .mini-stat b {
+        font-size: 12px;
+        line-height: 1.1;
+      }
+
+      .mini-stat span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 980px) {
+        body {
+          padding: 18px;
+        }
+
+        .prototype {
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+
+        .expand-modal,
+        .expand-modal.modal-sm,
+        .expand-modal.modal-lg {
+          width: min(100%, 760px);
+        }
+      }
+
+      @media (max-width: 680px) {
+        .modal-body {
+          grid-template-columns: 1fr;
+        }
+
+        .now-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .aqi {
+          justify-items: start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="prototype" aria-label="天气卡片与弹窗独立原型">
+      <section class="preview-rail" aria-label="天气卡片尺寸预览">
+        <div class="toolbar">
+          <div>
+            <strong>天气卡片</strong>
+            <span id="cardSpec"> · M 卡片 · 300 × 190</span>
+          </div>
+          <button class="size-button" id="cardSizeButton" type="button">切换卡片尺寸</button>
+        </div>
+        <div class="card-stage">
+          <article class="weather-card card-md" id="weatherCard" data-od-id="weather-card-md">
+            <header class="card-head">
+              <div class="card-title"><span class="card-dot"></span><span>天气</span></div>
+              <div class="card-meta" id="cardMeta">北京 · 已更新</div>
+            </header>
+            <div class="weather-card-body">
+              <div class="weather-now">
+                <div class="weather-temp" id="cardTemp">22°</div>
+                <div class="weather-state">
+                  <strong id="cardCondition">晴朗，体感舒适</strong>
+                  <span id="cardLocation">北京 · 海淀 · 今天 16:20</span>
+                </div>
+              </div>
+              <div class="weather-metrics" aria-label="天气指标">
+                <div class="metric"><b id="cardHumidity">45%</b><span>湿度</span></div>
+                <div class="metric"><b id="cardWind">12km/h</b><span>西南风</span></div>
+                <div class="metric"><b id="cardAqi">38</b><span>空气优</span></div>
+              </div>
+              <div class="hour-strip" id="cardHours" aria-label="小时天气"></div>
+            </div>
+            <footer class="card-foot">
+              <span id="cardFoot">M · 显示指标与 3 小时趋势</span>
+              <span>点击查看</span>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="modal-stage" aria-label="天气展开弹窗">
+        <div class="toolbar">
+          <div>
+            <strong>展开弹窗</strong>
+            <span id="modalSpec"> · M 弹窗 · 640 × 380</span>
+          </div>
+          <button class="size-button" id="modalSizeButton" type="button">切换弹窗尺寸</button>
+        </div>
+        <section class="expand-modal modal-md" id="expandModal" data-od-id="weather-modal-md">
+          <header class="modal-head">
+            <div class="modal-title">
+              <strong>天气</strong>
+              <span id="modalDescription">中尺寸用于查看当前天气、小时趋势和个人提醒。</span>
+            </div>
+            <div class="head-actions">
+              <button class="ghost-button" id="refreshButton" type="button">刷新</button>
+              <button class="ghost-button" type="button">关闭</button>
+            </div>
+          </header>
+
+          <div class="modal-body">
+            <div class="modal-main">
+              <section class="now-panel" aria-label="当前天气">
+                <div class="now-temp" id="modalTemp">22°</div>
+                <div class="now-copy">
+                  <strong id="modalCondition">晴朗，体感舒适</strong>
+                  <span id="modalPlace">北京 · 海淀 · 今天 16:20 更新</span>
+                  <span class="now-note" id="modalNote">晚间温差 7°，通勤建议带薄外套。</span>
+                </div>
+                <div class="aqi">
+                  <b id="modalAqi">AQI 38</b>
+                  <span>空气优</span>
+                </div>
+              </section>
+
+              <div class="tab-row" aria-label="天气视图切换">
+                <button class="tab-button is-active" data-view="hourly" type="button">
+                  逐小时
+                </button>
+                <button class="tab-button" data-view="forecast" type="button">三日趋势</button>
+                <button class="tab-button" data-view="advice" type="button">生活建议</button>
+              </div>
+
+              <section class="view-panel" id="hourlyView" aria-label="逐小时天气">
+                <div class="view-head"><span>未来 5 小时</span><span>温度 · 风 · 降水</span></div>
+                <div class="hour-list" id="hourList"></div>
+              </section>
+
+              <section class="view-panel hidden" id="forecastView" aria-label="三日趋势">
+                <div class="view-head"><span>未来三天</span><span>高低温 · 天气</span></div>
+                <div class="forecast-list" id="forecastList"></div>
+              </section>
+
+              <section class="view-panel hidden" id="adviceView" aria-label="生活建议">
+                <div class="view-head"><span>个人提醒</span><span>通勤 · 晾晒 · 运动</span></div>
+                <div class="advice-list" id="adviceList"></div>
+              </section>
+            </div>
+
+            <aside class="modal-side" aria-label="天气配置">
+              <section class="side-panel">
+                <div class="side-title">城市</div>
+                <select class="select" id="citySelect" aria-label="选择城市">
+                  <option value="beijing">北京 · 海淀</option>
+                  <option value="shanghai">上海 · 徐汇</option>
+                  <option value="shenzhen">深圳 · 南山</option>
+                </select>
+                <div class="city-list" id="cityList"></div>
+              </section>
+
+              <section class="side-panel">
+                <div class="side-title">关注指标</div>
+                <div class="mini-grid">
+                  <div class="mini-stat"><b id="sideHumidity">45%</b><span>湿度</span></div>
+                  <div class="mini-stat"><b id="sideWind">12km/h</b><span>风速</span></div>
+                  <div class="mini-stat"><b id="sideRain">5%</b><span>降水</span></div>
+                  <div class="mini-stat"><b id="sideUv">中等</b><span>紫外线</span></div>
+                </div>
+              </section>
+            </aside>
+          </div>
+
+          <footer class="modal-foot">
+            <span id="modalFoot">Enter 刷新 · ↑↓ 切换城市</span>
+            <div class="foot-actions">
+              <button class="ghost-button" type="button">管理城市</button>
+              <button class="primary-button" id="saveButton" type="button">保存到卡片</button>
+            </div>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const cardSizes = [
+        {
+          key: "sm",
+          name: "S 卡片",
+          spec: " · 224 × 132",
+          foot: "S · 仅显示当前天气",
+          od: "weather-card-sm",
+        },
+        {
+          key: "md",
+          name: "M 卡片",
+          spec: " · 300 × 190",
+          foot: "M · 显示指标与 3 小时趋势",
+          od: "weather-card-md",
+        },
+        {
+          key: "lg",
+          name: "L 卡片",
+          spec: " · 360 × 248",
+          foot: "L · 显示完整指标与 5 小时趋势",
+          od: "weather-card-lg",
+        },
+      ]
+
+      const modalSizes = [
+        {
+          key: "sm",
+          name: "S 弹窗",
+          spec: " · 520 × 320",
+          od: "weather-modal-sm",
+          description: "小尺寸用于快速查看当前天气和最近几小时变化。",
+        },
+        {
+          key: "md",
+          name: "M 弹窗",
+          spec: " · 640 × 380",
+          od: "weather-modal-md",
+          description: "中尺寸用于查看当前天气、小时趋势和个人提醒。",
+        },
+        {
+          key: "lg",
+          name: "L 弹窗",
+          spec: " · 760 × 440",
+          od: "weather-modal-lg",
+          description: "大尺寸用于同时查看小时趋势、三日预测和城市配置。",
+        },
+      ]
+
+      const weatherData = {
+        beijing: {
+          city: "北京",
+          district: "海淀",
+          temp: "22°",
+          condition: "晴朗，体感舒适",
+          time: "今天 16:20",
+          note: "晚间温差 7°，通勤建议带薄外套。",
+          humidity: "45%",
+          wind: "12km/h",
+          aqi: "38",
+          rain: "5%",
+          uv: "中等",
+          hours: [
+            ["17:00", "22°", "微风 · 5%"],
+            ["18:00", "21°", "微风 · 5%"],
+            ["19:00", "19°", "西南风 · 3%"],
+            ["20:00", "18°", "西南风 · 3%"],
+            ["21:00", "17°", "体感偏凉"],
+          ],
+          forecast: [
+            ["今天", "24° / 17°", "晴 · 晚间转凉"],
+            ["明天", "26° / 18°", "多云 · 午后有风"],
+            ["后天", "25° / 19°", "阴 · 降水 20%"],
+          ],
+          advice: [
+            ["通勤", "傍晚风力较小，适合骑行或步行。", "低风险"],
+            ["晾晒", "17:00 前光照较好，晚间湿度上升。", "建议提前收衣"],
+            ["运动", "空气质量优，适合户外慢跑。", "18:30 前"],
+          ],
+          cities: [
+            ["北京 · 海淀", "当前城市", "22°"],
+            ["北京 · 朝阳", "同城关注", "23°"],
+            ["北京 · 昌平", "周末常用", "20°"],
+          ],
+        },
+        shanghai: {
+          city: "上海",
+          district: "徐汇",
+          temp: "27°",
+          condition: "多云，湿度偏高",
+          time: "今天 16:20",
+          note: "晚高峰体感闷热，建议打开降水提醒。",
+          humidity: "72%",
+          wind: "9km/h",
+          aqi: "42",
+          rain: "18%",
+          uv: "偏弱",
+          hours: [
+            ["17:00", "27°", "多云 · 18%"],
+            ["18:00", "26°", "多云 · 20%"],
+            ["19:00", "25°", "闷热 · 22%"],
+            ["20:00", "25°", "东南风 · 18%"],
+            ["21:00", "24°", "湿度 76%"],
+          ],
+          forecast: [
+            ["今天", "29° / 24°", "多云 · 湿度偏高"],
+            ["明天", "30° / 25°", "阵雨 · 午后明显"],
+            ["后天", "28° / 24°", "阴 · 风力较弱"],
+          ],
+          advice: [
+            ["通勤", "晚高峰湿度较高，地铁比步行更舒适。", "注意闷热"],
+            ["晾晒", "晚间湿度高，不建议户外晾晒。", "不推荐"],
+            ["运动", "适合室内力量训练，户外注意补水。", "轻量"],
+          ],
+          cities: [
+            ["上海 · 徐汇", "当前城市", "27°"],
+            ["上海 · 静安", "通勤关注", "27°"],
+            ["上海 · 浦东", "机场关注", "28°"],
+          ],
+        },
+        shenzhen: {
+          city: "深圳",
+          district: "南山",
+          temp: "29°",
+          condition: "阵雨间歇，体感闷热",
+          time: "今天 16:20",
+          note: "未来两小时有短时阵雨，外出建议带伞。",
+          humidity: "78%",
+          wind: "14km/h",
+          aqi: "31",
+          rain: "46%",
+          uv: "偏弱",
+          hours: [
+            ["17:00", "29°", "阵雨 · 46%"],
+            ["18:00", "28°", "小雨 · 38%"],
+            ["19:00", "28°", "多云 · 24%"],
+            ["20:00", "27°", "南风 · 18%"],
+            ["21:00", "27°", "湿度 80%"],
+          ],
+          forecast: [
+            ["今天", "31° / 26°", "阵雨 · 闷热"],
+            ["明天", "32° / 27°", "雷阵雨 · 午后"],
+            ["后天", "31° / 26°", "多云 · 有风"],
+          ],
+          advice: [
+            ["通勤", "短时阵雨概率高，建议预留 10 分钟。", "带伞"],
+            ["晾晒", "不建议户外晾晒，湿度持续偏高。", "不推荐"],
+            ["运动", "雨停后适合轻量散步，不建议长跑。", "低强度"],
+          ],
+          cities: [
+            ["深圳 · 南山", "当前城市", "29°"],
+            ["深圳 · 福田", "通勤关注", "30°"],
+            ["深圳 · 宝安", "机场关注", "29°"],
+          ],
+        },
+      }
+
+      const weatherCard = document.getElementById("weatherCard")
+      const expandModal = document.getElementById("expandModal")
+      const cardSizeButton = document.getElementById("cardSizeButton")
+      const modalSizeButton = document.getElementById("modalSizeButton")
+      const cardSpec = document.getElementById("cardSpec")
+      const modalSpec = document.getElementById("modalSpec")
+      const cardFoot = document.getElementById("cardFoot")
+      const modalDescription = document.getElementById("modalDescription")
+      const citySelect = document.getElementById("citySelect")
+      const refreshButton = document.getElementById("refreshButton")
+      const saveButton = document.getElementById("saveButton")
+
+      let cardIndex = 1
+      let modalIndex = 1
+      let currentCity = "beijing"
+
+      function setText(id, value) {
+        document.getElementById(id).textContent = value
+      }
+
+      function renderWeather() {
+        const data = weatherData[currentCity]
+        const place = `${data.city} · ${data.district}`
+        setText("cardMeta", `${data.city} · 已更新`)
+        setText("cardTemp", data.temp)
+        setText("cardCondition", data.condition)
+        setText("cardLocation", `${place} · ${data.time}`)
+        setText("cardHumidity", data.humidity)
+        setText("cardWind", data.wind)
+        setText("cardAqi", data.aqi)
+        setText("modalTemp", data.temp)
+        setText("modalCondition", data.condition)
+        setText("modalPlace", `${place} · ${data.time} 更新`)
+        setText("modalNote", data.note)
+        setText("modalAqi", `AQI ${data.aqi}`)
+        setText("sideHumidity", data.humidity)
+        setText("sideWind", data.wind)
+        setText("sideRain", data.rain)
+        setText("sideUv", data.uv)
+
+        document.getElementById("cardHours").innerHTML = data.hours
+          .map(
+            ([time, temp, desc]) =>
+              `<div class="hour-pill"><b>${time}</b><span>${temp} · ${desc.split(" · ")[0]}</span></div>`,
+          )
+          .join("")
+        document.getElementById("hourList").innerHTML = data.hours
+          .map(
+            ([time, temp, desc]) =>
+              `<div class="weather-row"><b>${time}</b><span>${temp} · ${desc}</span><em>逐小时</em></div>`,
+          )
+          .join("")
+        document.getElementById("forecastList").innerHTML = data.forecast
+          .map(
+            ([day, temp, desc]) =>
+              `<div class="weather-row"><b>${day}</b><span>${temp} · ${desc}</span><em>趋势</em></div>`,
+          )
+          .join("")
+        document.getElementById("adviceList").innerHTML = data.advice
+          .map(
+            ([name, desc, tag]) =>
+              `<div class="advice-row"><b>${name}</b><span>${desc}</span><em>${tag}</em></div>`,
+          )
+          .join("")
+        document.getElementById("cityList").innerHTML = data.cities
+          .map(
+            ([name, desc, temp]) =>
+              `<div class="city-row"><b>${name}</b><span>${desc}</span><em>${temp}</em></div>`,
+          )
+          .join("")
+      }
+
+      function applyCardSize() {
+        const size = cardSizes[cardIndex]
+        weatherCard.className = `weather-card card-${size.key}`
+        weatherCard.dataset.odId = size.od
+        cardSpec.textContent = ` · ${size.name}${size.spec}`
+        cardFoot.textContent = size.foot
+      }
+
+      function applyModalSize() {
+        const size = modalSizes[modalIndex]
+        expandModal.className = `expand-modal modal-${size.key}`
+        expandModal.dataset.odId = size.od
+        modalSpec.textContent = ` · ${size.name}${size.spec}`
+        modalDescription.textContent = size.description
+      }
+
+      cardSizeButton.addEventListener("click", () => {
+        cardIndex = (cardIndex + 1) % cardSizes.length
+        applyCardSize()
+      })
+
+      modalSizeButton.addEventListener("click", () => {
+        modalIndex = (modalIndex + 1) % modalSizes.length
+        applyModalSize()
+      })
+
+      citySelect.addEventListener("change", (event) => {
+        currentCity = event.target.value
+        renderWeather()
+      })
+
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab-button")
+            .forEach((item) => item.classList.remove("is-active"))
+          button.classList.add("is-active")
+          document.querySelectorAll(".view-panel").forEach((panel) => panel.classList.add("hidden"))
+          document.getElementById(`${button.dataset.view}View`).classList.remove("hidden")
+        })
+      })
+
+      refreshButton.addEventListener("click", () => {
+        refreshButton.textContent = "已刷新"
+        setTimeout(() => {
+          refreshButton.textContent = "刷新"
+        }, 900)
+      })
+
+      saveButton.addEventListener("click", () => {
+        saveButton.textContent = "已保存"
+        setTimeout(() => {
+          saveButton.textContent = "保存到卡片"
+        }, 900)
+      })
+
+      renderWeather()
+      applyCardSize()
+      applyModalSize()
+    </script>
+  </body>
+</html>
