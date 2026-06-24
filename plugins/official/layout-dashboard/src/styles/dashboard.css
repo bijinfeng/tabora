@@ -42,7 +42,7 @@
   width: 38px;
   height: 38px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
   color: rgb(var(--color-muted));
   font-family: inherit;
@@ -483,12 +483,12 @@
 .dash-content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
   max-width: 1440px;
   min-width: 0;
   margin: 0 auto;
-  padding: 20px 24px;
+  padding: 24px 32px;
 }
 
 .dash-topbar {
@@ -502,16 +502,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgb(var(--color-surface-soft));
   font-size: 13px;
   font-weight: 600;
-  transition: background 120ms ease;
-}
-
-.dash-greeting:hover {
-  background: rgb(var(--color-surface-hover));
 }
 
 .dash-greeting-title {
@@ -529,7 +521,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  opacity: 0.85;
+  opacity: 0.74;
   transition: opacity 120ms ease;
 }
 
@@ -543,19 +535,12 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  margin: 0;
+  margin: 2px 0 4px;
 }
 
 .dash-search-stage > * {
   width: min(100%, 720px);
   max-width: 720px;
-  box-shadow: 0 2px 8px rgb(var(--color-shadow) / 0.08);
-  border-radius: 8px;
-  transition: box-shadow 120ms ease;
-}
-
-.dash-search-stage > *:hover {
-  box-shadow: 0 3px 12px rgb(var(--color-shadow) / 0.1);
 }
 
 .dash-toolbar-btn svg,
@@ -572,18 +557,22 @@
   height: 28px;
   padding: 0 10px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: rgb(var(--color-muted));
   font-family: inherit;
   font-size: 11px;
-  font-weight: 550;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
   transition:
     background 120ms ease,
     border-color 120ms ease,
     color 120ms ease;
+}
+
+.dash-toolbar-btn {
+  border-radius: 8px;
 }
 
 .dash-toolbar-btn:hover,

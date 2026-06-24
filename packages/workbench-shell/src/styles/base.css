@@ -56,8 +56,8 @@
   --tbr-dur-fast: 120ms;
   --tbr-dur-normal: var(--dur);
   --tbr-ease: var(--ease);
-  --radius: 6px;
-  --radius-lg: 8px;
+  --radius: 8px;
+  --radius-lg: 12px;
   --dur: 180ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
 }
@@ -181,7 +181,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: auto;
-  gap: 8px;
+  gap: 10px;
   align-items: stretch;
 }
 
@@ -196,24 +196,20 @@ body {
   height: 100%;
 }
 
-/* ====== CARD (exact prototype values) ====== */
+/* ====== CARD (exact prototype values: .layout-dashboard .widget-card) ====== */
 .widget-card {
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
   border-radius: var(--radius-card, var(--radius));
-  padding: 12px;
+  padding: 10px 11px;
   display: flex;
   flex-direction: column;
-  transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+  transition: border-color 120ms ease;
   position: relative;
-  box-shadow: 0 2px 12px rgb(var(--color-shadow) / 0.12);
 }
 
 .widget-card:hover {
   border-color: rgb(var(--color-line-strong));
-  box-shadow: 0 6px 20px rgb(var(--color-shadow) / 0.16);
 }
 .grid-item.dragging .widget-card {
   opacity: 0.92;
@@ -227,7 +223,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  min-height: 22px;
   cursor: grab;
   touch-action: none;
 }
@@ -236,16 +233,16 @@ body {
 }
 .card-title {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: var(--tbr-font-weight-bold, 650);
   display: flex;
   align-items: center;
-  gap: 6px;
-  letter-spacing: -0.005em;
+  gap: 5px;
+  letter-spacing: normal;
 }
 .card-title svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   color: rgb(var(--color-subtle));
   flex-shrink: 0;
   position: relative;
@@ -291,9 +288,9 @@ body {
 }
 
 .card-action-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   border: none;
   background: transparent;
   color: rgb(var(--color-muted));
@@ -311,8 +308,8 @@ body {
   color: rgb(var(--color-text));
 }
 .card-action-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 .card-action-btn.card-danger:hover {
   background: rgba(var(--color-danger), 0.08);

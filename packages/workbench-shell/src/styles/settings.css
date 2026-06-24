@@ -62,12 +62,12 @@
 }
 
 .settings-nav:hover {
-  background: rgba(var(--color-accent), 0.06);
+  background: rgb(var(--color-surface-hover));
   color: rgb(var(--color-text));
 }
 
 .settings-nav.active {
-  background: rgba(var(--color-accent), 0.1);
+  background: rgb(var(--color-accent-soft));
   color: rgb(var(--color-accent));
   font-weight: 650;
 }
