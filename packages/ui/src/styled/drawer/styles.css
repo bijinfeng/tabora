@@ -53,12 +53,13 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 16px;
+    padding: 10px 12px;
     border-bottom: 1px solid rgb(var(--tbr-color-line));
   }
 
   .tbr-drawer-footer {
     justify-content: flex-end;
+    padding: 9px 12px;
     border-top: 1px solid rgb(var(--tbr-color-line));
     border-bottom: 0;
   }
@@ -66,7 +67,7 @@
   .tbr-drawer-title {
     margin: 0;
     color: rgb(var(--tbr-color-text));
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 650;
     line-height: 1.35;
   }
@@ -101,6 +102,6 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding: 16px;
+    padding: 12px;
   }
 }

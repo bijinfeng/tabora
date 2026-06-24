@@ -11,8 +11,8 @@
   .tbr-timeline-item {
     position: relative;
     display: flex;
-    gap: 12px;
-    padding-bottom: 16px;
+    gap: 9px;
+    padding-bottom: 10px;
   }
 
   .tbr-timeline-item:not(:last-child)::before {
@@ -21,24 +21,23 @@
     top: 14px;
     bottom: 0;
     left: 5px;
-    width: 1px;
+    width: 2px;
     background: rgb(var(--tbr-color-line));
   }
 
   .tbr-timeline-dot {
     z-index: 1;
-    width: 11px;
-    height: 11px;
+    width: 10px;
+    height: 10px;
     margin-top: 4px;
-    border: 2px solid rgb(var(--tbr-color-accent));
     border-radius: var(--tbr-radius-pill);
-    background: rgb(var(--tbr-color-surface));
+    background: rgb(var(--tbr-color-line-strong));
     flex: none;
   }
 
   .tbr-timeline-body {
     display: grid;
-    gap: 3px;
+    gap: 2px;
     min-width: 0;
     color: rgb(var(--tbr-color-text));
     font-size: 13px;
@@ -46,11 +45,12 @@
 
   .tbr-timeline-body span {
     color: rgb(var(--tbr-color-text-muted));
+    font-size: 11px;
     line-height: 1.45;
   }
 
   .tbr-timeline-body small {
     color: rgb(var(--tbr-color-text-subtle));
-    font-size: 11px;
+    font-size: 10px;
   }
 }

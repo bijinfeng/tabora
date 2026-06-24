@@ -15,10 +15,10 @@
     border: 1px solid rgb(var(--tbr-color-line));
     border-radius: var(--tbr-radius-panel);
     box-shadow: 0 8px 32px rgb(var(--tbr-color-shadow) / 0.12);
-    padding: 20px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 9px;
     max-height: 80vh;
     overflow-y: auto;
     animation: tbr-scale-in var(--tbr-dur-normal) var(--tbr-ease);
@@ -30,18 +30,20 @@
     border-color: rgba(var(--tbr-color-danger), 0.3);
   }
   .tbr-dialog-header {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 650;
+    line-height: 1.25;
   }
   .tbr-dialog-body {
-    font-size: 13px;
+    font-size: 12px;
     color: rgb(var(--tbr-color-text-muted));
-    line-height: 1.5;
+    line-height: 1.45;
   }
   .tbr-dialog-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
+    padding-top: 1px;
   }
   @keyframes tbr-fade-in {
     from {

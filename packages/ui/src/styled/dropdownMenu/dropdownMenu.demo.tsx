@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js"
+import { Pencil, Copy, ArrowUp, Lock, Trash2 } from "lucide-solid"
 
-import { Badge } from "../badge"
 import { Button } from "../button"
 import { DropdownMenu } from "./dropdownMenu.styled"
 
@@ -11,11 +11,10 @@ export function DropdownMenuDemo() {
   return (
     <div class="docs-control-stack">
       <div class="docs-stack compact">
-        <strong>今日重点卡片</strong>
-        <span>下拉菜单适合承载按钮触发的一组次级动作，并保留危险操作层级。</span>
+        <strong>卡片操作菜单</strong>
+        <span>操作溢出菜单，支持图标、快捷键、已选中态、禁用项、分割线与危险操作。</span>
       </div>
       <div class="docs-row">
-        <Badge variant="accent">2x1</Badge>
         <span>{lastAction()}</span>
       </div>
       <DropdownMenu
@@ -24,21 +23,43 @@ export function DropdownMenuDemo() {
         onClose={() => setOpen(false)}
         items={[
           {
-            id: "expand",
-            label: "展开专注视图",
-            onClick: () => setLastAction("已打开专注视图。"),
+            id: "edit",
+            label: "编辑",
+            icon: <Pencil size={14} strokeWidth={2} />,
+            shortcut: "⌘E",
+            onClick: () => setLastAction("已进入编辑。"),
           },
           {
-            id: "resize",
+            id: "copy",
+            label: "复制",
+            icon: <Copy size={14} strokeWidth={2} />,
+            shortcut: "⌘C",
+            onClick: () => setLastAction("已复制卡片。"),
+          },
+          {
+            id: "wide",
             label: "切换为宽卡",
-            shortcut: "W",
             checked: true,
             onClick: () => setLastAction("卡片已切换为宽卡。"),
+          },
+          {
+            id: "pin",
+            label: "置顶",
+            icon: <ArrowUp size={14} strokeWidth={2} />,
+            onClick: () => setLastAction("卡片已置顶。"),
+          },
+          {
+            id: "lock",
+            label: "锁定（不可用）",
+            icon: <Lock size={14} strokeWidth={2} />,
+            disabled: true,
           },
           { id: "divider", label: "", separator: true },
           {
             id: "remove",
-            label: "移除卡片",
+            label: "删除",
+            icon: <Trash2 size={14} strokeWidth={2} />,
+            shortcut: "⌫",
             danger: true,
             onClick: () => setLastAction("卡片已移出当前工作区。"),
           },

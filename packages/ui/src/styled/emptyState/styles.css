@@ -5,18 +5,19 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 32px 16px;
+    gap: 6px;
+    padding: 20px 12px;
     text-align: center;
   }
   .tbr-empty-state[data-compact] {
-    padding: 16px 12px;
+    padding: 12px;
     gap: 4px;
   }
   .tbr-empty-state-title {
-    font-size: 13px;
+    font-size: 12px;
     color: rgb(var(--tbr-color-text-muted));
-    max-width: 260px;
+    max-width: 220px;
+    line-height: 1.4;
   }
   .tbr-empty-state[data-compact] .tbr-empty-state-title {
     font-size: 12px;
@@ -24,8 +25,8 @@
   .tbr-empty-state-desc {
     font-size: 12px;
     color: rgb(var(--tbr-color-text-subtle));
-    max-width: 260px;
-    line-height: 1.5;
+    max-width: 220px;
+    line-height: 1.4;
   }
   .tbr-empty-state-action {
     margin-top: 4px;

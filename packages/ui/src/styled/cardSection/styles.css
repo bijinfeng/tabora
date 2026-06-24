@@ -8,11 +8,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
+    padding: 8px 10px;
     border-bottom: 1px solid rgb(var(--tbr-color-line));
   }
   .tbr-card-section-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 650;
     margin: 0;
   }
@@ -21,9 +21,9 @@
     align-items: center;
   }
   .tbr-card-section-body {
-    padding: 14px;
+    padding: 10px;
   }
   .tbr-card-section[data-padded] .tbr-card-section-body {
-    padding: 14px;
+    padding: 10px;
   }
 }

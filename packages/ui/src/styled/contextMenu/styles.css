@@ -8,33 +8,35 @@
   .tbr-context-menu-content {
     min-width: 180px;
     max-width: 260px;
-    padding: 4px;
+    padding: 0;
     border: 1px solid rgb(var(--tbr-color-line));
     border-radius: var(--tbr-radius-control);
     background: rgb(var(--tbr-color-surface));
     box-shadow:
       0 4px 16px rgb(var(--tbr-color-shadow) / 0.08),
       0 0 1px rgb(var(--tbr-color-shadow) / 0.06);
+    overflow: hidden;
   }
 
   .tbr-context-menu-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     width: 100%;
-    min-height: 30px;
-    padding: 0 8px;
+    padding: 6px 10px;
     border: 0;
-    border-radius: var(--tbr-radius-2);
+    border-radius: 0;
     background: transparent;
     color: rgb(var(--tbr-color-text));
     cursor: pointer;
     font: inherit;
-    font-size: 13px;
+    font-size: 12px;
     text-align: left;
+    transition: background 120ms ease;
   }
 
-  .tbr-context-menu-item[data-highlighted] {
+  .tbr-context-menu-item[data-highlighted],
+  .tbr-context-menu-item:hover {
     background: rgb(var(--tbr-color-surface-hover));
   }
 
@@ -42,13 +44,16 @@
     color: rgb(var(--tbr-color-danger));
   }
 
-  .tbr-context-menu-item[data-danger][data-highlighted] {
+  .tbr-context-menu-item[data-danger][data-highlighted],
+  .tbr-context-menu-item[data-danger]:hover {
     background: rgb(var(--tbr-color-danger-soft));
   }
 
-  .tbr-context-menu-item[data-disabled] {
+  .tbr-context-menu-item[data-disabled],
+  .tbr-context-menu-item[data-disabled]:hover {
     cursor: not-allowed;
     opacity: 0.45;
+    background: none;
   }
 
   .tbr-context-menu-icon {
@@ -73,7 +78,9 @@
 
   .tbr-context-menu-sep {
     height: 1px;
-    margin: 4px 0;
+    margin: 2px 0;
     background: rgb(var(--tbr-color-line));
+    border: none;
+    color: inherit;
   }
 }

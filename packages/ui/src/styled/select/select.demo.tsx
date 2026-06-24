@@ -1,57 +1,100 @@
-import { createMemo, createSignal } from "solid-js"
+import { createSignal } from "solid-js"
 
-import { Field } from "../field"
 import { Select } from "./select.styled"
+import "./select.demo.css"
 
-const searchSourceOptions = [
+const engineOptions = [
   { value: "google", label: "Google" },
-  { value: "github", label: "GitHub" },
-  { value: "docs", label: "文档" },
-] as const
-
-const openModeOptions = [
-  { value: "current", label: "当前标签页" },
-  { value: "split", label: "侧边预览" },
-  { value: "newtab", label: "新标签页" },
+  { value: "bing", label: "Bing" },
+  { value: "ddg", label: "DuckDuckGo" },
+  { value: "perplexity", label: "Perplexity" },
+  { value: "kagi", label: "Kagi" },
 ] as const
 
 export function SelectDemo() {
-  const [value, setValue] = createSignal<"google" | "github" | "docs">("google")
-  const [openMode, setOpenMode] = createSignal<"current" | "split" | "newtab">("current")
+  const [singleValue, setSingleValue] = createSignal<
+    "google" | "bing" | "ddg" | "perplexity" | "kagi"
+  >("bing")
 
-  const summary = createMemo(() => {
-    const sourceLabel =
-      searchSourceOptions.find((option) => option.value === value())?.label ?? "Google"
-    const openLabel =
-      openModeOptions.find((option) => option.value === openMode())?.label ?? "当前标签页"
-    return `${sourceLabel} · ${openLabel}`
-  })
+  const [multiValue, setMultiValue] = createSignal<
+    ("google" | "bing" | "ddg" | "perplexity" | "kagi")[]
+  >(["google", "bing"])
+
+  const [smallValue, setSmallValue] = createSignal<
+    "google" | "bing" | "ddg" | "perplexity" | "kagi"
+  >("google")
+
+  const [invalidValue, setInvalidValue] = createSignal<
+    "google" | "bing" | "ddg" | "perplexity" | "kagi"
+  >("google")
 
   return (
     <div class="docs-control-stack">
-      <div class="docs-stack compact">
-        <strong>默认搜索源</strong>
-        <span>模拟工作区搜索配置里常见的双下拉组合。</span>
+      <div class="demo-section">
+        <h4>单选</h4>
+        <div class="demo-row">
+          <Select
+            value={singleValue()}
+            onChange={setSingleValue}
+            options={[...engineOptions]}
+            placeholder="选择搜索引擎"
+            aria-label="单选示例"
+          />
+        </div>
       </div>
-      <Field label="默认搜索源" helper="决定 Enter 直搜时优先命中的 provider。">
-        <Select
-          value={value()}
-          onChange={setValue}
-          aria-label="默认搜索源"
-          options={[...searchSourceOptions]}
-        />
-      </Field>
-      <Field label="打开方式" helper="控制搜索结果在当前工作区中的呈现方式。">
-        <Select
-          value={openMode()}
-          onChange={setOpenMode}
-          aria-label="打开方式"
-          options={[...openModeOptions]}
-        />
-      </Field>
-      <div class="docs-stack compact">
-        <span>当前配置</span>
-        <strong>{summary()}</strong>
+
+      <div class="demo-section">
+        <h4>多选标签模式</h4>
+        <div class="demo-row">
+          <div style={{ width: "320px" }}>
+            <Select
+              value={multiValue()}
+              onChange={setMultiValue}
+              options={[...engineOptions]}
+              multiple
+              placeholder="选择多个..."
+              maxVisibleTags={3}
+              aria-label="多选示例"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h4>尺寸与状态</h4>
+        <div class="demo-row">
+          <Select
+            value={smallValue()}
+            onChange={setSmallValue}
+            options={[...engineOptions]}
+            size="sm"
+            placeholder="小尺寸"
+            aria-label="小尺寸示例"
+          />
+          <Select
+            value={singleValue()}
+            onChange={setSingleValue}
+            options={[...engineOptions]}
+            placeholder="默认尺寸"
+            aria-label="默认尺寸示例"
+          />
+          <Select
+            value={invalidValue()}
+            onChange={setInvalidValue}
+            options={[...engineOptions]}
+            invalid
+            placeholder="校验失败"
+            aria-label="校验失败示例"
+          />
+          <Select
+            value="google"
+            onChange={() => {}}
+            options={[...engineOptions]}
+            disabled
+            placeholder="已禁用"
+            aria-label="禁用示例"
+          />
+        </div>
       </div>
     </div>
   )

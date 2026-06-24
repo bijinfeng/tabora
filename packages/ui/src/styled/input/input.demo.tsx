@@ -1,77 +1,89 @@
-import { createMemo, createSignal } from "solid-js"
+import { createSignal } from "solid-js"
+import { Search, Calendar } from "lucide-solid"
 
-import { Button } from "../button"
-import { Field } from "../field"
-import { InlineError } from "../inlineError"
 import { Input } from "./input.styled"
+import "./input.demo.css"
 
 export function InputDemo() {
-  const [workspaceName, setWorkspaceName] = createSignal("Tabora Docs")
-  const [searchUrl, setSearchUrl] = createSignal("https://example.com/search?q=%s")
-  const [savedUrl, setSavedUrl] = createSignal("https://example.com/search?q=%s")
-
-  const urlError = createMemo(() => {
-    const value = searchUrl().trim()
-    if (!value.startsWith("https://")) return "搜索 URL 必须使用 https://"
-    if (!value.includes("%s")) return "搜索 URL 需要保留 %s 作为查询占位符"
-    return ""
-  })
+  const [searchText, setSearchText] = createSignal("")
+  const [dateText, setDateText] = createSignal("2026-06-24")
+  const [clearableText, setClearableText] = createSignal("可清除文本")
+  const [urlText, setUrlText] = createSignal("https://example.com")
+  const [password, setPassword] = createSignal("secret")
+  const [placeholder, setPlaceholder] = createSignal("")
+  const [filled, setFilled] = createSignal("已输入")
+  const [invalid, setInvalid] = createSignal("校验失败")
+  const [small, setSmall] = createSignal("")
 
   return (
     <div class="docs-control-stack">
-      <div class="docs-stack compact">
-        <strong>工作区搜索设置</strong>
-        <span>演示内容区表单里标签、说明、错误与保存后摘要的组合方式。</span>
+      <div class="demo-section">
+        <h4>前后图标 + 清除</h4>
+        <div class="demo-row">
+          <Input
+            value={searchText()}
+            onInput={setSearchText}
+            leadingIcon={<Search size={16} strokeWidth={2} />}
+            placeholder="搜索..."
+            aria-label="搜索输入"
+          />
+          <Input
+            value={clearableText()}
+            onInput={setClearableText}
+            clearable
+            placeholder="可清除输入..."
+            aria-label="可清除输入"
+          />
+          <Input
+            value={urlText()}
+            onInput={setUrlText}
+            leadingIcon={<span style={{ "font-size": "11px", "font-weight": "600" }}>URL</span>}
+            clearable
+            placeholder="URL..."
+            aria-label="URL 输入"
+          />
+          <Input
+            value={dateText()}
+            onInput={setDateText}
+            trailingIcon={<Calendar size={16} strokeWidth={2} />}
+            aria-label="日期输入"
+          />
+        </div>
       </div>
-      <Field
-        label="工作区标题"
-        helper="显示在搜索栏上方，用于区分不同工作区。"
-        htmlFor="docs-workspace-name"
-      >
-        <Input id="docs-workspace-name" value={workspaceName()} onInput={setWorkspaceName} />
-      </Field>
-      <Field
-        label="默认搜索 URL"
-        helper="保留 %s 作为关键词占位符，提交时会替换为真实查询。"
-        htmlFor="docs-search-url"
-      >
-        <Input
-          id="docs-search-url"
-          type="url"
-          value={searchUrl()}
-          onInput={setSearchUrl}
-          invalid={Boolean(urlError())}
-        />
-      </Field>
-      {urlError() ? (
-        <InlineError>
-          {urlError()}
-          <Button size="sm" variant="danger-subtle" onClick={() => setSearchUrl(savedUrl())}>
-            恢复上次保存
-          </Button>
-        </InlineError>
-      ) : null}
-      <div class="docs-row">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => setSearchUrl("https://example.com/search?q=%s")}
-        >
-          载入模板
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => {
-            if (!urlError()) setSavedUrl(searchUrl())
-          }}
-          disabled={Boolean(urlError())}
-        >
-          保存设置
-        </Button>
+
+      <div class="demo-section">
+        <h4>密码显隐</h4>
+        <div class="demo-row">
+          <Input
+            value={password()}
+            onInput={setPassword}
+            type="password"
+            placeholder="输入密码..."
+            aria-label="密码输入"
+          />
+        </div>
       </div>
-      <div class="docs-stack compact">
-        <span>已保存工作区：{workspaceName()}</span>
-        <code>{savedUrl()}</code>
+
+      <div class="demo-section">
+        <h4>状态与尺寸</h4>
+        <div class="demo-row">
+          <Input
+            value={placeholder()}
+            onInput={setPlaceholder}
+            placeholder="占位"
+            aria-label="占位示例"
+          />
+          <Input value={filled()} onInput={setFilled} aria-label="已输入示例" />
+          <Input value={invalid()} onInput={setInvalid} invalid aria-label="校验失败示例" />
+          <Input value="禁用" onInput={() => {}} disabled aria-label="禁用示例" />
+          <Input
+            value={small()}
+            onInput={setSmall}
+            size="sm"
+            placeholder="小尺寸"
+            aria-label="小尺寸示例"
+          />
+        </div>
       </div>
     </div>
   )

@@ -1,7 +1,6 @@
 import { DropdownMenu as KDropdownMenu } from "@kobalte/core/dropdown-menu"
 import type { JSX } from "solid-js"
 import { For, Show, splitProps } from "solid-js"
-import { Check } from "lucide-solid"
 
 type KobalteDropdownMenuPlacement = NonNullable<Parameters<typeof KDropdownMenu>[0]["placement"]>
 
@@ -129,14 +128,14 @@ export function DropdownMenu(props: DropdownMenuProps) {
                     item.onClick?.()
                   }}
                 >
-                  {item.icon && <span class="tbr-dropdown-icon">{item.icon}</span>}
+                  <Show when={item.checked}>
+                    <span class="tbr-dropdown-check" aria-hidden="true" />
+                  </Show>
+                  {item.icon && !item.checked && (
+                    <span class="tbr-dropdown-icon">{item.icon}</span>
+                  )}
                   <span class="tbr-dropdown-label">{item.label}</span>
                   {item.shortcut && <kbd class="tbr-dropdown-kbd">{item.shortcut}</kbd>}
-                  <Show when={item.checked}>
-                    <span class="tbr-dropdown-check" aria-hidden="true">
-                      <Check size={16} strokeWidth={2} />
-                    </span>
-                  </Show>
                 </KDropdownMenu.Item>
               )
             }

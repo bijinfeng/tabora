@@ -42,7 +42,7 @@
   }
   .tbr-btn--md {
     height: var(--tbr-control-md);
-    padding: 0 14px;
+    padding: 0 12px;
     font-size: 13px;
   }
   .tbr-btn--lg {

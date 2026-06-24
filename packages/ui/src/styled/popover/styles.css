@@ -1,25 +1,25 @@
 @layer tabora-ui {
   .tbr-popover {
-    min-width: 220px;
+    min-width: 200px;
     background: rgb(var(--tbr-color-surface));
     border: 1px solid rgb(var(--tbr-color-line));
     border-radius: var(--tbr-radius-panel);
     box-shadow: 0 4px 16px rgb(var(--tbr-color-shadow) / 0.08);
     z-index: 50;
-    padding: 14px;
+    padding: 12px;
     animation: tbr-scale-in 120ms var(--tbr-ease);
   }
   .tbr-popover-arrow {
     z-index: 1;
   }
   .tbr-popover-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 650;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
   }
   .tbr-popover-body {
-    font-size: 12px;
+    font-size: 11px;
     color: rgb(var(--tbr-color-text-muted));
-    line-height: 1.5;
+    line-height: 1.4;
   }
 }

@@ -1,4 +1,5 @@
 @layer tabora-ui {
+  /* Linear progress */
   .tbr-progress {
     background: rgb(var(--tbr-color-surface-soft));
     border-radius: 999px;
@@ -23,5 +24,50 @@
     border-radius: 999px;
     background: rgb(var(--tbr-color-accent));
     transition: width 300ms ease;
+  }
+
+  /* Indeterminate animation */
+  .tbr-progress[data-indeterminate] .tbr-progress-fill {
+    width: 40%;
+    animation: tbr-progress-indeterminate 1.5s ease-in-out infinite;
+  }
+  @keyframes tbr-progress-indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(350%);
+    }
+  }
+
+  /* Circular progress */
+  .tbr-progress-circular {
+    position: relative;
+    display: inline-flex;
+  }
+  .tbr-progress-circular svg {
+    transform: rotate(-90deg);
+  }
+  .tbr-progress-circular-bg {
+    fill: none;
+    stroke: rgb(var(--tbr-color-surface-soft));
+    stroke-width: 4;
+  }
+  .tbr-progress-circular-fill {
+    fill: none;
+    stroke: rgb(var(--tbr-color-accent));
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 300ms ease;
+  }
+  .tbr-progress-circular-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgb(var(--tbr-color-text));
   }
 }

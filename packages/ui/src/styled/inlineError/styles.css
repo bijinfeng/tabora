@@ -4,11 +4,11 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid rgba(var(--tbr-color-danger), 0.25);
     border-radius: var(--tbr-radius-control);
     background: rgba(var(--tbr-color-danger), 0.05);
-    font-size: 12px;
+    font-size: 11px;
     color: rgb(var(--tbr-color-danger));
   }
 }

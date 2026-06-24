@@ -3,8 +3,8 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    height: 26px;
-    padding: 0 10px;
+    height: 24px;
+    padding: 0 8px;
     border: 1px solid rgb(var(--tbr-color-line));
     border-radius: 999px;
     background: rgb(var(--tbr-color-surface-soft));
@@ -26,8 +26,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     cursor: pointer;
     border: none;

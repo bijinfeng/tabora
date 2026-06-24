@@ -1,5 +1,12 @@
 /* Tabora Input — Styled Component */
 @layer tabora-ui {
+  /* Wrapper for icons / clearable / password toggle */
+  .tbr-input-wrapper {
+    position: relative;
+    display: inline-flex;
+    width: 100%;
+  }
+
   .tbr-input {
     display: block;
     width: 100%;
@@ -12,7 +19,7 @@
   }
   .tbr-input--sm {
     height: var(--tbr-control-sm);
-    padding: 0 8px;
+    padding: 0 10px;
     font-size: 12px;
   }
   .tbr-input--md {
@@ -20,6 +27,23 @@
     padding: 0 12px;
     font-size: 13px;
   }
+
+  /* Add left padding when leading icon exists */
+  .tbr-input[data-has-leading] {
+    padding-left: 34px;
+  }
+  .tbr-input[data-size="sm"][data-has-leading] {
+    padding-left: 30px;
+  }
+
+  /* Add right padding when trailing button/icon exists */
+  .tbr-input[data-has-trailing] {
+    padding-right: 36px;
+  }
+  .tbr-input[data-size="sm"][data-has-trailing] {
+    padding-right: 32px;
+  }
+
   .tbr-input::placeholder {
     color: rgb(var(--tbr-color-text-muted));
   }
@@ -38,5 +62,87 @@
     background: rgba(var(--tbr-color-line), 0.4);
     cursor: not-allowed;
     opacity: 0.5;
+  }
+
+  /* Leading icon (left side) */
+  .tbr-input-leading-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(var(--tbr-color-text-muted));
+    pointer-events: none;
+    font-size: 13px;
+  }
+  .tbr-input-wrapper:has(.tbr-input[data-size="sm"]) .tbr-input-leading-icon {
+    left: 8px;
+    font-size: 12px;
+  }
+
+  /* Trailing icon (right side, non-interactive) */
+  .tbr-input-trailing-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(var(--tbr-color-text-muted));
+    pointer-events: none;
+    font-size: 13px;
+  }
+  .tbr-input-wrapper:has(.tbr-input[data-size="sm"]) .tbr-input-trailing-icon {
+    right: 8px;
+    font-size: 12px;
+  }
+
+  /* Clear button */
+  .tbr-input-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: rgb(var(--tbr-color-text-muted));
+    cursor: pointer;
+    transition:
+      background-color var(--tbr-dur-fast) var(--tbr-ease),
+      color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-input-clear:hover {
+    background: rgba(var(--tbr-color-line), 0.5);
+    color: rgb(var(--tbr-color-text));
+  }
+
+  /* Password toggle button */
+  .tbr-input-trailing-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgb(var(--tbr-color-text-muted));
+    cursor: pointer;
+    transition: color var(--tbr-dur-fast) var(--tbr-ease);
+  }
+  .tbr-input-trailing-btn:hover {
+    color: rgb(var(--tbr-color-text));
   }
 }
