@@ -52,7 +52,15 @@ export function QuickLinksCard(props: WidgetViewProps) {
   const [urlError, setUrlError] = createSignal<string | null>(null)
 
   const storageKey = "quick-links"
-  const visibleLinks = () => links().slice(0, 6)
+  const visibleLinks = () => {
+    const size = props.size ?? "M"
+    const all = links()
+    // S 尺寸只显示前 4 个
+    if (size === "S") return all.slice(0, 4)
+    return all.slice(0, 12)
+  }
+  const showSearch = () => (props.size ?? "M") !== "S"
+  const showFoot = () => (props.size ?? "M") !== "S"
 
   onMount(async () => {
     let saved = await props.data.get<QuickLink[]>(storageKey)
@@ -139,6 +147,11 @@ export function QuickLinksCard(props: WidgetViewProps) {
 
   return (
     <div class="quick-links">
+      <Show when={showSearch()}>
+        <div class="quick-search" role="search" aria-label="搜索快捷入口">
+          <span class="quick-search-text">搜索快捷入口…</span>
+        </div>
+      </Show>
       <ul class="link-grid" aria-label="快捷入口">
         <For each={visibleLinks()}>
           {(link, index) => (
@@ -252,6 +265,20 @@ export function QuickLinksCard(props: WidgetViewProps) {
           </li>
         </Show>
       </ul>
+      <Show when={showFoot()}>
+        <div class="quick-links-foot">
+          <span class="foot-text">{links().length} 个链接</span>
+          <button
+            class="foot-manage-btn"
+            type="button"
+            onClick={() => {
+              /* TODO: open manage modal */
+            }}
+          >
+            管理
+          </button>
+        </div>
+      </Show>
       <Show when={urlError()}>
         <InlineError>{urlError()!}</InlineError>
       </Show>
