@@ -16,12 +16,13 @@ export async function addWorkbenchWidget(options: {
   resolveWidget: (
     pluginId: string,
     contributionId: string,
-  ) => Pick<WidgetContribution, "defaultSize"> | undefined
+  ) => Pick<WidgetContribution, "defaultSize" | "supportedSizes"> | undefined
   assignGridOrder: (instances: PluginInstance[]) => PluginInstance[]
   saveInstance: (instance: PluginInstance) => Promise<void>
   setInstances: (instances: PluginInstance[]) => void
   buildInstanceId?: () => string
   now?: () => string
+  size?: WidgetSize
 }): Promise<boolean> {
   const widget = options.resolveWidget(options.pluginId, options.contributionId)
   if (!widget) return false
@@ -30,6 +31,12 @@ export async function addWorkbenchWidget(options: {
   const instanceId = options.buildInstanceId?.() ?? `${options.contributionId}-${Date.now()}`
   const regionId = options.layoutRegions.find((region) => region.accepts.includes("widget"))?.id
   if (!regionId) return false
+
+  const requestedSize = options.size
+  const initialSize =
+    requestedSize && widget.supportedSizes?.includes(requestedSize)
+      ? requestedSize
+      : widget.defaultSize
 
   const nextInstances = options.assignGridOrder([
     ...options.currentInstances,
@@ -41,7 +48,7 @@ export async function addWorkbenchWidget(options: {
       extensionPoint: "widget",
       regionId,
       enabled: true,
-      size: widget.defaultSize,
+      size: initialSize,
       config: {},
       createdAt: timestamp,
       updatedAt: timestamp,

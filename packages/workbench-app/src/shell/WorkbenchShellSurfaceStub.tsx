@@ -21,7 +21,7 @@ export type WorkbenchShellSurfaceStubOverrides = {
   listSettingsPanels?: () => unknown[]
   pluginSummaries?: (...args: unknown[]) => Array<{ enabled: boolean }>
   tShell?: WorkbenchShell["tShell"]
-  addWidget?: (pluginId: string, widgetId: string) => Promise<void> | void
+  addWidget?: (pluginId: string, widgetId: string, size?: string) => Promise<void> | void
   widgetContribution?: (...args: unknown[]) => { icon?: unknown } | undefined
   closeExpand?: () => void
   buildContextMenuModel?: () => { sections?: unknown[] } | undefined

@@ -74,7 +74,7 @@ export function createWorkbenchWidgetController(options: {
   const contextMenuContributions = (instance: PluginInstance) =>
     widgetContribution(instance)?.contextMenus ?? []
 
-  async function addWidget(pluginId: string, contributionId: string) {
+  async function addWidget(pluginId: string, contributionId: string, size?: WidgetSize) {
     const workspace = requireWorkspace(options.getWorkspace())
     const added = await addWorkbenchWidget({
       workspaceId: workspace.id,
@@ -86,6 +86,7 @@ export function createWorkbenchWidgetController(options: {
       assignGridOrder: options.assignGridOrder,
       saveInstance: options.saveInstance,
       setInstances: options.setInstances,
+      ...(size ? { size } : {}),
     })
 
     if (!added) {

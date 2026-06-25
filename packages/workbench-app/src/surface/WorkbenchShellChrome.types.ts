@@ -9,6 +9,11 @@ export type AvailableWidget = {
   icon?: string
   title: string
   description?: string
+  source?: "official" | "third-party"
+  version?: string
+  supportedSizes?: WidgetSize[]
+  defaultSize?: WidgetSize
+  pluginName?: string
 }
 
 export type WidgetContextSection = {

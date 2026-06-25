@@ -38,7 +38,7 @@ describe("createWorkbenchShellSurfaceProps", () => {
     const props = createWorkbenchShellSurfaceProps(shell)
     props.addWidgetModal.onAdd("plugin.widgets", "widget.notes")
 
-    expect(addWidget).toHaveBeenCalledWith("plugin.widgets", "widget.notes")
+    expect(addWidget).toHaveBeenCalledWith("plugin.widgets", "widget.notes", undefined)
     expect(shell.state.overlays.addWidgetOpen()).toBe(false)
     expect(props.contextMenuOverlay.sections).toEqual([])
   })
@@ -114,7 +114,18 @@ describe("createWorkbenchShellSurfaceProps", () => {
 
     expect(listWidgetContributions).toHaveBeenCalledOnce()
     expect(listSettingsPanels).toHaveBeenCalledOnce()
-    expect(props.addWidgetModal.availableWidgets).toEqual(activeWidgets)
+    // availableWidgets 是 catalog 返回值的投影（含 source / version / supportedSizes 等）
+    expect(props.addWidgetModal.availableWidgets).toEqual([
+      expect.objectContaining({
+        pluginId: "plugin.enabled",
+        id: "widget.visible",
+        title: "Visible Widget",
+        description: "Shown by catalog",
+        supportedSizes: ["S"],
+        defaultSize: "S",
+        pluginName: "Enabled",
+      }),
+    ])
     expect(props.addWidgetModal.availableWidgets).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ id: "widget.hidden" })]),
     )

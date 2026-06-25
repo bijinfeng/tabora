@@ -24,6 +24,8 @@ export type PluginCatalogOptions = {
 export type WidgetContributionDescriptor = WidgetContribution & {
   pluginId: string
   pluginName: string
+  pluginVersion: string
+  pluginPublisher?: string
   description: string
 }
 
@@ -80,6 +82,8 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
           ...widget,
           pluginId: plugin.manifest.id,
           pluginName: plugin.manifest.name,
+          pluginVersion: plugin.manifest.version,
+          ...(plugin.manifest.publisher ? { pluginPublisher: plugin.manifest.publisher } : {}),
           icon: widget.icon ?? fallbackWidgetIcon,
           description: widget.description ?? fallbackWidgetDescription(widget),
         })),
