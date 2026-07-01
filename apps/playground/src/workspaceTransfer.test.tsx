@@ -177,10 +177,10 @@ describe("workspaceTransfer", () => {
       database: targetDb,
       availablePluginIds: [
         "official.search.command-bar",
-        "official.widgets.today-focus",
         "official.widgets.quick-links",
         "official.widgets.notes",
         "official.widgets.todo",
+        "official.widgets.weather",
       ],
     })
 

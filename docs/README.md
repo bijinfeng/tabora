@@ -79,7 +79,6 @@
 - `docs/design/快捷入口卡片原型.html`：快捷入口卡片及其弹窗。
 - `docs/design/待办卡片原型.html`：待办卡片及其弹窗。
 - `docs/design/天气卡片原型.html`：天气卡片及其弹窗。
-- `docs/design/今日重点卡片原型.html`：今日重点卡片及其弹窗。
 - `docs/design/设置窗口原型.html`：设置窗口独立原型。
 
 这些 HTML 是预览资产，不承载规范事实。与 `DESIGN.md` 冲突时以 `DESIGN.md` 为准。

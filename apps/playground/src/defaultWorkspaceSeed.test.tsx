@@ -26,9 +26,8 @@ describe("createDefaultWorkspaceFromPreset", () => {
 
     const mainGrid = workspace.regions["mainGrid"]
     expect(mainGrid).toBeDefined()
-    expect(mainGrid!.instances).toHaveLength(5)
+    expect(mainGrid!.instances).toHaveLength(4)
     expect(mainGrid!.instances.map((instance) => instance.instanceId)).toEqual([
-      "today-focus-1",
       "quick-links-1",
       "todo-1",
       "notes-1",
@@ -47,7 +46,7 @@ describe("createDefaultWorkspaceFromPreset", () => {
     expect(searchInstance!.pluginId).toBe("official.search.command-bar")
 
     const widgetInstances = instances.filter((i) => i.regionId === "mainGrid")
-    expect(widgetInstances).toHaveLength(5)
+    expect(widgetInstances).toHaveLength(4)
     for (const inst of widgetInstances) {
       expect(inst.extensionPoint).toBe("widget")
       expect(inst.enabled).toBe(true)

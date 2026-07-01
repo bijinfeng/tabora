@@ -9,7 +9,6 @@ import type { LayoutViewPropsWithI18n } from "./types"
 
 function widgetTitle(instance: PluginInstance) {
   const titles: Record<string, string> = {
-    "today-focus": "今日重点",
     "quick-links": "快捷入口",
     todo: "待办",
     notes: "便签",

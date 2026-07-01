@@ -18,7 +18,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
 const SIZE_OPTIONS: WidgetSize[] = ["S", "M", "L", "XL"]
 
 // 推荐分组里的排序优先级——越靠前展示越早。可根据数据补充。
-const FEATURED_ORDER = ["today-focus", "quick-links", "todo", "notes", "weather"]
+const FEATURED_ORDER = ["quick-links", "todo", "notes", "weather"]
 
 function featuredRank(widget: AvailableWidget): number {
   const idLower = widget.id.toLowerCase()

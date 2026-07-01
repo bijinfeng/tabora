@@ -43,7 +43,6 @@ const officialPluginStyleFiles = [
   "plugins/official/layout-stream/src/styles.css",
   "plugins/official/widget-notes/src/styles.css",
   "plugins/official/widget-quick-links/src/styles.css",
-  "plugins/official/widget-today-focus/src/styles.css",
   "plugins/official/widget-todo/src/styles.css",
   "plugins/official/widget-weather/src/styles.css",
 ]

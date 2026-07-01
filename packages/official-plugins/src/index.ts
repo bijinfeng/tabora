@@ -12,7 +12,6 @@ import {
 import { officialPluginWeather } from "@tabora/plugin-weather"
 import { officialPluginTodo } from "@tabora/plugin-todo"
 import { officialPluginQuickLinks } from "@tabora/plugin-quick-links"
-import { officialPluginTodayFocus } from "@tabora/plugin-today-focus"
 import { officialPluginNotes } from "@tabora/plugin-notes"
 
 export {
@@ -21,7 +20,6 @@ export {
   officialPluginManager,
   officialPluginNotes,
   officialPluginQuickLinks,
-  officialPluginTodayFocus,
   officialPluginTodo,
   officialPluginWeather,
   officialSearchCommandBar,
@@ -42,7 +40,6 @@ export const officialPlugins = [
   officialPluginWeather,
   officialPluginTodo,
   officialPluginQuickLinks,
-  officialPluginTodayFocus,
   officialPluginNotes,
   officialPluginManager,
   officialSettingsWorkspace,

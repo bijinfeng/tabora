@@ -35,12 +35,10 @@ export const layoutDashboard: BuiltinPlugin = {
           defaultRegions: {
             topbar: [{ instanceId: "search-main" }],
             mainGrid: [
-              { instanceId: "today-focus-1" },
               { instanceId: "quick-links-1" },
               { instanceId: "todo-1" },
               { instanceId: "notes-1" },
               { instanceId: "weather-1" },
-              { instanceId: "today-focus-2" },
               { instanceId: "quick-links-2" },
               { instanceId: "todo-2" },
             ],
@@ -54,7 +52,6 @@ export const layoutDashboard: BuiltinPlugin = {
           regions: [{ id: "focus", title: "专注卡片", accepts: ["widget"], required: true }],
           defaultRegions: {
             focus: [
-              { instanceId: "today-focus-1" },
               { instanceId: "quick-links-1" },
               { instanceId: "todo-1" },
               { instanceId: "notes-1" },

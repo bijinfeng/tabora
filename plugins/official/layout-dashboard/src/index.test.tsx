@@ -8,8 +8,8 @@ function instance(overrides: Partial<PluginInstance>): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "official.widgets.today-focus",
-    contributionId: "today-focus",
+    pluginId: "official.widgets.weather",
+    contributionId: "weather",
     extensionPoint: "widget",
     regionId: "focus",
     enabled: true,
@@ -82,7 +82,7 @@ describe("DashboardLayout", () => {
           regions={{
             topbar: makeSlot("topbar"),
             mainGrid: makeSlot("mainGrid", [
-              instance({ id: "today-focus-1", contributionId: "today-focus" }),
+              instance({ id: "weather-1", contributionId: "weather" }),
             ]),
           }}
         />
@@ -302,9 +302,9 @@ describe("FocusLayout", () => {
               ...makeSlot("focus"),
               instances: [
                 instance({
-                  id: "today-focus-1",
-                  pluginId: "official.widgets.today-focus",
-                  contributionId: "today-focus",
+                  id: "weather-1",
+                  pluginId: "official.widgets.weather",
+                  contributionId: "weather",
                   size: "M",
                 }),
                 instance({
@@ -323,7 +323,7 @@ describe("FocusLayout", () => {
     )
     expect(host.querySelectorAll("button.dash-rail-btn").length).toBe(5)
     expect(host.querySelector("[data-layout='focus']")).toBeTruthy()
-    expect(host.querySelector("[data-testid='focus-instance-today-focus-1']")).toBeTruthy()
+    expect(host.querySelector("[data-testid='focus-instance-weather-1']")).toBeTruthy()
     expect(host.querySelector("button.focus-satellite")).toBeTruthy()
     dispose()
   })

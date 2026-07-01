@@ -10,7 +10,6 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
     "official.layout.workbench-dashboard",
     "official.search.command-bar",
     "official.search-providers.basic",
-    "official.widgets.today-focus",
     "official.widgets.quick-links",
     "official.widgets.todo",
     "official.widgets.notes",
@@ -42,14 +41,6 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
       instanceId: "search-main",
       extensionPoint: "search",
       regionId: "topbar",
-    },
-    {
-      pluginId: "official.widgets.today-focus",
-      contributionId: "today-focus",
-      instanceId: "today-focus-1",
-      extensionPoint: "widget",
-      regionId: "mainGrid",
-      size: "M",
     },
     {
       pluginId: "official.widgets.quick-links",

@@ -24,7 +24,6 @@
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-notes": "workspace:*",
     "@tabora/plugin-quick-links": "workspace:*",
-    "@tabora/plugin-today-focus": "workspace:*",
     "@tabora/plugin-todo": "workspace:*",
     "@tabora/plugin-weather": "workspace:*"
   },

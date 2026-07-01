@@ -85,7 +85,6 @@ export const layoutDiyMasonry: BuiltinPlugin = {
           regions: [{ id: "masonry", title: "瀑布流", accepts: ["widget"], required: true }],
           defaultRegions: {
             masonry: [
-              { instanceId: "today-focus-1" },
               { instanceId: "quick-links-1" },
               { instanceId: "notes-1" },
               { instanceId: "todo-1" },

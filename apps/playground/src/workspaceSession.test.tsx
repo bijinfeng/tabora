@@ -92,7 +92,7 @@ describe("workspaceSession", () => {
     })
 
     expect(session.workspace.id).toBe("default")
-    expect(session.instances).toHaveLength(6)
+    expect(session.instances).toHaveLength(5)
     expect(session.searchSettings.defaultProviderId).toBe("official.search.google")
   })
 
@@ -127,7 +127,6 @@ describe("workspaceSession", () => {
         "search",
         "topbar",
       ],
-      ["today-focus-1", "official.widgets.today-focus", "today-focus", "widget", "mainGrid"],
       ["quick-links-1", "official.widgets.quick-links", "quick-links", "widget", "mainGrid"],
       ["notes-1", "official.widgets.notes", "notes", "widget", "mainGrid"],
       ["todo-1", "official.widgets.todo", "todo", "widget", "mainGrid"],
@@ -157,7 +156,7 @@ describe("workspaceSession", () => {
     })
 
     expect(session.instances.some((instance) => instance.id === "weather-1")).toBe(false)
-    expect(session.instances).toHaveLength(5)
+    expect(session.instances).toHaveLength(4)
   })
 
   it("does not seed an existing empty workspace", async () => {
@@ -214,7 +213,7 @@ describe("workspaceSession", () => {
 
     const instances = await instanceRepo.getByWorkspace(workspace.id)
     expect(workspace.name).toBe("新的工作区")
-    expect(instances).toHaveLength(6)
+    expect(instances).toHaveLength(5)
     expect(instances.every((instance) => instance.workspaceId === workspace.id)).toBe(true)
   })
 

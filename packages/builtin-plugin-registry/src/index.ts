@@ -8,7 +8,6 @@ import layoutDashboardStylesHref from "@tabora/layout-dashboard/styles.css?url"
 import layoutDiyMasonryStylesHref from "@tabora/layout-diy-masonry/styles.css?url"
 import notesStylesHref from "@tabora/plugin-notes/styles.css?url"
 import quickLinksStylesHref from "@tabora/plugin-quick-links/styles.css?url"
-import todayFocusStylesHref from "@tabora/plugin-today-focus/styles.css?url"
 import todoStylesHref from "@tabora/plugin-todo/styles.css?url"
 import weatherStylesHref from "@tabora/plugin-weather/styles.css?url"
 
@@ -43,7 +42,6 @@ const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   },
   "official.widgets.notes": { "./styles.css": notesStylesHref },
   "official.widgets.quick-links": { "./styles.css": quickLinksStylesHref },
-  "official.widgets.today-focus": { "./styles.css": todayFocusStylesHref },
   "official.widgets.todo": { "./styles.css": todoStylesHref },
   "official.widgets.weather": { "./styles.css": weatherStylesHref },
   "official.plugin-manager": {
