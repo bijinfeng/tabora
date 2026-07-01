@@ -14,7 +14,6 @@ function widgetTitle(instance: PluginInstance) {
     todo: "待办",
     notes: "便签",
     weather: "天气",
-    "plugin-status": "插件状态",
   }
   return titles[instance.contributionId] ?? instance.contributionId
 }

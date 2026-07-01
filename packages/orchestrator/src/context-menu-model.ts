@@ -5,6 +5,8 @@ export type ContextMenuItem = {
   label: string
   isCurrent?: boolean
   danger?: boolean
+  /** 右侧灰色提示文案，如展开卡片的「双击」 */
+  hint?: string
   run: () => void
 }
 
@@ -104,6 +106,17 @@ export function createWidgetContextMenuModel(
     instanceId,
     sections: [
       {
+        id: "expand",
+        items: [
+          {
+            id: "expand",
+            label: "展开卡片",
+            hint: "双击",
+            run: () => options.onExpand(instanceId),
+          },
+        ],
+      },
+      {
         id: "size",
         items: options.supportedSizes.map((size) => ({
           id: `size-${size}`,
@@ -111,16 +124,6 @@ export function createWidgetContextMenuModel(
           isCurrent: currentSize === size,
           run: () => options.onResize(instanceId, size),
         })),
-      },
-      {
-        id: "expand",
-        items: [
-          {
-            id: "expand",
-            label: "展开详情",
-            run: () => options.onExpand(instanceId),
-          },
-        ],
       },
       ...(pluginItems.length > 0 ? [{ id: "plugin", items: pluginItems }] : []),
       ...settingsSection,

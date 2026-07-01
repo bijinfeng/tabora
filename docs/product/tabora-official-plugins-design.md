@@ -279,7 +279,7 @@ MVP 组件清单：
 | `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供便签和弹窗编辑，验证插件数据和 modal           |
 | `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供待办列表，验证交互型 widget 和持久化           |
 | `official.widgets.weather`            | Weather Widget             | `widget`                                     | 是       | 当前在 productivity 包内                                                                 | 提供天气摘要，按 `DESIGN.md` 进入默认工作台        |
-| `official.plugin-manager`             | Plugin Manager             | `widget`, `settings-panel`                   | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件状态、贡献能力和权限摘要                   |
+| `official.plugin-manager`             | Plugin Manager             | `settings-panel`                             | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件贡献能力和权限摘要                         |
 | `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | 已实现轻量 settings host 面板贡献：外观、搜索；插件面板由 `official.plugin-manager` 贡献 | 聚合插件、外观、搜索等全局设置面板                 |
 
 ## 5. 默认装配方案
@@ -288,21 +288,20 @@ MVP 组件清单：
 
 建议默认装配：
 
-| 区域       | 实例              | 来源插件                              | 尺寸         | 说明                                         |
-| ---------- | ----------------- | ------------------------------------- | ------------ | -------------------------------------------- |
-| `rail`     | `rail-main`       | `official.layout.workbench-dashboard` | 固定左侧区域 | 主页、添加卡片、切换主题、设置等工作台级入口 |
-| `topbar`   | `search-main`     | `official.search.command-bar`         | 固定顶部区域 | 命令搜索入口                                 |
-| `mainGrid` | `today-focus-1`   | `official.widgets.today-focus`        | M            | 今日重点，默认首屏第一张核心卡片             |
-| `mainGrid` | `quick-links-1`   | `official.widgets.quick-links`        | M            | 快捷入口                                     |
-| `mainGrid` | `todo-1`          | `official.widgets.todo`               | S            | 待办列表                                     |
-| `mainGrid` | `notes-1`         | `official.widgets.notes`              | L            | 快速记录，按原型占据主编辑区域               |
-| `mainGrid` | `weather-1`       | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
-| `mainGrid` | `plugin-status-1` | `official.plugin-manager`             | S            | 插件状态摘要，位于核心卡片之后               |
-| `settings` | `plugin-manager`  | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
+| 区域       | 实例             | 来源插件                              | 尺寸         | 说明                                         |
+| ---------- | ---------------- | ------------------------------------- | ------------ | -------------------------------------------- |
+| `rail`     | `rail-main`      | `official.layout.workbench-dashboard` | 固定左侧区域 | 主页、添加卡片、切换主题、设置等工作台级入口 |
+| `topbar`   | `search-main`    | `official.search.command-bar`         | 固定顶部区域 | 命令搜索入口                                 |
+| `mainGrid` | `today-focus-1`  | `official.widgets.today-focus`        | M            | 今日重点，默认首屏第一张核心卡片             |
+| `mainGrid` | `quick-links-1`  | `official.widgets.quick-links`        | M            | 快捷入口                                     |
+| `mainGrid` | `todo-1`         | `official.widgets.todo`               | S            | 待办列表                                     |
+| `mainGrid` | `notes-1`        | `official.widgets.notes`              | L            | 快速记录，按原型占据主编辑区域               |
+| `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
+| `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
-当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。主网格默认按原型样张包含 `today-focus-1`、`quick-links-1`、`todo-1`、`notes-1`、`weather-1` 和 `plugin-status-1`。
+当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。主网格默认按原型样张包含 `today-focus-1`、`quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
 
-默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/workbench-prototype.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、今日重点、快捷入口、待办、便签和天气摘要。插件状态作为 S 尺寸摘要卡片进入默认主网格，但排在核心工作卡片之后，不抢占首屏核心位置；完整插件管理仍从设置中心进入。
+默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/workbench-prototype.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、今日重点、快捷入口、待办、便签和天气摘要。完整插件管理从设置中心进入。
 
 ### 5.2 默认插件加载顺序
 
@@ -1063,13 +1062,13 @@ MVP 目标新增：
 
 MVP widget 清单：
 
-| Widget ID     | 名称     | 支持尺寸    | 默认尺寸 | 允许多实例 | Views       | MVP 默认 |
-| ------------- | -------- | ----------- | -------- | ---------- | ----------- | -------- |
-| `today-focus` | 今日重点 | S, M, L     | M        | 是         | card        | 是       |
-| `quick-links` | 快捷入口 | S, M, L     | M        | 是         | card        | 是       |
-| `notes`       | 便签     | S, M, L     | M        | 是         | card, modal | 是       |
-| `todo`        | 待办     | S, M, L, XL | M        | 是         | card        | 是       |
-| `weather`     | 天气     | S, M        | S        | 是         | card        | 是       |
+| Widget ID     | 名称     | 支持尺寸    | 默认尺寸 | 允许多实例 | Views                      | MVP 默认 |
+| ------------- | -------- | ----------- | -------- | ---------- | -------------------------- | -------- |
+| `today-focus` | 今日重点 | S, M, L     | M        | 是         | card                       | 是       |
+| `quick-links` | 快捷入口 | S, M, L     | M        | 是         | card, expand, expandFooter | 是       |
+| `notes`       | 便签     | S, M, L     | M        | 是         | card, modal                | 是       |
+| `todo`        | 待办     | S, M, L, XL | M        | 是         | card                       | 是       |
+| `weather`     | 天气     | S, M        | S        | 是         | card                       | 是       |
 
 ### 11.3 统一卡片规范
 
@@ -1199,6 +1198,14 @@ V1.5：
 1. 用户删除所有入口。
 2. 卡片显示“添加第一个入口”按钮。
 3. 不显示解释性大段文案。
+
+展开弹窗：
+
+1. 用户双击卡片或右键选择展开。
+2. 宿主打开统一 expand overlay，渲染 `official.widgets.quick-links.expand` 作为主体视图（常用入口列表 / 管理分组 / 添加入口三面板 + 右侧配置）。
+3. 操作按钮（管理分组 / 添加入口，随面板切换为完成 / 取消 / 保存入口）通过 `views.expandFooter` 注入外层弹窗统一 footer，不在 body 内部自绘 footer，避免双 footer。
+4. 主体视图与 footer 视图共享一个按 instanceId 建立的插件内部会话 store，保证面板切换、校验错误等瞬时状态同步。
+5. 关闭弹窗后卡片入口数量与列表同步更新。
 
 #### 设计语言
 
@@ -1567,19 +1574,13 @@ V1.5：
 
 扩展点：
 
-- `widget`
 - `settings-panel`
 
 当前声明：
 
-| 字段                   | 值                          |
-| ---------------------- | --------------------------- |
-| widget id              | `plugin-status`             |
-| title                  | `插件状态`                  |
-| supportedSizes         | S                           |
-| defaultSize            | S                           |
-| allowMultipleInstances | false                       |
-| settings panel id      | `official.settings.plugins` |
+| 字段              | 值                          |
+| ----------------- | --------------------------- |
+| settings panel id | `official.settings.plugins` |
 
 ### 12.3 信息结构
 

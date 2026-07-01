@@ -42,7 +42,7 @@ describe("workbench dashboard layout", () => {
       grid: true,
       overflowX: false,
     })
-    expect(initial.cardTitles).toEqual(["今日重点", "快捷入口", "待办", "便签", "天气", "插件状态"])
+    expect(initial.cardTitles).toEqual(["今日重点", "快捷入口", "待办", "便签", "天气"])
 
     clickRequired('.workbench-rail button[aria-label="新建分组"]')
     await waitFor(() => expect(document.querySelector(".dash-inline-pop.open")).toBeTruthy())

@@ -78,6 +78,7 @@ const widgetContributionSchema = z
     views: z.object({
       card: z.string().min(1),
       expand: z.string().min(1).optional(),
+      expandFooter: z.string().min(1).optional(),
       settings: z.string().min(1).optional(),
     }),
     contextMenus: z

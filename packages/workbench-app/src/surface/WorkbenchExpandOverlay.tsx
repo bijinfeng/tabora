@@ -5,10 +5,11 @@ import { Show } from "solid-js"
 import type { JSX } from "solid-js"
 
 import type { ShellTranslation, WorkbenchShellPluginViewBoundaryCopy } from "../i18n"
-import type { ExpandState, SolidView } from "./WorkbenchShellChrome.types"
+import type { SolidView } from "./WorkbenchShellChrome.types"
+import type { WorkbenchExpandState } from "./WorkbenchShellInteractions"
 
 export function WorkbenchExpandOverlay(props: {
-  expandState: ExpandState | null
+  expandState: WorkbenchExpandState | null
   getView: (viewId: string) => SolidView<WidgetViewProps> | undefined
   widgetIconForProps: (props: WidgetViewProps) => JSX.Element
   onClose: () => void
@@ -73,10 +74,38 @@ export function WorkbenchExpandOverlay(props: {
               })()}
             </div>
             <div class="expand-footer">
-              <span class="expand-footer-meta">{expand().instanceId}</span>
-              <span class="expand-close-hint">
-                {props.tShell?.("chrome.expand.footerHint") ?? "Esc 关闭 · 双击打开 · 右键菜单"}
-              </span>
+              {(() => {
+                const footerViewId = expand().footerViewId
+                const FooterView = footerViewId ? props.getView(footerViewId) : undefined
+                if (!FooterView) {
+                  return (
+                    <>
+                      <span class="expand-footer-meta">{expand().instanceId}</span>
+                      <span class="expand-close-hint">
+                        {props.tShell?.("chrome.expand.footerHint") ??
+                          "Esc 关闭 · 双击打开 · 右键菜单"}
+                      </span>
+                    </>
+                  )
+                }
+
+                return (
+                  <PluginViewBoundary
+                    instanceId={expand().instanceId}
+                    title={expand().title}
+                    {...(props.pluginViewBoundaryCopy
+                      ? { copy: props.pluginViewBoundaryCopy }
+                      : {})}
+                  >
+                    <div
+                      class="expand-footer-plugin"
+                      data-tabora-plugin-id={expand().props.pluginId}
+                    >
+                      {FooterView(expand().props)}
+                    </div>
+                  </PluginViewBoundary>
+                )
+              })()}
             </div>
           </div>
         </div>

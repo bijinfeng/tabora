@@ -59,7 +59,6 @@ export const layoutDashboard: BuiltinPlugin = {
               { instanceId: "todo-1" },
               { instanceId: "notes-1" },
               { instanceId: "weather-1" },
-              { instanceId: "plugin-status-1" },
             ],
           },
           supportsResponsive: true,

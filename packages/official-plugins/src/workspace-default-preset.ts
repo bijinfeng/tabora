@@ -83,14 +83,6 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
       regionId: "mainGrid",
       size: "S",
     },
-    {
-      pluginId: "official.plugin-manager",
-      contributionId: "plugin-status",
-      instanceId: "plugin-status-1",
-      extensionPoint: "widget",
-      regionId: "mainGrid",
-      size: "S",
-    },
   ],
 }
 

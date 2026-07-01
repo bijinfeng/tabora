@@ -7,6 +7,7 @@ export type WorkbenchExpandState = {
   instanceId: string
   title: string
   viewId: string
+  footerViewId?: string
   mode: "expand" | "settings"
   props: WidgetViewProps
 }
@@ -57,6 +58,19 @@ export function resolveWorkbenchExpandView(
   return null
 }
 
+// 仅在声明了 expand 主体视图、且 expandFooter 已注册时返回 footer view id；
+// 否则返回 null，宿主回退默认 footer（实例 ID + Esc 提示）。
+export function resolveWorkbenchExpandFooterView(
+  widget: Pick<WidgetContribution, "views"> | undefined,
+  hasView: WidgetViewLookup,
+): string | null {
+  if (!widget) return null
+  if (!widget.views.expand) return null
+  const footerViewId = widget.views.expandFooter
+  if (!footerViewId) return null
+  return hasView(footerViewId) ? footerViewId : null
+}
+
 export function resolveWorkbenchInstanceSettingsView(
   widget: Pick<WidgetContribution, "views"> | undefined,
   hasView: WidgetViewLookup,
@@ -88,11 +102,14 @@ export function buildWorkbenchWidgetExpandState(
     }
   }
 
+  const footerViewId = resolveWorkbenchExpandFooterView(options.widget, options.hasView)
+
   return {
     expandState: {
       instanceId: options.instance.id,
       title: options.model.title,
       viewId: target.viewId,
+      ...(footerViewId ? { footerViewId } : {}),
       mode: target.mode,
       props: options.buildWidgetViewProps(options.instance, options.model),
     },

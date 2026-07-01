@@ -239,6 +239,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     renderWidgetIcon: renderWorkbenchWidgetIcon,
     openWidgetExpand: widgetController.openWidgetExpand,
     setContextMenu: options.setters.setContextMenu,
+    buildContextMenuItems: (instanceId) => widgetController.buildContextMenuItems(instanceId),
     changeWidgetSize: widgetController.changeWidgetSize,
     removeWidget: widgetController.removeWidget,
     isDragging: (instanceId) => dragHandlers.isDragging(instanceId),

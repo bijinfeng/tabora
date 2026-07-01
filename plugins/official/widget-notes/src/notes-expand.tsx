@@ -1,6 +1,6 @@
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { DatePicker } from "@tabora/ui"
+import { Button, DatePicker, IconButton, Input } from "@tabora/ui"
 import { ChevronDown, Eye, List, Plus, Search, Star, Trash } from "lucide-solid"
 
 type Note = {
@@ -165,15 +165,15 @@ export function NotesExpand(props: WidgetViewProps) {
     <div class="notes-expand-root">
       <div class="notes-side">
         <div class="notes-side-search">
-          <div class="notes-side-search-box">
-            <Search size={13} />
-            <input
-              type="search"
-              placeholder="搜索便签..."
-              value={searchQuery()}
-              onInput={(e) => setSearchQuery(e.currentTarget.value)}
-            />
-          </div>
+          <Input
+            size="sm"
+            type="search"
+            placeholder="搜索便签..."
+            aria-label="搜索便签"
+            value={searchQuery()}
+            onInput={(value) => setSearchQuery(value)}
+            leadingIcon={<Search size={13} />}
+          />
         </div>
         <div class="notes-side-cal">
           <DatePicker
@@ -240,9 +240,9 @@ export function NotesExpand(props: WidgetViewProps) {
       <div class="notes-main">
         <div class="notes-capture">
           <div class="notes-capture-inner">
-            <button class="notes-capture-plus" type="button" aria-label="附加文件">
+            <IconButton size="sm" variant="ghost" aria-label="附加文件">
               <Plus size={15} />
-            </button>
+            </IconButton>
             <textarea
               rows="1"
               placeholder="记点什么...（Enter 发送）"
@@ -255,11 +255,11 @@ export function NotesExpand(props: WidgetViewProps) {
             />
           </div>
           <div class="notes-capture-foot">
-            <button class="notes-capture-vis" type="button">
+            <Button size="sm" variant="secondary">
               <Eye size={12} />
               公开
               <ChevronDown size={10} />
-            </button>
+            </Button>
             <span class="notes-capture-save">保存</span>
           </div>
         </div>
@@ -324,9 +324,9 @@ export function NotesExpand(props: WidgetViewProps) {
                         <div class="notes-card-foot">
                           <span class="notes-card-meta">{note.content.length} 字</span>
                           <div class="notes-card-actions">
-                            <button
-                              class="notes-card-act"
-                              type="button"
+                            <IconButton
+                              size="sm"
+                              variant="ghost"
                               aria-label="置顶"
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -334,10 +334,10 @@ export function NotesExpand(props: WidgetViewProps) {
                               }}
                             >
                               <Star size={14} />
-                            </button>
-                            <button
-                              class="notes-card-act danger"
-                              type="button"
+                            </IconButton>
+                            <IconButton
+                              size="sm"
+                              variant="danger"
                               aria-label="删除"
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -345,7 +345,7 @@ export function NotesExpand(props: WidgetViewProps) {
                               }}
                             >
                               <Trash size={14} />
-                            </button>
+                            </IconButton>
                           </div>
                         </div>
                       </div>
@@ -367,23 +367,19 @@ export function NotesExpand(props: WidgetViewProps) {
                           已保存
                         </span>
                         <div class="notes-card-edit-btns">
-                          <button
-                            class="notes-btn notes-btn-red"
-                            type="button"
+                          <Button
+                            size="sm"
+                            variant="danger-subtle"
                             onClick={() => {
                               void deleteNote(note.id)
                               setEditingId(null)
                             }}
                           >
                             删除
-                          </button>
-                          <button
-                            class="notes-btn notes-btn-accent"
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                          >
+                          </Button>
+                          <Button size="sm" variant="primary" onClick={() => setEditingId(null)}>
                             完成
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>

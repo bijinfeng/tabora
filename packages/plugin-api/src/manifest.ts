@@ -61,6 +61,7 @@ export type WidgetContribution = {
   views: {
     card: string
     expand?: string
+    expandFooter?: string
     settings?: string
   }
   contextMenus?: WidgetContextMenuContribution[]

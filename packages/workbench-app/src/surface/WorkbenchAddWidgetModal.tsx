@@ -18,14 +18,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
 const SIZE_OPTIONS: WidgetSize[] = ["S", "M", "L", "XL"]
 
 // 推荐分组里的排序优先级——越靠前展示越早。可根据数据补充。
-const FEATURED_ORDER = [
-  "today-focus",
-  "quick-links",
-  "todo",
-  "notes",
-  "weather",
-  "plugin-status",
-]
+const FEATURED_ORDER = ["today-focus", "quick-links", "todo", "notes", "weather"]
 
 function featuredRank(widget: AvailableWidget): number {
   const idLower = widget.id.toLowerCase()
@@ -287,9 +280,7 @@ function LeftColumn(props: {
         <Show
           when={props.widgets.length > 0}
           fallback={
-            <div class="add-card-empty">
-              {props.t("chrome.addWidget.empty", "没有匹配的卡片")}
-            </div>
+            <div class="add-card-empty">{props.t("chrome.addWidget.empty", "没有匹配的卡片")}</div>
           }
         >
           <For each={props.widgets}>
@@ -346,10 +337,7 @@ function WidgetRow(props: {
         </Show>
       </span>
       <span class="add-card-item-meta">
-        <span
-          class="add-card-source"
-          classList={{ official: props.widget.source === "official" }}
-        >
+        <span class="add-card-source" classList={{ official: props.widget.source === "official" }}>
           {props.widget.source === "official"
             ? props.t("chrome.addWidget.badge.official", "官方")
             : props.t("chrome.addWidget.badge.thirdParty", "第三方")}
@@ -437,9 +425,7 @@ function PreviewArea(props: {
             <span class="add-card-workspace-dot" />
             {props.t("chrome.addWidget.workspaceBar.todayGroup", "今日")}
           </span>
-          <span>
-            {props.t("chrome.addWidget.workspaceBar.placement", "添加后放到分组末尾")}
-          </span>
+          <span>{props.t("chrome.addWidget.workspaceBar.placement", "添加后放到分组末尾")}</span>
         </div>
         <div class="add-card-workspace-grid">
           <div
@@ -462,10 +448,7 @@ function PreviewArea(props: {
               </span>
             </div>
             <div class="add-card-preview-widget-body">
-              <Show
-                when={props.widget.description}
-                fallback={<span>{props.widget.title}</span>}
-              >
+              <Show when={props.widget.description} fallback={<span>{props.widget.title}</span>}>
                 {props.widget.description}
               </Show>
             </div>

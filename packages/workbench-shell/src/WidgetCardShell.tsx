@@ -1,7 +1,8 @@
 import type { JSX } from "solid-js"
-import { onCleanup, onMount } from "solid-js"
+import { onCleanup, onMount, Show } from "solid-js"
 import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
+import { ContextMenu, type ContextMenuItem } from "@tabora/ui"
 import { X } from "lucide-solid"
 
 export type WidgetHostCallbacks = {
@@ -23,6 +24,9 @@ export type WidgetCardShellProps = {
   currentSize: WidgetSize
   children: JSX.Element
   callbacks: WidgetHostCallbacks
+  /** 右键菜单项；提供时卡片用 @tabora/ui ContextMenu 渲染原生右键菜单 */
+  contextMenuItems?: ContextMenuItem[]
+  onContextMenuSelect?: (key: string) => void
   copy?: {
     removeAriaLabel: (title: string) => string
   }
@@ -38,10 +42,12 @@ function gridRowSpan(size: WidgetSize): number {
 
 export function WidgetCardShell(props: WidgetCardShellProps) {
   let headerRef: HTMLDivElement | undefined
-  let rootRef: HTMLDivElement | undefined
+
+  const bindRoot = (element: HTMLElement | undefined) => {
+    props.callbacks.bindSortableRoot?.(element)
+  }
 
   onMount(() => {
-    props.callbacks.bindSortableRoot?.(rootRef)
     props.callbacks.bindSortableHandle?.(
       headerRef?.querySelector<HTMLElement>(".card-title") ?? undefined,
     )
@@ -53,48 +59,74 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
     }
   })
 
-  return (
-    <div
-      class="grid-item"
-      classList={{ dragging: props.callbacks.isDragging }}
-      style={{
-        "--widget-col-span": `${gridColumnSpan(props.currentSize)}`,
-        "--widget-row-span": `${gridRowSpan(props.currentSize)}`,
-      }}
-      data-widget-size={props.currentSize}
-      data-widget-instance-id={props.instance.id}
-      aria-label={props.title}
-      tabIndex={0}
-      ref={(element) => {
-        rootRef = element
-      }}
-      onClick={(event) => {
-        if (event.detail === 2) props.callbacks.onExpand()
-      }}
-      onDblClick={props.callbacks.onDblClick}
-      onContextMenu={(event) => {
-        event.preventDefault()
-        props.callbacks.onContextMenu(event)
-      }}
-    >
-      <div class="widget-card">
-        <div class="card-header" ref={(element) => (headerRef = element)}>
-          <h3 class="card-title" data-allow-expand="true">
-            {props.icon}
-            <span class="card-title-text">{props.title}</span>
-          </h3>
-          <div class="card-actions">
-            <button
-              class="card-action-btn card-danger"
-              aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
-              onClick={() => props.callbacks.onRemove()}
-            >
-              <X size={15} />
-            </button>
-          </div>
+  const cardInner = (
+    <div class="widget-card">
+      <div class="card-header" ref={(element) => (headerRef = element)}>
+        <h3 class="card-title" data-allow-expand="true">
+          {props.icon}
+          <span class="card-title-text">{props.title}</span>
+        </h3>
+        <div class="card-actions">
+          <button
+            class="card-action-btn card-danger"
+            aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
+            onClick={() => props.callbacks.onRemove()}
+          >
+            <X size={15} />
+          </button>
         </div>
-        <div class="card-body">{props.children}</div>
       </div>
+      <div class="card-body">{props.children}</div>
     </div>
+  )
+
+  const gridItemClassList = () => ({
+    "grid-item": true,
+    dragging: props.callbacks.isDragging,
+  })
+
+  const gridItemProps: Record<string, unknown> = {
+    style: {
+      "--widget-col-span": `${gridColumnSpan(props.currentSize)}`,
+      "--widget-row-span": `${gridRowSpan(props.currentSize)}`,
+    },
+    "data-widget-size": props.currentSize,
+    "data-widget-instance-id": props.instance.id,
+    "aria-label": props.title,
+    tabIndex: 0,
+    onClick: (event: MouseEvent) => {
+      if (event.detail === 2) props.callbacks.onExpand()
+    },
+    onDblClick: props.callbacks.onDblClick,
+  }
+
+  return (
+    <Show
+      when={props.contextMenuItems && props.contextMenuItems.length > 0}
+      fallback={
+        <div
+          {...gridItemProps}
+          classList={gridItemClassList()}
+          ref={bindRoot}
+          onContextMenu={(event) => {
+            event.preventDefault()
+            props.callbacks.onContextMenu(event)
+          }}
+        >
+          {cardInner}
+        </div>
+      }
+    >
+      <ContextMenu
+        items={props.contextMenuItems!}
+        onSelect={(key) => props.onContextMenuSelect?.(key)}
+        triggerRef={bindRoot}
+        triggerClassList={gridItemClassList()}
+        triggerProps={gridItemProps}
+        aria-label={props.title}
+      >
+        {cardInner}
+      </ContextMenu>
+    </Show>
   )
 }

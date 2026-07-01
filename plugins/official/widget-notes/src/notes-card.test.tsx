@@ -56,7 +56,7 @@ describe("NotesCard", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesCard {...props} />, root)
-    const btn = root.querySelector(".notes-widget-plus")
+    const btn = root.querySelector(".notes-widget-foot button")
     expect(btn).toBeTruthy()
     if (btn) {
       const event = new MouseEvent("click", { bubbles: true })
@@ -159,7 +159,7 @@ describe("NotesExpand", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesExpand {...makeProps()} />, root)
-    expect(root.querySelector(".notes-side-search-box input")).toBeTruthy()
+    expect(root.querySelector(".notes-side-search input")).toBeTruthy()
     root.remove()
   })
 

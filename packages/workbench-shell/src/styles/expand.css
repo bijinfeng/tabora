@@ -13,6 +13,7 @@
 
 .expand-shell {
   width: min(920px, calc(100vw - 64px));
+  min-height: min(440px, calc(100vh - 64px));
   max-height: calc(100vh - 64px);
   background: rgb(var(--color-surface));
   border: 1px solid rgb(var(--color-line));
@@ -38,28 +39,30 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 18px;
+  padding: 10px 12px;
   border-bottom: 1px solid rgb(var(--color-line));
-  background: rgb(var(--color-surface));
+  background: color-mix(in srgb, rgb(var(--color-surface-soft)) 72%, rgb(var(--color-surface)));
 }
 
 .expand-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
 .expand-title-icon {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--tbr-radius-control, 6px);
-  background: rgba(var(--color-accent), 0.1);
+  background: rgb(var(--color-accent-soft));
   color: rgb(var(--color-accent));
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .expand-title-texts {
@@ -70,14 +73,14 @@
 }
 
 .expand-title-text {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 650;
   line-height: 1.25;
 }
 
 .expand-title-meta {
-  font-size: 12px;
-  color: rgb(var(--color-muted));
+  font-size: 10px;
+  color: rgb(var(--color-subtle));
   line-height: 1.2;
 }
 
@@ -124,6 +127,17 @@
   background: rgb(var(--color-surface-soft));
   font-size: 12px;
   color: rgb(var(--color-muted));
+}
+
+/* 插件注入 footer 时，footer 区只承载插件内容，由插件自行布局 */
+.expand-footer:has(.expand-footer-plugin) {
+  padding: 0;
+  background: rgb(var(--color-surface));
+}
+
+.expand-footer-plugin {
+  width: 100%;
+  min-width: 0;
 }
 
 .expand-footer-meta {

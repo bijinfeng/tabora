@@ -32,6 +32,26 @@
   flex-shrink: 0;
 }
 
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-text));
+  font: inherit;
+  line-height: 1;
+  padding: 0;
+  outline: none;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-search-input::placeholder {
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .quick-search:focus-within {
+  border-color: rgb(var(--color-accent));
+}
+
 /* 链接网格 - 用 auto-fill 让链接保持紧凑小方块，列数随卡片实际宽度自适应
    (设计稿链接约 76px 宽，工作台卡片可能是 1~2 列 span，固定列数会把链接拉太宽) */
 [data-tabora-plugin-id="official.widgets.quick-links"] .link-grid {
@@ -78,11 +98,16 @@
 /* 链接锚点 */
 [data-tabora-plugin-id="official.widgets.quick-links"] .link-anchor {
   display: grid;
+  width: 100%;
   height: 100%;
+  padding: 6px 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
   align-content: center;
   justify-items: center;
   gap: 4px;
-  padding: 6px 4px;
   color: inherit;
   text-decoration: none;
 }
@@ -140,105 +165,413 @@
   display: none;
 }
 
-/* Footer */
-[data-tabora-plugin-id="official.widgets.quick-links"] .quick-links-foot {
+/* ══════════ 展开弹窗（QuickLinksExpand）══════════ */
+/* body 视图：shell 的 .expand-body padding 为 0，这里自行铺满并左右分区可滚动 */
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-expand-content {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: start;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-expand-main {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-expand-side {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+/* footer 视图：注入 shell .expand-footer（注入态 padding 已置 0），由本条自带内边距与分隔线 */
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-expand-footer {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding-top: 2px;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgb(var(--color-surface));
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .foot-text {
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-footer-info {
+  min-width: 0;
+  flex: 1;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-footer-hint {
+  color: rgb(var(--color-subtle));
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-footer-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+
+/* PLACEHOLDER_EXPAND_CSS */
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-section-head strong {
+  color: rgb(var(--color-text));
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* 每个面板内的内容纵向排列并保持间距（标题 / 搜索框 / 列表之间） */
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-panel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-link-table {
+  display: grid;
+  gap: 6px;
+}
+
+[data-widget-size] [data-tabora-plugin-id="official.widgets.quick-links"] .ql-link-table {
+  grid-template-columns: 1fr;
+}
+
+/* PLACEHOLDER_EXPAND_CSS2 */
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-link-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface-soft));
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-link-row:hover {
+  border-color: rgb(var(--color-line-strong));
+  background: rgb(var(--color-surface-hover));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-link-row:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 1px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-link-row-add {
+  border-style: dashed;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* PLACEHOLDER_EXPAND_CSS3 */
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-copy strong,
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-copy strong {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-copy span {
   color: rgb(var(--color-subtle));
   font-size: 10px;
   line-height: 1.2;
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .foot-manage-btn {
-  padding: 0;
-  border: none;
-  background: transparent;
+/* 链接行 wrapper，用于容纳 hover 操作按钮 */
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-link-row-wrapper {
+  position: relative;
+}
+
+/* 默认显示"编"字，hover 时隐藏 */
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-action-default {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 6px;
+  background: rgb(var(--color-surface));
   color: rgb(var(--color-muted));
   font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: pointer;
-  transition: color 120ms ease;
+  font-weight: 650;
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .foot-manage-btn:hover {
-  color: rgb(var(--color-accent));
-}
-
-/* 编辑操作按钮 */
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-actions {
-  position: absolute;
-  top: 2px;
-  right: 2px;
+[data-tabora-plugin-id="official.widgets.quick-links"]
+  .ql-link-row-wrapper:hover
+  .ql-row-action-default {
   display: none;
-  gap: 2px;
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-item:hover .link-actions,
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-item:focus-within .link-actions {
+/* hover 时显示操作按钮（绝对定位在右侧） */
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-row-action-hover {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: none;
+  gap: 4px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"]
+  .ql-link-row-wrapper:hover
+  .ql-row-action-hover {
   display: flex;
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn {
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border: none;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 6px;
   background: rgb(var(--color-surface));
   color: rgb(var(--color-muted));
-  font-family: inherit;
-  font-size: 10px;
   cursor: pointer;
   transition:
     background 120ms ease,
-    color 120ms ease;
+    color 120ms ease,
+    border-color 120ms ease;
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn:hover {
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-action-btn:hover {
   background: rgb(var(--color-accent) / 0.08);
   color: rgb(var(--color-accent));
+  border-color: rgb(var(--color-accent) / 0.3);
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn svg {
-  flex-shrink: 0;
-}
-
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-mini-btn:disabled {
-  cursor: default;
-  opacity: 0.35;
-}
-
-[data-tabora-plugin-id="official.widgets.quick-links"] .link-delete:hover {
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-action-delete:hover {
   background: rgb(var(--color-danger) / 0.08);
   color: rgb(var(--color-danger));
+  border-color: rgb(var(--color-danger) / 0.3);
 }
 
-/* 编辑表单 */
-[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-edit-form,
-[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-add-form {
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-empty {
+  margin: 4px 0 0;
+  padding: 12px;
+  text-align: center;
+  color: rgb(var(--color-subtle));
+  font-size: 12px;
+}
+
+/* PLACEHOLDER_EXPAND_CSS4 */
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-editor {
+  display: grid;
+  gap: 8px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface-soft));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-drag-grip {
+  display: grid;
+  place-items: center;
+  color: rgb(var(--color-subtle));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-copy strong,
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-copy strong {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-copy span {
+  color: rgb(var(--color-subtle));
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-inline-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+/* PLACEHOLDER_EXPAND_CSS5 */
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-entry-form {
+  display: grid;
+  gap: 10px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-color-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-swatch {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 7px;
+  background: var(--ql-swatch);
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-swatch.is-active {
+  border-color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.18);
+}
+
+/* Select 下拉需高于展开弹窗（overlay z-index 300） */
+.tbr-select-content {
+  z-index: 350;
+}
+
+/* PLACEHOLDER_EXPAND_CSS6 */
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-info-card {
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface-soft));
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-info-line {
   display: flex;
   align-items: center;
-  gap: 4px;
-  height: 100%;
-  padding: 4px;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  line-height: 1.2;
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-edit-fields,
-[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-add-form {
-  min-width: 0;
-  flex: 1;
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-info-line strong {
+  color: rgb(var(--color-text));
+  font-weight: 650;
 }
 
-[data-tabora-plugin-id="official.widgets.quick-links"] .quick-link-edit-actions {
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-chips {
   display: flex;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 999px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-muted));
+  font-size: 10px;
+  font-weight: 600;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(var(--color-accent));
+  opacity: 0.72;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-chip.is-hidden {
+  opacity: 0.5;
+}
+
+[data-tabora-plugin-id="official.widgets.quick-links"] .ql-group-chip.is-hidden::before {
+  background: rgb(var(--color-subtle));
+}
+
+/* PLACEHOLDER_EXPAND_CSS7 */
+
+/* 窄屏：侧栏折叠，单列布局 */
+@media (max-width: 640px) {
+  [data-tabora-plugin-id="official.widgets.quick-links"] .ql-expand-content {
+    grid-template-columns: 1fr;
+  }
+
+  [data-tabora-plugin-id="official.widgets.quick-links"] .ql-expand-side {
+    display: none;
+  }
 }

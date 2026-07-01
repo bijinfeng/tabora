@@ -1,4 +1,4 @@
-import type { WidgetViewProps, WidgetSize } from "@tabora/plugin-api"
+import type { WidgetSize } from "@tabora/plugin-api"
 import type { JSX } from "solid-js"
 
 export type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
@@ -23,14 +23,6 @@ export type WidgetContextSection = {
     isCurrent?: boolean
     run: () => void
   }>
-}
-
-export type ExpandState = {
-  instanceId: string
-  title: string
-  viewId: string
-  mode: "expand" | "settings"
-  props: WidgetViewProps
 }
 
 export type SafeLayoutModel = {

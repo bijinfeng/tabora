@@ -1,66 +1,37 @@
-import { createSignal, For, onMount, Show } from "solid-js"
+import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { InlineError, Input } from "@tabora/ui"
-import { ArrowDown, ArrowUp, Check, Pencil, X } from "lucide-solid"
-
-type QuickLink = {
-  id: string
-  title: string
-  url: string
-}
-
-function isValidUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url)
-    return parsed.protocol === "http:" || parsed.protocol === "https:"
-  } catch {
-    return false
-  }
-}
-
-function getDefaultLinks(config: Record<string, unknown>): QuickLink[] {
-  if (Array.isArray(config.links) && config.links.length > 0) {
-    return (config.links as Array<{ title: string; url: string }>).map((link) => ({
-      id: crypto.randomUUID(),
-      title: link.title,
-      url: link.url,
-    }))
-  }
-  return [
-    { id: crypto.randomUUID(), title: "GitHub", url: "https://github.com" },
-    { id: crypto.randomUUID(), title: "Notion", url: "https://notion.so" },
-    { id: crypto.randomUUID(), title: "Linear", url: "https://linear.app" },
-    { id: crypto.randomUUID(), title: "Figma", url: "https://figma.com" },
-    { id: crypto.randomUUID(), title: "YouTube", url: "https://youtube.com" },
-  ]
-}
-
-function linkIcon(title: string): string {
-  const trimmed = title.trim()
-  if (!trimmed) return "?"
-  return trimmed.charAt(0).toUpperCase()
-}
+import {
+  displayUrl,
+  getDefaultLinks,
+  initialsFromTitle,
+  LINKS_KEY,
+  type QuickLink,
+} from "./quick-links-data"
 
 export function QuickLinksCard(props: WidgetViewProps) {
   const [links, setLinks] = createSignal<QuickLink[]>([])
-  const [editing, setEditing] = createSignal(false)
-  const [newTitle, setNewTitle] = createSignal("")
-  const [newUrl, setNewUrl] = createSignal("")
-  const [editId, setEditId] = createSignal<string | null>(null)
-  const [editTitle, setEditTitle] = createSignal("")
-  const [editUrl, setEditUrl] = createSignal("")
-  const [urlError, setUrlError] = createSignal<string | null>(null)
+  const [query, setQuery] = createSignal("")
 
-  const storageKey = "quick-links"
+  const storageKey = LINKS_KEY
+  const showSearch = () => (props.size ?? "M") !== "S"
+
+  const filteredLinks = createMemo(() => {
+    const q = query().trim().toLowerCase()
+    const all = links()
+    if (!q) return all
+    return all.filter(
+      (link) =>
+        link.title.toLowerCase().includes(q) || displayUrl(link.url).toLowerCase().includes(q),
+    )
+  })
+
   const visibleLinks = () => {
     const size = props.size ?? "M"
-    const all = links()
+    const matched = filteredLinks()
     // S 尺寸只显示前 4 个
-    if (size === "S") return all.slice(0, 4)
-    return all.slice(0, 12)
+    if (size === "S") return matched.slice(0, 4)
+    return matched
   }
-  const showSearch = () => (props.size ?? "M") !== "S"
-  const showFoot = () => (props.size ?? "M") !== "S"
 
   onMount(async () => {
     let saved = await props.data.get<QuickLink[]>(storageKey)
@@ -71,251 +42,49 @@ export function QuickLinksCard(props: WidgetViewProps) {
     setLinks(saved)
   })
 
-  async function persist(updated: QuickLink[]) {
-    await props.data.save(storageKey, updated)
-    setLinks(updated)
-  }
-
-  function startAdd() {
-    setEditing(true)
-    setNewTitle("")
-    setNewUrl("")
-    setUrlError(null)
-  }
-
-  async function confirmAdd() {
-    const title = newTitle().trim()
-    const url = newUrl().trim()
-    if (!title) return
-    if (!isValidUrl(url)) {
-      setUrlError("请输入有效的 https:// URL")
-      return
-    }
-    setUrlError(null)
-    const next = [...links(), { id: crypto.randomUUID(), title, url }]
-    await persist(next)
-    setEditing(false)
-  }
-
-  function cancelAdd() {
-    setEditing(false)
-    setUrlError(null)
-  }
-
-  function startEdit(link: QuickLink) {
-    setEditId(link.id)
-    setEditTitle(link.title)
-    setEditUrl(link.url)
-    setUrlError(null)
-  }
-
-  async function confirmEdit() {
-    const id = editId()
-    if (!id) return
-    const title = editTitle().trim()
-    const url = editUrl().trim()
-    if (!title) return
-    if (!isValidUrl(url)) {
-      setUrlError("请输入有效的 https:// URL")
-      return
-    }
-    setUrlError(null)
-    const next = links().map((link) => (link.id === id ? { ...link, title, url } : link))
-    await persist(next)
-    setEditId(null)
-  }
-
-  function cancelEdit() {
-    setEditId(null)
-    setUrlError(null)
-  }
-
-  async function removeLink(id: string) {
-    const next = links().filter((link) => link.id !== id)
-    await persist(next)
-  }
-
-  async function moveLink(id: string, direction: "up" | "down") {
-    const list = [...links()]
-    const index = list.findIndex((link) => link.id === id)
-    if (index === -1) return
-    const targetIndex = direction === "up" ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= list.length) return
-    ;[list[index], list[targetIndex]] = [list[targetIndex]!, list[index]!]
-    await persist(list)
-  }
-
   return (
     <div class="quick-links">
       <Show when={showSearch()}>
-        <div class="quick-search" role="search" aria-label="搜索快捷入口">
-          <span class="quick-search-text">搜索快捷入口…</span>
+        <div class="quick-search" role="search">
+          <input
+            class="quick-search-input"
+            type="text"
+            value={query()}
+            onInput={(event) => setQuery(event.currentTarget.value)}
+            placeholder="搜索快捷入口…"
+            aria-label="搜索快捷入口"
+          />
         </div>
       </Show>
       <ul class="link-grid" aria-label="快捷入口">
         <For each={visibleLinks()}>
-          {(link, index) => (
+          {(link) => (
             <li class="link-item">
-              <Show
-                when={editId() === link.id}
-                fallback={
-                  <>
-                    <button
-                      class="link-anchor"
-                      type="button"
-                      style={{
-                        width: "100%",
-                        padding: "0",
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
-                        font: "inherit",
-                      }}
-                      onClick={() => void props.host.openExternal(link.url)}
-                    >
-                      <span class="link-icon">{linkIcon(link.title)}</span>
-                      <span class="link-label">{link.title}</span>
-                    </button>
-                    <div class="link-actions">
-                      <button
-                        class="link-mini-btn"
-                        aria-label="上移"
-                        type="button"
-                        onClick={() => void moveLink(link.id, "up")}
-                        disabled={index() === 0}
-                      >
-                        <ArrowUp size={13} />
-                      </button>
-                      <button
-                        class="link-mini-btn"
-                        aria-label="下移"
-                        type="button"
-                        onClick={() => void moveLink(link.id, "down")}
-                        disabled={index() === links().length - 1}
-                      >
-                        <ArrowDown size={13} />
-                      </button>
-                      <button
-                        class="link-mini-btn"
-                        aria-label={`编辑 ${link.title}`}
-                        type="button"
-                        onClick={() => startEdit(link)}
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        class="link-mini-btn link-delete"
-                        aria-label={`删除 ${link.title}`}
-                        type="button"
-                        onClick={() => void removeLink(link.id)}
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </>
-                }
+              <button
+                class="link-anchor"
+                type="button"
+                onClick={() => void props.host.openExternal(link.url)}
               >
-                <div class="quick-link-edit-form">
-                  <div class="quick-link-edit-fields">
-                    <Input
-                      size="sm"
-                      value={editTitle()}
-                      onInput={(value) => setEditTitle(value)}
-                      placeholder="标题"
-                      aria-label="编辑链接标题"
-                    />
-                    <Input
-                      size="sm"
-                      type="url"
-                      value={editUrl()}
-                      onInput={(value) => setEditUrl(value)}
-                      placeholder="https://..."
-                      aria-label="编辑链接地址"
-                    />
-                  </div>
-                  <div class="quick-link-edit-actions">
-                    <button
-                      aria-label="确认编辑"
-                      class="link-mini-btn"
-                      type="button"
-                      onClick={() => void confirmEdit()}
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      aria-label="取消编辑"
-                      class="link-mini-btn"
-                      type="button"
-                      onClick={cancelEdit}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                </div>
-              </Show>
+                <span class="link-icon">{initialsFromTitle(link.title)}</span>
+                <span class="link-label">{link.title}</span>
+              </button>
             </li>
           )}
         </For>
-        <Show when={!editing()}>
-          <li class="link-item link-add-item">
-            <button class="link-anchor link-add-anchor" type="button" onClick={startAdd}>
-              <span class="link-add-symbol">+</span>
-              <span class="link-label">添加</span>
-            </button>
-          </li>
+        <Show when={query().trim() && filteredLinks().length === 0}>
+          <li class="link-empty">未找到匹配的快捷入口</li>
         </Show>
-      </ul>
-      <Show when={showFoot()}>
-        <div class="quick-links-foot">
-          <span class="foot-text">{links().length} 个链接</span>
+        <li class="link-item link-add-item">
           <button
-            class="foot-manage-btn"
+            class="link-anchor link-add-anchor"
             type="button"
-            onClick={() => {
-              /* TODO: open manage modal */
-            }}
+            onClick={() => props.host.openExpand()}
           >
-            管理
+            <span class="link-add-symbol">+</span>
+            <span class="link-label">添加</span>
           </button>
-        </div>
-      </Show>
-      <Show when={urlError()}>
-        <InlineError>{urlError()!}</InlineError>
-      </Show>
-      <Show when={editing()} fallback={null}>
-        <div class="quick-link-add-form">
-          <Input
-            size="sm"
-            id={`ql-title-${props.instanceId}`}
-            value={newTitle()}
-            onInput={(value) => setNewTitle(value)}
-            placeholder="链接标题"
-            aria-label="新链接标题"
-          />
-          <Input
-            size="sm"
-            type="url"
-            id={`ql-url-${props.instanceId}`}
-            value={newUrl()}
-            onInput={(value) => setNewUrl(value)}
-            placeholder="https://..."
-            aria-label="新链接地址"
-          />
-          <div class="quick-link-add-actions">
-            <button
-              aria-label="确认添加"
-              class="link-mini-btn"
-              type="button"
-              onClick={() => void confirmAdd()}
-            >
-              <Check size={14} />
-            </button>
-            <button aria-label="取消添加" class="link-mini-btn" type="button" onClick={cancelAdd}>
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-      </Show>
+        </li>
+      </ul>
     </div>
   )
 }

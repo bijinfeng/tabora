@@ -1,5 +1,6 @@
 import { createSignal, For, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { Button } from "@tabora/ui"
 import { Plus } from "lucide-solid"
 
 type Note = {
@@ -52,17 +53,19 @@ export function NotesCard(props: WidgetViewProps) {
           )}
         </For>
       </div>
-      <button
-        class="notes-widget-plus"
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          props.host.openExpand()
-        }}
-      >
-        <Plus size={12} />
-        新建便签
-      </button>
+      <div class="notes-widget-foot">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation()
+            props.host.openExpand()
+          }}
+        >
+          <Plus size={12} />
+          新建便签
+        </Button>
+      </div>
     </div>
   )
 }

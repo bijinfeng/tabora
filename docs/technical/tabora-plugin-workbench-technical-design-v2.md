@@ -491,31 +491,24 @@ if (completed.instances) {
 
 ### 7.1 展开视图协议
 
-V2 原型中每种卡片类型有完全不同的展开视图内容。这是扩展点交互协议的一部分：
+每种卡片类型有完全不同的展开视图内容。展开视图通过 widget contribution 的 `views` 注册，宿主用 registry 解析为组件后在统一容器中渲染。展开视图（含 footer 视图）与卡片视图共用同一套 `WidgetViewProps`（见 §12.1），不再有独立的 `ExpandViewProps`。
 
 ```text
-// plugin-api 中新增
-type ExpandViewContribution = {
-  viewId: string // 注册到 registry 的 expand view ID
-  supportedActions: ExpandAction[] // 展开后可执行的操作
-}
-
-type ExpandViewProps = {
-  instance: PluginInstance
-  data: WidgetViewData
-  host: {
-    close(): void
-    updateData(data: unknown): Promise<void>
-    executeAction(action: string): void
-  }
-}
-
-// 平台提供的展开容器
-type ExpandHostProps = {
-  instance: PluginInstance
-  onClose: () => void
+// WidgetContribution.views（plugin-api/manifest.ts）
+views: {
+  card: string          // 必填：卡片视图
+  expand?: string       // 可选：展开弹窗主体视图；缺省时回退渲染 card 视图
+  expandFooter?: string // 可选：展开弹窗底部 footer 视图，注入宿主统一 footer 区域
+  settings?: string     // 可选：实例设置视图
 }
 ```
+
+约束：
+
+- `expandFooter` 仅在声明了 `expand` 时有意义。只声明 `expandFooter` 不声明 `expand`，按「无自定义 footer」处理，宿主回退默认 footer，不报错。
+- footer 视图与主体视图同为 `WidgetViewProps`，共享 host 能力（`showToast`、`openExternal`、`data` 等）。
+- footer 视图与主体视图是两个独立组件。瞬时 UI 状态（如当前面板、表单校验错误）由插件自行在内部建立「按 instanceId 的会话 store」共享，不进协议层。
+- `mode: "settings"`（实例设置）不注入自定义 footer，维持默认 footer。
 
 ### 7.2 展开容器动画
 
@@ -532,9 +525,16 @@ type ExpandHostProps = {
 ```text
 ExpandModal
   ExpandHeader (图标 + 标题 + 关闭按钮)
-  ExpandBody (插件 ExpandView)
-  ExpandFooter (元信息 + esc 提示)
+  ExpandBody (插件 expand 视图)
+  ExpandFooter (插件 expandFooter 视图；未注入时回退元信息 + esc 提示)
 ```
+
+footer 区域渲染规则：
+
+- widget 声明并注册了 `views.expandFooter` 时，宿主在 `expand-footer` 内用 `PluginViewBoundary` 隔离渲染该 footer 视图；footer 视图崩溃只局部兜底，不影响 body。
+- 否则回退默认 footer：左侧实例 ID，右侧 `chrome.expand.footerHint`（Esc 提示）。
+
+> 详细技术方案见 `docs/technical/tabora-expand-footer-injection-design.md`。
 
 ## 8. 上下文菜单子系统
 
@@ -754,6 +754,7 @@ type WidgetContribution = {
   views: {
     card: string
     expand?: string
+    expandFooter?: string
     settings?: string
   }
 }
@@ -789,6 +790,8 @@ type WidgetViewProps = {
 ```
 
 宿主渲染 widget 前必须解析当前 `WidgetContribution` 并校验实例显式声明的 `size` 是否包含在 `supportedSizes` 内。缺少 contribution、缺少 `size` 或 size 不受支持时，该实例进入局部无效实例占位，不按 `defaultSize` 或硬编码 `"M"` 做读取时补齐。`defaultSize` 只用于用户新增实例时从 contribution 取初始尺寸；workspace preset 中的 widget instance 也必须显式写入 `size`。
+
+`views.card` / `expand` / `expandFooter` / `settings` 都注册到 registry 并接收同一套 `WidgetViewProps`。展开弹窗的 footer 通过 `expandFooter` 视图注入宿主统一 footer 区域（详见 §7.1、§7.2）。
 
 ### 12.2 Search
 

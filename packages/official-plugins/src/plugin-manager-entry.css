@@ -1,34 +1,3 @@
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-stats {
-  display: flex;
-  flex-direction: column;
-}
-
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat:hover {
-  background: rgb(var(--color-surface-hover));
-}
-
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat-val {
-  color: rgb(var(--color-muted));
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: right;
-}
-
-[data-tabora-plugin-id="official.plugin-manager"] .plugin-stat-val.accent {
-  color: rgb(var(--color-accent));
-}
-
 [data-tabora-plugin-id="official.plugin-manager"] .plugin-settings-stack {
   display: flex;
   flex-direction: column;

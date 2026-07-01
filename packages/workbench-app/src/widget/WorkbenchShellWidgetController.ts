@@ -7,6 +7,7 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import type { ToastOptions } from "@tabora/orchestrator"
+import type { ContextMenuItem as WorkbenchContextMenuItem } from "@tabora/ui"
 
 import {
   buildWorkbenchWidgetExpandState,
@@ -171,9 +172,10 @@ export function createWorkbenchWidgetController(options: {
     options.setExpandState(result.expandState)
   }
 
-  function buildContextMenuModel() {
+  function buildContextMenuModel(instanceId?: string) {
+    const menu = instanceId ? { instanceId } : options.getContextMenu()
     return buildWorkbenchContextMenuModel({
-      menu: options.getContextMenu(),
+      menu,
       instances: options.getInstances(),
       resolveWidgetRenderModel: widgetRenderModel,
       resolveContextMenus: contextMenuContributions,
@@ -182,22 +184,55 @@ export function createWorkbenchWidgetController(options: {
       hasInstanceSettings: (instance) =>
         resolveWorkbenchInstanceSettingsView(widgetContribution(instance), options.hasView) !==
         null,
-      onResize: (instanceId, size) => {
-        void changeWidgetSize(instanceId, size)
+      onResize: (id, size) => {
+        void changeWidgetSize(id, size)
       },
-      onExpand: (instanceId) => {
-        const target = findWorkbenchWidgetInstance(options.getInstances(), instanceId)
+      onExpand: (id) => {
+        const target = findWorkbenchWidgetInstance(options.getInstances(), id)
         if (target) openWidgetExpand(target)
       },
-      onOpenSettings: (instanceId) => {
-        const target = findWorkbenchWidgetInstance(options.getInstances(), instanceId)
+      onOpenSettings: (id) => {
+        const target = findWorkbenchWidgetInstance(options.getInstances(), id)
         if (target) openWidgetInstanceSettings(target)
       },
-      onRemove: (instanceId) => {
-        void removeWidget(instanceId)
+      onRemove: (id) => {
+        void removeWidget(id)
         options.showToast(options.tShell?.("widget.instanceRemoved") ?? "实例已移除")
       },
     })
+  }
+
+  // 把分组化的菜单模型扁平成 @tabora/ui ContextMenu 需要的条目（含分隔线、"当前"标记）。
+  // 返回 items 与一个按 key 执行 run 的回调，供 WidgetCardShell 原生右键菜单使用。
+  function buildContextMenuItems(instanceId: string): {
+    items: WorkbenchContextMenuItem[]
+    onSelect: (key: string) => void
+  } {
+    const model = buildContextMenuModel(instanceId)
+    if (!model) return { items: [], onSelect: () => {} }
+
+    const runById = new Map<string, () => void>()
+    const items: WorkbenchContextMenuItem[] = []
+    const currentLabel = options.tShell?.("chrome.contextMenu.current") ?? "当前"
+
+    model.sections.forEach((section, sectionIndex) => {
+      if (sectionIndex > 0) {
+        items.push({ key: `sep-${section.id}`, label: "", separator: true })
+      }
+      for (const item of section.items) {
+        runById.set(item.id, item.run)
+        const menuItem: WorkbenchContextMenuItem = { key: item.id, label: item.label }
+        if (item.danger) menuItem.danger = true
+        if (item.isCurrent) menuItem.trailing = currentLabel
+        else if (item.hint) menuItem.trailing = item.hint
+        items.push(menuItem)
+      }
+    })
+
+    return {
+      items,
+      onSelect: (key: string) => runById.get(key)?.(),
+    }
   }
 
   function buildSearchableWidgets() {
@@ -231,6 +266,7 @@ export function createWorkbenchWidgetController(options: {
     openWidgetExpand,
     openWidgetInstanceSettings,
     buildContextMenuModel,
+    buildContextMenuItems,
     buildSearchableWidgets,
     persistGridOrder,
   }

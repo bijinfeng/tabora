@@ -81,23 +81,9 @@ describe("WorkbenchShellSurfaceHost", () => {
         return key
       },
       layoutContent: () => <div>layout-content</div>,
-      buildContextMenuModel: () => ({
-        sections: [
-          {
-            items: [
-              {
-                label: "Small",
-                isCurrent: true,
-                run: () => {},
-              },
-            ],
-          },
-        ],
-      }),
     })
 
     shell.state.overlays.setAddWidgetOpen(true)
-    shell.state.overlays.setCtxMenu({ x: 8, y: 12, instanceId: "widget-1" })
 
     render(
       () => (
@@ -109,7 +95,6 @@ describe("WorkbenchShellSurfaceHost", () => {
     )
 
     expect(root.textContent).toContain("Add widget")
-    expect(root.textContent).toContain("Current")
 
     root.remove()
   })
@@ -171,7 +156,7 @@ describe("WorkbenchShellSurfaceHost", () => {
     root.remove()
   })
 
-  it("renders add-widget and context-menu rows through the host overlays", () => {
+  it("renders add-widget rows through the host overlays", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
 
@@ -186,17 +171,9 @@ describe("WorkbenchShellSurfaceHost", () => {
           description: "记录当天任务",
         },
       ],
-      buildContextMenuModel: () => ({
-        sections: [
-          {
-            items: [{ label: "移除实例", danger: true, run: vi.fn() }],
-          },
-        ],
-      }),
     })
 
     shell.state.overlays.setAddWidgetOpen(true)
-    shell.state.overlays.setCtxMenu({ x: 12, y: 12, instanceId: "todo-1" })
 
     render(
       () => (
@@ -209,7 +186,6 @@ describe("WorkbenchShellSurfaceHost", () => {
 
     expect(root.textContent).toContain("待办")
     expect(root.textContent).toContain("记录当天任务")
-    expect(root.textContent).toContain("移除实例")
 
     root.remove()
   })

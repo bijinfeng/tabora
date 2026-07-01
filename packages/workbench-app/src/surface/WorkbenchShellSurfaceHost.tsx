@@ -1,11 +1,7 @@
 import { createMemo } from "solid-js"
 import { CommandPalette, SettingsHost, ToastHost } from "@tabora/workbench-shell"
 
-import {
-  WorkbenchAddWidgetModal,
-  WorkbenchContextMenuOverlay,
-  WorkbenchExpandOverlay,
-} from "./WorkbenchShellChrome"
+import { WorkbenchAddWidgetModal, WorkbenchExpandOverlay } from "./WorkbenchShellChrome"
 import { WorkbenchFullscreenOverlay, WorkbenchPluginModal } from "./WorkbenchPluginOverlays"
 import { useWorkbenchShell } from "../shell/WorkbenchShellContext"
 import { createWorkbenchShellSurfaceProps } from "./WorkbenchShellSurfaceProps"
@@ -22,7 +18,6 @@ export function WorkbenchShellSurfaceHost() {
       <WorkbenchExpandOverlay {...surface().expandOverlay} />
       <WorkbenchPluginModal {...surface().pluginModal} />
       <WorkbenchFullscreenOverlay {...surface().fullscreenOverlay} />
-      <WorkbenchContextMenuOverlay {...surface().contextMenuOverlay} />
       <ToastHost {...surface().toastHost} />
       <CommandPalette {...surface().commandPalette} />
     </>

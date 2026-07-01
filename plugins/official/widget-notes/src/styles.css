@@ -60,22 +60,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-plus {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-foot {
   padding: 8px 2px 0;
-  border: none;
-  background: transparent;
-  color: rgb(var(--color-subtle));
-  font-family: inherit;
-  font-size: 11px;
-  cursor: pointer;
-  transition: color 120ms var(--ease);
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-widget-plus:hover {
-  color: rgb(var(--color-accent));
 }
 
 /* ══════════ 展开视图（NotesExpand）══════════ */
@@ -99,41 +85,6 @@
 
 [data-tabora-plugin-id="official.widgets.notes"] .notes-side-search {
   padding: 8px 12px;
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: var(--tbr-radius-control, 6px);
-  background: rgb(var(--color-surface));
-  transition: border-color var(--tbr-dur-fast) var(--ease);
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box:focus-within {
-  border-color: rgb(var(--color-accent));
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box svg {
-  color: rgb(var(--color-subtle));
-  flex-shrink: 0;
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: inherit;
-  font-size: 12px;
-  color: rgb(var(--color-text));
-  min-width: 0;
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-side-search-box input::placeholder {
-  color: rgb(var(--color-subtle));
 }
 
 /* 日历容器 */
@@ -301,26 +252,6 @@
   padding: 8px 12px 4px;
 }
 
-[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-plus {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: rgb(var(--color-subtle));
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-plus:hover {
-  color: rgb(var(--color-accent));
-  background: rgb(var(--color-surface-hover));
-}
-
 [data-tabora-plugin-id="official.widgets.notes"] .notes-capture textarea {
   flex: 1;
   min-height: 36px;
@@ -344,24 +275,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 4px 12px 8px;
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-vis {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 8px;
-  background: rgb(var(--color-surface-soft));
-  color: rgb(var(--color-muted));
-  font-family: inherit;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-capture-vis:hover {
-  border-color: rgb(var(--color-line-strong));
 }
 
 [data-tabora-plugin-id="official.widgets.notes"] .notes-capture-save {
@@ -471,32 +384,6 @@
   opacity: 1;
 }
 
-[data-tabora-plugin-id="official.widgets.notes"] .notes-card-act {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: rgb(var(--color-subtle));
-  cursor: pointer;
-  transition:
-    background 120ms var(--ease),
-    color 120ms var(--ease);
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-card-act:hover {
-  background: rgb(var(--color-surface-hover));
-  color: rgb(var(--color-text));
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-card-act.danger:hover {
-  background: rgb(var(--color-danger-soft));
-  color: rgb(var(--color-danger));
-}
-
 /* 原地编辑 */
 [data-tabora-plugin-id="official.widgets.notes"] .notes-card.editing .notes-card-display {
   display: none;
@@ -563,50 +450,6 @@
 [data-tabora-plugin-id="official.widgets.notes"] .notes-card-edit-btns {
   display: flex;
   gap: 4px;
-}
-
-/* 通用按钮 */
-[data-tabora-plugin-id="official.widgets.notes"] .notes-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 28px;
-  padding: 0 12px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 8px;
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 120ms var(--ease),
-    border-color 120ms var(--ease);
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-btn:hover {
-  background: rgb(var(--color-surface-hover));
-  border-color: rgb(var(--color-line-strong));
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-accent {
-  background: rgb(var(--color-accent));
-  color: rgb(var(--color-inverse));
-  border-color: rgb(var(--color-accent));
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-accent:hover {
-  background: rgb(var(--color-accent-hover));
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-red {
-  color: rgb(var(--color-danger));
-}
-
-[data-tabora-plugin-id="official.widgets.notes"] .notes-btn-red:hover {
-  background: rgb(var(--color-danger-soft));
-  border-color: rgb(var(--color-danger));
 }
 
 /* 搜索高亮 */

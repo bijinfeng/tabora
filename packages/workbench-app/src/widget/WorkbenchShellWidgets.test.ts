@@ -98,8 +98,8 @@ describe("workbench widget helpers", () => {
     })
 
     expect(model?.sections.map((section) => section.id)).toEqual([
-      "size",
       "expand",
+      "size",
       "plugin",
       "settings",
       "remove",

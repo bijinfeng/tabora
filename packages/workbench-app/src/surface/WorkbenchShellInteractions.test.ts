@@ -5,6 +5,7 @@ import {
   buildWorkbenchWidgetExpandState,
   buildWorkbenchWidgetInstanceSettingsState,
   isWorkbenchInteractiveElement,
+  resolveWorkbenchExpandFooterView,
 } from "./WorkbenchShellInteractions"
 import type { WidgetRenderModel } from "../shared/shellHelpers"
 
@@ -128,6 +129,70 @@ describe("buildWorkbenchWidgetExpandState", () => {
       },
       errorMessage: null,
     })
+  })
+
+  it("includes the registered expand footer view id in the expand state", () => {
+    const viewProps = props()
+    const result = buildWorkbenchWidgetExpandState({
+      instance: instance(),
+      model: model(),
+      widget: widget({
+        card: "widget.notes.card",
+        expand: "widget.notes.expand",
+        expandFooter: "widget.notes.expand-footer",
+      }),
+      hasView: () => true,
+      buildWidgetViewProps: () => viewProps,
+    })
+
+    expect(result.expandState?.footerViewId).toBe("widget.notes.expand-footer")
+  })
+
+  it("omits the footer view id when the footer view is not registered", () => {
+    const viewProps = props()
+    const result = buildWorkbenchWidgetExpandState({
+      instance: instance(),
+      model: model(),
+      widget: widget({
+        card: "widget.notes.card",
+        expand: "widget.notes.expand",
+        expandFooter: "widget.notes.expand-footer",
+      }),
+      hasView: (viewId) => viewId !== "widget.notes.expand-footer",
+      buildWidgetViewProps: () => viewProps,
+    })
+
+    expect(result.expandState?.footerViewId).toBeUndefined()
+  })
+})
+
+describe("resolveWorkbenchExpandFooterView", () => {
+  it("returns the footer view id when expand and footer are both declared and registered", () => {
+    const viewId = resolveWorkbenchExpandFooterView(
+      widget({
+        card: "c",
+        expand: "e",
+        expandFooter: "f",
+      }),
+      () => true,
+    )
+    expect(viewId).toBe("f")
+  })
+
+  it("returns null when the widget declares a footer but no expand view", () => {
+    const viewId = resolveWorkbenchExpandFooterView(
+      widget({ card: "c", expandFooter: "f" }),
+      () => true,
+    )
+    expect(viewId).toBeNull()
+  })
+
+  it("returns null when the footer view is not registered", () => {
+    const viewId = resolveWorkbenchExpandFooterView(
+      widget({ card: "c", expand: "e", expandFooter: "f" }),
+      (id) => id !== "f",
+    )
+    expect(viewId).toBeNull()
   })
 })
 

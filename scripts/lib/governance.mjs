@@ -269,7 +269,15 @@ const WORKBENCH_AVOIDABLE_STYLE_PATTERNS = [
     reason: "workbench theme variables must not carry literal color fallbacks",
   },
 ]
-const WORKBENCH_RAW_COLOR_BASELINE = new Set()
+const WORKBENCH_RAW_COLOR_BASELINE = new Set([
+  // 快捷入口图标色板：用户可选的固定调色板，非主题色，按设计稿保留原始色值。
+  "plugins/official/widget-quick-links/src/quick-links-data.ts::#1a9070",
+  "plugins/official/widget-quick-links/src/quick-links-data.ts::#3b82f6",
+  "plugins/official/widget-quick-links/src/quick-links-data.ts::#8b5cf6",
+  "plugins/official/widget-quick-links/src/quick-links-data.ts::#d97706",
+  // 选中图标色时图标文字用白色保证对比度。
+  "plugins/official/widget-quick-links/src/quick-links-expand.tsx::#fff",
+])
 const SOURCE_INVARIANT_FILES = [
   "packages/workbench-shell/src/CommandPalette.tsx",
   "packages/workbench-app/src/layout/WorkbenchShellLayoutHost.ts",

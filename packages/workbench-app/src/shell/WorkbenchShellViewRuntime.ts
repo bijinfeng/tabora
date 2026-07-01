@@ -15,6 +15,7 @@ type InstanceRendererOptions = Omit<
   | "buildWidgetViewProps"
   | "buildSearchViewProps"
   | "onOpenWidgetContextMenu"
+  | "buildContextMenuItems"
   | "onChangeWidgetSize"
   | "onRemoveWidget"
   | "onOpenWidgetExpand"
@@ -25,6 +26,10 @@ export function createWorkbenchShellViewRuntime(
     BuildWidgetViewBaseOptions & {
       buildInlineSearchViewProps: (instance: PluginInstance) => SearchViewProps
       setContextMenu: (menu: WorkbenchContextMenuState | null) => void
+      buildContextMenuItems?: (instanceId: string) => {
+        items: import("@tabora/ui").ContextMenuItem[]
+        onSelect: (key: string) => void
+      }
     },
 ) {
   const buildWidgetViewProps = (instance: PluginInstance, model: WidgetRenderModel) =>
@@ -57,6 +62,9 @@ export function createWorkbenchShellViewRuntime(
       event.preventDefault()
       options.setContextMenu({ x: event.clientX, y: event.clientY, instanceId })
     },
+    ...(options.buildContextMenuItems
+      ? { buildContextMenuItems: options.buildContextMenuItems }
+      : {}),
     onChangeWidgetSize: (instanceId, size) => {
       void options.changeWidgetSize(instanceId, size)
     },

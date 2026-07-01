@@ -12,6 +12,7 @@ import {
   WidgetCardShell,
   type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
+import type { ContextMenuItem } from "@tabora/ui"
 
 import type { InstanceRenderer } from "../layout/layoutEngine"
 import { isWorkbenchInteractiveElement } from "../surface/WorkbenchShellInteractions"
@@ -58,6 +59,10 @@ export function createWorkbenchInstanceRenderer(options: {
   renderWidgetIcon: (icon?: string) => JSX.Element
   onOpenWidgetExpand: (instance: PluginInstance) => void
   onOpenWidgetContextMenu: (event: MouseEvent, instanceId: string) => void
+  buildContextMenuItems?: (instanceId: string) => {
+    items: ContextMenuItem[]
+    onSelect: (key: string) => void
+  }
   onChangeWidgetSize: (instanceId: string, size: WidgetSize) => void
   onRemoveWidget: (instanceId: string) => void
   isDragging: (instanceId: string) => boolean
@@ -86,6 +91,8 @@ export function createWorkbenchInstanceRenderer(options: {
         return <div class="settings-empty">Widget view not available</div>
       }
 
+      const menu = options.buildContextMenuItems?.(instance.id)
+
       return (
         <SortableWidgetCard
           instance={instance}
@@ -95,6 +102,7 @@ export function createWorkbenchInstanceRenderer(options: {
           currentSize={model.currentSize}
           sortableIndex={() => options.sortableIndex(instance.id)}
           {...(options.widgetShellCopy ? { copy: options.widgetShellCopy } : {})}
+          {...(menu ? { contextMenuItems: menu.items, onContextMenuSelect: menu.onSelect } : {})}
           callbacks={{
             onDblClick: (event: MouseEvent) => {
               const target = event.target as HTMLElement
@@ -168,6 +176,8 @@ function SortableWidgetCard(props: {
   sortableIndex: () => number
   callbacks: WidgetHostCallbacks
   copy?: WorkbenchShellWidgetCopy
+  contextMenuItems?: ContextMenuItem[]
+  onContextMenuSelect?: (key: string) => void
   children: JSX.Element
 }) {
   const sortable = useSortable({
@@ -188,6 +198,8 @@ function SortableWidgetCard(props: {
       supportedSizes={props.supportedSizes}
       currentSize={props.currentSize}
       {...(props.copy ? { copy: props.copy } : {})}
+      {...(props.contextMenuItems ? { contextMenuItems: props.contextMenuItems } : {})}
+      {...(props.onContextMenuSelect ? { onContextMenuSelect: props.onContextMenuSelect } : {})}
       callbacks={{
         ...props.callbacks,
         isDragging: props.callbacks.isDragging || sortable.isDragging(),

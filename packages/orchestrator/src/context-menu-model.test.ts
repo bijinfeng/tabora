@@ -19,7 +19,7 @@ function instance(size: WidgetSize = "M"): PluginInstance {
 }
 
 describe("createWidgetContextMenuModel", () => {
-  it("builds size, expand, and remove sections for a widget instance", () => {
+  it("builds expand, size, and remove sections for a widget instance", () => {
     const model = createWidgetContextMenuModel({
       instance: instance("L"),
       supportedSizes: ["S", "M", "L"],
@@ -29,11 +29,12 @@ describe("createWidgetContextMenuModel", () => {
     })
 
     expect(model.sections.map((section) => section.items.map((item) => item.label))).toEqual([
+      ["展开卡片"],
       ["尺寸 S", "尺寸 M", "尺寸 L"],
-      ["展开详情"],
       ["移除实例"],
     ])
-    expect(model.sections[0]!.items.map((item) => item.isCurrent)).toEqual([false, false, true])
+    expect(model.sections[0]!.items[0]!.hint).toBe("双击")
+    expect(model.sections[1]!.items.map((item) => item.isCurrent)).toEqual([false, false, true])
     expect(model.sections[2]!.items[0]!.danger).toBe(true)
   })
 
@@ -53,8 +54,8 @@ describe("createWidgetContextMenuModel", () => {
     model.sections[1]!.items[0]!.run()
     model.sections[2]!.items[0]!.run()
 
-    expect(onResize).toHaveBeenCalledWith("todo-1", "S")
     expect(onExpand).toHaveBeenCalledWith("todo-1")
+    expect(onResize).toHaveBeenCalledWith("todo-1", "S")
     expect(onRemove).toHaveBeenCalledWith("todo-1")
   })
 
@@ -70,7 +71,7 @@ describe("createWidgetContextMenuModel", () => {
       onRemove: vi.fn(),
     })
 
-    expect(model.sections[0]!.items.map((item) => item.isCurrent)).toEqual([false, false, false])
+    expect(model.sections[1]!.items.map((item) => item.isCurrent)).toEqual([false, false, false])
   })
 
   it("merges ordered plugin context menu items before remove", () => {
@@ -101,8 +102,8 @@ describe("createWidgetContextMenuModel", () => {
     })
 
     expect(model.sections.map((section) => section.id)).toEqual([
-      "size",
       "expand",
+      "size",
       "plugin",
       "remove",
     ])
@@ -129,8 +130,8 @@ describe("createWidgetContextMenuModel", () => {
     })
 
     expect(model.sections.map((section) => section.id)).toEqual([
-      "size",
       "expand",
+      "size",
       "settings",
       "remove",
     ])
@@ -160,13 +161,13 @@ describe("createWidgetContextMenuModel", () => {
     })
 
     expect(withAvailabilityOnly.sections.map((section) => section.id)).toEqual([
-      "size",
       "expand",
+      "size",
       "remove",
     ])
     expect(withHandlerOnly.sections.map((section) => section.id)).toEqual([
-      "size",
       "expand",
+      "size",
       "remove",
     ])
   })
@@ -192,7 +193,7 @@ describe("createWidgetContextMenuModel", () => {
       onRemove: vi.fn(),
     })
 
-    expect(model.sections.map((section) => section.id)).toEqual(["size", "expand", "remove"])
+    expect(model.sections.map((section) => section.id)).toEqual(["expand", "size", "remove"])
   })
 
   it("skips plugin command items when no command executor is configured", () => {
@@ -212,7 +213,7 @@ describe("createWidgetContextMenuModel", () => {
       onRemove: vi.fn(),
     })
 
-    expect(model.sections.map((section) => section.id)).toEqual(["size", "expand", "remove"])
+    expect(model.sections.map((section) => section.id)).toEqual(["expand", "size", "remove"])
   })
 
   it("passes the current widget instance context when running a plugin command", () => {

@@ -1,5 +1,7 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { QuickLinksCard } from "./quick-links-card"
+import { QuickLinksExpand } from "./quick-links-expand"
+import { QuickLinksExpandFooter } from "./quick-links-expand-footer"
 
 export const officialPluginQuickLinks: BuiltinPlugin = {
   enabled: true,
@@ -22,12 +24,21 @@ export const officialPluginQuickLinks: BuiltinPlugin = {
           supportedSizes: ["S", "M", "L"],
           defaultSize: "M",
           allowMultipleInstances: true,
-          views: { card: "official.widgets.quick-links.card" },
+          views: {
+            card: "official.widgets.quick-links.card",
+            expand: "official.widgets.quick-links.expand",
+            expandFooter: "official.widgets.quick-links.expand-footer",
+          },
         },
       ],
     },
   },
   activate(context) {
     context.registry.views.register("official.widgets.quick-links.card", QuickLinksCard)
+    context.registry.views.register("official.widgets.quick-links.expand", QuickLinksExpand)
+    context.registry.views.register(
+      "official.widgets.quick-links.expand-footer",
+      QuickLinksExpandFooter,
+    )
   },
 }
