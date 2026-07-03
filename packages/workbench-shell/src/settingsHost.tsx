@@ -1,6 +1,5 @@
-import { createComponent, createEffect, For, Show } from "solid-js"
+import { createComponent, createEffect, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import { X } from "lucide-solid"
 import type { PluginManifest, SettingsPanelViewProps } from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
@@ -66,8 +65,22 @@ export function SettingsHost(props: SettingsHostProps) {
   let previousFocusedElement: HTMLElement | null = null
   const navigator = () => createSettingsNavigator(props.panels)
 
+  const [isEntering, setIsEntering] = createSignal(false)
+  const [isClosing, setIsClosing] = createSignal(false)
+
+  const handleClose = () => {
+    if (isClosing()) return
+    setIsClosing(true)
+    setIsEntering(false)
+    setTimeout(() => {
+      setIsClosing(false)
+      props.onClose()
+    }, 250)
+  }
+
   const activeSection = () => props.activeSectionId ?? "general"
   const activePanels = () => navigator().sections[activeSection()].panels
+  const activePanelTitle = () => activeSectionTitle()
   const activeSectionTitle = () => {
     if (activeSection() === "plugins") return props.copy?.pluginsActiveTitle ?? "已安装插件"
     return (
@@ -95,123 +108,145 @@ export function SettingsHost(props: SettingsHostProps) {
     previousFocusedElement = null
   })
 
+  createEffect(() => {
+    if (props.open && !isClosing()) {
+      setTimeout(() => setIsEntering(true), 10)
+    } else {
+      setIsEntering(false)
+    }
+  })
+
   return (
     <Show when={props.open}>
       <div
         class="settings-overlay settings-host"
-        onClick={props.onClose}
+        classList={{ "is-entering": isEntering() }}
+        onClick={handleClose}
         role="dialog"
         aria-modal="true"
         aria-label={props.copy?.sidebarTitle ?? "设置"}
       >
-        <div class="settings-drawer" onClick={(e) => e.stopPropagation()}>
-          <nav class="settings-sidebar">
-            <div class="settings-sidebar-title">{props.copy?.sidebarTitle ?? "设置"}</div>
-            <For each={workspaceSections()}>
-              {(section) => (
-                <button
-                  class="settings-nav"
-                  classList={{ active: section.id === activeSection() }}
-                  onClick={() => props.onSectionChange(section.id)}
-                >
-                  {props.copy?.sectionTitle(section.id) ?? section.title}
-                </button>
-              )}
-            </For>
-            <Show when={pluginSection()}>
-              {(section) => (
-                <>
-                  <div class="settings-sidebar-title settings-sidebar-group-title">
-                    {props.copy?.pluginGroupTitle ?? "插件"}
-                  </div>
+        <div
+          class="settings-window"
+          classList={{ "is-entering": isEntering() }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <header class="window-head">
+            <div class="window-title">
+              <div class="window-title-icon">⚙</div>
+              <div class="window-title-main">
+                <strong>设置</strong>
+                <span>{activePanelTitle()}</span>
+              </div>
+            </div>
+            <button
+              class="icon-close"
+              onClick={handleClose}
+              ref={(el) => (closeButtonRef = el)}
+              aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
+            />
+          </header>
+          <div class="settings-body">
+            <nav class="settings-nav">
+              <div class="nav-kicker">工作区</div>
+              <For each={workspaceSections()}>
+                {(section) => (
                   <button
-                    class="settings-nav"
-                    classList={{ active: section().id === activeSection() }}
+                    class="nav-button"
+                    classList={{ "is-active": section.id === activeSection() }}
+                    onClick={() => props.onSectionChange(section.id)}
+                  >
+                    {props.copy?.sectionTitle(section.id) ?? section.title}
+                  </button>
+                )}
+              </For>
+              <Show when={pluginSection()}>
+                {(section) => (
+                  <>
+                    <div class="settings-sidebar-title settings-sidebar-group-title">
+                      {props.copy?.pluginGroupTitle ?? "插件"}
+                    </div>
+                    <button
+                      class="nav-button"
+                      classList={{ "is-active": section().id === activeSection() }}
+                      onClick={() => props.onSectionChange(section().id)}
+                    >
+                      {props.copy?.pluginInstalledNav ?? "已安装"}
+                    </button>
+                  </>
+                )}
+              </Show>
+              <div class="settings-sidebar-spacer" />
+              <Show when={aboutSection()}>
+                {(section) => (
+                  <button
+                    class="nav-button"
+                    classList={{ "is-active": section().id === activeSection() }}
                     onClick={() => props.onSectionChange(section().id)}
                   >
-                    {props.copy?.pluginInstalledNav ?? "已安装"}
+                    {props.copy?.sectionTitle(section().id) ?? section().title}
                   </button>
-                </>
-              )}
-            </Show>
-            <div class="settings-sidebar-spacer" />
-            <Show when={aboutSection()}>
-              {(section) => (
-                <button
-                  class="settings-nav"
-                  classList={{ active: section().id === activeSection() }}
-                  onClick={() => props.onSectionChange(section().id)}
-                >
-                  {props.copy?.sectionTitle(section().id) ?? section().title}
-                </button>
-              )}
-            </Show>
-          </nav>
-          <div class="settings-content">
-            <div class="settings-tab-title">
-              <span>{activeSectionTitle()}</span>
-              <button
-                class="settings-close-btn settings-close"
-                onClick={props.onClose}
-                aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
-                ref={(element) => {
-                  closeButtonRef = element
-                }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div class="settings-tab-body">
-              <Show
-                when={activeSection() !== "about"}
-                fallback={
-                  props.aboutContent ?? (
-                    <EmptyState
-                      class="settings-empty"
-                      compact
-                      title={props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
-                    />
-                  )
-                }
-              >
+                )}
+              </Show>
+            </nav>
+            <div class="settings-main">
+              <div class="panel-view" classList={{ "is-active": true }} data-view={activeSection()}>
                 <Show
-                  when={activePanels().length > 0}
+                  when={activeSection() !== "about"}
                   fallback={
-                    <EmptyState
-                      class="settings-empty"
-                      compact
-                      title={props.copy?.emptySection ?? "该分类下暂无设置内容"}
-                    />
+                    props.aboutContent ?? (
+                      <EmptyState
+                        class="settings-empty"
+                        compact
+                        title={props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
+                      />
+                    )
                   }
                 >
-                  <div class="settings-panel-stack-host">
-                    <For each={activePanels()}>
-                      {(panel) => {
-                        const View = props.getView(panel.view)
-                        if (!View)
+                  <Show
+                    when={activePanels().length > 0}
+                    fallback={
+                      <EmptyState
+                        class="settings-empty"
+                        compact
+                        title={props.copy?.emptySection ?? "该分类下暂无设置内容"}
+                      />
+                    }
+                  >
+                    <div class="settings-panel-stack-host">
+                      <For each={activePanels()}>
+                        {(panel) => {
+                          const View = props.getView(panel.view)
+                          if (!View)
+                            return (
+                              <InlineError class="settings-panel-missing">
+                                {props.copy?.panelMissing(panel.id) ??
+                                  `设置面板不可用：${panel.id}`}
+                              </InlineError>
+                            )
+                          let content: JSX.Element
+                          try {
+                            content = createComponent(View, props.panelProps(panel))
+                          } catch (error) {
+                            return createPluginErrorFallback(error, panel.id, panel.title)
+                          }
                           return (
-                            <InlineError class="settings-panel-missing">
-                              {props.copy?.panelMissing(panel.id) ?? `设置面板不可用：${panel.id}`}
-                            </InlineError>
+                            <PluginViewBoundary instanceId={panel.id} title={panel.title}>
+                              <div data-tabora-plugin-id={panel.pluginId}>{content}</div>
+                            </PluginViewBoundary>
                           )
-                        let content: JSX.Element
-                        try {
-                          content = createComponent(View, props.panelProps(panel))
-                        } catch (error) {
-                          return createPluginErrorFallback(error, panel.id, panel.title)
-                        }
-                        return (
-                          <PluginViewBoundary instanceId={panel.id} title={panel.title}>
-                            <div data-tabora-plugin-id={panel.pluginId}>{content}</div>
-                          </PluginViewBoundary>
-                        )
-                      }}
-                    </For>
-                  </div>
+                        }}
+                      </For>
+                    </div>
+                  </Show>
                 </Show>
-              </Show>
+              </div>
             </div>
           </div>
+          <footer class="window-foot">
+            <span>Esc 关闭</span>
+            <div class="footer-actions" />
+          </footer>
         </div>
       </div>
     </Show>

@@ -199,7 +199,7 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-drawer")).toBeTruthy()
+    expect(root.querySelector(".settings-window")).toBeTruthy()
   })
 
   it("renders modal semantics and moves focus into the drawer when opened", () => {
@@ -216,7 +216,7 @@ describe("settings host composition", () => {
     )
 
     const overlay = root.querySelector(".settings-overlay") as HTMLDivElement
-    const closeButton = root.querySelector(".settings-close") as HTMLButtonElement
+    const closeButton = root.querySelector(".icon-close") as HTMLButtonElement
 
     expect(overlay.getAttribute("role")).toBe("dialog")
     expect(overlay.getAttribute("aria-modal")).toBe("true")
@@ -236,16 +236,16 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("设置")
-    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("插件")
-    expect([...root.querySelectorAll(".settings-nav")].map((node) => node.textContent)).toEqual([
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("工作区")
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("插件")
+    expect([...root.querySelectorAll(".nav-button")].map((node) => node.textContent)).toEqual([
       "通用",
       "外观",
       "搜索",
       "已安装",
       "关于",
     ])
-    expect(root.querySelector(".settings-tab-title")?.textContent).toContain("已安装插件")
+    expect(root.querySelector(".window-title-main")?.textContent).toContain("已安装插件")
   })
 
   it("renders injected copy when provided", () => {
@@ -278,17 +278,17 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("Settings")
-    expect(root.querySelector(".settings-sidebar")?.textContent).toContain("Plugins")
-    expect([...root.querySelectorAll(".settings-nav")].map((node) => node.textContent)).toEqual([
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("工作区")
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("Plugins")
+    expect([...root.querySelectorAll(".nav-button")].map((node) => node.textContent)).toEqual([
       "General",
       "Appearance",
       "Search",
       "Installed",
       "About",
     ])
-    expect(root.querySelector(".settings-tab-title")?.textContent).toContain("Installed plugins")
-    expect(root.querySelector(".settings-close")?.getAttribute("aria-label")).toBe("Close settings")
+    expect(root.querySelector(".window-title-main")?.textContent).toContain("Installed plugins")
+    expect(root.querySelector(".icon-close")?.getAttribute("aria-label")).toBe("Close settings")
   })
 
   it("keeps the settings container open when a panel view fails", () => {
@@ -355,7 +355,7 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-drawer")).toBeTruthy()
+    expect(root.querySelector(".settings-window")).toBeTruthy()
     expect(root.textContent).toContain("插件视图加载失败")
     expect(root.textContent).toContain("official.settings.workspace.workbench")
   })
