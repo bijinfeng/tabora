@@ -206,7 +206,8 @@ export function createWorkbenchRuntimeBootstrap(
         "layoutHost.themeTarget.light": "Light",
         "layoutHost.themeTarget.dark": "Dark",
         "chrome.addWidget.title": "Add widget",
-        "chrome.addWidget.kicker": "Pick a widget from your installed plugins to add to the current workspace group.",
+        "chrome.addWidget.kicker":
+          "Pick a widget from your installed plugins to add to the current workspace group.",
         "chrome.addWidget.groupLabel": "Target group: {{group}}",
         "chrome.addWidget.searchPlaceholder": "Search widgets…",
         "chrome.addWidget.tab.recommended": "Featured",

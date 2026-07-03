@@ -28,8 +28,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
 
   const hasValue = () => props.value.length > 0
   const isPasswordType = () => props.type === "password"
-  const effectiveType = () =>
-    isPasswordType() && showPassword() ? "text" : props.type ?? "text"
+  const effectiveType = () => (isPasswordType() && showPassword() ? "text" : (props.type ?? "text"))
 
   const handleClear = () => {
     props.onInput("")
@@ -45,8 +44,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
 
   // Determine padding adjustments
   const hasLeading = () => !!props.leadingIcon
-  const hasTrailing = () =>
-    !!props.trailingIcon || props.clearable || isPasswordType()
+  const hasTrailing = () => !!props.trailingIcon || props.clearable || isPasswordType()
 
   if (!needsWrapper) {
     return (

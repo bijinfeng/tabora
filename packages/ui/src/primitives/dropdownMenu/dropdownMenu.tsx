@@ -131,9 +131,7 @@ export function DropdownMenu(props: DropdownMenuProps) {
                   <Show when={item.checked}>
                     <span class="tbr-dropdown-check" aria-hidden="true" />
                   </Show>
-                  {item.icon && !item.checked && (
-                    <span class="tbr-dropdown-icon">{item.icon}</span>
-                  )}
+                  {item.icon && !item.checked && <span class="tbr-dropdown-icon">{item.icon}</span>}
                   <span class="tbr-dropdown-label">{item.label}</span>
                   {item.shortcut && <kbd class="tbr-dropdown-kbd">{item.shortcut}</kbd>}
                 </KDropdownMenu.Item>
