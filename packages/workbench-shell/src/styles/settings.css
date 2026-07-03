@@ -34,7 +34,7 @@
 @media (min-width: 1200px) {
   .settings-window {
     width: min(65vw, 1000px);
-    height: min(60vh, 650px);
+    height: min(75vh, 800px);
   }
 }
 
