@@ -30,11 +30,11 @@
   transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 大屏适配：≥ 1200px 使用 Large 尺寸 */
+/* 大屏适配：使用视口相对尺寸 */
 @media (min-width: 1200px) {
   .settings-window {
-    width: 760px;
-    height: 440px;
+    width: min(65vw, 1000px);
+    height: min(60vh, 650px);
   }
 }
 
