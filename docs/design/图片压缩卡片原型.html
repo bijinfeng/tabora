@@ -1,0 +1,1722 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 图片压缩卡片与弹窗独立原型</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-hover: #15785c;
+        --wb-accent-soft: #eaf5f0;
+        --wb-success: #2d8a5e;
+        --wb-success-soft: #eaf5f0;
+        --wb-danger: #c94545;
+        --wb-danger-soft: #f7e9e8;
+        --wb-warn: #a66a12;
+        --wb-warn-soft: #fff4dc;
+        --wb-info: #3d7ba8;
+        --wb-info-soft: #e8f1f7;
+        --wb-shadow-floating: rgba(0, 0, 0, 0.14);
+        --wb-focus-ring: rgba(26, 144, 112, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        padding: 28px;
+        background:
+          linear-gradient(
+            color-mix(in srgb, var(--wb-text) 3.5%, transparent) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--wb-text) 3.5%, transparent) 1px,
+            transparent 1px
+          ),
+          var(--wb-page);
+        background-size: 24px 24px;
+        color: var(--wb-text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: default;
+      }
+
+      .prototype {
+        width: min(100%, 1220px);
+        min-height: calc(100vh - 56px);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(330px, 410px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+
+      .preview-rail,
+      .modal-stage {
+        display: grid;
+        gap: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .toolbar strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .size-button,
+      .ghost-button,
+      .primary-button,
+      .icon-button,
+      .format-button,
+      .tab-button {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .size-button::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-1px);
+        opacity: 0.55;
+      }
+
+      .size-button:hover,
+      .ghost-button:hover,
+      .icon-button:hover,
+      .format-button:hover,
+      .tab-button:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .primary-button {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent);
+        color: var(--wb-surface);
+      }
+
+      .primary-button:hover {
+        background: var(--wb-accent-hover);
+      }
+
+      .icon-button {
+        width: 28px;
+        padding: 0;
+        color: var(--wb-text-muted);
+      }
+
+      .card-stage {
+        min-height: 320px;
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        padding: 18px;
+        border: 1px solid var(--wb-line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--wb-surface) 70%, transparent);
+      }
+
+      .compress-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--wb-shadow-floating) 26%, transparent);
+      }
+
+      .compress-card.card-sm {
+        max-width: 224px;
+        aspect-ratio: 3 / 2;
+      }
+
+      .compress-card.card-md {
+        max-width: 300px;
+        aspect-ratio: 16 / 10;
+      }
+
+      .compress-card.card-lg {
+        max-width: 360px;
+        aspect-ratio: 16 / 9;
+      }
+
+      .compress-card.card-xl {
+        max-width: 440px;
+        aspect-ratio: 21 / 9;
+      }
+
+      .card-head {
+        min-height: 31px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 10px 7px;
+      }
+
+      .card-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .card-title span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .card-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--wb-accent);
+      }
+
+      .card-meta {
+        flex: 0 0 auto;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .compress-card-body {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        gap: 8px;
+        padding: 0 10px 10px;
+      }
+
+      .saving-panel {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        gap: 9px;
+        align-items: center;
+        padding: 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background:
+          linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--wb-accent-soft) 62%, transparent),
+            transparent 72%
+          ),
+          var(--wb-surface-soft);
+      }
+
+      .local-device {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--wb-accent) 28%, var(--wb-line));
+        border-radius: 8px;
+        background: var(--wb-surface);
+      }
+
+      .local-device::before {
+        content: "";
+        width: 19px;
+        height: 15px;
+        border: 1.5px solid var(--wb-accent);
+        border-top-width: 5px;
+        border-radius: 4px 4px 3px 3px;
+        box-shadow: inset 0 4px 0 color-mix(in srgb, var(--wb-accent) 10%, transparent);
+      }
+
+      .saving-main {
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+      }
+
+      .saving-main span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .saving-number {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 27px;
+        line-height: 0.95;
+        font-weight: 760;
+        letter-spacing: -0.03em;
+      }
+
+      .saving-main small {
+        overflow: hidden;
+        color: var(--wb-text-subtle);
+        font-size: 9px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .saving-badge {
+        justify-self: end;
+        padding: 4px 6px;
+        border-radius: 999px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .mini-metric {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+        padding: 6px 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .mini-metric b {
+        overflow: hidden;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        line-height: 1.1;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mini-metric span {
+        color: var(--wb-text-subtle);
+        font-size: 9px;
+        line-height: 1.1;
+      }
+
+      .progress-panel {
+        display: grid;
+        gap: 6px;
+      }
+
+      .progress-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--wb-text-muted);
+        font-size: 10px;
+      }
+
+      .progress-track {
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--wb-line);
+      }
+
+      .progress-fill {
+        width: 68%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--wb-accent);
+      }
+
+      .file-strip {
+        min-width: 0;
+        display: grid;
+        gap: 5px;
+      }
+
+      .file-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        gap: 6px;
+        align-items: center;
+        min-height: 28px;
+        padding: 5px 6px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .thumb {
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--wb-line-strong);
+        border-radius: 5px;
+        background:
+          linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--wb-info) 30%, transparent),
+            transparent 58%
+          ),
+          linear-gradient(
+            45deg,
+            color-mix(in srgb, var(--wb-accent) 28%, transparent),
+            transparent 55%
+          ),
+          var(--wb-surface);
+      }
+
+      .file-row b {
+        overflow: hidden;
+        font-size: 10px;
+        line-height: 1.1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .file-row span {
+        color: var(--wb-text-muted);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 7px 10px 9px;
+        border-top: 1px solid var(--wb-line);
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .card-foot span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .compress-card.card-sm .metric-row,
+      .compress-card.card-sm .progress-panel,
+      .compress-card.card-sm .file-strip,
+      .compress-card.card-sm .card-foot {
+        display: none;
+      }
+
+      .compress-card.card-sm .compress-card-body {
+        align-content: center;
+      }
+
+      .compress-card.card-sm .saving-panel {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      .compress-card.card-sm .local-device,
+      .compress-card.card-sm .saving-main small {
+        display: none;
+      }
+
+      .compress-card.card-sm .saving-number {
+        font-size: 23px;
+      }
+
+      .compress-card.card-md .metric-row,
+      .compress-card.card-md .file-strip {
+        display: none;
+      }
+
+      .compress-card.card-md .file-row:nth-child(n + 3) {
+        display: none;
+      }
+
+      .compress-card.card-lg .compress-card-body {
+        grid-template-columns: minmax(0, 1fr) 112px;
+        grid-template-rows: auto auto auto;
+        gap: 7px;
+        padding: 0 9px 9px;
+      }
+
+      .compress-card.card-lg .saving-panel {
+        grid-column: 1;
+        padding: 8px;
+      }
+
+      .compress-card.card-lg .saving-number {
+        font-size: 24px;
+      }
+
+      .compress-card.card-lg .metric-row {
+        grid-column: 1;
+      }
+
+      .compress-card.card-lg .progress-panel {
+        grid-column: 1;
+      }
+
+      .compress-card.card-lg .file-strip {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+        align-content: start;
+        gap: 4px;
+      }
+
+      .compress-card.card-lg .file-row {
+        grid-template-columns: 18px 1fr;
+        gap: 4px;
+        min-height: 32px;
+        padding: 5px 6px;
+      }
+
+      .compress-card.card-lg .file-row span {
+        grid-column: 2;
+        font-size: 9px;
+      }
+
+      .compress-card.card-lg .file-row:nth-child(n + 4) {
+        display: none;
+      }
+
+      .compress-card.card-lg .thumb {
+        width: 18px;
+        height: 18px;
+      }
+
+      .compress-card.card-xl .compress-card-body {
+        grid-template-columns: minmax(0, 1fr) 112px;
+        grid-template-rows: auto auto;
+        gap: 7px;
+        align-items: stretch;
+      }
+
+      .compress-card.card-xl .saving-panel {
+        grid-row: 1 / span 2;
+      }
+
+      .compress-card.card-xl .metric-row {
+        grid-template-columns: 1fr;
+      }
+
+      .compress-card.card-xl .file-strip {
+        display: none;
+      }
+
+      .compress-card.card-xl .saving-panel,
+      .compress-card.card-xl .progress-panel {
+        min-height: 0;
+      }
+
+      .compress-card.card-xl .progress-panel {
+        align-self: end;
+      }
+
+      .expand-modal {
+        width: 700px;
+        min-height: 430px;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 10px;
+        background: var(--wb-surface);
+        box-shadow: 0 22px 54px color-mix(in srgb, var(--wb-shadow-floating) 72%, transparent);
+      }
+
+      .expand-modal.modal-sm {
+        width: 560px;
+        min-height: 340px;
+      }
+
+      .expand-modal.modal-lg {
+        width: 840px;
+        min-height: 500px;
+      }
+
+      .modal-head,
+      .modal-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        background: var(--wb-surface-soft);
+      }
+
+      .modal-head {
+        border-bottom: 1px solid var(--wb-line);
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--wb-line);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .modal-title {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .modal-title strong {
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .modal-title span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .head-actions,
+      .foot-actions,
+      .tab-row,
+      .format-quick-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .modal-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 230px;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .modal-main,
+      .modal-side {
+        min-width: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .drop-zone,
+      .view-panel,
+      .side-panel,
+      .result-panel {
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .drop-zone {
+        min-height: 118px;
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+      }
+
+      .drop-zone.is-empty {
+        border-style: dashed;
+        background: color-mix(in srgb, var(--wb-surface-soft) 78%, var(--wb-page));
+      }
+
+      .drop-zone.is-dragging {
+        border-color: color-mix(in srgb, var(--wb-accent) 42%, var(--wb-line));
+        background: var(--wb-accent-soft);
+      }
+
+      .drop-icon {
+        width: 58px;
+        height: 58px;
+        display: grid;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--wb-accent) 28%, var(--wb-line));
+        border-radius: 12px;
+        background: var(--wb-accent-soft);
+        color: var(--wb-accent);
+      }
+
+      .drop-icon svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .drop-zone.is-empty .drop-icon {
+        border-color: var(--wb-line);
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+      }
+
+      .drop-copy {
+        min-width: 0;
+        display: grid;
+        gap: 5px;
+      }
+
+      .drop-copy strong {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      .drop-copy span,
+      .drop-note {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .drop-action {
+        width: fit-content;
+        margin-top: 2px;
+        padding: 6px 10px;
+        border: 1px solid color-mix(in srgb, var(--wb-accent) 30%, var(--wb-line));
+        border-radius: 8px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .drop-action:hover {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent-soft);
+      }
+
+      .drop-stats {
+        display: grid;
+        gap: 4px;
+        justify-items: end;
+      }
+
+      .drop-stats b {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 24px;
+        line-height: 1;
+      }
+
+      .drop-stats span {
+        color: var(--wb-accent);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .drop-zone.is-empty .drop-stats b,
+      .drop-zone.is-empty .drop-stats span {
+        color: var(--wb-text-muted);
+      }
+
+      .tab-button,
+      .format-button {
+        border-radius: 999px;
+        color: var(--wb-text-muted);
+      }
+
+      .format-control {
+        display: grid;
+        gap: 8px;
+      }
+
+      .format-select-wrap {
+        display: grid;
+        gap: 5px;
+      }
+
+      .format-select-wrap span,
+      .format-current {
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+
+      .format-select {
+        width: 100%;
+        height: 31px;
+        min-width: 0;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .format-select:focus {
+        outline: 2px solid color-mix(in srgb, var(--wb-accent) 26%, transparent);
+        outline-offset: 1px;
+        border-color: color-mix(in srgb, var(--wb-accent) 42%, var(--wb-line));
+      }
+
+      .format-quick-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .format-quick-row .format-button {
+        min-width: 0;
+        padding: 0 8px;
+      }
+
+      .tab-button.is-active,
+      .format-button.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-text);
+      }
+
+      .view-panel {
+        padding: 10px;
+      }
+
+      .view-panel.hidden {
+        display: none;
+      }
+
+      .view-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .queue-list,
+      .history-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .queue-row,
+      .history-row {
+        display: grid;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 7px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .queue-row {
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+      }
+
+      .history-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .queue-row.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+        background: var(--wb-accent-soft);
+      }
+
+      .queue-row b,
+      .history-row b {
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .queue-row span,
+      .history-row span {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      .queue-row em,
+      .history-row em {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .queue-row em.done,
+      .history-row em.done {
+        color: var(--wb-success);
+      }
+
+      .queue-row em.running {
+        color: var(--wb-accent);
+      }
+
+      .result-panel {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .result-stat {
+        display: grid;
+        gap: 2px;
+        padding: 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .result-stat b {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.1;
+      }
+
+      .result-stat span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+
+      .side-panel {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .side-title {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .input,
+      .select {
+        height: 32px;
+        width: 100%;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      .input:focus,
+      .select:focus {
+        outline: 2px solid var(--wb-focus-ring);
+        border-color: var(--wb-accent);
+      }
+
+      .quality-line {
+        display: grid;
+        gap: 6px;
+      }
+
+      .range-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--wb-accent);
+      }
+
+      .check-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 30px;
+        padding: 0 2px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .check-row input {
+        accent-color: var(--wb-accent);
+      }
+
+      .side-note {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.35;
+      }
+
+      @media (max-width: 980px) {
+        body {
+          padding: 18px;
+        }
+
+        .prototype {
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+
+        .expand-modal,
+        .expand-modal.modal-sm,
+        .expand-modal.modal-lg {
+          width: min(100%, 840px);
+        }
+      }
+
+      @media (max-width: 680px) {
+        .modal-body,
+        .drop-zone {
+          grid-template-columns: 1fr;
+        }
+
+        .drop-stats {
+          justify-items: start;
+        }
+
+        .result-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="prototype" aria-label="图片压缩卡片与弹窗独立原型">
+      <section
+        class="preview-rail"
+        aria-label="图片压缩卡片尺寸预览"
+        data-od-id="compress-card-preview"
+      >
+        <div class="toolbar">
+          <div>
+            <strong>图片压缩卡片</strong>
+            <span id="cardSpec"> · M 卡片 · 4/16 · 16:10</span>
+          </div>
+          <button class="size-button" id="cardSizeButton" type="button">切换卡片尺寸</button>
+        </div>
+        <div class="card-stage">
+          <article class="compress-card card-md" id="compressCard" data-od-id="compress-card-md">
+            <header class="card-head">
+              <div class="card-title"><span class="card-dot"></span><span>图片压缩</span></div>
+              <div class="card-meta" id="cardMeta">3 张本地图片 · 待生成</div>
+            </header>
+            <div class="compress-card-body">
+              <div class="saving-panel">
+                <span class="local-device" aria-hidden="true"></span>
+                <div class="saving-main">
+                  <span>本机预计节省</span>
+                  <div class="saving-number" id="cardSaving">18.6 MB</div>
+                  <small>原图保留在本机 · 输出手动导出</small>
+                </div>
+                <span class="saving-badge" id="cardRatio">-62%</span>
+              </div>
+              <div class="metric-row" aria-label="压缩指标">
+                <div class="mini-metric"><b id="cardOriginal">30.1 MB</b><span>本地原图</span></div>
+                <div class="mini-metric"><b id="cardOutput">11.5 MB</b><span>输出估算</span></div>
+                <div class="mini-metric"><b id="cardQuality">82%</b><span>质量档位</span></div>
+              </div>
+              <div class="progress-panel" aria-label="本机压缩进度">
+                <div class="progress-head">
+                  <span id="cardProgressLabel">2 / 3 本机生成</span><span>AVIF</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="cardProgressFill"></div>
+                </div>
+              </div>
+              <div class="file-strip" id="cardFileStrip" aria-label="本地处理说明"></div>
+            </div>
+            <footer class="card-foot">
+              <span id="cardFoot">M · 本地文件 + 最近输出</span>
+              <span>不上传</span>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="modal-stage" aria-label="图片压缩展开弹窗" data-od-id="compress-modal-stage">
+        <div class="toolbar">
+          <div>
+            <strong>展开弹窗</strong>
+            <span id="modalSpec"> · M 弹窗 · 700 × 430</span>
+          </div>
+          <button class="size-button" id="modalSizeButton" type="button">切换弹窗尺寸</button>
+        </div>
+        <section class="expand-modal modal-md" id="expandModal" data-od-id="compress-modal-md">
+          <header class="modal-head">
+            <div class="modal-title">
+              <strong>图片压缩</strong>
+              <span id="modalDescription">中尺寸用于本地选择图片、预估体积并导出结果。</span>
+            </div>
+            <div class="head-actions">
+              <button class="ghost-button" id="addButton" type="button">选择本地图片</button>
+              <input
+                id="filePicker"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/avif"
+                multiple
+                hidden
+              />
+              <button class="ghost-button" type="button">关闭</button>
+            </div>
+          </header>
+
+          <div class="modal-body">
+            <div class="modal-main">
+              <section class="drop-zone is-empty" aria-label="本地文件选择区域">
+                <div class="drop-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 7.8A2.8 2.8 0 0 1 6.8 5h3.1l1.6 1.8h5.7A2.8 2.8 0 0 1 20 9.6v6.6a2.8 2.8 0 0 1-2.8 2.8H6.8A2.8 2.8 0 0 1 4 16.2V7.8Z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    />
+                    <path
+                      d="m8.5 15 2.1-2.4 1.7 1.8 1.1-1.2 2.2 1.8"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M15.2 10.8h.01"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <div class="drop-copy">
+                  <strong id="dropTitle">还没有选择图片</strong>
+                  <span id="dropDescription"
+                    >选择本地 JPG、PNG、WebP 或 AVIF；压缩只在本机完成，原图不会离开设备。</span
+                  >
+                  <button class="drop-action" id="dropSelectButton" type="button">
+                    选择本地图片
+                  </button>
+                  <span class="drop-note" id="dropNote" aria-live="polite"
+                    >也可以把图片拖到这里开始预估。</span
+                  >
+                </div>
+                <div class="drop-stats">
+                  <b id="dropSaving">0 张</b>
+                  <span id="dropRatio">待选择</span>
+                </div>
+              </section>
+
+              <div class="tab-row" aria-label="本地压缩视图切换">
+                <button class="tab-button is-active" data-view="queue" type="button">
+                  本地文件
+                </button>
+                <button class="tab-button" data-view="result" type="button">输出结果</button>
+                <button class="tab-button" data-view="history" type="button">本机历史</button>
+              </div>
+
+              <section class="view-panel" id="queueView" aria-label="本地文件工作区">
+                <div class="view-head">
+                  <span>已选本地图片</span><span>点击行预览输出结果</span>
+                </div>
+                <div class="queue-list" id="queueList"></div>
+              </section>
+
+              <section class="view-panel hidden" id="resultView" aria-label="压缩结果">
+                <div class="view-head">
+                  <span>当前图片结果</span><span id="resultFileName">cover-hero.png</span>
+                </div>
+                <div class="result-panel">
+                  <div class="result-grid">
+                    <div class="result-stat">
+                      <b id="resultBefore">8.4 MB</b><span>压缩前</span>
+                    </div>
+                    <div class="result-stat"><b id="resultAfter">3.1 MB</b><span>压缩后</span></div>
+                    <div class="result-stat"><b id="resultSave">63%</b><span>节省</span></div>
+                  </div>
+                  <div class="progress-panel">
+                    <div class="progress-head">
+                      <span id="resultStatus">已生成 · 输出 AVIF</span
+                      ><span id="resultQuality">质量 82%</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill" id="resultProgressFill"></div>
+                    </div>
+                  </div>
+                  <div class="side-note">
+                    原型只读取文件名和体积，用于模拟本地压缩结果；不会上传图片。
+                  </div>
+                </div>
+              </section>
+
+              <section class="view-panel hidden" id="historyView" aria-label="本机压缩历史">
+                <div class="view-head"><span>最近本机批次</span><span>仅保存在本设备</span></div>
+                <div class="history-list" id="historyList"></div>
+              </section>
+            </div>
+
+            <aside class="modal-side" aria-label="图片压缩配置">
+              <section class="side-panel">
+                <div class="side-title">输出格式</div>
+                <div class="format-control" aria-label="选择输出格式">
+                  <label class="format-select-wrap" for="formatSelect">
+                    <span>完整格式</span>
+                    <select class="format-select" id="formatSelect">
+                      <option value="AVIF" selected>AVIF · 高压缩</option>
+                      <option value="WebP">WebP · Web 通用</option>
+                      <option value="JPEG">JPEG · 照片兼容</option>
+                      <option value="PNG">PNG · 透明保留</option>
+                      <option value="JPEG XL">JPEG XL · 新格式</option>
+                      <option value="HEIC">HEIC · Apple 生态</option>
+                      <option value="TIFF">TIFF · 印刷归档</option>
+                      <option value="原格式">原格式 · 仅压缩</option>
+                    </select>
+                  </label>
+                  <div class="format-quick-row" aria-label="常用输出格式">
+                    <button class="format-button is-active" data-format="AVIF" type="button">
+                      AVIF
+                    </button>
+                    <button class="format-button" data-format="WebP" type="button">WebP</button>
+                    <button class="format-button" data-format="JPEG" type="button">JPEG</button>
+                    <button class="format-button" data-format="PNG" type="button">PNG</button>
+                  </div>
+                  <div class="format-current" id="formatCurrent">当前输出 AVIF</div>
+                </div>
+              </section>
+
+              <section class="side-panel">
+                <div class="side-title">压缩质量</div>
+                <div class="quality-line">
+                  <div class="range-meta">
+                    <span>更小体积</span><b id="qualityValue">82%</b><span>更清晰</span>
+                  </div>
+                  <input
+                    id="qualityRange"
+                    type="range"
+                    min="45"
+                    max="95"
+                    value="82"
+                    aria-label="压缩质量"
+                  />
+                </div>
+              </section>
+
+              <section class="side-panel">
+                <div class="side-title">输出规则</div>
+                <label class="check-row"
+                  ><span>原图保留在本机</span><input id="keepOriginal" type="checkbox" checked
+                /></label>
+                <label class="check-row"
+                  ><span>移除 EXIF</span><input id="stripExif" type="checkbox" checked
+                /></label>
+                <label class="check-row"
+                  ><span>完成后打开输出文件夹</span><input id="openFolder" type="checkbox"
+                /></label>
+              </section>
+
+              <section class="side-panel">
+                <div class="side-title">命名</div>
+                <input class="input" id="suffixInput" value="-compressed" aria-label="文件名后缀" />
+                <div class="side-note">输出示例：cover-hero-compressed.avif</div>
+              </section>
+            </aside>
+          </div>
+
+          <footer class="modal-foot">
+            <span id="modalFoot">本机处理 · 原图不离开设备 · 不上传图片</span>
+            <div class="foot-actions">
+              <button class="ghost-button" id="presetButton" type="button">保存预设</button>
+              <button class="primary-button" id="compressButton" type="button">本机压缩</button>
+            </div>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const cardSizes = [
+        {
+          key: "sm",
+          name: "S 卡片",
+          spec: " · 3/16 · 3:2",
+          foot: "S · 本机节省量快照",
+          od: "compress-card-sm",
+          visible: 0,
+        },
+        {
+          key: "md",
+          name: "M 卡片",
+          spec: " · 4/16 · 16:10",
+          foot: "M · 本机处理状态",
+          od: "compress-card-md",
+          visible: 0,
+        },
+        {
+          key: "lg",
+          name: "L 卡片",
+          spec: " · 6/16 · 16:9",
+          foot: "L · 本地文件状态 + 安全提示",
+          od: "compress-card-lg",
+          visible: 2,
+        },
+        {
+          key: "xl",
+          name: "XL 卡片",
+          spec: " · 8/16 · 21:9",
+          foot: "XL · 本机压缩横向状态",
+          od: "compress-card-xl",
+          visible: 0,
+        },
+      ]
+
+      const modalSizes = [
+        {
+          key: "sm",
+          name: "S 弹窗",
+          spec: " · 560 × 340",
+          od: "compress-modal-sm",
+          description: "小尺寸用于快速选择本地图片并启动默认压缩。",
+        },
+        {
+          key: "md",
+          name: "M 弹窗",
+          spec: " · 700 × 430",
+          od: "compress-modal-md",
+          description: "中尺寸用于本地选择图片、预估体积并导出结果。",
+        },
+        {
+          key: "lg",
+          name: "L 弹窗",
+          spec: " · 840 × 500",
+          od: "compress-modal-lg",
+          description: "大尺寸用于同时查看本地文件、输出结果和完整参数。",
+        },
+      ]
+
+      const files = [
+        {
+          id: "cover",
+          name: "cover-hero.png",
+          type: "PNG",
+          before: 8.4,
+          after: 3.1,
+          saving: 63,
+          status: "done",
+        },
+        {
+          id: "gallery",
+          name: "gallery-grid.jpg",
+          type: "JPG",
+          before: 12.7,
+          after: 4.4,
+          saving: 65,
+          status: "done",
+        },
+        {
+          id: "poster",
+          name: "campaign-poster.png",
+          type: "PNG",
+          before: 9.0,
+          after: 4.0,
+          saving: 56,
+          status: "ready",
+        },
+      ]
+
+      const histories = [
+        { batch: "官网素材", files: "12 张", saved: "74.8 MB", date: "今天 10:42" },
+        { batch: "应用商店截图", files: "6 张", saved: "31.2 MB", date: "昨天 18:20" },
+        { batch: "博客配图", files: "9 张", saved: "46.5 MB", date: "周二 14:05" },
+      ]
+
+      let cardIndex = 1
+      let modalIndex = 1
+      let activeFileId = "cover"
+      let activeFormat = "AVIF"
+      let activeView = "queue"
+      let hasLocalSelection = false
+
+      const compressCard = document.getElementById("compressCard")
+      const expandModal = document.getElementById("expandModal")
+      const cardSpec = document.getElementById("cardSpec")
+      const cardFoot = document.getElementById("cardFoot")
+      const modalSpec = document.getElementById("modalSpec")
+      const modalDescription = document.getElementById("modalDescription")
+      const queueList = document.getElementById("queueList")
+      const historyList = document.getElementById("historyList")
+      const qualityRange = document.getElementById("qualityRange")
+      const qualityValue = document.getElementById("qualityValue")
+      const filePicker = document.getElementById("filePicker")
+      const dropZone = document.querySelector(".drop-zone")
+      const dropSelectButton = document.getElementById("dropSelectButton")
+      const formatSelect = document.getElementById("formatSelect")
+      const formatCurrent = document.getElementById("formatCurrent")
+
+      function currentFile() {
+        return files.find((file) => file.id === activeFileId) || files[0]
+      }
+
+      function formatMb(value) {
+        return `${value.toFixed(1)} MB`
+      }
+
+      function totals() {
+        const before = files.reduce((sum, file) => sum + file.before, 0)
+        const after = files.reduce((sum, file) => sum + file.after, 0)
+        const saving = before - after
+        const ratio = Math.round((saving / before) * 100)
+        const done = files.filter((file) => file.status === "done").length
+        return { before, after, saving, ratio, done }
+      }
+
+      function setText(id, value) {
+        document.getElementById(id).textContent = value
+      }
+
+      function renderCardFiles() {
+        const visible = cardSizes[cardIndex].visible
+        const localNotes = [
+          { title: "原图未上传", value: "仅本机读取" },
+          { title: "输出待导出", value: activeFormat },
+          { title: "最近文件", value: files[0]?.name || "—" },
+        ]
+        document.getElementById("cardFileStrip").innerHTML = localNotes
+          .slice(0, visible)
+          .map(
+            (item) =>
+              `<div class="file-row"><span class="thumb"></span><b>${item.title}</b><span>${item.value}</span></div>`,
+          )
+          .join("")
+      }
+
+      function renderQueue() {
+        queueList.innerHTML = files
+          .map(
+            (file) => `
+            <button class="queue-row ${file.id === activeFileId ? "is-active" : ""}" type="button" data-file="${file.id}">
+              <span class="thumb"></span>
+              <span><b>${file.name}</b><br />${file.type} · ${formatMb(file.before)} → ${formatMb(file.after)}</span>
+              <em class="${file.status === "done" ? "done" : "running"}">${file.status === "done" ? "已生成" : "待压缩"}</em>
+            </button>
+          `,
+          )
+          .join("")
+      }
+
+      function renderHistory() {
+        historyList.innerHTML = histories
+          .map(
+            (item) =>
+              `<div class="history-row"><span><b>${item.batch}</b><br />${item.files} · ${item.date}</span><em class="done">${item.saved}</em></div>`,
+          )
+          .join("")
+      }
+
+      function estimateLocalOutput(file) {
+        const before = Math.max(file.size / 1024 / 1024, 0.1)
+        const quality = Number(qualityRange.value) / 100
+        const type = (file.type || "").toLowerCase()
+        const baseFactor = type.includes("png")
+          ? 0.34
+          : type.includes("webp") || type.includes("avif")
+            ? 0.72
+            : 0.42
+        const after = Math.max(before * (baseFactor + quality * 0.18), 0.08)
+        const saving = Math.max(0, Math.round(((before - after) / before) * 100))
+        return { before, after, saving }
+      }
+
+      function addLocalFiles(selectedFiles) {
+        const images = Array.from(selectedFiles || []).filter((file) =>
+          file.type.startsWith("image/"),
+        )
+        if (!images.length) return
+        hasLocalSelection = true
+        images.forEach((file, index) => {
+          const estimate = estimateLocalOutput(file)
+          const extension = file.name.split(".").pop() || "IMG"
+          const id = `local-${Date.now()}-${index}`
+          files.push({
+            id,
+            name: file.name,
+            type: extension.toUpperCase(),
+            before: estimate.before,
+            after: estimate.after,
+            saving: estimate.saving,
+            status: "ready",
+          })
+          if (index === 0) activeFileId = id
+        })
+        document.getElementById("modalFoot").textContent =
+          `已加入本地工作区 · ${images.length} 张 · 未上传`
+        renderAll()
+        setView("queue")
+      }
+
+      function applyDropZoneSummary(total) {
+        if (!hasLocalSelection) {
+          dropZone.classList.add("is-empty")
+          setText("dropTitle", "还没有选择图片")
+          setText(
+            "dropDescription",
+            "选择本地 JPG、PNG、WebP 或 AVIF；压缩只在本机完成，原图不会离开设备。",
+          )
+          setText("dropNote", "也可以把图片拖到这里开始预估。")
+          setText("dropSaving", "0 张")
+          setText("dropRatio", "待选择")
+          return
+        }
+
+        dropZone.classList.remove("is-empty")
+        setText("dropTitle", "已选择本地图片")
+        setText(
+          "dropDescription",
+          "压缩在本机完成，支持 JPG、PNG、WebP、AVIF；原图默认保留在原位置。",
+        )
+        setText("dropNote", `已选 ${files.length} 张，预计本机节省 ${formatMb(total.saving)}。`)
+        setText("dropSaving", formatMb(total.saving))
+        setText("dropRatio", `平均 -${total.ratio}%`)
+      }
+
+      function applySummary() {
+        const total = totals()
+        const progress = Math.round((total.done / files.length) * 100)
+        setText("cardSaving", formatMb(total.saving))
+        setText("cardRatio", `-${total.ratio}%`)
+        setText(
+          "cardMeta",
+          `${files.length} 张本地图片 · ${total.done === files.length ? "本机完成" : "待本机压缩"}`,
+        )
+        setText("cardOriginal", formatMb(total.before))
+        setText("cardOutput", formatMb(total.after))
+        setText("cardQuality", `${qualityRange.value}%`)
+        setText("cardProgressLabel", `${total.done} / ${files.length} 本机生成`)
+        applyDropZoneSummary(total)
+        document.getElementById("cardProgressFill").style.width = `${progress}%`
+      }
+
+      function applyResult() {
+        const file = currentFile()
+        setText("resultFileName", file.name)
+        setText("resultBefore", formatMb(file.before))
+        setText("resultAfter", formatMb(file.after))
+        setText("resultSave", `${file.saving}%`)
+        setText(
+          "resultStatus",
+          `${file.status === "done" ? "已生成" : "待本机压缩"} · 输出 ${activeFormat}`,
+        )
+        setText("resultQuality", `质量 ${qualityRange.value}%`)
+        document.getElementById("resultProgressFill").style.width =
+          file.status === "done" ? "100%" : "68%"
+      }
+
+      function applyCardSize() {
+        const size = cardSizes[cardIndex]
+        compressCard.className = `compress-card card-${size.key}`
+        compressCard.dataset.odId = size.od
+        cardSpec.textContent = ` · ${size.name}${size.spec}`
+        cardFoot.textContent = size.foot
+        renderCardFiles()
+      }
+
+      function applyModalSize() {
+        const size = modalSizes[modalIndex]
+        expandModal.className = `expand-modal modal-${size.key}`
+        expandModal.dataset.odId = size.od
+        modalSpec.textContent = ` · ${size.name}${size.spec}`
+        modalDescription.textContent = size.description
+      }
+
+      function setView(view) {
+        activeView = view
+        document.querySelectorAll(".tab-button").forEach((button) => {
+          button.classList.toggle("is-active", button.dataset.view === view)
+        })
+        document.querySelectorAll(".view-panel").forEach((panel) => {
+          panel.classList.toggle("hidden", panel.id !== `${view}View`)
+        })
+      }
+
+      function syncFormatControl() {
+        document.querySelectorAll(".format-button").forEach((button) => {
+          button.classList.toggle("is-active", button.dataset.format === activeFormat)
+        })
+        if (formatSelect && formatSelect.value !== activeFormat) {
+          formatSelect.value = activeFormat
+        }
+        if (formatCurrent) {
+          formatCurrent.textContent = `当前输出 ${activeFormat}`
+        }
+      }
+
+      function setOutputFormat(format) {
+        activeFormat = format
+        syncFormatControl()
+        renderCardFiles()
+        applyResult()
+      }
+
+      function renderAll() {
+        syncFormatControl()
+        applySummary()
+        applyResult()
+        renderCardFiles()
+        renderQueue()
+        renderHistory()
+      }
+
+      document.getElementById("cardSizeButton").addEventListener("click", () => {
+        cardIndex = (cardIndex + 1) % cardSizes.length
+        applyCardSize()
+      })
+
+      document.getElementById("modalSizeButton").addEventListener("click", () => {
+        modalIndex = (modalIndex + 1) % modalSizes.length
+        applyModalSize()
+      })
+
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => setView(button.dataset.view))
+      })
+
+      formatSelect.addEventListener("change", () => {
+        setOutputFormat(formatSelect.value)
+      })
+
+      document.querySelectorAll(".format-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          setOutputFormat(button.dataset.format)
+        })
+      })
+
+      queueList.addEventListener("click", (event) => {
+        const row = event.target.closest("[data-file]")
+        if (!row) return
+        activeFileId = row.dataset.file
+        renderQueue()
+        applyResult()
+        setView("result")
+      })
+
+      qualityRange.addEventListener("input", () => {
+        qualityValue.textContent = `${qualityRange.value}%`
+        applySummary()
+        applyResult()
+      })
+
+      document.getElementById("addButton").addEventListener("click", () => {
+        filePicker.click()
+      })
+
+      dropSelectButton.addEventListener("click", () => {
+        filePicker.click()
+      })
+
+      filePicker.addEventListener("change", () => {
+        addLocalFiles(filePicker.files)
+        filePicker.value = ""
+      })
+
+      dropZone.addEventListener("dragover", (event) => {
+        event.preventDefault()
+        dropZone.classList.add("is-dragging")
+      })
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("is-dragging")
+      })
+
+      dropZone.addEventListener("drop", (event) => {
+        event.preventDefault()
+        dropZone.classList.remove("is-dragging")
+        addLocalFiles(event.dataTransfer.files)
+      })
+
+      document.getElementById("compressButton").addEventListener("click", () => {
+        files.forEach((file) => {
+          file.status = "done"
+        })
+        renderAll()
+        setView("result")
+        document.getElementById("modalFoot").textContent =
+          `本机已生成输出 · ${activeFormat} · ${files.length} 张 · 原图未上传`
+      })
+
+      document.getElementById("presetButton").addEventListener("click", () => {
+        document.getElementById("modalFoot").textContent =
+          `已保存本机预设 · ${activeFormat} · 质量 ${qualityRange.value}% · 后缀 ${document.getElementById("suffixInput").value}`
+      })
+
+      renderAll()
+      applyCardSize()
+      applyModalSize()
+    </script>
+  </body>
+</html>

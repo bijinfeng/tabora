@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 股票查看卡片与弹窗独立原型</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-soft: #eaf5f0;
+        --wb-success: #2d8a5e;
+        --wb-success-soft: #eaf5f0;
+        --wb-danger: #c94545;
+        --wb-danger-soft: #f7e9e8;
+        --wb-warn: #a66a12;
+        --wb-warn-soft: #fff4dc;
+        --wb-shadow-floating: rgba(0, 0, 0, 0.14);
+        --wb-focus-ring: rgba(26, 144, 112, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        padding: 28px;
+        background:
+          linear-gradient(
+            color-mix(in srgb, var(--wb-text) 3.5%, transparent) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--wb-text) 3.5%, transparent) 1px,
+            transparent 1px
+          ),
+          var(--wb-page);
+        background-size: 24px 24px;
+        color: var(--wb-text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: default;
+      }
+
+      .prototype {
+        width: min(100%, 1220px);
+        min-height: calc(100vh - 56px);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(330px, 410px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+
+      .preview-rail,
+      .modal-stage {
+        display: grid;
+        gap: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .toolbar strong {
+        color: var(--wb-text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .size-button,
+      .ghost-button,
+      .primary-button,
+      .icon-button {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 10px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .size-button::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-1px);
+        opacity: 0.55;
+      }
+
+      .size-button:hover,
+      .ghost-button:hover,
+      .icon-button:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+      }
+
+      .primary-button {
+        border-color: var(--wb-accent);
+        background: var(--wb-accent);
+        color: var(--wb-surface);
+      }
+
+      .icon-button {
+        width: 28px;
+        padding: 0;
+        color: var(--wb-text-muted);
+      }
+
+      .card-stage {
+        min-height: 320px;
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        padding: 18px;
+        border: 1px solid var(--wb-line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--wb-surface) 70%, transparent);
+      }
+
+      .stock-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--wb-shadow-floating) 26%, transparent);
+      }
+
+      .stock-card.card-sm {
+        max-width: 224px;
+        aspect-ratio: 3 / 2;
+      }
+
+      .stock-card.card-md {
+        max-width: 300px;
+        aspect-ratio: 16 / 10;
+      }
+
+      .stock-card.card-lg {
+        max-width: 360px;
+        aspect-ratio: 16 / 9;
+      }
+
+      .stock-card.card-xl {
+        max-width: 440px;
+        aspect-ratio: 21 / 9;
+      }
+
+      .card-head {
+        min-height: 31px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 10px 7px;
+      }
+
+      .card-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 650;
+      }
+
+      .card-title span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .card-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--wb-text-subtle);
+      }
+
+      .card-meta {
+        flex: 0 0 auto;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .stock-card-body {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        gap: 8px;
+        padding: 0 10px 10px;
+      }
+
+      .quote-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: end;
+        padding: 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .quote-main {
+        min-width: 0;
+        display: grid;
+        gap: 4px;
+      }
+
+      .ticker-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .ticker-line strong {
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 1.15;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .ticker-line span {
+        color: var(--wb-text-subtle);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+      }
+
+      .price {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 27px;
+        line-height: 0.95;
+        font-weight: 760;
+        letter-spacing: -0.03em;
+      }
+
+      .change {
+        justify-self: end;
+        padding: 4px 6px;
+        border-radius: 999px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .change.up {
+        background: var(--wb-success-soft);
+        color: var(--wb-success);
+      }
+
+      .change.down {
+        background: var(--wb-danger-soft);
+        color: var(--wb-danger);
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .mini-metric {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+        padding: 6px 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .mini-metric b {
+        overflow: hidden;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        line-height: 1.1;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mini-metric span {
+        color: var(--wb-text-subtle);
+        font-size: 9px;
+        line-height: 1.1;
+      }
+
+      .watch-strip {
+        min-width: 0;
+        display: grid;
+        gap: 5px;
+      }
+
+      .watch-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        gap: 6px;
+        align-items: center;
+        min-height: 25px;
+        padding: 5px 6px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .watch-row b {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        line-height: 1.1;
+      }
+
+      .watch-row span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .watch-row em {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+        font-style: normal;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .watch-row em.up {
+        color: var(--wb-success);
+      }
+
+      .watch-row em.down {
+        color: var(--wb-danger);
+      }
+
+      .sparkline {
+        width: 100%;
+        height: 34px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+      }
+
+      .sparkline path {
+        fill: none;
+        stroke: var(--wb-text-subtle);
+        stroke-width: 2;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .stock-card.trend-up .sparkline path {
+        stroke: var(--wb-success);
+      }
+
+      .stock-card.trend-down .sparkline path {
+        stroke: var(--wb-danger);
+      }
+
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 7px 10px 9px;
+        border-top: 1px solid var(--wb-line);
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .card-foot span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .stock-card.card-sm .metric-row,
+      .stock-card.card-sm .watch-strip,
+      .stock-card.card-sm .sparkline,
+      .stock-card.card-sm .card-foot {
+        display: none;
+      }
+
+      .stock-card.card-sm .stock-card-body {
+        align-content: center;
+      }
+
+      .stock-card.card-sm .quote-panel {
+        align-items: center;
+      }
+
+      .stock-card.card-sm .price {
+        font-size: 22px;
+      }
+
+      .stock-card.card-md .metric-row,
+      .stock-card.card-lg .metric-row,
+      .stock-card.card-xl .metric-row {
+        display: none;
+      }
+
+      .stock-card.card-md .watch-row:nth-child(n + 3),
+      .stock-card.card-md .sparkline {
+        display: none;
+      }
+
+      .stock-card.card-md .quote-panel {
+        padding: 8px;
+      }
+
+      .stock-card.card-md .watch-row {
+        min-height: 28px;
+      }
+
+      .stock-card.card-lg .stock-card-body {
+        grid-template-columns: minmax(0, 1fr) 118px;
+        grid-template-rows: auto 1fr;
+        gap: 7px;
+        padding: 0 9px 9px;
+      }
+
+      .stock-card.card-lg .quote-panel {
+        padding: 8px;
+      }
+
+      .stock-card.card-lg .price {
+        font-size: 24px;
+      }
+
+      .stock-card.card-lg .sparkline {
+        height: 42px;
+      }
+
+      .stock-card.card-lg .watch-strip {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-content: start;
+        gap: 4px;
+      }
+
+      .stock-card.card-lg .watch-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 3px 5px;
+        min-height: 31px;
+        padding: 5px 6px;
+      }
+
+      .stock-card.card-lg .watch-row span {
+        grid-column: 1 / -1;
+        font-size: 9px;
+      }
+
+      .stock-card.card-lg .watch-row:nth-child(n + 4) {
+        display: none;
+      }
+
+      .stock-card.card-xl .stock-card-body {
+        grid-template-columns: minmax(0, 1.05fr) minmax(128px, 0.9fr) 120px;
+        align-items: stretch;
+      }
+
+      .stock-card.card-xl .quote-panel {
+        grid-row: auto;
+      }
+
+      .stock-card.card-xl .sparkline {
+        height: 100%;
+        min-height: 78px;
+      }
+
+      .stock-card.card-xl .watch-strip {
+        align-content: start;
+      }
+
+      .expand-modal {
+        width: 700px;
+        min-height: 430px;
+        overflow: hidden;
+        border: 1px solid var(--wb-line);
+        border-radius: 10px;
+        background: var(--wb-surface);
+        box-shadow: 0 22px 54px color-mix(in srgb, var(--wb-shadow-floating) 72%, transparent);
+      }
+
+      .expand-modal.modal-sm {
+        width: 560px;
+        min-height: 340px;
+      }
+
+      .expand-modal.modal-lg {
+        width: 840px;
+        min-height: 500px;
+      }
+
+      .modal-head,
+      .modal-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        background: var(--wb-surface-soft);
+      }
+
+      .modal-head {
+        border-bottom: 1px solid var(--wb-line);
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--wb-line);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .modal-title {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .modal-title strong {
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .modal-title span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .head-actions,
+      .foot-actions {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .modal-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 230px;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .modal-main,
+      .modal-side {
+        min-width: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .quote-detail,
+      .view-panel,
+      .side-panel {
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface-soft);
+      }
+
+      .quote-detail {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 160px;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+      }
+
+      .quote-copy {
+        min-width: 0;
+        display: grid;
+        gap: 6px;
+      }
+
+      .quote-copy strong {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      .quote-copy span,
+      .quote-note {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .quote-number {
+        display: grid;
+        gap: 4px;
+        justify-items: end;
+      }
+
+      .quote-number b {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 24px;
+        line-height: 1;
+      }
+
+      .quote-number span {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .tab-row,
+      .range-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .tab-button,
+      .range-button {
+        height: 26px;
+        padding: 0 9px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .tab-button.is-active,
+      .range-button.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        color: var(--wb-text);
+      }
+
+      .view-panel {
+        padding: 10px;
+      }
+
+      .view-panel.hidden {
+        display: none;
+      }
+
+      .view-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+      }
+
+      .stock-list,
+      .news-list,
+      .alert-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .stock-row,
+      .news-row,
+      .alert-row {
+        display: grid;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 7px 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .stock-row {
+        grid-template-columns: 54px 1fr auto;
+      }
+
+      .stock-row.is-active {
+        border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+        background: var(--wb-accent-soft);
+      }
+
+      .stock-row b,
+      .news-row b,
+      .alert-row b {
+        font-size: 12px;
+        line-height: 1.15;
+      }
+
+      .stock-row span,
+      .news-row span,
+      .alert-row span {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      .stock-row em,
+      .alert-row em {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .stock-row em.up,
+      .quote-number span.up {
+        color: var(--wb-success);
+      }
+
+      .stock-row em.down,
+      .quote-number span.down {
+        color: var(--wb-danger);
+      }
+
+      .chart-panel {
+        display: grid;
+        gap: 8px;
+      }
+
+      .chart {
+        width: 100%;
+        height: 112px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background:
+          linear-gradient(color-mix(in srgb, var(--wb-line) 45%, transparent) 1px, transparent 1px),
+          var(--wb-surface);
+        background-size: 100% 28px;
+      }
+
+      .chart path {
+        fill: none;
+        stroke: var(--wb-text-subtle);
+        stroke-width: 2.2;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .chart circle {
+        fill: var(--wb-text-subtle);
+      }
+
+      .expand-modal.trend-up .chart path {
+        stroke: var(--wb-success);
+      }
+
+      .expand-modal.trend-up .chart circle {
+        fill: var(--wb-success);
+      }
+
+      .expand-modal.trend-down .chart path {
+        stroke: var(--wb-danger);
+      }
+
+      .expand-modal.trend-down .chart circle {
+        fill: var(--wb-danger);
+      }
+
+      .side-panel {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .side-title {
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .input,
+      .select {
+        height: 32px;
+        width: 100%;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+        color: var(--wb-text);
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      .input:focus,
+      .select:focus {
+        outline: 2px solid var(--wb-focus-ring);
+        border-color: var(--wb-accent);
+      }
+
+      .mini-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .mini-stat {
+        display: grid;
+        gap: 2px;
+        padding: 7px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .mini-stat b {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.1;
+      }
+
+      .mini-stat span {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+      }
+
+      .alert-form {
+        display: grid;
+        grid-template-columns: 1fr 92px;
+        gap: 6px;
+      }
+
+      .disclaimer {
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        line-height: 1.35;
+      }
+
+      @media (max-width: 980px) {
+        body {
+          padding: 18px;
+        }
+
+        .prototype {
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+
+        .expand-modal,
+        .expand-modal.modal-sm,
+        .expand-modal.modal-lg {
+          width: min(100%, 840px);
+        }
+      }
+
+      @media (max-width: 680px) {
+        .modal-body,
+        .quote-detail {
+          grid-template-columns: 1fr;
+        }
+
+        .quote-number {
+          justify-items: start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="prototype" aria-label="股票查看卡片与弹窗独立原型">
+      <section class="preview-rail" aria-label="股票卡片尺寸预览" data-od-id="stock-card-preview">
+        <div class="toolbar">
+          <div>
+            <strong>股票查看卡片</strong>
+            <span id="cardSpec"> · M 卡片 · 4/16 · 16:10</span>
+          </div>
+          <button class="size-button" id="cardSizeButton" type="button">切换卡片尺寸</button>
+        </div>
+        <div class="card-stage">
+          <article class="stock-card card-md" id="stockCard" data-od-id="stock-card-md">
+            <header class="card-head">
+              <div class="card-title"><span class="card-dot"></span><span>股票</span></div>
+              <div class="card-meta" id="cardMeta">美股 · 盘中</div>
+            </header>
+            <div class="stock-card-body">
+              <div class="quote-panel">
+                <div class="quote-main">
+                  <div class="ticker-line">
+                    <strong id="cardName">Apple Inc.</strong><span id="cardTicker">AAPL</span>
+                  </div>
+                  <div class="price" id="cardPrice">218.42</div>
+                </div>
+                <span class="change up" id="cardChange">+1.24%</span>
+              </div>
+              <div class="metric-row" aria-label="核心指标">
+                <div class="mini-metric"><b id="cardOpen">216.08</b><span>开盘</span></div>
+                <div class="mini-metric"><b id="cardHigh">220.10</b><span>日高</span></div>
+                <div class="mini-metric"><b id="cardVol">42.8M</b><span>成交量</span></div>
+              </div>
+              <svg class="sparkline" viewBox="0 0 180 34" role="img" aria-label="股票价格走势">
+                <path
+                  id="cardSparkline"
+                  d="M4 25 L28 22 L52 24 L76 16 L100 18 L124 12 L148 15 L176 8"
+                />
+              </svg>
+              <div class="watch-strip" id="cardWatchStrip" aria-label="自选股摘要"></div>
+            </div>
+            <footer class="card-foot">
+              <span id="cardFoot">M · 主票 + 2 条自选</span>
+              <span>示例行情</span>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="modal-stage" aria-label="股票展开弹窗" data-od-id="stock-modal-stage">
+        <div class="toolbar">
+          <div>
+            <strong>展开弹窗</strong>
+            <span id="modalSpec"> · M 弹窗 · 700 × 430</span>
+          </div>
+          <button class="size-button" id="modalSizeButton" type="button">切换弹窗尺寸</button>
+        </div>
+        <section class="expand-modal modal-md" id="expandModal" data-od-id="stock-modal-md">
+          <header class="modal-head">
+            <div class="modal-title">
+              <strong>股票查看</strong>
+              <span id="modalDescription">中尺寸用于查看自选股、当前股票走势和提醒规则。</span>
+            </div>
+            <div class="head-actions">
+              <button class="ghost-button" id="refreshButton" type="button">刷新</button>
+              <button class="ghost-button" type="button">关闭</button>
+            </div>
+          </header>
+
+          <div class="modal-body">
+            <div class="modal-main">
+              <section class="quote-detail" aria-label="当前股票">
+                <div class="quote-copy">
+                  <strong id="modalName">Apple Inc.</strong>
+                  <span id="modalTicker">AAPL · 纳斯达克 · USD</span>
+                  <span class="quote-note" id="modalNote"
+                    >距提醒价 225.00 还有 3.0%，当前处于自选列表第一位。</span
+                  >
+                </div>
+                <div class="quote-number">
+                  <b id="modalPrice">218.42</b>
+                  <span class="up" id="modalChange">+2.68 · +1.24%</span>
+                </div>
+              </section>
+
+              <div class="tab-row" aria-label="股票视图切换">
+                <button class="tab-button is-active" data-view="watchlist" type="button">
+                  自选
+                </button>
+                <button class="tab-button" data-view="chart" type="button">走势</button>
+                <button class="tab-button" data-view="alerts" type="button">提醒</button>
+              </div>
+
+              <section class="view-panel" id="watchlistView" aria-label="自选股票">
+                <div class="view-head"><span>自选列表</span><span>点击行切换当前股票</span></div>
+                <div class="stock-list" id="stockList"></div>
+              </section>
+
+              <section class="view-panel hidden" id="chartView" aria-label="走势查看">
+                <div class="view-head">
+                  <span>价格走势</span>
+                  <div class="range-row" aria-label="时间范围">
+                    <button class="range-button is-active" data-range="1D" type="button">1D</button>
+                    <button class="range-button" data-range="1W" type="button">1W</button>
+                    <button class="range-button" data-range="1M" type="button">1M</button>
+                  </div>
+                </div>
+                <div class="chart-panel">
+                  <svg class="chart" viewBox="0 0 520 112" role="img" aria-label="当前股票走势">
+                    <path
+                      id="chartPath"
+                      d="M8 82 L76 72 L144 78 L212 52 L280 58 L348 36 L416 46 L512 22"
+                    />
+                    <circle id="chartPoint" cx="512" cy="22" r="4" />
+                  </svg>
+                  <div class="disclaimer">
+                    走势为原型示例数据，用于验证卡片信息层级，不代表实时市场行情。
+                  </div>
+                </div>
+              </section>
+
+              <section class="view-panel hidden" id="alertsView" aria-label="股票提醒">
+                <div class="view-head"><span>价格提醒</span><span>本地规则 · 不自动交易</span></div>
+                <div class="alert-list" id="alertList"></div>
+                <div class="alert-form">
+                  <input class="input" id="alertInput" value="225.00" aria-label="提醒价格" />
+                  <button class="primary-button" id="addAlertButton" type="button">添加提醒</button>
+                </div>
+              </section>
+            </div>
+
+            <aside class="modal-side" aria-label="股票配置">
+              <section class="side-panel">
+                <div class="side-title">市场</div>
+                <select class="select" id="marketSelect" aria-label="选择市场">
+                  <option value="us">美股 · 盘中</option>
+                  <option value="hk">港股 · 已收盘</option>
+                  <option value="cn">A 股 · 已收盘</option>
+                </select>
+                <input class="input" id="stockSearch" value="AAPL" aria-label="搜索股票代码" />
+              </section>
+
+              <section class="side-panel">
+                <div class="side-title">关键指标</div>
+                <div class="mini-grid">
+                  <div class="mini-stat"><b id="sideOpen">216.08</b><span>开盘</span></div>
+                  <div class="mini-stat"><b id="sideHigh">220.10</b><span>日高</span></div>
+                  <div class="mini-stat"><b id="sideLow">215.60</b><span>日低</span></div>
+                  <div class="mini-stat"><b id="sideVolume">42.8M</b><span>成交量</span></div>
+                </div>
+              </section>
+
+              <section class="side-panel">
+                <div class="side-title">资讯摘要</div>
+                <div class="news-list" id="newsList"></div>
+              </section>
+            </aside>
+          </div>
+
+          <footer class="modal-foot">
+            <span id="modalFoot">示例行情 · 仅用于产品原型，不构成投资建议</span>
+            <div class="foot-actions">
+              <button class="ghost-button" id="pinButton" type="button">设为主卡</button>
+              <button class="primary-button" id="saveButton" type="button">保存配置</button>
+            </div>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const cardSizes = [
+        {
+          key: "sm",
+          name: "S 卡片",
+          spec: " · 3/16 · 3:2",
+          foot: "S · 主票快照",
+          od: "stock-card-sm",
+          visible: 0,
+        },
+        {
+          key: "md",
+          name: "M 卡片",
+          spec: " · 4/16 · 16:10",
+          foot: "M · 主票 + 2 条自选",
+          od: "stock-card-md",
+          visible: 2,
+        },
+        {
+          key: "lg",
+          name: "L 卡片",
+          spec: " · 6/16 · 16:9",
+          foot: "L · 主票 + 3 条自选 + 趋势",
+          od: "stock-card-lg",
+          visible: 3,
+        },
+        {
+          key: "xl",
+          name: "XL 卡片",
+          spec: " · 8/16 · 21:9",
+          foot: "XL · 横向行情带",
+          od: "stock-card-xl",
+          visible: 4,
+        },
+      ]
+
+      const modalSizes = [
+        {
+          key: "sm",
+          name: "S 弹窗",
+          spec: " · 560 × 340",
+          od: "stock-modal-sm",
+          description: "小尺寸用于快速查看自选列表和当前股票概要。",
+        },
+        {
+          key: "md",
+          name: "M 弹窗",
+          spec: " · 700 × 430",
+          od: "stock-modal-md",
+          description: "中尺寸用于查看自选股、当前股票走势和提醒规则。",
+        },
+        {
+          key: "lg",
+          name: "L 弹窗",
+          spec: " · 840 × 500",
+          od: "stock-modal-lg",
+          description: "大尺寸用于同时查看自选列表、走势和提醒配置。",
+        },
+      ]
+
+      const stocks = [
+        {
+          ticker: "AAPL",
+          name: "Apple Inc.",
+          market: "纳斯达克",
+          price: "218.42",
+          change: "+2.68 · +1.24%",
+          changeShort: "+1.24%",
+          trend: "up",
+          open: "216.08",
+          high: "220.10",
+          low: "215.60",
+          volume: "42.8M",
+          note: "距提醒价 225.00 还有 3.0%，当前处于自选列表第一位。",
+          spark: "M4 25 L28 22 L52 24 L76 16 L100 18 L124 12 L148 15 L176 8",
+          chart: "M8 82 L76 72 L144 78 L212 52 L280 58 L348 36 L416 46 L512 22",
+          point: [512, 22],
+          news: [
+            "新品发布会前市场保持观望",
+            "服务收入继续支撑长期预期",
+            "提醒：225.00 上方触发观察",
+          ],
+        },
+        {
+          ticker: "MSFT",
+          name: "Microsoft",
+          market: "纳斯达克",
+          price: "497.18",
+          change: "+4.91 · +1.00%",
+          changeShort: "+1.00%",
+          trend: "up",
+          open: "491.70",
+          high: "499.20",
+          low: "490.80",
+          volume: "25.1M",
+          note: "云服务和 AI 相关业务仍是主要观察项，提醒价 510.00。",
+          spark: "M4 26 L28 24 L52 20 L76 21 L100 15 L124 13 L148 9 L176 11",
+          chart: "M8 88 L76 80 L144 62 L212 68 L280 42 L348 38 L416 24 L512 30",
+          point: [512, 30],
+          news: ["企业云支出保持稳定", "AI Copilot 渗透率进入观察期", "510.00 上方触发强势提醒"],
+        },
+        {
+          ticker: "TSLA",
+          name: "Tesla",
+          market: "纳斯达克",
+          price: "322.64",
+          change: "-6.43 · -1.96%",
+          changeShort: "-1.96%",
+          trend: "down",
+          open: "330.30",
+          high: "334.80",
+          low: "319.50",
+          volume: "81.2M",
+          note: "波动较高，若跌破 315.00 触发风险提醒。",
+          spark: "M4 8 L28 12 L52 10 L76 18 L100 16 L124 23 L148 21 L176 29",
+          chart: "M8 24 L76 38 L144 30 L212 58 L280 52 L348 76 L416 72 L512 92",
+          point: [512, 92],
+          news: ["交付预期带来短线波动", "315.00 下方触发风险提醒", "成交量高于自选列表平均"],
+        },
+        {
+          ticker: "NVDA",
+          name: "NVIDIA",
+          market: "纳斯达克",
+          price: "151.92",
+          change: "+0.84 · +0.56%",
+          changeShort: "+0.56%",
+          trend: "up",
+          open: "149.88",
+          high: "153.20",
+          low: "148.74",
+          volume: "62.4M",
+          note: "芯片板块延续强势，短线观察 155.00 压力位。",
+          spark: "M4 24 L28 20 L52 21 L76 14 L100 15 L124 10 L148 11 L176 7",
+          chart: "M8 78 L76 66 L144 70 L212 48 L280 50 L348 32 L416 36 L512 20",
+          point: [512, 20],
+          news: ["芯片板块维持强势", "155.00 附近观察抛压", "自选热度高于昨日"],
+        },
+      ]
+
+      const alerts = [
+        { ticker: "AAPL", rule: "上穿 225.00", status: "等待" },
+        { ticker: "TSLA", rule: "跌破 315.00", status: "风险" },
+      ]
+
+      let cardIndex = 1
+      let modalIndex = 1
+      let activeTicker = "AAPL"
+      let activeView = "watchlist"
+
+      const stockCard = document.getElementById("stockCard")
+      const expandModal = document.getElementById("expandModal")
+      const cardSpec = document.getElementById("cardSpec")
+      const cardFoot = document.getElementById("cardFoot")
+      const modalSpec = document.getElementById("modalSpec")
+      const modalDescription = document.getElementById("modalDescription")
+      const stockList = document.getElementById("stockList")
+      const alertList = document.getElementById("alertList")
+      const newsList = document.getElementById("newsList")
+
+      function currentStock() {
+        return stocks.find((stock) => stock.ticker === activeTicker) || stocks[0]
+      }
+
+      function setText(id, value) {
+        document.getElementById(id).textContent = value
+      }
+
+      function applyStock(stock) {
+        setText("cardName", stock.name)
+        setText("cardTicker", stock.ticker)
+        setText("cardPrice", stock.price)
+        setText("cardMeta", `${stock.market} · 盘中`)
+        setText("cardOpen", stock.open)
+        setText("cardHigh", stock.high)
+        setText("cardVol", stock.volume)
+        setText("modalName", stock.name)
+        setText("modalTicker", `${stock.ticker} · ${stock.market} · USD`)
+        setText("modalPrice", stock.price)
+        setText("modalNote", stock.note)
+        setText("sideOpen", stock.open)
+        setText("sideHigh", stock.high)
+        setText("sideLow", stock.low)
+        setText("sideVolume", stock.volume)
+        document.getElementById("cardChange").textContent = stock.changeShort
+        document.getElementById("modalChange").textContent = stock.change
+        document.getElementById("cardChange").className = `change ${stock.trend}`
+        document.getElementById("modalChange").className = stock.trend
+        stockCard.classList.toggle("trend-up", stock.trend === "up")
+        stockCard.classList.toggle("trend-down", stock.trend === "down")
+        expandModal.classList.toggle("trend-up", stock.trend === "up")
+        expandModal.classList.toggle("trend-down", stock.trend === "down")
+        document.getElementById("cardSparkline").setAttribute("d", stock.spark)
+        document.getElementById("chartPath").setAttribute("d", stock.chart)
+        document.getElementById("chartPoint").setAttribute("cx", stock.point[0])
+        document.getElementById("chartPoint").setAttribute("cy", stock.point[1])
+        renderNews(stock)
+      }
+
+      function renderCardWatch() {
+        const visible = cardSizes[cardIndex].visible
+        document.getElementById("cardWatchStrip").innerHTML = stocks
+          .filter((stock) => stock.ticker !== activeTicker)
+          .slice(0, visible)
+          .map(
+            (stock) =>
+              `<div class="watch-row"><b>${stock.ticker}</b><span>${stock.name}</span><em class="${stock.trend}">${stock.changeShort}</em></div>`,
+          )
+          .join("")
+      }
+
+      function renderStockList() {
+        stockList.innerHTML = stocks
+          .map(
+            (stock) => `
+            <button class="stock-row ${stock.ticker === activeTicker ? "is-active" : ""}" type="button" data-ticker="${stock.ticker}">
+              <b>${stock.ticker}</b>
+              <span>${stock.name} · ${stock.price}</span>
+              <em class="${stock.trend}">${stock.changeShort}</em>
+            </button>
+          `,
+          )
+          .join("")
+      }
+
+      function renderAlerts() {
+        alertList.innerHTML = alerts
+          .map(
+            (alert) =>
+              `<div class="alert-row"><b>${alert.ticker}</b><span>${alert.rule}</span><em>${alert.status}</em></div>`,
+          )
+          .join("")
+      }
+
+      function renderNews(stock) {
+        newsList.innerHTML = stock.news
+          .map((item) => `<div class="news-row"><b>${stock.ticker}</b><span>${item}</span></div>`)
+          .join("")
+      }
+
+      function applyCardSize() {
+        const size = cardSizes[cardIndex]
+        stockCard.className = `stock-card card-${size.key} trend-${currentStock().trend}`
+        stockCard.dataset.odId = size.od
+        cardSpec.textContent = ` · ${size.name}${size.spec}`
+        cardFoot.textContent = size.foot
+        renderCardWatch()
+      }
+
+      function applyModalSize() {
+        const size = modalSizes[modalIndex]
+        expandModal.className = `expand-modal modal-${size.key} trend-${currentStock().trend}`
+        expandModal.dataset.odId = size.od
+        modalSpec.textContent = ` · ${size.name}${size.spec}`
+        modalDescription.textContent = size.description
+      }
+
+      function setView(view) {
+        activeView = view
+        document.querySelectorAll(".tab-button").forEach((button) => {
+          button.classList.toggle("is-active", button.dataset.view === view)
+        })
+        document.querySelectorAll(".view-panel").forEach((panel) => {
+          panel.classList.toggle("hidden", panel.id !== `${view}View`)
+        })
+      }
+
+      document.getElementById("cardSizeButton").addEventListener("click", () => {
+        cardIndex = (cardIndex + 1) % cardSizes.length
+        applyCardSize()
+      })
+
+      document.getElementById("modalSizeButton").addEventListener("click", () => {
+        modalIndex = (modalIndex + 1) % modalSizes.length
+        applyModalSize()
+      })
+
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => setView(button.dataset.view))
+      })
+
+      document.querySelectorAll(".range-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll(".range-button")
+            .forEach((item) => item.classList.remove("is-active"))
+          button.classList.add("is-active")
+        })
+      })
+
+      stockList.addEventListener("click", (event) => {
+        const row = event.target.closest(".stock-row")
+        if (!row) return
+        activeTicker = row.dataset.ticker
+        const stock = currentStock()
+        applyStock(stock)
+        renderStockList()
+        renderCardWatch()
+      })
+
+      document.getElementById("refreshButton").addEventListener("click", (event) => {
+        event.currentTarget.textContent = "已刷新"
+        setTimeout(() => {
+          event.currentTarget.textContent = "刷新"
+        }, 900)
+      })
+
+      document.getElementById("addAlertButton").addEventListener("click", () => {
+        const price = document.getElementById("alertInput").value.trim() || currentStock().price
+        alerts.unshift({ ticker: activeTicker, rule: `上穿 ${price}`, status: "等待" })
+        renderAlerts()
+      })
+
+      document.getElementById("pinButton").addEventListener("click", (event) => {
+        event.currentTarget.textContent = "已设为主卡"
+      })
+
+      document.getElementById("saveButton").addEventListener("click", (event) => {
+        event.currentTarget.textContent = "已保存"
+        setTimeout(() => {
+          event.currentTarget.textContent = "保存配置"
+        }, 900)
+      })
+
+      document.getElementById("marketSelect").addEventListener("change", (event) => {
+        setText("cardMeta", event.target.options[event.target.selectedIndex].textContent)
+      })
+
+      document.getElementById("stockSearch").addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return
+        const value = event.currentTarget.value.trim().toUpperCase()
+        const matched = stocks.find((stock) => stock.ticker === value)
+        if (!matched) return
+        activeTicker = matched.ticker
+        applyStock(matched)
+        renderStockList()
+        renderCardWatch()
+      })
+
+      applyStock(currentStock())
+      renderStockList()
+      renderAlerts()
+      applyCardSize()
+      applyModalSize()
+      setView(activeView)
+    </script>
+  </body>
+</html>

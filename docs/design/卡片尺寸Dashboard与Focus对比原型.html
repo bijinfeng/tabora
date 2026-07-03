@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabora · 卡片尺寸 Dashboard 与 Focus 对比</title>
+    <style>
+      :root {
+        --wb-page: #f6f7f4;
+        --wb-surface: #ffffff;
+        --wb-surface-soft: #fafaf8;
+        --wb-surface-hover: #f2f4f0;
+        --wb-text: #1c1e1c;
+        --wb-text-muted: #6b6e6a;
+        --wb-text-subtle: #949792;
+        --wb-line: #e6e8e3;
+        --wb-line-strong: #d1d4ce;
+        --wb-accent: #1a9070;
+        --wb-accent-hover: #15785c;
+        --wb-accent-soft: #eaf5f0;
+        --wb-success: #2d8a5e;
+        --wb-warning: #a66a12;
+        --wb-danger: #c94545;
+        --wb-radius: 8px;
+        --wb-radius-lg: 12px;
+        --wb-shadow-soft: rgba(28, 30, 28, 0.08);
+        --wb-ease: cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--wb-page);
+        color: var(--wb-text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+      }
+
+      .rail {
+        border-right: 1px solid var(--wb-line);
+        background: color-mix(in srgb, var(--wb-surface) 74%, transparent);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 0;
+      }
+
+      .rail-logo,
+      .rail-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--wb-line);
+        background: var(--wb-surface);
+        color: var(--wb-text-muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .rail-logo {
+        background: var(--wb-text);
+        color: var(--wb-surface);
+        border-color: var(--wb-text);
+      }
+
+      .rail-btn.active {
+        color: var(--wb-accent);
+        background: var(--wb-accent-soft);
+        border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+      }
+
+      .main {
+        min-width: 0;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .topbar {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+        letter-spacing: 0;
+      }
+
+      .sub {
+        color: var(--wb-text-muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .search {
+        width: min(360px, 42vw);
+        height: 38px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        border: 1px solid var(--wb-line);
+        border-radius: 8px;
+        background: var(--wb-surface);
+        color: var(--wb-text-subtle);
+        font-size: 12px;
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.8fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .surface {
+        min-width: 0;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius-lg);
+        padding: 16px;
+      }
+
+      .surface-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      h2 {
+        margin: 0 0 4px;
+        font-size: 14px;
+        line-height: 1.35;
+        letter-spacing: 0;
+      }
+
+      .meta {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        color: var(--wb-text-subtle);
+        white-space: nowrap;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(16, minmax(0, 1fr));
+        gap: 12px;
+        align-items: start;
+      }
+
+      .widget {
+        grid-column: span var(--span);
+        aspect-ratio: var(--ratio);
+        min-width: 0;
+        background: var(--wb-surface);
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        padding: 13px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: hidden;
+        transition:
+          border-color 140ms var(--wb-ease),
+          background 140ms var(--wb-ease),
+          transform 140ms var(--wb-ease);
+      }
+
+      .widget:hover {
+        border-color: var(--wb-line-strong);
+        background: var(--wb-surface-hover);
+        transform: translateY(-1px);
+      }
+
+      .size-s {
+        --span: 3;
+        --ratio: 3 / 2;
+      }
+
+      .size-m {
+        --span: 4;
+        --ratio: 16 / 10;
+      }
+
+      .size-l {
+        --span: 6;
+        --ratio: 16 / 9;
+      }
+
+      .size-xl {
+        --span: 8;
+        --ratio: 21 / 9;
+      }
+
+      .widget-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .widget-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .mark {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+        border: 1px solid var(--wb-line);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .size-chip {
+        flex: 0 0 auto;
+        padding: 2px 6px;
+        border: 1px solid var(--wb-line);
+        border-radius: 999px;
+        color: var(--wb-text-subtle);
+        background: var(--wb-surface-soft);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 10px;
+      }
+
+      .widget-body {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .focus-input {
+        width: 100%;
+        height: 36px;
+        border: 1px dashed var(--wb-line-strong);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+        padding: 0 10px;
+        color: var(--wb-text);
+        outline: none;
+        font-size: 13px;
+      }
+
+      .focus-input:focus {
+        border-color: var(--wb-accent);
+        border-style: solid;
+      }
+
+      .link-grid {
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .link-tile {
+        min-width: 0;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .todo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+
+      .todo-row {
+        min-height: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--wb-text-muted);
+        font-size: 12px;
+      }
+
+      .check {
+        width: 15px;
+        height: 15px;
+        border: 1.5px solid var(--wb-line-strong);
+        border-radius: 4px;
+        flex: 0 0 auto;
+      }
+
+      .check.done {
+        background: var(--wb-accent);
+        border-color: var(--wb-accent);
+      }
+
+      .weather {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .temp {
+        font-size: 30px;
+        line-height: 1;
+        font-weight: 750;
+        letter-spacing: 0;
+      }
+
+      .caption {
+        margin-top: 5px;
+        color: var(--wb-text-muted);
+        font-size: 12px;
+      }
+
+      .notes {
+        height: 100%;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        padding: 10px;
+        color: var(--wb-text-muted);
+        background: var(--wb-surface-soft);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .focus-stage {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .focus-hero {
+        aspect-ratio: 16 / 9;
+        min-height: 320px;
+        border: 1.5px solid var(--wb-accent);
+        border-radius: var(--wb-radius-lg);
+        background: var(--wb-surface);
+        box-shadow: 0 6px 28px color-mix(in srgb, var(--wb-accent) 12%, transparent);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        overflow: hidden;
+      }
+
+      .focus-hero .widget-head {
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--wb-line);
+      }
+
+      .focus-hero-body {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .sat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .sat {
+        aspect-ratio: 3 / 2;
+        border: 1px solid var(--wb-line);
+        border-radius: var(--wb-radius);
+        background: var(--wb-surface);
+        padding: 11px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        cursor: pointer;
+        text-align: left;
+        color: inherit;
+        transition:
+          border-color 140ms var(--wb-ease),
+          background 140ms var(--wb-ease),
+          transform 140ms var(--wb-ease);
+      }
+
+      .sat:hover,
+      .sat.active {
+        border-color: color-mix(in srgb, var(--wb-accent) 42%, var(--wb-line));
+        background: var(--wb-accent-soft);
+        transform: translateY(-1px);
+      }
+
+      .sat-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--wb-text-muted);
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .sat-glance {
+        color: var(--wb-text);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 650;
+      }
+
+      .sat-glance span {
+        display: block;
+        margin-top: 3px;
+        color: var(--wb-text-subtle);
+        font-size: 10px;
+        font-weight: 400;
+      }
+
+      .rule-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+        font-size: 12px;
+      }
+
+      .rule-table th,
+      .rule-table td {
+        padding: 9px 8px;
+        border-top: 1px solid var(--wb-line);
+        text-align: left;
+      }
+
+      .rule-table th {
+        color: var(--wb-text-subtle);
+        font-weight: 600;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+
+      .rule-table td:last-child,
+      .rule-table th:last-child {
+        text-align: right;
+      }
+
+      @media (max-width: 1180px) {
+        .compare {
+          grid-template-columns: 1fr;
+        }
+
+        .search {
+          width: 280px;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .dashboard-grid {
+          grid-template-columns: repeat(16, minmax(0, 1fr));
+        }
+
+        .sat-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 680px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .rail {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          height: 52px;
+          flex-direction: row;
+          justify-content: center;
+          border-right: 0;
+          border-bottom: 1px solid var(--wb-line);
+        }
+
+        .main {
+          padding: 16px;
+        }
+
+        .topbar,
+        .surface-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .search {
+          width: 100%;
+        }
+
+        .dashboard-grid {
+          grid-template-columns: repeat(8, minmax(0, 1fr));
+        }
+
+        .size-l,
+        .size-xl {
+          --span: 8;
+        }
+
+        .focus-hero {
+          aspect-ratio: auto;
+          min-height: 280px;
+        }
+      }
+
+      @media (max-width: 430px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .size-s,
+        .size-m,
+        .size-l,
+        .size-xl {
+          --span: 1;
+          aspect-ratio: auto;
+          min-height: 154px;
+        }
+
+        .sat-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail" aria-label="工作台导航">
+        <div class="rail-logo">T</div>
+        <div class="rail-btn active">D</div>
+        <div class="rail-btn">F</div>
+        <div class="rail-btn">S</div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="title-block">
+            <h1>卡片尺寸在 Dashboard 与 Focus 中的统一映射</h1>
+            <div class="sub">
+              插件只适配 S/M/L/XL 四种固定比例；Dashboard 负责 16 列中密度排布，Focus
+              负责把主卡映射为 L、卫星映射为 S。
+            </div>
+          </div>
+          <div class="search" aria-label="命令搜索">
+            <span>搜索卡片、命令或分组</span>
+            <span class="meta">⌘K</span>
+          </div>
+        </header>
+
+        <section class="compare" data-od-id="card-size-comparison">
+          <div class="surface">
+            <div class="surface-head">
+              <div>
+                <h2>Dashboard · 16 列中密度混排</h2>
+                <div class="sub">
+                  S=3列，M=4列，L=6列，XL=8列；M 是 1/4 宽，L 是 3/8 宽，XL 是半行重点卡。
+                </div>
+              </div>
+              <span class="meta">S/M/L/XL</span>
+            </div>
+
+            <div class="dashboard-grid" aria-label="Dashboard 卡片网格">
+              <article class="widget size-m">
+                <div class="widget-head">
+                  <div class="widget-title"><span class="mark">T</span>今日重点</div>
+                  <span class="size-chip">M · 4/16 · 16:10</span>
+                </div>
+                <div class="widget-body">
+                  <input
+                    class="focus-input"
+                    value="把默认新标签页做成可组合入口"
+                    aria-label="今日重点"
+                  />
+                </div>
+              </article>
+
+              <article class="widget size-m">
+                <div class="widget-head">
+                  <div class="widget-title"><span class="mark">K</span>快捷入口</div>
+                  <span class="size-chip">M · 4/16 · 16:10</span>
+                </div>
+                <div class="widget-body">
+                  <div class="link-grid">
+                    <div class="link-tile">Gh</div>
+                    <div class="link-tile">No</div>
+                    <div class="link-tile">Li</div>
+                    <div class="link-tile">Fg</div>
+                    <div class="link-tile">Dr</div>
+                    <div class="link-tile">+</div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="widget size-s">
+                <div class="widget-head">
+                  <div class="widget-title"><span class="mark">W</span>天气</div>
+                  <span class="size-chip">S · 3/16 · 3:2</span>
+                </div>
+                <div class="widget-body weather">
+                  <div class="temp">22°</div>
+                  <div class="caption">北京 · 晴</div>
+                </div>
+              </article>
+
+              <article class="widget size-l">
+                <div class="widget-head">
+                  <div class="widget-title"><span class="mark">D</span>待办</div>
+                  <span class="size-chip">L · 6/16 · 16:9</span>
+                </div>
+                <div class="widget-body">
+                  <div class="todo-list">
+                    <div class="todo-row">
+                      <span class="check done"></span><span>确认四档卡片比例</span>
+                    </div>
+                    <div class="todo-row">
+                      <span class="check"></span><span>补齐 Focus 主副位映射</span>
+                    </div>
+                    <div class="todo-row">
+                      <span class="check"></span><span>复核响应式降级</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="widget size-xl">
+                <div class="widget-head">
+                  <div class="widget-title"><span class="mark">N</span>便签</div>
+                  <span class="size-chip">XL · 8/16 · 21:9</span>
+                </div>
+                <div class="widget-body">
+                  <div class="notes">
+                    XL 只表达横向信息密度，不等同于 Focus
+                    主卡。它适合横向摘要、长条状态、宽表格或多列入口。
+                  </div>
+                </div>
+              </article>
+
+              <article class="widget size-s">
+                <div class="widget-head">
+                  <div class="widget-title"><span class="mark">P</span>插件</div>
+                  <span class="size-chip">S · 3/16 · 3:2</span>
+                </div>
+                <div class="widget-body weather">
+                  <div class="temp">6</div>
+                  <div class="caption">活跃实例</div>
+                </div>
+              </article>
+            </div>
+
+            <table class="rule-table" aria-label="Dashboard 尺寸规则">
+              <thead>
+                <tr>
+                  <th>尺寸</th>
+                  <th>列数</th>
+                  <th>比例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>S</td>
+                  <td>3 / 24</td>
+                  <td>3:2</td>
+                </tr>
+                <tr>
+                  <td>M</td>
+                  <td>4 / 24</td>
+                  <td>16:10</td>
+                </tr>
+                <tr>
+                  <td>L</td>
+                  <td>6 / 24</td>
+                  <td>16:9</td>
+                </tr>
+                <tr>
+                  <td>XL</td>
+                  <td>8 / 24</td>
+                  <td>21:9</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="surface">
+            <div class="surface-head">
+              <div>
+                <h2>Focus · 宿主内部映射</h2>
+                <div class="sub">
+                  主卡传 L，卫星卡传 S；点击卫星卡可切换主卡，插件仍只感知 size。
+                </div>
+              </div>
+              <span class="meta">Hero=L · Satellite=S</span>
+            </div>
+
+            <div class="focus-stage">
+              <article class="focus-hero" id="focusHero" aria-live="polite"></article>
+              <div class="sat-grid" id="satGrid" aria-label="Focus 卫星卡"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const cards = [
+        {
+          id: "focus",
+          label: "今日重点",
+          mark: "T",
+          glance: "入口重构",
+          detail: "把默认新标签页做成可组合的个人工作入口",
+          body: "主卡按 L 展开后，今日重点保留可编辑输入和上下文说明，不需要额外 hero 模式。",
+        },
+        {
+          id: "links",
+          label: "快捷入口",
+          mark: "K",
+          glance: "6 个入口",
+          detail: "GitHub · Notion · Linear",
+          body: "快捷入口在 L 主卡里显示更多入口和分组，但卫星 S 只保留常用摘要。",
+        },
+        {
+          id: "todo",
+          label: "待办",
+          mark: "D",
+          glance: "1/3 完成",
+          detail: "下一项：补齐映射",
+          body: "待办是验证 L 主卡的关键：16:9 能容纳列表、添加入口和状态，不会被 XL 的横向比例压扁。",
+        },
+        {
+          id: "weather",
+          label: "天气",
+          mark: "W",
+          glance: "22° 晴",
+          detail: "北京",
+          body: "天气适合 S 摘要，也可以进入 L 主卡展示趋势；插件仍只按尺寸比例重排内容。",
+        },
+      ]
+
+      let activeId = "focus"
+
+      function renderFocus() {
+        const active = cards.find((card) => card.id === activeId) || cards[0]
+        const hero = document.getElementById("focusHero")
+        hero.innerHTML = `
+          <div class="widget-head">
+            <div class="widget-title"><span class="mark">${active.mark}</span>${active.label}</div>
+            <span class="size-chip">L · 16:9</span>
+          </div>
+          <div class="focus-hero-body">
+            <h2>${active.detail}</h2>
+            <p class="sub" style="margin: 10px 0 16px;">${active.body}</p>
+            <div class="todo-list">
+              <div class="todo-row"><span class="check done"></span><span>插件收到 size=L</span></div>
+              <div class="todo-row"><span class="check done"></span><span>宿主控制 Focus 位置</span></div>
+              <div class="todo-row"><span class="check"></span><span>内容按比例自行降级</span></div>
+            </div>
+          </div>
+        `
+
+        document.getElementById("satGrid").innerHTML = cards
+          .map(
+            (card) => `
+              <button class="sat ${card.id === activeId ? "active" : ""}" type="button" onclick="setActive('${card.id}')">
+                <div class="sat-title"><span>${card.mark} ${card.label}</span><span class="size-chip">S</span></div>
+                <div class="sat-glance">${card.glance}<span>${card.detail}</span></div>
+              </button>
+            `,
+          )
+          .join("")
+      }
+
+      function setActive(id) {
+        activeId = id
+        renderFocus()
+      }
+
+      renderFocus()
+    </script>
+  </body>
+</html>

@@ -392,7 +392,7 @@
       }
       .focus-content {
         width: 100%;
-        max-width: 680px;
+        max-width: 720px;
         padding: 24px 32px;
         display: flex;
         flex-direction: column;
@@ -456,6 +456,10 @@
         position: relative;
         transition: all 250ms var(--wb-ease);
         animation: heroEnter 300ms var(--wb-ease) both;
+        aspect-ratio: 16 / 9;
+        min-height: 320px;
+        display: flex;
+        flex-direction: column;
       }
       @keyframes heroEnter {
         from {
@@ -498,6 +502,11 @@
         font-size: 13px;
         color: var(--wb-text-muted);
         line-height: 1.6;
+      }
+      .focus-hero-body {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
       }
       .focus-hero-body .focus-input {
         width: 100%;
@@ -738,7 +747,8 @@
         cursor: pointer;
         transition: all 160ms var(--wb-ease);
         position: relative;
-        min-height: 84px;
+        min-height: 0;
+        aspect-ratio: 3 / 2;
         display: flex;
         flex-direction: column;
         animation: satEnter 250ms var(--wb-ease) both;
@@ -1268,6 +1278,9 @@
         .focus-content {
           padding: 16px;
         }
+        .focus-hero {
+          min-height: 280px;
+        }
         .focus-satellites {
           grid-template-columns: repeat(2, 1fr);
         }
@@ -1278,6 +1291,9 @@
       @media (max-width: 500px) {
         .focus-satellites {
           grid-template-columns: 1fr 1fr;
+        }
+        .focus-hero {
+          aspect-ratio: auto;
         }
       }
     </style>
@@ -1482,7 +1498,7 @@
       </button>
       <div class="layout-switch-pop" id="layoutSwitchPop">
         <div class="lsp-header">布局</div>
-        <a class="lsp-item" href="workbench-prototype.html">
+        <a class="lsp-item" href="mpz35mfq-03-工作台交互原型.html">
           <div class="lsp-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -1648,6 +1664,7 @@
         let body = ""
         let eyebrow = typeNames[w.type] || w.type
         let title = w.label
+        let displayTitle = title === eyebrow ? "主卡工作区" : title
         let actions = `<button class="btn btn-sm btn-ghost" onclick="openAddWidget()">+ 添加</button><button class="btn btn-sm btn-ghost" onclick="removeHeroWidget()">移除</button>`
 
         switch (w.type) {
@@ -1672,9 +1689,9 @@
         }
 
         return `<div class="focus-hero">
-          <span class="focus-hero-tag">HERO</span>
+          <span class="focus-hero-tag">L 主卡</span>
           <div class="focus-hero-eyebrow">${eyebrow}</div>
-          <div class="focus-hero-title">${esc(title)}</div>
+          <div class="focus-hero-title">${esc(displayTitle)}</div>
           <div class="focus-hero-body">${body}</div>
           <div class="focus-hero-actions">${actions}</div>
         </div>`

@@ -1369,8 +1369,9 @@
       /* ---- CARDS (shared) ---- */
       .card-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(16, minmax(0, 1fr));
         gap: 12px;
+        align-items: start;
       }
       .widget-card {
         background: var(--wb-surface);
@@ -1382,6 +1383,7 @@
         transition: border-color 120ms ease;
         position: relative;
         cursor: grab;
+        overflow: hidden;
       }
       .widget-card:active {
         cursor: grabbing;
@@ -1391,6 +1393,22 @@
       }
       .widget-card.span-2 {
         grid-column: span 2;
+      }
+      .widget-card.size-s {
+        grid-column: span 3;
+        aspect-ratio: 3 / 2;
+      }
+      .widget-card.size-m {
+        grid-column: span 4;
+        aspect-ratio: 16 / 10;
+      }
+      .widget-card.size-l {
+        grid-column: span 6;
+        aspect-ratio: 16 / 9;
+      }
+      .widget-card.size-xl {
+        grid-column: span 8;
+        aspect-ratio: 21 / 9;
       }
       .widget-card.row-2 {
         grid-row: span 2;
@@ -1430,6 +1448,7 @@
       .card-body {
         flex: 1;
         min-height: 0;
+        overflow: auto;
       }
       .card-actions {
         display: flex;
@@ -1475,6 +1494,7 @@
       /* Dashboard-local compact card treatment */
       .layout-dashboard .card-grid {
         gap: 10px;
+        grid-auto-flow: dense;
       }
       .layout-dashboard .widget-card {
         padding: 10px 11px;
@@ -2194,7 +2214,7 @@
           max-width: 720px;
         }
         .card-grid {
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(12, minmax(0, 1fr));
         }
         .widget-card.span-2 {
           grid-column: span 2;
@@ -2244,7 +2264,11 @@
           text-overflow: ellipsis;
         }
         .card-grid {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(8, minmax(0, 1fr));
+        }
+        .widget-card.size-l,
+        .widget-card.size-xl {
+          grid-column: span 8;
         }
         .settings-shell {
           grid-template-columns: 160px minmax(0, 1fr);
@@ -2258,6 +2282,14 @@
         .card-grid,
         .stream-cards {
           grid-template-columns: 1fr;
+        }
+        .widget-card.size-s,
+        .widget-card.size-m,
+        .widget-card.size-l,
+        .widget-card.size-xl {
+          grid-column: span 1;
+          aspect-ratio: auto;
+          min-height: 150px;
         }
         .widget-card.span-2,
         .widget-card.row-2 {
@@ -3223,7 +3255,7 @@
           widgets: [
             { id: "focus-1", type: "focus", size: "M", label: "今日重点" },
             { id: "links-1", type: "links", size: "M", label: "快捷入口" },
-            { id: "todo-1", type: "todo", size: "S", label: "待办" },
+            { id: "todo-1", type: "todo", size: "M", label: "待办" },
             { id: "notes-1", type: "notes", size: "L", label: "便签" },
             { id: "weather-1", type: "weather", size: "S", label: "天气" },
             { id: "plugins-1", type: "plugins", size: "S", label: "插件状态" },
@@ -3451,9 +3483,9 @@
       let focusText = "把默认新标签页做成可组合的个人工作入口"
 
       const supportedSizes = {
-        focus: ["S", "M", "L"],
+        focus: ["M", "L"],
         links: ["S", "M", "L"],
-        todo: ["S", "M"],
+        todo: ["S", "M", "L", "XL"],
         notes: ["M", "L", "XL"],
         weather: ["S", "M"],
         plugins: ["S", "M"],
@@ -3467,10 +3499,10 @@
         plugins: "插件状态",
       }
       const sizeSpans = {
-        S: { dash: "", stream: "" },
-        M: { dash: "span-2", stream: "" },
-        L: { dash: "span-2 row-2", stream: "full-width" },
-        XL: { dash: "span-2 row-2", stream: "full-width" },
+        S: { dash: "size-s", stream: "" },
+        M: { dash: "size-m", stream: "" },
+        L: { dash: "size-l", stream: "full-width" },
+        XL: { dash: "size-xl", stream: "full-width" },
       }
 
       // ====== LAYOUT SWITCHING ======

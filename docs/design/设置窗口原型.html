@@ -770,6 +770,107 @@
         font-weight: 650;
       }
 
+      .badge-muted {
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-muted);
+      }
+
+      .ai-status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .ai-status-card {
+        min-width: 0;
+        display: grid;
+        gap: 5px;
+        padding: 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .ai-status-card strong {
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 1.25;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .ai-status-card span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1.3;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .ai-status-card .badge {
+        justify-self: start;
+      }
+
+      .ai-model-grid,
+      .ai-grant-list {
+        display: grid;
+        gap: 7px;
+      }
+
+      .ai-model-row,
+      .ai-grant-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        padding: 8px;
+        border: 1px solid var(--wb-line);
+        border-radius: 7px;
+        background: var(--wb-surface);
+      }
+
+      .ai-model-copy,
+      .ai-grant-copy {
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+      }
+
+      .ai-model-copy strong,
+      .ai-grant-copy strong {
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 1.25;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .ai-model-copy span,
+      .ai-grant-copy span {
+        overflow: hidden;
+        color: var(--wb-text-muted);
+        font-size: 10px;
+        line-height: 1.3;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .ai-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .ai-meta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        white-space: nowrap;
+      }
+
       .toast {
         min-width: 0;
         display: inline-flex;
@@ -806,11 +907,18 @@
       }
 
       .settings-window.modal-sm .plugin-config-shell,
-      .settings-window.modal-sm .schema-grid {
+      .settings-window.modal-sm .schema-grid,
+      .settings-window.modal-sm .ai-status-grid,
+      .settings-window.modal-sm .ai-model-row,
+      .settings-window.modal-sm .ai-grant-row {
         grid-template-columns: 1fr;
       }
 
       .settings-window.modal-lg .panel-view[data-view="plugins"].is-active {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .settings-window.modal-lg .panel-view[data-view="ai"].is-active {
         grid-template-columns: 1fr 1fr;
       }
 
@@ -850,7 +958,7 @@
               <div class="window-title-icon">设</div>
               <div class="window-title-main">
                 <strong>设置</strong>
-                <span id="windowSubtitle">个人工作台配置 · 布局、外观、搜索与插件</span>
+                <span id="windowSubtitle">个人工作台配置 · 布局、外观、搜索、AI 与插件</span>
               </div>
             </div>
             <button class="icon-close" type="button" aria-label="关闭"></button>
@@ -869,6 +977,9 @@
                 <span>搜索</span><span class="nav-count">8</span>
               </button>
               <div class="nav-kicker">扩展</div>
+              <button class="nav-button" type="button" data-view="ai">
+                <span>AI</span><span class="nav-count">4</span>
+              </button>
               <button class="nav-button" type="button" data-view="plugins">
                 <span>插件</span><span class="nav-count">14</span>
               </button>
@@ -1137,6 +1248,185 @@
                       />
                       <span id="debounceValue">180ms</span>
                     </label>
+                  </div>
+                </section>
+              </div>
+
+              <div class="panel-view" id="view-ai" data-view="ai">
+                <section class="setting-group">
+                  <div class="group-title">AI 网关状态<span id="aiGatewayStatus">可用</span></div>
+                  <div class="ai-status-grid" aria-label="AI 网关状态">
+                    <div class="ai-status-card">
+                      <span>默认文本模型</span>
+                      <strong id="defaultTextModel">GPT-4.1 Mini</strong>
+                      <span>摘要、改写、结构化抽取</span>
+                      <span class="badge" id="aiTextModelStatus">已测试</span>
+                    </div>
+                    <div class="ai-status-card">
+                      <span>默认图片理解模型</span>
+                      <strong id="defaultVisionModel">Gemini 1.5 Pro</strong>
+                      <span>票面识别、截图分析</span>
+                      <span class="badge" id="aiVisionModelStatus">已测试</span>
+                    </div>
+                    <div class="ai-status-card">
+                      <span>密钥托管</span>
+                      <strong>安全存储</strong>
+                      <span>插件不可读取 API Key</span>
+                      <span class="badge">core.ai</span>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>连接测试</strong>
+                      <span>验证默认文本模型与图片理解模型是否可调用</span>
+                    </div>
+                    <button class="btn-primary" type="button" id="aiTestButton">测试连接</button>
+                  </div>
+                </section>
+
+                <section class="setting-group">
+                  <div class="group-title">模型提供商<span>2 个启用</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>提供商类型</strong>
+                      <span>OpenAI 兼容、Anthropic、Gemini 或自定义网关</span>
+                    </div>
+                    <select class="select" id="aiProviderType" aria-label="AI 提供商类型">
+                      <option>OpenAI 兼容</option>
+                      <option>Anthropic</option>
+                      <option>Gemini</option>
+                      <option>自定义兼容网关</option>
+                    </select>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>显示名称</strong>
+                      <span>用户可识别的账号或网关名称</span>
+                    </div>
+                    <input class="input" value="OpenAI 主账号" aria-label="AI 提供商显示名称" />
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>Base URL</strong>
+                      <span>兼容网关或自定义服务地址</span>
+                    </div>
+                    <input
+                      class="input"
+                      value="https://api.openai.com/v1"
+                      aria-label="AI Base URL"
+                    />
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>API Key</strong>
+                      <span>保存后只显示掩码，写入 core 安全存储</span>
+                    </div>
+                    <div class="control-inline">
+                      <input class="input" value="sk-••••••••••••8Q2m" aria-label="AI API Key" />
+                      <button class="btn" type="button" id="aiReplaceKeyButton">替换</button>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="setting-group">
+                  <div class="group-title">模型配置<span>默认槽位</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>默认文本模型</strong>
+                      <span>供摘要、改写、问答和结构化抽取调用</span>
+                    </div>
+                    <select class="select" id="textModelSelect" aria-label="默认文本模型">
+                      <option>GPT-4.1 Mini</option>
+                      <option>Claude 3.5 Sonnet</option>
+                      <option>Gemini 1.5 Pro</option>
+                    </select>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>默认图片理解模型</strong>
+                      <span>供图片识别、票面识别和截图分析调用</span>
+                    </div>
+                    <select class="select" id="visionModelSelect" aria-label="默认图片理解模型">
+                      <option>Gemini 1.5 Pro</option>
+                      <option>GPT-4.1 Mini</option>
+                      <option>Claude 3.5 Sonnet</option>
+                    </select>
+                  </div>
+                  <div class="ai-model-grid" aria-label="已配置模型">
+                    <div class="ai-model-row">
+                      <div class="ai-model-copy">
+                        <strong>gpt-4.1-mini</strong>
+                        <span>OpenAI 主账号 · 文本、图片理解 · 最近测试可用</span>
+                      </div>
+                      <div class="ai-meta">
+                        <span class="badge">text</span><span class="badge badge-muted">vision</span>
+                      </div>
+                    </div>
+                    <div class="ai-model-row">
+                      <div class="ai-model-copy">
+                        <strong>gemini-1.5-pro</strong>
+                        <span>Gemini 个人账号 · 图片理解 · 彩票票面识别默认</span>
+                      </div>
+                      <div class="ai-meta">
+                        <span class="badge">vision</span
+                        ><button
+                          class="switch is-on"
+                          type="button"
+                          aria-label="启用 Gemini 模型"
+                        ></button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="setting-group">
+                  <div class="group-title">插件 AI 使用<span>首次授权</span></div>
+                  <div class="ai-grant-list" aria-label="插件 AI 授权">
+                    <div class="ai-grant-row">
+                      <div class="ai-grant-copy">
+                        <strong>彩票中奖查询</strong>
+                        <span>申请 ai.vision · 票面识别与号码结构化</span>
+                      </div>
+                      <div class="ai-meta">
+                        <span class="badge">已授权</span
+                        ><button
+                          class="switch is-on"
+                          type="button"
+                          data-ai-grant="彩票中奖查询"
+                        ></button>
+                      </div>
+                    </div>
+                    <div class="ai-grant-row">
+                      <div class="ai-grant-copy">
+                        <strong>图片压缩</strong>
+                        <span>申请 ai.vision · 图片描述和优化建议</span>
+                      </div>
+                      <div class="ai-meta">
+                        <span class="badge badge-muted">未授权</span
+                        ><button class="switch" type="button" data-ai-grant="图片压缩"></button>
+                      </div>
+                    </div>
+                    <div class="ai-grant-row">
+                      <div class="ai-grant-copy">
+                        <strong>今日重点</strong>
+                        <span>申请 ai.text · 摘要、改写和步骤提取</span>
+                      </div>
+                      <div class="ai-meta">
+                        <span class="badge">已授权</span
+                        ><button
+                          class="switch is-on"
+                          type="button"
+                          data-ai-grant="今日重点"
+                        ></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>隐私提示</strong>
+                      <span>图片或文本只在用户触发 AI 功能时发送给当前模型提供商</span>
+                    </div>
+                    <span class="field-note">插件不会获得 API Key</span>
                   </div>
                 </section>
               </div>
@@ -1430,6 +1720,7 @@
         general: ["通用", "工作区、布局和基础行为。所有设置只影响当前个人工作台。"],
         appearance: ["外观", "主题、背景和强调色。视觉配置来自主题插件。"],
         search: ["搜索", "默认搜索源、搜索范围和命令入口。"],
+        ai: ["AI", "模型提供商、默认模型、连接测试和插件 AI 授权。"],
         plugins: ["插件", "已安装插件、运行配置、设置表单协议和本地权限。"],
         about: ["关于", "版本、数据位置和插件化工作台说明。"],
       }
@@ -1502,9 +1793,68 @@
       document.querySelectorAll(".switch").forEach((button) => {
         button.addEventListener("click", () => {
           button.classList.toggle("is-on")
-          setStatus(button.classList.contains("is-on") ? "设置已启用" : "设置已关闭")
+          const isOn = button.classList.contains("is-on")
+          const grantName = button.dataset.aiGrant
+          if (grantName) {
+            const badge = button.parentElement.querySelector(".badge")
+            if (badge) {
+              badge.textContent = isOn ? "已授权" : "未授权"
+              badge.classList.toggle("badge-muted", !isOn)
+            }
+            setStatus(`${grantName} AI 权限${isOn ? "已允许" : "已关闭"}`)
+            return
+          }
+          setStatus(isOn ? "设置已启用" : "设置已关闭")
         })
       })
+
+      const aiTestButton = document.getElementById("aiTestButton")
+      if (aiTestButton) {
+        aiTestButton.addEventListener("click", () => {
+          document.getElementById("aiGatewayStatus").textContent = "测试中"
+          document.getElementById("aiTextModelStatus").textContent = "测试中"
+          document.getElementById("aiVisionModelStatus").textContent = "测试中"
+          setStatus("正在测试默认 AI 模型")
+          window.setTimeout(() => {
+            document.getElementById("aiGatewayStatus").textContent = "可用"
+            document.getElementById("aiTextModelStatus").textContent = "已测试"
+            document.getElementById("aiVisionModelStatus").textContent = "已测试"
+            setStatus("AI 网关连接可用")
+          }, 520)
+        })
+      }
+
+      const textModelSelect = document.getElementById("textModelSelect")
+      const visionModelSelect = document.getElementById("visionModelSelect")
+      if (textModelSelect) {
+        textModelSelect.addEventListener("change", () => {
+          document.getElementById("defaultTextModel").textContent = textModelSelect.value
+          document.getElementById("aiTextModelStatus").textContent = "未测试"
+          setStatus(`默认文本模型：${textModelSelect.value}`)
+        })
+      }
+      if (visionModelSelect) {
+        visionModelSelect.addEventListener("change", () => {
+          document.getElementById("defaultVisionModel").textContent = visionModelSelect.value
+          document.getElementById("aiVisionModelStatus").textContent = "未测试"
+          setStatus(`默认图片理解模型：${visionModelSelect.value}`)
+        })
+      }
+
+      const aiProviderType = document.getElementById("aiProviderType")
+      if (aiProviderType) {
+        aiProviderType.addEventListener("change", () =>
+          setStatus(`AI 提供商类型：${aiProviderType.value}`),
+        )
+      }
+
+      const aiReplaceKeyButton = document.getElementById("aiReplaceKeyButton")
+      if (aiReplaceKeyButton) {
+        aiReplaceKeyButton.addEventListener("click", () => {
+          document.getElementById("aiGatewayStatus").textContent = "未测试"
+          setStatus("等待替换 AI API Key")
+        })
+      }
 
       document.querySelectorAll(".plugin-select").forEach((button) => {
         button.addEventListener("click", () => {
