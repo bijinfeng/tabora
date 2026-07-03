@@ -1,5 +1,6 @@
 import { createComponent, createEffect, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
+import { Settings } from "lucide-solid"
 import type { PluginManifest, SettingsPanelViewProps } from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
@@ -78,6 +79,13 @@ export function SettingsHost(props: SettingsHostProps) {
     }, 250)
   }
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      handleClose()
+    }
+  }
+
   const activeSection = () => props.activeSectionId ?? "general"
   const activePanels = () => navigator().sections[activeSection()].panels
   const activePanelTitle = () => activeSectionTitle()
@@ -122,6 +130,7 @@ export function SettingsHost(props: SettingsHostProps) {
         class="settings-overlay settings-host"
         classList={{ "is-entering": isEntering() }}
         onClick={handleClose}
+        onKeyDown={handleKeyDown}
         role="dialog"
         aria-modal="true"
         aria-label={props.copy?.sidebarTitle ?? "设置"}
@@ -133,7 +142,9 @@ export function SettingsHost(props: SettingsHostProps) {
         >
           <header class="window-head">
             <div class="window-title">
-              <div class="window-title-icon">⚙</div>
+              <div class="window-title-icon">
+                <Settings size={14} />
+              </div>
               <div class="window-title-main">
                 <strong>设置</strong>
                 <span>{activePanelTitle()}</span>
