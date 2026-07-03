@@ -347,7 +347,7 @@ MVP 面板：
 - 页面第一屏是可用工作台，不做 landing page。
 - UI 工作以根目录 `DESIGN.md` 为视觉、token、基础组件、交互模式、宿主容器和可访问性单一事实源。
 - 使用主题 token 和 CSS variables。
-- 插件内容区控件优先使用 `@tabora/ui`，避免在每个插件中重复实现基础按钮、输入、选择器和错误状态。
+- **强制约束：凡是 `@tabora/ui` 已提供的基础组件（按钮、输入、选择器、下拉菜单、开关、对话框、抽屉、气泡、右键菜单、Toast、命令面板等），一律禁止在插件或 shell 中手搓实现。** 需要新控件时，先确认 `@tabora/ui` 是否已有或可扩展；确实缺失时补充到 `@tabora/ui` 再复用，而不是在业务代码里另起一套。手搓已有基础组件的改动视为不合格，评审必须打回。
 - 不要把 Tabora 宿主级容器放入 `@tabora/ui`；widget 卡片壳、modal/fullscreen/settings/toast host、workbench rail/grid、shell 全局命令面板由 shell 提供。`@tabora/ui` 中的 Dialog/Drawer/Toast/ContextMenu/CommandPalette 只作为插件内容区可复用的低层 primitive。
 - 明暗主题都要保证可读。
 - 卡片尺寸稳定，hover / focus / 拖拽不造成布局跳动。

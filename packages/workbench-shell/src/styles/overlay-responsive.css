@@ -1,16 +1,17 @@
 @media (max-width: 760px) {
-  .settings-drawer {
-    grid-template-columns: 160px minmax(0, 1fr);
-    max-width: 100vw;
+  .settings-window {
+    width: min(680px, calc(100vw - 32px));
+    height: min(390px, calc(100vh - 64px));
   }
 }
 
 @media (max-width: 500px) {
-  .settings-drawer {
+  .settings-body {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
-  .settings-sidebar {
+  .settings-nav {
     max-height: 170px;
     overflow-y: auto;
     border-right: 0;
