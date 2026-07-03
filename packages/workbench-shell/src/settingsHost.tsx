@@ -163,9 +163,7 @@ export function SettingsHost(props: SettingsHostProps) {
               <Show when={pluginSection()}>
                 {(section) => (
                   <>
-                    <div class="settings-sidebar-title settings-sidebar-group-title">
-                      {props.copy?.pluginGroupTitle ?? "插件"}
-                    </div>
+                    <div class="nav-kicker">{props.copy?.pluginGroupTitle ?? "插件"}</div>
                     <button
                       class="nav-button"
                       classList={{ "is-active": section().id === activeSection() }}
@@ -176,7 +174,7 @@ export function SettingsHost(props: SettingsHostProps) {
                   </>
                 )}
               </Show>
-              <div class="settings-sidebar-spacer" />
+              <div class="nav-spacer" />
               <Show when={aboutSection()}>
                 {(section) => (
                   <button

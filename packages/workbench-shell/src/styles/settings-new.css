@@ -192,6 +192,10 @@
   font-weight: 600;
 }
 
+.nav-spacer {
+  flex: 1;
+}
+
 /* 面板内容 */
 .settings-main {
   gap: 10px;
