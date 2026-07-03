@@ -76,7 +76,7 @@ export function createCommandPaletteItems<TProvider extends SearchProviderContri
         const provider = providers.find((item) => item.id === entry.providerId)
         return {
           id: `history-${entry.providerId}-${entry.timestamp}`,
-          icon: "🕘",
+          icon: "history",
           name: entry.query,
           desc: `最近搜索 · ${provider?.title ?? entry.providerId}`,
           group: "最近搜索",
@@ -130,7 +130,7 @@ export function createCommandPaletteItems<TProvider extends SearchProviderContri
     return [
       {
         id: `provider-search-${route.provider.id}`,
-        icon: "🔍",
+        icon: "search",
         name: `在 ${route.provider.title} 中搜索 "${route.query}"`,
         desc: "临时搜索源",
         group: "搜索",
@@ -181,7 +181,7 @@ export function createCommandPaletteItems<TProvider extends SearchProviderContri
           const provider = providers.find((item) => item.id === entry.providerId)
           return {
             id: `history-${entry.providerId}-${entry.timestamp}`,
-            icon: "🕘",
+            icon: "history",
             name: entry.query,
             desc: `最近搜索 · ${historyLabel(entry, providers)}`,
             group: "最近搜索",

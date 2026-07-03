@@ -1,4 +1,5 @@
 import { createEffect, createMemo, For, Show } from "solid-js"
+import { History, Search } from "lucide-solid"
 import type { SearchCommandEntry, SearchHistoryEntry, SearchWidgetEntry } from "@tabora/plugin-api"
 import {
   buildSearchUrl,
@@ -8,6 +9,18 @@ import {
   type SearchProviderContributionDescriptor,
 } from "@tabora/orchestrator"
 import { Kbd } from "@tabora/ui"
+
+// Map icon names to lucide components
+function getIconComponent(iconName: string) {
+  switch (iconName) {
+    case "history":
+      return <History size={16} />
+    case "search":
+      return <Search size={16} />
+    default:
+      return iconName // Fallback to string for unknown icons
+  }
+}
 
 export type CommandItem = SearchCommandEntry
 
@@ -199,7 +212,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                               }
                             }}
                           >
-                            <span class="cmd-item-icon">{item.icon}</span>
+                            <span class="cmd-item-icon">{getIconComponent(item.icon)}</span>
                             <span class="cmd-item-text">
                               <span class="cmd-item-name">{item.name}</span>
                               <span class="cmd-item-desc">{item.desc}</span>
