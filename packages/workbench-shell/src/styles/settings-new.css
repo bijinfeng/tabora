@@ -229,7 +229,7 @@
 
 /* 设置组 */
 .setting-group {
-  display: flex;
+  display: grid;
   flex-direction: column;
   gap: 7px;
   padding: 9px;
