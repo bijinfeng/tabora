@@ -487,6 +487,110 @@ if (completed.instances) {
 - 拖拽中禁止文字选择：`body.drag-active { user-select: none }`
 - 只在 `pointerup` 时持久化排序；未发生 reorder 时直接取消，不写库不提示
 
+## 6.6 卡片网格系统
+
+### 设计原则
+
+**固定比例是底线**：插件开发者必须知道确切的宽高比才能适配不同尺寸的卡片样式。
+
+Dashboard 使用 **16 列网格系统**，提供中等密度的灵活布局。
+
+### 网格定义
+
+| 尺寸 | colSpan | 占比        | aspect-ratio   | 用途                       |
+| ---- | ------- | ----------- | -------------- | -------------------------- |
+| S    | 3       | 3/16 (19%)  | 3:2 (1.50:1)   | 纯展示：时钟、天气、小数据 |
+| M    | 4       | 1/4 (25%)   | 16:10 (1.60:1) | 轻交互：快捷链接、开关     |
+| L    | 6       | 3/8 (37.5%) | 16:9 (1.78:1)  | 中等交互：待办、便签       |
+| XL   | 8       | 1/2 (50%)   | 21:9 (2.33:1)  | 丰富交互：复杂表单、图表   |
+
+### 实际尺寸（1200px 容器）
+
+| 尺寸 | 宽度  | 高度  | 说明     |
+| ---- | ----- | ----- | -------- |
+| S    | 217px | 145px | 小巧紧凑 |
+| M    | 292px | 183px | 标准卡片 |
+| L    | 444px | 250px | 宽松布局 |
+| XL   | 595px | 255px | 横向展示 |
+
+### 响应式断点
+
+| 屏幕宽度   | 网格列数 |
+| ---------- | -------- |
+| > 1100px   | 16 列    |
+| 768-1100px | 12 列    |
+| 500-768px  | 8 列     |
+| < 500px    | 1 列     |
+
+### 技术实现
+
+**CSS Grid 布局：**
+
+```css
+.workbench-grid {
+  display: grid;
+  grid-template-columns: repeat(16, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start; /* 防止同行卡片互相拉伸 */
+}
+
+.grid-item[data-widget-size="S"] {
+  aspect-ratio: 3 / 2;
+}
+.grid-item[data-widget-size="M"] {
+  aspect-ratio: 16 / 10;
+}
+.grid-item[data-widget-size="L"] {
+  aspect-ratio: 16 / 9;
+}
+.grid-item[data-widget-size="XL"] {
+  aspect-ratio: 21 / 9;
+}
+```
+
+**JavaScript 定义：**
+
+```typescript
+// packages/plugin-api/src/widgetGeometry.ts
+export const WIDGET_GRID_GEOMETRY: Record<WidgetSize, WidgetGridSpan> = {
+  S: { colSpan: 3, rowSpan: 1 },
+  M: { colSpan: 4, rowSpan: 1 },
+  L: { colSpan: 6, rowSpan: 1 },
+  XL: { colSpan: 8, rowSpan: 1 },
+}
+```
+
+### 关键设计决策
+
+1. **16 列而非 12 列**：提供更密集的布局，同时保持灵活性
+2. **align-items: start**：防止同行不同高度的卡片互相拉伸，保持 aspect-ratio
+3. **所有 rowSpan = 1**：高度完全由 aspect-ratio 控制，插件开发者可预测
+4. **XL 占 1/2 宽**：可以并排两个超大卡片，不会独占整行
+
+### 插件开发指南
+
+插件开发者可以依赖固定的 aspect-ratio 进行精确布局设计：
+
+```css
+/* 针对不同尺寸优化布局 */
+.widget[data-size="S"] {
+  font-size: 12px;
+  padding: 8px;
+}
+.widget[data-size="M"] {
+  font-size: 14px;
+  padding: 12px;
+}
+.widget[data-size="L"] {
+  font-size: 16px;
+  padding: 16px;
+}
+.widget[data-size="XL"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+```
+
 ## 7. 卡片展开子系统
 
 ### 7.1 展开视图协议

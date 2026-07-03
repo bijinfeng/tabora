@@ -32,13 +32,13 @@
 
 @media (max-width: 1100px) {
   .workbench-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(12, 1fr); /* 中等屏幕：12 列 */
   }
 }
 
 @media (max-width: 768px) {
   .workbench-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(8, 1fr); /* 平板：8 列 */
     gap: 12px;
   }
 }

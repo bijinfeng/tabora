@@ -1,41 +1,44 @@
 .focus-shell {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-width: 0;
-  padding: clamp(24px, 6vh, 48px) 24px 32px;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 100vh;
+  padding-left: 56px;
+  padding-top: clamp(40px, 8vh, 80px);
 }
 
 .focus-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(100%, 616px);
+  width: 100%;
+  max-width: clamp(680px, 90vw, 880px);
+  padding: 24px 32px;
 }
 
 .focus-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 27px;
-  gap: 12px;
-  color: rgb(var(--color-muted));
-  font-size: 13px;
-  line-height: 1.2;
+  color: rgb(var(--color-subtle));
+  font-size: 12px;
 }
 
 .focus-greeting {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 10px;
   min-width: 0;
-  color: rgb(var(--color-text));
-  font-weight: 620;
+  color: rgb(var(--color-muted));
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .focus-muted {
-  color: rgb(var(--color-muted));
-  font-weight: 420;
+  color: rgb(var(--color-subtle));
+  font-weight: 400;
+  font-size: 11px;
 }
 
 .focus-topbar-actions {
@@ -69,48 +72,93 @@
 
 .focus-icon-btn,
 .focus-command {
-  background: color-mix(in srgb, rgb(var(--color-surface)) 82%, transparent);
+  background: rgb(var(--color-surface));
 }
 
 .focus-command {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-width: 142px;
-  height: 27px;
-  padding: 0 10px 0 12px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 999px;
-  box-shadow: 0 10px 28px rgb(var(--color-shadow) / 0.22);
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
 }
 
 .focus-satellite {
+  background: rgb(var(--color-surface));
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 10px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  aspect-ratio: 3 / 2; /* S size - 3:2 (1.5:1) - 纯展示 */
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 114px;
-  padding: 14px;
-  border-radius: 8px;
-  background: color-mix(in srgb, rgb(var(--color-surface)) 88%, transparent);
-  box-shadow: 0 10px 26px rgb(var(--color-shadow) / 0.2);
-  color: rgb(var(--color-text));
-  text-align: left;
-  cursor: pointer;
+  animation: focus-satellite-enter 250ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  overflow: hidden;
+}
+
+.focus-satellite-render {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.focus-satellite-render .widget-card {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.focus-satellite:nth-child(1) {
+  animation-delay: 60ms;
+}
+
+.focus-satellite:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+.focus-satellite:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.focus-satellite:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+@keyframes focus-satellite-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.focus-satellite:hover {
+  border-color: rgb(var(--color-line-strong));
+  background: rgb(var(--color-surface-hover));
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 16px rgb(var(--color-shadow) / 0.1),
+    0 2px 4px rgb(var(--color-shadow) / 0.06);
+}
+
+.focus-command:hover {
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+  border-color: rgb(var(--color-accent));
 }
 
 .focus-icon-btn:hover {
-  border-color: rgb(var(--color-accent));
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-}
-
-.focus-command:hover,
-.focus-satellite:hover {
-  transform: translateY(-1px);
   border-color: rgb(var(--color-accent));
   background: rgb(var(--color-surface));
   color: rgb(var(--color-text));
@@ -130,29 +178,55 @@
   font-weight: 650;
 }
 
-.focus-hero,
+.focus-hero {
+  aspect-ratio: 21 / 9; /* XL size - 21:9 (2.33:1) - 超宽屏比例 */
+}
+
 .focus-hero-render {
-  min-height: 217px;
+  height: 100%;
 }
 
 .focus-hero-render > .grid-item,
 .focus-hero-render > .widget-card {
   width: 100%;
-  min-height: 217px;
+  height: 100%;
 }
 
 .focus-hero-render .widget-card {
-  min-height: 217px;
-  box-shadow: 0 2px 8px rgb(var(--color-shadow) / 0.08);
+  height: 100%;
+  background: rgb(var(--color-surface));
+  border: 1.5px solid rgb(var(--color-accent));
+  border-radius: 12px;
+  padding: 28px 28px 24px;
+  box-shadow:
+    0 6px 28px color-mix(in srgb, rgb(var(--color-accent)) 12%, transparent),
+    0 2px 8px rgb(var(--color-shadow) / 0.08);
+  position: relative;
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  animation: focus-hero-enter 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  overflow: hidden;
+}
+
+@keyframes focus-hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .focus-hero-render .widget-card:hover {
-  box-shadow: 0 4px 16px rgb(var(--color-shadow) / 0.12);
+  box-shadow:
+    0 8px 32px color-mix(in srgb, rgb(var(--color-accent)) 16%, transparent),
+    0 4px 16px rgb(var(--color-shadow) / 0.12);
 }
 
 .focus-empty {
   width: 100%;
-  min-height: 217px;
+  height: 100%;
   border: 1px dashed rgb(var(--color-line));
   border-radius: 8px;
   background: rgb(var(--color-surface));
@@ -164,9 +238,9 @@
 
 .focus-satellites {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-content: start;
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 0;
 }
 
 .focus-satellite-title {

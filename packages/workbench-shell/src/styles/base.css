@@ -179,10 +179,10 @@ body {
 /* ====== GRID ====== */
 .workbench-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(16, minmax(0, 1fr)); /* 16 列网格系统 - 中密度 */
   grid-auto-rows: auto;
   gap: 10px;
-  align-items: stretch;
+  align-items: start; /* 改为 start，避免拉伸破坏 aspect-ratio */
 }
 
 .grid-item {
@@ -256,7 +256,24 @@ body {
   overscroll-behavior: contain;
 }
 
-/* 卡片尺寸变体 - 确保内容区最小高度 */
+/* 卡片尺寸变体 - 使用 aspect-ratio 保证固定比例（插件开发者依赖） */
+.grid-item[data-widget-size="S"] {
+  aspect-ratio: 3 / 2; /* S: 3:2 (1.5:1) - 1列，纯展示 */
+}
+
+.grid-item[data-widget-size="M"] {
+  aspect-ratio: 16 / 10; /* M: 16:10 (1.6:1) - 2列，轻交互 */
+}
+
+.grid-item[data-widget-size="L"] {
+  aspect-ratio: 16 / 9; /* L: 16:9 (1.78:1) - 3列，中等交互 */
+}
+
+.grid-item[data-widget-size="XL"] {
+  aspect-ratio: 21 / 9; /* XL: 21:9 (2.33:1) - 4列，丰富交互 */
+}
+
+/* 保留旧的 min-height 作为极端情况后备 */
 .grid-item[data-widget-size="small"] .card-body {
   min-height: 80px;
 }

@@ -442,8 +442,7 @@
   border-radius: 8px;
   background:
     linear-gradient(rgb(var(--color-line)) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--color-line)) 1px, transparent 1px),
-    rgb(var(--color-surface));
+    linear-gradient(90deg, rgb(var(--color-line)) 1px, transparent 1px), rgb(var(--color-surface));
   background-size: 52px 52px;
   padding: 9px;
 }
@@ -487,17 +486,22 @@
 
 .add-card-preview-widget.size-s {
   width: 146px;
-  min-height: 78px;
+  min-height: 97px; /* 3:2 ratio (1.5:1) - 纯展示 */
+}
+
+.add-card-preview-widget.size-m {
+  width: 187px;
+  min-height: 117px; /* 16:10 ratio (1.6:1) - 轻交互 */
 }
 
 .add-card-preview-widget.size-l {
   width: 228px;
-  min-height: 122px;
+  min-height: 128px; /* 16:9 ratio (1.78:1) - 中等交互 */
 }
 
 .add-card-preview-widget.size-xl {
   width: min(100%, 268px);
-  min-height: 138px;
+  min-height: 115px; /* 21:9 ratio (2.33:1) - 丰富交互，超宽屏 */
 }
 
 .add-card-preview-widget-head {
@@ -665,11 +669,7 @@
   justify-content: space-between;
   gap: 12px;
   flex-shrink: 0;
-  background: color-mix(
-    in srgb,
-    rgb(var(--color-surface)) 92%,
-    rgb(var(--color-surface-soft))
-  );
+  background: color-mix(in srgb, rgb(var(--color-surface)) 92%, rgb(var(--color-surface-soft)));
 }
 
 .add-card-footer-left {
@@ -762,4 +762,3 @@
   color: rgb(var(--color-text));
   border-color: transparent;
 }
-
