@@ -180,13 +180,8 @@
   transition: all 120ms;
 }
 
-.nav-button:hover {
-  background: rgb(var(--color-surface-hover));
-  color: rgb(var(--color-text));
-}
-
 .nav-button.is-active {
-  border-color: rgb(var(--color-accent));
+  border-color: color-mix(in srgb, rgb(var(--color-accent)) 28%, rgb(var(--color-line)));
   background: rgb(var(--color-accent-soft));
   color: rgb(var(--color-accent));
 }
@@ -237,6 +232,10 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
+  padding: 9px;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 8px;
+  background: rgb(var(--color-surface-soft));
 }
 
 .group-title {
@@ -246,7 +245,6 @@
   gap: 8px;
   font-size: 12px;
   font-weight: 650;
-  color: rgb(var(--color-text));
 }
 
 .group-title span {
