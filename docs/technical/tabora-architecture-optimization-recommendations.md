@@ -115,7 +115,8 @@ CommandPalette 改为受控 surface 已落地（见 1.10）。inline search 与 
 
 - 第三方远程插件市场、不可信远程插件沙箱、在线安装/升级仍不进入 MVP。
 - `network`、`clipboard`、`local-file`、workspace write 等权限 port 仍待后续按能力逐个设计。
-- 完整插件开发者工具、复杂 WebGL 背景编辑器、云同步和账号系统仍延期。
+- 完整插件开发者工具、复杂 WebGL 背景编辑器仍延期。
+- 云同步和账号系统已单独立项（原为延期项），需求与核心技术决策见 `docs/technical/mpz35mfq-16-data-sync-prd.md`：后端采用 Supabase，state-based 当前态同步 + Edge Function 同步网关 + 平台级加密。落地时需评估其对 storage 层（IndexedDB 变更监听、tombstone、schemaVersion）与 core runtime 的影响。
 
 ## 3. 验证入口
 
