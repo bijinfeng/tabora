@@ -110,6 +110,8 @@ const { data, error } = await supabase.auth.verifyOtp({
 
 ## 3. 数据库 Schema
 
+> **落地状态（2026-07-06）**：本节 5 表 + RLS 已在远端 tabora 项目（`ajetfjtfterbkczrbjlq`）验证通过 security/performance advisors，并落成迁移文件 `supabase/migrations/20260706092225_create_sync_schema.sql`（手写，已与远端 MCP 跨核对一致）。后续结构变更走 `execute_sql` 迭代 + `migration new` 追加迁移。
+
 所有业务表放 `public` schema 并开启 RLS。字段用 `snake_case`（Postgres 惯例），客户端/网关边界处映射为 camelCase。
 
 ### 3.1 profiles
