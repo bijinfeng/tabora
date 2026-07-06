@@ -26,3 +26,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Supabase CLI 本地态（不进仓库）
+supabase/.temp/
+supabase/.branches/
