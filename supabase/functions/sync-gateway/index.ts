@@ -279,14 +279,44 @@ Deno.serve(async (req) => {
           },
         })
       }
-      case "snapshot":
-        return jsonResponse(
-          {
-            ok: false,
-            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
-          },
-          501,
-        )
+      case "snapshot": {
+        const { reason, payload } = body
+        if (!reason || !payload) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "INVALID_PAYLOAD", message: "Missing reason or payload" },
+            },
+            400,
+          )
+        }
+
+        const { data: snapshot, error: insertError } = await supabaseAdmin
+          .from("sync_snapshots")
+          .insert({
+            account_id: accountId,
+            reason,
+            payload,
+            created_at: new Date().toISOString(),
+          })
+          .select("snapshot_id")
+          .single()
+
+        if (insertError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: insertError.message },
+            },
+            500,
+          )
+        }
+
+        return jsonResponse<SuccessResponse>({
+          ok: true,
+          data: { snapshotId: snapshot.snapshot_id },
+        })
+      }
       case "list-devices":
         return jsonResponse(
           {
