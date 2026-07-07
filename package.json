@@ -25,6 +25,7 @@
     "geist": "^1.7.2"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49.2",
     "@tailwindcss/vite": "catalog:build",
     "@testing-library/jest-dom": "^6.9.1",
     "@tsdown/css": "0.22.0",
@@ -35,6 +36,7 @@
     "playwright": "catalog:test",
     "tailwindcss": "catalog:build",
     "tsdown": "catalog:build",
+    "tsx": "^4.19.2",
     "typescript": "catalog:build",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build",
