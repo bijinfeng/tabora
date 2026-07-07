@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
 
           // 1. 敏感字段过滤
           try {
-            filterSensitiveFields(payload)
+            rejectSensitiveFields(payload)
           } catch (err) {
             return jsonResponse<ErrorResponse>(
               {
@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
               entity_type: entityType,
               record_key: recordKey,
               payload,
-              updated_at: now, // 权威时间戳
+              updated_at: clientUpdatedAt, // LWW: 保留客户端时间戳
               deleted_at: deleted ? now : null,
               schema_version: 1,
               last_writer_device_id: body.deviceId || "unknown", // 客户端应传 deviceId
@@ -536,18 +536,31 @@ function jsonResponse<T>(data: T, status = 200): Response {
   })
 }
 
-function filterSensitiveFields(payload: Record<string, any>): Record<string, any> {
+function rejectSensitiveFields(payload: unknown, path = ""): void {
   const sensitiveKeywords = ["apikey", "token", "password", "secret", "filepath"]
-  const filtered: Record<string, any> = {}
+
+  if (typeof payload !== "object" || payload === null) {
+    return
+  }
+
+  if (Array.isArray(payload)) {
+    payload.forEach((item, index) => {
+      rejectSensitiveFields(item, path ? `${path}[${index}]` : `[${index}]`)
+    })
+    return
+  }
 
   for (const [key, value] of Object.entries(payload)) {
     const lowerKey = key.toLowerCase()
-    if (sensitiveKeywords.some((kw) => lowerKey.includes(kw))) {
-      // 拒绝敏感字段，调用方会检查返回的对象大小
-      throw new Error(`Sensitive field detected: ${key}`)
-    }
-    filtered[key] = value
-  }
+    const fullPath = path ? `${path}.${key}` : key
 
-  return filtered
+    if (sensitiveKeywords.some((kw) => lowerKey.includes(kw))) {
+      throw new Error(`Sensitive field detected: ${fullPath}`)
+    }
+
+    // 递归检查嵌套对象和数组
+    if (typeof value === "object" && value !== null) {
+      rejectSensitiveFields(value, fullPath)
+    }
+  }
 }
