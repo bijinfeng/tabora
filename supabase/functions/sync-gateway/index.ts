@@ -67,7 +67,18 @@ Deno.serve(async (req) => {
     const accountId = user.id
 
     // 解析请求体
-    const body = await req.json()
+    let body: any
+    try {
+      body = await req.json()
+    } catch {
+      return jsonResponse<ErrorResponse>(
+        {
+          ok: false,
+          error: { code: "INVALID_PAYLOAD", message: "Invalid JSON body" },
+        },
+        400,
+      )
+    }
     const { action } = body
 
     // Action 派发（后续 tasks 填充各 handler）
