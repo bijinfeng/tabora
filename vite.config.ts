@@ -81,7 +81,7 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
-    ignorePatterns: ["examples/**"],
+    ignorePatterns: ["examples/**", "supabase/functions/**"],
     rules: {
       "no-console": ["error", { allow: ["warn", "error"] }],
     },
