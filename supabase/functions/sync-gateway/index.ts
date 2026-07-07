@@ -39,7 +39,10 @@ Deno.serve(async (req) => {
       return jsonResponse<ErrorResponse>(
         {
           ok: false,
-          error: { code: "AUTH_FAILED", message: "Missing or invalid authorization header" },
+          error: {
+            code: "AUTH_FAILED",
+            message: "Missing or invalid authorization header",
+          },
         },
         401,
       )
@@ -83,51 +86,112 @@ Deno.serve(async (req) => {
 
     // Action 派发（后续 tasks 填充各 handler）
     switch (action) {
-      case "register-device":
-        return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
-          501,
-        )
+      case "register-device": {
+        const { deviceId, name, type } = body
+        if (!deviceId || !name || !type) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: {
+                code: "INVALID_PAYLOAD",
+                message: "Missing deviceId, name, or type",
+              },
+            },
+            400,
+          )
+        }
+
+        const { data: device, error: dbError } = await supabaseAdmin
+          .from("sync_devices")
+          .upsert(
+            {
+              device_id: deviceId,
+              account_id: accountId,
+              name,
+              type,
+              last_sync_at: new Date().toISOString(),
+            },
+            { onConflict: "account_id,device_id" },
+          )
+          .select()
+          .single()
+
+        if (dbError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: dbError.message },
+            },
+            500,
+          )
+        }
+
+        return jsonResponse<SuccessResponse>({ ok: true, data: { device } })
+      }
       case "push":
         return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
+          {
+            ok: false,
+            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+          },
           501,
         )
       case "pull":
         return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
+          {
+            ok: false,
+            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+          },
           501,
         )
       case "snapshot":
         return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
+          {
+            ok: false,
+            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+          },
           501,
         )
       case "list-devices":
         return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
+          {
+            ok: false,
+            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+          },
           501,
         )
       case "remove-device":
         return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
+          {
+            ok: false,
+            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+          },
           501,
         )
       case "list-conflicts":
         return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
+          {
+            ok: false,
+            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+          },
           501,
         )
       case "resolve-conflict":
         return jsonResponse(
-          { ok: false, error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" } },
+          {
+            ok: false,
+            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+          },
           501,
         )
       default:
         return jsonResponse<ErrorResponse>(
           {
             ok: false,
-            error: { code: "UNKNOWN_ACTION", message: `Unknown action: ${action}` },
+            error: {
+              code: "UNKNOWN_ACTION",
+              message: `Unknown action: ${action}`,
+            },
           },
           400,
         )
