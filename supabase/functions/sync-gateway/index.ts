@@ -317,38 +317,191 @@ Deno.serve(async (req) => {
           data: { snapshotId: snapshot.snapshot_id },
         })
       }
-      case "list-devices":
-        return jsonResponse(
-          {
-            ok: false,
-            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+      case "list-devices": {
+        const { data: devices, error: queryError } = await supabaseAdmin
+          .from("sync_devices")
+          .select("device_id, name, type, first_login_at, last_sync_at, status")
+          .eq("account_id", accountId)
+
+        if (queryError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: queryError.message },
+            },
+            500,
+          )
+        }
+
+        return jsonResponse<SuccessResponse>({
+          ok: true,
+          data: {
+            devices: devices.map((d) => ({
+              deviceId: d.device_id,
+              name: d.name,
+              type: d.type,
+              firstLoginAt: d.first_login_at,
+              lastSyncAt: d.last_sync_at,
+              status: d.status,
+            })),
           },
-          501,
-        )
-      case "remove-device":
-        return jsonResponse(
-          {
-            ok: false,
-            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+        })
+      }
+      case "remove-device": {
+        const { deviceId } = body
+        if (!deviceId) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "INVALID_PAYLOAD", message: "Missing deviceId" },
+            },
+            400,
+          )
+        }
+
+        const { error: updateError } = await supabaseAdmin
+          .from("sync_devices")
+          .update({ status: "removed" })
+          .eq("account_id", accountId)
+          .eq("device_id", deviceId)
+
+        if (updateError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: updateError.message },
+            },
+            500,
+          )
+        }
+
+        return jsonResponse<SuccessResponse>({ ok: true, data: {} })
+      }
+      case "list-conflicts": {
+        const { status = "open", limit = 50 } = body
+
+        const { data: conflicts, error: queryError } = await supabaseAdmin
+          .from("sync_conflicts")
+          .select("*")
+          .eq("account_id", accountId)
+          .eq("status", status)
+          .order("created_at", { ascending: false })
+          .limit(limit)
+
+        if (queryError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: queryError.message },
+            },
+            500,
+          )
+        }
+
+        return jsonResponse<SuccessResponse>({
+          ok: true,
+          data: {
+            conflicts: conflicts.map((c) => ({
+              conflictId: c.conflict_id,
+              scope: c.scope,
+              entityType: c.entity_type,
+              recordKey: c.record_key,
+              localDeviceId: c.local_device_id,
+              remoteDeviceId: c.remote_device_id,
+              localSummary: c.local_summary,
+              remoteSummary: c.remote_summary,
+              localPayload: c.local_payload,
+              remotePayload: c.remote_payload,
+              status: c.status,
+              createdAt: c.created_at,
+            })),
           },
-          501,
-        )
-      case "list-conflicts":
-        return jsonResponse(
+        })
+      }
+      case "resolve-conflict": {
+        const { conflictId, resolution } = body
+        if (!conflictId || !resolution || !["local", "remote"].includes(resolution)) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: {
+                code: "INVALID_PAYLOAD",
+                message: "Missing or invalid conflictId/resolution",
+              },
+            },
+            400,
+          )
+        }
+
+        // 读取冲突
+        const { data: conflict, error: fetchError } = await supabaseAdmin
+          .from("sync_conflicts")
+          .select("*")
+          .eq("conflict_id", conflictId)
+          .eq("account_id", accountId)
+          .single()
+
+        if (fetchError || !conflict) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: fetchError?.message || "Conflict not found" },
+            },
+            404,
+          )
+        }
+
+        // 选择保留版本
+        const chosenPayload =
+          resolution === "local" ? conflict.local_payload : conflict.remote_payload
+
+        // 写入 synced_records（覆盖）
+        const now = new Date().toISOString()
+        const { error: upsertError } = await supabaseAdmin.from("synced_records").upsert(
           {
-            ok: false,
-            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+            account_id: accountId,
+            scope: conflict.scope,
+            entity_type: conflict.entity_type,
+            record_key: conflict.record_key,
+            payload: chosenPayload,
+            updated_at: now,
+            deleted_at: null,
+            schema_version: 1,
+            last_writer_device_id:
+              resolution === "local" ? conflict.local_device_id : conflict.remote_device_id,
+            server_updated_at: now,
           },
-          501,
+          { onConflict: "account_id,scope,entity_type,record_key" },
         )
-      case "resolve-conflict":
-        return jsonResponse(
-          {
-            ok: false,
-            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
-          },
-          501,
-        )
+
+        if (upsertError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: upsertError.message },
+            },
+            500,
+          )
+        }
+
+        // 标记冲突已解决
+        const { error: updateError } = await supabaseAdmin
+          .from("sync_conflicts")
+          .update({ status: "resolved", resolved_at: now })
+          .eq("conflict_id", conflictId)
+
+        if (updateError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: updateError.message },
+            },
+            500,
+          )
+        }
+
+        return jsonResponse<SuccessResponse>({ ok: true, data: {} })
+      }
       default:
         return jsonResponse<ErrorResponse>(
           {
