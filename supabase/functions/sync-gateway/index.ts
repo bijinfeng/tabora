@@ -236,14 +236,49 @@ Deno.serve(async (req) => {
           data: { pushedCount, skippedCount },
         })
       }
-      case "pull":
-        return jsonResponse(
-          {
-            ok: false,
-            error: { code: "UNKNOWN_ACTION", message: "Not implemented yet" },
+      case "pull": {
+        const { cursor } = body
+        const cursorTime = cursor || "1970-01-01T00:00:00Z"
+
+        const { data: records, error: queryError } = await supabaseAdmin
+          .from("synced_records")
+          .select(
+            "scope, entity_type, record_key, payload, updated_at, deleted_at, last_writer_device_id, server_updated_at",
+          )
+          .eq("account_id", accountId)
+          .gt("server_updated_at", cursorTime)
+          .order("server_updated_at", { ascending: true })
+          .limit(500)
+
+        if (queryError) {
+          return jsonResponse<ErrorResponse>(
+            {
+              ok: false,
+              error: { code: "DB_ERROR", message: queryError.message },
+            },
+            500,
+          )
+        }
+
+        const newCursor =
+          records && records.length > 0 ? records[records.length - 1].server_updated_at : cursorTime
+
+        return jsonResponse<SuccessResponse>({
+          ok: true,
+          data: {
+            records: (records || []).map((r) => ({
+              scope: r.scope,
+              entityType: r.entity_type,
+              recordKey: r.record_key,
+              payload: r.payload,
+              updatedAt: r.updated_at,
+              deletedAt: r.deleted_at,
+              lastWriterDeviceId: r.last_writer_device_id,
+            })),
+            newCursor,
           },
-          501,
-        )
+        })
+      }
       case "snapshot":
         return jsonResponse(
           {
