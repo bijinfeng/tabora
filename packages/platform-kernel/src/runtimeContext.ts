@@ -1,4 +1,9 @@
-import type { PluginManifest, PluginPermission } from "@tabora/plugin-api"
+import type {
+  AiPermissionAccess,
+  AiRuntimeBridge,
+  PluginManifest,
+  PluginPermission,
+} from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
 import type { ExtensionRegistry, ViewRegistrationDisposer } from "./extensionRegistry"
 
@@ -48,6 +53,7 @@ export type PluginRuntimeContext = {
   registry: ExtensionRegistry
   ui: PluginUiBridge
   permissions: PermissionBridge
+  ai?: AiRuntimeBridge
   i18n?: PluginI18nBridge
   logger: {
     warn(message: string): void
@@ -90,6 +96,7 @@ export function createPluginRuntimeContext(options: {
   manifest?: PluginManifest
   grantedPermissions?: PluginPermission[]
   registrationDisposers?: ViewRegistrationDisposer[]
+  ai?: AiRuntimeBridge
   i18n?: PluginI18nService
 }): PluginRuntimeContext {
   const grantedPermissions = options.grantedPermissions ?? []
@@ -129,6 +136,55 @@ export function createPluginRuntimeContext(options: {
       return permission.hosts.some((host) => host === "*" || host === hostname)
     })
   }
+
+  function hasAiAccess(access: AiPermissionAccess): boolean {
+    return grantedPermissions.some((permission) => {
+      if (permission.type !== "ai") return false
+      return permission.access.includes(access)
+    })
+  }
+
+  function hasAnyAiAccess(): boolean {
+    return grantedPermissions.some((permission) => permission.type === "ai")
+  }
+
+  function requireAiAccess(access: AiPermissionAccess): void {
+    if (!hasAiAccess(access)) {
+      throw new Error(
+        `Plugin "${options.pluginId}" attempted to use AI ${access} without permission`,
+      )
+    }
+  }
+
+  const ai: AiRuntimeBridge | undefined =
+    options.ai && hasAnyAiAccess()
+      ? {
+          generate(request) {
+            requireAiAccess("generate")
+            return options.ai!.generate(request)
+          },
+          stream(request) {
+            requireAiAccess("generate")
+            return options.ai!.stream(request)
+          },
+          ...(options.ai.requestToolApproval
+            ? {
+                requestToolApproval(request) {
+                  requireAiAccess("tools")
+                  return options.ai!.requestToolApproval!(request)
+                },
+              }
+            : {}),
+          ...(options.ai.getWorkspaceContext
+            ? {
+                getWorkspaceContext() {
+                  requireAiAccess("context")
+                  return options.ai!.getWorkspaceContext!()
+                },
+              }
+            : {}),
+        }
+      : undefined
 
   const i18n: PluginI18nBridge | undefined = options.i18n
     ? {
@@ -184,6 +240,7 @@ export function createPluginRuntimeContext(options: {
         return true
       },
     },
+    ...(ai ? { ai } : {}),
     ...(i18n ? { i18n } : {}),
     logger: {
       warn(message) {

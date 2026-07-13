@@ -1,0 +1,27 @@
+{
+  "name": "@tabora/ai-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "vp pack src/index.ts",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@tabora/plugin-api": "workspace:*",
+    "ai": "catalog:ai"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*"
+  }
+}

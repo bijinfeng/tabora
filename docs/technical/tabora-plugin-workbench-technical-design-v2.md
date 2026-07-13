@@ -58,6 +58,7 @@
                        │
 ┌──────────────────────┴───────────────────────────────┐
 │  Infrastructure Layer                                 │
+│  - @tabora/ai-runtime (Vercel AI SDK adapter)         │
 │  - @tabora/storage (IndexedDB 持久化)                  │
 │  - @tabora/theme (CSS custom properties)              │
 │  - @tabora/brand (品牌图标源与品牌组件)               │
@@ -89,6 +90,7 @@
 packages/
   plugin-api/           # 类型、Schema、Props Contract（不变）
   platform-kernel/      # 插件生命周期、Registry、EventBus、权限、快捷键注册（增强）
+  ai-runtime/           # AI Runtime adapter，P0 基于 Vercel AI SDK
   orchestrator/         # 新增：布局切换、区域映射、搜索路由、拖拽、展开、设置导航
   workbench-app/        # Phase X1 起步：跨 shell 的 workbench composition 承载层
   host-adapters/        # Phase X1 起步：Web / extension / desktop host capability adapters
@@ -111,6 +113,7 @@ packages/
 - Phase X2 已完成布局协议语义收口：`HostActionId` 已包含 `layout-switch`、`shortcuts`、`plugin-manager` 等稳定动作 ID，布局切换不再伪装为 `theme` action；`RegionSlot` 为泛型渲染结果契约，`plugin-api` 不绑定 Solid JSX，workbench shell 的 `createLayoutEngine` 会按 `region.accepts` 过滤实例，避免 extension point 错配；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖，保持第三方 layout 依赖面隔离；playground / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误 fallback 会记录状态并触发 toast。
 - Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和 safe layout fallback 属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
 - `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope`、workspace `activeBackgroundProviderId`、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
+- 2026-07-13 AI Runtime P0 补充：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginRuntimeContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
 - 2026-06-07 发布前兼容性清理补充：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
 - `@tabora/plugin-api` 当前额外导出 `workbenchSearchSettingsSchema`、`pluginInstanceSchema`、`workspaceSchema`、`workspaceExportSchema` 作为当前工作台协议事实源。`WorkbenchSearchSettings` 当前协议为完整显式配置：`defaultProviderId: string`、`enabledProviderIds: string[]`，并要求默认 provider 必须属于启用列表。workspace hydration、import/export 和 preset 链路统一走 schema 校验；缺失字段、旧导出或不满足约束的数据直接拒绝，不再按“首个 provider”或“全量 providers”做 silent backfill。
 - `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
@@ -812,6 +815,7 @@ SettingsHost (shell 提供)
   │   ├── 外观 (平台 tab + 对应 settings-panel panels)
   │   ├── 搜索 (平台 tab + 对应 settings-panel panels)
   │   ├── 插件 (平台 tab + 对应 settings-panel panels)
+  │   ├── AI (平台 tab + 对应 settings-panel panels)
   │   └── 关于 (平台 tab + 对应 settings-panel panels)
   └── SettingsContent (右侧内容区)
       └── SettingsTab (每个 tab 由 orchestrator 管理容器与顺序)
@@ -826,6 +830,7 @@ SettingsHost (shell 提供)
 - **外观**：主题切换、背景选择，以及相关插件贡献的外观面板内容。
 - **搜索**：默认搜索引擎选择、`@语法` 说明，以及搜索相关插件贡献内容。
 - **插件**：已安装插件列表、贡献能力摘要、权限摘要，以及插件管理相关面板内容。
+- **AI**：模型 provider、默认模型、网关状态、插件 AI 授权摘要，以及注册到 `ai` 分组的设置面板内容。
 - **关于**：平台内置说明，可附加只读插件贡献内容。
 
 ### 11.2 SettingsPanel 贡献的新角色

@@ -24,18 +24,19 @@
 
 ## 当前事实源
 
-| 领域             | 当前事实源                                                           | 什么时候读                                     |
-| ---------------- | -------------------------------------------------------------------- | ---------------------------------------------- |
-| 产品范围         | `docs/product/tabora-plugin-workbench-prd.md`                        | 判断 MVP 范围、用户流程、验收标准、非目标      |
-| 官方插件         | `docs/product/tabora-official-plugins-design.md`                     | 修改官方插件、默认装配、插件交互和插件验收     |
-| 视觉与交互       | `DESIGN.md`                                                          | 修改 UI、token、布局视觉、组件语义、可访问性   |
-| 设计实现映射     | `docs/product/tabora-design-system.md`                               | 判断 `DESIGN.md` 如何映射到 `@tabora/ui/theme` |
-| 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md`      | 修改协议、runtime、storage、shell、包边界      |
-| 架构优化记录     | `docs/technical/tabora-architecture-optimization-recommendations.md` | 审查架构决策或排查已知优化项                   |
-| 回归治理         | `docs/technical/tabora-regression-baseline.md`                       | 每轮迭代后选择回归层级、验证命令、报告模板     |
-| Playground 部署  | `docs/technical/playground-github-actions-deploy.md`                 | 修改 playground 发布链路或服务器部署           |
-| Extension 分发   | `docs/technical/extension-github-actions-publish.md`                 | 修改扩展 zip、商店提交、发布 workflow          |
-| 展开 footer 注入 | `docs/technical/tabora-expand-footer-injection-design.md`            | 修改展开弹窗 footer 注入协议或快捷入口 footer  |
+| 领域             | 当前事实源                                                           | 什么时候读                                            |
+| ---------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
+| 产品范围         | `docs/product/tabora-plugin-workbench-prd.md`                        | 判断 MVP 范围、用户流程、验收标准、非目标             |
+| 官方插件         | `docs/product/tabora-official-plugins-design.md`                     | 修改官方插件、默认装配、插件交互和插件验收            |
+| 视觉与交互       | `DESIGN.md`                                                          | 修改 UI、token、布局视觉、组件语义、可访问性          |
+| 设计实现映射     | `docs/product/tabora-design-system.md`                               | 判断 `DESIGN.md` 如何映射到 `@tabora/ui/theme`        |
+| AI Agent Runtime | `docs/product/tabora-ai-agent-runtime-design.md`                     | 判断 AI 基础设施、agent 协议、插件 AI 授权和 MVP 路线 |
+| 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md`      | 修改协议、runtime、storage、shell、包边界             |
+| 架构优化记录     | `docs/technical/tabora-architecture-optimization-recommendations.md` | 审查架构决策或排查已知优化项                          |
+| 回归治理         | `docs/technical/tabora-regression-baseline.md`                       | 每轮迭代后选择回归层级、验证命令、报告模板            |
+| Playground 部署  | `docs/technical/playground-github-actions-deploy.md`                 | 修改 playground 发布链路或服务器部署                  |
+| Extension 分发   | `docs/technical/extension-github-actions-publish.md`                 | 修改扩展 zip、商店提交、发布 workflow                 |
+| 展开 footer 注入 | `docs/technical/tabora-expand-footer-injection-design.md`            | 修改展开弹窗 footer 注入协议或快捷入口 footer         |
 
 ## 按任务选择文档
 
@@ -45,6 +46,11 @@
 
 - `docs/product/tabora-plugin-workbench-prd.md`
 - `docs/product/tabora-official-plugins-design.md`
+
+涉及 AI agent、AI runtime、模型配置、插件 AI 授权或 agent 工具协议时，额外读：
+
+- `docs/product/tabora-ai-agent-runtime-design.md`
+- `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 中的 AI Runtime P0 补充
 
 ### 技术实现
 

@@ -178,6 +178,37 @@ describe("createPluginRuntimeContext permissions", () => {
     expect(context.i18n?.formatNumber(1)).toBe("NUM")
   })
 
+  it("does not expose the AI bridge without an AI permission grant", () => {
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      ai: {
+        generate: async () => ({ text: "hidden" }),
+        stream: async function* () {},
+      },
+    })
+
+    expect(context.ai).toBeUndefined()
+  })
+
+  it("exposes the AI bridge when the plugin has an AI generate grant", async () => {
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async (request) => ({ text: `reply:${request.prompt}` }),
+        stream: async function* () {},
+      },
+    })
+
+    await expect(context.ai?.generate({ prompt: "hello" })).resolves.toEqual({
+      text: "reply:hello",
+    })
+  })
+
   it("collects view registration disposers for plugin-owned cleanup", () => {
     const registrationDisposers: Array<() => void> = []
     const registry = createExtensionRegistry()

@@ -103,6 +103,45 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(true)
   })
 
+  it("accepts declared AI permissions", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.ai.assistant",
+      name: "AI Assistant",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      permissions: [{ type: "ai", access: ["generate", "context", "tools"] }],
+      contributes: {},
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts AI settings panel sections", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.settings.ai",
+      name: "AI Settings",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "official.settings.ai",
+            title: "AI",
+            view: "official.settings.ai.view",
+            section: "ai",
+            scope: "global",
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
   it("accepts plugin stylesheet declarations", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.widgets.productivity",

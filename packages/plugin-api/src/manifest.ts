@@ -1,4 +1,5 @@
 import type { PluginInstance, Workspace } from "./workspace"
+import type { AiPermissionAccess } from "./ai"
 
 export type ExtensionPoint =
   | "layout"
@@ -13,6 +14,7 @@ export type ExtensionPoint =
 export type WidgetSize = "S" | "M" | "L" | "XL"
 
 export type PluginPermission =
+  | { type: "ai"; access: AiPermissionAccess[] }
   | { type: "storage"; scope: "plugin" }
   | { type: "workspace"; access: "read" | "write" }
   | { type: "network"; hosts: string[] }
@@ -31,6 +33,7 @@ export type PluginStyleContribution = {
 export type HostPlatform = "web" | "extension" | "desktop-webview"
 
 export type HostCapabilityId =
+  | "ai"
   | "externalOpen"
   | "themeApply"
   | "backgroundApply"
@@ -331,7 +334,7 @@ export type SettingsPanelContribution = {
   id: string
   title: string
   view: string
-  section: "general" | "appearance" | "search" | "plugins" | "about"
+  section: "general" | "appearance" | "search" | "plugins" | "ai" | "about"
   scope: "global" | "workspace" | "plugin" | "instance"
   order?: number
 }

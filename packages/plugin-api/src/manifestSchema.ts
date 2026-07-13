@@ -4,13 +4,21 @@ import { workbenchSearchSettingsSchema } from "./workspaceSchema"
 
 const widgetSizeSchema = z.enum(["S", "M", "L", "XL"])
 
-const settingsPanelSectionSchema = z.enum(["general", "appearance", "search", "plugins", "about"])
+const settingsPanelSectionSchema = z.enum([
+  "general",
+  "appearance",
+  "search",
+  "plugins",
+  "ai",
+  "about",
+])
 
 const settingsPanelScopeSchema = z.enum(["global", "workspace", "plugin", "instance"])
 
 const hostPlatformSchema = z.enum(["web", "extension", "desktop-webview"])
 
 const hostCapabilitySchema = z.enum([
+  "ai",
   "externalOpen",
   "themeApply",
   "backgroundApply",
@@ -33,6 +41,10 @@ const extensionPointSchema = z.enum([
 ])
 
 const pluginPermissionSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("ai"),
+    access: z.array(z.enum(["generate", "context", "tools"])).min(1),
+  }),
   z.object({
     type: z.literal("external-open"),
     hosts: z.array(z.string().min(1)).min(1),
