@@ -1,4 +1,5 @@
 import type {
+  AiRuntimeBridge,
   HostCapabilityId,
   HostPlatform,
   PluginManifest,
@@ -33,6 +34,7 @@ export type PluginKernelOptions = {
   recordSource?: PluginRecord["source"]
   hostPlatform?: HostPlatform
   hostCapabilities?: Partial<Record<HostCapabilityId, boolean>>
+  ai?: AiRuntimeBridge
   i18n?: PluginI18nService
 }
 
@@ -162,6 +164,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       manifest: plugin.manifest,
       grantedPermissions: plugin.manifest.permissions ?? [],
       registrationDisposers,
+      ...(options.ai ? { ai: options.ai } : {}),
       ...(options.i18n ? { i18n: options.i18n } : {}),
     })
 

@@ -1,6 +1,6 @@
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createPluginCatalog, type PluginCatalog } from "@tabora/orchestrator"
-import type { WorkspacePresetContribution } from "@tabora/plugin-api"
+import type { AiRuntimeBridge, WorkspacePresetContribution } from "@tabora/plugin-api"
 import {
   createPluginKernel,
   loadBuiltinPlugins,
@@ -57,6 +57,7 @@ export type CreateWorkbenchRuntimeBootstrapOptions = {
   shellConfig: WorkbenchShellConfig
   databaseName?: string
   storageAdapter?: StorageAdapter
+  ai?: AiRuntimeBridge
 }
 
 export function createWorkbenchRuntimeBootstrap(
@@ -300,6 +301,7 @@ export function createWorkbenchRuntimeBootstrap(
     recordSource: "builtin",
     hostPlatform: options.host.platform,
     hostCapabilities: options.host.capabilities,
+    ...(options.ai ? { ai: options.ai } : {}),
     i18n,
   })
 

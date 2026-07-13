@@ -180,6 +180,42 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.repositories).toBe(storageAdapter.repositories)
   })
 
+  it("passes the host AI bridge into the plugin kernel", async () => {
+    let generatedText: string | undefined
+    const runtime = createWorkbenchRuntimeBootstrap({
+      host: createWebHostAdapter({ id: "host.test" }),
+      plugins: [
+        {
+          manifest: {
+            id: "test.ai-plugin",
+            name: "Test AI Plugin",
+            version: "0.0.1",
+            apiVersion: "1.0.0",
+            entry: "./index.ts",
+            engine: { platform: "^0.1.0" },
+            permissions: [{ type: "ai", access: ["generate"] }],
+            contributes: {},
+          },
+          enabled: true,
+          async activate(context) {
+            generatedText = (await context.ai!.generate({ prompt: "bootstrap" })).text
+          },
+        },
+      ],
+      defaultWorkspacePreset,
+      shellConfig,
+      ai: {
+        generate: async (request) => ({ text: `from-ai:${request.prompt}` }),
+        stream: async function* () {},
+      },
+    })
+
+    await runtime.kernel.discover(runtime.plugins)
+    await runtime.kernel.activateEnabledPlugins()
+
+    expect(generatedText).toBe("from-ai:bootstrap")
+  })
+
   it("registers shell message bundles for both locales", () => {
     const runtime = createWorkbenchRuntimeBootstrap({
       host: createWebHostAdapter({ id: "host.test" }),

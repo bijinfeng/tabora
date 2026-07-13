@@ -413,6 +413,40 @@ describe("createPluginKernel", () => {
     expect(activated).toBe(true)
   })
 
+  it("passes the host AI bridge into authorized plugin activation contexts", async () => {
+    const manifest: PluginManifest = {
+      id: "official.ai-consumer",
+      name: "AI Consumer",
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      permissions: [{ type: "ai", access: ["generate"] }],
+      contributes: {},
+    }
+    let generatedText: string | undefined
+
+    const kernel = createPluginKernel({
+      ai: {
+        generate: async (request) => ({ text: `ai:${request.prompt}` }),
+        stream: async function* () {},
+      },
+    })
+    await kernel.discover([
+      {
+        manifest,
+        enabled: true,
+        async activate(context) {
+          generatedText = (await context.ai!.generate({ prompt: "hello" })).text
+        },
+      },
+    ])
+
+    await kernel.activateEnabledPlugins()
+
+    expect(generatedText).toBe("ai:hello")
+  })
+
   it("does not activate incompatible plugins when manually enabled", async () => {
     const saved: Array<{ id: string; enabled: boolean; status: string; disabledReason?: string }> =
       []
