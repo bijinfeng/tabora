@@ -237,7 +237,7 @@ describe("SearchSettingsPanel", () => {
       root,
     )
 
-    expect(root.textContent).toContain("默认搜索引擎")
+    expect(root.textContent).toContain("默认搜索源")
     expect(root.textContent).toContain("✓ 当前")
     expect(root.querySelector('[aria-label="禁用 Google"]')).toBeTruthy()
     root.remove()
@@ -245,10 +245,15 @@ describe("SearchSettingsPanel", () => {
 })
 
 describe("AppearanceSettingsPanel", () => {
-  it("renders prototype layout, theme, and background pickers", () => {
+  it("renders prototype form rows for theme, background, and locale", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    const panelHost = host()
+    const switchTheme = vi.fn(async () => {})
+    const panelHost = {
+      ...host(),
+      switchTheme,
+      switchLocale: vi.fn(async () => {}),
+    }
 
     render(
       () => (
@@ -289,16 +294,27 @@ describe("AppearanceSettingsPanel", () => {
             enabledProviderIds: ["official.search.google"],
           }}
           plugins={[]}
+          locale="zh-CN"
+          availableLocales={[
+            { value: "zh-CN", label: "简体中文" },
+            { value: "en-US", label: "English" },
+          ]}
         />
       ),
       root,
     )
 
-    expect(root.querySelectorAll(".layout-option")).toHaveLength(2)
-    expect(root.querySelectorAll(".theme-card")).toHaveLength(2)
-    expect(root.querySelectorAll(".bg-item")).toHaveLength(2)
-    expect(root.textContent).toContain("明")
-    expect(root.textContent).toContain("暗")
+    expect(root.querySelectorAll(".settings-form-row")).toHaveLength(8)
+    expect(root.textContent).toContain("界面模式")
+    expect(root.textContent).toContain("强调色")
+    expect(root.textContent).toContain("页面背景")
+    expect(root.textContent).toContain("背景渲染")
+    expect(root.textContent).toContain("界面密度")
+    expect(root.textContent).toContain("圆角半径")
+    expect(root.textContent).toContain("正文大小")
+    expect(root.textContent).toContain("当前语言")
+    buttonByText(root, "暗色").click()
+    expect(switchTheme).toHaveBeenCalledWith("official.theme.dark")
     root.remove()
   })
 })

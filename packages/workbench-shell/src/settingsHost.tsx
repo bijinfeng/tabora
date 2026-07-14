@@ -40,6 +40,8 @@ export type SettingsHostCopy = {
   emptySection: string
   panelMissing: (panelId: string) => string
   sectionTitle: (sectionId: SettingsSectionId) => string
+  sectionDescription?: (sectionId: SettingsSectionId) => string
+  sectionMeta?: (sectionId: SettingsSectionId) => string
 }
 
 export function collectSettingsPanels(plugins: PluginLike[]): SettingsPanelDescriptor[] {
@@ -96,6 +98,27 @@ export function SettingsHost(props: SettingsHostProps) {
       SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ??
       "设置"
     )
+  }
+  const activeSectionDescription = () => {
+    const sectionId = activeSection()
+    const description = props.copy?.sectionDescription?.(sectionId)
+    if (description) return description
+    if (sectionId === "general") return "工作区、布局和基础行为。所有设置只影响当前个人工作台。"
+    if (sectionId === "appearance")
+      return "主题、背景和界面语言。视觉配置通过插件贡献和 token 应用。"
+    if (sectionId === "search") return "默认搜索源、启用状态和命令搜索行为。"
+    if (sectionId === "plugins") return "查看插件贡献能力、权限摘要和当前启用状态。"
+    return "Tabora 版本、协议和本地运行信息。"
+  }
+  const activeSectionMeta = () => {
+    const sectionId = activeSection()
+    const meta = props.copy?.sectionMeta?.(sectionId)
+    if (meta) return meta
+    if (sectionId === "general") return "本地保存"
+    if (sectionId === "appearance") return "即时生效"
+    if (sectionId === "search") return "快捷入口"
+    if (sectionId === "plugins") return `${activePanels().length} 项`
+    return "V2"
   }
   const workspaceSections = () =>
     SETTINGS_SECTIONS.filter((section) => ["general", "appearance", "search"].includes(section.id))
@@ -198,7 +221,14 @@ export function SettingsHost(props: SettingsHostProps) {
                 )}
               </Show>
             </nav>
-            <div class="settings-main">
+            <div class="settings-main" data-active-view={activeSection()}>
+              <div class="panel-head">
+                <div>
+                  <strong>{activeSectionTitle()}</strong>
+                  <span>{activeSectionDescription()}</span>
+                </div>
+                <span class="panel-meta">{activeSectionMeta()}</span>
+              </div>
               <div class="panel-view" classList={{ "is-active": true }} data-view={activeSection()}>
                 <Show
                   when={activeSection() !== "about"}

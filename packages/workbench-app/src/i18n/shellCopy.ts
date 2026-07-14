@@ -24,6 +24,20 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     if (sectionId === "about") return t("settingsHost.section.about")
     return t("settingsHost.group.plugins")
   }
+  const sectionDescription = (sectionId: SettingsSectionId) => {
+    if (sectionId === "general") return t("settingsHost.section.general.description")
+    if (sectionId === "appearance") return t("settingsHost.section.appearance.description")
+    if (sectionId === "search") return t("settingsHost.section.search.description")
+    if (sectionId === "about") return t("settingsHost.section.about.description")
+    return t("settingsHost.section.plugins.description")
+  }
+  const sectionMeta = (sectionId: SettingsSectionId) => {
+    if (sectionId === "general") return t("settingsHost.section.general.meta")
+    if (sectionId === "appearance") return t("settingsHost.section.appearance.meta")
+    if (sectionId === "search") return t("settingsHost.section.search.meta")
+    if (sectionId === "about") return t("settingsHost.section.about.meta")
+    return t("settingsHost.section.plugins.meta")
+  }
 
   return {
     sidebarTitle: t("settingsHost.sidebarTitle"),
@@ -35,6 +49,8 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     emptySection: t("settingsHost.emptySection"),
     panelMissing: (panelId: string) => t("settingsHost.panelMissing", { panelId }),
     sectionTitle,
+    sectionDescription,
+    sectionMeta,
   }
 }
 

@@ -174,9 +174,21 @@ export function createWorkbenchRuntimeBootstrap(
         "settingsHost.emptySection": "该分类下暂无设置内容",
         "settingsHost.panelMissing": "设置面板不可用：{{panelId}}",
         "settingsHost.section.general": "通用",
+        "settingsHost.section.general.description":
+          "工作区、布局和基础行为。所有设置只影响当前个人工作台。",
+        "settingsHost.section.general.meta": "本地保存",
         "settingsHost.section.appearance": "外观",
+        "settingsHost.section.appearance.description":
+          "主题、背景和界面语言。视觉配置通过插件贡献和 token 应用。",
+        "settingsHost.section.appearance.meta": "即时生效",
         "settingsHost.section.search": "搜索",
+        "settingsHost.section.search.description": "默认搜索源、启用状态和命令搜索行为。",
+        "settingsHost.section.search.meta": "快捷入口",
+        "settingsHost.section.plugins.description": "查看插件贡献能力、权限摘要和当前启用状态。",
+        "settingsHost.section.plugins.meta": "插件状态",
         "settingsHost.section.about": "关于",
+        "settingsHost.section.about.description": "Tabora 版本、协议和本地运行信息。",
+        "settingsHost.section.about.meta": "V2",
         "widget.removeAriaLabel": "移除 {{title}}",
         "pluginView.loadFailed": "插件视图加载失败",
         "pluginView.retry": "重试",
@@ -283,9 +295,24 @@ export function createWorkbenchRuntimeBootstrap(
         "settingsHost.emptySection": "No settings in this section",
         "settingsHost.panelMissing": "Settings panel unavailable: {{panelId}}",
         "settingsHost.section.general": "General",
+        "settingsHost.section.general.description":
+          "Workspace, layout, and base behavior. These settings only affect the current workbench.",
+        "settingsHost.section.general.meta": "Local",
         "settingsHost.section.appearance": "Appearance",
+        "settingsHost.section.appearance.description":
+          "Theme, background, and interface language from plugin contributions and tokens.",
+        "settingsHost.section.appearance.meta": "Live",
         "settingsHost.section.search": "Search",
+        "settingsHost.section.search.description":
+          "Default search provider, enabled providers, and command search behavior.",
+        "settingsHost.section.search.meta": "Shortcut",
+        "settingsHost.section.plugins.description":
+          "Review plugin contributions, permission summaries, and current enablement.",
+        "settingsHost.section.plugins.meta": "Plugin status",
         "settingsHost.section.about": "About",
+        "settingsHost.section.about.description":
+          "Tabora version, protocol, and local runtime information.",
+        "settingsHost.section.about.meta": "V2",
         "widget.removeAriaLabel": "Remove {{title}}",
         "pluginView.loadFailed": "Plugin view failed to load",
         "pluginView.retry": "Retry",

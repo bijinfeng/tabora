@@ -6,10 +6,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgb(var(--color-scrim) / 0.18);
   backdrop-filter: blur(2px);
   opacity: 0;
-  transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity var(--tbr-dur-slow, 240ms) var(--ease);
 }
 
 .settings-overlay.is-entering {
@@ -17,25 +17,17 @@
 }
 
 .settings-window {
-  width: 680px;
-  height: 390px;
+  width: min(760px, calc(100vw - 48px));
+  height: min(440px, calc(100vh - 64px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid rgb(var(--color-line-strong));
   border-radius: 10px;
   background: rgb(var(--color-surface));
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.1064);
+  box-shadow: 0 18px 44px rgb(var(--color-shadow-strong) / 0.11);
   transform: scale(0.95) translateY(12px);
-  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 大屏适配：使用视口相对尺寸 */
-@media (min-width: 1200px) {
-  .settings-window {
-    width: min(65vw, 1000px);
-    height: min(75vh, 800px);
-  }
+  transition: transform var(--tbr-dur-slow, 240ms) var(--ease);
 }
 
 .settings-window.is-entering {
@@ -60,6 +52,7 @@
   border-bottom: 0;
   color: rgb(var(--color-muted));
   font-size: 11px;
+  background: rgb(var(--color-surface));
 }
 
 .window-title {
@@ -111,6 +104,19 @@
   position: relative;
   cursor: pointer;
   flex-shrink: 0;
+  transition:
+    background var(--tbr-dur-fast) var(--ease),
+    border-color var(--tbr-dur-fast) var(--ease);
+}
+
+.icon-close:hover {
+  border-color: rgb(var(--color-line-strong));
+  background: rgb(var(--color-surface-hover));
+}
+
+.icon-close:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
 }
 
 .icon-close::before,
@@ -138,8 +144,8 @@
   flex: 1;
   display: grid;
   grid-template-columns: 154px minmax(0, 1fr);
-  gap: 10px;
-  padding: 10px;
+  gap: 0;
+  padding: 0;
   background: rgb(var(--color-surface));
   min-height: 0;
 }
@@ -156,6 +162,7 @@
 }
 
 .settings-nav {
+  margin: 10px 0 10px 10px;
   padding: 8px;
   gap: 3px;
   background: rgb(var(--color-surface-soft));
@@ -185,7 +192,20 @@
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 120ms;
+  transition:
+    background var(--tbr-dur-fast) var(--ease),
+    border-color var(--tbr-dur-fast) var(--ease),
+    color var(--tbr-dur-fast) var(--ease);
+}
+
+.nav-button:hover {
+  background: rgb(var(--color-surface-hover));
+  color: rgb(var(--color-text));
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
 }
 
 .nav-button.is-active {
@@ -206,15 +226,21 @@
 
 /* 面板内容 */
 .settings-main {
-  gap: 10px;
-  padding: 10px;
+  gap: 12px;
+  padding: 12px 14px 12px 16px;
+  border: 0;
+  border-radius: 0;
+  background: rgb(var(--color-surface));
 }
 
 .panel-head {
   display: flex;
-  align-items: start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 0 2px;
 }
 
 .panel-head strong {
@@ -225,18 +251,38 @@
 }
 
 .panel-head span {
+  display: block;
+  max-width: 310px;
   color: rgb(var(--color-muted));
   font-size: 11px;
   line-height: 1.35;
 }
 
+.panel-meta {
+  flex: none;
+  padding-top: 2px;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .panel-view {
   display: none;
-  gap: 8px;
+  gap: 14px;
+  min-height: 0;
 }
 
 .panel-view.is-active {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-panel-stack-host {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 /* 设置组 */

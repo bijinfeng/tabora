@@ -1,7 +1,7 @@
 @media (max-width: 760px) {
   .settings-window {
-    width: min(680px, calc(100vw - 32px));
-    height: min(390px, calc(100vh - 64px));
+    width: calc(100vw - 32px);
+    height: min(440px, calc(100vh - 64px));
   }
 }
 

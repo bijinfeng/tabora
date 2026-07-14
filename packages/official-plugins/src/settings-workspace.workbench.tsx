@@ -1,4 +1,14 @@
-import { FieldRow, InlineError, Input } from "@tabora/ui"
+import {
+  Button,
+  Checkbox,
+  FieldRow,
+  InlineError,
+  Input,
+  Kbd,
+  SegmentedControl,
+  Select,
+  Switch,
+} from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
@@ -7,6 +17,12 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   const [importWarnings, setImportWarnings] = createSignal<string[]>([])
   const [importSuccess, setImportSuccess] = createSignal(false)
   const [newWorkspaceName, setNewWorkspaceName] = createSignal("")
+  const [defaultColumns, setDefaultColumns] = createSignal(4)
+  const [focusSearchOnOpen, setFocusSearchOnOpen] = createSignal(true)
+  const [restoreCardSize, setRestoreCardSize] = createSignal(true)
+  const [restoreLayout, setRestoreLayout] = createSignal(true)
+  const [restoreSize, setRestoreSize] = createSignal(true)
+  const [restoreFilter, setRestoreFilter] = createSignal(false)
 
   async function handleExport() {
     try {
@@ -59,23 +75,201 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   const workspaces = () => props.workspaces ?? []
+  const workspaceOptions = () => {
+    const list = workspaces().length > 0 ? workspaces() : [props.workspace]
+    return list.map((workspace) => ({ value: workspace.id, label: workspace.name }))
+  }
+  const layoutOptions = () =>
+    props.layouts.map((layout) => ({ value: layout.id, label: layoutShortLabel(layout) }))
+  const activeLayout = () =>
+    props.layouts.find((layout) => layout.id === props.workspace.activeLayoutId)
+  const widgetInstanceCount = () =>
+    Object.values(props.workspace.regions).reduce(
+      (total, region) => total + region.instances.length,
+      0,
+    )
+  const stepColumns = (delta: number) =>
+    setDefaultColumns((value) => Math.min(6, Math.max(3, value + delta)))
 
   return (
     <div class="settings-panel-stack">
       <section class="set-group">
-        <div class="set-group-title">工作台布局</div>
-        <p class="settings-help">
-          布局是插件。当前可用布局来自 layout contribution，Focus 布局用于深度专注工作流。
-        </p>
-        <div class="set-hint">不同的布局适合不同的使用习惯和工作流程。</div>
+        <div class="set-group-title">
+          工作区<span>本地保存</span>
+        </div>
+        <FieldRow
+          class="settings-form-row"
+          label="当前工作区"
+          description={`${props.workspace.name} · 保存布局、卡片和背景配置`}
+          trailing={
+            <Select<string>
+              size="sm"
+              value={props.workspace.id}
+              options={workspaceOptions()}
+              disabled={workspaces().length <= 1 || !props.host.switchWorkspace}
+              onChange={(workspaceId) => void props.host.switchWorkspace?.(workspaceId)}
+              aria-label="当前工作区"
+            />
+          }
+        />
+        <FieldRow
+          class="settings-form-row"
+          label="默认布局"
+          description="切换新标签页打开时使用的布局插件"
+          trailing={
+            <Show
+              when={layoutOptions().length > 0}
+              fallback={<span class="settings-row-meta">{props.workspace.activeLayoutId}</span>}
+            >
+              <SegmentedControl<string>
+                size="sm"
+                value={props.workspace.activeLayoutId}
+                options={layoutOptions()}
+                onChange={(layoutId) => void props.host.switchLayout?.(layoutId)}
+                aria-label="默认布局"
+              />
+            </Show>
+          }
+        />
+        <FieldRow
+          class="settings-form-row"
+          label="默认卡片列数"
+          description="Dashboard 首次打开时使用的网格密度"
+          trailing={
+            <div class="settings-stepper" aria-label="默认卡片列数">
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label="减少默认卡片列数"
+                onClick={() => stepColumns(-1)}
+              >
+                -
+              </Button>
+              <strong>{defaultColumns()}</strong>
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label="增加默认卡片列数"
+                onClick={() => stepColumns(1)}
+              >
+                +
+              </Button>
+            </div>
+          }
+        />
       </section>
 
       <section class="set-group">
-        <div class="set-group-title">工作区</div>
+        <div class="set-group-title">
+          启动行为<span>快捷入口</span>
+        </div>
         <FieldRow
-          label="当前工作区"
-          description="存储布局、主题、背景和卡片配置"
-          trailing={<span class="settings-row-meta">{props.workspace.name}</span>}
+          class="settings-form-row"
+          label="打开时聚焦搜索"
+          description="新标签页加载后自动把焦点放到命令搜索框"
+          trailing={
+            <Switch
+              size="sm"
+              checked={focusSearchOnOpen()}
+              onChange={setFocusSearchOnOpen}
+              aria-label="打开时聚焦搜索"
+            />
+          }
+        />
+        <FieldRow
+          class="settings-form-row"
+          label="保留上次卡片尺寸"
+          description="刷新后恢复每张卡片的 S / M / L 状态"
+          trailing={
+            <Switch
+              size="sm"
+              checked={restoreCardSize()}
+              onChange={setRestoreCardSize}
+              aria-label="保留上次卡片尺寸"
+            />
+          }
+        />
+        <FieldRow
+          class="settings-form-row"
+          label="全局命令快捷键"
+          description="从任意输入状态唤起命令搜索"
+          trailing={
+            <span class="settings-keybind" aria-label="全局命令快捷键">
+              <Kbd>⌘</Kbd>
+              <Kbd>K</Kbd>
+            </span>
+          }
+        />
+        <FieldRow
+          class="settings-form-row"
+          label="启动后恢复"
+          description="选择刷新后要自动恢复的个人状态"
+          trailing={
+            <div class="settings-check-chip-list" aria-label="启动后恢复">
+              <span class="settings-check-chip">
+                <Checkbox checked={restoreLayout()} onChange={setRestoreLayout} label="布局" />
+              </span>
+              <span class="settings-check-chip">
+                <Checkbox checked={restoreSize()} onChange={setRestoreSize} label="尺寸" />
+              </span>
+              <span class="settings-check-chip">
+                <Checkbox checked={restoreFilter()} onChange={setRestoreFilter} label="筛选" />
+              </span>
+            </div>
+          }
+        />
+      </section>
+
+      <section class="set-group">
+        <div class="set-group-title">
+          工作区管理<span>导入导出</span>
+        </div>
+        <FieldRow
+          class="settings-form-row"
+          label="新建工作区"
+          description="创建独立的布局、主题和卡片配置"
+          trailing={
+            <div class="workspace-create-row">
+              <Input
+                size="sm"
+                id="ws-new-name"
+                value={newWorkspaceName()}
+                onInput={(value: string) => setNewWorkspaceName(value)}
+                onKeyDown={(event: KeyboardEvent) => event.key === "Enter" && void handleCreate()}
+                placeholder="新建工作区"
+                aria-label="新建工作区名称"
+              />
+              <Button
+                size="sm"
+                variant="subtle"
+                disabled={!newWorkspaceName().trim()}
+                onClick={() => void handleCreate()}
+              >
+                创建
+              </Button>
+            </div>
+          }
+        />
+        <FieldRow
+          class="settings-form-row"
+          label="卡片状态"
+          description="按实例保存卡片排序、尺寸和所在区域"
+          trailing={<span class="settings-row-meta">{widgetInstanceCount()} 个实例</span>}
+        />
+        <FieldRow
+          class="settings-form-row"
+          label="备份与恢复"
+          description="导出当前工作区 JSON，或从本地文件导入"
+          trailing={
+            <div class="workspace-actions">
+              <Button size="sm" variant="secondary" onClick={() => void handleExport()}>
+                导出
+              </Button>
+              <Button size="sm" variant="secondary" onClick={handleImport}>
+                导入
+              </Button>
+            </div>
+          }
         />
         <Show when={workspaces().length > 1}>
           <div class="workspace-list">
@@ -93,22 +287,22 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
                   </span>
                   <div class="workspace-list-actions">
                     <Show when={workspace.id !== props.workspace.id}>
-                      <button
-                        type="button"
-                        class="settings-mini-btn"
+                      <Button
+                        size="sm"
+                        variant="subtle"
                         onClick={() => void props.host.switchWorkspace?.(workspace.id)}
                       >
                         切换
-                      </button>
+                      </Button>
                     </Show>
                     <Show when={workspace.id !== "default"}>
-                      <button
-                        type="button"
-                        class="settings-mini-btn danger"
+                      <Button
+                        size="sm"
+                        variant="danger-subtle"
                         onClick={() => void props.host.deleteWorkspace?.(workspace.id)}
                       >
                         删除
-                      </button>
+                      </Button>
                     </Show>
                   </div>
                 </div>
@@ -116,39 +310,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
             </For>
           </div>
         </Show>
-        <FieldRow
-          label="新建工作区"
-          description="创建独立的布局、主题和卡片配置"
-          trailing={
-            <div class="workspace-create-row">
-              <Input
-                size="sm"
-                id="ws-new-name"
-                value={newWorkspaceName()}
-                onInput={(value: string) => setNewWorkspaceName(value)}
-                onKeyDown={(event: KeyboardEvent) => event.key === "Enter" && void handleCreate()}
-                placeholder="新建工作区"
-                aria-label="新建工作区名称"
-              />
-              <button
-                type="button"
-                class="settings-mini-btn"
-                disabled={!newWorkspaceName().trim()}
-                onClick={() => void handleCreate()}
-              >
-                创建
-              </button>
-            </div>
-          }
-        />
-        <div class="workspace-actions">
-          <button type="button" class="settings-mini-btn" onClick={() => void handleExport()}>
-            导出
-          </button>
-          <button type="button" class="settings-mini-btn" onClick={handleImport}>
-            导入
-          </button>
-        </div>
         <Show when={importError()}>
           <InlineError>{importError()!}</InlineError>
         </Show>
@@ -163,4 +324,12 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
       </section>
     </div>
   )
+}
+
+function layoutShortLabel(layout: SettingsPanelViewProps["layouts"][number]) {
+  const key = `${layout.id} ${layout.title}`.toLowerCase()
+  if (key.includes("dashboard") || key.includes("仪表盘")) return "Dashboard"
+  if (key.includes("stream") || key.includes("focus") || key.includes("专注")) return "Stream"
+  if (key.includes("masonry") || key.includes("diy") || key.includes("瀑布")) return "DIY"
+  return layout.title
 }

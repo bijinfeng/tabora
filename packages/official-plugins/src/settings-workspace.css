@@ -1,29 +1,53 @@
 [data-tabora-plugin-id="official.settings.workspace"] .settings-panel-stack {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .set-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0 0 2px;
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-group + .set-group {
+  margin-top: 2px;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .set-group-title {
-  color: rgb(var(--color-muted));
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px;
+  color: rgb(var(--color-text));
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .set-group-title span {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  color: rgb(var(--color-subtle));
+  font-size: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .settings-help {
   margin: 0;
   color: rgb(var(--color-muted));
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .settings-help code {
@@ -39,277 +63,327 @@
   font-size: 10px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .set-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-width: 0;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .set-row-info {
-  min-width: 0;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .set-row-label {
-  color: rgb(var(--color-text));
-  font-size: 13px;
-  font-weight: 500;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .set-row-desc {
-  margin-top: 2px;
-  color: rgb(var(--color-muted));
-  font-size: 11px;
-}
-
 [data-tabora-plugin-id="official.settings.workspace"] .settings-row-meta {
   flex-shrink: 0;
   color: rgb(var(--color-muted));
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .layout-picker,
-[data-tabora-plugin-id="official.settings.workspace"] .theme-card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .layout-option,
-[data-tabora-plugin-id="official.settings.workspace"] .theme-card {
-  display: flex;
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row.tbr-field-row,
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-item,
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.tbr-list-row {
   min-width: 0;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px;
-  border: 1.5px solid rgb(var(--color-line));
-  border-radius: var(--radius);
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-  font-family: inherit;
-  text-align: center;
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    color 120ms ease;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, rgb(var(--color-surface-soft)) 58%, rgb(var(--color-surface)));
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .layout-option:hover,
-[data-tabora-plugin-id="official.settings.workspace"] .theme-card:hover {
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row.tbr-field-row:hover,
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list-item:hover,
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.tbr-list-row:hover {
   border-color: rgb(var(--color-line-strong));
-  background: rgb(var(--color-surface-soft));
+  background: color-mix(in srgb, rgb(var(--color-surface-hover)) 72%, rgb(var(--color-surface)));
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .layout-option.active,
-[data-tabora-plugin-id="official.settings.workspace"] .theme-card.active {
-  border-color: rgb(var(--color-accent));
-  background: rgb(var(--color-accent) / 0.1);
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row.tbr-field-row {
+  display: grid;
+  gap: 6px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .layout-option-icon {
-  font-size: 28px;
-  line-height: 1;
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .layout-option-name,
-[data-tabora-plugin-id="official.settings.workspace"] .theme-card-name {
-  overflow-wrap: anywhere;
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-info {
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-label {
+  overflow: hidden;
+  color: rgb(var(--color-text));
   font-size: 12px;
   font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .theme-card-glyph {
-  font-size: 20px;
-  line-height: 1;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .theme-card-desc {
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-description,
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-helper {
+  overflow: hidden;
   color: rgb(var(--color-muted));
-  font-size: 10px;
+  font-size: 11px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .bg-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-trailing {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item {
-  min-height: 54px;
-  padding: 8px;
-  border: 1.5px solid rgb(var(--color-line));
-  border-radius: var(--radius);
-  background: rgb(var(--color-surface-soft));
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-select-trigger {
+  width: 180px;
+  min-width: 132px;
+  max-width: 100%;
+  height: 30px;
+  border-radius: 7px;
+  font-size: 11px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-input-wrapper {
+  width: 180px;
+  max-width: 100%;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-input {
+  height: 30px;
+  border-radius: 7px;
+  font-size: 11px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-segmented {
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-segmented-item {
+  height: 28px;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"]
+  .settings-form-row
+  .tbr-segmented-item[data-pressed] {
+  border-color: rgb(var(--color-accent));
+  background: rgb(var(--color-accent-soft));
   color: rgb(var(--color-text));
-  font-family: inherit;
+  box-shadow: none;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-stepper {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
+  border-radius: 7px;
+  background: rgb(var(--color-surface));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-stepper .tbr-btn {
+  width: 28px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgb(var(--color-muted));
+  font-size: 14px;
+  font-weight: 700;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-stepper strong {
+  min-width: 42px;
+  padding: 0 8px;
+  border-inline: 1px solid rgb(var(--color-line));
+  color: rgb(var(--color-text));
+  text-align: center;
   font-size: 11px;
   font-weight: 650;
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    transform 120ms ease;
+  line-height: 30px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item:hover {
-  border-color: rgb(var(--color-line-strong));
+[data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-switch {
+  gap: 0;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .bg-item.active {
+[data-tabora-plugin-id="official.settings.workspace"]
+  .settings-form-row
+  .tbr-switch[data-size="sm"]
+  .tbr-switch-control {
+  width: 32px;
+  height: 18px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"]
+  .settings-form-row
+  .tbr-switch[data-size="sm"]
+  .tbr-switch-thumb {
+  width: 14px;
+  height: 14px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"]
+  .settings-form-row
+  .tbr-switch[data-size="sm"][data-checked]
+  .tbr-switch-thumb {
+  left: 16px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-keybind {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
+  border-radius: 7px;
+  background: rgb(var(--color-surface));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-keybind .tbr-kbd {
+  min-width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 5px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-check-chip-list {
+  min-width: 220px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-check-chip {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-muted));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-check-chip:hover,
+[data-tabora-plugin-id="official.settings.workspace"]
+  .settings-check-chip:has(.tbr-checkbox[data-checked]) {
   border-color: rgb(var(--color-accent));
-  box-shadow: inset 0 0 0 1px rgb(var(--color-accent));
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-text));
 }
 
+[data-tabora-plugin-id="official.settings.workspace"] .settings-check-chip .tbr-checkbox {
+  gap: 6px;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-check-chip .tbr-checkbox-control {
+  width: 12px;
+  height: 12px;
+  border-width: 1px;
+  border-radius: 3px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"]
+  .settings-check-chip
+  .tbr-checkbox-control
+  svg {
+  width: 11px;
+  height: 11px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-check-chip .tbr-checkbox-label {
+  font-size: 11px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 88%, transparent);
+  border-radius: 7px;
+  background: var(--tone);
+  cursor: pointer;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-swatch.is-active {
+  border-color: rgb(var(--color-accent));
+  outline: 3px solid rgb(var(--color-accent) / 0.18);
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-swatch:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-range-control {
+  min-width: 170px;
+  display: grid;
+  grid-template-columns: minmax(92px, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  font-weight: 600;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-range-control .tbr-slider {
+  height: 20px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .settings-range-control span {
+  text-align: right;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-list,
 [data-tabora-plugin-id="official.settings.workspace"] .settings-provider-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-  padding: 8px 12px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 8px;
-  background: rgb(var(--color-surface));
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.active {
-  border-color: rgb(var(--color-accent) / 0.45);
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.disabled {
-  opacity: 0.58;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-main {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-main:disabled {
-  cursor: not-allowed;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-kind {
-  flex-shrink: 0;
-  color: rgb(var(--color-muted));
-  font-size: 12px;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-text {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-title {
-  color: rgb(var(--color-text));
-  font-size: 13px;
-  font-weight: 650;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-alias {
-  color: rgb(var(--color-muted));
-  font-size: 11px;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .search-provider-actions {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 10px;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .provider-state {
-  min-width: 42px;
-  color: rgb(var(--color-accent));
-  font-size: 12px;
-  font-weight: 600;
-  text-align: right;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .sw-track {
-  position: relative;
-  width: 32px;
-  height: 18px;
-  border-radius: 999px;
-  background: rgb(var(--color-line-strong));
-  transition: background 120ms ease;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .sw-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: rgb(var(--color-surface));
-  box-shadow: 0 1px 3px rgb(var(--color-shadow) / 0.18);
-  transition: transform 120ms ease;
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap input:checked + .sw-track {
-  background: rgb(var(--color-accent));
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .sw-wrap input:checked + .sw-track .sw-thumb {
-  transform: translateX(14px);
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .workspace-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-  padding: 8px 12px;
-  border: 1px solid rgb(var(--color-line));
-  border-radius: 8px;
-  background: rgb(var(--color-surface));
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-name {
   min-width: 0;
+  overflow: hidden;
   color: rgb(var(--color-muted));
   font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-name.active {
@@ -320,39 +394,121 @@
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-actions,
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-actions,
 [data-tabora-plugin-id="official.settings.workspace"] .workspace-create-row {
-  display: flex;
+  display: inline-flex;
+  min-width: 0;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 7px;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn {
-  display: inline-flex;
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-create-row {
+  width: 244px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .workspace-create-row .tbr-input {
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.tbr-list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: center;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: rgb(var(--color-accent) / 0.1);
-  color: rgb(var(--color-accent));
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
+  gap: 10px;
+  width: 100%;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.active {
+  border-color: color-mix(in srgb, rgb(var(--color-accent)) 34%, rgb(var(--color-line)));
+  background: color-mix(in srgb, rgb(var(--color-accent-soft)) 42%, rgb(var(--color-surface)));
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.disabled {
+  opacity: 0.58;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row .tbr-list-row-main {
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row .tbr-list-row-primary {
+  min-width: 0;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-row .tbr-list-row-trailing {
+  justify-content: flex-end;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn:hover {
-  background: rgb(var(--color-accent) / 0.16);
-}
-
-[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn:disabled {
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-main:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
 }
 
-[data-tabora-plugin-id="official.settings.workspace"] .settings-mini-btn.danger {
-  background: rgb(var(--color-danger) / 0.1);
-  color: rgb(var(--color-danger));
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-main:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-kind {
+  flex-shrink: 0;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  font-weight: 650;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-title {
+  overflow: hidden;
+  color: rgb(var(--color-text));
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-alias {
+  overflow: hidden;
+  color: rgb(var(--color-muted));
+  font-size: 11px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .search-provider-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+[data-tabora-plugin-id="official.settings.workspace"] .provider-state {
+  min-width: 42px;
+  color: rgb(var(--color-accent));
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
 }
 
 [data-tabora-plugin-id="official.settings.workspace"] .settings-inline-error {
@@ -376,21 +532,36 @@
   font-size: 12px;
 }
 
-@media (max-width: 500px) {
-  [data-tabora-plugin-id="official.settings.workspace"] .layout-picker,
-  [data-tabora-plugin-id="official.settings.workspace"] .theme-card-grid,
-  [data-tabora-plugin-id="official.settings.workspace"] .bg-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 560px) {
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-main,
+  [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-item,
+  [data-tabora-plugin-id="official.settings.workspace"] .search-provider-row.tbr-list-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  [data-tabora-plugin-id="official.settings.workspace"] .set-row,
-  [data-tabora-plugin-id="official.settings.workspace"] .search-provider-row {
-    align-items: flex-start;
-    flex-direction: column;
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-label,
+  [data-tabora-plugin-id="official.settings.workspace"]
+    .settings-form-row
+    .tbr-field-row-description,
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-helper {
+    white-space: normal;
   }
 
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-field-row-trailing,
+  [data-tabora-plugin-id="official.settings.workspace"] .workspace-list-actions,
+  [data-tabora-plugin-id="official.settings.workspace"] .workspace-actions,
+  [data-tabora-plugin-id="official.settings.workspace"] .workspace-create-row,
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-check-chip-list,
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-swatch-row,
   [data-tabora-plugin-id="official.settings.workspace"] .search-provider-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+  }
+
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-select-trigger,
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-form-row .tbr-input-wrapper,
+  [data-tabora-plugin-id="official.settings.workspace"] .workspace-create-row,
+  [data-tabora-plugin-id="official.settings.workspace"] .settings-range-control {
+    width: 100%;
   }
 }
