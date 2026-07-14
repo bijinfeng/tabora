@@ -135,9 +135,17 @@
         color: #fff;
       }
 
+      .btn:disabled,
+      .btn-primary:disabled {
+        border-color: var(--wb-line);
+        background: var(--wb-surface-soft);
+        color: var(--wb-text-subtle);
+        opacity: 1;
+      }
+
       .settings-window {
-        width: 680px;
-        height: 390px;
+        width: 760px;
+        height: 440px;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -145,16 +153,6 @@
         border-radius: 10px;
         background: var(--wb-surface);
         box-shadow: 0 18px 44px color-mix(in srgb, var(--wb-shadow-floating) 76%, transparent);
-      }
-
-      .settings-window.modal-sm {
-        width: 560px;
-        height: 330px;
-      }
-
-      .settings-window.modal-lg {
-        width: 760px;
-        height: 440px;
       }
 
       .window-head,
@@ -173,7 +171,8 @@
         border-top: 1px solid var(--wb-line);
         border-bottom: 0;
         color: var(--wb-text-muted);
-        font-size: 11px;
+        font-size: 10px;
+        background: var(--wb-surface);
       }
 
       .window-title {
@@ -482,6 +481,12 @@
         min-width: 0;
       }
 
+      .account-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr) auto;
+        gap: 7px;
+      }
+
       .range-control {
         min-width: 170px;
         display: grid;
@@ -553,6 +558,10 @@
         height: 12px;
         margin: 0;
         accent-color: var(--wb-accent);
+      }
+
+      .is-muted-panel {
+        opacity: 0.72;
       }
 
       .keybind {
@@ -777,11 +786,18 @@
 
       .ai-status-grid {
         display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .sync-status-grid {
+        display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 7px;
       }
 
-      .ai-status-card {
+      .ai-status-card,
+      .sync-status-card {
         min-width: 0;
         display: grid;
         gap: 5px;
@@ -791,7 +807,8 @@
         background: var(--wb-surface);
       }
 
-      .ai-status-card strong {
+      .ai-status-card strong,
+      .sync-status-card strong {
         overflow: hidden;
         font-size: 12px;
         line-height: 1.25;
@@ -799,7 +816,8 @@
         text-overflow: ellipsis;
       }
 
-      .ai-status-card span {
+      .ai-status-card span,
+      .sync-status-card span {
         overflow: hidden;
         color: var(--wb-text-muted);
         font-size: 10px;
@@ -808,18 +826,21 @@
         text-overflow: ellipsis;
       }
 
-      .ai-status-card .badge {
+      .ai-status-card .badge,
+      .sync-status-card .badge {
         justify-self: start;
       }
 
       .ai-model-grid,
-      .ai-grant-list {
+      .ai-grant-list,
+      .sync-list {
         display: grid;
         gap: 7px;
       }
 
       .ai-model-row,
-      .ai-grant-row {
+      .ai-grant-row,
+      .sync-row {
         min-width: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -832,14 +853,16 @@
       }
 
       .ai-model-copy,
-      .ai-grant-copy {
+      .ai-grant-copy,
+      .sync-copy {
         min-width: 0;
         display: grid;
         gap: 3px;
       }
 
       .ai-model-copy strong,
-      .ai-grant-copy strong {
+      .ai-grant-copy strong,
+      .sync-copy strong {
         overflow: hidden;
         font-size: 12px;
         line-height: 1.25;
@@ -848,7 +871,8 @@
       }
 
       .ai-model-copy span,
-      .ai-grant-copy span {
+      .ai-grant-copy span,
+      .sync-copy span {
         overflow: hidden;
         color: var(--wb-text-muted);
         font-size: 10px;
@@ -871,20 +895,27 @@
         white-space: nowrap;
       }
 
+      .sync-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 5px;
+      }
+
       .toast {
         min-width: 0;
         display: inline-flex;
         align-items: center;
         gap: 7px;
-        color: var(--wb-text-muted);
+        color: var(--wb-text-subtle);
       }
 
       .toast::before {
         content: "";
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
-        background: var(--wb-accent);
+        background: var(--wb-line-strong);
       }
 
       .footer-actions {
@@ -893,32 +924,15 @@
         gap: 6px;
       }
 
-      .settings-window.modal-sm .settings-body {
-        grid-template-columns: 124px minmax(0, 1fr);
-      }
-
-      .settings-window.modal-sm .setting-line,
-      .settings-window.modal-sm .plugin-line {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .settings-window.modal-sm .plugin-meta {
-        justify-content: space-between;
-      }
-
-      .settings-window.modal-sm .plugin-config-shell,
-      .settings-window.modal-sm .schema-grid,
-      .settings-window.modal-sm .ai-status-grid,
-      .settings-window.modal-sm .ai-model-row,
-      .settings-window.modal-sm .ai-grant-row {
-        grid-template-columns: 1fr;
-      }
-
       .settings-window.modal-lg .panel-view[data-view="plugins"].is-active {
         grid-template-columns: 1fr 1fr;
       }
 
       .settings-window.modal-lg .panel-view[data-view="ai"].is-active {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .settings-window.modal-lg .panel-view[data-view="account"].is-active {
         grid-template-columns: 1fr 1fr;
       }
 
@@ -940,25 +954,422 @@
   </head>
   <body>
     <main class="prototype" aria-label="设置窗口独立原型">
-      <section class="modal-stage" aria-label="设置窗口打开状态">
+      <section class="modal-stage" aria-label="设置窗口打开状态" data-content-density="flat">
+        <style>
+          .modal-stage[data-content-density="flat"] .settings-body {
+            gap: 0;
+            padding: 0;
+            background: var(--wb-surface);
+          }
+
+          .modal-stage[data-content-density="flat"] .settings-nav {
+            margin: 10px 0 10px 10px;
+          }
+
+          .modal-stage[data-content-density="flat"] .settings-main {
+            gap: 12px;
+            padding: 12px 14px 12px 16px;
+            border: 0;
+            border-radius: 0;
+            background: var(--wb-surface);
+          }
+
+          .modal-stage[data-content-density="flat"] .panel-head {
+            align-items: center;
+            min-height: 38px;
+            padding: 0 0 2px;
+            border-bottom: 0;
+          }
+
+          .modal-stage[data-content-density="flat"] .panel-head span {
+            max-width: 310px;
+            display: block;
+            color: var(--wb-text-subtle);
+          }
+
+          .modal-stage[data-content-density="flat"]
+            .settings-main[data-active-view="account"]
+            .panel-head {
+            display: none;
+          }
+
+          .modal-stage[data-content-density="flat"] .panel-view {
+            gap: 14px;
+            align-content: start;
+          }
+
+          .modal-stage[data-content-density="flat"] .setting-group {
+            gap: 8px;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+          }
+
+          .modal-stage[data-content-density="flat"] .setting-group + .setting-group {
+            margin-top: 2px;
+            padding-top: 0;
+          }
+
+          .modal-stage[data-content-density="flat"] .group-title {
+            min-height: 22px;
+            padding: 0 2px;
+            color: var(--wb-text);
+            font-size: 11px;
+            letter-spacing: 0.01em;
+          }
+
+          .modal-stage[data-content-density="flat"] .group-title span {
+            height: auto;
+            display: inline-flex;
+            align-items: center;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: var(--wb-text-subtle);
+          }
+
+          .modal-stage[data-content-density="flat"] .setting-line,
+          .modal-stage[data-content-density="flat"] .plugin-line,
+          .modal-stage[data-content-density="flat"] .ai-model-row,
+          .modal-stage[data-content-density="flat"] .ai-grant-row,
+          .modal-stage[data-content-density="flat"] .sync-row,
+          .modal-stage[data-content-density="flat"] .plugin-select,
+          .modal-stage[data-content-density="flat"] .schema-chip {
+            min-height: 42px;
+            padding: 9px 10px;
+            border: 1px solid color-mix(in srgb, var(--wb-line) 88%, transparent);
+            border-radius: 9px;
+            background: color-mix(in srgb, var(--wb-surface-soft) 58%, var(--wb-surface));
+          }
+
+          .modal-stage[data-content-density="flat"] .setting-line:hover,
+          .modal-stage[data-content-density="flat"] .plugin-line:hover,
+          .modal-stage[data-content-density="flat"] .plugin-select:hover {
+            border-color: var(--wb-line-strong);
+            background: color-mix(in srgb, var(--wb-surface-hover) 72%, var(--wb-surface));
+          }
+
+          .modal-stage[data-content-density="flat"] .ai-status-grid,
+          .modal-stage[data-content-density="flat"] .sync-status-grid {
+            gap: 8px;
+            overflow: visible;
+            margin-top: 4px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+          }
+
+          .modal-stage[data-content-density="flat"] .ai-status-card,
+          .modal-stage[data-content-density="flat"] .sync-status-card {
+            padding: 10px;
+            border: 1px solid color-mix(in srgb, var(--wb-line) 88%, transparent);
+            border-radius: 9px;
+            background: color-mix(in srgb, var(--wb-surface-soft) 62%, var(--wb-surface));
+          }
+
+          .modal-stage[data-content-density="flat"] .ai-model-grid,
+          .modal-stage[data-content-density="flat"] .ai-grant-list,
+          .modal-stage[data-content-density="flat"] .sync-list,
+          .modal-stage[data-content-density="flat"] .plugin-config-list,
+          .modal-stage[data-content-density="flat"] .plugin-config-form,
+          .modal-stage[data-content-density="flat"] .schema-grid {
+            gap: 8px;
+          }
+
+          .modal-stage[data-content-density="flat"] .plugin-config-shell {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+
+          .modal-stage[data-content-density="flat"] .plugin-select.is-active {
+            border-color: var(--wb-accent);
+            background: var(--wb-accent-soft);
+            color: var(--wb-accent);
+          }
+
+          .modal-stage[data-content-density="flat"] .segmented {
+            gap: 6px;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+          }
+
+          .modal-stage[data-content-density="flat"] .segmented button {
+            height: 28px;
+            border: 1px solid color-mix(in srgb, var(--wb-line) 88%, transparent);
+            border-radius: 8px;
+            background: var(--wb-surface);
+          }
+
+          .modal-stage[data-content-density="flat"] .segmented button.is-active {
+            border-color: var(--wb-accent);
+            background: var(--wb-accent-soft);
+            color: var(--wb-text);
+            box-shadow: none;
+          }
+
+          .modal-stage[data-content-density="flat"] .check-chip {
+            height: 28px;
+            border-color: color-mix(in srgb, var(--wb-line) 88%, transparent);
+            border-radius: 8px;
+            background: var(--wb-surface);
+          }
+
+          .modal-stage[data-content-density="flat"] .check-chip:has(input:checked) {
+            border-color: var(--wb-accent);
+            background: var(--wb-accent-soft);
+            color: var(--wb-text);
+          }
+
+          .modal-stage[data-content-density="flat"] .badge {
+            border: 1px solid color-mix(in srgb, var(--wb-accent) 20%, transparent);
+          }
+
+          .modal-stage[data-content-density="flat"] .badge-muted {
+            border-color: color-mix(in srgb, var(--wb-line) 70%, transparent);
+          }
+
+          .modal-stage[data-content-density="flat"] .danger-line {
+            border-color: color-mix(in srgb, var(--wb-danger) 28%, var(--wb-line));
+            background: color-mix(in srgb, var(--wb-danger-soft) 72%, var(--wb-surface));
+          }
+
+          .modal-stage[data-content-density="flat"] .account-entry {
+            min-height: 48px;
+            display: grid;
+            grid-template-columns: 28px minmax(0, 1fr);
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 7px;
+            padding: 7px;
+            border: 1px solid color-mix(in srgb, var(--wb-line) 78%, transparent);
+            border-radius: 8px;
+            background: color-mix(in srgb, var(--wb-surface-soft) 62%, var(--wb-surface));
+            color: var(--wb-text);
+            text-align: left;
+          }
+
+          .modal-stage[data-content-density="flat"] .account-entry.is-active {
+            border-color: color-mix(in srgb, var(--wb-accent) 34%, var(--wb-line));
+            background: color-mix(in srgb, var(--wb-accent-soft) 72%, var(--wb-surface));
+          }
+
+          .modal-stage[data-content-density="flat"] .account-avatar {
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid color-mix(in srgb, var(--wb-accent) 28%, var(--wb-line));
+            border-radius: 999px;
+            background: var(--wb-accent-soft);
+            color: var(--wb-accent);
+            font-weight: 760;
+          }
+
+          .modal-stage[data-content-density="flat"] .account-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 11px;
+          }
+
+          .modal-stage[data-content-density="flat"] .account-nav-copy {
+            min-width: 0;
+            display: grid;
+            gap: 2px;
+          }
+
+          .modal-stage[data-content-density="flat"] .account-nav-copy strong {
+            overflow: hidden;
+            font-size: 11px;
+            line-height: 1.2;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+
+          .modal-stage[data-content-density="flat"] .account-nav-copy span {
+            overflow: hidden;
+            color: var(--wb-text-subtle);
+            font-size: 10px;
+            line-height: 1.25;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+
+          .modal-stage[data-content-density="flat"]
+            .settings-window.modal-lg
+            .panel-view[data-view="ai"].is-active,
+          .modal-stage[data-content-density="flat"]
+            .settings-window.modal-lg
+            .panel-view[data-view="account"].is-active {
+            gap: 14px;
+          }
+
+          .modal-stage[data-content-density="flat"]
+            .settings-window.modal-lg
+            .panel-view[data-view="plugins"].is-active {
+            grid-template-columns: 1fr;
+            gap: 14px;
+          }
+
+          .modal-stage[data-content-density="flat"]
+            .settings-window.modal-lg
+            .panel-view[data-view="ai"].is-active {
+            grid-template-columns: 1fr;
+            gap: 14px;
+          }
+
+          .modal-stage[data-content-density="flat"]
+            .settings-window.modal-lg
+            .panel-view[data-view="account"].is-active {
+            grid-template-columns: 1fr;
+            align-content: center;
+            justify-items: center;
+          }
+
+          .modal-stage[data-content-density="flat"]
+            .settings-main[data-active-view="account"]
+            #view-account {
+            min-height: 100%;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account {
+            min-height: 220px;
+            max-width: none;
+            align-content: center;
+            justify-items: center;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .account-auth-panel {
+            display: grid;
+            width: min(100%, 322px);
+            gap: 10px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .account-auth-form {
+            display: grid;
+            gap: 10px;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-fields-shell {
+            display: grid;
+            gap: 8px;
+            overflow: visible;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-fields-shell:focus-within {
+            box-shadow: none;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-field {
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr);
+            align-items: center;
+            min-height: 38px;
+            gap: 8px;
+            padding: 0 10px;
+            border: 1px solid color-mix(in srgb, var(--wb-line) 88%, transparent);
+            border-radius: 9px;
+            background: color-mix(in srgb, var(--wb-surface-soft) 58%, var(--wb-surface));
+            color: var(--wb-text-muted);
+            font-size: 11px;
+            font-weight: 600;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-field:focus-within {
+            border-color: color-mix(in srgb, var(--wb-accent) 62%, var(--wb-line));
+            background: var(--wb-surface);
+            box-shadow: 0 0 0 3px var(--wb-focus-ring);
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-field .input,
+          .modal-stage[data-content-density="flat"] #view-account .auth-code-row .btn,
+          .modal-stage[data-content-density="flat"] #view-account .account-actions .btn,
+          .modal-stage[data-content-density="flat"] #view-account .account-actions .btn-primary {
+            height: 28px;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-field .input {
+            min-width: 0;
+            height: 32px;
+            padding: 0;
+            border-color: transparent;
+            background: transparent;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-field .input:focus {
+            border-color: transparent;
+            box-shadow: none;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-code-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 7px;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-code-row .btn {
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 6px;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-action-row {
+            display: grid;
+            gap: 7px;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-note {
+            color: var(--wb-text-subtle);
+            font-size: 10px;
+            line-height: 1.3;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .auth-status {
+            color: var(--wb-text-subtle);
+            font-size: 10px;
+            line-height: 1.3;
+            text-align: center;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .account-actions {
+            display: grid;
+            grid-template-columns: 72px minmax(0, 1fr);
+            gap: 6px;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .account-actions .btn-primary {
+            width: 100%;
+          }
+
+          .modal-stage[data-content-density="flat"] #view-account .account-hidden-state {
+            display: none;
+          }
+        </style>
         <div class="toolbar">
-          <div>
-            <strong id="modalSizeName">M 窗口</strong><span id="modalSizeSpec"> · 680 × 390</span>
-          </div>
-          <button class="size-button" id="modalSizeToggle" type="button">切换窗口尺寸</button>
+          <div><strong>L 窗口</strong><span> · 760 × 440</span></div>
         </div>
 
         <section
-          class="settings-window modal-md"
+          class="settings-window modal-lg"
           id="settingsWindow"
-          data-od-id="settings-window-md"
+          data-od-id="settings-window-lg"
         >
           <header class="window-head">
             <div class="window-title">
               <div class="window-title-icon">设</div>
               <div class="window-title-main">
                 <strong>设置</strong>
-                <span id="windowSubtitle">个人工作台配置 · 布局、外观、搜索、AI 与插件</span>
+                <span id="windowSubtitle"
+                  >个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件</span
+                >
               </div>
             </div>
             <button class="icon-close" type="button" aria-label="关闭"></button>
@@ -966,6 +1377,13 @@
 
           <div class="settings-body">
             <nav class="settings-nav" aria-label="设置导航">
+              <button class="account-entry" type="button" data-view="account" aria-label="账号">
+                <span class="account-avatar" id="accountNavAvatar">未</span>
+                <span class="account-nav-copy">
+                  <strong id="accountNavName">未登录</strong>
+                  <span id="accountNavMeta">本地模式</span>
+                </span>
+              </button>
               <div class="nav-kicker">工作台</div>
               <button class="nav-button is-active" type="button" data-view="general">
                 <span>通用</span><span class="nav-count">8</span>
@@ -980,6 +1398,9 @@
               <button class="nav-button" type="button" data-view="ai">
                 <span>AI</span><span class="nav-count">4</span>
               </button>
+              <button class="nav-button" type="button" data-view="sync">
+                <span>数据同步</span><span class="nav-count">3</span>
+              </button>
               <button class="nav-button" type="button" data-view="plugins">
                 <span>插件</span><span class="nav-count">14</span>
               </button>
@@ -988,7 +1409,7 @@
               </button>
             </nav>
 
-            <div class="settings-main">
+            <div class="settings-main" data-active-view="general">
               <div class="panel-head">
                 <div>
                   <strong id="panelTitle">通用</strong>
@@ -1260,25 +1681,19 @@
                       <span>默认文本模型</span>
                       <strong id="defaultTextModel">GPT-4.1 Mini</strong>
                       <span>摘要、改写、结构化抽取</span>
-                      <span class="badge" id="aiTextModelStatus">已测试</span>
+                      <span class="field-note" id="aiTextModelStatus">已测试</span>
                     </div>
                     <div class="ai-status-card">
                       <span>默认图片理解模型</span>
                       <strong id="defaultVisionModel">Gemini 1.5 Pro</strong>
                       <span>票面识别、截图分析</span>
-                      <span class="badge" id="aiVisionModelStatus">已测试</span>
-                    </div>
-                    <div class="ai-status-card">
-                      <span>密钥托管</span>
-                      <strong>安全存储</strong>
-                      <span>插件不可读取 API Key</span>
-                      <span class="badge">core.ai</span>
+                      <span class="field-note" id="aiVisionModelStatus">已测试</span>
                     </div>
                   </div>
                   <div class="setting-line">
                     <div class="setting-line-copy">
                       <strong>连接测试</strong>
-                      <span>验证默认文本模型与图片理解模型是否可调用</span>
+                      <span>验证默认模型是否可调用；密钥保存在 core 安全存储，插件不可读取</span>
                     </div>
                     <button class="btn-primary" type="button" id="aiTestButton">测试连接</button>
                   </div>
@@ -1358,9 +1773,7 @@
                         <strong>gpt-4.1-mini</strong>
                         <span>OpenAI 主账号 · 文本、图片理解 · 最近测试可用</span>
                       </div>
-                      <div class="ai-meta">
-                        <span class="badge">text</span><span class="badge badge-muted">vision</span>
-                      </div>
+                      <div class="ai-meta"><span class="field-note">文本 / 图片</span></div>
                     </div>
                     <div class="ai-model-row">
                       <div class="ai-model-copy">
@@ -1368,7 +1781,7 @@
                         <span>Gemini 个人账号 · 图片理解 · 彩票票面识别默认</span>
                       </div>
                       <div class="ai-meta">
-                        <span class="badge">vision</span
+                        <span class="field-note">图片</span
                         ><button
                           class="switch is-on"
                           type="button"
@@ -1388,11 +1801,11 @@
                         <span>申请 ai.vision · 票面识别与号码结构化</span>
                       </div>
                       <div class="ai-meta">
-                        <span class="badge">已授权</span
-                        ><button
+                        <button
                           class="switch is-on"
                           type="button"
                           data-ai-grant="彩票中奖查询"
+                          aria-label="彩票中奖查询 AI 授权"
                         ></button>
                       </div>
                     </div>
@@ -1402,8 +1815,12 @@
                         <span>申请 ai.vision · 图片描述和优化建议</span>
                       </div>
                       <div class="ai-meta">
-                        <span class="badge badge-muted">未授权</span
-                        ><button class="switch" type="button" data-ai-grant="图片压缩"></button>
+                        <button
+                          class="switch"
+                          type="button"
+                          data-ai-grant="图片压缩"
+                          aria-label="图片压缩 AI 授权"
+                        ></button>
                       </div>
                     </div>
                     <div class="ai-grant-row">
@@ -1412,11 +1829,11 @@
                         <span>申请 ai.text · 摘要、改写和步骤提取</span>
                       </div>
                       <div class="ai-meta">
-                        <span class="badge">已授权</span
-                        ><button
+                        <button
                           class="switch is-on"
                           type="button"
                           data-ai-grant="今日重点"
+                          aria-label="今日重点 AI 授权"
                         ></button>
                       </div>
                     </div>
@@ -1431,6 +1848,121 @@
                 </section>
               </div>
 
+              <div class="panel-view" id="view-account" data-view="account">
+                <section class="account-auth-panel" aria-label="官方账号登录注册">
+                  <div class="account-auth-form">
+                    <div class="auth-fields-shell">
+                      <label class="auth-field">
+                        <span>邮箱</span>
+                        <input
+                          class="input"
+                          id="accountEmailInput"
+                          type="email"
+                          autocomplete="email"
+                          placeholder="name@example.com"
+                          aria-label="官方账号邮箱"
+                        />
+                      </label>
+                      <label class="auth-field">
+                        <span>验证码</span>
+                        <div class="auth-code-row">
+                          <input
+                            class="input"
+                            id="accountCodeInput"
+                            placeholder="6 位验证码"
+                            aria-label="邮箱验证码"
+                          />
+                          <button class="btn" type="button" id="sendCodeButton">发送验证码</button>
+                        </div>
+                      </label>
+                    </div>
+                    <div class="auth-action-row">
+                      <span class="auth-note">新邮箱会自动注册</span>
+                      <div class="account-actions">
+                        <button class="btn" type="button" id="accountLogoutButton" disabled>
+                          退出
+                        </button>
+                        <button class="btn-primary" type="button" id="accountAuthButton">
+                          登录 / 注册
+                        </button>
+                      </div>
+                    </div>
+                    <span class="auth-status" id="accountStatusLabel">未登录 · 本地模式</span>
+                    <span class="account-hidden-state" id="accountStatusValue">本地模式</span>
+                    <span class="account-hidden-state" id="deviceStatusValue">当前设备未注册</span>
+                    <span class="account-hidden-state" id="deviceStatusLabel">待登录</span>
+                  </div>
+                </section>
+              </div>
+
+              <div class="panel-view" id="view-sync" data-view="sync">
+                <section class="setting-group">
+                  <div class="group-title">同步状态<span id="syncOverallStatus">未开启</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong id="syncModeLabel">本地模式</strong>
+                      <span id="syncLastTime">未同步</span>
+                    </div>
+                    <span class="badge badge-muted" id="syncQueueStatus">未开启</span>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>后台自动同步</strong>
+                    </div>
+                    <button
+                      class="switch"
+                      type="button"
+                      id="autoSyncSwitch"
+                      aria-label="后台自动同步"
+                    ></button>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>立即同步</strong>
+                    </div>
+                    <button class="btn-primary" type="button" id="syncNowButton" disabled>
+                      登录后可用
+                    </button>
+                  </div>
+                </section>
+
+                <section class="setting-group">
+                  <div class="group-title">同步范围<span>V1</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>会同步</strong>
+                      <span>工作区 / 插件配置 / 可同步数据</span>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>不会同步</strong>
+                      <span>密钥 / 本机路径 / 缓存</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="setting-group">
+                  <div class="group-title">处理<span id="syncConflictCount">0 条冲突</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>冲突</strong>
+                    </div>
+                    <button class="btn" type="button" data-sync-action="open-conflicts">
+                      查看冲突
+                    </button>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>恢复</strong>
+                    </div>
+                    <button class="btn" type="button" data-sync-action="open-restore">
+                      查看快照
+                    </button>
+                  </div>
+                </section>
+              </div>
+
               <div class="panel-view" id="view-plugins" data-view="plugins">
                 <section class="setting-group">
                   <div class="group-title">已安装插件<span>5 个启用</span></div>
@@ -1440,8 +1972,12 @@
                       <span>official.layout.dashboard · 工作台网格布局</span>
                     </div>
                     <div class="plugin-meta">
-                      <span class="badge">layout</span
-                      ><button class="switch is-on" type="button"></button>
+                      <span class="field-note">布局</span
+                      ><button
+                        class="switch is-on"
+                        type="button"
+                        aria-label="启用 Dashboard 布局"
+                      ></button>
                     </div>
                   </div>
                   <div class="plugin-line">
@@ -1450,8 +1986,12 @@
                       <span>official.widget.shortcuts · 链接分组与快速打开</span>
                     </div>
                     <div class="plugin-meta">
-                      <span class="badge">widget</span
-                      ><button class="switch is-on" type="button"></button>
+                      <span class="field-note">卡片</span
+                      ><button
+                        class="switch is-on"
+                        type="button"
+                        aria-label="启用快捷入口"
+                      ></button>
                     </div>
                   </div>
                   <div class="plugin-line">
@@ -1460,8 +2000,12 @@
                       <span>official.widget.todo · 清单、提醒和完成状态</span>
                     </div>
                     <div class="plugin-meta">
-                      <span class="badge">widget</span
-                      ><button class="switch is-on" type="button"></button>
+                      <span class="field-note">卡片</span
+                      ><button
+                        class="switch is-on"
+                        type="button"
+                        aria-label="启用个人待办"
+                      ></button>
                     </div>
                   </div>
                   <div class="plugin-line">
@@ -1470,8 +2014,8 @@
                       <span>official.widget.weather · 城市、趋势和生活建议</span>
                     </div>
                     <div class="plugin-meta">
-                      <span class="badge">widget</span
-                      ><button class="switch is-on" type="button"></button>
+                      <span class="field-note">卡片</span
+                      ><button class="switch is-on" type="button" aria-label="启用天气"></button>
                     </div>
                   </div>
                   <div class="plugin-line">
@@ -1480,55 +2024,13 @@
                       <span>official.widget.focus · 当日目标、步骤和复盘</span>
                     </div>
                     <div class="plugin-meta">
-                      <span class="badge">widget</span
-                      ><button class="switch is-on" type="button"></button>
+                      <span class="field-note">卡片</span
+                      ><button
+                        class="switch is-on"
+                        type="button"
+                        aria-label="启用今日重点"
+                      ></button>
                     </div>
-                  </div>
-                </section>
-                <section class="setting-group">
-                  <div class="group-title">设置表单协议<span>plugin.settings</span></div>
-                  <div class="setting-line">
-                    <div class="setting-line-copy">
-                      <strong>插件声明设置项</strong>
-                      <span>运行插件通过 schema 注入设置，不直接改宿主窗口结构</span>
-                    </div>
-                    <span class="badge">runtime</span>
-                  </div>
-                  <div class="schema-grid" aria-label="插件设置表单字段类型">
-                    <div class="schema-chip">
-                      <strong>text / textarea</strong>
-                      <span>名称、URL、提示词、模板内容</span>
-                    </div>
-                    <div class="schema-chip">
-                      <strong>select / radio</strong>
-                      <span>城市、数据源、刷新策略</span>
-                    </div>
-                    <div class="schema-chip">
-                      <strong>switch / checkbox</strong>
-                      <span>开关能力、多选权限、显示字段</span>
-                    </div>
-                    <div class="schema-chip">
-                      <strong>range / stepper</strong>
-                      <span>刷新间隔、数量、阈值和密度</span>
-                    </div>
-                  </div>
-                  <div class="setting-line">
-                    <div class="setting-line-copy">
-                      <strong>字段作用域</strong>
-                      <span>支持全局默认、插件默认、单个卡片实例三层覆盖</span>
-                    </div>
-                    <div class="segmented" aria-label="字段作用域">
-                      <button class="is-active" type="button">实例</button>
-                      <button type="button">插件</button>
-                      <button type="button">全局</button>
-                    </div>
-                  </div>
-                  <div class="setting-line">
-                    <div class="setting-line-copy">
-                      <strong>校验反馈</strong>
-                      <span>协议字段可声明必填、范围、正则、权限依赖和帮助文案</span>
-                    </div>
-                    <span class="field-note">错误显示在字段下方，不阻塞其它插件设置</span>
                   </div>
                 </section>
                 <section class="setting-group">
@@ -1648,6 +2150,45 @@
                     </div>
                   </div>
                 </section>
+                <section class="setting-group">
+                  <div class="group-title">开发者协议<span>plugin.settings</span></div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>插件声明设置项</strong>
+                      <span>运行插件通过 schema 注入设置，不直接改宿主窗口结构</span>
+                    </div>
+                    <span class="field-note">runtime</span>
+                  </div>
+                  <div class="schema-grid" aria-label="插件设置表单字段类型">
+                    <div class="schema-chip">
+                      <strong>text / textarea</strong>
+                      <span>名称、URL、提示词、模板内容</span>
+                    </div>
+                    <div class="schema-chip">
+                      <strong>select / radio</strong>
+                      <span>城市、数据源、刷新策略</span>
+                    </div>
+                    <div class="schema-chip">
+                      <strong>switch / checkbox</strong>
+                      <span>开关能力、多选权限、显示字段</span>
+                    </div>
+                    <div class="schema-chip">
+                      <strong>range / stepper</strong>
+                      <span>刷新间隔、数量、阈值和密度</span>
+                    </div>
+                  </div>
+                  <div class="setting-line">
+                    <div class="setting-line-copy">
+                      <strong>字段作用域</strong>
+                      <span>支持全局默认、插件默认、单个卡片实例三层覆盖</span>
+                    </div>
+                    <div class="segmented" aria-label="字段作用域">
+                      <button class="is-active" type="button">实例</button>
+                      <button type="button">插件</button>
+                      <button type="button">全局</button>
+                    </div>
+                  </div>
+                </section>
               </div>
 
               <div class="panel-view" id="view-about" data-view="about">
@@ -1710,60 +2251,66 @@
     </main>
 
     <script>
-      const modalSizes = [
-        { key: "sm", label: "S 窗口", spec: " · 560 × 330" },
-        { key: "md", label: "M 窗口", spec: " · 680 × 390" },
-        { key: "lg", label: "L 窗口", spec: " · 760 × 440" },
-      ]
-
       const panelCopy = {
         general: ["通用", "工作区、布局和基础行为。所有设置只影响当前个人工作台。"],
         appearance: ["外观", "主题、背景和强调色。视觉配置来自主题插件。"],
         search: ["搜索", "默认搜索源、搜索范围和命令入口。"],
+        account: ["账号", "登录 Tabora 账号，用于云同步和设备注册。"],
         ai: ["AI", "模型提供商、默认模型、连接测试和插件 AI 授权。"],
+        sync: ["数据同步", "状态、范围和处理。"],
         plugins: ["插件", "已安装插件、运行配置、设置表单协议和本地权限。"],
         about: ["关于", "版本、数据位置和插件化工作台说明。"],
       }
 
-      let modalIndex = 1
-
-      const settingsWindow = document.getElementById("settingsWindow")
-      const modalSizeName = document.getElementById("modalSizeName")
-      const modalSizeSpec = document.getElementById("modalSizeSpec")
       const panelTitle = document.getElementById("panelTitle")
       const panelDesc = document.getElementById("panelDesc")
       const statusText = document.getElementById("statusText")
+      const resetButton = document.getElementById("resetButton")
+      const settingsMain = document.querySelector(".settings-main")
+      const navItems = document.querySelectorAll(".nav-button, .account-entry")
+      const accountNavAvatar = document.getElementById("accountNavAvatar")
+      const accountNavName = document.getElementById("accountNavName")
+      const accountNavMeta = document.getElementById("accountNavMeta")
+      const accountStatusLabel = document.getElementById("accountStatusLabel")
+      const accountStatusValue = document.getElementById("accountStatusValue")
+      const deviceStatusLabel = document.getElementById("deviceStatusLabel")
+      const deviceStatusValue = document.getElementById("deviceStatusValue")
+      const accountLogoutButton = document.getElementById("accountLogoutButton")
 
       function setStatus(text) {
         statusText.textContent = text
       }
 
-      function renderModal() {
-        const size = modalSizes[modalIndex]
-        settingsWindow.className = `settings-window modal-${size.key}`
-        settingsWindow.dataset.odId = `settings-window-${size.key}`
-        modalSizeName.textContent = size.label
-        modalSizeSpec.textContent = size.spec
+      function getAccountInitial(email) {
+        return (email.trim().charAt(0) || "未").toUpperCase()
       }
 
-      document.getElementById("modalSizeToggle").addEventListener("click", () => {
-        modalIndex = (modalIndex + 1) % modalSizes.length
-        renderModal()
-      })
+      function renderLoggedOutAccount(meta = "本地模式") {
+        accountNavAvatar.textContent = "未"
+        accountNavName.textContent = "未登录"
+        accountNavMeta.textContent = meta
+      }
 
-      document.querySelectorAll(".nav-button").forEach((button) => {
+      function renderLoggedInAccount(email) {
+        const initial = getAccountInitial(email)
+        accountNavAvatar.textContent = initial
+        accountNavName.textContent = email
+        accountNavMeta.textContent = "已登录"
+      }
+
+      navItems.forEach((button) => {
         button.addEventListener("click", () => {
           const view = button.dataset.view
-          document
-            .querySelectorAll(".nav-button")
-            .forEach((item) => item.classList.remove("is-active"))
+          navItems.forEach((item) => item.classList.remove("is-active"))
           document
             .querySelectorAll(".panel-view")
             .forEach((item) => item.classList.remove("is-active"))
           button.classList.add("is-active")
           document.getElementById(`view-${view}`).classList.add("is-active")
+          settingsMain.dataset.activeView = view
           panelTitle.textContent = panelCopy[view][0]
           panelDesc.textContent = panelCopy[view][1]
+          resetButton.hidden = view === "account"
           setStatus(`已切换到${panelCopy[view][0]}`)
         })
       })
@@ -1856,6 +2403,110 @@
         })
       }
 
+      const sendCodeButton = document.getElementById("sendCodeButton")
+      if (sendCodeButton) {
+        sendCodeButton.addEventListener("click", () => {
+          const email = document.getElementById("accountEmailInput").value.trim()
+          if (!email) {
+            setStatus("请输入官方账号邮箱")
+            return
+          }
+          accountStatusLabel.textContent = "验证码已发送"
+          renderLoggedOutAccount("验证中")
+          setStatus(`验证码已发送到 ${email}`)
+        })
+      }
+
+      const accountAuthButton = document.getElementById("accountAuthButton")
+      if (accountAuthButton) {
+        accountAuthButton.addEventListener("click", () => {
+          const email = document.getElementById("accountEmailInput").value.trim()
+          const code = document.getElementById("accountCodeInput").value.trim()
+          if (!email) {
+            setStatus("请输入官方账号邮箱")
+            return
+          }
+          if (!code) {
+            setStatus("请输入邮箱验证码")
+            return
+          }
+          accountStatusLabel.textContent = "已登录"
+          accountStatusValue.textContent = email
+          deviceStatusLabel.textContent = "已注册"
+          deviceStatusValue.textContent = "当前设备已注册"
+          accountLogoutButton.disabled = false
+          renderLoggedInAccount(email)
+          document.getElementById("syncModeLabel").textContent = "待开启"
+          document.getElementById("syncOverallStatus").textContent = "待开启"
+          document.getElementById("syncLastTime").textContent = "未同步"
+          document.getElementById("syncQueueStatus").textContent = "等待开启"
+          document.getElementById("syncQueueStatus").classList.remove("badge-muted")
+          document.getElementById("syncNowButton").disabled = false
+          document.getElementById("syncNowButton").textContent = "开启同步"
+          document.getElementById("autoSyncSwitch").classList.add("is-on")
+          setStatus("账号已登录")
+        })
+      }
+
+      if (accountLogoutButton) {
+        accountLogoutButton.addEventListener("click", () => {
+          accountStatusLabel.textContent = "未登录 · 本地模式"
+          accountStatusValue.textContent = "本地模式"
+          deviceStatusLabel.textContent = "待登录"
+          deviceStatusValue.textContent = "当前设备未注册"
+          accountLogoutButton.disabled = true
+          renderLoggedOutAccount()
+          document.getElementById("syncModeLabel").textContent = "本地模式"
+          document.getElementById("syncOverallStatus").textContent = "未开启"
+          document.getElementById("syncLastTime").textContent = "未同步"
+          document.getElementById("syncQueueStatus").textContent = "未开启"
+          document.getElementById("syncQueueStatus").classList.add("badge-muted")
+          document.getElementById("syncNowButton").disabled = true
+          document.getElementById("syncNowButton").textContent = "登录后可用"
+          document.getElementById("autoSyncSwitch").classList.remove("is-on")
+          setStatus("已退出账号")
+        })
+      }
+
+      const syncNowButton = document.getElementById("syncNowButton")
+      if (syncNowButton) {
+        syncNowButton.addEventListener("click", () => {
+          document.getElementById("syncOverallStatus").textContent = "同步中"
+          document.getElementById("syncModeLabel").textContent = "同步中"
+          document.getElementById("syncQueueStatus").textContent = "上传中"
+          syncNowButton.textContent = "同步中"
+          syncNowButton.disabled = true
+          setStatus("正在同步")
+          window.setTimeout(() => {
+            document.getElementById("syncOverallStatus").textContent = "已同步"
+            document.getElementById("syncModeLabel").textContent = "官方云同步"
+            document.getElementById("syncQueueStatus").textContent = "队列清空"
+            document.getElementById("syncLastTime").textContent = "刚刚"
+            document.getElementById("syncConflictCount").textContent = "0 条冲突"
+            syncNowButton.textContent = "立即同步"
+            syncNowButton.disabled = false
+            setStatus("同步完成")
+          }, 620)
+        })
+      }
+
+      document.querySelectorAll("[data-sync-action]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.dataset.syncAction
+          if (action === "open-conflicts") setStatus("冲突收件箱当前为空")
+          if (action === "open-restore") setStatus("暂无快照")
+        })
+      })
+
+      document.querySelectorAll("[data-device-remove]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const deviceName = button.dataset.deviceRemove
+          button.textContent = "已移除"
+          button.disabled = true
+          setStatus(`${deviceName} 后续将不能参与同步`)
+        })
+      })
+
       document.querySelectorAll(".plugin-select").forEach((button) => {
         button.addEventListener("click", () => {
           document
@@ -1927,14 +2578,10 @@
         button.addEventListener("click", () => setStatus("已请求重置本机设置"))
       })
 
-      document
-        .getElementById("resetButton")
-        .addEventListener("click", () => setStatus("已恢复当前页默认值"))
+      resetButton.addEventListener("click", () => setStatus("已恢复当前页默认值"))
       document
         .getElementById("saveButton")
         .addEventListener("click", () => setStatus("设置已保存到本地"))
-
-      renderModal()
     </script>
   </body>
 </html>
