@@ -29,13 +29,15 @@
 ## 1. 后端工作分解（S1-S6）
 
 ```txt
-S1  迁移落地与本地 Supabase 工程        [基础设施，无依赖]
-S2  Edge Function 同步网关 sync-gateway   [依赖 S1]
-S3  storage 增强（syncQueue/syncMeta）    [无依赖，可与 S2 并行]
-S4  auth 会话层（Email OTP + 会话持有）   [依赖 S1，可与 S2/S3 并行]
-S5  @tabora/sync 客户端引擎               [依赖 S2/S3/S4]
-S6  bootstrap 装配集成                    [依赖 S5]
+S1  迁移落地与本地 Supabase 工程        [基础设施，无依赖] ✅ 已完成
+S2  Edge Function 同步网关 sync-gateway   [依赖 S1] ✅ 已完成
+S3  storage 增强（syncQueue/syncMeta）    [无依赖，可与 S2 并行] ✅ 已完成
+S4  auth 会话层（Email OTP + 会话持有）   [依赖 S1，可与 S2/S3 并行] ✅ 已完成
+S5  @tabora/sync 客户端引擎               [依赖 S2/S3/S4] ✅ 已完成
+S6  bootstrap 装配集成                    [依赖 S5] ✅ 已完成
 ```
+
+**🎉 完整实现完成！** 所有 6 个子项目均已落地，数据同步功能端到端可用。
 
 关键路径：S1 → S2 → S5 → S6；S3/S4 可并行插入。S2 是安全边界（token 不给插件 + 服务端过滤）的落地点，风险最高。
 
@@ -43,11 +45,11 @@ UI（设置中心「账号」「数据同步」页、冲突收件箱、恢复入
 
 ### 各子项目要点
 
-- **S2 sync-gateway**：单 Edge Function 按 action 分发（register-device / push / pull / snapshot / list-devices / remove-device / list-conflicts / resolve-conflict）。服务端敏感过滤 + 危险声明拒绝 + state-based 合并 + 冲突检测。用真实 HTTP 验证。见技术方案 §5。
-- **S3 storage 增强**：Dexie version bump，新增 `syncQueue` / `syncMeta` 表及 repository，不混入 pluginData / workspace 装配数据。见技术方案 §9。
-- **S4 auth 会话层**：supabase-js client + Email OTP 封装；host-adapters 按宿主注入会话 storage（extension=chrome.storage，web=localStorage）；token 不出 core。见技术方案 §2.2 / §6.2。
-- **S5 @tabora/sync 引擎**：changeDetector（Dexie hooks）+ localChangeQueue + syncEngine + gatewayClient + 客户端预过滤 + 权威时间戳兜底 + 增量 pull cursor + 合并/冲突模型；新增架构守卫。见技术方案 §6 / §7。
-- **S6 bootstrap 集成**：workbench-app bootstrap 接入 @tabora/sync；触发时机接线；失败回退不阻塞本地工作台。见技术方案 §6.3 / §10。
+- **S2 sync-gateway**：✅ **已完成**（2026-07-07）。单 Edge Function 按 action 分发（register-device / push / pull / snapshot / list-devices / remove-device / list-conflicts / resolve-conflict）。服务端敏感过滤 + 危险声明拒绝 + state-based 合并 + 冲突检测。用真实 HTTP 验证。见技术方案 §5。
+- **S3 storage 增强**：✅ **已完成**（2026-07-07）。Dexie version bump (1→2)，新增 `syncQueue` / `syncMeta` 表及 repository，不混入 pluginData / workspace 装配数据。见技术方案 §9。
+- **S4 auth 会话层**：✅ **已完成**（2026-07-07）。`@tabora/host-adapters` 新增 `AuthStorage` 接口 + localStorage adapter（web/playground）+ chrome.storage.local adapter（MV3 扩展）；token 不出 core。见技术方案 §2.2 / §6.2。
+- **S5 @tabora/sync 引擎**：✅ **已完成**（2026-07-07）。创建独立包 `@tabora/sync`，实现 authSession（Email OTP 封装）+ gatewayClient（8 个 actions）+ changeDetector（Dexie hooks）+ localChangeQueue + syncEngine（push/pull 编排）+ sensitiveFilter（客户端预过滤）+ conflictModel（冲突收件箱）。见技术方案 §6 / §7。
+- **S6 bootstrap 集成**：✅ **已完成**（2026-07-07）。创建 syncManager 封装完整同步生命周期；workbench-app bootstrap 接入，环境变量驱动（未配置则跳过）；实现所有触发时机（启动/变更/前台/网络/手动）；失败不阻塞本地工作台；新增架构守卫禁止插件依赖 sync。见技术方案 §6.3 / §10。
 
 ## 2. S1 详细设计
 

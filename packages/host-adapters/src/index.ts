@@ -23,3 +23,5 @@ export function defineHostAdapter(adapter: HostAdapter): HostAdapter {
 
 export { createWebHostAdapter } from "./web"
 export { createExtensionHostAdapter } from "./extension"
+export type { AuthStorage } from "./authStorage"
+export { createLocalStorageAuthStorage, createChromeStorageAuthStorage } from "./authStorage"

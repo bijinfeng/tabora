@@ -13,6 +13,8 @@ import {
   createInstanceRepository,
   createPluginDataRepository,
   createPluginRecordRepository,
+  createSyncMetaRepository,
+  createSyncQueueRepository,
   createTaboraDatabase,
   createWorkspaceRepository,
   createWorkspaceSnapshotRepository,
@@ -20,6 +22,8 @@ import {
   type PluginDataRepository,
   type PluginRecordRepository,
   type StorageAdapter,
+  type SyncMetaRepository,
+  type SyncQueueRepository,
   type TaboraDatabase,
   type WorkspaceRepository,
   type WorkspaceSnapshotRepository,
@@ -27,6 +31,7 @@ import {
 
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
 import { createWorkbenchI18nStore, type WorkbenchI18nStore } from "../i18n"
+import { createSyncManager, type SyncManager } from "./syncManager"
 
 export type WorkbenchRuntimeRepositories = {
   workspaceRepo: WorkspaceRepository
@@ -34,6 +39,8 @@ export type WorkbenchRuntimeRepositories = {
   pluginDataRepo: PluginDataRepository
   pluginRecordRepo: PluginRecordRepository
   workspaceSnapshotRepo: WorkspaceSnapshotRepository
+  syncQueueRepo: SyncQueueRepository
+  syncMetaRepo: SyncMetaRepository
 }
 
 export type WorkbenchRuntimeBootstrap = {
@@ -48,6 +55,7 @@ export type WorkbenchRuntimeBootstrap = {
   shellConfig: WorkbenchShellConfig
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
+  syncManager?: SyncManager
 }
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
@@ -290,6 +298,8 @@ export function createWorkbenchRuntimeBootstrap(
     pluginDataRepo: createPluginDataRepository(database),
     pluginRecordRepo: createPluginRecordRepository(database),
     workspaceSnapshotRepo: createWorkspaceSnapshotRepository(database),
+    syncQueueRepo: createSyncQueueRepository(database),
+    syncMetaRepo: createSyncMetaRepository(database),
   }
   const { pluginRecordRepo } = repositories
   const loadResult = loadBuiltinPlugins(options.plugins)
@@ -305,6 +315,33 @@ export function createWorkbenchRuntimeBootstrap(
     i18n,
   })
 
+  // Create sync manager (optional, only if env vars are set)
+  // Note: Environment variables are expected to be injected at build time
+  // via Vite or other bundler. If not available, sync will be disabled.
+  let syncManager: SyncManager | undefined = undefined
+  const supabaseUrl: string | undefined = undefined
+  const supabaseAnonKey: string | undefined = undefined
+  const gatewayUrl: string | undefined = undefined
+
+  if (supabaseUrl && supabaseAnonKey && gatewayUrl) {
+    try {
+      syncManager = createSyncManager({
+        database,
+        syncQueueRepo: repositories.syncQueueRepo,
+        syncMetaRepo: repositories.syncMetaRepo,
+        host: options.host,
+        supabaseUrl,
+        supabaseAnonKey,
+        gatewayUrl,
+      })
+      // Start sync automatically
+      syncManager.start()
+    } catch (err) {
+      console.error("Failed to create sync manager:", err)
+      // Continue without sync - sync failure should not block workbench
+    }
+  }
+
   return {
     host: options.host,
     database,
@@ -317,5 +354,6 @@ export function createWorkbenchRuntimeBootstrap(
     shellConfig: options.shellConfig,
     pluginStyles,
     rejectedPlugins: loadResult.rejected,
+    ...(syncManager ? { syncManager } : {}),
   }
 }

@@ -166,6 +166,38 @@ describe("createWorkbenchRuntimeBootstrap", () => {
             return undefined
           },
         },
+        syncQueueRepo: {
+          async add() {
+            return "mock-id"
+          },
+          async get() {
+            return undefined
+          },
+          async getAllPending() {
+            return []
+          },
+          async getByRecord() {
+            return undefined
+          },
+          async updateStatus() {},
+          async remove() {},
+          async removeByRecord() {},
+          async clear() {},
+          async count() {
+            return 0
+          },
+        },
+        syncMetaRepo: {
+          async get() {
+            return undefined
+          },
+          async set() {},
+          async remove() {},
+          async clear() {},
+          async getAll() {
+            return []
+          },
+        },
       },
     }
 

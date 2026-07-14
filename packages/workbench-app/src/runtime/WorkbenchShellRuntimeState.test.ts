@@ -165,6 +165,24 @@ function createRuntime(records: PluginRecord[] = []) {
         save: vi.fn(async () => {}),
         getLast: vi.fn(async () => undefined),
       },
+      syncQueueRepo: {
+        add: vi.fn(async () => "mock-id"),
+        remove: vi.fn(async () => {}),
+        getAllPending: vi.fn(async () => []),
+        updateStatus: vi.fn(async () => {}),
+        clear: vi.fn(async () => {}),
+        getByRecord: vi.fn(async () => undefined),
+        get: vi.fn(async () => undefined),
+        count: vi.fn(async () => 0),
+        removeByRecord: vi.fn(async () => {}),
+      },
+      syncMetaRepo: {
+        get: vi.fn(async () => undefined),
+        set: vi.fn(async () => {}),
+        remove: vi.fn(async () => {}),
+        clear: vi.fn(async () => {}),
+        getAll: vi.fn(async () => []),
+      },
     },
   }
 

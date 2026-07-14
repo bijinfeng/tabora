@@ -38,6 +38,10 @@ catalogs:
     zod:
       specifier: ^4.4.3
       version: 4.4.3
+  node:
+    '@types/node':
+      specifier: ^25.9.1
+      version: 25.9.1
   test:
     '@vitest/browser-playwright':
       specifier: ^4.1.7
@@ -102,7 +106,7 @@ importers:
         specifier: 0.22.0
         version: 0.22.0(jiti@2.7.0)(postcss@8.5.15)(tsdown@0.22.0)(tsx@4.23.0)
       '@types/node':
-        specifier: ^25.9.1
+        specifier: catalog:node
         version: 25.9.1
       '@vitest/browser-playwright':
         specifier: catalog:test
@@ -432,6 +436,31 @@ importers:
         specifier: catalog:test
         version: 6.2.5
 
+  packages/sync:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.39.0
+        version: 2.110.0
+      '@tabora/host-adapters':
+        specifier: workspace:*
+        version: link:../host-adapters
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../plugin-api
+      '@tabora/storage':
+        specifier: workspace:*
+        version: link:../storage
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@types/node':
+        specifier: catalog:node
+        version: 25.9.1
+      fake-indexeddb:
+        specifier: catalog:test
+        version: 6.2.5
+
   packages/theme:
     dependencies:
       '@tabora/plugin-api':
@@ -493,6 +522,9 @@ importers:
       '@tabora/storage':
         specifier: workspace:*
         version: link:../storage
+      '@tabora/sync':
+        specifier: workspace:*
+        version: link:../sync
       '@tabora/theme':
         specifier: workspace:*
         version: link:../theme
@@ -515,6 +547,9 @@ importers:
       '@tabora/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
+      '@types/node':
+        specifier: catalog:node
+        version: 25.9.1
 
   packages/workbench-shell:
     dependencies:

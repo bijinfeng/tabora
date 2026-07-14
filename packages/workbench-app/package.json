@@ -27,6 +27,7 @@
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",
+    "@tabora/sync": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "@tabora/workbench-shell": "workspace:*",
@@ -35,6 +36,7 @@
     "solid-js": "catalog:ui"
   },
   "devDependencies": {
-    "@tabora/tsconfig": "workspace:*"
+    "@tabora/tsconfig": "workspace:*",
+    "@types/node": "catalog:node"
   }
 }

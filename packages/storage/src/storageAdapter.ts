@@ -3,6 +3,8 @@ import { createTaboraDatabase } from "./database"
 import { createInstanceRepository, type InstanceRepository } from "./instanceRepository"
 import { createPluginDataRepository, type PluginDataRepository } from "./pluginDataRepository"
 import { createPluginRecordRepository, type PluginRecordRepository } from "./pluginRecordRepository"
+import { createSyncMetaRepository, type SyncMetaRepository } from "./syncMetaRepository"
+import { createSyncQueueRepository, type SyncQueueRepository } from "./syncQueueRepository"
 import {
   createWorkspaceSnapshotRepository,
   type WorkspaceSnapshotRepository,
@@ -15,6 +17,8 @@ export type StorageRepositories = {
   pluginDataRepo: PluginDataRepository
   pluginRecordRepo: PluginRecordRepository
   workspaceSnapshotRepo: WorkspaceSnapshotRepository
+  syncQueueRepo: SyncQueueRepository
+  syncMetaRepo: SyncMetaRepository
 }
 
 export type StorageAdapter = {
@@ -32,6 +36,8 @@ export function createWebStorageAdapter(name?: string): StorageAdapter {
       pluginDataRepo: createPluginDataRepository(database),
       pluginRecordRepo: createPluginRecordRepository(database),
       workspaceSnapshotRepo: createWorkspaceSnapshotRepository(database),
+      syncQueueRepo: createSyncQueueRepository(database),
+      syncMetaRepo: createSyncMetaRepository(database),
     },
   }
 }

@@ -314,6 +314,8 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
 ## 6. 客户端同步引擎（@tabora/sync）
 
+> **状态：已实现**（2026-07-07，S5 完成）
+
 ### 6.1 包边界与放置
 
 同步是 core 能力，但**不放进 `@tabora/platform-kernel`**（kernel 只放通用运行机制，不含具体后端/业务）。新建独立包 `@tabora/sync`：
@@ -331,16 +333,29 @@ packages/sync/
     sensitiveFilter.ts     # 客户端预过滤（与服务端对齐，减体积）
 ```
 
+实现路径：
+
+- `authSession.ts`：封装 supabase-js Email OTP（signInWithOtp / verifyOtp / getSession / signOut / refreshSession），注入 S4 的 AuthStorage adapter。
+- `gatewayClient.ts`：调用 sync-gateway 的唯一出口，封装 8 个 actions（register-device / push / pull / snapshot / list-devices / remove-device / list-conflicts / resolve-conflict）。
+- `sensitiveFilter.ts`：客户端敏感字段预过滤（apiKey / token / password / secret / filepath 关键词 + Unix/Windows 路径检测），与服务端规则对齐。
+- `localChangeQueue.ts`：封装 S3 的 syncQueueRepository，提供队列操作（enqueue / dequeue / getPending / markAsSyncing / markAsFailed）。
+- `changeDetector.ts`：监听 Dexie hooks（workspaces / pluginInstances / plugins / pluginData 的 creating / updating / deleting），自动生成 SyncChange 入队。
+- `syncEngine.ts`：主同步编排器，协调 push（上传本地变更 + 敏感过滤）、pull（拉取云端变更 + 应用到本地 + 处理 tombstone）、sync（完整同步周期）。
+- `conflictModel.ts`：冲突收件箱模型（V1 内存实现，预留接口供后续持久化）。
+- 单元测试：`sensitiveFilter.test.ts`（覆盖敏感字段检测核心路径）。
+
 依赖方向：
 
-- `@tabora/sync` 可依赖 `@tabora/storage`（读写本地）、`@tabora/plugin-api`（类型/声明）、`supabase-js`。
+- `@tabora/sync` 可依赖 `@tabora/storage`（读写本地）、`@tabora/plugin-api`（类型/声明）、`@tabora/host-adapters`（AuthStorage）、`supabase-js`。
 - `@tabora/sync` **不被** `@tabora/ui` / `@tabora/plugin-api` 依赖，不含插件业务逻辑。
 - 同步设置 UI 作为 core 设置面板贡献，经 shell 装配；插件不感知 `@tabora/sync`。
-- `pnpm check:architecture` 需新增守卫：插件 package 不得依赖 `@tabora/sync`；`@tabora/plugin-api`、`@tabora/ui` 不得依赖 `@tabora/sync`。
+- `pnpm check:architecture` 需新增守卫：插件 package 不得依赖 `@tabora/sync`；`@tabora/plugin-api`、`@tabora/ui` 不得依赖 `@tabora/sync`。（守卫规则待 S6 集成时添加）
 
 > 待确认：包名与是否独立成包（备选：并入 `@tabora/workbench-app` 的 core runtime 层）。本方案按独立包 `@tabora/sync` 设计，最终以架构评审为准。
 
 ### 6.2 会话持有（浏览器扩展硬坑）
+
+> **状态：已实现**（2026-07-07，S4 完成）
 
 扩展 MV3 的 background/service worker 没有 `localStorage`，supabase-js 默认 storage 失效，session 无法持久化。必须注入自定义 storage adapter：
 
@@ -351,18 +366,79 @@ const chromeStorageAdapter = {
   removeItem: (k) => chrome.storage.local.remove(k),
 }
 createClient(url, publishableKey, {
-  auth: { storage: chromeStorageAdapter, persistSession: true, autoRefreshToken: true },
+  auth: {
+    storage: chromeStorageAdapter,
+    persistSession: true,
+    autoRefreshToken: true,
+  },
 })
 ```
 
 playground（普通 web）用默认 `localStorage`。adapter 由 host-adapters 层按宿主注入，`@tabora/sync` 只依赖抽象 storage 接口。
 
-### 6.3 本地变更捕获与队列
+实现路径：
+
+- `packages/host-adapters/src/authStorage.ts`：定义 `AuthStorage` 接口和两个实现（`createLocalStorageAuthStorage` / `createChromeStorageAuthStorage`）。
+- `createLocalStorageAuthStorage()`：基于浏览器标准 `localStorage`，用于 web/playground。
+- `createChromeStorageAuthStorage()`：基于 `chrome.storage.local` API，用于 MV3 扩展 service worker（session 持久化到扩展存储，不受 worker 重启影响）。
+- 单元测试：`authStorage.test.ts`（覆盖两个 adapter 的核心路径，chrome API 用 vitest mock）。
+- 后续 S5（`@tabora/sync`）在创建 supabase client 时，由 host-adapters 注入对应 adapter。
+
+### 6.3 本地变更捕获与队列 & bootstrap 装配集成
+
+> **状态：已实现**（2026-07-07，S6 完成）
+
+**本地变更捕获（已实现）：**
 
 - `changeDetector` 通过 Dexie hooks（`creating`/`updating`/`deleting`）监听 `workspaces`、`pluginInstances`、`plugins`、`pluginData` 的写入。
 - 每次写入生成一条本地 `SyncChange`（PRD §17，**仅本地内部结构**），入 `localChangeQueue`（存 IndexedDB 一张新表 `syncQueue`，见 §9）。
 - 短延迟合并：同一 `(scope, entityType, recordKey)` 的多次变更在延迟窗口内合并为最新态，再上传（PRD §12）。
 - 触发时机（PRD §12）：本地变更后短延迟、应用启动、后台回前台、网络恢复、登录成功、手动"立即同步"。
+
+**bootstrap 装配集成（已实现）：**
+
+实现路径：
+
+1. **syncManager.ts**：创建同步管理器，封装 authSession + gatewayClient + changeDetector + syncEngine 的完整生命周期
+   - 根据 host.platform 自动选择 authStorage adapter（extension → chromeStorage，web → localStorage）
+   - 设备注册逻辑：首次同步时自动调用 register-device，持久化 deviceId
+   - 触发时机实现：
+     - 应用启动：syncManager.start() 自动触发首次同步
+     - 本地变更：changeDetector 监听 Dexie hooks，2 秒防抖后触发同步
+     - 后台回前台：监听 document.visibilitychange 事件
+     - 网络恢复：监听 window.online 事件
+     - 手动同步：暴露 triggerSync() API 供 UI 调用
+   - 失败回退：所有同步错误仅 console.error，不阻塞本地工作台
+
+2. **bootstrap.ts 集成**：
+   - 在 WorkbenchRuntimeRepositories 中添加 syncQueueRepo 和 syncMetaRepo
+   - 在 WorkbenchRuntimeBootstrap 中添加可选的 syncManager 字段
+   - createWorkbenchRuntimeBootstrap 中检查环境变量（SUPABASE_URL / SUPABASE_ANON_KEY / SYNC_GATEWAY_URL）
+   - 如果环境变量存在，创建 syncManager 并自动启动；失败则跳过，不影响 workbench 启动
+
+3. **StorageAdapter 更新**：
+   - 在 StorageRepositories 类型中添加 syncQueueRepo 和 syncMetaRepo
+   - createWebStorageAdapter 中创建并返回 sync 相关 repositories
+
+4. **架构守卫规则**：
+   - PLUGIN_IMPORT_RULES：禁止插件 import @tabora/sync
+   - UI_IMPORT_RULES：禁止 @tabora/ui import @tabora/sync
+   - UI_DEPENDENCY_RULES：禁止 @tabora/ui 依赖 @tabora/sync
+   - 确保同步能力仅由 workbench-app 核心持有，插件和 UI 组件无感知
+
+5. **测试更新**：
+   - WorkbenchShellRuntimeState.test.ts 中添加 syncQueueRepo 和 syncMetaRepo 的 mock
+
+**环境变量配置示例：**
+
+```bash
+# .env (playground / extension)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SYNC_GATEWAY_URL=https://your-project.supabase.co/functions/v1/sync-gateway
+```
+
+未配置环境变量时，workbench 正常启动，syncManager 为 undefined，应用以纯本地模式运行。
 
 ### 6.4 权威时间戳兜底
 
@@ -415,12 +491,21 @@ core 内置排除（永不上传，PRD §15 / §7.2）：
 
 ## 9. 本地存储增强
 
-`@tabora/storage` 的 Dexie schema（当前 6 表，见平台技术方案 §13.2）新增同步专用表，version bump：
+> **状态：已实现**（2026-07-07，S3 完成）
+
+`@tabora/storage` 的 Dexie schema 已从 version 1（6 表）升至 version 2（8 表），新增同步专用表：
 
 ```txt
 syncQueue: "id, [scope+entityType+recordKey], status, queuedAt"
 syncMeta:  "key"   // 存 pullCursor、账号态、设备 ID、schemaVersion 等
 ```
+
+实现路径：
+
+- `packages/storage/src/database.ts`：Dexie version 2，新增 `syncQueue`、`syncMeta` 表定义和类型。
+- `packages/storage/src/syncQueueRepository.ts`：同步队列 CRUD 操作（add/get/getAllPending/getByRecord/updateStatus/remove/removeByRecord/clear/count）。
+- `packages/storage/src/syncMetaRepository.ts`：同步元数据键值存储（get/set/remove/clear/getAll）。
+- 单元测试：`syncQueueRepository.test.ts`、`syncMetaRepository.test.ts`（覆盖核心路径，使用 `fake-indexeddb`）。
 
 约束（对齐平台技术方案 §13）：
 

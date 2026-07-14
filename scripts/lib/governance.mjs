@@ -25,6 +25,10 @@ const PLUGIN_IMPORT_RULES = [
     reason: "plugins must use host-provided runtime data ports",
   },
   {
+    matches: (specifier) => specifier === "@tabora/sync" || specifier.startsWith("@tabora/sync/"),
+    reason: "plugins must not import sync internals",
+  },
+  {
     matches: (specifier) =>
       specifier.includes("apps/") ||
       specifier.startsWith("app/") ||
@@ -46,6 +50,10 @@ const UI_IMPORT_RULES = [
     matches: (specifier) =>
       specifier === "@tabora/storage" || specifier.startsWith("@tabora/storage/"),
     reason: "@tabora/ui must not import storage",
+  },
+  {
+    matches: (specifier) => specifier === "@tabora/sync" || specifier.startsWith("@tabora/sync/"),
+    reason: "@tabora/ui must not import sync",
   },
   {
     matches: (specifier) =>
@@ -73,6 +81,11 @@ const UI_DEPENDENCY_RULES = [
     matches: (dependency) =>
       dependency === "@tabora/storage" || dependency.startsWith("@tabora/storage/"),
     reason: "@tabora/ui must not depend on storage",
+  },
+  {
+    matches: (dependency) =>
+      dependency === "@tabora/sync" || dependency.startsWith("@tabora/sync/"),
+    reason: "@tabora/ui must not depend on sync",
   },
   {
     matches: (dependency) =>
