@@ -1,0 +1,15 @@
+# .dockerignore for Directus backend
+node_modules
+*.log
+.env
+.env.local
+*.md
+.git
+.gitignore
+scripts
+tests
+vitest.config.ts
+tsconfig.json
+*.test.ts
+*.spec.ts
+directus.sqlite

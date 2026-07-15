@@ -7,10 +7,16 @@ packages:
   - tooling/*
 
 allowBuilds:
+  argon2: true
+  braintrust: true
   esbuild: true
   isolated-vm: true
+  oracledb: true
+  protobufjs: true
   sharp: true
   spawn-sync: true
+  sqlite3: true
+  vue-demi: true
 
 catalogs:
   node:

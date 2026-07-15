@@ -281,7 +281,7 @@ importers:
     dependencies:
       directus:
         specifier: ^12.1.1
-        version: 12.1.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.21.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)
+        version: 12.1.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.22.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
@@ -843,8 +843,8 @@ packages:
     resolution: {integrity: sha512-lXhhmcBjYa+ea0kRs00aq3WUwiXggwJkLwcMzOOsbW3CVYQaNpT7hztkfn2S6Qna7ETzd8M5+XZP+BmQRVE0Sg==}
     engines: {node: '>=18.0.0'}
 
-  '@aws-sdk/client-sesv2@3.1085.0':
-    resolution: {integrity: sha512-bB+ohCYDGKf7e0edGVMLXD4nTaI+sEdWxuAejfKaYU0R0ibV2Bje4ymZ/YtjnX+RfABPkMLfm87iZddQgUaU7w==}
+  '@aws-sdk/client-sesv2@3.1086.0':
+    resolution: {integrity: sha512-n7AZDhboioUpPDbp/YC2mVYviOJQOaBtCNI51iQVV09IiG0YRRBBx8w73RE7LM8mrrAXIwZjaNJErxL9v5IXow==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-sesv2@3.928.0':
@@ -895,8 +895,8 @@ packages:
     resolution: {integrity: sha512-SdXVjxZOIXefIR/NJx+lyXOrn4m0ScTAU2JXpLsFCkW2Cafo6vTqHUghyO8vak/XQ8PpPqpLXVpGbAYFuIPW6Q==}
     engines: {node: '>=18.0.0'}
 
-  '@aws-sdk/credential-provider-node@3.972.66':
-    resolution: {integrity: sha512-f+qjRXZpz7sgzbc4QB+6nLKfyKFgRRXzWdXbsKPv/VhVRyHsDyq4yBWC/B75BAJpFIcUeI2XR/3gdWJ677zB4A==}
+  '@aws-sdk/credential-provider-node@3.972.67':
+    resolution: {integrity: sha512-oYlzWst56rlhhjbYnexwv5hVLYe1cW4liLObhDfxDLI4RAQzleMVHQgQgx7XsC4HKj4e3kjT8v9DId+Pi/dndw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/credential-provider-process@3.928.0':
@@ -1045,40 +1045,28 @@ packages:
     resolution: {integrity: sha512-sl4Bm6yiMNYrZKkqqDFWN0UfnWhlS8ivKxrYl+6t0gCLrqr8y3B2IqZZbFRkfaVVp7C/baApyh71P+LeE1A2sQ==}
     engines: {node: '>=18.0.0'}
 
-  '@azure-rest/core-client@2.7.0':
-    resolution: {integrity: sha512-rL0lJqh1E8HLXNgjIw8cRyGAV/v+m6p1xRu/8OhsnmN8XHhwkyYJkAoGM+zrew96v7jZYPmVfy7pv7v4Iccfsg==}
-    engines: {node: '>=20.0.0'}
+  '@azure-rest/core-client@2.8.0':
+    resolution: {integrity: sha512-F1ybHeN+++QhyFCF/ehLUEvrOB6fehPdFBFtGdj0C3B2lpQ9zkPiO5JDgsqc6IfjuUe6b3dAbXK0a7+VgSGfhw==}
+    engines: {node: '>=22.0.0'}
 
   '@azure/abort-controller@1.0.0':
     resolution: {integrity: sha512-U4RM+AuCxlwq1GDP+VSswfzxvsmQ2hUAAhii2Em2xf0e00/6CsZAoQnQCxhvLDe39pebjivobU29LioN9x+DJQ==}
 
-  '@azure/abort-controller@2.0.0':
-    resolution: {integrity: sha512-RP/mR/WJchR+g+nQFJGOec+nzeN/VvjlwbinccoqfhTsTHbb8X5+mLDp48kHT0ueyum0BNSwGm0kX0UZuIqTGg==}
-    engines: {node: '>=18.0.0'}
+  '@azure/abort-controller@2.2.0':
+    resolution: {integrity: sha512-fNAjWnA/nZ2jz31kxR/AqRaUT8ewHBw/WuBIosK0moMy1C9e5ValbDfFdIxJzVOOYaYkV/b2F1S4H/aHiqfVQg==}
+    engines: {node: '>=22.0.0'}
 
-  '@azure/abort-controller@2.1.2':
-    resolution: {integrity: sha512-nBrLsEWm4J2u5LpAPjxADTlq3trDgVZZXHNKabeXZtpq3d3AbN/KGO82R87rdDz5/lYB024rtEf10/q0urNgsA==}
-    engines: {node: '>=18.0.0'}
+  '@azure/core-auth@1.11.0':
+    resolution: {integrity: sha512-IUZydyTUkDnYdstOW9pFOOUQlBjAepK5teihDE3x6yxsPJs/hsAaaYpeGxdxrgtOiJbBKSjKW7MDk7AEhb4LRg==}
+    engines: {node: '>=22.0.0'}
 
-  '@azure/core-auth@1.10.0':
-    resolution: {integrity: sha512-88Djs5vBvGbHQHf5ZZcaoNHo6Y8BKZkt3cw2iuJIQzLEgH4Ox6Tm4hjFhbqOxyYsgIG/eJbFEHpxRIfEEWv5Ow==}
-    engines: {node: '>=20.0.0'}
+  '@azure/core-client@1.11.0':
+    resolution: {integrity: sha512-JjQWO6akOck45PH/XBrxzsQGAiKrfFl4m5iggJ0ItMIz5omRufOXWpqCPpdjKN3vKDzlSUvFjaMb7Zwf0gvAdA==}
+    engines: {node: '>=22.0.0'}
 
-  '@azure/core-auth@1.7.2':
-    resolution: {integrity: sha512-Igm/S3fDYmnMq1uKS38Ae1/m37B3zigdlZw+kocwEhh5GjyKjPrXKO2J6rzpC1wAxrNil/jX9BJRqBshyjnF3g==}
-    engines: {node: '>=18.0.0'}
-
-  '@azure/core-auth@1.9.0':
-    resolution: {integrity: sha512-FPwHpZywuyasDSLMqJ6fhbOK3TqUdviZNF8OqRGA4W5Ewib2lEEZ+pBsYcBa88B2NGO/SEnYPGhyBqNlE8ilSw==}
-    engines: {node: '>=18.0.0'}
-
-  '@azure/core-client@1.10.2':
-    resolution: {integrity: sha512-1D2LpsU7y9xrqKjdIbsB7PlrRePw0xsVV8p+AKTlzITrWmscajryfJCdDJB/oGwvDI5HmRo04eMMADB67uwAwQ==}
-    engines: {node: '>=20.0.0'}
-
-  '@azure/core-http-compat@2.4.0':
-    resolution: {integrity: sha512-f1P96IB399YiN2ARYHP7EpZi3Bf3wH4SN2lGzrw7JVwm7bbsVYtf2iKSBwTywD2P62NOPZGHFSZi+6jjb75JuA==}
-    engines: {node: '>=20.0.0'}
+  '@azure/core-http-compat@2.5.0':
+    resolution: {integrity: sha512-BoSmXPx2er1Ai+wKlDvj29jIQespCNBwEmKyZVHO2kEFsWbGjAjwMCGzug3DJM5/QYIV3vej0S1zcU5bq9fa8w==}
+    engines: {node: '>=22.0.0'}
     peerDependencies:
       '@azure/core-client': ^1.10.0
       '@azure/core-rest-pipeline': ^1.22.0
@@ -1091,45 +1079,29 @@ packages:
     resolution: {integrity: sha512-0YIpccoX8m/k00O7mDDMdJpbr6mf1yWo2dfmxt5A8XVZVVMz2SSKaEbMCeJRvgQ0IaSlqhjT47p4hVIRRy90xw==}
     engines: {node: '>=18.0.0'}
 
-  '@azure/core-paging@1.6.2':
-    resolution: {integrity: sha512-YKWi9YuCU04B55h25cnOYZHxXYtEvQEbKST5vqRga7hWY9ydd3FZHdeQF8pyh+acWZvppw13M/LMGx0LABUVMA==}
-    engines: {node: '>=18.0.0'}
+  '@azure/core-paging@1.7.0':
+    resolution: {integrity: sha512-7GEAoIsaoBr6KELNRb8nypowCqvk8dnCHFCYg4XD4lOQGY2GqjQg5IhkRjyBFRO18CGSMq05PaNqSOE9GQro3g==}
+    engines: {node: '>=22.0.0'}
 
-  '@azure/core-rest-pipeline@1.24.0':
-    resolution: {integrity: sha512-PpLsoDQ3AMmKZ0VU+0GrmqMxgp/sExjlVm4R+nLWngeoEGAzOIPVifaxKGU5gMv+nWELUoHfvrolWD+ZS/nFJg==}
-    engines: {node: '>=20.0.0'}
-
-  '@azure/core-tracing@1.0.0':
-    resolution: {integrity: sha512-t22+vxAKHUX5BUaikagSYULtIuWrdLvm8jOLQMIu9q9oencUNT0QwSMMMXuB3NuJZhoP9vNIa+8L6v9BUsL5wA==}
-    engines: {node: '>=12.0.0'}
+  '@azure/core-rest-pipeline@1.25.0':
+    resolution: {integrity: sha512-bMs8ekJLjX8wPV+9IPBges1SLPyuDtE9g5gLDWOpxzKcoOFQnpLGkbcT1tdw3FaAmDS1gnPmMmJ6y/T5B96kIA==}
+    engines: {node: '>=22.0.0'}
 
   '@azure/core-tracing@1.0.0-preview.13':
     resolution: {integrity: sha512-KxDlhXyMlh2Jhj2ykX6vNEU0Vou4nHr025KoSEiz7cS3BNiHNaZcdECk/DmLkEB0as5T7b/TpRcehJ5yV6NeXQ==}
     engines: {node: '>=12.0.0'}
 
-  '@azure/core-tracing@1.2.0':
-    resolution: {integrity: sha512-UKTiEJPkWcESPYJz3X5uKRYyOcJD+4nYph+KpfdPRnQJVrZfk0KJgdnaAWKfhsBBtAf/D58Az4AvCJEmWgIBAg==}
-    engines: {node: '>=18.0.0'}
+  '@azure/core-tracing@1.4.0':
+    resolution: {integrity: sha512-eGwxD0AtncrxeBM4tG8R55Pc3rdX1hNW2WibJAgYpCVA6E93mvvVH+LcssoVjOBrSKWS55yEIHsk0X8ctHmfOQ==}
+    engines: {node: '>=22.0.0'}
 
-  '@azure/core-tracing@1.3.0':
-    resolution: {integrity: sha512-+XvmZLLWPe67WXNZo9Oc9CrPj/Tm8QnHR92fFAFdnbzwNdCH1h+7UdpaQgRSBsMY+oW1kHXNUZQLdZ1gHX3ROw==}
-    engines: {node: '>=20.0.0'}
+  '@azure/core-util@1.14.0':
+    resolution: {integrity: sha512-9n2pWK61veAuN0V20t9lOuoV4CFMdyAZ1ygZzvBGk/pBBJRib/PjL9PLXa/aI2CcPpyHfqVsxxqLCYl6uZlfDw==}
+    engines: {node: '>=22.0.0'}
 
-  '@azure/core-util@1.1.0':
-    resolution: {integrity: sha512-+i93lNJNA3Pl3KSuC6xKP2jTL4YFeDfO6VNOaYdk0cppZcLCxt811gS878VsqsCisaltdhl9lhMzK5kbxCiF4w==}
-    engines: {node: '>=12.0.0'}
-
-  '@azure/core-util@1.11.0':
-    resolution: {integrity: sha512-DxOSLua+NdpWoSqULhjDyAZTXFdP/LKkqtYuxxz1SCN289zk3OG8UOpnCQAz/tygyACBtWp/BoO72ptK7msY8g==}
-    engines: {node: '>=18.0.0'}
-
-  '@azure/core-util@1.13.0':
-    resolution: {integrity: sha512-o0psW8QWQ58fq3i24Q1K2XfS/jYTxr7O1HRcyUE9bV9NttLU+kYOH82Ixj8DGlMTOWgxm1Sss2QAfKK5UkSPxw==}
-    engines: {node: '>=20.0.0'}
-
-  '@azure/core-xml@1.5.1':
-    resolution: {integrity: sha512-xcNRHqCoSp4AunOALEae6A8f3qATb83gSrm31Iqb01OzblvC3/W/bfXozcq78EzIdzZzuH1bZ2NvRR0TdX709w==}
-    engines: {node: '>=20.0.0'}
+  '@azure/core-xml@1.6.0':
+    resolution: {integrity: sha512-e7lX/dk//F6Qf7BB6PTY4+p2yuOQtyOeHGyapYHNwqSp2OnYpwQt49A/Nin2XmKBQ69pwagR4k/lQBq8lbHQkA==}
+    engines: {node: '>=22.0.0'}
 
   '@azure/identity@4.13.1':
     resolution: {integrity: sha512-5C/2WD5Vb1lHnZS16dNQRPMjN6oV/Upba+C9nBIs15PmOi6A3ZGs4Lr2u60zw4S04gi+u3cEXiqTVP7M4Pz3kw==}
@@ -1143,16 +1115,9 @@ packages:
     resolution: {integrity: sha512-VmUSLbXRAbSzDD8grXHGPaknYs0SKr3yuf6U+d4XMpX4XuVYskNqbTTwXce0zR1LyxfTZm9rWEBcvs3vdYwCmQ==}
     engines: {node: '>=20.0.0'}
 
-  '@azure/logger@1.0.0':
-    resolution: {integrity: sha512-g2qLDgvmhyIxR3JVS8N67CyIOeFRKQlX/llxYJQr1OSGQqM3HTpVP8MjmjcEKbL/OIt2N9C9UFaNQuKOw1laOA==}
-
-  '@azure/logger@1.1.4':
-    resolution: {integrity: sha512-4IXXzcCdLdlXuCG+8UKEwLA1T1NHqUfanhXYHiQTn+6sfWCZXduqbtXDGceg3Ce5QxTGo7EqmbV6Bi+aqKuClQ==}
-    engines: {node: '>=18.0.0'}
-
-  '@azure/logger@1.3.0':
-    resolution: {integrity: sha512-fCqPIfOcLE+CGqGPd66c8bZpwAji98tZ4JI9i/mlTNTlsIWslCfpg48s/ypyLxZTump5sypjrKn2/kY7q8oAbA==}
-    engines: {node: '>=20.0.0'}
+  '@azure/logger@1.4.0':
+    resolution: {integrity: sha512-rbAE25KUfjU/s3XHUdJgceoCP5dEOpMx85J04kF+QMdta73XkuG9JGHHinch+XIoKpBdqljin+KqURpJriSzLA==}
+    engines: {node: '>=22.0.0'}
 
   '@azure/msal-browser@5.17.0':
     resolution: {integrity: sha512-/yTnW2TCk9Mh+2b/NOaHAN+MryUNxzRTaJD/YtrqOA9bpBWfTXn/iyReRbaLrK/btBo3stEzLyEvuWp2NZ5DuA==}
@@ -1385,9 +1350,6 @@ packages:
   '@directus/env@6.1.0':
     resolution: {integrity: sha512-DLTfygyk+wXsMp1U/O2aa/fhxtfKsEvmIBPtEgNFR5pQeeaqyo1HQ+yGUHzi/nOe1sT1TTH4j9HL1nKA6MgbXA==}
 
-  '@directus/errors@2.3.1':
-    resolution: {integrity: sha512-lTFCIBRirQa7gH1Nr6EpNiM0cFeIUMfBMrRzGDmgCqe56MnQ6+ZG0f7czY35+5uCKeIsLcrOVVv7NM3XGBQZ9w==}
-
   '@directus/errors@2.4.0':
     resolution: {integrity: sha512-XyRE86Nly8QmZKySfQct2ehhhHTkAADHu3HuZFeMh9C9ICX5Fa3D0b4v/3e3ZosCdTktbP4if+IeAlXcVtJpqA==}
 
@@ -1455,9 +1417,6 @@ packages:
 
   '@directus/storage-driver-supabase@4.0.1':
     resolution: {integrity: sha512-NoDrWZ8HRTMQHfM/494FY7LalRItxFNoehz++8JMr/wOPNjYC4wWzuhpWJ8l5RxSfNhJjfESVS5cgWrjz6QFUg==}
-
-  '@directus/storage@12.0.4':
-    resolution: {integrity: sha512-dfM1o0PKHIJV81vGRnvzLPl/YlAO+3vTcpY6eGXxYZ094Uiz52BzJCofmAf6LjWt7d8ydEVDxKG0trSaRFAkCw==}
 
   '@directus/storage@13.0.0':
     resolution: {integrity: sha512-0o2IMwbANUwZh2K8j9mO8scXOTl0YUc+71pWdkGmX38wLfGXjN96Kuc+KMaUfeTYoZYhwp4GaemBiK4UaCk/Iw==}
@@ -4404,9 +4363,9 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@typespec/ts-http-runtime@0.3.6':
-    resolution: {integrity: sha512-jIXhD0eWQ1JA6ln/5Dltyx22UxWNrw0hZmhy2rlv6m6KgF7kplHx3g0fzi09lNmTJQRR91OlemYp3xFnvDK9og==}
-    engines: {node: '>=20.0.0'}
+  '@typespec/ts-http-runtime@0.3.7':
+    resolution: {integrity: sha512-JVUD8X2tfDMWjcjLs4yVxxVrS8yR5vnh386GAXT9Qj79nBxxXSaHFQZg5FweLmT8HlPQ3kii6noUB+Z9RN7DvQ==}
+    engines: {node: '>=22.0.0'}
 
   '@unhead/dom@1.11.20':
     resolution: {integrity: sha512-jgfGYdOH+xHJF/j8gudjsYu3oIjFyXhCWcgKaw3vQnT616gSqyqnGQGOItL+BQtQZACKNISwIfx5PuOtztMKLA==}
@@ -5094,8 +5053,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  braintrust@3.21.0:
-    resolution: {integrity: sha512-Hj1A/ESN1VRM2f+iRRehF9IpHABd99TSStuXXUSsVrJAXBL7B7Ue08KcLjkpi5MCfBTjuWr4i/5SUGm+zuhbIA==}
+  braintrust@3.22.0:
+    resolution: {integrity: sha512-r3RmoLmZ/UsR3uReYWCV/B5CFA4kZjt+iXI41b8Hl6B7CDn8OLbeBxAX8ryMVGRJERNlGmbXLn0+n0IUqMFTqQ==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.34 || ^4.0
@@ -9263,8 +9222,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  systeminformation@5.31.16:
-    resolution: {integrity: sha512-37NsFaeaqwYxanLgdJAGWj8OXIRgvSBsDXGhlC0uUoHyl9nf4HrNsZjqtQ9Gc99bj9FQpffzYccPVuQ6gpjfqg==}
+  systeminformation@5.31.17:
+    resolution: {integrity: sha512-TvFA9iwDWlMjqZVlKIJ0Cy+Zgm9ttlMx0SMRwJDMNKyhlEKWBMb3+WRwDi/3dvHdWbexpos4Osp4U49p5WjB5g==}
     engines: {node: '>=8.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
@@ -10279,10 +10238,10 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-sesv2@3.1085.0':
+  '@aws-sdk/client-sesv2@3.1086.0':
     dependencies:
       '@aws-sdk/core': 3.975.1
-      '@aws-sdk/credential-provider-node': 3.972.66
+      '@aws-sdk/credential-provider-node': 3.972.67
       '@aws-sdk/signature-v4-multi-region': 3.996.39
       '@aws-sdk/types': 3.974.0
       '@smithy/core': 3.29.3
@@ -10505,7 +10464,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/credential-provider-node@3.972.66':
+  '@aws-sdk/credential-provider-node@3.972.67':
     dependencies:
       '@aws-sdk/credential-provider-env': 3.972.57
       '@aws-sdk/credential-provider-http': 3.972.59
@@ -10839,13 +10798,13 @@ snapshots:
 
   '@aws/lambda-invoke-store@0.3.0': {}
 
-  '@azure-rest/core-client@2.7.0':
+  '@azure-rest/core-client@2.8.0':
     dependencies:
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.10.0
-      '@azure/core-rest-pipeline': 1.24.0
-      '@azure/core-tracing': 1.3.0
-      '@typespec/ts-http-runtime': 0.3.6
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@typespec/ts-http-runtime': 0.3.7
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -10855,132 +10814,102 @@ snapshots:
     dependencies:
       tslib: 1.14.1
 
-  '@azure/abort-controller@2.0.0':
+  '@azure/abort-controller@2.2.0':
     dependencies:
       tslib: 2.8.1
 
-  '@azure/abort-controller@2.1.2':
+  '@azure/core-auth@1.11.0':
     dependencies:
-      tslib: 2.8.1
-
-  '@azure/core-auth@1.10.0':
-    dependencies:
-      '@azure/abort-controller': 2.0.0
-      '@azure/core-util': 1.11.0
-      tslib: 2.8.1
-
-  '@azure/core-auth@1.7.2':
-    dependencies:
-      '@azure/abort-controller': 2.0.0
-      '@azure/core-util': 1.1.0
-      tslib: 2.8.1
-    optional: true
-
-  '@azure/core-auth@1.9.0':
-    dependencies:
-      '@azure/abort-controller': 2.0.0
-      '@azure/core-util': 1.11.0
-      tslib: 2.8.1
-
-  '@azure/core-client@1.10.2':
-    dependencies:
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.10.0
-      '@azure/core-rest-pipeline': 1.24.0
-      '@azure/core-tracing': 1.3.0
-      '@azure/core-util': 1.13.0
-      '@azure/logger': 1.3.0
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-util': 1.14.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/core-http-compat@2.4.0(@azure/core-client@1.10.2)(@azure/core-rest-pipeline@1.24.0)':
+  '@azure/core-client@1.11.0':
     dependencies:
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-client': 1.10.2
-      '@azure/core-rest-pipeline': 1.24.0
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@azure/core-http-compat@2.5.0(@azure/core-client@1.11.0)(@azure/core-rest-pipeline@1.25.0)':
+    dependencies:
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-client': 1.11.0
+      '@azure/core-rest-pipeline': 1.25.0
 
   '@azure/core-lro@2.2.0':
     dependencies:
       '@azure/abort-controller': 1.0.0
       '@azure/core-tracing': 1.0.0-preview.13
-      '@azure/logger': 1.0.0
-      tslib: 2.8.1
-
-  '@azure/core-lro@2.7.2':
-    dependencies:
-      '@azure/abort-controller': 2.0.0
-      '@azure/core-util': 1.11.0
-      '@azure/logger': 1.0.0
-      tslib: 2.8.1
-    optional: true
-
-  '@azure/core-paging@1.6.2':
-    dependencies:
-      tslib: 2.8.1
-
-  '@azure/core-rest-pipeline@1.24.0':
-    dependencies:
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.10.0
-      '@azure/core-tracing': 1.3.0
-      '@azure/core-util': 1.13.0
-      '@azure/logger': 1.3.0
-      '@typespec/ts-http-runtime': 0.3.6
+      '@azure/logger': 1.4.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/core-tracing@1.0.0':
+  '@azure/core-lro@2.7.2':
+    dependencies:
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
+  '@azure/core-paging@1.7.0':
     dependencies:
       tslib: 2.8.1
-    optional: true
+
+  '@azure/core-rest-pipeline@1.25.0':
+    dependencies:
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
+      '@typespec/ts-http-runtime': 0.3.7
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@azure/core-tracing@1.0.0-preview.13':
     dependencies:
       '@opentelemetry/api': 1.9.1
       tslib: 2.8.1
 
-  '@azure/core-tracing@1.2.0':
+  '@azure/core-tracing@1.4.0':
     dependencies:
       tslib: 2.8.1
 
-  '@azure/core-tracing@1.3.0':
+  '@azure/core-util@1.14.0':
     dependencies:
-      tslib: 2.8.1
-
-  '@azure/core-util@1.1.0':
-    dependencies:
-      tslib: 2.8.1
-    optional: true
-
-  '@azure/core-util@1.11.0':
-    dependencies:
-      '@azure/abort-controller': 2.0.0
-      tslib: 2.8.1
-
-  '@azure/core-util@1.13.0':
-    dependencies:
-      '@azure/abort-controller': 2.0.0
-      '@typespec/ts-http-runtime': 0.3.6
+      '@azure/abort-controller': 2.2.0
+      '@typespec/ts-http-runtime': 0.3.7
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/core-xml@1.5.1':
+  '@azure/core-xml@1.6.0':
     dependencies:
       fast-xml-parser: 5.10.0
       tslib: 2.8.1
 
   '@azure/identity@4.13.1':
     dependencies:
-      '@azure/abort-controller': 2.0.0
-      '@azure/core-auth': 1.9.0
-      '@azure/core-client': 1.10.2
-      '@azure/core-rest-pipeline': 1.24.0
-      '@azure/core-tracing': 1.0.0
-      '@azure/core-util': 1.11.0
-      '@azure/logger': 1.0.0
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-client': 1.11.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
       '@azure/msal-browser': 5.17.0
       '@azure/msal-node': 5.4.0
       open: 10.2.0
@@ -10991,13 +10920,13 @@ snapshots:
 
   '@azure/keyvault-common@2.1.0':
     dependencies:
-      '@azure-rest/core-client': 2.7.0
-      '@azure/abort-controller': 2.0.0
-      '@azure/core-auth': 1.7.2
-      '@azure/core-rest-pipeline': 1.24.0
-      '@azure/core-tracing': 1.0.0
-      '@azure/core-util': 1.11.0
-      '@azure/logger': 1.1.4
+      '@azure-rest/core-client': 2.8.0
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -11005,32 +10934,24 @@ snapshots:
 
   '@azure/keyvault-keys@4.10.2':
     dependencies:
-      '@azure-rest/core-client': 2.7.0
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.9.0
+      '@azure-rest/core-client': 2.8.0
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
       '@azure/core-lro': 2.7.2
-      '@azure/core-paging': 1.6.2
-      '@azure/core-rest-pipeline': 1.24.0
-      '@azure/core-tracing': 1.2.0
-      '@azure/core-util': 1.11.0
+      '@azure/core-paging': 1.7.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
       '@azure/keyvault-common': 2.1.0
-      '@azure/logger': 1.1.4
+      '@azure/logger': 1.4.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
     optional: true
 
-  '@azure/logger@1.0.0':
+  '@azure/logger@1.4.0':
     dependencies:
-      tslib: 1.14.1
-
-  '@azure/logger@1.1.4':
-    dependencies:
-      tslib: 2.8.1
-
-  '@azure/logger@1.3.0':
-    dependencies:
-      '@typespec/ts-http-runtime': 0.3.6
+      '@typespec/ts-http-runtime': 0.3.7
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -11051,32 +10972,32 @@ snapshots:
 
   '@azure/storage-blob@12.29.1':
     dependencies:
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.9.0
-      '@azure/core-client': 1.10.2
-      '@azure/core-http-compat': 2.4.0(@azure/core-client@1.10.2)(@azure/core-rest-pipeline@1.24.0)
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-client': 1.11.0
+      '@azure/core-http-compat': 2.5.0(@azure/core-client@1.11.0)(@azure/core-rest-pipeline@1.25.0)
       '@azure/core-lro': 2.2.0
-      '@azure/core-paging': 1.6.2
-      '@azure/core-rest-pipeline': 1.24.0
-      '@azure/core-tracing': 1.2.0
-      '@azure/core-util': 1.11.0
-      '@azure/core-xml': 1.5.1
-      '@azure/logger': 1.1.4
-      '@azure/storage-common': 12.4.1(@azure/core-client@1.10.2)
+      '@azure/core-paging': 1.7.0
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/core-xml': 1.6.0
+      '@azure/logger': 1.4.0
+      '@azure/storage-common': 12.4.1(@azure/core-client@1.11.0)
       events: 3.3.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/storage-common@12.4.1(@azure/core-client@1.10.2)':
+  '@azure/storage-common@12.4.1(@azure/core-client@1.11.0)':
     dependencies:
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.9.0
-      '@azure/core-http-compat': 2.4.0(@azure/core-client@1.10.2)(@azure/core-rest-pipeline@1.24.0)
-      '@azure/core-rest-pipeline': 1.24.0
-      '@azure/core-tracing': 1.2.0
-      '@azure/core-util': 1.11.0
-      '@azure/logger': 1.1.4
+      '@azure/abort-controller': 2.2.0
+      '@azure/core-auth': 1.11.0
+      '@azure/core-http-compat': 2.5.0(@azure/core-client@1.11.0)(@azure/core-rest-pipeline@1.25.0)
+      '@azure/core-rest-pipeline': 1.25.0
+      '@azure/core-tracing': 1.4.0
+      '@azure/core-util': 1.14.0
+      '@azure/logger': 1.4.0
       events: 3.3.0
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -11247,13 +11168,13 @@ snapshots:
   '@braintrust/bt-win32-x64@0.12.0':
     optional: true
 
-  '@braintrust/otel@0.2.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(braintrust@3.21.0(zod@4.1.12))':
+  '@braintrust/otel@0.2.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(braintrust@3.22.0(zod@4.1.12))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 2.1.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/exporter-trace-otlp-http': 0.202.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.1.0(@opentelemetry/api@1.9.1)
-      braintrust: 3.21.0(zod@4.1.12)
+      braintrust: 3.22.0(zod@4.1.12)
 
   '@colordx/core@5.5.0': {}
 
@@ -11283,7 +11204,7 @@ snapshots:
 
   '@directus/ai@1.3.2': {}
 
-  '@directus/api@37.0.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.21.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)':
+  '@directus/api@37.0.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.22.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)':
     dependencies:
       '@ai-sdk/anthropic': 3.0.58(zod@4.1.12)
       '@ai-sdk/devtools': 0.0.15
@@ -11292,7 +11213,7 @@ snapshots:
       '@ai-sdk/openai-compatible': 2.0.35(zod@4.1.12)
       '@authenio/samlify-node-xmllint': 2.0.0(samlify@2.13.1)
       '@aws-sdk/client-sesv2': 3.928.0
-      '@braintrust/otel': 0.2.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(braintrust@3.21.0(zod@4.1.12))
+      '@braintrust/otel': 0.2.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(braintrust@3.22.0(zod@4.1.12))
       '@directus/ai': 1.3.2
       '@directus/app': 16.2.1
       '@directus/constants': 14.4.0
@@ -11346,7 +11267,7 @@ snapshots:
       cron: 4.3.4
       date-fns: 4.1.0
       deep-diff: 1.0.2
-      directus: 12.1.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.21.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)
+      directus: 12.1.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.22.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)
       dotenv: 17.2.3
       encodeurl: 2.0.0
       eventemitter2: 6.4.9
@@ -11554,11 +11475,6 @@ snapshots:
     transitivePeerDependencies:
       - vue
 
-  '@directus/errors@2.3.1':
-    dependencies:
-      '@directus/storage': 12.0.4
-      ms: 2.1.3
-
   '@directus/errors@2.4.0':
     dependencies:
       '@directus/storage': 13.0.0
@@ -11689,7 +11605,7 @@ snapshots:
 
   '@directus/license@0.3.0(mysql2@3.15.3)(pg@8.16.3)(sqlite3@5.1.7)(tedious@18.6.1)':
     dependencies:
-      '@directus/errors': 2.3.1
+      '@directus/errors': 2.4.0
       '@directus/sdk': 21.3.0
       jose: 6.2.3
       knex: 3.1.0(mysql2@3.15.3)(pg@8.16.3)(sqlite3@5.1.7)(tedious@18.6.1)
@@ -11799,8 +11715,6 @@ snapshots:
       undici: 7.28.0
     transitivePeerDependencies:
       - vue
-
-  '@directus/storage@12.0.4': {}
 
   '@directus/storage@13.0.0': {}
 
@@ -14044,7 +13958,7 @@ snapshots:
 
   '@types/nodemailer@7.0.3':
     dependencies:
-      '@aws-sdk/client-sesv2': 3.1085.0
+      '@aws-sdk/client-sesv2': 3.1086.0
       '@types/node': 25.9.1
 
   '@types/qs@6.15.1': {}
@@ -14090,7 +14004,7 @@ snapshots:
     dependencies:
       '@types/node': 25.9.1
 
-  '@typespec/ts-http-runtime@0.3.6':
+  '@typespec/ts-http-runtime@0.3.7':
     dependencies:
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.0
@@ -14865,10 +14779,9 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  braintrust@3.21.0(zod@4.1.12):
+  braintrust@3.22.0(zod@4.1.12):
     dependencies:
       '@next/env': 14.2.35
-      '@types/estree': 1.0.9
       '@vercel/functions': 1.0.2
       acorn: 8.16.0
       acorn-import-attributes: 1.9.5(acorn@8.16.0)
@@ -15486,9 +15399,9 @@ snapshots:
 
   diff@8.0.4: {}
 
-  directus@12.1.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.21.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0):
+  directus@12.1.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.22.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0):
     dependencies:
-      '@directus/api': 37.0.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.21.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)
+      '@directus/api': 37.0.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.1.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.202.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.1))(@types/node@25.9.1)(@unhead/vue@1.11.20(vue@3.5.24(typescript@6.0.3)))(braintrust@3.22.0(zod@4.1.12))(encoding@0.1.13)(jiti@2.7.0)(lodash@4.18.1)(pinia@2.3.1(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(terser@5.49.0)(typescript@6.0.3)(vue@3.5.24(typescript@6.0.3))(yaml@2.9.0)
       '@directus/update-check': 14.0.0
     transitivePeerDependencies:
       - '@arethetypeswrong/core'
@@ -15973,7 +15886,7 @@ snapshots:
       once: 1.4.0
       parseurl: 1.3.3
       proxy-addr: 2.0.7
-      qs: 6.15.3
+      qs: 6.14.2
       range-parser: 1.3.0
       router: 2.2.0
       send: 1.2.1
@@ -17246,7 +17159,7 @@ snapshots:
 
   minipass-collect@1.0.2:
     dependencies:
-      minipass: 3.0.0
+      minipass: 3.1.3
     optional: true
 
   minipass-fetch@1.3.2:
@@ -17260,17 +17173,17 @@ snapshots:
 
   minipass-flush@1.0.7:
     dependencies:
-      minipass: 3.0.0
+      minipass: 3.1.3
     optional: true
 
   minipass-pipeline@1.2.4:
     dependencies:
-      minipass: 3.0.0
+      minipass: 3.1.3
     optional: true
 
   minipass-sized@1.0.3:
     dependencies:
-      minipass: 3.0.0
+      minipass: 3.1.3
     optional: true
 
   minipass@3.0.0:
@@ -17771,7 +17684,7 @@ snapshots:
       agent-base: 7.0.2
       debug: 4.4.3
       get-uri: 6.0.1
-      http-proxy-agent: 7.0.0
+      http-proxy-agent: 7.0.1
       https-proxy-agent: 7.0.3
       pac-resolver: 7.0.0
       socks-proxy-agent: 8.0.2
@@ -18069,7 +17982,7 @@ snapshots:
       async: 3.2.6
       debug: 4.4.3
       pidusage: 2.0.21
-      systeminformation: 5.31.16
+      systeminformation: 5.31.17
       tx2: 1.0.5
     transitivePeerDependencies:
       - supports-color
@@ -18557,7 +18470,7 @@ snapshots:
   readable-stream@3.6.2:
     dependencies:
       inherits: 2.0.4
-      string_decoder: 1.3.0
+      string_decoder: 1.1.1
       util-deprecate: 1.0.2
 
   readable-stream@4.7.0:
@@ -19472,7 +19385,7 @@ snapshots:
       picocolors: 1.1.1
       sax: 1.6.0
 
-  systeminformation@5.31.16:
+  systeminformation@5.31.17:
     optional: true
 
   tailwindcss@4.3.0: {}
@@ -19531,7 +19444,7 @@ snapshots:
 
   tedious@18.6.1:
     dependencies:
-      '@azure/core-auth': 1.7.2
+      '@azure/core-auth': 1.11.0
       '@azure/identity': 4.13.1
       '@azure/keyvault-keys': 4.10.2
       '@js-joda/core': 5.7.0

@@ -26,10 +26,10 @@ services:
   directus:
     image: directus/directus:12.1.1
     env_file:
-      - ../../backend/directus/.env.example
+      - ../.env.example
     volumes:
-      - ../../backend/directus:/workspace/backend/directus:ro
-      - ../../backend/directus/extensions:/directus/extensions:ro
+      - ..:/workspace/backend/directus:ro
+      - ../extensions:/directus/extensions:ro
     ports:
       - "8055:8055"
     depends_on:
@@ -40,10 +40,10 @@ services:
   worker:
     image: directus/directus:12.1.1
     env_file:
-      - ../../backend/directus/.env.example
+      - ../.env.example
     volumes:
-      - ../../backend/directus:/workspace/backend/directus:ro
-      - ../../backend/directus/extensions:/directus/extensions:ro
+      - ..:/workspace/backend/directus:ro
+      - ../extensions:/directus/extensions:ro
     depends_on:
       - postgres
       - redis
