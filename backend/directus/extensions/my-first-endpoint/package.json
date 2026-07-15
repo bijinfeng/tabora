@@ -1,7 +1,7 @@
 {
-  "name": "directus-extension-tabora",
+  "name": "my-first-endpoint",
   "version": "1.0.0",
-  "description": "Tabora custom endpoints for authentication, attachments, and sync",
+  "description": "Please enter a description for your extension",
   "keywords": [
     "directus",
     "directus-extension",
@@ -13,12 +13,13 @@
   "type": "module",
   "scripts": {
     "build": "directus-extension build",
-    "dev": "directus-extension build -w --no-minify"
+    "dev": "directus-extension build -w --no-minify",
+    "link": "directus-extension link",
+    "validate": "directus-extension validate"
   },
   "devDependencies": {
     "@directus/extensions-sdk": "18.0.1",
     "@tabora/tsconfig": "workspace:*",
-    "@types/express": "^5.0.6",
     "@types/node": "catalog:node",
     "typescript": "catalog:build"
   },

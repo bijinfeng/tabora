@@ -4,6 +4,7 @@ packages:
   - plugins/*
   - plugins/*/*
   - backend/directus
+  - backend/directus/extensions/*
   - tooling/*
 
 allowBuilds:

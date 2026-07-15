@@ -1,10 +1,16 @@
+import type { Request, Response } from "express"
+import { registerAttachmentsEndpoints } from "./attachments"
+
 export default {
   id: "tabora",
   handler: (router: any, context: any) => {
     const { services, database } = context
 
+    // Register attachments endpoints
+    registerAttachmentsEndpoints(router, context)
+
     // POST /auth/register
-    router.post("/auth/register", async (req: any, res: any) => {
+    router.post("/auth/register", async (req: Request, res: Response) => {
       const { email, password } = req.body
 
       if (!email || !password) {
@@ -38,7 +44,7 @@ export default {
     })
 
     // POST /auth/login
-    router.post("/auth/login", async (req: any, res: any) => {
+    router.post("/auth/login", async (req: Request, res: Response) => {
       const { email, password } = req.body
 
       if (!email || !password) {
@@ -48,7 +54,7 @@ export default {
       }
 
       try {
-        const schema = req.schema || {}
+        const schema = (req as any).schema || {}
         const authService = new services.AuthenticationService({
           schema,
           accountability: null,
@@ -71,7 +77,7 @@ export default {
     })
 
     // POST /auth/refresh
-    router.post("/auth/refresh", async (req: any, res: any) => {
+    router.post("/auth/refresh", async (req: Request, res: Response) => {
       const { refresh_token } = req.body
 
       if (!refresh_token) {
@@ -81,7 +87,7 @@ export default {
       }
 
       try {
-        const schema = req.schema || {}
+        const schema = (req as any).schema || {}
         const authService = new services.AuthenticationService({
           schema,
           accountability: null,
@@ -104,7 +110,7 @@ export default {
     })
 
     // POST /auth/logout
-    router.post("/auth/logout", async (req: any, res: any) => {
+    router.post("/auth/logout", async (req: Request, res: Response) => {
       const { refresh_token } = req.body
 
       if (!refresh_token) {
@@ -114,7 +120,7 @@ export default {
       }
 
       try {
-        const schema = req.schema || {}
+        const schema = (req as any).schema || {}
         const authService = new services.AuthenticationService({
           schema,
           accountability: null,
@@ -131,8 +137,8 @@ export default {
     })
 
     // GET /auth/session
-    router.get("/auth/session", async (req: any, res: any) => {
-      const accountability = req.accountability
+    router.get("/auth/session", async (req: Request, res: Response) => {
+      const accountability = (req as any).accountability
 
       if (!accountability?.user) {
         return res.status(401).json({
@@ -141,7 +147,7 @@ export default {
       }
 
       try {
-        const schema = req.schema || {}
+        const schema = (req as any).schema || {}
         const usersService = new services.UsersService({
           schema,
           accountability,
@@ -158,7 +164,7 @@ export default {
     })
 
     // POST /auth/send-code
-    router.post("/auth/send-code", async (req: any, res: any) => {
+    router.post("/auth/send-code", async (req: Request, res: Response) => {
       const { email } = req.body
 
       if (!email) {
@@ -196,7 +202,7 @@ export default {
     })
 
     // POST /auth/verify-code
-    router.post("/auth/verify-code", async (req: any, res: any) => {
+    router.post("/auth/verify-code", async (req: Request, res: Response) => {
       const { token, code, password } = req.body
       const resetToken = token || code
 
@@ -230,8 +236,8 @@ export default {
     })
 
     // GET /auth/devices
-    router.get("/auth/devices", async (req: any, res: any) => {
-      const accountability = req.accountability
+    router.get("/auth/devices", async (req: Request, res: Response) => {
+      const accountability = (req as any).accountability
 
       if (!accountability?.user) {
         return res.status(401).json({
@@ -255,8 +261,8 @@ export default {
     })
 
     // POST /auth/revoke
-    router.post("/auth/revoke", async (req: any, res: any) => {
-      const accountability = req.accountability
+    router.post("/auth/revoke", async (req: Request, res: Response) => {
+      const accountability = (req as any).accountability
 
       if (!accountability?.user) {
         return res.status(401).json({
