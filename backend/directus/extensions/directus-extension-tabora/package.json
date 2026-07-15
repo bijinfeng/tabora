@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@directus/extensions-sdk": "18.0.1",
+    "@directus/types": "^16.0.0",
     "@tabora/tsconfig": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/node": "catalog:node",

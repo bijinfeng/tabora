@@ -1,13 +1,11 @@
-import type { Request, Response } from "express"
-
 // Attachments endpoints
 export function registerAttachmentsEndpoints(router: any, context: any): void {
   const { database } = context
 
   // POST /attachments/prepare
-  router.post("/attachments/prepare", async (req: Request, res: Response) => {
+  router.post("/attachments/prepare", async (req: any, res: any) => {
     const { entity_type, mime_type, size_bytes, filename } = req.body
-    const accountability = (req as any).accountability
+    const accountability = req.accountability
 
     if (!accountability?.user) {
       return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
@@ -54,9 +52,9 @@ export function registerAttachmentsEndpoints(router: any, context: any): void {
   })
 
   // POST /attachments/commit
-  router.post("/attachments/commit", async (req: Request, res: Response) => {
+  router.post("/attachments/commit", async (req: any, res: any) => {
     const { file_id, entity_type, entity_id } = req.body
-    const accountability = (req as any).accountability
+    const accountability = req.accountability
 
     if (!accountability?.user) {
       return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
@@ -91,9 +89,9 @@ export function registerAttachmentsEndpoints(router: any, context: any): void {
   })
 
   // GET /attachments/:id/access
-  router.get("/attachments/:id/access", async (req: Request, res: Response) => {
+  router.get("/attachments/:id/access", async (req: any, res: any) => {
     const { id } = req.params
-    const accountability = (req as any).accountability
+    const accountability = req.accountability
 
     if (!accountability?.user) {
       return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
@@ -122,10 +120,10 @@ export function registerAttachmentsEndpoints(router: any, context: any): void {
   })
 
   // POST /attachments/:id/bind
-  router.post("/attachments/:id/bind", async (req: Request, res: Response) => {
+  router.post("/attachments/:id/bind", async (req: any, res: any) => {
     const { id } = req.params
     const { entity_type, entity_id } = req.body
-    const accountability = (req as any).accountability
+    const accountability = req.accountability
 
     if (!accountability?.user) {
       return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
@@ -157,10 +155,10 @@ export function registerAttachmentsEndpoints(router: any, context: any): void {
   })
 
   // POST /attachments/:id/unbind
-  router.post("/attachments/:id/unbind", async (req: Request, res: Response) => {
+  router.post("/attachments/:id/unbind", async (req: any, res: any) => {
     const { id } = req.params
     const { entity_type, entity_id } = req.body
-    const accountability = (req as any).accountability
+    const accountability = req.accountability
 
     if (!accountability?.user) {
       return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
@@ -194,9 +192,9 @@ export function registerAttachmentsEndpoints(router: any, context: any): void {
   })
 
   // DELETE /attachments/:id
-  router.delete("/attachments/:id", async (req: Request, res: Response) => {
+  router.delete("/attachments/:id", async (req: any, res: any) => {
     const { id } = req.params
-    const accountability = (req as any).accountability
+    const accountability = req.accountability
 
     if (!accountability?.user) {
       return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
@@ -218,9 +216,9 @@ export function registerAttachmentsEndpoints(router: any, context: any): void {
   })
 
   // GET /attachments/:id/meta
-  router.get("/attachments/:id/meta", async (req: Request, res: Response) => {
+  router.get("/attachments/:id/meta", async (req: any, res: any) => {
     const { id } = req.params
-    const accountability = (req as any).accountability
+    const accountability = req.accountability
 
     if (!accountability?.user) {
       return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
