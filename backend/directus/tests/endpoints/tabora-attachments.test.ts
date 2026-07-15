@@ -171,7 +171,15 @@ async function loadExtension() {
   vi.resetModules()
   // @ts-expect-error - dynamic import of extension
   const mod = (await import("../../extensions/directus-extension-tabora/dist/index")) as any
-  return mod.default as any
+  const ext = mod.default
+  // Adapt defineEndpoint format to test format
+  if (typeof ext === "function") {
+    return {
+      id: "tabora",
+      handler: ext,
+    }
+  }
+  return ext as any
 }
 
 function findRoute(routes: Route[], method: Route["method"], path: string) {

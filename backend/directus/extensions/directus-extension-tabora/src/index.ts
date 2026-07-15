@@ -1,294 +1,291 @@
-import type { Request, Response } from "express"
+import { defineEndpoint } from "@directus/extensions-sdk"
 import { registerAttachmentsEndpoints } from "./attachments"
 
-export default {
-  id: "tabora",
-  handler: (router: any, context: any) => {
-    const { services, database } = context
+export default defineEndpoint((router, context) => {
+  const { services, database } = context
 
-    // Register attachments endpoints
-    registerAttachmentsEndpoints(router, context)
+  // Register attachments endpoints
+  registerAttachmentsEndpoints(router, context)
 
-    // POST /auth/register
-    router.post("/auth/register", async (req: Request, res: Response) => {
-      const { email, password } = req.body
+  // POST /auth/register
+  router.post("/auth/register", async (req, res) => {
+    const { email, password } = req.body
 
-      if (!email || !password) {
-        return res.status(400).json({
-          errors: [{ message: "Email and password are required" }],
+    if (!email || !password) {
+      return res.status(400).json({
+        errors: [{ message: "Email and password are required" }],
+      })
+    }
+
+    try {
+      const baseUrl =
+        process.env.TABORA_INTERNAL_DIRECTUS_URL || `http://localhost:${process.env.PORT || 8055}`
+      const response = await fetch(`${baseUrl}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        return res.status(response.status).json({
+          errors: [{ message: errorText }],
         })
       }
 
-      try {
-        const baseUrl =
-          process.env.TABORA_INTERNAL_DIRECTUS_URL || `http://localhost:${process.env.PORT || 8055}`
-        const response = await fetch(`${baseUrl}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        })
+      return res.sendStatus(204)
+    } catch (_error) {
+      return res.status(500).json({
+        errors: [{ message: "Registration failed" }],
+      })
+    }
+  })
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          return res.status(response.status).json({
-            errors: [{ message: errorText }],
-          })
-        }
+  // POST /auth/login
+  router.post("/auth/login", async (req, res) => {
+    const { email, password } = req.body
 
-        return res.sendStatus(204)
-      } catch (_error) {
-        return res.status(500).json({
-          errors: [{ message: "Registration failed" }],
-        })
-      }
-    })
+    if (!email || !password) {
+      return res.status(400).json({
+        errors: [{ message: "Email and password are required" }],
+      })
+    }
 
-    // POST /auth/login
-    router.post("/auth/login", async (req: Request, res: Response) => {
-      const { email, password } = req.body
+    try {
+      const schema = (req as any).schema || {}
+      const authService = new services.AuthenticationService({
+        schema,
+        accountability: null,
+      })
 
-      if (!email || !password) {
-        return res.status(400).json({
-          errors: [{ message: "Email and password are required" }],
-        })
-      }
+      const result = await authService.login("default", { email, password }, { session: true })
 
-      try {
-        const schema = (req as any).schema || {}
-        const authService = new services.AuthenticationService({
-          schema,
-          accountability: null,
-        })
+      return res.json({
+        data: {
+          access_token: result.accessToken,
+          refresh_token: result.refreshToken,
+          expires: result.expires,
+        },
+      })
+    } catch (_error) {
+      return res.status(401).json({
+        errors: [{ message: "Invalid credentials" }],
+      })
+    }
+  })
 
-        const result = await authService.login("default", { email, password }, { session: true })
+  // POST /auth/refresh
+  router.post("/auth/refresh", async (req, res) => {
+    const { refresh_token } = req.body
 
-        return res.json({
-          data: {
-            access_token: result.accessToken,
-            refresh_token: result.refreshToken,
-            expires: result.expires,
-          },
-        })
-      } catch (_error) {
-        return res.status(401).json({
-          errors: [{ message: "Invalid credentials" }],
-        })
-      }
-    })
+    if (!refresh_token) {
+      return res.status(400).json({
+        errors: [{ message: "Refresh token is required" }],
+      })
+    }
 
-    // POST /auth/refresh
-    router.post("/auth/refresh", async (req: Request, res: Response) => {
-      const { refresh_token } = req.body
+    try {
+      const schema = (req as any).schema || {}
+      const authService = new services.AuthenticationService({
+        schema,
+        accountability: null,
+      })
 
-      if (!refresh_token) {
-        return res.status(400).json({
-          errors: [{ message: "Refresh token is required" }],
-        })
-      }
+      const result = await authService.refresh(refresh_token, { session: true })
 
-      try {
-        const schema = (req as any).schema || {}
-        const authService = new services.AuthenticationService({
-          schema,
-          accountability: null,
-        })
+      return res.json({
+        data: {
+          access_token: result.accessToken,
+          refresh_token: result.refreshToken,
+          expires: result.expires,
+        },
+      })
+    } catch (_error) {
+      return res.status(401).json({
+        errors: [{ message: "Invalid refresh token" }],
+      })
+    }
+  })
 
-        const result = await authService.refresh(refresh_token, { session: true })
+  // POST /auth/logout
+  router.post("/auth/logout", async (req, res) => {
+    const { refresh_token } = req.body
 
-        return res.json({
-          data: {
-            access_token: result.accessToken,
-            refresh_token: result.refreshToken,
-            expires: result.expires,
-          },
-        })
-      } catch (_error) {
-        return res.status(401).json({
-          errors: [{ message: "Invalid refresh token" }],
-        })
-      }
-    })
+    if (!refresh_token) {
+      return res.status(400).json({
+        errors: [{ message: "Refresh token is required" }],
+      })
+    }
 
-    // POST /auth/logout
-    router.post("/auth/logout", async (req: Request, res: Response) => {
-      const { refresh_token } = req.body
+    try {
+      const schema = (req as any).schema || {}
+      const authService = new services.AuthenticationService({
+        schema,
+        accountability: null,
+      })
 
-      if (!refresh_token) {
-        return res.status(400).json({
-          errors: [{ message: "Refresh token is required" }],
-        })
-      }
+      await authService.logout(refresh_token)
 
-      try {
-        const schema = (req as any).schema || {}
-        const authService = new services.AuthenticationService({
-          schema,
-          accountability: null,
-        })
+      return res.sendStatus(204)
+    } catch (_error) {
+      return res.status(500).json({
+        errors: [{ message: "Logout failed" }],
+      })
+    }
+  })
 
-        await authService.logout(refresh_token)
+  // GET /auth/session
+  router.get("/auth/session", async (req, res) => {
+    const accountability = (req as any).accountability
 
-        return res.sendStatus(204)
-      } catch (_error) {
-        return res.status(500).json({
-          errors: [{ message: "Logout failed" }],
-        })
-      }
-    })
+    if (!accountability?.user) {
+      return res.status(401).json({
+        errors: [{ message: "Unauthorized" }],
+      })
+    }
 
-    // GET /auth/session
-    router.get("/auth/session", async (req: Request, res: Response) => {
-      const accountability = (req as any).accountability
+    try {
+      const schema = (req as any).schema || {}
+      const usersService = new services.UsersService({
+        schema,
+        accountability,
+      })
 
-      if (!accountability?.user) {
-        return res.status(401).json({
-          errors: [{ message: "Unauthorized" }],
-        })
-      }
+      const user = await usersService.readOne("me")
 
-      try {
-        const schema = (req as any).schema || {}
-        const usersService = new services.UsersService({
-          schema,
-          accountability,
-        })
+      return res.json({ data: user })
+    } catch (_error) {
+      return res.status(500).json({
+        errors: [{ message: "Failed to fetch session" }],
+      })
+    }
+  })
 
-        const user = await usersService.readOne("me")
+  // POST /auth/send-code
+  router.post("/auth/send-code", async (req, res) => {
+    const { email } = req.body
 
-        return res.json({ data: user })
-      } catch (_error) {
-        return res.status(500).json({
-          errors: [{ message: "Failed to fetch session" }],
-        })
-      }
-    })
+    if (!email) {
+      return res.status(400).json({
+        errors: [{ message: "Email is required" }],
+      })
+    }
 
-    // POST /auth/send-code
-    router.post("/auth/send-code", async (req: Request, res: Response) => {
-      const { email } = req.body
+    try {
+      const baseUrl =
+        process.env.TABORA_INTERNAL_DIRECTUS_URL || `http://localhost:${process.env.PORT || 8055}`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
 
-      if (!email) {
-        return res.status(400).json({
-          errors: [{ message: "Email is required" }],
-        })
-      }
+      const response = await fetch(`${baseUrl}/auth/password/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        signal: controller.signal,
+      })
 
-      try {
-        const baseUrl =
-          process.env.TABORA_INTERNAL_DIRECTUS_URL || `http://localhost:${process.env.PORT || 8055}`
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 30000)
+      clearTimeout(timeoutId)
 
-        const response = await fetch(`${baseUrl}/auth/password/request`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-          signal: controller.signal,
-        })
-
-        clearTimeout(timeoutId)
-
-        if (!response.ok) {
-          return res.sendStatus(204)
-        }
-
-        return res.sendStatus(204)
-      } catch (error: any) {
-        if (error.name === "AbortError") {
-          return res.status(504).json({ error: "upstream_unavailable" })
-        }
+      if (!response.ok) {
         return res.sendStatus(204)
       }
-    })
 
-    // POST /auth/verify-code
-    router.post("/auth/verify-code", async (req: Request, res: Response) => {
-      const { token, code, password } = req.body
-      const resetToken = token || code
+      return res.sendStatus(204)
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        return res.status(504).json({ error: "upstream_unavailable" })
+      }
+      return res.sendStatus(204)
+    }
+  })
 
-      if (!resetToken || !password) {
+  // POST /auth/verify-code
+  router.post("/auth/verify-code", async (req, res) => {
+    const { token, code, password } = req.body
+    const resetToken = token || code
+
+    if (!resetToken || !password) {
+      return res.status(400).json({
+        errors: [{ message: "Token/code and password are required" }],
+      })
+    }
+
+    try {
+      const baseUrl =
+        process.env.TABORA_INTERNAL_DIRECTUS_URL || `http://localhost:${process.env.PORT || 8055}`
+      const response = await fetch(`${baseUrl}/auth/password/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, password }),
+      })
+
+      if (!response.ok) {
         return res.status(400).json({
-          errors: [{ message: "Token/code and password are required" }],
+          errors: [{ message: "Invalid or expired code" }],
         })
       }
 
-      try {
-        const baseUrl =
-          process.env.TABORA_INTERNAL_DIRECTUS_URL || `http://localhost:${process.env.PORT || 8055}`
-        const response = await fetch(`${baseUrl}/auth/password/reset`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: resetToken, password }),
-        })
+      return res.sendStatus(204)
+    } catch (_error) {
+      return res.status(500).json({
+        errors: [{ message: "Verification failed" }],
+      })
+    }
+  })
 
-        if (!response.ok) {
-          return res.status(400).json({
-            errors: [{ message: "Invalid or expired code" }],
-          })
-        }
+  // GET /auth/devices
+  router.get("/auth/devices", async (req, res) => {
+    const accountability = (req as any).accountability
 
-        return res.sendStatus(204)
-      } catch (_error) {
-        return res.status(500).json({
-          errors: [{ message: "Verification failed" }],
-        })
-      }
-    })
+    if (!accountability?.user) {
+      return res.status(401).json({
+        errors: [{ message: "Unauthorized" }],
+      })
+    }
 
-    // GET /auth/devices
-    router.get("/auth/devices", async (req: Request, res: Response) => {
-      const accountability = (req as any).accountability
+    try {
+      const sessions = await database
+        .select("*")
+        .from("directus_sessions")
+        .where({ user: accountability.user })
+        .orderBy("created_at", "desc")
 
-      if (!accountability?.user) {
-        return res.status(401).json({
-          errors: [{ message: "Unauthorized" }],
-        })
-      }
+      return res.json({ data: { devices: sessions } })
+    } catch (_error) {
+      return res.status(500).json({
+        errors: [{ message: "Failed to fetch devices" }],
+      })
+    }
+  })
 
-      try {
-        const sessions = await database
-          .select("*")
-          .from("directus_sessions")
-          .where({ user: accountability.user })
-          .orderBy("created_at", "desc")
+  // POST /auth/revoke
+  router.post("/auth/revoke", async (req, res) => {
+    const accountability = (req as any).accountability
 
-        return res.json({ data: { devices: sessions } })
-      } catch (_error) {
-        return res.status(500).json({
-          errors: [{ message: "Failed to fetch devices" }],
-        })
-      }
-    })
+    if (!accountability?.user) {
+      return res.status(401).json({
+        errors: [{ message: "Unauthorized" }],
+      })
+    }
 
-    // POST /auth/revoke
-    router.post("/auth/revoke", async (req: Request, res: Response) => {
-      const accountability = (req as any).accountability
+    const { session_id } = req.body
 
-      if (!accountability?.user) {
-        return res.status(401).json({
-          errors: [{ message: "Unauthorized" }],
-        })
-      }
+    if (!session_id) {
+      return res.status(400).json({
+        errors: [{ message: "Session ID is required" }],
+      })
+    }
 
-      const { session_id } = req.body
+    try {
+      await database("directus_sessions")
+        .where({ token: session_id, user: accountability.user })
+        .del()
 
-      if (!session_id) {
-        return res.status(400).json({
-          errors: [{ message: "Session ID is required" }],
-        })
-      }
-
-      try {
-        await database("directus_sessions")
-          .where({ token: session_id, user: accountability.user })
-          .del()
-
-        return res.sendStatus(204)
-      } catch (_error) {
-        return res.status(500).json({
-          errors: [{ message: "Failed to revoke session" }],
-        })
-      }
-    })
-  },
-}
+      return res.sendStatus(204)
+    } catch (_error) {
+      return res.status(500).json({
+        errors: [{ message: "Failed to revoke session" }],
+      })
+    }
+  })
+})
