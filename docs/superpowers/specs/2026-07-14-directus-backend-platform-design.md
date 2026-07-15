@@ -593,9 +593,9 @@ Directus 默认后台用于管理：
 - staging 先于 production 升级。
 - schema 变更必须可回放，禁止只在生产手工修改。
 
-### 10.2 本地开发口径（ADMIN_*、dev:directus env、首次启动闭环）
+### 10.2 本地开发口径（ADMIN\_\*、dev:directus env、首次启动闭环）
 
-#### ADMIN_* 口径
+#### ADMIN\_\* 口径
 
 使用 `ADMIN_EMAIL` / `ADMIN_PASSWORD` 作为本地开发与脚本的一致口径：
 

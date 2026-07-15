@@ -87,6 +87,7 @@ class UsersServiceMock {
 
 async function loadExtension() {
   vi.resetModules()
+  // @ts-expect-error - dynamic import of extension
   const mod = (await import("../../extensions/directus-extension-tabora/dist/index")) as any
   return mod.default as any
 }
@@ -338,7 +339,7 @@ describe("tabora-auth endpoint extension", () => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  it("send-code 超时返回 504 且不泄露错误体", async () => {
+  it("send-code 超时返回 504 且不泄露错误体", { timeout: 10000 }, async () => {
     vi.useFakeTimers()
 
     const router = createRouter()

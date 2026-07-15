@@ -59,10 +59,7 @@ describe("directus schema snapshot", () => {
     expect(attachmentPolicies?.fields.some((f) => f.name === "max_size_bytes")).toBe(true)
   })
 
-  it("wires the bootstrap script into the package entrypoints", () => {
-    expect(packageJson).toContain(
-      '"bootstrap": "node --experimental-strip-types ./scripts/bootstrap.ts"',
-    )
+  it("wires the schema provisioning script into the package entrypoints", () => {
     expect(packageJson).toContain(
       '"schema:provision": "node --experimental-strip-types ./scripts/provisionSchema.ts"',
     )

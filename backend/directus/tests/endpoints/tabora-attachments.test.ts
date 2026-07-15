@@ -169,6 +169,7 @@ function createDatabase(options?: {
 
 async function loadExtension() {
   vi.resetModules()
+  // @ts-expect-error - dynamic import of extension
   const mod = (await import("../../extensions/directus-extension-tabora/dist/index")) as any
   return mod.default as any
 }

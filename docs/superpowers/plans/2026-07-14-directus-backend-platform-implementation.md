@@ -10,14 +10,14 @@
 
 ---
 
-## 当前基线优先级（ADMIN_*、dev:directus env、首次启动闭环、provisioning）
+## 当前基线优先级（ADMIN\_\*、dev:directus env、首次启动闭环、provisioning）
 
 本计划分两层交付：
 
 - **当前基线（优先完成）：** 提供可启动的本地 Directus 栈，并建立 schema provisioning（`manifest.json` + `snapshot.json`）的闭环
 - **后续扩展（逐步推进）：** auth / attachments / sync / admin interfaces / worker 等业务扩展（后文任务 3+）
 
-### ADMIN_* 口径
+### ADMIN\_\* 口径
 
 `ADMIN_EMAIL` / `ADMIN_PASSWORD` 作为 Directus 与脚本的统一口径：
 
@@ -280,14 +280,14 @@ describe("directus schema manifest", () => {
   const manifest = readFileSync("backend/directus/schema/manifest.json", "utf8")
 
   it("declares sync collections", () => {
-    expect(manifest).toContain("\"sync_devices\"")
-    expect(manifest).toContain("\"synced_records\"")
-    expect(manifest).toContain("\"sync_conflicts\"")
+    expect(manifest).toContain('"sync_devices"')
+    expect(manifest).toContain('"synced_records"')
+    expect(manifest).toContain('"sync_conflicts"')
   })
 
   it("declares attachment collections", () => {
-    expect(manifest).toContain("\"attachment_refs\"")
-    expect(manifest).toContain("\"attachment_policies\"")
+    expect(manifest).toContain('"attachment_refs"')
+    expect(manifest).toContain('"attachment_policies"')
   })
 })
 ```

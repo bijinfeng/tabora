@@ -13,7 +13,6 @@ function resolveRepoRoot() {
 }
 
 const repoRoot = resolveRepoRoot()
-const rootPackageJson = readFileSync(resolve(repoRoot, "package.json"), "utf8")
 const directusPackageJson = readFileSync(resolve(repoRoot, "backend/directus/package.json"), "utf8")
 
 describe("directus workspace bootstrap", () => {
@@ -22,15 +21,13 @@ describe("directus workspace bootstrap", () => {
   })
 
   it("provides docker compose for directus stack", () => {
-    expect(existsSync(resolve(repoRoot, "infra/docker/compose.directus.yml"))).toBe(true)
+    expect(existsSync(resolve(repoRoot, "backend/directus/docker/compose.dev.yml"))).toBe(true)
+    expect(existsSync(resolve(repoRoot, "backend/directus/docker/compose.prod.yml"))).toBe(true)
   })
 
-  it("exposes bootstrap scripts for schema initialization", () => {
-    expect(rootPackageJson).toContain(
-      '"directus:bootstrap": "pnpm --dir backend/directus bootstrap"',
-    )
+  it("exposes schema provisioning scripts", () => {
     expect(directusPackageJson).toContain(
-      '"bootstrap": "node --experimental-strip-types ./scripts/bootstrap.ts"',
+      '"schema:provision": "node --experimental-strip-types ./scripts/provisionSchema.ts"',
     )
   })
 
