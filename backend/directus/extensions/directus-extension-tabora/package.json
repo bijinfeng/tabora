@@ -2,6 +2,18 @@
   "name": "directus-extension-tabora",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@directus/types": "^12.1.1"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*",
+    "@types/node": "catalog:node",
+    "typescript": "catalog:build"
+  },
   "directus:extension": {
     "type": "endpoint",
     "path": "dist/index.js"
