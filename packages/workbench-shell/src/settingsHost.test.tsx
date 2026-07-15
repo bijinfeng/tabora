@@ -236,16 +236,15 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("工作区")
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("插件")
-    expect([...root.querySelectorAll(".nav-button")].map((node) => node.textContent)).toEqual([
-      "通用",
-      "外观",
-      "搜索",
-      "已安装",
-      "关于",
-    ])
-    expect(root.querySelector(".window-title-main")?.textContent).toContain("已安装插件")
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("工作台")
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("扩展")
+    expect(root.querySelector(".account-entry")?.textContent).toContain("未登录")
+    expect(
+      [...root.querySelectorAll(".nav-button")].map(
+        (node) => node.querySelector("span")?.textContent,
+      ),
+    ).toEqual(["通用", "外观", "搜索", "AI", "数据同步", "插件", "关于"])
+    expect(root.querySelector(".panel-head")?.textContent).toContain("插件")
   })
 
   it("renders injected copy when provided", () => {
@@ -271,23 +270,30 @@ describe("settings host composition", () => {
             if (id === "general") return "General"
             if (id === "appearance") return "Appearance"
             if (id === "search") return "Search"
+            if (id === "account") return "Account"
+            if (id === "ai") return "AI"
+            if (id === "sync") return "Data sync"
+            if (id === "plugins") return "Plugins"
             if (id === "about") return "About"
             return id
           },
+          workspaceGroupTitle: "Workbench",
+          extensionGroupTitle: "Extensions",
+          accountNavName: "Signed out",
+          accountNavMeta: "Local mode",
         },
       }),
     )
 
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("工作区")
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("Plugins")
-    expect([...root.querySelectorAll(".nav-button")].map((node) => node.textContent)).toEqual([
-      "General",
-      "Appearance",
-      "Search",
-      "Installed",
-      "About",
-    ])
-    expect(root.querySelector(".window-title-main")?.textContent).toContain("Installed plugins")
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("Workbench")
+    expect(root.querySelector(".settings-nav")?.textContent).toContain("Extensions")
+    expect(root.querySelector(".account-entry")?.textContent).toContain("Signed out")
+    expect(
+      [...root.querySelectorAll(".nav-button")].map(
+        (node) => node.querySelector("span")?.textContent,
+      ),
+    ).toEqual(["General", "Appearance", "Search", "AI", "Data sync", "Plugins", "About"])
+    expect(root.querySelector(".panel-head")?.textContent).toContain("Plugins")
     expect(root.querySelector(".icon-close")?.getAttribute("aria-label")).toBe("Close settings")
   })
 

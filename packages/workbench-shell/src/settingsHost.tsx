@@ -9,7 +9,7 @@ import {
   type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
   type SettingsSectionId,
 } from "@tabora/orchestrator"
-import { EmptyState, InlineError } from "@tabora/ui"
+import { Button, EmptyState, InlineError } from "@tabora/ui"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
@@ -42,7 +42,34 @@ export type SettingsHostCopy = {
   sectionTitle: (sectionId: SettingsSectionId) => string
   sectionDescription?: (sectionId: SettingsSectionId) => string
   sectionMeta?: (sectionId: SettingsSectionId) => string
+  workspaceGroupTitle?: string
+  extensionGroupTitle?: string
+  accountNavName?: string
+  accountNavMeta?: string
+  accountNavAvatar?: string
+  windowSubtitle?: string
+  statusReady?: string
+  statusSectionChanged?: (sectionTitle: string) => string
+  statusReset?: string
+  statusSaved?: string
+  resetLabel?: string
+  cancelLabel?: string
+  saveLabel?: string
 }
+
+const SECTION_FALLBACK_DESCRIPTIONS: Record<SettingsSectionId, string> = {
+  general: "工作区、布局和基础行为。所有设置只影响当前个人工作台。",
+  appearance: "主题、背景和强调色。视觉配置来自主题插件。",
+  search: "默认搜索源、搜索范围和命令入口。",
+  account: "登录 Tabora 账号，用于云同步和设备注册。",
+  ai: "模型提供商、默认模型、连接测试和插件 AI 授权。",
+  sync: "状态、范围和处理。",
+  plugins: "已安装插件、运行配置、设置表单协议和本地权限。",
+  about: "版本、数据位置和插件化工作台说明。",
+}
+
+const WORKSPACE_SECTION_IDS: SettingsSectionId[] = ["general", "appearance", "search"]
+const EXTENSION_SECTION_IDS: SettingsSectionId[] = ["ai", "sync", "plugins", "about"]
 
 export function collectSettingsPanels(plugins: PluginLike[]): SettingsPanelDescriptor[] {
   const panels: SettingsPanelDescriptor[] = []
@@ -70,6 +97,7 @@ export function SettingsHost(props: SettingsHostProps) {
 
   const [isEntering, setIsEntering] = createSignal(false)
   const [isClosing, setIsClosing] = createSignal(false)
+  const [statusText, setStatusText] = createSignal<string | null>(null)
 
   const handleClose = () => {
     if (isClosing()) return
@@ -77,6 +105,7 @@ export function SettingsHost(props: SettingsHostProps) {
     setIsEntering(false)
     setTimeout(() => {
       setIsClosing(false)
+      setStatusText(null)
       props.onClose()
     }, 250)
   }
@@ -90,40 +119,39 @@ export function SettingsHost(props: SettingsHostProps) {
 
   const activeSection = () => props.activeSectionId ?? "general"
   const activePanels = () => navigator().sections[activeSection()].panels
-  const activePanelTitle = () => activeSectionTitle()
-  const activeSectionTitle = () => {
-    if (activeSection() === "plugins") return props.copy?.pluginsActiveTitle ?? "已安装插件"
-    return (
-      props.copy?.sectionTitle(activeSection()) ??
-      SETTINGS_SECTIONS.find((section) => section.id === activeSection())?.title ??
-      "设置"
-    )
-  }
-  const activeSectionDescription = () => {
-    const sectionId = activeSection()
-    const description = props.copy?.sectionDescription?.(sectionId)
-    if (description) return description
-    if (sectionId === "general") return "工作区、布局和基础行为。所有设置只影响当前个人工作台。"
-    if (sectionId === "appearance")
-      return "主题、背景和界面语言。视觉配置通过插件贡献和 token 应用。"
-    if (sectionId === "search") return "默认搜索源、启用状态和命令搜索行为。"
-    if (sectionId === "plugins") return "查看插件贡献能力、权限摘要和当前启用状态。"
-    return "Tabora 版本、协议和本地运行信息。"
-  }
-  const activeSectionMeta = () => {
-    const sectionId = activeSection()
-    const meta = props.copy?.sectionMeta?.(sectionId)
-    if (meta) return meta
-    if (sectionId === "general") return "本地保存"
-    if (sectionId === "appearance") return "即时生效"
-    if (sectionId === "search") return "快捷入口"
-    if (sectionId === "plugins") return `${activePanels().length} 项`
-    return "V2"
+  const sectionTitle = (sectionId: SettingsSectionId) =>
+    props.copy?.sectionTitle(sectionId) ??
+    SETTINGS_SECTIONS.find((section) => section.id === sectionId)?.title ??
+    "设置"
+  const activeSectionTitle = () => sectionTitle(activeSection())
+  const activeSectionDescription = () =>
+    props.copy?.sectionDescription?.(activeSection()) ??
+    SECTION_FALLBACK_DESCRIPTIONS[activeSection()]
+  const sectionNavMeta = (sectionId: SettingsSectionId) => {
+    const panelCount = navigator().sections[sectionId].panels.length
+    if (sectionId === "about") return props.copy?.sectionMeta?.(sectionId) ?? "V2"
+    return panelCount > 0 ? String(panelCount) : ""
   }
   const workspaceSections = () =>
-    SETTINGS_SECTIONS.filter((section) => ["general", "appearance", "search"].includes(section.id))
-  const pluginSection = () => SETTINGS_SECTIONS.find((section) => section.id === "plugins")
-  const aboutSection = () => SETTINGS_SECTIONS.find((section) => section.id === "about")
+    SETTINGS_SECTIONS.filter((section) => WORKSPACE_SECTION_IDS.includes(section.id))
+  const extensionSections = () =>
+    SETTINGS_SECTIONS.filter((section) => EXTENSION_SECTION_IDS.includes(section.id))
+
+  const handleSectionChange = (sectionId: SettingsSectionId) => {
+    props.onSectionChange(sectionId)
+    setStatusText(
+      props.copy?.statusSectionChanged?.(sectionTitle(sectionId)) ??
+        `已切换到${sectionTitle(sectionId)}`,
+    )
+  }
+
+  const handleReset = () => {
+    setStatusText(props.copy?.statusReset ?? "已恢复当前页默认值")
+  }
+
+  const handleSave = () => {
+    setStatusText(props.copy?.statusSaved ?? "设置已保存到本地")
+  }
 
   createEffect(() => {
     if (props.open) {
@@ -169,8 +197,11 @@ export function SettingsHost(props: SettingsHostProps) {
                 <Settings size={14} />
               </div>
               <div class="window-title-main">
-                <strong>设置</strong>
-                <span>{activePanelTitle()}</span>
+                <strong>{props.copy?.sidebarTitle ?? "设置"}</strong>
+                <span>
+                  {props.copy?.windowSubtitle ??
+                    "个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件"}
+                </span>
               </div>
             </div>
             <button
@@ -181,54 +212,63 @@ export function SettingsHost(props: SettingsHostProps) {
             />
           </header>
           <div class="settings-body">
-            <nav class="settings-nav">
-              <div class="nav-kicker">工作区</div>
+            <nav class="settings-nav" aria-label={props.copy?.sidebarTitle ?? "设置导航"}>
+              <button
+                class="account-entry"
+                type="button"
+                classList={{ "is-active": activeSection() === "account" }}
+                onClick={() => handleSectionChange("account")}
+                aria-label={sectionTitle("account")}
+              >
+                <span class="account-avatar">{props.copy?.accountNavAvatar ?? "未"}</span>
+                <span class="account-nav-copy">
+                  <strong>{props.copy?.accountNavName ?? "未登录"}</strong>
+                  <span>{props.copy?.accountNavMeta ?? "本地模式"}</span>
+                </span>
+              </button>
+              <div class="nav-kicker">{props.copy?.workspaceGroupTitle ?? "工作台"}</div>
               <For each={workspaceSections()}>
                 {(section) => (
                   <button
                     class="nav-button"
                     classList={{ "is-active": section.id === activeSection() }}
-                    onClick={() => props.onSectionChange(section.id)}
+                    onClick={() => handleSectionChange(section.id)}
                   >
-                    {props.copy?.sectionTitle(section.id) ?? section.title}
+                    <span>{sectionTitle(section.id)}</span>
+                    <Show when={sectionNavMeta(section.id)}>
+                      <span class="nav-count">{sectionNavMeta(section.id)}</span>
+                    </Show>
                   </button>
                 )}
               </For>
-              <Show when={pluginSection()}>
-                {(section) => (
-                  <>
-                    <div class="nav-kicker">{props.copy?.pluginGroupTitle ?? "插件"}</div>
-                    <button
-                      class="nav-button"
-                      classList={{ "is-active": section().id === activeSection() }}
-                      onClick={() => props.onSectionChange(section().id)}
-                    >
-                      {props.copy?.pluginInstalledNav ?? "已安装"}
-                    </button>
-                  </>
-                )}
-              </Show>
-              <div class="nav-spacer" />
-              <Show when={aboutSection()}>
+              <div class="nav-kicker">{props.copy?.extensionGroupTitle ?? "扩展"}</div>
+              <For each={extensionSections()}>
                 {(section) => (
                   <button
                     class="nav-button"
-                    classList={{ "is-active": section().id === activeSection() }}
-                    onClick={() => props.onSectionChange(section().id)}
+                    classList={{ "is-active": section.id === activeSection() }}
+                    onClick={() => handleSectionChange(section.id)}
                   >
-                    {props.copy?.sectionTitle(section().id) ?? section().title}
+                    <span>{sectionTitle(section.id)}</span>
+                    <Show when={sectionNavMeta(section.id)}>
+                      <span class="nav-count">{sectionNavMeta(section.id)}</span>
+                    </Show>
                   </button>
                 )}
-              </Show>
+              </For>
             </nav>
             <div class="settings-main" data-active-view={activeSection()}>
-              <div class="panel-head">
-                <div>
-                  <strong>{activeSectionTitle()}</strong>
-                  <span>{activeSectionDescription()}</span>
+              <Show when={activeSection() !== "account"}>
+                <div class="panel-head">
+                  <div>
+                    <strong>{activeSectionTitle()}</strong>
+                    <span>{activeSectionDescription()}</span>
+                  </div>
+                  <Button size="sm" variant="secondary" onClick={handleReset}>
+                    {props.copy?.resetLabel ?? "恢复默认"}
+                  </Button>
                 </div>
-                <span class="panel-meta">{activeSectionMeta()}</span>
-              </div>
+              </Show>
               <div class="panel-view" classList={{ "is-active": true }} data-view={activeSection()}>
                 <Show
                   when={activeSection() !== "about"}
@@ -283,8 +323,17 @@ export function SettingsHost(props: SettingsHostProps) {
             </div>
           </div>
           <footer class="window-foot">
-            <span>Esc 关闭</span>
-            <div class="footer-actions" />
+            <span class="footer-status">
+              {statusText() ?? props.copy?.statusReady ?? "设置已就绪"}
+            </span>
+            <div class="footer-actions">
+              <Button size="sm" variant="secondary" onClick={handleClose}>
+                {props.copy?.cancelLabel ?? "取消"}
+              </Button>
+              <Button size="sm" variant="primary" onClick={handleSave}>
+                {props.copy?.saveLabel ?? "保存设置"}
+              </Button>
+            </div>
           </footer>
         </div>
       </div>

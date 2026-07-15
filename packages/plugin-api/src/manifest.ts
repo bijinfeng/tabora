@@ -334,7 +334,7 @@ export type SettingsPanelContribution = {
   id: string
   title: string
   view: string
-  section: "general" | "appearance" | "search" | "plugins" | "ai" | "about"
+  section: "general" | "appearance" | "search" | "account" | "ai" | "sync" | "plugins" | "about"
   scope: "global" | "workspace" | "plugin" | "instance"
   order?: number
 }

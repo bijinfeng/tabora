@@ -21,6 +21,9 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     if (sectionId === "general") return t("settingsHost.section.general")
     if (sectionId === "appearance") return t("settingsHost.section.appearance")
     if (sectionId === "search") return t("settingsHost.section.search")
+    if (sectionId === "account") return t("settingsHost.section.account")
+    if (sectionId === "ai") return t("settingsHost.section.ai")
+    if (sectionId === "sync") return t("settingsHost.section.sync")
     if (sectionId === "about") return t("settingsHost.section.about")
     return t("settingsHost.group.plugins")
   }
@@ -28,6 +31,9 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     if (sectionId === "general") return t("settingsHost.section.general.description")
     if (sectionId === "appearance") return t("settingsHost.section.appearance.description")
     if (sectionId === "search") return t("settingsHost.section.search.description")
+    if (sectionId === "account") return t("settingsHost.section.account.description")
+    if (sectionId === "ai") return t("settingsHost.section.ai.description")
+    if (sectionId === "sync") return t("settingsHost.section.sync.description")
     if (sectionId === "about") return t("settingsHost.section.about.description")
     return t("settingsHost.section.plugins.description")
   }
@@ -35,6 +41,9 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     if (sectionId === "general") return t("settingsHost.section.general.meta")
     if (sectionId === "appearance") return t("settingsHost.section.appearance.meta")
     if (sectionId === "search") return t("settingsHost.section.search.meta")
+    if (sectionId === "account") return t("settingsHost.section.account.meta")
+    if (sectionId === "ai") return t("settingsHost.section.ai.meta")
+    if (sectionId === "sync") return t("settingsHost.section.sync.meta")
     if (sectionId === "about") return t("settingsHost.section.about.meta")
     return t("settingsHost.section.plugins.meta")
   }
@@ -51,6 +60,20 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     sectionTitle,
     sectionDescription,
     sectionMeta,
+    workspaceGroupTitle: t("settingsHost.group.workspace"),
+    extensionGroupTitle: t("settingsHost.group.extensions"),
+    accountNavName: t("settingsHost.account.navName"),
+    accountNavMeta: t("settingsHost.account.navMeta"),
+    accountNavAvatar: t("settingsHost.account.navAvatar"),
+    windowSubtitle: t("settingsHost.windowSubtitle"),
+    statusReady: t("settingsHost.status.ready"),
+    statusSectionChanged: (sectionTitleText: string) =>
+      t("settingsHost.status.sectionChanged", { sectionTitle: sectionTitleText }),
+    statusReset: t("settingsHost.status.reset"),
+    statusSaved: t("settingsHost.status.saved"),
+    resetLabel: t("settingsHost.action.reset"),
+    cancelLabel: t("settingsHost.action.cancel"),
+    saveLabel: t("settingsHost.action.save"),
   }
 }
 

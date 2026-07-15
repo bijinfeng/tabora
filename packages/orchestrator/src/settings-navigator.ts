@@ -1,6 +1,14 @@
 import type { SettingsPanelContribution } from "@tabora/plugin-api"
 
-export type SettingsSectionId = "general" | "appearance" | "search" | "plugins" | "about"
+export type SettingsSectionId =
+  | "general"
+  | "appearance"
+  | "search"
+  | "account"
+  | "ai"
+  | "sync"
+  | "plugins"
+  | "about"
 export type SettingsPanelScope = "global" | "workspace" | "plugin" | "instance"
 
 export type SettingsPanelDescriptor = SettingsPanelContribution & {
@@ -21,6 +29,9 @@ export const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; title: string }> 
   { id: "general", title: "通用" },
   { id: "appearance", title: "外观" },
   { id: "search", title: "搜索" },
+  { id: "account", title: "账号" },
+  { id: "ai", title: "AI" },
+  { id: "sync", title: "数据同步" },
   { id: "plugins", title: "插件" },
   { id: "about", title: "关于" },
 ]

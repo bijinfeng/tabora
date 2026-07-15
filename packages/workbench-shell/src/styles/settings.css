@@ -178,6 +178,77 @@
   text-transform: uppercase;
 }
 
+/* 账号入口 */
+.account-entry {
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  padding: 7px;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-line)) 78%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, rgb(var(--color-surface-soft)) 62%, rgb(var(--color-surface)));
+  color: rgb(var(--color-text));
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--tbr-dur-fast) var(--ease),
+    border-color var(--tbr-dur-fast) var(--ease);
+}
+
+.account-entry:hover {
+  border-color: rgb(var(--color-line-strong));
+  background: color-mix(in srgb, rgb(var(--color-surface-hover)) 72%, rgb(var(--color-surface)));
+}
+
+.account-entry:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
+}
+
+.account-entry.is-active {
+  border-color: color-mix(in srgb, rgb(var(--color-accent)) 34%, rgb(var(--color-line)));
+  background: color-mix(in srgb, rgb(var(--color-accent-soft)) 72%, rgb(var(--color-surface)));
+}
+
+.account-avatar {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, rgb(var(--color-accent)) 28%, rgb(var(--color-line)));
+  border-radius: 999px;
+  background: rgb(var(--color-accent-soft));
+  color: rgb(var(--color-accent));
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.account-nav-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.account-nav-copy strong {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.account-nav-copy span {
+  overflow: hidden;
+  color: rgb(var(--color-subtle));
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .nav-button {
   height: 28px;
   display: flex;
@@ -220,10 +291,6 @@
   font-weight: 600;
 }
 
-.nav-spacer {
-  flex: 1;
-}
-
 /* 面板内容 */
 .settings-main {
   gap: 12px;
@@ -253,18 +320,9 @@
 .panel-head span {
   display: block;
   max-width: 310px;
-  color: rgb(var(--color-muted));
+  color: rgb(var(--color-subtle));
   font-size: 11px;
   line-height: 1.35;
-}
-
-.panel-meta {
-  flex: none;
-  padding-top: 2px;
-  color: rgb(var(--color-muted));
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 .panel-view {
@@ -348,9 +406,47 @@
 }
 
 /* 页脚操作 */
+.window-foot {
+  font-size: 10px;
+}
+
+.footer-status {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgb(var(--color-subtle));
+}
+
+.footer-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(var(--color-line-strong));
+}
+
 .footer-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
+}
+
+/* 账号分区：登录面板居中 */
+.settings-main[data-active-view="account"] .panel-view[data-view="account"] {
+  min-height: 100%;
+  align-content: center;
+  justify-items: center;
+}
+
+.settings-main[data-active-view="account"] .panel-view.is-active[data-view="account"] {
+  display: grid;
+  flex: 1;
+}
+
+.settings-main[data-active-view="account"] .settings-panel-stack-host {
+  width: min(100%, 322px);
+  margin: auto;
 }
 
 /* 错误和空状态（保留原有样式）*/

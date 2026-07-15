@@ -8,8 +8,10 @@ const settingsPanelSectionSchema = z.enum([
   "general",
   "appearance",
   "search",
-  "plugins",
+  "account",
   "ai",
+  "sync",
+  "plugins",
   "about",
 ])
 
