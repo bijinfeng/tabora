@@ -13,14 +13,16 @@ const engineOptions = [
 
 const openModeOptions = [
   { value: "current", label: "当前标签页" },
-  { value: "new-tab", label: "新标签页" },
-  { value: "new-window", label: "新窗口" },
+  { value: "newtab", label: "新标签页" },
+  { value: "external", label: "外部浏览器" },
 ] as const
 
 export function SelectDemo() {
   const [singleValue, setSingleValue] = createSignal<
     "google" | "bing" | "ddg" | "perplexity" | "kagi"
   >("bing")
+
+  const [openMode, setOpenMode] = createSignal<"current" | "newtab" | "external">("newtab")
 
   const [multiValue, setMultiValue] = createSignal<
     ("google" | "bing" | "ddg" | "perplexity" | "kagi")[]
@@ -34,8 +36,6 @@ export function SelectDemo() {
     "google" | "bing" | "ddg" | "perplexity" | "kagi"
   >("google")
 
-  const [openMode, setOpenMode] = createSignal<"current" | "new-tab" | "new-window">("new-tab")
-
   return (
     <div class="docs-control-stack">
       <div class="demo-section">
@@ -45,7 +45,7 @@ export function SelectDemo() {
             value={singleValue()}
             onChange={setSingleValue}
             options={[...engineOptions]}
-            placeholder="选择搜索引擎"
+            placeholder="选择默认搜索源"
             aria-label="单选示例"
           />
         </div>
@@ -59,7 +59,7 @@ export function SelectDemo() {
             onChange={setOpenMode}
             options={[...openModeOptions]}
             placeholder="选择打开方式"
-            aria-label="打开方式"
+            aria-label="打开方式示例"
           />
         </div>
       </div>
