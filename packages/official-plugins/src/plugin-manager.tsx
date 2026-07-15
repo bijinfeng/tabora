@@ -38,6 +38,8 @@ function permissionLabel(permission: PluginPermission): string {
       return `剪贴板: ${permission.access}`
     case "local-file":
       return `本地文件: ${permission.access}`
+    default:
+      return permission.type
   }
 }
 
@@ -55,6 +57,8 @@ function permissionType(permission: PluginPermission): string {
       return "剪贴板"
     case "local-file":
       return "本地文件"
+    default:
+      return permission.type
   }
 }
 

@@ -31,41 +31,41 @@
   isolation: isolate;
 }
 
-.btn-group button {
-  border-radius: 0 !important;
+.btn-group .tbr-btn {
+  border-radius: 0;
   margin-left: -1px;
   position: relative;
-  box-shadow: none !important;
-  outline: none !important;
+  box-shadow: none;
+  outline: none;
 }
 
-.btn-group button:first-child {
-  border-top-left-radius: var(--tbr-radius-control, 6px) !important;
-  border-bottom-left-radius: var(--tbr-radius-control, 6px) !important;
+.btn-group .tbr-btn:first-child {
+  border-top-left-radius: var(--tbr-radius-control, 6px);
+  border-bottom-left-radius: var(--tbr-radius-control, 6px);
   margin-left: 0;
 }
 
-.btn-group button:last-child {
-  border-top-right-radius: var(--tbr-radius-control, 6px) !important;
-  border-bottom-right-radius: var(--tbr-radius-control, 6px) !important;
+.btn-group .tbr-btn:last-child {
+  border-top-right-radius: var(--tbr-radius-control, 6px);
+  border-bottom-right-radius: var(--tbr-radius-control, 6px);
 }
 
-.btn-group button:hover,
-.btn-group button:focus-visible {
+.btn-group .tbr-btn:hover,
+.btn-group .tbr-btn:focus-visible {
   z-index: 1;
 }
 
 .btn-group-active {
-  background: var(--tbr-color-accent-soft, rgba(26, 144, 112, 0.12)) !important;
-  color: rgb(var(--tbr-color-accent, 26 144 112)) !important;
-  border-color: rgb(var(--tbr-color-accent, 26 144 112)) !important;
-  z-index: 2 !important;
+  background: rgb(var(--tbr-color-accent-soft));
+  color: rgb(var(--tbr-color-accent));
+  border-color: rgb(var(--tbr-color-accent));
+  z-index: 2;
 }
 
 /* State demos — force states for screenshot */
 .btn-hover-demo {
-  background: var(--cp-accent-hover) !important;
-  border-color: var(--cp-accent-hover) !important;
+  background: rgb(var(--tbr-color-accent-hover));
+  border-color: rgb(var(--tbr-color-accent-hover));
 }
 
 .btn-active-demo {
@@ -73,7 +73,7 @@
 }
 
 .btn-focus-demo {
-  outline: 2px solid var(--cp-accent) !important;
+  outline: 2px solid rgb(var(--tbr-color-focus));
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(26, 144, 112, 0.18) !important;
+  box-shadow: 0 0 0 4px rgba(var(--tbr-color-focus), 0.18);
 }

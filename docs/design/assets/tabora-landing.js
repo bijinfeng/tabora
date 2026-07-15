@@ -66,8 +66,9 @@
 
   waitlist?.addEventListener("submit", (event) => {
     event.preventDefault()
-    const email = new FormData(waitlist).get("email")
-    if (!String(email).includes("@")) {
+    const emailEntry = new FormData(waitlist).get("email")
+    const email = typeof emailEntry === "string" ? emailEntry : ""
+    if (!email.includes("@")) {
       showToast("请输入有效邮箱。")
       return
     }

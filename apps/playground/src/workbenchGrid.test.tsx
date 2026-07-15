@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
-import { assignGridOrder } from "@tabora/workbench-app"
+import { assignGridOrder, gridColumnSpan, gridRowSpan } from "@tabora/workbench-app"
 
 function instance(id: string, size?: WidgetSize): PluginInstance {
   return {
@@ -28,12 +28,12 @@ describe("assignGridOrder", () => {
     expect(ordered).toMatchObject([
       {
         id: "notes",
-        grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 },
+        grid: { x: 0, y: 0, colSpan: gridColumnSpan("M"), rowSpan: gridRowSpan("M") },
         updatedAt: "2026-05-27T00:00:00.000Z",
       },
       {
         id: "weather",
-        grid: { x: 1, y: 0, colSpan: 1, rowSpan: 1 },
+        grid: { x: 1, y: 0, colSpan: gridColumnSpan("S"), rowSpan: gridRowSpan("S") },
         updatedAt: "2026-05-27T00:00:00.000Z",
       },
     ])
@@ -47,7 +47,12 @@ describe("assignGridOrder", () => {
     )
 
     expect(ordered[0]).toEqual(withoutSize)
-    expect(ordered[1]?.grid).toEqual({ x: 0, y: 0, colSpan: 2, rowSpan: 1 })
+    expect(ordered[1]?.grid).toEqual({
+      x: 0,
+      y: 0,
+      colSpan: gridColumnSpan("M"),
+      rowSpan: gridRowSpan("M"),
+    })
   })
 
   it("preserves persisted grid placement and only appends widgets without grid", () => {
@@ -58,7 +63,12 @@ describe("assignGridOrder", () => {
     const ordered = assignGridOrder([persisted, instance("notes", "M")], "2026-05-27T00:00:00.000Z")
 
     expect(ordered[0]).toEqual(persisted)
-    expect(ordered[1]?.grid).toEqual({ x: 4, y: 0, colSpan: 2, rowSpan: 1 })
+    expect(ordered[1]?.grid).toEqual({
+      x: 4,
+      y: 0,
+      colSpan: gridColumnSpan("M"),
+      rowSpan: gridRowSpan("M"),
+    })
     expect(ordered[1]?.updatedAt).toBe("2026-05-27T00:00:00.000Z")
   })
 })

@@ -26,12 +26,20 @@ export type AiStreamChunk =
   | { type: "text-delta"; text: string }
   | { type: "finish"; finishReason?: string; usage?: AiTokenUsage }
 
+export type AiJsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | AiJsonValue[]
+  | { [key: string]: AiJsonValue }
+
 export type AiToolDefinition = {
   id: string
   description?: string
   inputSchema?: unknown
   requiresConfirmation?: boolean
-  execute?: (input: unknown) => Promise<unknown> | unknown
+  execute?: (input: unknown) => Promise<AiJsonValue> | AiJsonValue
 }
 
 export type AiToolApprovalRequest = {

@@ -160,13 +160,13 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
     changeDetector.start()
 
     // Trigger initial sync on start
-    triggerSync()
+    void triggerSync()
 
     // Listen for visibility change (background to foreground)
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-          triggerSync()
+          void triggerSync()
         }
       })
     }
@@ -174,7 +174,7 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
     // Listen for online event (network recovery)
     if (typeof window !== "undefined") {
       window.addEventListener("online", () => {
-        triggerSync()
+        void triggerSync()
       })
     }
   }

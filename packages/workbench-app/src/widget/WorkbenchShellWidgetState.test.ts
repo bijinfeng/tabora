@@ -1,4 +1,9 @@
-import type { LayoutRegion, PluginInstance, WidgetContribution } from "@tabora/plugin-api"
+import {
+  type LayoutRegion,
+  type PluginInstance,
+  type WidgetContribution,
+  widgetGridSpan,
+} from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 
 import {
@@ -150,7 +155,12 @@ describe("resizeWorkbenchWidget", () => {
     await resizeWorkbenchWidget({
       instanceId: "widget-1",
       newSize: "L",
-      currentInstances: [instance({ size: "M", grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 } })],
+      currentInstances: [
+        instance({
+          size: "M",
+          grid: { x: 0, y: 0, ...widgetGridSpan("M") },
+        }),
+      ],
       saveInstance,
       setInstances,
       now: () => "2026-06-07T01:00:00.000Z",
@@ -160,7 +170,7 @@ describe("resizeWorkbenchWidget", () => {
       expect.objectContaining({
         id: "widget-1",
         size: "L",
-        grid: expect.objectContaining({ colSpan: 2, rowSpan: 2 }),
+        grid: expect.objectContaining(widgetGridSpan("L")),
         updatedAt: "2026-06-07T01:00:00.000Z",
       }),
     )

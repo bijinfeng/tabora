@@ -13,6 +13,13 @@ export function ToastDemo() {
           <Toast variant="info" title="新版本可用" action="更新" onAction={() => {}} />
         </div>
       </div>
+
+      <div class="demo-section">
+        <h4>同步队列</h4>
+        <div class="toast-row">
+          <Toast variant="warning" title="同步队列已暂停" action="重新连接" onAction={() => {}} />
+        </div>
+      </div>
     </div>
   )
 }

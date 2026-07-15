@@ -30,6 +30,18 @@ export function useSiteTheme(): SiteThemeApi {
   return context
 }
 
+const getLocalStorage = () => {
+  try {
+    const storage = window.localStorage as unknown as Storage | undefined
+    if (!storage) return null
+    if (typeof storage.getItem !== "function") return null
+    if (typeof storage.setItem !== "function") return null
+    return storage
+  } catch {
+    return null
+  }
+}
+
 export type SiteLocale = "zh-CN" | "en"
 
 export type SiteI18nApi = {
@@ -166,7 +178,7 @@ export const needsLandingStylesheet = (pathname: string, base?: string) => {
 
 export function AppShell(props: { children?: JSX.Element }) {
   const initialDark = () => {
-    const saved = localStorage.getItem("tabora-theme")
+    const saved = getLocalStorage()?.getItem("tabora-theme") ?? null
     if (saved === "dark") return true
     if (saved === "light") return false
     return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -179,7 +191,7 @@ export function AppShell(props: { children?: JSX.Element }) {
   const initialLocale = () => {
     const paramLocale = normalizeLocale(new URLSearchParams(window.location.search).get("lang"))
     if (paramLocale) return paramLocale
-    const saved = normalizeLocale(localStorage.getItem("tabora-site-lang"))
+    const saved = normalizeLocale(getLocalStorage()?.getItem("tabora-site-lang") ?? null)
     if (saved) return saved
     const browser = normalizeLocale(navigator.language)
     return browser ?? "zh-CN"
@@ -196,7 +208,7 @@ export function AppShell(props: { children?: JSX.Element }) {
   const toggleDark = () => {
     setDark((value) => {
       const next = !value
-      localStorage.setItem("tabora-theme", next ? "dark" : "light")
+      getLocalStorage()?.setItem("tabora-theme", next ? "dark" : "light")
       return next
     })
   }
@@ -213,7 +225,7 @@ export function AppShell(props: { children?: JSX.Element }) {
   })
 
   createEffect(() => {
-    localStorage.setItem("tabora-site-lang", locale())
+    getLocalStorage()?.setItem("tabora-site-lang", locale())
     document.documentElement.lang = locale()
   })
 

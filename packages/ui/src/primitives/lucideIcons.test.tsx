@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
+import { Search } from "lucide-solid"
 import { Accordion } from "./accordion/accordion"
 import { Banner } from "./callout/callout"
 import { Checkbox } from "./checkbox/checkbox"
@@ -47,7 +48,10 @@ describe("built-in component icons", () => {
           <DropdownMenu
             open
             onOpenChange={() => {}}
-            items={[{ id: "enabled", label: "启用", checked: true }]}
+            items={[
+              { id: "enabled", label: "启用", checked: true },
+              { id: "search", label: "搜索", icon: <Search size={16} strokeWidth={2} /> },
+            ]}
           >
             菜单
           </DropdownMenu>
@@ -60,7 +64,8 @@ describe("built-in component icons", () => {
     expectLucideIcon(el.querySelector(".tbr-accordion-arrow"))
     expectLucideIcon(el.querySelector(".tbr-collapsible-arrow"))
     expectLucideIcon(el.querySelector(".tbr-select-icon"))
-    expectLucideIcon(document.body.querySelector(".tbr-dropdown-check"))
+    expect(document.body.querySelector(".tbr-dropdown-check")).toBeTruthy()
+    expectLucideIcon(document.body.querySelector(".tbr-dropdown-icon"))
   })
 
   it("renders close, remove, navigation, and copy actions with lucide icons", () => {

@@ -11,6 +11,12 @@ const engineOptions = [
   { value: "kagi", label: "Kagi" },
 ] as const
 
+const openModeOptions = [
+  { value: "current", label: "当前标签页" },
+  { value: "new-tab", label: "新标签页" },
+  { value: "new-window", label: "新窗口" },
+] as const
+
 export function SelectDemo() {
   const [singleValue, setSingleValue] = createSignal<
     "google" | "bing" | "ddg" | "perplexity" | "kagi"
@@ -28,10 +34,12 @@ export function SelectDemo() {
     "google" | "bing" | "ddg" | "perplexity" | "kagi"
   >("google")
 
+  const [openMode, setOpenMode] = createSignal<"current" | "new-tab" | "new-window">("new-tab")
+
   return (
     <div class="docs-control-stack">
       <div class="demo-section">
-        <h4>单选</h4>
+        <h4>默认搜索源</h4>
         <div class="demo-row">
           <Select
             value={singleValue()}
@@ -39,6 +47,19 @@ export function SelectDemo() {
             options={[...engineOptions]}
             placeholder="选择搜索引擎"
             aria-label="单选示例"
+          />
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h4>打开方式</h4>
+        <div class="demo-row">
+          <Select
+            value={openMode()}
+            onChange={setOpenMode}
+            options={[...openModeOptions]}
+            placeholder="选择打开方式"
+            aria-label="打开方式"
           />
         </div>
       </div>

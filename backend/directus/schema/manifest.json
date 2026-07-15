@@ -1,0 +1,91 @@
+{
+  "collections": [
+    {
+      "name": "user_profiles",
+      "fields": []
+    },
+    {
+      "name": "user_verification_codes",
+      "fields": []
+    },
+    {
+      "name": "user_refresh_tokens",
+      "fields": []
+    },
+    {
+      "name": "trusted_devices",
+      "fields": []
+    },
+    {
+      "name": "sync_devices",
+      "fields": [
+        { "name": "user_id", "type": "uuid" },
+        { "name": "device_key", "type": "string" },
+        { "name": "status", "type": "string" }
+      ]
+    },
+    {
+      "name": "synced_records",
+      "fields": [
+        { "name": "scope", "type": "string" },
+        { "name": "entity_type", "type": "string" },
+        { "name": "record_key", "type": "string" },
+        { "name": "payload", "type": "json" },
+        { "name": "deleted_at", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "sync_snapshots",
+      "fields": [
+        { "name": "reason", "type": "string" },
+        { "name": "payload", "type": "json" }
+      ]
+    },
+    {
+      "name": "sync_conflicts",
+      "fields": [
+        { "name": "local_payload", "type": "json" },
+        { "name": "remote_payload", "type": "json" },
+        { "name": "status", "type": "string" }
+      ]
+    },
+    {
+      "name": "sync_operation_logs",
+      "fields": [
+        { "name": "operation", "type": "string" },
+        { "name": "summary", "type": "text" }
+      ]
+    },
+    {
+      "name": "attachment_refs",
+      "fields": [
+        { "name": "file_id", "type": "uuid" },
+        { "name": "owner_user_id", "type": "uuid" },
+        { "name": "entity_type", "type": "string" },
+        { "name": "entity_id", "type": "string" }
+      ]
+    },
+    {
+      "name": "attachment_policies",
+      "fields": [
+        { "name": "entity_type", "type": "string" },
+        { "name": "mime_whitelist", "type": "json" },
+        { "name": "max_size_bytes", "type": "bigInteger" }
+      ]
+    },
+    {
+      "name": "audit_events",
+      "fields": [
+        { "name": "event_type", "type": "string" },
+        { "name": "payload", "type": "json" }
+      ]
+    },
+    {
+      "name": "system_settings",
+      "fields": [
+        { "name": "key", "type": "string" },
+        { "name": "value", "type": "json" }
+      ]
+    }
+  ]
+}

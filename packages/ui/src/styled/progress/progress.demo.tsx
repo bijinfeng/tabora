@@ -27,10 +27,10 @@ export function ProgressDemo() {
       </div>
 
       <div class="demo-section">
-        <h4>不定长</h4>
+        <h4>导入插件包</h4>
         <div class="demo-row">
           <div style={{ width: "180px" }}>
-            <Progress value={0} indeterminate aria-label="不定长进度" />
+            <Progress value={0} indeterminate aria-label="导入插件包进度" />
           </div>
         </div>
       </div>

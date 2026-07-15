@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js"
 import { Search, Calendar } from "lucide-solid"
 
+import { InlineError } from "../inlineError"
 import { Input } from "./input.styled"
 import "./input.demo.css"
 
@@ -48,6 +49,21 @@ export function InputDemo() {
             trailingIcon={<Calendar size={16} strokeWidth={2} />}
             aria-label="日期输入"
           />
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h4>工作区搜索设置</h4>
+        <div class="demo-row">
+          <div style={{ width: "260px" }}>
+            <Input
+              value={searchText()}
+              onInput={setSearchText}
+              placeholder="默认搜索源 ID"
+              aria-label="默认搜索源"
+            />
+            <InlineError>需要一个有效的搜索源 ID</InlineError>
+          </div>
         </div>
       </div>
 

@@ -1,0 +1,21 @@
+{
+  "name": "@tabora/directus-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "directus start",
+    "bootstrap": "node --experimental-strip-types ./scripts/bootstrap.ts",
+    "schema:provision": "node --experimental-strip-types ./scripts/provisionSchema.ts",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "directus": "^12.1.1"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*",
+    "@types/node": "catalog:node",
+    "supertest": "^7.0.0",
+    "typescript": "catalog:build",
+    "vitest": "catalog:test"
+  }
+}

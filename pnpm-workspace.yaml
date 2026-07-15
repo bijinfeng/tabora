@@ -3,10 +3,12 @@ packages:
   - packages/*
   - plugins/*
   - plugins/*/*
+  - backend/directus
   - tooling/*
 
 allowBuilds:
   esbuild: true
+  isolated-vm: true
   sharp: true
   spawn-sync: true
 

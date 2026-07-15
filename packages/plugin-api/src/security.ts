@@ -38,6 +38,8 @@ export function assessPermissionRisk(permission: PluginPermission): PermissionRi
         risk: "critical",
         description: `本地文件系统 ${permission.access === "write" ? "读写" : "只读"} 访问`,
       }
+    default:
+      return { permission, risk: "low", description: `未知权限类型: ${permission.type}` }
   }
 }
 

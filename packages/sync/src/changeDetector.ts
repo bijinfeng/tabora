@@ -16,7 +16,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
   function start() {
     // Monitor workspaces table
     database.workspaces.hook("creating", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "workspace",
         recordKey: obj.id,
@@ -27,7 +27,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.workspaces.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "workspace",
         recordKey: obj.id,
@@ -38,7 +38,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.workspaces.hook("deleting", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "workspace",
         recordKey: obj.id,
@@ -50,7 +50,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
 
     // Monitor pluginInstances table
     database.pluginInstances.hook("creating", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "pluginInstance",
         recordKey: obj.id,
@@ -61,7 +61,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.pluginInstances.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "pluginInstance",
         recordKey: obj.id,
@@ -72,7 +72,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.pluginInstances.hook("deleting", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "pluginInstance",
         recordKey: obj.id,
@@ -84,7 +84,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
 
     // Monitor plugins table
     database.plugins.hook("creating", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "plugin",
         recordKey: obj.id,
@@ -95,7 +95,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.plugins.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "plugin",
         recordKey: obj.id,
@@ -106,7 +106,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.plugins.hook("deleting", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "core",
         entityType: "plugin",
         recordKey: obj.id,
@@ -118,7 +118,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
 
     // Monitor pluginData table (plugin-scope changes)
     database.pluginData.hook("creating", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "plugin",
         entityType: obj.pluginId,
         recordKey: obj.id,
@@ -129,7 +129,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.pluginData.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "plugin",
         entityType: obj.pluginId,
         recordKey: obj.id,
@@ -140,7 +140,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     database.pluginData.hook("deleting", (_primKey: any, obj: any) => {
-      changeQueue.enqueue({
+      void changeQueue.enqueue({
         scope: "plugin",
         entityType: obj.pluginId,
         recordKey: obj.id,

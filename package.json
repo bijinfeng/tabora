@@ -5,8 +5,11 @@
   "scripts": {
     "prepare": "vp config",
     "dev": "vp dev apps/playground",
+    "dev:directus": "pnpm --dir backend/directus dev",
+    "dev:directus:stack": "docker compose -f infra/docker/compose.directus.yml up -d",
     "staged": "vp staged",
     "test": "pnpm run test:unit",
+    "test:directus": "pnpm --dir backend/directus test",
     "test:unit": "vitest run --config vitest.config.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "build": "vp run -r build",
@@ -18,6 +21,8 @@
     "check": "vp check && pnpm check:architecture",
     "check:fix": "vp check --fix",
     "check:architecture": "node scripts/check-architecture.mjs",
+    "directus:bootstrap": "pnpm --dir backend/directus bootstrap",
+    "directus:schema:provision": "pnpm --dir backend/directus schema:provision",
     "quality": "node scripts/quality-report.mjs",
     "regression:summary": "node scripts/regression-summary.mjs"
   },

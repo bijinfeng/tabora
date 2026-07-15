@@ -52,7 +52,7 @@ export function createSyncEngine(config: SyncEngineConfig) {
         errors.push(
           `Sensitive field in ${item.entityType}/${item.recordKey}: ${err instanceof Error ? err.message : "unknown"}`,
         )
-        changeQueue.markAsFailed(
+        void changeQueue.markAsFailed(
           item.id,
           `Sensitive field: ${err instanceof Error ? err.message : "unknown"}`,
         )

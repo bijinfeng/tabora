@@ -74,8 +74,8 @@ export function Progress(props: ProgressProps) {
           cx={circleSize() / 2}
           cy={circleSize() / 2}
           r={radius()}
-          stroke-dasharray={circumference()}
-          stroke-dashoffset={offset()}
+          stroke-dasharray={String(circumference())}
+          stroke-dashoffset={String(offset())}
         />
       </svg>
       <Show when={props.showLabel}>

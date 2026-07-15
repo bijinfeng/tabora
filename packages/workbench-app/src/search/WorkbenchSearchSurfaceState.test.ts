@@ -87,7 +87,7 @@ describe("buildWorkbenchSearchSurfaceState", () => {
         items: [
           {
             id: "provider-search-official.search.bing",
-            icon: "🔍",
+            icon: "search",
             name: '在 Bing 中搜索 "tabora"',
             desc: "临时搜索源",
             hint: "b",

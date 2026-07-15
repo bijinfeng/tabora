@@ -1,0 +1,9 @@
+{
+  "name": "directus-extension-tabora",
+  "private": true,
+  "type": "module",
+  "directus:extension": {
+    "type": "endpoint",
+    "path": "dist/index.js"
+  }
+}
