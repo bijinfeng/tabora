@@ -20,7 +20,7 @@ type SyncedRecordRow = {
   record_id: string
   data: unknown
   version: number
-  record_updated_at: string
+  record_updated_at: string | Date
   deleted: boolean
 }
 
@@ -153,6 +153,26 @@ describe("tabora sync endpoints", () => {
 
     const body = response.body as { data: { records: any[] } }
     expect(body.data.records.map((record) => record.id)).toEqual(["note-new"])
+  })
+
+  it("pull since 过滤兼容 Date 类型的 record_updated_at 并返回 ISO 字符串", async () => {
+    const database = createDatabase({
+      synced_records: [
+        syncedRecord({ record_id: "note-date", record_updated_at: new Date(T_LATE) }),
+      ],
+    })
+    const { router } = await registerSync(database)
+    const response = createResponse()
+
+    await findRoute(router.routes, "get", "/sync/records").handler(
+      { accountability: { user: "user-1" }, query: { since: T_EARLY } },
+      response,
+      vi.fn(),
+    )
+
+    const body = response.body as { data: { records: any[] } }
+    expect(body.data.records.map((record) => record.id)).toEqual(["note-date"])
+    expect(body.data.records[0].updated_at).toBe(T_LATE)
   })
 
   it("pull 通过 types 过滤 record_type", async () => {
@@ -348,6 +368,29 @@ describe("tabora sync endpoints", () => {
 
     const body = response.body as { data: { conflicts: any[] } }
     expect(body.data.conflicts.map((conflict) => conflict.id)).toEqual(["note-1"])
+  })
+
+  it("push 时间戳冲突兼容 Date 类型的 record_updated_at 并返回 ISO 字符串", async () => {
+    const database = createDatabase({
+      synced_records: [
+        syncedRecord({ record_id: "note-1", version: 1, record_updated_at: new Date(T_LATE) }),
+      ],
+    })
+    const { router } = await registerSync(database)
+    const response = createResponse()
+
+    await findRoute(router.routes, "post", "/sync/records").handler(
+      {
+        accountability: { user: "user-1" },
+        body: [pushRecord({ id: "note-1", version: null, client_timestamp: T_EARLY })],
+      },
+      response,
+      vi.fn(),
+    )
+
+    const body = response.body as { data: { conflicts: any[] } }
+    expect(body.data.conflicts.map((conflict) => conflict.id)).toEqual(["note-1"])
+    expect(body.data.conflicts[0].server_updated_at).toBe(T_LATE)
   })
 
   it("push tombstone（deleted:true）标记删除并清空 data", async () => {

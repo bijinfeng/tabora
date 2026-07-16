@@ -66,6 +66,6 @@ export type SyncedRecordRow = {
   record_id: string
   data: unknown
   version: number
-  record_updated_at: string
+  record_updated_at: string | Date
   deleted: boolean
 }

@@ -30,13 +30,21 @@ const pullQuerySchema = z.object({
 
 type PushRecord = z.output<typeof pushRecordSchema>
 
+/**
+ * 归一化时间戳比较：raw knex + pg 对 timestamp 列返回 JS Date 对象，
+ * 而客户端提交与内存测试库中是 ISO 字符串，统一转 epoch 毫秒再比较。
+ */
+function toEpochMs(value: string | Date): number {
+  return value instanceof Date ? value.getTime() : Date.parse(value)
+}
+
 function toResponseRecord(row: SyncedRecordRow) {
   return {
     type: row.record_type,
     id: row.record_id,
     data: row.deleted ? null : row.data,
     version: row.version,
-    updated_at: row.record_updated_at,
+    updated_at: new Date(row.record_updated_at).toISOString(),
     deleted: row.deleted,
     device_id: row.device_id,
   }
@@ -47,9 +55,14 @@ function isConflict(row: SyncedRecordRow, record: PushRecord): boolean {
     return true
   }
 
-  return record.client_timestamp <= row.record_updated_at
+  return toEpochMs(record.client_timestamp) <= toEpochMs(row.record_updated_at)
 }
 
+/**
+ * 测试用内存 DB 只支持等值 where，故 since/types/limit 目前在应用层过滤；
+ * 生产量级需把过滤与 LIMIT 下推到 SQL（配合 (user_id, record_updated_at) 索引），
+ * 留待接入真实 Postgres 集成测试时处理。
+ */
 async function readUserRecords(
   database: TaboraDatabase,
   userId: string,
@@ -71,8 +84,8 @@ export function registerSyncEndpoints(router: TaboraRouter, context: TaboraEndpo
       let rows = await readUserRecords(context.database, userId)
 
       if (query.since) {
-        const since = query.since
-        rows = rows.filter((row) => row.record_updated_at > since)
+        const sinceMs = toEpochMs(query.since)
+        rows = rows.filter((row) => toEpochMs(row.record_updated_at) > sinceMs)
       }
 
       if (query.types) {
@@ -129,7 +142,7 @@ export function registerSyncEndpoints(router: TaboraRouter, context: TaboraEndpo
               id: record.id,
               server_version: row.version,
               server_data: row.data,
-              server_updated_at: row.record_updated_at,
+              server_updated_at: new Date(row.record_updated_at).toISOString(),
               server_device_id: row.device_id,
             })
             continue
