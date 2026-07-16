@@ -117,10 +117,12 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
 
     // Monitor pluginData table (plugin-scope changes)
+    // NOTE: entityType is the literal "pluginData" (the backend enum value); the
+    // originating pluginId stays in the payload (obj.pluginId), so no info is lost.
     database.pluginData.hook("creating", (_primKey: any, obj: any) => {
       void changeQueue.enqueue({
         scope: "plugin",
-        entityType: obj.pluginId,
+        entityType: "pluginData",
         recordKey: obj.id,
         payload: obj,
         clientUpdatedAt: obj.updatedAt ?? new Date().toISOString(),
@@ -131,7 +133,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     database.pluginData.hook("updating", (mods: any, _primKey: any, obj: any) => {
       void changeQueue.enqueue({
         scope: "plugin",
-        entityType: obj.pluginId,
+        entityType: "pluginData",
         recordKey: obj.id,
         payload: { ...obj, ...mods },
         clientUpdatedAt: mods.updatedAt ?? new Date().toISOString(),
@@ -142,7 +144,7 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     database.pluginData.hook("deleting", (_primKey: any, obj: any) => {
       void changeQueue.enqueue({
         scope: "plugin",
-        entityType: obj.pluginId,
+        entityType: "pluginData",
         recordKey: obj.id,
         payload: obj,
         clientUpdatedAt: new Date().toISOString(),

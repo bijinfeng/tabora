@@ -41,27 +41,30 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
   // Create local change queue
   const changeQueue = createLocalChangeQueue(config.syncQueueRepo)
 
-  // Device ID is resolved lazily before the first sync
-  let deviceId = ""
+  // Device ID is resolved lazily (and cached) the first time the engine pushes.
+  // Generated + persisted on first use so it survives restarts.
+  let cachedDeviceId: string | null = null
+  async function getDeviceId(): Promise<string> {
+    if (cachedDeviceId) return cachedDeviceId
+    const stored = await config.syncMetaRepo.get("deviceId")
+    if (stored) {
+      cachedDeviceId = stored
+      return stored
+    }
+    const generated = crypto.randomUUID()
+    await config.syncMetaRepo.set("deviceId", generated)
+    cachedDeviceId = generated
+    return generated
+  }
 
-  // Create sync engine with temporary deviceId (will be updated before sync)
-  const syncEngineConfig: {
-    database: TaboraDatabase
-    gatewayClient: typeof gatewayClient
-    changeQueue: typeof changeQueue
-    syncMetaRepo: SyncMetaRepository
-    authSession: { getSession: () => Promise<unknown | null> }
-    deviceId: string
-  } = {
+  const syncEngine = createSyncEngine({
     database: config.database,
     gatewayClient,
     changeQueue,
     syncMetaRepo: config.syncMetaRepo,
     authSession: { getSession: () => config.authClient.getSession() },
-    deviceId: "",
-  }
-
-  const syncEngine = createSyncEngine(syncEngineConfig)
+    getDeviceId,
+  })
 
   // Create change detector
   const changeDetector = createChangeDetector({
@@ -90,19 +93,7 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
           return
         }
 
-        // Ensure we have a device ID (generate and persist on first sync)
-        if (!deviceId) {
-          const storedDeviceId = await config.syncMetaRepo.get("deviceId")
-          if (storedDeviceId) {
-            deviceId = storedDeviceId
-          } else {
-            deviceId = crypto.randomUUID()
-            await config.syncMetaRepo.set("deviceId", deviceId)
-          }
-          syncEngineConfig.deviceId = deviceId
-        }
-
-        // Run sync
+        // Run sync (the engine resolves the device id lazily via getDeviceId)
         const result = await syncEngine.sync()
         if (!result.success) {
           console.error("Sync failed:", result.errors)

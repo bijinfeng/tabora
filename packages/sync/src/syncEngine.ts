@@ -18,7 +18,12 @@ export type SyncEngineConfig = {
   changeQueue: LocalChangeQueue
   syncMetaRepo: SyncMetaRepository
   authSession: SyncAuthSession
-  deviceId: string
+  /**
+   * Lazily resolve the device id. Evaluated on each push so a deviceId that is
+   * generated/persisted after the engine is constructed is picked up (avoids
+   * capturing an empty string by value in the closure).
+   */
+  getDeviceId: () => Promise<string>
 }
 
 export type SyncResult = {
@@ -76,7 +81,7 @@ async function applyRemoteRecord(database: TaboraDatabase, record: RemoteRecord)
  * This is the main sync coordinator.
  */
 export function createSyncEngine(config: SyncEngineConfig) {
-  const { database, gatewayClient, changeQueue, syncMetaRepo, authSession, deviceId } = config
+  const { database, gatewayClient, changeQueue, syncMetaRepo, authSession, getDeviceId } = config
 
   async function push(): Promise<{
     accepted: number
@@ -118,6 +123,9 @@ export function createSyncEngine(config: SyncEngineConfig) {
     // Mark as syncing
     await Promise.all(safePending.map((item) => changeQueue.markAsSyncing(item.id)))
 
+    // Resolve the device id lazily (generated/persisted outside the engine).
+    const deviceId = await getDeviceId()
+
     // Push to gateway
     const response = await gatewayClient.push(
       deviceId,
@@ -141,6 +149,9 @@ export function createSyncEngine(config: SyncEngineConfig) {
     }
 
     // Process accepted: local change reached the server, drop it from the queue.
+    // The push protocol only returns the record id here (no entityType), so the
+    // match relies on recordKey uniqueness. recordKeys are UUIDs, so a collision
+    // across entity types is not expected in practice.
     accepted = response.data.accepted.length
     await Promise.all(
       response.data.accepted.map((recordKey) => {
@@ -150,7 +161,8 @@ export function createSyncEngine(config: SyncEngineConfig) {
     )
 
     // Process conflicts: server wins. Overwrite the local record with the
-    // server's version, then drop the pending change (no retry).
+    // server's version, then drop the pending change (no retry). Only dequeue
+    // when the local apply succeeds; on failure keep the entry for a later retry.
     conflicts = response.data.conflicts.length
     for (const conflict of response.data.conflicts) {
       try {
@@ -165,14 +177,21 @@ export function createSyncEngine(config: SyncEngineConfig) {
         errors.push(
           `Failed to apply conflict ${conflict.type}/${conflict.id}: ${err instanceof Error ? err.message : "unknown"}`,
         )
+        // Local apply failed — do NOT dequeue so the change is retried next cycle.
+        continue
       }
-      const item = safePending.find((p) => p.recordKey === conflict.id)
+      // Conflicts carry a `type`, so constrain the match by entityType too.
+      const item = safePending.find(
+        (p) => p.recordKey === conflict.id && p.entityType === conflict.type,
+      )
       if (item) {
         await changeQueue.dequeue(item.id)
       }
     }
 
     // Process rejected: keep the entry as failed so it can be inspected/retried.
+    // The protocol only returns the record id (no entityType), so this match
+    // relies on recordKey (UUID) uniqueness, same as the accepted branch.
     rejected = response.data.rejected.length
     for (const rej of response.data.rejected) {
       errors.push(`Rejected ${rej.id}: ${rej.reason}`)

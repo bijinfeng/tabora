@@ -8,7 +8,7 @@
 
 S1 完成前端登录注册接入（`@tabora/auth`），S2 完成 Directus 后端同步网关（`GET/POST /sync/records`，LWW + tombstone + 敏感过滤）。S3 把前端 `packages/sync` 从 Supabase 切到 Directus，激活 bootstrap 中禁用的 syncManager，接通同步设置页。
 
-关键发现：前端 changeDetector 产出的 entityType 是 `workspace` / `pluginInstance` / `plugin` / `pluginData`，S2 后端枚举是 `note` / `workspace_settings` / `plugin_data`，两边不一致。S3 第一步先改后端枚举对齐前端真实实体。
+关键发现：前端 changeDetector 产出的 core 表 entityType 是 `workspace` / `pluginInstance` / `plugin`，pluginData 表原本产出 `entityType: pluginId`（如 `todo-plugin`），与 S2 后端枚举 `note` / `workspace_settings` / `plugin_data` 均不一致。S3 分两步对齐：后端枚举改为前端真实实体；前端 changeDetector 将 pluginData 的 entityType 归一化为字面量 `"pluginData"`（pluginId 保留在 payload，不丢信息）。
 
 ## 目标
 

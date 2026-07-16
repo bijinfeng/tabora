@@ -96,7 +96,7 @@ function setup() {
     changeQueue,
     syncMetaRepo,
     authSession,
-    deviceId: DEVICE_ID,
+    getDeviceId: vi.fn().mockResolvedValue(DEVICE_ID),
   } as unknown as SyncEngineConfig)
 
   return { engine, database, gatewayClient, changeQueue, syncMetaRepo, authSession }
@@ -145,6 +145,11 @@ describe("createSyncEngine (Directus contract)", () => {
     ])
     expect(changeQueue.dequeue).toHaveBeenCalledWith("q1")
     expect(changeQueue.dequeue).toHaveBeenCalledWith("q2")
+
+    // deviceId is resolved lazily via getDeviceId and must be non-empty.
+    const deviceIdArg = gatewayClient.push.mock.calls[0]?.[0]
+    expect(deviceIdArg).toBe(DEVICE_ID)
+    expect(deviceIdArg).not.toBe("")
   })
 
   it("push conflict (server wins): applies server_data and dequeues the entry", async () => {
@@ -199,6 +204,35 @@ describe("createSyncEngine (Directus contract)", () => {
     expect(database.workspaces.delete).toHaveBeenCalledWith("w3")
     expect(database.workspaces.put).not.toHaveBeenCalled()
     expect(changeQueue.dequeue).toHaveBeenCalledWith("q1")
+  })
+
+  it("push conflict apply failure: keeps the entry (no dequeue) for retry", async () => {
+    const { engine, database, gatewayClient, changeQueue } = setup()
+    changeQueue.getPending.mockResolvedValue([
+      queueRow({ id: "q1", scope: "core", entityType: "workspace", recordKey: "w5" }),
+    ])
+    // Local apply fails (e.g. IndexedDB write rejects).
+    database.workspaces.put.mockRejectedValue(new Error("db write failed"))
+    gatewayClient.push.mockResolvedValue(
+      pushOk({
+        conflicts: [
+          {
+            type: "workspace",
+            id: "w5",
+            server_version: 5,
+            server_data: { id: "w5", name: "server" },
+            server_updated_at: "2026-07-15T10:00:00.000Z",
+            server_device_id: "dev-server",
+          },
+        ],
+      }),
+    )
+
+    const result = await engine.sync()
+
+    // Apply failed → entry stays queued for a later retry.
+    expect(changeQueue.dequeue).not.toHaveBeenCalledWith("q1")
+    expect(result.errors.some((e) => e.includes("Failed to apply conflict"))).toBe(true)
   })
 
   it("push conflict derives plugin scope for the pluginData type", async () => {
