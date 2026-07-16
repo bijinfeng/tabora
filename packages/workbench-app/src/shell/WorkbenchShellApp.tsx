@@ -185,6 +185,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     showToast,
   })
   onCleanup(hostRuntime.dispose)
+  const authClient = runtime.authClient
   const buildSettingsPanelProps = createWorkbenchSettingsPanelPropsBuilder({
     getWorkspace: workspaceState,
     getWorkspaces: workspaceList,
@@ -217,6 +218,34 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       },
       switchWorkspace: workspaceController.switchWorkspace,
       deleteWorkspace: workspaceController.deleteWorkspace,
+      ...(authClient
+        ? {
+            auth: {
+              getSession: async () => {
+                const s = await authClient.getSession()
+                if (!s) return null
+                const result: { userId?: string; sessionId: string } = { sessionId: s.sessionId }
+                if (s.userId !== undefined) result.userId = s.userId
+                return result
+              },
+              getCurrentUser: async () => {
+                const u = await authClient.getCurrentUser()
+                if (!u) return null
+                const result: { id: string; email?: string } = { id: u.id }
+                if (u.email !== undefined) result.email = u.email
+                return result
+              },
+              login: async (email: string, password: string) => {
+                await authClient.login(email, password)
+              },
+              register: (email: string, password: string) => authClient.register(email, password),
+              logout: () => authClient.logout(),
+              requestPasswordReset: (email: string) => authClient.requestPasswordReset(email),
+              resetPassword: (code: string, password: string) =>
+                authClient.resetPassword(code, password),
+            },
+          }
+        : {}),
     },
   })
 
