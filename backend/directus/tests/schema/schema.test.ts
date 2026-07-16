@@ -58,9 +58,6 @@ describe("directus schema snapshot", () => {
     const syncDevices = manifest.collections.find((c) => c.name === "sync_devices")
     expect(syncDevices?.fields.some((f) => f.name === "device_key")).toBe(true)
 
-    const syncedRecords = manifest.collections.find((c) => c.name === "synced_records")
-    expect(syncedRecords?.fields.some((f) => f.name === "record_key")).toBe(true)
-
     const syncConflicts = manifest.collections.find((c) => c.name === "sync_conflicts")
     expect(syncConflicts?.fields.some((f) => f.name === "local_payload")).toBe(true)
 
@@ -144,6 +141,25 @@ describe("directus schema snapshot", () => {
             max_length: 64,
           }),
         }),
+      ]),
+    )
+  })
+
+  it("declares synced_records with S2 sync gateway schema", () => {
+    const syncedRecords = manifest.collections.find(
+      (collection) => collection.name === "synced_records",
+    )
+
+    expect(syncedRecords?.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "user_id", type: "uuid" }),
+        expect.objectContaining({ name: "device_id", type: "string" }),
+        expect.objectContaining({ name: "record_type", type: "string" }),
+        expect.objectContaining({ name: "record_id", type: "string" }),
+        expect.objectContaining({ name: "data", type: "json" }),
+        expect.objectContaining({ name: "version", type: "integer" }),
+        expect.objectContaining({ name: "record_updated_at", type: "timestamp" }),
+        expect.objectContaining({ name: "deleted", type: "boolean" }),
       ]),
     )
   })
