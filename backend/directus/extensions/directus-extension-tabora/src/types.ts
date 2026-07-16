@@ -57,3 +57,15 @@ export type DirectusSessionRow = {
   user_agent: string | null
   origin: string | null
 }
+
+export type SyncedRecordRow = {
+  id?: number
+  user_id: string
+  device_id: string
+  record_type: string
+  record_id: string
+  data: unknown
+  version: number
+  record_updated_at: string
+  deleted: boolean
+}
