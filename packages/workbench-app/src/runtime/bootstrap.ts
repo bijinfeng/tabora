@@ -1,4 +1,9 @@
 import type { HostAdapter } from "@tabora/host-adapters"
+import { createDirectusAuthClient, type DirectusAuthClient } from "@tabora/auth"
+import {
+  createChromeStorageAuthStorage,
+  createLocalStorageAuthStorage,
+} from "@tabora/host-adapters"
 import { createPluginCatalog, type PluginCatalog } from "@tabora/orchestrator"
 import type { AiRuntimeBridge, WorkspacePresetContribution } from "@tabora/plugin-api"
 import {
@@ -56,6 +61,7 @@ export type WorkbenchRuntimeBootstrap = {
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
   syncManager?: SyncManager
+  authClient?: DirectusAuthClient
 }
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
@@ -389,6 +395,16 @@ export function createWorkbenchRuntimeBootstrap(
     i18n,
   })
 
+  let authClient: DirectusAuthClient | undefined = undefined
+  const authApiBaseUrl = options.shellConfig.auth?.apiBaseUrl
+  if (authApiBaseUrl) {
+    const authStorage =
+      options.host.platform === "extension"
+        ? createChromeStorageAuthStorage()
+        : createLocalStorageAuthStorage()
+    authClient = createDirectusAuthClient({ apiBaseUrl: authApiBaseUrl, storage: authStorage })
+  }
+
   // Create sync manager (optional, only if env vars are set)
   // Note: Environment variables are expected to be injected at build time
   // via Vite or other bundler. If not available, sync will be disabled.
@@ -429,5 +445,6 @@ export function createWorkbenchRuntimeBootstrap(
     pluginStyles,
     rejectedPlugins: loadResult.rejected,
     ...(syncManager ? { syncManager } : {}),
+    ...(authClient ? { authClient } : {}),
   }
 }

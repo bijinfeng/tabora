@@ -21,6 +21,7 @@
     "@dnd-kit/solid": "^0.4.0",
     "@solid-primitives/media": "catalog:ui",
     "@solid-primitives/timer": "catalog:ui",
+    "@tabora/auth": "workspace:*",
     "@tabora/brand": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
