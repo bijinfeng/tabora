@@ -513,9 +513,6 @@ importers:
 
   packages/sync:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.39.0
-        version: 2.110.0
       '@tabora/auth':
         specifier: workspace:*
         version: link:../auth

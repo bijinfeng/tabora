@@ -1,34 +1,3 @@
-// Auth session management
-export {
-  createAuthSessionManager,
-  getSupabaseClient,
-  type AuthSession,
-  type AuthSessionManager,
-  type AuthSessionConfig,
-} from "./authSession"
-
-// Gateway client
-export {
-  createGatewayClient,
-  type GatewayClient,
-  type GatewayAction,
-  type GatewayRequest,
-  type GatewayResponse,
-  type GatewaySuccessResponse,
-  type GatewayErrorResponse,
-  type DeviceInfo,
-  type SyncRecord,
-  type PushRequest,
-  type PushResponse,
-  type PullRequest,
-  type PullResponse,
-  type RegisterDeviceRequest,
-  type RegisterDeviceResponse,
-  type SnapshotRequest,
-  type SnapshotResponse,
-  type GatewayClientConfig,
-} from "./gatewayClient"
-
 // Local change queue
 export { createLocalChangeQueue, type LocalChange, type LocalChangeQueue } from "./localChangeQueue"
 
@@ -59,7 +28,7 @@ export {
   type ConflictResolution,
 } from "./conflictModel"
 
-// Directus auth (S1) - re-exported for S3 migration off Supabase
+// Directus auth (S1) - re-exported for S3 sync migration
 export {
   createDirectusAuthClient,
   type DirectusAuthClient,
