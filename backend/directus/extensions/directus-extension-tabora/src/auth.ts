@@ -132,23 +132,15 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
     "/auth/login",
     asyncRoute(async (request, response) => {
       const credentials = parseBody(credentialsSchema, request.body)
-      const { result, sessionId } = await context.database.transaction(async (transaction) => {
-        const authenticationService = await createAuthenticationService(
-          context,
-          request,
-          transaction,
-        )
-        const result = await authenticationService.login("default", credentials, {
-          session: false,
-        })
-        const sessionId = await createSessionIdentity(
-          transaction,
-          requireLoginUserId(result),
-          result.refreshToken,
-        )
-
-        return { result, sessionId }
+      const authenticationService = await createAuthenticationService(context, request)
+      const result = await authenticationService.login("default", credentials, {
+        session: false,
       })
+      const sessionId = await createSessionIdentity(
+        context.database,
+        requireLoginUserId(result),
+        result.refreshToken,
+      )
 
       return response.json({
         data: {
@@ -165,22 +157,17 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
     "/auth/refresh",
     asyncRoute(async (request, response) => {
       const { refresh_token: refreshToken } = parseBody(refreshTokenSchema, request.body)
-      const { result, sessionId } = await context.database.transaction(async (transaction) => {
+      const authenticationService = await createAuthenticationService(context, request)
+      const result = await authenticationService.refresh(refreshToken, {
+        session: false,
+      })
+      const userId = requireLoginUserId(result)
+      const sessionId = await context.database.transaction(async (transaction) => {
         const identity = await lockSessionIdentityByToken(transaction, refreshToken)
-        const authenticationService = await createAuthenticationService(
-          context,
-          request,
-          transaction,
-        )
-        const result = await authenticationService.refresh(refreshToken, {
-          session: false,
-        })
-        const userId = requireLoginUserId(result)
-        const sessionId = identity
+
+        return identity
           ? await rotateSessionIdentity(transaction, identity, userId, result.refreshToken)
           : await createSessionIdentity(transaction, userId, result.refreshToken)
-
-        return { result, sessionId }
       })
 
       return response.json({
@@ -198,16 +185,12 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
     "/auth/logout",
     asyncRoute(async (request, response) => {
       const { refresh_token: refreshToken } = parseBody(refreshTokenSchema, request.body)
+      const authenticationService = await createAuthenticationService(context, request)
+
+      await authenticationService.logout(refreshToken)
 
       await context.database.transaction(async (transaction) => {
-        const authenticationService = await createAuthenticationService(
-          context,
-          request,
-          transaction,
-        )
         const identity = await lockSessionIdentityByToken(transaction, refreshToken)
-
-        await authenticationService.logout(refreshToken)
 
         if (identity) {
           await deleteSessionIdentityByToken(transaction, identity.user_id, refreshToken)
