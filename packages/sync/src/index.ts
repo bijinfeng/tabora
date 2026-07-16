@@ -64,3 +64,17 @@ export {
   type DirectusAuthClient,
   type DirectusSession,
 } from "@tabora/auth"
+
+// Directus gateway client (S3) - HTTP client + 字段映射，对接 S2 同步网关
+export {
+  createDirectusGatewayClient,
+  type DirectusGatewayClient,
+  type DirectusGatewayClientConfig,
+  type DirectusGatewayError,
+  type DirectusGatewayResult,
+  type DirectusGatewayPushRecord,
+  type DirectusPushConflict,
+  type DirectusPushResponse,
+  type DirectusPullRecord,
+  type DirectusPullResponse,
+} from "./directusGatewayClient"
