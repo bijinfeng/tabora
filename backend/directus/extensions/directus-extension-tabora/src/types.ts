@@ -50,7 +50,6 @@ export type DirectusFileSummary = {
 
 export type DirectusSessionRow = {
   token: string
-  data: unknown
   created_at: string | null
   expires: string | null
   ip: string | null

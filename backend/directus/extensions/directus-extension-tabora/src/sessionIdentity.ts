@@ -1,102 +1,121 @@
-import { randomUUID } from "node:crypto"
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto"
 import { InternalServerError } from "@directus/errors"
 import type { TaboraDatabase } from "./types"
 
-const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const SESSION_TOKEN_HASH_PATTERN = /^[a-f0-9]{64}$/i
 
-type JsonObject = Record<string, unknown>
-
-function isJsonObject(value: unknown): value is JsonObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
+export type SessionIdentityRow = {
+  id?: number
+  user_id: string
+  session_id: string
+  token_hash: string
 }
 
-function parseSessionData(data: unknown): unknown {
-  if (typeof data !== "string") {
-    return data
+export function hashSessionToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex")
+}
+
+export function sessionTokenMatchesHash(token: string, expectedHash: string): boolean {
+  if (!SESSION_TOKEN_HASH_PATTERN.test(expectedHash)) {
+    return false
   }
 
-  try {
-    return JSON.parse(data)
-  } catch {
-    return null
+  const actualHash = hashSessionToken(token)
+
+  if (!SESSION_TOKEN_HASH_PATTERN.test(actualHash)) {
+    return false
+  }
+
+  return timingSafeEqual(
+    Buffer.from(actualHash, "hex"),
+    Buffer.from(expectedHash.toLowerCase(), "hex"),
+  )
+}
+
+function assertValidIdentity(identity: SessionIdentityRow): void {
+  if (
+    typeof identity.user_id !== "string" ||
+    !identity.user_id ||
+    typeof identity.session_id !== "string" ||
+    !identity.session_id ||
+    typeof identity.token_hash !== "string" ||
+    !SESSION_TOKEN_HASH_PATTERN.test(identity.token_hash)
+  ) {
+    throw new InternalServerError()
   }
 }
 
-function requireSessionData(data: unknown): JsonObject {
-  let parsed = data
+export async function lockSessionIdentityByToken(
+  database: TaboraDatabase,
+  token: string,
+): Promise<SessionIdentityRow | undefined> {
+  const identities = (await database
+    .select("id", "user_id", "session_id", "token_hash")
+    .from("user_refresh_tokens")
+    .where({ token_hash: hashSessionToken(token) })
+    .forUpdate()) as SessionIdentityRow[]
 
-  if (typeof data === "string") {
-    try {
-      parsed = JSON.parse(data)
-    } catch {
-      throw new InternalServerError()
-    }
+  if (identities.length === 0) {
+    return undefined
   }
 
-  if (parsed === null || parsed === undefined) {
-    return {}
-  }
-
-  if (!isJsonObject(parsed)) {
+  if (identities.length > 1) {
     throw new InternalServerError()
   }
 
-  return parsed
+  const identity = identities[0] as SessionIdentityRow
+  assertValidIdentity(identity)
+
+  return identity
 }
 
-export function readSessionId(data: unknown): string | null {
-  const sessionData = parseSessionData(data)
-
-  if (!isJsonObject(sessionData) || !isJsonObject(sessionData.tabora)) {
-    return null
-  }
-
-  const sessionId = sessionData.tabora.session_id
-  return typeof sessionId === "string" && UUID_V4_PATTERN.test(sessionId)
-    ? sessionId.toLowerCase()
-    : null
-}
-
-export async function ensureSessionId(database: TaboraDatabase, token: string): Promise<string> {
-  const session = (await database
-    .select("data")
-    .from("directus_sessions")
-    .where({ token })
-    .forUpdate()
-    .first()) as { data?: unknown } | undefined
-
-  if (!session) {
-    throw new InternalServerError()
-  }
-
-  const existingSessionId = readSessionId(session.data)
-  if (existingSessionId) {
-    return existingSessionId
-  }
-
-  const sessionData = requireSessionData(session.data)
-  const taboraData = sessionData.tabora
-
-  if (taboraData !== null && taboraData !== undefined && !isJsonObject(taboraData)) {
-    throw new InternalServerError()
-  }
-
+export async function createSessionIdentity(
+  database: TaboraDatabase,
+  userId: string,
+  token: string,
+): Promise<string> {
   const sessionId = randomUUID()
-  const updated = await database("directus_sessions")
-    .where({ token })
+
+  await database("user_refresh_tokens").insert({
+    user_id: userId,
+    session_id: sessionId,
+    token_hash: hashSessionToken(token),
+  })
+
+  return sessionId
+}
+
+export async function rotateSessionIdentity(
+  database: TaboraDatabase,
+  identity: SessionIdentityRow,
+  userId: string,
+  nextToken: string,
+): Promise<string> {
+  assertValidIdentity(identity)
+
+  if (identity.user_id !== userId) {
+    throw new InternalServerError()
+  }
+
+  const updated = await database("user_refresh_tokens")
+    .where({ id: identity.id, user_id: userId })
     .update({
-      data: {
-        ...sessionData,
-        tabora: {
-          ...(taboraData ?? {}),
-          session_id: sessionId,
-        },
-      },
+      token_hash: hashSessionToken(nextToken),
     })
 
   if (updated !== 1) {
     throw new InternalServerError()
   }
 
-  return sessionId
+  return identity.session_id
+}
+
+export async function deleteSessionIdentityByToken(
+  database: TaboraDatabase,
+  userId: string,
+  token: string,
+): Promise<void> {
+  await database("user_refresh_tokens")
+    .where({ user_id: userId, token_hash: hashSessionToken(token) })
+    .del()
 }
