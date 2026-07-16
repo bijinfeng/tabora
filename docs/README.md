@@ -45,6 +45,7 @@
 - `docs/superpowers/specs/2026-07-15-directus-extension-refactor-design.md`：Directus Tabora endpoint 扩展重构边界与安全语义。
 - `docs/superpowers/plans/2026-07-15-directus-extension-refactor.md`：对应的测试先行实施步骤。
 - `docs/superpowers/specs/2026-07-16-frontend-directus-auth-s1-design.md`：账号数据同步转向 Directus，S1 前端登录注册接入设计（独立认证模块 `@tabora/auth` + 账号页邮箱密码接线）。
+- `docs/superpowers/plans/2026-07-16-frontend-directus-auth-s1.md`：S1 前端登录注册接入 Directus 的 TDD 逐步实现计划（9 个任务）。
 
 ## 按任务选择文档
 
