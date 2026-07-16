@@ -2,10 +2,11 @@ import type { AuthStorage } from "@tabora/host-adapters"
 import { mapDirectusError, type AuthError } from "./errors"
 
 const SESSION_KEY = "tabora.auth.session"
+// 刷新提前量：预留网络延迟余量，避免 access token 在请求途中过期
 const REFRESH_LEEWAY_MS = 30_000
 
 export type DirectusSession = {
-  userId: string
+  userId?: string
   accessToken: string
   refreshToken: string
   expiresAt: number
@@ -109,7 +110,6 @@ export function createDirectusAuthClient(config: DirectusAuthClientConfig): Dire
 
   function toSession(data: LoginResponseData): DirectusSession {
     return {
-      userId: "",
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
       expiresAt: Date.now() + data.expires,
@@ -155,6 +155,15 @@ export function createDirectusAuthClient(config: DirectusAuthClientConfig): Dire
     }
   }
 
+  async function loadSession(): Promise<DirectusSession | null> {
+    const current = await readStored()
+    if (!current) return null
+    if (current.expiresAt - REFRESH_LEEWAY_MS > Date.now()) {
+      return current
+    }
+    return refreshSession()
+  }
+
   return {
     async register(email, password) {
       await request<never>("/auth/register", { email, password })
@@ -182,19 +191,14 @@ export function createDirectusAuthClient(config: DirectusAuthClientConfig): Dire
       await clearStored()
     },
 
-    async getSession() {
-      const current = await readStored()
-      if (!current) return null
-      if (current.expiresAt - REFRESH_LEEWAY_MS > Date.now()) {
-        return current
-      }
-      return refreshSession()
+    getSession() {
+      return loadSession()
     },
 
     refreshSession,
 
     async getCurrentUser() {
-      const session = await this.getSession()
+      const session = await loadSession()
       if (!session) return null
       return get<CurrentUser>("/auth/session", session.accessToken)
     },
