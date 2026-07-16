@@ -202,4 +202,42 @@ describe("createDirectusAuthClient", () => {
       code: "NETWORK_ERROR",
     })
   })
+
+  it("resetPassword maps INVALID_PAYLOAD to RESET_INVALID", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(400, { errors: [{ extensions: { code: "INVALID_PAYLOAD" } }] }),
+    )
+    const client = createDirectusAuthClient({ apiBaseUrl: BASE, storage: memoryStorage() })
+
+    await expect(client.resetPassword("badcode", "pw12345678")).rejects.toMatchObject({
+      code: "RESET_INVALID",
+    })
+  })
+
+  it("getCurrentUser fetches session with bearer token when logged in", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, loginBody()))
+    const storage = memoryStorage()
+    const client = createDirectusAuthClient({ apiBaseUrl: BASE, storage })
+    await client.login("a@test.com", "pw12345678")
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: { id: "u1", email: "a@test.com" } }))
+
+    const user = await client.getCurrentUser()
+
+    expect(user?.email).toBe("a@test.com")
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${BASE}/auth/session`,
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer acc" }),
+      }),
+    )
+  })
+
+  it("getCurrentUser returns null without a session and skips fetch", async () => {
+    const client = createDirectusAuthClient({ apiBaseUrl: BASE, storage: memoryStorage() })
+
+    const user = await client.getCurrentUser()
+
+    expect(user).toBeNull()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })
