@@ -21,12 +21,15 @@ export function createPlaygroundWorkbenchComposition(): WorkbenchComposition {
 }
 
 export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
+  const apiBaseUrl = import.meta.env.VITE_TABORA_API_BASE?.trim()
   return createWorkbenchRuntimeBootstrap({
     host: createWebHostAdapter({
       id: "host.playground",
     }),
     plugins: builtinPlugins,
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
-    shellConfig: builtinWorkbenchShellConfig,
+    shellConfig: apiBaseUrl
+      ? { ...builtinWorkbenchShellConfig, auth: { apiBaseUrl } }
+      : builtinWorkbenchShellConfig,
   })
 }
