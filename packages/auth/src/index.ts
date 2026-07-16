@@ -1,4 +1,3 @@
-export { mapDirectusError, AUTH_ERROR_MESSAGES, type AuthError, type AuthErrorCode } from "./errors"
 export {
   createDirectusAuthClient,
   type DirectusAuthClient,
@@ -6,3 +5,5 @@ export {
   type DirectusSession,
   type CurrentUser,
 } from "./directusAuthClient"
+
+export { mapDirectusError, AUTH_ERROR_MESSAGES, type AuthError, type AuthErrorCode } from "./errors"
