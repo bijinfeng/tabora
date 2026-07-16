@@ -28,8 +28,8 @@ function syncedRecord(overrides: Partial<SyncedRecordRow> = {}): SyncedRecordRow
   return {
     user_id: "user-1",
     device_id: "device-a",
-    record_type: "note",
-    record_id: "note-1",
+    record_type: "workspace",
+    record_id: "workspace-1",
     data: { title: "hello" },
     version: 1,
     record_updated_at: T_EARLY,
@@ -40,8 +40,8 @@ function syncedRecord(overrides: Partial<SyncedRecordRow> = {}): SyncedRecordRow
 
 function pushRecord(overrides: Record<string, unknown> = {}) {
   return {
-    type: "note",
-    id: "note-1",
+    type: "workspace",
+    id: "workspace-1",
     data: { title: "hello" },
     version: null,
     client_timestamp: T_LATE,
@@ -88,8 +88,8 @@ describe("tabora sync endpoints", () => {
     const database = createDatabase({
       synced_records: [
         syncedRecord({
-          record_type: "note",
-          record_id: "note-1",
+          record_type: "workspace",
+          record_id: "workspace-1",
           data: { title: "keep" },
           version: 1,
           record_updated_at: T_EARLY,
@@ -97,8 +97,8 @@ describe("tabora sync endpoints", () => {
           device_id: "device-a",
         }),
         syncedRecord({
-          record_type: "note",
-          record_id: "note-2",
+          record_type: "pluginData",
+          record_id: "pluginData-2",
           data: { title: "gone" },
           version: 2,
           record_updated_at: T_LATE,
@@ -120,8 +120,8 @@ describe("tabora sync endpoints", () => {
     expect(body.data.records).toHaveLength(2)
     expect(body.data.records[0]).toEqual(
       expect.objectContaining({
-        type: "note",
-        id: "note-1",
+        type: "workspace",
+        id: "workspace-1",
         data: { title: "keep" },
         version: 1,
         updated_at: T_EARLY,
@@ -130,8 +130,10 @@ describe("tabora sync endpoints", () => {
       }),
     )
 
-    const tombstone = body.data.records.find((record) => record.id === "note-2")
-    expect(tombstone).toEqual(expect.objectContaining({ id: "note-2", deleted: true, data: null }))
+    const tombstone = body.data.records.find((record) => record.id === "pluginData-2")
+    expect(tombstone).toEqual(
+      expect.objectContaining({ id: "pluginData-2", deleted: true, data: null }),
+    )
     expect(typeof body.data.server_time).toBe("string")
   })
 
@@ -178,16 +180,16 @@ describe("tabora sync endpoints", () => {
   it("pull 通过 types 过滤 record_type", async () => {
     const database = createDatabase({
       synced_records: [
-        syncedRecord({ record_type: "note", record_id: "note-1" }),
-        syncedRecord({ record_type: "workspace_settings", record_id: "ws-1" }),
-        syncedRecord({ record_type: "plugin_data", record_id: "plugin-1" }),
+        syncedRecord({ record_type: "workspace", record_id: "workspace-1" }),
+        syncedRecord({ record_type: "pluginInstance", record_id: "pluginInstance-1" }),
+        syncedRecord({ record_type: "pluginData", record_id: "pluginData-1" }),
       ],
     })
     const { router } = await registerSync(database)
     const response = createResponse()
 
     await findRoute(router.routes, "get", "/sync/records").handler(
-      { accountability: { user: "user-1" }, query: { types: "note,plugin_data" } },
+      { accountability: { user: "user-1" }, query: { types: "workspace,pluginData" } },
       response,
       vi.fn(),
     )
@@ -197,7 +199,7 @@ describe("tabora sync endpoints", () => {
       body.data.records
         .map((record) => record.type)
         .sort((left, right) => left.localeCompare(right)),
-    ).toEqual(["note", "plugin_data"])
+    ).toEqual(["pluginData", "workspace"])
   })
 
   it("pull 不返回其他用户的记录", async () => {
@@ -258,20 +260,20 @@ describe("tabora sync endpoints", () => {
     await findRoute(router.routes, "post", "/sync/records").handler(
       {
         accountability: { user: "user-1" },
-        body: [pushRecord({ id: "note-new", version: null })],
+        body: [pushRecord({ id: "workspace-new", version: null })],
       },
       response,
       vi.fn(),
     )
 
     const body = response.body as { data: { accepted: string[] } }
-    expect(body.data.accepted).toContain("note-new")
+    expect(body.data.accepted).toContain("workspace-new")
 
     const rows = database.__state.synced_records as any[]
     expect(rows).toHaveLength(1)
     expect(rows[0]).toEqual(
       expect.objectContaining({
-        record_id: "note-new",
+        record_id: "workspace-new",
         user_id: "user-1",
         version: 1,
         deleted: false,
@@ -282,7 +284,7 @@ describe("tabora sync endpoints", () => {
   it("push 更新已存在记录（version+1）", async () => {
     const database = createDatabase({
       synced_records: [
-        syncedRecord({ record_id: "note-1", version: 2, record_updated_at: T_EARLY }),
+        syncedRecord({ record_id: "workspace-1", version: 2, record_updated_at: T_EARLY }),
       ],
     })
     const { router } = await registerSync(database)
@@ -291,14 +293,14 @@ describe("tabora sync endpoints", () => {
     await findRoute(router.routes, "post", "/sync/records").handler(
       {
         accountability: { user: "user-1" },
-        body: [pushRecord({ id: "note-1", version: 2, client_timestamp: T_LATE })],
+        body: [pushRecord({ id: "workspace-1", version: 2, client_timestamp: T_LATE })],
       },
       response,
       vi.fn(),
     )
 
     const body = response.body as { data: { accepted: string[] } }
-    expect(body.data.accepted).toContain("note-1")
+    expect(body.data.accepted).toContain("workspace-1")
 
     const rows = database.__state.synced_records as any[]
     expect(rows[0].version).toBe(3)
@@ -308,7 +310,7 @@ describe("tabora sync endpoints", () => {
     const database = createDatabase({
       synced_records: [
         syncedRecord({
-          record_id: "note-1",
+          record_id: "workspace-1",
           version: 5,
           data: { title: "server" },
           record_updated_at: T_EARLY,
@@ -322,7 +324,7 @@ describe("tabora sync endpoints", () => {
     await findRoute(router.routes, "post", "/sync/records").handler(
       {
         accountability: { user: "user-1" },
-        body: [pushRecord({ id: "note-1", version: 3, client_timestamp: T_LATE })],
+        body: [pushRecord({ id: "workspace-1", version: 3, client_timestamp: T_LATE })],
       },
       response,
       vi.fn(),
@@ -331,12 +333,12 @@ describe("tabora sync endpoints", () => {
     const body = response.body as {
       data: { accepted: string[]; conflicts: any[] }
     }
-    expect(body.data.accepted).not.toContain("note-1")
+    expect(body.data.accepted).not.toContain("workspace-1")
     expect(body.data.conflicts).toHaveLength(1)
     expect(body.data.conflicts[0]).toEqual(
       expect.objectContaining({
-        type: "note",
-        id: "note-1",
+        type: "workspace",
+        id: "workspace-1",
         server_version: 5,
         server_data: { title: "server" },
         server_updated_at: T_EARLY,
@@ -351,7 +353,7 @@ describe("tabora sync endpoints", () => {
   it("push client_timestamp 过时时进入 conflicts", async () => {
     const database = createDatabase({
       synced_records: [
-        syncedRecord({ record_id: "note-1", version: 1, record_updated_at: T_LATE }),
+        syncedRecord({ record_id: "workspace-1", version: 1, record_updated_at: T_LATE }),
       ],
     })
     const { router } = await registerSync(database)
@@ -360,20 +362,20 @@ describe("tabora sync endpoints", () => {
     await findRoute(router.routes, "post", "/sync/records").handler(
       {
         accountability: { user: "user-1" },
-        body: [pushRecord({ id: "note-1", version: null, client_timestamp: T_EARLY })],
+        body: [pushRecord({ id: "workspace-1", version: null, client_timestamp: T_EARLY })],
       },
       response,
       vi.fn(),
     )
 
     const body = response.body as { data: { conflicts: any[] } }
-    expect(body.data.conflicts.map((conflict) => conflict.id)).toEqual(["note-1"])
+    expect(body.data.conflicts.map((conflict) => conflict.id)).toEqual(["workspace-1"])
   })
 
   it("push 时间戳冲突兼容 Date 类型的 record_updated_at 并返回 ISO 字符串", async () => {
     const database = createDatabase({
       synced_records: [
-        syncedRecord({ record_id: "note-1", version: 1, record_updated_at: new Date(T_LATE) }),
+        syncedRecord({ record_id: "workspace-1", version: 1, record_updated_at: new Date(T_LATE) }),
       ],
     })
     const { router } = await registerSync(database)
@@ -382,14 +384,14 @@ describe("tabora sync endpoints", () => {
     await findRoute(router.routes, "post", "/sync/records").handler(
       {
         accountability: { user: "user-1" },
-        body: [pushRecord({ id: "note-1", version: null, client_timestamp: T_EARLY })],
+        body: [pushRecord({ id: "workspace-1", version: null, client_timestamp: T_EARLY })],
       },
       response,
       vi.fn(),
     )
 
     const body = response.body as { data: { conflicts: any[] } }
-    expect(body.data.conflicts.map((conflict) => conflict.id)).toEqual(["note-1"])
+    expect(body.data.conflicts.map((conflict) => conflict.id)).toEqual(["workspace-1"])
     expect(body.data.conflicts[0].server_updated_at).toBe(T_LATE)
   })
 
@@ -397,7 +399,7 @@ describe("tabora sync endpoints", () => {
     const database = createDatabase({
       synced_records: [
         syncedRecord({
-          record_id: "note-1",
+          record_id: "workspace-1",
           version: 1,
           data: { title: "keep" },
           record_updated_at: T_EARLY,
@@ -411,14 +413,16 @@ describe("tabora sync endpoints", () => {
     await findRoute(router.routes, "post", "/sync/records").handler(
       {
         accountability: { user: "user-1" },
-        body: [pushRecord({ id: "note-1", version: 1, client_timestamp: T_LATE, deleted: true })],
+        body: [
+          pushRecord({ id: "workspace-1", version: 1, client_timestamp: T_LATE, deleted: true }),
+        ],
       },
       response,
       vi.fn(),
     )
 
     const body = response.body as { data: { accepted: string[] } }
-    expect(body.data.accepted).toContain("note-1")
+    expect(body.data.accepted).toContain("workspace-1")
 
     const rows = database.__state.synced_records as any[]
     expect(rows[0].deleted).toBe(true)
@@ -434,8 +438,8 @@ describe("tabora sync endpoints", () => {
       {
         accountability: { user: "user-1" },
         body: [
-          pushRecord({ id: "note-secret", data: { apiKey: "x" } }),
-          pushRecord({ id: "note-ok", data: { title: "safe" } }),
+          pushRecord({ id: "workspace-secret", data: { apiKey: "x" } }),
+          pushRecord({ id: "workspace-ok", data: { title: "safe" } }),
         ],
       },
       response,
@@ -445,15 +449,15 @@ describe("tabora sync endpoints", () => {
     const body = response.body as {
       data: { accepted: string[]; rejected: Array<{ id: string; reason: string }> }
     }
-    expect(body.data.accepted).toContain("note-ok")
-    expect(body.data.accepted).not.toContain("note-secret")
+    expect(body.data.accepted).toContain("workspace-ok")
+    expect(body.data.accepted).not.toContain("workspace-secret")
 
-    const rejected = body.data.rejected.find((entry) => entry.id === "note-secret")
+    const rejected = body.data.rejected.find((entry) => entry.id === "workspace-secret")
     expect(rejected).toBeDefined()
     expect(rejected?.reason).toContain("sensitive")
 
     const rows = database.__state.synced_records as any[]
-    expect(rows.map((row) => row.record_id)).toEqual(["note-ok"])
+    expect(rows.map((row) => row.record_id)).toEqual(["workspace-ok"])
   })
 
   it("push body 非数组时抛 InvalidPayloadError", async () => {
@@ -473,7 +477,7 @@ describe("tabora sync endpoints", () => {
     const { router } = await registerSync()
     const next = vi.fn()
 
-    const body = Array.from({ length: 101 }, (_, index) => pushRecord({ id: `note-${index}` }))
+    const body = Array.from({ length: 101 }, (_, index) => pushRecord({ id: `workspace-${index}` }))
 
     await findRoute(router.routes, "post", "/sync/records").handler(
       { accountability: { user: "user-1" }, body },

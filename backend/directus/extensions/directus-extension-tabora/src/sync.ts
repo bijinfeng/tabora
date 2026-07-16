@@ -3,7 +3,7 @@ import { asyncRoute, parseBody, requireUserId } from "./http"
 import { findSensitiveFieldPath } from "./syncSensitiveFilter"
 import type { SyncedRecordRow, TaboraDatabase, TaboraEndpointContext, TaboraRouter } from "./types"
 
-const RECORD_TYPES = ["note", "workspace_settings", "plugin_data"] as const
+const RECORD_TYPES = ["workspace", "pluginInstance", "plugin", "pluginData"] as const
 const MAX_PUSH_BATCH = 100
 const MAX_PULL_LIMIT = 1000
 
