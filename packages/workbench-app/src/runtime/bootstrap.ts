@@ -405,30 +405,21 @@ export function createWorkbenchRuntimeBootstrap(
     authClient = createDirectusAuthClient({ apiBaseUrl: authApiBaseUrl, storage: authStorage })
   }
 
-  // Create sync manager (optional, only if env vars are set)
-  // Note: Environment variables are expected to be injected at build time
-  // via Vite or other bundler. If not available, sync will be disabled.
+  // Create sync manager (optional, only when auth is configured and available)
   let syncManager: SyncManager | undefined = undefined
-  const supabaseUrl: string | undefined = undefined
-  const supabaseAnonKey: string | undefined = undefined
-  const gatewayUrl: string | undefined = undefined
-
-  if (supabaseUrl && supabaseAnonKey && gatewayUrl) {
+  if (authApiBaseUrl && authClient) {
     try {
       syncManager = createSyncManager({
         database,
         syncQueueRepo: repositories.syncQueueRepo,
         syncMetaRepo: repositories.syncMetaRepo,
         host: options.host,
-        supabaseUrl,
-        supabaseAnonKey,
-        gatewayUrl,
+        apiBaseUrl: authApiBaseUrl,
+        authClient,
       })
-      // Start sync automatically
       syncManager.start()
-    } catch (err) {
-      console.error("Failed to create sync manager:", err)
-      // Continue without sync - sync failure should not block workbench
+    } catch (error) {
+      console.error("Failed to create sync manager:", error)
     }
   }
 

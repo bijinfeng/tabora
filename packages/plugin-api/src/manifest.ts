@@ -316,6 +316,10 @@ export type SettingsPanelViewProps = {
       requestPasswordReset(email: string): Promise<void>
       resetPassword(code: string, password: string): Promise<void>
     }
+    sync?: {
+      triggerSync(): Promise<void>
+      getLastSyncAt(): Promise<string | null>
+    }
   }
   workspaces?: Workspace[]
   workspace: Workspace

@@ -186,6 +186,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   })
   onCleanup(hostRuntime.dispose)
   const authClient = runtime.authClient
+  const syncManager = runtime.syncManager
   const buildSettingsPanelProps = createWorkbenchSettingsPanelPropsBuilder({
     getWorkspace: workspaceState,
     getWorkspaces: workspaceList,
@@ -243,6 +244,18 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
               requestPasswordReset: (email: string) => authClient.requestPasswordReset(email),
               resetPassword: (code: string, password: string) =>
                 authClient.resetPassword(code, password),
+            },
+          }
+        : {}),
+      ...(syncManager
+        ? {
+            sync: {
+              triggerSync: async () => {
+                await syncManager.triggerSync()
+                await runtime.repositories.syncMetaRepo.set("lastSyncAt", new Date().toISOString())
+              },
+              getLastSyncAt: async () =>
+                (await runtime.repositories.syncMetaRepo.get("lastSyncAt")) ?? null,
             },
           }
         : {}),

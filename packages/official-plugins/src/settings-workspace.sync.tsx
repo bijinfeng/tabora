@@ -1,46 +1,74 @@
 import { Badge, Button, FieldRow, Switch } from "@tabora/ui"
-import { createSignal } from "solid-js"
+import { createSignal, onMount } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
-type SyncPhase = "off" | "pending" | "syncing" | "synced"
+function formatSyncTime(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  const pad = (value: number) => String(value).padStart(2, "0")
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(
+    date.getUTCHours(),
+  )}:${pad(date.getUTCMinutes())}`
+}
 
-export function SyncSettingsPanel(_props: SettingsPanelViewProps) {
-  const [phase, setPhase] = createSignal<SyncPhase>("off")
+function messageFor(error: unknown): string {
+  const code = (error as { code?: string })?.code
+  const message = (error as { message?: string })?.message
+  return message ?? (code ? String(code) : "同步失败，请稍后重试")
+}
+
+export function SyncSettingsPanel(props: SettingsPanelViewProps) {
+  const sync = () => props.host.sync
+  const [lastSyncAt, setLastSyncAt] = createSignal<string | null>(null)
   const [autoSync, setAutoSync] = createSignal(false)
-  const [lastSyncTime, setLastSyncTime] = createSignal("未同步")
+  const [busy, setBusy] = createSignal(false)
+  const [status, setStatus] = createSignal("")
+
+  onMount(async () => {
+    const client = sync()
+    if (!client) return
+    try {
+      setLastSyncAt(await client.getLastSyncAt())
+    } catch {
+      // 读取失败按未同步处理
+    }
+  })
 
   const overallStatus = () => {
-    if (phase() === "syncing") return "同步中"
-    if (phase() === "synced") return "已同步"
-    if (phase() === "pending") return "待开启"
-    return "未开启"
+    if (!sync()) return "未开启"
+    if (busy()) return "同步中"
+    if (lastSyncAt()) return "已同步"
+    return "待同步"
   }
-  const modeLabel = () => {
-    if (phase() === "syncing") return "同步中"
-    if (phase() === "synced") return "官方云同步"
-    if (phase() === "pending") return "待开启"
-    return "本地模式"
-  }
+  const modeLabel = () => (sync() ? "官方云同步" : "本地模式")
   const queueStatus = () => {
-    if (phase() === "syncing") return "上传中"
-    if (phase() === "synced") return "队列清空"
-    if (phase() === "pending") return "等待开启"
-    return "未开启"
+    if (!sync()) return "未接入"
+    if (busy()) return "同步中"
+    if (lastSyncAt()) return "已同步"
+    return "待同步"
   }
-  const signedOut = () => phase() === "off"
+  const lastSyncLabel = () => {
+    if (!sync()) return "未配置同步服务"
+    const at = lastSyncAt()
+    return at ? formatSyncTime(at) : "尚未同步"
+  }
 
   function handleSyncNow() {
-    if (signedOut() || phase() === "syncing") return
-    setPhase("syncing")
-    window.setTimeout(() => {
-      setPhase("synced")
-      setLastSyncTime("刚刚")
-    }, 620)
-  }
-
-  function handleAutoSyncChange(enabled: boolean) {
-    setAutoSync(enabled)
-    if (enabled && phase() === "off") setPhase("pending")
+    const client = sync()
+    if (!client || busy()) return
+    setBusy(true)
+    setStatus("")
+    void (async () => {
+      try {
+        await client.triggerSync()
+        setLastSyncAt(await client.getLastSyncAt())
+        setStatus("已同步")
+      } catch (error) {
+        setStatus(messageFor(error))
+      } finally {
+        setBusy(false)
+      }
+    })()
   }
 
   return (
@@ -52,10 +80,8 @@ export function SyncSettingsPanel(_props: SettingsPanelViewProps) {
         <FieldRow
           class="settings-form-row"
           label={modeLabel()}
-          description={lastSyncTime()}
-          trailing={
-            <Badge variant={phase() === "off" ? "neutral" : "accent"}>{queueStatus()}</Badge>
-          }
+          description={lastSyncLabel()}
+          trailing={<Badge variant={sync() ? "accent" : "neutral"}>{queueStatus()}</Badge>}
         />
         <FieldRow
           class="settings-form-row"
@@ -64,7 +90,7 @@ export function SyncSettingsPanel(_props: SettingsPanelViewProps) {
             <Switch
               size="sm"
               checked={autoSync()}
-              onChange={handleAutoSyncChange}
+              onChange={setAutoSync}
               aria-label="后台自动同步"
             />
           }
@@ -76,49 +102,14 @@ export function SyncSettingsPanel(_props: SettingsPanelViewProps) {
             <Button
               size="sm"
               variant="primary"
-              disabled={signedOut() || phase() === "syncing"}
+              disabled={!sync() || busy()}
               onClick={handleSyncNow}
             >
-              {signedOut() ? "登录后可用" : phase() === "syncing" ? "同步中" : "立即同步"}
+              {!sync() ? "未配置" : busy() ? "同步中" : "立即同步"}
             </Button>
           }
         />
-      </section>
-
-      <section class="set-group">
-        <div class="set-group-title">
-          同步范围<span>V1</span>
-        </div>
-        <FieldRow
-          class="settings-form-row"
-          label="会同步"
-          description="工作区 / 插件配置 / 可同步数据"
-        />
-        <FieldRow class="settings-form-row" label="不会同步" description="密钥 / 本机路径 / 缓存" />
-      </section>
-
-      <section class="set-group">
-        <div class="set-group-title">
-          处理<span>0 条冲突</span>
-        </div>
-        <FieldRow
-          class="settings-form-row"
-          label="冲突"
-          trailing={
-            <Button size="sm" variant="secondary">
-              查看冲突
-            </Button>
-          }
-        />
-        <FieldRow
-          class="settings-form-row"
-          label="恢复"
-          trailing={
-            <Button size="sm" variant="secondary">
-              查看快照
-            </Button>
-          }
-        />
+        <span class="auth-status">{status()}</span>
       </section>
     </div>
   )
