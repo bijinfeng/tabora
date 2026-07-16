@@ -349,7 +349,10 @@ describe("tabora attachment endpoints", () => {
     expect(secondResponse.body).toEqual(firstResponse.body)
     expect(database.__state.attachment_refs).toHaveLength(2)
     expect(database.transaction).toHaveBeenCalledTimes(2)
-    expect(database.__forUpdate).toHaveBeenCalledTimes(2)
+    expect(database.__transactions).toHaveLength(2)
+    for (const trx of database.__transactions) {
+      expect(trx.__forUpdate).toHaveBeenCalled()
+    }
   })
 
   it("access 仅允许拥有 ref 的用户访问", async () => {
@@ -484,7 +487,10 @@ describe("tabora attachment endpoints", () => {
       ]),
     )
     expect(database.transaction).toHaveBeenCalledTimes(2)
-    expect(database.__forUpdate).toHaveBeenCalledTimes(2)
+    expect(database.__transactions).toHaveLength(2)
+    for (const trx of database.__transactions) {
+      expect(trx.__forUpdate).toHaveBeenCalled()
+    }
   })
 
   it("meta 只返回文件白名单字段和当前用户 refs_count", async () => {
@@ -585,7 +591,7 @@ describe("tabora attachment endpoints", () => {
 
     expect(constructors.files).toHaveBeenCalledWith({
       accountability: { user: "user-1" },
-      knex: database,
+      knex: database.__lastTransaction,
       schema,
     })
     expect(methods.deleteFile).toHaveBeenCalledWith(FILE_ONE)
