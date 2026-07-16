@@ -10,7 +10,19 @@
     },
     {
       "name": "user_refresh_tokens",
-      "fields": []
+      "fields": [
+        { "name": "user_id", "type": "uuid" },
+        {
+          "name": "session_id",
+          "type": "uuid",
+          "schema": { "is_unique": true, "is_nullable": false }
+        },
+        {
+          "name": "token_hash",
+          "type": "string",
+          "schema": { "max_length": 64, "is_unique": true, "is_nullable": false }
+        }
+      ]
     },
     {
       "name": "trusted_devices",

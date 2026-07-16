@@ -1,13 +1,20 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 
+type ManifestField = {
+  name: string
+  type: string
+  schema?: {
+    is_unique?: boolean
+    is_nullable?: boolean
+    max_length?: number
+  }
+}
+
 type Manifest = {
   collections: Array<{
     name: string
-    fields: Array<{
-      name: string
-      type: string
-    }>
+    fields: ManifestField[]
   }>
 }
 
@@ -84,7 +91,8 @@ async function ensureCollection(token: string, name: string) {
   throw new Error(`${response.status} ${response.statusText}: ${text}`)
 }
 
-async function ensureField(token: string, collection: string, field: string, type: string) {
+async function ensureField(token: string, collection: string, manifestField: ManifestField) {
+  const { name: field, type, schema: fieldSchema } = manifestField
   const response = await fetch(`${directusUrl}/fields/${collection}`, {
     method: "POST",
     headers: {
@@ -94,6 +102,7 @@ async function ensureField(token: string, collection: string, field: string, typ
     body: JSON.stringify({
       field,
       type,
+      ...(fieldSchema ? { schema: fieldSchema } : {}),
     }),
   })
 
@@ -124,7 +133,7 @@ async function main() {
   for (const collection of manifest.collections) {
     await ensureCollection(token, collection.name)
     for (const field of collection.fields) {
-      await ensureField(token, collection.name, field.name, field.type)
+      await ensureField(token, collection.name, field)
     }
   }
 

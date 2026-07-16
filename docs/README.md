@@ -40,6 +40,11 @@
 | 账号与数据同步   | `docs/technical/mpz35mfq-16-data-sync-prd.md`                        | 官方账号、多设备同步、同步范围与设置入口（需求与决策）                  |
 | 数据同步实现     | `docs/technical/tabora-data-sync-technical-design.md`                | Supabase 后端形态、DB schema、RLS、Edge Function 网关、同步引擎与包边界 |
 
+## 阶段性实施记录
+
+- `docs/superpowers/specs/2026-07-15-directus-extension-refactor-design.md`：Directus Tabora endpoint 扩展重构边界与安全语义。
+- `docs/superpowers/plans/2026-07-15-directus-extension-refactor.md`：对应的测试先行实施步骤。
+
 ## 按任务选择文档
 
 ### 产品判断

@@ -1,12 +1,13 @@
 {
   "extends": "@tabora/tsconfig/base.json",
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2022",
     "module": "ESNext",
-    "lib": ["ES2019", "DOM"],
+    "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "rootDir": "./src",
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true
   },
   "include": ["./src/**/*.ts"]
 }

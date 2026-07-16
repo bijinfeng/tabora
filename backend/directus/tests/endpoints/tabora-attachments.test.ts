@@ -1,231 +1,53 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+import {
+  createContext,
+  createDatabase,
+  createResponse,
+  createRouter,
+  findRoute,
+  firstForwardedError,
+  registerExtension,
+} from "./tabora-test-kit"
 
-vi.mock("@directus/extensions-sdk", () => ({
-  defineEndpoint: (factory: any) => factory,
-}))
+const FILE_ONE = "11111111-1111-4111-8111-111111111111"
+const FILE_TWO = "22222222-2222-4222-8222-222222222222"
 
-type Route = {
-  method: "get" | "post" | "delete"
-  path: string
-  handler: any
-}
-
-type AttachmentPolicy = {
-  entity_type: string
-  mime_whitelist?: string[] | null
-  max_size_bytes?: number | null
-}
-
-type AttachmentRef = {
-  id?: number
-  file_id: string
-  owner_user_id: string
-  entity_type: string
-  entity_id: string
-}
-
-type DirectusFile = {
-  id: string
-  title: string
-  filename_download: string
-  type: string
-  filesize?: number
-  uploaded_by?: string | null
-}
-
-function createRouter() {
-  const routes: Route[] = []
-
-  return {
-    routes,
-    get(path: string, handler: any) {
-      routes.push({ method: "get", path, handler })
-    },
-    post(path: string, handler: any) {
-      routes.push({ method: "post", path, handler })
-    },
-    delete(path: string, handler: any) {
-      routes.push({ method: "delete", path, handler })
-    },
-  }
-}
-
-function createRes() {
-  return {
-    statusCode: 200,
-    body: undefined as unknown,
-    status(code: number) {
-      this.statusCode = code
-      return this
-    },
-    json(payload: unknown) {
-      this.body = payload
-      return this
-    },
-    sendStatus(code: number) {
-      this.statusCode = code
-      return this
-    },
-  }
-}
-
-function matchesWhere(row: Record<string, unknown>, clauses: Array<Record<string, unknown>>) {
-  return clauses.every((clause) =>
-    Object.entries(clause).every(([key, value]) => row[key] === value),
-  )
-}
-
-function createSelectQuery(
-  state: Record<string, Array<Record<string, unknown>>>,
-  result?: unknown[],
-) {
-  const clauses: Array<Record<string, unknown>> = []
-  let tableName = ""
-  let selected = result
-
-  const qb: any = {}
-  qb.from = vi.fn((table: string) => {
-    tableName = table
-    return qb
-  })
-  qb.where = vi.fn((arg1: string | Record<string, unknown>, arg2?: unknown) => {
-    if (typeof arg1 === "string") {
-      clauses.push({ [arg1]: arg2 })
-    } else {
-      clauses.push(arg1)
-    }
-
-    return qb
-  })
-  qb.orderBy = vi.fn(() => qb)
-  qb.then = (resolve: any, reject: any) => {
-    const rows =
-      selected ??
-      (state[tableName] ?? [])
-        .filter((row) => matchesWhere(row, clauses))
-        .map((row) => ({ ...row }))
-
-    return Promise.resolve(rows).then(resolve, reject)
-  }
-  return qb
-}
-
-function createTableQuery(
-  state: Record<string, Array<Record<string, unknown>>>,
-  tableName: string,
-  snapshots: Array<Record<string, Array<Record<string, unknown>>>>,
-) {
-  const clauses: Array<Record<string, unknown>> = []
-  const qb: any = {}
-
-  qb.where = vi.fn((arg1: string | Record<string, unknown>, arg2?: unknown) => {
-    if (typeof arg1 === "string") {
-      clauses.push({ [arg1]: arg2 })
-    } else {
-      clauses.push(arg1)
-    }
-
-    return qb
-  })
-  qb.insert = vi.fn(async (payload: Record<string, unknown>) => {
-    const table = state[tableName] ?? (state[tableName] = [])
-    const row = { id: table.length + 1, ...payload }
-    table.push(row)
-    snapshots.push(structuredClone(state))
-    return [row.id]
-  })
-  qb.del = vi.fn(async () => {
-    const table = state[tableName] ?? (state[tableName] = [])
-    const before = table.length
-    state[tableName] = table.filter((row) => !matchesWhere(row, clauses))
-    snapshots.push(structuredClone(state))
-    return before - state[tableName].length
-  })
-
-  return qb
-}
-
-function createDatabase(options?: {
-  policies?: AttachmentPolicy[]
-  refs?: AttachmentRef[]
-  files?: DirectusFile[]
-}) {
-  const state: Record<string, Array<Record<string, unknown>>> = {
-    attachment_policies: (options?.policies ?? []).map((item) => ({ ...item })),
-    attachment_refs: (options?.refs ?? []).map((item) => ({ ...item })),
-    directus_files: (options?.files ?? []).map((item) => ({ ...item })),
-  }
-
-  const snapshots: Array<Record<string, Array<Record<string, unknown>>>> = [structuredClone(state)]
-  const db: any = vi.fn((tableName: string) => createTableQuery(state, tableName, snapshots))
-  db.select = vi.fn((columns?: string[]) => {
-    const result = columns && columns.length > 0 ? undefined : undefined
-    return createSelectQuery(state, result)
-  })
-  db.__state = state
-  db.__snapshots = snapshots
-  return db
-}
-
-async function loadExtension() {
-  vi.resetModules()
-  // @ts-expect-error - dynamic import of extension
-  const mod = (await import("../../extensions/directus-extension-tabora/dist/index")) as any
-  const ext = mod.default
-  // Adapt defineEndpoint format to test format
-  if (typeof ext === "function") {
-    return {
-      id: "tabora",
-      handler: ext,
-    }
-  }
-  return ext as any
-}
-
-function findRoute(routes: Route[], method: Route["method"], path: string) {
-  return routes.find((route) => route.method === method && route.path === path)
-}
-
-describe("tabora-attachments endpoint extension", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  it("注册 /attachments/* 路由", async () => {
+describe("tabora attachment endpoints", () => {
+  it("注册完整的附件路由", async () => {
     const router = createRouter()
-    const database = createDatabase()
-    const extension = await loadExtension()
+    const { context } = createContext()
+    await registerExtension(router, context)
 
-    extension.handler(router as any, { services: {}, database })
-
-    expect(findRoute(router.routes, "post", "/attachments/prepare")).toBeTruthy()
-    expect(findRoute(router.routes, "post", "/attachments/commit")).toBeTruthy()
-    expect(findRoute(router.routes, "get", "/attachments/:id/access")).toBeTruthy()
-    expect(findRoute(router.routes, "post", "/attachments/:id/bind")).toBeTruthy()
-    expect(findRoute(router.routes, "post", "/attachments/:id/unbind")).toBeTruthy()
-    expect(findRoute(router.routes, "delete", "/attachments/:id")).toBeTruthy()
-    expect(findRoute(router.routes, "get", "/attachments/:id/meta")).toBeTruthy()
+    expect(router.routes.map(({ method, path }) => `${method}:${path}`)).toEqual(
+      expect.arrayContaining([
+        "post:/attachments/prepare",
+        "post:/attachments/commit",
+        "get:/attachments/:id/access",
+        "post:/attachments/:id/bind",
+        "post:/attachments/:id/unbind",
+        "delete:/attachments/:id",
+        "get:/attachments/:id/meta",
+      ]),
+    )
   })
 
-  it("prepare 按 policy 校验并默认返回 private 访问", async () => {
-    const router = createRouter()
+  it("prepare 使用结构化校验并返回匹配的上传 policy", async () => {
     const database = createDatabase({
-      policies: [
+      attachment_policies: [
         {
           entity_type: "note",
           mime_whitelist: ["image/png"],
           max_size_bytes: 2048,
+          internal_note: "must-not-leak",
         },
       ],
     })
-    const extension = await loadExtension()
-    extension.handler(router as any, { services: {}, database })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
 
-    const route = findRoute(router.routes, "post", "/attachments/prepare")
-    expect(route).toBeTruthy()
-
-    const res = createRes()
-    await route!.handler(
+    const response = createResponse()
+    await findRoute(router.routes, "post", "/attachments/prepare").handler(
       {
         accountability: { user: "user-1" },
         body: {
@@ -235,12 +57,11 @@ describe("tabora-attachments endpoint extension", () => {
           filename: "cover.png",
         },
       },
-      res,
+      response,
       vi.fn(),
     )
 
-    expect(res.statusCode).toBe(200)
-    expect(res.body).toEqual({
+    expect(response.body).toEqual({
       data: {
         entity_type: "note",
         filename: "cover.png",
@@ -251,227 +72,467 @@ describe("tabora-attachments endpoint extension", () => {
         },
         policy: {
           entity_type: "note",
-          max_size_bytes: 2048,
           mime_whitelist: ["image/png"],
+          max_size_bytes: 2048,
         },
       },
     })
+    expect(JSON.stringify(response.body)).not.toContain("internal_note")
   })
 
-  it("commit 会为上传者创建 owner ref", async () => {
-    const router = createRouter()
+  it("prepare 拒绝无效字段、MIME 和超限文件", async () => {
     const database = createDatabase({
-      files: [
+      attachment_policies: [
         {
-          id: "file-1",
-          title: "Cover",
-          filename_download: "cover.png",
-          type: "image/png",
-          filesize: 123,
-          uploaded_by: "user-1",
+          entity_type: "note",
+          mime_whitelist: ["image/png"],
+          max_size_bytes: 2048,
         },
       ],
     })
-    const extension = await loadExtension()
-    extension.handler(router as any, { services: {}, database })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
+    const route = findRoute(router.routes, "post", "/attachments/prepare")
 
-    const route = findRoute(router.routes, "post", "/attachments/commit")
-    expect(route).toBeTruthy()
-
-    const res = createRes()
-    await route!.handler(
+    const invalidNext = vi.fn()
+    await route.handler(
       {
         accountability: { user: "user-1" },
-        body: { file_id: "file-1", entity_type: "note", entity_id: "n1" },
+        body: { entity_type: "", mime_type: "image/png", size_bytes: 0, filename: "" },
       },
-      res,
-      vi.fn(),
+      createResponse(),
+      invalidNext,
+    )
+    expect(firstForwardedError(invalidNext).code).toBe("INVALID_PAYLOAD")
+
+    const mimeNext = vi.fn()
+    await route.handler(
+      {
+        accountability: { user: "user-1" },
+        body: {
+          entity_type: "note",
+          mime_type: "image/jpeg",
+          size_bytes: 1024,
+          filename: "cover.jpg",
+        },
+      },
+      createResponse(),
+      mimeNext,
+    )
+    expect(firstForwardedError(mimeNext).code).toBe("INVALID_PAYLOAD")
+
+    const sizeNext = vi.fn()
+    await route.handler(
+      {
+        accountability: { user: "user-1" },
+        body: {
+          entity_type: "note",
+          mime_type: "image/png",
+          size_bytes: 4096,
+          filename: "cover.png",
+        },
+      },
+      createResponse(),
+      sizeNext,
+    )
+    expect(firstForwardedError(sizeNext).code).toBe("INVALID_PAYLOAD")
+  })
+
+  it.each([
+    {
+      field: "mime_whitelist",
+      policy: {
+        entity_type: "note",
+        mime_whitelist: { unexpected: "shape" },
+        max_size_bytes: 2048,
+      },
+    },
+    {
+      field: "max_size_bytes",
+      policy: {
+        entity_type: "note",
+        mime_whitelist: ["image/png"],
+        max_size_bytes: "not-a-number",
+      },
+    },
+  ])("prepare 对损坏的 policy 字段 $field fail closed", async ({ policy }) => {
+    const database = createDatabase({
+      attachment_policies: [policy],
+    })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
+
+    const next = vi.fn()
+    await findRoute(router.routes, "post", "/attachments/prepare").handler(
+      {
+        accountability: { user: "user-1" },
+        body: {
+          entity_type: "note",
+          mime_type: "image/png",
+          size_bytes: 1024,
+          filename: "cover.png",
+        },
+      },
+      createResponse(),
+      next,
     )
 
-    expect(res.statusCode).toBe(200)
-    expect(res.body).toEqual({
+    expect(firstForwardedError(next).code).toBe("INTERNAL_SERVER_ERROR")
+  })
+
+  it("commit 拒绝绑定其他用户上传的文件", async () => {
+    const database = createDatabase({
+      directus_files: [{ id: FILE_ONE, uploaded_by: "user-2" }],
+      attachment_refs: [],
+    })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
+
+    const next = vi.fn()
+    await findRoute(router.routes, "post", "/attachments/commit").handler(
+      {
+        accountability: { user: "user-1" },
+        body: { file_id: FILE_ONE, entity_type: "note", entity_id: "note-1" },
+      },
+      createResponse(),
+      next,
+    )
+
+    expect(firstForwardedError(next).code).toBe("ATTACHMENT_NOT_FOUND")
+    expect(database.__state.attachment_refs).toEqual([])
+  })
+
+  it("commit 会按真实文件元数据再次强制执行 policy", async () => {
+    const database = createDatabase({
+      directus_files: [
+        {
+          id: FILE_ONE,
+          uploaded_by: "user-1",
+          type: "image/jpeg",
+          filesize: 4096,
+        },
+      ],
+      attachment_policies: [
+        {
+          entity_type: "note",
+          mime_whitelist: ["image/png"],
+          max_size_bytes: 2048,
+        },
+      ],
+      attachment_refs: [],
+    })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
+
+    const next = vi.fn()
+    await findRoute(router.routes, "post", "/attachments/commit").handler(
+      {
+        accountability: { user: "user-1" },
+        body: { file_id: FILE_ONE, entity_type: "note", entity_id: "note-1" },
+      },
+      createResponse(),
+      next,
+    )
+
+    expect(firstForwardedError(next).code).toBe("INVALID_PAYLOAD")
+    expect(database.__state.attachment_refs).toEqual([])
+  })
+
+  it("commit 在 policy 限制大小时拒绝缺失的真实 filesize", async () => {
+    const database = createDatabase({
+      directus_files: [
+        {
+          id: FILE_ONE,
+          uploaded_by: "user-1",
+          type: "image/png",
+          filesize: null,
+        },
+      ],
+      attachment_policies: [
+        {
+          entity_type: "note",
+          mime_whitelist: ["image/png"],
+          max_size_bytes: 2048,
+        },
+      ],
+      attachment_refs: [],
+    })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
+
+    const next = vi.fn()
+    await findRoute(router.routes, "post", "/attachments/commit").handler(
+      {
+        accountability: { user: "user-1" },
+        body: { file_id: FILE_ONE, entity_type: "note", entity_id: "note-1" },
+      },
+      createResponse(),
+      next,
+    )
+
+    expect(firstForwardedError(next).code).toBe("INVALID_PAYLOAD")
+    expect(database.__state.attachment_refs).toEqual([])
+  })
+
+  it("commit 不会把 FilesService 内部故障伪装成附件不存在", async () => {
+    const failure = new Error("database connection lost")
+    const database = createDatabase({
+      directus_files: [{ id: FILE_ONE, uploaded_by: "user-1" }],
+      attachment_refs: [],
+    })
+    const router = createRouter()
+    const { context } = createContext({
+      database,
+      serviceOverrides: {
+        readFile: async () => {
+          throw failure
+        },
+      },
+    })
+    await registerExtension(router, context)
+
+    const next = vi.fn()
+    await findRoute(router.routes, "post", "/attachments/commit").handler(
+      {
+        accountability: { user: "user-1" },
+        body: { file_id: FILE_ONE, entity_type: "note", entity_id: "note-1" },
+      },
+      createResponse(),
+      next,
+    )
+
+    expect(next).toHaveBeenCalledWith(failure)
+    expect(database.__state.attachment_refs).toEqual([])
+  })
+
+  it("commit 对同一 owner ref 幂等并按当前用户计数", async () => {
+    const database = createDatabase({
+      directus_files: [{ id: FILE_ONE, uploaded_by: "user-1" }],
+      attachment_refs: [
+        {
+          id: 1,
+          file_id: FILE_ONE,
+          owner_user_id: "user-2",
+          entity_type: "note",
+          entity_id: "other-note",
+        },
+      ],
+    })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
+    const route = findRoute(router.routes, "post", "/attachments/commit")
+    const request = {
+      accountability: { user: "user-1" },
+      body: { file_id: FILE_ONE, entity_type: "note", entity_id: "note-1" },
+    }
+
+    const firstResponse = createResponse()
+    await route.handler(request, firstResponse, vi.fn())
+    const secondResponse = createResponse()
+    await route.handler(request, secondResponse, vi.fn())
+
+    expect(firstResponse.body).toEqual({
       data: {
-        file_id: "file-1",
+        file_id: FILE_ONE,
         entity_type: "note",
-        entity_id: "n1",
+        entity_id: "note-1",
         visibility: "private",
         refs_count: 1,
       },
     })
-    expect(database.__state.attachment_refs).toEqual([
-      {
-        id: 1,
-        file_id: "file-1",
-        owner_user_id: "user-1",
-        entity_type: "note",
-        entity_id: "n1",
-      },
-    ])
+    expect(secondResponse.body).toEqual(firstResponse.body)
+    expect(database.__state.attachment_refs).toHaveLength(2)
+    expect(database.transaction).toHaveBeenCalledTimes(2)
+    expect(database.__forUpdate).toHaveBeenCalledTimes(2)
   })
 
-  it("access 仅允许 owner 访问私有附件", async () => {
-    const router = createRouter()
+  it("access 仅允许拥有 ref 的用户访问", async () => {
     const database = createDatabase({
-      files: [
-        {
-          id: "file-1",
-          title: "Cover",
-          filename_download: "cover.png",
-          type: "image/png",
-          filesize: 123,
-          uploaded_by: "user-1",
-        },
-      ],
-      refs: [
+      directus_files: [{ id: FILE_ONE, uploaded_by: "user-1" }],
+      attachment_refs: [
         {
           id: 1,
-          file_id: "file-1",
+          file_id: FILE_ONE,
           owner_user_id: "user-1",
           entity_type: "note",
-          entity_id: "n1",
+          entity_id: "note-1",
         },
       ],
     })
-    const extension = await loadExtension()
-    extension.handler(router as any, { services: {}, database })
-
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
     const route = findRoute(router.routes, "get", "/attachments/:id/access")
-    expect(route).toBeTruthy()
 
-    const denied = createRes()
-    await route!.handler(
-      { accountability: { user: "user-2" }, params: { id: "file-1" } },
-      denied,
+    const deniedNext = vi.fn()
+    await route.handler(
+      { accountability: { user: "user-2" }, params: { id: FILE_ONE } },
+      createResponse(),
+      deniedNext,
+    )
+    expect(firstForwardedError(deniedNext).code).toBe("ATTACHMENT_NOT_FOUND")
+
+    const response = createResponse()
+    await route.handler(
+      { accountability: { user: "user-1" }, params: { id: FILE_ONE } },
+      response,
       vi.fn(),
     )
-    expect(denied.statusCode).toBe(403)
-
-    const granted = createRes()
-    await route!.handler(
-      { accountability: { user: "user-1" }, params: { id: "file-1" } },
-      granted,
-      vi.fn(),
-    )
-    expect(granted.statusCode).toBe(200)
-    expect(granted.body).toEqual({
+    expect(response.body).toEqual({
       data: {
-        file_id: "file-1",
+        file_id: FILE_ONE,
         visibility: "private",
-        asset_url: "/assets/file-1",
+        asset_url: `/assets/${FILE_ONE}`,
       },
     })
   })
 
-  it("bind 与 unbind 会维护 attachment_refs", async () => {
-    const router = createRouter()
+  it("access 不信任指向缺失或已转移文件的陈旧 ref", async () => {
     const database = createDatabase({
-      files: [
-        {
-          id: "file-1",
-          title: "Cover",
-          filename_download: "cover.png",
-          type: "image/png",
-          uploaded_by: "user-1",
-        },
-      ],
-      refs: [
+      directus_files: [{ id: FILE_ONE, uploaded_by: "user-2" }],
+      attachment_refs: [
         {
           id: 1,
-          file_id: "file-1",
+          file_id: FILE_ONE,
           owner_user_id: "user-1",
           entity_type: "note",
-          entity_id: "n1",
+          entity_id: "note-1",
         },
       ],
     })
-    const extension = await loadExtension()
-    extension.handler(router as any, { services: {}, database })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
 
-    const bindRoute = findRoute(router.routes, "post", "/attachments/:id/bind")
-    const unbindRoute = findRoute(router.routes, "post", "/attachments/:id/unbind")
-    expect(bindRoute).toBeTruthy()
-    expect(unbindRoute).toBeTruthy()
+    const next = vi.fn()
+    await findRoute(router.routes, "get", "/attachments/:id/access").handler(
+      { accountability: { user: "user-1" }, params: { id: FILE_ONE } },
+      createResponse(),
+      next,
+    )
 
-    const bindRes = createRes()
-    await bindRoute!.handler(
+    expect(firstForwardedError(next).code).toBe("ATTACHMENT_NOT_FOUND")
+  })
+
+  it("bind 与 unbind 只维护当前用户的引用和计数", async () => {
+    const database = createDatabase({
+      directus_files: [{ id: FILE_ONE, uploaded_by: "user-1" }],
+      attachment_refs: [
+        {
+          id: 1,
+          file_id: FILE_ONE,
+          owner_user_id: "user-1",
+          entity_type: "note",
+          entity_id: "note-1",
+        },
+        {
+          id: 2,
+          file_id: FILE_ONE,
+          owner_user_id: "user-2",
+          entity_type: "note",
+          entity_id: "note-2",
+        },
+      ],
+    })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
+
+    const bindResponse = createResponse()
+    await findRoute(router.routes, "post", "/attachments/:id/bind").handler(
       {
         accountability: { user: "user-1" },
-        params: { id: "file-1" },
-        body: { entity_type: "todo", entity_id: "t1" },
+        params: { id: FILE_ONE },
+        body: { entity_type: "todo", entity_id: "todo-1" },
       },
-      bindRes,
+      bindResponse,
       vi.fn(),
     )
-
-    expect(bindRes.body).toEqual({
+    expect(bindResponse.body).toEqual({
       data: {
-        file_id: "file-1",
+        file_id: FILE_ONE,
         refs_count: 2,
       },
     })
 
-    const unbindRes = createRes()
-    await unbindRoute!.handler(
+    const unbindResponse = createResponse()
+    await findRoute(router.routes, "post", "/attachments/:id/unbind").handler(
       {
         accountability: { user: "user-1" },
-        params: { id: "file-1" },
-        body: { entity_type: "todo", entity_id: "t1" },
+        params: { id: FILE_ONE },
+        body: { entity_type: "todo", entity_id: "todo-1" },
       },
-      unbindRes,
+      unbindResponse,
       vi.fn(),
     )
-
-    expect(unbindRes.body).toEqual({
+    expect(unbindResponse.body).toEqual({
       data: {
-        file_id: "file-1",
+        file_id: FILE_ONE,
         refs_count: 1,
       },
     })
+    expect(database.__state.attachment_refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ owner_user_id: "user-1", entity_id: "note-1" }),
+        expect.objectContaining({ owner_user_id: "user-2", entity_id: "note-2" }),
+      ]),
+    )
+    expect(database.transaction).toHaveBeenCalledTimes(2)
+    expect(database.__forUpdate).toHaveBeenCalledTimes(2)
   })
 
-  it("delete 仅在无引用时删除，meta 返回私有元信息", async () => {
-    const router = createRouter()
+  it("meta 只返回文件白名单字段和当前用户 refs_count", async () => {
     const database = createDatabase({
-      files: [
+      directus_files: [
         {
-          id: "file-1",
+          id: FILE_ONE,
+          uploaded_by: "user-1",
           title: "Cover",
           filename_download: "cover.png",
           type: "image/png",
           filesize: 123,
-          uploaded_by: "user-1",
+          storage: "secret-storage",
+          filename_disk: "secret-name",
         },
       ],
-      refs: [
+      attachment_refs: [
         {
           id: 1,
-          file_id: "file-1",
+          file_id: FILE_ONE,
           owner_user_id: "user-1",
           entity_type: "note",
-          entity_id: "n1",
+          entity_id: "note-1",
+        },
+        {
+          id: 2,
+          file_id: FILE_ONE,
+          owner_user_id: "user-2",
+          entity_type: "note",
+          entity_id: "note-2",
         },
       ],
     })
-    const extension = await loadExtension()
-    extension.handler(router as any, { services: {}, database })
+    const router = createRouter()
+    const { context } = createContext({ database })
+    await registerExtension(router, context)
 
-    const metaRoute = findRoute(router.routes, "get", "/attachments/:id/meta")
-    const deleteRoute = findRoute(router.routes, "delete", "/attachments/:id")
-    const unbindRoute = findRoute(router.routes, "post", "/attachments/:id/unbind")
-    expect(metaRoute).toBeTruthy()
-    expect(deleteRoute).toBeTruthy()
-    expect(unbindRoute).toBeTruthy()
-
-    const metaRes = createRes()
-    await metaRoute!.handler(
-      { accountability: { user: "user-1" }, params: { id: "file-1" } },
-      metaRes,
+    const response = createResponse()
+    await findRoute(router.routes, "get", "/attachments/:id/meta").handler(
+      { accountability: { user: "user-1" }, params: { id: FILE_ONE } },
+      response,
       vi.fn(),
     )
-    expect(metaRes.body).toEqual({
+
+    expect(response.body).toEqual({
       data: {
         file: {
-          id: "file-1",
+          id: FILE_ONE,
           title: "Cover",
           filename_download: "cover.png",
           type: "image/png",
@@ -481,32 +542,62 @@ describe("tabora-attachments endpoint extension", () => {
         refs_count: 1,
       },
     })
+    expect(JSON.stringify(response.body)).not.toContain("secret-storage")
+    expect(JSON.stringify(response.body)).not.toContain("secret-name")
+  })
 
-    const blockedDelete = createRes()
-    await deleteRoute!.handler(
-      { accountability: { user: "user-1" }, params: { id: "file-1" } },
-      blockedDelete,
+  it("delete 阻止有引用文件并通过 FilesService 删除无引用自有文件", async () => {
+    const database = createDatabase({
+      directus_files: [
+        { id: FILE_ONE, uploaded_by: "user-1" },
+        { id: FILE_TWO, uploaded_by: "user-2" },
+      ],
+      attachment_refs: [
+        {
+          id: 1,
+          file_id: FILE_ONE,
+          owner_user_id: "user-1",
+          entity_type: "note",
+          entity_id: "note-1",
+        },
+      ],
+    })
+    const router = createRouter()
+    const { context, constructors, methods, schema } = createContext({ database })
+    await registerExtension(router, context)
+    const deleteRoute = findRoute(router.routes, "delete", "/attachments/:id")
+
+    const inUseNext = vi.fn()
+    await deleteRoute.handler(
+      { accountability: { user: "user-1" }, params: { id: FILE_ONE } },
+      createResponse(),
+      inUseNext,
+    )
+    expect(firstForwardedError(inUseNext).code).toBe("ATTACHMENT_IN_USE")
+
+    database.__state.attachment_refs = []
+    const response = createResponse()
+    await deleteRoute.handler(
+      { accountability: { user: "user-1" }, params: { id: FILE_ONE } },
+      response,
       vi.fn(),
     )
-    expect(blockedDelete.statusCode).toBe(409)
 
-    await unbindRoute!.handler(
-      {
-        accountability: { user: "user-1" },
-        params: { id: "file-1" },
-        body: { entity_type: "note", entity_id: "n1" },
-      },
-      createRes(),
-      vi.fn(),
-    )
+    expect(constructors.files).toHaveBeenCalledWith({
+      accountability: { user: "user-1" },
+      knex: database,
+      schema,
+    })
+    expect(methods.deleteFile).toHaveBeenCalledWith(FILE_ONE)
+    expect(response.statusCode).toBe(204)
+    expect(database.__state.directus_files).toEqual([{ id: FILE_TWO, uploaded_by: "user-2" }])
 
-    const deleteRes = createRes()
-    await deleteRoute!.handler(
-      { accountability: { user: "user-1" }, params: { id: "file-1" } },
-      deleteRes,
-      vi.fn(),
+    const foreignNext = vi.fn()
+    await deleteRoute.handler(
+      { accountability: { user: "user-1" }, params: { id: FILE_TWO } },
+      createResponse(),
+      foreignNext,
     )
-    expect(deleteRes.statusCode).toBe(204)
-    expect(database.__state.directus_files).toEqual([])
+    expect(firstForwardedError(foreignNext).code).toBe("ATTACHMENT_NOT_FOUND")
   })
 })

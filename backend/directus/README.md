@@ -12,7 +12,15 @@ backend/directus/
 │   └── nginx/
 │       └── default.conf     # Nginx 反向代理配置
 ├── extensions/
-│   └── directus-extension-tabora/  # 自定义扩展
+│   └── directus-extension-tabora/
+│       └── src/
+│           ├── index.ts       # endpoint 组合入口
+│           ├── auth.ts        # 注册、登录和密码找回
+│           ├── sessions.ts    # 会话列表与撤销
+│           ├── attachments.ts # 附件 policy、引用和删除
+│           ├── http.ts        # 请求校验与异步 handler
+│           ├── errors.ts      # Directus 标准错误
+│           └── types.ts       # 扩展内部类型
 ├── scripts/
 │   └── provisionSchema.ts   # 数据库 schema 初始化
 ├── .env.example             # 环境变量模板
@@ -92,10 +100,20 @@ docker compose -f docker/compose.prod.yml exec directus npx directus bootstrap
 开发流程：
 
 1. 修改扩展代码
-2. 重启 Directus：`pnpm dev`
-3. 测试扩展功能
+2. 运行扩展类型检查和构建：
+   ```bash
+   pnpm --filter directus-extension-tabora typecheck
+   pnpm --filter directus-extension-tabora build
+   ```
+3. 运行 endpoint 测试：
+   ```bash
+   pnpm test -- tests/endpoints/tabora-auth.test.ts tests/endpoints/tabora-attachments.test.ts
+   ```
+4. 重启 Directus：`pnpm dev`
 
 生产部署时，扩展会通过 Dockerfile 打包进镜像。
+
+Endpoint 测试直接导入 `src/index.ts`，确保测试覆盖当前源码；部署仍以 SDK 生成的 `dist/index.js` 为准。
 
 ## 测试
 

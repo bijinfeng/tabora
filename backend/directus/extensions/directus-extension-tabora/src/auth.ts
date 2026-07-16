@@ -1,0 +1,242 @@
+import { ErrorCode, isDirectusError } from "@directus/errors"
+import type { Accountability } from "@directus/types"
+import { z } from "zod"
+import { asyncRoute, parseBody, requireUserId } from "./http"
+import { ensureSessionId } from "./sessionIdentity"
+import type { TaboraDatabase, TaboraEndpointContext, TaboraRequest, TaboraRouter } from "./types"
+
+const emailSchema = z
+  .string()
+  .trim()
+  .email()
+  .max(254)
+  .transform((email) => email.toLowerCase())
+
+const passwordSchema = z.string().min(1).max(1024)
+const tokenSchema = z.string().trim().min(1).max(4096)
+
+const credentialsSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+})
+
+const refreshTokenSchema = z.object({
+  refresh_token: tokenSchema,
+})
+
+const emailRequestSchema = z.object({
+  email: emailSchema,
+})
+
+const passwordResetSchema = z
+  .object({
+    token: tokenSchema.optional(),
+    code: tokenSchema.optional(),
+    password: passwordSchema,
+  })
+  .refine((value) => value.token || value.code, {
+    message: "token or code is required",
+    path: ["token"],
+  })
+
+const CURRENT_USER_FIELDS = ["id", "email", "first_name", "last_name", "avatar", "status"] as const
+
+type ServiceRequest = TaboraRequest & {
+  accountability?: NonNullable<TaboraRequest["accountability"]> | null
+}
+
+function createAnonymousRequestAccountability(request: ServiceRequest): Accountability {
+  const userAgent = request.get?.("user-agent")?.slice(0, 1024)
+  const origin = request.get?.("origin")
+
+  return {
+    role: null,
+    roles: [],
+    user: null,
+    admin: false,
+    app: false,
+    ip: request.ip ?? null,
+    ...(userAgent ? { userAgent } : {}),
+    ...(origin ? { origin } : {}),
+  }
+}
+
+async function createCurrentUserService(context: TaboraEndpointContext, request: ServiceRequest) {
+  const schema = await context.getSchema()
+  return new context.services.UsersService({
+    schema,
+    accountability: request.accountability ?? null,
+  })
+}
+
+async function createAnonymousUsersService(
+  context: TaboraEndpointContext,
+  request: ServiceRequest,
+) {
+  const schema = await context.getSchema()
+  return new context.services.UsersService({
+    schema,
+    accountability: createAnonymousRequestAccountability(request),
+  })
+}
+
+async function createRegistrationUsersService(context: TaboraEndpointContext) {
+  const schema = await context.getSchema()
+  return new context.services.UsersService({
+    schema,
+    accountability: null,
+  })
+}
+
+async function createAuthenticationService(
+  context: TaboraEndpointContext,
+  request: ServiceRequest,
+  database?: TaboraDatabase,
+) {
+  const schema = await context.getSchema()
+  const options = {
+    schema,
+    accountability: createAnonymousRequestAccountability(request),
+  }
+
+  if (database) {
+    Object.defineProperty(options, "knex", {
+      enumerable: request.accountability == null,
+      value: database,
+    })
+  }
+
+  return new context.services.AuthenticationService(options)
+}
+
+export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpointContext): void {
+  router.post(
+    "/auth/register",
+    asyncRoute(async (request, response) => {
+      const credentials = parseBody(credentialsSchema, request.body)
+      const usersService = await createRegistrationUsersService(context)
+
+      await usersService.registerUser(credentials)
+      return response.sendStatus(204)
+    }),
+  )
+
+  router.post(
+    "/auth/login",
+    asyncRoute(async (request, response) => {
+      const credentials = parseBody(credentialsSchema, request.body)
+      const { result, sessionId } = await context.database.transaction(async (transaction) => {
+        const authenticationService = await createAuthenticationService(
+          context,
+          request,
+          transaction,
+        )
+        const result = await authenticationService.login("default", credentials, {
+          session: false,
+        })
+        const sessionId = await ensureSessionId(transaction, result.refreshToken)
+
+        return { result, sessionId }
+      })
+
+      return response.json({
+        data: {
+          access_token: result.accessToken,
+          refresh_token: result.refreshToken,
+          expires: result.expires,
+          session_id: sessionId,
+        },
+      })
+    }),
+  )
+
+  router.post(
+    "/auth/refresh",
+    asyncRoute(async (request, response) => {
+      const { refresh_token: refreshToken } = parseBody(refreshTokenSchema, request.body)
+      const { result, sessionId } = await context.database.transaction(async (transaction) => {
+        const authenticationService = await createAuthenticationService(
+          context,
+          request,
+          transaction,
+        )
+        const result = await authenticationService.refresh(refreshToken, {
+          session: false,
+        })
+        const sessionId = await ensureSessionId(transaction, result.refreshToken)
+
+        return { result, sessionId }
+      })
+
+      return response.json({
+        data: {
+          access_token: result.accessToken,
+          refresh_token: result.refreshToken,
+          expires: result.expires,
+          session_id: sessionId,
+        },
+      })
+    }),
+  )
+
+  router.post(
+    "/auth/logout",
+    asyncRoute(async (request, response) => {
+      const { refresh_token: refreshToken } = parseBody(refreshTokenSchema, request.body)
+      const authenticationService = await createAuthenticationService(context, request)
+
+      await authenticationService.logout(refreshToken)
+      return response.sendStatus(204)
+    }),
+  )
+
+  router.get(
+    "/auth/session",
+    asyncRoute(async (request, response) => {
+      const userId = requireUserId(request)
+      const usersService = await createCurrentUserService(context, request)
+      const user = await usersService.readOne(userId, {
+        fields: [...CURRENT_USER_FIELDS],
+      })
+
+      return response.json({ data: user })
+    }),
+  )
+
+  router.post(
+    "/auth/send-code",
+    asyncRoute(async (request, response) => {
+      const { email } = parseBody(emailRequestSchema, request.body)
+      const usersService = await createAnonymousUsersService(context, request)
+
+      try {
+        await usersService.requestPasswordReset(email, null)
+      } catch (error: unknown) {
+        if (isDirectusError(error, ErrorCode.InvalidPayload)) {
+          throw error
+        }
+
+        context.logger.warn(error, "Password reset request failed")
+      }
+
+      return response.sendStatus(204)
+    }),
+  )
+
+  router.post(
+    "/auth/verify-code",
+    asyncRoute(async (request, response) => {
+      const payload = parseBody(passwordResetSchema, request.body)
+      const resetToken = payload.token ?? payload.code
+
+      if (!resetToken) {
+        throw new TypeError("Password reset token was not parsed")
+      }
+
+      const usersService = await createAnonymousUsersService(context, request)
+      await usersService.resetPassword(resetToken, payload.password)
+
+      return response.sendStatus(204)
+    }),
+  )
+}

@@ -1,248 +1,442 @@
-// Attachments endpoints
-export function registerAttachmentsEndpoints(router: any, context: any): void {
-  const { database } = context
+import {
+  ErrorCode,
+  InternalServerError,
+  InvalidPayloadError,
+  isDirectusError,
+} from "@directus/errors"
+import { z } from "zod"
+import { AttachmentInUseError, AttachmentNotFoundError } from "./errors"
+import { asyncRoute, parseBody, requireUserId } from "./http"
+import type {
+  AttachmentPolicy,
+  AttachmentRef,
+  DirectusFileSummary,
+  TaboraDatabase,
+  TaboraEndpointContext,
+  TaboraRequest,
+  TaboraRouter,
+} from "./types"
 
-  // POST /attachments/prepare
-  router.post("/attachments/prepare", async (req: any, res: any) => {
-    const { entity_type, mime_type, size_bytes, filename } = req.body
-    const accountability = req.accountability
+const attachmentIdSchema = z.uuid()
+const entityTypeSchema = z.string().trim().min(1).max(128)
+const entityIdSchema = z.string().trim().min(1).max(512)
 
-    if (!accountability?.user) {
-      return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
+const prepareAttachmentSchema = z.object({
+  entity_type: entityTypeSchema,
+  mime_type: z.string().trim().min(1).max(255),
+  size_bytes: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  filename: z.string().trim().min(1).max(255),
+})
+
+const commitAttachmentSchema = z.object({
+  file_id: attachmentIdSchema,
+  entity_type: entityTypeSchema,
+  entity_id: entityIdSchema,
+})
+
+const bindAttachmentSchema = z.object({
+  entity_type: entityTypeSchema,
+  entity_id: entityIdSchema,
+})
+
+const attachmentParamsSchema = z.object({
+  id: attachmentIdSchema,
+})
+
+const maxSizePolicySchema = z.union([
+  z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  z
+    .string()
+    .regex(/^[1-9]\d*$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(Number.MAX_SAFE_INTEGER)),
+  z.null(),
+])
+
+const attachmentPolicySchema = z.object({
+  entity_type: entityTypeSchema,
+  mime_whitelist: z.array(z.string().trim().min(1).max(255)).nullable(),
+  max_size_bytes: maxSizePolicySchema,
+})
+
+const POLICY_COLUMNS = ["entity_type", "mime_whitelist", "max_size_bytes"] as const
+
+const FILE_SUMMARY_FIELDS = [
+  "id",
+  "uploaded_by",
+  "title",
+  "filename_download",
+  "type",
+  "filesize",
+] as const
+
+type AttachmentParams = z.output<typeof attachmentParamsSchema>
+type BindAttachmentBody = z.output<typeof bindAttachmentSchema>
+
+function normalizePolicy(policy: unknown): AttachmentPolicy | null {
+  if (!policy) {
+    return null
+  }
+
+  const result = attachmentPolicySchema.safeParse(policy)
+
+  if (!result.success) {
+    throw new InternalServerError()
+  }
+
+  return result.data
+}
+
+function validateFileAgainstPolicy(
+  file: DirectusFileSummary,
+  policy: AttachmentPolicy | null,
+): void {
+  if (!policy) {
+    return
+  }
+
+  if (
+    policy.mime_whitelist &&
+    (typeof file.type !== "string" || !policy.mime_whitelist.includes(file.type))
+  ) {
+    throw new InvalidPayloadError({
+      reason: `MIME type ${String(file.type ?? "unknown")} is not allowed for ${policy.entity_type}`,
+    })
+  }
+
+  const maxSize = policy.max_size_bytes
+  const fileSize =
+    typeof file.filesize === "number" || typeof file.filesize === "string"
+      ? Number(file.filesize)
+      : Number.NaN
+
+  if (maxSize !== null && (!Number.isSafeInteger(fileSize) || fileSize < 0 || fileSize > maxSize)) {
+    throw new InvalidPayloadError({
+      reason: `File size exceeds maximum of ${maxSize} bytes`,
+    })
+  }
+}
+
+async function readPolicy(
+  context: TaboraEndpointContext,
+  entityType: string,
+  database: TaboraDatabase = context.database,
+): Promise<AttachmentPolicy | null> {
+  const policy = (await database
+    .select(...POLICY_COLUMNS)
+    .from("attachment_policies")
+    .where({ entity_type: entityType })
+    .first()) as AttachmentPolicy | undefined
+
+  return normalizePolicy(policy)
+}
+
+async function readOwnedFile(
+  context: TaboraEndpointContext,
+  request: TaboraRequest,
+  fileId: string,
+  userId: string,
+  database: TaboraDatabase = context.database,
+): Promise<DirectusFileSummary> {
+  const schema = await context.getSchema()
+  const filesService = new context.services.FilesService({
+    schema,
+    accountability: request.accountability ?? null,
+    knex: database,
+  })
+
+  let file: DirectusFileSummary
+
+  try {
+    file = (await filesService.readOne(fileId, {
+      fields: [...FILE_SUMMARY_FIELDS],
+    })) as DirectusFileSummary
+  } catch (error: unknown) {
+    if (isDirectusError(error, ErrorCode.Forbidden)) {
+      throw new AttachmentNotFoundError()
     }
 
-    if (!entity_type || !mime_type || !size_bytes || !filename) {
-      return res.status(400).json({ errors: [{ message: "Missing required fields" }] })
-    }
+    throw error
+  }
 
-    try {
-      const policies = await database.select("*").from("attachment_policies").where({ entity_type })
+  if (file.uploaded_by !== userId) {
+    throw new AttachmentNotFoundError()
+  }
 
-      const policy = policies[0] || null
+  return file
+}
 
-      if (policy) {
-        if (policy.mime_whitelist && !policy.mime_whitelist.includes(mime_type)) {
-          return res.status(400).json({
-            errors: [{ message: `MIME type ${mime_type} not allowed for ${entity_type}` }],
-          })
-        }
+async function findExactRef(
+  database: TaboraDatabase,
+  ref: Omit<AttachmentRef, "id">,
+): Promise<AttachmentRef | undefined> {
+  return (await database
+    .select("id", "file_id", "owner_user_id", "entity_type", "entity_id")
+    .from("attachment_refs")
+    .where(ref)
+    .first()) as AttachmentRef | undefined
+}
 
-        if (policy.max_size_bytes && size_bytes > policy.max_size_bytes) {
-          return res.status(400).json({
-            errors: [{ message: `File size exceeds maximum of ${policy.max_size_bytes} bytes` }],
-          })
-        }
+async function hasOwnedRef(
+  database: TaboraDatabase,
+  fileId: string,
+  userId: string,
+): Promise<boolean> {
+  const ref = await database
+    .select("id")
+    .from("attachment_refs")
+    .where({ file_id: fileId, owner_user_id: userId })
+    .first()
+
+  return Boolean(ref)
+}
+
+async function countOwnedRefs(
+  database: TaboraDatabase,
+  fileId: string,
+  userId: string,
+): Promise<number> {
+  const refs = await database
+    .select("id")
+    .from("attachment_refs")
+    .where({ file_id: fileId, owner_user_id: userId })
+
+  return refs.length
+}
+
+async function createRefIfMissing(
+  database: TaboraDatabase,
+  ref: Omit<AttachmentRef, "id">,
+): Promise<void> {
+  const existingRef = await findExactRef(database, ref)
+
+  if (!existingRef) {
+    await database("attachment_refs").insert(ref)
+  }
+}
+
+async function lockFile(database: TaboraDatabase, fileId: string): Promise<void> {
+  const file = await database
+    .select("id")
+    .from("directus_files")
+    .where({ id: fileId })
+    .forUpdate()
+    .first()
+
+  if (!file) {
+    throw new AttachmentNotFoundError()
+  }
+}
+
+function parseAttachmentId(params: unknown): string {
+  return parseBody(attachmentParamsSchema, params).id
+}
+
+export function registerAttachmentsEndpoints(
+  router: TaboraRouter,
+  context: TaboraEndpointContext,
+): void {
+  router.post(
+    "/attachments/prepare",
+    asyncRoute(async (request, response) => {
+      requireUserId(request)
+      const payload = parseBody(prepareAttachmentSchema, request.body)
+      const policy = await readPolicy(context, payload.entity_type)
+
+      if (policy?.mime_whitelist && !policy.mime_whitelist.includes(payload.mime_type)) {
+        throw new InvalidPayloadError({
+          reason: `MIME type ${payload.mime_type} is not allowed for ${payload.entity_type}`,
+        })
       }
 
-      return res.json({
+      const maxSize = policy?.max_size_bytes ?? null
+
+      if (maxSize !== null && payload.size_bytes > maxSize) {
+        throw new InvalidPayloadError({
+          reason: `File size exceeds maximum of ${maxSize} bytes`,
+        })
+      }
+
+      return response.json({
         data: {
-          entity_type,
-          filename,
+          entity_type: payload.entity_type,
+          filename: payload.filename,
           visibility: "private",
           upload: {
             method: "directus-files",
             endpoint: "/files",
           },
-          policy: policy || undefined,
+          ...(policy ? { policy } : {}),
         },
       })
-    } catch (_error) {
-      return res.status(500).json({ errors: [{ message: "Failed to prepare attachment" }] })
-    }
-  })
+    }),
+  )
 
-  // POST /attachments/commit
-  router.post("/attachments/commit", async (req: any, res: any) => {
-    const { file_id, entity_type, entity_id } = req.body
-    const accountability = req.accountability
+  router.post(
+    "/attachments/commit",
+    asyncRoute(async (request, response) => {
+      const userId = requireUserId(request)
+      const payload = parseBody(commitAttachmentSchema, request.body)
 
-    if (!accountability?.user) {
-      return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
-    }
-
-    if (!file_id || !entity_type || !entity_id) {
-      return res.status(400).json({ errors: [{ message: "Missing required fields" }] })
-    }
-
-    try {
-      await database("attachment_refs").insert({
-        file_id,
-        owner_user_id: accountability.user,
-        entity_type,
-        entity_id,
-      })
-
-      const refs = await database.select("*").from("attachment_refs").where({ file_id })
-
-      return res.json({
-        data: {
-          file_id,
-          entity_type,
-          entity_id,
-          visibility: "private",
-          refs_count: refs.length,
-        },
-      })
-    } catch (_error) {
-      return res.status(500).json({ errors: [{ message: "Failed to commit attachment" }] })
-    }
-  })
-
-  // GET /attachments/:id/access
-  router.get("/attachments/:id/access", async (req: any, res: any) => {
-    const { id } = req.params
-    const accountability = req.accountability
-
-    if (!accountability?.user) {
-      return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
-    }
-
-    try {
-      const refs = await database
-        .select("*")
-        .from("attachment_refs")
-        .where({ file_id: id, owner_user_id: accountability.user })
-
-      if (refs.length === 0) {
-        return res.status(403).json({ errors: [{ message: "Access denied" }] })
-      }
-
-      return res.json({
-        data: {
-          file_id: id,
-          visibility: "private",
-          asset_url: `/assets/${id}`,
-        },
-      })
-    } catch (_error) {
-      return res.status(500).json({ errors: [{ message: "Failed to check access" }] })
-    }
-  })
-
-  // POST /attachments/:id/bind
-  router.post("/attachments/:id/bind", async (req: any, res: any) => {
-    const { id } = req.params
-    const { entity_type, entity_id } = req.body
-    const accountability = req.accountability
-
-    if (!accountability?.user) {
-      return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
-    }
-
-    if (!entity_type || !entity_id) {
-      return res.status(400).json({ errors: [{ message: "Missing required fields" }] })
-    }
-
-    try {
-      await database("attachment_refs").insert({
-        file_id: id,
-        owner_user_id: accountability.user,
-        entity_type,
-        entity_id,
-      })
-
-      const refs = await database.select("*").from("attachment_refs").where({ file_id: id })
-
-      return res.json({
-        data: {
-          file_id: id,
-          refs_count: refs.length,
-        },
-      })
-    } catch (_error) {
-      return res.status(500).json({ errors: [{ message: "Failed to bind attachment" }] })
-    }
-  })
-
-  // POST /attachments/:id/unbind
-  router.post("/attachments/:id/unbind", async (req: any, res: any) => {
-    const { id } = req.params
-    const { entity_type, entity_id } = req.body
-    const accountability = req.accountability
-
-    if (!accountability?.user) {
-      return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
-    }
-
-    if (!entity_type || !entity_id) {
-      return res.status(400).json({ errors: [{ message: "Missing required fields" }] })
-    }
-
-    try {
-      await database("attachment_refs")
-        .where({
-          file_id: id,
-          owner_user_id: accountability.user,
-          entity_type,
-          entity_id,
+      const refsCount = await context.database.transaction(async (transaction) => {
+        await lockFile(transaction, payload.file_id)
+        const [file, policy] = await Promise.all([
+          readOwnedFile(context, request, payload.file_id, userId, transaction),
+          readPolicy(context, payload.entity_type, transaction),
+        ])
+        validateFileAgainstPolicy(file, policy)
+        await createRefIfMissing(transaction, {
+          file_id: payload.file_id,
+          owner_user_id: userId,
+          entity_type: payload.entity_type,
+          entity_id: payload.entity_id,
         })
-        .del()
 
-      const refs = await database.select("*").from("attachment_refs").where({ file_id: id })
+        return countOwnedRefs(transaction, payload.file_id, userId)
+      })
 
-      return res.json({
+      return response.json({
         data: {
-          file_id: id,
-          refs_count: refs.length,
+          file_id: payload.file_id,
+          entity_type: payload.entity_type,
+          entity_id: payload.entity_id,
+          visibility: "private",
+          refs_count: refsCount,
         },
       })
-    } catch (_error) {
-      return res.status(500).json({ errors: [{ message: "Failed to unbind attachment" }] })
-    }
-  })
+    }),
+  )
 
-  // DELETE /attachments/:id
-  router.delete("/attachments/:id", async (req: any, res: any) => {
-    const { id } = req.params
-    const accountability = req.accountability
+  router.get(
+    "/attachments/:id/access",
+    asyncRoute<unknown, AttachmentParams>(async (request, response) => {
+      const userId = requireUserId(request)
+      const fileId = parseAttachmentId(request.params)
 
-    if (!accountability?.user) {
-      return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
-    }
+      if (!(await hasOwnedRef(context.database, fileId, userId))) {
+        throw new AttachmentNotFoundError()
+      }
 
-    try {
-      const refs = await database.select("*").from("attachment_refs").where({ file_id: id })
+      await readOwnedFile(context, request, fileId, userId)
 
-      if (refs.length > 0) {
-        return res.status(409).json({
-          errors: [{ message: "Cannot delete attachment with existing references" }],
+      return response.json({
+        data: {
+          file_id: fileId,
+          visibility: "private",
+          asset_url: `/assets/${fileId}`,
+        },
+      })
+    }),
+  )
+
+  router.post(
+    "/attachments/:id/bind",
+    asyncRoute<BindAttachmentBody, AttachmentParams>(async (request, response) => {
+      const userId = requireUserId(request)
+      const fileId = parseAttachmentId(request.params)
+      const payload = parseBody(bindAttachmentSchema, request.body)
+
+      const refsCount = await context.database.transaction(async (transaction) => {
+        await lockFile(transaction, fileId)
+        const [file, policy] = await Promise.all([
+          readOwnedFile(context, request, fileId, userId, transaction),
+          readPolicy(context, payload.entity_type, transaction),
+        ])
+        validateFileAgainstPolicy(file, policy)
+        await createRefIfMissing(transaction, {
+          file_id: fileId,
+          owner_user_id: userId,
+          entity_type: payload.entity_type,
+          entity_id: payload.entity_id,
         })
+
+        return countOwnedRefs(transaction, fileId, userId)
+      })
+
+      return response.json({
+        data: {
+          file_id: fileId,
+          refs_count: refsCount,
+        },
+      })
+    }),
+  )
+
+  router.post(
+    "/attachments/:id/unbind",
+    asyncRoute<BindAttachmentBody, AttachmentParams>(async (request, response) => {
+      const userId = requireUserId(request)
+      const fileId = parseAttachmentId(request.params)
+      const payload = parseBody(bindAttachmentSchema, request.body)
+
+      const refsCount = await context.database.transaction(async (transaction) => {
+        await lockFile(transaction, fileId)
+        await transaction("attachment_refs")
+          .where({
+            file_id: fileId,
+            owner_user_id: userId,
+            entity_type: payload.entity_type,
+            entity_id: payload.entity_id,
+          })
+          .del()
+
+        return countOwnedRefs(transaction, fileId, userId)
+      })
+
+      return response.json({
+        data: {
+          file_id: fileId,
+          refs_count: refsCount,
+        },
+      })
+    }),
+  )
+
+  router.delete(
+    "/attachments/:id",
+    asyncRoute<unknown, AttachmentParams>(async (request, response) => {
+      const userId = requireUserId(request)
+      const fileId = parseAttachmentId(request.params)
+
+      await context.database.transaction(async (transaction) => {
+        await lockFile(transaction, fileId)
+        await readOwnedFile(context, request, fileId, userId, transaction)
+
+        const refs = await transaction
+          .select("id")
+          .from("attachment_refs")
+          .where({ file_id: fileId })
+
+        if (refs.length > 0) {
+          throw new AttachmentInUseError()
+        }
+
+        const schema = await context.getSchema()
+        const filesService = new context.services.FilesService({
+          schema,
+          accountability: request.accountability ?? null,
+          knex: transaction,
+        })
+        await filesService.deleteOne(fileId)
+      })
+
+      return response.sendStatus(204)
+    }),
+  )
+
+  router.get(
+    "/attachments/:id/meta",
+    asyncRoute<unknown, AttachmentParams>(async (request, response) => {
+      const userId = requireUserId(request)
+      const fileId = parseAttachmentId(request.params)
+
+      if (!(await hasOwnedRef(context.database, fileId, userId))) {
+        throw new AttachmentNotFoundError()
       }
 
-      return res.sendStatus(204)
-    } catch (_error) {
-      return res.status(500).json({ errors: [{ message: "Failed to delete attachment" }] })
-    }
-  })
+      const file = await readOwnedFile(context, request, fileId, userId)
 
-  // GET /attachments/:id/meta
-  router.get("/attachments/:id/meta", async (req: any, res: any) => {
-    const { id } = req.params
-    const accountability = req.accountability
-
-    if (!accountability?.user) {
-      return res.status(401).json({ errors: [{ message: "Unauthorized" }] })
-    }
-
-    try {
-      const refs = await database
-        .select("*")
-        .from("attachment_refs")
-        .where({ file_id: id, owner_user_id: accountability.user })
-
-      if (refs.length === 0) {
-        return res.status(403).json({ errors: [{ message: "Access denied" }] })
-      }
-
-      const files = await database.select("*").from("directus_files").where({ id })
-
-      const file = files[0]
-
-      if (!file) {
-        return res.status(404).json({ errors: [{ message: "File not found" }] })
-      }
-
-      return res.json({
+      return response.json({
         data: {
           file: {
             id: file.id,
@@ -252,11 +446,9 @@ export function registerAttachmentsEndpoints(router: any, context: any): void {
             filesize: file.filesize,
           },
           visibility: "private",
-          refs_count: refs.length,
+          refs_count: await countOwnedRefs(context.database, fileId, userId),
         },
       })
-    } catch (_error) {
-      return res.status(500).json({ errors: [{ message: "Failed to fetch metadata" }] })
-    }
-  })
+    }),
+  )
 }
