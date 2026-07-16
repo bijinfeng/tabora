@@ -74,9 +74,11 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
 
   function handleLogin() {
     if (!validCredentials(false)) return
+    const client = auth()
+    if (!client) return
     void run(async () => {
-      await auth()!.login(email().trim(), password())
-      const user = await auth()!.getCurrentUser()
+      await client.login(email().trim(), password())
+      const user = await client.getCurrentUser()
       setAccountEmail(user?.email ?? email().trim())
       setPassword("")
       setPhase("signed-in")
@@ -85,10 +87,12 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
 
   function handleRegister() {
     if (!validCredentials(true)) return
+    const client = auth()
+    if (!client) return
     void run(async () => {
-      await auth()!.register(email().trim(), password())
-      await auth()!.login(email().trim(), password())
-      const user = await auth()!.getCurrentUser()
+      await client.register(email().trim(), password())
+      await client.login(email().trim(), password())
+      const user = await client.getCurrentUser()
       setAccountEmail(user?.email ?? email().trim())
       setPassword("")
       setPhase("signed-in")
@@ -100,8 +104,10 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
       setStatus("请输入邮箱")
       return
     }
+    const client = auth()
+    if (!client) return
     void run(async () => {
-      await auth()!.requestPasswordReset(email().trim())
+      await client.requestPasswordReset(email().trim())
       setPhase("reset-verify")
       setStatus("验证码已发送到邮箱")
     })
@@ -116,8 +122,10 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
       setStatus(`新密码至少 ${MIN_PASSWORD} 位`)
       return
     }
+    const client = auth()
+    if (!client) return
     void run(async () => {
-      await auth()!.resetPassword(code().trim(), newPassword())
+      await client.resetPassword(code().trim(), newPassword())
       setCode("")
       setNewPassword("")
       setPhase("signed-out")
@@ -126,8 +134,10 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   function handleLogout() {
+    const client = auth()
+    if (!client) return
     void run(async () => {
-      await auth()!.logout()
+      await client.logout()
       setAccountEmail("")
       setPassword("")
       setPhase("signed-out")
@@ -168,7 +178,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   type="password"
                   value={password()}
                   onInput={setPassword}
-                  placeholder="至少 8 位"
+                  placeholder={`至少 ${MIN_PASSWORD} 位`}
                   aria-label="账号密码"
                 />
               </label>
@@ -247,7 +257,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   type="password"
                   value={newPassword()}
                   onInput={setNewPassword}
-                  placeholder="至少 8 位"
+                  placeholder={`至少 ${MIN_PASSWORD} 位`}
                   aria-label="新密码"
                 />
               </label>
