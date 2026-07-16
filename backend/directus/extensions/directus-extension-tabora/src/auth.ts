@@ -206,11 +206,21 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
     asyncRoute(async (request, response) => {
       const userId = requireUserId(request)
       const usersService = await createCurrentUserService(context, request)
-      const user = await usersService.readOne(userId, {
-        fields: [...CURRENT_USER_FIELDS],
-      })
 
-      return response.json({ data: user })
+      try {
+        const user = await usersService.readOne(userId, {
+          fields: [...CURRENT_USER_FIELDS],
+        })
+
+        return response.json({ data: user })
+      } catch (error: unknown) {
+        // 与 Directus /users/me 对齐：无权读 directus_users（如 role=null）时只回 id
+        if (isDirectusError(error, ErrorCode.Forbidden)) {
+          return response.json({ data: { id: userId } })
+        }
+
+        throw error
+      }
     }),
   )
 
