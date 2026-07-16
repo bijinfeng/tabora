@@ -21,6 +21,18 @@ describe("mapDirectusError", () => {
     expect(result.code).toBe("INVALID_PAYLOAD")
   })
 
+  it("prefers directusCode over status 401", () => {
+    const result = mapDirectusError(401, {
+      errors: [{ extensions: { code: "RECORD_NOT_UNIQUE" } }],
+    })
+    expect(result.code).toBe("EMAIL_IN_USE")
+  })
+
+  it("falls back to INVALID_CREDENTIALS for status 401 with no directusCode", () => {
+    const result = mapDirectusError(401, {})
+    expect(result.code).toBe("INVALID_CREDENTIALS")
+  })
+
   it("falls back to UNKNOWN for unrecognized codes", () => {
     const result = mapDirectusError(500, { errors: [{ extensions: { code: "WEIRD" } }] })
     expect(result.code).toBe("UNKNOWN")
