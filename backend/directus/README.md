@@ -17,6 +17,8 @@ backend/directus/
 │           ├── index.ts       # endpoint 组合入口
 │           ├── auth.ts        # 注册、登录和密码找回
 │           ├── sessions.ts    # 会话列表与撤销
+│           ├── sync.ts        # 数据同步 pull/push（LWW + tombstone）
+│           ├── syncSensitiveFilter.ts # 同步 payload 敏感字段过滤
 │           ├── attachments.ts # 附件 policy、引用和删除
 │           ├── http.ts        # 请求校验与异步 handler
 │           ├── errors.ts      # Directus 标准错误

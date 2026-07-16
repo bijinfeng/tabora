@@ -47,7 +47,7 @@
 - `docs/superpowers/specs/2026-07-16-frontend-directus-auth-s1-design.md`：账号数据同步转向 Directus，S1 前端登录注册接入设计（独立认证模块 `@tabora/auth` + 账号页邮箱密码接线）。
 - `docs/superpowers/plans/2026-07-16-frontend-directus-auth-s1.md`：S1 前端登录注册接入 Directus 的 TDD 逐步实现计划（9 个任务）。✅ 已实现：新增 `@tabora/auth` 包（`createDirectusAuthClient` + 错误归一），账号页改为真实邮箱密码登录/注册/退出/会话恢复/忘记密码，后端地址经 `VITE_TABORA_API_BASE` 注入；未配置时降级为本地模式。
 - `docs/superpowers/specs/2026-07-16-directus-sync-gateway-s2-design.md`：S2 Directus 数据同步网关设计（状态同步 + LWW + tombstone，pull/push REST 契约）。
-- `docs/superpowers/plans/2026-07-16-directus-sync-gateway-s2.md`：S2 同步网关 TDD 实现计划（5 个任务：schema、敏感过滤、RED 契约、实现、验证）。
+- `docs/superpowers/plans/2026-07-16-directus-sync-gateway-s2.md`：S2 同步网关 TDD 实现计划（5 个任务：schema、敏感过滤、RED 契约、实现、验证）。✅ 已实现：`synced_records` schema 对齐、`GET/POST /sync/records`（增量 pull / 批量 push，LWW + tombstone + 服务端敏感过滤，26 个端点测试）；Directus role 权限过滤与真实 Postgres 集成测试为部署侧人工步骤。
 
 ## 按任务选择文档
 
