@@ -44,6 +44,7 @@ export {
   createSyncEngine,
   type SyncEngine,
   type SyncEngineConfig,
+  type SyncAuthSession,
   type SyncResult,
 } from "./syncEngine"
 
