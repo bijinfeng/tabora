@@ -57,3 +57,10 @@ export {
   type ConflictRecord,
   type ConflictResolution,
 } from "./conflictModel"
+
+// Directus auth (S1) - re-exported for S3 migration off Supabase
+export {
+  createDirectusAuthClient,
+  type DirectusAuthClient,
+  type DirectusSession,
+} from "@tabora/auth"

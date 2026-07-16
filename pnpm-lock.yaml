@@ -516,6 +516,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.39.0
         version: 2.110.0
+      '@tabora/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@tabora/host-adapters':
         specifier: workspace:*
         version: link:../host-adapters

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "@tabora/auth": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*"
