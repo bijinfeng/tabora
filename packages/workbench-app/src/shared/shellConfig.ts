@@ -15,6 +15,9 @@ export type WorkbenchShellConfig = {
     pluginId: string
     key: string
   }
+  auth?: {
+    apiBaseUrl: string
+  }
 }
 
 export function resolveWorkbenchThemeToggleTarget(

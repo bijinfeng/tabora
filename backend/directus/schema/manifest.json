@@ -39,11 +39,14 @@
     {
       "name": "synced_records",
       "fields": [
-        { "name": "scope", "type": "string" },
-        { "name": "entity_type", "type": "string" },
-        { "name": "record_key", "type": "string" },
-        { "name": "payload", "type": "json" },
-        { "name": "deleted_at", "type": "timestamp" }
+        { "name": "user_id", "type": "uuid" },
+        { "name": "device_id", "type": "string" },
+        { "name": "record_type", "type": "string" },
+        { "name": "record_id", "type": "string" },
+        { "name": "data", "type": "json" },
+        { "name": "version", "type": "integer" },
+        { "name": "record_updated_at", "type": "timestamp" },
+        { "name": "deleted", "type": "boolean" }
       ]
     },
     {

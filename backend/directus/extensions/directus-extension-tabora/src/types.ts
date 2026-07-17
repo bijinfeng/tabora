@@ -50,10 +50,21 @@ export type DirectusFileSummary = {
 
 export type DirectusSessionRow = {
   token: string
-  data: unknown
   created_at: string | null
   expires: string | null
   ip: string | null
   user_agent: string | null
   origin: string | null
+}
+
+export type SyncedRecordRow = {
+  id?: number
+  user_id: string
+  device_id: string
+  record_type: string
+  record_id: string
+  data: unknown
+  version: number
+  record_updated_at: string | Date
+  deleted: boolean
 }

@@ -1,8 +1,13 @@
-import { ErrorCode, isDirectusError } from "@directus/errors"
+import { ErrorCode, InternalServerError, isDirectusError } from "@directus/errors"
 import type { Accountability } from "@directus/types"
 import { z } from "zod"
 import { asyncRoute, parseBody, requireUserId } from "./http"
-import { ensureSessionId } from "./sessionIdentity"
+import {
+  createSessionIdentity,
+  deleteSessionIdentityByToken,
+  lockSessionIdentityByToken,
+  rotateSessionIdentity,
+} from "./sessionIdentity"
 import type { TaboraDatabase, TaboraEndpointContext, TaboraRequest, TaboraRouter } from "./types"
 
 const emailSchema = z
@@ -88,6 +93,14 @@ async function createRegistrationUsersService(context: TaboraEndpointContext) {
   })
 }
 
+function requireLoginUserId(result: { id?: string }): string {
+  if (!result.id) {
+    throw new InternalServerError()
+  }
+
+  return result.id
+}
+
 async function createAuthenticationService(
   context: TaboraEndpointContext,
   request: ServiceRequest,
@@ -97,13 +110,7 @@ async function createAuthenticationService(
   const options = {
     schema,
     accountability: createAnonymousRequestAccountability(request),
-  }
-
-  if (database) {
-    Object.defineProperty(options, "knex", {
-      enumerable: request.accountability == null,
-      value: database,
-    })
+    ...(database ? { knex: database } : {}),
   }
 
   return new context.services.AuthenticationService(options)
@@ -125,19 +132,15 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
     "/auth/login",
     asyncRoute(async (request, response) => {
       const credentials = parseBody(credentialsSchema, request.body)
-      const { result, sessionId } = await context.database.transaction(async (transaction) => {
-        const authenticationService = await createAuthenticationService(
-          context,
-          request,
-          transaction,
-        )
-        const result = await authenticationService.login("default", credentials, {
-          session: false,
-        })
-        const sessionId = await ensureSessionId(transaction, result.refreshToken)
-
-        return { result, sessionId }
+      const authenticationService = await createAuthenticationService(context, request)
+      const result = await authenticationService.login("default", credentials, {
+        session: false,
       })
+      const sessionId = await createSessionIdentity(
+        context.database,
+        requireLoginUserId(result),
+        result.refreshToken,
+      )
 
       return response.json({
         data: {
@@ -154,18 +157,17 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
     "/auth/refresh",
     asyncRoute(async (request, response) => {
       const { refresh_token: refreshToken } = parseBody(refreshTokenSchema, request.body)
-      const { result, sessionId } = await context.database.transaction(async (transaction) => {
-        const authenticationService = await createAuthenticationService(
-          context,
-          request,
-          transaction,
-        )
-        const result = await authenticationService.refresh(refreshToken, {
-          session: false,
-        })
-        const sessionId = await ensureSessionId(transaction, result.refreshToken)
+      const authenticationService = await createAuthenticationService(context, request)
+      const result = await authenticationService.refresh(refreshToken, {
+        session: false,
+      })
+      const userId = requireLoginUserId(result)
+      const sessionId = await context.database.transaction(async (transaction) => {
+        const identity = await lockSessionIdentityByToken(transaction, refreshToken)
 
-        return { result, sessionId }
+        return identity
+          ? await rotateSessionIdentity(transaction, identity, userId, result.refreshToken)
+          : await createSessionIdentity(transaction, userId, result.refreshToken)
       })
 
       return response.json({
@@ -186,6 +188,15 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
       const authenticationService = await createAuthenticationService(context, request)
 
       await authenticationService.logout(refreshToken)
+
+      await context.database.transaction(async (transaction) => {
+        const identity = await lockSessionIdentityByToken(transaction, refreshToken)
+
+        if (identity) {
+          await deleteSessionIdentityByToken(transaction, identity.user_id, refreshToken)
+        }
+      })
+
       return response.sendStatus(204)
     }),
   )
@@ -195,11 +206,21 @@ export function registerAuthEndpoints(router: TaboraRouter, context: TaboraEndpo
     asyncRoute(async (request, response) => {
       const userId = requireUserId(request)
       const usersService = await createCurrentUserService(context, request)
-      const user = await usersService.readOne(userId, {
-        fields: [...CURRENT_USER_FIELDS],
-      })
 
-      return response.json({ data: user })
+      try {
+        const user = await usersService.readOne(userId, {
+          fields: [...CURRENT_USER_FIELDS],
+        })
+
+        return response.json({ data: user })
+      } catch (error: unknown) {
+        // 与 Directus /users/me 对齐：无权读 directus_users（如 role=null）时只回 id
+        if (isDirectusError(error, ErrorCode.Forbidden)) {
+          return response.json({ data: { id: userId } })
+        }
+
+        throw error
+      }
     }),
   )
 

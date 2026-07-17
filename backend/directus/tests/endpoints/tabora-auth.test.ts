@@ -211,7 +211,11 @@ describe("tabora auth endpoints", () => {
       loginResponse,
       vi.fn(),
     )
-    const transaction = onlyTransaction(database)
+
+    // login 不再包一层跨 Directus auth 的事务（SQLite 单连接下会与
+    // AuthenticationService 内部的连接请求死锁），Directus 登录调用与
+    // identity 写入都直接使用 context.database。
+    expect(database.__transactions).toHaveLength(0)
 
     expect(methods.login).toHaveBeenCalledWith(
       "default",
@@ -244,11 +248,8 @@ describe("tabora auth endpoints", () => {
         token_hash: sha256("refresh-token"),
       },
     ])
-    expect(database).not.toHaveBeenCalled()
     expect(database.select).not.toHaveBeenCalled()
-    expect(database.__writes).not.toHaveBeenCalled()
-    expect(transaction.select.mock.calls.flat()).not.toContain("data")
-    expect(transaction.__writes).toHaveBeenCalledWith(
+    expect(database.__writes).toHaveBeenCalledWith(
       expect.objectContaining({
         operation: "insert",
         table: "user_refresh_tokens",
@@ -268,7 +269,6 @@ describe("tabora auth endpoints", () => {
         app: false,
         ip: "127.0.0.1",
       },
-      knex: transaction,
       schema,
     })
   })
@@ -308,6 +308,10 @@ describe("tabora auth endpoints", () => {
       refreshResponse,
       vi.fn(),
     )
+
+    // authenticationService.refresh 直接用 context.database（不传事务，避免
+    // 与 Directus auth driver 的全局连接池死锁）；identity 的 rotate 用一个
+    // 只包含 user_refresh_tokens 操作的独立短事务。
     const transaction = onlyTransaction(database)
 
     expect(methods.refresh).toHaveBeenCalledWith("refresh-token", { session: false })
@@ -336,10 +340,20 @@ describe("tabora auth endpoints", () => {
         token_hash: sha256("next-refresh-token"),
       },
     ])
-    expect(database).not.toHaveBeenCalled()
     expect(database.select).not.toHaveBeenCalled()
-    expect(database.__forUpdate).not.toHaveBeenCalled()
-    expect(database.__writes).not.toHaveBeenCalled()
+    // directus_sessions 的更新（AuthenticationService.refresh 内部）发生在
+    // context.database 上，不进短事务；短事务只应看到 user_refresh_tokens 的写入。
+    expect(database.__writes).toHaveBeenCalledWith({
+      operation: "update",
+      table: "directus_sessions",
+      where: [{ token: "refresh-token" }],
+      payload: { token: "next-refresh-token" },
+    })
+    expect(
+      transaction.__writes.mock.calls
+        .map(([write]: [{ table: string }]) => write.table)
+        .every((table: string) => table === "user_refresh_tokens"),
+    ).toBe(true)
     expect(transaction.__forUpdate).toHaveBeenCalledWith("user_refresh_tokens")
     expect(transaction.select.mock.calls.flat()).not.toContain("data")
     expect(transaction.__writes).toHaveBeenCalledWith({
@@ -359,7 +373,6 @@ describe("tabora auth endpoints", () => {
         app: false,
         ip: "127.0.0.1",
       },
-      knex: transaction,
       schema,
     })
   })
@@ -420,9 +433,15 @@ describe("tabora auth endpoints", () => {
         expires: "2099-01-02T00:00:00.000Z",
       },
     ])
-    expect(database).not.toHaveBeenCalled()
     expect(database.select).not.toHaveBeenCalled()
-    expect(database.__writes).not.toHaveBeenCalled()
+    // AuthenticationService.refresh 内部对 directus_sessions 的更新走
+    // context.database（无事务）；identity 的 create 走独立短事务。
+    expect(database.__writes).toHaveBeenCalledWith({
+      operation: "update",
+      table: "directus_sessions",
+      where: [{ token: "refresh-token" }],
+      payload: { token: "next-refresh-token" },
+    })
     expect(transaction.select.mock.calls.flat()).not.toContain("data")
     expect(transaction.__writes).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -459,7 +478,8 @@ describe("tabora auth endpoints", () => {
       createResponse(),
       vi.fn(),
     )
-    const transaction = onlyTransaction(database)
+    // login 不再传事务给 AuthenticationService（避免与全局连接池死锁）。
+    expect(database.__transactions).toHaveLength(0)
 
     expect(constructors.authentication).toHaveBeenCalledWith({
       accountability: {
@@ -470,15 +490,12 @@ describe("tabora auth endpoints", () => {
         app: false,
         ip: "127.0.0.1",
       },
-      knex: transaction,
       schema,
     })
-    expect(database).not.toHaveBeenCalled()
     expect(database.select).not.toHaveBeenCalled()
-    expect(database.__writes).not.toHaveBeenCalled()
   })
 
-  it("logout 在事务中删除 Directus session 与 hash mapping", async () => {
+  it("logout 删除 Directus session 与 hash mapping", async () => {
     const database = createDatabase({
       directus_sessions: [
         {
@@ -508,6 +525,8 @@ describe("tabora auth endpoints", () => {
       response,
       vi.fn(),
     )
+    // authenticationService.logout 用 context.database 独立执行（不传事务）；
+    // identity 删除用一个只含 user_refresh_tokens 操作的独立短事务。
     const transaction = onlyTransaction(database)
 
     expect(methods.logout).toHaveBeenCalledWith("refresh-token")
@@ -520,13 +539,10 @@ describe("tabora auth endpoints", () => {
         app: false,
         ip: null,
       },
-      knex: transaction,
       schema,
     })
-    expect(database).not.toHaveBeenCalled()
     expect(database.select).not.toHaveBeenCalled()
-    expect(database.__writes).not.toHaveBeenCalled()
-    expect(transaction.__writes).toHaveBeenCalledWith({
+    expect(database.__writes).toHaveBeenCalledWith({
       operation: "delete",
       table: "directus_sessions",
       where: [{ token: "refresh-token" }],
@@ -541,6 +557,11 @@ describe("tabora auth endpoints", () => {
         },
       ],
     })
+    expect(
+      transaction.__writes.mock.calls
+        .map(([write]: [{ table: string }]) => write.table)
+        .every((table: string) => table === "user_refresh_tokens"),
+    ).toBe(true)
     expect(database.__state.directus_sessions).toEqual([])
     expect(database.__state.user_refresh_tokens).toEqual([])
     expect(response.statusCode).toBe(204)

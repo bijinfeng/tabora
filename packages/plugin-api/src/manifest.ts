@@ -307,6 +307,19 @@ export type SettingsPanelViewProps = {
     createWorkspace?(name: string): Promise<void>
     switchWorkspace?(id: string): Promise<void>
     deleteWorkspace?(id: string): Promise<void>
+    auth?: {
+      getSession(): Promise<{ userId?: string; sessionId: string } | null>
+      getCurrentUser(): Promise<{ id: string; email?: string } | null>
+      login(email: string, password: string): Promise<void>
+      register(email: string, password: string): Promise<void>
+      logout(): Promise<void>
+      requestPasswordReset(email: string): Promise<void>
+      resetPassword(code: string, password: string): Promise<void>
+    }
+    sync?: {
+      triggerSync(): Promise<void>
+      getLastSyncAt(): Promise<string | null>
+    }
   }
   workspaces?: Workspace[]
   workspace: Workspace

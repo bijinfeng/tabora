@@ -1,100 +1,304 @@
 import { Button, Input } from "@tabora/ui"
-import { createSignal, Show } from "solid-js"
+import { createSignal, onMount, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
-type AccountPhase = "signed-out" | "code-sent" | "signed-in"
+type AccountPhase = "loading" | "signed-out" | "reset-request" | "reset-verify" | "signed-in"
 
-export function AccountSettingsPanel(_props: SettingsPanelViewProps) {
+const MIN_PASSWORD = 8
+
+export function AccountSettingsPanel(props: SettingsPanelViewProps) {
+  const auth = () => props.host.auth
   const [email, setEmail] = createSignal("")
+  const [password, setPassword] = createSignal("")
   const [code, setCode] = createSignal("")
-  const [phase, setPhase] = createSignal<AccountPhase>("signed-out")
-  const [statusNote, setStatusNote] = createSignal("未登录 · 本地模式")
+  const [newPassword, setNewPassword] = createSignal("")
+  const [phase, setPhase] = createSignal<AccountPhase>("loading")
+  const [accountEmail, setAccountEmail] = createSignal("")
+  const [status, setStatus] = createSignal("")
+  const [busy, setBusy] = createSignal(false)
 
-  const signedIn = () => phase() === "signed-in"
-
-  function handleSendCode() {
-    if (!email().trim()) {
-      setStatusNote("请输入官方账号邮箱")
+  onMount(async () => {
+    const client = auth()
+    if (!client) {
+      setPhase("signed-out")
       return
     }
-    setPhase("code-sent")
-    setStatusNote(`验证码已发送到 ${email().trim()}`)
+    try {
+      const session = await client.getSession()
+      if (session) {
+        const user = await client.getCurrentUser()
+        setAccountEmail(user?.email ?? "")
+        setPhase("signed-in")
+        return
+      }
+    } catch {
+      // 恢复失败按未登录处理
+    }
+    setPhase("signed-out")
+  })
+
+  function messageFor(error: unknown): string {
+    const code = (error as { code?: string })?.code
+    const message = (error as { message?: string })?.message
+    return message ?? (code ? String(code) : "操作失败，请稍后重试")
   }
 
-  function handleAuth() {
+  async function run(action: () => Promise<void>) {
+    if (busy()) return
+    setBusy(true)
+    setStatus("")
+    try {
+      await action()
+    } catch (error) {
+      setStatus(messageFor(error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function validCredentials(requireLength: boolean): boolean {
     if (!email().trim()) {
-      setStatusNote("请输入官方账号邮箱")
+      setStatus("请输入邮箱")
+      return false
+    }
+    if (!password()) {
+      setStatus("请输入密码")
+      return false
+    }
+    if (requireLength && password().length < MIN_PASSWORD) {
+      setStatus(`密码至少 ${MIN_PASSWORD} 位`)
+      return false
+    }
+    return true
+  }
+
+  function handleLogin() {
+    if (!validCredentials(false)) return
+    const client = auth()
+    if (!client) return
+    void run(async () => {
+      await client.login(email().trim(), password())
+      const user = await client.getCurrentUser()
+      setAccountEmail(user?.email ?? email().trim())
+      setPassword("")
+      setPhase("signed-in")
+    })
+  }
+
+  function handleRegister() {
+    if (!validCredentials(true)) return
+    const client = auth()
+    if (!client) return
+    void run(async () => {
+      await client.register(email().trim(), password())
+      await client.login(email().trim(), password())
+      const user = await client.getCurrentUser()
+      setAccountEmail(user?.email ?? email().trim())
+      setPassword("")
+      setPhase("signed-in")
+    })
+  }
+
+  function handleSendResetCode() {
+    if (!email().trim()) {
+      setStatus("请输入邮箱")
       return
     }
+    const client = auth()
+    if (!client) return
+    void run(async () => {
+      await client.requestPasswordReset(email().trim())
+      setPhase("reset-verify")
+      setStatus("验证码已发送到邮箱")
+    })
+  }
+
+  function handleResetPassword() {
     if (!code().trim()) {
-      setStatusNote("请输入邮箱验证码")
+      setStatus("请输入验证码")
       return
     }
-    setPhase("signed-in")
-    setStatusNote(`已登录 · ${email().trim()}`)
+    if (newPassword().length < MIN_PASSWORD) {
+      setStatus(`新密码至少 ${MIN_PASSWORD} 位`)
+      return
+    }
+    const client = auth()
+    if (!client) return
+    void run(async () => {
+      await client.resetPassword(code().trim(), newPassword())
+      setCode("")
+      setNewPassword("")
+      setPhase("signed-out")
+      setStatus("密码已重置，请登录")
+    })
   }
 
   function handleLogout() {
-    setPhase("signed-out")
-    setCode("")
-    setStatusNote("未登录 · 本地模式")
+    const client = auth()
+    if (!client) return
+    void run(async () => {
+      await client.logout()
+      setAccountEmail("")
+      setPassword("")
+      setPhase("signed-out")
+      setStatus("已退出登录")
+    })
   }
 
   return (
     <section class="account-auth-panel" aria-label="官方账号登录注册">
-      <div class="account-auth-form">
-        <div class="auth-fields-shell">
-          <label class="auth-field">
-            <span>邮箱</span>
-            <Input
-              size="sm"
-              type="email"
-              value={email()}
-              onInput={setEmail}
-              placeholder="name@example.com"
-              disabled={signedIn()}
-              aria-label="官方账号邮箱"
-            />
-          </label>
-          <label class="auth-field">
-            <span>验证码</span>
-            <div class="auth-code-row">
-              <Input
+      <Show when={auth()} fallback={<p class="auth-status">未配置同步服务，当前为本地模式</p>}>
+        <Show when={phase() !== "loading"} fallback={<p class="auth-status">正在恢复登录状态…</p>}>
+          <Show when={phase() === "signed-in"}>
+            <div class="account-profile-card">
+              <div class="profile-info">
+                <div class="profile-avatar">
+                  <span class="avatar-initial">{accountEmail().charAt(0).toUpperCase()}</span>
+                </div>
+                <div class="profile-details">
+                  <div class="profile-email">{accountEmail()}</div>
+                  <div class="profile-status">
+                    <span class="status-dot"></span>
+                    已登录
+                  </div>
+                </div>
+              </div>
+              <Button
                 size="sm"
-                value={code()}
-                onInput={setCode}
-                placeholder="6 位验证码"
-                disabled={signedIn()}
-                aria-label="邮箱验证码"
-              />
-              <Button size="sm" variant="secondary" disabled={signedIn()} onClick={handleSendCode}>
-                发送验证码
+                variant="ghost"
+                onClick={handleLogout}
+                disabled={busy()}
+                class="signout-btn"
+              >
+                退出
               </Button>
             </div>
-          </label>
-        </div>
-        <div class="auth-action-row">
-          <span class="auth-note">新邮箱会自动注册</span>
-          <div class="account-actions">
-            <Button size="sm" variant="secondary" disabled={!signedIn()} onClick={handleLogout}>
-              退出
-            </Button>
-            <Show
-              when={!signedIn()}
-              fallback={
-                <Button size="sm" variant="primary" disabled>
-                  已登录
+          </Show>
+
+          <Show when={phase() === "signed-out"}>
+            <div class="account-auth-form">
+              <label class="auth-field">
+                <span>邮箱</span>
+                <Input
+                  size="sm"
+                  type="email"
+                  value={email()}
+                  onInput={setEmail}
+                  placeholder="name@example.com"
+                  aria-label="账号邮箱"
+                />
+              </label>
+              <label class="auth-field">
+                <span>密码</span>
+                <Input
+                  size="sm"
+                  type="password"
+                  value={password()}
+                  onInput={setPassword}
+                  placeholder={`至少 ${MIN_PASSWORD} 位`}
+                  aria-label="账号密码"
+                />
+              </label>
+              <div class="account-actions">
+                <Button size="sm" variant="primary" disabled={busy()} onClick={handleLogin}>
+                  登录
                 </Button>
-              }
-            >
-              <Button size="sm" variant="primary" onClick={handleAuth}>
-                登录 / 注册
+                <Button size="sm" variant="secondary" disabled={busy()} onClick={handleRegister}>
+                  注册
+                </Button>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy()}
+                onClick={() => {
+                  setStatus("")
+                  setPhase("reset-request")
+                }}
+              >
+                忘记密码?
               </Button>
-            </Show>
-          </div>
-        </div>
-        <span class="auth-status">{statusNote()}</span>
-      </div>
+              <span class="auth-status">{status()}</span>
+            </div>
+          </Show>
+
+          <Show when={phase() === "reset-request"}>
+            <div class="account-auth-form">
+              <label class="auth-field">
+                <span>邮箱</span>
+                <Input
+                  size="sm"
+                  type="email"
+                  value={email()}
+                  onInput={setEmail}
+                  placeholder="name@example.com"
+                  aria-label="重置账号邮箱"
+                />
+              </label>
+              <div class="account-actions">
+                <Button size="sm" variant="primary" disabled={busy()} onClick={handleSendResetCode}>
+                  发送验证码
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy()}
+                  onClick={() => {
+                    setStatus("")
+                    setPhase("signed-out")
+                  }}
+                >
+                  返回
+                </Button>
+              </div>
+              <span class="auth-status">{status()}</span>
+            </div>
+          </Show>
+
+          <Show when={phase() === "reset-verify"}>
+            <div class="account-auth-form">
+              <label class="auth-field">
+                <span>验证码</span>
+                <Input
+                  size="sm"
+                  value={code()}
+                  onInput={setCode}
+                  placeholder="邮箱验证码"
+                  aria-label="重置验证码"
+                />
+              </label>
+              <label class="auth-field">
+                <span>新密码</span>
+                <Input
+                  size="sm"
+                  type="password"
+                  value={newPassword()}
+                  onInput={setNewPassword}
+                  placeholder={`至少 ${MIN_PASSWORD} 位`}
+                  aria-label="新密码"
+                />
+              </label>
+              <div class="account-actions">
+                <Button size="sm" variant="primary" disabled={busy()} onClick={handleResetPassword}>
+                  重置密码
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy()}
+                  onClick={() => {
+                    setStatus("")
+                    setPhase("signed-out")
+                  }}
+                >
+                  返回
+                </Button>
+              </div>
+              <span class="auth-status">{status()}</span>
+            </div>
+          </Show>
+        </Show>
+      </Show>
     </section>
   )
 }

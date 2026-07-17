@@ -483,13 +483,18 @@ export function createContext(options?: {
 
 export async function registerExtension(router: ReturnType<typeof createRouter>, context: unknown) {
   const extensionModule = await import("../../extensions/directus-extension-tabora/src/index")
-  const extension = extensionModule.default
+  const extension = extensionModule.default as unknown
 
-  if (typeof extension !== "function") {
-    throw new TypeError("Expected defineEndpoint to return a registration function")
+  const handler =
+    typeof extension === "function"
+      ? extension
+      : (extension as { handler?: unknown } | null)?.handler
+
+  if (typeof handler !== "function") {
+    throw new TypeError("Expected defineEndpoint to provide a registration function")
   }
 
-  extension(router as never, context as never)
+  handler(router as never, context as never)
 }
 
 export function firstForwardedError(next: ReturnType<typeof vi.fn>) {

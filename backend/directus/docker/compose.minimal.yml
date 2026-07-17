@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-tabora_directus}
+      POSTGRES_USER: ${DB_USER:-tabora}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tabora}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  directus:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8055:8055"
+    env_file:
+      - ../.env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    volumes:
+      # 本地上传文件（不用 S3）
+      - uploads:/directus/uploads
+
+volumes:
+  postgres_data:
+  uploads:

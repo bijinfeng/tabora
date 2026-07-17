@@ -1,4 +1,9 @@
 import type { HostAdapter } from "@tabora/host-adapters"
+import { createDirectusAuthClient, type DirectusAuthClient } from "@tabora/auth"
+import {
+  createChromeStorageAuthStorage,
+  createLocalStorageAuthStorage,
+} from "@tabora/host-adapters"
 import { createPluginCatalog, type PluginCatalog } from "@tabora/orchestrator"
 import type { AiRuntimeBridge, WorkspacePresetContribution } from "@tabora/plugin-api"
 import {
@@ -56,6 +61,7 @@ export type WorkbenchRuntimeBootstrap = {
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
   syncManager?: SyncManager
+  authClient?: DirectusAuthClient
 }
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
@@ -389,30 +395,31 @@ export function createWorkbenchRuntimeBootstrap(
     i18n,
   })
 
-  // Create sync manager (optional, only if env vars are set)
-  // Note: Environment variables are expected to be injected at build time
-  // via Vite or other bundler. If not available, sync will be disabled.
-  let syncManager: SyncManager | undefined = undefined
-  const supabaseUrl: string | undefined = undefined
-  const supabaseAnonKey: string | undefined = undefined
-  const gatewayUrl: string | undefined = undefined
+  let authClient: DirectusAuthClient | undefined = undefined
+  const authApiBaseUrl = options.shellConfig.auth?.apiBaseUrl
+  if (authApiBaseUrl) {
+    const authStorage =
+      options.host.platform === "extension"
+        ? createChromeStorageAuthStorage()
+        : createLocalStorageAuthStorage()
+    authClient = createDirectusAuthClient({ apiBaseUrl: authApiBaseUrl, storage: authStorage })
+  }
 
-  if (supabaseUrl && supabaseAnonKey && gatewayUrl) {
+  // Create sync manager (optional, only when auth is configured and available)
+  let syncManager: SyncManager | undefined = undefined
+  if (authApiBaseUrl && authClient) {
     try {
       syncManager = createSyncManager({
         database,
         syncQueueRepo: repositories.syncQueueRepo,
         syncMetaRepo: repositories.syncMetaRepo,
         host: options.host,
-        supabaseUrl,
-        supabaseAnonKey,
-        gatewayUrl,
+        apiBaseUrl: authApiBaseUrl,
+        authClient,
       })
-      // Start sync automatically
       syncManager.start()
-    } catch (err) {
-      console.error("Failed to create sync manager:", err)
-      // Continue without sync - sync failure should not block workbench
+    } catch (error) {
+      console.error("Failed to create sync manager:", error)
     }
   }
 
@@ -429,5 +436,6 @@ export function createWorkbenchRuntimeBootstrap(
     pluginStyles,
     rejectedPlugins: loadResult.rejected,
     ...(syncManager ? { syncManager } : {}),
+    ...(authClient ? { authClient } : {}),
   }
 }

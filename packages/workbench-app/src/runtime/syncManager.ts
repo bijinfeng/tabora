@@ -1,15 +1,10 @@
+import type { DirectusAuthClient } from "@tabora/auth"
 import type { HostAdapter } from "@tabora/host-adapters"
 import {
-  createChromeStorageAuthStorage,
-  createLocalStorageAuthStorage,
-} from "@tabora/host-adapters"
-import {
-  createAuthSessionManager,
   createChangeDetector,
-  createGatewayClient,
+  createDirectusGatewayClient,
   createLocalChangeQueue,
   createSyncEngine,
-  type AuthSessionManager,
   type ChangeDetector,
   type SyncEngine,
 } from "@tabora/sync"
@@ -20,13 +15,11 @@ export type SyncManagerConfig = {
   syncQueueRepo: SyncQueueRepository
   syncMetaRepo: SyncMetaRepository
   host: HostAdapter
-  supabaseUrl: string
-  supabaseAnonKey: string
-  gatewayUrl: string
+  apiBaseUrl: string
+  authClient: DirectusAuthClient
 }
 
 export type SyncManager = {
-  authSession: AuthSessionManager
   syncEngine: SyncEngine
   changeDetector: ChangeDetector
   start(): void
@@ -35,56 +28,43 @@ export type SyncManager = {
 }
 
 /**
- * Create sync manager - orchestrates auth, change detection, and sync engine.
+ * Create sync manager - orchestrates change detection and the sync engine.
  * This is the main entry point for integrating sync into the workbench.
  */
 export function createSyncManager(config: SyncManagerConfig): SyncManager {
-  // Create auth storage adapter based on host platform
-  const authStorage =
-    config.host.platform === "extension"
-      ? createChromeStorageAuthStorage()
-      : createLocalStorageAuthStorage()
-
-  // Create auth session manager
-  const authSession = createAuthSessionManager({
-    supabaseUrl: config.supabaseUrl,
-    supabaseAnonKey: config.supabaseAnonKey,
-    storage: authStorage,
-  })
-
-  // Create gateway client
-  const gatewayClient = createGatewayClient({
-    gatewayUrl: config.gatewayUrl,
-    getAccessToken: async () => {
-      const session = await authSession.getSession()
-      return session?.accessToken ?? null
-    },
+  // Create Directus gateway client (auth token pulled from the auth client)
+  const gatewayClient = createDirectusGatewayClient({
+    apiBaseUrl: config.apiBaseUrl,
+    getAccessToken: async () => (await config.authClient.getSession())?.accessToken ?? null,
   })
 
   // Create local change queue
   const changeQueue = createLocalChangeQueue(config.syncQueueRepo)
 
-  // Get device ID from sync meta (will be loaded on first sync)
-  let deviceId: string = ""
+  // Device ID is resolved lazily (and cached) the first time the engine pushes.
+  // Generated + persisted on first use so it survives restarts.
+  let cachedDeviceId: string | null = null
+  async function getDeviceId(): Promise<string> {
+    if (cachedDeviceId) return cachedDeviceId
+    const stored = await config.syncMetaRepo.get("deviceId")
+    if (stored) {
+      cachedDeviceId = stored
+      return stored
+    }
+    const generated = crypto.randomUUID()
+    await config.syncMetaRepo.set("deviceId", generated)
+    cachedDeviceId = generated
+    return generated
+  }
 
-  // Create sync engine with temporary deviceId (will be updated before sync)
-  const syncEngineConfig: {
-    database: TaboraDatabase
-    gatewayClient: typeof gatewayClient
-    changeQueue: typeof changeQueue
-    syncMetaRepo: SyncMetaRepository
-    authSession: typeof authSession
-    deviceId: string
-  } = {
+  const syncEngine = createSyncEngine({
     database: config.database,
     gatewayClient,
     changeQueue,
     syncMetaRepo: config.syncMetaRepo,
-    authSession,
-    deviceId: "",
-  }
-
-  const syncEngine = createSyncEngine(syncEngineConfig)
+    authSession: { getSession: () => config.authClient.getSession() },
+    getDeviceId,
+  })
 
   // Create change detector
   const changeDetector = createChangeDetector({
@@ -107,39 +87,13 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
 
       try {
         // Check if we have a session
-        const session = await authSession.getSession()
+        const session = await config.authClient.getSession()
         if (!session) {
           // No session, skip sync
           return
         }
 
-        // Ensure device is registered
-        if (!deviceId) {
-          const storedDeviceId = await config.syncMetaRepo.get("deviceId")
-          if (!storedDeviceId) {
-            // Register device on first sync
-            const deviceInfo = {
-              deviceId: crypto.randomUUID(),
-              name: `${config.host.platform}-${Date.now()}`,
-              type:
-                config.host.platform === "extension" ? ("browser" as const) : ("browser" as const),
-            }
-            const registerResult = await gatewayClient.registerDevice(deviceInfo)
-            if (registerResult.ok) {
-              deviceId = registerResult.data.deviceId
-              syncEngineConfig.deviceId = deviceId
-              await config.syncMetaRepo.set("deviceId", deviceId)
-            } else {
-              console.error("Failed to register device:", registerResult.error)
-              return
-            }
-          } else {
-            deviceId = storedDeviceId
-            syncEngineConfig.deviceId = storedDeviceId
-          }
-        }
-
-        // Run sync
+        // Run sync (the engine resolves the device id lazily via getDeviceId)
         const result = await syncEngine.sync()
         if (!result.success) {
           console.error("Sync failed:", result.errors)
@@ -196,7 +150,6 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
   }
 
   return {
-    authSession,
     syncEngine,
     changeDetector,
     start,

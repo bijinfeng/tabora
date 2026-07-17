@@ -17,12 +17,15 @@ export function createExtensionWorkbenchComposition() {
 
 export function createExtensionRuntimeBootstrap() {
   const composition = createExtensionWorkbenchComposition()
+  const apiBaseUrl = import.meta.env.VITE_TABORA_API_BASE?.trim()
 
   return createWorkbenchRuntimeBootstrap({
     host: composition.host,
     plugins: builtinPlugins,
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
-    shellConfig: builtinWorkbenchShellConfig,
+    shellConfig: apiBaseUrl
+      ? { ...builtinWorkbenchShellConfig, auth: { apiBaseUrl } }
+      : builtinWorkbenchShellConfig,
     databaseName: "tabora-extension",
   })
 }

@@ -1,5 +1,5 @@
 /**
- * Auth storage adapter interface for Supabase session persistence.
+ * Auth storage adapter interface for session persistence.
  * Extension MV3 service workers don't have localStorage, so we need
  * to inject platform-specific storage adapters.
  */

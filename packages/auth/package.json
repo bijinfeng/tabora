@@ -1,5 +1,5 @@
 {
-  "name": "@tabora/sync",
+  "name": "@tabora/auth",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,14 +18,9 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@tabora/auth": "workspace:*",
-    "@tabora/host-adapters": "workspace:*",
-    "@tabora/plugin-api": "workspace:*",
-    "@tabora/storage": "workspace:*"
+    "@tabora/host-adapters": "workspace:*"
   },
   "devDependencies": {
-    "@tabora/tsconfig": "workspace:*",
-    "@types/node": "catalog:node",
-    "fake-indexeddb": "catalog:test"
+    "@tabora/tsconfig": "workspace:*"
   }
 }
