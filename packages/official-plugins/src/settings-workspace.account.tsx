@@ -150,9 +150,26 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
       <Show when={auth()} fallback={<p class="auth-status">未配置同步服务，当前为本地模式</p>}>
         <Show when={phase() !== "loading"} fallback={<p class="auth-status">正在恢复登录状态…</p>}>
           <Show when={phase() === "signed-in"}>
-            <div class="account-auth-form">
-              <p class="auth-status">已登录 · {accountEmail()}</p>
-              <Button size="sm" variant="secondary" disabled={busy()} onClick={handleLogout}>
+            <div class="account-profile-card">
+              <div class="profile-info">
+                <div class="profile-avatar">
+                  <span class="avatar-initial">{accountEmail().charAt(0).toUpperCase()}</span>
+                </div>
+                <div class="profile-details">
+                  <div class="profile-email">{accountEmail()}</div>
+                  <div class="profile-status">
+                    <span class="status-dot"></span>
+                    已登录
+                  </div>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleLogout}
+                disabled={busy()}
+                class="signout-btn"
+              >
                 退出
               </Button>
             </div>
