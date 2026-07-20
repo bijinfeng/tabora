@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../../shared/stylex"
 import type { HomePageContent } from "../homePrototypeContent"
 
 const styles = stylex.create({
@@ -422,43 +421,43 @@ const styles = stylex.create({
 export function WorkbenchPreview(props: { content: HomePageContent }) {
   return (
     <div
-      {...sx(styles.shell)}
+      {...stylex.attrs(styles.shell)}
       id="product"
       data-site-workbench-preview
       data-component="SiteProductPreview"
     >
-      <div {...sx(styles.browserBar)}>
-        <div {...sx(styles.traffic)} aria-hidden="true">
-          <span {...sx(styles.trafficDot)} />
-          <span {...sx(styles.trafficDot)} />
-          <span {...sx(styles.trafficDot)} />
+      <div {...stylex.attrs(styles.browserBar)}>
+        <div {...stylex.attrs(styles.traffic)} aria-hidden="true">
+          <span {...stylex.attrs(styles.trafficDot)} />
+          <span {...stylex.attrs(styles.trafficDot)} />
+          <span {...stylex.attrs(styles.trafficDot)} />
         </div>
-        <div {...sx(styles.address)}>new-tab://tabora/workbench</div>
-        <span {...sx(styles.kbd, styles.browserKbd)}>⌘K</span>
+        <div {...stylex.attrs(styles.address)}>new-tab://tabora/workbench</div>
+        <span {...stylex.attrs(styles.kbd, styles.browserKbd)}>⌘K</span>
       </div>
-      <div {...sx(styles.workbench)} data-mock-root>
-        <aside {...sx(styles.rail)} aria-label="工作台导航">
-          <span {...sx(styles.railBrand)} aria-hidden="true">
+      <div {...stylex.attrs(styles.workbench)} data-mock-root>
+        <aside {...stylex.attrs(styles.rail)} aria-label="工作台导航">
+          <span {...stylex.attrs(styles.railBrand)} aria-hidden="true">
             T
           </span>
-          <div {...sx(styles.railGroups)} role="tablist" aria-label="分组">
+          <div {...stylex.attrs(styles.railGroups)} role="tablist" aria-label="分组">
             <button
-              {...sx(styles.railButton, styles.railButtonActive)}
+              {...stylex.attrs(styles.railButton, styles.railButtonActive)}
               type="button"
               aria-label="默认分组"
               aria-current="true"
             >
               <span>T</span>
             </button>
-            <button {...sx(styles.railButton)} type="button" aria-label="设计稿">
+            <button {...stylex.attrs(styles.railButton)} type="button" aria-label="设计稿">
               <span>◐</span>
             </button>
-            <button {...sx(styles.railButton)} type="button" aria-label="阅读">
+            <button {...stylex.attrs(styles.railButton)} type="button" aria-label="阅读">
               <span>★</span>
             </button>
           </div>
-          <div {...sx(styles.railDivider)} aria-hidden="true" />
-          <button {...sx(styles.railButton)} type="button" aria-label="新建分组">
+          <div {...stylex.attrs(styles.railDivider)} aria-hidden="true" />
+          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="新建分组">
             <svg
               width="14"
               height="14"
@@ -472,8 +471,8 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </button>
-          <div {...sx(styles.railSpacer)} />
-          <button {...sx(styles.railButton)} type="button" aria-label="切换布局">
+          <div {...stylex.attrs(styles.railSpacer)} />
+          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="切换布局">
             <svg
               width="16"
               height="16"
@@ -489,7 +488,7 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
           </button>
-          <button {...sx(styles.railButton)} type="button" aria-label="主题">
+          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="主题">
             <svg
               width="16"
               height="16"
@@ -508,7 +507,7 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <line x1="21" y1="12" x2="23" y2="12" />
             </svg>
           </button>
-          <button {...sx(styles.railButton)} type="button" aria-label="设置">
+          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="设置">
             <svg
               width="16"
               height="16"
@@ -524,20 +523,20 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
           </button>
         </aside>
 
-        <div {...sx(styles.workspace)}>
-          <div {...sx(styles.greeting)}>
-            <span {...sx(styles.greetingText)}>
+        <div {...stylex.attrs(styles.workspace)}>
+          <div {...stylex.attrs(styles.greeting)}>
+            <span {...stylex.attrs(styles.greetingText)}>
               {props.content.mock.greeting}
-              <span {...sx(styles.greetingMuted)}> · {props.content.mock.date}</span>
+              <span {...stylex.attrs(styles.greetingMuted)}> · {props.content.mock.date}</span>
             </span>
-            <button {...sx(styles.greetingAdd)} type="button">
+            <button {...stylex.attrs(styles.greetingAdd)} type="button">
               {props.content.mock.addCard}
             </button>
           </div>
 
-          <label {...sx(styles.command)}>
-            <span {...sx(styles.providerBadge)}>
-              <span {...sx(styles.providerDot)} aria-hidden="true" />
+          <label {...stylex.attrs(styles.command)}>
+            <span {...stylex.attrs(styles.providerBadge)}>
+              <span {...stylex.attrs(styles.providerDot)} aria-hidden="true" />
               Google
               <svg
                 width="10"
@@ -551,7 +550,7 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
                 <path d="M6 9l6 6 6-6" />
               </svg>
             </span>
-            <span {...sx(styles.commandSep)} aria-hidden="true" />
+            <span {...stylex.attrs(styles.commandSep)} aria-hidden="true" />
             <svg
               width="15"
               height="15"
@@ -565,53 +564,63 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <path d="m20 20-3.5-3.5" />
             </svg>
             <input
-              {...sx(styles.commandInput)}
+              {...stylex.attrs(styles.commandInput)}
               value={props.content.mock.commandPlaceholder}
               aria-label="命令搜索"
             />
-            <span {...sx(styles.kbd)}>⌘K</span>
+            <span {...stylex.attrs(styles.kbd)}>⌘K</span>
           </label>
 
-          <div {...sx(styles.widgetGrid)}>
-            <article {...sx(styles.widget, styles.widgetLarge)}>
-              <div {...sx(styles.widgetHead)}>
-                <div {...sx(styles.titleBlock)}>
-                  <span {...sx(styles.widgetTitle)}>{props.content.mock.widgets.focus.title}</span>
-                  <span {...sx(styles.widgetSub)}>{props.content.mock.widgets.focus.sub}</span>
+          <div {...stylex.attrs(styles.widgetGrid)}>
+            <article {...stylex.attrs(styles.widget, styles.widgetLarge)}>
+              <div {...stylex.attrs(styles.widgetHead)}>
+                <div {...stylex.attrs(styles.titleBlock)}>
+                  <span {...stylex.attrs(styles.widgetTitle)}>
+                    {props.content.mock.widgets.focus.title}
+                  </span>
+                  <span {...stylex.attrs(styles.widgetSub)}>
+                    {props.content.mock.widgets.focus.sub}
+                  </span>
                 </div>
-                <span {...sx(styles.statusDot)} aria-label="已同步" />
+                <span {...stylex.attrs(styles.statusDot)} aria-label="已同步" />
               </div>
-              <div {...sx(styles.focusLine)}>{props.content.mock.widgets.focus.body}</div>
+              <div {...stylex.attrs(styles.focusLine)}>{props.content.mock.widgets.focus.body}</div>
             </article>
-            <article {...sx(styles.widget)}>
-              <div {...sx(styles.widgetHead)}>
-                <div {...sx(styles.titleBlock)}>
-                  <span {...sx(styles.widgetTitle)}>{props.content.mock.widgets.links.title}</span>
-                  <span {...sx(styles.widgetSub)}>{props.content.mock.widgets.links.sub}</span>
+            <article {...stylex.attrs(styles.widget)}>
+              <div {...stylex.attrs(styles.widgetHead)}>
+                <div {...stylex.attrs(styles.titleBlock)}>
+                  <span {...stylex.attrs(styles.widgetTitle)}>
+                    {props.content.mock.widgets.links.title}
+                  </span>
+                  <span {...stylex.attrs(styles.widgetSub)}>
+                    {props.content.mock.widgets.links.sub}
+                  </span>
                 </div>
-                <span {...sx(styles.chip)}>links</span>
+                <span {...stylex.attrs(styles.chip)}>links</span>
               </div>
-              <div {...sx(styles.quickLinks)}>
+              <div {...stylex.attrs(styles.quickLinks)}>
                 {props.content.mock.widgets.links.items.map((item: [string, string]) => (
-                  <button {...sx(styles.quickLink)} type="button">
-                    <strong {...sx(styles.quickLinkTitle)}>{item[0]}</strong>
-                    <span {...sx(styles.quickLinkMeta)}>{item[1]}</span>
+                  <button {...stylex.attrs(styles.quickLink)} type="button">
+                    <strong {...stylex.attrs(styles.quickLinkTitle)}>{item[0]}</strong>
+                    <span {...stylex.attrs(styles.quickLinkMeta)}>{item[1]}</span>
                   </button>
                 ))}
               </div>
             </article>
-            <article {...sx(styles.widget)}>
-              <div {...sx(styles.widgetHead)}>
-                <div {...sx(styles.titleBlock)}>
-                  <span {...sx(styles.widgetTitle)}>
+            <article {...stylex.attrs(styles.widget)}>
+              <div {...stylex.attrs(styles.widgetHead)}>
+                <div {...stylex.attrs(styles.titleBlock)}>
+                  <span {...stylex.attrs(styles.widgetTitle)}>
                     {props.content.mock.widgets.weather.title}
                   </span>
-                  <span {...sx(styles.widgetSub)}>{props.content.mock.widgets.weather.sub}</span>
+                  <span {...stylex.attrs(styles.widgetSub)}>
+                    {props.content.mock.widgets.weather.sub}
+                  </span>
                 </div>
-                <span {...sx(styles.chip, styles.chipSuccess)}>live</span>
+                <span {...stylex.attrs(styles.chip, styles.chipSuccess)}>live</span>
               </div>
-              <div {...sx(styles.weather)}>
-                <div {...sx(styles.weatherMark)}>
+              <div {...stylex.attrs(styles.weather)}>
+                <div {...stylex.attrs(styles.weatherMark)}>
                   <svg
                     width="20"
                     height="20"
@@ -626,61 +635,73 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
                   </svg>
                 </div>
                 <div>
-                  <div {...sx(styles.metric)}>{props.content.mock.widgets.weather.metric}</div>
-                  <span {...sx(styles.meta)}>{props.content.mock.widgets.weather.meta}</span>
+                  <div {...stylex.attrs(styles.metric)}>
+                    {props.content.mock.widgets.weather.metric}
+                  </div>
+                  <span {...stylex.attrs(styles.meta)}>
+                    {props.content.mock.widgets.weather.meta}
+                  </span>
                 </div>
               </div>
             </article>
-            <article {...sx(styles.widget)}>
-              <div {...sx(styles.widgetHead)}>
-                <div {...sx(styles.titleBlock)}>
-                  <span {...sx(styles.widgetTitle)}>{props.content.mock.widgets.todo.title}</span>
-                  <span {...sx(styles.widgetSub)}>{props.content.mock.widgets.todo.sub}</span>
+            <article {...stylex.attrs(styles.widget)}>
+              <div {...stylex.attrs(styles.widgetHead)}>
+                <div {...stylex.attrs(styles.titleBlock)}>
+                  <span {...stylex.attrs(styles.widgetTitle)}>
+                    {props.content.mock.widgets.todo.title}
+                  </span>
+                  <span {...stylex.attrs(styles.widgetSub)}>
+                    {props.content.mock.widgets.todo.sub}
+                  </span>
                 </div>
-                <span {...sx(styles.chip)}>tasks</span>
+                <span {...stylex.attrs(styles.chip)}>tasks</span>
               </div>
-              <div {...sx(styles.taskList)}>
-                <div {...sx(styles.task)}>
-                  <span {...sx(styles.check, styles.checkDone)} />
+              <div {...stylex.attrs(styles.taskList)}>
+                <div {...stylex.attrs(styles.task)}>
+                  <span {...stylex.attrs(styles.check, styles.checkDone)} />
                   <span>{props.content.mock.widgets.todo.items[0]}</span>
                 </div>
-                <div {...sx(styles.task)}>
-                  <span {...sx(styles.check)} />
+                <div {...stylex.attrs(styles.task)}>
+                  <span {...stylex.attrs(styles.check)} />
                   <span>{props.content.mock.widgets.todo.items[1]}</span>
                 </div>
-                <div {...sx(styles.task)}>
-                  <span {...sx(styles.check)} />
+                <div {...stylex.attrs(styles.task)}>
+                  <span {...stylex.attrs(styles.check)} />
                   <span>{props.content.mock.widgets.todo.items[2]}</span>
                 </div>
               </div>
             </article>
-            <article {...sx(styles.widget, styles.widgetLarge)}>
-              <div {...sx(styles.widgetHead)}>
-                <div {...sx(styles.titleBlock)}>
-                  <span {...sx(styles.widgetTitle)}>{props.content.mock.widgets.notes.title}</span>
-                  <span {...sx(styles.widgetSub)}>{props.content.mock.widgets.notes.sub}</span>
+            <article {...stylex.attrs(styles.widget, styles.widgetLarge)}>
+              <div {...stylex.attrs(styles.widgetHead)}>
+                <div {...stylex.attrs(styles.titleBlock)}>
+                  <span {...stylex.attrs(styles.widgetTitle)}>
+                    {props.content.mock.widgets.notes.title}
+                  </span>
+                  <span {...stylex.attrs(styles.widgetSub)}>
+                    {props.content.mock.widgets.notes.sub}
+                  </span>
                 </div>
-                <span {...sx(styles.chip)}>draft</span>
+                <span {...stylex.attrs(styles.chip)}>draft</span>
               </div>
-              <p {...sx(styles.notes)}>{props.content.mock.widgets.notes.body}</p>
+              <p {...stylex.attrs(styles.notes)}>{props.content.mock.widgets.notes.body}</p>
             </article>
-            <article {...sx(styles.widget)}>
-              <div {...sx(styles.widgetHead)}>
-                <div {...sx(styles.titleBlock)}>
-                  <span {...sx(styles.widgetTitle)}>
+            <article {...stylex.attrs(styles.widget)}>
+              <div {...stylex.attrs(styles.widgetHead)}>
+                <div {...stylex.attrs(styles.titleBlock)}>
+                  <span {...stylex.attrs(styles.widgetTitle)}>
                     {props.content.mock.widgets.pluginStatus.title}
                   </span>
-                  <span {...sx(styles.widgetSub)}>
+                  <span {...stylex.attrs(styles.widgetSub)}>
                     {props.content.mock.widgets.pluginStatus.sub}
                   </span>
                 </div>
-                <span {...sx(styles.chip, styles.chipSuccess)}>healthy</span>
+                <span {...stylex.attrs(styles.chip, styles.chipSuccess)}>healthy</span>
               </div>
-              <div {...sx(styles.pluginStats)}>
+              <div {...stylex.attrs(styles.pluginStats)}>
                 {props.content.mock.widgets.pluginStatus.rows.map((row: [string, string]) => (
-                  <div {...sx(styles.pluginStat)}>
+                  <div {...stylex.attrs(styles.pluginStat)}>
                     <span>{row[0]}</span>
-                    <strong {...sx(styles.pluginStatValue)}>{row[1]}</strong>
+                    <strong {...stylex.attrs(styles.pluginStatValue)}>{row[1]}</strong>
                   </div>
                 ))}
               </div>

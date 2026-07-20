@@ -2,7 +2,6 @@ import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
 
 import { useSiteI18n, useSiteTheme } from "../../../app/AppShell"
-import { sx } from "../../../shared/stylex"
 
 const styles = stylex.create({
   root: {
@@ -108,36 +107,36 @@ export function DocsTopnav() {
   const theme = useSiteTheme()
 
   return (
-    <header {...sx(styles.root)} role="banner">
-      <A {...sx(styles.logo)} href="/" aria-label="Tabora 首页">
-        <span {...sx(styles.logoMark)} aria-hidden="true">
+    <header {...stylex.attrs(styles.root)} role="banner">
+      <A {...stylex.attrs(styles.logo)} href="/" aria-label="Tabora 首页">
+        <span {...stylex.attrs(styles.logoMark)} aria-hidden="true">
           T
         </span>
         <span>Tabora</span>
       </A>
-      <nav {...sx(styles.links)} aria-label="主导航">
-        <A {...sx(styles.link)} href="/">
+      <nav {...stylex.attrs(styles.links)} aria-label="主导航">
+        <A {...stylex.attrs(styles.link)} href="/">
           {i18n.t("nav.home")}
         </A>
-        <A {...sx(styles.link)} href="/#product">
+        <A {...stylex.attrs(styles.link)} href="/#product">
           {i18n.t("nav.product")}
         </A>
-        <A {...sx(styles.link)} href="/download">
+        <A {...stylex.attrs(styles.link)} href="/download">
           {i18n.t("nav.download")}
         </A>
-        <A {...sx(styles.link, styles.active)} href="/docs" aria-current="page">
+        <A {...stylex.attrs(styles.link, styles.active)} href="/docs" aria-current="page">
           {i18n.t("nav.docs")}
         </A>
       </nav>
-      <div {...sx(styles.actions)}>
+      <div {...stylex.attrs(styles.actions)}>
         <button
-          {...sx(styles.iconButton)}
+          {...stylex.attrs(styles.iconButton)}
           type="button"
           aria-label={i18n.t("a11y.toggleTheme")}
           onClick={theme.toggleDark}
         >
           <svg
-            {...sx(theme.dark() && styles.hidden)}
+            {...stylex.attrs(theme.dark() && styles.hidden)}
             width="15"
             height="15"
             viewBox="0 0 24 24"
@@ -149,7 +148,7 @@ export function DocsTopnav() {
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
           <svg
-            {...sx(!theme.dark() && styles.hidden)}
+            {...stylex.attrs(!theme.dark() && styles.hidden)}
             width="15"
             height="15"
             viewBox="0 0 24 24"

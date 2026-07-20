@@ -2,7 +2,7 @@ import { Button, IconButton } from "./button.styled"
 import { Plus, Ellipsis } from "lucide-solid"
 import * as stylex from "@stylexjs/stylex"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 
 const buttonDemoStyles = stylex.create({
   groupedButton: {
@@ -49,10 +49,10 @@ const buttonDemoStyles = stylex.create({
 
 export function ButtonDemo() {
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>变体</h4>
-        <div {...sx(demoStyles.row)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>变体</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Button variant="primary">主要</Button>
           <Button variant="secondary">次要</Button>
           <Button variant="subtle">柔和</Button>
@@ -62,9 +62,9 @@ export function ButtonDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>尺寸 + 全宽 + 纯图标</h4>
-        <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>尺寸 + 全宽 + 纯图标</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Button variant="primary" size="sm">
             小 28px
           </Button>
@@ -88,10 +88,10 @@ export function ButtonDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>按钮组</h4>
-        <div {...sx(demoStyles.row)}>
-          <div {...sx(demoStyles.buttonGroup)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>按钮组</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
+          <div {...stylex.attrs(demoStyles.buttonGroup)}>
             <Button
               variant="secondary"
               xstyle={[buttonDemoStyles.groupedButton, buttonDemoStyles.groupedFirst]}
@@ -115,9 +115,9 @@ export function ButtonDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>状态</h4>
-        <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>状态</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Button variant="primary">默认</Button>
           <Button variant="primary" xstyle={buttonDemoStyles.hoverDemo}>
             悬停
@@ -142,7 +142,7 @@ export function ButtonDemo() {
 
 export function IconButtonDemo() {
   return (
-    <div {...sx(demoStyles.row)}>
+    <div {...stylex.attrs(demoStyles.row)}>
       <IconButton aria-label="添加" size="sm">
         <Plus size={14} strokeWidth={2} />
       </IconButton>

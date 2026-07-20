@@ -1,11 +1,12 @@
+import * as stylex from "@stylexjs/stylex"
 import { Badge } from "../badge"
 import { ListRow } from "../listRow"
 import { CardSection } from "./cardSection.styled"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 export function CardSectionDemo() {
   return (
-    <div {...sx(demoStyles.controlStack)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
       <CardSection title="搜索配置" trailing={<Badge>3 sources</Badge>}>
         <ListRow primary="Google" secondary="默认搜索源" />
         <ListRow primary="侧边预览" secondary="打开方式" />

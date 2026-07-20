@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Badge } from "../badge"
 import { Button } from "../button"
 import { Table } from "./table.styled"
@@ -42,8 +43,8 @@ export function TableDemo() {
   })
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.row)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.row)}>
         <strong>插件运行状态</strong>
         <Button size="sm" variant="secondary" onClick={() => setShowOnlyRunning((value) => !value)}>
           {showOnlyRunning() ? "显示全部" : "只看运行中"}
@@ -69,7 +70,7 @@ export function TableDemo() {
         rows={rows()}
         rowKey={(row) => row.id}
       />
-      <div {...sx(demoStyles.stackCompact)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <span>当前显示 {rows().length} 个插件实例。</span>
         {rows().length === 0 ? <span>没有符合筛选条件的运行实例。</span> : null}
       </div>

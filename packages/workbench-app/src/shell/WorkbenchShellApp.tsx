@@ -338,7 +338,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   return (
     <WorkbenchShellProvider shell={shell}>
       <div
-        {...stylex.props(styles.root)}
+        {...stylex.attrs(styles.root)}
         data-workbench-shell-root
         onKeyDown={handleWorkbenchKeydown}
         tabIndex={-1}
@@ -346,7 +346,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
         <Show
           when={kernelReady()}
           fallback={
-            <div {...stylex.props(styles.loading)} data-workbench-loading>
+            <div {...stylex.attrs(styles.loading)} data-workbench-loading>
               Loading Tabora...
             </div>
           }

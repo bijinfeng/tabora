@@ -14,7 +14,6 @@ import {
 
 import { Topbar } from "./Topbar"
 import { darkTokens, lightTokens } from "./themeTokens"
-import { sx } from "../shared/stylex"
 
 const styles = stylex.create({
   prototypeRoot: {
@@ -246,11 +245,16 @@ export function AppShell(props: { children?: JSX.Element }) {
     <SiteThemeContext.Provider value={{ dark, toggleDark }}>
       <SiteI18nContext.Provider value={{ locale, setLocale, toggleLocale, t }}>
         {isPrototypePage() ? (
-          <div {...sx(styles.prototypeRoot)} id="top" data-site-shell data-site-prototype="true">
+          <div
+            {...stylex.attrs(styles.prototypeRoot)}
+            id="top"
+            data-site-shell
+            data-site-prototype="true"
+          >
             {props.children}
           </div>
         ) : (
-          <div {...sx(styles.siteRoot)} id="top" data-site-shell>
+          <div {...stylex.attrs(styles.siteRoot)} id="top" data-site-shell>
             <Topbar onToggleTheme={toggleDark} />
             {props.children}
           </div>

@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { ToggleGroup as Primitive } from "../../primitives/toggleGroup/toggleGroup"
 import type { ToggleGroupOption, ToggleGroupProps } from "../../primitives/toggleGroup/toggleGroup"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -63,19 +62,19 @@ export type StyledToggleGroupProps = Omit<ToggleGroupProps, ToggleGroupStyleProp
 }
 
 export function ToggleGroup(props: StyledToggleGroupProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const itemCompiled = () => stylex.props(styles.item)
-  const itemSelectedCompiled = () => stylex.props(styles.itemSelected)
-  const itemDisabledCompiled = () => stylex.props(styles.itemDisabled)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const itemSelectedCompiled = () => stylex.attrs(styles.itemSelected)
+  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
 
   return (
     <Primitive
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      itemClass={itemCompiled().className}
-      itemSelectedClass={itemSelectedCompiled().className}
-      itemDisabledClass={itemDisabledCompiled().className}
+      class={rootCompiled().class}
+      style={undefined}
+      itemClass={itemCompiled().class}
+      itemSelectedClass={itemSelectedCompiled().class}
+      itemDisabledClass={itemDisabledCompiled().class}
     />
   )
 }

@@ -3,7 +3,6 @@ import * as stylex from "@stylexjs/stylex"
 import { createEffect, createMemo, onCleanup, onMount } from "solid-js"
 import { useSiteI18n } from "../../app/AppShell"
 import { highlightCode } from "../../shared/codeHighlight"
-import { sx } from "../../shared/stylex"
 import { DocsTopnav } from "./components/DocsTopnav"
 import { DocsGuideSections } from "./components/DocsGuideSections"
 import { defaultDocsSectionId, getDocsPageContent, getDocsSectionPath } from "./docsPageContent"
@@ -124,17 +123,24 @@ export function DocsHomePage() {
   return (
     <>
       <DocsTopnav />
-      <div {...sx(styles.page)}>
-        <aside {...sx(styles.sidebar)} aria-label={content().sidebarTitle} data-docs-sidebar>
-          <div {...sx(styles.title)}>
-            Tabora <span {...sx(styles.titleAccent)}>Docs</span>
+      <div {...stylex.attrs(styles.page)}>
+        <aside
+          {...stylex.attrs(styles.sidebar)}
+          aria-label={content().sidebarTitle}
+          data-docs-sidebar
+        >
+          <div {...stylex.attrs(styles.title)}>
+            Tabora <span {...stylex.attrs(styles.titleAccent)}>Docs</span>
           </div>
           {content().sidebarGroups.map((group) => (
             <>
-              <div {...sx(styles.section)}>{group.title}</div>
+              <div {...stylex.attrs(styles.section)}>{group.title}</div>
               {group.items.map((item) => (
                 <A
-                  {...sx(styles.link, currentSectionId() === item.id && styles.linkActive)}
+                  {...stylex.attrs(
+                    styles.link,
+                    currentSectionId() === item.id && styles.linkActive,
+                  )}
                   href={getDocsSectionPath(item.id)}
                 >
                   {item.label}

@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Checkbox as Primitive } from "../../primitives/checkbox/checkbox"
 import type { CheckboxProps } from "../../primitives/checkbox/checkbox"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -72,26 +71,26 @@ export type StyledCheckboxProps = Omit<CheckboxProps, CheckboxStyleProp> & {
 
 export function Checkbox(props: StyledCheckboxProps) {
   const rootCompiled = () =>
-    stylex.props(styles.root, props.disabled && styles.rootDisabled, props.xstyle)
-  const inputCompiled = () => stylex.props(styles.input)
+    stylex.attrs(styles.root, props.disabled && styles.rootDisabled, props.xstyle)
+  const inputCompiled = () => stylex.attrs(styles.input)
   const controlCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.control,
       (props.checked === true || props.checked === "indeterminate") && styles.controlChecked,
     )
-  const labelCompiled = () => stylex.props(styles.label)
+  const labelCompiled = () => stylex.attrs(styles.label)
 
   return (
     <Primitive
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      inputClass={inputCompiled().className}
-      inputStyle={toSolidStyle(inputCompiled().style)}
-      controlClass={controlCompiled().className}
-      controlStyle={toSolidStyle(controlCompiled().style)}
-      labelClass={labelCompiled().className}
-      labelStyle={toSolidStyle(labelCompiled().style)}
+      class={rootCompiled().class}
+      style={undefined}
+      inputClass={inputCompiled().class}
+      inputStyle={undefined}
+      controlClass={controlCompiled().class}
+      controlStyle={undefined}
+      labelClass={labelCompiled().class}
+      labelStyle={undefined}
     />
   )
 }

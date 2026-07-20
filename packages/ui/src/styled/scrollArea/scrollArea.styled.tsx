@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { ScrollArea as Primitive } from "../../primitives/scrollArea/scrollArea"
 import type { ScrollAreaProps } from "../../primitives/scrollArea/scrollArea"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -31,13 +31,13 @@ export type StyledScrollAreaProps = ScrollAreaProps & {
 }
 
 export function ScrollArea(props: StyledScrollAreaProps) {
-  const compiled = () => stylex.props(styles.root, props.xstyle)
+  const compiled = () => stylex.attrs(styles.root, props.xstyle)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
+      class={joinClassNames(compiled().class, props.class)}
+      style={props.style}
     />
   )
 }

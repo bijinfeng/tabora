@@ -1,10 +1,11 @@
+import * as stylex from "@stylexjs/stylex"
 import { Breadcrumb } from "./breadcrumb.styled"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 export function BreadcrumbDemo() {
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>设置路径</strong>
         <span>适合在深层设置或文档结构里帮助用户确认当前位置。</span>
       </div>

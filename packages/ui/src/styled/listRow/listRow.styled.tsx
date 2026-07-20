@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { ListRow as Primitive } from "../../primitives/listRow/listRow"
 import type { ListRowProps } from "../../primitives/listRow/listRow"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -79,7 +79,7 @@ export type StyledListRowProps = ListRowProps & {
 
 export function ListRow(props: StyledListRowProps) {
   const rootCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.root,
       props.interactive === true && styles.interactive,
       props.interactive === undefined && props.onClick !== undefined && styles.interactive,
@@ -87,30 +87,27 @@ export function ListRow(props: StyledListRowProps) {
       props.divider && styles.divider,
       props.xstyle,
     )
-  const leadingCompiled = () => stylex.props(styles.leading)
-  const mainCompiled = () => stylex.props(styles.main)
-  const primaryCompiled = () => stylex.props(styles.primary, props.danger && styles.primaryDanger)
-  const secondaryCompiled = () => stylex.props(styles.secondary)
-  const trailingCompiled = () => stylex.props(styles.trailing)
+  const leadingCompiled = () => stylex.attrs(styles.leading)
+  const mainCompiled = () => stylex.attrs(styles.main)
+  const primaryCompiled = () => stylex.attrs(styles.primary, props.danger && styles.primaryDanger)
+  const secondaryCompiled = () => stylex.attrs(styles.secondary)
+  const trailingCompiled = () => stylex.attrs(styles.trailing)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      leadingClass={joinClassNames(leadingCompiled().className, props.leadingClass)}
-      leadingStyle={mergeSolidStyles(toSolidStyle(leadingCompiled().style), props.leadingStyle)}
-      mainClass={joinClassNames(mainCompiled().className, props.mainClass)}
-      mainStyle={mergeSolidStyles(toSolidStyle(mainCompiled().style), props.mainStyle)}
-      primaryClass={joinClassNames(primaryCompiled().className, props.primaryClass)}
-      primaryStyle={mergeSolidStyles(toSolidStyle(primaryCompiled().style), props.primaryStyle)}
-      secondaryClass={joinClassNames(secondaryCompiled().className, props.secondaryClass)}
-      secondaryStyle={mergeSolidStyles(
-        toSolidStyle(secondaryCompiled().style),
-        props.secondaryStyle,
-      )}
-      trailingClass={joinClassNames(trailingCompiled().className, props.trailingClass)}
-      trailingStyle={mergeSolidStyles(toSolidStyle(trailingCompiled().style), props.trailingStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      leadingClass={joinClassNames(leadingCompiled().class, props.leadingClass)}
+      leadingStyle={props.leadingStyle}
+      mainClass={joinClassNames(mainCompiled().class, props.mainClass)}
+      mainStyle={props.mainStyle}
+      primaryClass={joinClassNames(primaryCompiled().class, props.primaryClass)}
+      primaryStyle={props.primaryStyle}
+      secondaryClass={joinClassNames(secondaryCompiled().class, props.secondaryClass)}
+      secondaryStyle={{ ...props.secondaryStyle }}
+      trailingClass={joinClassNames(trailingCompiled().class, props.trailingClass)}
+      trailingStyle={props.trailingStyle}
     />
   )
 }

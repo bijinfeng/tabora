@@ -1,7 +1,6 @@
 import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../../shared/stylex"
 import type { HomePageContent } from "../homePrototypeContent"
 import { WorkbenchPreview } from "./WorkbenchPreview"
 
@@ -123,14 +122,14 @@ const styles = stylex.create({
 
 export function HeroSection(props: { content: HomePageContent }) {
   return (
-    <section {...sx(styles.section)} data-od-id="hero" data-component="SiteHero">
-      <div {...sx(styles.container)}>
-        <div {...sx(styles.copy)}>
-          <p {...sx(styles.eyebrow)}>PLUGIN-FIRST NEW TAB</p>
-          <h1 {...sx(styles.title)}>{props.content.hero.title}</h1>
-          <p {...sx(styles.lead)}>{props.content.hero.lead}</p>
-          <div {...sx(styles.actionRow)}>
-            <A {...sx(styles.button, styles.primary)} href="/download">
+    <section {...stylex.attrs(styles.section)} data-od-id="hero" data-component="SiteHero">
+      <div {...stylex.attrs(styles.container)}>
+        <div {...stylex.attrs(styles.copy)}>
+          <p {...stylex.attrs(styles.eyebrow)}>PLUGIN-FIRST NEW TAB</p>
+          <h1 {...stylex.attrs(styles.title)}>{props.content.hero.title}</h1>
+          <p {...stylex.attrs(styles.lead)}>{props.content.hero.lead}</p>
+          <div {...stylex.attrs(styles.actionRow)}>
+            <A {...stylex.attrs(styles.button, styles.primary)} href="/download">
               <svg
                 width="16"
                 height="16"
@@ -144,13 +143,13 @@ export function HeroSection(props: { content: HomePageContent }) {
               </svg>
               {props.content.hero.primaryCta}
             </A>
-            <A {...sx(styles.button, styles.secondary)} href="/docs">
+            <A {...stylex.attrs(styles.button, styles.secondary)} href="/docs">
               {props.content.hero.secondaryCta}
             </A>
           </div>
-          <div {...sx(styles.chipRow)} aria-label="产品边界">
+          <div {...stylex.attrs(styles.chipRow)} aria-label="产品边界">
             {props.content.hero.chips.map((chip: string) => (
-              <span {...sx(styles.chip)}>{chip}</span>
+              <span {...stylex.attrs(styles.chip)}>{chip}</span>
             ))}
           </div>
         </div>

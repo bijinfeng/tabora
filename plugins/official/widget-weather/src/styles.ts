@@ -1,10 +1,4 @@
 import * as stylex from "@stylexjs/stylex"
-import type { CompiledStyles, InlineStyles, StyleXArray } from "@stylexjs/stylex"
-import type { JSX } from "solid-js"
-
-type XStyle = StyleXArray<
-  (null | undefined | CompiledStyles) | boolean | Readonly<[CompiledStyles, InlineStyles]>
->
 
 export const styles = stylex.create({
   root: { display: "flex", flexDirection: "column", height: "100%", minHeight: 0 },
@@ -145,11 +139,3 @@ export const styles = stylex.create({
     padding: 8,
   },
 })
-
-export function sx(...values: XStyle[]): {
-  class: string | undefined
-  style: JSX.CSSProperties | undefined
-} {
-  const compiled = stylex.props(...values)
-  return { class: compiled.className, style: compiled.style as JSX.CSSProperties | undefined }
-}

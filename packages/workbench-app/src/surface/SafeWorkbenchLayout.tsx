@@ -125,18 +125,18 @@ export function SafeWorkbenchLayout(props: {
   pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
   return (
-    <div {...stylex.props(styles.root)} data-safe-workbench-layout>
-      <div {...stylex.props(styles.toolbar)}>
-        <span {...stylex.props(styles.logo)}>
-          <TaboraMark class={stylex.props(styles.logoMark).className} />
+    <div {...stylex.attrs(styles.root)} data-safe-workbench-layout>
+      <div {...stylex.attrs(styles.toolbar)}>
+        <span {...stylex.attrs(styles.logo)}>
+          <TaboraMark class={stylex.attrs(styles.logoMark).class} />
           <span>Tabora</span>
         </span>
-        <div {...stylex.props(styles.spacer)} />
-        <button {...stylex.props(styles.button)} type="button" onClick={props.onOpenCommandPalette}>
+        <div {...stylex.attrs(styles.spacer)} />
+        <button {...stylex.attrs(styles.button)} type="button" onClick={props.onOpenCommandPalette}>
           {props.tShell?.("chrome.toolbar.search") ?? "搜索"}
         </button>
         <button
-          {...stylex.props(styles.button)}
+          {...stylex.attrs(styles.button)}
           type="button"
           aria-label={
             props.isDark
@@ -147,18 +147,18 @@ export function SafeWorkbenchLayout(props: {
         >
           {props.isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
-        <button {...stylex.props(styles.button)} type="button" onClick={props.onOpenSettings}>
+        <button {...stylex.attrs(styles.button)} type="button" onClick={props.onOpenSettings}>
           {props.tShell?.("chrome.toolbar.settings") ?? "设置"}
         </button>
       </div>
-      <div {...stylex.props(styles.list)}>
+      <div {...stylex.attrs(styles.list)}>
         <For each={props.instances}>
           {(instance) => {
             const widget = props.widgetContribution(instance)
             const model = props.resolveWidgetModel(instance)
             if (!model) {
               return (
-                <div {...stylex.props(styles.empty)}>
+                <div {...stylex.attrs(styles.empty)}>
                   {props.tShell
                     ? props.tShell("placeholders.widgetInstanceInvalid", {
                         instanceId: instance.id,

@@ -1,10 +1,4 @@
 import * as stylex from "@stylexjs/stylex"
-import type { CompiledStyles, InlineStyles, StyleXArray } from "@stylexjs/stylex"
-import type { JSX } from "solid-js"
-
-type XStyle = StyleXArray<
-  (null | undefined | CompiledStyles) | boolean | Readonly<[CompiledStyles, InlineStyles]>
->
 
 export const styles = stylex.create({
   root: {
@@ -339,11 +333,3 @@ export const styles = stylex.create({
     placeItems: "center",
   },
 })
-
-export function sx(...values: XStyle[]): {
-  class: string | undefined
-  style: JSX.CSSProperties | undefined
-} {
-  const compiled = stylex.props(...values)
-  return { class: compiled.className, style: compiled.style as JSX.CSSProperties | undefined }
-}

@@ -8,7 +8,7 @@ import type {
   DropdownMenuProps,
   DropdownMenuSide,
 } from "../../primitives/dropdownMenu/dropdownMenu"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const scaleIn = stylex.keyframes({
   from: {
@@ -142,46 +142,40 @@ export type StyledDropdownMenuProps = DropdownMenuProps & {
 }
 
 export function DropdownMenu(props: StyledDropdownMenuProps) {
-  const contentCompiled = () => stylex.props(styles.content, props.xstyle)
-  const titleCompiled = () => stylex.props(styles.title)
-  const arrowCompiled = () => stylex.props(styles.arrow)
-  const itemCompiled = () => stylex.props(styles.item)
-  const dangerCompiled = () => stylex.props(styles.danger)
-  const separatorCompiled = () => stylex.props(styles.separator)
-  const iconCompiled = () => stylex.props(styles.icon)
-  const checkCompiled = () => stylex.props(styles.check)
-  const labelCompiled = () => stylex.props(styles.label)
-  const kbdCompiled = () => stylex.props(styles.kbd)
+  const contentCompiled = () => stylex.attrs(styles.content, props.xstyle)
+  const titleCompiled = () => stylex.attrs(styles.title)
+  const arrowCompiled = () => stylex.attrs(styles.arrow)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const dangerCompiled = () => stylex.attrs(styles.danger)
+  const separatorCompiled = () => stylex.attrs(styles.separator)
+  const iconCompiled = () => stylex.attrs(styles.icon)
+  const checkCompiled = () => stylex.attrs(styles.check)
+  const labelCompiled = () => stylex.attrs(styles.label)
+  const kbdCompiled = () => stylex.attrs(styles.kbd)
 
   return (
     <P
       {...props}
-      class={joinClassNames(contentCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.style)}
-      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
-      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
-      arrowClass={joinClassNames(arrowCompiled().className, props.arrowClass)}
-      arrowStyle={mergeSolidStyles(toSolidStyle(arrowCompiled().style), props.arrowStyle)}
-      itemClass={joinClassNames(itemCompiled().className, props.itemClass)}
-      itemStyle={mergeSolidStyles(toSolidStyle(itemCompiled().style), props.itemStyle)}
-      itemDangerClass={joinClassNames(dangerCompiled().className, props.itemDangerClass)}
-      itemDangerStyle={mergeSolidStyles(
-        toSolidStyle(dangerCompiled().style),
-        props.itemDangerStyle,
-      )}
-      separatorClass={joinClassNames(separatorCompiled().className, props.separatorClass)}
-      separatorStyle={mergeSolidStyles(
-        toSolidStyle(separatorCompiled().style),
-        props.separatorStyle,
-      )}
-      iconClass={joinClassNames(iconCompiled().className, props.iconClass)}
-      iconStyle={mergeSolidStyles(toSolidStyle(iconCompiled().style), props.iconStyle)}
-      checkClass={joinClassNames(checkCompiled().className, props.checkClass)}
-      checkStyle={mergeSolidStyles(toSolidStyle(checkCompiled().style), props.checkStyle)}
-      labelClass={joinClassNames(labelCompiled().className, props.labelClass)}
-      labelStyle={mergeSolidStyles(toSolidStyle(labelCompiled().style), props.labelStyle)}
-      kbdClass={joinClassNames(kbdCompiled().className, props.kbdClass)}
-      kbdStyle={mergeSolidStyles(toSolidStyle(kbdCompiled().style), props.kbdStyle)}
+      class={joinClassNames(contentCompiled().class, props.class)}
+      style={props.style}
+      titleClass={joinClassNames(titleCompiled().class, props.titleClass)}
+      titleStyle={props.titleStyle}
+      arrowClass={joinClassNames(arrowCompiled().class, props.arrowClass)}
+      arrowStyle={props.arrowStyle}
+      itemClass={joinClassNames(itemCompiled().class, props.itemClass)}
+      itemStyle={props.itemStyle}
+      itemDangerClass={joinClassNames(dangerCompiled().class, props.itemDangerClass)}
+      itemDangerStyle={{ ...props.itemDangerStyle }}
+      separatorClass={joinClassNames(separatorCompiled().class, props.separatorClass)}
+      separatorStyle={{ ...props.separatorStyle }}
+      iconClass={joinClassNames(iconCompiled().class, props.iconClass)}
+      iconStyle={props.iconStyle}
+      checkClass={joinClassNames(checkCompiled().class, props.checkClass)}
+      checkStyle={props.checkStyle}
+      labelClass={joinClassNames(labelCompiled().class, props.labelClass)}
+      labelStyle={props.labelStyle}
+      kbdClass={joinClassNames(kbdCompiled().class, props.kbdClass)}
+      kbdStyle={props.kbdStyle}
     />
   )
 }

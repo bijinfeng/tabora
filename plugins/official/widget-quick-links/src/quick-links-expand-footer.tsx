@@ -1,8 +1,9 @@
+import * as stylex from "@stylexjs/stylex"
 import { Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button, InlineError } from "@tabora/ui"
 import { useQuickLinksExpandSession } from "./quick-links-expand-session"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 function footerHint(panel: "links" | "groups" | "entry"): string {
   if (panel === "groups") return "正在管理分组：调整显示状态，或新增一个入口分组。"
@@ -15,16 +16,16 @@ export function QuickLinksExpandFooter(props: WidgetViewProps) {
   const { panel, urlError, toggleManageGroups, primaryAction } = session
 
   return (
-    <div {...sx(styles.footer)} data-quick-links-footer>
-      <div {...sx(styles.footerInfo)}>
+    <div {...stylex.attrs(styles.footer)} data-quick-links-footer>
+      <div {...stylex.attrs(styles.footerInfo)}>
         <Show
           when={urlError()}
-          fallback={<span {...sx(styles.footerHint)}>{footerHint(panel())}</span>}
+          fallback={<span {...stylex.attrs(styles.footerHint)}>{footerHint(panel())}</span>}
         >
           <InlineError>{urlError()!}</InlineError>
         </Show>
       </div>
-      <div {...sx(styles.footerActions)}>
+      <div {...stylex.attrs(styles.footerActions)}>
         <Button size="sm" variant="secondary" onClick={toggleManageGroups}>
           {panel() === "groups" ? "完成" : panel() === "entry" ? "取消" : "管理分组"}
         </Button>

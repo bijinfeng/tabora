@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Switch as Primitive } from "../../primitives/switch/switch"
 import type { SwitchProps } from "../../primitives/switch/switch"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -99,21 +98,21 @@ export type StyledSwitchProps = Omit<SwitchProps, SwitchStyleProp> & {
 
 export function Switch(props: StyledSwitchProps) {
   const rootCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.root,
       (props.disabled || props.loading) && styles.rootDisabled,
       props.xstyle,
     )
-  const inputCompiled = () => stylex.props(styles.input)
+  const inputCompiled = () => stylex.attrs(styles.input)
   const controlCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.control,
       props.checked && styles.controlChecked,
       props.size === "sm" && styles.controlSm,
       (!props.size || props.size === "md") && styles.controlMd,
     )
   const thumbCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.thumb,
       props.size === "sm" && styles.thumbSm,
       (!props.size || props.size === "md") && styles.thumbMd,
@@ -121,21 +120,21 @@ export function Switch(props: StyledSwitchProps) {
       props.checked && (!props.size || props.size === "md") && styles.thumbCheckedMd,
       props.loading && styles.thumbLoading,
     )
-  const labelCompiled = () => stylex.props(styles.label)
+  const labelCompiled = () => stylex.attrs(styles.label)
 
   return (
     <Primitive
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      inputClass={inputCompiled().className}
-      inputStyle={toSolidStyle(inputCompiled().style)}
-      controlClass={controlCompiled().className}
-      controlStyle={toSolidStyle(controlCompiled().style)}
-      thumbClass={thumbCompiled().className}
-      thumbStyle={toSolidStyle(thumbCompiled().style)}
-      labelClass={labelCompiled().className}
-      labelStyle={toSolidStyle(labelCompiled().style)}
+      class={rootCompiled().class}
+      style={undefined}
+      inputClass={inputCompiled().class}
+      inputStyle={undefined}
+      controlClass={controlCompiled().class}
+      controlStyle={undefined}
+      thumbClass={thumbCompiled().class}
+      thumbStyle={undefined}
+      labelClass={labelCompiled().class}
+      labelStyle={undefined}
     />
   )
 }

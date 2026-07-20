@@ -1,7 +1,8 @@
+import * as stylex from "@stylexjs/stylex"
 import { Button, Checkbox, FieldRow, SegmentedControl, Select, Slider, Switch } from "@tabora/ui"
 import { createSignal, For } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { className, styles, sx } from "./styles"
+import { className, styles } from "./styles"
 
 const PLUGIN_INSTANCES = [
   { id: "weather-1", plugin: "天气", summary: "weather-1 · 城市与刷新" },
@@ -39,18 +40,21 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
   const activePluginName = () => activeInstance()?.plugin ?? "天气"
 
   return (
-    <div {...sx(styles.panelStack)} data-settings-panel="plugins">
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+    <div {...stylex.attrs(styles.panelStack)} data-settings-panel="plugins">
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           运行插件配置
-          <span {...sx(styles.groupTitleMeta)}>{`${activePluginName()} · 当前实例`}</span>
+          <span {...stylex.attrs(styles.groupTitleMeta)}>{`${activePluginName()} · 当前实例`}</span>
         </div>
-        <div {...sx(styles.configList)} aria-label="选择插件配置">
+        <div {...stylex.attrs(styles.configList)} aria-label="选择插件配置">
           <For each={PLUGIN_INSTANCES}>
             {(instance) => (
               <button
                 type="button"
-                {...sx(styles.configButton, instance.id === activeInstanceId() && styles.selected)}
+                {...stylex.attrs(
+                  styles.configButton,
+                  instance.id === activeInstanceId() && styles.selected,
+                )}
                 onClick={() => setActiveInstanceId(instance.id)}
               >
                 <strong>{instance.plugin}</strong>
@@ -78,7 +82,7 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
           label="刷新间隔"
           description="字段 type=range，宿主负责保存和实时校验"
           trailing={
-            <div {...sx(styles.rangeControl)}>
+            <div {...stylex.attrs(styles.rangeControl)}>
               <Slider
                 value={refreshInterval()}
                 min={5}
@@ -96,14 +100,14 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
           label="卡片显示项"
           description="字段 type=checkbox-group，决定卡片紧凑态展示内容"
           trailing={
-            <div {...sx(styles.checkList)} aria-label="天气卡片显示项">
-              <span {...sx(styles.checkChip)}>
+            <div {...stylex.attrs(styles.checkList)} aria-label="天气卡片显示项">
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={showTemperature()} onChange={setShowTemperature} label="温度" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={showAir()} onChange={setShowAir} label="空气" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={showWind()} onChange={setShowWind} label="风力" />
               </span>
             </div>
@@ -124,9 +128,9 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          插件安全<span {...sx(styles.groupTitleMeta)}>本地权限</span>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          插件安全<span {...stylex.attrs(styles.groupTitleMeta)}>本地权限</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
@@ -146,21 +150,21 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
           label="允许的权限"
           description="插件默认只能请求勾选范围内的本地能力"
           trailing={
-            <div {...sx(styles.checkList)} aria-label="允许的权限">
-              <span {...sx(styles.checkChip)}>
+            <div {...stylex.attrs(styles.checkList)} aria-label="允许的权限">
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={allowStorage()} onChange={setAllowStorage} label="存储" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={allowNetwork()} onChange={setAllowNetwork} label="网络" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox
                   checked={allowNotification()}
                   onChange={setAllowNotification}
                   label="通知"
                 />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={allowClipboard()} onChange={setAllowClipboard} label="剪贴板" />
               </span>
             </div>
@@ -171,8 +175,8 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
           label="插件数据目录"
           description="插件缓存和本地配置的存放位置"
           trailing={
-            <div {...sx(styles.inlineActions)}>
-              <code {...sx(styles.pathCode)}>~/Library/Tabora/plugins</code>
+            <div {...stylex.attrs(styles.inlineActions)}>
+              <code {...stylex.attrs(styles.pathCode)}>~/Library/Tabora/plugins</code>
               <Button size="sm" variant="secondary">
                 更改
               </Button>
@@ -181,20 +185,20 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          开发者协议<span {...sx(styles.groupTitleMeta)}>plugin.settings</span>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          开发者协议<span {...stylex.attrs(styles.groupTitleMeta)}>plugin.settings</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
           label="插件声明设置项"
           description="运行插件通过 schema 注入设置，不直接改宿主窗口结构"
-          trailing={<span {...sx(styles.fieldNote)}>runtime</span>}
+          trailing={<span {...stylex.attrs(styles.fieldNote)}>runtime</span>}
         />
-        <div {...sx(styles.schemaGrid)} aria-label="插件设置表单字段类型">
+        <div {...stylex.attrs(styles.schemaGrid)} aria-label="插件设置表单字段类型">
           <For each={SCHEMA_FIELD_TYPES}>
             {(field) => (
-              <div {...sx(styles.schemaChip)}>
+              <div {...stylex.attrs(styles.schemaChip)}>
                 <strong>{field.title}</strong>
                 <span>{field.description}</span>
               </div>

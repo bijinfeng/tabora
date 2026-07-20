@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Badge } from "../badge"
 import { Switch } from "../switch"
 import { ListRow } from "./listRow.styled"
@@ -9,12 +10,12 @@ export function ListRowDemo() {
   const [enabled, setEnabled] = createSignal(true)
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>插件设置列表</strong>
         <span>适合密集展示设置项、插件状态和对应的快捷操作。</span>
       </div>
-      <div {...sx(demoStyles.stack)}>
+      <div {...stylex.attrs(demoStyles.stack)}>
         <ListRow
           primary="Todo Widget"
           secondary="待办卡片，支持多实例与完成态隔离。"

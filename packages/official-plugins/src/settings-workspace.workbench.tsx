@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import {
   Button,
   Checkbox,
@@ -11,7 +12,7 @@ import {
 } from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { className, styles, sx } from "./styles"
+import { className, styles } from "./styles"
 
 export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   const [importError, setImportError] = createSignal<string | null>(null)
@@ -91,10 +92,10 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
     setDefaultColumns((value) => Math.min(6, Math.max(3, value + delta)))
 
   return (
-    <div {...sx(styles.panelStack)} data-settings-panel="workbench">
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          工作区<span {...sx(styles.groupTitleMeta)}>本地保存</span>
+    <div {...stylex.attrs(styles.panelStack)} data-settings-panel="workbench">
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          工作区<span {...stylex.attrs(styles.groupTitleMeta)}>本地保存</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
@@ -118,7 +119,9 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           trailing={
             <Show
               when={layoutOptions().length > 0}
-              fallback={<span {...sx(styles.rowMeta)}>{props.workspace.activeLayoutId}</span>}
+              fallback={
+                <span {...stylex.attrs(styles.rowMeta)}>{props.workspace.activeLayoutId}</span>
+              }
             >
               <SegmentedControl<string>
                 size="sm"
@@ -135,7 +138,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           label="默认卡片列数"
           description="Dashboard 首次打开时使用的网格密度"
           trailing={
-            <div {...sx(styles.stepper)} aria-label="默认卡片列数">
+            <div {...stylex.attrs(styles.stepper)} aria-label="默认卡片列数">
               <Button
                 size="sm"
                 variant="ghost"
@@ -158,9 +161,9 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          启动行为<span {...sx(styles.groupTitleMeta)}>快捷入口</span>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          启动行为<span {...stylex.attrs(styles.groupTitleMeta)}>快捷入口</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
@@ -193,7 +196,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           label="全局命令快捷键"
           description="从任意输入状态唤起命令搜索"
           trailing={
-            <span {...sx(styles.keybind)} aria-label="全局命令快捷键">
+            <span {...stylex.attrs(styles.keybind)} aria-label="全局命令快捷键">
               <Kbd>⌘</Kbd>
               <Kbd>K</Kbd>
             </span>
@@ -204,14 +207,14 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           label="启动后恢复"
           description="选择刷新后要自动恢复的个人状态"
           trailing={
-            <div {...sx(styles.checkList)} aria-label="启动后恢复">
-              <span {...sx(styles.checkChip)}>
+            <div {...stylex.attrs(styles.checkList)} aria-label="启动后恢复">
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={restoreLayout()} onChange={setRestoreLayout} label="布局" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={restoreSize()} onChange={setRestoreSize} label="尺寸" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={restoreFilter()} onChange={setRestoreFilter} label="筛选" />
               </span>
             </div>
@@ -219,16 +222,16 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          工作区管理<span {...sx(styles.groupTitleMeta)}>导入导出</span>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          工作区管理<span {...stylex.attrs(styles.groupTitleMeta)}>导入导出</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
           label="新建工作区"
           description="创建独立的布局、主题和卡片配置"
           trailing={
-            <div {...sx(styles.wideInlineActions)}>
+            <div {...stylex.attrs(styles.wideInlineActions)}>
               <Input
                 size="sm"
                 id="ws-new-name"
@@ -253,14 +256,14 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           class={className(styles.fieldRow)}
           label="卡片状态"
           description="按实例保存卡片排序、尺寸和所在区域"
-          trailing={<span {...sx(styles.rowMeta)}>{widgetInstanceCount()} 个实例</span>}
+          trailing={<span {...stylex.attrs(styles.rowMeta)}>{widgetInstanceCount()} 个实例</span>}
         />
         <FieldRow
           class={className(styles.fieldRow)}
           label="备份与恢复"
           description="导出当前工作区 JSON，或从本地文件导入"
           trailing={
-            <div {...sx(styles.inlineActions)}>
+            <div {...stylex.attrs(styles.inlineActions)}>
               <Button size="sm" variant="secondary" onClick={() => void handleExport()}>
                 导出
               </Button>
@@ -271,12 +274,12 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <Show when={workspaces().length > 1}>
-          <div {...sx(styles.list)}>
+          <div {...stylex.attrs(styles.list)}>
             <For each={workspaces()}>
               {(workspace) => (
-                <div {...sx(styles.listItem)}>
+                <div {...stylex.attrs(styles.listItem)}>
                   <span
-                    {...sx(
+                    {...stylex.attrs(
                       styles.listName,
                       workspace.id === props.workspace.id && styles.listNameActive,
                     )}
@@ -284,7 +287,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
                     {workspace.name}
                     {workspace.id === props.workspace.id ? " · 当前" : ""}
                   </span>
-                  <div {...sx(styles.inlineActions)}>
+                  <div {...stylex.attrs(styles.inlineActions)}>
                     <Show when={workspace.id !== props.workspace.id}>
                       <Button
                         size="sm"
@@ -313,10 +316,10 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           <InlineError>{importError()!}</InlineError>
         </Show>
         <Show when={importSuccess()}>
-          <div {...sx(styles.successText)}>导入成功</div>
+          <div {...stylex.attrs(styles.successText)}>导入成功</div>
         </Show>
         <Show when={importWarnings().length > 0}>
-          <ul {...sx(styles.warningList)}>
+          <ul {...stylex.attrs(styles.warningList)}>
             <For each={importWarnings()}>{(warning) => <li>{warning}</li>}</For>
           </ul>
         </Show>

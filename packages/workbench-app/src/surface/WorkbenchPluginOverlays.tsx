@@ -165,16 +165,16 @@ export function WorkbenchPluginModal(props: {
   return (
     <Show when={props.viewId}>
       <div
-        {...stylex.props(styles.modalOverlay)}
+        {...stylex.attrs(styles.modalOverlay)}
         data-workbench-overlay="modal"
         onClick={props.onClose}
         onKeyDown={(event) => event.key === "Escape" && props.onClose()}
         role="dialog"
         aria-modal="true"
       >
-        <div {...stylex.props(styles.modal)} onClick={(event) => event.stopPropagation()}>
+        <div {...stylex.attrs(styles.modal)} onClick={(event) => event.stopPropagation()}>
           <button
-            {...stylex.props(styles.close)}
+            {...stylex.attrs(styles.close)}
             type="button"
             data-modal-close
             ref={(element) => (closeRef = element)}
@@ -183,7 +183,7 @@ export function WorkbenchPluginModal(props: {
           >
             <X size={16} />
           </button>
-          <div {...stylex.props(styles.modalBody)}>
+          <div {...stylex.attrs(styles.modalBody)}>
             <Show when={props.viewId}>
               {(viewId) => (
                 <WorkbenchPluginSurfaceView
@@ -218,14 +218,14 @@ export function WorkbenchFullscreenOverlay(props: {
   return (
     <Show when={props.viewId}>
       <div
-        {...stylex.props(styles.fullscreen)}
+        {...stylex.attrs(styles.fullscreen)}
         data-workbench-overlay="fullscreen"
         onKeyDown={(event) => event.key === "Escape" && props.onClose()}
         role="dialog"
         aria-modal="true"
       >
         <button
-          {...stylex.props(styles.fullscreenClose)}
+          {...stylex.attrs(styles.fullscreenClose)}
           type="button"
           data-fullscreen-close
           ref={(element) => (closeRef = element)}
@@ -234,7 +234,7 @@ export function WorkbenchFullscreenOverlay(props: {
         >
           <X size={18} />
         </button>
-        <div {...stylex.props(styles.fullscreenBody)}>
+        <div {...stylex.attrs(styles.fullscreenBody)}>
           <Show when={props.viewId}>
             {(viewId) => (
               <WorkbenchPluginSurfaceView

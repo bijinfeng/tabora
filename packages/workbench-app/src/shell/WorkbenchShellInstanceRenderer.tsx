@@ -88,7 +88,7 @@ export function createWorkbenchInstanceRenderer(options: {
       const model = options.widgetRenderModel(instance)
       if (!model) {
         return (
-          <div {...stylex.props(styles.empty)}>
+          <div {...stylex.attrs(styles.empty)}>
             {options.tShell
               ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: instance.id })
               : `卡片实例无效：${instance.id}`}
@@ -100,7 +100,7 @@ export function createWorkbenchInstanceRenderer(options: {
         ? resolveWorkbenchView<WidgetViewProps>(options.registryViews, widget.views.card)
         : undefined
       if (!View) {
-        return <div {...stylex.props(styles.empty)}>Widget view not available</div>
+        return <div {...stylex.attrs(styles.empty)}>Widget view not available</div>
       }
 
       const menu = options.buildContextMenuItems?.(instance.id)
@@ -147,7 +147,7 @@ export function createWorkbenchInstanceRenderer(options: {
       const search = options.findSearchContribution(instance.pluginId, instance.contributionId)
       if (!search) {
         return (
-          <div {...stylex.props(styles.empty)}>
+          <div {...stylex.attrs(styles.empty)}>
             {options.tShell?.("placeholders.searchContributionMissing") ?? "搜索贡献未找到"}
           </div>
         )
@@ -156,7 +156,7 @@ export function createWorkbenchInstanceRenderer(options: {
       const View = resolveWorkbenchView<SearchViewProps>(options.registryViews, search.view)
       if (!View) {
         return (
-          <div {...stylex.props(styles.empty)}>
+          <div {...stylex.attrs(styles.empty)}>
             {options.tShell
               ? options.tShell("placeholders.searchViewUnavailable", { id: search.id })
               : `搜索视图不可用：${search.id}`}

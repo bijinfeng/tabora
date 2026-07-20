@@ -1,8 +1,9 @@
+import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button, DatePicker, IconButton, Input } from "@tabora/ui"
 import { ChevronDown, Eye, List, Plus, Search, Star, Trash } from "lucide-solid"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 type Note = {
   id: string
@@ -166,9 +167,9 @@ export function NotesExpand(props: WidgetViewProps) {
   }
 
   return (
-    <div {...sx(styles.expandRoot)} data-widget-expand="notes">
-      <div {...sx(styles.side)} data-notes-side>
-        <div {...sx(styles.sideSearch)}>
+    <div {...stylex.attrs(styles.expandRoot)} data-widget-expand="notes">
+      <div {...stylex.attrs(styles.side)} data-notes-side>
+        <div {...stylex.attrs(styles.sideSearch)}>
           <Input
             size="sm"
             type="search"
@@ -179,7 +180,7 @@ export function NotesExpand(props: WidgetViewProps) {
             leadingIcon={<Search size={13} />}
           />
         </div>
-        <div {...sx(styles.sideCalendar)}>
+        <div {...stylex.attrs(styles.sideCalendar)}>
           <DatePicker
             value={currentCalDate()}
             onChange={(ds) => selectCalDate(ds)}
@@ -192,12 +193,12 @@ export function NotesExpand(props: WidgetViewProps) {
             markedDates={noteDates()}
           />
         </div>
-        <div {...sx(styles.sideSection)}>
-          <span {...sx(styles.sideSectionTitle)}>筛选</span>
+        <div {...stylex.attrs(styles.sideSection)}>
+          <span {...stylex.attrs(styles.sideSectionTitle)}>筛选</span>
         </div>
-        <div {...sx(styles.sideList)}>
+        <div {...stylex.attrs(styles.sideList)}>
           <button
-            {...sx(
+            {...stylex.attrs(
               styles.sideButton,
               currentFilter() === "all" && !currentCalDate() && styles.sideButtonActive,
             )}
@@ -207,7 +208,7 @@ export function NotesExpand(props: WidgetViewProps) {
             <List size={13} />
             全部
             <span
-              {...sx(
+              {...stylex.attrs(
                 styles.sideCount,
                 currentFilter() === "all" && !currentCalDate() && styles.sideCountActive,
               )}
@@ -216,27 +217,33 @@ export function NotesExpand(props: WidgetViewProps) {
             </span>
           </button>
           <button
-            {...sx(styles.sideButton, currentFilter() === "starred" && styles.sideButtonActive)}
+            {...stylex.attrs(
+              styles.sideButton,
+              currentFilter() === "starred" && styles.sideButtonActive,
+            )}
             type="button"
             onClick={() => selectFilter("starred")}
           >
             <Star size={13} fill={currentFilter() === "starred" ? "currentColor" : "none"} />
             置顶
             <span
-              {...sx(styles.sideCount, currentFilter() === "starred" && styles.sideCountActive)}
+              {...stylex.attrs(
+                styles.sideCount,
+                currentFilter() === "starred" && styles.sideCountActive,
+              )}
             >
               {starCount()}
             </span>
           </button>
         </div>
-        <div {...sx(styles.sideSection)}>
-          <span {...sx(styles.sideSectionTitle)}>标签</span>
+        <div {...stylex.attrs(styles.sideSection)}>
+          <span {...stylex.attrs(styles.sideSectionTitle)}>标签</span>
         </div>
-        <div {...sx(styles.sideTags)}>
+        <div {...stylex.attrs(styles.sideTags)}>
           <For each={allTags().slice(0, 8)}>
             {([tag, count]) => (
               <button
-                {...sx(
+                {...stylex.attrs(
                   styles.sideButton,
                   currentFilter() === `tag:${tag}` && styles.sideButtonActive,
                 )}
@@ -244,7 +251,7 @@ export function NotesExpand(props: WidgetViewProps) {
                 onClick={() => selectFilter(`tag:${tag}`)}
               >
                 <span
-                  {...sx(
+                  {...stylex.attrs(
                     styles.sideHash,
                     currentFilter() === `tag:${tag}` && styles.sideHashActive,
                   )}
@@ -253,7 +260,7 @@ export function NotesExpand(props: WidgetViewProps) {
                 </span>
                 {tag}
                 <span
-                  {...sx(
+                  {...stylex.attrs(
                     styles.sideCount,
                     currentFilter() === `tag:${tag}` && styles.sideCountActive,
                   )}
@@ -264,19 +271,19 @@ export function NotesExpand(props: WidgetViewProps) {
             )}
           </For>
           <Show when={allTags().length === 0}>
-            <div {...sx(styles.sideEmpty)}>暂无标签</div>
+            <div {...stylex.attrs(styles.sideEmpty)}>暂无标签</div>
           </Show>
         </div>
       </div>
 
-      <div {...sx(styles.main)} data-notes-main>
-        <div {...sx(styles.capture)} data-notes-capture>
-          <div {...sx(styles.captureInner)}>
+      <div {...stylex.attrs(styles.main)} data-notes-main>
+        <div {...stylex.attrs(styles.capture)} data-notes-capture>
+          <div {...stylex.attrs(styles.captureInner)}>
             <IconButton size="sm" variant="ghost" aria-label="附加文件">
               <Plus size={15} />
             </IconButton>
             <textarea
-              {...sx(styles.textarea)}
+              {...stylex.attrs(styles.textarea)}
               rows="1"
               placeholder="记点什么...（Enter 发送）"
               aria-label="新建便签内容"
@@ -287,21 +294,21 @@ export function NotesExpand(props: WidgetViewProps) {
               onKeyDown={(e) => handleCaptureKey(e, e.currentTarget)}
             />
           </div>
-          <div {...sx(styles.captureFooter)}>
+          <div {...stylex.attrs(styles.captureFooter)}>
             <Button size="sm" variant="secondary">
               <Eye size={12} />
               公开
               <ChevronDown size={10} />
             </Button>
-            <span {...sx(styles.savePill)}>保存</span>
+            <span {...stylex.attrs(styles.savePill)}>保存</span>
           </div>
         </div>
 
         <Show
           when={filteredNotes().length > 0}
           fallback={
-            <div {...sx(styles.empty)}>
-              <div {...sx(styles.emptyIcon)}>
+            <div {...stylex.attrs(styles.empty)}>
+              <div {...stylex.attrs(styles.emptyIcon)}>
                 <svg
                   width="32"
                   height="32"
@@ -314,7 +321,7 @@ export function NotesExpand(props: WidgetViewProps) {
                   <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                 </svg>
               </div>
-              <div {...sx(styles.emptyText)}>
+              <div {...stylex.attrs(styles.emptyText)}>
                 {searchQuery()
                   ? `没有匹配 "${searchQuery()}" 的便签`
                   : currentCalDate()
@@ -322,16 +329,16 @@ export function NotesExpand(props: WidgetViewProps) {
                     : "还没有便签"}
               </div>
               <Show when={!searchQuery() && !currentCalDate()}>
-                <div {...sx(styles.emptyHint)}>在上方输入框开始记录</div>
+                <div {...stylex.attrs(styles.emptyHint)}>在上方输入框开始记录</div>
               </Show>
             </div>
           }
         >
-          <div {...sx(styles.noteList)}>
+          <div {...stylex.attrs(styles.noteList)}>
             <For each={filteredNotes()}>
               {(note) => (
                 <div
-                  {...sx(styles.note, editingId() === note.id && styles.noteEditing)}
+                  {...stylex.attrs(styles.note, editingId() === note.id && styles.noteEditing)}
                   data-note-card
                   data-editing={editingId() === note.id ? "" : undefined}
                 >
@@ -339,35 +346,37 @@ export function NotesExpand(props: WidgetViewProps) {
                     when={editingId() === note.id}
                     fallback={
                       <div
-                        {...sx(styles.noteDisplay)}
+                        {...stylex.attrs(styles.noteDisplay)}
                         data-note-display
                         onClick={() => setEditingId(note.id)}
                       >
-                        <div {...sx(styles.noteTime)}>
+                        <div {...stylex.attrs(styles.noteTime)}>
                           <Show when={note.starred}>
-                            <span {...sx(styles.star)} data-note-star>
+                            <span {...stylex.attrs(styles.star)} data-note-star>
                               <Star size={12} fill="currentColor" />
                             </span>
                           </Show>
                           {formatTime(note.updatedAt)}
                         </div>
-                        <div {...sx(styles.noteContent)}>
+                        <div {...stylex.attrs(styles.noteContent)}>
                           <For each={highlightText(note.content, searchQuery())}>
                             {(part) => (
-                              <span {...sx(part.highlighted && styles.highlight)}>{part.text}</span>
+                              <span {...stylex.attrs(part.highlighted && styles.highlight)}>
+                                {part.text}
+                              </span>
                             )}
                           </For>
                         </div>
                         <Show when={extractTags(note.content).length > 0}>
-                          <div {...sx(styles.tags)}>
+                          <div {...stylex.attrs(styles.tags)}>
                             <For each={extractTags(note.content)}>
-                              {(tag) => <span {...sx(styles.tag)}>#{tag}</span>}
+                              {(tag) => <span {...stylex.attrs(styles.tag)}>#{tag}</span>}
                             </For>
                           </div>
                         </Show>
-                        <div {...sx(styles.noteFooter)}>
-                          <span {...sx(styles.meta)}>{note.content.length} 字</span>
-                          <div {...sx(styles.actions)}>
+                        <div {...stylex.attrs(styles.noteFooter)}>
+                          <span {...stylex.attrs(styles.meta)}>{note.content.length} 字</span>
+                          <div {...stylex.attrs(styles.actions)}>
                             <IconButton
                               size="sm"
                               variant="ghost"
@@ -395,23 +404,23 @@ export function NotesExpand(props: WidgetViewProps) {
                       </div>
                     }
                   >
-                    <div {...sx(styles.edit)}>
-                      <div {...sx(styles.editArea)}>
+                    <div {...stylex.attrs(styles.edit)}>
+                      <div {...stylex.attrs(styles.editArea)}>
                         <textarea
-                          {...sx(styles.textarea, styles.editTextarea)}
+                          {...stylex.attrs(styles.textarea, styles.editTextarea)}
                           value={note.content}
                           aria-label={`编辑 ${note.content.slice(0, 30)}`}
                           onInput={(e) => handleEditInput(e.currentTarget)}
                           onKeyDown={(e) => handleEditKey(e, note.id, e.currentTarget)}
                         />
                       </div>
-                      <div {...sx(styles.editFooter)}>
-                        <span {...sx(styles.meta)}>{note.content.length} 字</span>
-                        <span {...sx(styles.saved)}>
-                          <span {...sx(styles.savedDot)} />
+                      <div {...stylex.attrs(styles.editFooter)}>
+                        <span {...stylex.attrs(styles.meta)}>{note.content.length} 字</span>
+                        <span {...stylex.attrs(styles.saved)}>
+                          <span {...stylex.attrs(styles.savedDot)} />
                           已保存
                         </span>
-                        <div {...sx(styles.editButtons)}>
+                        <div {...stylex.attrs(styles.editButtons)}>
                           <Button
                             size="sm"
                             variant="danger-subtle"

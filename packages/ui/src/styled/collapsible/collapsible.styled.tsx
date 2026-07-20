@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Collapsible as P } from "../../primitives/collapsible/collapsible"
 import type { CollapsibleProps } from "../../primitives/collapsible/collapsible"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -65,22 +65,22 @@ export type StyledCollapsibleProps = CollapsibleProps & {
 }
 
 export function Collapsible(props: StyledCollapsibleProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const triggerCompiled = () => stylex.props(styles.trigger)
-  const arrowCompiled = () => stylex.props(styles.arrow)
-  const contentCompiled = () => stylex.props(styles.content)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const triggerCompiled = () => stylex.attrs(styles.trigger)
+  const arrowCompiled = () => stylex.attrs(styles.arrow)
+  const contentCompiled = () => stylex.attrs(styles.content)
 
   return (
     <P
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      triggerClass={joinClassNames(triggerCompiled().className, props.triggerClass)}
-      triggerStyle={mergeSolidStyles(toSolidStyle(triggerCompiled().style), props.triggerStyle)}
-      arrowClass={joinClassNames(arrowCompiled().className, props.arrowClass)}
-      arrowStyle={mergeSolidStyles(toSolidStyle(arrowCompiled().style), props.arrowStyle)}
-      contentClass={joinClassNames(contentCompiled().className, props.contentClass)}
-      contentStyle={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.contentStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
+      triggerStyle={props.triggerStyle}
+      arrowClass={joinClassNames(arrowCompiled().class, props.arrowClass)}
+      arrowStyle={props.arrowStyle}
+      contentClass={joinClassNames(contentCompiled().class, props.contentClass)}
+      contentStyle={props.contentStyle}
     />
   )
 }

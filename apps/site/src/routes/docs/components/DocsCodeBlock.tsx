@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../../shared/stylex"
 import type { DocsCodeBlock as DocsCodeBlockContent, DocsTable } from "../docsPageContent"
 
 const styles = stylex.create({
@@ -88,11 +87,11 @@ const styles = stylex.create({
 
 export function DocsCodeBlock(props: { block: DocsCodeBlockContent }) {
   return (
-    <div {...sx(styles.block)} data-docs-code>
-      <div {...sx(styles.head)}>
+    <div {...stylex.attrs(styles.block)} data-docs-code>
+      <div {...stylex.attrs(styles.head)}>
         <span>{props.block.label}</span>
         <button
-          {...sx(styles.copy)}
+          {...stylex.attrs(styles.copy)}
           type="button"
           data-copy-button
           data-copy={props.block.copyId}
@@ -102,9 +101,9 @@ export function DocsCodeBlock(props: { block: DocsCodeBlockContent }) {
           {props.block.copyLabel}
         </button>
       </div>
-      <div {...sx(styles.window)}>
-        <pre {...sx(styles.pre)}>
-          <code {...sx(styles.code)} id={props.block.copyId}>
+      <div {...stylex.attrs(styles.window)}>
+        <pre {...stylex.attrs(styles.pre)}>
+          <code {...stylex.attrs(styles.code)} id={props.block.copyId}>
             {props.block.code}
           </code>
         </pre>
@@ -115,11 +114,11 @@ export function DocsCodeBlock(props: { block: DocsCodeBlockContent }) {
 
 export function DocsSpecTable(props: { table: DocsTable }) {
   return (
-    <table {...sx(styles.table)}>
+    <table {...stylex.attrs(styles.table)}>
       <thead>
         <tr>
           {props.table.columns.map((column) => (
-            <th {...sx(styles.cell, styles.headingCell)}>{column}</th>
+            <th {...stylex.attrs(styles.cell, styles.headingCell)}>{column}</th>
           ))}
         </tr>
       </thead>
@@ -127,7 +126,7 @@ export function DocsSpecTable(props: { table: DocsTable }) {
         {props.table.rows.map((row) => (
           <tr>
             {row.map((cell) => (
-              <td {...sx(styles.cell)}>{renderTableCell(cell)}</td>
+              <td {...stylex.attrs(styles.cell)}>{renderTableCell(cell)}</td>
             ))}
           </tr>
         ))}
@@ -151,5 +150,5 @@ function renderTableCell(cell: string) {
     cell === "searchProviders" ||
     cell === "settingsPanels"
 
-  return looksLikeCode ? <code {...sx(styles.inlineCode)}>{cell}</code> : cell
+  return looksLikeCode ? <code {...stylex.attrs(styles.inlineCode)}>{cell}</code> : cell
 }

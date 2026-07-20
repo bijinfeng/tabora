@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Slider as P } from "../../primitives/slider/slider"
 import type { SliderProps } from "../../primitives/slider/slider"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -61,22 +60,22 @@ export type StyledSliderProps = Omit<SliderProps, SliderStyleProp> & {
 }
 
 export function Slider(props: StyledSliderProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const trackCompiled = () => stylex.props(styles.track)
-  const fillCompiled = () => stylex.props(styles.fill)
-  const thumbCompiled = () => stylex.props(styles.thumb)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const trackCompiled = () => stylex.attrs(styles.track)
+  const fillCompiled = () => stylex.attrs(styles.fill)
+  const thumbCompiled = () => stylex.attrs(styles.thumb)
 
   return (
     <P
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      trackClass={trackCompiled().className}
-      trackStyle={toSolidStyle(trackCompiled().style)}
-      fillClass={fillCompiled().className}
-      fillStyle={toSolidStyle(fillCompiled().style)}
-      thumbClass={thumbCompiled().className}
-      thumbStyle={toSolidStyle(thumbCompiled().style)}
+      class={rootCompiled().class}
+      style={undefined}
+      trackClass={trackCompiled().class}
+      trackStyle={undefined}
+      fillClass={fillCompiled().class}
+      fillStyle={undefined}
+      thumbClass={thumbCompiled().class}
+      thumbStyle={undefined}
     />
   )
 }

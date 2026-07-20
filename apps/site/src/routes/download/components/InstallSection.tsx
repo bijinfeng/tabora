@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../../shared/stylex"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
 
 const styles = stylex.create({
@@ -154,22 +153,26 @@ export function InstallSection(props: {
 }) {
   return (
     <>
-      <section {...sx(styles.section)} data-od-id="install" data-component="SiteInstallSteps">
-        <div {...sx(styles.container)}>
-          <div {...sx(styles.head)}>
+      <section
+        {...stylex.attrs(styles.section)}
+        data-od-id="install"
+        data-component="SiteInstallSteps"
+      >
+        <div {...stylex.attrs(styles.container)}>
+          <div {...stylex.attrs(styles.head)}>
             <div>
-              <p {...sx(styles.eyebrow)}>INSTALL</p>
-              <h2 {...sx(styles.title)}>{props.content.install.title}</h2>
+              <p {...stylex.attrs(styles.eyebrow)}>INSTALL</p>
+              <h2 {...stylex.attrs(styles.title)}>{props.content.install.title}</h2>
             </div>
-            <p {...sx(styles.body)}>{props.content.install.body}</p>
+            <p {...stylex.attrs(styles.body)}>{props.content.install.body}</p>
           </div>
 
-          <div {...sx(styles.grid)}>
+          <div {...stylex.attrs(styles.grid)}>
             {props.content.install.steps.map((step: [string, string, string]) => (
-              <article {...sx(styles.card)}>
-                <span {...sx(styles.meta)}>{step[0]}</span>
-                <h3 {...sx(styles.cardTitle)}>{step[1]}</h3>
-                <p {...sx(styles.body)}>{step[2]}</p>
+              <article {...stylex.attrs(styles.card)}>
+                <span {...stylex.attrs(styles.meta)}>{step[0]}</span>
+                <h3 {...stylex.attrs(styles.cardTitle)}>{step[1]}</h3>
+                <p {...stylex.attrs(styles.body)}>{step[2]}</p>
               </article>
             ))}
           </div>
@@ -177,27 +180,27 @@ export function InstallSection(props: {
       </section>
 
       <section
-        {...sx(styles.section)}
+        {...stylex.attrs(styles.section)}
         data-od-id="developer-install"
         data-component="DocsCodeBlock"
       >
-        <div {...sx(styles.container, styles.split)}>
-          <div {...sx(styles.principles)}>
-            <p {...sx(styles.eyebrow)}>DEVELOPER PREVIEW</p>
-            <h2 {...sx(styles.title)}>{props.content.dev.title}</h2>
+        <div {...stylex.attrs(styles.container, styles.split)}>
+          <div {...stylex.attrs(styles.principles)}>
+            <p {...stylex.attrs(styles.eyebrow)}>DEVELOPER PREVIEW</p>
+            <h2 {...stylex.attrs(styles.title)}>{props.content.dev.title}</h2>
             {props.content.dev.principles.map((item: [string, string]) => (
-              <div {...sx(styles.principle)}>
-                <strong {...sx(styles.principleTitle)}>{item[0]}</strong>
-                <span {...sx(styles.body)}>{item[1]}</span>
+              <div {...stylex.attrs(styles.principle)}>
+                <strong {...stylex.attrs(styles.principleTitle)}>{item[0]}</strong>
+                <span {...stylex.attrs(styles.body)}>{item[1]}</span>
               </div>
             ))}
           </div>
 
-          <div {...sx(styles.code)} data-docs-code>
-            <div {...sx(styles.codeHead)}>
+          <div {...stylex.attrs(styles.code)} data-docs-code>
+            <div {...stylex.attrs(styles.codeHead)}>
               <span>local preview</span>
               <button
-                {...sx(styles.copyButton)}
+                {...stylex.attrs(styles.copyButton)}
                 type="button"
                 data-copy-button
                 data-copy-target="#download-install-code"
@@ -217,8 +220,8 @@ export function InstallSection(props: {
                 {props.content.dev.copyLabel}
               </button>
             </div>
-            <div {...sx(styles.codeWindow)}>
-              <pre {...sx(styles.pre)}>
+            <div {...stylex.attrs(styles.codeWindow)}>
+              <pre {...stylex.attrs(styles.pre)}>
                 <code id="download-install-code">{`pnpm install
 pnpm dev
 

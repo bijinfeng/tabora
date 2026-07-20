@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import { LayoutGrid } from "lucide-solid"
@@ -5,7 +6,7 @@ import { LayoutGrid } from "lucide-solid"
 import { dateLabel, fallbackText, greeting } from "./i18n"
 import { WorkbenchRail } from "./workbench-rail"
 import { normalizeDashboardLayoutState, resolveSetterValue } from "./dashboard-layout-state"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 import type {
   ActiveGroupSetter,
   DashboardLayoutState,
@@ -84,7 +85,7 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
   }
 
   return (
-    <main {...sx(styles.layout)} data-layout="dashboard">
+    <main {...stylex.attrs(styles.layout)} data-layout="dashboard">
       <WorkbenchRail
         host={props.host}
         groups={groups}
@@ -92,16 +93,16 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
         setGroups={setPersistedGroups}
         setActiveGroupId={setPersistedActiveGroupId}
       />
-      <section {...sx(styles.dashboardContent)}>
-        <header {...sx(styles.dashboardTopbar)}>
-          <div {...sx(styles.greeting)}>
-            <div {...sx(styles.greetingTitle)}>
-              {greeting(t)} <span {...sx(styles.muted)}>· {dateLabel(locale())}</span>
+      <section {...stylex.attrs(styles.dashboardContent)}>
+        <header {...stylex.attrs(styles.dashboardTopbar)}>
+          <div {...stylex.attrs(styles.greeting)}>
+            <div {...stylex.attrs(styles.greetingTitle)}>
+              {greeting(t)} <span {...stylex.attrs(styles.muted)}>· {dateLabel(locale())}</span>
             </div>
-            <div {...sx(styles.greetingActions)}>
+            <div {...stylex.attrs(styles.greetingActions)}>
               <Show when={addWidgetAction()}>
                 <button
-                  {...sx(styles.toolbarButton)}
+                  {...stylex.attrs(styles.toolbarButton)}
                   type="button"
                   onClick={openAddWidgetForActiveGroup}
                 >
@@ -110,14 +111,14 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
               </Show>
             </div>
           </div>
-          <div {...sx(styles.searchStage)}>
+          <div {...stylex.attrs(styles.searchStage)}>
             <Show when={props.regions["topbar"]}>
-              <div {...sx(styles.searchInner)}>{props.regions["topbar"]!.render()}</div>
+              <div {...stylex.attrs(styles.searchInner)}>{props.regions["topbar"]!.render()}</div>
             </Show>
           </div>
         </header>
-        <section {...sx(styles.grid)}>
-          <div {...sx(styles.gridContainer)} data-layout-grid>
+        <section {...stylex.attrs(styles.grid)}>
+          <div {...stylex.attrs(styles.gridContainer)} data-layout-grid>
             <Show when={props.regions["mainGrid"]}>
               {(region) => (
                 <Show when={!activeGroup().isDefault} fallback={region().render()}>
@@ -125,16 +126,17 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                     when={activeMainGridInstances().length > 0}
                     fallback={
                       <button
-                        {...sx(styles.emptyGroup)}
+                        {...stylex.attrs(styles.emptyGroup)}
                         type="button"
                         onClick={openAddWidgetForActiveGroup}
                       >
-                        <div {...sx(styles.emptyIcon)}>
+                        <div {...stylex.attrs(styles.emptyIcon)}>
                           <LayoutGrid size={32} />
                         </div>
-                        <div {...sx(styles.emptyText)}>暂无卡片</div>
-                        <div {...sx(styles.emptyHint)}>
-                          点击 <span {...sx(styles.emptyAction)}>添加第一个</span> 开始使用
+                        <div {...stylex.attrs(styles.emptyText)}>暂无卡片</div>
+                        <div {...stylex.attrs(styles.emptyHint)}>
+                          点击 <span {...stylex.attrs(styles.emptyAction)}>添加第一个</span>{" "}
+                          开始使用
                         </div>
                       </button>
                     }

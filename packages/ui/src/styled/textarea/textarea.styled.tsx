@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { HeadlessTextarea } from "../../primitives/textarea/textarea"
 import type { HeadlessTextareaProps } from "../../primitives/textarea/textarea"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -56,7 +55,7 @@ export type TextareaProps = Omit<HeadlessTextareaProps, "class" | "style"> & {
 
 export function Textarea(props: TextareaProps) {
   const compiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.root,
       props.size === "sm" && styles.sm,
       (!props.size || props.size === "md") && styles.md,
@@ -64,11 +63,5 @@ export function Textarea(props: TextareaProps) {
       props.xstyle,
     )
 
-  return (
-    <HeadlessTextarea
-      {...props}
-      class={compiled().className}
-      style={toSolidStyle(compiled().style)}
-    />
-  )
+  return <HeadlessTextarea {...props} class={compiled().class} style={undefined} />
 }

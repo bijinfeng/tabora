@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Badge } from "../badge"
 import { TreeView } from "./treeView.styled"
 
@@ -9,8 +10,8 @@ export function TreeViewDemo() {
   const [selected, setSelected] = createSignal("manifest")
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>插件文件</strong>
         <span>适合展示插件贡献结构、文件树或文档章节，不需要跳出当前面板。</span>
       </div>
@@ -32,7 +33,7 @@ export function TreeViewDemo() {
         selectedId={selected()}
         onSelect={setSelected}
       />
-      <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.row)}>
         <Badge variant="accent">已选中文件</Badge>
         <span>{selected()}</span>
       </div>

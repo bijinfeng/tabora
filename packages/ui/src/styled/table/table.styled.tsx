@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Table as Primitive } from "../../primitives/table/table"
 import type { TableColumn, TableProps } from "../../primitives/table/table"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -70,55 +70,40 @@ export type StyledTableProps<T> = TableProps<T> & {
 }
 
 export function Table<T>(props: StyledTableProps<T>) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const tableCompiled = () => stylex.props(styles.table)
-  const rowCompiled = () => stylex.props(styles.row)
-  const rowSelectedCompiled = () => stylex.props(styles.rowSelected)
-  const headerCellCompiled = () => stylex.props(styles.headerCell)
-  const cellCompiled = () => stylex.props(styles.cell)
-  const cellSelectedCompiled = () => stylex.props(styles.cellSelected)
-  const cellLastRowCompiled = () => stylex.props(styles.cellLastRow)
-  const alignCenterCompiled = () => stylex.props(styles.alignCenter)
-  const alignEndCompiled = () => stylex.props(styles.alignEnd)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const tableCompiled = () => stylex.attrs(styles.table)
+  const rowCompiled = () => stylex.attrs(styles.row)
+  const rowSelectedCompiled = () => stylex.attrs(styles.rowSelected)
+  const headerCellCompiled = () => stylex.attrs(styles.headerCell)
+  const cellCompiled = () => stylex.attrs(styles.cell)
+  const cellSelectedCompiled = () => stylex.attrs(styles.cellSelected)
+  const cellLastRowCompiled = () => stylex.attrs(styles.cellLastRow)
+  const alignCenterCompiled = () => stylex.attrs(styles.alignCenter)
+  const alignEndCompiled = () => stylex.attrs(styles.alignEnd)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      tableClass={joinClassNames(tableCompiled().className, props.tableClass)}
-      tableStyle={mergeSolidStyles(toSolidStyle(tableCompiled().style), props.tableStyle)}
-      rowClass={joinClassNames(rowCompiled().className, props.rowClass)}
-      rowStyle={mergeSolidStyles(toSolidStyle(rowCompiled().style), props.rowStyle)}
-      rowSelectedClass={joinClassNames(rowSelectedCompiled().className, props.rowSelectedClass)}
-      rowSelectedStyle={mergeSolidStyles(
-        toSolidStyle(rowSelectedCompiled().style),
-        props.rowSelectedStyle,
-      )}
-      headerCellClass={joinClassNames(headerCellCompiled().className, props.headerCellClass)}
-      headerCellStyle={mergeSolidStyles(
-        toSolidStyle(headerCellCompiled().style),
-        props.headerCellStyle,
-      )}
-      cellClass={joinClassNames(cellCompiled().className, props.cellClass)}
-      cellStyle={mergeSolidStyles(toSolidStyle(cellCompiled().style), props.cellStyle)}
-      cellSelectedClass={joinClassNames(cellSelectedCompiled().className, props.cellSelectedClass)}
-      cellSelectedStyle={mergeSolidStyles(
-        toSolidStyle(cellSelectedCompiled().style),
-        props.cellSelectedStyle,
-      )}
-      cellLastRowClass={joinClassNames(cellLastRowCompiled().className, props.cellLastRowClass)}
-      cellLastRowStyle={mergeSolidStyles(
-        toSolidStyle(cellLastRowCompiled().style),
-        props.cellLastRowStyle,
-      )}
-      alignCenterClass={joinClassNames(alignCenterCompiled().className, props.alignCenterClass)}
-      alignCenterStyle={mergeSolidStyles(
-        toSolidStyle(alignCenterCompiled().style),
-        props.alignCenterStyle,
-      )}
-      alignEndClass={joinClassNames(alignEndCompiled().className, props.alignEndClass)}
-      alignEndStyle={mergeSolidStyles(toSolidStyle(alignEndCompiled().style), props.alignEndStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      tableClass={joinClassNames(tableCompiled().class, props.tableClass)}
+      tableStyle={props.tableStyle}
+      rowClass={joinClassNames(rowCompiled().class, props.rowClass)}
+      rowStyle={props.rowStyle}
+      rowSelectedClass={joinClassNames(rowSelectedCompiled().class, props.rowSelectedClass)}
+      rowSelectedStyle={{ ...props.rowSelectedStyle }}
+      headerCellClass={joinClassNames(headerCellCompiled().class, props.headerCellClass)}
+      headerCellStyle={{ ...props.headerCellStyle }}
+      cellClass={joinClassNames(cellCompiled().class, props.cellClass)}
+      cellStyle={props.cellStyle}
+      cellSelectedClass={joinClassNames(cellSelectedCompiled().class, props.cellSelectedClass)}
+      cellSelectedStyle={{ ...props.cellSelectedStyle }}
+      cellLastRowClass={joinClassNames(cellLastRowCompiled().class, props.cellLastRowClass)}
+      cellLastRowStyle={{ ...props.cellLastRowStyle }}
+      alignCenterClass={joinClassNames(alignCenterCompiled().class, props.alignCenterClass)}
+      alignCenterStyle={{ ...props.alignCenterStyle }}
+      alignEndClass={joinClassNames(alignEndCompiled().class, props.alignEndClass)}
+      alignEndStyle={props.alignEndStyle}
     />
   )
 }

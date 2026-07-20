@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { FieldRow as Primitive } from "../../primitives/fieldRow/fieldRow"
 import type { FieldRowProps } from "../../primitives/fieldRow/fieldRow"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -49,33 +49,30 @@ export type StyledFieldRowProps = FieldRowProps & {
 }
 
 export function FieldRow(props: StyledFieldRowProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const mainCompiled = () => stylex.props(styles.main)
-  const infoCompiled = () => stylex.props(styles.info)
-  const labelCompiled = () => stylex.props(styles.label)
-  const descriptionCompiled = () => stylex.props(styles.description)
-  const trailingCompiled = () => stylex.props(styles.trailing)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const mainCompiled = () => stylex.attrs(styles.main)
+  const infoCompiled = () => stylex.attrs(styles.info)
+  const labelCompiled = () => stylex.attrs(styles.label)
+  const descriptionCompiled = () => stylex.attrs(styles.description)
+  const trailingCompiled = () => stylex.attrs(styles.trailing)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      mainClass={joinClassNames(mainCompiled().className, props.mainClass)}
-      mainStyle={mergeSolidStyles(toSolidStyle(mainCompiled().style), props.mainStyle)}
-      infoClass={joinClassNames(infoCompiled().className, props.infoClass)}
-      infoStyle={mergeSolidStyles(toSolidStyle(infoCompiled().style), props.infoStyle)}
-      labelClass={joinClassNames(labelCompiled().className, props.labelClass)}
-      labelStyle={mergeSolidStyles(toSolidStyle(labelCompiled().style), props.labelStyle)}
-      descriptionClass={joinClassNames(descriptionCompiled().className, props.descriptionClass)}
-      descriptionStyle={mergeSolidStyles(
-        toSolidStyle(descriptionCompiled().style),
-        props.descriptionStyle,
-      )}
-      trailingClass={joinClassNames(trailingCompiled().className, props.trailingClass)}
-      trailingStyle={mergeSolidStyles(toSolidStyle(trailingCompiled().style), props.trailingStyle)}
-      helperClass={joinClassNames(descriptionCompiled().className, props.helperClass)}
-      helperStyle={mergeSolidStyles(toSolidStyle(descriptionCompiled().style), props.helperStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      mainClass={joinClassNames(mainCompiled().class, props.mainClass)}
+      mainStyle={props.mainStyle}
+      infoClass={joinClassNames(infoCompiled().class, props.infoClass)}
+      infoStyle={props.infoStyle}
+      labelClass={joinClassNames(labelCompiled().class, props.labelClass)}
+      labelStyle={props.labelStyle}
+      descriptionClass={joinClassNames(descriptionCompiled().class, props.descriptionClass)}
+      descriptionStyle={{ ...props.descriptionStyle }}
+      trailingClass={joinClassNames(trailingCompiled().class, props.trailingClass)}
+      trailingStyle={props.trailingStyle}
+      helperClass={joinClassNames(descriptionCompiled().class, props.helperClass)}
+      helperStyle={props.helperStyle}
     />
   )
 }

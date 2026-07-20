@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { TagInput as Primitive } from "../../primitives/tagInput/tagInput"
 import type { TagInputProps } from "../../primitives/tagInput/tagInput"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -109,22 +108,22 @@ export type StyledTagInputProps = Omit<TagInputProps, TagInputStyleProp> & {
 
 export function TagInput(props: StyledTagInputProps) {
   const rootCompiled = () =>
-    stylex.props(styles.root, props.disabled && styles.rootDisabled, props.xstyle)
-  const tagCompiled = () => stylex.props(styles.tag)
-  const removeButtonCompiled = () => stylex.props(styles.removeButton)
-  const inputCompiled = () => stylex.props(styles.input)
+    stylex.attrs(styles.root, props.disabled && styles.rootDisabled, props.xstyle)
+  const tagCompiled = () => stylex.attrs(styles.tag)
+  const removeButtonCompiled = () => stylex.attrs(styles.removeButton)
+  const inputCompiled = () => stylex.attrs(styles.input)
 
   return (
     <Primitive
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      tagClass={tagCompiled().className}
-      tagStyle={toSolidStyle(tagCompiled().style)}
-      removeButtonClass={removeButtonCompiled().className}
-      removeButtonStyle={toSolidStyle(removeButtonCompiled().style)}
-      inputClass={inputCompiled().className}
-      inputStyle={toSolidStyle(inputCompiled().style)}
+      class={rootCompiled().class}
+      style={undefined}
+      tagClass={tagCompiled().class}
+      tagStyle={undefined}
+      removeButtonClass={removeButtonCompiled().class}
+      removeButtonStyle={undefined}
+      inputClass={inputCompiled().class}
+      inputStyle={undefined}
     />
   )
 }

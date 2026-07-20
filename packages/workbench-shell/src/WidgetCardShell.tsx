@@ -210,22 +210,22 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
 
   const cardInner = (
     <div
-      {...stylex.props(styles.card, props.callbacks.isDragging && styles.cardDragging)}
+      {...stylex.attrs(styles.card, props.callbacks.isDragging && styles.cardDragging)}
       data-widget-card
     >
-      <div {...stylex.props(styles.header)} data-widget-card-header>
+      <div {...stylex.attrs(styles.header)} data-widget-card-header>
         <h3
-          {...stylex.props(styles.title)}
+          {...stylex.attrs(styles.title)}
           ref={(element) => (titleRef = element)}
           data-allow-expand="true"
           data-widget-card-title
         >
-          <span {...stylex.props(styles.titleIcon)}>{props.icon}</span>
+          <span {...stylex.attrs(styles.titleIcon)}>{props.icon}</span>
           <span>{props.title}</span>
         </h3>
-        <div {...stylex.props(styles.actions)} data-widget-card-actions>
+        <div {...stylex.attrs(styles.actions)} data-widget-card-actions>
           <button
-            {...stylex.props(styles.action)}
+            {...stylex.attrs(styles.action)}
             type="button"
             data-widget-card-remove
             aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
@@ -235,7 +235,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
           </button>
         </div>
       </div>
-      <div {...stylex.props(styles.body)} data-widget-card-body>
+      <div {...stylex.attrs(styles.body)} data-widget-card-body>
         {props.children}
       </div>
     </div>
@@ -264,7 +264,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       fallback={
         <div
           {...gridItemProps}
-          {...stylex.props(...gridItemXstyle(props.currentSize, props.callbacks.isDragging))}
+          {...stylex.attrs(...gridItemXstyle(props.currentSize, props.callbacks.isDragging))}
           ref={bindRoot}
           onContextMenu={(event) => {
             event.preventDefault()

@@ -1,7 +1,6 @@
 import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
 import type { SiteI18nApi } from "../../../app/AppShell"
-import { sx } from "../../../shared/stylex"
 import type { HomePageContent } from "../homePrototypeContent"
 
 const styles = stylex.create({
@@ -305,36 +304,40 @@ export function FeatureSections(props: {
 }) {
   return (
     <>
-      <section {...sx(styles.section)} data-od-id="stats" data-component="SiteStatStrip">
-        <div {...sx(styles.container)}>
-          <div {...sx(styles.stats)} aria-label="产品数据">
+      <section {...stylex.attrs(styles.section)} data-od-id="stats" data-component="SiteStatStrip">
+        <div {...stylex.attrs(styles.container)}>
+          <div {...stylex.attrs(styles.stats)} aria-label="产品数据">
             {props.content.stats.map((item: [string, string]) => (
-              <div {...sx(styles.stat)}>
-                <strong {...sx(styles.statValue)}>{item[0]}</strong>
-                <span {...sx(styles.statLabel)}>{item[1]}</span>
+              <div {...stylex.attrs(styles.stat)}>
+                <strong {...stylex.attrs(styles.statValue)}>{item[0]}</strong>
+                <span {...stylex.attrs(styles.statLabel)}>{item[1]}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section {...sx(styles.section)} data-od-id="features" data-component="SiteFeatureGrid">
-        <div {...sx(styles.container)}>
-          <div {...sx(styles.sectionHead)}>
+      <section
+        {...stylex.attrs(styles.section)}
+        data-od-id="features"
+        data-component="SiteFeatureGrid"
+      >
+        <div {...stylex.attrs(styles.container)}>
+          <div {...stylex.attrs(styles.sectionHead)}>
             <div>
-              <p {...sx(styles.eyebrow)}>WHAT CHANGES</p>
-              <h2 {...sx(styles.heading)}>{props.content.featureHead.title}</h2>
+              <p {...stylex.attrs(styles.eyebrow)}>WHAT CHANGES</p>
+              <h2 {...stylex.attrs(styles.heading)}>{props.content.featureHead.title}</h2>
             </div>
-            <p {...sx(styles.body)}>{props.content.featureHead.body}</p>
+            <p {...stylex.attrs(styles.body)}>{props.content.featureHead.body}</p>
           </div>
-          <div {...sx(styles.featureGrid)}>
+          <div {...stylex.attrs(styles.featureGrid)}>
             {props.content.features.map((feature: [string, string], index: number) => (
-              <article {...sx(styles.feature)}>
-                <div {...sx(styles.featureMark)}>
+              <article {...stylex.attrs(styles.feature)}>
+                <div {...stylex.attrs(styles.featureMark)}>
                   <FeatureIcon index={index} />
                 </div>
-                <h3 {...sx(styles.featureTitle)}>{feature[0]}</h3>
-                <p {...sx(styles.body)}>{feature[1]}</p>
+                <h3 {...stylex.attrs(styles.featureTitle)}>{feature[0]}</h3>
+                <p {...stylex.attrs(styles.body)}>{feature[1]}</p>
               </article>
             ))}
           </div>
@@ -342,46 +345,49 @@ export function FeatureSections(props: {
       </section>
 
       <section
-        {...sx(styles.section)}
+        {...stylex.attrs(styles.section)}
         id="architecture"
         data-od-id="architecture"
         data-component="SiteProof"
       >
-        <div {...sx(styles.container, styles.split)}>
-          <div {...sx(styles.principles)}>
-            <p {...sx(styles.eyebrow)}>ARCHITECTURE POSTURE</p>
-            <h2 {...sx(styles.heading)}>{props.content.architecture.title}</h2>
+        <div {...stylex.attrs(styles.container, styles.split)}>
+          <div {...stylex.attrs(styles.principles)}>
+            <p {...stylex.attrs(styles.eyebrow)}>ARCHITECTURE POSTURE</p>
+            <h2 {...stylex.attrs(styles.heading)}>{props.content.architecture.title}</h2>
             {props.content.architecture.principles.map((item: [string, string]) => (
-              <div {...sx(styles.principle)}>
-                <strong {...sx(styles.principleTitle)}>{item[0]}</strong>
-                <span {...sx(styles.body)}>{item[1]}</span>
+              <div {...stylex.attrs(styles.principle)}>
+                <strong {...stylex.attrs(styles.principleTitle)}>{item[0]}</strong>
+                <span {...stylex.attrs(styles.body)}>{item[1]}</span>
               </div>
             ))}
           </div>
 
-          <div {...sx(styles.matrix)} role="table" aria-label="插件类型自由度与约束">
-            <div {...sx(styles.matrixRow, styles.matrixFirstRow, styles.matrixHead)} role="row">
-              <div {...sx(styles.matrixCell)} role="columnheader">
+          <div {...stylex.attrs(styles.matrix)} role="table" aria-label="插件类型自由度与约束">
+            <div
+              {...stylex.attrs(styles.matrixRow, styles.matrixFirstRow, styles.matrixHead)}
+              role="row"
+            >
+              <div {...stylex.attrs(styles.matrixCell)} role="columnheader">
                 类型
               </div>
-              <div {...sx(styles.matrixCell)} role="columnheader">
+              <div {...stylex.attrs(styles.matrixCell)} role="columnheader">
                 自由度
               </div>
-              <div {...sx(styles.matrixCell, styles.matrixLastCell)} role="columnheader">
+              <div {...stylex.attrs(styles.matrixCell, styles.matrixLastCell)} role="columnheader">
                 硬约束
               </div>
             </div>
             {props.content.architecture.matrix.map((row: [string, string, string, string]) => (
-              <div {...sx(styles.matrixRow)} role="row">
-                <div {...sx(styles.matrixCell)} role="cell">
-                  <strong {...sx(styles.matrixTitle)}>{row[0]}</strong>
-                  <span {...sx(styles.body)}>{row[1]}</span>
+              <div {...stylex.attrs(styles.matrixRow)} role="row">
+                <div {...stylex.attrs(styles.matrixCell)} role="cell">
+                  <strong {...stylex.attrs(styles.matrixTitle)}>{row[0]}</strong>
+                  <span {...stylex.attrs(styles.body)}>{row[1]}</span>
                 </div>
-                <div {...sx(styles.matrixCell)} role="cell">
-                  <span {...sx(styles.body)}>{row[2]}</span>
+                <div {...stylex.attrs(styles.matrixCell)} role="cell">
+                  <span {...stylex.attrs(styles.body)}>{row[2]}</span>
                 </div>
-                <div {...sx(styles.matrixCell, styles.matrixLastCell)} role="cell">
-                  <span {...sx(styles.body)}>{row[3]}</span>
+                <div {...stylex.attrs(styles.matrixCell, styles.matrixLastCell)} role="cell">
+                  <span {...stylex.attrs(styles.body)}>{row[3]}</span>
                 </div>
               </div>
             ))}
@@ -389,24 +395,29 @@ export function FeatureSections(props: {
         </div>
       </section>
 
-      <section {...sx(styles.section)} id="plugins" data-od-id="plugins" data-component="SiteProof">
-        <div {...sx(styles.container)}>
-          <div {...sx(styles.sectionHead)}>
+      <section
+        {...stylex.attrs(styles.section)}
+        id="plugins"
+        data-od-id="plugins"
+        data-component="SiteProof"
+      >
+        <div {...stylex.attrs(styles.container)}>
+          <div {...stylex.attrs(styles.sectionHead)}>
             <div>
-              <p {...sx(styles.eyebrow)}>OFFICIAL PLUGINS</p>
-              <h2 {...sx(styles.heading)}>{props.content.plugins.title}</h2>
+              <p {...stylex.attrs(styles.eyebrow)}>OFFICIAL PLUGINS</p>
+              <h2 {...stylex.attrs(styles.heading)}>{props.content.plugins.title}</h2>
             </div>
-            <p {...sx(styles.body)}>{props.content.plugins.body}</p>
+            <p {...stylex.attrs(styles.body)}>{props.content.plugins.body}</p>
           </div>
-          <div {...sx(styles.logList)}>
+          <div {...stylex.attrs(styles.logList)}>
             {props.content.plugins.rows.map((row: [string, string, string, string]) => (
-              <article {...sx(styles.logRow)}>
-                <span {...sx(styles.meta)}>{row[0]}</span>
+              <article {...stylex.attrs(styles.logRow)}>
+                <span {...stylex.attrs(styles.meta)}>{row[0]}</span>
                 <div>
-                  <h3 {...sx(styles.logTitle)}>{row[1]}</h3>
-                  <p {...sx(styles.body)}>{row[2]}</p>
+                  <h3 {...stylex.attrs(styles.logTitle)}>{row[1]}</h3>
+                  <p {...stylex.attrs(styles.body)}>{row[2]}</p>
                 </div>
-                <span {...sx(styles.meta)}>{row[3]}</span>
+                <span {...stylex.attrs(styles.meta)}>{row[3]}</span>
               </article>
             ))}
           </div>
@@ -414,20 +425,20 @@ export function FeatureSections(props: {
       </section>
 
       <section
-        {...sx(styles.section)}
+        {...stylex.attrs(styles.section)}
         id="resources"
         data-od-id="resources"
         data-component="SiteFeatureGrid"
       >
-        <div {...sx(styles.container)}>
-          <div {...sx(styles.sectionHead)}>
+        <div {...stylex.attrs(styles.container)}>
+          <div {...stylex.attrs(styles.sectionHead)}>
             <div>
-              <p {...sx(styles.eyebrow)}>GET STARTED</p>
-              <h2 {...sx(styles.heading)}>{props.content.resources.title}</h2>
+              <p {...stylex.attrs(styles.eyebrow)}>GET STARTED</p>
+              <h2 {...stylex.attrs(styles.heading)}>{props.content.resources.title}</h2>
             </div>
-            <p {...sx(styles.body)}>{props.content.resources.body}</p>
+            <p {...stylex.attrs(styles.body)}>{props.content.resources.body}</p>
           </div>
-          <div {...sx(styles.featureGrid)}>
+          <div {...stylex.attrs(styles.featureGrid)}>
             <ResourceCard
               href="/download"
               card={props.content.resources.cards[0]}
@@ -444,25 +455,25 @@ export function FeatureSections(props: {
       </section>
 
       <section
-        {...sx(styles.section, styles.cta)}
+        {...stylex.attrs(styles.section, styles.cta)}
         id="waitlist"
         data-od-id="cta-strip"
         data-component="SiteCTA SiteWaitlist"
       >
-        <div {...sx(styles.container, styles.ctaPanel)}>
-          <p {...sx(styles.eyebrow)}>NEXT REVIEW</p>
-          <h2 {...sx(styles.heading)}>{props.content.cta.title}</h2>
-          <p {...sx(styles.centeredLead)}>{props.content.cta.body}</p>
-          <div {...sx(styles.actionRow)}>
-            <A {...sx(styles.button, styles.primary)} href="/download">
+        <div {...stylex.attrs(styles.container, styles.ctaPanel)}>
+          <p {...stylex.attrs(styles.eyebrow)}>NEXT REVIEW</p>
+          <h2 {...stylex.attrs(styles.heading)}>{props.content.cta.title}</h2>
+          <p {...stylex.attrs(styles.centeredLead)}>{props.content.cta.body}</p>
+          <div {...stylex.attrs(styles.actionRow)}>
+            <A {...stylex.attrs(styles.button, styles.primary)} href="/download">
               {props.content.cta.primary}
             </A>
-            <A {...sx(styles.button, styles.secondary)} href="/docs">
+            <A {...stylex.attrs(styles.button, styles.secondary)} href="/docs">
               {props.content.cta.secondary}
             </A>
           </div>
           <form
-            {...sx(styles.waitlist)}
+            {...stylex.attrs(styles.waitlist)}
             data-waitlist
             onSubmit={(event) => {
               event.preventDefault()
@@ -478,14 +489,14 @@ export function FeatureSections(props: {
             }}
           >
             <input
-              {...sx(styles.input)}
+              {...stylex.attrs(styles.input)}
               type="email"
               name="email"
               placeholder="name@example.com"
               aria-label="邮箱"
               required
             />
-            <button {...sx(styles.button, styles.secondary)} type="submit">
+            <button {...stylex.attrs(styles.button, styles.secondary)} type="submit">
               {props.i18n.t("waitlist.submit")}
             </button>
           </form>
@@ -551,12 +562,12 @@ function ResourceCard(props: {
   icon: "download" | "docs" | "components"
 }) {
   return (
-    <A {...sx(styles.feature)} href={props.href}>
-      <div {...sx(styles.featureMark)} aria-hidden="true">
+    <A {...stylex.attrs(styles.feature)} href={props.href}>
+      <div {...stylex.attrs(styles.featureMark)} aria-hidden="true">
         <ResourceIcon icon={props.icon} />
       </div>
-      <h3 {...sx(styles.featureTitle)}>{props.card[0]}</h3>
-      <p {...sx(styles.body)}>{props.card[1]}</p>
+      <h3 {...stylex.attrs(styles.featureTitle)}>{props.card[0]}</h3>
+      <p {...stylex.attrs(styles.body)}>{props.card[1]}</p>
     </A>
   )
 }

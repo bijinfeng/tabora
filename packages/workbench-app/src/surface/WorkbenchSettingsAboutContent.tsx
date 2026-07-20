@@ -40,22 +40,22 @@ export function WorkbenchSettingsAboutContent(props: {
   tShell?: ShellTranslation
 }) {
   return (
-    <div {...stylex.props(styles.stack)} data-settings-panel-stack>
-      <section {...stylex.props(styles.panel)}>
-        <div {...stylex.props(styles.title)}>
+    <div {...stylex.attrs(styles.stack)} data-settings-panel-stack>
+      <section {...stylex.attrs(styles.panel)}>
+        <div {...stylex.attrs(styles.title)}>
           {props.tShell?.("chrome.settings.about.title") ?? "关于 Tabora"}
         </div>
-        <div {...stylex.props(styles.body)}>
-          <p {...stylex.props(styles.paragraph)}>
+        <div {...stylex.attrs(styles.body)}>
+          <p {...stylex.attrs(styles.paragraph)}>
             {props.tShell?.("chrome.settings.about.description") ??
               "当前实现已切换到双布局工作台骨架，设置中心按固定分类组织插件设置内容。"}
           </p>
-          <p {...stylex.props(styles.paragraph)}>
+          <p {...stylex.attrs(styles.paragraph)}>
             {props.tShell
               ? props.tShell("chrome.settings.about.workspaceLabel", { name: props.workspaceName })
               : `当前工作区：${props.workspaceName}。`}
           </p>
-          <p {...stylex.props(styles.paragraph)}>
+          <p {...stylex.attrs(styles.paragraph)}>
             {props.tShell
               ? props.tShell("chrome.settings.about.enabledPluginsLabel", {
                   count: props.enabledPluginCount,

@@ -1,10 +1,11 @@
+import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { PluginInstance } from "@tabora/plugin-api"
 
 import { HostActionIcon } from "./host-action-icon"
 import { dateLabel, fallbackText, greeting } from "./i18n"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 import { WorkbenchRail } from "./workbench-rail"
 import type { LayoutViewPropsWithI18n } from "./types"
 
@@ -37,20 +38,20 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
   })
 
   return (
-    <main {...sx(styles.layout)} data-layout="focus">
+    <main {...stylex.attrs(styles.layout)} data-layout="focus">
       <WorkbenchRail host={props.host} />
-      <section {...sx(styles.focusShell)}>
-        <div {...sx(styles.focusContent)}>
-          <header {...sx(styles.focusTopbar)}>
-            <div {...sx(styles.focusGreeting)}>
+      <section {...stylex.attrs(styles.focusShell)}>
+        <div {...stylex.attrs(styles.focusContent)}>
+          <header {...stylex.attrs(styles.focusTopbar)}>
+            <div {...stylex.attrs(styles.focusGreeting)}>
               <span>{greeting(t)}</span>
-              <span {...sx(styles.focusMuted)}>· {dateLabel(locale())}</span>
+              <span {...stylex.attrs(styles.focusMuted)}>· {dateLabel(locale())}</span>
             </div>
-            <div {...sx(styles.focusActions)}>
+            <div {...stylex.attrs(styles.focusActions)}>
               <Show when={layoutSwitchAction()}>
                 {(action) => (
                   <button
-                    {...sx(styles.focusControl, styles.focusIconButton)}
+                    {...stylex.attrs(styles.focusControl, styles.focusIconButton)}
                     type="button"
                     aria-label={action().label}
                     title={action().label}
@@ -64,22 +65,22 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                 )}
               </Show>
               <button
-                {...sx(styles.focusControl, styles.focusCommand)}
+                {...stylex.attrs(styles.focusControl, styles.focusCommand)}
                 type="button"
                 onClick={() => commandAction()?.run() ?? props.host.openCommandPalette()}
               >
                 <span>{t("search.placeholder")}</span>
-                <kbd {...sx(styles.focusKbd)}>⌘K</kbd>
+                <kbd {...stylex.attrs(styles.focusKbd)}>⌘K</kbd>
               </button>
             </div>
           </header>
 
-          <section {...sx(styles.hero)} aria-label="专注卡片">
+          <section {...stylex.attrs(styles.hero)} aria-label="专注卡片">
             <Show
               when={heroInstance()}
               fallback={
                 <button
-                  {...sx(styles.focusEmpty)}
+                  {...stylex.attrs(styles.focusEmpty)}
                   type="button"
                   onClick={() => props.host.openAddWidget()}
                 >
@@ -88,7 +89,7 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
               }
             >
               {(instance) => (
-                <div {...sx(styles.heroRender)}>
+                <div {...stylex.attrs(styles.heroRender)}>
                   {props.regions["focus"]!.renderInstance(instance())}
                 </div>
               )}
@@ -96,17 +97,17 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
           </section>
 
           <Show when={satelliteInstances().length > 0}>
-            <section {...sx(styles.satellites)} aria-label="可切换卡片">
+            <section {...stylex.attrs(styles.satellites)} aria-label="可切换卡片">
               <For each={satelliteInstances()}>
                 {(instance) => (
                   <button
-                    {...sx(styles.satellite)}
+                    {...stylex.attrs(styles.satellite)}
                     data-focus-satellite
                     type="button"
                     onClick={() => setSelectedHeroId(instance.id)}
                   >
-                    <span {...sx(styles.satelliteTitle)}>{widgetTitle(instance)}</span>
-                    <span {...sx(styles.satelliteMeta)}>{t("focus.switchHero")}</span>
+                    <span {...stylex.attrs(styles.satelliteTitle)}>{widgetTitle(instance)}</span>
+                    <span {...stylex.attrs(styles.satelliteMeta)}>{t("focus.switchHero")}</span>
                   </button>
                 )}
               </For>

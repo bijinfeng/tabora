@@ -1,7 +1,8 @@
+import * as stylex from "@stylexjs/stylex"
 import { FieldRow, SegmentedControl, Select, Slider } from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { className, styles, sx } from "./styles"
+import { className, styles } from "./styles"
 
 export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
   const [accentTone, setAccentTone] = createSignal("sage")
@@ -25,10 +26,10 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
     activeBackground()
 
   return (
-    <div {...sx(styles.panelStack)} data-settings-panel="appearance">
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          主题<span {...sx(styles.groupTitleMeta)}>{activeThemeTitle()}</span>
+    <div {...stylex.attrs(styles.panelStack)} data-settings-panel="appearance">
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          主题<span {...stylex.attrs(styles.groupTitleMeta)}>{activeThemeTitle()}</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
@@ -37,7 +38,7 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           trailing={
             <Show
               when={themeOptions().length > 0}
-              fallback={<span {...sx(styles.rowMeta)}>{activeTheme()}</span>}
+              fallback={<span {...stylex.attrs(styles.rowMeta)}>{activeTheme()}</span>}
             >
               <SegmentedControl<string>
                 size="sm"
@@ -54,12 +55,12 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           label="强调色"
           description="用于焦点、选中状态和主操作按钮"
           trailing={
-            <div {...sx(styles.swatchRow)} aria-label="强调色">
+            <div {...stylex.attrs(styles.swatchRow)} aria-label="强调色">
               <For each={ACCENT_TONES}>
                 {(tone) => (
                   <button
                     type="button"
-                    {...sx(styles.swatch, accentTone() === tone.id && styles.selected)}
+                    {...stylex.attrs(styles.swatch, accentTone() === tone.id && styles.selected)}
                     style={{ "background-color": tone.color }}
                     aria-label={tone.label}
                     onClick={() => setAccentTone(tone.id)}
@@ -71,9 +72,9 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          背景<span {...sx(styles.groupTitleMeta)}>{activeBackgroundTitle()}</span>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          背景<span {...stylex.attrs(styles.groupTitleMeta)}>{activeBackgroundTitle()}</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
@@ -94,7 +95,7 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           class={className(styles.fieldRow)}
           label="背景渲染"
           description="由 background-renderer 插件渲染图片、渐变或画布背景"
-          trailing={<span {...sx(styles.rowMeta)}>跟随背景源</span>}
+          trailing={<span {...stylex.attrs(styles.rowMeta)}>跟随背景源</span>}
         />
         <FieldRow
           class={className(styles.fieldRow)}
@@ -119,7 +120,7 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           label="圆角半径"
           description="控制卡片、输入框和浮层的圆角基准"
           trailing={
-            <div {...sx(styles.rangeControl)}>
+            <div {...stylex.attrs(styles.rangeControl)}>
               <Slider
                 value={radius()}
                 min={4}
@@ -136,7 +137,7 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           label="正文大小"
           description="仅调整工作台正文和卡片说明文字"
           trailing={
-            <div {...sx(styles.rangeControl)}>
+            <div {...stylex.attrs(styles.rangeControl)}>
               <Slider
                 value={fontSize()}
                 min={11}
@@ -151,9 +152,9 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
       </section>
 
       <Show when={canSwitchLocale()}>
-        <section {...sx(styles.group)}>
-          <div {...sx(styles.groupTitle)}>
-            语言<span {...sx(styles.groupTitleMeta)}>{localeValue()}</span>
+        <section {...stylex.attrs(styles.group)}>
+          <div {...stylex.attrs(styles.groupTitle)}>
+            语言<span {...stylex.attrs(styles.groupTitleMeta)}>{localeValue()}</span>
           </div>
           <FieldRow
             class={className(styles.fieldRow)}

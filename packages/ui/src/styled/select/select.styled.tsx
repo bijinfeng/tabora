@@ -4,7 +4,6 @@ import { splitProps } from "solid-js"
 
 import { Select as Primitive } from "../../primitives/select/select"
 import type { SelectProps, SelectOption } from "../../primitives/select/select"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   trigger: {
@@ -275,7 +274,7 @@ export type StyledSelectProps<V extends string> = DistributiveOmit<
 export function Select<V extends string>(props: StyledSelectProps<V>) {
   const [local, primitiveProps] = splitProps(props, ["xstyle"])
   const triggerCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.trigger,
       props.size === "sm" && styles.triggerSm,
       (!props.size || props.size === "md") && styles.triggerMd,
@@ -285,45 +284,45 @@ export function Select<V extends string>(props: StyledSelectProps<V>) {
       props.invalid && styles.triggerInvalid,
       local.xstyle,
     )
-  const valueCompiled = () => stylex.props(styles.value)
-  const valueInvalidCompiled = () => stylex.props(styles.valueInvalid)
-  const valuePlaceholderCompiled = () => stylex.props(styles.valuePlaceholder)
-  const iconCompiled = () => stylex.props(styles.icon)
-  const tagsCompiled = () => stylex.props(styles.tags)
-  const tagCompiled = () => stylex.props(styles.tag)
-  const tagRemoveCompiled = () => stylex.props(styles.tagRemove)
-  const tagMoreCompiled = () => stylex.props(styles.tagMore)
-  const placeholderCompiled = () => stylex.props(styles.placeholder)
-  const contentCompiled = () => stylex.props(styles.content)
-  const listboxCompiled = () => stylex.props(styles.listbox)
-  const itemCompiled = () => stylex.props(styles.item)
-  const itemSelectedCompiled = () => stylex.props(styles.itemSelected)
-  const itemDisabledCompiled = () => stylex.props(styles.itemDisabled)
-  const itemCheckCompiled = () => stylex.props(styles.itemCheck)
-  const itemLabelCompiled = () => stylex.props(styles.itemLabel)
+  const valueCompiled = () => stylex.attrs(styles.value)
+  const valueInvalidCompiled = () => stylex.attrs(styles.valueInvalid)
+  const valuePlaceholderCompiled = () => stylex.attrs(styles.valuePlaceholder)
+  const iconCompiled = () => stylex.attrs(styles.icon)
+  const tagsCompiled = () => stylex.attrs(styles.tags)
+  const tagCompiled = () => stylex.attrs(styles.tag)
+  const tagRemoveCompiled = () => stylex.attrs(styles.tagRemove)
+  const tagMoreCompiled = () => stylex.attrs(styles.tagMore)
+  const placeholderCompiled = () => stylex.attrs(styles.placeholder)
+  const contentCompiled = () => stylex.attrs(styles.content)
+  const listboxCompiled = () => stylex.attrs(styles.listbox)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const itemSelectedCompiled = () => stylex.attrs(styles.itemSelected)
+  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
+  const itemCheckCompiled = () => stylex.attrs(styles.itemCheck)
+  const itemLabelCompiled = () => stylex.attrs(styles.itemLabel)
 
   return (
     <Primitive<V>
       {...(primitiveProps as SelectProps<V>)}
-      class={triggerCompiled().className}
-      style={toSolidStyle(triggerCompiled().style)}
-      valueClass={valueCompiled().className}
-      valueInvalidClass={valueInvalidCompiled().className}
-      valuePlaceholderClass={valuePlaceholderCompiled().className}
-      iconClass={iconCompiled().className}
-      tagsClass={tagsCompiled().className}
-      tagClass={tagCompiled().className}
-      tagRemoveClass={tagRemoveCompiled().className}
-      tagMoreClass={tagMoreCompiled().className}
-      placeholderClass={placeholderCompiled().className}
-      contentClass={contentCompiled().className}
-      contentStyle={toSolidStyle(contentCompiled().style)}
-      listboxClass={listboxCompiled().className}
-      itemClass={itemCompiled().className}
-      itemSelectedClass={itemSelectedCompiled().className}
-      itemDisabledClass={itemDisabledCompiled().className}
-      itemCheckClass={itemCheckCompiled().className}
-      itemLabelClass={itemLabelCompiled().className}
+      class={triggerCompiled().class}
+      style={undefined}
+      valueClass={valueCompiled().class}
+      valueInvalidClass={valueInvalidCompiled().class}
+      valuePlaceholderClass={valuePlaceholderCompiled().class}
+      iconClass={iconCompiled().class}
+      tagsClass={tagsCompiled().class}
+      tagClass={tagCompiled().class}
+      tagRemoveClass={tagRemoveCompiled().class}
+      tagMoreClass={tagMoreCompiled().class}
+      placeholderClass={placeholderCompiled().class}
+      contentClass={contentCompiled().class}
+      contentStyle={undefined}
+      listboxClass={listboxCompiled().class}
+      itemClass={itemCompiled().class}
+      itemSelectedClass={itemSelectedCompiled().class}
+      itemDisabledClass={itemDisabledCompiled().class}
+      itemCheckClass={itemCheckCompiled().class}
+      itemLabelClass={itemLabelCompiled().class}
     />
   )
 }

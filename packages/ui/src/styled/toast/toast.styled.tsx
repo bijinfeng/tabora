@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Toast as Primitive } from "../../primitives/toast/toast"
 import type { ToastProps, ToastVariant } from "../../primitives/toast/toast"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -75,38 +75,35 @@ export type StyledToastProps = ToastProps & {
 }
 
 export function Toast(props: StyledToastProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const iconCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.icon,
       (!props.variant || props.variant === "info") && styles.iconInfo,
       props.variant === "success" && styles.iconSuccess,
       props.variant === "warning" && styles.iconWarning,
       props.variant === "danger" && styles.iconDanger,
     )
-  const bodyCompiled = () => stylex.props(styles.body)
-  const titleCompiled = () => stylex.props(styles.title)
-  const descriptionCompiled = () => stylex.props(styles.description)
-  const actionCompiled = () => stylex.props(styles.action)
+  const bodyCompiled = () => stylex.attrs(styles.body)
+  const titleCompiled = () => stylex.attrs(styles.title)
+  const descriptionCompiled = () => stylex.attrs(styles.description)
+  const actionCompiled = () => stylex.attrs(styles.action)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      iconClass={joinClassNames(iconCompiled().className, props.iconClass)}
-      iconStyle={mergeSolidStyles(toSolidStyle(iconCompiled().style), props.iconStyle)}
-      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
-      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
-      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
-      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
-      descriptionClass={joinClassNames(descriptionCompiled().className, props.descriptionClass)}
-      descriptionStyle={mergeSolidStyles(
-        toSolidStyle(descriptionCompiled().style),
-        props.descriptionStyle,
-      )}
-      actionClass={joinClassNames(actionCompiled().className, props.actionClass)}
-      actionStyle={mergeSolidStyles(toSolidStyle(actionCompiled().style), props.actionStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      iconClass={joinClassNames(iconCompiled().class, props.iconClass)}
+      iconStyle={props.iconStyle}
+      bodyClass={joinClassNames(bodyCompiled().class, props.bodyClass)}
+      bodyStyle={props.bodyStyle}
+      titleClass={joinClassNames(titleCompiled().class, props.titleClass)}
+      titleStyle={props.titleStyle}
+      descriptionClass={joinClassNames(descriptionCompiled().class, props.descriptionClass)}
+      descriptionStyle={{ ...props.descriptionStyle }}
+      actionClass={joinClassNames(actionCompiled().class, props.actionClass)}
+      actionStyle={props.actionStyle}
     />
   )
 }

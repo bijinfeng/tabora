@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Combobox as P } from "../../primitives/combobox/combobox"
 import type { ComboboxProps, ComboboxOption } from "../../primitives/combobox/combobox"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -75,21 +74,21 @@ export type StyledComboboxProps<V extends string> = Omit<ComboboxProps<V>, Combo
 }
 
 export function Combobox<V extends string>(props: StyledComboboxProps<V>) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const inputCompiled = () => stylex.props(styles.input)
-  const dropdownCompiled = () => stylex.props(styles.dropdown)
-  const optionCompiled = () => stylex.props(styles.option)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const inputCompiled = () => stylex.attrs(styles.input)
+  const dropdownCompiled = () => stylex.attrs(styles.dropdown)
+  const optionCompiled = () => stylex.attrs(styles.option)
 
   return (
     <P
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      inputClass={inputCompiled().className}
-      inputStyle={toSolidStyle(inputCompiled().style)}
-      dropdownClass={dropdownCompiled().className}
-      dropdownStyle={toSolidStyle(dropdownCompiled().style)}
-      optionClass={optionCompiled().className}
+      class={rootCompiled().class}
+      style={undefined}
+      inputClass={inputCompiled().class}
+      inputStyle={undefined}
+      dropdownClass={dropdownCompiled().class}
+      dropdownStyle={undefined}
+      optionClass={optionCompiled().class}
     />
   )
 }

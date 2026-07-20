@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Skeleton as P, SkeletonText as PT } from "../../primitives/skeleton/skeleton"
 import type { SkeletonProps, SkeletonTextProps } from "../../primitives/skeleton/skeleton"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const pulse = stylex.keyframes({
   "0%": {
@@ -41,28 +41,22 @@ export type StyledSkeletonTextProps = SkeletonTextProps & {
 }
 
 export function Skeleton(props: StyledSkeletonProps) {
-  const compiled = () => stylex.props(styles.root, props.rounded && styles.rounded, props.xstyle)
+  const compiled = () => stylex.attrs(styles.root, props.rounded && styles.rounded, props.xstyle)
 
-  return (
-    <P
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <P {...props} class={joinClassNames(compiled().class, props.class)} style={props.style} />
 }
 
 export function SkeletonText(props: StyledSkeletonTextProps) {
-  const rootCompiled = () => stylex.props(props.xstyle)
-  const lineCompiled = () => stylex.props(styles.root, props.lineXstyle)
+  const rootCompiled = () => stylex.attrs(props.xstyle)
+  const lineCompiled = () => stylex.attrs(styles.root, props.lineXstyle)
 
   return (
     <PT
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      lineClass={joinClassNames(lineCompiled().className, props.lineClass)}
-      lineStyle={mergeSolidStyles(toSolidStyle(lineCompiled().style), props.lineStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      lineClass={joinClassNames(lineCompiled().class, props.lineClass)}
+      lineStyle={props.lineStyle}
     />
   )
 }

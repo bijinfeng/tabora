@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Button } from "../button"
 import { Checkbox } from "../checkbox"
 import { Dialog } from "./dialog.styled"
@@ -28,12 +29,12 @@ export function DialogDemo() {
   }
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>移除插件</strong>
         <span>演示危险确认、附加选项和提交中状态。</span>
       </div>
-      <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.row)}>
         <Button variant="secondary" onClick={() => setOpen(true)}>
           打开 Dialog
         </Button>
@@ -46,7 +47,7 @@ export function DialogDemo() {
         description="该操作会从当前工作区中卸载插件实例，但不会影响其他工作区。"
         destructive
         children={
-          <div {...sx(demoStyles.stackCompact)}>
+          <div {...stylex.attrs(demoStyles.stackCompact)}>
             <Checkbox
               checked={cleanupData()}
               onChange={setCleanupData}

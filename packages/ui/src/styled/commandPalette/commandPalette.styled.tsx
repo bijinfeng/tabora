@@ -7,7 +7,7 @@ import type {
   CommandPaletteItem,
   CommandPaletteProps,
 } from "../../primitives/commandPalette/commandPalette"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -134,55 +134,49 @@ export type StyledCommandPaletteProps = CommandPaletteProps & {
 }
 
 export function CommandPalette(props: StyledCommandPaletteProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const boxCompiled = () => stylex.props(styles.box)
-  const inputCompiled = () => stylex.props(styles.input)
-  const listCompiled = () => stylex.props(styles.list)
-  const emptyCompiled = () => stylex.props(styles.empty)
-  const groupCompiled = () => stylex.props(styles.group)
-  const groupLabelCompiled = () => stylex.props(styles.groupLabel)
-  const itemCompiled = () => stylex.props(styles.item)
-  const iconCompiled = () => stylex.props(styles.icon)
-  const textCompiled = () => stylex.props(styles.text)
-  const titleCompiled = () => stylex.props(styles.title)
-  const descriptionCompiled = () => stylex.props(styles.description)
-  const kbdCompiled = () => stylex.props(styles.kbd)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const boxCompiled = () => stylex.attrs(styles.box)
+  const inputCompiled = () => stylex.attrs(styles.input)
+  const listCompiled = () => stylex.attrs(styles.list)
+  const emptyCompiled = () => stylex.attrs(styles.empty)
+  const groupCompiled = () => stylex.attrs(styles.group)
+  const groupLabelCompiled = () => stylex.attrs(styles.groupLabel)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const iconCompiled = () => stylex.attrs(styles.icon)
+  const textCompiled = () => stylex.attrs(styles.text)
+  const titleCompiled = () => stylex.attrs(styles.title)
+  const descriptionCompiled = () => stylex.attrs(styles.description)
+  const kbdCompiled = () => stylex.attrs(styles.kbd)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      boxClass={joinClassNames(boxCompiled().className, props.boxClass)}
-      boxStyle={mergeSolidStyles(toSolidStyle(boxCompiled().style), props.boxStyle)}
-      inputClass={joinClassNames(inputCompiled().className, props.inputClass)}
-      inputStyle={mergeSolidStyles(toSolidStyle(inputCompiled().style), props.inputStyle)}
-      listClass={joinClassNames(listCompiled().className, props.listClass)}
-      listStyle={mergeSolidStyles(toSolidStyle(listCompiled().style), props.listStyle)}
-      emptyClass={joinClassNames(emptyCompiled().className, props.emptyClass)}
-      emptyStyle={mergeSolidStyles(toSolidStyle(emptyCompiled().style), props.emptyStyle)}
-      groupClass={joinClassNames(groupCompiled().className, props.groupClass)}
-      groupStyle={mergeSolidStyles(toSolidStyle(groupCompiled().style), props.groupStyle)}
-      groupLabelClass={joinClassNames(groupLabelCompiled().className, props.groupLabelClass)}
-      groupLabelStyle={mergeSolidStyles(
-        toSolidStyle(groupLabelCompiled().style),
-        props.groupLabelStyle,
-      )}
-      itemClass={joinClassNames(itemCompiled().className, props.itemClass)}
-      itemStyle={mergeSolidStyles(toSolidStyle(itemCompiled().style), props.itemStyle)}
-      iconClass={joinClassNames(iconCompiled().className, props.iconClass)}
-      iconStyle={mergeSolidStyles(toSolidStyle(iconCompiled().style), props.iconStyle)}
-      textClass={joinClassNames(textCompiled().className, props.textClass)}
-      textStyle={mergeSolidStyles(toSolidStyle(textCompiled().style), props.textStyle)}
-      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
-      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
-      descriptionClass={joinClassNames(descriptionCompiled().className, props.descriptionClass)}
-      descriptionStyle={mergeSolidStyles(
-        toSolidStyle(descriptionCompiled().style),
-        props.descriptionStyle,
-      )}
-      kbdClass={joinClassNames(kbdCompiled().className, props.kbdClass)}
-      kbdStyle={mergeSolidStyles(toSolidStyle(kbdCompiled().style), props.kbdStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      boxClass={joinClassNames(boxCompiled().class, props.boxClass)}
+      boxStyle={props.boxStyle}
+      inputClass={joinClassNames(inputCompiled().class, props.inputClass)}
+      inputStyle={props.inputStyle}
+      listClass={joinClassNames(listCompiled().class, props.listClass)}
+      listStyle={props.listStyle}
+      emptyClass={joinClassNames(emptyCompiled().class, props.emptyClass)}
+      emptyStyle={props.emptyStyle}
+      groupClass={joinClassNames(groupCompiled().class, props.groupClass)}
+      groupStyle={props.groupStyle}
+      groupLabelClass={joinClassNames(groupLabelCompiled().class, props.groupLabelClass)}
+      groupLabelStyle={{ ...props.groupLabelStyle }}
+      itemClass={joinClassNames(itemCompiled().class, props.itemClass)}
+      itemStyle={props.itemStyle}
+      iconClass={joinClassNames(iconCompiled().class, props.iconClass)}
+      iconStyle={props.iconStyle}
+      textClass={joinClassNames(textCompiled().class, props.textClass)}
+      textStyle={props.textStyle}
+      titleClass={joinClassNames(titleCompiled().class, props.titleClass)}
+      titleStyle={props.titleStyle}
+      descriptionClass={joinClassNames(descriptionCompiled().class, props.descriptionClass)}
+      descriptionStyle={{ ...props.descriptionStyle }}
+      kbdClass={joinClassNames(kbdCompiled().class, props.kbdClass)}
+      kbdStyle={props.kbdStyle}
     />
   )
 }

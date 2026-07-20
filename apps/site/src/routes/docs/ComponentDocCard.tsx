@@ -2,8 +2,6 @@ import { Badge } from "@tabora/ui"
 import { ComponentDocDemo, type ComponentDocItem } from "@tabora/ui/component-docs"
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../shared/stylex"
-
 const styles = stylex.create({
   root: {
     borderTop: "1px solid rgb(var(--tbr-color-line))",
@@ -96,26 +94,26 @@ const styles = stylex.create({
 
 export function ComponentDocCard(props: { doc: ComponentDocItem }) {
   return (
-    <section {...sx(styles.root)} id={props.doc.id} data-component-doc>
-      <div {...sx(styles.head)}>
+    <section {...stylex.attrs(styles.root)} id={props.doc.id} data-component-doc>
+      <div {...stylex.attrs(styles.head)}>
         <div>
-          <h2 {...sx(styles.title)}>{props.doc.title}</h2>
-          <p {...sx(styles.body)}>{props.doc.purpose}</p>
+          <h2 {...stylex.attrs(styles.title)}>{props.doc.title}</h2>
+          <p {...stylex.attrs(styles.body)}>{props.doc.purpose}</p>
         </div>
         <Badge variant="accent">real render</Badge>
       </div>
-      <div {...sx(styles.grid)}>
-        <div {...sx(styles.panel, styles.demoPanel)}>
-          <div {...sx(styles.label)}>使用方案</div>
-          <p {...sx(styles.body)}>{props.doc.usage}</p>
-          <div {...sx(styles.render)} data-docs-demo>
+      <div {...stylex.attrs(styles.grid)}>
+        <div {...stylex.attrs(styles.panel, styles.demoPanel)}>
+          <div {...stylex.attrs(styles.label)}>使用方案</div>
+          <p {...stylex.attrs(styles.body)}>{props.doc.usage}</p>
+          <div {...stylex.attrs(styles.render)} data-docs-demo>
             <ComponentDocDemo id={props.doc.id} />
           </div>
         </div>
-        <div {...sx(styles.panel, styles.codePanel)}>
-          <div {...sx(styles.label, styles.codeLabel)}>代码示例</div>
-          <pre {...sx(styles.pre)}>
-            <code {...sx(styles.code)}>{props.doc.code}</code>
+        <div {...stylex.attrs(styles.panel, styles.codePanel)}>
+          <div {...stylex.attrs(styles.label, styles.codeLabel)}>代码示例</div>
+          <pre {...stylex.attrs(styles.pre)}>
+            <code {...stylex.attrs(styles.code)}>{props.doc.code}</code>
           </pre>
         </div>
       </div>

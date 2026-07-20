@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { HoverCard as Primitive } from "../../primitives/hoverCard/hoverCard"
 import type { HoverCardProps } from "../../primitives/hoverCard/hoverCard"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const scaleIn = stylex.keyframes({
   from: {
@@ -78,34 +78,31 @@ export type StyledHoverCardProps = HoverCardProps & {
 }
 
 export function HoverCard(props: StyledHoverCardProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const triggerCompiled = () => stylex.props(styles.trigger)
-  const contentCompiled = () => stylex.props(styles.content)
-  const mediaCompiled = () => stylex.props(styles.media)
-  const titleCompiled = () => stylex.props(styles.title)
-  const descriptionCompiled = () => stylex.props(styles.description)
-  const metaCompiled = () => stylex.props(styles.meta)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const triggerCompiled = () => stylex.attrs(styles.trigger)
+  const contentCompiled = () => stylex.attrs(styles.content)
+  const mediaCompiled = () => stylex.attrs(styles.media)
+  const titleCompiled = () => stylex.attrs(styles.title)
+  const descriptionCompiled = () => stylex.attrs(styles.description)
+  const metaCompiled = () => stylex.attrs(styles.meta)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      triggerClass={joinClassNames(triggerCompiled().className, props.triggerClass)}
-      triggerStyle={mergeSolidStyles(toSolidStyle(triggerCompiled().style), props.triggerStyle)}
-      contentClass={joinClassNames(contentCompiled().className, props.contentClass)}
-      contentStyle={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.contentStyle)}
-      mediaClass={joinClassNames(mediaCompiled().className, props.mediaClass)}
-      mediaStyle={mergeSolidStyles(toSolidStyle(mediaCompiled().style), props.mediaStyle)}
-      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
-      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
-      descriptionClass={joinClassNames(descriptionCompiled().className, props.descriptionClass)}
-      descriptionStyle={mergeSolidStyles(
-        toSolidStyle(descriptionCompiled().style),
-        props.descriptionStyle,
-      )}
-      metaClass={joinClassNames(metaCompiled().className, props.metaClass)}
-      metaStyle={mergeSolidStyles(toSolidStyle(metaCompiled().style), props.metaStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
+      triggerStyle={props.triggerStyle}
+      contentClass={joinClassNames(contentCompiled().class, props.contentClass)}
+      contentStyle={props.contentStyle}
+      mediaClass={joinClassNames(mediaCompiled().class, props.mediaClass)}
+      mediaStyle={props.mediaStyle}
+      titleClass={joinClassNames(titleCompiled().class, props.titleClass)}
+      titleStyle={props.titleStyle}
+      descriptionClass={joinClassNames(descriptionCompiled().class, props.descriptionClass)}
+      descriptionStyle={{ ...props.descriptionStyle }}
+      metaClass={joinClassNames(metaCompiled().class, props.metaClass)}
+      metaStyle={props.metaStyle}
     />
   )
 }

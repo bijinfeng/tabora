@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Truncate as P } from "../../primitives/truncate/truncate"
 import type { TruncateProps } from "../../primitives/truncate/truncate"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -16,15 +16,9 @@ export type StyledTruncateProps = TruncateProps & {
 }
 
 export function Truncate(props: StyledTruncateProps) {
-  const compiled = () => stylex.props(styles.root, props.xstyle)
+  const compiled = () => stylex.attrs(styles.root, props.xstyle)
 
-  return (
-    <P
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <P {...props} class={joinClassNames(compiled().class, props.class)} style={props.style} />
 }
 
 export type { StyledTruncateProps as TruncateProps }

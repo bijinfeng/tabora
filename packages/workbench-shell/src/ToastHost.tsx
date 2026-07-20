@@ -98,20 +98,20 @@ export function ToastHost(props: {
 }) {
   return (
     <Show when={props.toasts.length > 0}>
-      <div {...stylex.props(styles.stack)} aria-live="polite" aria-atomic="true" data-toast-stack>
+      <div {...stylex.attrs(styles.stack)} aria-live="polite" aria-atomic="true" data-toast-stack>
         <For each={props.toasts}>
           {(toast) => (
-            <div {...stylex.props(styles.item)} data-toast-type={toast.type} data-toast-item>
-              <span {...stylex.props(styles.icon)} aria-hidden="true" data-toast-icon>
+            <div {...stylex.attrs(styles.item)} data-toast-type={toast.type} data-toast-item>
+              <span {...stylex.attrs(styles.icon)} aria-hidden="true" data-toast-icon>
                 ✓
               </span>
-              <span {...stylex.props(styles.message)} data-toast-message>
+              <span {...stylex.attrs(styles.message)} data-toast-message>
                 {toast.message}
               </span>
               <Show when={toast.action}>
                 {(action) => (
                   <button
-                    {...stylex.props(styles.action)}
+                    {...stylex.attrs(styles.action)}
                     data-toast-action
                     type="button"
                     onClick={() => props.onAction?.(action().commandId)}

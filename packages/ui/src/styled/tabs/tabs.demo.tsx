@@ -3,9 +3,8 @@ import type { JSX } from "solid-js"
 import { createSignal } from "solid-js"
 import { Boxes, Search, Settings } from "lucide-solid"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Badge } from "../badge"
-import { toSolidStyle } from "../../stylex"
 import { Tabs } from "./tabs.styled"
 
 const tabDemoStyles = stylex.create({
@@ -17,10 +16,10 @@ const tabDemoStyles = stylex.create({
 })
 
 function TabLabel(props: { children: JSX.Element }) {
-  const compiled = () => stylex.props(tabDemoStyles.tabLabel)
+  const compiled = () => stylex.attrs(tabDemoStyles.tabLabel)
 
   return (
-    <span class={compiled().className} style={toSolidStyle(compiled().style)}>
+    <span class={compiled().class} style={undefined}>
       {props.children}
     </span>
   )
@@ -32,7 +31,7 @@ export function TabsDemo() {
   const [iconValue, setIconValue] = createSignal("installed")
 
   return (
-    <div {...sx(demoStyles.stack)}>
+    <div {...stylex.attrs(demoStyles.stack)}>
       <Tabs
         value={underlineValue()}
         onChange={setUnderlineValue}

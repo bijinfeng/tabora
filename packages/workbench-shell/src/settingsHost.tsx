@@ -552,7 +552,7 @@ export function SettingsHost(props: SettingsHostProps) {
   return (
     <Show when={props.open}>
       <div
-        {...stylex.props(styles.overlay, isEntering() ? styles.entering : null)}
+        {...stylex.attrs(styles.overlay, isEntering() ? styles.entering : null)}
         data-workbench-overlay="settings"
         onClick={handleClose}
         onKeyDown={handleKeyDown}
@@ -561,27 +561,27 @@ export function SettingsHost(props: SettingsHostProps) {
         aria-label={props.copy?.sidebarTitle ?? "设置"}
       >
         <div
-          {...stylex.props(styles.window, isEntering() ? styles.windowEntering : null)}
+          {...stylex.attrs(styles.window, isEntering() ? styles.windowEntering : null)}
           data-settings-window
           onClick={(e) => e.stopPropagation()}
         >
-          <header {...stylex.props(styles.header)}>
-            <div {...stylex.props(styles.title)}>
-              <div {...stylex.props(styles.titleIcon)}>
+          <header {...stylex.attrs(styles.header)}>
+            <div {...stylex.attrs(styles.title)}>
+              <div {...stylex.attrs(styles.titleIcon)}>
                 <Settings size={14} />
               </div>
-              <div {...stylex.props(styles.titleCopy)}>
-                <strong {...stylex.props(styles.titleStrong)}>
+              <div {...stylex.attrs(styles.titleCopy)}>
+                <strong {...stylex.attrs(styles.titleStrong)}>
                   {props.copy?.sidebarTitle ?? "设置"}
                 </strong>
-                <span {...stylex.props(styles.titleMeta)}>
+                <span {...stylex.attrs(styles.titleMeta)}>
                   {props.copy?.windowSubtitle ??
                     "个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件"}
                 </span>
               </div>
             </div>
             <button
-              {...stylex.props(styles.close)}
+              {...stylex.attrs(styles.close)}
               type="button"
               data-settings-close
               onClick={handleClose}
@@ -591,14 +591,14 @@ export function SettingsHost(props: SettingsHostProps) {
               <X size={16} />
             </button>
           </header>
-          <div {...stylex.props(styles.body)}>
+          <div {...stylex.attrs(styles.body)}>
             <nav
-              {...stylex.props(styles.nav)}
+              {...stylex.attrs(styles.nav)}
               data-settings-nav
               aria-label={props.copy?.sidebarTitle ?? "设置导航"}
             >
               <button
-                {...stylex.props(
+                {...stylex.attrs(
                   styles.account,
                   activeSection() === "account" ? styles.selected : null,
                 )}
@@ -608,23 +608,23 @@ export function SettingsHost(props: SettingsHostProps) {
                 onClick={() => handleSectionChange("account")}
                 aria-label={sectionTitle("account")}
               >
-                <span {...stylex.props(styles.avatar)}>{props.copy?.accountNavAvatar ?? "未"}</span>
-                <span {...stylex.props(styles.accountCopy)}>
-                  <strong {...stylex.props(styles.accountName)}>
+                <span {...stylex.attrs(styles.avatar)}>{props.copy?.accountNavAvatar ?? "未"}</span>
+                <span {...stylex.attrs(styles.accountCopy)}>
+                  <strong {...stylex.attrs(styles.accountName)}>
                     {props.copy?.accountNavName ?? "未登录"}
                   </strong>
-                  <span {...stylex.props(styles.accountMeta)}>
+                  <span {...stylex.attrs(styles.accountMeta)}>
                     {props.copy?.accountNavMeta ?? "本地模式"}
                   </span>
                 </span>
               </button>
-              <div {...stylex.props(styles.kicker)}>
+              <div {...stylex.attrs(styles.kicker)}>
                 {props.copy?.workspaceGroupTitle ?? "工作台"}
               </div>
               <For each={workspaceSections()}>
                 {(section) => (
                   <button
-                    {...stylex.props(
+                    {...stylex.attrs(
                       styles.navButton,
                       section.id === activeSection() ? styles.selected : null,
                     )}
@@ -635,18 +635,18 @@ export function SettingsHost(props: SettingsHostProps) {
                   >
                     <span>{sectionTitle(section.id)}</span>
                     <Show when={sectionNavMeta(section.id)}>
-                      <span {...stylex.props(styles.navCount)}>{sectionNavMeta(section.id)}</span>
+                      <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
                     </Show>
                   </button>
                 )}
               </For>
-              <div {...stylex.props(styles.kicker)}>
+              <div {...stylex.attrs(styles.kicker)}>
                 {props.copy?.extensionGroupTitle ?? "扩展"}
               </div>
               <For each={extensionSections()}>
                 {(section) => (
                   <button
-                    {...stylex.props(
+                    {...stylex.attrs(
                       styles.navButton,
                       section.id === activeSection() ? styles.selected : null,
                     )}
@@ -657,20 +657,20 @@ export function SettingsHost(props: SettingsHostProps) {
                   >
                     <span>{sectionTitle(section.id)}</span>
                     <Show when={sectionNavMeta(section.id)}>
-                      <span {...stylex.props(styles.navCount)}>{sectionNavMeta(section.id)}</span>
+                      <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
                     </Show>
                   </button>
                 )}
               </For>
             </nav>
-            <div {...stylex.props(styles.main)} data-active-view={activeSection()}>
+            <div {...stylex.attrs(styles.main)} data-active-view={activeSection()}>
               <Show when={activeSection() !== "account"}>
-                <div {...stylex.props(styles.panelHeader)} data-settings-panel-header>
+                <div {...stylex.attrs(styles.panelHeader)} data-settings-panel-header>
                   <div>
-                    <strong {...stylex.props(styles.panelHeaderTitle)}>
+                    <strong {...stylex.attrs(styles.panelHeaderTitle)}>
                       {activeSectionTitle()}
                     </strong>
-                    <span {...stylex.props(styles.panelHeaderDescription)}>
+                    <span {...stylex.attrs(styles.panelHeaderDescription)}>
                       {activeSectionDescription()}
                     </span>
                   </div>
@@ -680,7 +680,7 @@ export function SettingsHost(props: SettingsHostProps) {
                 </div>
               </Show>
               <div
-                {...stylex.props(
+                {...stylex.attrs(
                   styles.panelView,
                   activeSection() === "account" ? styles.accountPanel : null,
                 )}
@@ -709,7 +709,7 @@ export function SettingsHost(props: SettingsHostProps) {
                     }
                   >
                     <div
-                      {...stylex.props(
+                      {...stylex.attrs(
                         styles.stack,
                         activeSection() === "account" ? styles.accountStack : null,
                       )}
@@ -744,12 +744,12 @@ export function SettingsHost(props: SettingsHostProps) {
               </div>
             </div>
           </div>
-          <footer {...stylex.props(styles.footer)} data-workbench-overlay-footer>
-            <span {...stylex.props(styles.status)}>
-              <span {...stylex.props(styles.statusDot)} aria-hidden="true" />
+          <footer {...stylex.attrs(styles.footer)} data-workbench-overlay-footer>
+            <span {...stylex.attrs(styles.status)}>
+              <span {...stylex.attrs(styles.statusDot)} aria-hidden="true" />
               {statusText() ?? props.copy?.statusReady ?? "设置已就绪"}
             </span>
-            <div {...stylex.props(styles.footerActions)}>
+            <div {...stylex.attrs(styles.footerActions)}>
               <Button size="sm" variant="secondary" onClick={handleClose}>
                 {props.copy?.cancelLabel ?? "取消"}
               </Button>

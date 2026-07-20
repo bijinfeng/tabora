@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button, InlineError, SegmentedControl, Select, Skeleton } from "@tabora/ui"
@@ -11,7 +12,7 @@ import {
   windDirectionLabel,
   type WeatherSnapshot,
 } from "./weather-data"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 type WeatherView = "hourly" | "forecast" | "advice"
 
@@ -59,14 +60,14 @@ export function WeatherExpand(props: WidgetViewProps) {
   }
 
   return (
-    <div {...sx(styles.expand)} data-widget-expand="weather">
+    <div {...stylex.attrs(styles.expand)} data-widget-expand="weather">
       <Show
         when={store.snapshot()}
         fallback={
           <Show
             when={!store.error()}
             fallback={
-              <div {...sx(styles.stack)}>
+              <div {...stylex.attrs(styles.stack)}>
                 <InlineError>{store.error()!}</InlineError>
                 <Button size="sm" variant="secondary" onClick={() => void store.load()}>
                   <RefreshCw size={12} /> 重试
@@ -74,7 +75,7 @@ export function WeatherExpand(props: WidgetViewProps) {
               </div>
             }
           >
-            <div {...sx(styles.stack)}>
+            <div {...stylex.attrs(styles.stack)}>
               <Skeleton height="88px" width="100%" />
               <Skeleton height="200px" width="100%" />
             </div>
@@ -82,26 +83,26 @@ export function WeatherExpand(props: WidgetViewProps) {
         }
       >
         {(snap) => (
-          <div {...sx(styles.expandBody)}>
-            <div {...sx(styles.main)}>
-              <section {...sx(styles.nowPanel)} aria-label="当前天气">
-                <div {...sx(styles.icon)}>
+          <div {...stylex.attrs(styles.expandBody)}>
+            <div {...stylex.attrs(styles.main)}>
+              <section {...stylex.attrs(styles.nowPanel)} aria-label="当前天气">
+                <div {...stylex.attrs(styles.icon)}>
                   <WeatherIcon code={snap().code} size={40} />
                 </div>
-                <div {...sx(styles.temp)}>{snap().temp}°</div>
-                <div {...sx(styles.copy)}>
-                  <strong {...sx(styles.title)}>
+                <div {...stylex.attrs(styles.temp)}>{snap().temp}°</div>
+                <div {...stylex.attrs(styles.copy)}>
+                  <strong {...stylex.attrs(styles.title)}>
                     {weatherCodeToText(snap().code)} · 体感 {snap().feelsLike}°
                   </strong>
-                  <span {...sx(styles.muted)}>
+                  <span {...stylex.attrs(styles.muted)}>
                     {snap().city}
                     {snap().district ? ` · ${snap().district}` : ""} ·{" "}
                     {formatUpdatedAt(snap().updatedAt)}更新
                   </span>
                 </div>
-                <div {...sx(styles.aqi)}>
-                  <b {...sx(styles.value)}>AQI {snap().aqi ?? "—"}</b>
-                  <span {...sx(styles.muted)}>{aqiLabel(snap().aqi)}</span>
+                <div {...stylex.attrs(styles.aqi)}>
+                  <b {...stylex.attrs(styles.value)}>AQI {snap().aqi ?? "—"}</b>
+                  <span {...stylex.attrs(styles.muted)}>{aqiLabel(snap().aqi)}</span>
                 </div>
               </section>
 
@@ -118,21 +119,21 @@ export function WeatherExpand(props: WidgetViewProps) {
               />
 
               <Show when={view() === "hourly"}>
-                <section {...sx(styles.panel)} aria-label="逐小时天气">
-                  <div {...sx(styles.panelHead)}>
+                <section {...stylex.attrs(styles.panel)} aria-label="逐小时天气">
+                  <div {...stylex.attrs(styles.panelHead)}>
                     <span>未来 5 小时</span>
                     <span>温度 · 天气 · 降水</span>
                   </div>
-                  <div {...sx(styles.list)}>
+                  <div {...stylex.attrs(styles.list)}>
                     <For each={snap().hours}>
                       {(hour) => (
-                        <div {...sx(styles.row)}>
+                        <div {...stylex.attrs(styles.row)}>
                           <b>{hour.time}</b>
-                          <span {...sx(styles.rowText)}>
+                          <span {...stylex.attrs(styles.rowText)}>
                             <WeatherIcon code={hour.code} size={14} />{" "}
                             {weatherCodeToText(hour.code)}
                           </span>
-                          <em {...sx(styles.rowMeta)}>
+                          <em {...stylex.attrs(styles.rowMeta)}>
                             {hour.temp}° · 降水 {hour.precipitation}%
                           </em>
                         </div>
@@ -143,20 +144,20 @@ export function WeatherExpand(props: WidgetViewProps) {
               </Show>
 
               <Show when={view() === "forecast"}>
-                <section {...sx(styles.panel)} aria-label="三日趋势">
-                  <div {...sx(styles.panelHead)}>
+                <section {...stylex.attrs(styles.panel)} aria-label="三日趋势">
+                  <div {...stylex.attrs(styles.panelHead)}>
                     <span>未来三天</span>
                     <span>高低温 · 天气</span>
                   </div>
-                  <div {...sx(styles.list)}>
+                  <div {...stylex.attrs(styles.list)}>
                     <For each={snap().days}>
                       {(day) => (
-                        <div {...sx(styles.row)}>
+                        <div {...stylex.attrs(styles.row)}>
                           <b>{day.label}</b>
-                          <span {...sx(styles.rowText)}>
+                          <span {...stylex.attrs(styles.rowText)}>
                             <WeatherIcon code={day.code} size={14} /> {weatherCodeToText(day.code)}
                           </span>
-                          <em {...sx(styles.rowMeta)}>
+                          <em {...stylex.attrs(styles.rowMeta)}>
                             {day.high}° / {day.low}°
                           </em>
                         </div>
@@ -167,18 +168,18 @@ export function WeatherExpand(props: WidgetViewProps) {
               </Show>
 
               <Show when={view() === "advice"}>
-                <section {...sx(styles.panel)} aria-label="生活建议">
-                  <div {...sx(styles.panelHead)}>
+                <section {...stylex.attrs(styles.panel)} aria-label="生活建议">
+                  <div {...stylex.attrs(styles.panelHead)}>
                     <span>个人提醒</span>
                     <span>通勤 · 晾晒 · 运动</span>
                   </div>
-                  <div {...sx(styles.list)}>
+                  <div {...stylex.attrs(styles.list)}>
                     <For each={buildAdvice(snap())}>
                       {(advice) => (
-                        <div {...sx(styles.row, styles.advice)}>
+                        <div {...stylex.attrs(styles.row, styles.advice)}>
                           <b>{advice.name}</b>
-                          <span {...sx(styles.rowText)}>{advice.desc}</span>
-                          <em {...sx(styles.rowMeta)}>{advice.tag}</em>
+                          <span {...stylex.attrs(styles.rowText)}>{advice.desc}</span>
+                          <em {...stylex.attrs(styles.rowMeta)}>{advice.tag}</em>
                         </div>
                       )}
                     </For>
@@ -187,9 +188,9 @@ export function WeatherExpand(props: WidgetViewProps) {
               </Show>
             </div>
 
-            <aside {...sx(styles.side)} aria-label="天气配置">
-              <section {...sx(styles.sidePanel)}>
-                <div {...sx(styles.title)}>城市</div>
+            <aside {...stylex.attrs(styles.side)} aria-label="天气配置">
+              <section {...stylex.attrs(styles.sidePanel)}>
+                <div {...stylex.attrs(styles.title)}>城市</div>
                 <Select
                   size="sm"
                   value={store.city()}
@@ -207,24 +208,26 @@ export function WeatherExpand(props: WidgetViewProps) {
                 </Button>
               </section>
 
-              <section {...sx(styles.sidePanel)}>
-                <div {...sx(styles.title)}>关注指标</div>
-                <div {...sx(styles.miniGrid)}>
-                  <div {...sx(styles.mini)}>
-                    <b {...sx(styles.value)}>{snap().humidity}%</b>
-                    <span {...sx(styles.muted)}>湿度</span>
+              <section {...stylex.attrs(styles.sidePanel)}>
+                <div {...stylex.attrs(styles.title)}>关注指标</div>
+                <div {...stylex.attrs(styles.miniGrid)}>
+                  <div {...stylex.attrs(styles.mini)}>
+                    <b {...stylex.attrs(styles.value)}>{snap().humidity}%</b>
+                    <span {...stylex.attrs(styles.muted)}>湿度</span>
                   </div>
-                  <div {...sx(styles.mini)}>
-                    <b {...sx(styles.value)}>{snap().windSpeed}km/h</b>
-                    <span {...sx(styles.muted)}>{windDirectionLabel(snap().windDirection)}</span>
+                  <div {...stylex.attrs(styles.mini)}>
+                    <b {...stylex.attrs(styles.value)}>{snap().windSpeed}km/h</b>
+                    <span {...stylex.attrs(styles.muted)}>
+                      {windDirectionLabel(snap().windDirection)}
+                    </span>
                   </div>
-                  <div {...sx(styles.mini)}>
-                    <b {...sx(styles.value)}>{snap().precipitation}%</b>
-                    <span {...sx(styles.muted)}>降水概率</span>
+                  <div {...stylex.attrs(styles.mini)}>
+                    <b {...stylex.attrs(styles.value)}>{snap().precipitation}%</b>
+                    <span {...stylex.attrs(styles.muted)}>降水概率</span>
                   </div>
-                  <div {...sx(styles.mini)}>
-                    <b {...sx(styles.value)}>{snap().feelsLike}°</b>
-                    <span {...sx(styles.muted)}>体感温度</span>
+                  <div {...stylex.attrs(styles.mini)}>
+                    <b {...stylex.attrs(styles.value)}>{snap().feelsLike}°</b>
+                    <span {...stylex.attrs(styles.muted)}>体感温度</span>
                   </div>
                 </div>
               </section>

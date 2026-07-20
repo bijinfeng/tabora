@@ -1,16 +1,17 @@
+import * as stylex from "@stylexjs/stylex"
 import { Progress } from "./progress.styled"
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 
 export function ProgressDemo() {
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.sectionRoomy)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>线性 — 尺寸</h4>
-        <div {...sx(demoStyles.col)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.sectionRoomy)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>线性 — 尺寸</h4>
+        <div {...stylex.attrs(demoStyles.col)}>
           <Progress value={100} size="sm" aria-label="小尺寸进度 100%" />
           <div>
             <Progress value={60} aria-label="默认尺寸进度 60%" />
-            <div {...sx(demoStyles.progressLabel)}>
+            <div {...stylex.attrs(demoStyles.progressLabel)}>
               <span>60%</span>
               <span>3/5 完成</span>
             </div>
@@ -19,16 +20,16 @@ export function ProgressDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.sectionRoomy)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>圆形</h4>
-        <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.sectionRoomy)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>圆形</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Progress value={60} variant="circular" showLabel aria-label="圆形进度 60%" />
         </div>
       </div>
 
-      <div {...sx(demoStyles.sectionRoomy)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>导入插件包</h4>
-        <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.sectionRoomy)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>导入插件包</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <div style={{ width: "180px" }}>
             <Progress value={0} indeterminate aria-label="导入插件包进度" />
           </div>

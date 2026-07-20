@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Pagination as P } from "../../primitives/pagination/pagination"
 import type { PaginationProps } from "../../primitives/pagination/pagination"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -62,31 +62,22 @@ export type StyledPaginationProps = PaginationProps & {
 }
 
 export function Pagination(props: StyledPaginationProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const buttonCompiled = () => stylex.props(styles.button)
-  const activeCompiled = () => stylex.props(styles.active)
-  const ellipsisCompiled = () => stylex.props(styles.ellipsis)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const buttonCompiled = () => stylex.attrs(styles.button)
+  const activeCompiled = () => stylex.attrs(styles.active)
+  const ellipsisCompiled = () => stylex.attrs(styles.ellipsis)
 
   return (
     <P
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      pageButtonClass={joinClassNames(buttonCompiled().className, props.pageButtonClass)}
-      pageButtonStyle={mergeSolidStyles(
-        toSolidStyle(buttonCompiled().style),
-        props.pageButtonStyle,
-      )}
-      pageButtonActiveClass={joinClassNames(
-        activeCompiled().className,
-        props.pageButtonActiveClass,
-      )}
-      pageButtonActiveStyle={mergeSolidStyles(
-        toSolidStyle(activeCompiled().style),
-        props.pageButtonActiveStyle,
-      )}
-      ellipsisClass={joinClassNames(ellipsisCompiled().className, props.ellipsisClass)}
-      ellipsisStyle={mergeSolidStyles(toSolidStyle(ellipsisCompiled().style), props.ellipsisStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      pageButtonClass={joinClassNames(buttonCompiled().class, props.pageButtonClass)}
+      pageButtonStyle={{ ...props.pageButtonStyle }}
+      pageButtonActiveClass={joinClassNames(activeCompiled().class, props.pageButtonActiveClass)}
+      pageButtonActiveStyle={{ ...props.pageButtonActiveStyle }}
+      ellipsisClass={joinClassNames(ellipsisCompiled().class, props.ellipsisClass)}
+      ellipsisStyle={props.ellipsisStyle}
     />
   )
 }

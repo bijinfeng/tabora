@@ -1,8 +1,9 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Checkbox, Skeleton } from "@tabora/ui"
 import { ChevronDown, ChevronRight, Circle, ArrowUpRight } from "lucide-solid"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 type Priority = "high" | "medium" | "low" | "none"
 
@@ -136,26 +137,26 @@ export function TodoCard(props: WidgetViewProps) {
   }
 
   return (
-    <div {...sx(styles.root)} data-todo-card>
-      <div {...sx(styles.toolbar)}>
+    <div {...stylex.attrs(styles.root)} data-todo-card>
+      <div {...stylex.attrs(styles.toolbar)}>
         <button
-          {...sx(styles.tab, filter() === "todo" && styles.active)}
+          {...stylex.attrs(styles.tab, filter() === "todo" && styles.active)}
           type="button"
           onClick={() => setFilter("todo")}
         >
           未完成
-          <span {...sx(styles.badge)}>{todoCount()}</span>
+          <span {...stylex.attrs(styles.badge)}>{todoCount()}</span>
         </button>
         <button
-          {...sx(styles.tab, filter() === "all" && styles.active)}
+          {...stylex.attrs(styles.tab, filter() === "all" && styles.active)}
           type="button"
           onClick={() => setFilter("all")}
         >
           全部
         </button>
-        <div {...sx(styles.spacer)} />
+        <div {...stylex.attrs(styles.spacer)} />
         <button
-          {...sx(styles.outlineButton)}
+          {...stylex.attrs(styles.outlineButton)}
           data-todo-expand
           type="button"
           onClick={() => props.host.openExpand()}
@@ -164,11 +165,11 @@ export function TodoCard(props: WidgetViewProps) {
         </button>
       </div>
 
-      <div {...sx(styles.list)}>
+      <div {...stylex.attrs(styles.list)}>
         <Show
           when={!loading()}
           fallback={
-            <div {...sx(styles.skeleton)}>
+            <div {...stylex.attrs(styles.skeleton)}>
               <Skeleton height="24px" width="100%" />
               <Skeleton height="24px" width="90%" />
               <Skeleton height="24px" width="85%" />
@@ -180,22 +181,25 @@ export function TodoCard(props: WidgetViewProps) {
               const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
               return (
                 <Show when={groupItems().length > 0}>
-                  <div {...sx(styles.group)}>
-                    <div {...sx(styles.groupHeader)} onClick={() => void toggleGroup(group.id)}>
-                      <span {...sx(styles.arrow)}>
+                  <div {...stylex.attrs(styles.group)}>
+                    <div
+                      {...stylex.attrs(styles.groupHeader)}
+                      onClick={() => void toggleGroup(group.id)}
+                    >
+                      <span {...stylex.attrs(styles.arrow)}>
                         {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                       </span>
-                      <span {...sx(styles.groupName)}>{group.name}</span>
-                      <span {...sx(styles.count)}>{groupItems().length}</span>
+                      <span {...stylex.attrs(styles.groupName)}>{group.name}</span>
+                      <span {...stylex.attrs(styles.count)}>{groupItems().length}</span>
                     </div>
 
                     <Show when={!group.collapsed}>
-                      <div {...sx(styles.groupItems)}>
+                      <div {...stylex.attrs(styles.groupItems)}>
                         <For each={groupItems()}>
                           {(item) => (
-                            <div {...sx(styles.item, item.done && styles.done)}>
+                            <div {...stylex.attrs(styles.item, item.done && styles.done)}>
                               <span
-                                {...sx(styles.priorityDot)}
+                                {...stylex.attrs(styles.priorityDot)}
                                 style={{ color: PRIORITY_COLORS[item.priority] }}
                               >
                                 <Circle size={7} fill="currentColor" />
@@ -205,12 +209,15 @@ export function TodoCard(props: WidgetViewProps) {
                                 aria-label={`标记 ${item.text} 完成`}
                                 onChange={() => void toggleItem(item.id)}
                               />
-                              <span {...sx(styles.text, item.done && styles.textDone)}>
+                              <span {...stylex.attrs(styles.text, item.done && styles.textDone)}>
                                 {item.text}
                               </span>
                               <Show when={item.dueDate}>
                                 <span
-                                  {...sx(styles.due, isOverdue(item.dueDate) && styles.overdue)}
+                                  {...stylex.attrs(
+                                    styles.due,
+                                    isOverdue(item.dueDate) && styles.overdue,
+                                  )}
                                 >
                                   {formatDate(item.dueDate)}
                                 </span>

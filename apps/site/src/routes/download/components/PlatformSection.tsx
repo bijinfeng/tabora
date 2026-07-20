@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
-import { sx } from "../../../shared/stylex"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
 
 const styles = stylex.create({
@@ -153,48 +152,48 @@ const styles = stylex.create({
 export function PlatformSection(props: { content: DownloadPageContent }) {
   return (
     <section
-      {...sx(styles.section)}
+      {...stylex.attrs(styles.section)}
       id="platforms"
       data-od-id="platforms"
       data-component="SiteDownloadCard"
     >
-      <div {...sx(styles.container)}>
-        <div {...sx(styles.head)}>
+      <div {...stylex.attrs(styles.container)}>
+        <div {...stylex.attrs(styles.head)}>
           <div>
-            <p {...sx(styles.eyebrow)}>PLATFORMS</p>
-            <h2 {...sx(styles.title)}>{props.content.platforms.title}</h2>
+            <p {...stylex.attrs(styles.eyebrow)}>PLATFORMS</p>
+            <h2 {...stylex.attrs(styles.title)}>{props.content.platforms.title}</h2>
           </div>
-          <p {...sx(styles.body)}>{props.content.platforms.body}</p>
+          <p {...stylex.attrs(styles.body)}>{props.content.platforms.body}</p>
         </div>
 
-        <div {...sx(styles.stats)} aria-label="平台信息">
+        <div {...stylex.attrs(styles.stats)} aria-label="平台信息">
           {props.content.platforms.stats.map((item: [string, string]) => (
-            <div {...sx(styles.stat)}>
-              <strong {...sx(styles.statValue)}>{item[0]}</strong>
-              <span {...sx(styles.statLabel)}>{item[1]}</span>
+            <div {...stylex.attrs(styles.stat)}>
+              <strong {...stylex.attrs(styles.statValue)}>{item[0]}</strong>
+              <span {...stylex.attrs(styles.statLabel)}>{item[1]}</span>
             </div>
           ))}
         </div>
 
-        <div {...sx(styles.grid)}>
+        <div {...stylex.attrs(styles.grid)}>
           {props.content.platforms.cards.map(
             (card: [string, string, string, [string, string]], index: number) => (
-              <article {...sx(styles.card, index === 0 && styles.featured)}>
-                <span {...sx(styles.mark)}>{card[0]}</span>
-                <h3 {...sx(styles.cardTitle)}>{card[1]}</h3>
-                <p {...sx(styles.body)}>{card[2]}</p>
-                <div {...sx(styles.actions)}>
+              <article {...stylex.attrs(styles.card, index === 0 && styles.featured)}>
+                <span {...stylex.attrs(styles.mark)}>{card[0]}</span>
+                <h3 {...stylex.attrs(styles.cardTitle)}>{card[1]}</h3>
+                <p {...stylex.attrs(styles.body)}>{card[2]}</p>
+                <div {...stylex.attrs(styles.actions)}>
                   {index === 2 ? (
                     <>
-                      <A {...sx(styles.button)} href="/docs/quickstart">
+                      <A {...stylex.attrs(styles.button)} href="/docs/quickstart">
                         {card[3][0]}
                       </A>
-                      <span {...sx(styles.badge)}>{card[3][1]}</span>
+                      <span {...stylex.attrs(styles.badge)}>{card[3][1]}</span>
                     </>
                   ) : (
                     <>
-                      <span {...sx(styles.badge)}>{card[3][0]}</span>
-                      <span {...sx(styles.badge)}>{card[3][1]}</span>
+                      <span {...stylex.attrs(styles.badge)}>{card[3][0]}</span>
+                      <span {...stylex.attrs(styles.badge)}>{card[3][1]}</span>
                     </>
                   )}
                 </div>

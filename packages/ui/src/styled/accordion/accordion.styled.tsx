@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Accordion as P } from "../../primitives/accordion/accordion"
 import type { AccordionItem, AccordionProps } from "../../primitives/accordion/accordion"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -76,25 +76,25 @@ export type StyledAccordionProps = AccordionProps & {
 }
 
 export function Accordion(props: StyledAccordionProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const itemCompiled = () => stylex.props(styles.item)
-  const triggerCompiled = () => stylex.props(styles.trigger)
-  const arrowCompiled = () => stylex.props(styles.arrow)
-  const contentCompiled = () => stylex.props(styles.content)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const triggerCompiled = () => stylex.attrs(styles.trigger)
+  const arrowCompiled = () => stylex.attrs(styles.arrow)
+  const contentCompiled = () => stylex.attrs(styles.content)
 
   return (
     <P
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      itemClass={joinClassNames(itemCompiled().className, props.itemClass)}
-      itemStyle={mergeSolidStyles(toSolidStyle(itemCompiled().style), props.itemStyle)}
-      triggerClass={joinClassNames(triggerCompiled().className, props.triggerClass)}
-      triggerStyle={mergeSolidStyles(toSolidStyle(triggerCompiled().style), props.triggerStyle)}
-      arrowClass={joinClassNames(arrowCompiled().className, props.arrowClass)}
-      arrowStyle={mergeSolidStyles(toSolidStyle(arrowCompiled().style), props.arrowStyle)}
-      contentClass={joinClassNames(contentCompiled().className, props.contentClass)}
-      contentStyle={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.contentStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      itemClass={joinClassNames(itemCompiled().class, props.itemClass)}
+      itemStyle={props.itemStyle}
+      triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
+      triggerStyle={props.triggerStyle}
+      arrowClass={joinClassNames(arrowCompiled().class, props.arrowClass)}
+      arrowStyle={props.arrowStyle}
+      contentClass={joinClassNames(contentCompiled().class, props.contentClass)}
+      contentStyle={props.contentStyle}
     />
   )
 }
