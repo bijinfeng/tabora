@@ -1,51 +1,200 @@
 import { A } from "@solidjs/router"
+import * as stylex from "@stylexjs/stylex"
+import { sx } from "../../../shared/stylex"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
+
+const styles = stylex.create({
+  section: {
+    borderTop: "1px solid rgb(var(--tbr-color-line))",
+    paddingBlock: 72,
+    "@media (max-width: 560px)": {
+      paddingBlock: 48,
+    },
+  },
+  container: {
+    marginInline: "auto",
+    width: "min(calc(100% - 64px), 1180px)",
+    "@media (max-width: 560px)": {
+      width: "min(calc(100% - 32px), 1180px)",
+    },
+  },
+  head: {
+    alignItems: "end",
+    display: "grid",
+    gap: 48,
+    gridTemplateColumns: "minmax(0, 0.7fr) minmax(260px, 0.3fr)",
+    marginBottom: 36,
+    "@media (max-width: 920px)": {
+      gap: 16,
+      gridTemplateColumns: "1fr",
+    },
+  },
+  eyebrow: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontFamily: "var(--tbr-font-mono)",
+    fontSize: 11,
+    fontWeight: 650,
+    margin: 0,
+  },
+  title: {
+    fontSize: 24,
+    margin: "6px 0 0",
+  },
+  body: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 14,
+    lineHeight: 1.6,
+    margin: 0,
+  },
+  stats: {
+    backgroundColor: "rgb(var(--tbr-color-line))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-panel)",
+    display: "grid",
+    gap: 1,
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    marginBottom: 32,
+    overflow: "hidden",
+    "@media (max-width: 640px)": {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  stat: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    display: "grid",
+    gap: 5,
+    minHeight: 104,
+    padding: 18,
+  },
+  statValue: {
+    fontFamily: "var(--tbr-font-mono)",
+    fontSize: 24,
+  },
+  statLabel: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 13,
+  },
+  grid: {
+    display: "grid",
+    gap: 14,
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    "@media (max-width: 920px)": {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  card: {
+    alignContent: "start",
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-card)",
+    display: "grid",
+    gap: 14,
+    minHeight: 220,
+    padding: 18,
+  },
+  featured: {
+    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    borderColor: "rgb(var(--tbr-color-accent))",
+  },
+  mark: {
+    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-control)",
+    display: "grid",
+    fontFamily: "var(--tbr-font-mono)",
+    fontSize: 12,
+    fontWeight: 760,
+    height: 42,
+    placeItems: "center",
+    width: 42,
+  },
+  cardTitle: {
+    fontSize: 16,
+    margin: 0,
+  },
+  actions: {
+    alignItems: "center",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: "auto",
+  },
+  badge: {
+    alignItems: "center",
+    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    borderRadius: "var(--tbr-radius-pill)",
+    color: "rgb(var(--tbr-color-accent))",
+    display: "inline-flex",
+    fontSize: 11,
+    fontWeight: 650,
+    minHeight: 22,
+    paddingInline: 8,
+  },
+  button: {
+    alignItems: "center",
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-control)",
+    color: "rgb(var(--tbr-color-text))",
+    display: "inline-flex",
+    fontSize: 14,
+    fontWeight: 620,
+    justifyContent: "center",
+    minHeight: 38,
+    paddingInline: 14,
+    textDecoration: "none",
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      borderColor: "rgb(var(--tbr-color-line-strong))",
+    },
+  },
+})
 
 export function PlatformSection(props: { content: DownloadPageContent }) {
   return (
     <section
-      class="site-section"
+      {...sx(styles.section)}
       id="platforms"
       data-od-id="platforms"
       data-component="SiteDownloadCard"
     >
-      <div class="site-container">
-        <div class="site-section-head">
+      <div {...sx(styles.container)}>
+        <div {...sx(styles.head)}>
           <div>
-            <p class="site-eyebrow">PLATFORMS</p>
-            <h2>{props.content.platforms.title}</h2>
+            <p {...sx(styles.eyebrow)}>PLATFORMS</p>
+            <h2 {...sx(styles.title)}>{props.content.platforms.title}</h2>
           </div>
-          <p>{props.content.platforms.body}</p>
+          <p {...sx(styles.body)}>{props.content.platforms.body}</p>
         </div>
 
-        <div class="site-stat-strip" aria-label="平台信息" style="margin-bottom: 32px">
+        <div {...sx(styles.stats)} aria-label="平台信息">
           {props.content.platforms.stats.map((item: [string, string]) => (
-            <div class="site-stat">
-              <strong>{item[0]}</strong>
-              <span>{item[1]}</span>
+            <div {...sx(styles.stat)}>
+              <strong {...sx(styles.statValue)}>{item[0]}</strong>
+              <span {...sx(styles.statLabel)}>{item[1]}</span>
             </div>
           ))}
         </div>
 
-        <div class="download-grid">
+        <div {...sx(styles.grid)}>
           {props.content.platforms.cards.map(
             (card: [string, string, string, [string, string]], index: number) => (
-              <article class="download-card" classList={{ featured: index === 0 }}>
-                <span class="download-mark">{card[0]}</span>
-                <h3>{card[1]}</h3>
-                <p>{card[2]}</p>
-                <div class="download-actions">
+              <article {...sx(styles.card, index === 0 && styles.featured)}>
+                <span {...sx(styles.mark)}>{card[0]}</span>
+                <h3 {...sx(styles.cardTitle)}>{card[1]}</h3>
+                <p {...sx(styles.body)}>{card[2]}</p>
+                <div {...sx(styles.actions)}>
                   {index === 2 ? (
                     <>
-                      <A class="btn btn-secondary" href="/docs/quickstart">
+                      <A {...sx(styles.button)} href="/docs/quickstart">
                         {card[3][0]}
                       </A>
-                      <span class="badge">{card[3][1]}</span>
+                      <span {...sx(styles.badge)}>{card[3][1]}</span>
                     </>
                   ) : (
                     <>
-                      <span class="badge">{card[3][0]}</span>
-                      <span class="badge">{card[3][1]}</span>
+                      <span {...sx(styles.badge)}>{card[3][0]}</span>
+                      <span {...sx(styles.badge)}>{card[3][1]}</span>
                     </>
                   )}
                 </div>

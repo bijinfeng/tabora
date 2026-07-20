@@ -11,7 +11,18 @@ export type ListRowProps = {
   danger?: boolean
   selected?: boolean
   interactive?: boolean
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  leadingClass?: string | undefined
+  leadingStyle?: JSX.CSSProperties | undefined
+  mainClass?: string | undefined
+  mainStyle?: JSX.CSSProperties | undefined
+  primaryClass?: string | undefined
+  primaryStyle?: JSX.CSSProperties | undefined
+  secondaryClass?: string | undefined
+  secondaryStyle?: JSX.CSSProperties | undefined
+  trailingClass?: string | undefined
+  trailingStyle?: JSX.CSSProperties | undefined
 }
 
 export function ListRow(props: ListRowProps) {
@@ -19,16 +30,24 @@ export function ListRow(props: ListRowProps) {
   const inner = (
     <>
       <Show when={props.leading}>
-        <div class="tbr-list-row-leading">{props.leading}</div>
+        <div class={props.leadingClass} style={props.leadingStyle}>
+          {props.leading}
+        </div>
       </Show>
-      <div class="tbr-list-row-main">
-        <div class="tbr-list-row-primary">{props.primary}</div>
+      <div class={props.mainClass} style={props.mainStyle}>
+        <div class={props.primaryClass} style={props.primaryStyle}>
+          {props.primary}
+        </div>
         <Show when={props.secondary}>
-          <div class="tbr-list-row-secondary">{props.secondary}</div>
+          <div class={props.secondaryClass} style={props.secondaryStyle}>
+            {props.secondary}
+          </div>
         </Show>
       </div>
       <Show when={props.trailing}>
-        <div class="tbr-list-row-trailing">{props.trailing}</div>
+        <div class={props.trailingClass} style={props.trailingStyle}>
+          {props.trailing}
+        </div>
       </Show>
     </>
   )
@@ -36,6 +55,7 @@ export function ListRow(props: ListRowProps) {
     <button
       type="button"
       class={props.class}
+      style={props.style}
       data-divider={props.divider ? "" : undefined}
       data-danger={props.danger ? "" : undefined}
       data-selected={props.selected ? "" : undefined}
@@ -48,6 +68,7 @@ export function ListRow(props: ListRowProps) {
   ) : (
     <div
       class={props.class}
+      style={props.style}
       data-divider={props.divider ? "" : undefined}
       data-danger={props.danger ? "" : undefined}
       data-selected={props.selected ? "" : undefined}

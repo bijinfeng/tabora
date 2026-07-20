@@ -101,10 +101,12 @@ describe("SearchSettingsPanel", () => {
       root,
     )
 
-    expect(root.querySelectorAll(".search-provider-row")).toHaveLength(2)
-    expect(root.querySelector(".search-provider-row.active")?.textContent).toContain("✓ 当前")
+    expect(root.querySelector("[data-settings-panel='search']")).toBeTruthy()
+    expect(root.querySelector(".settings-panel-stack")).toBeNull()
+    expect(root.querySelectorAll("[data-search-provider-main]")).toHaveLength(2)
+    expect(root.querySelector("[data-selected]")?.textContent).toContain("✓ 当前")
     expect(root.textContent).toContain("@github")
-    ;(root.querySelectorAll(".search-provider-main")[1] as HTMLButtonElement).click()
+    ;(root.querySelectorAll("[data-search-provider-main]")[1] as HTMLButtonElement).click()
     expect(setDefaultSearchProvider).toHaveBeenCalledWith("official.search.github")
     root.remove()
   })
@@ -304,7 +306,6 @@ describe("AppearanceSettingsPanel", () => {
       root,
     )
 
-    expect(root.querySelectorAll(".settings-form-row")).toHaveLength(8)
     expect(root.textContent).toContain("界面模式")
     expect(root.textContent).toContain("强调色")
     expect(root.textContent).toContain("页面背景")

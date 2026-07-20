@@ -16,7 +16,8 @@ export type BadgeProps = {
   variant?: BadgeVariant
   size?: "sm" | "md"
   dotColor?: BadgeColorVariant
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
   children?: JSX.Element
 }
 
@@ -24,6 +25,7 @@ export function Badge(props: BadgeProps) {
   return (
     <span
       class={props.class}
+      style={props.style}
       data-variant={props.variant ?? "neutral"}
       data-size={props.size ?? "md"}
       data-dot-color={props.variant === "dot" ? (props.dotColor ?? "accent") : undefined}

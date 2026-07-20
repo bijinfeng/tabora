@@ -29,14 +29,26 @@ describe("createWorkbenchOverlayStore", () => {
       const overlays = createWorkbenchOverlayStore()
 
       overlays.setSettingsOpen(true)
-      overlays.setAddWidgetOpen(true)
+      const onAdded = () => {}
+      overlays.setAddWidgetOpen(true, {
+        activeGroupLabel: "Research",
+        onAdded,
+      })
       overlays.setCmdPaletteOpen(true)
       overlays.setActiveSettingsSectionId("appearance")
 
       expect(overlays.settingsOpen()).toBe(true)
       expect(overlays.addWidgetOpen()).toBe(true)
+      expect(overlays.addWidgetContext()).toEqual({
+        activeGroupLabel: "Research",
+        onAdded,
+      })
       expect(overlays.cmdPaletteOpen()).toBe(true)
       expect(overlays.activeSettingsSectionId()).toBe("appearance")
+
+      overlays.setAddWidgetOpen(false)
+      expect(overlays.addWidgetOpen()).toBe(false)
+      expect(overlays.addWidgetContext()).toBeNull()
 
       dispose()
     })

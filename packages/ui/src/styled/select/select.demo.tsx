@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js"
 
 import { Select } from "./select.styled"
-import "./select.demo.css"
+import { demoStyles, sx } from "../demoStyles"
 
 const engineOptions = [
   { value: "google", label: "Google" },
@@ -37,10 +37,10 @@ export function SelectDemo() {
   >("google")
 
   return (
-    <div class="docs-control-stack">
-      <div class="demo-section">
-        <h4>默认搜索源</h4>
-        <div class="demo-row">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>默认搜索源</h4>
+        <div {...sx(demoStyles.rowStart)}>
           <Select
             value={singleValue()}
             onChange={setSingleValue}
@@ -51,9 +51,9 @@ export function SelectDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>打开方式</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>打开方式</h4>
+        <div {...sx(demoStyles.rowStart)}>
           <Select
             value={openMode()}
             onChange={setOpenMode}
@@ -64,9 +64,9 @@ export function SelectDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>多选标签模式</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>多选标签模式</h4>
+        <div {...sx(demoStyles.rowStart)}>
           <div style={{ width: "320px" }}>
             <Select
               value={multiValue()}
@@ -81,9 +81,9 @@ export function SelectDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>尺寸与状态</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>尺寸与状态</h4>
+        <div {...sx(demoStyles.rowStart)}>
           <Select
             value={smallValue()}
             onChange={setSmallValue}

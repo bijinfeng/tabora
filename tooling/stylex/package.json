@@ -1,0 +1,20 @@
+{
+  "name": "@tabora/stylex-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@stylexjs/unplugin": "catalog:build"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*",
+    "vitest": "catalog:test"
+  }
+}

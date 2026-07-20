@@ -8,25 +8,55 @@ export type HoverCardProps = {
   description?: JSX.Element
   media?: JSX.Element
   meta?: JSX.Element
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  triggerClass?: string | undefined
+  triggerStyle?: JSX.CSSProperties | undefined
+  contentClass?: string | undefined
+  contentStyle?: JSX.CSSProperties | undefined
+  mediaClass?: string | undefined
+  mediaStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  descriptionClass?: string | undefined
+  descriptionStyle?: JSX.CSSProperties | undefined
+  metaClass?: string | undefined
+  metaStyle?: JSX.CSSProperties | undefined
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function HoverCard(props: HoverCardProps) {
   return (
-    <span class={props.class}>
+    <span class={props.class} style={props.style}>
       <KHoverCard>
-        <KHoverCard.Trigger class="tbr-hover-card-trigger">{props.trigger}</KHoverCard.Trigger>
+        <KHoverCard.Trigger class={props.triggerClass} style={props.triggerStyle}>
+          {props.trigger}
+        </KHoverCard.Trigger>
         <KHoverCard.Portal>
-          <KHoverCard.Content class="tbr-hover-card-content">
+          <KHoverCard.Content {...optionalPartProps(props.contentClass, props.contentStyle)}>
             <Show when={props.media}>
-              <span class="tbr-hover-card-media">{props.media}</span>
+              <span class={props.mediaClass} style={props.mediaStyle}>
+                {props.media}
+              </span>
             </Show>
-            <strong class="tbr-hover-card-title">{props.title}</strong>
+            <strong class={props.titleClass} style={props.titleStyle}>
+              {props.title}
+            </strong>
             <Show when={props.description}>
-              <span class="tbr-hover-card-desc">{props.description}</span>
+              <span class={props.descriptionClass} style={props.descriptionStyle}>
+                {props.description}
+              </span>
             </Show>
             <Show when={props.meta}>
-              <span class="tbr-hover-card-meta">{props.meta}</span>
+              <span class={props.metaClass} style={props.metaStyle}>
+                {props.meta}
+              </span>
             </Show>
           </KHoverCard.Content>
         </KHoverCard.Portal>

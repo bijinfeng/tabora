@@ -1,5 +1,6 @@
 import { createMemo, createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Badge } from "../badge"
 import { Combobox } from "./combobox.styled"
 
@@ -23,8 +24,8 @@ export function ComboboxDemo() {
   )
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>搜索插件与搜索源</strong>
         <span>适合需要边输入边筛选的大量候选项，而不是少量固定选项。</span>
       </div>
@@ -39,7 +40,7 @@ export function ComboboxDemo() {
         placeholder="搜索插件或搜索源..."
         options={[...options]}
       />
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Badge variant="neutral">候选 {resultCount()}</Badge>
         <span>最近选中：{selectedLabel()}</span>
       </div>

@@ -1,5 +1,6 @@
 import { createMemo, createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Badge } from "../badge"
 import { Button } from "../button"
 import { Table } from "./table.styled"
@@ -41,8 +42,8 @@ export function TableDemo() {
   })
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-row">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.row)}>
         <strong>插件运行状态</strong>
         <Button size="sm" variant="secondary" onClick={() => setShowOnlyRunning((value) => !value)}>
           {showOnlyRunning() ? "显示全部" : "只看运行中"}
@@ -68,7 +69,7 @@ export function TableDemo() {
         rows={rows()}
         rowKey={(row) => row.id}
       />
-      <div class="docs-stack compact">
+      <div {...sx(demoStyles.stackCompact)}>
         <span>当前显示 {rows().length} 个插件实例。</span>
         {rows().length === 0 ? <span>没有符合筛选条件的运行实例。</span> : null}
       </div>

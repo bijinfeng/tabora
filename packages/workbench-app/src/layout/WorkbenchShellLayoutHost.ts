@@ -1,4 +1,4 @@
-import type { LayoutHostAPI } from "@tabora/plugin-api"
+import type { AddWidgetContext, LayoutHostAPI } from "@tabora/plugin-api"
 
 import {
   resolveWorkbenchLayoutToggleTarget,
@@ -13,7 +13,7 @@ export function createWorkbenchLayoutHostAPI(options: {
   tShell?: ShellTranslation
   shellConfig: WorkbenchShellConfig
   setCommandPaletteOpen: (open: boolean) => void
-  setAddWidgetOpen: (open: boolean) => void
+  setAddWidgetOpen: (open: boolean, context?: AddWidgetContext) => void
   openSettings: (panelId?: string) => void
   readLayoutState: LayoutHostAPI["readLayoutState"]
   writeLayoutState: LayoutHostAPI["writeLayoutState"]
@@ -151,7 +151,7 @@ export function createWorkbenchLayoutHostAPI(options: {
     },
     openSettings: (panelId?: string) => options.openSettings(panelId),
     openCommandPalette: () => options.setCommandPaletteOpen(true),
-    openAddWidget: () => options.setAddWidgetOpen(true),
+    openAddWidget: (context?: AddWidgetContext) => options.setAddWidgetOpen(true, context),
     readLayoutState: options.readLayoutState,
     writeLayoutState: options.writeLayoutState,
     showToast: options.showToast,

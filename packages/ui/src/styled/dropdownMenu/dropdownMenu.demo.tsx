@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js"
 import { Pencil, Copy, ArrowUp, Lock, Trash2 } from "lucide-solid"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Button } from "../button"
 import { DropdownMenu } from "./dropdownMenu.styled"
 
@@ -9,12 +10,12 @@ export function DropdownMenuDemo() {
   const [lastAction, setLastAction] = createSignal("尚未调整卡片。")
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>卡片操作菜单</strong>
         <span>操作溢出菜单，支持图标、快捷键、已选中态、禁用项、分割线与危险操作。</span>
       </div>
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <span>{lastAction()}</span>
       </div>
       <DropdownMenu

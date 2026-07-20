@@ -18,9 +18,13 @@ import {
   findPassThroughWorkbenchAppExports,
   findForbiddenUiDependencies,
   findForbiddenUiImports,
+  findLegacyCssSourceViolations,
   findSourceInvariantViolations,
   findPluginExternalOpenViolations,
   findRawColorMatches,
+  findSiteSemanticClassViolations,
+  findUiDocsDemoClassViolations,
+  findTailwindSourceViolations,
   findTypeEscapeViolations,
   findTestModeViolations,
   findWidgetRegionFallbackViolations,
@@ -30,24 +34,186 @@ import {
   rankFilesByLineCount,
   readRepositoryText,
   scanSourceInvariantBoundaries,
+  scanStylexCssBoundaries,
+  scanSiteSemanticClassBoundaries,
+  scanUiDocsDemoClassBoundaries,
+  scanTailwindBoundaries,
   summarizeExternalOpenMatches,
   summarizeRawColorMatches,
   summarizeWorkbenchRawColorDebt,
 } from "../../scripts/lib/governance.mjs"
 
 const officialPluginStyleFiles = [
-  "packages/official-plugins/src/plugin-manager-entry.css",
-  "packages/official-plugins/src/search-command-bar.css",
-  "packages/official-plugins/src/settings-workspace.css",
-  "plugins/official/layout-dashboard/src/styles.css",
-  "plugins/official/layout-stream/src/styles.css",
-  "plugins/official/widget-notes/src/styles.css",
-  "plugins/official/widget-quick-links/src/styles.css",
-  "plugins/official/widget-todo/src/styles.css",
-  "plugins/official/widget-weather/src/styles.css",
+  "packages/official-plugins/src/styles.ts",
+  "plugins/official/layout-dashboard/src/styles.ts",
+  "plugins/official/widget-notes/src/styles.ts",
+  "plugins/official/widget-quick-links/src/styles.ts",
+  "plugins/official/widget-todo/src/styles.ts",
+  "plugins/official/widget-weather/src/styles.ts",
 ]
 
 describe("governance rules", () => {
+  it("rejects component CSS and non-placeholder StyleX package exports", () => {
+    expect(
+      findLegacyCssSourceViolations({
+        filePath: "plugins/official/widget-weather/src/weather.css",
+        source: ".weather { display: grid; }",
+      }),
+    ).toEqual([
+      {
+        filePath: "plugins/official/widget-weather/src/weather.css",
+        match: "weather.css",
+        reason: "component styles must be authored with StyleX",
+      },
+    ])
+
+    expect(
+      findLegacyCssSourceViolations({
+        filePath: "plugins/official/widget-weather/src/styles.css",
+        source: ".weather { display: grid; }",
+      }),
+    ).toEqual([
+      {
+        filePath: "plugins/official/widget-weather/src/styles.css",
+        match: "styles.css",
+        reason: "StyleX package stylesheet exports must remain development placeholders",
+      },
+    ])
+
+    expect(
+      findLegacyCssSourceViolations({
+        filePath: "plugins/official/widget-weather/src/styles.css",
+        source: "/* Development placeholder. Plugin rules are emitted by StyleX. */\n",
+      }),
+    ).toEqual([])
+
+    expect(
+      findLegacyCssSourceViolations({
+        filePath: "packages/theme/src/global.css",
+        source: ":root { color-scheme: light dark; }",
+      }),
+    ).toEqual([])
+  })
+
+  it("keeps runtime CSS limited to StyleX global assets and package placeholders", async () => {
+    expect(await scanStylexCssBoundaries(".")).toEqual([])
+  })
+
+  it("rejects Tailwind dependencies, plugins, directives, and apply rules", () => {
+    expect(
+      findTailwindSourceViolations({
+        filePath: "apps/example/package.json",
+        source: `
+          {
+            "dependencies": {
+              "tailwindcss": "^4.0.0",
+              "@tailwindcss/vite": "^4.0.0"
+            }
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "apps/example/package.json",
+        match: "tailwindcss",
+        reason: "Tailwind CSS must not be reintroduced after the StyleX migration",
+      },
+      {
+        filePath: "apps/example/package.json",
+        match: "@tailwindcss/vite",
+        reason: "Tailwind CSS must not be reintroduced after the StyleX migration",
+      },
+    ])
+
+    expect(
+      findTailwindSourceViolations({
+        filePath: "apps/example/src/styles.css",
+        source: '@import "tailwindcss";\n@tailwind utilities;\n.card { @apply p-4; }',
+      }),
+    ).toEqual([
+      {
+        filePath: "apps/example/src/styles.css",
+        match: '@import "tailwindcss"',
+        reason: "Tailwind CSS must not be reintroduced after the StyleX migration",
+      },
+      {
+        filePath: "apps/example/src/styles.css",
+        match: "@tailwind",
+        reason: "Tailwind CSS must not be reintroduced after the StyleX migration",
+      },
+      {
+        filePath: "apps/example/src/styles.css",
+        match: "@apply",
+        reason: "Tailwind CSS must not be reintroduced after the StyleX migration",
+      },
+    ])
+  })
+
+  it("keeps runtime packages and source free of Tailwind", async () => {
+    expect(await scanTailwindBoundaries(".")).toEqual([])
+  })
+
+  it("rejects semantic class bindings in site JSX", () => {
+    expect(
+      findSiteSemanticClassViolations({
+        filePath: "apps/site/src/routes/example.tsx",
+        source: `
+          export function Example() {
+            return <div class={rootClass} classList={{ active: true }} />
+          }
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "apps/site/src/routes/example.tsx",
+        match: "class=",
+        reason: "site JSX styling must use StyleX props instead of semantic classes",
+      },
+      {
+        filePath: "apps/site/src/routes/example.tsx",
+        match: "classList=",
+        reason: "site JSX styling must use StyleX props instead of semantic classes",
+      },
+    ])
+
+    expect(
+      findSiteSemanticClassViolations({
+        filePath: "apps/site/src/routes/example.tsx",
+        source: "export function Example() { return <div {...sx(styles.root)} /> }",
+      }),
+    ).toEqual([])
+  })
+
+  it("keeps every site JSX file on StyleX props", async () => {
+    expect(await scanSiteSemanticClassBoundaries(".")).toEqual([])
+  })
+
+  it("rejects legacy docs demo classes in UI source", () => {
+    expect(
+      findUiDocsDemoClassViolations({
+        filePath: "packages/ui/src/styled/button/button.demo.tsx",
+        source: '<div class="docs-stack" />',
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/ui/src/styled/button/button.demo.tsx",
+        match: 'class="docs-stack"',
+        reason: "UI demos must use StyleX demoStyles instead of legacy docs-* classes",
+      },
+    ])
+
+    expect(
+      findUiDocsDemoClassViolations({
+        filePath: "packages/ui/src/styled/button/button.demo.tsx",
+        source: "<div {...sx(demoStyles.stack)} />",
+      }),
+    ).toEqual([])
+  })
+
+  it("keeps UI demos on StyleX demo layout styles", async () => {
+    expect(await scanUiDocsDemoClassBoundaries(".")).toEqual([])
+  })
+
   it("detects forbidden plugin imports and dependencies", () => {
     expect(
       findForbiddenPluginImports({
@@ -643,6 +809,24 @@ describe("governance rules", () => {
     ])
   })
 
+  it("keeps @tabora/ui StyleX package build and stylesheet exports aligned", async () => {
+    const manifest = JSON.parse(await readRepositoryText(".", "packages/ui/package.json"))
+
+    expect(manifest.exports["./style.css"]).toBeUndefined()
+    expect(manifest.exports["./styles.css"]).toBe("./src/styles.css")
+    expect(manifest.publishConfig.exports["./styles.css"]).toBe("./dist/styles.css")
+    expect(manifest.scripts.build).toContain("scripts/build-stylex-package.mjs")
+    expect(manifest.scripts.build).toContain("--global-css src/styles.css")
+    expect(manifest.scripts.build).toContain("--css-name styles.css")
+  })
+
+  it("keeps theme reset from overriding layered StyleX component typography", async () => {
+    const source = await readRepositoryText(".", "packages/theme/src/global.css")
+
+    expect(source).not.toMatch(/button,\s*\ninput,\s*\ntextarea,\s*\nselect\s*\{[^}]*font\s*:/)
+    expect(source).toContain("font-family: inherit")
+  })
+
   it("keeps root pack config free of official plugin stylesheet special cases", async () => {
     const source = await readRepositoryText(".", "vite.config.ts")
 
@@ -801,6 +985,47 @@ describe("governance rules", () => {
   it("flags avoidable workbench style literals but ignores token fallback chains", () => {
     expect(
       findWorkbenchAvoidableStyleViolations({
+        filePath: "packages/ui/src/styled/button/button.styled.tsx",
+        source: `
+          const styles = stylex.create({
+            button: { border: "none" },
+            iconButton: { border: 0 },
+            hover: { backgroundColor: "rgba(var(--tbr-color-accent), 0.08)" },
+            reset: { font: "inherit" },
+            code: { fontFamily: "var(--tbr-font-family-mono)" },
+          })
+        `,
+      }),
+    ).toEqual([
+      {
+        filePath: "packages/ui/src/styled/button/button.styled.tsx",
+        match: 'border: "none"',
+        reason: "StyleX border resets must use borderStyle and borderWidth longhands",
+      },
+      {
+        filePath: "packages/ui/src/styled/button/button.styled.tsx",
+        match: "border: 0",
+        reason: "StyleX border resets must use borderStyle and borderWidth longhands",
+      },
+      {
+        filePath: "packages/ui/src/styled/button/button.styled.tsx",
+        match: "rgba(var(--tbr-color-accent), 0.08)",
+        reason: "StyleX alpha colors must use rgb(var(--token) / alpha) syntax",
+      },
+      {
+        filePath: "packages/ui/src/styled/button/button.styled.tsx",
+        match: 'font: "inherit"',
+        reason: "StyleX font resets must use fontFamily longhand",
+      },
+      {
+        filePath: "packages/ui/src/styled/button/button.styled.tsx",
+        match: "--tbr-font-family-mono",
+        reason: "use the canonical --tbr-font-mono token",
+      },
+    ])
+
+    expect(
+      findWorkbenchAvoidableStyleViolations({
         filePath: "plugins/community/layout-diy-masonry/src/styles.css",
         source: `
           .menu {
@@ -910,10 +1135,10 @@ describe("governance rules", () => {
   it("tokenizes shared inverse foreground styles instead of keeping raw white literals", async () => {
     const targetFiles = [
       ...officialPluginStyleFiles,
-      "packages/ui/src/styled/button/styles.css",
-      "packages/ui/src/styled/checkbox/styles.css",
-      "packages/ui/src/styled/switch/styles.css",
-      "plugins/community/layout-diy-masonry/src/styles.css",
+      "packages/ui/src/styled/button/button.styled.tsx",
+      "packages/ui/src/styled/checkbox/checkbox.styled.tsx",
+      "packages/ui/src/styled/switch/switch.styled.tsx",
+      "plugins/community/layout-diy-masonry/src/index.tsx",
     ]
 
     for (const filePath of targetFiles) {
@@ -921,17 +1146,14 @@ describe("governance rules", () => {
       expect(source).not.toContain("#fff")
     }
 
-    const uiThemeTokens = await readRepositoryText(".", "packages/ui/src/tokens/theme.css")
-    expect(uiThemeTokens).toContain("--tbr-color-inverse: 255 255 255;")
+    const themeGlobal = await readRepositoryText(".", "packages/theme/src/global.css")
+    expect(themeGlobal).toContain("--tbr-color-inverse: 255 255 255;")
+
+    const themeStylexTokens = await readRepositoryText(".", "packages/theme/src/stylexTokens.ts")
+    expect(themeStylexTokens).toContain('inverse: "rgb(var(--tbr-color-inverse))"')
 
     const uiTokenRegistry = await readRepositoryText(".", "packages/ui/src/tokens/tokens.ts")
     expect(uiTokenRegistry).toContain('inverse: "tbr-color-inverse"')
-
-    const workbenchDefaults = await readRepositoryText(
-      ".",
-      "packages/workbench-shell/src/styles.css",
-    )
-    expect(workbenchDefaults).toContain("--color-inverse: 255 255 255;")
 
     const themePack = await readRepositoryText(
       ".",
@@ -943,16 +1165,16 @@ describe("governance rules", () => {
   it("tokenizes shared shadow and scrim styles instead of keeping raw overlay colors", async () => {
     const targetFiles = [
       ...officialPluginStyleFiles,
-      "packages/ui/src/styled/combobox/styles.css",
-      "packages/ui/src/styled/dialog/styles.css",
-      "packages/ui/src/styled/dropdownMenu/styles.css",
-      "packages/ui/src/styled/popover/styles.css",
-      "packages/ui/src/styled/segmentedControl/styles.css",
-      "packages/ui/src/styled/select/styles.css",
-      "packages/ui/src/styled/slider/styles.css",
-      "packages/ui/src/styled/switch/styles.css",
+      "packages/ui/src/styled/combobox/combobox.styled.tsx",
+      "packages/ui/src/styled/dialog/dialog.styled.tsx",
+      "packages/ui/src/styled/dropdownMenu/dropdownMenu.styled.tsx",
+      "packages/ui/src/styled/popover/popover.styled.tsx",
+      "packages/ui/src/styled/segmentedControl/segmentedControl.styled.tsx",
+      "packages/ui/src/styled/select/select.styled.tsx",
+      "packages/ui/src/styled/slider/slider.styled.tsx",
+      "packages/ui/src/styled/switch/switch.styled.tsx",
       "packages/workbench-shell/src/styles.css",
-      "plugins/community/layout-diy-masonry/src/styles.css",
+      "plugins/community/layout-diy-masonry/src/index.tsx",
     ]
 
     for (const filePath of targetFiles) {
@@ -962,23 +1184,20 @@ describe("governance rules", () => {
       expect(source).not.toMatch(/rgba\(\s*8\s*,\s*10\s*,\s*8\s*,/i)
     }
 
-    const uiThemeTokens = await readRepositoryText(".", "packages/ui/src/tokens/theme.css")
-    expect(uiThemeTokens).toContain("--tbr-color-shadow: 0 0 0;")
-    expect(uiThemeTokens).toContain("--tbr-color-shadow-strong: 15 23 18;")
-    expect(uiThemeTokens).toContain("--tbr-color-scrim: 8 10 8;")
+    const themeGlobal = await readRepositoryText(".", "packages/theme/src/global.css")
+    expect(themeGlobal).toContain("--tbr-color-shadow: 0 0 0;")
+    expect(themeGlobal).toContain("--tbr-color-shadow-strong: 15 23 18;")
+    expect(themeGlobal).toContain("--tbr-color-scrim: 8 10 8;")
+
+    const themeStylexTokens = await readRepositoryText(".", "packages/theme/src/stylexTokens.ts")
+    expect(themeStylexTokens).toContain('shadow: "rgb(var(--tbr-color-shadow))"')
+    expect(themeStylexTokens).toContain('shadowStrong: "rgb(var(--tbr-color-shadow-strong))"')
+    expect(themeStylexTokens).toContain('scrim: "rgb(var(--tbr-color-scrim))"')
 
     const uiTokenRegistry = await readRepositoryText(".", "packages/ui/src/tokens/tokens.ts")
     expect(uiTokenRegistry).toContain('shadow: "tbr-color-shadow"')
     expect(uiTokenRegistry).toContain('shadowStrong: "tbr-color-shadow-strong"')
     expect(uiTokenRegistry).toContain('scrim: "tbr-color-scrim"')
-
-    const workbenchDefaults = await readRepositoryText(
-      ".",
-      "packages/workbench-shell/src/styles.css",
-    )
-    expect(workbenchDefaults).toContain("--color-shadow: 0 0 0;")
-    expect(workbenchDefaults).toContain("--color-shadow-strong: 15 23 18;")
-    expect(workbenchDefaults).toContain("--color-scrim: 8 10 8;")
 
     const themePack = await readRepositoryText(
       ".",
@@ -990,18 +1209,15 @@ describe("governance rules", () => {
   })
 
   it("reuses semantic tokens for glow and highlight treatments", async () => {
-    const source = await readRepositoryText(
-      ".",
-      "packages/official-plugins/src/search-command-bar.css",
-    )
+    const source = await readRepositoryText(".", "packages/official-plugins/src/styles.ts")
 
     expect(source).not.toContain("rgba(255, 255, 255, 0.45)")
     expect(source).not.toContain("rgba(26, 144, 112, 0.08)")
     expect(source).not.toContain("rgba(28, 30, 28, 0.035)")
 
-    expect(source).toContain("rgb(var(--color-text) / 0.035)")
-    expect(source).toContain("rgb(var(--color-inverse) / 0.45)")
-    expect(source).toContain("rgb(var(--color-accent) / 0.08)")
+    expect(source).toContain("rgb(var(--tbr-color-shadow) / 0.04)")
+    expect(source).toContain("rgb(var(--tbr-color-accent) / 0.1)")
+    expect(source).toContain("rgb(var(--tbr-color-accent-soft))")
   })
 
   it("builds generated background presets from data instead of inline raw color literals", async () => {
@@ -1017,24 +1233,18 @@ describe("governance rules", () => {
     expect(source).not.toContain("rgba(128, 90, 213, 0.15)")
   })
 
-  it("uses local site variables instead of raw site color literals", async () => {
-    const source = await readRepositoryText(".", "apps/site/src/styles.css")
+  it("keeps site global CSS document-scoped and based on shared semantic tokens", async () => {
+    const source = await readRepositoryText(".", "apps/site/src/global.css")
 
-    expect(source).not.toContain("#000")
-    expect(source).not.toContain("#111512")
-    expect(source).not.toContain("#2e718f")
-    expect(source).not.toContain("#6fb4d2")
-    expect(source).not.toContain("#9b6b16")
-    expect(source).not.toContain("#d5a64f")
-    expect(source).not.toContain("#f7f8f6")
-    expect(source).not.toContain("rgba(0, 0, 0, 0.28)")
-    expect(source).not.toContain("rgba(17, 21, 18, 0.1)")
-
-    expect(source).toContain("--site-ink: 17 21 18;")
-    expect(source).toContain("--site-shadow-rgb: 17 21 18;")
-    expect(source).toContain("rgb(var(--site-ink))")
-    expect(source).toContain("rgb(var(--site-blue))")
-    expect(source).toContain("rgb(var(--site-amber))")
+    expect(source).toContain('@import "@tabora/theme/global.css";')
+    expect(source).toContain("html {")
+    expect(source).toContain("body {")
+    expect(source).toContain("#root {")
+    expect(source).toContain("::selection {")
+    expect(source).toContain("rgb(var(--tbr-color-page))")
+    expect(source).toContain("rgb(var(--tbr-color-text))")
+    expect(source).not.toContain("--site-")
+    expect(source).not.toMatch(/\.[a-z][a-z0-9_-]*\s*[{,]/i)
   })
 
   it("keeps raw color fixtures out of committed test sources", async () => {

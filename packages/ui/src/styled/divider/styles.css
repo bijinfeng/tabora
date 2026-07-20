@@ -1,7 +1,0 @@
-@layer tabora-ui {
-  .tbr-divider {
-    border: none;
-    border-top: 1px solid rgb(var(--tbr-color-line));
-    margin: 12px 0;
-  }
-}

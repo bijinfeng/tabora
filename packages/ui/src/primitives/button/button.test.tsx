@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+import * as stylex from "@stylexjs/stylex"
 import { render } from "solid-js/web"
 import { Button, IconButton } from "../../styled/button/button.styled"
 
@@ -38,6 +39,41 @@ describe("Button", () => {
     document.body.appendChild(root)
     render(() => <Button type="submit">提交</Button>, root)
     expect(root.querySelector("button")!.type).toBe("submit")
+  })
+
+  it("uses StyleX classes while preserving variant state attributes", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button variant="primary" size="sm">
+          保存
+        </Button>
+      ),
+      root,
+    )
+
+    const btn = root.querySelector("button")!
+    expect(btn.className).not.toContain("tbr-btn")
+    expect(btn.className.length).toBeGreaterThan(0)
+    expect(btn.getAttribute("data-variant")).toBe("primary")
+    expect(btn.getAttribute("data-size")).toBe("sm")
+  })
+
+  it("composes caller-provided xstyle", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const local = stylex.create({
+      grow: {
+        flexGrow: 1,
+      },
+    })
+
+    render(() => <Button xstyle={local.grow}>Save</Button>, root)
+
+    const btn = root.querySelector("button")!
+    expect(btn.className).not.toContain("tbr-btn")
+    expect(btn.className.length).toBeGreaterThan(0)
   })
 })
 

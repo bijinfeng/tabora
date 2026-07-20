@@ -1,4 +1,38 @@
+import * as stylex from "@stylexjs/stylex"
 import type { ShellTranslation } from "../i18n"
+import { color, font, radius, space } from "../stylexTokens.stylex"
+
+const styles = stylex.create({
+  stack: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+    minHeight: 0,
+  },
+  panel: {
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.card,
+    borderStyle: "solid",
+    borderWidth: 1,
+    padding: space.s5,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: font.bold,
+    marginBottom: space.s4,
+  },
+  body: {
+    color: color.textMuted,
+    display: "grid",
+    fontSize: 13,
+    gap: space.s3,
+    lineHeight: 1.45,
+  },
+  paragraph: {
+    margin: 0,
+  },
+})
 
 export function WorkbenchSettingsAboutContent(props: {
   workspaceName: string
@@ -6,26 +40,22 @@ export function WorkbenchSettingsAboutContent(props: {
   tShell?: ShellTranslation
 }) {
   return (
-    <div class="settings-panel-stack-host">
-      <section class="widget-card">
-        <div class="card-header">
-          <div class="card-title">
-            <span class="card-title-text">
-              {props.tShell?.("chrome.settings.about.title") ?? "关于 Tabora"}
-            </span>
-          </div>
+    <div {...stylex.props(styles.stack)} data-settings-panel-stack>
+      <section {...stylex.props(styles.panel)}>
+        <div {...stylex.props(styles.title)}>
+          {props.tShell?.("chrome.settings.about.title") ?? "关于 Tabora"}
         </div>
-        <div class="card-body">
-          <p>
+        <div {...stylex.props(styles.body)}>
+          <p {...stylex.props(styles.paragraph)}>
             {props.tShell?.("chrome.settings.about.description") ??
               "当前实现已切换到双布局工作台骨架，设置中心按固定分类组织插件设置内容。"}
           </p>
-          <p>
+          <p {...stylex.props(styles.paragraph)}>
             {props.tShell
               ? props.tShell("chrome.settings.about.workspaceLabel", { name: props.workspaceName })
               : `当前工作区：${props.workspaceName}。`}
           </p>
-          <p>
+          <p {...stylex.props(styles.paragraph)}>
             {props.tShell
               ? props.tShell("chrome.settings.about.enabledPluginsLabel", {
                   count: props.enabledPluginCount,

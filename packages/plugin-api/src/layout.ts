@@ -33,11 +33,16 @@ export type HostActionItem = {
   run: () => void
 }
 
+export type AddWidgetContext = {
+  activeGroupLabel?: string
+  onAdded?: (instance: PluginInstance) => void
+}
+
 export type LayoutHostAPI = {
   getGlobalActions: (surface: HostSurface) => HostActionItem[]
   openSettings: (panelId?: string) => void
   openCommandPalette: () => void
-  openAddWidget: () => void
+  openAddWidget: (context?: AddWidgetContext) => void
   readLayoutState: <T = unknown>(key: string) => T | undefined
   writeLayoutState: (key: string, value: unknown) => void
   showToast: (

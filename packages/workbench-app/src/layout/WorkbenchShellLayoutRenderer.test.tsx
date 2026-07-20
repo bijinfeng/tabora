@@ -206,7 +206,7 @@ describe("createWorkbenchLayoutRenderer", () => {
     })
 
     const { host, dispose } = mount(renderer.renderActiveLayout())
-    const title = host.querySelector(".card-title") as HTMLElement
+    const title = host.querySelector("[data-widget-card-title]") as HTMLElement
     const event = new MouseEvent("contextmenu", {
       bubbles: true,
       cancelable: true,

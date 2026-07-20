@@ -21,8 +21,9 @@ describe("ToastHost", () => {
 
     expect(root.textContent).toContain("A")
     expect(root.textContent).toContain("B")
-    expect(root.querySelectorAll(".toast-icon")[0]?.textContent).toBe("✓")
-    expect(root.querySelectorAll(".toast-message")[1]?.textContent).toBe("B")
+    expect(root.querySelectorAll("[data-toast-icon]")[0]?.textContent).toBe("✓")
+    expect(root.querySelectorAll("[data-toast-message]")[1]?.textContent).toBe("B")
+    expect(root.querySelector(".toast-item")).toBeNull()
 
     root.remove()
   })
@@ -49,7 +50,7 @@ describe("ToastHost", () => {
       root,
     )
 
-    root.querySelector<HTMLButtonElement>(".toast-action")?.click()
+    root.querySelector<HTMLButtonElement>("[data-toast-action]")?.click()
 
     expect(commandIds).toEqual(["open-details"])
 

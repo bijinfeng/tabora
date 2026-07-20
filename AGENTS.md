@@ -151,7 +151,7 @@ tooling/
 
 ## 技术栈和命令
 
-项目使用 pnpm workspace、Vite+、Solid、TypeScript、Tailwind CSS v4、Vitest、Dexie、Zod、tsdown。
+项目使用 pnpm workspace、Vite+、Solid、TypeScript、StyleX、Vitest、Dexie、Zod、tsdown。
 
 环境：
 

@@ -60,12 +60,24 @@ describe("built-in component icons", () => {
       el,
     )
 
-    expectLucideIcon(el.querySelector(".tbr-checkbox-control"))
-    expectLucideIcon(el.querySelector(".tbr-accordion-arrow"))
-    expectLucideIcon(el.querySelector(".tbr-collapsible-arrow"))
-    expectLucideIcon(el.querySelector(".tbr-select-icon"))
-    expect(document.body.querySelector(".tbr-dropdown-check")).toBeTruthy()
-    expectLucideIcon(document.body.querySelector(".tbr-dropdown-icon"))
+    expectLucideIcon(el.querySelector("input[type='checkbox']")?.parentElement ?? null)
+    expectLucideIcon(
+      Array.from(el.querySelectorAll("button"))
+        .find((button) => button.textContent?.includes("一"))
+        ?.querySelector("span[aria-hidden='true']") ?? null,
+    )
+    expectLucideIcon(
+      Array.from(el.querySelectorAll("button"))
+        .find((button) => button.textContent?.includes("更多"))
+        ?.querySelector("span[aria-hidden='true']") ?? null,
+    )
+    expectLucideIcon(el.querySelector("button[aria-label='水果']"))
+    expect(document.body.querySelector("[data-checked] span[aria-hidden='true']")).toBeTruthy()
+    expectLucideIcon(
+      Array.from(document.body.querySelectorAll("[role='menuitem'], [role='menuitemcheckbox']"))
+        .find((item) => item.textContent?.includes("搜索"))
+        ?.querySelector("span") ?? null,
+    )
   })
 
   it("renders close, remove, navigation, and copy actions with lucide icons", () => {
@@ -85,19 +97,23 @@ describe("built-in component icons", () => {
             expandedIds={[]}
             onExpandedChange={() => {}}
           />
-          <CopyButton class="tbr-copy-btn" value="tabora" />
+          <CopyButton value="tabora" />
         </>
       ),
       el,
     )
 
-    expectLucideIcon(el.querySelector(".tbr-chip-remove"))
-    expectLucideIcon(el.querySelector(".tbr-tag-input-remove"))
-    expectLucideIcon(document.body.querySelector(".tbr-drawer-close"))
+    expectLucideIcon(el.querySelector("button[aria-label='移除']"))
+    expectLucideIcon(el.querySelector("button[aria-label='移除 设计']"))
+    expectLucideIcon(document.body.querySelector("button[aria-label='关闭']"))
     expectLucideIcon(el.querySelector("button[aria-label='上一页']"))
     expectLucideIcon(el.querySelector("button[aria-label='下一页']"))
-    expectLucideIcon(el.querySelector(".tbr-tree-toggle"))
-    expectLucideIcon(el.querySelector(".tbr-copy-btn"))
+    expectLucideIcon(el.querySelector("button[aria-label='展开']"))
+    expectLucideIcon(
+      Array.from(el.querySelectorAll("button")).find((button) =>
+        button.textContent?.includes("复制"),
+      ) ?? null,
+    )
   })
 
   it("renders feedback status icons with lucide icons", () => {
@@ -105,14 +121,15 @@ describe("built-in component icons", () => {
     render(
       () => (
         <>
-          <Toast class="tbr-toast" variant="success" title="已保存" />
-          <Banner class="tbr-banner" variant="warning" title="需要确认" />
+          <Toast variant="success" title="已保存" />
+          <Banner variant="warning" title="需要确认" />
         </>
       ),
       el,
     )
 
-    expectLucideIcon(el.querySelector(".tbr-toast-icon"))
-    expectLucideIcon(el.querySelector(".tbr-callout-icon"))
+    const statuses = el.querySelectorAll("[role='status']")
+    expectLucideIcon(statuses[0]?.querySelector("span[aria-hidden='true']") ?? null)
+    expectLucideIcon(statuses[1]?.querySelector("span[aria-hidden='true']") ?? null)
   })
 })

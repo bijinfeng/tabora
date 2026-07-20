@@ -111,7 +111,8 @@ describe("createWorkbenchLayoutHostAPI", () => {
 
     host.openSettings("settings.search.custom")
     host.openCommandPalette()
-    host.openAddWidget()
+    const addWidgetContext = { activeGroupLabel: "Research" }
+    host.openAddWidget(addWidgetContext)
     expect(host.readLayoutState("dashboard")).toEqual({ cached: true })
     host.writeLayoutState("dashboard", { groupCount: 2 })
     host.showToast("已保存", { type: "success" })
@@ -122,7 +123,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
     expect(switchTheme).toHaveBeenNthCalledWith(1, "theme.light.custom")
     expect(openSettings).toHaveBeenCalledWith("settings.search.custom")
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(2, true)
-    expect(setAddWidgetOpen).toHaveBeenCalledWith(true)
+    expect(setAddWidgetOpen).toHaveBeenCalledWith(true, addWidgetContext)
     expect(readLayoutState).toHaveBeenCalledWith("dashboard")
     expect(writeLayoutState).toHaveBeenCalledWith("dashboard", { groupCount: 2 })
     expect(showToast).toHaveBeenCalledWith("已保存", { type: "success" })

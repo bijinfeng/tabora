@@ -5,24 +5,43 @@ export type CardSectionProps = {
   title?: JSX.Element
   trailing?: JSX.Element
   padded?: boolean
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  headerClass?: string | undefined
+  headerStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  trailingClass?: string | undefined
+  trailingStyle?: JSX.CSSProperties | undefined
+  bodyClass?: string | undefined
+  bodyStyle?: JSX.CSSProperties | undefined
   children: JSX.Element
 }
 
 export function CardSection(props: CardSectionProps) {
   return (
-    <section class={props.class} data-padded={props.padded === false ? undefined : ""}>
+    <section
+      class={props.class}
+      style={props.style}
+      data-padded={props.padded === false ? undefined : ""}
+    >
       <Show when={props.title || props.trailing}>
-        <header class="tbr-card-section-header">
+        <header class={props.headerClass} style={props.headerStyle}>
           <Show when={props.title}>
-            <h3 class="tbr-card-section-title">{props.title}</h3>
+            <h3 class={props.titleClass} style={props.titleStyle}>
+              {props.title}
+            </h3>
           </Show>
           <Show when={props.trailing}>
-            <div class="tbr-card-section-trailing">{props.trailing}</div>
+            <div class={props.trailingClass} style={props.trailingStyle}>
+              {props.trailing}
+            </div>
           </Show>
         </header>
       </Show>
-      <div class="tbr-card-section-body">{props.children}</div>
+      <div class={props.bodyClass} style={props.bodyStyle}>
+        {props.children}
+      </div>
     </section>
   )
 }

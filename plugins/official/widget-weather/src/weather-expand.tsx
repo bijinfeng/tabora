@@ -1,6 +1,6 @@
 import { createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { InlineError, SegmentedControl, Select, Skeleton } from "@tabora/ui"
+import { Button, InlineError, SegmentedControl, Select, Skeleton } from "@tabora/ui"
 import { RefreshCw } from "lucide-solid"
 import { WeatherIcon } from "./weather-icon"
 import { createWeatherStore } from "./weather-store"
@@ -11,6 +11,7 @@ import {
   windDirectionLabel,
   type WeatherSnapshot,
 } from "./weather-data"
+import { styles, sx } from "./styles"
 
 type WeatherView = "hourly" | "forecast" | "advice"
 
@@ -58,22 +59,22 @@ export function WeatherExpand(props: WidgetViewProps) {
   }
 
   return (
-    <div class="weather-expand" data-tabora-plugin-id="official.widgets.weather">
+    <div {...sx(styles.expand)} data-widget-expand="weather">
       <Show
         when={store.snapshot()}
         fallback={
           <Show
             when={!store.error()}
             fallback={
-              <div class="weather-error">
+              <div {...sx(styles.stack)}>
                 <InlineError>{store.error()!}</InlineError>
-                <button class="weather-retry" type="button" onClick={() => void store.load()}>
+                <Button size="sm" variant="secondary" onClick={() => void store.load()}>
                   <RefreshCw size={12} /> 重试
-                </button>
+                </Button>
               </div>
             }
           >
-            <div class="weather-skeleton">
+            <div {...sx(styles.stack)}>
               <Skeleton height="88px" width="100%" />
               <Skeleton height="200px" width="100%" />
             </div>
@@ -81,26 +82,26 @@ export function WeatherExpand(props: WidgetViewProps) {
         }
       >
         {(snap) => (
-          <div class="weather-expand-body">
-            <div class="weather-expand-main">
-              <section class="now-panel" aria-label="当前天气">
-                <div class="now-icon">
+          <div {...sx(styles.expandBody)}>
+            <div {...sx(styles.main)}>
+              <section {...sx(styles.nowPanel)} aria-label="当前天气">
+                <div {...sx(styles.icon)}>
                   <WeatherIcon code={snap().code} size={40} />
                 </div>
-                <div class="now-temp">{snap().temp}°</div>
-                <div class="now-copy">
-                  <strong>
+                <div {...sx(styles.temp)}>{snap().temp}°</div>
+                <div {...sx(styles.copy)}>
+                  <strong {...sx(styles.title)}>
                     {weatherCodeToText(snap().code)} · 体感 {snap().feelsLike}°
                   </strong>
-                  <span>
+                  <span {...sx(styles.muted)}>
                     {snap().city}
                     {snap().district ? ` · ${snap().district}` : ""} ·{" "}
                     {formatUpdatedAt(snap().updatedAt)}更新
                   </span>
                 </div>
-                <div class="aqi">
-                  <b>AQI {snap().aqi ?? "—"}</b>
-                  <span>{aqiLabel(snap().aqi)}</span>
+                <div {...sx(styles.aqi)}>
+                  <b {...sx(styles.value)}>AQI {snap().aqi ?? "—"}</b>
+                  <span {...sx(styles.muted)}>{aqiLabel(snap().aqi)}</span>
                 </div>
               </section>
 
@@ -117,21 +118,21 @@ export function WeatherExpand(props: WidgetViewProps) {
               />
 
               <Show when={view() === "hourly"}>
-                <section class="view-panel" aria-label="逐小时天气">
-                  <div class="view-head">
+                <section {...sx(styles.panel)} aria-label="逐小时天气">
+                  <div {...sx(styles.panelHead)}>
                     <span>未来 5 小时</span>
                     <span>温度 · 天气 · 降水</span>
                   </div>
-                  <div class="weather-list">
+                  <div {...sx(styles.list)}>
                     <For each={snap().hours}>
                       {(hour) => (
-                        <div class="weather-row">
+                        <div {...sx(styles.row)}>
                           <b>{hour.time}</b>
-                          <span>
+                          <span {...sx(styles.rowText)}>
                             <WeatherIcon code={hour.code} size={14} />{" "}
                             {weatherCodeToText(hour.code)}
                           </span>
-                          <em>
+                          <em {...sx(styles.rowMeta)}>
                             {hour.temp}° · 降水 {hour.precipitation}%
                           </em>
                         </div>
@@ -142,20 +143,20 @@ export function WeatherExpand(props: WidgetViewProps) {
               </Show>
 
               <Show when={view() === "forecast"}>
-                <section class="view-panel" aria-label="三日趋势">
-                  <div class="view-head">
+                <section {...sx(styles.panel)} aria-label="三日趋势">
+                  <div {...sx(styles.panelHead)}>
                     <span>未来三天</span>
                     <span>高低温 · 天气</span>
                   </div>
-                  <div class="weather-list">
+                  <div {...sx(styles.list)}>
                     <For each={snap().days}>
                       {(day) => (
-                        <div class="weather-row">
+                        <div {...sx(styles.row)}>
                           <b>{day.label}</b>
-                          <span>
+                          <span {...sx(styles.rowText)}>
                             <WeatherIcon code={day.code} size={14} /> {weatherCodeToText(day.code)}
                           </span>
-                          <em>
+                          <em {...sx(styles.rowMeta)}>
                             {day.high}° / {day.low}°
                           </em>
                         </div>
@@ -166,18 +167,18 @@ export function WeatherExpand(props: WidgetViewProps) {
               </Show>
 
               <Show when={view() === "advice"}>
-                <section class="view-panel" aria-label="生活建议">
-                  <div class="view-head">
+                <section {...sx(styles.panel)} aria-label="生活建议">
+                  <div {...sx(styles.panelHead)}>
                     <span>个人提醒</span>
                     <span>通勤 · 晾晒 · 运动</span>
                   </div>
-                  <div class="weather-list">
+                  <div {...sx(styles.list)}>
                     <For each={buildAdvice(snap())}>
                       {(advice) => (
-                        <div class="advice-row">
+                        <div {...sx(styles.row, styles.advice)}>
                           <b>{advice.name}</b>
-                          <span>{advice.desc}</span>
-                          <em>{advice.tag}</em>
+                          <span {...sx(styles.rowText)}>{advice.desc}</span>
+                          <em {...sx(styles.rowMeta)}>{advice.tag}</em>
                         </div>
                       )}
                     </For>
@@ -186,9 +187,9 @@ export function WeatherExpand(props: WidgetViewProps) {
               </Show>
             </div>
 
-            <aside class="weather-expand-side" aria-label="天气配置">
-              <section class="side-panel">
-                <div class="side-title">城市</div>
+            <aside {...sx(styles.side)} aria-label="天气配置">
+              <section {...sx(styles.sidePanel)}>
+                <div {...sx(styles.title)}>城市</div>
                 <Select
                   size="sm"
                   value={store.city()}
@@ -196,34 +197,34 @@ export function WeatherExpand(props: WidgetViewProps) {
                   options={cityOptions()}
                   aria-label="选择城市"
                 />
-                <button
-                  class="weather-refresh"
-                  type="button"
+                <Button
+                  size="sm"
+                  variant="secondary"
                   onClick={() => void store.load()}
                   disabled={store.loading()}
                 >
                   <RefreshCw size={13} /> {store.loading() ? "刷新中" : "刷新"}
-                </button>
+                </Button>
               </section>
 
-              <section class="side-panel">
-                <div class="side-title">关注指标</div>
-                <div class="mini-grid">
-                  <div class="mini-stat">
-                    <b>{snap().humidity}%</b>
-                    <span>湿度</span>
+              <section {...sx(styles.sidePanel)}>
+                <div {...sx(styles.title)}>关注指标</div>
+                <div {...sx(styles.miniGrid)}>
+                  <div {...sx(styles.mini)}>
+                    <b {...sx(styles.value)}>{snap().humidity}%</b>
+                    <span {...sx(styles.muted)}>湿度</span>
                   </div>
-                  <div class="mini-stat">
-                    <b>{snap().windSpeed}km/h</b>
-                    <span>{windDirectionLabel(snap().windDirection)}</span>
+                  <div {...sx(styles.mini)}>
+                    <b {...sx(styles.value)}>{snap().windSpeed}km/h</b>
+                    <span {...sx(styles.muted)}>{windDirectionLabel(snap().windDirection)}</span>
                   </div>
-                  <div class="mini-stat">
-                    <b>{snap().precipitation}%</b>
-                    <span>降水概率</span>
+                  <div {...sx(styles.mini)}>
+                    <b {...sx(styles.value)}>{snap().precipitation}%</b>
+                    <span {...sx(styles.muted)}>降水概率</span>
                   </div>
-                  <div class="mini-stat">
-                    <b>{snap().feelsLike}°</b>
-                    <span>体感温度</span>
+                  <div {...sx(styles.mini)}>
+                    <b {...sx(styles.value)}>{snap().feelsLike}°</b>
+                    <span {...sx(styles.muted)}>体感温度</span>
                   </div>
                 </div>
               </section>

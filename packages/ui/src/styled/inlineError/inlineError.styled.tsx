@@ -1,9 +1,41 @@
+import * as stylex from "@stylexjs/stylex"
+import type { StyleXStyles } from "@stylexjs/stylex"
+
 import { InlineError as Primitive } from "../../primitives/inlineError/inlineError"
 import type { InlineErrorProps } from "../../primitives/inlineError/inlineError"
-import "./styles.css"
+import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
-export function InlineError(props: InlineErrorProps) {
-  return <Primitive {...props} class={`tbr-inline-error ${props.class ?? ""}`.trim()} />
+const styles = stylex.create({
+  root: {
+    alignItems: "center",
+    backgroundColor: "rgb(var(--tbr-color-danger) / 0.05)",
+    borderColor: "rgb(var(--tbr-color-danger) / 0.25)",
+    borderRadius: "var(--tbr-radius-control)",
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: "rgb(var(--tbr-color-danger))",
+    display: "flex",
+    fontSize: 11,
+    gap: 6,
+    paddingBlock: 6,
+    paddingInline: 10,
+  },
+})
+
+export type StyledInlineErrorProps = InlineErrorProps & {
+  xstyle?: StyleXStyles
 }
 
-export type { InlineErrorProps }
+export function InlineError(props: StyledInlineErrorProps) {
+  const compiled = () => stylex.props(styles.root, props.xstyle)
+
+  return (
+    <Primitive
+      {...props}
+      class={joinClassNames(compiled().className, props.class)}
+      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
+    />
+  )
+}
+
+export type { StyledInlineErrorProps as InlineErrorProps }

@@ -1,11 +1,116 @@
+import * as stylex from "@stylexjs/stylex"
 import { PluginViewBoundary } from "@tabora/workbench-shell"
 import { X } from "lucide-solid"
-import { Show } from "solid-js"
+import { createEffect, Show } from "solid-js"
 import type { JSX } from "solid-js"
 
 import type { ShellTranslation, WorkbenchShellPluginViewBoundaryCopy } from "../i18n"
+import { color, motion, radius, shadow, zIndex } from "../stylexTokens.stylex"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
+
+const styles = stylex.create({
+  modalOverlay: {
+    alignItems: "center",
+    backdropFilter: "blur(2px)",
+    backgroundColor: "rgb(var(--tbr-color-scrim) / 0.2)",
+    display: "flex",
+    inset: 0,
+    justifyContent: "center",
+    position: "fixed",
+    zIndex: zIndex.modal,
+  },
+  modal: {
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.panel,
+    borderStyle: "solid",
+    borderWidth: 1,
+    boxShadow: shadow.floating,
+    maxHeight: "80vh",
+    maxWidth: "90vw",
+    overflowY: "auto",
+    position: "relative",
+    width: 480,
+  },
+  close: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderStyle: "none",
+    borderWidth: 0,
+    borderRadius: radius.control,
+    color: color.textMuted,
+    cursor: "pointer",
+    display: "flex",
+    height: 30,
+    justifyContent: "center",
+    position: "absolute",
+    right: 12,
+    top: 12,
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, color",
+    transitionTimingFunction: motion.ease,
+    width: 30,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      color: color.text,
+    },
+    ":focus-visible": {
+      outlineColor: color.focus,
+      outlineOffset: 2,
+      outlineStyle: "solid",
+      outlineWidth: 2,
+    },
+  },
+  modalBody: {
+    padding: 16,
+    paddingTop: 48,
+  },
+  fullscreen: {
+    backgroundColor: color.page,
+    display: "flex",
+    flexDirection: "column",
+    inset: 0,
+    position: "fixed",
+    zIndex: zIndex.overlay,
+  },
+  fullscreenClose: {
+    alignItems: "center",
+    alignSelf: "flex-end",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: color.textMuted,
+    cursor: "pointer",
+    display: "flex",
+    height: 32,
+    justifyContent: "center",
+    marginBlock: 16,
+    marginInline: 24,
+    width: 32,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      color: color.text,
+    },
+    ":focus-visible": {
+      outlineColor: color.focus,
+      outlineOffset: 2,
+      outlineStyle: "solid",
+      outlineWidth: 2,
+    },
+  },
+  fullscreenBody: {
+    flex: 1,
+    marginInline: "auto",
+    maxWidth: 960,
+    overflowY: "auto",
+    paddingBottom: 24,
+    paddingInline: 24,
+    width: "100%",
+  },
+})
 
 function resolvePluginBoundaryId(props: Record<string, unknown>, fallback: string): string {
   return typeof props.instanceId === "string" ? props.instanceId : fallback
@@ -45,18 +150,40 @@ export function WorkbenchPluginModal(props: {
   tShell?: ShellTranslation
   pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
+  let closeRef: HTMLButtonElement | undefined
+  let previousFocusedElement: HTMLElement | null = null
+  createEffect(() => {
+    if (props.viewId) {
+      previousFocusedElement =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null
+      closeRef?.focus()
+      return
+    }
+    previousFocusedElement?.focus()
+    previousFocusedElement = null
+  })
   return (
     <Show when={props.viewId}>
-      <div class="modal-overlay" onClick={props.onClose}>
-        <div class="modal-container" onClick={(event) => event.stopPropagation()}>
+      <div
+        {...stylex.props(styles.modalOverlay)}
+        data-workbench-overlay="modal"
+        onClick={props.onClose}
+        onKeyDown={(event) => event.key === "Escape" && props.onClose()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div {...stylex.props(styles.modal)} onClick={(event) => event.stopPropagation()}>
           <button
-            class="modal-close"
+            {...stylex.props(styles.close)}
+            type="button"
+            data-modal-close
+            ref={(element) => (closeRef = element)}
             aria-label={props.tShell?.("chrome.modal.close") ?? "关闭"}
             onClick={props.onClose}
           >
             <X size={16} />
           </button>
-          <div class="modal-body">
+          <div {...stylex.props(styles.modalBody)}>
             <Show when={props.viewId}>
               {(viewId) => (
                 <WorkbenchPluginSurfaceView
@@ -84,17 +211,30 @@ export function WorkbenchFullscreenOverlay(props: {
   tShell?: ShellTranslation
   pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
+  let closeRef: HTMLButtonElement | undefined
+  createEffect(() => {
+    if (props.viewId) closeRef?.focus()
+  })
   return (
     <Show when={props.viewId}>
-      <div class="fullscreen-overlay">
+      <div
+        {...stylex.props(styles.fullscreen)}
+        data-workbench-overlay="fullscreen"
+        onKeyDown={(event) => event.key === "Escape" && props.onClose()}
+        role="dialog"
+        aria-modal="true"
+      >
         <button
-          class="fullscreen-close"
+          {...stylex.props(styles.fullscreenClose)}
+          type="button"
+          data-fullscreen-close
+          ref={(element) => (closeRef = element)}
           aria-label={props.tShell?.("chrome.fullscreen.close") ?? "关闭全屏视图"}
           onClick={props.onClose}
         >
           <X size={18} />
         </button>
-        <div class="fullscreen-body">
+        <div {...stylex.props(styles.fullscreenBody)}>
           <Show when={props.viewId}>
             {(viewId) => (
               <WorkbenchPluginSurfaceView

@@ -1,6 +1,7 @@
 import { Button, Input } from "@tabora/ui"
 import { createSignal, onMount, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import { styles, sx } from "./styles"
 
 type AccountPhase = "loading" | "signed-out" | "reset-request" | "reset-verify" | "signed-in"
 
@@ -146,38 +147,45 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   return (
-    <section class="account-auth-panel" aria-label="官方账号登录注册">
-      <Show when={auth()} fallback={<p class="auth-status">未配置同步服务，当前为本地模式</p>}>
-        <Show when={phase() !== "loading"} fallback={<p class="auth-status">正在恢复登录状态…</p>}>
+    <section
+      {...sx(styles.accountPanel)}
+      data-account-state={phase()}
+      data-settings-panel="account"
+      aria-label="官方账号登录注册"
+    >
+      <Show
+        when={auth()}
+        fallback={<p {...sx(styles.authStatus)}>未配置同步服务，当前为本地模式</p>}
+      >
+        <Show
+          when={phase() !== "loading"}
+          fallback={<p {...sx(styles.authStatus)}>正在恢复登录状态…</p>}
+        >
           <Show when={phase() === "signed-in"}>
-            <div class="account-profile-card">
-              <div class="profile-info">
-                <div class="profile-avatar">
-                  <span class="avatar-initial">{accountEmail().charAt(0).toUpperCase()}</span>
+            <div {...sx(styles.profileCard)}>
+              <div {...sx(styles.profileInfo)}>
+                <div {...sx(styles.avatar)}>
+                  <span {...sx(styles.avatarInitial)}>
+                    {accountEmail().charAt(0).toUpperCase()}
+                  </span>
                 </div>
-                <div class="profile-details">
-                  <div class="profile-email">{accountEmail()}</div>
-                  <div class="profile-status">
-                    <span class="status-dot"></span>
+                <div {...sx(styles.profileDetails)}>
+                  <div {...sx(styles.profileEmail)}>{accountEmail()}</div>
+                  <div {...sx(styles.profileStatus)}>
+                    <span {...sx(styles.statusDot)}></span>
                     已登录
                   </div>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleLogout}
-                disabled={busy()}
-                class="signout-btn"
-              >
+              <Button size="sm" variant="ghost" onClick={handleLogout} disabled={busy()}>
                 退出
               </Button>
             </div>
           </Show>
 
           <Show when={phase() === "signed-out"}>
-            <div class="account-auth-form">
-              <label class="auth-field">
+            <div {...sx(styles.authForm)}>
+              <label {...sx(styles.authField)}>
                 <span>邮箱</span>
                 <Input
                   size="sm"
@@ -188,7 +196,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   aria-label="账号邮箱"
                 />
               </label>
-              <label class="auth-field">
+              <label {...sx(styles.authField)}>
                 <span>密码</span>
                 <Input
                   size="sm"
@@ -199,7 +207,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   aria-label="账号密码"
                 />
               </label>
-              <div class="account-actions">
+              <div {...sx(styles.accountActions)}>
                 <Button size="sm" variant="primary" disabled={busy()} onClick={handleLogin}>
                   登录
                 </Button>
@@ -218,13 +226,13 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
               >
                 忘记密码?
               </Button>
-              <span class="auth-status">{status()}</span>
+              <span {...sx(styles.authStatus)}>{status()}</span>
             </div>
           </Show>
 
           <Show when={phase() === "reset-request"}>
-            <div class="account-auth-form">
-              <label class="auth-field">
+            <div {...sx(styles.authForm)}>
+              <label {...sx(styles.authField)}>
                 <span>邮箱</span>
                 <Input
                   size="sm"
@@ -235,7 +243,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   aria-label="重置账号邮箱"
                 />
               </label>
-              <div class="account-actions">
+              <div {...sx(styles.accountActions)}>
                 <Button size="sm" variant="primary" disabled={busy()} onClick={handleSendResetCode}>
                   发送验证码
                 </Button>
@@ -251,13 +259,13 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   返回
                 </Button>
               </div>
-              <span class="auth-status">{status()}</span>
+              <span {...sx(styles.authStatus)}>{status()}</span>
             </div>
           </Show>
 
           <Show when={phase() === "reset-verify"}>
-            <div class="account-auth-form">
-              <label class="auth-field">
+            <div {...sx(styles.authForm)}>
+              <label {...sx(styles.authField)}>
                 <span>验证码</span>
                 <Input
                   size="sm"
@@ -267,7 +275,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   aria-label="重置验证码"
                 />
               </label>
-              <label class="auth-field">
+              <label {...sx(styles.authField)}>
                 <span>新密码</span>
                 <Input
                   size="sm"
@@ -278,7 +286,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   aria-label="新密码"
                 />
               </label>
-              <div class="account-actions">
+              <div {...sx(styles.accountActions)}>
                 <Button size="sm" variant="primary" disabled={busy()} onClick={handleResetPassword}>
                   重置密码
                 </Button>
@@ -294,7 +302,7 @@ export function AccountSettingsPanel(props: SettingsPanelViewProps) {
                   返回
                 </Button>
               </div>
-              <span class="auth-status">{status()}</span>
+              <span {...sx(styles.authStatus)}>{status()}</span>
             </div>
           </Show>
         </Show>

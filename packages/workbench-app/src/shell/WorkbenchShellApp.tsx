@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createEffect, createMemo, onCleanup, Show } from "solid-js"
 import type { PluginInstance, WorkbenchSearchSettings, Workspace } from "@tabora/plugin-api"
@@ -20,6 +21,7 @@ import { createWorkbenchWorkspaceController } from "../workspace/WorkbenchShellW
 import { assignGridOrder } from "../shared/workbenchGrid"
 import { createWorkbenchShellRuntimes } from "./createWorkbenchShellRuntimes"
 import { createWorkbenchShellPluginViewBoundaryCopy } from "../i18n"
+import { color, font } from "../stylexTokens.stylex"
 
 export type WorkbenchShellAppProps = {
   composition: {
@@ -32,6 +34,24 @@ export type WorkbenchShellAppProps = {
   }
   runtime: WorkbenchRuntimeBootstrap
 }
+
+const styles = stylex.create({
+  root: {
+    backgroundColor: color.page,
+    color: color.text,
+    fontFamily: font.sans,
+    minHeight: "100vh",
+    WebkitFontSmoothing: "antialiased",
+  },
+  loading: {
+    alignItems: "center",
+    color: color.textMuted,
+    display: "flex",
+    fontSize: 14,
+    height: "100vh",
+    justifyContent: "center",
+  },
+})
 
 export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   const composition = props.composition
@@ -317,8 +337,20 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 
   return (
     <WorkbenchShellProvider shell={shell}>
-      <div class="tabora-root" onKeyDown={handleWorkbenchKeydown} tabIndex={-1}>
-        <Show when={kernelReady()} fallback={<div class="loading">Loading Tabora...</div>}>
+      <div
+        {...stylex.props(styles.root)}
+        data-workbench-shell-root
+        onKeyDown={handleWorkbenchKeydown}
+        tabIndex={-1}
+      >
+        <Show
+          when={kernelReady()}
+          fallback={
+            <div {...stylex.props(styles.loading)} data-workbench-loading>
+              Loading Tabora...
+            </div>
+          }
+        >
           <WorkbenchShellSurfaceHost />
         </Show>
       </div>

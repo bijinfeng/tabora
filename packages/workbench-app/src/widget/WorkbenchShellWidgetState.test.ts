@@ -73,7 +73,12 @@ describe("addWorkbenchWidget", () => {
       now: () => "2026-06-07T01:00:00.000Z",
     })
 
-    expect(result).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: "widget.notes-1",
+        regionId: "grid",
+      }),
+    )
     expect(assignGridOrder).toHaveBeenCalledWith([
       currentInstances[0],
       expect.objectContaining({
@@ -115,7 +120,7 @@ describe("addWorkbenchWidget", () => {
       now: () => "2026-06-07T01:00:00.000Z",
     })
 
-    expect(result).toBe(false)
+    expect(result).toBeNull()
     expect(assignGridOrder).not.toHaveBeenCalled()
     expect(saveInstance).not.toHaveBeenCalled()
     expect(setInstances).not.toHaveBeenCalled()

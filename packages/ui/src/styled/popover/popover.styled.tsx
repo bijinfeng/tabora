@@ -1,7 +1,74 @@
+import * as stylex from "@stylexjs/stylex"
+import type { StyleXStyles } from "@stylexjs/stylex"
+
 import { Popover as P } from "../../primitives/popover/popover"
 import type { PopoverProps } from "../../primitives/popover/popover"
-import "./styles.css"
-export function Popover(props: PopoverProps) {
-  return <P {...props} />
+import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+
+const scaleIn = stylex.keyframes({
+  from: {
+    opacity: 0,
+    transform: "scale(0.98)",
+  },
+  to: {
+    opacity: 1,
+    transform: "scale(1)",
+  },
+})
+
+const styles = stylex.create({
+  content: {
+    animationDuration: "120ms",
+    animationName: scaleIn,
+    animationTimingFunction: "var(--tbr-ease)",
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-panel)",
+    borderStyle: "solid",
+    borderWidth: 1,
+    boxShadow: "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08)",
+    minWidth: 200,
+    padding: 12,
+    zIndex: 50,
+  },
+  arrow: {
+    zIndex: 1,
+  },
+  title: {
+    fontSize: 12,
+    fontWeight: 650,
+    marginBottom: 5,
+  },
+  body: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 11,
+    lineHeight: 1.4,
+  },
+})
+
+export type StyledPopoverProps = PopoverProps & {
+  xstyle?: StyleXStyles
 }
-export type { PopoverProps }
+
+export function Popover(props: StyledPopoverProps) {
+  const contentCompiled = () => stylex.props(styles.content, props.xstyle)
+  const arrowCompiled = () => stylex.props(styles.arrow)
+  const titleCompiled = () => stylex.props(styles.title)
+  const bodyCompiled = () => stylex.props(styles.body)
+
+  return (
+    <P
+      {...props}
+      class={joinClassNames(contentCompiled().className, props.class)}
+      style={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.style)}
+      arrowClass={joinClassNames(arrowCompiled().className, props.arrowClass)}
+      arrowStyle={mergeSolidStyles(toSolidStyle(arrowCompiled().style), props.arrowStyle)}
+      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
+      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
+      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
+      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
+    />
+  )
+}
+
+export type { StyledPopoverProps as PopoverProps }

@@ -1,10 +1,11 @@
 import { Button } from "../button"
 import { EmptyState } from "./emptyState.styled"
 
+import { demoStyles, sx } from "../demoStyles"
 export function EmptyStateDemo() {
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>固定卡片区域</strong>
         <span>空状态不只告诉用户“没有内容”，还要给出下一步动作。</span>
       </div>

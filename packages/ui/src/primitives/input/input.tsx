@@ -15,7 +15,18 @@ export type HeadlessInputProps = {
   clearable?: boolean
   leadingIcon?: JSX.Element
   trailingIcon?: JSX.Element
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  wrapperClass?: string | undefined
+  wrapperStyle?: JSX.CSSProperties | undefined
+  leadingIconClass?: string | undefined
+  leadingIconStyle?: JSX.CSSProperties | undefined
+  trailingIconClass?: string | undefined
+  trailingIconStyle?: JSX.CSSProperties | undefined
+  clearButtonClass?: string | undefined
+  clearButtonStyle?: JSX.CSSProperties | undefined
+  trailingButtonClass?: string | undefined
+  trailingButtonStyle?: JSX.CSSProperties | undefined
   "aria-label"?: string
   id?: string
   onKeyDown?: (e: KeyboardEvent) => void
@@ -50,6 +61,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
     return (
       <input
         class={props.class}
+        style={props.style}
         data-size={props.size ?? "md"}
         data-invalid={props.invalid ? "" : undefined}
         type={props.type ?? "text"}
@@ -69,14 +81,15 @@ export function HeadlessInput(props: HeadlessInputProps) {
 
   // Render with wrapper for icons / clearable / password toggle
   return (
-    <span class="tbr-input-wrapper">
+    <span class={props.wrapperClass} style={props.wrapperStyle}>
       <Show when={props.leadingIcon}>
-        <span class="tbr-input-leading-icon" aria-hidden="true">
+        <span class={props.leadingIconClass} style={props.leadingIconStyle} aria-hidden="true">
           {props.leadingIcon}
         </span>
       </Show>
       <input
         class={props.class}
+        style={props.style}
         data-size={props.size ?? "md"}
         data-invalid={props.invalid ? "" : undefined}
         data-has-leading={hasLeading() ? "" : undefined}
@@ -94,14 +107,15 @@ export function HeadlessInput(props: HeadlessInputProps) {
         onBlur={() => props.onBlur?.()}
       />
       <Show when={props.trailingIcon && !props.clearable && !isPasswordType()}>
-        <span class="tbr-input-trailing-icon" aria-hidden="true">
+        <span class={props.trailingIconClass} style={props.trailingIconStyle} aria-hidden="true">
           {props.trailingIcon}
         </span>
       </Show>
       <Show when={props.clearable && hasValue() && !props.disabled}>
         <button
           type="button"
-          class="tbr-input-clear"
+          class={props.clearButtonClass}
+          style={props.clearButtonStyle}
           onClick={handleClear}
           aria-label="清除"
           tabIndex={-1}
@@ -112,7 +126,8 @@ export function HeadlessInput(props: HeadlessInputProps) {
       <Show when={isPasswordType() && !props.disabled}>
         <button
           type="button"
-          class="tbr-input-trailing-btn"
+          class={props.trailingButtonClass}
+          style={props.trailingButtonStyle}
           onClick={togglePasswordVisibility}
           aria-label={showPassword() ? "隐藏密码" : "显示密码"}
           tabIndex={-1}

@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Badge } from "../badge"
 import { Menubar } from "./menubar.styled"
 
@@ -16,8 +17,8 @@ export function MenubarDemo() {
     )[value()]
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>设置导航</strong>
         <span>适合在同一上下文内切换设置分区，不需要离开当前内容面板。</span>
       </div>
@@ -31,7 +32,7 @@ export function MenubarDemo() {
           { value: "plugins", label: "插件" },
         ]}
       />
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Badge variant="neutral">当前分区</Badge>
         <span>{sectionSummary()}</span>
       </div>

@@ -149,8 +149,8 @@ describe("createWorkbenchDndKitDragHandlers", () => {
   it("falls back to rendered DOM order when dnd-kit ends without a target", async () => {
     const root = document.createElement("div")
     root.innerHTML = `
-      <div class="grid-item" data-widget-instance-id="widget-b"></div>
-      <div class="grid-item" data-widget-instance-id="widget-a"></div>
+      <div data-workbench-grid-item data-widget-instance-id="widget-b"></div>
+      <div data-workbench-grid-item data-widget-instance-id="widget-a"></div>
     `
     document.body.append(root)
     const persisted = [

@@ -71,7 +71,7 @@ describe("createChangeDetector", () => {
     expect(change?.scope).toBe("plugin")
     expect(change?.recordKey).toBe("pd1")
     // pluginId is preserved in the payload (no info loss).
-    expect((change?.payload as any).pluginId).toBe("todo-plugin")
+    expect((change!.payload as { pluginId?: string }).pluginId).toBe("todo-plugin")
   })
 
   it("uses the core entityType for workspace creates", () => {

@@ -1,2 +1,2 @@
-export { Truncate } from "../../primitives/truncate/truncate"
-export type { TruncateProps } from "../../primitives/truncate/truncate"
+export { Truncate } from "./truncate.styled"
+export type { TruncateProps } from "./truncate.styled"

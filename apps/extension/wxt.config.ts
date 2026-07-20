@@ -1,7 +1,7 @@
 import "@wxt-dev/auto-icons"
 import { taboraAppIconPath } from "@tabora/brand/assetPaths"
+import { createTaboraStylexVitePlugin, taboraStylexWorkspaceRoot } from "@tabora/stylex-config"
 import { defineConfig } from "wxt"
-import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
   modules: ["@wxt-dev/module-solid", "@wxt-dev/auto-icons"],
@@ -18,7 +18,16 @@ export default defineConfig({
       newtab: "newtab.html",
     },
   },
-  vite: () => ({
-    plugins: [tailwindcss()],
-  }),
+  vite: () => {
+    const isDevelopment = process.env.NODE_ENV !== "production"
+    return {
+      plugins: [
+        createTaboraStylexVitePlugin({
+          rootDir: taboraStylexWorkspaceRoot,
+          dev: isDevelopment,
+          devMode: isDevelopment ? "full" : "off",
+        }),
+      ],
+    }
+  },
 })

@@ -2,6 +2,7 @@ import { Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button, InlineError } from "@tabora/ui"
 import { useQuickLinksExpandSession } from "./quick-links-expand-session"
+import { styles, sx } from "./styles"
 
 function footerHint(panel: "links" | "groups" | "entry"): string {
   if (panel === "groups") return "正在管理分组：调整显示状态，或新增一个入口分组。"
@@ -14,16 +15,16 @@ export function QuickLinksExpandFooter(props: WidgetViewProps) {
   const { panel, urlError, toggleManageGroups, primaryAction } = session
 
   return (
-    <div class="ql-expand-footer">
-      <div class="ql-footer-info">
+    <div {...sx(styles.footer)} data-quick-links-footer>
+      <div {...sx(styles.footerInfo)}>
         <Show
           when={urlError()}
-          fallback={<span class="ql-footer-hint">{footerHint(panel())}</span>}
+          fallback={<span {...sx(styles.footerHint)}>{footerHint(panel())}</span>}
         >
           <InlineError>{urlError()!}</InlineError>
         </Show>
       </div>
-      <div class="ql-footer-actions">
+      <div {...sx(styles.footerActions)}>
         <Button size="sm" variant="secondary" onClick={toggleManageGroups}>
           {panel() === "groups" ? "完成" : panel() === "entry" ? "取消" : "管理分组"}
         </Button>

@@ -9,6 +9,7 @@ export default defineConfig({
       "plugins/official/*/vitest.config.ts",
       "plugins/community/*/vitest.config.ts",
       "backend/directus/vitest.config.ts",
+      "tooling/stylex/vitest.config.ts",
       "tooling/vitest/vitest.config.ts",
     ],
   },

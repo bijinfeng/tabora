@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 import { createStore } from "solid-js/store"
+import type { AddWidgetContext } from "@tabora/plugin-api"
 import type { SettingsSectionId } from "@tabora/workbench-shell"
 
 import type { WorkbenchDndDragState } from "../drag/WorkbenchShellDragState"
@@ -10,6 +11,8 @@ export type WorkbenchContextMenuState = {
   y: number
   instanceId: string
 }
+
+export type WorkbenchAddWidgetContext = AddWidgetContext
 
 // 标量开关/视图 id 用 createStore 分组；这些值（boolean / string / null）replace 语义安全。
 type WorkbenchOverlayFlags = {
@@ -38,6 +41,14 @@ export function createWorkbenchOverlayStore() {
   const [ctxMenu, setCtxMenu] = createSignal<WorkbenchContextMenuState | null>(null)
   const [expandState, setExpandState] = createSignal<WorkbenchExpandState | null>(null)
   const [dragState, setDragState] = createSignal<WorkbenchDndDragState | null>(null)
+  const [addWidgetContext, setAddWidgetContext] = createSignal<WorkbenchAddWidgetContext | null>(
+    null,
+  )
+
+  function setAddWidgetOpen(open: boolean, context?: WorkbenchAddWidgetContext) {
+    setFlags("addWidgetOpen", open)
+    setAddWidgetContext(open ? (context ?? null) : null)
+  }
 
   return {
     settingsOpen: () => flags.settingsOpen,
@@ -50,7 +61,8 @@ export function createWorkbenchOverlayStore() {
     fullscreenViewId: () => flags.fullscreenViewId,
     setFullscreenViewId: (viewId: string | null) => setFlags("fullscreenViewId", viewId),
     addWidgetOpen: () => flags.addWidgetOpen,
-    setAddWidgetOpen: (open: boolean) => setFlags("addWidgetOpen", open),
+    setAddWidgetOpen,
+    addWidgetContext,
     cmdPaletteOpen: () => flags.cmdPaletteOpen,
     setCmdPaletteOpen: (open: boolean) => setFlags("cmdPaletteOpen", open),
     modalProps,

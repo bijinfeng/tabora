@@ -33,9 +33,15 @@ export function createWorkbenchShellSurfaceActionProps(shell: WorkbenchShell) {
       open: overlays.addWidgetOpen(),
       availableWidgets,
       widgetIconLabel: resolveWidgetIconLabel,
+      ...(overlays.addWidgetContext()?.activeGroupLabel
+        ? { activeGroupLabel: overlays.addWidgetContext()!.activeGroupLabel }
+        : {}),
       ...(tShell ? { tShell } : {}),
       onAdd: (pluginId: string, widgetId: string, size?: WidgetSize) => {
-        void widgetController.addWidget(pluginId, widgetId, size)
+        const context = overlays.addWidgetContext()
+        void widgetController.addWidget(pluginId, widgetId, size).then((instance) => {
+          if (instance) context?.onAdded?.(instance)
+        })
         overlays.setAddWidgetOpen(false)
       },
       onClose: () => overlays.setAddWidgetOpen(false),

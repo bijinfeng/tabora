@@ -3,6 +3,7 @@ import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { LayoutHostAPI } from "@tabora/plugin-api"
 import { DropdownMenu } from "@tabora/ui"
 import { HostActionIcon } from "./host-action-icon"
+import { className, styles, sx } from "./styles"
 import type { ActiveGroupSetter, RailGroup, RailGroupContextMenu, RailGroupSetter } from "./types"
 
 const groupIcons = ["T", "◐", "◇", "★", "◈", "⌘", "⚡", "◔", "♥", "■", "◆", "▲", "●", "✦"]
@@ -221,42 +222,49 @@ export function WorkbenchRail(props: {
   })
 
   return (
-    <aside class="dash-rail workbench-rail" aria-label="工作台导航">
-      <TaboraMark class="dash-rail-logo" />
-      <div class="dash-rail-groups">
+    <aside {...sx(styles.rail)} data-workbench-rail aria-label="工作台导航">
+      <TaboraMark class={className(styles.railLogo)} />
+      <div {...sx(styles.railGroups)}>
         <For each={groups()}>
           {(group, index) => {
             const shortcut = () => (index() < 9 ? `⌘${index() + 1}` : "")
             return (
               <div
-                class="dash-rail-group"
+                {...sx(styles.railGroup)}
                 onContextMenu={(event) => openGroupMenu(event, group.id)}
               >
                 <button
-                  class="dash-rail-btn"
-                  classList={{ active: group.id === activeGroupId() }}
+                  {...sx(
+                    styles.railButton,
+                    group.id === activeGroupId() && styles.railButtonActive,
+                  )}
                   aria-label={`分组 ${group.name}`}
                   title={`${group.name} · 右键菜单${shortcut() ? ` · ${shortcut()}` : ""}`}
                   type="button"
                   onClick={() => switchGroup(group.id)}
                 >
-                  <span class="dash-rail-group-icon">{group.icon}</span>
+                  <span {...sx(styles.groupIcon)}>{group.icon}</span>
                   <Show when={shortcut()}>
-                    {(label) => <span class="dash-rail-group-shortcut">{label()}</span>}
+                    {(label) => <span {...sx(styles.groupShortcut)}>{label()}</span>}
                   </Show>
                 </button>
-                <span class="dash-rail-group-tip">{group.name} · Dashboard</span>
+                <span {...sx(styles.groupTip)}>{group.name} · Dashboard</span>
               </div>
             )
           }}
         </For>
         <Show when={inlineOpen()}>
-          <div class="dash-rail-placeholder-wrap">
-            <button class="dash-rail-btn dash-rail-placeholder" type="button" aria-label="正在命名">
+          <div {...sx(styles.placeholderWrap)}>
+            <button
+              {...sx(styles.railButton, styles.placeholder)}
+              type="button"
+              aria-label="正在命名"
+            >
               ●
             </button>
-            <div class="dash-inline-pop open">
+            <div {...sx(styles.inlinePop)} data-rail-inline-pop>
               <input
+                {...sx(styles.inlineInput)}
                 ref={(element) => {
                   inlineInput = element
                 }}
@@ -280,16 +288,17 @@ export function WorkbenchRail(props: {
                 maxlength={20}
                 aria-label="分组名"
               />
-              <span class="dash-inline-hint">
-                <kbd>Enter</kbd>建 <kbd>Esc</kbd>退
+              <span {...sx(styles.inlineHint)}>
+                <kbd {...sx(styles.inlineKbd)}>Enter</kbd>建{" "}
+                <kbd {...sx(styles.inlineKbd)}>Esc</kbd>退
               </span>
             </div>
           </div>
         </Show>
       </div>
-      <div class="dash-rail-divider" />
+      <div {...sx(styles.divider)} />
       <button
-        class="dash-rail-btn dash-rail-add"
+        {...sx(styles.railButton)}
         aria-label="新建分组"
         title="新建分组（⌘ ⇧ N）"
         type="button"
@@ -297,7 +306,7 @@ export function WorkbenchRail(props: {
       >
         <HostActionIcon id="add-widget" icon="+" size={16} />
       </button>
-      <div class="dash-rail-spacer" />
+      <div {...sx(styles.spacer)} />
       <Show when={layoutAction()}>
         {(action) => (
           <DropdownMenu
@@ -315,9 +324,9 @@ export function WorkbenchRail(props: {
               {
                 id: "dashboard",
                 label: (
-                  <span class="dash-layout-switch-text">
-                    <span class="dash-layout-switch-name">Dashboard</span>
-                    <span class="dash-layout-switch-desc">控制面板：多卡片并列</span>
+                  <span {...sx(styles.layoutLabel)}>
+                    <span {...sx(styles.layoutName)}>Dashboard</span>
+                    <span {...sx(styles.layoutDescription)}>控制面板：多卡片并列</span>
                   </span>
                 ),
                 icon: <LayoutDashboardIcon />,
@@ -327,9 +336,9 @@ export function WorkbenchRail(props: {
               {
                 id: "focus",
                 label: (
-                  <span class="dash-layout-switch-text">
-                    <span class="dash-layout-switch-name">Focus</span>
-                    <span class="dash-layout-switch-desc">深度专注：主卡 + 卫星</span>
+                  <span {...sx(styles.layoutLabel)}>
+                    <span {...sx(styles.layoutName)}>Focus</span>
+                    <span {...sx(styles.layoutDescription)}>深度专注：主卡 + 卫星</span>
                   </span>
                 ),
                 icon: <LayoutFocusIcon />,
@@ -337,8 +346,7 @@ export function WorkbenchRail(props: {
                 onClick: () => selectLayout("focus"),
               },
             ]}
-            triggerClass="dash-rail-btn"
-            triggerClassList={{ active: layoutPopOpen() }}
+            triggerClass={className(styles.railButton, layoutPopOpen() && styles.railButtonActive)}
             triggerAriaLabel="切换布局"
             triggerTitle="切换布局"
           >
@@ -349,8 +357,7 @@ export function WorkbenchRail(props: {
       <For each={utilityActions()}>
         {(action) => (
           <button
-            class="dash-rail-btn"
-            classList={{ active: action.isActive }}
+            {...sx(styles.railButton, action.isActive && styles.railButtonActive)}
             aria-label={action.label}
             title={action.label}
             type="button"
@@ -363,7 +370,8 @@ export function WorkbenchRail(props: {
       <Show when={activeGroupMenu()}>
         {(menu) => (
           <div
-            class="dash-group-menu"
+            {...sx(styles.groupMenu)}
+            data-group-menu
             ref={(element) => {
               groupMenuPanel = element
             }}
@@ -372,21 +380,22 @@ export function WorkbenchRail(props: {
             aria-label={`分组 ${menu().group.name} 菜单`}
           >
             <button
-              class="dash-group-menu-item"
+              {...sx(styles.menuItem)}
+              data-group-menu-item
               type="button"
               onClick={() => renameGroup(menu().group.id)}
             >
               <span>重命名</span>
-              <kbd>F2</kbd>
+              <kbd {...sx(styles.menuKbd)}>F2</kbd>
             </button>
-            <div class="dash-group-menu-sep" />
-            <div class="dash-group-menu-label">图标</div>
-            <div class="dash-group-menu-icons">
+            <div {...sx(styles.menuSeparator)} />
+            <div {...sx(styles.menuLabel)}>图标</div>
+            <div {...sx(styles.menuIcons)}>
               <For each={groupIcons}>
                 {(icon) => (
                   <button
-                    class="dash-group-menu-icon"
-                    classList={{ active: icon === menu().group.icon }}
+                    {...sx(styles.menuIcon, icon === menu().group.icon && styles.menuIconActive)}
+                    data-group-menu-icon
                     type="button"
                     onClick={() => setGroupIcon(menu().group.id, icon)}
                   >
@@ -395,17 +404,18 @@ export function WorkbenchRail(props: {
                 )}
               </For>
             </div>
-            <div class="dash-group-menu-sep" />
+            <div {...sx(styles.menuSeparator)} />
             <button
-              class="dash-group-menu-item danger"
-              classList={{ disabled: menu().group.isDefault }}
+              {...sx(styles.menuItem, styles.menuItemDanger)}
+              data-group-menu-item
+              data-danger
               type="button"
               disabled={menu().group.isDefault}
               onClick={() => deleteGroup(menu().group.id)}
             >
               <span>删除分组</span>
               <Show when={menu().group.isDefault}>
-                <kbd>默认</kbd>
+                <kbd {...sx(styles.menuKbd)}>默认</kbd>
               </Show>
             </button>
           </div>

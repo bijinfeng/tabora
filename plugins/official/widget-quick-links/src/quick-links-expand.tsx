@@ -4,6 +4,7 @@ import { Button, Field, Input, Select, Switch } from "@tabora/ui"
 import { GripVertical, Pencil, Plus, Search, Trash2 } from "lucide-solid"
 import { displayUrl, ICON_COLORS, initialsFromTitle, MAX_LINKS } from "./quick-links-data"
 import { useQuickLinksExpandSession } from "./quick-links-expand-session"
+import { styles, sx } from "./styles"
 
 export function QuickLinksExpand(props: WidgetViewProps) {
   const session = useQuickLinksExpandSession(props)
@@ -37,12 +38,12 @@ export function QuickLinksExpand(props: WidgetViewProps) {
   } = session
 
   return (
-    <div class="ql-expand-content">
-      <div class="ql-expand-main">
+    <div {...sx(styles.expand)} data-widget-expand="quick-links">
+      <div {...sx(styles.main)}>
         <Show when={panel() === "links"}>
-          <div class="ql-panel" data-view="links">
-            <div class="ql-section-head">
-              <strong>常用入口</strong>
+          <div {...sx(styles.panel)} data-view="links">
+            <div {...sx(styles.sectionHead)}>
+              <strong {...sx(styles.sectionTitle)}>常用入口</strong>
               <span>按最近访问排序</span>
             </div>
             <Input
@@ -53,33 +54,33 @@ export function QuickLinksExpand(props: WidgetViewProps) {
               aria-label="搜索快捷入口"
               leadingIcon={<Search size={14} />}
             />
-            <div class="ql-link-table" aria-label="展开后的快捷入口列表">
-              <Show when={loaded()} fallback={<p class="ql-empty">加载中...</p>}>
+            <div {...sx(styles.list)} aria-label="展开后的快捷入口列表">
+              <Show when={loaded()} fallback={<p {...sx(styles.empty)}>加载中...</p>}>
                 <For each={filteredLinks()}>
                   {(link) => (
-                    <div class="ql-link-row-wrapper">
+                    <div {...sx(styles.rowWrap)}>
                       <button
-                        class="ql-link-row"
+                        {...sx(styles.row)}
+                        data-quick-link-row
                         type="button"
                         onClick={() => startEditEntry(link)}
                       >
                         <span
-                          class="ql-row-mark"
+                          {...sx(styles.rowMark)}
                           style={link.color ? { background: link.color, color: "#fff" } : undefined}
                         >
                           {initialsFromTitle(link.title)}
                         </span>
-                        <span class="ql-row-copy">
-                          <strong>{link.title}</strong>
-                          <span>
+                        <span {...sx(styles.copy)}>
+                          <strong {...sx(styles.primary)}>{link.title}</strong>
+                          <span {...sx(styles.secondary)}>
                             {displayUrl(link.url)} · {groupName(link.groupId)}
                           </span>
                         </span>
-                        <span class="ql-row-action-default">编</span>
                       </button>
-                      <div class="ql-row-action-hover">
+                      <div {...sx(styles.rowActions)}>
                         <button
-                          class="ql-action-btn"
+                          {...sx(styles.rowAction)}
                           type="button"
                           aria-label="编辑"
                           onClick={() => startEditEntry(link)}
@@ -87,7 +88,7 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                           <Pencil size={14} />
                         </button>
                         <button
-                          class="ql-action-btn ql-action-delete"
+                          {...sx(styles.rowAction, styles.deleteAction)}
                           type="button"
                           aria-label="删除"
                           onClick={() => void deleteEntry(link.id)}
@@ -98,18 +99,17 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                     </div>
                   )}
                 </For>
-                <button class="ql-link-row ql-link-row-add" type="button" onClick={startAddEntry}>
-                  <span class="ql-row-mark">
+                <button {...sx(styles.row, styles.rowAdd)} type="button" onClick={startAddEntry}>
+                  <span {...sx(styles.rowMark)}>
                     <Plus size={14} />
                   </span>
-                  <span class="ql-row-copy">
-                    <strong>添加入口</strong>
-                    <span>粘贴链接后自动补全标题与图标</span>
+                  <span {...sx(styles.copy)}>
+                    <strong {...sx(styles.primary)}>添加入口</strong>
+                    <span {...sx(styles.secondary)}>粘贴链接后自动补全标题与图标</span>
                   </span>
-                  <span class="ql-row-action-default">加</span>
                 </button>
                 <Show when={filteredLinks().length === 0 && query().trim()}>
-                  <p class="ql-empty">没有匹配 "{query().trim()}" 的入口</p>
+                  <p {...sx(styles.empty)}>没有匹配 "{query().trim()}" 的入口</p>
                 </Show>
               </Show>
             </div>
@@ -117,21 +117,21 @@ export function QuickLinksExpand(props: WidgetViewProps) {
         </Show>
 
         <Show when={panel() === "groups"}>
-          <div class="ql-panel" data-view="groups">
-            <div class="ql-section-head">
-              <strong>管理分组</strong>
+          <div {...sx(styles.panel)} data-view="groups">
+            <div {...sx(styles.sectionHead)}>
+              <strong {...sx(styles.sectionTitle)}>管理分组</strong>
               <span>显示控制 · 新增分组</span>
             </div>
-            <div class="ql-group-editor">
+            <div {...sx(styles.groupList)}>
               <For each={groups()}>
                 {(group) => (
-                  <div class="ql-group-row">
-                    <span class="ql-drag-grip" aria-hidden="true">
+                  <div {...sx(styles.groupRow)}>
+                    <span {...sx(styles.grip)} aria-hidden="true">
                       <GripVertical size={14} />
                     </span>
-                    <span class="ql-group-copy">
-                      <strong>{group.name}</strong>
-                      <span>
+                    <span {...sx(styles.copy)}>
+                      <strong {...sx(styles.primary)}>{group.name}</strong>
+                      <span {...sx(styles.secondary)}>
                         {groupEntryNames(group.id)} · {groupEntryCount(group.id)} 个入口
                       </span>
                     </span>
@@ -144,7 +144,7 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                 )}
               </For>
             </div>
-            <div class="ql-inline-create">
+            <div {...sx(styles.inlineCreate)}>
               <Input
                 size="sm"
                 value={newGroupName()}
@@ -163,12 +163,12 @@ export function QuickLinksExpand(props: WidgetViewProps) {
         </Show>
 
         <Show when={panel() === "entry"}>
-          <div class="ql-panel" data-view="entry">
-            <div class="ql-section-head">
-              <strong>添加入口</strong>
+          <div {...sx(styles.panel)} data-view="entry">
+            <div {...sx(styles.sectionHead)}>
+              <strong {...sx(styles.sectionTitle)}>添加入口</strong>
               <span>保存后进入当前分组</span>
             </div>
-            <form class="ql-entry-form" onSubmit={(event) => event.preventDefault()}>
+            <form {...sx(styles.form)} onSubmit={(event) => event.preventDefault()}>
               <Field label="入口链接" htmlFor={`ql-entry-url-${props.instanceId}`}>
                 <Input
                   size="sm"
@@ -180,7 +180,7 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                   aria-label="入口链接"
                 />
               </Field>
-              <div class="ql-field-row">
+              <div {...sx(styles.fieldRow)}>
                 <Field label="显示名称" htmlFor={`ql-entry-title-${props.instanceId}`}>
                   <Input
                     size="sm"
@@ -206,12 +206,11 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                 label="图标色"
                 helper="粘贴链接后可手动编辑名称、分组和图标色。保存后插入到入口列表顶部，并同步卡片里的入口数量。"
               >
-                <div class="ql-color-strip" role="group" aria-label="图标色">
+                <div {...sx(styles.colors)} role="group" aria-label="图标色">
                   <For each={ICON_COLORS}>
                     {(color) => (
                       <button
-                        class="ql-swatch"
-                        classList={{ "is-active": entryColor() === color }}
+                        {...sx(styles.swatch, entryColor() === color && styles.swatchActive)}
                         type="button"
                         style={{ "--ql-swatch": color }}
                         aria-label={`图标色 ${color}`}
@@ -227,38 +226,36 @@ export function QuickLinksExpand(props: WidgetViewProps) {
         </Show>
       </div>
 
-      <aside class="ql-expand-side" aria-label="快捷入口配置">
-        <div class="ql-section-head">
-          <strong>配置</strong>
+      <aside {...sx(styles.side)} data-quick-links-side aria-label="快捷入口配置">
+        <div {...sx(styles.sectionHead)}>
+          <strong {...sx(styles.sectionTitle)}>配置</strong>
           <span>{groups().length} 组</span>
         </div>
-        <div class="ql-info-card">
-          <div class="ql-info-line">
+        <div {...sx(styles.infoCard)}>
+          <div {...sx(styles.infoLine)}>
             <span>入口数量</span>
-            <strong>
+            <strong {...sx(styles.infoValue)}>
               {links().length} / {MAX_LINKS}
             </strong>
           </div>
-          <div class="ql-info-line">
+          <div {...sx(styles.infoLine)}>
             <span>打开方式</span>
-            <strong>当前标签页</strong>
+            <strong {...sx(styles.infoValue)}>当前标签页</strong>
           </div>
-          <div class="ql-info-line">
+          <div {...sx(styles.infoLine)}>
             <span>最近访问</span>
-            <strong>{recentLink()?.title ?? "—"}</strong>
+            <strong {...sx(styles.infoValue)}>{recentLink()?.title ?? "—"}</strong>
           </div>
         </div>
-        <div class="ql-info-card">
-          <div class="ql-section-head">
-            <strong>分组</strong>
+        <div {...sx(styles.infoCard)}>
+          <div {...sx(styles.sectionHead)}>
+            <strong {...sx(styles.sectionTitle)}>分组</strong>
             <span>{groups().length} 组</span>
           </div>
-          <div class="ql-group-chips">
+          <div {...sx(styles.chips)}>
             <For each={groups()}>
               {(group) => (
-                <span class="ql-group-chip" classList={{ "is-hidden": !group.visible }}>
-                  {group.name}
-                </span>
+                <span {...sx(styles.chip, !group.visible && styles.chipHidden)}>{group.name}</span>
               )}
             </For>
           </div>

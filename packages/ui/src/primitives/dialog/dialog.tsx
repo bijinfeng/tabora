@@ -11,7 +11,25 @@ export type DialogProps = {
   footer?: JSX.Element
   destructive?: boolean
   size?: "sm" | "md" | "lg"
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  overlayClass?: string | undefined
+  overlayStyle?: JSX.CSSProperties | undefined
+  panelClass?: string | undefined
+  panelStyle?: JSX.CSSProperties | undefined
+  headerClass?: string | undefined
+  headerStyle?: JSX.CSSProperties | undefined
+  bodyClass?: string | undefined
+  bodyStyle?: JSX.CSSProperties | undefined
+  footerClass?: string | undefined
+  footerStyle?: JSX.CSSProperties | undefined
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function Dialog(props: DialogProps) {
@@ -24,20 +42,31 @@ export function Dialog(props: DialogProps) {
       }}
     >
       <KDialog.Portal>
-        <KDialog.Overlay class={`tbr-dialog-overlay ${props.class ?? ""}`} />
+        <KDialog.Overlay
+          {...optionalPartProps(
+            [props.overlayClass, props.class].filter(Boolean).join(" "),
+            props.overlayStyle ?? props.style,
+          )}
+        />
         <KDialog.Content
-          class="tbr-dialog-panel"
+          class={props.panelClass}
           data-destructive={props.destructive ? "" : undefined}
           data-size={props.size ?? "md"}
-          style={{ width: sizes[props.size ?? "md"], "max-width": "90vw" }}
+          style={{ ...props.panelStyle, width: sizes[props.size ?? "md"], "max-width": "90vw" }}
         >
-          <KDialog.Title class="tbr-dialog-header">{props.title}</KDialog.Title>
+          <KDialog.Title class={props.headerClass} style={props.headerStyle}>
+            {props.title}
+          </KDialog.Title>
           <Show when={props.description}>
-            <KDialog.Description class="tbr-dialog-body">{props.description}</KDialog.Description>
+            <KDialog.Description class={props.bodyClass} style={props.bodyStyle}>
+              {props.description}
+            </KDialog.Description>
           </Show>
           {props.children}
           <Show when={props.footer}>
-            <div class="tbr-dialog-footer">{props.footer}</div>
+            <div class={props.footerClass} style={props.footerStyle}>
+              {props.footer}
+            </div>
           </Show>
         </KDialog.Content>
       </KDialog.Portal>

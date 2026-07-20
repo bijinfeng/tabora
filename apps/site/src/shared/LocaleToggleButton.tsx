@@ -1,11 +1,13 @@
 import { useSiteI18n } from "../app/AppShell"
+import { sx } from "./stylex"
+import type { XStyle } from "./stylex"
 
-export function LocaleToggleButton(props: { class?: string }) {
+export function LocaleToggleButton(props: { xstyle?: XStyle }) {
   const i18n = useSiteI18n()
 
   return (
     <button
-      class={props.class}
+      {...sx(props.xstyle)}
       type="button"
       aria-label={i18n.t("a11y.toggleLocale")}
       onClick={() => i18n.toggleLocale()}

@@ -76,12 +76,14 @@ describe("WeatherCard", () => {
     render(() => <WeatherCard {...props} />, root)
     await flush()
 
+    expect(root.querySelector("[data-weather-card]")).toBeTruthy()
+    expect(root.querySelector(".weather-widget")).toBeNull()
     expect(root.textContent).toContain("22°")
     expect(root.textContent).toContain("北京")
     expect(root.textContent).toContain("晴朗")
-    expect(root.querySelector(".weather-now")).toBeTruthy()
-    expect(root.querySelector(".weather-metrics")).toBeTruthy()
-    expect(root.querySelector(".hour-strip")).toBeTruthy()
+    expect(root.querySelector("[data-weather-now]")).toBeTruthy()
+    expect(root.querySelector("[data-weather-metrics]")).toBeTruthy()
+    expect(root.querySelector("[data-weather-hours]")).toBeTruthy()
     root.remove()
   })
 
@@ -120,7 +122,7 @@ describe("WeatherCard", () => {
     await flush()
     await flush()
 
-    expect(root.querySelector(".weather-error")).toBeTruthy()
+    expect(root.querySelector("[data-weather-error]")).toBeTruthy()
     expect(root.textContent).toContain("重试")
     root.remove()
   })

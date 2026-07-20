@@ -44,72 +44,105 @@ describe("workbench dashboard layout", () => {
     })
     expect(initial.cardTitles).toEqual(["快捷入口", "待办", "便签", "天气"])
 
-    clickRequired('.workbench-rail button[aria-label="新建分组"]')
-    await waitFor(() => expect(document.querySelector(".dash-inline-pop.open")).toBeTruthy())
-    expect(document.querySelector(".modal-container")).toBeFalsy()
+    clickRequired('[data-workbench-rail] button[aria-label="新建分组"]')
+    await waitFor(() => expect(document.querySelector("[data-rail-inline-pop]")).toBeTruthy())
+    expect(document.querySelector('[data-workbench-overlay="add-widget"]')).toBeFalsy()
     commitRailGroupName("Research")
     await waitFor(() =>
       expect(
-        document.querySelector('.workbench-rail button[aria-label="分组 Research"]'),
+        document.querySelector('[data-workbench-rail] button[aria-label="分组 Research"]'),
       ).toBeTruthy(),
     )
-    expect(document.querySelector(".dash-inline-pop.open")).toBeFalsy()
+    expect(document.querySelector("[data-rail-inline-pop]")).toBeFalsy()
 
     const addBefore = countGridItems()
-    clickRequired(".dash-add-widget-btn")
-    await waitFor(() => expect(document.querySelector(".modal-container")).toBeTruthy())
-    clickRequired(".add-widget-modal-item")
+    clickButtonByText("button", "添加卡片")
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-workbench-overlay="add-widget"] [role="dialog"]'),
+      ).toBeTruthy(),
+    )
+    clickButtonByText('[data-workbench-overlay="add-widget"] button', "添加到工作台")
     await waitFor(() => expect(countGridItems()).toBe(addBefore + 1))
+    expect(readGridItemByTitle("快捷入口")).toBeTruthy()
+
+    clickRequired('[data-workbench-rail] button[aria-label="分组 我的工作台"]')
+    await waitFor(() => expect(readGridItemByTitle("待办")).toBeTruthy())
 
     expect(readHeaderSizeButtons("待办")).toEqual([])
-    expect(readContextMenuSizeOptions("待办")).toEqual(["尺寸 S", "尺寸 M", "尺寸 L", "尺寸 XL"])
+    expect(await readContextMenuSizeOptions("待办")).toEqual([
+      "尺寸 S",
+      "尺寸 M",
+      "尺寸 L",
+      "尺寸 XL",
+    ])
 
-    clickRequired(readGridItemByTitle("便签"), ".card-action-btn")
-    await waitFor(() => expect(document.querySelector(".expand-overlay .notes-modal")).toBeTruthy())
-    clickRequired(".expand-close-btn")
+    const notesItem = readGridItemByTitle("便签")
+    notesItem.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    notesItem.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 2 }))
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="expand"]')).toBeTruthy(),
+    )
+    clickRequired('[data-workbench-overlay="expand"] button[aria-label="关闭展开视图"]')
 
-    clickRequired('.workbench-rail button[aria-label="设置"]')
-    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
-    expect(document.querySelector(".settings-nav.active")?.textContent).toContain("外观")
+    clickRequired('[data-workbench-rail] button[aria-label="设置"]')
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
+    )
+    expect(
+      document.querySelector('[data-settings-section][aria-current="page"]')?.textContent,
+    ).toContain("通用")
 
-    const searchNavBtn = findButtonByText(".settings-nav", "搜索")
+    const searchNavBtn = findButtonByText("[data-settings-nav] button", "搜索")
     expect(searchNavBtn).toBeTruthy()
     expect(searchNavBtn?.textContent).toContain("搜索")
     ;(searchNavBtn as HTMLElement).click()
     await waitFor(() =>
-      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("搜索"),
+      expect(
+        document.querySelector('[data-settings-section][aria-current="page"]')?.textContent,
+      ).toContain("搜索"),
     )
 
     await waitFor(() =>
       expect(document.querySelector("#settings-search-provider-select")).toBeTruthy(),
     )
 
-    const pluginsNavBtn = findButtonByText(".settings-nav", "插件")
+    const pluginsNavBtn = findButtonByText("[data-settings-nav] button", "插件")
     expect(pluginsNavBtn).toBeTruthy()
     ;(pluginsNavBtn as HTMLElement).click()
     await waitFor(() =>
-      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("插件"),
+      expect(
+        document.querySelector('[data-settings-section][aria-current="page"]')?.textContent,
+      ).toContain("插件"),
     )
-    await waitFor(() => expect(document.querySelector(".plugin-list")).toBeTruthy())
+    await waitFor(() => expect(document.querySelector("[data-plugin-settings-card]")).toBeTruthy())
 
-    clickRequired(".settings-close")
-    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+    clickRequired("[data-settings-close]")
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
+    )
 
-    clickRequired('.workbench-rail button[aria-label="设置"]')
-    await waitFor(() => expect(document.querySelectorAll(".settings-drawer")).toHaveLength(1))
-    const aboutNavBtn = findButtonByText(".settings-nav", "关于")
+    clickRequired('[data-workbench-rail] button[aria-label="设置"]')
+    await waitFor(() =>
+      expect(document.querySelectorAll('[data-workbench-overlay="settings"]')).toHaveLength(1),
+    )
+    const aboutNavBtn = findButtonByText("[data-settings-nav] button", "关于")
     expect(aboutNavBtn).toBeTruthy()
     ;(aboutNavBtn as HTMLElement).click()
     await waitFor(() =>
-      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("关于"),
+      expect(
+        document.querySelector('[data-settings-section][aria-current="page"]')?.textContent,
+      ).toContain("关于"),
     )
     await waitFor(() =>
-      expect(document.querySelector(".settings-host")?.textContent).toContain(
+      expect(document.querySelector('[data-workbench-overlay="settings"]')?.textContent).toContain(
         "当前工作区：默认工作区",
       ),
     )
-    clickRequired(".settings-close")
-    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+    clickRequired("[data-settings-close]")
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
+    )
 
     const dragOrder = await dragFirstGridItemToSecond()
     expect(dragOrder.after).toEqual([
@@ -122,29 +155,41 @@ describe("workbench dashboard layout", () => {
     await expectNoHorizontalOverflow({ width: 768, height: 900 })
     await expectNoHorizontalOverflow({ width: 390, height: 844 })
 
-    clickRequired('.workbench-rail button[aria-label="设置"]')
-    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    clickRequired('[data-workbench-rail] button[aria-label="设置"]')
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
+    )
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
-    clickRequired(".settings-close")
-    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+    clickRequired("[data-settings-close]")
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
+    )
 
-    clickRequired('.workbench-rail button[aria-label="切换布局"]')
-    await waitFor(() => expect(document.querySelector(".dash-layout-switch-pop.open")).toBeTruthy())
-    const focusLayoutButton = [
-      ...document.querySelectorAll<HTMLElement>(".dash-layout-switch-item"),
-    ].find((node) => node.textContent?.includes("Focus"))
+    const layoutSwitchTrigger = document.querySelector<HTMLElement>(
+      '[data-workbench-rail] button[aria-label="切换布局"]',
+    )
+    expect(layoutSwitchTrigger).toBeTruthy()
+    await userEvent.click(layoutSwitchTrigger!)
+    await waitFor(() => expect(document.querySelector('[role="menu"]')).toBeTruthy())
+    const focusLayoutButton = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+      (node) => node.textContent?.includes("Focus"),
+    )
     expect(focusLayoutButton).toBeTruthy()
-    focusLayoutButton?.click()
+    await userEvent.click(focusLayoutButton!)
     await waitFor(() => expect(document.querySelector('[data-layout="focus"]')).toBeTruthy())
-    await waitFor(() => expect(document.querySelector(".focus-hero")).toBeTruthy())
-    expect(document.querySelectorAll(".focus-satellite").length).toBeGreaterThan(0)
+    await waitFor(() => expect(document.querySelector('[aria-label="专注卡片"]')).toBeTruthy())
+    expect(document.querySelectorAll("[data-focus-satellite]").length).toBeGreaterThan(0)
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
 
-    clickRequired('[data-layout="focus"] .workbench-rail button[aria-label="设置"]')
-    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    clickRequired('[data-layout="focus"] [data-workbench-rail] button[aria-label="设置"]')
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
+    )
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
-    clickRequired(".settings-close")
-    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+    clickRequired("[data-settings-close]")
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
+    )
   }, 45_000)
 })
 
@@ -158,7 +203,7 @@ async function mountFreshWorkbench(): Promise<void> {
     throw new Error("Root element #root was not found")
   }
   disposeApp = render(() => <App />, root)
-  await vi.waitFor(() => expect(document.querySelector(".workbench-grid")).toBeTruthy(), {
+  await vi.waitFor(() => expect(document.querySelector("[data-layout-grid]")).toBeTruthy(), {
     timeout: 5_000,
   })
 }
@@ -176,15 +221,15 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
   await page.viewport(1280, 900)
 
   return {
-    rail: !!document.querySelector(".workbench-rail"),
-    railLabels: [...document.querySelectorAll<HTMLElement>(".workbench-rail button")].map(
+    rail: !!document.querySelector("[data-workbench-rail]"),
+    railLabels: [...document.querySelectorAll<HTMLElement>("[data-workbench-rail] button")].map(
       (node) => node.getAttribute("aria-label") ?? "",
     ),
-    topbar: !!document.querySelector(".dash-topbar .search-bar"),
+    topbar: !!document.querySelector("[data-search-command-bar]"),
     globalToolbar: !!document.querySelector(".toolbar"),
-    layoutSwitch: !!document.querySelector('.workbench-rail button[aria-label="切换布局"]'),
-    grid: !!document.querySelector(".workbench-grid"),
-    cardTitles: [...document.querySelectorAll(".card-title-text")].map(
+    layoutSwitch: !!document.querySelector('[data-workbench-rail] button[aria-label="切换布局"]'),
+    grid: !!document.querySelector("[data-layout-grid]"),
+    cardTitles: [...document.querySelectorAll("[data-widget-card-title]")].map(
       (node) => node.textContent?.trim() ?? "",
     ),
     overflowX: hasHorizontalOverflow(),
@@ -192,17 +237,17 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
 }
 
 function countGridItems(): number {
-  return document.querySelectorAll(".grid-item").length
+  return document.querySelectorAll("[data-workbench-grid-item]").length
 }
 
 function readHeaderSizeButtons(title: string): string[] {
   const todo = readGridItemByTitle(title)
-  return [...todo.querySelectorAll<HTMLElement>(".widget-size-btn")].map(
+  return [...todo.querySelectorAll<HTMLElement>("[data-widget-size-button]")].map(
     (btn) => btn.textContent ?? "",
   )
 }
 
-function readContextMenuSizeOptions(title: string): string[] {
+async function readContextMenuSizeOptions(title: string): Promise<string[]> {
   const todo = readGridItemByTitle(title)
   todo.dispatchEvent(
     new MouseEvent("contextmenu", {
@@ -211,17 +256,19 @@ function readContextMenuSizeOptions(title: string): string[] {
       clientY: 24,
     }),
   )
-  const options = [...document.querySelectorAll<HTMLElement>(".ctx-menu-item")]
+  await waitFor(() => expect(document.querySelector('[role="menu"]')).toBeTruthy())
+  const options = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
     .map((btn) => btn.textContent?.replace(/\s+/g, " ").trim() ?? "")
     .filter((text) => text.startsWith("尺寸 "))
     .map((text) => text.replace("当前", "").trim())
-  clickRequired(".ctx-menu-overlay")
+  await userEvent.keyboard("{Escape}")
+  await waitFor(() => expect(document.querySelector('[role="menu"]')).toBeFalsy())
   return options
 }
 
 function readGridItemByTitle(title: string): HTMLElement {
-  const item = [...document.querySelectorAll<HTMLElement>(".grid-item")].find((node) =>
-    node.textContent?.includes(title),
+  const item = [...document.querySelectorAll<HTMLElement>("[data-workbench-grid-item]")].find(
+    (node) => node.textContent?.includes(title),
   )
   if (!item) {
     throw new Error(`Grid item was not found: ${title}`)
@@ -230,20 +277,20 @@ function readGridItemByTitle(title: string): HTMLElement {
 }
 
 async function dragFirstGridItemToSecond(): Promise<{ before: string[]; after: string[] }> {
-  const items = [...document.querySelectorAll<HTMLElement>(".grid-item")]
+  const items = [...document.querySelectorAll<HTMLElement>("[data-workbench-grid-item]")]
   const source = items[0]
   const target = items[1]
   if (!source || !target) {
     throw new Error("At least two grid items are required for drag sorting")
   }
 
-  const sourceHeader = source.querySelector<HTMLElement>(".card-header")
-  if (!sourceHeader) {
-    throw new Error("Source widget header was not found for pointer drag")
+  const sourceHandle = source.querySelector<HTMLElement>("[data-widget-card-title]")
+  if (!sourceHandle) {
+    throw new Error("Source widget drag handle was not found for pointer drag")
   }
 
   const before = readGridOrder()
-  await userEvent.dragAndDrop(sourceHeader, target)
+  await userEvent.dragAndDrop(sourceHandle, target)
 
   await waitFor(() => expect(readGridOrder()).toEqual([before[1], before[0], ...before.slice(2)]))
 
@@ -254,7 +301,7 @@ async function dragFirstGridItemToSecond(): Promise<{ before: string[]; after: s
 }
 
 function readGridOrder(): string[] {
-  return [...document.querySelectorAll(".grid-item")].map(
+  return [...document.querySelectorAll("[data-workbench-grid-item]")].map(
     (item) => item.getAttribute("aria-label") ?? "",
   )
 }
@@ -281,8 +328,16 @@ function findButtonByText(selector: string, text: string): HTMLElement | null {
   )
 }
 
+function clickButtonByText(selector: string, text: string): void {
+  const button = findButtonByText(selector, text)
+  if (!button) {
+    throw new Error(`Button was not found: ${selector} containing ${text}`)
+  }
+  button.click()
+}
+
 function commitRailGroupName(name: string): void {
-  const input = document.querySelector<HTMLInputElement>(".dash-inline-pop input")
+  const input = document.querySelector<HTMLInputElement>("[data-rail-inline-pop] input")
   if (!input) {
     throw new Error("Rail inline group input was not found")
   }

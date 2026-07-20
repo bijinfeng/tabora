@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Button } from "../button"
 import { Checkbox } from "../checkbox"
 import { Dialog } from "./dialog.styled"
@@ -27,12 +28,12 @@ export function DialogDemo() {
   }
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>移除插件</strong>
         <span>演示危险确认、附加选项和提交中状态。</span>
       </div>
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Button variant="secondary" onClick={() => setOpen(true)}>
           打开 Dialog
         </Button>
@@ -45,7 +46,7 @@ export function DialogDemo() {
         description="该操作会从当前工作区中卸载插件实例，但不会影响其他工作区。"
         destructive
         children={
-          <div class="docs-stack compact">
+          <div {...sx(demoStyles.stackCompact)}>
             <Checkbox
               checked={cleanupData()}
               onChange={setCleanupData}

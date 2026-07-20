@@ -9,16 +9,30 @@ export type StepItem = {
 export type StepsProps = {
   steps: StepItem[]
   current: number
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  stepClass?: string | undefined
+  stepStyle?: JSX.CSSProperties | undefined
+  markerClass?: string | undefined
+  markerStyle?: JSX.CSSProperties | undefined
+  markerActiveClass?: string | undefined
+  markerActiveStyle?: JSX.CSSProperties | undefined
+  bodyClass?: string | undefined
+  bodyStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  descriptionClass?: string | undefined
+  descriptionStyle?: JSX.CSSProperties | undefined
 }
 
 export function Steps(props: StepsProps) {
   return (
-    <ol class={props.class}>
+    <ol class={props.class} style={props.style}>
       <For each={props.steps}>
         {(step, index) => (
           <li
-            class="tbr-step"
+            class={props.stepClass}
+            style={props.stepStyle}
             data-state={
               index() < props.current
                 ? "complete"
@@ -27,10 +41,30 @@ export function Steps(props: StepsProps) {
                   : "pending"
             }
           >
-            <span class="tbr-step-marker">{index() + 1}</span>
-            <span class="tbr-step-body">
-              <strong>{step.title}</strong>
-              {step.description && <span>{step.description}</span>}
+            <span
+              class={[
+                props.markerClass,
+                index() <= props.current ? props.markerActiveClass : undefined,
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={
+                index() <= props.current
+                  ? { ...props.markerStyle, ...props.markerActiveStyle }
+                  : props.markerStyle
+              }
+            >
+              {index() + 1}
+            </span>
+            <span class={props.bodyClass} style={props.bodyStyle}>
+              <strong class={props.titleClass} style={props.titleStyle}>
+                {step.title}
+              </strong>
+              {step.description && (
+                <span class={props.descriptionClass} style={props.descriptionStyle}>
+                  {step.description}
+                </span>
+              )}
             </span>
           </li>
         )}

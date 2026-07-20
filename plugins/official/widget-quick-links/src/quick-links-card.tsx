@@ -7,6 +7,7 @@ import {
   LINKS_KEY,
   type QuickLink,
 } from "./quick-links-data"
+import { styles, sx } from "./styles"
 
 export function QuickLinksCard(props: WidgetViewProps) {
   const [links, setLinks] = createSignal<QuickLink[]>([])
@@ -43,11 +44,11 @@ export function QuickLinksCard(props: WidgetViewProps) {
   })
 
   return (
-    <div class="quick-links">
+    <div {...sx(styles.card)} data-quick-links-card>
       <Show when={showSearch()}>
-        <div class="quick-search" role="search">
+        <div {...sx(styles.search)} role="search">
           <input
-            class="quick-search-input"
+            {...sx(styles.searchInput)}
             type="text"
             value={query()}
             onInput={(event) => setQuery(event.currentTarget.value)}
@@ -56,32 +57,31 @@ export function QuickLinksCard(props: WidgetViewProps) {
           />
         </div>
       </Show>
-      <ul class="link-grid" aria-label="快捷入口">
+      <ul {...sx(styles.grid, props.size === "S" && styles.gridSmall)} aria-label="快捷入口">
         <For each={visibleLinks()}>
           {(link) => (
-            <li class="link-item">
+            <li {...sx(styles.item, props.size === "S" && styles.itemSmall)}>
               <button
-                class="link-anchor"
+                {...sx(styles.link)}
+                data-quick-link
                 type="button"
                 onClick={() => void props.host.openExternal(link.url)}
               >
-                <span class="link-icon">{initialsFromTitle(link.title)}</span>
-                <span class="link-label">{link.title}</span>
+                <span {...sx(styles.mark)}>{initialsFromTitle(link.title)}</span>
+                <span {...sx(styles.label, props.size === "S" && styles.labelHidden)}>
+                  {link.title}
+                </span>
               </button>
             </li>
           )}
         </For>
         <Show when={query().trim() && filteredLinks().length === 0}>
-          <li class="link-empty">未找到匹配的快捷入口</li>
+          <li {...sx(styles.empty)}>未找到匹配的快捷入口</li>
         </Show>
-        <li class="link-item link-add-item">
-          <button
-            class="link-anchor link-add-anchor"
-            type="button"
-            onClick={() => props.host.openExpand()}
-          >
-            <span class="link-add-symbol">+</span>
-            <span class="link-label">添加</span>
+        <li {...sx(styles.item, styles.itemAdd, props.size === "S" && styles.itemSmall)}>
+          <button {...sx(styles.link)} type="button" onClick={() => props.host.openExpand()}>
+            <span {...sx(styles.addMark)}>+</span>
+            <span {...sx(styles.label, props.size === "S" && styles.labelHidden)}>添加</span>
           </button>
         </li>
       </ul>

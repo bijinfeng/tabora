@@ -12,6 +12,32 @@ const DEPENDENCY_SECTIONS = [
 const IMPORT_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mjs"])
 const QUALITY_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".css", ".mjs"])
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/
+const STYLEX_GLOBAL_CSS_ALLOWLIST = new Set([
+  "apps/site/src/global.css",
+  "packages/theme/src/global.css",
+  "packages/ui/src/styles.css",
+])
+const STYLEX_PACKAGE_PLACEHOLDER_ALLOWLIST = new Set([
+  "packages/official-plugins/src/styles.css",
+  "packages/workbench-shell/src/styles.css",
+  "plugins/community/layout-diy-masonry/src/styles.css",
+  "plugins/official/layout-dashboard/src/styles.css",
+  "plugins/official/widget-notes/src/styles.css",
+  "plugins/official/widget-quick-links/src/styles.css",
+  "plugins/official/widget-todo/src/styles.css",
+  "plugins/official/widget-weather/src/styles.css",
+])
+const STYLEX_PLACEHOLDER_PATTERN =
+  /^\/\* Development placeholder\. (?:Official plugin|Plugin|Workbench shell) rules are emitted by StyleX\. \*\/\s*$/
+const TAILWIND_SOURCE_PATTERNS = [
+  /@tailwindcss\/[a-z0-9-]+/gi,
+  /@import\s+["']tailwindcss["']/gi,
+  /@tailwind\b/gi,
+  /@apply\b/gi,
+  /\btailwindcss\b/gi,
+]
+const SITE_SEMANTIC_CLASS_PATTERN = /\b(?:class|className|classList)\s*=/g
+const UI_DOCS_DEMO_CLASS_PATTERN = /\bclass="docs-[^"]+"/g
 
 const PLUGIN_IMPORT_RULES = [
   {
@@ -273,6 +299,22 @@ const WORKBENCH_RAW_COLOR_DEBT_ORDER = [
 ]
 const WORKBENCH_AVOIDABLE_STYLE_PATTERNS = [
   {
+    pattern: /\bborder\s*:\s*(?:"none"|0)(?=\s*[,}])/g,
+    reason: "StyleX border resets must use borderStyle and borderWidth longhands",
+  },
+  {
+    pattern: /rgba\(var\(--[a-z0-9-]+\)\s*,\s*[^)]+\)/gi,
+    reason: "StyleX alpha colors must use rgb(var(--token) / alpha) syntax",
+  },
+  {
+    pattern: /\bfont\s*:\s*"inherit"(?=\s*[,}])/g,
+    reason: "StyleX font resets must use fontFamily longhand",
+  },
+  {
+    pattern: /--tbr-font-family-mono/g,
+    reason: "use the canonical --tbr-font-mono token",
+  },
+  {
     pattern: /rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0(?:\.0+)?\s*\)/g,
     reason: "use transparent instead of zero-alpha rgba",
   },
@@ -290,6 +332,13 @@ const WORKBENCH_RAW_COLOR_BASELINE = new Set([
   "plugins/official/widget-quick-links/src/quick-links-data.ts::#d97706",
   // 选中图标色时图标文字用白色保证对比度。
   "plugins/official/widget-quick-links/src/quick-links-expand.tsx::#fff",
+  // 设置面板强调色板：用户可选的固定调色板，非主题色。
+  "packages/official-plugins/src/settings-workspace.appearance.tsx::#1a9070",
+  "packages/official-plugins/src/settings-workspace.appearance.tsx::#316fd5",
+  "packages/official-plugins/src/settings-workspace.appearance.tsx::#8a6a2f",
+  "packages/official-plugins/src/settings-workspace.appearance.tsx::#8f4c45",
+  // 全局 reduced-motion reset 需要覆盖组件级 motion。
+  "packages/theme/src/global.css::!important",
 ])
 const SOURCE_INVARIANT_FILES = [
   "packages/workbench-shell/src/CommandPalette.tsx",
@@ -355,6 +404,82 @@ export function findForbiddenShellAppDependencies(options) {
 
 export function findForbiddenOrchestratorDependencies(options) {
   return findForbiddenDependencies(options, ORCHESTRATOR_FORBIDDEN_DEPENDENCIES)
+}
+
+export function findLegacyCssSourceViolations(options) {
+  if (STYLEX_GLOBAL_CSS_ALLOWLIST.has(options.filePath)) {
+    return []
+  }
+
+  if (STYLEX_PACKAGE_PLACEHOLDER_ALLOWLIST.has(options.filePath)) {
+    if (STYLEX_PLACEHOLDER_PATTERN.test(options.source)) {
+      return []
+    }
+
+    return [
+      {
+        filePath: options.filePath,
+        match: path.basename(options.filePath),
+        reason: "StyleX package stylesheet exports must remain development placeholders",
+      },
+    ]
+  }
+
+  return [
+    {
+      filePath: options.filePath,
+      match: path.basename(options.filePath),
+      reason: "component styles must be authored with StyleX",
+    },
+  ]
+}
+
+export function findTailwindSourceViolations(options) {
+  const matches = TAILWIND_SOURCE_PATTERNS.flatMap((pattern) =>
+    [...options.source.matchAll(pattern)].map((match) => ({
+      index: match.index ?? 0,
+      match: match[0],
+    })),
+  ).sort(
+    (left, right) =>
+      left.index - right.index ||
+      right.match.length - left.match.length ||
+      left.match.localeCompare(right.match),
+  )
+  const accepted = []
+
+  for (const candidate of matches) {
+    const candidateEnd = candidate.index + candidate.match.length
+    const overlaps = accepted.some((match) => {
+      const matchEnd = match.index + match.match.length
+      return candidate.index < matchEnd && candidateEnd > match.index
+    })
+    if (!overlaps) {
+      accepted.push(candidate)
+    }
+  }
+
+  return accepted.map(({ match }) => ({
+    filePath: options.filePath,
+    match,
+    reason: "Tailwind CSS must not be reintroduced after the StyleX migration",
+  }))
+}
+
+export function findSiteSemanticClassViolations(options) {
+  return [...options.source.matchAll(SITE_SEMANTIC_CLASS_PATTERN)].map((match) => ({
+    filePath: options.filePath,
+    match: match[0].replace(/\s+/g, ""),
+    reason: "site JSX styling must use StyleX props instead of semantic classes",
+  }))
+}
+
+export function findUiDocsDemoClassViolations(options) {
+  return [...options.source.matchAll(UI_DOCS_DEMO_CLASS_PATTERN)].map((match) => ({
+    filePath: options.filePath,
+    match: match[0],
+    reason: "UI demos must use StyleX demoStyles instead of legacy docs-* classes",
+  }))
 }
 
 export function findSourceInvariantViolations(options) {
@@ -910,6 +1035,69 @@ export async function scanSourceInvariantBoundaries(rootDir) {
   return scanFiles(repositoryRoot, files, findSourceInvariantViolations)
 }
 
+export async function scanStylexCssBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [
+      path.join(repositoryRoot, "apps"),
+      path.join(repositoryRoot, "packages"),
+      path.join(repositoryRoot, "plugins"),
+    ],
+    (filePath) => path.extname(filePath) === ".css",
+  )
+
+  return scanFiles(repositoryRoot, files, findLegacyCssSourceViolations)
+}
+
+export async function scanSiteSemanticClassBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [path.join(repositoryRoot, "apps", "site", "src")],
+    (filePath) => path.extname(filePath) === ".tsx" && !isTestFile(filePath),
+  )
+
+  return scanFiles(repositoryRoot, files, findSiteSemanticClassViolations)
+}
+
+export async function scanUiDocsDemoClassBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = await collectFiles(
+    [path.join(repositoryRoot, "packages", "ui", "src")],
+    (filePath) => {
+      if (path.extname(filePath) !== ".tsx") {
+        return false
+      }
+
+      return !isTestFile(filePath)
+    },
+  )
+
+  return scanFiles(repositoryRoot, files, findUiDocsDemoClassViolations)
+}
+
+export async function scanTailwindBoundaries(rootDir) {
+  const repositoryRoot = resolveRepositoryRoot(rootDir)
+  const files = [
+    path.join(repositoryRoot, "package.json"),
+    path.join(repositoryRoot, "pnpm-workspace.yaml"),
+    path.join(repositoryRoot, "vite.config.ts"),
+    ...(await collectFiles(
+      [
+        path.join(repositoryRoot, "apps"),
+        path.join(repositoryRoot, "packages"),
+        path.join(repositoryRoot, "plugins"),
+        path.join(repositoryRoot, "tooling"),
+      ],
+      (filePath) =>
+        [".css", ".json", ".mjs", ".ts", ".tsx", ".yaml", ".yml"].includes(
+          path.extname(filePath),
+        ) && !isTestFile(filePath),
+    )),
+  ].filter((filePath) => existsSync(filePath))
+
+  return scanFiles(repositoryRoot, uniquePaths(files), findTailwindSourceViolations)
+}
+
 export async function scanPluginExternalOpenBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles([path.join(repositoryRoot, "plugins")], (filePath) =>
@@ -1198,6 +1386,10 @@ export async function scanArchitecture(rootDir) {
     ...(await scanBrowserSmokeWorkflowBoundaries(rootDir)),
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),
     ...(await scanWorkbenchAvoidableStyleBoundaries(rootDir)),
+    ...(await scanStylexCssBoundaries(rootDir)),
+    ...(await scanSiteSemanticClassBoundaries(rootDir)),
+    ...(await scanUiDocsDemoClassBoundaries(rootDir)),
+    ...(await scanTailwindBoundaries(rootDir)),
     ...(await scanSourceInvariantBoundaries(rootDir)),
     ...(await scanLargeFileBoundaries(rootDir)),
   ]

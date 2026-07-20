@@ -16,15 +16,40 @@ export type ContextMenuItem = {
 export type ContextMenuProps = {
   items: ContextMenuItem[]
   onSelect: (key: string) => void
-  class?: string
-  triggerClass?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  triggerClass?: string | undefined
+  triggerStyle?: JSX.CSSProperties | undefined
   triggerClassList?: Record<string, boolean>
   /** 让触发器渲染为消费方自己的元素时，把额外属性透传到触发器 div 上 */
   triggerProps?: Record<string, unknown>
   /** 触发器元素 ref（可与外部 ref 合并） */
   triggerRef?: (element: HTMLDivElement) => void
   children?: JSX.Element
+  contentClass?: string | undefined
+  contentStyle?: JSX.CSSProperties | undefined
+  itemClass?: string | undefined
+  itemStyle?: JSX.CSSProperties | undefined
+  itemDangerClass?: string | undefined
+  itemDangerStyle?: JSX.CSSProperties | undefined
+  separatorClass?: string | undefined
+  separatorStyle?: JSX.CSSProperties | undefined
+  iconClass?: string | undefined
+  iconStyle?: JSX.CSSProperties | undefined
+  labelClass?: string | undefined
+  labelStyle?: JSX.CSSProperties | undefined
+  trailingClass?: string | undefined
+  trailingStyle?: JSX.CSSProperties | undefined
+  kbdClass?: string | undefined
+  kbdStyle?: JSX.CSSProperties | undefined
   "aria-label"?: string
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function ContextMenu(props: ContextMenuProps) {
@@ -42,30 +67,54 @@ export function ContextMenu(props: ContextMenuProps) {
   return (
     <KContextMenu>
       <KContextMenu.Trigger
-        class={triggerClass()}
-        classList={props.triggerClassList}
+        {...optionalPartProps(triggerClass(), props.triggerStyle ?? props.style)}
+        {...(props.triggerClassList !== undefined ? { classList: props.triggerClassList } : {})}
         {...(props.triggerRef ? { ref: props.triggerRef } : {})}
         {...(triggerExtra() as Record<string, never>)}
       >
         {props.children}
       </KContextMenu.Trigger>
       <KContextMenu.Portal>
-        <KContextMenu.Content class="tbr-context-menu-content" aria-label={props["aria-label"]}>
+        <KContextMenu.Content
+          {...optionalPartProps(props.contentClass, props.contentStyle)}
+          aria-label={props["aria-label"]}
+        >
           <For each={props.items}>
             {(item) =>
               item.separator ? (
-                <KContextMenu.Separator class="tbr-context-menu-sep" />
+                <KContextMenu.Separator
+                  {...optionalPartProps(props.separatorClass, props.separatorStyle)}
+                />
               ) : (
                 <KContextMenu.Item
-                  class="tbr-context-menu-item"
+                  class={[props.itemClass, item.danger ? props.itemDangerClass : undefined]
+                    .filter(Boolean)
+                    .join(" ")}
+                  style={
+                    item.danger ? { ...props.itemStyle, ...props.itemDangerStyle } : props.itemStyle
+                  }
                   data-danger={item.danger ? "" : undefined}
                   {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
                   onSelect={() => props.onSelect(item.key)}
                 >
-                  {item.icon && <span class="tbr-context-menu-icon">{item.icon}</span>}
-                  <span class="tbr-context-menu-label">{item.label}</span>
-                  {item.trailing && <span class="tbr-context-menu-trailing">{item.trailing}</span>}
-                  {item.shortcut && <kbd class="tbr-context-menu-kbd">{item.shortcut}</kbd>}
+                  {item.icon && (
+                    <span class={props.iconClass} style={props.iconStyle}>
+                      {item.icon}
+                    </span>
+                  )}
+                  <span class={props.labelClass} style={props.labelStyle}>
+                    {item.label}
+                  </span>
+                  {item.trailing && (
+                    <span class={props.trailingClass} style={props.trailingStyle}>
+                      {item.trailing}
+                    </span>
+                  )}
+                  {item.shortcut && (
+                    <kbd class={props.kbdClass} style={props.kbdStyle}>
+                      {item.shortcut}
+                    </kbd>
+                  )}
                 </KContextMenu.Item>
               )
             }

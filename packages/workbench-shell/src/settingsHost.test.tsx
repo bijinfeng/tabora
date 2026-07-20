@@ -199,7 +199,8 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-window")).toBeTruthy()
+    expect(root.querySelector("[data-settings-window]")).toBeTruthy()
+    expect(root.querySelector(".settings-window")).toBeNull()
   })
 
   it("renders modal semantics and moves focus into the drawer when opened", () => {
@@ -215,8 +216,8 @@ describe("settings host composition", () => {
       }),
     )
 
-    const overlay = root.querySelector(".settings-overlay") as HTMLDivElement
-    const closeButton = root.querySelector(".icon-close") as HTMLButtonElement
+    const overlay = root.querySelector('[data-workbench-overlay="settings"]') as HTMLDivElement
+    const closeButton = root.querySelector("[data-settings-close]") as HTMLButtonElement
 
     expect(overlay.getAttribute("role")).toBe("dialog")
     expect(overlay.getAttribute("aria-modal")).toBe("true")
@@ -236,15 +237,18 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("工作台")
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("扩展")
-    expect(root.querySelector(".account-entry")?.textContent).toContain("未登录")
+    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("工作台")
+    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("扩展")
+    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain("未登录")
     expect(
-      [...root.querySelectorAll(".nav-button")].map(
-        (node) => node.querySelector("span")?.textContent,
-      ),
+      [
+        ...root.querySelectorAll('[data-settings-section]:not([data-settings-section="account"])'),
+      ].map((node) => node.querySelector("span")?.textContent),
     ).toEqual(["通用", "外观", "搜索", "AI", "数据同步", "插件", "关于"])
-    expect(root.querySelector(".panel-head")?.textContent).toContain("插件")
+    expect(root.querySelector("[data-settings-panel-header]")?.textContent).toContain("插件")
+    expect(
+      root.querySelector('[data-settings-section="plugins"]')?.getAttribute("aria-current"),
+    ).toBe("page")
   })
 
   it("renders injected copy when provided", () => {
@@ -285,16 +289,20 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("Workbench")
-    expect(root.querySelector(".settings-nav")?.textContent).toContain("Extensions")
-    expect(root.querySelector(".account-entry")?.textContent).toContain("Signed out")
+    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("Workbench")
+    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("Extensions")
+    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain(
+      "Signed out",
+    )
     expect(
-      [...root.querySelectorAll(".nav-button")].map(
-        (node) => node.querySelector("span")?.textContent,
-      ),
+      [
+        ...root.querySelectorAll('[data-settings-section]:not([data-settings-section="account"])'),
+      ].map((node) => node.querySelector("span")?.textContent),
     ).toEqual(["General", "Appearance", "Search", "AI", "Data sync", "Plugins", "About"])
-    expect(root.querySelector(".panel-head")?.textContent).toContain("Plugins")
-    expect(root.querySelector(".icon-close")?.getAttribute("aria-label")).toBe("Close settings")
+    expect(root.querySelector("[data-settings-panel-header]")?.textContent).toContain("Plugins")
+    expect(root.querySelector("[data-settings-close]")?.getAttribute("aria-label")).toBe(
+      "Close settings",
+    )
   })
 
   it("keeps the settings container open when a panel view fails", () => {
@@ -361,7 +369,7 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector(".settings-window")).toBeTruthy()
+    expect(root.querySelector("[data-settings-window]")).toBeTruthy()
     expect(root.textContent).toContain("插件视图加载失败")
     expect(root.textContent).toContain("official.settings.workspace.workbench")
   })

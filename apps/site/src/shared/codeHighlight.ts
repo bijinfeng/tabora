@@ -1,3 +1,14 @@
+import * as stylex from "@stylexjs/stylex"
+
+import { codeTokenStyles } from "./codeHighlight.styles"
+
+type CodeTokenKind = keyof typeof codeTokenStyles
+
+const token = (kind: CodeTokenKind, value: string) => {
+  const className = stylex.props(codeTokenStyles[kind]).className ?? ""
+  return `<span class="${className}" data-code-token="${kind}">${value}</span>`
+}
+
 const escapeHtml = (value: string) => {
   return value
     .replaceAll("&", "&amp;")
@@ -55,35 +66,34 @@ const highlightJson = (value: string) => {
     (match, _content, offset, full) => {
       const after = full.slice(offset + match.length)
       const isKey = /^\s*:/.test(after)
-      const cls = isKey ? "tbr-syn-attr" : "tbr-syn-string"
-      return `<span class="${cls}">${match}</span>`
+      return token(isKey ? "attr" : "string", match)
     },
   )
 
   return withStrings
     .replace(/\b-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g, (match) => {
-      return `<span class="tbr-syn-number">${match}</span>`
+      return token("number", match)
     })
     .replace(/\b(true|false|null)\b/g, (match) => {
-      return `<span class="tbr-syn-keyword">${match}</span>`
+      return token("keyword", match)
     })
     .replace(/[{}[\],:]/g, (match) => {
-      return `<span class="tbr-syn-punct">${match}</span>`
+      return token("punct", match)
     })
 }
 
 const highlightBash = (value: string) => {
   const escaped = escapeHtml(value)
   const withComments = escaped.replace(/(^|\n)\s*#.*$/g, (match) => {
-    return `<span class="tbr-syn-comment">${match}</span>`
+    return token("comment", match)
   })
 
   const withStrings = withComments.replace(/(&quot;.*?&quot;|&#39;.*?&#39;)/g, (match) => {
-    return `<span class="tbr-syn-string">${match}</span>`
+    return token("string", match)
   })
 
   return withStrings.replace(/(^|\s)(--?[\w-]+)/g, (_match, space, flag) => {
-    return `${space}<span class="tbr-syn-keyword">${flag}</span>`
+    return `${space}${token("keyword", flag)}`
   })
 }
 
@@ -103,9 +113,7 @@ const highlightJsxTags = (value: string, makeToken: (html: string) => string) =>
         (/(^|[\s([{:>,=])$/.test(before) && /^[\s/>]/.test(after))
 
       if (isJsxOpen) {
-        output += makeToken(
-          `<span class="tbr-syn-punct">&lt;</span><span class="tbr-syn-tag">${tagMatch[0].slice(4)}</span>`,
-        )
+        output += makeToken(`${token("punct", "&lt;")}${token("tag", tagMatch[0].slice(4))}`)
         tagStack.push({ braceDepth: 0 })
         index += tagMatch[0].length
         continue
@@ -116,14 +124,14 @@ const highlightJsxTags = (value: string, makeToken: (html: string) => string) =>
 
     if (currentTag) {
       if (currentTag.braceDepth === 0 && value.startsWith("/&gt;", index)) {
-        output += makeToken('<span class="tbr-syn-punct">/&gt;</span>')
+        output += makeToken(token("punct", "/&gt;"))
         tagStack.pop()
         index += 5
         continue
       }
 
       if (currentTag.braceDepth === 0 && value.startsWith("&gt;", index)) {
-        output += makeToken('<span class="tbr-syn-punct">&gt;</span>')
+        output += makeToken(token("punct", "&gt;"))
         tagStack.pop()
         index += 4
         continue
@@ -132,7 +140,7 @@ const highlightJsxTags = (value: string, makeToken: (html: string) => string) =>
       if (currentTag.braceDepth === 0) {
         const attrMatch = value.slice(index).match(/^(\s)([\w:-]+)(?=\s*=)/)
         if (attrMatch) {
-          output += `${attrMatch[1]}<span class="tbr-syn-attr">${attrMatch[2]}</span>`
+          output += `${attrMatch[1]}${token("attr", attrMatch[2] ?? "")}`
           index += attrMatch[0].length
           continue
         }
@@ -155,21 +163,21 @@ const highlightTsx = (value: string) => {
   const withStrings = escaped.replace(
     /`(?:\\[\s\S]|[^`])*`|&quot;(?:\\[\s\S]|(?!&quot;)[\s\S])*?&quot;|&#39;(?:\\[\s\S]|(?!&#39;)[\s\S])*?&#39;/g,
     (match) => {
-      return makeToken(`<span class="tbr-syn-string">${match}</span>`)
+      return makeToken(token("string", match))
     },
   )
   const withComments = withStrings.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n\r]*/g, (match) => {
-    return makeToken(`<span class="tbr-syn-comment">${match}</span>`)
+    return makeToken(token("comment", match))
   })
   const withJsx = highlightJsxTags(withComments, makeToken)
   const withKeywords = withJsx.replace(
     /(?<![.\w$])\b(import|from|export|default|type|interface|function|return|const|let|var|as|satisfies|if|else|for|while|new|true|false|null|undefined|async|await)\b(?!\s*:)/g,
     (match) => {
-      return `<span class="tbr-syn-keyword">${match}</span>`
+      return token("keyword", match)
     },
   )
   const withNumbers = withKeywords.replace(/\b-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g, (match) => {
-    return `<span class="tbr-syn-number">${match}</span>`
+    return token("number", match)
   })
 
   return restoreTokens(withNumbers)
@@ -178,7 +186,7 @@ const highlightTsx = (value: string) => {
 const highlightHtmlCode = (value: string) => {
   const escaped = escapeHtml(value)
   const withComments = escaped.replace(/&lt;!--[\s\S]*?--&gt;/g, (match) => {
-    return `<span class="tbr-syn-comment">${match}</span>`
+    return token("comment", match)
   })
 
   return withComments.replace(/&lt;\/?[\w:-]+[\s\S]*?&gt;/g, (match) => {
@@ -191,13 +199,13 @@ const highlightHtmlCode = (value: string) => {
 
     const highlightedRest = rest
       .replace(/\s([\w:-]+)(?==)/g, (_m, name: string) => {
-        return ` <span class="tbr-syn-attr">${name}</span>`
+        return ` ${token("attr", name)}`
       })
       .replace(/(&quot;.*?&quot;|&#39;.*?&#39;)/g, (valueMatch) => {
-        return `<span class="tbr-syn-string">${valueMatch}</span>`
+        return token("string", valueMatch)
       })
 
-    return `<span class="tbr-syn-punct">&lt;</span><span class="tbr-syn-tag">${tagHead}</span>${highlightedRest}<span class="tbr-syn-punct">&gt;</span>`
+    return `${token("punct", "&lt;")}${token("tag", tagHead)}${highlightedRest}${token("punct", "&gt;")}`
   })
 }
 
@@ -210,9 +218,9 @@ export const highlightCode = (value: string) => {
   const escaped = escapeHtml(value)
   return escaped
     .replace(/(&quot;.*?&quot;|&#39;.*?&#39;)/g, (match) => {
-      return `<span class="tbr-syn-string">${match}</span>`
+      return token("string", match)
     })
     .replace(/\b-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g, (match) => {
-      return `<span class="tbr-syn-number">${match}</span>`
+      return token("number", match)
     })
 }

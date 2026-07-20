@@ -3,7 +3,7 @@ import { Search, Calendar } from "lucide-solid"
 
 import { Input } from "./input.styled"
 import { InlineError } from "../inlineError"
-import "./input.demo.css"
+import { demoStyles, sx } from "../demoStyles"
 
 export function InputDemo() {
   const [searchText, setSearchText] = createSignal("")
@@ -17,10 +17,10 @@ export function InputDemo() {
   const [small, setSmall] = createSignal("")
 
   return (
-    <div class="docs-control-stack">
-      <div class="demo-section">
-        <h4>工作区搜索设置</h4>
-        <div class="demo-row">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>工作区搜索设置</h4>
+        <div {...sx(demoStyles.row)}>
           <Input
             value={searchText()}
             onInput={setSearchText}
@@ -34,9 +34,9 @@ export function InputDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>前后图标 + 清除</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>前后图标 + 清除</h4>
+        <div {...sx(demoStyles.row)}>
           <Input
             value={searchText()}
             onInput={setSearchText}
@@ -68,9 +68,9 @@ export function InputDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>密码显隐</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>密码显隐</h4>
+        <div {...sx(demoStyles.row)}>
           <Input
             value={password()}
             onInput={setPassword}
@@ -81,9 +81,9 @@ export function InputDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>状态与尺寸</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>状态与尺寸</h4>
+        <div {...sx(demoStyles.row)}>
           <Input
             value={placeholder()}
             onInput={setPlaceholder}

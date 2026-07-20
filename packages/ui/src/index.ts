@@ -1,5 +1,6 @@
 export { TOKEN } from "./tokens/tokens"
 export type { TokenName } from "./tokens/tokens"
+export type { XStyle } from "./stylex"
 
 export { Button, IconButton } from "./styled/button"
 export type { ButtonProps, IconButtonProps, ButtonVariant, ButtonSize } from "./styled/button"

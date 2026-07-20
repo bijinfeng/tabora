@@ -1,4 +1,10 @@
-export type DividerProps = { orientation?: "horizontal" | "vertical"; class?: string }
+import type { JSX } from "solid-js"
+
+export type DividerProps = {
+  orientation?: "horizontal" | "vertical"
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+}
 
 export function Divider(props: DividerProps) {
   return (
@@ -9,12 +15,14 @@ export function Divider(props: DividerProps) {
       style={
         props.orientation === "vertical"
           ? {
+              ...props.style,
               width: "1px",
               height: "100%",
-              border: "none",
+              "border-style": "none",
+              "border-width": 0,
               background: "rgb(var(--tbr-color-line))",
             }
-          : {}
+          : props.style
       }
     />
   )

@@ -1,8 +1,30 @@
+import * as stylex from "@stylexjs/stylex"
+import type { JSX } from "solid-js"
 import { createSignal } from "solid-js"
 import { Boxes, Search, Settings } from "lucide-solid"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Badge } from "../badge"
+import { toSolidStyle } from "../../stylex"
 import { Tabs } from "./tabs.styled"
+
+const tabDemoStyles = stylex.create({
+  tabLabel: {
+    alignItems: "center",
+    display: "inline-flex",
+    gap: 6,
+  },
+})
+
+function TabLabel(props: { children: JSX.Element }) {
+  const compiled = () => stylex.props(tabDemoStyles.tabLabel)
+
+  return (
+    <span class={compiled().className} style={toSolidStyle(compiled().style)}>
+      {props.children}
+    </span>
+  )
+}
 
 export function TabsDemo() {
   const [underlineValue, setUnderlineValue] = createSignal("overview")
@@ -10,7 +32,7 @@ export function TabsDemo() {
   const [iconValue, setIconValue] = createSignal("installed")
 
   return (
-    <div class="docs-stack">
+    <div {...sx(demoStyles.stack)}>
       <Tabs
         value={underlineValue()}
         onChange={setUnderlineValue}
@@ -44,36 +66,36 @@ export function TabsDemo() {
           {
             value: "installed",
             label: (
-              <span class="tbr-tabs-label">
+              <TabLabel>
                 <Boxes size={16} strokeWidth={2} />
                 已安装
                 <Badge variant="counter" size="sm">
                   12
                 </Badge>
-              </span>
+              </TabLabel>
             ),
             content: <p>已安装插件内容</p>,
           },
           {
             value: "discover",
             label: (
-              <span class="tbr-tabs-label">
+              <TabLabel>
                 <Search size={16} strokeWidth={2} />
                 发现
-              </span>
+              </TabLabel>
             ),
             content: <p>发现插件内容</p>,
           },
           {
             value: "updates",
             label: (
-              <span class="tbr-tabs-label">
+              <TabLabel>
                 <Settings size={16} strokeWidth={2} />
                 更新
                 <Badge variant="counter" size="sm">
                   3
                 </Badge>
-              </span>
+              </TabLabel>
             ),
             content: <p>更新面板内容</p>,
           },

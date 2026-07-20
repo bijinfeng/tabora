@@ -1,6 +1,7 @@
 import { applyThemeTokens } from "@tabora/theme"
 import { useLocation } from "@solidjs/router"
 import * as i18n from "@solid-primitives/i18n"
+import * as stylex from "@stylexjs/stylex"
 import {
   createContext,
   createEffect,
@@ -13,7 +14,20 @@ import {
 
 import { Topbar } from "./Topbar"
 import { darkTokens, lightTokens } from "./themeTokens"
-import landingCssUrl from "../../../../docs/design/assets/tabora-landing.css?url"
+import { sx } from "../shared/stylex"
+
+const styles = stylex.create({
+  prototypeRoot: {
+    minHeight: "100vh",
+  },
+  siteRoot: {
+    marginInline: "auto",
+    width: "min(calc(100% - 32px), 1180px)",
+    "@media (max-width: 560px)": {
+      width: "min(calc(100% - 20px), 1180px)",
+    },
+  },
+})
 
 export type SiteThemeApi = {
   dark: Accessor<boolean>
@@ -171,11 +185,6 @@ export const isPrototypeRoute = (pathname: string, base?: string) => {
   )
 }
 
-export const needsLandingStylesheet = (pathname: string, base?: string) => {
-  const path = getSiteRoutePath(pathname, base)
-  return path === "/" || path === "/download"
-}
-
 export function AppShell(props: { children?: JSX.Element }) {
   const initialDark = () => {
     const saved = getLocalStorage()?.getItem("tabora-theme") ?? null
@@ -215,8 +224,6 @@ export function AppShell(props: { children?: JSX.Element }) {
 
   createEffect(() => {
     applyThemeTokens(document.documentElement, dark() ? darkTokens : lightTokens)
-    document.documentElement.classList.toggle("site-dark", dark())
-    document.documentElement.classList.toggle("dark", dark())
   })
 
   createEffect(() => {
@@ -230,30 +237,6 @@ export function AppShell(props: { children?: JSX.Element }) {
   })
 
   createEffect(() => {
-    document.documentElement.classList.toggle("site-prototype", isPrototypePage())
-  })
-
-  let landingStylesheet: HTMLLinkElement | null = null
-
-  createEffect(() => {
-    const needsLandingCss = needsLandingStylesheet(location.pathname)
-
-    if (needsLandingCss) {
-      if (!landingStylesheet) {
-        landingStylesheet = document.createElement("link")
-        landingStylesheet.rel = "stylesheet"
-        landingStylesheet.href = landingCssUrl
-        landingStylesheet.dataset.siteLanding = "true"
-        document.head.append(landingStylesheet)
-      }
-      return
-    }
-
-    landingStylesheet?.remove()
-    landingStylesheet = null
-  })
-
-  createEffect(() => {
     const hash = location.hash
     if (hash) queueMicrotask(() => document.querySelector(hash)?.scrollIntoView())
     else queueMicrotask(() => window.scrollTo({ top: 0 }))
@@ -263,11 +246,11 @@ export function AppShell(props: { children?: JSX.Element }) {
     <SiteThemeContext.Provider value={{ dark, toggleDark }}>
       <SiteI18nContext.Provider value={{ locale, setLocale, toggleLocale, t }}>
         {isPrototypePage() ? (
-          <div class="site-prototype-root" id="top">
+          <div {...sx(styles.prototypeRoot)} id="top" data-site-shell data-site-prototype="true">
             {props.children}
           </div>
         ) : (
-          <div class="site" id="top">
+          <div {...sx(styles.siteRoot)} id="top" data-site-shell>
             <Topbar onToggleTheme={toggleDark} />
             {props.children}
           </div>

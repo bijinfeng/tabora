@@ -10,9 +10,11 @@ describe("HoverCard", () => {
 
     render(() => <HoverCard trigger="Tabora" title="插件工作台" description="协议优先" />, root)
 
-    const trigger = root.querySelector(".tbr-hover-card-trigger") as HTMLElement
+    const trigger = Array.from(root.querySelectorAll("button, span")).find(
+      (element) => element.textContent === "Tabora",
+    ) as HTMLElement | undefined
     expect(trigger).toBeTruthy()
-    expect(trigger.textContent).toBe("Tabora")
+    expect(trigger?.textContent).toBe("Tabora")
 
     root.remove()
   })

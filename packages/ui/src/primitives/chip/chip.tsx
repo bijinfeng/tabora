@@ -5,17 +5,21 @@ export type ChipProps = {
   selected?: boolean
   removable?: boolean
   onRemove?: () => void
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  removeClass?: string | undefined
+  removeStyle?: JSX.CSSProperties | undefined
   children: JSX.Element
 }
 
 export function Chip(props: ChipProps) {
   return (
-    <span class={props.class} data-selected={props.selected ? "" : undefined}>
+    <span class={props.class} style={props.style} data-selected={props.selected ? "" : undefined}>
       {props.children}
       {props.removable && (
         <button
-          class="tbr-chip-remove"
+          class={props.removeClass}
+          style={props.removeStyle}
           onClick={(e) => {
             e.stopPropagation()
             props.onRemove?.()

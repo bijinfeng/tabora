@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Badge } from "../badge"
 import { CommandPalette } from "./commandPalette.styled"
 
@@ -8,12 +9,12 @@ export function CommandPaletteDemo() {
   const [lastAction, setLastAction] = createSignal("最近执行：打开工作区设置")
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>工作台命令中心</strong>
         <span>把命令、卡片和搜索源放进同一入口，方便键盘优先的快速流转。</span>
       </div>
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Badge variant="neutral">⌘K</Badge>
         <span>{lastAction()}</span>
       </div>

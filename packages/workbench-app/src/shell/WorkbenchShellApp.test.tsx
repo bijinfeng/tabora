@@ -199,6 +199,9 @@ describe("WorkbenchShellApp", () => {
       root,
     )
 
+    expect(root.querySelector("[data-workbench-shell-root]")).toBeTruthy()
+    expect(root.querySelector(".tabora-root")).toBeNull()
+
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }))
 
     expect(executeKeydown).toHaveBeenCalled()

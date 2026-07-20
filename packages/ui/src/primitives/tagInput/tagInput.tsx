@@ -7,7 +7,14 @@ export type TagInputProps = {
   onChange: (value: string[]) => void
   placeholder?: string
   disabled?: boolean
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  tagClass?: string | undefined
+  tagStyle?: JSX.CSSProperties | undefined
+  removeButtonClass?: string | undefined
+  removeButtonStyle?: JSX.CSSProperties | undefined
+  inputClass?: string | undefined
+  inputStyle?: JSX.CSSProperties | undefined
   id?: string
   "aria-label": string
 }
@@ -25,14 +32,15 @@ export function TagInput(props: TagInputProps) {
   const removeTag = (tag: string) => props.onChange(props.value.filter((item) => item !== tag))
 
   return (
-    <div class={props.class} data-disabled={props.disabled ? "" : undefined}>
+    <div class={props.class} style={props.style} data-disabled={props.disabled ? "" : undefined}>
       <For each={props.value}>
         {(tag) => (
-          <span class="tbr-tag-input-tag">
+          <span class={props.tagClass} style={props.tagStyle}>
             {tag}
             <button
               type="button"
-              class="tbr-tag-input-remove"
+              class={props.removeButtonClass}
+              style={props.removeButtonStyle}
               aria-label={`移除 ${tag}`}
               disabled={props.disabled}
               onClick={() => removeTag(tag)}
@@ -44,7 +52,8 @@ export function TagInput(props: TagInputProps) {
       </For>
       <input
         id={props.id}
-        class="tbr-tag-input-core"
+        class={props.inputClass}
+        style={props.inputStyle}
         value={draft()}
         placeholder={props.placeholder}
         disabled={props.disabled}

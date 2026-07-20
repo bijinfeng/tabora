@@ -1,10 +1,11 @@
 import { existsSync } from "node:fs"
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { dirname, resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 
 const siteSrcDir = dirname(fileURLToPath(import.meta.url))
+const siteRootDir = resolve(siteSrcDir, "..")
 const removedLegacyPaths = [
   "home/components/Cta.tsx",
   "home/components/LayoutsSection.tsx",
@@ -51,6 +52,29 @@ const lineCount = (relativePath: string) => {
   return readFileSync(resolve(siteSrcDir, relativePath), "utf8").trimEnd().split("\n").length
 }
 
+function productionTsxFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = resolve(directory, entry.name)
+    if (entry.isDirectory()) return productionTsxFiles(entryPath)
+    if (!entry.name.endsWith(".tsx")) return []
+    if (entry.name.endsWith(".test.tsx") || entry.name.endsWith(".spec.tsx")) return []
+    return [entryPath]
+  })
+}
+
+const requiredStableSelectors = new Map([
+  ["home/HomePage.tsx", "data-site-home"],
+  ["home/components/WorkbenchPreview.tsx", "data-site-workbench-preview"],
+  ["home/components/CommandDialog.tsx", "data-site-command-dialog"],
+  ["download/DownloadPage.tsx", "data-site-download"],
+  ["download/components/DownloadSupport.tsx", "data-site-faq-item"],
+  ["docs/DocsShell.tsx", "data-docs-shell"],
+  ["docs/DocsHomePage.tsx", "data-docs-sidebar"],
+  ["docs/ComponentDocCard.tsx", "data-component-doc"],
+  ["docs/components/DocsGuideSections.tsx", "data-docs-demo"],
+  ["docs/components/DocsCodeBlock.tsx", "data-docs-code"],
+])
+
 describe("site route slices", () => {
   it("does not keep the previous standalone marketing UI implementation", () => {
     expect(
@@ -74,5 +98,29 @@ describe("site route slices", () => {
         readFileSync(resolve(siteSrcDir, relativePath), "utf8").includes("/docs#quickstart"),
       ),
     ).toEqual([])
+  })
+
+  it("keeps route interactions on stable data selectors", () => {
+    const missingSelectors = [...requiredStableSelectors].filter(([relativePath, selector]) => {
+      return !readFileSync(resolve(siteSrcDir, relativePath), "utf8").includes(selector)
+    })
+
+    expect(missingSelectors).toEqual([])
+  })
+
+  it("uses component-local StyleX instead of static semantic classes", () => {
+    const violations = productionTsxFiles(siteRootDir).flatMap((filePath) => {
+      const source = readFileSync(filePath, "utf8")
+      const findings: string[] = []
+      const relativePath = filePath.slice(siteRootDir.length + 1)
+
+      if (/\bclass\s*=/.test(source)) findings.push(`${relativePath}: class`)
+      if (/\bclassName\s*=/.test(source)) findings.push(`${relativePath}: className`)
+      if (/\bclassList\s*=/.test(source)) findings.push(`${relativePath}: classList`)
+
+      return findings
+    })
+
+    expect(violations).toEqual([])
   })
 })

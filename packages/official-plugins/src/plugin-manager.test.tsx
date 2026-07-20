@@ -30,6 +30,8 @@ describe("PluginManagerCard", () => {
       root,
     )
 
+    expect(root.querySelector("[data-plugin-settings-card]")).toBeTruthy()
+    expect(root.querySelector(".plugin-settings-stack")).toBeNull()
     expect(root.textContent).toContain("不兼容")
     expect(root.textContent).toContain('Unsupported platform "web"')
     expect(root.textContent).toContain("需要能力 localFile")

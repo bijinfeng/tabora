@@ -5,6 +5,7 @@ import { LayoutGrid } from "lucide-solid"
 import { dateLabel, fallbackText, greeting } from "./i18n"
 import { WorkbenchRail } from "./workbench-rail"
 import { normalizeDashboardLayoutState, resolveSetterValue } from "./dashboard-layout-state"
+import { styles, sx } from "./styles"
 import type {
   ActiveGroupSetter,
   DashboardLayoutState,
@@ -65,9 +66,25 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
     const allowed = new Set(group.widgets)
     return region.instances.filter((instance) => allowed.has(instance.id))
   })
+  const openAddWidgetForActiveGroup = () => {
+    const group = activeGroup()
+    props.host.openAddWidget({
+      activeGroupLabel: group.name,
+      onAdded: (instance) => {
+        if (group.isDefault) return
+        setPersistedGroups((items) =>
+          items.map((item) =>
+            item.id === group.id && !item.widgets.includes(instance.id)
+              ? { ...item, widgets: [...item.widgets, instance.id] }
+              : item,
+          ),
+        )
+      },
+    })
+  }
 
   return (
-    <main class="layout-dashboard" data-layout="dashboard">
+    <main {...sx(styles.layout)} data-layout="dashboard">
       <WorkbenchRail
         host={props.host}
         groups={groups}
@@ -75,32 +92,32 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
         setGroups={setPersistedGroups}
         setActiveGroupId={setPersistedActiveGroupId}
       />
-      <section class="dash-content">
-        <header class="dash-topbar">
-          <div class="dash-greeting">
-            <div class="dash-greeting-title">
-              {greeting(t)} <span class="dash-greeting-muted">· {dateLabel(locale())}</span>
+      <section {...sx(styles.dashboardContent)}>
+        <header {...sx(styles.dashboardTopbar)}>
+          <div {...sx(styles.greeting)}>
+            <div {...sx(styles.greetingTitle)}>
+              {greeting(t)} <span {...sx(styles.muted)}>· {dateLabel(locale())}</span>
             </div>
-            <div class="dash-greeting-actions">
+            <div {...sx(styles.greetingActions)}>
               <Show when={addWidgetAction()}>
-                {(action) => (
-                  <button
-                    class="tb-btn dash-toolbar-btn dash-add-widget-btn"
-                    type="button"
-                    onClick={() => action().run()}
-                  >
-                    <span>{t("actions.addWidget")}</span>
-                  </button>
-                )}
+                <button
+                  {...sx(styles.toolbarButton)}
+                  type="button"
+                  onClick={openAddWidgetForActiveGroup}
+                >
+                  <span>{t("actions.addWidget")}</span>
+                </button>
               </Show>
             </div>
           </div>
-          <div class="dash-search-stage">
-            <Show when={props.regions["topbar"]}>{props.regions["topbar"]!.render()}</Show>
+          <div {...sx(styles.searchStage)}>
+            <Show when={props.regions["topbar"]}>
+              <div {...sx(styles.searchInner)}>{props.regions["topbar"]!.render()}</div>
+            </Show>
           </div>
         </header>
-        <section class="dash-grid">
-          <div class="workbench-grid">
+        <section {...sx(styles.grid)}>
+          <div {...sx(styles.gridContainer)} data-layout-grid>
             <Show when={props.regions["mainGrid"]}>
               {(region) => (
                 <Show when={!activeGroup().isDefault} fallback={region().render()}>
@@ -108,16 +125,16 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                     when={activeMainGridInstances().length > 0}
                     fallback={
                       <button
-                        class="dash-empty-group"
+                        {...sx(styles.emptyGroup)}
                         type="button"
-                        onClick={() => props.host.openAddWidget()}
+                        onClick={openAddWidgetForActiveGroup}
                       >
-                        <div class="dash-empty-icon">
+                        <div {...sx(styles.emptyIcon)}>
                           <LayoutGrid size={32} />
                         </div>
-                        <div class="dash-empty-text">暂无卡片</div>
-                        <div class="dash-empty-hint">
-                          点击 <span class="dash-empty-group-action">添加第一个</span> 开始使用
+                        <div {...sx(styles.emptyText)}>暂无卡片</div>
+                        <div {...sx(styles.emptyHint)}>
+                          点击 <span {...sx(styles.emptyAction)}>添加第一个</span> 开始使用
                         </div>
                       </button>
                     }

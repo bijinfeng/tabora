@@ -3,6 +3,7 @@ import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { InlineError, Input, Kbd } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
+import { styles, sx } from "./styles"
 
 type SearchResultItem = SearchViewProps["results"][number]["items"][number]
 type SearchSuggestionItem = SearchResultItem & {
@@ -129,7 +130,11 @@ export function SearchCommandBar(props: SearchViewProps) {
   })
 
   return (
-    <div class="search-wrapper" ref={(element) => (wrapperRef = element)}>
+    <div
+      {...sx(styles.searchRoot)}
+      data-search-command-bar
+      ref={(element) => (wrapperRef = element)}
+    >
       <Show
         when={!configurationError()}
         fallback={
@@ -139,33 +144,36 @@ export function SearchCommandBar(props: SearchViewProps) {
           </InlineError>
         }
       >
-        <form class="search-bar" onSubmit={handleSubmit}>
-          <div class="search-provider">
+        <form {...sx(styles.searchBar)} onSubmit={handleSubmit}>
+          <div {...sx(styles.searchProvider)}>
             <button
-              class="search-provider-btn"
+              {...sx(styles.searchProviderButton)}
               type="button"
               aria-label="切换搜索引擎"
               aria-expanded={providerOpen()}
               onClick={() => setProviderOpen((open) => !open)}
             >
-              <span class="search-provider-dot" aria-hidden="true" />
-              <span class="search-provider-label">{activeProvider()!.title}</span>
-              <span class="search-provider-caret">▾</span>
+              <span {...sx(styles.searchProviderDot)} aria-hidden="true" />
+              <span {...sx(styles.searchProviderLabel)}>{activeProvider()!.title}</span>
+              <span {...sx(styles.searchProviderCaret)}>▾</span>
             </button>
             <Show when={providerOpen()}>
-              <div class="search-provider-dropdown">
+              <div {...sx(styles.searchProviderDropdown)} data-search-provider-dropdown>
                 <For each={providers()}>
                   {(provider) => (
                     <button
-                      class="sp-option"
-                      classList={{ active: provider.id === activeProvider()!.id }}
+                      {...sx(
+                        styles.searchProviderOption,
+                        provider.id === activeProvider()!.id && styles.selected,
+                      )}
+                      data-search-provider-option
                       type="button"
                       onMouseDown={(event) => {
                         event.preventDefault()
                         handleProviderChange(provider.id)
                       }}
                     >
-                      <span class="sp-check">
+                      <span {...sx(styles.searchCheck)}>
                         {provider.id === activeProvider()!.id ? "✓" : ""}
                       </span>
                       <span>{provider.title}</span>
@@ -175,7 +183,7 @@ export function SearchCommandBar(props: SearchViewProps) {
               </div>
             </Show>
           </div>
-          <span class="search-scope-divider" aria-hidden="true" />
+          <span {...sx(styles.searchDivider)} aria-hidden="true" />
           <Input
             type="search"
             value={query()}
@@ -194,30 +202,32 @@ export function SearchCommandBar(props: SearchViewProps) {
             placeholder="搜索网页、命令或卡片"
             aria-label="搜索内容"
           />
-          <span class="search-kbd">⌘K</span>
+          <span {...sx(styles.searchKbd)}>⌘K</span>
         </form>
       </Show>
 
       <Show when={/^@\S+$/.test(query().trim())}>
-        <div class="search-provider-state">
+        <div {...sx(styles.searchState)}>
           继续输入查询以使用临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
       <Show when={/^@\S+\s+/.test(query().trim()) && !!props.providerToken}>
-        <div class="search-provider-state">
+        <div {...sx(styles.searchState)}>
           当前临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
       <Show when={props.isOpen && visibleResults().length > 0}>
-        <div class="search-suggestions">
+        <div {...sx(styles.searchSuggestions)}>
           <For each={visibleResults()}>
             {(group) => (
               <>
-                <div class="cmd-group">{group.label}</div>
+                <div {...sx(styles.searchGroup)} data-search-suggestion-group>
+                  {group.label}
+                </div>
                 <For each={group.items}>
                   {(item) => {
                     const globalIdx = props.results
@@ -225,8 +235,11 @@ export function SearchCommandBar(props: SearchViewProps) {
                       .findIndex((candidate) => candidate.id === item.id)
                     return (
                       <button
-                        class="cmd-item"
-                        classList={{ active: props.activeResultIndex === globalIdx }}
+                        {...sx(
+                          styles.searchItem,
+                          props.activeResultIndex === globalIdx && styles.searchItemActive,
+                        )}
+                        data-search-suggestion
                         onMouseDown={(event) => {
                           event.preventDefault()
                           if (item.id.startsWith("web-search:")) {
@@ -241,10 +254,14 @@ export function SearchCommandBar(props: SearchViewProps) {
                         }}
                         type="button"
                       >
-                        <span class="cmd-item-icon">{item.icon}</span>
-                        <span class="cmd-item-text">
-                          <span class="cmd-item-name">{item.name}</span>
-                          <span class="cmd-item-desc">{item.desc}</span>
+                        <span {...sx(styles.searchItemIcon)} data-search-suggestion-icon>
+                          {item.icon}
+                        </span>
+                        <span {...sx(styles.searchItemText)}>
+                          <span {...sx(styles.searchItemName)} data-search-suggestion-name>
+                            {item.name}
+                          </span>
+                          <span {...sx(styles.searchItemDescription)}>{item.desc}</span>
                         </span>
                         <Show when={item.hint}>
                           <Kbd>{item.hint!}</Kbd>
@@ -343,7 +360,7 @@ export const officialSearchCommandBar: BuiltinPlugin = {
     version: "0.0.0",
     apiVersion: "1.0.0",
     entry: "./search-command-bar",
-    styles: [{ href: "./search-command-bar.css", scope: "plugin", order: 30 }],
+    styles: [{ href: "./styles.css", scope: "plugin", order: 30 }],
     engine: { platform: "^0.1.0" },
     permissions: [{ type: "external-open", hosts: ["*"] }],
     contributes: {
