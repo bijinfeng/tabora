@@ -50,5 +50,6 @@ describe("ToggleGroup", () => {
     expect(group.className.length).toBeGreaterThan(0)
     expect(selected.className).not.toContain("tbr-toggle-group-item")
     expect(selected.className.length).toBeGreaterThan(0)
+    expect(selected.hasAttribute("data-pressed")).toBe(true)
   })
 })
