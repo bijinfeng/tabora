@@ -15,13 +15,31 @@ export type TreeViewProps = {
   onExpandedChange: (ids: string[]) => void
   selectedId?: string
   onSelect?: (id: string) => void
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  itemClass?: string | undefined
+  itemStyle?: JSX.CSSProperties | undefined
+  rowClass?: string | undefined
+  rowStyle?: JSX.CSSProperties | undefined
+  rowSelectedClass?: string | undefined
+  rowSelectedStyle?: JSX.CSSProperties | undefined
+  toggleClass?: string | undefined
+  toggleStyle?: JSX.CSSProperties | undefined
+  toggleOpenClass?: string | undefined
+  toggleOpenStyle?: JSX.CSSProperties | undefined
+  toggleEmptyClass?: string | undefined
+  toggleEmptyStyle?: JSX.CSSProperties | undefined
+  labelClass?: string | undefined
+  labelStyle?: JSX.CSSProperties | undefined
+  iconClass?: string | undefined
+  iconStyle?: JSX.CSSProperties | undefined
   "aria-label": string
 }
 
 function TreeNode(props: { item: TreeViewItem; root: TreeViewProps; level: number }) {
   const hasChildren = () => Boolean(props.item.children?.length)
   const expanded = () => props.root.expandedIds.includes(props.item.id)
+  const selected = () => props.root.selectedId === props.item.id
   const toggle = () => {
     props.root.onExpandedChange(
       expanded()
@@ -32,18 +50,43 @@ function TreeNode(props: { item: TreeViewItem; root: TreeViewProps; level: numbe
 
   return (
     <div
-      class="tbr-tree-item"
+      class={props.root.itemClass}
+      style={props.root.itemStyle}
       role="treeitem"
       aria-expanded={hasChildren() ? expanded() : undefined}
     >
       <div
-        class="tbr-tree-row"
-        data-selected={props.root.selectedId === props.item.id ? "" : undefined}
-        style={{ "padding-left": `${props.level * 16 + 8}px` }}
+        class={[props.root.rowClass, selected() ? props.root.rowSelectedClass : undefined]
+          .filter(Boolean)
+          .join(" ")}
+        data-selected={selected() ? "" : undefined}
+        style={
+          selected()
+            ? {
+                ...props.root.rowStyle,
+                ...props.root.rowSelectedStyle,
+                "padding-left": `${props.level * 16 + 8}px`,
+              }
+            : {
+                ...props.root.rowStyle,
+                "padding-left": `${props.level * 16 + 8}px`,
+              }
+        }
       >
         <button
           type="button"
-          class="tbr-tree-toggle"
+          class={[
+            props.root.toggleClass,
+            expanded() ? props.root.toggleOpenClass : undefined,
+            !hasChildren() ? props.root.toggleEmptyClass : undefined,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          style={{
+            ...props.root.toggleStyle,
+            ...(expanded() ? props.root.toggleOpenStyle : undefined),
+            ...(!hasChildren() ? props.root.toggleEmptyStyle : undefined),
+          }}
           data-empty={!hasChildren() ? "" : undefined}
           data-open={expanded() ? "" : undefined}
           aria-label={expanded() ? "折叠" : "展开"}
@@ -53,11 +96,14 @@ function TreeNode(props: { item: TreeViewItem; root: TreeViewProps; level: numbe
         </button>
         <button
           type="button"
-          class="tbr-tree-label"
+          class={props.root.labelClass}
+          style={props.root.labelStyle}
           onClick={() => props.root.onSelect?.(props.item.id)}
         >
           <Show when={props.item.icon}>
-            <span class="tbr-tree-icon">{props.item.icon}</span>
+            <span class={props.root.iconClass} style={props.root.iconStyle}>
+              {props.item.icon}
+            </span>
           </Show>
           {props.item.label}
         </button>
@@ -75,7 +121,7 @@ function TreeNode(props: { item: TreeViewItem; root: TreeViewProps; level: numbe
 
 export function TreeView(props: TreeViewProps) {
   return (
-    <div class={props.class} role="tree" aria-label={props["aria-label"]}>
+    <div class={props.class} style={props.style} role="tree" aria-label={props["aria-label"]}>
       <For each={props.items}>{(item) => <TreeNode item={item} root={props} level={0} />}</For>
     </div>
   )

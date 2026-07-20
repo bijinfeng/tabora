@@ -94,7 +94,10 @@ export function createWorkbenchWidgetController(options: {
       options.showToast(options.tShell?.("widget.addNotSupported") ?? "当前布局不支持添加卡片", {
         type: "warning",
       })
+      return null
     }
+
+    return added
   }
 
   async function removeWidget(instanceId: string) {

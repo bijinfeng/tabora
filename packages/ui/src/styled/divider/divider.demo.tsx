@@ -1,13 +1,14 @@
 import { Divider } from "./divider.styled"
 
+import { demoStyles, sx } from "../demoStyles"
 export function DividerDemo() {
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>设置分组分隔</strong>
         <span>用弱分隔把同一块里的不同信息区间切开，而不是增加多层边框。</span>
       </div>
-      <div class="docs-stack">
+      <div {...sx(demoStyles.stack)}>
         <span>搜索源配置</span>
         <Divider />
         <span>快捷键偏好</span>

@@ -2,6 +2,7 @@ import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Checkbox, Input } from "@tabora/ui"
 import { ChevronDown, ChevronRight, Plus } from "lucide-solid"
+import { styles, sx } from "./styles"
 
 type Priority = "high" | "medium" | "low" | "none"
 
@@ -181,11 +182,11 @@ export function TodoExpand(props: WidgetViewProps) {
   }
 
   return (
-    <div class="todo-expand-widget">
-      <div class="expand-header">
-        <span class="expand-title">待办</span>
+    <div {...sx(styles.expandRoot)} data-widget-expand="todo">
+      <div {...sx(styles.header)}>
+        <span {...sx(styles.title)}>待办</span>
         <button
-          class="expand-new-btn"
+          {...sx(styles.primaryButton)}
           type="button"
           onClick={() => setAddingGroupId(DEFAULT_GROUP_ID)}
         >
@@ -194,18 +195,16 @@ export function TodoExpand(props: WidgetViewProps) {
         </button>
       </div>
 
-      <div class="expand-tabs">
+      <div {...sx(styles.tabs)}>
         <button
-          class="expand-tab"
-          classList={{ active: view() === "list" }}
+          {...sx(styles.tab, view() === "list" && styles.active)}
           type="button"
           onClick={() => setView("list")}
         >
           列表
         </button>
         <button
-          class="expand-tab"
-          classList={{ active: view() === "board" }}
+          {...sx(styles.tab, view() === "board" && styles.active)}
           type="button"
           onClick={() => setView("board")}
         >
@@ -213,93 +212,90 @@ export function TodoExpand(props: WidgetViewProps) {
         </button>
       </div>
 
-      <div class="expand-filters">
+      <div {...sx(styles.filters)}>
         <button
-          class="expand-filter-btn"
-          classList={{ active: filter() === "todo" }}
+          {...sx(styles.tab, filter() === "todo" && styles.active)}
           type="button"
           onClick={() => setFilter("todo")}
         >
           未完成
-          <span class="expand-count-badge">{todoCount()}</span>
+          <span {...sx(styles.badge)}>{todoCount()}</span>
         </button>
         <button
-          class="expand-filter-btn"
-          classList={{ active: filter() === "all" }}
+          {...sx(styles.tab, filter() === "all" && styles.active)}
           type="button"
           onClick={() => setFilter("all")}
         >
           全部
         </button>
-        <div class="expand-spacer" />
-        <button class="expand-tool-btn" type="button">
+        <div {...sx(styles.spacer)} />
+        <button {...sx(styles.toolButton)} type="button">
           排序
         </button>
-        <button class="expand-tool-btn" type="button">
+        <button {...sx(styles.toolButton)} type="button">
           分组
         </button>
-        <button class="expand-tool-btn" type="button">
+        <button {...sx(styles.toolButton)} type="button">
           字段
         </button>
       </div>
 
       <Show when={view() === "list"}>
-        <div class="expand-table-header">
-          <span class="expand-th expand-th-check" />
-          <span class="expand-th expand-th-title">任务标题</span>
-          <span class="expand-th expand-th-priority">优先级</span>
-          <span class="expand-th expand-th-due">截止时间</span>
-          <span class="expand-th expand-th-assignee">负责人</span>
+        <div {...sx(styles.tableHeader)}>
+          <span />
+          <span>任务标题</span>
+          <span>优先级</span>
+          <span>截止时间</span>
+          <span>负责人</span>
         </div>
 
-        <div class="expand-list">
+        <div {...sx(styles.expandList)}>
           <For each={groups()}>
             {(group) => {
               const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
               return (
-                <div class="expand-group">
-                  <div class="expand-group-header" onClick={() => void toggleGroup(group.id)}>
-                    <span class="expand-group-arrow">
+                <div {...sx(styles.group)}>
+                  <div {...sx(styles.groupHeader)} onClick={() => void toggleGroup(group.id)}>
+                    <span {...sx(styles.arrow)}>
                       {group.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                     </span>
-                    <span class="expand-group-name">{group.name}</span>
-                    <span class="expand-group-count">{groupItems().length}</span>
+                    <span {...sx(styles.groupName)}>{group.name}</span>
+                    <span {...sx(styles.count)}>{groupItems().length}</span>
                   </div>
 
                   <Show when={!group.collapsed}>
-                    <div class="expand-group-items">
+                    <div>
                       <For each={groupItems()}>
                         {(item) => (
-                          <div class="expand-row" classList={{ done: item.done }}>
-                            <div class="expand-cell expand-cell-check">
+                          <div {...sx(styles.expandRow, item.done && styles.done)}>
+                            <div {...sx(styles.cell)}>
                               <Checkbox
                                 checked={item.done}
                                 aria-label={`标记 ${item.text} 完成`}
                                 onChange={() => void toggleItem(item.id)}
                               />
                             </div>
-                            <div class="expand-cell expand-cell-title">{item.text}</div>
-                            <div class="expand-cell expand-cell-priority">
+                            <div {...sx(styles.cell, item.done && styles.textDone)}>
+                              {item.text}
+                            </div>
+                            <div {...sx(styles.cell)}>
                               <span
-                                class="expand-priority-tag"
-                                classList={{
-                                  "priority-high": item.priority === "high",
-                                  "priority-medium": item.priority === "medium",
-                                  "priority-low": item.priority === "low",
-                                }}
+                                {...sx(
+                                  styles.priorityTag,
+                                  item.priority === "high" && styles.priorityHigh,
+                                  item.priority === "medium" && styles.priorityMedium,
+                                  item.priority === "low" && styles.priorityLow,
+                                )}
                               >
                                 ● {PRIORITY_LABELS[item.priority]}
                               </span>
                             </div>
-                            <div
-                              class="expand-cell expand-cell-due"
-                              classList={{ overdue: isOverdue(item.dueDate) }}
-                            >
+                            <div {...sx(styles.cell, isOverdue(item.dueDate) && styles.overdue)}>
                               {formatDate(item.dueDate)}
                             </div>
-                            <div class="expand-cell expand-cell-assignee">
+                            <div {...sx(styles.cell)}>
                               <Show when={item.assignee}>
-                                <span class="expand-assignee">{item.assignee}</span>
+                                <span {...sx(styles.assignee)}>{item.assignee}</span>
                               </Show>
                             </div>
                           </div>
@@ -307,7 +303,7 @@ export function TodoExpand(props: WidgetViewProps) {
                       </For>
 
                       <Show when={addingGroupId() === group.id}>
-                        <div class="expand-add-row">
+                        <div {...sx(styles.addRow)}>
                           <Input
                             size="sm"
                             value={newTaskText()}
@@ -327,7 +323,7 @@ export function TodoExpand(props: WidgetViewProps) {
 
                       <Show when={addingGroupId() !== group.id}>
                         <button
-                          class="expand-add-task-btn"
+                          {...sx(styles.addButton)}
                           type="button"
                           onClick={() => {
                             setAddingGroupId(group.id)
@@ -346,7 +342,7 @@ export function TodoExpand(props: WidgetViewProps) {
           </For>
 
           <Show when={addingGroup()}>
-            <div class="expand-add-row">
+            <div {...sx(styles.addRow)}>
               <Input
                 size="sm"
                 value={newGroupName()}
@@ -365,7 +361,7 @@ export function TodoExpand(props: WidgetViewProps) {
           </Show>
 
           <button
-            class="expand-add-group-btn"
+            {...sx(styles.addButton)}
             type="button"
             onClick={() => {
               setAddingGroup(true)
@@ -379,7 +375,7 @@ export function TodoExpand(props: WidgetViewProps) {
       </Show>
 
       <Show when={view() === "board"}>
-        <div class="expand-board-placeholder">
+        <div {...sx(styles.board)}>
           <p>看板视图占位，本期不实现</p>
         </div>
       </Show>

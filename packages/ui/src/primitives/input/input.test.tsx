@@ -25,4 +25,19 @@ describe("Input", () => {
     render(() => <Input value="" onInput={() => {}} disabled aria-label="x" />, root)
     expect(root.querySelector("input")!.disabled).toBe(true)
   })
+
+  it("uses StyleX classes while preserving input state attributes", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => <Input value="hello" onInput={() => {}} size="sm" invalid aria-label="搜索" />,
+      root,
+    )
+
+    const el = root.querySelector("input")!
+    expect(el.className).not.toContain("tbr-input")
+    expect(el.className.length).toBeGreaterThan(0)
+    expect(el.getAttribute("data-size")).toBe("sm")
+    expect(el.hasAttribute("data-invalid")).toBe(true)
+  })
 })

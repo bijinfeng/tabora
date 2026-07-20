@@ -4,6 +4,7 @@ import type { PluginInstance } from "@tabora/plugin-api"
 
 import { HostActionIcon } from "./host-action-icon"
 import { dateLabel, fallbackText, greeting } from "./i18n"
+import { styles, sx } from "./styles"
 import { WorkbenchRail } from "./workbench-rail"
 import type { LayoutViewPropsWithI18n } from "./types"
 
@@ -36,20 +37,20 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
   })
 
   return (
-    <main class="layout-focus" data-layout="focus">
+    <main {...sx(styles.layout)} data-layout="focus">
       <WorkbenchRail host={props.host} />
-      <section class="focus-shell">
-        <div class="focus-content">
-          <header class="focus-topbar">
-            <div class="focus-greeting">
+      <section {...sx(styles.focusShell)}>
+        <div {...sx(styles.focusContent)}>
+          <header {...sx(styles.focusTopbar)}>
+            <div {...sx(styles.focusGreeting)}>
               <span>{greeting(t)}</span>
-              <span class="focus-muted">· {dateLabel(locale())}</span>
+              <span {...sx(styles.focusMuted)}>· {dateLabel(locale())}</span>
             </div>
-            <div class="focus-topbar-actions">
+            <div {...sx(styles.focusActions)}>
               <Show when={layoutSwitchAction()}>
                 {(action) => (
                   <button
-                    class="focus-icon-btn"
+                    {...sx(styles.focusControl, styles.focusIconButton)}
                     type="button"
                     aria-label={action().label}
                     title={action().label}
@@ -63,22 +64,22 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                 )}
               </Show>
               <button
-                class="focus-command"
+                {...sx(styles.focusControl, styles.focusCommand)}
                 type="button"
                 onClick={() => commandAction()?.run() ?? props.host.openCommandPalette()}
               >
                 <span>{t("search.placeholder")}</span>
-                <kbd>⌘K</kbd>
+                <kbd {...sx(styles.focusKbd)}>⌘K</kbd>
               </button>
             </div>
           </header>
 
-          <section class="focus-hero" aria-label="专注卡片">
+          <section {...sx(styles.hero)} aria-label="专注卡片">
             <Show
               when={heroInstance()}
               fallback={
                 <button
-                  class="focus-empty"
+                  {...sx(styles.focusEmpty)}
                   type="button"
                   onClick={() => props.host.openAddWidget()}
                 >
@@ -87,7 +88,7 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
               }
             >
               {(instance) => (
-                <div class="focus-hero-render">
+                <div {...sx(styles.heroRender)}>
                   {props.regions["focus"]!.renderInstance(instance())}
                 </div>
               )}
@@ -95,16 +96,17 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
           </section>
 
           <Show when={satelliteInstances().length > 0}>
-            <section class="focus-satellites" aria-label="可切换卡片">
+            <section {...sx(styles.satellites)} aria-label="可切换卡片">
               <For each={satelliteInstances()}>
                 {(instance) => (
                   <button
-                    class="focus-satellite"
+                    {...sx(styles.satellite)}
+                    data-focus-satellite
                     type="button"
                     onClick={() => setSelectedHeroId(instance.id)}
                   >
-                    <span class="focus-satellite-title">{widgetTitle(instance)}</span>
-                    <span class="focus-satellite-meta">{t("focus.switchHero")}</span>
+                    <span {...sx(styles.satelliteTitle)}>{widgetTitle(instance)}</span>
+                    <span {...sx(styles.satelliteMeta)}>{t("focus.switchHero")}</span>
                   </button>
                 )}
               </For>

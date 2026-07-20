@@ -10,7 +10,18 @@ export type ToastProps = {
   description?: JSX.Element
   action?: JSX.Element
   onAction?: () => void
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  iconClass?: string | undefined
+  iconStyle?: JSX.CSSProperties | undefined
+  bodyClass?: string | undefined
+  bodyStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  descriptionClass?: string | undefined
+  descriptionStyle?: JSX.CSSProperties | undefined
+  actionClass?: string | undefined
+  actionStyle?: JSX.CSSProperties | undefined
 }
 
 function ToastIcon(props: { variant: ToastVariant }) {
@@ -30,18 +41,27 @@ export function Toast(props: ToastProps) {
   const variant = () => props.variant ?? "info"
 
   return (
-    <div class={props.class} data-variant={variant()} role="status">
-      <span class="tbr-toast-icon" aria-hidden="true">
+    <div class={props.class} style={props.style} data-variant={variant()} role="status">
+      <span class={props.iconClass} style={props.iconStyle} aria-hidden="true">
         <ToastIcon variant={variant()} />
       </span>
-      <span class="tbr-toast-body">
-        <strong class="tbr-toast-title">{props.title}</strong>
+      <span class={props.bodyClass} style={props.bodyStyle}>
+        <strong class={props.titleClass} style={props.titleStyle}>
+          {props.title}
+        </strong>
         <Show when={props.description}>
-          <span class="tbr-toast-desc">{props.description}</span>
+          <span class={props.descriptionClass} style={props.descriptionStyle}>
+            {props.description}
+          </span>
         </Show>
       </span>
       <Show when={props.action}>
-        <button type="button" class="tbr-toast-action" onClick={props.onAction}>
+        <button
+          type="button"
+          class={props.actionClass}
+          style={props.actionStyle}
+          onClick={props.onAction}
+        >
           {props.action}
         </button>
       </Show>

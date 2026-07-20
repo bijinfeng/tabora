@@ -4,7 +4,10 @@ import { Check, Copy } from "lucide-solid"
 
 export type CopyButtonProps = {
   value: string
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  copiedClass?: string | undefined
+  copiedStyle?: JSX.CSSProperties | undefined
   children?: JSX.Element
 }
 
@@ -12,7 +15,8 @@ export function CopyButton(props: CopyButtonProps) {
   const [copied, setCopied] = createSignal(false)
   return (
     <button
-      class={props.class}
+      class={[props.class, copied() ? props.copiedClass : undefined].filter(Boolean).join(" ")}
+      style={copied() ? { ...props.style, ...props.copiedStyle } : props.style}
       onClick={async () => {
         await navigator.clipboard.writeText(props.value)
         setCopied(true)

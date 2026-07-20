@@ -2,8 +2,8 @@ import type { JSX } from "solid-js"
 
 export type ScrollAreaProps = {
   children: JSX.Element
-  class?: string
-  style?: JSX.CSSProperties | string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
   "aria-label"?: string
 }
 

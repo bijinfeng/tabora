@@ -1,13 +1,58 @@
 import { Button, IconButton } from "./button.styled"
 import { Plus, Ellipsis } from "lucide-solid"
-import "./button.demo.css"
+import * as stylex from "@stylexjs/stylex"
+
+import { demoStyles, sx } from "../demoStyles"
+
+const buttonDemoStyles = stylex.create({
+  groupedButton: {
+    borderRadius: 0,
+    boxShadow: "none",
+    marginLeft: -1,
+    outline: "none",
+    position: "relative",
+    ":hover": {
+      zIndex: 1,
+    },
+    ":focus-visible": {
+      zIndex: 1,
+    },
+  },
+  groupedFirst: {
+    borderBottomLeftRadius: "var(--tbr-radius-control, 6px)",
+    borderTopLeftRadius: "var(--tbr-radius-control, 6px)",
+    marginLeft: 0,
+  },
+  groupedLast: {
+    borderBottomRightRadius: "var(--tbr-radius-control, 6px)",
+    borderTopRightRadius: "var(--tbr-radius-control, 6px)",
+  },
+  groupedActive: {
+    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    borderColor: "rgb(var(--tbr-color-accent))",
+    color: "rgb(var(--tbr-color-accent))",
+    zIndex: 2,
+  },
+  hoverDemo: {
+    backgroundColor: "rgb(var(--tbr-color-accent-hover))",
+    borderColor: "rgb(var(--tbr-color-accent-hover))",
+  },
+  activeDemo: {
+    transform: "translateY(1px)",
+  },
+  focusDemo: {
+    boxShadow: "0 0 0 4px rgb(var(--tbr-color-focus) / 0.18)",
+    outline: "2px solid rgb(var(--tbr-color-focus))",
+    outlineOffset: 2,
+  },
+})
 
 export function ButtonDemo() {
   return (
-    <div class="docs-control-stack">
-      <div class="demo-section">
-        <h4>变体</h4>
-        <div class="demo-row">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>变体</h4>
+        <div {...sx(demoStyles.row)}>
           <Button variant="primary">主要</Button>
           <Button variant="secondary">次要</Button>
           <Button variant="subtle">柔和</Button>
@@ -17,9 +62,9 @@ export function ButtonDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>尺寸 + 全宽 + 纯图标</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>尺寸 + 全宽 + 纯图标</h4>
+        <div {...sx(demoStyles.row)}>
           <Button variant="primary" size="sm">
             小 28px
           </Button>
@@ -43,30 +88,44 @@ export function ButtonDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>按钮组</h4>
-        <div class="demo-row">
-          <div class="btn-group">
-            <Button variant="secondary">日</Button>
-            <Button variant="secondary">周</Button>
-            <Button variant="secondary" class="btn-group-active">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>按钮组</h4>
+        <div {...sx(demoStyles.row)}>
+          <div {...sx(demoStyles.buttonGroup)}>
+            <Button
+              variant="secondary"
+              xstyle={[buttonDemoStyles.groupedButton, buttonDemoStyles.groupedFirst]}
+            >
+              日
+            </Button>
+            <Button variant="secondary" xstyle={buttonDemoStyles.groupedButton}>
+              周
+            </Button>
+            <Button
+              variant="secondary"
+              xstyle={[
+                buttonDemoStyles.groupedButton,
+                buttonDemoStyles.groupedLast,
+                buttonDemoStyles.groupedActive,
+              ]}
+            >
               月
             </Button>
           </div>
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>状态</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.section)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>状态</h4>
+        <div {...sx(demoStyles.row)}>
           <Button variant="primary">默认</Button>
-          <Button variant="primary" class="btn-hover-demo">
+          <Button variant="primary" xstyle={buttonDemoStyles.hoverDemo}>
             悬停
           </Button>
-          <Button variant="primary" class="btn-active-demo">
+          <Button variant="primary" xstyle={buttonDemoStyles.activeDemo}>
             按下
           </Button>
-          <Button variant="primary" class="btn-focus-demo">
+          <Button variant="primary" xstyle={buttonDemoStyles.focusDemo}>
             聚焦
           </Button>
           <Button variant="primary" disabled>
@@ -83,7 +142,7 @@ export function ButtonDemo() {
 
 export function IconButtonDemo() {
   return (
-    <div class="docs-row">
+    <div {...sx(demoStyles.row)}>
       <IconButton aria-label="添加" size="sm">
         <Plus size={14} strokeWidth={2} />
       </IconButton>

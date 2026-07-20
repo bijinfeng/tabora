@@ -19,4 +19,19 @@ describe("Textarea", () => {
     ta.dispatchEvent(new Event("input", { bubbles: true }))
     expect(onInput).toHaveBeenCalledWith("ok")
   })
+
+  it("uses StyleX classes while preserving invalid and size state", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => <Textarea value="hi" onInput={() => {}} invalid size="sm" aria-label="便签" />,
+      root,
+    )
+
+    const ta = root.querySelector("textarea")!
+    expect(ta.className).not.toContain("tbr-textarea")
+    expect(ta.className.length).toBeGreaterThan(0)
+    expect(ta.getAttribute("data-size")).toBe("sm")
+    expect(ta.hasAttribute("data-invalid")).toBe(true)
+  })
 })

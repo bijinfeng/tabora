@@ -340,43 +340,35 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
       swatches: [
         {
           name: "--cp-accent",
-          style:
-            "padding: 10px 12px; background: var(--cp-accent); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600;",
+          tone: "accent",
         },
         {
           name: "--cp-accent-soft",
-          style:
-            "padding: 10px 12px; background: var(--cp-accent-soft); color: var(--cp-accent); border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--cp-line);",
+          tone: "accentSoft",
         },
         {
           name: "--cp-surface",
-          style:
-            "padding: 10px 12px; background: var(--cp-surface); color: var(--cp-text); border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--cp-line);",
+          tone: "surface",
         },
         {
           name: "--cp-surface-soft",
-          style:
-            "padding: 10px 12px; background: var(--cp-surface-soft); color: var(--cp-text); border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--cp-line);",
+          tone: "surfaceSoft",
         },
         {
           name: "--cp-surface-hover",
-          style:
-            "padding: 10px 12px; background: var(--cp-surface-hover); color: var(--cp-text); border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--cp-line);",
+          tone: "surfaceHover",
         },
         {
           name: "--cp-page",
-          style:
-            "padding: 10px 12px; background: var(--cp-page); color: var(--cp-text); border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--cp-line);",
+          tone: "page",
         },
         {
           name: "--cp-danger",
-          style:
-            "padding: 10px 12px; background: var(--cp-danger); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600;",
+          tone: "danger",
         },
         {
           name: "--cp-success",
-          style:
-            "padding: 10px 12px; background: var(--cp-success); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600;",
+          tone: "success",
         },
       ],
       table: {

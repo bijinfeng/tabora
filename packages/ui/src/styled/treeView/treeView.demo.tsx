@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Badge } from "../badge"
 import { TreeView } from "./treeView.styled"
 
@@ -8,8 +9,8 @@ export function TreeViewDemo() {
   const [selected, setSelected] = createSignal("manifest")
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>插件文件</strong>
         <span>适合展示插件贡献结构、文件树或文档章节，不需要跳出当前面板。</span>
       </div>
@@ -31,7 +32,7 @@ export function TreeViewDemo() {
         selectedId={selected()}
         onSelect={setSelected}
       />
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Badge variant="accent">已选中文件</Badge>
         <span>{selected()}</span>
       </div>

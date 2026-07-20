@@ -59,7 +59,9 @@ describe("PluginViewBoundary", () => {
     )
 
     expect(root.textContent).toContain("Plugin view failed to load")
-    expect(root.querySelector("button")?.textContent).toBe("Retry")
+    expect(root.querySelector("[data-plugin-error-retry]")?.textContent).toBe("Retry")
+    expect(root.querySelector("[data-plugin-error-fallback]")).toBeTruthy()
+    expect(root.querySelector(".plugin-error-fallback")).toBeNull()
   })
 
   it("renders a retry button without relying on full page reload", () => {
@@ -68,7 +70,7 @@ describe("PluginViewBoundary", () => {
       throw new Error("retry-me")
     })
 
-    const button = root.querySelector("button")
+    const button = root.querySelector("[data-plugin-error-retry]")
     expect(button?.textContent).toBe("重试")
 
     button?.dispatchEvent(new MouseEvent("click", { bubbles: true }))

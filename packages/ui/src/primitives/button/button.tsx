@@ -16,7 +16,8 @@ export type HeadlessButtonProps = {
   disabled?: boolean
   fullWidth?: boolean
   type?: "button" | "submit" | "reset"
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
   onClick?: (e: MouseEvent) => void
   "aria-label"?: string
   children: JSX.Element
@@ -27,6 +28,7 @@ export function HeadlessButton(props: HeadlessButtonProps) {
   return (
     <button
       class={props.class}
+      style={props.style}
       data-variant={props.variant}
       data-size={props.size}
       data-loading={props.loading ? "" : undefined}
@@ -49,7 +51,8 @@ export type HeadlessIconButtonProps = {
   size?: ButtonSize
   loading?: boolean
   disabled?: boolean
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
   "aria-label": string
   onClick?: (e: MouseEvent) => void
   children: JSX.Element
@@ -60,6 +63,7 @@ export function HeadlessIconButton(props: HeadlessIconButtonProps) {
   return (
     <button
       class={props.class}
+      style={props.style}
       data-variant={props.variant ?? "ghost"}
       data-size={props.size ?? "md"}
       data-loading={props.loading ? "" : undefined}

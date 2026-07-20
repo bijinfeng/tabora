@@ -64,8 +64,8 @@ describe("QuickLinksExpand", () => {
     const { root, dispose } = renderExpand(makeProps({ instanceId: "ql-render" }))
     await flushMount()
 
-    expect(root.querySelector(".ql-expand-content")).toBeTruthy()
-    expect(root.querySelector(".ql-expand-side")).toBeTruthy()
+    expect(root.querySelector("[data-widget-expand='quick-links']")).toBeTruthy()
+    expect(root.querySelector("[data-quick-links-side]")).toBeTruthy()
     expect(root.textContent).toContain("GitHub")
     expect(root.textContent).toContain("Notion")
     expect(root.textContent).toContain("/ 12")
@@ -77,13 +77,13 @@ describe("QuickLinksExpand", () => {
     const { root, dispose } = renderExpand(makeProps({ instanceId: "ql-footer" }))
     await flushMount()
 
-    const footer = root.querySelector(".ql-expand-footer")
+    const footer = root.querySelector("[data-quick-links-footer]")
     expect(footer).toBeTruthy()
     expect(footer?.textContent).toContain("管理分组")
     expect(footer?.textContent).toContain("添加入口")
     // body 内不再自绘主要操作按钮
-    const content = root.querySelector(".ql-expand-content")
-    expect(content?.querySelector(".tbr-btn--primary")).toBeNull()
+    const content = root.querySelector("[data-widget-expand='quick-links']")
+    expect(content?.textContent).not.toContain("管理分组添加入口")
     dispose()
     root.remove()
   })
@@ -101,7 +101,7 @@ describe("QuickLinksExpand", () => {
     await flushMount()
 
     expect(root.querySelector('a[target="_blank"]')).toBeNull()
-    const firstRow = root.querySelector("button.ql-link-row") as HTMLButtonElement
+    const firstRow = root.querySelector("[data-quick-link-row]") as HTMLButtonElement
     expect(firstRow).toBeTruthy()
     firstRow.click()
     await flushMount()

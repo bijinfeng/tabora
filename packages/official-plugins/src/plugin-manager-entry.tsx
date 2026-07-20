@@ -10,7 +10,7 @@ export const officialPluginManager: BuiltinPlugin = {
     version: "0.0.0",
     apiVersion: "1.0.0",
     entry: "./plugin-manager-entry",
-    styles: [{ href: "./plugin-manager-entry.css", scope: "plugin", order: 40 }],
+    styles: [{ href: "./styles.css", scope: "plugin", order: 40 }],
     engine: { platform: "^0.1.0" },
     contributes: {
       settingsPanels: [

@@ -1,9 +1,7 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { layoutDiyMasonry } from "@tabora/layout-diy-masonry"
 import { officialPlugins } from "@tabora/official-plugins"
-import officialPluginManagerStylesHref from "@tabora/official-plugins/plugin-manager-entry.css?url"
-import officialSettingsWorkspaceStylesHref from "@tabora/official-plugins/settings-workspace.css?url"
-import officialSearchCommandBarStylesHref from "@tabora/official-plugins/search-command-bar.css?url"
+import officialPluginsStylesHref from "@tabora/official-plugins/styles.css?url"
 import layoutDashboardStylesHref from "@tabora/layout-dashboard/styles.css?url"
 import layoutDiyMasonryStylesHref from "@tabora/layout-diy-masonry/styles.css?url"
 import notesStylesHref from "@tabora/plugin-notes/styles.css?url"
@@ -37,19 +35,13 @@ export const builtinWorkbenchShellConfig = {
 
 const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "official.layout.workbench-dashboard": { "./styles.css": layoutDashboardStylesHref },
-  "official.search.command-bar": {
-    "./search-command-bar.css": officialSearchCommandBarStylesHref,
-  },
+  "official.search.command-bar": { "./styles.css": officialPluginsStylesHref },
   "official.widgets.notes": { "./styles.css": notesStylesHref },
   "official.widgets.quick-links": { "./styles.css": quickLinksStylesHref },
   "official.widgets.todo": { "./styles.css": todoStylesHref },
   "official.widgets.weather": { "./styles.css": weatherStylesHref },
-  "official.plugin-manager": {
-    "./plugin-manager-entry.css": officialPluginManagerStylesHref,
-  },
-  "official.settings.workspace": {
-    "./settings-workspace.css": officialSettingsWorkspaceStylesHref,
-  },
+  "official.plugin-manager": { "./styles.css": officialPluginsStylesHref },
+  "official.settings.workspace": { "./styles.css": officialPluginsStylesHref },
   "community.layout.diy-masonry": { "./styles.css": layoutDiyMasonryStylesHref },
 }
 

@@ -115,7 +115,9 @@ export function createWorkbenchDndKitDragHandlers(options: {
       if (fromIndex < 0) return
 
       const renderedOrder = Array.from(
-        documentRoot.querySelectorAll<HTMLElement>(".grid-item[data-widget-instance-id]"),
+        documentRoot.querySelectorAll<HTMLElement>(
+          "[data-workbench-grid-item][data-widget-instance-id]",
+        ),
       )
         .map((element) => element.dataset.widgetInstanceId)
         .filter((id): id is string =>

@@ -1,3 +1,5 @@
+import type { JSX } from "solid-js"
+
 export type HeadlessTextareaProps = {
   value: string
   onInput: (value: string) => void
@@ -7,7 +9,8 @@ export type HeadlessTextareaProps = {
   readOnly?: boolean
   invalid?: boolean
   size?: "sm" | "md"
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
   "aria-label"?: string
   id?: string
 }
@@ -16,6 +19,7 @@ export function HeadlessTextarea(props: HeadlessTextareaProps) {
   return (
     <textarea
       class={props.class}
+      style={props.style}
       id={props.id}
       rows={props.rows ?? 4}
       value={props.value}

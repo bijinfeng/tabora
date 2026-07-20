@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Button } from "../button"
 import { Checkbox } from "./checkbox.styled"
 
@@ -9,8 +10,8 @@ export function CheckboxDemo() {
   const [includeTheme, setIncludeTheme] = createSignal(true)
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>同步到所有工作区</strong>
         <span>适合多选偏好项和批量同步场景。</span>
       </div>
@@ -21,7 +22,7 @@ export function CheckboxDemo() {
         label="包含快捷键配置"
       />
       <Checkbox checked={includeTheme()} onChange={setIncludeTheme} label="包含主题与背景" />
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Button
           size="sm"
           variant="secondary"

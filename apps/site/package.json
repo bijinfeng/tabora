@@ -4,20 +4,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@solid-primitives/i18n": "^2.2.1",
     "@solidjs/router": "catalog:ui",
+    "@stylexjs/stylex": "catalog:style",
     "@tabora/brand": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {
+    "@tabora/stylex-config": "workspace:*",
     "@tabora/tsconfig": "workspace:*",
-    "@tailwindcss/vite": "catalog:build",
-    "tailwindcss": "catalog:build",
     "typescript": "catalog:build",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build"

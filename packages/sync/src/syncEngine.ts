@@ -9,7 +9,7 @@ import { rejectSensitiveFields } from "./sensitiveFilter"
  * a session currently exists before attempting a push/pull cycle.
  */
 export type SyncAuthSession = {
-  getSession(): Promise<unknown | null>
+  getSession(): Promise<unknown>
 }
 
 export type SyncEngineConfig = {

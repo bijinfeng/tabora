@@ -1,5 +1,6 @@
 import { Combobox as KCombobox } from "@kobalte/core/combobox"
 import { splitProps } from "solid-js"
+import type { JSX } from "solid-js"
 
 export type ComboboxOption<V extends string> = { value: V; label: string }
 
@@ -9,9 +10,22 @@ export type ComboboxProps<V extends string> = {
   onInput: (value: string) => void
   onSelect: (option: ComboboxOption<V>) => void
   placeholder?: string
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  inputClass?: string | undefined
+  inputStyle?: JSX.CSSProperties | undefined
+  dropdownClass?: string | undefined
+  dropdownStyle?: JSX.CSSProperties | undefined
+  optionClass?: string | undefined
   "aria-label"?: string
   id?: string
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function Combobox<V extends string>(props: ComboboxProps<V>) {
@@ -22,6 +36,12 @@ export function Combobox<V extends string>(props: ComboboxProps<V>) {
     "onSelect",
     "placeholder",
     "class",
+    "style",
+    "inputClass",
+    "inputStyle",
+    "dropdownClass",
+    "dropdownStyle",
+    "optionClass",
     "aria-label",
     "id",
   ])
@@ -30,7 +50,8 @@ export function Combobox<V extends string>(props: ComboboxProps<V>) {
 
   const inputProps = () => {
     const p: Record<string, unknown> = {
-      class: "tbr-combo-input",
+      class: local.inputClass,
+      style: local.inputStyle,
       autocomplete: "off",
     }
     if (local.id !== undefined) p.id = local.id
@@ -46,7 +67,7 @@ export function Combobox<V extends string>(props: ComboboxProps<V>) {
   }
 
   return (
-    <div class={`tbr-combo-wrap ${local.class ?? ""}`}>
+    <div class={local.class} style={local.style}>
       <KCombobox
         options={options()}
         optionValue={(o: unknown) => (o as { value: string }).value}
@@ -58,14 +79,14 @@ export function Combobox<V extends string>(props: ComboboxProps<V>) {
         triggerMode="focus"
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         itemComponent={(itemProps: any) => (
-          <KCombobox.Item item={itemProps.item} class="tbr-combo-option">
+          <KCombobox.Item item={itemProps.item} class={local.optionClass}>
             <KCombobox.ItemLabel>{itemProps.item.rawValue.label}</KCombobox.ItemLabel>
           </KCombobox.Item>
         )}
       >
         <KCombobox.Input {...inputProps()} />
         <KCombobox.Portal>
-          <KCombobox.Content class="tbr-combo-dropdown">
+          <KCombobox.Content {...optionalPartProps(local.dropdownClass, local.dropdownStyle)}>
             <KCombobox.Listbox />
           </KCombobox.Content>
         </KCombobox.Portal>

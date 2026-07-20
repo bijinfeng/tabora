@@ -1,12 +1,19 @@
-import tailwindcss from "@tailwindcss/vite"
 import { playwright } from "@vitest/browser-playwright"
 import solid from "vite-plugin-solid"
 
+import { createTaboraStylexVitePlugin, taboraStylexWorkspaceRoot } from "@tabora/stylex-config"
 import { defineBrowserE2eConfig } from "./tooling/vitest/e2e"
 
 export default defineBrowserE2eConfig({
   root: "apps/playground",
-  plugins: [solid(), tailwindcss()],
+  plugins: [
+    createTaboraStylexVitePlugin({
+      rootDir: taboraStylexWorkspaceRoot,
+      dev: false,
+      devMode: "css-only",
+    }),
+    solid(),
+  ],
   test: {
     browser: {
       enabled: true,

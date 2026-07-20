@@ -1,0 +1,4 @@
+{
+  "extends": "@tabora/tsconfig/base.json",
+  "include": ["src", "vitest.config.ts"]
+}

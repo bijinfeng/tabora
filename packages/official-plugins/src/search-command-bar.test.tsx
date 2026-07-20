@@ -38,6 +38,8 @@ describe("SearchCommandBar", () => {
 
     render(() => <SearchCommandBar {...searchViewProps({ providers: [] })} />, root)
 
+    expect(root.querySelector("[data-search-command-bar]")).toBeTruthy()
+    expect(root.querySelector(".search-wrapper")).toBeNull()
     expect(root.textContent).toContain("搜索不可用")
     expect(root.textContent).toContain("未配置可用搜索源")
     root.remove()
@@ -114,7 +116,7 @@ describe("SearchCommandBar", () => {
       root,
     )
 
-    const button = root.querySelector(".cmd-item") as HTMLButtonElement | null
+    const button = root.querySelector("[data-search-suggestion]") as HTMLButtonElement | null
     expect(button?.textContent).toContain("在 Google 中搜索")
     button?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }))
 
@@ -176,14 +178,20 @@ describe("SearchCommandBar", () => {
       root,
     )
 
-    expect(Array.from(root.querySelectorAll(".cmd-group")).map((node) => node.textContent)).toEqual(
-      ["建议"],
-    )
     expect(
-      Array.from(root.querySelectorAll(".cmd-item-name")).map((node) => node.textContent),
+      Array.from(root.querySelectorAll("[data-search-suggestion-group]")).map(
+        (node) => node.textContent,
+      ),
+    ).toEqual(["建议"])
+    expect(
+      Array.from(root.querySelectorAll("[data-search-suggestion-name]")).map(
+        (node) => node.textContent,
+      ),
     ).toEqual(["@github tabora runtime", "添加便签卡片", "打开插件管理", "切换到暗色主题"])
     expect(
-      Array.from(root.querySelectorAll(".cmd-item-icon")).map((node) => node.textContent),
+      Array.from(root.querySelectorAll("[data-search-suggestion-icon]")).map(
+        (node) => node.textContent,
+      ),
     ).toEqual(["↵", "↵", "↵", "↵"])
     expect(root.textContent).not.toContain("常用命令")
     expect(root.textContent).not.toContain("核心卡片")
@@ -217,7 +225,7 @@ describe("SearchCommandBar", () => {
       root,
     )
 
-    const input = root.querySelector(".search-bar input") as HTMLInputElement
+    const input = root.querySelector('input[aria-label="搜索内容"]') as HTMLInputElement
     input.value = "theme"
     input.dispatchEvent(new InputEvent("input", { bubbles: true }))
 
@@ -254,17 +262,17 @@ describe("SearchCommandBar", () => {
       root,
     )
 
-    const button = root.querySelector(".search-provider-btn") as HTMLButtonElement
+    const button = root.querySelector('button[aria-label="切换搜索引擎"]') as HTMLButtonElement
     button.click()
-    expect(root.querySelector(".search-provider-dropdown")).toBeTruthy()
+    expect(root.querySelector("[data-search-provider-dropdown]")).toBeTruthy()
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
-    expect(root.querySelector(".search-provider-dropdown")).toBeNull()
+    expect(root.querySelector("[data-search-provider-dropdown]")).toBeNull()
 
     button.click()
-    expect(root.querySelector(".search-provider-dropdown")).toBeTruthy()
+    expect(root.querySelector("[data-search-provider-dropdown]")).toBeTruthy()
     document.body.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }))
-    expect(root.querySelector(".search-provider-dropdown")).toBeNull()
+    expect(root.querySelector("[data-search-provider-dropdown]")).toBeNull()
 
     root.remove()
   })

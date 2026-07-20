@@ -1,6 +1,7 @@
 import { FieldRow, SegmentedControl, Select, Slider } from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import { className, styles, sx } from "./styles"
 
 export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
   const [accentTone, setAccentTone] = createSignal("sage")
@@ -24,19 +25,19 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
     activeBackground()
 
   return (
-    <div class="settings-panel-stack">
-      <section class="set-group">
-        <div class="set-group-title">
-          主题<span>{activeThemeTitle()}</span>
+    <div {...sx(styles.panelStack)} data-settings-panel="appearance">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
+          主题<span {...sx(styles.groupTitleMeta)}>{activeThemeTitle()}</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="界面模式"
           description="明亮、暗色或跟随系统"
           trailing={
             <Show
               when={themeOptions().length > 0}
-              fallback={<span class="settings-row-meta">{activeTheme()}</span>}
+              fallback={<span {...sx(styles.rowMeta)}>{activeTheme()}</span>}
             >
               <SegmentedControl<string>
                 size="sm"
@@ -49,18 +50,17 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="强调色"
           description="用于焦点、选中状态和主操作按钮"
           trailing={
-            <div class="settings-swatch-row" aria-label="强调色">
+            <div {...sx(styles.swatchRow)} aria-label="强调色">
               <For each={ACCENT_TONES}>
                 {(tone) => (
                   <button
                     type="button"
-                    class="settings-swatch"
-                    classList={{ "is-active": accentTone() === tone.id }}
-                    style={{ "--tone": tone.color }}
+                    {...sx(styles.swatch, accentTone() === tone.id && styles.selected)}
+                    style={{ "background-color": tone.color }}
                     aria-label={tone.label}
                     onClick={() => setAccentTone(tone.id)}
                   />
@@ -71,12 +71,12 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section class="set-group">
-        <div class="set-group-title">
-          背景<span>{activeBackgroundTitle()}</span>
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
+          背景<span {...sx(styles.groupTitleMeta)}>{activeBackgroundTitle()}</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="页面背景"
           description="纯色、轻网格或本地图片；背景由插件渲染"
           trailing={
@@ -91,13 +91,13 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="背景渲染"
           description="由 background-renderer 插件渲染图片、渐变或画布背景"
-          trailing={<span class="settings-row-meta">跟随背景源</span>}
+          trailing={<span {...sx(styles.rowMeta)}>跟随背景源</span>}
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="界面密度"
           description="影响设置、弹窗、卡片列表的默认间距"
           trailing={
@@ -115,11 +115,11 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="圆角半径"
           description="控制卡片、输入框和浮层的圆角基准"
           trailing={
-            <div class="settings-range-control">
+            <div {...sx(styles.rangeControl)}>
               <Slider
                 value={radius()}
                 min={4}
@@ -132,11 +132,11 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="正文大小"
           description="仅调整工作台正文和卡片说明文字"
           trailing={
-            <div class="settings-range-control">
+            <div {...sx(styles.rangeControl)}>
               <Slider
                 value={fontSize()}
                 min={11}
@@ -151,12 +151,12 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
       </section>
 
       <Show when={canSwitchLocale()}>
-        <section class="set-group">
-          <div class="set-group-title">
-            语言<span>{localeValue()}</span>
+        <section {...sx(styles.group)}>
+          <div {...sx(styles.groupTitle)}>
+            语言<span {...sx(styles.groupTitleMeta)}>{localeValue()}</span>
           </div>
           <FieldRow
-            class="settings-form-row"
+            class={className(styles.fieldRow)}
             label="当前语言"
             description="影响工作台宿主文案和官方插件面板文案"
             trailing={

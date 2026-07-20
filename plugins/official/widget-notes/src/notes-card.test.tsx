@@ -39,7 +39,8 @@ describe("NotesCard", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesCard {...makeProps()} />, root)
-    expect(root.querySelector(".notes-widget")).toBeTruthy()
+    expect(root.querySelector("[data-notes-card]")).toBeTruthy()
+    expect(root.querySelector(".notes-widget")).toBeNull()
     root.remove()
   })
 
@@ -56,7 +57,7 @@ describe("NotesCard", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesCard {...props} />, root)
-    const btn = root.querySelector(".notes-widget-foot button")
+    const btn = root.querySelector("[data-notes-card-footer] button")
     expect(btn).toBeTruthy()
     if (btn) {
       const event = new MouseEvent("click", { bubbles: true })
@@ -93,7 +94,7 @@ describe("NotesCard", () => {
     await flushMount()
     expect(root.textContent).toContain("hello world")
     expect(root.textContent).toContain("second line")
-    expect(root.querySelector(".notes-widget-row.starred")).toBeTruthy()
+    expect(root.querySelector("[data-note-row][data-starred]")).toBeTruthy()
     root.remove()
   })
 
@@ -142,8 +143,9 @@ describe("NotesExpand", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesExpand {...makeProps()} />, root)
-    expect(root.querySelector(".notes-side")).toBeTruthy()
-    expect(root.querySelector(".notes-main")).toBeTruthy()
+    expect(root.querySelector("[data-widget-expand='notes']")).toBeTruthy()
+    expect(root.querySelector("[data-notes-side]")).toBeTruthy()
+    expect(root.querySelector("[data-notes-main]")).toBeTruthy()
     root.remove()
   })
 
@@ -151,7 +153,7 @@ describe("NotesExpand", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesExpand {...makeProps()} />, root)
-    expect(root.querySelector(".notes-capture textarea")).toBeTruthy()
+    expect(root.querySelector("[data-notes-capture] textarea")).toBeTruthy()
     root.remove()
   })
 
@@ -159,7 +161,7 @@ describe("NotesExpand", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesExpand {...makeProps()} />, root)
-    expect(root.querySelector(".notes-side-search input")).toBeTruthy()
+    expect(root.querySelector('input[aria-label="搜索便签"]')).toBeTruthy()
     root.remove()
   })
 
@@ -167,7 +169,8 @@ describe("NotesExpand", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesExpand {...makeProps()} />, root)
-    expect(root.querySelector(".tbr-date-picker-label")).toBeTruthy()
+    expect(root.querySelector('button[aria-label="上个月"]')).toBeTruthy()
+    expect(root.querySelector('button[aria-label="下个月"]')).toBeTruthy()
     root.remove()
   })
 
@@ -206,7 +209,7 @@ describe("NotesExpand", () => {
     await flushMount()
     expect(root.textContent).toContain("first note")
     expect(root.textContent).toContain("#tag1")
-    expect(root.querySelector(".notes-card-star")).toBeTruthy()
+    expect(root.querySelector("[data-note-star]")).toBeTruthy()
     root.remove()
   })
 
@@ -249,14 +252,14 @@ describe("NotesExpand", () => {
     render(() => <NotesExpand {...props} />, root)
     await flushMount()
 
-    const display = root.querySelector(".notes-card-display")
+    const display = root.querySelector("[data-note-display]")
     expect(display).toBeTruthy()
     if (display) {
       const event = new MouseEvent("click", { bubbles: true })
       display.dispatchEvent(event)
     }
     await flushMount()
-    expect(root.querySelector(".notes-card-edit-area textarea")).toBeTruthy()
+    expect(root.querySelector("[data-note-card][data-editing] textarea")).toBeTruthy()
     root.remove()
   })
 })

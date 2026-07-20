@@ -49,7 +49,7 @@ describe("QuickLinksCard", () => {
     await flushMount()
 
     expect(root.querySelector('a[target="_blank"]')).toBeNull()
-    const button = root.querySelector("button.link-anchor") as HTMLButtonElement
+    const button = root.querySelector("[data-quick-link]") as HTMLButtonElement
     expect(button).toBeTruthy()
     button.click()
 
@@ -64,6 +64,8 @@ describe("QuickLinksCard", () => {
     render(() => <QuickLinksCard {...makeProps()} />, root)
     await flushMount()
 
+    expect(root.querySelector("[data-quick-links-card]")).toBeTruthy()
+    expect(root.querySelector(".quick-links")).toBeNull()
     expect(root.textContent).toContain("GitHub")
     expect(root.textContent).toContain("Notion")
     expect(root.textContent).toContain("Linear")
@@ -83,7 +85,7 @@ describe("QuickLinksCard", () => {
     )
     await flushMount()
 
-    const button = root.querySelector("button.link-anchor") as HTMLButtonElement
+    const button = root.querySelector("[data-quick-link]") as HTMLButtonElement
     button.click()
 
     expect(openExternal).toHaveBeenCalledWith("https://github.com")

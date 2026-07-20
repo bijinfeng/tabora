@@ -62,10 +62,14 @@ describe("WorkbenchExpandOverlay footer", () => {
       root,
     )
 
-    const footer = root.querySelector(".expand-footer")
-    expect(footer?.querySelector(".expand-footer-meta")?.textContent).toBe("widget-1")
-    expect(footer?.querySelector(".expand-close-hint")).toBeTruthy()
-    expect(footer?.querySelector(".expand-footer-plugin")).toBeNull()
+    const overlay = root.querySelector('[data-workbench-overlay="expand"]')
+    const footer = root.querySelector("[data-workbench-overlay-footer]")
+    expect(overlay?.getAttribute("role")).toBe("dialog")
+    expect(overlay?.getAttribute("aria-modal")).toBe("true")
+    expect(footer?.querySelector("[data-workbench-overlay-meta]")?.textContent).toBe("widget-1")
+    expect(footer?.querySelector("[data-workbench-overlay-close-hint]")).toBeTruthy()
+    expect(footer?.querySelector("[data-workbench-overlay-plugin-footer]")).toBeNull()
+    expect(root.querySelector(".expand-overlay")).toBeNull()
     root.remove()
   })
 
@@ -91,13 +95,13 @@ describe("WorkbenchExpandOverlay footer", () => {
       root,
     )
 
-    const footer = root.querySelector(".expand-footer")
-    const pluginFooter = footer?.querySelector(".expand-footer-plugin")
+    const footer = root.querySelector("[data-workbench-overlay-footer]")
+    const pluginFooter = footer?.querySelector("[data-workbench-overlay-plugin-footer]")
     expect(pluginFooter).toBeTruthy()
     expect(pluginFooter?.getAttribute("data-tabora-plugin-id")).toBe("plugin.widgets")
     expect(footer?.textContent).toContain("自定义操作")
     // 默认 footer 元信息不再渲染
-    expect(footer?.querySelector(".expand-footer-meta")).toBeNull()
+    expect(footer?.querySelector("[data-workbench-overlay-meta]")).toBeNull()
     root.remove()
   })
 
@@ -117,9 +121,9 @@ describe("WorkbenchExpandOverlay footer", () => {
       root,
     )
 
-    const footer = root.querySelector(".expand-footer")
-    expect(footer?.querySelector(".expand-footer-meta")?.textContent).toBe("widget-1")
-    expect(footer?.querySelector(".expand-footer-plugin")).toBeNull()
+    const footer = root.querySelector("[data-workbench-overlay-footer]")
+    expect(footer?.querySelector("[data-workbench-overlay-meta]")?.textContent).toBe("widget-1")
+    expect(footer?.querySelector("[data-workbench-overlay-plugin-footer]")).toBeNull()
     root.remove()
   })
 })

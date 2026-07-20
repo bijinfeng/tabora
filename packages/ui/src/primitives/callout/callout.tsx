@@ -10,7 +10,20 @@ type BaseCalloutProps = {
   description?: JSX.Element
   action?: JSX.Element
   onClose?: () => void
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  iconClass?: string | undefined
+  iconStyle?: JSX.CSSProperties | undefined
+  bodyClass?: string | undefined
+  bodyStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  descriptionClass?: string | undefined
+  descriptionStyle?: JSX.CSSProperties | undefined
+  actionClass?: string | undefined
+  actionStyle?: JSX.CSSProperties | undefined
+  closeClass?: string | undefined
+  closeStyle?: JSX.CSSProperties | undefined
 }
 
 export type BannerProps = BaseCalloutProps
@@ -33,21 +46,33 @@ export function Banner(props: BannerProps) {
   const variant = () => props.variant ?? "info"
 
   return (
-    <div class={props.class} data-variant={variant()} role="status">
-      <span class="tbr-callout-icon" aria-hidden="true">
+    <div class={props.class} style={props.style} data-variant={variant()} role="status">
+      <span class={props.iconClass} style={props.iconStyle} aria-hidden="true">
         <CalloutIcon variant={variant()} />
       </span>
-      <span class="tbr-callout-body">
-        <strong class="tbr-callout-title">{props.title}</strong>
+      <span class={props.bodyClass} style={props.bodyStyle}>
+        <strong class={props.titleClass} style={props.titleStyle}>
+          {props.title}
+        </strong>
         <Show when={props.description}>
-          <span class="tbr-callout-desc">{props.description}</span>
+          <span class={props.descriptionClass} style={props.descriptionStyle}>
+            {props.description}
+          </span>
         </Show>
       </span>
       <Show when={props.action}>
-        <span class="tbr-callout-action">{props.action}</span>
+        <span class={props.actionClass} style={props.actionStyle}>
+          {props.action}
+        </span>
       </Show>
       <Show when={props.onClose}>
-        <button type="button" class="tbr-callout-close" aria-label="关闭" onClick={props.onClose}>
+        <button
+          type="button"
+          class={props.closeClass}
+          style={props.closeStyle}
+          aria-label="关闭"
+          onClick={props.onClose}
+        >
           <X size={16} strokeWidth={2} />
         </button>
       </Show>
@@ -59,18 +84,24 @@ export function Alert(props: AlertProps) {
   const variant = () => props.variant ?? "info"
 
   return (
-    <div class={props.class} data-variant={variant()} role="note">
-      <span class="tbr-callout-icon" aria-hidden="true">
+    <div class={props.class} style={props.style} data-variant={variant()} role="note">
+      <span class={props.iconClass} style={props.iconStyle} aria-hidden="true">
         <CalloutIcon variant={variant()} />
       </span>
-      <span class="tbr-callout-body">
-        <strong class="tbr-callout-title">{props.title}</strong>
+      <span class={props.bodyClass} style={props.bodyStyle}>
+        <strong class={props.titleClass} style={props.titleStyle}>
+          {props.title}
+        </strong>
         <Show when={props.description}>
-          <span class="tbr-callout-desc">{props.description}</span>
+          <span class={props.descriptionClass} style={props.descriptionStyle}>
+            {props.description}
+          </span>
         </Show>
       </span>
       <Show when={props.action}>
-        <span class="tbr-callout-action">{props.action}</span>
+        <span class={props.actionClass} style={props.actionStyle}>
+          {props.action}
+        </span>
       </Show>
     </div>
   )

@@ -1,5 +1,7 @@
 import { Suspense, lazy, type Component, type JSX } from "solid-js"
+import * as stylex from "@stylexjs/stylex"
 
+import { sx } from "../../shared/stylex"
 import accordionDemoSource from "../../../../../packages/ui/src/styled/accordion/accordion.demo.tsx?raw"
 import avatarDemoSource from "../../../../../packages/ui/src/styled/avatar/avatar.demo.tsx?raw"
 import badgeDemoSource from "../../../../../packages/ui/src/styled/badge/badge.demo.tsx?raw"
@@ -429,10 +431,30 @@ export type DocsExample = {
   render: () => JSX.Element
 }
 
+const styles = stylex.create({
+  render: {
+    alignItems: "start",
+    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    border: "1px dashed rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-card)",
+    display: "grid",
+    gap: 12,
+    minWidth: 0,
+    padding: 14,
+    "@media (max-width: 560px)": {
+      padding: 10,
+    },
+  },
+})
+
 const componentExample = (source: string, render: () => JSX.Element): DocsExample => ({
   language: "tsx",
   source,
-  render: () => <div class="docs-render">{render()}</div>,
+  render: () => (
+    <div {...sx(styles.render)} data-docs-demo>
+      {render()}
+    </div>
+  ),
 })
 
 const renderLazy = (DemoComponent: Component): (() => JSX.Element) => {

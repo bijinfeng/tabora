@@ -52,7 +52,8 @@ describe("CommandPalette", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <Controlled isOpen={true} />, root)
-    expect(root.querySelector(".cmd-panel")).toBeTruthy()
+    expect(root.querySelector("[data-command-palette-panel]")).toBeTruthy()
+    expect(root.querySelector(".cmd-panel")).toBeNull()
     root.remove()
   })
 
@@ -61,8 +62,8 @@ describe("CommandPalette", () => {
     document.body.appendChild(root)
     render(() => <Controlled isOpen={true} />, root)
 
-    const overlay = root.querySelector(".cmd-overlay") as HTMLDivElement
-    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    const overlay = root.querySelector("[data-command-palette-overlay]") as HTMLDivElement
+    const input = root.querySelector("[data-command-palette-input]") as HTMLInputElement
 
     expect(overlay.getAttribute("role")).toBe("dialog")
     expect(overlay.getAttribute("aria-modal")).toBe("true")
@@ -74,7 +75,7 @@ describe("CommandPalette", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <Controlled isOpen={false} />, root)
-    expect(root.querySelector(".cmd-panel")).toBeNull()
+    expect(root.querySelector("[data-command-palette-panel]")).toBeNull()
     root.remove()
   })
 
@@ -98,7 +99,7 @@ describe("CommandPalette", () => {
       root,
     )
 
-    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    const input = root.querySelector("[data-command-palette-input]") as HTMLInputElement
     expect(input.placeholder).toBe("Search commands, widgets, or type @bing weather")
     expect(root.textContent).toContain("No results found")
     root.remove()
@@ -117,7 +118,7 @@ describe("CommandPalette", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <Controlled isOpen={true} />, root)
-    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    const input = root.querySelector("[data-command-palette-input]") as HTMLInputElement
     input.value = "设置"
     input.dispatchEvent(new Event("input", { bubbles: true }))
     expect(root.textContent).toContain("打开设置")
@@ -130,7 +131,7 @@ describe("CommandPalette", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <Controlled isOpen={true} onClose={onClose} />, root)
-    const overlay = root.querySelector(".cmd-overlay")!
+    const overlay = root.querySelector("[data-command-palette-overlay]")!
     overlay.dispatchEvent(new MouseEvent("click", { bubbles: true }))
     expect(onClose).toHaveBeenCalled()
     root.remove()
@@ -140,7 +141,7 @@ describe("CommandPalette", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <Controlled isOpen={true} />, root)
-    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    const input = root.querySelector("[data-command-palette-input]") as HTMLInputElement
     input.value = "搜索"
     input.dispatchEvent(new Event("input", { bubbles: true }))
 
@@ -155,7 +156,7 @@ describe("CommandPalette", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <Controlled isOpen={true} onClose={onClose} />, root)
-    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    const input = root.querySelector("[data-command-palette-input]") as HTMLInputElement
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
     expect(onClose).toHaveBeenCalled()
     root.remove()
@@ -185,7 +186,7 @@ describe("CommandPalette", () => {
       root,
     )
 
-    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    const input = root.querySelector("[data-command-palette-input]") as HTMLInputElement
     input.value = "tabora"
     input.dispatchEvent(new Event("input", { bubbles: true }))
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
@@ -219,7 +220,7 @@ describe("CommandPalette", () => {
       root,
     )
 
-    const input = root.querySelector(".cmd-input") as HTMLInputElement
+    const input = root.querySelector("[data-command-palette-input]") as HTMLInputElement
     input.value = "tabora governance"
     input.dispatchEvent(new Event("input", { bubbles: true }))
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))

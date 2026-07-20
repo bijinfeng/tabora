@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createComponent, createEffect, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import { Settings } from "lucide-solid"
+import { Settings, X } from "lucide-solid"
 import type { PluginManifest, SettingsPanelViewProps } from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
@@ -11,6 +12,7 @@ import {
 } from "@tabora/orchestrator"
 import { Button, EmptyState, InlineError } from "@tabora/ui"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
+import { color, font, motion, radius, shadow, space, zIndex } from "./stylexTokens.stylex"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
 
@@ -70,6 +72,378 @@ const SECTION_FALLBACK_DESCRIPTIONS: Record<SettingsSectionId, string> = {
 
 const WORKSPACE_SECTION_IDS: SettingsSectionId[] = ["general", "appearance", "search"]
 const EXTENSION_SECTION_IDS: SettingsSectionId[] = ["ai", "sync", "plugins", "about"]
+
+const styles = stylex.create({
+  overlay: {
+    alignItems: "center",
+    backdropFilter: "blur(2px)",
+    backgroundColor: "rgb(var(--tbr-color-scrim) / 0.18)",
+    display: "flex",
+    inset: 0,
+    justifyContent: "center",
+    opacity: 0,
+    position: "fixed",
+    transitionDuration: motion.normal,
+    transitionProperty: "opacity",
+    transitionTimingFunction: motion.ease,
+    zIndex: zIndex.modal,
+    "@media (prefers-reduced-motion: reduce)": {
+      transitionDuration: "1ms",
+    },
+  },
+  entering: {
+    opacity: 1,
+  },
+  window: {
+    backgroundColor: color.surface,
+    borderColor: color.lineStrong,
+    borderRadius: radius.panel,
+    borderStyle: "solid",
+    borderWidth: 1,
+    boxShadow: shadow.floating,
+    display: "flex",
+    flexDirection: "column",
+    height: "min(440px, calc(100vh - 64px))",
+    overflow: "hidden",
+    transform: "scale(0.97) translateY(10px)",
+    transitionDuration: motion.normal,
+    transitionProperty: "transform",
+    transitionTimingFunction: motion.ease,
+    width: "min(760px, calc(100vw - 48px))",
+    "@media (max-width: 768px)": {
+      width: "calc(100vw - 32px)",
+    },
+    "@media (prefers-reduced-motion: reduce)": {
+      transitionDuration: "1ms",
+    },
+  },
+  windowEntering: {
+    transform: "scale(1) translateY(0)",
+  },
+  header: {
+    alignItems: "center",
+    backgroundColor: color.surfaceSoft,
+    borderBottomColor: color.line,
+    borderBottomStyle: "solid",
+    borderBottomWidth: 1,
+    display: "flex",
+    flex: "0 0 auto",
+    gap: 10,
+    justifyContent: "space-between",
+    paddingBlock: 10,
+    paddingInline: 12,
+  },
+  title: {
+    alignItems: "center",
+    display: "flex",
+    gap: 9,
+    minWidth: 0,
+  },
+  titleIcon: {
+    alignItems: "center",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: color.accent,
+    display: "flex",
+    height: 28,
+    justifyContent: "center",
+    width: 28,
+  },
+  titleCopy: {
+    display: "grid",
+    gap: 2,
+    minWidth: 0,
+  },
+  titleStrong: {
+    fontSize: 13,
+    lineHeight: 1.2,
+  },
+  titleMeta: {
+    color: color.textMuted,
+    fontSize: 11,
+    lineHeight: 1.25,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  close: {
+    alignItems: "center",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: color.textMuted,
+    cursor: "pointer",
+    display: "flex",
+    flexShrink: 0,
+    height: 28,
+    justifyContent: "center",
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, border-color, color",
+    transitionTimingFunction: motion.ease,
+    width: 28,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
+      color: color.text,
+    },
+    ":focus-visible": {
+      outlineColor: color.focus,
+      outlineOffset: 2,
+      outlineStyle: "solid",
+      outlineWidth: 2,
+    },
+  },
+  body: {
+    backgroundColor: color.surface,
+    display: "grid",
+    flex: 1,
+    gridTemplateColumns: "154px minmax(0, 1fr)",
+    minHeight: 0,
+    "@media (max-width: 480px)": {
+      gridTemplateColumns: "1fr",
+      gridTemplateRows: "auto minmax(0, 1fr)",
+    },
+  },
+  nav: {
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
+    borderRadius: radius.panel,
+    borderStyle: "solid",
+    borderWidth: 1,
+    display: "flex",
+    flexDirection: "column",
+    gap: 3,
+    marginBottom: 10,
+    marginLeft: 10,
+    marginTop: 10,
+    minHeight: 0,
+    overflow: "auto",
+    padding: 8,
+    "@media (max-width: 480px)": {
+      borderRadius: 0,
+      borderWidth: 0,
+      borderBottomStyle: "solid",
+      borderBottomWidth: 1,
+      margin: 0,
+      maxHeight: 170,
+    },
+  },
+  kicker: {
+    color: color.textSubtle,
+    fontSize: 10,
+    fontWeight: font.bold,
+    letterSpacing: "0.05em",
+    paddingBottom: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    paddingTop: 6,
+    textTransform: "uppercase",
+  },
+  account: {
+    alignItems: "center",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: color.text,
+    cursor: "pointer",
+    display: "grid",
+    gap: 8,
+    gridTemplateColumns: "28px minmax(0, 1fr)",
+    marginBottom: 7,
+    minHeight: 48,
+    padding: 7,
+    textAlign: "left",
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
+    },
+    ":focus-visible": {
+      outlineColor: color.focus,
+      outlineOffset: 2,
+      outlineStyle: "solid",
+      outlineWidth: 2,
+    },
+  },
+  selected: {
+    backgroundColor: color.accentSoft,
+    borderColor: color.accent,
+    color: color.accent,
+  },
+  avatar: {
+    alignItems: "center",
+    backgroundColor: color.accentSoft,
+    borderColor: color.line,
+    borderRadius: radius.pill,
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: color.accent,
+    display: "inline-flex",
+    fontSize: 11,
+    fontWeight: font.bold,
+    height: 28,
+    justifyContent: "center",
+    width: 28,
+  },
+  accountCopy: {
+    display: "grid",
+    gap: 2,
+    minWidth: 0,
+  },
+  accountName: {
+    fontSize: 11,
+    lineHeight: 1.2,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  accountMeta: {
+    color: color.textSubtle,
+    fontSize: 10,
+    lineHeight: 1.25,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  navButton: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: color.textMuted,
+    cursor: "pointer",
+    display: "flex",
+    fontSize: 11,
+    fontWeight: font.semibold,
+    gap: 8,
+    height: 28,
+    justifyContent: "space-between",
+    paddingInline: 8,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      color: color.text,
+    },
+    ":focus-visible": {
+      outlineColor: color.focus,
+      outlineOffset: 2,
+      outlineStyle: "solid",
+      outlineWidth: 2,
+    },
+  },
+  navCount: {
+    color: color.textSubtle,
+    fontSize: 10,
+    fontWeight: font.semibold,
+  },
+  main: {
+    backgroundColor: color.surface,
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+    minHeight: 0,
+    overflow: "auto",
+    paddingBottom: 12,
+    paddingLeft: 16,
+    paddingRight: 14,
+    paddingTop: 12,
+  },
+  panelHeader: {
+    alignItems: "center",
+    display: "flex",
+    flex: "0 0 auto",
+    gap: 10,
+    justifyContent: "space-between",
+    minHeight: 38,
+    paddingBottom: 2,
+  },
+  panelHeaderTitle: {
+    display: "block",
+    fontSize: 13,
+    lineHeight: 1.2,
+    marginBottom: 3,
+  },
+  panelHeaderDescription: {
+    color: color.textSubtle,
+    display: "block",
+    fontSize: 11,
+    lineHeight: 1.35,
+    maxWidth: 310,
+  },
+  panelView: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+    minHeight: 0,
+  },
+  accountPanel: {
+    display: "grid",
+    flex: 1,
+    placeItems: "center",
+  },
+  stack: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+    minHeight: 0,
+  },
+  accountStack: {
+    margin: "auto",
+    width: "min(100%, 322px)",
+  },
+  empty: {
+    color: color.textMuted,
+    fontSize: 13,
+    paddingBlock: 24,
+    paddingInline: 20,
+    textAlign: "center",
+  },
+  missing: {
+    color: color.danger,
+    fontSize: 13,
+    padding: 12,
+  },
+  footer: {
+    alignItems: "center",
+    backgroundColor: color.surface,
+    borderTopColor: color.line,
+    borderTopStyle: "solid",
+    borderTopWidth: 1,
+    color: color.textMuted,
+    display: "flex",
+    flex: "0 0 auto",
+    fontSize: 10,
+    gap: 10,
+    justifyContent: "space-between",
+    paddingBlock: 10,
+    paddingInline: 12,
+  },
+  status: {
+    alignItems: "center",
+    color: color.textSubtle,
+    display: "inline-flex",
+    gap: 7,
+    minWidth: 0,
+  },
+  statusDot: {
+    backgroundColor: color.lineStrong,
+    borderRadius: radius.pill,
+    height: 6,
+    width: 6,
+  },
+  footerActions: {
+    alignItems: "center",
+    display: "flex",
+    gap: space.s2,
+  },
+})
 
 export function collectSettingsPanels(plugins: PluginLike[]): SettingsPanelDescriptor[] {
   const panels: SettingsPanelDescriptor[] = []
@@ -178,8 +552,8 @@ export function SettingsHost(props: SettingsHostProps) {
   return (
     <Show when={props.open}>
       <div
-        class="settings-overlay settings-host"
-        classList={{ "is-entering": isEntering() }}
+        {...stylex.props(styles.overlay, isEntering() ? styles.entering : null)}
+        data-workbench-overlay="settings"
         onClick={handleClose}
         onKeyDown={handleKeyDown}
         role="dialog"
@@ -187,95 +561,137 @@ export function SettingsHost(props: SettingsHostProps) {
         aria-label={props.copy?.sidebarTitle ?? "设置"}
       >
         <div
-          class="settings-window"
-          classList={{ "is-entering": isEntering() }}
+          {...stylex.props(styles.window, isEntering() ? styles.windowEntering : null)}
+          data-settings-window
           onClick={(e) => e.stopPropagation()}
         >
-          <header class="window-head">
-            <div class="window-title">
-              <div class="window-title-icon">
+          <header {...stylex.props(styles.header)}>
+            <div {...stylex.props(styles.title)}>
+              <div {...stylex.props(styles.titleIcon)}>
                 <Settings size={14} />
               </div>
-              <div class="window-title-main">
-                <strong>{props.copy?.sidebarTitle ?? "设置"}</strong>
-                <span>
+              <div {...stylex.props(styles.titleCopy)}>
+                <strong {...stylex.props(styles.titleStrong)}>
+                  {props.copy?.sidebarTitle ?? "设置"}
+                </strong>
+                <span {...stylex.props(styles.titleMeta)}>
                   {props.copy?.windowSubtitle ??
                     "个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件"}
                 </span>
               </div>
             </div>
             <button
-              class="icon-close"
+              {...stylex.props(styles.close)}
+              type="button"
+              data-settings-close
               onClick={handleClose}
               ref={(el) => (closeButtonRef = el)}
               aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
-            />
+            >
+              <X size={16} />
+            </button>
           </header>
-          <div class="settings-body">
-            <nav class="settings-nav" aria-label={props.copy?.sidebarTitle ?? "设置导航"}>
+          <div {...stylex.props(styles.body)}>
+            <nav
+              {...stylex.props(styles.nav)}
+              data-settings-nav
+              aria-label={props.copy?.sidebarTitle ?? "设置导航"}
+            >
               <button
-                class="account-entry"
+                {...stylex.props(
+                  styles.account,
+                  activeSection() === "account" ? styles.selected : null,
+                )}
                 type="button"
-                classList={{ "is-active": activeSection() === "account" }}
+                data-settings-section="account"
+                aria-current={activeSection() === "account" ? "page" : undefined}
                 onClick={() => handleSectionChange("account")}
                 aria-label={sectionTitle("account")}
               >
-                <span class="account-avatar">{props.copy?.accountNavAvatar ?? "未"}</span>
-                <span class="account-nav-copy">
-                  <strong>{props.copy?.accountNavName ?? "未登录"}</strong>
-                  <span>{props.copy?.accountNavMeta ?? "本地模式"}</span>
+                <span {...stylex.props(styles.avatar)}>{props.copy?.accountNavAvatar ?? "未"}</span>
+                <span {...stylex.props(styles.accountCopy)}>
+                  <strong {...stylex.props(styles.accountName)}>
+                    {props.copy?.accountNavName ?? "未登录"}
+                  </strong>
+                  <span {...stylex.props(styles.accountMeta)}>
+                    {props.copy?.accountNavMeta ?? "本地模式"}
+                  </span>
                 </span>
               </button>
-              <div class="nav-kicker">{props.copy?.workspaceGroupTitle ?? "工作台"}</div>
+              <div {...stylex.props(styles.kicker)}>
+                {props.copy?.workspaceGroupTitle ?? "工作台"}
+              </div>
               <For each={workspaceSections()}>
                 {(section) => (
                   <button
-                    class="nav-button"
-                    classList={{ "is-active": section.id === activeSection() }}
+                    {...stylex.props(
+                      styles.navButton,
+                      section.id === activeSection() ? styles.selected : null,
+                    )}
+                    type="button"
+                    data-settings-section={section.id}
+                    aria-current={section.id === activeSection() ? "page" : undefined}
                     onClick={() => handleSectionChange(section.id)}
                   >
                     <span>{sectionTitle(section.id)}</span>
                     <Show when={sectionNavMeta(section.id)}>
-                      <span class="nav-count">{sectionNavMeta(section.id)}</span>
+                      <span {...stylex.props(styles.navCount)}>{sectionNavMeta(section.id)}</span>
                     </Show>
                   </button>
                 )}
               </For>
-              <div class="nav-kicker">{props.copy?.extensionGroupTitle ?? "扩展"}</div>
+              <div {...stylex.props(styles.kicker)}>
+                {props.copy?.extensionGroupTitle ?? "扩展"}
+              </div>
               <For each={extensionSections()}>
                 {(section) => (
                   <button
-                    class="nav-button"
-                    classList={{ "is-active": section.id === activeSection() }}
+                    {...stylex.props(
+                      styles.navButton,
+                      section.id === activeSection() ? styles.selected : null,
+                    )}
+                    type="button"
+                    data-settings-section={section.id}
+                    aria-current={section.id === activeSection() ? "page" : undefined}
                     onClick={() => handleSectionChange(section.id)}
                   >
                     <span>{sectionTitle(section.id)}</span>
                     <Show when={sectionNavMeta(section.id)}>
-                      <span class="nav-count">{sectionNavMeta(section.id)}</span>
+                      <span {...stylex.props(styles.navCount)}>{sectionNavMeta(section.id)}</span>
                     </Show>
                   </button>
                 )}
               </For>
             </nav>
-            <div class="settings-main" data-active-view={activeSection()}>
+            <div {...stylex.props(styles.main)} data-active-view={activeSection()}>
               <Show when={activeSection() !== "account"}>
-                <div class="panel-head">
+                <div {...stylex.props(styles.panelHeader)} data-settings-panel-header>
                   <div>
-                    <strong>{activeSectionTitle()}</strong>
-                    <span>{activeSectionDescription()}</span>
+                    <strong {...stylex.props(styles.panelHeaderTitle)}>
+                      {activeSectionTitle()}
+                    </strong>
+                    <span {...stylex.props(styles.panelHeaderDescription)}>
+                      {activeSectionDescription()}
+                    </span>
                   </div>
                   <Button size="sm" variant="secondary" onClick={handleReset}>
                     {props.copy?.resetLabel ?? "恢复默认"}
                   </Button>
                 </div>
               </Show>
-              <div class="panel-view" classList={{ "is-active": true }} data-view={activeSection()}>
+              <div
+                {...stylex.props(
+                  styles.panelView,
+                  activeSection() === "account" ? styles.accountPanel : null,
+                )}
+                data-view={activeSection()}
+              >
                 <Show
                   when={activeSection() !== "about"}
                   fallback={
                     props.aboutContent ?? (
                       <EmptyState
-                        class="settings-empty"
+                        xstyle={styles.empty}
                         compact
                         title={props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
                       />
@@ -286,19 +702,25 @@ export function SettingsHost(props: SettingsHostProps) {
                     when={activePanels().length > 0}
                     fallback={
                       <EmptyState
-                        class="settings-empty"
+                        xstyle={styles.empty}
                         compact
                         title={props.copy?.emptySection ?? "该分类下暂无设置内容"}
                       />
                     }
                   >
-                    <div class="settings-panel-stack-host">
+                    <div
+                      {...stylex.props(
+                        styles.stack,
+                        activeSection() === "account" ? styles.accountStack : null,
+                      )}
+                      data-settings-panel-stack
+                    >
                       <For each={activePanels()}>
                         {(panel) => {
                           const View = props.getView(panel.view)
                           if (!View)
                             return (
-                              <InlineError class="settings-panel-missing">
+                              <InlineError xstyle={styles.missing}>
                                 {props.copy?.panelMissing(panel.id) ??
                                   `设置面板不可用：${panel.id}`}
                               </InlineError>
@@ -322,11 +744,12 @@ export function SettingsHost(props: SettingsHostProps) {
               </div>
             </div>
           </div>
-          <footer class="window-foot">
-            <span class="footer-status">
+          <footer {...stylex.props(styles.footer)} data-workbench-overlay-footer>
+            <span {...stylex.props(styles.status)}>
+              <span {...stylex.props(styles.statusDot)} aria-hidden="true" />
               {statusText() ?? props.copy?.statusReady ?? "设置已就绪"}
             </span>
-            <div class="footer-actions">
+            <div {...stylex.props(styles.footerActions)}>
               <Button size="sm" variant="secondary" onClick={handleClose}>
                 {props.copy?.cancelLabel ?? "取消"}
               </Button>

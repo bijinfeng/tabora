@@ -11,6 +11,7 @@ import {
 } from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import { className, styles, sx } from "./styles"
 
 export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   const [importError, setImportError] = createSignal<string | null>(null)
@@ -81,8 +82,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   }
   const layoutOptions = () =>
     props.layouts.map((layout) => ({ value: layout.id, label: layoutShortLabel(layout) }))
-  const activeLayout = () =>
-    props.layouts.find((layout) => layout.id === props.workspace.activeLayoutId)
   const widgetInstanceCount = () =>
     Object.values(props.workspace.regions).reduce(
       (total, region) => total + region.instances.length,
@@ -92,13 +91,13 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
     setDefaultColumns((value) => Math.min(6, Math.max(3, value + delta)))
 
   return (
-    <div class="settings-panel-stack">
-      <section class="set-group">
-        <div class="set-group-title">
-          工作区<span>本地保存</span>
+    <div {...sx(styles.panelStack)} data-settings-panel="workbench">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
+          工作区<span {...sx(styles.groupTitleMeta)}>本地保存</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="当前工作区"
           description={`${props.workspace.name} · 保存布局、卡片和背景配置`}
           trailing={
@@ -113,13 +112,13 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="默认布局"
           description="切换新标签页打开时使用的布局插件"
           trailing={
             <Show
               when={layoutOptions().length > 0}
-              fallback={<span class="settings-row-meta">{props.workspace.activeLayoutId}</span>}
+              fallback={<span {...sx(styles.rowMeta)}>{props.workspace.activeLayoutId}</span>}
             >
               <SegmentedControl<string>
                 size="sm"
@@ -132,11 +131,11 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="默认卡片列数"
           description="Dashboard 首次打开时使用的网格密度"
           trailing={
-            <div class="settings-stepper" aria-label="默认卡片列数">
+            <div {...sx(styles.stepper)} aria-label="默认卡片列数">
               <Button
                 size="sm"
                 variant="ghost"
@@ -159,12 +158,12 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section class="set-group">
-        <div class="set-group-title">
-          启动行为<span>快捷入口</span>
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
+          启动行为<span {...sx(styles.groupTitleMeta)}>快捷入口</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="打开时聚焦搜索"
           description="新标签页加载后自动把焦点放到命令搜索框"
           trailing={
@@ -177,7 +176,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="保留上次卡片尺寸"
           description="刷新后恢复每张卡片的 S / M / L 状态"
           trailing={
@@ -190,29 +189,29 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="全局命令快捷键"
           description="从任意输入状态唤起命令搜索"
           trailing={
-            <span class="settings-keybind" aria-label="全局命令快捷键">
+            <span {...sx(styles.keybind)} aria-label="全局命令快捷键">
               <Kbd>⌘</Kbd>
               <Kbd>K</Kbd>
             </span>
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="启动后恢复"
           description="选择刷新后要自动恢复的个人状态"
           trailing={
-            <div class="settings-check-chip-list" aria-label="启动后恢复">
-              <span class="settings-check-chip">
+            <div {...sx(styles.checkList)} aria-label="启动后恢复">
+              <span {...sx(styles.checkChip)}>
                 <Checkbox checked={restoreLayout()} onChange={setRestoreLayout} label="布局" />
               </span>
-              <span class="settings-check-chip">
+              <span {...sx(styles.checkChip)}>
                 <Checkbox checked={restoreSize()} onChange={setRestoreSize} label="尺寸" />
               </span>
-              <span class="settings-check-chip">
+              <span {...sx(styles.checkChip)}>
                 <Checkbox checked={restoreFilter()} onChange={setRestoreFilter} label="筛选" />
               </span>
             </div>
@@ -220,16 +219,16 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section class="set-group">
-        <div class="set-group-title">
-          工作区管理<span>导入导出</span>
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
+          工作区管理<span {...sx(styles.groupTitleMeta)}>导入导出</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="新建工作区"
           description="创建独立的布局、主题和卡片配置"
           trailing={
-            <div class="workspace-create-row">
+            <div {...sx(styles.wideInlineActions)}>
               <Input
                 size="sm"
                 id="ws-new-name"
@@ -251,17 +250,17 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="卡片状态"
           description="按实例保存卡片排序、尺寸和所在区域"
-          trailing={<span class="settings-row-meta">{widgetInstanceCount()} 个实例</span>}
+          trailing={<span {...sx(styles.rowMeta)}>{widgetInstanceCount()} 个实例</span>}
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="备份与恢复"
           description="导出当前工作区 JSON，或从本地文件导入"
           trailing={
-            <div class="workspace-actions">
+            <div {...sx(styles.inlineActions)}>
               <Button size="sm" variant="secondary" onClick={() => void handleExport()}>
                 导出
               </Button>
@@ -272,20 +271,20 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <Show when={workspaces().length > 1}>
-          <div class="workspace-list">
+          <div {...sx(styles.list)}>
             <For each={workspaces()}>
               {(workspace) => (
-                <div class="workspace-list-item">
+                <div {...sx(styles.listItem)}>
                   <span
-                    class="workspace-list-name"
-                    classList={{
-                      active: workspace.id === props.workspace.id,
-                    }}
+                    {...sx(
+                      styles.listName,
+                      workspace.id === props.workspace.id && styles.listNameActive,
+                    )}
                   >
                     {workspace.name}
                     {workspace.id === props.workspace.id ? " · 当前" : ""}
                   </span>
-                  <div class="workspace-list-actions">
+                  <div {...sx(styles.inlineActions)}>
                     <Show when={workspace.id !== props.workspace.id}>
                       <Button
                         size="sm"
@@ -314,10 +313,10 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           <InlineError>{importError()!}</InlineError>
         </Show>
         <Show when={importSuccess()}>
-          <div class="workspace-import-success">导入成功</div>
+          <div {...sx(styles.successText)}>导入成功</div>
         </Show>
         <Show when={importWarnings().length > 0}>
-          <ul class="workspace-import-warnings">
+          <ul {...sx(styles.warningList)}>
             <For each={importWarnings()}>{(warning) => <li>{warning}</li>}</For>
           </ul>
         </Show>

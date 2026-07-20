@@ -11,8 +11,36 @@ export type DrawerProps = {
   footer?: JSX.Element
   side?: "right" | "left"
   size?: "sm" | "md" | "lg"
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  scrimClass?: string | undefined
+  scrimStyle?: JSX.CSSProperties | undefined
+  panelClass?: string | undefined
+  panelStyle?: JSX.CSSProperties | undefined
+  panelSideClass?: string | undefined
+  panelSideStyle?: JSX.CSSProperties | undefined
+  panelSizeClass?: string | undefined
+  panelSizeStyle?: JSX.CSSProperties | undefined
+  headerClass?: string | undefined
+  headerStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  descriptionClass?: string | undefined
+  descriptionStyle?: JSX.CSSProperties | undefined
+  closeClass?: string | undefined
+  closeStyle?: JSX.CSSProperties | undefined
+  bodyClass?: string | undefined
+  bodyStyle?: JSX.CSSProperties | undefined
+  footerClass?: string | undefined
+  footerStyle?: JSX.CSSProperties | undefined
   children: JSX.Element
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function Drawer(props: DrawerProps) {
@@ -24,29 +52,53 @@ export function Drawer(props: DrawerProps) {
       }}
     >
       <KDialog.Portal>
-        <div class={props.class ? `tbr-drawer ${props.class}` : "tbr-drawer"}>
-          <KDialog.Overlay class="tbr-drawer-scrim" aria-label="关闭" />
+        <div class={props.class} style={props.style}>
+          <KDialog.Overlay
+            {...optionalPartProps(props.scrimClass, props.scrimStyle)}
+            aria-label="关闭"
+          />
           <KDialog.Content
-            class="tbr-drawer-panel"
+            class={[props.panelClass, props.panelSideClass, props.panelSizeClass]
+              .filter(Boolean)
+              .join(" ")}
             data-side={props.side ?? "right"}
             data-size={props.size ?? "md"}
+            style={{
+              ...props.panelStyle,
+              ...props.panelSideStyle,
+              ...props.panelSizeStyle,
+            }}
           >
-            <header class="tbr-drawer-header">
+            <header class={props.headerClass} style={props.headerStyle}>
               <div>
-                <KDialog.Title class="tbr-drawer-title">{props.title}</KDialog.Title>
+                <KDialog.Title class={props.titleClass} style={props.titleStyle}>
+                  {props.title}
+                </KDialog.Title>
                 <Show when={props.description}>
-                  <KDialog.Description class="tbr-drawer-desc">
+                  <KDialog.Description
+                    class={props.descriptionClass}
+                    style={props.descriptionStyle}
+                  >
                     {props.description}
                   </KDialog.Description>
                 </Show>
               </div>
-              <KDialog.CloseButton type="button" class="tbr-drawer-close" aria-label="关闭">
+              <KDialog.CloseButton
+                type="button"
+                class={props.closeClass}
+                style={props.closeStyle}
+                aria-label="关闭"
+              >
                 <X size={16} strokeWidth={2} />
               </KDialog.CloseButton>
             </header>
-            <div class="tbr-drawer-body">{props.children}</div>
+            <div class={props.bodyClass} style={props.bodyStyle}>
+              {props.children}
+            </div>
             <Show when={props.footer}>
-              <footer class="tbr-drawer-footer">{props.footer}</footer>
+              <footer class={props.footerClass} style={props.footerStyle}>
+                {props.footer}
+              </footer>
             </Show>
           </KDialog.Content>
         </div>

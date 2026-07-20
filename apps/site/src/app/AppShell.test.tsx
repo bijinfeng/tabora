@@ -2,14 +2,9 @@ import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
 import { Route, Router } from "@solidjs/router"
 
-import {
-  AppShell,
-  getSiteHref,
-  getSiteRoutePath,
-  isPrototypeRoute,
-  needsLandingStylesheet,
-} from "./AppShell"
+import { AppShell, getSiteHref, getSiteRoutePath, isPrototypeRoute } from "./AppShell"
 import { PrototypeTopnav } from "../shared/PrototypeTopnav"
+import { SiteToast } from "../shared/SiteToast"
 
 describe("AppShell route path handling", () => {
   it("normalizes the GitHub Pages base path before choosing the page shell", () => {
@@ -25,15 +20,6 @@ describe("AppShell route path handling", () => {
     expect(isPrototypeRoute("/tabora/docs/quickstart", "/tabora/")).toBe(true)
     expect(isPrototypeRoute("/tabora/docs/button", "/tabora/")).toBe(true)
     expect(isPrototypeRoute("/tabora/docs/components", "/tabora/")).toBe(false)
-  })
-
-  it("loads design preview stylesheets only for public prototype routes", () => {
-    expect(needsLandingStylesheet("/tabora/", "/tabora/")).toBe(true)
-    expect(needsLandingStylesheet("/tabora/download", "/tabora/")).toBe(true)
-    expect(needsLandingStylesheet("/tabora/docs", "/tabora/")).toBe(false)
-    expect(needsLandingStylesheet("/tabora/docs/quickstart", "/tabora/")).toBe(false)
-    expect(needsLandingStylesheet("/tabora/docs/button", "/tabora/")).toBe(false)
-    expect(needsLandingStylesheet("/tabora/docs/components", "/tabora/")).toBe(false)
   })
 
   it("prefixes public site links with the deployment base path", () => {
@@ -67,12 +53,38 @@ describe("AppShell route path handling", () => {
       root,
     )
 
-    expect(root.querySelector<HTMLAnchorElement>(".site-nav-actions a")?.getAttribute("href")).toBe(
-      "/tabora/download",
-    )
-    expect(root.querySelector<HTMLAnchorElement>(".site-logo")?.getAttribute("href")).toBe(
+    expect(
+      root.querySelector<HTMLAnchorElement>("[data-site-nav-actions] a")?.getAttribute("href"),
+    ).toBe("/tabora/download")
+    expect(root.querySelector<HTMLAnchorElement>("[data-site-logo]")?.getAttribute("href")).toBe(
       "/tabora",
     )
+
+    dispose()
+    root.remove()
+  })
+
+  it("renders the shared shell with stable selectors instead of semantic CSS classes", () => {
+    const root = document.createElement("div")
+    window.history.pushState({}, "", "/tabora/docs/components")
+    document.body.append(root)
+
+    const dispose = render(
+      () => (
+        <Router root={AppShell} base="/tabora">
+          <Route path="/docs/components" component={() => <SiteToast visible message="已更新" />} />
+        </Router>
+      ),
+      root,
+    )
+
+    expect(root.querySelector("[data-site-shell]")).not.toBeNull()
+    expect(root.querySelector("[data-site-toast]")).not.toBeNull()
+    expect(root.querySelector('[role="banner"]')).not.toBeNull()
+    expect(root.querySelector('nav[aria-label="主导航"]')).not.toBeNull()
+    expect(root.querySelector(".site")).toBeNull()
+    expect(root.querySelector(".topbar")).toBeNull()
+    expect(root.querySelector(".toast")).toBeNull()
 
     dispose()
     root.remove()

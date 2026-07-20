@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js"
 import type { PluginCatalog } from "@tabora/orchestrator"
+import type { PluginInstance } from "@tabora/plugin-api"
 
 import type { WorkbenchShell } from "./WorkbenchShellContext"
 import { createWorkbenchShellState } from "./WorkbenchShellState"
@@ -21,7 +22,11 @@ export type WorkbenchShellSurfaceStubOverrides = {
   listSettingsPanels?: () => unknown[]
   pluginSummaries?: (...args: unknown[]) => Array<{ enabled: boolean }>
   tShell?: WorkbenchShell["tShell"]
-  addWidget?: (pluginId: string, widgetId: string, size?: string) => Promise<void> | void
+  addWidget?: (
+    pluginId: string,
+    widgetId: string,
+    size?: string,
+  ) => Promise<PluginInstance | null> | PluginInstance | null
   widgetContribution?: (...args: unknown[]) => { icon?: unknown } | undefined
   closeExpand?: () => void
   buildContextMenuModel?: () => { sections?: unknown[] } | undefined

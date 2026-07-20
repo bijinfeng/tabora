@@ -2,6 +2,7 @@ import { For } from "solid-js"
 import type { PluginManifest, PluginPermission, SettingsPanelViewProps } from "@tabora/plugin-api"
 import { assessPermissionRisk } from "@tabora/plugin-api"
 import { Switch } from "@tabora/ui"
+import { styles, sx } from "./styles"
 
 export type PluginSummary = SettingsPanelViewProps["plugins"][number]
 
@@ -68,28 +69,35 @@ function pluginStatus(plugin: PluginSummary) {
   return plugin.enabled ? { label: "已启用", tone: "success" } : { label: "已禁用", tone: "muted" }
 }
 
+function pillTone(tone: string) {
+  if (tone === "success" || tone === "low") return styles.pillSuccess
+  if (tone === "danger" || tone === "high" || tone === "critical") return styles.pillDanger
+  if (tone === "muted") return styles.pillMuted
+  return null
+}
+
 export function PluginManagerCard(props: PluginManagerCardProps = {}) {
   const plugins = () => props.plugins ?? []
 
   return (
-    <div class="plugin-settings-stack">
-      <section class="set-group">
-        <div class="set-group-title">已安装插件</div>
-        <p class="plugin-settings-help">
+    <div {...sx(styles.panelStack)} data-plugin-settings-card>
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>已安装插件</div>
+        <p {...sx(styles.pluginHelp)}>
           每个插件贡献的能力、版本和运行状态。插件启用状态控制是否加载到当前工作台。
         </p>
-        <div class="plugin-list">
+        <div {...sx(styles.list)}>
           <For each={plugins()}>
             {(plugin) => {
               const extensions = contributionLabels(plugin.contributes)
               const permissions = plugin.permissions.map(permissionLabel)
               const status = pluginStatus(plugin)
               return (
-                <div class="plugin-card">
-                  <div class="plugin-main">
-                    <div class="plugin-name">{plugin.name}</div>
-                    <div class="plugin-id-mono">{plugin.id}</div>
-                    <div class="plugin-meta">
+                <div {...sx(styles.pluginCard)}>
+                  <div {...sx(styles.pluginMain)}>
+                    <div {...sx(styles.pluginName)}>{plugin.name}</div>
+                    <div {...sx(styles.pluginId)}>{plugin.id}</div>
+                    <div {...sx(styles.pluginMeta)}>
                       {extensions.length > 0 ? extensions.join(" · ") : "无贡献能力"}
                       {permissions.length > 0 ? ` · 权限 ${permissions.join(" / ")}` : ""}
                       {plugin.disabledReason ? ` · ${plugin.disabledReason}` : ""}
@@ -99,9 +107,9 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
                         : ""}
                     </div>
                   </div>
-                  <div class="plugin-controls">
-                    <span class="plugin-version">v{plugin.version}</span>
-                    <span class={`plugin-pill ${status.tone}`}>{status.label}</span>
+                  <div {...sx(styles.pluginControls)}>
+                    <span {...sx(styles.pluginVersion)}>v{plugin.version}</span>
+                    <span {...sx(styles.pill, pillTone(status.tone))}>{status.label}</span>
                     <Switch
                       checked={plugin.enabled}
                       size="sm"
@@ -118,9 +126,9 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
         </div>
       </section>
 
-      <section class="set-group">
-        <div class="set-group-title">权限审计</div>
-        <div class="plugin-audit-section">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>权限审计</div>
+        <div {...sx(styles.list)}>
           <For each={plugins()}>
             {(plugin) => {
               const risks = plugin.permissions.map(assessPermissionRisk)
@@ -136,20 +144,20 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
                 "low",
               )
               return (
-                <div class="plugin-audit-item">
-                  <span class="plugin-audit-name">{plugin.name}</span>
-                  <div class="plugin-audit-tags">
+                <div {...sx(styles.pluginCard)}>
+                  <span {...sx(styles.pluginName)}>{plugin.name}</span>
+                  <div {...sx(styles.pluginControls)}>
                     <For each={risks}>
                       {(risk) => (
-                        <span class={`plugin-pill ${risk.risk}`}>
+                        <span {...sx(styles.pill, pillTone(risk.risk))}>
                           {permissionType(risk.permission)}
                         </span>
                       )}
                     </For>
                     {plugin.permissions.length === 0 ? (
-                      <span class="plugin-audit-none">无权限请求</span>
+                      <span {...sx(styles.mutedText)}>无权限请求</span>
                     ) : (
-                      <span class="plugin-audit-risk">风险: {maxRisk}</span>
+                      <span {...sx(styles.dangerText)}>风险: {maxRisk}</span>
                     )}
                   </div>
                 </div>

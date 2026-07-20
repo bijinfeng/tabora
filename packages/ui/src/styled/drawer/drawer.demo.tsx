@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Button } from "../button"
 import { Badge } from "../badge"
 import { Drawer } from "./drawer.styled"
@@ -8,8 +9,8 @@ export function DrawerDemo() {
   const [open, setOpen] = createSignal(false)
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-row">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.row)}>
         <Button variant="secondary" onClick={() => setOpen(true)}>
           打开 Drawer
         </Button>
@@ -21,7 +22,7 @@ export function DrawerDemo() {
         title="插件运行详情"
         description="保持当前页面上下文，同时查看更多状态和操作。"
         footer={
-          <div class="docs-row">
+          <div {...sx(demoStyles.row)}>
             <Button variant="secondary" onClick={() => setOpen(false)}>
               关闭
             </Button>
@@ -29,17 +30,17 @@ export function DrawerDemo() {
           </div>
         }
       >
-        <div class="docs-stack">
-          <div class="docs-row">
+        <div {...sx(demoStyles.stack)}>
+          <div {...sx(demoStyles.row)}>
             <Badge variant="accent">widget</Badge>
             <Badge variant="success">运行中</Badge>
           </div>
-          <p class="docs-muted">最近一次同步发生在 2 分钟前，当前实例没有未处理错误。</p>
-          <div class="docs-stack compact">
+          <p {...sx(demoStyles.muted)}>最近一次同步发生在 2 分钟前，当前实例没有未处理错误。</p>
+          <div {...sx(demoStyles.stackCompact)}>
             <strong>权限摘要</strong>
             <span>external-open、local storage</span>
           </div>
-          <div class="docs-stack compact">
+          <div {...sx(demoStyles.stackCompact)}>
             <strong>最近事件</strong>
             <span>00:01 拉取配置成功</span>
             <span>00:03 渲染首屏卡片</span>

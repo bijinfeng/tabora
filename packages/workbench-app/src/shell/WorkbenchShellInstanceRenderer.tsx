@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import type { JSX } from "solid-js"
 import { createComponent } from "solid-js"
 import { useSortable } from "@dnd-kit/solid/sortable"
@@ -23,6 +24,7 @@ import type {
   WorkbenchShellPluginViewBoundaryCopy,
   WorkbenchShellWidgetCopy,
 } from "../i18n"
+import { color } from "../stylexTokens.stylex"
 
 type WorkbenchSortableCollisionDetector = NonNullable<
   Parameters<typeof useSortable>[0]["collisionDetector"]
@@ -42,6 +44,16 @@ type SearchContributionLike = {
   title: string
   view: string
 }
+
+const styles = stylex.create({
+  empty: {
+    color: color.textMuted,
+    fontSize: 13,
+    paddingBlock: 24,
+    paddingInline: 20,
+    textAlign: "center",
+  },
+})
 
 export function createWorkbenchInstanceRenderer(options: {
   registryViews: ViewRegistry
@@ -76,7 +88,7 @@ export function createWorkbenchInstanceRenderer(options: {
       const model = options.widgetRenderModel(instance)
       if (!model) {
         return (
-          <div class="settings-empty">
+          <div {...stylex.props(styles.empty)}>
             {options.tShell
               ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: instance.id })
               : `卡片实例无效：${instance.id}`}
@@ -88,7 +100,7 @@ export function createWorkbenchInstanceRenderer(options: {
         ? resolveWorkbenchView<WidgetViewProps>(options.registryViews, widget.views.card)
         : undefined
       if (!View) {
-        return <div class="settings-empty">Widget view not available</div>
+        return <div {...stylex.props(styles.empty)}>Widget view not available</div>
       }
 
       const menu = options.buildContextMenuItems?.(instance.id)
@@ -135,7 +147,7 @@ export function createWorkbenchInstanceRenderer(options: {
       const search = options.findSearchContribution(instance.pluginId, instance.contributionId)
       if (!search) {
         return (
-          <div class="settings-empty">
+          <div {...stylex.props(styles.empty)}>
             {options.tShell?.("placeholders.searchContributionMissing") ?? "搜索贡献未找到"}
           </div>
         )
@@ -144,7 +156,7 @@ export function createWorkbenchInstanceRenderer(options: {
       const View = resolveWorkbenchView<SearchViewProps>(options.registryViews, search.view)
       if (!View) {
         return (
-          <div class="settings-empty">
+          <div {...stylex.props(styles.empty)}>
             {options.tShell
               ? options.tShell("placeholders.searchViewUnavailable", { id: search.id })
               : `搜索视图不可用：${search.id}`}

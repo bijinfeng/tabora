@@ -6,8 +6,30 @@ import { Check, ChevronDown, X } from "lucide-solid"
 
 export type SelectOption<V extends string> = { value: V; label: string; disabled?: boolean }
 
+type SelectPartStyleProps = {
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  valueClass?: string | undefined
+  valueInvalidClass?: string | undefined
+  valuePlaceholderClass?: string | undefined
+  iconClass?: string | undefined
+  tagsClass?: string | undefined
+  tagClass?: string | undefined
+  tagRemoveClass?: string | undefined
+  tagMoreClass?: string | undefined
+  placeholderClass?: string | undefined
+  contentClass?: string | undefined
+  contentStyle?: JSX.CSSProperties | undefined
+  listboxClass?: string | undefined
+  itemClass?: string | undefined
+  itemSelectedClass?: string | undefined
+  itemDisabledClass?: string | undefined
+  itemCheckClass?: string | undefined
+  itemLabelClass?: string | undefined
+}
+
 // Single-select props
-export type SelectSingleProps<V extends string> = {
+export type SelectSingleProps<V extends string> = SelectPartStyleProps & {
   value: V
   onChange: (value: V) => void
   options: SelectOption<V>[]
@@ -16,13 +38,12 @@ export type SelectSingleProps<V extends string> = {
   size?: "sm" | "md"
   disabled?: boolean
   invalid?: boolean
-  class?: string
   "aria-label"?: string
   id?: string
 }
 
 // Multi-select props
-export type SelectMultipleProps<V extends string> = {
+export type SelectMultipleProps<V extends string> = SelectPartStyleProps & {
   value: V[]
   onChange: (value: V[]) => void
   options: SelectOption<V>[]
@@ -32,12 +53,22 @@ export type SelectMultipleProps<V extends string> = {
   size?: "sm" | "md"
   disabled?: boolean
   invalid?: boolean
-  class?: string
   "aria-label"?: string
   id?: string
 }
 
 export type SelectProps<V extends string> = SelectSingleProps<V> | SelectMultipleProps<V>
+
+function joinClasses(...classes: Array<string | undefined>) {
+  return classes.filter(Boolean).join(" ") || undefined
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
+}
 
 export function Select<V extends string>(props: SelectProps<V>) {
   const [local] = splitProps(props, [
@@ -52,6 +83,24 @@ export function Select<V extends string>(props: SelectProps<V>) {
     "aria-label",
     "id",
     "class",
+    "style",
+    "valueClass",
+    "valueInvalidClass",
+    "valuePlaceholderClass",
+    "iconClass",
+    "tagsClass",
+    "tagClass",
+    "tagRemoveClass",
+    "tagMoreClass",
+    "placeholderClass",
+    "contentClass",
+    "contentStyle",
+    "listboxClass",
+    "itemClass",
+    "itemSelectedClass",
+    "itemDisabledClass",
+    "itemCheckClass",
+    "itemLabelClass",
   ])
 
   const isMultiple = () => local.multiple === true
@@ -82,14 +131,26 @@ export function Select<V extends string>(props: SelectProps<V>) {
   }
 
   const itemComponent = (p: SelectRootItemComponentProps<SelectOption<V>>) => {
+    const isSelected = () =>
+      isMultiple()
+        ? selectedOptions().some((option) => option.value === p.item.rawValue.value)
+        : selectedOption()?.value === p.item.rawValue.value
+
     return (
-      <KSelect.Item item={p.item} class="tbr-select-item">
-        <span class="tbr-select-item-check" aria-hidden="true">
+      <KSelect.Item
+        item={p.item}
+        class={joinClasses(
+          local.itemClass,
+          isSelected() ? local.itemSelectedClass : undefined,
+          p.item.rawValue.disabled ? local.itemDisabledClass : undefined,
+        )}
+      >
+        <span class={local.itemCheckClass} aria-hidden="true">
           <KSelect.ItemIndicator>
             <Check size={16} strokeWidth={2} />
           </KSelect.ItemIndicator>
         </span>
-        <KSelect.ItemLabel class="tbr-select-item-label">{p.item.rawValue.label}</KSelect.ItemLabel>
+        <KSelect.ItemLabel class={local.itemLabelClass}>{p.item.rawValue.label}</KSelect.ItemLabel>
       </KSelect.Item>
     )
   }
@@ -113,7 +174,8 @@ export function Select<V extends string>(props: SelectProps<V>) {
         itemComponent={itemComponent}
       >
         <KSelect.Trigger
-          class={`tbr-select-trigger ${local.class ?? ""}`}
+          class={local.class}
+          style={local.style}
           data-size={local.size ?? "md"}
           data-multiple=""
           data-invalid={local.invalid ? "" : undefined}
@@ -121,15 +183,15 @@ export function Select<V extends string>(props: SelectProps<V>) {
           {...(local["aria-label"] !== undefined ? { "aria-label": local["aria-label"] } : {})}
           {...(local.id !== undefined ? { id: local.id } : {})}
         >
-          <div class="tbr-select-tags">
+          <div class={local.tagsClass}>
             <Show when={visibleTags().length > 0}>
               <For each={visibleTags()}>
                 {(opt) => (
-                  <span class="tbr-select-tag">
+                  <span class={local.tagClass}>
                     {opt.label}
                     <button
                       type="button"
-                      class="tbr-select-tag-remove"
+                      class={local.tagRemoveClass}
                       onClick={(e) => {
                         e.stopPropagation()
                         removeTag(opt.value)
@@ -143,20 +205,20 @@ export function Select<V extends string>(props: SelectProps<V>) {
                 )}
               </For>
               <Show when={remainingCount() > 0}>
-                <span class="tbr-select-tag-more">+{remainingCount()}</span>
+                <span class={local.tagMoreClass}>+{remainingCount()}</span>
               </Show>
             </Show>
             <Show when={visibleTags().length === 0}>
-              <span class="tbr-select-placeholder">{local.placeholder ?? "选择..."}</span>
+              <span class={local.placeholderClass}>{local.placeholder ?? "选择..."}</span>
             </Show>
           </div>
-          <KSelect.Icon class="tbr-select-icon" aria-hidden="true">
+          <KSelect.Icon class={local.iconClass} aria-hidden="true">
             <ChevronDown size={16} strokeWidth={2} />
           </KSelect.Icon>
         </KSelect.Trigger>
         <KSelect.Portal>
-          <KSelect.Content class="tbr-select-content">
-            <KSelect.Listbox class="tbr-select-listbox" />
+          <KSelect.Content {...optionalPartProps(local.contentClass, local.contentStyle)}>
+            <KSelect.Listbox class={local.listboxClass} />
           </KSelect.Content>
         </KSelect.Portal>
       </KSelect>
@@ -181,25 +243,33 @@ export function Select<V extends string>(props: SelectProps<V>) {
       itemComponent={itemComponent}
     >
       <KSelect.Trigger
-        class={`tbr-select-trigger ${local.class ?? ""}`}
+        class={local.class}
+        style={local.style}
         data-size={local.size ?? "md"}
         data-invalid={local.invalid ? "" : undefined}
         aria-invalid={local.invalid ? true : undefined}
         {...(local["aria-label"] !== undefined ? { "aria-label": local["aria-label"] } : {})}
         {...(local.id !== undefined ? { id: local.id } : {})}
       >
-        <span class="tbr-select-value" data-placeholder-shown={!hasSelection() ? "" : undefined}>
+        <span
+          class={joinClasses(
+            local.valueClass,
+            local.invalid ? local.valueInvalidClass : undefined,
+            !hasSelection() ? local.valuePlaceholderClass : undefined,
+          )}
+          data-placeholder-shown={!hasSelection() ? "" : undefined}
+        >
           <KSelect.Value<SelectOption<V>>>
             {(state) => state.selectedOption()?.label ?? local.placeholder ?? ""}
           </KSelect.Value>
         </span>
-        <KSelect.Icon class="tbr-select-icon" aria-hidden="true">
+        <KSelect.Icon class={local.iconClass} aria-hidden="true">
           <ChevronDown size={16} strokeWidth={2} />
         </KSelect.Icon>
       </KSelect.Trigger>
       <KSelect.Portal>
-        <KSelect.Content class="tbr-select-content">
-          <KSelect.Listbox class="tbr-select-listbox" />
+        <KSelect.Content {...optionalPartProps(local.contentClass, local.contentStyle)}>
+          <KSelect.Listbox class={local.listboxClass} />
         </KSelect.Content>
       </KSelect.Portal>
     </KSelect>

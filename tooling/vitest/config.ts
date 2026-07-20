@@ -1,6 +1,7 @@
 import type { UserConfig } from "vite"
 import { mergeConfig, defineConfig, defineProject } from "vitest/config"
 import solid from "vite-plugin-solid"
+import { createTaboraStylexVitePlugin, taboraStylexWorkspaceRoot } from "@tabora/stylex-config"
 
 const sharedUnitInlineDeps = [
   /@kobalte\//,
@@ -36,7 +37,15 @@ export function defineUnitTestConfig(config: UserConfig = {}) {
   return mergeConfig(
     defineConfig({
       logLevel: "error",
-      plugins: [stripMissingSourcemapCommentPlugin(), solid({ hot: false })],
+      plugins: [
+        createTaboraStylexVitePlugin({
+          rootDir: taboraStylexWorkspaceRoot,
+          dev: false,
+          devMode: "css-only",
+        }),
+        stripMissingSourcemapCommentPlugin(),
+        solid({ hot: false }),
+      ],
       test: {
         environment: "happy-dom",
         exclude: sharedUnitExclude,

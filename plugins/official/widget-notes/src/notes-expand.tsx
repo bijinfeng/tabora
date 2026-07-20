@@ -2,6 +2,7 @@ import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button, DatePicker, IconButton, Input } from "@tabora/ui"
 import { ChevronDown, Eye, List, Plus, Search, Star, Trash } from "lucide-solid"
+import { styles, sx } from "./styles"
 
 type Note = {
   id: string
@@ -33,10 +34,13 @@ function extractTags(content: string): string[] {
   return [...new Set(matches.map((t) => t.toLowerCase().replace(/^#/, "")))]
 }
 
-function highlightText(text: string, query: string): string {
-  if (!query) return text
+function highlightText(text: string, query: string): Array<{ text: string; highlighted: boolean }> {
+  if (!query) return [{ text, highlighted: false }]
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  return text.replace(new RegExp(`(${escaped})`, "gi"), '<span class="notes-hl">$1</span>')
+  return text
+    .split(new RegExp(`(${escaped})`, "gi"))
+    .filter(Boolean)
+    .map((part) => ({ text: part, highlighted: part.toLowerCase() === query.toLowerCase() }))
 }
 
 const STORAGE_KEY = "notes-items"
@@ -162,9 +166,9 @@ export function NotesExpand(props: WidgetViewProps) {
   }
 
   return (
-    <div class="notes-expand-root">
-      <div class="notes-side">
-        <div class="notes-side-search">
+    <div {...sx(styles.expandRoot)} data-widget-expand="notes">
+      <div {...sx(styles.side)} data-notes-side>
+        <div {...sx(styles.sideSearch)}>
           <Input
             size="sm"
             type="search"
@@ -175,7 +179,7 @@ export function NotesExpand(props: WidgetViewProps) {
             leadingIcon={<Search size={13} />}
           />
         </div>
-        <div class="notes-side-cal">
+        <div {...sx(styles.sideCalendar)}>
           <DatePicker
             value={currentCalDate()}
             onChange={(ds) => selectCalDate(ds)}
@@ -188,62 +192,91 @@ export function NotesExpand(props: WidgetViewProps) {
             markedDates={noteDates()}
           />
         </div>
-        <div class="notes-side-section">
-          <span class="notes-side-section-title">筛选</span>
+        <div {...sx(styles.sideSection)}>
+          <span {...sx(styles.sideSectionTitle)}>筛选</span>
         </div>
-        <div class="notes-side-filters">
+        <div {...sx(styles.sideList)}>
           <button
-            class="notes-side-filter"
-            classList={{ active: currentFilter() === "all" && !currentCalDate() }}
+            {...sx(
+              styles.sideButton,
+              currentFilter() === "all" && !currentCalDate() && styles.sideButtonActive,
+            )}
             type="button"
             onClick={() => selectFilter("all")}
           >
             <List size={13} />
             全部
-            <span class="notes-side-filter-count">{notes().length}</span>
+            <span
+              {...sx(
+                styles.sideCount,
+                currentFilter() === "all" && !currentCalDate() && styles.sideCountActive,
+              )}
+            >
+              {notes().length}
+            </span>
           </button>
           <button
-            class="notes-side-filter"
-            classList={{ active: currentFilter() === "starred" }}
+            {...sx(styles.sideButton, currentFilter() === "starred" && styles.sideButtonActive)}
             type="button"
             onClick={() => selectFilter("starred")}
           >
             <Star size={13} fill={currentFilter() === "starred" ? "currentColor" : "none"} />
             置顶
-            <span class="notes-side-filter-count">{starCount()}</span>
+            <span
+              {...sx(styles.sideCount, currentFilter() === "starred" && styles.sideCountActive)}
+            >
+              {starCount()}
+            </span>
           </button>
         </div>
-        <div class="notes-side-section">
-          <span class="notes-side-section-title">标签</span>
+        <div {...sx(styles.sideSection)}>
+          <span {...sx(styles.sideSectionTitle)}>标签</span>
         </div>
-        <div class="notes-side-tags">
+        <div {...sx(styles.sideTags)}>
           <For each={allTags().slice(0, 8)}>
             {([tag, count]) => (
               <button
-                class="notes-side-tag"
-                classList={{ active: currentFilter() === `tag:${tag}` }}
+                {...sx(
+                  styles.sideButton,
+                  currentFilter() === `tag:${tag}` && styles.sideButtonActive,
+                )}
                 type="button"
                 onClick={() => selectFilter(`tag:${tag}`)}
               >
-                <span class="notes-side-tag-hash">#</span>
+                <span
+                  {...sx(
+                    styles.sideHash,
+                    currentFilter() === `tag:${tag}` && styles.sideHashActive,
+                  )}
+                >
+                  #
+                </span>
                 {tag}
-                <span class="notes-side-tag-count">{count}</span>
+                <span
+                  {...sx(
+                    styles.sideCount,
+                    currentFilter() === `tag:${tag}` && styles.sideCountActive,
+                  )}
+                >
+                  {count}
+                </span>
               </button>
             )}
           </For>
           <Show when={allTags().length === 0}>
-            <div class="notes-side-tag-empty">暂无标签</div>
+            <div {...sx(styles.sideEmpty)}>暂无标签</div>
           </Show>
         </div>
       </div>
 
-      <div class="notes-main">
-        <div class="notes-capture">
-          <div class="notes-capture-inner">
+      <div {...sx(styles.main)} data-notes-main>
+        <div {...sx(styles.capture)} data-notes-capture>
+          <div {...sx(styles.captureInner)}>
             <IconButton size="sm" variant="ghost" aria-label="附加文件">
               <Plus size={15} />
             </IconButton>
             <textarea
+              {...sx(styles.textarea)}
               rows="1"
               placeholder="记点什么...（Enter 发送）"
               aria-label="新建便签内容"
@@ -254,21 +287,21 @@ export function NotesExpand(props: WidgetViewProps) {
               onKeyDown={(e) => handleCaptureKey(e, e.currentTarget)}
             />
           </div>
-          <div class="notes-capture-foot">
+          <div {...sx(styles.captureFooter)}>
             <Button size="sm" variant="secondary">
               <Eye size={12} />
               公开
               <ChevronDown size={10} />
             </Button>
-            <span class="notes-capture-save">保存</span>
+            <span {...sx(styles.savePill)}>保存</span>
           </div>
         </div>
 
         <Show
           when={filteredNotes().length > 0}
           fallback={
-            <div class="notes-empty">
-              <div class="notes-empty-icon">
+            <div {...sx(styles.empty)}>
+              <div {...sx(styles.emptyIcon)}>
                 <svg
                   width="32"
                   height="32"
@@ -281,7 +314,7 @@ export function NotesExpand(props: WidgetViewProps) {
                   <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                 </svg>
               </div>
-              <div class="notes-empty-text">
+              <div {...sx(styles.emptyText)}>
                 {searchQuery()
                   ? `没有匹配 "${searchQuery()}" 的便签`
                   : currentCalDate()
@@ -289,41 +322,52 @@ export function NotesExpand(props: WidgetViewProps) {
                     : "还没有便签"}
               </div>
               <Show when={!searchQuery() && !currentCalDate()}>
-                <div class="notes-empty-hint">在上方输入框开始记录</div>
+                <div {...sx(styles.emptyHint)}>在上方输入框开始记录</div>
               </Show>
             </div>
           }
         >
-          <div class="notes-list">
+          <div {...sx(styles.noteList)}>
             <For each={filteredNotes()}>
               {(note) => (
-                <div class="notes-card" classList={{ editing: editingId() === note.id }}>
+                <div
+                  {...sx(styles.note, editingId() === note.id && styles.noteEditing)}
+                  data-note-card
+                  data-editing={editingId() === note.id ? "" : undefined}
+                >
                   <Show
                     when={editingId() === note.id}
                     fallback={
-                      <div class="notes-card-display" onClick={() => setEditingId(note.id)}>
-                        <div class="notes-card-time">
+                      <div
+                        {...sx(styles.noteDisplay)}
+                        data-note-display
+                        onClick={() => setEditingId(note.id)}
+                      >
+                        <div {...sx(styles.noteTime)}>
                           <Show when={note.starred}>
-                            <span class="notes-card-star">
+                            <span {...sx(styles.star)} data-note-star>
                               <Star size={12} fill="currentColor" />
                             </span>
                           </Show>
                           {formatTime(note.updatedAt)}
                         </div>
-                        <div
-                          class="notes-card-content"
-                          innerHTML={highlightText(note.content, searchQuery())}
-                        />
+                        <div {...sx(styles.noteContent)}>
+                          <For each={highlightText(note.content, searchQuery())}>
+                            {(part) => (
+                              <span {...sx(part.highlighted && styles.highlight)}>{part.text}</span>
+                            )}
+                          </For>
+                        </div>
                         <Show when={extractTags(note.content).length > 0}>
-                          <div class="notes-card-tags">
+                          <div {...sx(styles.tags)}>
                             <For each={extractTags(note.content)}>
-                              {(tag) => <span class="notes-card-tag">#{tag}</span>}
+                              {(tag) => <span {...sx(styles.tag)}>#{tag}</span>}
                             </For>
                           </div>
                         </Show>
-                        <div class="notes-card-foot">
-                          <span class="notes-card-meta">{note.content.length} 字</span>
-                          <div class="notes-card-actions">
+                        <div {...sx(styles.noteFooter)}>
+                          <span {...sx(styles.meta)}>{note.content.length} 字</span>
+                          <div {...sx(styles.actions)}>
                             <IconButton
                               size="sm"
                               variant="ghost"
@@ -351,22 +395,23 @@ export function NotesExpand(props: WidgetViewProps) {
                       </div>
                     }
                   >
-                    <div class="notes-card-edit">
-                      <div class="notes-card-edit-area">
+                    <div {...sx(styles.edit)}>
+                      <div {...sx(styles.editArea)}>
                         <textarea
+                          {...sx(styles.textarea, styles.editTextarea)}
                           value={note.content}
                           aria-label={`编辑 ${note.content.slice(0, 30)}`}
                           onInput={(e) => handleEditInput(e.currentTarget)}
                           onKeyDown={(e) => handleEditKey(e, note.id, e.currentTarget)}
                         />
                       </div>
-                      <div class="notes-card-edit-foot">
-                        <span class="notes-card-edit-info">{note.content.length} 字</span>
-                        <span class="notes-card-edit-saved">
-                          <span class="notes-card-edit-dot" />
+                      <div {...sx(styles.editFooter)}>
+                        <span {...sx(styles.meta)}>{note.content.length} 字</span>
+                        <span {...sx(styles.saved)}>
+                          <span {...sx(styles.savedDot)} />
                           已保存
                         </span>
-                        <div class="notes-card-edit-btns">
+                        <div {...sx(styles.editButtons)}>
                           <Button
                             size="sm"
                             variant="danger-subtle"

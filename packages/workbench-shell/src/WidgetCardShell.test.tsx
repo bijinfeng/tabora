@@ -56,6 +56,12 @@ describe("WidgetCardShell", () => {
     const { host, dispose } = mount(makeCallbacks())
     expect(host.textContent).toContain("便签")
     expect(host.querySelector("[data-testid='content']")).toBeTruthy()
+    expect(host.querySelector("[data-workbench-grid-item]")).toBeTruthy()
+    expect(host.querySelector("[data-widget-card]")).toBeTruthy()
+    expect(host.querySelector("[data-widget-card-title]")?.textContent).toContain("便签")
+    expect(host.querySelector(".grid-item")).toBeNull()
+    expect(host.querySelector(".widget-card")).toBeNull()
+    expect(host.querySelector(".card-title")).toBeNull()
     dispose()
   })
 
@@ -78,7 +84,7 @@ describe("WidgetCardShell", () => {
   it("点击删除触发 onRemove", () => {
     const cb = makeCallbacks()
     const { host, dispose } = mount(cb)
-    const removeBtn = host.querySelector("button.card-danger") as HTMLButtonElement
+    const removeBtn = host.querySelector("[data-widget-card-remove]") as HTMLButtonElement
     removeBtn.click()
     expect(cb.onRemove).toHaveBeenCalled()
     dispose()
@@ -91,7 +97,7 @@ describe("WidgetCardShell", () => {
         removeAriaLabel: (title: string) => `Remove ${title}`,
       },
     })
-    const removeBtn = host.querySelector("button.card-danger") as HTMLButtonElement
+    const removeBtn = host.querySelector("[data-widget-card-remove]") as HTMLButtonElement
     expect(removeBtn.getAttribute("aria-label")).toBe("Remove 便签")
     dispose()
   })
@@ -136,7 +142,9 @@ describe("WidgetCardShell", () => {
     expect(cb.bindSortableRoot).toHaveBeenCalledWith(
       host.querySelector("[data-widget-instance-id='w1']"),
     )
-    expect(cb.bindSortableHandle).toHaveBeenCalledWith(host.querySelector(".card-title"))
+    expect(cb.bindSortableHandle).toHaveBeenCalledWith(
+      host.querySelector("[data-widget-card-title]"),
+    )
     dispose()
   })
 })

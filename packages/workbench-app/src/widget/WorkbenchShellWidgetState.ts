@@ -23,14 +23,14 @@ export async function addWorkbenchWidget(options: {
   buildInstanceId?: () => string
   now?: () => string
   size?: WidgetSize
-}): Promise<boolean> {
+}): Promise<PluginInstance | null> {
   const widget = options.resolveWidget(options.pluginId, options.contributionId)
-  if (!widget) return false
+  if (!widget) return null
 
   const timestamp = options.now?.() ?? new Date().toISOString()
   const instanceId = options.buildInstanceId?.() ?? `${options.contributionId}-${Date.now()}`
   const regionId = options.layoutRegions.find((region) => region.accepts.includes("widget"))?.id
-  if (!regionId) return false
+  if (!regionId) return null
 
   const requestedSize = options.size
   const initialSize =
@@ -38,26 +38,26 @@ export async function addWorkbenchWidget(options: {
       ? requestedSize
       : widget.defaultSize
 
-  const nextInstances = options.assignGridOrder([
-    ...options.currentInstances,
-    {
-      id: instanceId,
-      workspaceId: options.workspaceId,
-      pluginId: options.pluginId,
-      contributionId: options.contributionId,
-      extensionPoint: "widget",
-      regionId,
-      enabled: true,
-      size: initialSize,
-      config: {},
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-  ])
+  const nextInstance: PluginInstance = {
+    id: instanceId,
+    workspaceId: options.workspaceId,
+    pluginId: options.pluginId,
+    contributionId: options.contributionId,
+    extensionPoint: "widget",
+    regionId,
+    enabled: true,
+    size: initialSize,
+    config: {},
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  }
 
-  await options.saveInstance(nextInstances[nextInstances.length - 1]!)
+  const nextInstances = options.assignGridOrder([...options.currentInstances, nextInstance])
+  const savedInstance = nextInstances.find((instance) => instance.id === instanceId) ?? nextInstance
+
+  await options.saveInstance(savedInstance)
   options.setInstances(nextInstances)
-  return true
+  return savedInstance
 }
 
 export async function removeWorkbenchWidget(options: {

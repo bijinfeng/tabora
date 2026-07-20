@@ -61,7 +61,7 @@ export function DownloadPage() {
         onThemeToggled={showToast}
       />
 
-      <main>
+      <main data-site-download>
         <DownloadHero content={content()} />
         <PlatformSection content={content()} />
         <InstallSection content={content()} showToast={showToast} />

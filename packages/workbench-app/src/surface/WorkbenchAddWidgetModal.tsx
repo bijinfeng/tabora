@@ -1,9 +1,12 @@
+import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { WidgetSize } from "@tabora/plugin-api"
+import { Search, X } from "lucide-solid"
 
 import type { ShellTranslation } from "../i18n"
 import type { AvailableWidget } from "./WorkbenchShellChrome.types"
+import { styles } from "./WorkbenchAddWidgetModal.styles"
 
 type Category = "recommended" | "info" | "productivity" | "tools" | "installed"
 
@@ -147,13 +150,14 @@ export function WorkbenchAddWidgetModal(props: {
   return (
     <Show when={props.open}>
       <div
-        class="modal-overlay add-widget-overlay"
+        {...stylex.props(styles.overlay)}
+        data-workbench-overlay="add-widget"
         onClick={props.onClose}
         onKeyDown={handleOverlayKeyDown}
         tabIndex={-1}
       >
         <div
-          class="add-card-modal"
+          {...stylex.props(styles.modal)}
           onClick={(event) => event.stopPropagation()}
           role="dialog"
           aria-label={t("chrome.addWidget.title", "添加卡片")}
@@ -170,7 +174,7 @@ export function WorkbenchAddWidgetModal(props: {
             closeAria={t("chrome.addWidget.closeAria", "关闭")}
             onClose={props.onClose}
           />
-          <div class="add-card-body">
+          <div {...stylex.props(styles.body)}>
             <LeftColumn
               query={query()}
               onQueryChange={setQuery}
@@ -216,20 +220,20 @@ function ModalHeader(props: {
   onClose: () => void
 }) {
   return (
-    <div class="add-card-header">
-      <div class="add-card-header-titles">
-        <div class="add-card-title">{props.title}</div>
-        <div class="add-card-kicker">{props.kicker}</div>
+    <div {...stylex.props(styles.header)}>
+      <div {...stylex.props(styles.headerTitles)}>
+        <div {...stylex.props(styles.title)}>{props.title}</div>
+        <div {...stylex.props(styles.kicker)}>{props.kicker}</div>
       </div>
-      <div class="add-card-header-context">
-        <span class="add-card-group-pill">{props.groupLabel}</span>
+      <div {...stylex.props(styles.headerContext)}>
+        <span {...stylex.props(styles.pill)}>{props.groupLabel}</span>
         <button
           type="button"
-          class="add-card-close"
+          {...stylex.props(styles.iconButton)}
           aria-label={props.closeAria}
           onClick={props.onClose}
         >
-          ×
+          <X size={16} />
         </button>
       </div>
     </div>
@@ -248,19 +252,23 @@ function LeftColumn(props: {
   t: TFn
 }) {
   return (
-    <div class="add-card-left">
-      <div class="add-card-search">
-        <div class="add-card-search-wrap">
+    <div {...stylex.props(styles.left)}>
+      <div {...stylex.props(styles.searchArea)}>
+        <div {...stylex.props(styles.searchWrap)}>
+          <span {...stylex.props(styles.searchIcon)} aria-hidden="true">
+            <Search size={14} />
+          </span>
           <input
             type="search"
-            class="add-card-search-input"
+            {...stylex.props(styles.searchInput)}
             placeholder={props.t("chrome.addWidget.searchPlaceholder", "搜索卡片…")}
+            aria-label={props.t("chrome.addWidget.searchPlaceholder", "搜索卡片")}
             value={props.query}
             onInput={(event) => props.onQueryChange(event.currentTarget.value)}
           />
         </div>
       </div>
-      <div class="add-card-tabs" role="tablist">
+      <div {...stylex.props(styles.tabs)} role="tablist">
         <CategoryTab
           label={props.t("chrome.addWidget.tab.recommended", "推荐")}
           active={props.activeCategory === "all" || props.activeCategory === "recommended"}
@@ -276,11 +284,13 @@ function LeftColumn(props: {
           )}
         </For>
       </div>
-      <div class="add-card-list">
+      <div {...stylex.props(styles.list)}>
         <Show
           when={props.widgets.length > 0}
           fallback={
-            <div class="add-card-empty">{props.t("chrome.addWidget.empty", "没有匹配的卡片")}</div>
+            <div {...stylex.props(styles.empty)}>
+              {props.t("chrome.addWidget.empty", "没有匹配的卡片")}
+            </div>
           }
         >
           <For each={props.widgets}>
@@ -304,8 +314,7 @@ function CategoryTab(props: { label: string; active: boolean; onClick: () => voi
   return (
     <button
       type="button"
-      class="add-card-tab"
-      classList={{ active: props.active }}
+      {...stylex.props(styles.tab, props.active && styles.selected)}
       role="tab"
       aria-selected={props.active}
       onClick={props.onClick}
@@ -325,24 +334,26 @@ function WidgetRow(props: {
   return (
     <button
       type="button"
-      class="add-card-item"
-      classList={{ selected: props.selected }}
+      {...stylex.props(styles.item, props.selected && styles.selected)}
+      aria-pressed={props.selected}
       onClick={props.onSelect}
     >
-      <span class="add-card-item-icon">{props.widgetIconLabel(props.widget.icon)}</span>
-      <span class="add-card-item-info">
-        <span class="add-card-item-name">{props.widget.title}</span>
+      <span {...stylex.props(styles.itemIcon)}>{props.widgetIconLabel(props.widget.icon)}</span>
+      <span {...stylex.props(styles.itemInfo)}>
+        <span {...stylex.props(styles.itemName)}>{props.widget.title}</span>
         <Show when={props.widget.description}>
-          <span class="add-card-item-desc">{props.widget.description}</span>
+          <span {...stylex.props(styles.itemDescription)}>{props.widget.description}</span>
         </Show>
       </span>
-      <span class="add-card-item-meta">
-        <span class="add-card-source" classList={{ official: props.widget.source === "official" }}>
+      <span {...stylex.props(styles.itemMeta)}>
+        <span
+          {...stylex.props(styles.source, props.widget.source === "official" && styles.selected)}
+        >
           {props.widget.source === "official"
             ? props.t("chrome.addWidget.badge.official", "官方")
             : props.t("chrome.addWidget.badge.thirdParty", "第三方")}
         </span>
-        <span class="add-card-size-hint">{defaultSize(props.widget)}</span>
+        <span {...stylex.props(styles.sizeHint)}>{defaultSize(props.widget)}</span>
       </span>
     </button>
   )
@@ -356,11 +367,11 @@ function RightColumn(props: {
   t: TFn
 }) {
   return (
-    <div class="add-card-right">
+    <div {...stylex.props(styles.right)}>
       <Show
         when={props.widget}
         fallback={
-          <div class="add-card-preview-empty">
+          <div {...stylex.props(styles.previewEmpty)}>
             <span>{props.t("chrome.addWidget.previewEmpty", "请选择左侧的卡片查看预览")}</span>
           </div>
         }
@@ -371,7 +382,7 @@ function RightColumn(props: {
             <>
               <PreviewHead widget={widget} effectiveSize={props.effectiveSize} t={props.t} />
               <PreviewArea widget={widget} effectiveSize={props.effectiveSize} t={props.t} />
-              <div class="add-card-detail-row">
+              <div {...stylex.props(styles.detailRow)}>
                 <SizeSelector
                   supportedSizes={widget.supportedSizes ?? SIZE_OPTIONS}
                   effectiveSize={props.effectiveSize}
@@ -394,15 +405,15 @@ function PreviewHead(props: {
   t: TFn
 }) {
   return (
-    <div class="add-card-preview-head">
+    <div {...stylex.props(styles.previewHead)}>
       <div>
-        <div class="add-card-preview-label">
+        <div {...stylex.props(styles.previewLabel)}>
           {props.t("chrome.addWidget.previewLabel", "卡片预览")}
         </div>
-        <div class="add-card-preview-title">{props.widget.title}</div>
+        <div {...stylex.props(styles.previewTitle)}>{props.widget.title}</div>
       </div>
       <Show when={props.effectiveSize}>
-        <div class="add-card-preview-status">
+        <div {...stylex.props(styles.previewStatus)}>
           {props.t("chrome.addWidget.previewStatus", "预览 · {{size}}", {
             size: props.effectiveSize as string,
           })}
@@ -418,36 +429,38 @@ function PreviewArea(props: {
   t: TFn
 }) {
   return (
-    <div class="add-card-preview-area">
-      <div class="add-card-workspace-preview">
-        <div class="add-card-workspace-bar">
-          <span class="add-card-workspace-group">
-            <span class="add-card-workspace-dot" />
+    <div {...stylex.props(styles.previewArea)}>
+      <div {...stylex.props(styles.workspacePreview)}>
+        <div {...stylex.props(styles.workspaceBar)}>
+          <span {...stylex.props(styles.workspaceGroup)}>
+            <span {...stylex.props(styles.dot)} />
             {props.t("chrome.addWidget.workspaceBar.todayGroup", "今日")}
           </span>
           <span>{props.t("chrome.addWidget.workspaceBar.placement", "添加后放到分组末尾")}</span>
         </div>
-        <div class="add-card-workspace-grid">
+        <div {...stylex.props(styles.workspaceGrid)}>
           <div
-            class="add-card-preview-widget"
-            classList={{
-              "size-s": props.effectiveSize === "S",
-              "size-l": props.effectiveSize === "L",
-              "size-xl": props.effectiveSize === "XL",
-            }}
+            {...stylex.props(
+              styles.previewWidget,
+              props.effectiveSize === "S" && styles.previewS,
+              props.effectiveSize === "L" && styles.previewL,
+              props.effectiveSize === "XL" && styles.previewXL,
+            )}
           >
-            <div class="add-card-preview-widget-head">
-              <span class="add-card-preview-widget-title">{props.widget.title}</span>
+            <div {...stylex.props(styles.previewWidgetHead)}>
+              <span {...stylex.props(styles.previewWidgetTitle)}>{props.widget.title}</span>
               <span
-                class="add-card-preview-widget-badge"
-                classList={{ "third-party": props.widget.source !== "official" }}
+                {...stylex.props(
+                  styles.badge,
+                  props.widget.source !== "official" && styles.thirdParty,
+                )}
               >
                 {props.widget.source === "official"
                   ? props.t("chrome.addWidget.badge.official", "官方")
                   : props.t("chrome.addWidget.badge.thirdParty", "第三方")}
               </span>
             </div>
-            <div class="add-card-preview-widget-body">
+            <div {...stylex.props(styles.previewWidgetBody)}>
               <Show when={props.widget.description} fallback={<span>{props.widget.title}</span>}>
                 {props.widget.description}
               </Show>
@@ -466,14 +479,16 @@ function SizeSelector(props: {
   t: TFn
 }): JSX.Element {
   return (
-    <div class="add-card-size">
-      <div class="add-card-size-label">
-        <div class="add-card-size-title">{props.t("chrome.addWidget.size.title", "尺寸")}</div>
-        <div class="add-card-size-desc">
+    <div {...stylex.props(styles.box)}>
+      <div {...stylex.props(styles.sizeLabel)}>
+        <div {...stylex.props(styles.boxTitle)}>
+          {props.t("chrome.addWidget.size.title", "尺寸")}
+        </div>
+        <div {...stylex.props(styles.boxDescription)}>
           {props.t("chrome.addWidget.size.desc", "选择卡片在当前分组里的默认占位。")}
         </div>
       </div>
-      <div class="add-card-size-options" role="radiogroup">
+      <div {...stylex.props(styles.sizeOptions)} role="radiogroup">
         <For each={SIZE_OPTIONS}>
           {(size) => {
             const disabled = () => !props.supportedSizes.includes(size)
@@ -481,8 +496,7 @@ function SizeSelector(props: {
             return (
               <button
                 type="button"
-                class="add-card-size-btn"
-                classList={{ active: active() }}
+                {...stylex.props(styles.sizeButton, active() && styles.selected)}
                 role="radio"
                 aria-checked={active()}
                 disabled={disabled()}
@@ -500,26 +514,28 @@ function SizeSelector(props: {
 
 function WidgetMetaCard(props: { widget: AvailableWidget; t: TFn }) {
   return (
-    <div class="add-card-meta-card">
-      <div class="add-card-meta-title">{props.t("chrome.addWidget.meta.title", "信息")}</div>
-      <div class="add-card-meta-row">
+    <div {...stylex.props(styles.box, styles.metaCard)}>
+      <div {...stylex.props(styles.boxTitle)}>{props.t("chrome.addWidget.meta.title", "信息")}</div>
+      <div {...stylex.props(styles.metaRow)}>
         <span>{props.t("chrome.addWidget.meta.source", "来源")}</span>
-        <strong>
+        <strong {...stylex.props(styles.metaValue)}>
           {props.widget.source === "official"
             ? props.t("chrome.addWidget.source.official", "官方插件")
             : props.t("chrome.addWidget.source.thirdParty", "第三方插件")}
         </strong>
       </div>
       <Show when={props.widget.version}>
-        <div class="add-card-meta-row">
+        <div {...stylex.props(styles.metaRow)}>
           <span>{props.t("chrome.addWidget.meta.version", "版本")}</span>
-          <strong>v{props.widget.version}</strong>
+          <strong {...stylex.props(styles.metaValue)}>v{props.widget.version}</strong>
         </div>
       </Show>
       <Show when={props.widget.supportedSizes && props.widget.supportedSizes.length > 0}>
-        <div class="add-card-meta-row">
+        <div {...stylex.props(styles.metaRow)}>
           <span>{props.t("chrome.addWidget.meta.support", "支持")}</span>
-          <strong>{props.widget.supportedSizes!.join(" / ")}</strong>
+          <strong {...stylex.props(styles.metaValue)}>
+            {props.widget.supportedSizes!.join(" / ")}
+          </strong>
         </div>
       </Show>
     </div>
@@ -533,23 +549,27 @@ function ModalFooter(props: {
   t: TFn
 }) {
   return (
-    <div class="add-card-footer">
-      <div class="add-card-footer-left">
-        <a class="add-card-marketplace" href="#" onClick={(e) => e.preventDefault()}>
+    <div {...stylex.props(styles.footer)} data-workbench-overlay-footer>
+      <div {...stylex.props(styles.footerLeft)}>
+        <a {...stylex.props(styles.marketplace)} href="#" onClick={(e) => e.preventDefault()}>
           {props.t("chrome.addWidget.marketplace", "浏览插件市场")}
         </a>
-        <span class="add-card-footer-divider" />
-        <span class="add-card-footer-hint">
+        <span {...stylex.props(styles.divider)} />
+        <span {...stylex.props(styles.footerHint)}>
           {props.t("chrome.addWidget.shortcutHint", "Enter 添加 · Esc 关闭")}
         </span>
       </div>
-      <div class="add-card-footer-actions">
-        <button type="button" class="add-card-btn add-card-btn-subtle" onClick={props.onCancel}>
+      <div {...stylex.props(styles.footerActions)}>
+        <button
+          type="button"
+          {...stylex.props(styles.button, styles.buttonSubtle)}
+          onClick={props.onCancel}
+        >
           {props.t("chrome.addWidget.cancel", "取消")}
         </button>
         <button
           type="button"
-          class="add-card-btn"
+          {...stylex.props(styles.button)}
           disabled={props.disabled}
           onClick={(e) => e.preventDefault()}
         >
@@ -557,7 +577,7 @@ function ModalFooter(props: {
         </button>
         <button
           type="button"
-          class="add-card-btn add-card-btn-primary"
+          {...stylex.props(styles.button, styles.buttonPrimary)}
           disabled={props.disabled}
           onClick={props.onConfirm}
         >

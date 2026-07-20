@@ -1,8 +1,58 @@
 import { describe, expect, it } from "vitest"
 import { officialPlugins } from "@tabora/official-plugins"
+import officialPluginsManifest from "../../official-plugins/package.json"
+import layoutDashboardManifest from "../../../plugins/official/layout-dashboard/package.json"
+import widgetNotesManifest from "../../../plugins/official/widget-notes/package.json"
+import widgetQuickLinksManifest from "../../../plugins/official/widget-quick-links/package.json"
+import widgetTodoManifest from "../../../plugins/official/widget-todo/package.json"
+import widgetWeatherManifest from "../../../plugins/official/widget-weather/package.json"
 import { builtinPlugins } from "./index"
 
+const stylePackages = [
+  {
+    manifest: officialPluginsManifest,
+    buildEntry: "src/index.ts",
+  },
+  {
+    manifest: layoutDashboardManifest,
+    buildEntry: "src/index.tsx",
+  },
+  {
+    manifest: widgetNotesManifest,
+    buildEntry: "src/index.ts",
+  },
+  {
+    manifest: widgetQuickLinksManifest,
+    buildEntry: "src/index.ts",
+  },
+  {
+    manifest: widgetTodoManifest,
+    buildEntry: "src/index.ts",
+  },
+  {
+    manifest: widgetWeatherManifest,
+    buildEntry: "src/index.ts",
+  },
+] as const
+
 describe("builtinPlugins", () => {
+  it("standardizes independently loadable StyleX package assets", () => {
+    for (const stylePackage of stylePackages) {
+      const manifest = stylePackage.manifest as {
+        exports: Record<string, string>
+        publishConfig: { exports: Record<string, string> }
+        scripts: { build?: string }
+        dependencies: Record<string, string>
+      }
+
+      expect(manifest.exports["./styles.css"]).toBe("./src/styles.css")
+      expect(manifest.publishConfig.exports["./styles.css"]).toBe("./dist/styles.css")
+      expect(manifest.scripts.build).toContain("build-stylex-package.mjs")
+      expect(manifest.scripts.build).toContain(stylePackage.buildEntry)
+      expect(manifest.dependencies["@stylexjs/stylex"]).toBe("catalog:style")
+    }
+  })
+
   it("includes the official plugin pack plus community verification layouts", () => {
     expect(builtinPlugins.length).toBeGreaterThan(officialPlugins.length)
     expect(
@@ -42,5 +92,22 @@ describe("builtinPlugins", () => {
       ]),
     )
     expect(missingStyleAssets).toEqual([])
+    expect(
+      Object.fromEntries(
+        styledPlugins
+          .filter((plugin) =>
+            [
+              "official.search.command-bar",
+              "official.plugin-manager",
+              "official.settings.workspace",
+            ].includes(plugin.manifest.id),
+          )
+          .map((plugin) => [plugin.manifest.id, plugin.manifest.styles?.[0]?.href]),
+      ),
+    ).toEqual({
+      "official.search.command-bar": "./styles.css",
+      "official.plugin-manager": "./styles.css",
+      "official.settings.workspace": "./styles.css",
+    })
   })
 })

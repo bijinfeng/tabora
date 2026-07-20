@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js"
-import type { Workspace } from "@tabora/plugin-api"
+import type { PluginInstance, Workspace } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 
@@ -31,16 +31,23 @@ describe("createWorkbenchShellSurfaceProps", () => {
   })
 
   it("closes add widget after dispatching add and defaults empty context sections", () => {
-    const addWidget = vi.fn(async () => {})
+    const addedInstance = { id: "widget.notes-1" } as PluginInstance
+    const addWidget = vi.fn(async () => addedInstance)
+    const onAdded = vi.fn()
     const shell = createWorkbenchShellSurfaceStub({ addWidget })
-    shell.state.overlays.setAddWidgetOpen(true)
+    shell.state.overlays.setAddWidgetOpen(true, {
+      activeGroupLabel: "Research",
+      onAdded,
+    })
 
     const props = createWorkbenchShellSurfaceProps(shell)
     props.addWidgetModal.onAdd("plugin.widgets", "widget.notes")
 
     expect(addWidget).toHaveBeenCalledWith("plugin.widgets", "widget.notes", undefined)
+    expect(props.addWidgetModal.activeGroupLabel).toBe("Research")
     expect(shell.state.overlays.addWidgetOpen()).toBe(false)
     expect(props.contextMenuOverlay.sections).toEqual([])
+    return vi.waitFor(() => expect(onAdded).toHaveBeenCalledWith(addedInstance))
   })
 
   it("uses catalog active contribution lists for add widget and settings surfaces", () => {

@@ -16,9 +16,11 @@
     }
   },
   "scripts": {
+    "build": "node ../../../scripts/build-stylex-package.mjs --package . --entry src/index.ts --css-name styles.css",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@stylexjs/stylex": "catalog:style",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/ui": "workspace:*",

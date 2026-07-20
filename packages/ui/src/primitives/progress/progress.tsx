@@ -1,4 +1,5 @@
 import { Progress as KProgress } from "@kobalte/core/progress"
+import type { JSX } from "solid-js"
 import { Show } from "solid-js"
 
 export type ProgressVariant = "linear" | "circular"
@@ -10,8 +11,28 @@ export type ProgressProps = {
   size?: "sm" | "md" | "lg"
   indeterminate?: boolean
   showLabel?: boolean
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  trackClass?: string | undefined
+  trackStyle?: JSX.CSSProperties | undefined
+  fillClass?: string | undefined
+  fillStyle?: JSX.CSSProperties | undefined
+  svgClass?: string | undefined
+  svgStyle?: JSX.CSSProperties | undefined
+  circularBgClass?: string | undefined
+  circularBgStyle?: JSX.CSSProperties | undefined
+  circularFillClass?: string | undefined
+  circularFillStyle?: JSX.CSSProperties | undefined
+  circularTextClass?: string | undefined
+  circularTextStyle?: JSX.CSSProperties | undefined
   "aria-label"?: string
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function Progress(props: ProgressProps) {
@@ -31,13 +52,14 @@ export function Progress(props: ProgressProps) {
         {...rootProps()}
         value={props.value}
         maxValue={props.max ?? 100}
-        class={`tbr-progress ${props.class ?? ""}`}
+        class={props.class}
+        style={props.style}
         data-variant="linear"
         data-size={props.size ?? "md"}
         data-indeterminate={props.indeterminate ? "" : undefined}
       >
-        <KProgress.Track class="tbr-progress-track">
-          <KProgress.Fill class="tbr-progress-fill" />
+        <KProgress.Track {...optionalPartProps(props.trackClass, props.trackStyle)}>
+          <KProgress.Fill {...optionalPartProps(props.fillClass, props.fillStyle)} />
         </KProgress.Track>
       </KProgress>
     )
@@ -53,24 +75,24 @@ export function Progress(props: ProgressProps) {
   const offset = () => circumference() * (1 - props.value / (props.max ?? 100))
 
   return (
-    <div
-      class={`tbr-progress-circular ${props.class ?? ""}`}
-      data-size={props.size ?? "md"}
-      {...rootProps()}
-    >
+    <div class={props.class} style={props.style} data-size={props.size ?? "md"} {...rootProps()}>
       <svg
+        class={props.svgClass}
+        style={props.svgStyle}
         width={circleSize()}
         height={circleSize()}
         viewBox={`0 0 ${circleSize()} ${circleSize()}`}
       >
         <circle
-          class="tbr-progress-circular-bg"
+          class={props.circularBgClass}
+          style={props.circularBgStyle}
           cx={circleSize() / 2}
           cy={circleSize() / 2}
           r={radius()}
         />
         <circle
-          class="tbr-progress-circular-fill"
+          class={props.circularFillClass}
+          style={props.circularFillStyle}
           cx={circleSize() / 2}
           cy={circleSize() / 2}
           r={radius()}
@@ -79,7 +101,9 @@ export function Progress(props: ProgressProps) {
         />
       </svg>
       <Show when={props.showLabel}>
-        <div class="tbr-progress-circular-text">{percentage()}%</div>
+        <div class={props.circularTextClass} style={props.circularTextStyle}>
+          {percentage()}%
+        </div>
       </Show>
     </div>
   )

@@ -1,16 +1,16 @@
 import { Progress } from "./progress.styled"
-import "./progress.demo.css"
+import { demoStyles, sx } from "../demoStyles"
 
 export function ProgressDemo() {
   return (
-    <div class="docs-control-stack">
-      <div class="demo-section">
-        <h4>线性 — 尺寸</h4>
-        <div class="demo-col">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.sectionRoomy)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>线性 — 尺寸</h4>
+        <div {...sx(demoStyles.col)}>
           <Progress value={100} size="sm" aria-label="小尺寸进度 100%" />
           <div>
             <Progress value={60} aria-label="默认尺寸进度 60%" />
-            <div class="progress-label">
+            <div {...sx(demoStyles.progressLabel)}>
               <span>60%</span>
               <span>3/5 完成</span>
             </div>
@@ -19,16 +19,16 @@ export function ProgressDemo() {
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>圆形</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.sectionRoomy)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>圆形</h4>
+        <div {...sx(demoStyles.row)}>
           <Progress value={60} variant="circular" showLabel aria-label="圆形进度 60%" />
         </div>
       </div>
 
-      <div class="demo-section">
-        <h4>导入插件包</h4>
-        <div class="demo-row">
+      <div {...sx(demoStyles.sectionRoomy)}>
+        <h4 {...sx(demoStyles.sectionTitle)}>导入插件包</h4>
+        <div {...sx(demoStyles.row)}>
           <div style={{ width: "180px" }}>
             <Progress value={0} indeterminate aria-label="导入插件包进度" />
           </div>

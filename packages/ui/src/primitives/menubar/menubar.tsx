@@ -12,7 +12,12 @@ export type MenubarProps = {
   value: string
   onChange: (value: string) => void
   items: MenubarItem[]
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  itemClass?: string | undefined
+  itemStyle?: JSX.CSSProperties | undefined
+  itemPressedClass?: string | undefined
+  itemPressedStyle?: JSX.CSSProperties | undefined
   "aria-label": string
 }
 
@@ -20,6 +25,7 @@ export function Menubar(props: MenubarProps) {
   return (
     <KToggleGroup
       class={props.class}
+      style={props.style}
       aria-label={props["aria-label"]}
       value={props.value}
       onChange={(value) => value && props.onChange(value)}
@@ -27,7 +33,17 @@ export function Menubar(props: MenubarProps) {
       <For each={props.items}>
         {(item) => (
           <KToggleGroup.Item
-            class="tbr-menubar-item"
+            class={[
+              props.itemClass,
+              item.value === props.value ? props.itemPressedClass : undefined,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            style={
+              item.value === props.value
+                ? { ...props.itemStyle, ...props.itemPressedStyle }
+                : props.itemStyle
+            }
             value={item.value}
             {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
           >

@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../styled/demoStyles"
 import { Alert } from "../styled/callout"
 import { Badge } from "../styled/badge"
 import { Button } from "../styled/button"
@@ -20,9 +21,9 @@ export function PatternsDemo() {
   const [selectValue, setSelectValue] = createSignal<"google" | "github" | "docs">("google")
 
   return (
-    <div class="docs-pattern-grid">
+    <div {...sx(demoStyles.patternGrid)}>
       <CardSection title="插件设置">
-        <div class="docs-stack">
+        <div {...sx(demoStyles.stack)}>
           <ListRow
             primary="启用插件"
             trailing={<Switch checked={enabled()} onChange={setEnabled} aria-label="启用插件" />}
@@ -32,7 +33,7 @@ export function PatternsDemo() {
         </div>
       </CardSection>
       <CardSection title="搜索配置">
-        <div class="docs-stack">
+        <div {...sx(demoStyles.stack)}>
           <Field label="默认搜索源" htmlFor="pattern-search">
             <Select
               id="pattern-search"

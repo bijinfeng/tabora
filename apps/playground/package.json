@@ -20,6 +20,7 @@
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*",
+    "@tabora/stylex-config": "workspace:*",
     "@tabora/tsconfig": "workspace:*",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build"

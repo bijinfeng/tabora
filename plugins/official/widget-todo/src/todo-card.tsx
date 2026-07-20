@@ -2,6 +2,7 @@ import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Checkbox, Skeleton } from "@tabora/ui"
 import { ChevronDown, ChevronRight, Circle, ArrowUpRight } from "lucide-solid"
+import { styles, sx } from "./styles"
 
 type Priority = "high" | "medium" | "low" | "none"
 
@@ -135,36 +136,39 @@ export function TodoCard(props: WidgetViewProps) {
   }
 
   return (
-    <div class="todo-card-widget">
-      <div class="card-toolbar">
+    <div {...sx(styles.root)} data-todo-card>
+      <div {...sx(styles.toolbar)}>
         <button
-          class="card-tab"
-          classList={{ active: filter() === "todo" }}
+          {...sx(styles.tab, filter() === "todo" && styles.active)}
           type="button"
           onClick={() => setFilter("todo")}
         >
           未完成
-          <span class="card-count-badge">{todoCount()}</span>
+          <span {...sx(styles.badge)}>{todoCount()}</span>
         </button>
         <button
-          class="card-tab"
-          classList={{ active: filter() === "all" }}
+          {...sx(styles.tab, filter() === "all" && styles.active)}
           type="button"
           onClick={() => setFilter("all")}
         >
           全部
         </button>
-        <div class="card-spacer" />
-        <button class="card-expand-btn" type="button" onClick={() => props.host.openExpand()}>
+        <div {...sx(styles.spacer)} />
+        <button
+          {...sx(styles.outlineButton)}
+          data-todo-expand
+          type="button"
+          onClick={() => props.host.openExpand()}
+        >
           展开 <ArrowUpRight size={12} />
         </button>
       </div>
 
-      <div class="card-list">
+      <div {...sx(styles.list)}>
         <Show
           when={!loading()}
           fallback={
-            <div class="card-skeleton">
+            <div {...sx(styles.skeleton)}>
               <Skeleton height="24px" width="100%" />
               <Skeleton height="24px" width="90%" />
               <Skeleton height="24px" width="85%" />
@@ -176,22 +180,22 @@ export function TodoCard(props: WidgetViewProps) {
               const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
               return (
                 <Show when={groupItems().length > 0}>
-                  <div class="card-group">
-                    <div class="card-group-header" onClick={() => void toggleGroup(group.id)}>
-                      <span class="card-group-arrow">
+                  <div {...sx(styles.group)}>
+                    <div {...sx(styles.groupHeader)} onClick={() => void toggleGroup(group.id)}>
+                      <span {...sx(styles.arrow)}>
                         {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                       </span>
-                      <span class="card-group-name">{group.name}</span>
-                      <span class="card-group-count">{groupItems().length}</span>
+                      <span {...sx(styles.groupName)}>{group.name}</span>
+                      <span {...sx(styles.count)}>{groupItems().length}</span>
                     </div>
 
                     <Show when={!group.collapsed}>
-                      <div class="card-group-items">
+                      <div {...sx(styles.groupItems)}>
                         <For each={groupItems()}>
                           {(item) => (
-                            <div class="card-item" classList={{ done: item.done }}>
+                            <div {...sx(styles.item, item.done && styles.done)}>
                               <span
-                                class="card-priority-dot"
+                                {...sx(styles.priorityDot)}
                                 style={{ color: PRIORITY_COLORS[item.priority] }}
                               >
                                 <Circle size={7} fill="currentColor" />
@@ -201,13 +205,12 @@ export function TodoCard(props: WidgetViewProps) {
                                 aria-label={`标记 ${item.text} 完成`}
                                 onChange={() => void toggleItem(item.id)}
                               />
-                              <span class="card-text" classList={{ done: item.done }}>
+                              <span {...sx(styles.text, item.done && styles.textDone)}>
                                 {item.text}
                               </span>
                               <Show when={item.dueDate}>
                                 <span
-                                  class="card-due-date"
-                                  classList={{ overdue: isOverdue(item.dueDate) }}
+                                  {...sx(styles.due, isOverdue(item.dueDate) && styles.overdue)}
                                 >
                                   {formatDate(item.dueDate)}
                                 </span>

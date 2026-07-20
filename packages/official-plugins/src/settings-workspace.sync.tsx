@@ -1,6 +1,7 @@
 import { Badge, Button, FieldRow, Switch } from "@tabora/ui"
 import { createSignal, onMount } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import { className, styles, sx } from "./styles"
 
 function formatSyncTime(iso: string): string {
   const date = new Date(iso)
@@ -72,19 +73,19 @@ export function SyncSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   return (
-    <div class="settings-panel-stack">
-      <section class="set-group">
-        <div class="set-group-title">
+    <div {...sx(styles.panelStack)} data-settings-panel="sync">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
           同步状态<span>{overallStatus()}</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label={modeLabel()}
           description={lastSyncLabel()}
           trailing={<Badge variant={sync() ? "accent" : "neutral"}>{queueStatus()}</Badge>}
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="后台自动同步"
           trailing={
             <Switch
@@ -96,7 +97,7 @@ export function SyncSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="立即同步"
           trailing={
             <Button
@@ -109,7 +110,7 @@ export function SyncSettingsPanel(props: SettingsPanelViewProps) {
             </Button>
           }
         />
-        <span class="auth-status">{status()}</span>
+        <span {...sx(styles.authStatus)}>{status()}</span>
       </section>
     </div>
   )

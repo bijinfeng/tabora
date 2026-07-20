@@ -1,5 +1,7 @@
 import { createMemo, Match, Switch } from "solid-js"
+import * as stylex from "@stylexjs/stylex"
 
+import { sx } from "../../../shared/stylex"
 import {
   type DocsComponentDemo,
   type DocsComponentSpec,
@@ -12,6 +14,264 @@ import {
 import { getDocsExample } from "../docsExamples"
 import { DocsCodeBlock, DocsSpecTable } from "./DocsCodeBlock"
 
+const styles = stylex.create({
+  main: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 40,
+    maxWidth: 1100,
+    minWidth: 0,
+    padding: 32,
+    "@media (max-width: 900px)": {
+      padding: "24px 16px 48px",
+    },
+  },
+  section: {
+    display: "grid",
+    gap: 18,
+    scrollMarginTop: 20,
+  },
+  sectionHead: {
+    display: "grid",
+    gap: 8,
+    marginBottom: 20,
+    maxWidth: 760,
+  },
+  eyebrow: {
+    color: "rgb(var(--tbr-color-accent))",
+    fontSize: 10,
+    fontWeight: 700,
+    margin: 0,
+    textTransform: "uppercase",
+  },
+  sectionTitle: {
+    color: "rgb(var(--tbr-color-text))",
+    fontSize: 24,
+    fontWeight: 700,
+    lineHeight: 1.25,
+    margin: 0,
+  },
+  body: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 13,
+    lineHeight: 1.62,
+    margin: 0,
+  },
+  demo: {
+    display: "grid",
+    gap: 0,
+    marginBottom: 18,
+    minWidth: 0,
+  },
+  demoHead: {
+    alignItems: "center",
+    borderBottom: "1px solid rgb(var(--tbr-color-line))",
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 14,
+    paddingBottom: 8,
+  },
+  demoTitle: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontSize: 11,
+    fontWeight: 700,
+    margin: 0,
+    textTransform: "uppercase",
+  },
+  demoBody: {
+    display: "grid",
+    gap: 12,
+    minWidth: 0,
+    paddingBottom: 16,
+  },
+  codeBlock: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-card)",
+    marginBottom: 18,
+    overflow: "hidden",
+  },
+  codeHead: {
+    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    borderBottom: "1px solid rgb(var(--tbr-color-line))",
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontFamily: "var(--tbr-font-mono)",
+    fontSize: 11,
+    paddingBlock: 8,
+    paddingInline: 14,
+  },
+  codeWindow: {
+    overflowX: "auto",
+  },
+  pre: {
+    color: "rgb(var(--tbr-color-text))",
+    fontFamily: "var(--tbr-font-mono)",
+    fontSize: 12,
+    lineHeight: 1.65,
+    margin: 0,
+    paddingBlock: 16,
+    paddingInline: 18,
+    whiteSpace: "pre",
+  },
+  anatomy: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-card)",
+    padding: 14,
+  },
+  anatomyTitle: {
+    fontSize: 13,
+    margin: 0,
+  },
+  anatomyList: {
+    display: "grid",
+    gap: 7,
+    margin: "10px 0 0",
+    paddingLeft: 18,
+  },
+  anatomyItem: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 13,
+    lineHeight: 1.62,
+  },
+  doDont: {
+    display: "grid",
+    gap: 12,
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    "@media (max-width: 900px)": {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  doDontPanel: {
+    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-card)",
+    display: "grid",
+    gap: 8,
+    padding: 14,
+  },
+  doDontTitle: {
+    fontSize: 13,
+    margin: 0,
+  },
+  button: {
+    alignItems: "center",
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-control)",
+    color: "rgb(var(--tbr-color-text))",
+    display: "inline-flex",
+    fontSize: 13,
+    fontWeight: 650,
+    justifyContent: "center",
+    minHeight: 38,
+    paddingInline: 14,
+    textDecoration: "none",
+    width: "fit-content",
+  },
+  compHeader: {
+    display: "grid",
+    gap: 8,
+    marginBottom: 20,
+  },
+  compTitle: {
+    color: "rgb(var(--tbr-color-text))",
+    fontSize: 24,
+    lineHeight: 1.2,
+    margin: 0,
+  },
+  meta: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10,
+  },
+  metaTag: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: "var(--tbr-radius-pill)",
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontSize: 10,
+    fontWeight: 500,
+    paddingBlock: 2,
+    paddingInline: 8,
+    whiteSpace: "nowrap",
+  },
+  swatches: {
+    display: "grid",
+    gap: 8,
+    gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+  },
+  swatch: {
+    borderColor: "transparent",
+    borderRadius: "var(--tbr-radius-panel)",
+    borderStyle: "solid",
+    borderWidth: 1,
+    fontSize: 12,
+    fontWeight: 600,
+    paddingBlock: 10,
+    paddingInline: 12,
+  },
+  swatchAccent: {
+    backgroundColor: "rgb(var(--tbr-color-accent))",
+    color: "rgb(var(--tbr-color-inverse))",
+  },
+  swatchAccentSoft: {
+    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    color: "rgb(var(--tbr-color-accent))",
+  },
+  swatchSurface: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    color: "rgb(var(--tbr-color-text))",
+  },
+  swatchSurfaceSoft: {
+    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    color: "rgb(var(--tbr-color-text))",
+  },
+  swatchSurfaceHover: {
+    backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    color: "rgb(var(--tbr-color-text))",
+  },
+  swatchPage: {
+    backgroundColor: "rgb(var(--tbr-color-page))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    color: "rgb(var(--tbr-color-text))",
+  },
+  swatchDanger: {
+    backgroundColor: "rgb(var(--tbr-color-danger))",
+    color: "rgb(var(--tbr-color-inverse))",
+  },
+  swatchSuccess: {
+    backgroundColor: "rgb(var(--tbr-color-success))",
+    color: "rgb(var(--tbr-color-inverse))",
+  },
+})
+
+function swatchToneStyle(tone: DocsPageContent["sections"]["tokens"]["swatches"][number]["tone"]) {
+  switch (tone) {
+    case "accent":
+      return styles.swatchAccent
+    case "accentSoft":
+      return styles.swatchAccentSoft
+    case "surface":
+      return styles.swatchSurface
+    case "surfaceSoft":
+      return styles.swatchSurfaceSoft
+    case "surfaceHover":
+      return styles.swatchSurfaceHover
+    case "page":
+      return styles.swatchPage
+    case "danger":
+      return styles.swatchDanger
+    case "success":
+      return styles.swatchSuccess
+  }
+}
+
 export function DocsGuideSections(props: {
   content: DocsPageContent
   locale: "zh-CN" | "en"
@@ -22,7 +282,7 @@ export function DocsGuideSections(props: {
   )
 
   return (
-    <main class="main">
+    <main {...sx(styles.main)}>
       <Switch fallback={<MissingDocsSection id={page().id} locale={props.locale} />}>
         <Match when={page().kind === "guide" && page().id === "quickstart"}>
           <QuickstartSection section={props.content.sections.quickstart} />
@@ -51,26 +311,26 @@ export function DocsGuideSections(props: {
 
 function QuickstartSection(props: { section: DocsPageContent["sections"]["quickstart"] }) {
   return (
-    <section class="comp-spec" id="quickstart">
+    <section {...sx(styles.section)} id="quickstart">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
       {props.section.demos.map((demo) => (
-        <div class="demo-section">
-          <div class="demo-section-head">
-            <h4>{demo.title}</h4>
+        <div {...sx(styles.demo)} data-docs-demo>
+          <div {...sx(styles.demoHead)}>
+            <h4 {...sx(styles.demoTitle)}>{demo.title}</h4>
           </div>
-          <div class="demo-body">
+          <div {...sx(styles.demoBody)}>
             {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
             {demo.treeBlock ? (
-              <div class="code-block">
-                <div class="code-head">
+              <div {...sx(styles.codeBlock)} data-docs-code>
+                <div {...sx(styles.codeHead)}>
                   <span>{demo.treeBlock.label}</span>
                 </div>
-                <div class="code-window">
-                  <pre>
+                <div {...sx(styles.codeWindow)}>
+                  <pre {...sx(styles.pre)}>
                     <code>{demo.treeBlock.code}</code>
                   </pre>
                 </div>
@@ -85,17 +345,17 @@ function QuickstartSection(props: { section: DocsPageContent["sections"]["quicks
 
 function ManifestSection(props: { section: DocsPageContent["sections"]["manifest"] }) {
   return (
-    <section class="comp-spec" id="manifest">
+    <section {...sx(styles.section)} id="manifest">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
-      <div class="anatomy-box">
-        <h4>{props.section.anatomyTitle}</h4>
-        <ul>
+      <div {...sx(styles.anatomy)}>
+        <h4 {...sx(styles.anatomyTitle)}>{props.section.anatomyTitle}</h4>
+        <ul {...sx(styles.anatomyList)}>
           {props.section.anatomyItems.map((item) => (
-            <li>{item}</li>
+            <li {...sx(styles.anatomyItem)}>{item}</li>
           ))}
         </ul>
       </div>
@@ -107,18 +367,18 @@ function ManifestSection(props: { section: DocsPageContent["sections"]["manifest
 
 function RuntimeSection(props: { section: DocsPageContent["sections"]["runtime"] }) {
   return (
-    <section class="comp-spec" id="runtime">
+    <section {...sx(styles.section)} id="runtime">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
       {props.section.demos.map((demo) => (
-        <div class="demo-section">
-          <div class="demo-section-head">
-            <h4>{demo.title}</h4>
+        <div {...sx(styles.demo)} data-docs-demo>
+          <div {...sx(styles.demoHead)}>
+            <h4 {...sx(styles.demoTitle)}>{demo.title}</h4>
           </div>
-          <div class="demo-body">
+          <div {...sx(styles.demoBody)}>
             {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
           </div>
         </div>
@@ -130,21 +390,21 @@ function RuntimeSection(props: { section: DocsPageContent["sections"]["runtime"]
 
 function ContributionsSection(props: { section: DocsPageContent["sections"]["contributions"] }) {
   return (
-    <section class="comp-spec" id="contributions">
+    <section {...sx(styles.section)} id="contributions">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
       <DocsSpecTable table={props.section.table} />
-      <div class="do-dont">
-        <div class="do">
-          <h5>{props.section.doTitle}</h5>
-          <p>{props.section.doBody}</p>
+      <div {...sx(styles.doDont)}>
+        <div {...sx(styles.doDontPanel)}>
+          <h5 {...sx(styles.doDontTitle)}>{props.section.doTitle}</h5>
+          <p {...sx(styles.body)}>{props.section.doBody}</p>
         </div>
-        <div class="dont">
-          <h5>{props.section.dontTitle}</h5>
-          <p>{props.section.dontBody}</p>
+        <div {...sx(styles.doDontPanel)}>
+          <h5 {...sx(styles.doDontTitle)}>{props.section.dontTitle}</h5>
+          <p {...sx(styles.body)}>{props.section.dontBody}</p>
         </div>
       </div>
     </section>
@@ -153,26 +413,20 @@ function ContributionsSection(props: { section: DocsPageContent["sections"]["con
 
 function TokensSection(props: { section: DocsPageContent["sections"]["tokens"] }) {
   return (
-    <section class="comp-spec" id="tokens">
+    <section {...sx(styles.section)} id="tokens">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
-      <div class="demo-section">
-        <div class="demo-section-head">
-          <h4>{props.section.previewTitle}</h4>
+      <div {...sx(styles.demo)} data-docs-demo>
+        <div {...sx(styles.demoHead)}>
+          <h4 {...sx(styles.demoTitle)}>{props.section.previewTitle}</h4>
         </div>
-        <div class="demo-body">
-          <div
-            style="
-              display: grid;
-              grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-              gap: 8px;
-            "
-          >
+        <div {...sx(styles.demoBody)}>
+          <div {...sx(styles.swatches)}>
             {props.section.swatches.map((swatch) => (
-              <div style={swatch.style}>{swatch.name}</div>
+              <div {...sx(styles.swatch, swatchToneStyle(swatch.tone))}>{swatch.name}</div>
             ))}
           </div>
         </div>
@@ -186,7 +440,7 @@ function MissingDocsSection(props: { id: string; locale: "zh-CN" | "en" }) {
   const isEnglish = props.locale === "en"
 
   return (
-    <section class="comp-spec">
+    <section {...sx(styles.section)}>
       <DocsSectionHead
         eyebrow={isEnglish ? "NOT FOUND" : "未找到"}
         title={isEnglish ? "This docs page does not exist" : "没有找到这个文档页面"}
@@ -196,7 +450,7 @@ function MissingDocsSection(props: { id: string; locale: "zh-CN" | "en" }) {
             : "请从左侧导航选择一个文档页面继续。"
         }
       />
-      <a class="btn btn-secondary" href={getDocsSectionPath(defaultDocsSectionId)}>
+      <a {...sx(styles.button)} href={getDocsSectionPath(defaultDocsSectionId)}>
         {isEnglish ? "Back to quick start" : "返回快速开始"}
       </a>
     </section>
@@ -205,53 +459,53 @@ function MissingDocsSection(props: { id: string; locale: "zh-CN" | "en" }) {
 
 function DocsSectionHead(props: { eyebrow: string; title: string; description: string }) {
   return (
-    <div class="section-head">
-      <p class="eyebrow">{props.eyebrow}</p>
-      <h2>{props.title}</h2>
-      <p>{props.description}</p>
+    <div {...sx(styles.sectionHead)}>
+      <p {...sx(styles.eyebrow)}>{props.eyebrow}</p>
+      <h2 {...sx(styles.sectionTitle)}>{props.title}</h2>
+      <p {...sx(styles.body)}>{props.description}</p>
     </div>
   )
 }
 
 function DocsComponentSpecSection(props: { spec: DocsComponentSpec; locale: "zh-CN" | "en" }) {
   return (
-    <section class="comp-spec" id={props.spec.id}>
-      <div class="comp-header">
-        <h3>{props.spec.title}</h3>
-        <p>{props.spec.description}</p>
-        <div class="comp-meta">
+    <section {...sx(styles.section)} id={props.spec.id}>
+      <div {...sx(styles.compHeader)}>
+        <h3 {...sx(styles.compTitle)}>{props.spec.title}</h3>
+        <p {...sx(styles.body)}>{props.spec.description}</p>
+        <div {...sx(styles.meta)}>
           {props.spec.metaTags.map((tag) => (
-            <span class="comp-meta-tag">{tag}</span>
+            <span {...sx(styles.metaTag)}>{tag}</span>
           ))}
         </div>
       </div>
       {props.spec.anatomyTitle ? (
-        <div class="anatomy-box">
-          <h4>{props.spec.anatomyTitle}</h4>
-          <ul>
+        <div {...sx(styles.anatomy)}>
+          <h4 {...sx(styles.anatomyTitle)}>{props.spec.anatomyTitle}</h4>
+          <ul {...sx(styles.anatomyList)}>
             {props.spec.anatomyItems?.map((item) => (
-              <li>{item}</li>
+              <li {...sx(styles.anatomyItem)}>{item}</li>
             ))}
           </ul>
         </div>
       ) : null}
       {props.spec.demos.map((demo) => (
-        <div class="demo-section">
-          <div class="demo-section-head">
-            <h4>{demo.title}</h4>
+        <div {...sx(styles.demo)} data-docs-demo>
+          <div {...sx(styles.demoHead)}>
+            <h4 {...sx(styles.demoTitle)}>{demo.title}</h4>
           </div>
           <DocsComponentDemoView demo={demo} locale={props.locale} />
         </div>
       ))}
       <DocsSpecTable table={props.spec.table} />
-      <div class="do-dont">
-        <div class="do">
-          <h5>{props.spec.doTitle}</h5>
-          <p>{props.spec.doBody}</p>
+      <div {...sx(styles.doDont)}>
+        <div {...sx(styles.doDontPanel)}>
+          <h5 {...sx(styles.doDontTitle)}>{props.spec.doTitle}</h5>
+          <p {...sx(styles.body)}>{props.spec.doBody}</p>
         </div>
-        <div class="dont">
-          <h5>{props.spec.dontTitle}</h5>
-          <p>{props.spec.dontBody}</p>
+        <div {...sx(styles.doDontPanel)}>
+          <h5 {...sx(styles.doDontTitle)}>{props.spec.dontTitle}</h5>
+          <p {...sx(styles.body)}>{props.spec.dontBody}</p>
         </div>
       </div>
       {props.spec.pluginExample ? <DocsCodeBlock block={props.spec.pluginExample} /> : null}
@@ -266,7 +520,9 @@ function DocsComponentDemoView(props: { demo: DocsComponentDemo; locale: "zh-CN"
 
     return (
       <>
-        <div class="demo-body">{example.render()}</div>
+        <div {...sx(styles.demoBody)} data-docs-demo>
+          {example.render()}
+        </div>
         <DocsCodeBlock
           block={{
             label: example.language.toUpperCase(),
@@ -281,7 +537,7 @@ function DocsComponentDemoView(props: { demo: DocsComponentDemo; locale: "zh-CN"
 
   return (
     <>
-      <div class="demo-body">
+      <div {...sx(styles.demoBody)} data-docs-demo>
         <div innerHTML={props.demo.previewHtml} />
       </div>
       <DocsCodeBlock block={props.demo.codeBlock} />

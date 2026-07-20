@@ -186,7 +186,9 @@ describe("createWorkbenchInstanceRenderer", () => {
     } as Parameters<typeof createWorkbenchInstanceRenderer>[0])
 
     const { host, dispose } = mount(renderer.renderWidget(instance()))
-    expect(host.querySelector("button.card-danger")?.getAttribute("aria-label")).toBe("Remove 便签")
+    expect(host.querySelector("[data-widget-card-remove]")?.getAttribute("aria-label")).toBe(
+      "Remove 便签",
+    )
     dispose()
   })
 
@@ -209,7 +211,7 @@ describe("createWorkbenchInstanceRenderer", () => {
 
     const { host, dispose } = mount(renderer.renderWidget(instance()))
     expect(host.textContent).toContain("Plugin view failed to load")
-    expect(host.querySelector(".plugin-error-retry-btn")?.textContent).toBe("Retry")
+    expect(host.querySelector("[data-plugin-error-retry]")?.textContent).toBe("Retry")
     dispose()
   })
 
@@ -222,7 +224,7 @@ describe("createWorkbenchInstanceRenderer", () => {
     })
 
     const { host, dispose } = mount(renderer.renderWidget(instance()))
-    const title = host.querySelector(".card-title") as HTMLElement
+    const title = host.querySelector("[data-widget-card-title]") as HTMLElement
     const event = new MouseEvent("contextmenu", {
       bubbles: true,
       cancelable: true,

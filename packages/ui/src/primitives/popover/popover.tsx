@@ -9,8 +9,10 @@ export type PopoverProps = {
   onClose?: () => void
   title?: JSX.Element
   showArrow?: boolean
-  class?: string
-  triggerClass?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  triggerClass?: string | undefined
+  triggerStyle?: JSX.CSSProperties | undefined
   triggerClassList?: Record<string, boolean>
   triggerDisabled?: boolean
   triggerId?: string
@@ -18,6 +20,19 @@ export type PopoverProps = {
   triggerAriaLabel?: string
   trigger: JSX.Element
   children: JSX.Element
+  arrowClass?: string | undefined
+  arrowStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  bodyClass?: string | undefined
+  bodyStyle?: JSX.CSSProperties | undefined
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function Popover(props: PopoverProps) {
@@ -29,7 +44,9 @@ export function Popover(props: PopoverProps) {
     "title",
     "showArrow",
     "class",
+    "style",
     "triggerClass",
+    "triggerStyle",
     "triggerClassList",
     "triggerDisabled",
     "triggerId",
@@ -37,6 +54,12 @@ export function Popover(props: PopoverProps) {
     "triggerAriaLabel",
     "trigger",
     "children",
+    "arrowClass",
+    "arrowStyle",
+    "titleClass",
+    "titleStyle",
+    "bodyClass",
+    "bodyStyle",
   ])
   return (
     <KPopover
@@ -50,6 +73,7 @@ export function Popover(props: PopoverProps) {
     >
       <KPopover.Trigger
         class={local.triggerClass}
+        style={local.triggerStyle}
         classList={local.triggerClassList}
         disabled={local.triggerDisabled}
         {...(local.triggerId !== undefined ? { id: local.triggerId } : {})}
@@ -59,14 +83,18 @@ export function Popover(props: PopoverProps) {
         {local.trigger}
       </KPopover.Trigger>
       <KPopover.Portal>
-        <KPopover.Content class={local.class ? `tbr-popover ${local.class}` : "tbr-popover"}>
+        <KPopover.Content {...optionalPartProps(local.class, local.style)}>
           <Show when={local.showArrow}>
-            <KPopover.Arrow class="tbr-popover-arrow" size={10} />
+            <KPopover.Arrow {...optionalPartProps(local.arrowClass, local.arrowStyle)} size={10} />
           </Show>
           <Show when={local.title}>
-            <div class="tbr-popover-title">{local.title}</div>
+            <div class={local.titleClass} style={local.titleStyle}>
+              {local.title}
+            </div>
           </Show>
-          <div class="tbr-popover-body">{local.children}</div>
+          <div class={local.bodyClass} style={local.bodyStyle}>
+            {local.children}
+          </div>
         </KPopover.Content>
       </KPopover.Portal>
     </KPopover>

@@ -15,14 +15,39 @@ export type RadioGroupProps<V extends string> = {
   options: RadioGroupOption<V>[]
   onChange: (value: V) => void
   direction?: "vertical" | "horizontal"
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  listClass?: string | undefined
+  listStyle?: JSX.CSSProperties | undefined
+  itemClass?: string | undefined
+  itemCheckedClass?: string | undefined
+  itemDisabledClass?: string | undefined
+  inputClass?: string | undefined
+  inputStyle?: JSX.CSSProperties | undefined
+  controlClass?: string | undefined
+  controlCheckedClass?: string | undefined
+  contentClass?: string | undefined
+  labelClass?: string | undefined
+  descriptionClass?: string | undefined
   "aria-label"?: string
+}
+
+function joinClasses(...classes: Array<string | undefined>) {
+  return classes.filter(Boolean).join(" ") || undefined
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function RadioGroup<V extends string>(props: RadioGroupProps<V>) {
   return (
     <KRadioGroup
       {...(props.class ? { class: props.class } : {})}
+      {...(props.style ? { style: props.style } : {})}
       data-direction={props.direction ?? "vertical"}
       name={props.name}
       value={props.value}
@@ -30,20 +55,29 @@ export function RadioGroup<V extends string>(props: RadioGroupProps<V>) {
       orientation={props.direction === "horizontal" ? "horizontal" : "vertical"}
       {...(props["aria-label"] ? { "aria-label": props["aria-label"] } : {})}
     >
-      <div role="presentation" class="tbr-radio-group-list">
+      <div role="presentation" class={props.listClass} style={props.listStyle}>
         <For each={props.options}>
           {(opt) => (
             <KRadioGroup.Item
-              class="tbr-radio-item"
+              class={joinClasses(
+                props.itemClass,
+                props.value === opt.value ? props.itemCheckedClass : undefined,
+                opt.disabled ? props.itemDisabledClass : undefined,
+              )}
               value={opt.value}
               {...(opt.disabled !== undefined ? { disabled: opt.disabled } : {})}
             >
-              <KRadioGroup.ItemInput class="tbr-radio-input" />
-              <KRadioGroup.ItemControl class="tbr-radio-control" />
-              <span class="tbr-radio-content">
-                <KRadioGroup.ItemLabel class="tbr-radio-label">{opt.label}</KRadioGroup.ItemLabel>
+              <KRadioGroup.ItemInput {...optionalPartProps(props.inputClass, props.inputStyle)} />
+              <KRadioGroup.ItemControl
+                class={joinClasses(
+                  props.controlClass,
+                  props.value === opt.value ? props.controlCheckedClass : undefined,
+                )}
+              />
+              <span class={props.contentClass}>
+                <KRadioGroup.ItemLabel class={props.labelClass}>{opt.label}</KRadioGroup.ItemLabel>
                 {opt.description && (
-                  <KRadioGroup.ItemDescription class="tbr-radio-desc">
+                  <KRadioGroup.ItemDescription class={props.descriptionClass}>
                     {opt.description}
                   </KRadioGroup.ItemDescription>
                 )}

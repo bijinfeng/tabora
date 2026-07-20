@@ -64,7 +64,7 @@ describe("WorkbenchShellSurfaceHost", () => {
     expect(root.textContent).toContain("已保存")
     expect(root.textContent).toContain("打开设置")
 
-    root.querySelector<HTMLButtonElement>(".toast-action")?.click()
+    root.querySelector<HTMLButtonElement>("[data-toast-action]")?.click()
     expect(runCommand).toHaveBeenCalledWith("undo-save", {})
 
     root.remove()
@@ -148,8 +148,8 @@ describe("WorkbenchShellSurfaceHost", () => {
 
     expect(root.textContent).toContain("Expanded view unavailable: missing.view")
     expect(root.textContent).toContain("Esc to close")
-    expect(root.querySelector(".modal-close")?.getAttribute("aria-label")).toBe("Close")
-    expect(root.querySelector(".fullscreen-close")?.getAttribute("aria-label")).toBe(
+    expect(root.querySelector("[data-modal-close]")?.getAttribute("aria-label")).toBe("Close")
+    expect(root.querySelector("[data-fullscreen-close]")?.getAttribute("aria-label")).toBe(
       "Close fullscreen view",
     )
 

@@ -2,9 +2,10 @@ import { Badge } from "../badge"
 import { ListRow } from "../listRow"
 import { CardSection } from "./cardSection.styled"
 
+import { demoStyles, sx } from "../demoStyles"
 export function CardSectionDemo() {
   return (
-    <div class="docs-control-stack">
+    <div {...sx(demoStyles.controlStack)}>
       <CardSection title="搜索配置" trailing={<Badge>3 sources</Badge>}>
         <ListRow primary="Google" secondary="默认搜索源" />
         <ListRow primary="侧边预览" secondary="打开方式" />

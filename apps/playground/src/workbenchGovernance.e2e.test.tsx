@@ -43,11 +43,11 @@ describe("workbench governance smoke", () => {
     const openSpy = vi.spyOn(window, "open").mockImplementation((() => null) as typeof window.open)
 
     await mountFreshWorkbench()
-    await waitFor(() => expect(document.querySelector(".link-anchor")).toBeTruthy())
+    await waitFor(() => expect(findButtonByText("[data-quick-link]", "GitHub")).toBeTruthy())
 
-    const quickLinkButton = document.querySelector<HTMLElement>(".link-anchor")
+    const quickLinkButton = findButtonByText("[data-quick-link]", "GitHub")
     expect(quickLinkButton?.tagName).toBe("BUTTON")
-    expect(document.querySelector(".link-item a")).toBeFalsy()
+    expect(document.querySelector("[data-quick-links-card] a")).toBeFalsy()
 
     quickLinkButton?.click()
     await waitFor(() => expect(openSpy).toHaveBeenNthCalledWith(1, "https://github.com", "_blank"))
@@ -63,7 +63,7 @@ describe("workbench governance smoke", () => {
   })
 
   it("shows a toast when search external-open permission is denied", async () => {
-    patchPluginPermissions("official.search.command-bar", [
+    patchPluginPermissions("official.search-providers.basic", [
       { type: "external-open", hosts: ["example.com"] },
     ])
 
@@ -74,7 +74,7 @@ describe("workbench governance smoke", () => {
     await enterSearchQuery("blocked query")
 
     await waitFor(() =>
-      expect(document.querySelector(".toast-item")?.textContent).toContain(
+      expect(document.querySelector("[data-toast-item]")?.textContent).toContain(
         "无法打开该搜索源，请检查插件权限",
       ),
     )
@@ -87,40 +87,50 @@ describe("workbench governance smoke", () => {
       "official.layout.workbench-dashboard.view",
     )
 
-    await mountFreshWorkbench({ readySelector: ".safe-layout" })
+    await mountFreshWorkbench({ readySelector: "[data-safe-workbench-layout]" })
 
-    await waitFor(() => expect(document.querySelector(".safe-layout")).toBeTruthy())
+    await waitFor(() => expect(document.querySelector("[data-safe-workbench-layout]")).toBeTruthy())
     await waitFor(() =>
-      expect(document.querySelector(".toast-item")?.textContent).toContain(
+      expect(document.querySelector("[data-toast-item]")?.textContent).toContain(
         "布局加载失败，已切换到安全布局",
       ),
     )
-    expect(document.querySelectorAll(".safe-layout-list .grid-item").length).toBeGreaterThan(0)
+    expect(
+      document.querySelectorAll("[data-safe-workbench-layout] [data-workbench-grid-item]").length,
+    ).toBeGreaterThan(0)
 
-    findButtonByText(".safe-layout-toolbar .toolbar-btn", "搜索")?.click()
-    await waitFor(() => expect(document.querySelector(".cmd-panel")).toBeTruthy())
-    clickRequired(".cmd-overlay")
-    await waitFor(() => expect(document.querySelector(".cmd-panel")).toBeFalsy())
+    findButtonByText("[data-safe-workbench-layout] button", "搜索")?.click()
+    await waitFor(() => expect(document.querySelector("[data-command-palette-panel]")).toBeTruthy())
+    clickRequired("[data-command-palette-overlay]")
+    await waitFor(() => expect(document.querySelector("[data-command-palette-panel]")).toBeFalsy())
 
-    findButtonByText(".safe-layout-toolbar .toolbar-btn", "设置")?.click()
-    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
-    const searchNavBtn = findButtonByText(".settings-nav", "搜索")
+    findButtonByText("[data-safe-workbench-layout] button", "设置")?.click()
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
+    )
+    const searchNavBtn = findButtonByText("[data-settings-nav] button", "搜索")
     expect(searchNavBtn).toBeTruthy()
     ;(searchNavBtn as HTMLElement).click()
     await waitFor(() =>
-      expect(document.querySelector(".settings-nav.active")?.textContent).toContain("搜索"),
+      expect(
+        document.querySelector('[data-settings-section][aria-current="page"]')?.textContent,
+      ).toContain("搜索"),
     )
     await waitFor(() =>
       expect(document.querySelector("#settings-search-provider-select")).toBeTruthy(),
     )
-    clickRequired(".settings-close")
-    await waitFor(() => expect(document.querySelector(".settings-host")).toBeFalsy())
+    clickRequired("[data-settings-close]")
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
+    )
 
     await page.viewport(390, 844)
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
 
-    findButtonByText(".safe-layout-toolbar .toolbar-btn", "设置")?.click()
-    await waitFor(() => expect(document.querySelector(".settings-drawer")).toBeTruthy())
+    findButtonByText("[data-safe-workbench-layout] button", "设置")?.click()
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
+    )
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
   })
 })
@@ -136,7 +146,8 @@ async function mountFreshWorkbench(options: { readySelector?: string } = {}): Pr
   }
   disposeApp = render(() => <App />, root)
   await vi.waitFor(
-    () => expect(document.querySelector(options.readySelector ?? ".workbench-grid")).toBeTruthy(),
+    () =>
+      expect(document.querySelector(options.readySelector ?? "[data-layout-grid]")).toBeTruthy(),
     {
       timeout: 5_000,
     },
@@ -200,7 +211,9 @@ function clonePermissions(
 }
 
 async function enterSearchQuery(query: string): Promise<void> {
-  const input = document.querySelector<HTMLInputElement>('.search-bar input[type="search"]')
+  const input = document.querySelector<HTMLInputElement>(
+    '[data-search-command-bar] input[type="search"]',
+  )
   if (!input) {
     throw new Error("Search input was not found")
   }
@@ -209,7 +222,20 @@ async function enterSearchQuery(query: string): Promise<void> {
   input.value = ""
   input.dispatchEvent(new InputEvent("input", { bubbles: true, data: "" }))
   await userEvent.type(input, query)
-  await userEvent.keyboard("{Enter}")
+  await waitFor(() =>
+    expect(
+      [...document.querySelectorAll<HTMLElement>("[data-search-suggestion]")].some((node) =>
+        node.textContent?.includes("使用 Google 搜索"),
+      ),
+    ).toBe(true),
+  )
+  const searchButton = [...document.querySelectorAll<HTMLElement>("[data-search-suggestion]")].find(
+    (node) => node.textContent?.includes("使用 Google 搜索"),
+  )
+  if (!searchButton) {
+    throw new Error("Web search suggestion was not found")
+  }
+  searchButton.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))
 }
 
 function findButtonByText(selector: string, text: string): HTMLElement | null {

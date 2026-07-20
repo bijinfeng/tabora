@@ -1,3 +1,5 @@
+import "@tabora/ui/styles.css"
+import "@tabora/workbench-shell/styles.css"
 import { WorkbenchShellApp } from "@tabora/workbench-app"
 
 import {

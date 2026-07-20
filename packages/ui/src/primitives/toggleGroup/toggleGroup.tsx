@@ -13,14 +13,23 @@ export type ToggleGroupProps = {
   onChange: (value: string[]) => void
   options: ToggleGroupOption[]
   disabled?: boolean
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  itemClass?: string | undefined
+  itemSelectedClass?: string | undefined
+  itemDisabledClass?: string | undefined
   "aria-label": string
+}
+
+function joinClasses(...classes: Array<string | undefined>) {
+  return classes.filter(Boolean).join(" ") || undefined
 }
 
 export function ToggleGroup(props: ToggleGroupProps) {
   return (
     <KToggleGroup
       {...(props.class ? { class: props.class } : {})}
+      {...(props.style ? { style: props.style } : {})}
       aria-label={props["aria-label"]}
       multiple={true}
       {...(props.disabled !== undefined ? { disabled: props.disabled } : {})}
@@ -33,7 +42,11 @@ export function ToggleGroup(props: ToggleGroupProps) {
       <For each={props.options}>
         {(option) => (
           <KToggleGroup.Item
-            class="tbr-toggle-group-item"
+            class={joinClasses(
+              props.itemClass,
+              props.value.includes(option.value) ? props.itemSelectedClass : undefined,
+              props.disabled || option.disabled ? props.itemDisabledClass : undefined,
+            )}
             value={option.value}
             disabled={Boolean(props.disabled || option.disabled)}
           >

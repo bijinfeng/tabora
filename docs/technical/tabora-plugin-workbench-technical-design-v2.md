@@ -322,12 +322,17 @@ type LayoutHostAPI = {
   getGlobalActions(surface: "rail" | "toolbar" | "menu"): HostActionItem[]
   openSettings(panelId?: string): void
   openCommandPalette(): void
-  openAddWidget(): void
+  openAddWidget(context?: AddWidgetContext): void
   readLayoutState<T = unknown>(key: string): T | undefined
   writeLayoutState(key: string, value: unknown): void
   showToast(message: string, opts?: ToastOptions): void
   toggleTheme(): void
   isDark(): boolean
+}
+
+type AddWidgetContext = {
+  activeGroupLabel?: string
+  onAdded?: (instance: PluginInstance) => void
 }
 
 type HostActionItem = {

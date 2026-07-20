@@ -1,6 +1,10 @@
+import * as stylex from "@stylexjs/stylex"
+import type { StyleXStyles } from "@stylexjs/stylex"
+import type { JSX } from "solid-js"
 import { ChevronLeft, ChevronRight } from "lucide-solid"
 import { For } from "solid-js"
-import "./styles.css"
+
+import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 export type DatePickerProps = {
   value?: string
@@ -10,7 +14,9 @@ export type DatePickerProps = {
   onMonthChange?: (year: number, month: number) => void
   markedDates?: string[]
   today?: string
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  xstyle?: StyleXStyles
 }
 
 type CalendarDay = { day: number; dateStr: string }
@@ -35,10 +41,141 @@ function formatMonthLabel(year: number, month: number): string {
   return `${year}年${month + 1}月`
 }
 
+const styles = stylex.create({
+  root: {
+    fontFamily: "inherit",
+  },
+  header: {
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "var(--tbr-space-2)",
+  },
+  label: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 12,
+    fontWeight: 600,
+  },
+  nav: {
+    display: "flex",
+    gap: 2,
+  },
+  navButton: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderStyle: "none",
+    borderWidth: 0,
+    borderRadius: "var(--tbr-radius-2)",
+    color: "rgb(var(--tbr-color-text-subtle))",
+    cursor: "pointer",
+    display: "flex",
+    height: 24,
+    justifyContent: "center",
+    transitionDuration: "var(--tbr-dur-fast)",
+    transitionProperty: "background-color, color",
+    transitionTimingFunction: "var(--tbr-ease)",
+    width: 24,
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      color: "rgb(var(--tbr-color-text))",
+    },
+    ":focus-visible": {
+      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outlineOffset: 2,
+    },
+  },
+  grid: {
+    display: "grid",
+    gap: 1,
+    gridTemplateColumns: "repeat(7, 1fr)",
+    textAlign: "center",
+  },
+  dow: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontSize: 10,
+    fontWeight: 600,
+    lineHeight: 1,
+    paddingBlock: 2,
+    paddingInline: 0,
+  },
+  dayBase: {
+    borderStyle: "none",
+    borderWidth: 0,
+    borderRadius: "var(--tbr-radius-pill)",
+    fontFamily: "inherit",
+    fontSize: 11,
+    lineHeight: "24px",
+    minHeight: 24,
+    padding: 0,
+  },
+  day: {
+    backgroundColor: "transparent",
+    color: "rgb(var(--tbr-color-text-muted))",
+    cursor: "pointer",
+    transitionDuration: "var(--tbr-dur-fast)",
+    transitionProperty: "background-color, color",
+    transitionTimingFunction: "var(--tbr-ease)",
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+    },
+    ":focus-visible": {
+      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outlineOffset: 1,
+    },
+  },
+  emptyDay: {
+    backgroundColor: "transparent",
+    cursor: "default",
+  },
+  today: {
+    backgroundColor: "rgb(var(--tbr-color-accent))",
+    color: "rgb(var(--tbr-color-inverse))",
+    fontWeight: 700,
+  },
+  active: {
+    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    color: "rgb(var(--tbr-color-accent))",
+    fontWeight: 600,
+  },
+  marked: {
+    position: "relative",
+    "::after": {
+      backgroundColor: "rgb(var(--tbr-color-accent))",
+      borderRadius: "50%",
+      bottom: 2,
+      content: '""',
+      height: 3,
+      left: "50%",
+      position: "absolute",
+      transform: "translateX(-50%)",
+      width: 3,
+    },
+  },
+  todayMarked: {
+    "::after": {
+      backgroundColor: "rgb(var(--tbr-color-inverse))",
+    },
+  },
+})
+
 export function DatePicker(props: DatePickerProps) {
   const days = () => buildDays(props.year, props.month)
   const todayStr = props.today ?? new Date().toISOString().slice(0, 10)
   const markedSet = () => new Set(props.markedDates ?? [])
+
+  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
+  const headerCompiled = () => stylex.props(styles.header)
+  const labelCompiled = () => stylex.props(styles.label)
+  const navCompiled = () => stylex.props(styles.nav)
+  const navButtonCompiled = () => stylex.props(styles.navButton)
+  const gridCompiled = () => stylex.props(styles.grid)
+  const dowCompiled = () => stylex.props(styles.dow)
+  const emptyDayCompiled = () => stylex.props(styles.dayBase, styles.emptyDay)
+  const dayBaseCompiled = () => stylex.props(styles.dayBase, styles.day)
+  const todayCompiled = () => stylex.props(styles.today)
+  const activeCompiled = () => stylex.props(styles.active)
+  const markedCompiled = () => stylex.props(styles.marked)
+  const todayMarkedCompiled = () => stylex.props(styles.todayMarked)
 
   function setMonth(delta: number) {
     const d = new Date(props.year, props.month + delta, 1)
@@ -51,12 +188,18 @@ export function DatePicker(props: DatePickerProps) {
   }
 
   return (
-    <div class="tbr-date-picker" classList={{ [props.class ?? ""]: !!props.class }}>
-      <div class="tbr-date-picker-header">
-        <span class="tbr-date-picker-label">{formatMonthLabel(props.year, props.month)}</span>
-        <div class="tbr-date-picker-nav">
+    <div
+      class={joinClassNames(rootCompiled().className, props.class)}
+      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
+    >
+      <div class={headerCompiled().className} style={toSolidStyle(headerCompiled().style)}>
+        <span class={labelCompiled().className} style={toSolidStyle(labelCompiled().style)}>
+          {formatMonthLabel(props.year, props.month)}
+        </span>
+        <div class={navCompiled().className} style={toSolidStyle(navCompiled().style)}>
           <button
-            class="tbr-date-picker-nav-btn"
+            class={navButtonCompiled().className}
+            style={toSolidStyle(navButtonCompiled().style)}
             type="button"
             aria-label="上个月"
             onClick={() => setMonth(-1)}
@@ -64,7 +207,8 @@ export function DatePicker(props: DatePickerProps) {
             <ChevronLeft size={12} />
           </button>
           <button
-            class="tbr-date-picker-nav-btn"
+            class={navButtonCompiled().className}
+            style={toSolidStyle(navButtonCompiled().style)}
             type="button"
             aria-label="下个月"
             onClick={() => setMonth(1)}
@@ -73,24 +217,43 @@ export function DatePicker(props: DatePickerProps) {
           </button>
         </div>
       </div>
-      <div class="tbr-date-picker-grid">
-        <For each={DAY_NAMES}>{(name) => <div class="tbr-date-picker-dow">{name}</div>}</For>
+      <div class={gridCompiled().className} style={toSolidStyle(gridCompiled().style)}>
+        <For each={DAY_NAMES}>
+          {(name) => (
+            <div class={dowCompiled().className} style={toSolidStyle(dowCompiled().style)}>
+              {name}
+            </div>
+          )}
+        </For>
         <For each={days()}>
           {(d) => {
             if (!d.dateStr) {
-              return <span class="tbr-date-picker-day is-empty" />
+              return (
+                <span
+                  class={emptyDayCompiled().className}
+                  style={toSolidStyle(emptyDayCompiled().style)}
+                />
+              )
             }
             const isToday = d.dateStr === todayStr
             const isActive = d.dateStr === props.value
             const isMarked = markedSet().has(d.dateStr)
             return (
               <button
-                class="tbr-date-picker-day"
-                classList={{
-                  "is-today": isToday,
-                  "is-active": isActive,
-                  "is-marked": isMarked,
-                }}
+                class={joinClassNames(
+                  dayBaseCompiled().className,
+                  isActive && !isToday && activeCompiled().className,
+                  isToday && todayCompiled().className,
+                  isMarked && markedCompiled().className,
+                  isToday && isMarked && todayMarkedCompiled().className,
+                )}
+                style={mergeSolidStyles(
+                  toSolidStyle(dayBaseCompiled().style),
+                  isActive && !isToday ? toSolidStyle(activeCompiled().style) : undefined,
+                  isToday ? toSolidStyle(todayCompiled().style) : undefined,
+                  isMarked ? toSolidStyle(markedCompiled().style) : undefined,
+                  isToday && isMarked ? toSolidStyle(todayMarkedCompiled().style) : undefined,
+                )}
                 type="button"
                 aria-label={`${props.year}年${props.month + 1}月${d.day}日`}
                 aria-pressed={isActive}

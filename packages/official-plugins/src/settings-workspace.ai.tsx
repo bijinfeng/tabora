@@ -1,6 +1,7 @@
 import { Button, FieldRow, Input, Select, Switch } from "@tabora/ui"
 import { createSignal, For } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import { className, styles, sx } from "./styles"
 
 const TEXT_MODEL_OPTIONS = ["GPT-4.1 Mini", "Claude 3.5 Sonnet", "Gemini 1.5 Pro"]
 const VISION_MODEL_OPTIONS = ["Gemini 1.5 Pro", "GPT-4.1 Mini", "Claude 3.5 Sonnet"]
@@ -53,27 +54,27 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
   ]
 
   return (
-    <div class="settings-panel-stack">
-      <section class="set-group">
-        <div class="set-group-title">
+    <div {...sx(styles.panelStack)} data-settings-panel="ai">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
           AI 网关状态<span>{gatewayStatus()}</span>
         </div>
-        <div class="ai-status-grid" aria-label="AI 网关状态">
-          <div class="ai-status-card">
+        <div {...sx(styles.statusGrid)} aria-label="AI 网关状态">
+          <div {...sx(styles.statusCard)}>
             <span>默认文本模型</span>
             <strong>{textModel()}</strong>
             <span>摘要、改写、结构化抽取</span>
-            <span class="ai-field-note">{testStateLabel(textModelState())}</span>
+            <span {...sx(styles.fieldNote)}>{testStateLabel(textModelState())}</span>
           </div>
-          <div class="ai-status-card">
+          <div {...sx(styles.statusCard)}>
             <span>默认图片理解模型</span>
             <strong>{visionModel()}</strong>
             <span>票面识别、截图分析</span>
-            <span class="ai-field-note">{testStateLabel(visionModelState())}</span>
+            <span {...sx(styles.fieldNote)}>{testStateLabel(visionModelState())}</span>
           </div>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="连接测试"
           description="验证默认模型是否可调用；密钥保存在 core 安全存储，插件不可读取"
           trailing={
@@ -84,12 +85,12 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section class="set-group">
-        <div class="set-group-title">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
           模型提供商<span>2 个启用</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="提供商类型"
           description="OpenAI 兼容、Anthropic、Gemini 或自定义网关"
           trailing={
@@ -103,7 +104,7 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="显示名称"
           description="用户可识别的账号或网关名称"
           trailing={
@@ -116,7 +117,7 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="Base URL"
           description="兼容网关或自定义服务地址"
           trailing={
@@ -124,11 +125,11 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="API Key"
           description="保存后只显示掩码，写入 core 安全存储"
           trailing={
-            <div class="ai-key-row">
+            <div {...sx(styles.wideInlineActions)}>
               <Input size="sm" value={apiKey()} onInput={setApiKey} aria-label="AI API Key" />
               <Button size="sm" variant="secondary" onClick={() => setGatewayStatus("未测试")}>
                 替换
@@ -138,12 +139,12 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section class="set-group">
-        <div class="set-group-title">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
           模型配置<span>默认槽位</span>
         </div>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="默认文本模型"
           description="供摘要、改写、问答和结构化抽取调用"
           trailing={
@@ -160,7 +161,7 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="默认图片理解模型"
           description="供图片识别、票面识别和截图分析调用"
           trailing={
@@ -177,18 +178,18 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="gpt-4.1-mini"
           description="OpenAI 主账号 · 文本、图片理解 · 最近测试可用"
-          trailing={<span class="ai-field-note">文本 / 图片</span>}
+          trailing={<span {...sx(styles.fieldNote)}>文本 / 图片</span>}
         />
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="gemini-1.5-pro"
           description="Gemini 个人账号 · 图片理解 · 彩票票面识别默认"
           trailing={
-            <div class="ai-meta-row">
-              <span class="ai-field-note">图片</span>
+            <div {...sx(styles.inlineActions)}>
+              <span {...sx(styles.fieldNote)}>图片</span>
               <Switch
                 size="sm"
                 checked={geminiEnabled()}
@@ -200,14 +201,14 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section class="set-group">
-        <div class="set-group-title">
+      <section {...sx(styles.group)}>
+        <div {...sx(styles.groupTitle)}>
           插件 AI 使用<span>首次授权</span>
         </div>
         <For each={grantRows()}>
           {(grant) => (
             <FieldRow
-              class="settings-form-row"
+              class={className(styles.fieldRow)}
               label={grant.name}
               description={grant.description}
               trailing={
@@ -222,10 +223,10 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           )}
         </For>
         <FieldRow
-          class="settings-form-row"
+          class={className(styles.fieldRow)}
           label="隐私提示"
           description="图片或文本只在用户触发 AI 功能时发送给当前模型提供商"
-          trailing={<span class="ai-field-note">插件不会获得 API Key</span>}
+          trailing={<span {...sx(styles.fieldNote)}>插件不会获得 API Key</span>}
         />
       </section>
     </div>

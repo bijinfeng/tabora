@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js"
 
+import { demoStyles, sx } from "../demoStyles"
 import { Badge } from "../badge"
 import { ContextMenu } from "./contextMenu.styled"
 
@@ -7,18 +8,17 @@ export function ContextMenuDemo() {
   const [lastAction, setLastAction] = createSignal("右键后可直接调整卡片布局，无需离开当前网格。")
 
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>右键卡片快捷操作</strong>
         <span>更适合当前对象的上下文动作，比如布局调整、固定和移除。</span>
       </div>
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Badge variant="success">已固定</Badge>
         <span>{lastAction()}</span>
       </div>
       <ContextMenu
         aria-label="今日重点卡片菜单"
-        triggerClass="tbr-context-menu"
         onSelect={(key) => {
           const messages: Record<string, string> = {
             pin: "卡片已固定到工作区顶部。",
@@ -36,7 +36,7 @@ export function ContextMenuDemo() {
           { key: "remove", label: "移除卡片", danger: true },
         ]}
       >
-        <div class="tbr-context-menu-content">右键打开菜单</div>
+        <div {...sx(demoStyles.contextMenuContent)}>右键打开菜单</div>
       </ContextMenu>
     </div>
   )

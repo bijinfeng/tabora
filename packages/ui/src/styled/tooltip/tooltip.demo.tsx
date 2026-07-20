@@ -1,14 +1,15 @@
 import { Button } from "../button"
 import { Tooltip } from "./tooltip.styled"
 
+import { demoStyles, sx } from "../demoStyles"
 export function TooltipDemo() {
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>图标与工具按钮提示</strong>
         <span>适合补充紧凑按钮语义，而不是承载复杂交互。</span>
       </div>
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Tooltip content="打开插件设置">
           <Button variant="secondary">设置</Button>
         </Tooltip>

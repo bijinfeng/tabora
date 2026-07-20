@@ -1,14 +1,15 @@
 import { Badge } from "../badge"
 import { Avatar } from "./avatar.styled"
 
+import { demoStyles, sx } from "../demoStyles"
 export function AvatarDemo() {
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>插件协作成员</strong>
         <span>适合在插件详情、作者信息和协作面板里提供紧凑身份标识。</span>
       </div>
-      <div class="docs-row">
+      <div {...sx(demoStyles.row)}>
         <Avatar size="sm" fallback="TB" />
         <Avatar fallback="QA" />
         <Avatar size="lg" fallback="UX" />

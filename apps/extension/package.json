@@ -21,10 +21,10 @@
   },
   "devDependencies": {
     "@tabora/brand": "workspace:*",
+    "@tabora/stylex-config": "workspace:*",
     "@tabora/tsconfig": "workspace:*",
     "@wxt-dev/auto-icons": "1.1.1",
     "@wxt-dev/module-solid": "^1.1.4",
-    "tailwindcss": "catalog:build",
     "typescript": "catalog:build",
     "vite": "catalog:build",
     "vitest": "catalog:test",

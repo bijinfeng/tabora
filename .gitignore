@@ -30,3 +30,4 @@ Thumbs.db
 # Supabase CLI 本地态（不进仓库）
 supabase/.temp/
 supabase/.branches/
+.gstack/

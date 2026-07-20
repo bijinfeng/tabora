@@ -1,6 +1,5 @@
 import { render } from "solid-js/web"
-import "@tabora/ui/styles.css"
-import "@tabora/workbench-shell/styles.css"
+import "./stylexDev"
 
 import { App } from "./App"
 

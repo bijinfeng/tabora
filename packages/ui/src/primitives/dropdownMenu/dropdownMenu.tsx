@@ -32,14 +32,41 @@ export type DropdownMenuProps = {
   sideOffset?: number
   alignOffset?: number
   showArrow?: boolean
-  triggerClass?: string
+  triggerClass?: string | undefined
+  triggerStyle?: JSX.CSSProperties | undefined
   triggerClassList?: Record<string, boolean>
   triggerDisabled?: boolean
   triggerId?: string
   triggerTitle?: string
   triggerAriaLabel?: string
-  class?: string
+  class?: string | undefined
+  style?: JSX.CSSProperties | undefined
+  arrowClass?: string | undefined
+  arrowStyle?: JSX.CSSProperties | undefined
+  titleClass?: string | undefined
+  titleStyle?: JSX.CSSProperties | undefined
+  itemClass?: string | undefined
+  itemStyle?: JSX.CSSProperties | undefined
+  itemDangerClass?: string | undefined
+  itemDangerStyle?: JSX.CSSProperties | undefined
+  separatorClass?: string | undefined
+  separatorStyle?: JSX.CSSProperties | undefined
+  checkClass?: string | undefined
+  checkStyle?: JSX.CSSProperties | undefined
+  iconClass?: string | undefined
+  iconStyle?: JSX.CSSProperties | undefined
+  labelClass?: string | undefined
+  labelStyle?: JSX.CSSProperties | undefined
+  kbdClass?: string | undefined
+  kbdStyle?: JSX.CSSProperties | undefined
   children: JSX.Element
+}
+
+function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
+  return {
+    ...(className !== undefined ? { class: className } : {}),
+    ...(style !== undefined ? { style } : {}),
+  }
 }
 
 export function DropdownMenu(props: DropdownMenuProps) {
@@ -56,12 +83,32 @@ export function DropdownMenu(props: DropdownMenuProps) {
     "alignOffset",
     "showArrow",
     "triggerClass",
+    "triggerStyle",
     "triggerClassList",
     "triggerDisabled",
     "triggerId",
     "triggerTitle",
     "triggerAriaLabel",
     "class",
+    "style",
+    "arrowClass",
+    "arrowStyle",
+    "titleClass",
+    "titleStyle",
+    "itemClass",
+    "itemStyle",
+    "itemDangerClass",
+    "itemDangerStyle",
+    "separatorClass",
+    "separatorStyle",
+    "checkClass",
+    "checkStyle",
+    "iconClass",
+    "iconStyle",
+    "labelClass",
+    "labelStyle",
+    "kbdClass",
+    "kbdStyle",
     "children",
   ])
 
@@ -77,9 +124,6 @@ export function DropdownMenu(props: DropdownMenuProps) {
     const align = local.align ?? "end"
     return placementMap[side][align]
   }
-
-  const contentClass = () => (local.class ? `tbr-dropdown ${local.class}` : "tbr-dropdown")
-
   return (
     <KDropdownMenu
       {...(local.open !== undefined ? { open: local.open } : {})}
@@ -98,6 +142,7 @@ export function DropdownMenu(props: DropdownMenuProps) {
     >
       <KDropdownMenu.Trigger
         class={local.triggerClass}
+        style={local.triggerStyle}
         classList={local.triggerClassList}
         disabled={local.triggerDisabled}
         {...(local.triggerId !== undefined ? { id: local.triggerId } : {})}
@@ -107,20 +152,32 @@ export function DropdownMenu(props: DropdownMenuProps) {
         {local.children}
       </KDropdownMenu.Trigger>
       <KDropdownMenu.Portal>
-        <KDropdownMenu.Content class={contentClass()}>
+        <KDropdownMenu.Content {...optionalPartProps(local.class, local.style)}>
           <Show when={local.showArrow}>
-            <KDropdownMenu.Arrow class="tbr-dropdown-arrow" size={10} />
+            <KDropdownMenu.Arrow
+              {...optionalPartProps(local.arrowClass, local.arrowStyle)}
+              size={10}
+            />
           </Show>
           <Show when={local.title}>
-            <div class="tbr-dropdown-title">{local.title}</div>
+            <div class={local.titleClass} style={local.titleStyle}>
+              {local.title}
+            </div>
           </Show>
           <For each={local.items}>
             {(item) =>
               item.separator ? (
-                <KDropdownMenu.Separator class="tbr-dropdown-sep" />
+                <KDropdownMenu.Separator
+                  {...optionalPartProps(local.separatorClass, local.separatorStyle)}
+                />
               ) : (
                 <KDropdownMenu.Item
-                  class="tbr-dropdown-item"
+                  class={[local.itemClass, item.danger ? local.itemDangerClass : undefined]
+                    .filter(Boolean)
+                    .join(" ")}
+                  style={
+                    item.danger ? { ...local.itemStyle, ...local.itemDangerStyle } : local.itemStyle
+                  }
                   {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
                   data-danger={item.danger ? "" : undefined}
                   data-checked={item.checked ? "" : undefined}
@@ -129,11 +186,21 @@ export function DropdownMenu(props: DropdownMenuProps) {
                   }}
                 >
                   <Show when={item.checked}>
-                    <span class="tbr-dropdown-check" aria-hidden="true" />
+                    <span class={local.checkClass} style={local.checkStyle} aria-hidden="true" />
                   </Show>
-                  {item.icon && !item.checked && <span class="tbr-dropdown-icon">{item.icon}</span>}
-                  <span class="tbr-dropdown-label">{item.label}</span>
-                  {item.shortcut && <kbd class="tbr-dropdown-kbd">{item.shortcut}</kbd>}
+                  {item.icon && !item.checked && (
+                    <span class={local.iconClass} style={local.iconStyle}>
+                      {item.icon}
+                    </span>
+                  )}
+                  <span class={local.labelClass} style={local.labelStyle}>
+                    {item.label}
+                  </span>
+                  {item.shortcut && (
+                    <kbd class={local.kbdClass} style={local.kbdStyle}>
+                      {item.shortcut}
+                    </kbd>
+                  )}
                 </KDropdownMenu.Item>
               )
             }

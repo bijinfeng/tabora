@@ -89,7 +89,12 @@ describe("DashboardLayout", () => {
       ),
       host,
     )
-    expect(host.querySelectorAll("button.dash-rail-btn").length).toBe(5)
+    expect(host.querySelector("[data-layout='dashboard']")).toBeTruthy()
+    expect(host.querySelector("[data-workbench-rail]")).toBeTruthy()
+    const layoutGrid = host.querySelector<HTMLElement>("[data-layout-grid]")
+    expect(layoutGrid).toBeTruthy()
+    expect(layoutGrid!.className).not.toBe("")
+    expect(host.querySelector(".layout-dashboard")).toBeNull()
     expect(host.querySelector("[data-testid='region-mainGrid']")).toBeTruthy()
     dispose()
   })
@@ -115,7 +120,7 @@ describe("DashboardLayout", () => {
     )
 
     firstRoot.querySelector<HTMLButtonElement>('button[aria-label="新建分组"]')?.click()
-    const input = firstRoot.querySelector<HTMLInputElement>(".dash-inline-pop input")
+    const input = firstRoot.querySelector<HTMLInputElement>("[data-rail-inline-pop] input")
     input!.value = "Research"
     input!.dispatchEvent(new InputEvent("input", { bubbles: true }))
     input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
@@ -158,8 +163,8 @@ describe("DashboardLayout", () => {
     )
 
     host.querySelector<HTMLButtonElement>('button[aria-label="新建分组"]')?.click()
-    expect(host.querySelector(".dash-inline-pop.open")).toBeTruthy()
-    const input = host.querySelector<HTMLInputElement>(".dash-inline-pop input")
+    expect(host.querySelector("[data-rail-inline-pop]")).toBeTruthy()
+    const input = host.querySelector<HTMLInputElement>("[data-rail-inline-pop] input")
     input!.value = "Research"
     input!.dispatchEvent(new InputEvent("input", { bubbles: true }))
     input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
@@ -193,7 +198,7 @@ describe("DashboardLayout", () => {
     )
 
     host.querySelector<HTMLButtonElement>('button[aria-label="新建分组"]')?.click()
-    const input = host.querySelector<HTMLInputElement>(".dash-inline-pop input")
+    const input = host.querySelector<HTMLInputElement>("[data-rail-inline-pop] input")
     input!.value = "Research"
     input!.dispatchEvent(new InputEvent("input", { bubbles: true }))
     input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
@@ -203,9 +208,9 @@ describe("DashboardLayout", () => {
       new MouseEvent("contextmenu", { bubbles: true, clientX: 72, clientY: 88 }),
     )
 
-    expect(host.querySelector(".dash-group-menu")).toBeTruthy()
-    expect(host.querySelector(".dash-group-menu")?.textContent).toContain("重命名")
-    host.querySelectorAll<HTMLButtonElement>(".dash-group-menu-icon")[3]?.click()
+    expect(host.querySelector("[data-group-menu]")).toBeTruthy()
+    expect(host.querySelector("[data-group-menu]")?.textContent).toContain("重命名")
+    host.querySelectorAll<HTMLButtonElement>("[data-group-menu-icon]")[3]?.click()
     expect(
       host.querySelector<HTMLButtonElement>('button[aria-label="分组 Research"]')?.textContent,
     ).toContain("★")
@@ -213,7 +218,7 @@ describe("DashboardLayout", () => {
       type: "success",
     })
 
-    host.querySelector<HTMLButtonElement>(".dash-group-menu-item")?.click()
+    host.querySelector<HTMLButtonElement>("[data-group-menu-item]")?.click()
     expect(host.querySelector('button[aria-label="分组 Lab"]')).toBeTruthy()
     expect(layoutHost.showToast).toHaveBeenCalledWith("已重命名为「Lab」", {
       type: "success",
@@ -222,7 +227,7 @@ describe("DashboardLayout", () => {
     host
       .querySelector<HTMLButtonElement>('button[aria-label="分组 Lab"]')
       ?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: 72, clientY: 88 }))
-    host.querySelector<HTMLButtonElement>(".dash-group-menu-item.danger")?.click()
+    host.querySelector<HTMLButtonElement>("[data-group-menu-item][data-danger]")?.click()
 
     expect(host.querySelector('button[aria-label="分组 Lab"]')).toBeFalsy()
     expect(host.querySelector('button[aria-label="分组 我的工作台"]')).toBeTruthy()
@@ -252,23 +257,23 @@ describe("DashboardLayout", () => {
       ?.dispatchEvent(
         new PointerEvent("pointerdown", { bubbles: true, pointerType: "mouse", button: 0 }),
       )
-    const menu = document.querySelector(".tbr-dropdown")
+    const menu = document.querySelector('[role="menu"]')
     expect(menu).toBeTruthy()
     expect(menu?.textContent).toContain("Dashboard")
     expect(menu?.textContent).toContain("控制面板：多卡片并列")
     expect(menu?.textContent).toContain("Focus")
     expect(menu?.textContent).toContain("深度专注：主卡 + 卫星")
 
-    const items = document.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
+    const items = document.querySelectorAll<HTMLElement>('[role="menuitem"]')
     expect(items.length).toBe(2)
-    expect(items[0]?.querySelector(".tbr-dropdown-check")).toBeTruthy()
+    expect(items[0]?.hasAttribute("data-checked")).toBe(true)
 
     items[0]?.dispatchEvent(
       new PointerEvent("pointerup", { bubbles: true, pointerType: "mouse", button: 0 }),
     )
     await Promise.resolve()
     expect(layoutRun).not.toHaveBeenCalled()
-    const menuAfterSelect = document.querySelector(".tbr-dropdown")
+    const menuAfterSelect = document.querySelector('[role="menu"]')
     expect(!menuAfterSelect || menuAfterSelect.hasAttribute("data-closed")).toBe(true)
 
     host
@@ -276,13 +281,13 @@ describe("DashboardLayout", () => {
       ?.dispatchEvent(
         new PointerEvent("pointerdown", { bubbles: true, pointerType: "mouse", button: 0 }),
       )
-    const items2 = document.querySelectorAll<HTMLButtonElement>(".tbr-dropdown-item")
+    const items2 = document.querySelectorAll<HTMLElement>('[role="menuitem"]')
     items2[1]?.dispatchEvent(
       new PointerEvent("pointerup", { bubbles: true, pointerType: "mouse", button: 0 }),
     )
     await Promise.resolve()
     expect(layoutRun).toHaveBeenCalledTimes(1)
-    const menuAfterSelect2 = document.querySelector(".tbr-dropdown")
+    const menuAfterSelect2 = document.querySelector('[role="menu"]')
     expect(!menuAfterSelect2 || menuAfterSelect2.hasAttribute("data-closed")).toBe(true)
     dispose()
   })
@@ -321,10 +326,10 @@ describe("FocusLayout", () => {
       ),
       host,
     )
-    expect(host.querySelectorAll("button.dash-rail-btn").length).toBe(5)
+    expect(host.querySelector("[data-workbench-rail]")).toBeTruthy()
     expect(host.querySelector("[data-layout='focus']")).toBeTruthy()
     expect(host.querySelector("[data-testid='focus-instance-weather-1']")).toBeTruthy()
-    expect(host.querySelector("button.focus-satellite")).toBeTruthy()
+    expect(host.querySelector("button[data-focus-satellite]")).toBeTruthy()
     dispose()
   })
 })

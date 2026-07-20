@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import { TaboraMark } from "@tabora/brand"
 import type { PluginInstance, WidgetViewProps, WidgetSize } from "@tabora/plugin-api"
 import { PluginViewBoundary, WidgetCardShell } from "@tabora/workbench-shell"
@@ -10,7 +11,96 @@ import type {
   WorkbenchShellPluginViewBoundaryCopy,
   WorkbenchShellWidgetCopy,
 } from "../i18n"
+import { color, font, radius, space } from "../stylexTokens.stylex"
 import type { SafeLayoutModel, SolidView } from "./WorkbenchShellChrome.types"
+
+const styles = stylex.create({
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space.s5,
+    minHeight: "100vh",
+    padding: space.s6,
+    "@media (max-width: 480px)": {
+      padding: space.s5,
+    },
+  },
+  toolbar: {
+    alignItems: "center",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.card,
+    borderStyle: "solid",
+    borderWidth: 1,
+    display: "flex",
+    gap: space.s2,
+    minHeight: 44,
+    paddingInline: space.s4,
+  },
+  logo: {
+    alignItems: "center",
+    display: "inline-flex",
+    fontSize: 15,
+    fontWeight: font.bold,
+    gap: space.s3,
+  },
+  logoMark: {
+    color: color.accent,
+    flexShrink: 0,
+    height: 20,
+    width: 20,
+  },
+  spacer: {
+    flex: 1,
+  },
+  button: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderStyle: "none",
+    borderWidth: 0,
+    borderRadius: radius.control,
+    color: color.textMuted,
+    cursor: "pointer",
+    display: "inline-flex",
+    fontFamily: "inherit",
+    fontSize: 11,
+    gap: 4,
+    height: 28,
+    justifyContent: "center",
+    paddingInline: 10,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      color: color.text,
+    },
+    ":focus-visible": {
+      outlineColor: color.focus,
+      outlineOffset: 2,
+      outlineStyle: "solid",
+      outlineWidth: 2,
+    },
+  },
+  list: {
+    display: "grid",
+    gap: 12,
+    gridTemplateColumns: "repeat(16, minmax(0, 1fr))",
+    minWidth: 0,
+    "@media (max-width: 1024px)": {
+      gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
+    },
+    "@media (max-width: 768px)": {
+      gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
+    },
+    "@media (max-width: 480px)": {
+      gridTemplateColumns: "minmax(0, 1fr)",
+    },
+  },
+  empty: {
+    color: color.textMuted,
+    fontSize: 13,
+    padding: 20,
+    textAlign: "center",
+  },
+})
 
 export function SafeWorkbenchLayout(props: {
   isDark: boolean
@@ -35,18 +125,19 @@ export function SafeWorkbenchLayout(props: {
   pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }) {
   return (
-    <div class="safe-layout">
-      <div class="safe-layout-toolbar">
-        <span class="toolbar-logo">
-          <TaboraMark class="toolbar-logo-mark" />
+    <div {...stylex.props(styles.root)} data-safe-workbench-layout>
+      <div {...stylex.props(styles.toolbar)}>
+        <span {...stylex.props(styles.logo)}>
+          <TaboraMark class={stylex.props(styles.logoMark).className} />
           <span>Tabora</span>
         </span>
-        <div style={{ flex: 1 }} />
-        <button class="toolbar-btn" onClick={props.onOpenCommandPalette}>
+        <div {...stylex.props(styles.spacer)} />
+        <button {...stylex.props(styles.button)} type="button" onClick={props.onOpenCommandPalette}>
           {props.tShell?.("chrome.toolbar.search") ?? "搜索"}
         </button>
         <button
-          class="toolbar-btn"
+          {...stylex.props(styles.button)}
+          type="button"
           aria-label={
             props.isDark
               ? (props.tShell?.("chrome.toolbar.toggleThemeToLight") ?? "切换到明亮主题")
@@ -56,18 +147,18 @@ export function SafeWorkbenchLayout(props: {
         >
           {props.isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
-        <button class="toolbar-btn" onClick={props.onOpenSettings}>
+        <button {...stylex.props(styles.button)} type="button" onClick={props.onOpenSettings}>
           {props.tShell?.("chrome.toolbar.settings") ?? "设置"}
         </button>
       </div>
-      <div class="safe-layout-list">
+      <div {...stylex.props(styles.list)}>
         <For each={props.instances}>
           {(instance) => {
             const widget = props.widgetContribution(instance)
             const model = props.resolveWidgetModel(instance)
             if (!model) {
               return (
-                <div class="settings-empty">
+                <div {...stylex.props(styles.empty)}>
                   {props.tShell
                     ? props.tShell("placeholders.widgetInstanceInvalid", {
                         instanceId: instance.id,

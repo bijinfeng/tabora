@@ -102,7 +102,15 @@ export type DocsPageContent = {
       previewTitle: string
       swatches: Array<{
         name: string
-        style: string
+        tone:
+          | "accent"
+          | "accentSoft"
+          | "surface"
+          | "surfaceSoft"
+          | "surfaceHover"
+          | "page"
+          | "danger"
+          | "success"
       }>
       table: DocsTable
     }

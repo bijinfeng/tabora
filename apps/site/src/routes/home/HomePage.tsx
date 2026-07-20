@@ -79,7 +79,7 @@ export function HomePage() {
         onThemeToggled={showToast}
       />
 
-      <main>
+      <main data-site-home>
         <HeroSection content={content()} />
         <FeatureSections content={content()} i18n={i18n} showToast={showToast} />
       </main>

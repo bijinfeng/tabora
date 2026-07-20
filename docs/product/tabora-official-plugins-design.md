@@ -296,7 +296,7 @@ MVP 组件清单：
 | `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
-当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
+当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
 
 默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/workbench-prototype.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、快捷入口、待办、便签和天气摘要。完整插件管理从设置中心进入。
 

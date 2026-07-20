@@ -1,9 +1,10 @@
 import { Breadcrumb } from "./breadcrumb.styled"
 
+import { demoStyles, sx } from "../demoStyles"
 export function BreadcrumbDemo() {
   return (
-    <div class="docs-control-stack">
-      <div class="docs-stack compact">
+    <div {...sx(demoStyles.controlStack)}>
+      <div {...sx(demoStyles.stackCompact)}>
         <strong>设置路径</strong>
         <span>适合在深层设置或文档结构里帮助用户确认当前位置。</span>
       </div>

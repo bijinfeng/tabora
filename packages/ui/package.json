@@ -6,7 +6,6 @@
     ".": "./src/index.ts",
     "./component-docs": "./src/component-docs/index.ts",
     "./package.json": "./package.json",
-    "./style.css": "./dist/style.css",
     "./styles.css": "./src/styles.css"
   },
   "publishConfig": {
@@ -14,16 +13,16 @@
       ".": "./dist/index.js",
       "./component-docs": "./dist/component-docs/index.js",
       "./package.json": "./package.json",
-      "./style.css": "./dist/style.css",
-      "./styles.css": "./dist/style.css"
+      "./styles.css": "./dist/styles.css"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts src/component-docs/index.ts",
+    "build": "node ../../scripts/build-stylex-package.mjs --package . --entry src/index.ts --entry src/component-docs/index.ts --global-css src/styles.css --css-name styles.css",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@kobalte/core": "catalog:ui",
+    "@stylexjs/stylex": "catalog:style",
     "@tabora/theme": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
