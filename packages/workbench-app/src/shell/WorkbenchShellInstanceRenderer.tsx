@@ -24,7 +24,7 @@ import type {
   WorkbenchShellPluginViewBoundaryCopy,
   WorkbenchShellWidgetCopy,
 } from "../i18n"
-import { color } from "../stylexTokens.stylex"
+import { color } from "@tabora/theme/tokens.stylex"
 
 type WorkbenchSortableCollisionDetector = NonNullable<
   Parameters<typeof useSortable>[0]["collisionDetector"]

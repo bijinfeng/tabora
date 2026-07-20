@@ -6,6 +6,11 @@ export type XStyle = StyleXArray<
   (null | undefined | CompiledStyles) | boolean | Readonly<[CompiledStyles, InlineStyles]>
 >
 
+export type SolidAttrs<T extends HTMLElement = HTMLElement> = Pick<
+  JSX.HTMLAttributes<T>,
+  "class" | "style"
+>
+
 export function toSolidStyle(
   style: ReturnType<typeof stylex.props>["style"],
 ): JSX.CSSProperties | undefined {

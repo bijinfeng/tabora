@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { stat } from "node:fs/promises"
 
 import {
   buildQualityReport,
@@ -815,9 +816,53 @@ describe("governance rules", () => {
     expect(manifest.exports["./style.css"]).toBeUndefined()
     expect(manifest.exports["./styles.css"]).toBe("./src/styles.css")
     expect(manifest.publishConfig.exports["./styles.css"]).toBe("./dist/styles.css")
-    expect(manifest.scripts.build).toContain("scripts/build-stylex-package.mjs")
-    expect(manifest.scripts.build).toContain("--global-css src/styles.css")
-    expect(manifest.scripts.build).toContain("--css-name styles.css")
+    expect(manifest.scripts.build).toBe("vp pack src/index.ts src/component-docs/index.ts")
+  })
+
+  it("keeps StyleX packages on the shared Vite+ pack pipeline", async () => {
+    const expectedBuilds = new Map([
+      ["packages/ui/package.json", "vp pack src/index.ts src/component-docs/index.ts"],
+      ["packages/workbench-shell/package.json", "vp pack src/index.ts"],
+      ["packages/official-plugins/package.json", "vp pack src/index.ts"],
+      ["plugins/community/layout-diy-masonry/package.json", "vp pack src/index.tsx"],
+      ["plugins/official/layout-dashboard/package.json", "vp pack src/index.tsx"],
+      ["plugins/official/widget-notes/package.json", "vp pack src/index.ts"],
+      ["plugins/official/widget-quick-links/package.json", "vp pack src/index.ts"],
+      ["plugins/official/widget-todo/package.json", "vp pack src/index.ts"],
+      ["plugins/official/widget-weather/package.json", "vp pack src/index.ts"],
+    ])
+
+    for (const [filePath, expectedBuild] of expectedBuilds) {
+      const manifest = JSON.parse(await readRepositoryText(".", filePath))
+      expect(manifest.scripts.build, filePath).toBe(expectedBuild)
+    }
+
+    await expect(stat("scripts/build-stylex-package.mjs")).rejects.toMatchObject({ code: "ENOENT" })
+    await expect(stat("scripts/lib/stylexPackageBuild.mjs")).rejects.toMatchObject({
+      code: "ENOENT",
+    })
+  })
+
+  it("keeps representative Solid components on the official StyleX attrs API", async () => {
+    const button = await readRepositoryText(".", "packages/ui/src/styled/button/button.styled.tsx")
+    const drawer = await readRepositoryText(".", "packages/ui/src/styled/drawer/drawer.styled.tsx")
+    const input = await readRepositoryText(".", "packages/ui/src/styled/input/input.styled.tsx")
+
+    for (const source of [button, drawer, input]) {
+      expect(source).toContain("stylex.attrs(")
+      expect(source).not.toContain("stylex.props(")
+      expect(source).not.toContain("toSolidStyle")
+    }
+
+    for (const legacySlotProp of [
+      "scrimClass",
+      "panelClass",
+      "panelStyle",
+      "headerClass",
+      "footerStyle",
+    ]) {
+      expect(drawer).not.toContain(legacySlotProp)
+    }
   })
 
   it("keeps theme reset from overriding layered StyleX component typography", async () => {
@@ -1149,7 +1194,7 @@ describe("governance rules", () => {
     const themeGlobal = await readRepositoryText(".", "packages/theme/src/global.css")
     expect(themeGlobal).toContain("--tbr-color-inverse: 255 255 255;")
 
-    const themeStylexTokens = await readRepositoryText(".", "packages/theme/src/stylexTokens.ts")
+    const themeStylexTokens = await readRepositoryText(".", "packages/theme/src/tokens.stylex.ts")
     expect(themeStylexTokens).toContain('inverse: "rgb(var(--tbr-color-inverse))"')
 
     const uiTokenRegistry = await readRepositoryText(".", "packages/ui/src/tokens/tokens.ts")
@@ -1189,7 +1234,7 @@ describe("governance rules", () => {
     expect(themeGlobal).toContain("--tbr-color-shadow-strong: 15 23 18;")
     expect(themeGlobal).toContain("--tbr-color-scrim: 8 10 8;")
 
-    const themeStylexTokens = await readRepositoryText(".", "packages/theme/src/stylexTokens.ts")
+    const themeStylexTokens = await readRepositoryText(".", "packages/theme/src/tokens.stylex.ts")
     expect(themeStylexTokens).toContain('shadow: "rgb(var(--tbr-color-shadow))"')
     expect(themeStylexTokens).toContain('shadowStrong: "rgb(var(--tbr-color-shadow-strong))"')
     expect(themeStylexTokens).toContain('scrim: "rgb(var(--tbr-color-scrim))"')

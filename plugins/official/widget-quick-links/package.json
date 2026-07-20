@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "build": "node ../../../scripts/build-stylex-package.mjs --package . --entry src/index.ts --css-name styles.css",
+    "build": "vp pack src/index.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

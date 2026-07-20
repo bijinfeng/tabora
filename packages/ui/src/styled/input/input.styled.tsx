@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
-import type { JSX } from "solid-js"
 
 import { HeadlessInput } from "../../primitives/input/input"
 import type { HeadlessInputProps } from "../../primitives/input/input"
@@ -145,30 +144,30 @@ const styles = stylex.create({
 type HeadlessInputStyleProp =
   | "class"
   | "style"
+  | "controlAttrs"
   | "wrapperClass"
   | "wrapperStyle"
+  | "wrapperAttrs"
   | "leadingIconClass"
   | "leadingIconStyle"
+  | "leadingIconAttrs"
   | "trailingIconClass"
   | "trailingIconStyle"
+  | "trailingIconAttrs"
   | "clearButtonClass"
   | "clearButtonStyle"
+  | "clearButtonAttrs"
   | "trailingButtonClass"
   | "trailingButtonStyle"
+  | "trailingButtonAttrs"
 
 export type InputProps = Omit<HeadlessInputProps, HeadlessInputStyleProp> & {
   xstyle?: StyleXStyles
 }
 
-function toSolidStyle(
-  style: ReturnType<typeof stylex.props>["style"],
-): JSX.CSSProperties | undefined {
-  return style as JSX.CSSProperties | undefined
-}
-
 export function Input(props: InputProps) {
-  const controlCompiled = () =>
-    stylex.props(
+  const controlAttrs = () =>
+    stylex.attrs(
       styles.control,
       props.size === "sm" && styles.sm,
       (!props.size || props.size === "md") && styles.md,
@@ -188,8 +187,8 @@ export function Input(props: InputProps) {
         props.type === "password"
       ) && props.xstyle,
     )
-  const wrapperCompiled = () =>
-    stylex.props(
+  const wrapperAttrs = () =>
+    stylex.attrs(
       styles.wrapper,
       (Boolean(props.leadingIcon) ||
         Boolean(props.trailingIcon) ||
@@ -197,38 +196,32 @@ export function Input(props: InputProps) {
         props.type === "password") &&
         props.xstyle,
     )
-  const leadingIconCompiled = () =>
-    stylex.props(
+  const leadingIconAttrs = () =>
+    stylex.attrs(
       styles.sideIcon,
       styles.leadingIcon,
       props.size === "sm" && styles.sideIconSm,
       props.size === "sm" && styles.leadingIconSm,
     )
-  const trailingIconCompiled = () =>
-    stylex.props(
+  const trailingIconAttrs = () =>
+    stylex.attrs(
       styles.sideIcon,
       styles.trailingIcon,
       props.size === "sm" && styles.sideIconSm,
       props.size === "sm" && styles.trailingIconSm,
     )
-  const clearButtonCompiled = () => stylex.props(styles.clearButton)
-  const trailingButtonCompiled = () => stylex.props(styles.trailingButton)
+  const clearButtonAttrs = () => stylex.attrs(styles.clearButton)
+  const trailingButtonAttrs = () => stylex.attrs(styles.trailingButton)
 
   return (
     <HeadlessInput
       {...props}
-      class={controlCompiled().className}
-      style={toSolidStyle(controlCompiled().style)}
-      wrapperClass={wrapperCompiled().className}
-      wrapperStyle={toSolidStyle(wrapperCompiled().style)}
-      leadingIconClass={leadingIconCompiled().className}
-      leadingIconStyle={toSolidStyle(leadingIconCompiled().style)}
-      trailingIconClass={trailingIconCompiled().className}
-      trailingIconStyle={toSolidStyle(trailingIconCompiled().style)}
-      clearButtonClass={clearButtonCompiled().className}
-      clearButtonStyle={toSolidStyle(clearButtonCompiled().style)}
-      trailingButtonClass={trailingButtonCompiled().className}
-      trailingButtonStyle={toSolidStyle(trailingButtonCompiled().style)}
+      controlAttrs={controlAttrs()}
+      wrapperAttrs={wrapperAttrs()}
+      leadingIconAttrs={leadingIconAttrs()}
+      trailingIconAttrs={trailingIconAttrs()}
+      clearButtonAttrs={clearButtonAttrs()}
+      trailingButtonAttrs={trailingButtonAttrs()}
     />
   )
 }

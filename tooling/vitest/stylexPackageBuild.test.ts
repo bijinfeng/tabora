@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process"
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { promisify } from "node:util"
 import { describe, expect, it } from "vitest"
@@ -17,6 +17,9 @@ describe("StyleX package build helper", () => {
           name: "@tabora/stylex-solid-fixture",
           private: true,
           type: "module",
+          scripts: {
+            build: "vp pack src/index.tsx",
+          },
           exports: {
             ".": "./src/index.tsx",
             "./styles.css": "./src/styles.css",
@@ -59,33 +62,31 @@ describe("StyleX package build helper", () => {
       )
       await writeFile(
         join(fixtureDir, "src/styles.css"),
-        "/* Development placeholder. StyleX rules are emitted during package build. */\n",
+        ["@layer reset {", "  :root {", "    --fixture-global: 1;", "  }", "}", ""].join("\n"),
       )
 
-      await execFileAsync(
-        "/usr/bin/env",
-        [
-          "node",
-          "scripts/build-stylex-package.mjs",
-          "--package",
-          fixtureDir,
-          "--entry",
-          "src/index.tsx",
-          "--css-name",
-          "styles.css",
-        ],
-        { cwd: repositoryRoot },
-      )
+      await execFileAsync("/usr/bin/env", ["pnpm", "exec", "vp", "pack", "src/index.tsx"], {
+        cwd: fixtureDir,
+      })
+
+      const distFiles = await readdir(join(fixtureDir, "dist"), { recursive: true })
+      expect(distFiles).toContain("styles.css")
 
       const css = await readFile(join(fixtureDir, "dist/styles.css"), "utf8")
       const js = await readFile(join(fixtureDir, "dist/index.js"), "utf8")
       const manifestAfterBuild = await readFile(join(fixtureDir, "package.json"), "utf8")
 
-      expect(css).toContain("rgb(255,0,0)")
+      expect(css).toMatch(/\.x[a-zA-Z0-9_-]+\s*\{/)
+      expect(css).toMatch(/color:\s*red/)
+      expect(css).toContain("--fixture-global: 1")
       expect(css.length).toBeGreaterThan(20)
       expect(js).not.toContain("stylex.create(")
       expect(js).not.toContain("ProbeProps")
       expect(manifestAfterBuild).toBe(fixtureManifest)
+
+      await expect(stat(join(fixtureDir, ".stylex-build"))).rejects.toMatchObject({
+        code: "ENOENT",
+      })
     } finally {
       await rm(fixtureDir, { recursive: true, force: true })
     }

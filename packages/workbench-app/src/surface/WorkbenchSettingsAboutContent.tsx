@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import type { ShellTranslation } from "../i18n"
-import { color, font, radius, space } from "../stylexTokens.stylex"
+import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 
 const styles = stylex.create({
   stack: {

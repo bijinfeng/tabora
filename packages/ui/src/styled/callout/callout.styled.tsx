@@ -6,7 +6,6 @@ import {
   Banner as PrimitiveBanner,
 } from "../../primitives/callout/callout"
 import type { AlertProps, BannerProps, CalloutVariant } from "../../primitives/callout/callout"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -90,44 +89,58 @@ const styles = stylex.create({
   },
 })
 
-export type StyledBannerProps = BannerProps & {
+type CalloutStyleProps =
+  | "attrs"
+  | "class"
+  | "style"
+  | "iconAttrs"
+  | "iconClass"
+  | "iconStyle"
+  | "bodyAttrs"
+  | "bodyClass"
+  | "bodyStyle"
+  | "titleAttrs"
+  | "titleClass"
+  | "titleStyle"
+  | "descriptionAttrs"
+  | "descriptionClass"
+  | "descriptionStyle"
+  | "actionAttrs"
+  | "actionClass"
+  | "actionStyle"
+  | "closeAttrs"
+  | "closeClass"
+  | "closeStyle"
+
+export type StyledBannerProps = Omit<BannerProps, CalloutStyleProps> & {
   xstyle?: StyleXStyles
 }
 
-export type StyledAlertProps = AlertProps & {
+export type StyledAlertProps = Omit<AlertProps, CalloutStyleProps> & {
   xstyle?: StyleXStyles
 }
 
-function partProps(props: BannerProps | AlertProps) {
-  const iconCompiled = () => stylex.props(styles.icon)
-  const bodyCompiled = () => stylex.props(styles.body)
-  const titleCompiled = () => stylex.props(styles.title)
-  const descriptionCompiled = () => stylex.props(styles.description)
-  const actionCompiled = () => stylex.props(styles.action)
-  const closeCompiled = () => stylex.props(styles.close)
+function partAttrs() {
+  const iconAttrs = () => stylex.attrs(styles.icon)
+  const bodyAttrs = () => stylex.attrs(styles.body)
+  const titleAttrs = () => stylex.attrs(styles.title)
+  const descriptionAttrs = () => stylex.attrs(styles.description)
+  const actionAttrs = () => stylex.attrs(styles.action)
+  const closeAttrs = () => stylex.attrs(styles.close)
 
   return {
-    iconClass: joinClassNames(iconCompiled().className, props.iconClass),
-    iconStyle: mergeSolidStyles(toSolidStyle(iconCompiled().style), props.iconStyle),
-    bodyClass: joinClassNames(bodyCompiled().className, props.bodyClass),
-    bodyStyle: mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle),
-    titleClass: joinClassNames(titleCompiled().className, props.titleClass),
-    titleStyle: mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle),
-    descriptionClass: joinClassNames(descriptionCompiled().className, props.descriptionClass),
-    descriptionStyle: mergeSolidStyles(
-      toSolidStyle(descriptionCompiled().style),
-      props.descriptionStyle,
-    ),
-    actionClass: joinClassNames(actionCompiled().className, props.actionClass),
-    actionStyle: mergeSolidStyles(toSolidStyle(actionCompiled().style), props.actionStyle),
-    closeClass: joinClassNames(closeCompiled().className, props.closeClass),
-    closeStyle: mergeSolidStyles(toSolidStyle(closeCompiled().style), props.closeStyle),
+    iconAttrs: iconAttrs(),
+    bodyAttrs: bodyAttrs(),
+    titleAttrs: titleAttrs(),
+    descriptionAttrs: descriptionAttrs(),
+    actionAttrs: actionAttrs(),
+    closeAttrs: closeAttrs(),
   }
 }
 
 export function Banner(props: StyledBannerProps) {
-  const rootCompiled = () =>
-    stylex.props(
+  const rootAttrs = () =>
+    stylex.attrs(
       styles.root,
       styles.banner,
       (!props.variant || props.variant === "info") && styles.info,
@@ -137,19 +150,12 @@ export function Banner(props: StyledBannerProps) {
       props.xstyle,
     )
 
-  return (
-    <PrimitiveBanner
-      {...props}
-      {...partProps(props)}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-    />
-  )
+  return <PrimitiveBanner {...props} {...partAttrs()} attrs={rootAttrs()} />
 }
 
 export function Alert(props: StyledAlertProps) {
-  const rootCompiled = () =>
-    stylex.props(
+  const rootAttrs = () =>
+    stylex.attrs(
       styles.root,
       (!props.variant || props.variant === "info") && styles.info,
       props.variant === "success" && styles.success,
@@ -158,14 +164,7 @@ export function Alert(props: StyledAlertProps) {
       props.xstyle,
     )
 
-  return (
-    <PrimitiveAlert
-      {...props}
-      {...partProps(props)}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-    />
-  )
+  return <PrimitiveAlert {...props} {...partAttrs()} attrs={rootAttrs()} />
 }
 
 export type { StyledAlertProps as AlertProps, StyledBannerProps as BannerProps, CalloutVariant }

@@ -30,17 +30,12 @@
     "geist": "^1.7.2"
   },
   "devDependencies": {
-    "@babel/plugin-syntax-jsx": "catalog:build",
-    "@babel/plugin-syntax-typescript": "catalog:build",
-    "@babel/plugin-transform-typescript": "catalog:build",
-    "@stylexjs/cli": "catalog:build",
     "@stylexjs/unplugin": "catalog:build",
     "@tabora/stylex-config": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@tsdown/css": "0.22.0",
     "@types/node": "catalog:node",
     "@vitest/browser-playwright": "catalog:test",
-    "babel-preset-solid": "catalog:build",
     "fake-indexeddb": "catalog:test",
     "happy-dom": "catalog:test",
     "playwright": "catalog:test",

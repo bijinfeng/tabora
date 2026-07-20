@@ -3,6 +3,7 @@ import type { HostAdapter } from "@tabora/host-adapters"
 import { createEffect, createMemo, onCleanup, Show } from "solid-js"
 import type { PluginInstance, WorkbenchSearchSettings, Workspace } from "@tabora/plugin-api"
 import { applyThemeTokens } from "@tabora/theme"
+import { color, font } from "@tabora/theme/tokens.stylex"
 
 import type { WorkbenchRuntimeBootstrap } from "../runtime/bootstrap"
 import { applyBackgroundStyle } from "../appearance/backgroundResolver"
@@ -21,7 +22,6 @@ import { createWorkbenchWorkspaceController } from "../workspace/WorkbenchShellW
 import { assignGridOrder } from "../shared/workbenchGrid"
 import { createWorkbenchShellRuntimes } from "./createWorkbenchShellRuntimes"
 import { createWorkbenchShellPluginViewBoundaryCopy } from "../i18n"
-import { color, font } from "../stylexTokens.stylex"
 
 export type WorkbenchShellAppProps = {
   composition: {

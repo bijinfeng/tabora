@@ -17,7 +17,7 @@ export type HeadlessButtonProps = {
   fullWidth?: boolean
   type?: "button" | "submit" | "reset"
   class?: string | undefined
-  style?: JSX.CSSProperties | undefined
+  style?: JSX.HTMLAttributes<HTMLButtonElement>["style"]
   onClick?: (e: MouseEvent) => void
   "aria-label"?: string
   children: JSX.Element
@@ -52,7 +52,7 @@ export type HeadlessIconButtonProps = {
   loading?: boolean
   disabled?: boolean
   class?: string | undefined
-  style?: JSX.CSSProperties | undefined
+  style?: JSX.HTMLAttributes<HTMLButtonElement>["style"]
   "aria-label": string
   onClick?: (e: MouseEvent) => void
   children: JSX.Element

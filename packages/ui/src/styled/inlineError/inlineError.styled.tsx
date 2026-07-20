@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { InlineError as Primitive } from "../../primitives/inlineError/inlineError"
 import type { InlineErrorProps } from "../../primitives/inlineError/inlineError"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -22,20 +21,14 @@ const styles = stylex.create({
   },
 })
 
-export type StyledInlineErrorProps = InlineErrorProps & {
+export type StyledInlineErrorProps = Omit<InlineErrorProps, "attrs" | "class" | "style"> & {
   xstyle?: StyleXStyles
 }
 
 export function InlineError(props: StyledInlineErrorProps) {
-  const compiled = () => stylex.props(styles.root, props.xstyle)
+  const attrs = () => stylex.attrs(styles.root, props.xstyle)
 
-  return (
-    <Primitive
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <Primitive {...props} attrs={attrs()} />
 }
 
 export type { StyledInlineErrorProps as InlineErrorProps }

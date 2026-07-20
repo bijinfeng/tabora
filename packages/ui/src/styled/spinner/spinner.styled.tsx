@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Spinner as SpinnerPrimitive } from "../../primitives/spinner/spinner"
 import type { SpinnerProps } from "../../primitives/spinner/spinner"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const spin = stylex.keyframes({
   to: {
@@ -50,13 +49,13 @@ const styles = stylex.create({
   },
 })
 
-export type StyledSpinnerProps = SpinnerProps & {
+export type StyledSpinnerProps = Omit<SpinnerProps, "attrs" | "class" | "style"> & {
   xstyle?: StyleXStyles
 }
 
 export function Spinner(props: StyledSpinnerProps) {
-  const compiled = () =>
-    stylex.props(
+  const attrs = () =>
+    stylex.attrs(
       styles.root,
       props.size === "sm" && styles.sm,
       (!props.size || props.size === "md") && styles.md,
@@ -64,13 +63,7 @@ export function Spinner(props: StyledSpinnerProps) {
       props.xstyle,
     )
 
-  return (
-    <SpinnerPrimitive
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <SpinnerPrimitive {...props} attrs={attrs()} />
 }
 
 export type { StyledSpinnerProps as SpinnerProps }

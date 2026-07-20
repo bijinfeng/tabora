@@ -5,15 +5,8 @@ import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 import { ContextMenu, type ContextMenuItem } from "@tabora/ui"
 import { X } from "lucide-solid"
-import {
-  color,
-  font,
-  motion,
-  radius,
-  shadow,
-  widgetCardStyleVars,
-  zIndex,
-} from "./stylexTokens.stylex"
+import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
+import { widgetCardStyleVars } from "./WidgetCardShell.stylex"
 
 export type WidgetHostCallbacks = {
   onDblClick: (e: MouseEvent) => void

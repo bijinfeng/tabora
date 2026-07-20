@@ -4,21 +4,24 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./tokens.stylex": "./src/tokens.stylex.ts",
     "./package.json": "./package.json",
     "./global.css": "./src/global.css"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
+      "./tokens.stylex": "./dist/tokens.stylex.js",
       "./package.json": "./package.json",
       "./global.css": "./dist/global.css"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts",
+    "build": "vp pack src/index.ts src/tokens.stylex.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@stylexjs/stylex": "catalog:style",
     "@tabora/plugin-api": "workspace:*"
   },
   "devDependencies": {

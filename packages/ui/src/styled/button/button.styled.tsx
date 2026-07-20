@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
-import type { JSX } from "solid-js"
 
 import { HeadlessButton, HeadlessIconButton } from "../../primitives/button/button"
 import type { HeadlessButtonProps, HeadlessIconButtonProps } from "../../primitives/button/button"
@@ -188,57 +187,56 @@ export type IconButtonProps = Omit<HeadlessIconButtonProps, "class" | "style"> &
   xstyle?: StyleXStyles
 }
 
-function toSolidStyle(
-  style: ReturnType<typeof stylex.props>["style"],
-): JSX.CSSProperties | undefined {
-  return style as JSX.CSSProperties | undefined
-}
+const buttonVariantStyles = {
+  primary: styles.primary,
+  secondary: styles.secondary,
+  subtle: styles.subtle,
+  ghost: styles.ghost,
+  danger: styles.danger,
+  "danger-subtle": styles.dangerSubtle,
+} as const
+
+const buttonSizeStyles = {
+  sm: styles.buttonSm,
+  md: styles.buttonMd,
+  lg: styles.buttonLg,
+} as const
+
+const iconButtonVariantStyles = {
+  ghost: null,
+  secondary: styles.iconSecondary,
+  danger: styles.iconDanger,
+} as const
+
+const iconButtonSizeStyles = {
+  sm: styles.iconSm,
+  md: styles.iconMd,
+  lg: styles.iconLg,
+} as const
 
 export function Button(props: ButtonProps) {
-  const compiled = () =>
-    stylex.props(
+  const attrs = () =>
+    stylex.attrs(
       styles.buttonBase,
-      props.variant === "primary" && styles.primary,
-      (!props.variant || props.variant === "secondary") && styles.secondary,
-      props.variant === "subtle" && styles.subtle,
-      props.variant === "ghost" && styles.ghost,
-      props.variant === "danger" && styles.danger,
-      props.variant === "danger-subtle" && styles.dangerSubtle,
-      props.size === "sm" && styles.buttonSm,
-      (!props.size || props.size === "md") && styles.buttonMd,
-      props.size === "lg" && styles.buttonLg,
+      buttonVariantStyles[props.variant ?? "secondary"],
+      buttonSizeStyles[props.size ?? "md"],
       props.fullWidth && styles.buttonFullWidth,
       props.xstyle,
     )
 
-  return (
-    <HeadlessButton
-      {...props}
-      class={compiled().className}
-      style={toSolidStyle(compiled().style)}
-    />
-  )
+  return <HeadlessButton {...props} {...attrs()} />
 }
 
 export function IconButton(props: IconButtonProps) {
-  const compiled = () =>
-    stylex.props(
+  const attrs = () =>
+    stylex.attrs(
       styles.iconButtonBase,
-      props.variant === "secondary" && styles.iconSecondary,
-      props.variant === "danger" && styles.iconDanger,
-      props.size === "sm" && styles.iconSm,
-      (!props.size || props.size === "md") && styles.iconMd,
-      props.size === "lg" && styles.iconLg,
+      iconButtonVariantStyles[props.variant ?? "ghost"],
+      iconButtonSizeStyles[props.size ?? "md"],
       props.xstyle,
     )
 
-  return (
-    <HeadlessIconButton
-      {...props}
-      class={compiled().className}
-      style={toSolidStyle(compiled().style)}
-    />
-  )
+  return <HeadlessIconButton {...props} {...attrs()} />
 }
 
 export type ButtonVariant = HeadlessButtonProps["variant"]
