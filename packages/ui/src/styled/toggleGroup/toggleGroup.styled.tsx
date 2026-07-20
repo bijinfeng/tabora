@@ -38,15 +38,15 @@ const styles = stylex.create({
       outline: "2px solid rgb(var(--tbr-color-focus))",
       outlineOffset: 2,
     },
-  },
-  itemSelected: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-accent))",
-  },
-  itemDisabled: {
-    cursor: "not-allowed",
-    opacity: 0.45,
+    "[data-pressed]": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      borderColor: "rgb(var(--tbr-color-accent))",
+      color: "rgb(var(--tbr-color-accent))",
+    },
+    "[data-disabled]": {
+      cursor: "not-allowed",
+      opacity: 0.45,
+    },
   },
 })
 
@@ -63,18 +63,13 @@ export type StyledToggleGroupProps = Omit<ToggleGroupProps, ToggleGroupStyleProp
 
 export function ToggleGroup(props: StyledToggleGroupProps) {
   const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
-  const itemCompiled = () => stylex.attrs(styles.item)
-  const itemSelectedCompiled = () => stylex.attrs(styles.itemSelected)
-  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
 
   return (
     <Primitive
       {...props}
       class={rootCompiled().class}
       style={undefined}
-      itemClass={itemCompiled().class}
-      itemSelectedClass={itemSelectedCompiled().class}
-      itemDisabledClass={itemDisabledCompiled().class}
+      itemClass={stylex.attrs(styles.item).class}
     />
   )
 }

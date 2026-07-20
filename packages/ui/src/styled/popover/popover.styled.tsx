@@ -28,6 +28,7 @@ const styles = stylex.create({
     borderWidth: 1,
     boxShadow: "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08)",
     minWidth: 200,
+    outline: "none",
     padding: 12,
     zIndex: 50,
   },
