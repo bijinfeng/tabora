@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Tooltip as Primitive } from "../../primitives/tooltip/tooltip"
 import type { TooltipPlacement, TooltipProps } from "../../primitives/tooltip/tooltip"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const tooltipIn = stylex.keyframes({
   from: {
@@ -61,16 +61,16 @@ export type StyledTooltipProps = TooltipProps & {
 }
 
 export function Tooltip(props: StyledTooltipProps) {
-  const triggerCompiled = () => stylex.props(styles.trigger, props.xstyle)
-  const contentCompiled = () => stylex.props(styles.content, props.contentXstyle)
+  const triggerCompiled = () => stylex.attrs(styles.trigger, props.xstyle)
+  const contentCompiled = () => stylex.attrs(styles.content, props.contentXstyle)
 
   return (
     <Primitive
       {...props}
-      triggerClass={joinClassNames(triggerCompiled().className, props.triggerClass)}
-      triggerStyle={mergeSolidStyles(toSolidStyle(triggerCompiled().style), props.triggerStyle)}
-      contentClass={joinClassNames(contentCompiled().className, props.contentClass, props.class)}
-      contentStyle={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.contentStyle)}
+      triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
+      triggerStyle={props.triggerStyle}
+      contentClass={joinClassNames(contentCompiled().class, props.contentClass, props.class)}
+      contentStyle={props.contentStyle}
     />
   )
 }

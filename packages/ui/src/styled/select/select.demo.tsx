@@ -1,7 +1,8 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
 import { Select } from "./select.styled"
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 
 const engineOptions = [
   { value: "google", label: "Google" },
@@ -37,10 +38,10 @@ export function SelectDemo() {
   >("google")
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>默认搜索源</h4>
-        <div {...sx(demoStyles.rowStart)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>默认搜索源</h4>
+        <div {...stylex.attrs(demoStyles.rowStart)}>
           <Select
             value={singleValue()}
             onChange={setSingleValue}
@@ -51,9 +52,9 @@ export function SelectDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>打开方式</h4>
-        <div {...sx(demoStyles.rowStart)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>打开方式</h4>
+        <div {...stylex.attrs(demoStyles.rowStart)}>
           <Select
             value={openMode()}
             onChange={setOpenMode}
@@ -64,9 +65,9 @@ export function SelectDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>多选标签模式</h4>
-        <div {...sx(demoStyles.rowStart)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>多选标签模式</h4>
+        <div {...stylex.attrs(demoStyles.rowStart)}>
           <div style={{ width: "320px" }}>
             <Select
               value={multiValue()}
@@ -81,9 +82,9 @@ export function SelectDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>尺寸与状态</h4>
-        <div {...sx(demoStyles.rowStart)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>尺寸与状态</h4>
+        <div {...stylex.attrs(demoStyles.rowStart)}>
           <Select
             value={smallValue()}
             onChange={setSmallValue}

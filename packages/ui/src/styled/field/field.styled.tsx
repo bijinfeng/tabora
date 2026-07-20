@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Field as Primitive } from "../../primitives/field/field"
 import type { FieldProps } from "../../primitives/field/field"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -39,25 +39,25 @@ export type StyledFieldProps = FieldProps & {
 }
 
 export function Field(props: StyledFieldProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const labelCompiled = () => stylex.props(styles.label)
-  const requiredCompiled = () => stylex.props(styles.required)
-  const helperCompiled = () => stylex.props(styles.helper)
-  const errorCompiled = () => stylex.props(styles.error)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const labelCompiled = () => stylex.attrs(styles.label)
+  const requiredCompiled = () => stylex.attrs(styles.required)
+  const helperCompiled = () => stylex.attrs(styles.helper)
+  const errorCompiled = () => stylex.attrs(styles.error)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      labelClass={joinClassNames(labelCompiled().className, props.labelClass)}
-      labelStyle={mergeSolidStyles(toSolidStyle(labelCompiled().style), props.labelStyle)}
-      requiredClass={joinClassNames(requiredCompiled().className, props.requiredClass)}
-      requiredStyle={mergeSolidStyles(toSolidStyle(requiredCompiled().style), props.requiredStyle)}
-      helperClass={joinClassNames(helperCompiled().className, props.helperClass)}
-      helperStyle={mergeSolidStyles(toSolidStyle(helperCompiled().style), props.helperStyle)}
-      errorClass={joinClassNames(errorCompiled().className, props.errorClass)}
-      errorStyle={mergeSolidStyles(toSolidStyle(errorCompiled().style), props.errorStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      labelClass={joinClassNames(labelCompiled().class, props.labelClass)}
+      labelStyle={props.labelStyle}
+      requiredClass={joinClassNames(requiredCompiled().class, props.requiredClass)}
+      requiredStyle={props.requiredStyle}
+      helperClass={joinClassNames(helperCompiled().class, props.helperClass)}
+      helperStyle={props.helperStyle}
+      errorClass={joinClassNames(errorCompiled().class, props.errorClass)}
+      errorStyle={props.errorStyle}
     />
   )
 }

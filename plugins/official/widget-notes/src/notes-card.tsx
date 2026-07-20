@@ -1,8 +1,9 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, onMount } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button } from "@tabora/ui"
 import { Plus } from "lucide-solid"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 type Note = {
   id: string
@@ -42,23 +43,26 @@ export function NotesCard(props: WidgetViewProps) {
   const displayNotes = () => notes().slice(0, 4)
 
   return (
-    <div {...sx(styles.cardRoot)} data-notes-card>
-      <div {...sx(styles.cardBody)}>
+    <div {...stylex.attrs(styles.cardRoot)} data-notes-card>
+      <div {...stylex.attrs(styles.cardBody)}>
         <For each={displayNotes()}>
           {(note, index) => (
             <div
-              {...sx(styles.cardRow, index() === displayNotes().length - 1 && styles.cardRowLast)}
+              {...stylex.attrs(
+                styles.cardRow,
+                index() === displayNotes().length - 1 && styles.cardRowLast,
+              )}
               data-note-row
               data-starred={note.starred ? "" : undefined}
             >
-              <span {...sx(styles.dot, note.starred && styles.dotStarred)} />
-              <span {...sx(styles.cardText)}>{firstLine(note.content)}</span>
-              <span {...sx(styles.time)}>{formatTime(note.updatedAt)}</span>
+              <span {...stylex.attrs(styles.dot, note.starred && styles.dotStarred)} />
+              <span {...stylex.attrs(styles.cardText)}>{firstLine(note.content)}</span>
+              <span {...stylex.attrs(styles.time)}>{formatTime(note.updatedAt)}</span>
             </div>
           )}
         </For>
       </div>
-      <div {...sx(styles.cardFooter)} data-notes-card-footer>
+      <div {...stylex.attrs(styles.cardFooter)} data-notes-card-footer>
         <Button
           size="sm"
           variant="ghost"

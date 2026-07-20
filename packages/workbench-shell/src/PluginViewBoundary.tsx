@@ -65,7 +65,7 @@ export function createPluginErrorFallback(
 ): JSX.Element {
   return (
     <div
-      {...stylex.props(styles.fallback)}
+      {...stylex.attrs(styles.fallback)}
       role="alert"
       data-instance-id={instanceId}
       data-plugin-error-fallback
@@ -73,11 +73,11 @@ export function createPluginErrorFallback(
       <strong>{title}</strong>
       <span>{copy?.loadFailed ?? "插件视图加载失败"}</span>
       <small>{instanceId}</small>
-      <pre {...stylex.props(styles.details)}>
+      <pre {...stylex.attrs(styles.details)}>
         {error instanceof Error ? error.message : String(error)}
       </pre>
       <button
-        {...stylex.props(styles.retry)}
+        {...stylex.attrs(styles.retry)}
         data-plugin-error-retry
         type="button"
         onClick={() => reset?.()}

@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Chip as P } from "../../primitives/chip/chip"
 import type { ChipProps } from "../../primitives/chip/chip"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -61,16 +61,16 @@ export type StyledChipProps = ChipProps & {
 
 export function Chip(props: StyledChipProps) {
   const rootCompiled = () =>
-    stylex.props(styles.root, props.selected && styles.selected, props.xstyle)
-  const removeCompiled = () => stylex.props(styles.remove)
+    stylex.attrs(styles.root, props.selected && styles.selected, props.xstyle)
+  const removeCompiled = () => stylex.attrs(styles.remove)
 
   return (
     <P
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      removeClass={joinClassNames(removeCompiled().className, props.removeClass)}
-      removeStyle={mergeSolidStyles(toSolidStyle(removeCompiled().style), props.removeStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      removeClass={joinClassNames(removeCompiled().class, props.removeClass)}
+      removeStyle={props.removeStyle}
     />
   )
 }

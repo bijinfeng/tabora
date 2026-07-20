@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { TreeView as Primitive } from "../../primitives/treeView/treeView"
 import type { TreeViewItem, TreeViewProps } from "../../primitives/treeView/treeView"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -73,43 +73,34 @@ export type StyledTreeViewProps = TreeViewProps & {
 }
 
 export function TreeView(props: StyledTreeViewProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const rowCompiled = () => stylex.props(styles.row)
-  const rowSelectedCompiled = () => stylex.props(styles.rowSelected)
-  const toggleCompiled = () => stylex.props(styles.buttonBase, styles.toggle)
-  const toggleOpenCompiled = () => stylex.props(styles.toggleOpen)
-  const toggleEmptyCompiled = () => stylex.props(styles.toggleEmpty)
-  const labelCompiled = () => stylex.props(styles.buttonBase, styles.label)
-  const iconCompiled = () => stylex.props(styles.icon)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const rowCompiled = () => stylex.attrs(styles.row)
+  const rowSelectedCompiled = () => stylex.attrs(styles.rowSelected)
+  const toggleCompiled = () => stylex.attrs(styles.buttonBase, styles.toggle)
+  const toggleOpenCompiled = () => stylex.attrs(styles.toggleOpen)
+  const toggleEmptyCompiled = () => stylex.attrs(styles.toggleEmpty)
+  const labelCompiled = () => stylex.attrs(styles.buttonBase, styles.label)
+  const iconCompiled = () => stylex.attrs(styles.icon)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      rowClass={joinClassNames(rowCompiled().className, props.rowClass)}
-      rowStyle={mergeSolidStyles(toSolidStyle(rowCompiled().style), props.rowStyle)}
-      rowSelectedClass={joinClassNames(rowSelectedCompiled().className, props.rowSelectedClass)}
-      rowSelectedStyle={mergeSolidStyles(
-        toSolidStyle(rowSelectedCompiled().style),
-        props.rowSelectedStyle,
-      )}
-      toggleClass={joinClassNames(toggleCompiled().className, props.toggleClass)}
-      toggleStyle={mergeSolidStyles(toSolidStyle(toggleCompiled().style), props.toggleStyle)}
-      toggleOpenClass={joinClassNames(toggleOpenCompiled().className, props.toggleOpenClass)}
-      toggleOpenStyle={mergeSolidStyles(
-        toSolidStyle(toggleOpenCompiled().style),
-        props.toggleOpenStyle,
-      )}
-      toggleEmptyClass={joinClassNames(toggleEmptyCompiled().className, props.toggleEmptyClass)}
-      toggleEmptyStyle={mergeSolidStyles(
-        toSolidStyle(toggleEmptyCompiled().style),
-        props.toggleEmptyStyle,
-      )}
-      labelClass={joinClassNames(labelCompiled().className, props.labelClass)}
-      labelStyle={mergeSolidStyles(toSolidStyle(labelCompiled().style), props.labelStyle)}
-      iconClass={joinClassNames(iconCompiled().className, props.iconClass)}
-      iconStyle={mergeSolidStyles(toSolidStyle(iconCompiled().style), props.iconStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      rowClass={joinClassNames(rowCompiled().class, props.rowClass)}
+      rowStyle={props.rowStyle}
+      rowSelectedClass={joinClassNames(rowSelectedCompiled().class, props.rowSelectedClass)}
+      rowSelectedStyle={{ ...props.rowSelectedStyle }}
+      toggleClass={joinClassNames(toggleCompiled().class, props.toggleClass)}
+      toggleStyle={props.toggleStyle}
+      toggleOpenClass={joinClassNames(toggleOpenCompiled().class, props.toggleOpenClass)}
+      toggleOpenStyle={{ ...props.toggleOpenStyle }}
+      toggleEmptyClass={joinClassNames(toggleEmptyCompiled().class, props.toggleEmptyClass)}
+      toggleEmptyStyle={{ ...props.toggleEmptyStyle }}
+      labelClass={joinClassNames(labelCompiled().class, props.labelClass)}
+      labelStyle={props.labelStyle}
+      iconClass={joinClassNames(iconCompiled().class, props.iconClass)}
+      iconStyle={props.iconStyle}
     />
   )
 }

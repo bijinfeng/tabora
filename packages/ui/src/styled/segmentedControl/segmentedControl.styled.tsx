@@ -6,7 +6,6 @@ import type {
   SegmentedControlProps,
   SegmentedControlOption,
 } from "../../primitives/segmentedControl/segmentedControl"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -78,24 +77,24 @@ export type StyledSegmentedControlProps<V extends string> = Omit<
 }
 
 export function SegmentedControl<V extends string>(props: StyledSegmentedControlProps<V>) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const itemCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.item,
       props.size === "sm" && styles.itemSm,
       (!props.size || props.size === "md") && styles.itemMd,
     )
-  const itemSelectedCompiled = () => stylex.props(styles.itemSelected)
-  const itemDisabledCompiled = () => stylex.props(styles.itemDisabled)
+  const itemSelectedCompiled = () => stylex.attrs(styles.itemSelected)
+  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
 
   return (
     <Primitive
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      itemClass={itemCompiled().className}
-      itemSelectedClass={itemSelectedCompiled().className}
-      itemDisabledClass={itemDisabledCompiled().className}
+      class={rootCompiled().class}
+      style={undefined}
+      itemClass={itemCompiled().class}
+      itemSelectedClass={itemSelectedCompiled().class}
+      itemDisabledClass={itemDisabledCompiled().class}
     />
   )
 }

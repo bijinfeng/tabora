@@ -294,7 +294,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   return (
     <Show when={props.isOpen}>
       <div
-        {...stylex.props(styles.overlay)}
+        {...stylex.attrs(styles.overlay)}
         data-command-palette-overlay
         onClick={close}
         role="dialog"
@@ -302,16 +302,16 @@ export function CommandPalette(props: CommandPaletteProps) {
         aria-label="命令面板"
       >
         <div
-          {...stylex.props(styles.panel)}
+          {...stylex.attrs(styles.panel)}
           data-command-palette-panel
           onClick={(event) => event.stopPropagation()}
         >
-          <div {...stylex.props(styles.inputWrap)}>
-            <span {...stylex.props(styles.searchIcon)} aria-hidden="true">
+          <div {...stylex.attrs(styles.inputWrap)}>
+            <span {...stylex.attrs(styles.searchIcon)} aria-hidden="true">
               <Search size={16} />
             </span>
             <input
-              {...stylex.props(styles.input)}
+              {...stylex.attrs(styles.input)}
               data-command-palette-input
               type="text"
               value={props.query}
@@ -327,27 +327,27 @@ export function CommandPalette(props: CommandPaletteProps) {
               onKeyDown={handleKeyDown}
               aria-label={props.copy?.placeholder ?? "搜索命令、卡片或网页"}
             />
-            <span {...stylex.props(styles.escape)}>
+            <span {...stylex.attrs(styles.escape)}>
               <Kbd>esc</Kbd>
             </span>
           </div>
-          <div {...stylex.props(styles.results)}>
+          <div {...stylex.attrs(styles.results)}>
             <Show
               when={items().length > 0}
               fallback={
-                <div {...stylex.props(styles.empty)}>{props.copy?.empty ?? "未找到匹配结果"}</div>
+                <div {...stylex.attrs(styles.empty)}>{props.copy?.empty ?? "未找到匹配结果"}</div>
               }
             >
               <For each={Object.entries(grouped())}>
                 {([group, groupItems]) => (
                   <>
-                    <div {...stylex.props(styles.group)}>{group}</div>
+                    <div {...stylex.attrs(styles.group)}>{group}</div>
                     <For each={groupItems}>
                       {(item) => {
                         const index = items().indexOf(item)
                         return (
                           <button
-                            {...stylex.props(
+                            {...stylex.attrs(
                               styles.item,
                               index === props.activeIdx && styles.itemActive,
                             )}
@@ -362,12 +362,12 @@ export function CommandPalette(props: CommandPaletteProps) {
                               }
                             }}
                           >
-                            <span {...stylex.props(styles.itemIcon)}>
+                            <span {...stylex.attrs(styles.itemIcon)}>
                               {getIconComponent(item.icon)}
                             </span>
-                            <span {...stylex.props(styles.itemText)}>
-                              <span {...stylex.props(styles.itemName)}>{item.name}</span>
-                              <span {...stylex.props(styles.itemDescription)}>{item.desc}</span>
+                            <span {...stylex.attrs(styles.itemText)}>
+                              <span {...stylex.attrs(styles.itemName)}>{item.name}</span>
+                              <span {...stylex.attrs(styles.itemDescription)}>{item.desc}</span>
                             </span>
                             <Show when={item.hint}>
                               <Kbd>{item.hint!}</Kbd>

@@ -2,7 +2,6 @@ import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
 
 import type { SiteI18nApi } from "../app/AppShell"
-import { sx } from "./stylex"
 
 const styles = stylex.create({
   root: {
@@ -39,23 +38,23 @@ const styles = stylex.create({
 
 export function SiteFooter(props: { i18n: SiteI18nApi }) {
   return (
-    <footer {...sx(styles.root)} data-od-id="footer" data-component="SiteFooter">
-      <div {...sx(styles.inner)}>
+    <footer {...stylex.attrs(styles.root)} data-od-id="footer" data-component="SiteFooter">
+      <div {...stylex.attrs(styles.inner)}>
         <span>© 2026 Tabora</span>
-        <span {...sx(styles.links)}>
-          <A {...sx(styles.link)} href="/">
+        <span {...stylex.attrs(styles.links)}>
+          <A {...stylex.attrs(styles.link)} href="/">
             {props.i18n.t("nav.home")}
           </A>{" "}
           ·{" "}
-          <A {...sx(styles.link)} href="/download">
+          <A {...stylex.attrs(styles.link)} href="/download">
             {props.i18n.t("nav.download")}
           </A>{" "}
           ·{" "}
-          <A {...sx(styles.link)} href="/docs">
+          <A {...stylex.attrs(styles.link)} href="/docs">
             {props.i18n.t("nav.docs")}
           </A>{" "}
           ·{" "}
-          <A {...sx(styles.link)} href="/docs/components">
+          <A {...stylex.attrs(styles.link)} href="/docs/components">
             {props.i18n.t("footer.componentSpec")}
           </A>
         </span>

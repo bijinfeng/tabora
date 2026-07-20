@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Badge } from "../badge"
 import { ContextMenu } from "./contextMenu.styled"
 
@@ -8,12 +9,12 @@ export function ContextMenuDemo() {
   const [lastAction, setLastAction] = createSignal("右键后可直接调整卡片布局，无需离开当前网格。")
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>右键卡片快捷操作</strong>
         <span>更适合当前对象的上下文动作，比如布局调整、固定和移除。</span>
       </div>
-      <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.row)}>
         <Badge variant="success">已固定</Badge>
         <span>{lastAction()}</span>
       </div>
@@ -36,7 +37,7 @@ export function ContextMenuDemo() {
           { key: "remove", label: "移除卡片", danger: true },
         ]}
       >
-        <div {...sx(demoStyles.contextMenuContent)}>右键打开菜单</div>
+        <div {...stylex.attrs(demoStyles.contextMenuContent)}>右键打开菜单</div>
       </ContextMenu>
     </div>
   )

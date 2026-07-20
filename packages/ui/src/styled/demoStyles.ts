@@ -1,9 +1,4 @@
 import * as stylex from "@stylexjs/stylex"
-import type { JSX } from "solid-js"
-
-import { toSolidStyle } from "../stylex"
-import type { XStyle } from "../stylex"
-
 export const demoStyles = stylex.create({
   section: {
     marginBottom: 12,
@@ -129,14 +124,3 @@ export const demoStyles = stylex.create({
     gap: 12,
   },
 })
-
-export function sx(...xstyles: XStyle[]): {
-  class: string | undefined
-  style: JSX.CSSProperties | undefined
-} {
-  const compiled = stylex.props(...xstyles)
-  return {
-    class: compiled.className,
-    style: toSolidStyle(compiled.style),
-  }
-}

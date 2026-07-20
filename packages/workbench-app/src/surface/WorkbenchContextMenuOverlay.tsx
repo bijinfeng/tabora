@@ -1,5 +1,4 @@
 import * as stylex from "@stylexjs/stylex"
-import type { JSX } from "solid-js"
 import { ListRow } from "@tabora/ui"
 import { For, Show } from "solid-js"
 
@@ -61,25 +60,21 @@ export function WorkbenchContextMenuOverlay(props: {
     <Show when={props.menu}>
       {(menu) => (
         <div
-          {...stylex.props(styles.overlay)}
+          {...stylex.attrs(styles.overlay)}
           data-workbench-overlay="context-menu"
           onClick={props.onClose}
         >
           <div
-            class={stylex.props(styles.panel).className}
+            class={stylex.attrs(styles.panel).class}
             data-context-menu-panel
-            style={{
-              ...(stylex.props(styles.panel).style as JSX.CSSProperties),
-              left: `${menu().x}px`,
-              top: `${menu().y}px`,
-            }}
+            style={{ left: `${menu().x}px`, top: `${menu().y}px` }}
             onClick={(event) => event.stopPropagation()}
           >
             <For each={props.sections}>
               {(section, sectionIndex) => (
                 <>
                   <Show when={sectionIndex() > 0}>
-                    <hr {...stylex.props(styles.separator)} />
+                    <hr {...stylex.attrs(styles.separator)} />
                   </Show>
                   <For each={section.items}>
                     {(item) => (
@@ -89,7 +84,7 @@ export function WorkbenchContextMenuOverlay(props: {
                         primary={item.label}
                         trailing={
                           <Show when={item.isCurrent}>
-                            <span {...stylex.props(styles.check)}>
+                            <span {...stylex.attrs(styles.check)}>
                               {props.tShell?.("chrome.contextMenu.current") ?? "当前"}
                             </span>
                           </Show>

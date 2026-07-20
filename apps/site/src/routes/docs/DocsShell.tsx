@@ -3,7 +3,6 @@ import * as stylex from "@stylexjs/stylex"
 import { For, type JSX } from "solid-js"
 
 import { componentDocsCategories } from "@tabora/ui/component-docs"
-import { sx } from "../../shared/stylex"
 
 const styles = stylex.create({
   page: {
@@ -70,22 +69,22 @@ const styles = stylex.create({
 
 export function DocsShell(props: { children: JSX.Element }) {
   return (
-    <main {...sx(styles.page)} data-docs-shell>
-      <aside {...sx(styles.sidebar)} aria-label="基础组件目录" data-docs-sidebar>
-        <div {...sx(styles.title)}>基础组件</div>
-        <A {...sx(styles.link, styles.homeLink)} href="/docs" end>
+    <main {...stylex.attrs(styles.page)} data-docs-shell>
+      <aside {...stylex.attrs(styles.sidebar)} aria-label="基础组件目录" data-docs-sidebar>
+        <div {...stylex.attrs(styles.title)}>基础组件</div>
+        <A {...stylex.attrs(styles.link, styles.homeLink)} href="/docs" end>
           文档总览
         </A>
-        <A {...sx(styles.link, styles.homeLink)} href="/docs/components">
+        <A {...stylex.attrs(styles.link, styles.homeLink)} href="/docs/components">
           全部组件
         </A>
         <For each={componentDocsCategories}>
           {(category) => (
             <section>
-              <div {...sx(styles.section)}>{category.title}</div>
+              <div {...stylex.attrs(styles.section)}>{category.title}</div>
               <For each={category.items}>
                 {(item) => (
-                  <A {...sx(styles.link)} href={`/docs/components/${item.id}`}>
+                  <A {...stylex.attrs(styles.link)} href={`/docs/components/${item.id}`}>
                     {item.name}
                   </A>
                 )}
@@ -94,7 +93,7 @@ export function DocsShell(props: { children: JSX.Element }) {
           )}
         </For>
       </aside>
-      <div {...sx(styles.content)}>{props.children}</div>
+      <div {...stylex.attrs(styles.content)}>{props.children}</div>
     </main>
   )
 }

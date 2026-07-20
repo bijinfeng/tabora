@@ -1,11 +1,12 @@
+import * as stylex from "@stylexjs/stylex"
 import { Button } from "../button"
 import { InlineError } from "./inlineError.styled"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 export function InlineErrorDemo() {
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>同步错误提示</strong>
         <span>适合局部失败场景，提示问题并给出单个直接动作。</span>
       </div>

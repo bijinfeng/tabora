@@ -1,7 +1,6 @@
 import { Suspense, lazy, type Component, type JSX } from "solid-js"
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../shared/stylex"
 import accordionDemoSource from "../../../../../packages/ui/src/styled/accordion/accordion.demo.tsx?raw"
 import avatarDemoSource from "../../../../../packages/ui/src/styled/avatar/avatar.demo.tsx?raw"
 import badgeDemoSource from "../../../../../packages/ui/src/styled/badge/badge.demo.tsx?raw"
@@ -451,7 +450,7 @@ const componentExample = (source: string, render: () => JSX.Element): DocsExampl
   language: "tsx",
   source,
   render: () => (
-    <div {...sx(styles.render)} data-docs-demo>
+    <div {...stylex.attrs(styles.render)} data-docs-demo>
       {render()}
     </div>
   ),

@@ -3,7 +3,6 @@ import * as stylex from "@stylexjs/stylex"
 
 import { useSiteI18n, useSiteTheme } from "../app/AppShell"
 import { LocaleToggleButton } from "./LocaleToggleButton"
-import { sx } from "./stylex"
 
 const styles = stylex.create({
   root: {
@@ -154,29 +153,40 @@ export function PrototypeTopnav(props: {
   }
 
   return (
-    <header {...sx(styles.root)} role="banner" data-od-id="topnav" data-component="SiteTopnav">
-      <div {...sx(styles.inner)}>
-        <A {...sx(styles.logo)} href="/" aria-label="Tabora 首页" data-site-logo>
-          <span {...sx(styles.logoMark)} aria-hidden="true">
+    <header
+      {...stylex.attrs(styles.root)}
+      role="banner"
+      data-od-id="topnav"
+      data-component="SiteTopnav"
+    >
+      <div {...stylex.attrs(styles.inner)}>
+        <A {...stylex.attrs(styles.logo)} href="/" aria-label="Tabora 首页" data-site-logo>
+          <span {...stylex.attrs(styles.logoMark)} aria-hidden="true">
             T
           </span>
           <span>Tabora</span>
         </A>
-        <nav {...sx(styles.nav)} aria-label="主导航">
-          <A {...sx(styles.navLink, props.active === "home" && styles.navLinkActive)} href="/">
+        <nav {...stylex.attrs(styles.nav)} aria-label="主导航">
+          <A
+            {...stylex.attrs(styles.navLink, props.active === "home" && styles.navLinkActive)}
+            href="/"
+          >
             {i18n.t("nav.home")}
           </A>
-          <A {...sx(styles.navLink)} href="/#product">
+          <A {...stylex.attrs(styles.navLink)} href="/#product">
             {i18n.t("nav.product")}
           </A>
-          <A {...sx(styles.navLink, props.active === "docs" && styles.navLinkActive)} href="/docs">
+          <A
+            {...stylex.attrs(styles.navLink, props.active === "docs" && styles.navLinkActive)}
+            href="/docs"
+          >
             {i18n.t("nav.docs")}
           </A>
         </nav>
-        <div {...sx(styles.actions)} data-site-nav-actions>
+        <div {...stylex.attrs(styles.actions)} data-site-nav-actions>
           {props.actions?.map((action) => (
             <A
-              {...sx(
+              {...stylex.attrs(
                 styles.button,
                 action.variant === "primary" ? styles.primary : styles.secondary,
               )}
@@ -187,7 +197,7 @@ export function PrototypeTopnav(props: {
           ))}
           <LocaleToggleButton xstyle={[styles.button, styles.secondary, styles.localeControl]} />
           <button
-            {...sx(styles.button, styles.secondary, styles.iconButton)}
+            {...stylex.attrs(styles.button, styles.secondary, styles.iconButton)}
             type="button"
             data-dark-toggle
             aria-label={i18n.t("a11y.toggleTheme")}
@@ -197,7 +207,7 @@ export function PrototypeTopnav(props: {
             }}
           >
             <svg
-              {...sx(styles.icon, theme.dark() && styles.hidden)}
+              {...stylex.attrs(styles.icon, theme.dark() && styles.hidden)}
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -209,7 +219,7 @@ export function PrototypeTopnav(props: {
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
             <svg
-              {...sx(styles.icon, !theme.dark() && styles.hidden)}
+              {...stylex.attrs(styles.icon, !theme.dark() && styles.hidden)}
               width="16"
               height="16"
               viewBox="0 0 24 24"

@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import {
@@ -7,7 +8,7 @@ import {
   LINKS_KEY,
   type QuickLink,
 } from "./quick-links-data"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 export function QuickLinksCard(props: WidgetViewProps) {
   const [links, setLinks] = createSignal<QuickLink[]>([])
@@ -44,11 +45,11 @@ export function QuickLinksCard(props: WidgetViewProps) {
   })
 
   return (
-    <div {...sx(styles.card)} data-quick-links-card>
+    <div {...stylex.attrs(styles.card)} data-quick-links-card>
       <Show when={showSearch()}>
-        <div {...sx(styles.search)} role="search">
+        <div {...stylex.attrs(styles.search)} role="search">
           <input
-            {...sx(styles.searchInput)}
+            {...stylex.attrs(styles.searchInput)}
             type="text"
             value={query()}
             onInput={(event) => setQuery(event.currentTarget.value)}
@@ -57,18 +58,21 @@ export function QuickLinksCard(props: WidgetViewProps) {
           />
         </div>
       </Show>
-      <ul {...sx(styles.grid, props.size === "S" && styles.gridSmall)} aria-label="快捷入口">
+      <ul
+        {...stylex.attrs(styles.grid, props.size === "S" && styles.gridSmall)}
+        aria-label="快捷入口"
+      >
         <For each={visibleLinks()}>
           {(link) => (
-            <li {...sx(styles.item, props.size === "S" && styles.itemSmall)}>
+            <li {...stylex.attrs(styles.item, props.size === "S" && styles.itemSmall)}>
               <button
-                {...sx(styles.link)}
+                {...stylex.attrs(styles.link)}
                 data-quick-link
                 type="button"
                 onClick={() => void props.host.openExternal(link.url)}
               >
-                <span {...sx(styles.mark)}>{initialsFromTitle(link.title)}</span>
-                <span {...sx(styles.label, props.size === "S" && styles.labelHidden)}>
+                <span {...stylex.attrs(styles.mark)}>{initialsFromTitle(link.title)}</span>
+                <span {...stylex.attrs(styles.label, props.size === "S" && styles.labelHidden)}>
                   {link.title}
                 </span>
               </button>
@@ -76,12 +80,18 @@ export function QuickLinksCard(props: WidgetViewProps) {
           )}
         </For>
         <Show when={query().trim() && filteredLinks().length === 0}>
-          <li {...sx(styles.empty)}>未找到匹配的快捷入口</li>
+          <li {...stylex.attrs(styles.empty)}>未找到匹配的快捷入口</li>
         </Show>
-        <li {...sx(styles.item, styles.itemAdd, props.size === "S" && styles.itemSmall)}>
-          <button {...sx(styles.link)} type="button" onClick={() => props.host.openExpand()}>
-            <span {...sx(styles.addMark)}>+</span>
-            <span {...sx(styles.label, props.size === "S" && styles.labelHidden)}>添加</span>
+        <li {...stylex.attrs(styles.item, styles.itemAdd, props.size === "S" && styles.itemSmall)}>
+          <button
+            {...stylex.attrs(styles.link)}
+            type="button"
+            onClick={() => props.host.openExpand()}
+          >
+            <span {...stylex.attrs(styles.addMark)}>+</span>
+            <span {...stylex.attrs(styles.label, props.size === "S" && styles.labelHidden)}>
+              添加
+            </span>
           </button>
         </li>
       </ul>

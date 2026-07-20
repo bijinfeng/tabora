@@ -4,7 +4,7 @@ import type { JSX } from "solid-js"
 import { ChevronLeft, ChevronRight } from "lucide-solid"
 import { For } from "solid-js"
 
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 export type DatePickerProps = {
   value?: string
@@ -163,19 +163,19 @@ export function DatePicker(props: DatePickerProps) {
   const todayStr = props.today ?? new Date().toISOString().slice(0, 10)
   const markedSet = () => new Set(props.markedDates ?? [])
 
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const headerCompiled = () => stylex.props(styles.header)
-  const labelCompiled = () => stylex.props(styles.label)
-  const navCompiled = () => stylex.props(styles.nav)
-  const navButtonCompiled = () => stylex.props(styles.navButton)
-  const gridCompiled = () => stylex.props(styles.grid)
-  const dowCompiled = () => stylex.props(styles.dow)
-  const emptyDayCompiled = () => stylex.props(styles.dayBase, styles.emptyDay)
-  const dayBaseCompiled = () => stylex.props(styles.dayBase, styles.day)
-  const todayCompiled = () => stylex.props(styles.today)
-  const activeCompiled = () => stylex.props(styles.active)
-  const markedCompiled = () => stylex.props(styles.marked)
-  const todayMarkedCompiled = () => stylex.props(styles.todayMarked)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const headerCompiled = () => stylex.attrs(styles.header)
+  const labelCompiled = () => stylex.attrs(styles.label)
+  const navCompiled = () => stylex.attrs(styles.nav)
+  const navButtonCompiled = () => stylex.attrs(styles.navButton)
+  const gridCompiled = () => stylex.attrs(styles.grid)
+  const dowCompiled = () => stylex.attrs(styles.dow)
+  const emptyDayCompiled = () => stylex.attrs(styles.dayBase, styles.emptyDay)
+  const dayBaseCompiled = () => stylex.attrs(styles.dayBase, styles.day)
+  const todayCompiled = () => stylex.attrs(styles.today)
+  const activeCompiled = () => stylex.attrs(styles.active)
+  const markedCompiled = () => stylex.attrs(styles.marked)
+  const todayMarkedCompiled = () => stylex.attrs(styles.todayMarked)
 
   function setMonth(delta: number) {
     const d = new Date(props.year, props.month + delta, 1)
@@ -188,18 +188,15 @@ export function DatePicker(props: DatePickerProps) {
   }
 
   return (
-    <div
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-    >
-      <div class={headerCompiled().className} style={toSolidStyle(headerCompiled().style)}>
-        <span class={labelCompiled().className} style={toSolidStyle(labelCompiled().style)}>
+    <div class={joinClassNames(rootCompiled().class, props.class)} style={props.style}>
+      <div class={headerCompiled().class} style={props.style}>
+        <span class={labelCompiled().class} style={props.style}>
           {formatMonthLabel(props.year, props.month)}
         </span>
-        <div class={navCompiled().className} style={toSolidStyle(navCompiled().style)}>
+        <div class={navCompiled().class} style={props.style}>
           <button
-            class={navButtonCompiled().className}
-            style={toSolidStyle(navButtonCompiled().style)}
+            class={navButtonCompiled().class}
+            style={props.style}
             type="button"
             aria-label="上个月"
             onClick={() => setMonth(-1)}
@@ -207,8 +204,8 @@ export function DatePicker(props: DatePickerProps) {
             <ChevronLeft size={12} />
           </button>
           <button
-            class={navButtonCompiled().className}
-            style={toSolidStyle(navButtonCompiled().style)}
+            class={navButtonCompiled().class}
+            style={props.style}
             type="button"
             aria-label="下个月"
             onClick={() => setMonth(1)}
@@ -217,10 +214,10 @@ export function DatePicker(props: DatePickerProps) {
           </button>
         </div>
       </div>
-      <div class={gridCompiled().className} style={toSolidStyle(gridCompiled().style)}>
+      <div class={gridCompiled().class} style={props.style}>
         <For each={DAY_NAMES}>
           {(name) => (
-            <div class={dowCompiled().className} style={toSolidStyle(dowCompiled().style)}>
+            <div class={dowCompiled().class} style={props.style}>
               {name}
             </div>
           )}
@@ -228,12 +225,7 @@ export function DatePicker(props: DatePickerProps) {
         <For each={days()}>
           {(d) => {
             if (!d.dateStr) {
-              return (
-                <span
-                  class={emptyDayCompiled().className}
-                  style={toSolidStyle(emptyDayCompiled().style)}
-                />
-              )
+              return <span class={emptyDayCompiled().class} style={props.style} />
             }
             const isToday = d.dateStr === todayStr
             const isActive = d.dateStr === props.value
@@ -241,19 +233,13 @@ export function DatePicker(props: DatePickerProps) {
             return (
               <button
                 class={joinClassNames(
-                  dayBaseCompiled().className,
-                  isActive && !isToday && activeCompiled().className,
-                  isToday && todayCompiled().className,
-                  isMarked && markedCompiled().className,
-                  isToday && isMarked && todayMarkedCompiled().className,
+                  dayBaseCompiled().class,
+                  isActive && !isToday && activeCompiled().class,
+                  isToday && todayCompiled().class,
+                  isMarked && markedCompiled().class,
+                  isToday && isMarked && todayMarkedCompiled().class,
                 )}
-                style={mergeSolidStyles(
-                  toSolidStyle(dayBaseCompiled().style),
-                  isActive && !isToday ? toSolidStyle(activeCompiled().style) : undefined,
-                  isToday ? toSolidStyle(todayCompiled().style) : undefined,
-                  isMarked ? toSolidStyle(markedCompiled().style) : undefined,
-                  isToday && isMarked ? toSolidStyle(todayMarkedCompiled().style) : undefined,
-                )}
+                style={{}}
                 type="button"
                 aria-label={`${props.year}年${props.month + 1}月${d.day}日`}
                 aria-pressed={isActive}

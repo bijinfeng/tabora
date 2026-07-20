@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Badge } from "../badge"
 import { CommandPalette } from "./commandPalette.styled"
 
@@ -9,12 +10,12 @@ export function CommandPaletteDemo() {
   const [lastAction, setLastAction] = createSignal("最近执行：打开工作区设置")
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>工作台命令中心</strong>
         <span>把命令、卡片和搜索源放进同一入口，方便键盘优先的快速流转。</span>
       </div>
-      <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.row)}>
         <Badge variant="neutral">⌘K</Badge>
         <span>{lastAction()}</span>
       </div>

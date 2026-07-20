@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Dialog as P } from "../../primitives/dialog/dialog"
 import type { DialogProps } from "../../primitives/dialog/dialog"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const fadeIn = stylex.keyframes({
   from: {
@@ -84,31 +84,27 @@ export type StyledDialogProps = DialogProps & {
 }
 
 export function Dialog(props: StyledDialogProps) {
-  const overlayCompiled = () => stylex.props(styles.overlay, props.xstyle)
+  const overlayCompiled = () => stylex.attrs(styles.overlay, props.xstyle)
   const panelCompiled = () =>
-    stylex.props(styles.panel, props.destructive && styles.panelDestructive, props.panelXstyle)
+    stylex.attrs(styles.panel, props.destructive && styles.panelDestructive, props.panelXstyle)
   const headerCompiled = () =>
-    stylex.props(styles.header, props.destructive && styles.headerDestructive)
-  const bodyCompiled = () => stylex.props(styles.body)
-  const footerCompiled = () => stylex.props(styles.footer)
+    stylex.attrs(styles.header, props.destructive && styles.headerDestructive)
+  const bodyCompiled = () => stylex.attrs(styles.body)
+  const footerCompiled = () => stylex.attrs(styles.footer)
 
   return (
     <P
       {...props}
-      overlayClass={joinClassNames(overlayCompiled().className, props.overlayClass, props.class)}
-      overlayStyle={mergeSolidStyles(
-        toSolidStyle(overlayCompiled().style),
-        props.overlayStyle,
-        props.style,
-      )}
-      panelClass={joinClassNames(panelCompiled().className, props.panelClass)}
-      panelStyle={mergeSolidStyles(toSolidStyle(panelCompiled().style), props.panelStyle)}
-      headerClass={joinClassNames(headerCompiled().className, props.headerClass)}
-      headerStyle={mergeSolidStyles(toSolidStyle(headerCompiled().style), props.headerStyle)}
-      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
-      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
-      footerClass={joinClassNames(footerCompiled().className, props.footerClass)}
-      footerStyle={mergeSolidStyles(toSolidStyle(footerCompiled().style), props.footerStyle)}
+      overlayClass={joinClassNames(overlayCompiled().class, props.overlayClass, props.class)}
+      overlayStyle={{ ...props.overlayStyle, ...props.style }}
+      panelClass={joinClassNames(panelCompiled().class, props.panelClass)}
+      panelStyle={props.panelStyle}
+      headerClass={joinClassNames(headerCompiled().class, props.headerClass)}
+      headerStyle={props.headerStyle}
+      bodyClass={joinClassNames(bodyCompiled().class, props.bodyClass)}
+      bodyStyle={props.bodyStyle}
+      footerClass={joinClassNames(footerCompiled().class, props.footerClass)}
+      footerStyle={props.footerStyle}
     />
   )
 }

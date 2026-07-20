@@ -1,7 +1,6 @@
 import { createMemo, Match, Switch } from "solid-js"
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../../shared/stylex"
 import {
   type DocsComponentDemo,
   type DocsComponentSpec,
@@ -282,7 +281,7 @@ export function DocsGuideSections(props: {
   )
 
   return (
-    <main {...sx(styles.main)}>
+    <main {...stylex.attrs(styles.main)}>
       <Switch fallback={<MissingDocsSection id={page().id} locale={props.locale} />}>
         <Match when={page().kind === "guide" && page().id === "quickstart"}>
           <QuickstartSection section={props.content.sections.quickstart} />
@@ -311,26 +310,26 @@ export function DocsGuideSections(props: {
 
 function QuickstartSection(props: { section: DocsPageContent["sections"]["quickstart"] }) {
   return (
-    <section {...sx(styles.section)} id="quickstart">
+    <section {...stylex.attrs(styles.section)} id="quickstart">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
       {props.section.demos.map((demo) => (
-        <div {...sx(styles.demo)} data-docs-demo>
-          <div {...sx(styles.demoHead)}>
-            <h4 {...sx(styles.demoTitle)}>{demo.title}</h4>
+        <div {...stylex.attrs(styles.demo)} data-docs-demo>
+          <div {...stylex.attrs(styles.demoHead)}>
+            <h4 {...stylex.attrs(styles.demoTitle)}>{demo.title}</h4>
           </div>
-          <div {...sx(styles.demoBody)}>
+          <div {...stylex.attrs(styles.demoBody)}>
             {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
             {demo.treeBlock ? (
-              <div {...sx(styles.codeBlock)} data-docs-code>
-                <div {...sx(styles.codeHead)}>
+              <div {...stylex.attrs(styles.codeBlock)} data-docs-code>
+                <div {...stylex.attrs(styles.codeHead)}>
                   <span>{demo.treeBlock.label}</span>
                 </div>
-                <div {...sx(styles.codeWindow)}>
-                  <pre {...sx(styles.pre)}>
+                <div {...stylex.attrs(styles.codeWindow)}>
+                  <pre {...stylex.attrs(styles.pre)}>
                     <code>{demo.treeBlock.code}</code>
                   </pre>
                 </div>
@@ -345,17 +344,17 @@ function QuickstartSection(props: { section: DocsPageContent["sections"]["quicks
 
 function ManifestSection(props: { section: DocsPageContent["sections"]["manifest"] }) {
   return (
-    <section {...sx(styles.section)} id="manifest">
+    <section {...stylex.attrs(styles.section)} id="manifest">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
-      <div {...sx(styles.anatomy)}>
-        <h4 {...sx(styles.anatomyTitle)}>{props.section.anatomyTitle}</h4>
-        <ul {...sx(styles.anatomyList)}>
+      <div {...stylex.attrs(styles.anatomy)}>
+        <h4 {...stylex.attrs(styles.anatomyTitle)}>{props.section.anatomyTitle}</h4>
+        <ul {...stylex.attrs(styles.anatomyList)}>
           {props.section.anatomyItems.map((item) => (
-            <li {...sx(styles.anatomyItem)}>{item}</li>
+            <li {...stylex.attrs(styles.anatomyItem)}>{item}</li>
           ))}
         </ul>
       </div>
@@ -367,18 +366,18 @@ function ManifestSection(props: { section: DocsPageContent["sections"]["manifest
 
 function RuntimeSection(props: { section: DocsPageContent["sections"]["runtime"] }) {
   return (
-    <section {...sx(styles.section)} id="runtime">
+    <section {...stylex.attrs(styles.section)} id="runtime">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
       {props.section.demos.map((demo) => (
-        <div {...sx(styles.demo)} data-docs-demo>
-          <div {...sx(styles.demoHead)}>
-            <h4 {...sx(styles.demoTitle)}>{demo.title}</h4>
+        <div {...stylex.attrs(styles.demo)} data-docs-demo>
+          <div {...stylex.attrs(styles.demoHead)}>
+            <h4 {...stylex.attrs(styles.demoTitle)}>{demo.title}</h4>
           </div>
-          <div {...sx(styles.demoBody)}>
+          <div {...stylex.attrs(styles.demoBody)}>
             {demo.codeBlock ? <DocsCodeBlock block={demo.codeBlock} /> : null}
           </div>
         </div>
@@ -390,21 +389,21 @@ function RuntimeSection(props: { section: DocsPageContent["sections"]["runtime"]
 
 function ContributionsSection(props: { section: DocsPageContent["sections"]["contributions"] }) {
   return (
-    <section {...sx(styles.section)} id="contributions">
+    <section {...stylex.attrs(styles.section)} id="contributions">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
       <DocsSpecTable table={props.section.table} />
-      <div {...sx(styles.doDont)}>
-        <div {...sx(styles.doDontPanel)}>
-          <h5 {...sx(styles.doDontTitle)}>{props.section.doTitle}</h5>
-          <p {...sx(styles.body)}>{props.section.doBody}</p>
+      <div {...stylex.attrs(styles.doDont)}>
+        <div {...stylex.attrs(styles.doDontPanel)}>
+          <h5 {...stylex.attrs(styles.doDontTitle)}>{props.section.doTitle}</h5>
+          <p {...stylex.attrs(styles.body)}>{props.section.doBody}</p>
         </div>
-        <div {...sx(styles.doDontPanel)}>
-          <h5 {...sx(styles.doDontTitle)}>{props.section.dontTitle}</h5>
-          <p {...sx(styles.body)}>{props.section.dontBody}</p>
+        <div {...stylex.attrs(styles.doDontPanel)}>
+          <h5 {...stylex.attrs(styles.doDontTitle)}>{props.section.dontTitle}</h5>
+          <p {...stylex.attrs(styles.body)}>{props.section.dontBody}</p>
         </div>
       </div>
     </section>
@@ -413,20 +412,22 @@ function ContributionsSection(props: { section: DocsPageContent["sections"]["con
 
 function TokensSection(props: { section: DocsPageContent["sections"]["tokens"] }) {
   return (
-    <section {...sx(styles.section)} id="tokens">
+    <section {...stylex.attrs(styles.section)} id="tokens">
       <DocsSectionHead
         eyebrow={props.section.eyebrow}
         title={props.section.title}
         description={props.section.description}
       />
-      <div {...sx(styles.demo)} data-docs-demo>
-        <div {...sx(styles.demoHead)}>
-          <h4 {...sx(styles.demoTitle)}>{props.section.previewTitle}</h4>
+      <div {...stylex.attrs(styles.demo)} data-docs-demo>
+        <div {...stylex.attrs(styles.demoHead)}>
+          <h4 {...stylex.attrs(styles.demoTitle)}>{props.section.previewTitle}</h4>
         </div>
-        <div {...sx(styles.demoBody)}>
-          <div {...sx(styles.swatches)}>
+        <div {...stylex.attrs(styles.demoBody)}>
+          <div {...stylex.attrs(styles.swatches)}>
             {props.section.swatches.map((swatch) => (
-              <div {...sx(styles.swatch, swatchToneStyle(swatch.tone))}>{swatch.name}</div>
+              <div {...stylex.attrs(styles.swatch, swatchToneStyle(swatch.tone))}>
+                {swatch.name}
+              </div>
             ))}
           </div>
         </div>
@@ -440,7 +441,7 @@ function MissingDocsSection(props: { id: string; locale: "zh-CN" | "en" }) {
   const isEnglish = props.locale === "en"
 
   return (
-    <section {...sx(styles.section)}>
+    <section {...stylex.attrs(styles.section)}>
       <DocsSectionHead
         eyebrow={isEnglish ? "NOT FOUND" : "未找到"}
         title={isEnglish ? "This docs page does not exist" : "没有找到这个文档页面"}
@@ -450,7 +451,7 @@ function MissingDocsSection(props: { id: string; locale: "zh-CN" | "en" }) {
             : "请从左侧导航选择一个文档页面继续。"
         }
       />
-      <a {...sx(styles.button)} href={getDocsSectionPath(defaultDocsSectionId)}>
+      <a {...stylex.attrs(styles.button)} href={getDocsSectionPath(defaultDocsSectionId)}>
         {isEnglish ? "Back to quick start" : "返回快速开始"}
       </a>
     </section>
@@ -459,53 +460,53 @@ function MissingDocsSection(props: { id: string; locale: "zh-CN" | "en" }) {
 
 function DocsSectionHead(props: { eyebrow: string; title: string; description: string }) {
   return (
-    <div {...sx(styles.sectionHead)}>
-      <p {...sx(styles.eyebrow)}>{props.eyebrow}</p>
-      <h2 {...sx(styles.sectionTitle)}>{props.title}</h2>
-      <p {...sx(styles.body)}>{props.description}</p>
+    <div {...stylex.attrs(styles.sectionHead)}>
+      <p {...stylex.attrs(styles.eyebrow)}>{props.eyebrow}</p>
+      <h2 {...stylex.attrs(styles.sectionTitle)}>{props.title}</h2>
+      <p {...stylex.attrs(styles.body)}>{props.description}</p>
     </div>
   )
 }
 
 function DocsComponentSpecSection(props: { spec: DocsComponentSpec; locale: "zh-CN" | "en" }) {
   return (
-    <section {...sx(styles.section)} id={props.spec.id}>
-      <div {...sx(styles.compHeader)}>
-        <h3 {...sx(styles.compTitle)}>{props.spec.title}</h3>
-        <p {...sx(styles.body)}>{props.spec.description}</p>
-        <div {...sx(styles.meta)}>
+    <section {...stylex.attrs(styles.section)} id={props.spec.id}>
+      <div {...stylex.attrs(styles.compHeader)}>
+        <h3 {...stylex.attrs(styles.compTitle)}>{props.spec.title}</h3>
+        <p {...stylex.attrs(styles.body)}>{props.spec.description}</p>
+        <div {...stylex.attrs(styles.meta)}>
           {props.spec.metaTags.map((tag) => (
-            <span {...sx(styles.metaTag)}>{tag}</span>
+            <span {...stylex.attrs(styles.metaTag)}>{tag}</span>
           ))}
         </div>
       </div>
       {props.spec.anatomyTitle ? (
-        <div {...sx(styles.anatomy)}>
-          <h4 {...sx(styles.anatomyTitle)}>{props.spec.anatomyTitle}</h4>
-          <ul {...sx(styles.anatomyList)}>
+        <div {...stylex.attrs(styles.anatomy)}>
+          <h4 {...stylex.attrs(styles.anatomyTitle)}>{props.spec.anatomyTitle}</h4>
+          <ul {...stylex.attrs(styles.anatomyList)}>
             {props.spec.anatomyItems?.map((item) => (
-              <li {...sx(styles.anatomyItem)}>{item}</li>
+              <li {...stylex.attrs(styles.anatomyItem)}>{item}</li>
             ))}
           </ul>
         </div>
       ) : null}
       {props.spec.demos.map((demo) => (
-        <div {...sx(styles.demo)} data-docs-demo>
-          <div {...sx(styles.demoHead)}>
-            <h4 {...sx(styles.demoTitle)}>{demo.title}</h4>
+        <div {...stylex.attrs(styles.demo)} data-docs-demo>
+          <div {...stylex.attrs(styles.demoHead)}>
+            <h4 {...stylex.attrs(styles.demoTitle)}>{demo.title}</h4>
           </div>
           <DocsComponentDemoView demo={demo} locale={props.locale} />
         </div>
       ))}
       <DocsSpecTable table={props.spec.table} />
-      <div {...sx(styles.doDont)}>
-        <div {...sx(styles.doDontPanel)}>
-          <h5 {...sx(styles.doDontTitle)}>{props.spec.doTitle}</h5>
-          <p {...sx(styles.body)}>{props.spec.doBody}</p>
+      <div {...stylex.attrs(styles.doDont)}>
+        <div {...stylex.attrs(styles.doDontPanel)}>
+          <h5 {...stylex.attrs(styles.doDontTitle)}>{props.spec.doTitle}</h5>
+          <p {...stylex.attrs(styles.body)}>{props.spec.doBody}</p>
         </div>
-        <div {...sx(styles.doDontPanel)}>
-          <h5 {...sx(styles.doDontTitle)}>{props.spec.dontTitle}</h5>
-          <p {...sx(styles.body)}>{props.spec.dontBody}</p>
+        <div {...stylex.attrs(styles.doDontPanel)}>
+          <h5 {...stylex.attrs(styles.doDontTitle)}>{props.spec.dontTitle}</h5>
+          <p {...stylex.attrs(styles.body)}>{props.spec.dontBody}</p>
         </div>
       </div>
       {props.spec.pluginExample ? <DocsCodeBlock block={props.spec.pluginExample} /> : null}
@@ -520,7 +521,7 @@ function DocsComponentDemoView(props: { demo: DocsComponentDemo; locale: "zh-CN"
 
     return (
       <>
-        <div {...sx(styles.demoBody)} data-docs-demo>
+        <div {...stylex.attrs(styles.demoBody)} data-docs-demo>
           {example.render()}
         </div>
         <DocsCodeBlock
@@ -537,7 +538,7 @@ function DocsComponentDemoView(props: { demo: DocsComponentDemo; locale: "zh-CN"
 
   return (
     <>
-      <div {...sx(styles.demoBody)} data-docs-demo>
+      <div {...stylex.attrs(styles.demoBody)} data-docs-demo>
         <div innerHTML={props.demo.previewHtml} />
       </div>
       <DocsCodeBlock block={props.demo.codeBlock} />

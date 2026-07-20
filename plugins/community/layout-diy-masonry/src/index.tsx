@@ -81,17 +81,6 @@ const styles = stylex.create({
   },
 })
 
-function sx(
-  style: stylex.StyleXStyles,
-  className?: string,
-): { class: string | undefined; style: JSX.CSSProperties } {
-  const compiled = stylex.props(style)
-  return {
-    class: [compiled.className, className].filter(Boolean).join(" ") || undefined,
-    style: compiled.style as JSX.CSSProperties,
-  }
-}
-
 function splitIntoColumns(instances: PluginInstance[]): PluginInstance[][] {
   const columns: PluginInstance[][] = Array.from({ length: COLUMN_COUNT }, () => [])
   instances.forEach((inst, index) => {
@@ -106,19 +95,35 @@ export function MasonryLayout(props: LayoutViewProps<JSX.Element>) {
   const columns = () => splitIntoColumns(masonry()?.instances ?? [])
 
   return (
-    <main {...sx(styles.root, "layout-masonry")} data-layout="diy-masonry">
-      <div {...sx(styles.columns, "masonry-columns")}>
+    <main
+      {...stylex.attrs(styles.root)}
+      class={[stylex.attrs(styles.root).class, "layout-masonry"].filter(Boolean).join(" ")}
+      data-layout="diy-masonry"
+    >
+      <div
+        {...stylex.attrs(styles.columns)}
+        class={[stylex.attrs(styles.columns).class, "masonry-columns"].filter(Boolean).join(" ")}
+      >
         <For each={columns()}>
           {(column) => (
-            <div {...sx(styles.column, "masonry-column")}>
+            <div
+              {...stylex.attrs(styles.column)}
+              class={[stylex.attrs(styles.column).class, "masonry-column"]
+                .filter(Boolean)
+                .join(" ")}
+            >
               <For each={column}>{(inst) => masonry()!.renderInstance(inst)}</For>
             </div>
           )}
         </For>
       </div>
-      <div {...sx(styles.fabWrap, "masonry-fab-wrap")}>
+      <div
+        {...stylex.attrs(styles.fabWrap)}
+        class={[stylex.attrs(styles.fabWrap).class, "masonry-fab-wrap"].filter(Boolean).join(" ")}
+      >
         <button
-          {...sx(styles.fab, "masonry-fab")}
+          {...stylex.attrs(styles.fab)}
+          class={[stylex.attrs(styles.fab).class, "masonry-fab"].filter(Boolean).join(" ")}
           aria-label="打开菜单"
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
@@ -126,11 +131,18 @@ export function MasonryLayout(props: LayoutViewProps<JSX.Element>) {
           <Menu size={20} />
         </button>
         <Show when={menuOpen()}>
-          <div {...sx(styles.menu, "masonry-menu")} role="menu">
+          <div
+            {...stylex.attrs(styles.menu)}
+            class={[stylex.attrs(styles.menu).class, "masonry-menu"].filter(Boolean).join(" ")}
+            role="menu"
+          >
             <For each={props.host.getGlobalActions("menu")}>
               {(action) => (
                 <button
-                  {...sx(styles.menuItem, "masonry-menu-item")}
+                  {...stylex.attrs(styles.menuItem)}
+                  class={[stylex.attrs(styles.menuItem).class, "masonry-menu-item"]
+                    .filter(Boolean)
+                    .join(" ")}
                   role="menuitem"
                   type="button"
                   onClick={() => {
@@ -138,7 +150,7 @@ export function MasonryLayout(props: LayoutViewProps<JSX.Element>) {
                     setMenuOpen(false)
                   }}
                 >
-                  <span {...sx(styles.menuIcon)}>
+                  <span {...stylex.attrs(styles.menuIcon)}>
                     <HostActionIcon id={action.id} icon={action.icon} size={16} />
                   </span>
                   <span>{action.label}</span>

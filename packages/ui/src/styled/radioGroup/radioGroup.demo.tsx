@@ -1,14 +1,15 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { RadioGroup } from "./radioGroup.styled"
 
 export function RadioGroupDemo() {
   const [value, setValue] = createSignal<"cards" | "list" | "compact">("cards")
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>搜索结果布局</strong>
         <span>适合 3-5 个互斥方案，并直接展示每种方案的说明。</span>
       </div>
@@ -22,7 +23,7 @@ export function RadioGroupDemo() {
           { value: "compact", label: "紧凑布局", description: "为窄宽度或小屏预留更多内容空间" },
         ]}
       />
-      <div {...sx(demoStyles.stackCompact)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <span>当前选择</span>
         <strong>
           {value() === "cards" ? "卡片布局" : value() === "list" ? "列表布局" : "紧凑布局"}

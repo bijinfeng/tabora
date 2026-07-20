@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { ContextMenu as Primitive } from "../../primitives/contextMenu/contextMenu"
 import type { ContextMenuItem, ContextMenuProps } from "../../primitives/contextMenu/contextMenu"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   trigger: {
@@ -103,43 +103,37 @@ export type StyledContextMenuProps = ContextMenuProps & {
 }
 
 export function ContextMenu(props: StyledContextMenuProps) {
-  const triggerCompiled = () => stylex.props(styles.trigger, props.xstyle)
-  const contentCompiled = () => stylex.props(styles.content)
-  const itemCompiled = () => stylex.props(styles.item)
-  const dangerCompiled = () => stylex.props(styles.danger)
-  const iconCompiled = () => stylex.props(styles.icon)
-  const labelCompiled = () => stylex.props(styles.label)
-  const trailingCompiled = () => stylex.props(styles.trailing)
-  const kbdCompiled = () => stylex.props(styles.kbd)
-  const separatorCompiled = () => stylex.props(styles.separator)
+  const triggerCompiled = () => stylex.attrs(styles.trigger, props.xstyle)
+  const contentCompiled = () => stylex.attrs(styles.content)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const dangerCompiled = () => stylex.attrs(styles.danger)
+  const iconCompiled = () => stylex.attrs(styles.icon)
+  const labelCompiled = () => stylex.attrs(styles.label)
+  const trailingCompiled = () => stylex.attrs(styles.trailing)
+  const kbdCompiled = () => stylex.attrs(styles.kbd)
+  const separatorCompiled = () => stylex.attrs(styles.separator)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(triggerCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(triggerCompiled().style), props.style)}
-      contentClass={joinClassNames(contentCompiled().className, props.contentClass)}
-      contentStyle={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.contentStyle)}
-      itemClass={joinClassNames(itemCompiled().className, props.itemClass)}
-      itemStyle={mergeSolidStyles(toSolidStyle(itemCompiled().style), props.itemStyle)}
-      itemDangerClass={joinClassNames(dangerCompiled().className, props.itemDangerClass)}
-      itemDangerStyle={mergeSolidStyles(
-        toSolidStyle(dangerCompiled().style),
-        props.itemDangerStyle,
-      )}
-      iconClass={joinClassNames(iconCompiled().className, props.iconClass)}
-      iconStyle={mergeSolidStyles(toSolidStyle(iconCompiled().style), props.iconStyle)}
-      labelClass={joinClassNames(labelCompiled().className, props.labelClass)}
-      labelStyle={mergeSolidStyles(toSolidStyle(labelCompiled().style), props.labelStyle)}
-      trailingClass={joinClassNames(trailingCompiled().className, props.trailingClass)}
-      trailingStyle={mergeSolidStyles(toSolidStyle(trailingCompiled().style), props.trailingStyle)}
-      kbdClass={joinClassNames(kbdCompiled().className, props.kbdClass)}
-      kbdStyle={mergeSolidStyles(toSolidStyle(kbdCompiled().style), props.kbdStyle)}
-      separatorClass={joinClassNames(separatorCompiled().className, props.separatorClass)}
-      separatorStyle={mergeSolidStyles(
-        toSolidStyle(separatorCompiled().style),
-        props.separatorStyle,
-      )}
+      class={joinClassNames(triggerCompiled().class, props.class)}
+      style={props.style}
+      contentClass={joinClassNames(contentCompiled().class, props.contentClass)}
+      contentStyle={props.contentStyle}
+      itemClass={joinClassNames(itemCompiled().class, props.itemClass)}
+      itemStyle={props.itemStyle}
+      itemDangerClass={joinClassNames(dangerCompiled().class, props.itemDangerClass)}
+      itemDangerStyle={{ ...props.itemDangerStyle }}
+      iconClass={joinClassNames(iconCompiled().class, props.iconClass)}
+      iconStyle={props.iconStyle}
+      labelClass={joinClassNames(labelCompiled().class, props.labelClass)}
+      labelStyle={props.labelStyle}
+      trailingClass={joinClassNames(trailingCompiled().class, props.trailingClass)}
+      trailingStyle={props.trailingStyle}
+      kbdClass={joinClassNames(kbdCompiled().class, props.kbdClass)}
+      kbdStyle={props.kbdStyle}
+      separatorClass={joinClassNames(separatorCompiled().class, props.separatorClass)}
+      separatorStyle={{ ...props.separatorStyle }}
     />
   )
 }

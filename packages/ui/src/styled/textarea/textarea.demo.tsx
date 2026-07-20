@@ -1,6 +1,7 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 import { Button } from "../button"
 import { Textarea } from "./textarea.styled"
 
@@ -16,13 +17,13 @@ export function TextareaDemo() {
   const [value, setValue] = createSignal(initialValue)
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>发布说明草稿</strong>
         <span>适合展示较长文本编辑、草稿回滚和字符摘要。</span>
       </div>
       <Textarea value={value()} onInput={setValue} rows={6} aria-label="发布说明草稿" />
-      <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.row)}>
         <Button size="sm" variant="secondary" onClick={() => setValue(initialValue)}>
           恢复草稿
         </Button>

@@ -1,7 +1,8 @@
+import * as stylex from "@stylexjs/stylex"
 import { Button, FieldRow, Input, Select, Switch } from "@tabora/ui"
 import { createSignal, For } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { className, styles, sx } from "./styles"
+import { className, styles } from "./styles"
 
 const TEXT_MODEL_OPTIONS = ["GPT-4.1 Mini", "Claude 3.5 Sonnet", "Gemini 1.5 Pro"]
 const VISION_MODEL_OPTIONS = ["Gemini 1.5 Pro", "GPT-4.1 Mini", "Claude 3.5 Sonnet"]
@@ -54,23 +55,23 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
   ]
 
   return (
-    <div {...sx(styles.panelStack)} data-settings-panel="ai">
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+    <div {...stylex.attrs(styles.panelStack)} data-settings-panel="ai">
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           AI 网关状态<span>{gatewayStatus()}</span>
         </div>
-        <div {...sx(styles.statusGrid)} aria-label="AI 网关状态">
-          <div {...sx(styles.statusCard)}>
+        <div {...stylex.attrs(styles.statusGrid)} aria-label="AI 网关状态">
+          <div {...stylex.attrs(styles.statusCard)}>
             <span>默认文本模型</span>
             <strong>{textModel()}</strong>
             <span>摘要、改写、结构化抽取</span>
-            <span {...sx(styles.fieldNote)}>{testStateLabel(textModelState())}</span>
+            <span {...stylex.attrs(styles.fieldNote)}>{testStateLabel(textModelState())}</span>
           </div>
-          <div {...sx(styles.statusCard)}>
+          <div {...stylex.attrs(styles.statusCard)}>
             <span>默认图片理解模型</span>
             <strong>{visionModel()}</strong>
             <span>票面识别、截图分析</span>
-            <span {...sx(styles.fieldNote)}>{testStateLabel(visionModelState())}</span>
+            <span {...stylex.attrs(styles.fieldNote)}>{testStateLabel(visionModelState())}</span>
           </div>
         </div>
         <FieldRow
@@ -85,8 +86,8 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           模型提供商<span>2 个启用</span>
         </div>
         <FieldRow
@@ -129,7 +130,7 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           label="API Key"
           description="保存后只显示掩码，写入 core 安全存储"
           trailing={
-            <div {...sx(styles.wideInlineActions)}>
+            <div {...stylex.attrs(styles.wideInlineActions)}>
               <Input size="sm" value={apiKey()} onInput={setApiKey} aria-label="AI API Key" />
               <Button size="sm" variant="secondary" onClick={() => setGatewayStatus("未测试")}>
                 替换
@@ -139,8 +140,8 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           模型配置<span>默认槽位</span>
         </div>
         <FieldRow
@@ -181,15 +182,15 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           class={className(styles.fieldRow)}
           label="gpt-4.1-mini"
           description="OpenAI 主账号 · 文本、图片理解 · 最近测试可用"
-          trailing={<span {...sx(styles.fieldNote)}>文本 / 图片</span>}
+          trailing={<span {...stylex.attrs(styles.fieldNote)}>文本 / 图片</span>}
         />
         <FieldRow
           class={className(styles.fieldRow)}
           label="gemini-1.5-pro"
           description="Gemini 个人账号 · 图片理解 · 彩票票面识别默认"
           trailing={
-            <div {...sx(styles.inlineActions)}>
-              <span {...sx(styles.fieldNote)}>图片</span>
+            <div {...stylex.attrs(styles.inlineActions)}>
+              <span {...stylex.attrs(styles.fieldNote)}>图片</span>
               <Switch
                 size="sm"
                 checked={geminiEnabled()}
@@ -201,8 +202,8 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           插件 AI 使用<span>首次授权</span>
         </div>
         <For each={grantRows()}>
@@ -226,7 +227,7 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           class={className(styles.fieldRow)}
           label="隐私提示"
           description="图片或文本只在用户触发 AI 功能时发送给当前模型提供商"
-          trailing={<span {...sx(styles.fieldNote)}>插件不会获得 API Key</span>}
+          trailing={<span {...stylex.attrs(styles.fieldNote)}>插件不会获得 API Key</span>}
         />
       </section>
     </div>

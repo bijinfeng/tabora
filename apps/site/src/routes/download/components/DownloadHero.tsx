@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
-import { sx } from "../../../shared/stylex"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
 
 const styles = stylex.create({
@@ -149,38 +148,38 @@ const styles = stylex.create({
 export function DownloadHero(props: { content: DownloadPageContent }) {
   return (
     <section
-      {...sx(styles.section)}
+      {...stylex.attrs(styles.section)}
       data-od-id="download-hero"
       data-component="SiteHero SiteDownloadPanel"
     >
-      <div {...sx(styles.grid)}>
-        <div {...sx(styles.copy)}>
-          <p {...sx(styles.eyebrow)}>DOWNLOAD TABORA</p>
-          <h1 {...sx(styles.title)}>{props.content.hero.title}</h1>
-          <p {...sx(styles.lead)}>{props.content.hero.lead}</p>
-          <div {...sx(styles.actions)}>
-            <a {...sx(styles.button, styles.primary)} href="#platforms">
+      <div {...stylex.attrs(styles.grid)}>
+        <div {...stylex.attrs(styles.copy)}>
+          <p {...stylex.attrs(styles.eyebrow)}>DOWNLOAD TABORA</p>
+          <h1 {...stylex.attrs(styles.title)}>{props.content.hero.title}</h1>
+          <p {...stylex.attrs(styles.lead)}>{props.content.hero.lead}</p>
+          <div {...stylex.attrs(styles.actions)}>
+            <a {...stylex.attrs(styles.button, styles.primary)} href="#platforms">
               {props.content.hero.primary}
             </a>
-            <A {...sx(styles.button, styles.secondary)} href="/docs/quickstart">
+            <A {...stylex.attrs(styles.button, styles.secondary)} href="/docs/quickstart">
               {props.content.hero.secondary}
             </A>
           </div>
         </div>
 
-        <aside {...sx(styles.panel)} aria-label="发布通道">
-          <div {...sx(styles.panelHead)}>
+        <aside {...stylex.attrs(styles.panel)} aria-label="发布通道">
+          <div {...stylex.attrs(styles.panelHead)}>
             <span>release channel</span>
             <span>tabora.newtab</span>
           </div>
-          <div {...sx(styles.panelBody)}>
+          <div {...stylex.attrs(styles.panelBody)}>
             {props.content.panel.rows.map((row: [string, string, string]) => (
-              <div {...sx(styles.row)}>
+              <div {...stylex.attrs(styles.row)}>
                 <div>
-                  <h3 {...sx(styles.rowTitle)}>{row[0]}</h3>
-                  <p {...sx(styles.rowBody)}>{row[1]}</p>
+                  <h3 {...stylex.attrs(styles.rowTitle)}>{row[0]}</h3>
+                  <p {...stylex.attrs(styles.rowBody)}>{row[1]}</p>
                 </div>
-                <span {...sx(styles.badge)}>{row[2]}</span>
+                <span {...stylex.attrs(styles.badge)}>{row[2]}</span>
               </div>
             ))}
           </div>

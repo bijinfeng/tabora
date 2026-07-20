@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
-import { sx } from "../../../shared/stylex"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
 
 const styles = stylex.create({
@@ -186,43 +185,47 @@ export function DownloadSupport(props: {
 }) {
   return (
     <>
-      <section {...sx(styles.section)} data-od-id="support" data-component="SiteSupportTable">
-        <div {...sx(styles.container)}>
-          <div {...sx(styles.head)}>
+      <section
+        {...stylex.attrs(styles.section)}
+        data-od-id="support"
+        data-component="SiteSupportTable"
+      >
+        <div {...stylex.attrs(styles.container)}>
+          <div {...stylex.attrs(styles.head)}>
             <div>
-              <p {...sx(styles.eyebrow)}>SUPPORT</p>
-              <h2 {...sx(styles.title)}>{props.content.support.title}</h2>
+              <p {...stylex.attrs(styles.eyebrow)}>SUPPORT</p>
+              <h2 {...stylex.attrs(styles.title)}>{props.content.support.title}</h2>
             </div>
-            <p {...sx(styles.body)}>{props.content.support.body}</p>
+            <p {...stylex.attrs(styles.body)}>{props.content.support.body}</p>
           </div>
 
-          <div {...sx(styles.supportTable)} aria-label="平台支持范围">
+          <div {...stylex.attrs(styles.supportTable)} aria-label="平台支持范围">
             {props.content.support.rows.map((row: [string, string, string], index: number) => (
-              <div {...sx(styles.supportRow, index === 0 && styles.firstRow)}>
+              <div {...stylex.attrs(styles.supportRow, index === 0 && styles.firstRow)}>
                 <strong>{row[0]}</strong>
-                <span {...sx(styles.body)}>{row[1]}</span>
-                <span {...sx(styles.badge)}>{row[2]}</span>
+                <span {...stylex.attrs(styles.body)}>{row[1]}</span>
+                <span {...stylex.attrs(styles.badge)}>{row[2]}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section {...sx(styles.section)} data-od-id="faq" data-component="SiteFAQ">
-        <div {...sx(styles.container)}>
-          <div {...sx(styles.head)}>
+      <section {...stylex.attrs(styles.section)} data-od-id="faq" data-component="SiteFAQ">
+        <div {...stylex.attrs(styles.container)}>
+          <div {...stylex.attrs(styles.head)}>
             <div>
-              <p {...sx(styles.eyebrow)}>FAQ</p>
-              <h2 {...sx(styles.title)}>{props.content.faq.title}</h2>
+              <p {...stylex.attrs(styles.eyebrow)}>FAQ</p>
+              <h2 {...stylex.attrs(styles.title)}>{props.content.faq.title}</h2>
             </div>
-            <p {...sx(styles.body)}>{props.content.faq.body}</p>
+            <p {...stylex.attrs(styles.body)}>{props.content.faq.body}</p>
           </div>
 
-          <div {...sx(styles.faqList)} aria-label="常见问题">
+          <div {...stylex.attrs(styles.faqList)} aria-label="常见问题">
             {props.content.faq.items.map((item: [string, string], index: number) => (
-              <div {...sx(styles.faqItem)} data-faq-item data-site-faq-item>
+              <div {...stylex.attrs(styles.faqItem)} data-faq-item data-site-faq-item>
                 <button
-                  {...sx(styles.faqTrigger)}
+                  {...stylex.attrs(styles.faqTrigger)}
                   type="button"
                   data-faq-trigger
                   aria-expanded={props.openFaq.has(index)}
@@ -230,14 +233,21 @@ export function DownloadSupport(props: {
                 >
                   {item[0]}
                   <span
-                    {...sx(styles.faqIcon, props.openFaq.has(index) && styles.faqIconOpen)}
+                    {...stylex.attrs(
+                      styles.faqIcon,
+                      props.openFaq.has(index) && styles.faqIconOpen,
+                    )}
                     aria-hidden="true"
                   >
                     +
                   </span>
                 </button>
-                <div {...sx(styles.faqBody)} data-faq-body hidden={!props.openFaq.has(index)}>
-                  <p {...sx(styles.body)}>{item[1]}</p>
+                <div
+                  {...stylex.attrs(styles.faqBody)}
+                  data-faq-body
+                  hidden={!props.openFaq.has(index)}
+                >
+                  <p {...stylex.attrs(styles.body)}>{item[1]}</p>
                 </div>
               </div>
             ))}
@@ -246,19 +256,19 @@ export function DownloadSupport(props: {
       </section>
 
       <section
-        {...sx(styles.section, styles.cta)}
+        {...stylex.attrs(styles.section, styles.cta)}
         data-od-id="download-cta"
         data-component="SiteCTA"
       >
-        <div {...sx(styles.container, styles.ctaPanel)}>
-          <p {...sx(styles.eyebrow)}>NEXT STEP</p>
-          <h2 {...sx(styles.title)}>{props.content.cta.title}</h2>
-          <p {...sx(styles.lead)}>{props.content.cta.body}</p>
-          <div {...sx(styles.actions)}>
-            <A {...sx(styles.button, styles.primary)} href="/docs">
+        <div {...stylex.attrs(styles.container, styles.ctaPanel)}>
+          <p {...stylex.attrs(styles.eyebrow)}>NEXT STEP</p>
+          <h2 {...stylex.attrs(styles.title)}>{props.content.cta.title}</h2>
+          <p {...stylex.attrs(styles.lead)}>{props.content.cta.body}</p>
+          <div {...stylex.attrs(styles.actions)}>
+            <A {...stylex.attrs(styles.button, styles.primary)} href="/docs">
               {props.content.cta.primary}
             </A>
-            <A {...sx(styles.button, styles.secondary)} href="/">
+            <A {...stylex.attrs(styles.button, styles.secondary)} href="/">
               {props.content.cta.secondary}
             </A>
           </div>

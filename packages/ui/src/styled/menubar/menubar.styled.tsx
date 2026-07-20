@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Menubar as Primitive } from "../../primitives/menubar/menubar"
 import type { MenubarItem, MenubarProps } from "../../primitives/menubar/menubar"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -48,22 +48,19 @@ export type StyledMenubarProps = MenubarProps & {
 }
 
 export function Menubar(props: StyledMenubarProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const itemCompiled = () => stylex.props(styles.item)
-  const itemPressedCompiled = () => stylex.props(styles.pressed)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const itemPressedCompiled = () => stylex.attrs(styles.pressed)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      itemClass={joinClassNames(itemCompiled().className, props.itemClass)}
-      itemStyle={mergeSolidStyles(toSolidStyle(itemCompiled().style), props.itemStyle)}
-      itemPressedClass={joinClassNames(itemPressedCompiled().className, props.itemPressedClass)}
-      itemPressedStyle={mergeSolidStyles(
-        toSolidStyle(itemPressedCompiled().style),
-        props.itemPressedStyle,
-      )}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      itemClass={joinClassNames(itemCompiled().class, props.itemClass)}
+      itemStyle={props.itemStyle}
+      itemPressedClass={joinClassNames(itemPressedCompiled().class, props.itemPressedClass)}
+      itemPressedStyle={{ ...props.itemPressedStyle }}
     />
   )
 }

@@ -1,11 +1,12 @@
+import * as stylex from "@stylexjs/stylex"
 import { Button } from "../button"
 import { EmptyState } from "./emptyState.styled"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 export function EmptyStateDemo() {
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>固定卡片区域</strong>
         <span>空状态不只告诉用户“没有内容”，还要给出下一步动作。</span>
       </div>

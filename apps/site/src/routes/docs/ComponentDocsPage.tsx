@@ -4,7 +4,6 @@ import { useNavigate, useParams } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, For, Show } from "solid-js"
 
-import { sx } from "../../shared/stylex"
 import { ComponentDocCard } from "./ComponentDocCard"
 import { DocsShell } from "./DocsShell"
 
@@ -70,16 +69,16 @@ export function ComponentDocsPage() {
 
   return (
     <DocsShell>
-      <section {...sx(styles.hero)} aria-labelledby="docs-title">
-        <div {...sx(styles.label)}>COMPONENT DOCS</div>
-        <h1 {...sx(styles.title)} id="docs-title">
+      <section {...stylex.attrs(styles.hero)} aria-labelledby="docs-title">
+        <div {...stylex.attrs(styles.label)}>COMPONENT DOCS</div>
+        <h1 {...stylex.attrs(styles.title)} id="docs-title">
           {pageTitle()}
         </h1>
-        <p {...sx(styles.body)}>
+        <p {...stylex.attrs(styles.body)}>
           官网只负责目录、路由和页面组装。具体组件 demo、代码片段和说明数据由
           `@tabora/ui/component-docs` 提供，随 UI 包一起维护。
         </p>
-        <div {...sx(styles.actions)}>
+        <div {...stylex.attrs(styles.actions)}>
           <Button variant="primary" onClick={() => navigate("/docs/components")}>
             全部组件
           </Button>
@@ -92,11 +91,13 @@ export function ComponentDocsPage() {
       <Show
         when={isKnownRoute()}
         fallback={
-          <section {...sx(styles.empty)}>
-            <div {...sx(styles.emptyHead)}>
+          <section {...stylex.attrs(styles.empty)}>
+            <div {...stylex.attrs(styles.emptyHead)}>
               <div>
-                <h2 {...sx(styles.emptyTitle)}>没有找到这个组件</h2>
-                <p {...sx(styles.body)}>请从左侧目录选择一个基础组件，或回到全部组件列表。</p>
+                <h2 {...stylex.attrs(styles.emptyTitle)}>没有找到这个组件</h2>
+                <p {...stylex.attrs(styles.body)}>
+                  请从左侧目录选择一个基础组件，或回到全部组件列表。
+                </p>
               </div>
             </div>
             <Button variant="secondary" onClick={() => navigate("/docs/components")}>

@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { CopyButton as P } from "../../primitives/copyButton/copyButton"
 import type { CopyButtonProps } from "../../primitives/copyButton/copyButton"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -42,16 +42,16 @@ export type StyledCopyButtonProps = CopyButtonProps & {
 }
 
 export function CopyButton(props: StyledCopyButtonProps) {
-  const compiled = () => stylex.props(styles.root, props.xstyle)
-  const copiedCompiled = () => stylex.props(styles.copied)
+  const compiled = () => stylex.attrs(styles.root, props.xstyle)
+  const copiedCompiled = () => stylex.attrs(styles.copied)
 
   return (
     <P
       {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-      copiedClass={joinClassNames(copiedCompiled().className, props.copiedClass)}
-      copiedStyle={mergeSolidStyles(toSolidStyle(copiedCompiled().style), props.copiedStyle)}
+      class={joinClassNames(compiled().class, props.class)}
+      style={props.style}
+      copiedClass={joinClassNames(copiedCompiled().class, props.copiedClass)}
+      copiedStyle={props.copiedStyle}
     />
   )
 }

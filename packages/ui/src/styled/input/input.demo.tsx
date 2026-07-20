@@ -1,9 +1,10 @@
+import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 import { Search, Calendar } from "lucide-solid"
 
 import { Input } from "./input.styled"
 import { InlineError } from "../inlineError"
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 
 export function InputDemo() {
   const [searchText, setSearchText] = createSignal("")
@@ -17,10 +18,10 @@ export function InputDemo() {
   const [small, setSmall] = createSignal("")
 
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>工作区搜索设置</h4>
-        <div {...sx(demoStyles.row)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>工作区搜索设置</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Input
             value={searchText()}
             onInput={setSearchText}
@@ -34,9 +35,9 @@ export function InputDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>前后图标 + 清除</h4>
-        <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>前后图标 + 清除</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Input
             value={searchText()}
             onInput={setSearchText}
@@ -68,9 +69,9 @@ export function InputDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>密码显隐</h4>
-        <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>密码显隐</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Input
             value={password()}
             onInput={setPassword}
@@ -81,9 +82,9 @@ export function InputDemo() {
         </div>
       </div>
 
-      <div {...sx(demoStyles.section)}>
-        <h4 {...sx(demoStyles.sectionTitle)}>状态与尺寸</h4>
-        <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.section)}>
+        <h4 {...stylex.attrs(demoStyles.sectionTitle)}>状态与尺寸</h4>
+        <div {...stylex.attrs(demoStyles.row)}>
           <Input
             value={placeholder()}
             onInput={setPlaceholder}

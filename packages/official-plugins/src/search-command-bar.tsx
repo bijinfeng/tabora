@@ -1,9 +1,10 @@
+import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { InlineError, Input, Kbd } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 type SearchResultItem = SearchViewProps["results"][number]["items"][number]
 type SearchSuggestionItem = SearchResultItem & {
@@ -131,7 +132,7 @@ export function SearchCommandBar(props: SearchViewProps) {
 
   return (
     <div
-      {...sx(styles.searchRoot)}
+      {...stylex.attrs(styles.searchRoot)}
       data-search-command-bar
       ref={(element) => (wrapperRef = element)}
     >
@@ -144,25 +145,25 @@ export function SearchCommandBar(props: SearchViewProps) {
           </InlineError>
         }
       >
-        <form {...sx(styles.searchBar)} onSubmit={handleSubmit}>
-          <div {...sx(styles.searchProvider)}>
+        <form {...stylex.attrs(styles.searchBar)} onSubmit={handleSubmit}>
+          <div {...stylex.attrs(styles.searchProvider)}>
             <button
-              {...sx(styles.searchProviderButton)}
+              {...stylex.attrs(styles.searchProviderButton)}
               type="button"
               aria-label="切换搜索引擎"
               aria-expanded={providerOpen()}
               onClick={() => setProviderOpen((open) => !open)}
             >
-              <span {...sx(styles.searchProviderDot)} aria-hidden="true" />
-              <span {...sx(styles.searchProviderLabel)}>{activeProvider()!.title}</span>
-              <span {...sx(styles.searchProviderCaret)}>▾</span>
+              <span {...stylex.attrs(styles.searchProviderDot)} aria-hidden="true" />
+              <span {...stylex.attrs(styles.searchProviderLabel)}>{activeProvider()!.title}</span>
+              <span {...stylex.attrs(styles.searchProviderCaret)}>▾</span>
             </button>
             <Show when={providerOpen()}>
-              <div {...sx(styles.searchProviderDropdown)} data-search-provider-dropdown>
+              <div {...stylex.attrs(styles.searchProviderDropdown)} data-search-provider-dropdown>
                 <For each={providers()}>
                   {(provider) => (
                     <button
-                      {...sx(
+                      {...stylex.attrs(
                         styles.searchProviderOption,
                         provider.id === activeProvider()!.id && styles.selected,
                       )}
@@ -173,7 +174,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                         handleProviderChange(provider.id)
                       }}
                     >
-                      <span {...sx(styles.searchCheck)}>
+                      <span {...stylex.attrs(styles.searchCheck)}>
                         {provider.id === activeProvider()!.id ? "✓" : ""}
                       </span>
                       <span>{provider.title}</span>
@@ -183,7 +184,7 @@ export function SearchCommandBar(props: SearchViewProps) {
               </div>
             </Show>
           </div>
-          <span {...sx(styles.searchDivider)} aria-hidden="true" />
+          <span {...stylex.attrs(styles.searchDivider)} aria-hidden="true" />
           <Input
             type="search"
             value={query()}
@@ -202,30 +203,30 @@ export function SearchCommandBar(props: SearchViewProps) {
             placeholder="搜索网页、命令或卡片"
             aria-label="搜索内容"
           />
-          <span {...sx(styles.searchKbd)}>⌘K</span>
+          <span {...stylex.attrs(styles.searchKbd)}>⌘K</span>
         </form>
       </Show>
 
       <Show when={/^@\S+$/.test(query().trim())}>
-        <div {...sx(styles.searchState)}>
+        <div {...stylex.attrs(styles.searchState)}>
           继续输入查询以使用临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
       <Show when={/^@\S+\s+/.test(query().trim()) && !!props.providerToken}>
-        <div {...sx(styles.searchState)}>
+        <div {...stylex.attrs(styles.searchState)}>
           当前临时搜索源：
           <strong>{` ${providerStateLabel()}`}</strong>
         </div>
       </Show>
 
       <Show when={props.isOpen && visibleResults().length > 0}>
-        <div {...sx(styles.searchSuggestions)}>
+        <div {...stylex.attrs(styles.searchSuggestions)}>
           <For each={visibleResults()}>
             {(group) => (
               <>
-                <div {...sx(styles.searchGroup)} data-search-suggestion-group>
+                <div {...stylex.attrs(styles.searchGroup)} data-search-suggestion-group>
                   {group.label}
                 </div>
                 <For each={group.items}>
@@ -235,7 +236,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                       .findIndex((candidate) => candidate.id === item.id)
                     return (
                       <button
-                        {...sx(
+                        {...stylex.attrs(
                           styles.searchItem,
                           props.activeResultIndex === globalIdx && styles.searchItemActive,
                         )}
@@ -254,14 +255,17 @@ export function SearchCommandBar(props: SearchViewProps) {
                         }}
                         type="button"
                       >
-                        <span {...sx(styles.searchItemIcon)} data-search-suggestion-icon>
+                        <span {...stylex.attrs(styles.searchItemIcon)} data-search-suggestion-icon>
                           {item.icon}
                         </span>
-                        <span {...sx(styles.searchItemText)}>
-                          <span {...sx(styles.searchItemName)} data-search-suggestion-name>
+                        <span {...stylex.attrs(styles.searchItemText)}>
+                          <span
+                            {...stylex.attrs(styles.searchItemName)}
+                            data-search-suggestion-name
+                          >
                             {item.name}
                           </span>
-                          <span {...sx(styles.searchItemDescription)}>{item.desc}</span>
+                          <span {...stylex.attrs(styles.searchItemDescription)}>{item.desc}</span>
                         </span>
                         <Show when={item.hint}>
                           <Kbd>{item.hint!}</Kbd>

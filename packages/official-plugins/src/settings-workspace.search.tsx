@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import { Checkbox, FieldRow, Input, ListRow, SegmentedControl, Slider, Switch } from "@tabora/ui"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
@@ -8,7 +9,7 @@ import {
   SettingsInlineError,
   SettingsSwitch,
 } from "./settings-workspace.shared"
-import { className, styles, sx } from "./styles"
+import { className, styles } from "./styles"
 
 export function SearchSettingsPanel(props: SettingsPanelViewProps) {
   const [placeholder, setPlaceholder] = createSignal("搜索网页、命令或卡片")
@@ -54,11 +55,13 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   return (
-    <div {...sx(styles.panelStack)} data-settings-panel="search">
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+    <div {...stylex.attrs(styles.panelStack)} data-settings-panel="search">
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           默认搜索源
-          <span {...sx(styles.groupTitleMeta)}>{enabledProviders()[0]?.title ?? "未配置"}</span>
+          <span {...stylex.attrs(styles.groupTitleMeta)}>
+            {enabledProviders()[0]?.title ?? "未配置"}
+          </span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
@@ -80,7 +83,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           trailing={
             <Show
               when={providerOptions().length > 0}
-              fallback={<span {...sx(styles.rowMeta)}>{defaultId()}</span>}
+              fallback={<span {...stylex.attrs(styles.rowMeta)}>{defaultId()}</span>}
             >
               <SegmentedControl<string>
                 size="sm"
@@ -105,9 +108,9 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
         </Show>
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
-          搜索范围<span {...sx(styles.groupTitleMeta)}>4 项</span>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
+          搜索范围<span {...stylex.attrs(styles.groupTitleMeta)}>4 项</span>
         </div>
         <FieldRow
           class={className(styles.fieldRow)}
@@ -127,17 +130,17 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           label="默认搜索范围"
           description="选择输入框默认纳入的内容来源"
           trailing={
-            <div {...sx(styles.checkList)} aria-label="默认搜索范围">
-              <span {...sx(styles.checkChip)}>
+            <div {...stylex.attrs(styles.checkList)} aria-label="默认搜索范围">
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={includeWeb()} onChange={setIncludeWeb} label="网页" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={includeCards()} onChange={setIncludeCards} label="卡片" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={includeCommands()} onChange={setIncludeCommands} label="命令" />
               </span>
-              <span {...sx(styles.checkChip)}>
+              <span {...stylex.attrs(styles.checkChip)}>
                 <Checkbox checked={includeHistory()} onChange={setIncludeHistory} label="历史" />
               </span>
             </div>
@@ -148,7 +151,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           label="输入防抖"
           description="减少输入时过于频繁的搜索刷新"
           trailing={
-            <div {...sx(styles.rangeControl)}>
+            <div {...stylex.attrs(styles.rangeControl)}>
               <Slider
                 value={debounceMs()}
                 min={80}
@@ -163,12 +166,12 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
         />
       </section>
 
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           搜索源管理
-          <span {...sx(styles.groupTitleMeta)}>{enabledProviders().length} 个启用</span>
+          <span {...stylex.attrs(styles.groupTitleMeta)}>{enabledProviders().length} 个启用</span>
         </div>
-        <div {...sx(styles.providerList)} id="settings-search-provider-select">
+        <div {...stylex.attrs(styles.providerList)} id="settings-search-provider-select">
           <For each={props.searchProviders}>
             {(provider) => {
               const isEnabled = () => enabledIds().includes(provider.id)
@@ -183,7 +186,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                   primary={
                     <button
                       type="button"
-                      {...sx(styles.providerMain)}
+                      {...stylex.attrs(styles.providerMain)}
                       data-search-provider-main
                       onClick={() => {
                         if (!isEnabled()) return
@@ -191,16 +194,22 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                       }}
                       disabled={!isEnabled()}
                     >
-                      <span {...sx(styles.providerKind)}>{providerKindLabel(provider)}</span>
-                      <span {...sx(styles.providerText)}>
-                        <span {...sx(styles.providerTitle)}>{provider.title}</span>
-                        <span {...sx(styles.providerAlias)}>{providerAlias(provider)}</span>
+                      <span {...stylex.attrs(styles.providerKind)}>
+                        {providerKindLabel(provider)}
+                      </span>
+                      <span {...stylex.attrs(styles.providerText)}>
+                        <span {...stylex.attrs(styles.providerTitle)}>{provider.title}</span>
+                        <span {...stylex.attrs(styles.providerAlias)}>
+                          {providerAlias(provider)}
+                        </span>
                       </span>
                     </button>
                   }
                   trailing={
-                    <div {...sx(styles.inlineActions)}>
-                      <span {...sx(styles.providerState)}>{isDefault() ? "✓ 当前" : ""}</span>
+                    <div {...stylex.attrs(styles.inlineActions)}>
+                      <span {...stylex.attrs(styles.providerState)}>
+                        {isDefault() ? "✓ 当前" : ""}
+                      </span>
                       <SettingsSwitch
                         checked={isEnabled()}
                         label={`${isEnabled() ? "禁用" : "启用"} ${provider.title}`}

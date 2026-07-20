@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Tabs as Primitive } from "../../primitives/tabs/tabs"
 import type { TabsProps } from "../../primitives/tabs/tabs"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -128,49 +128,43 @@ export type StyledTabsProps = TabsProps & {
 }
 
 export function Tabs(props: StyledTabsProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const listCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       (!props.variant || props.variant === "underline") && styles.underlineList,
       props.variant === "pills" && styles.pillsList,
     )
   const triggerCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.trigger,
       (!props.variant || props.variant === "underline") && styles.underlineTrigger,
       props.variant === "pills" && styles.pillsTrigger,
       props.size === "sm" && styles.smTrigger,
     )
   const triggerSelectedCompiled = () =>
-    stylex.props(styles.selected, props.variant === "pills" && styles.pillsSelected)
+    stylex.attrs(styles.selected, props.variant === "pills" && styles.pillsSelected)
   const indicatorCompiled = () =>
-    stylex.props(styles.indicator, props.variant === "pills" && styles.indicatorHidden)
-  const contentCompiled = () => stylex.props(styles.content)
+    stylex.attrs(styles.indicator, props.variant === "pills" && styles.indicatorHidden)
+  const contentCompiled = () => stylex.attrs(styles.content)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      listClass={joinClassNames(listCompiled().className, props.listClass)}
-      listStyle={mergeSolidStyles(toSolidStyle(listCompiled().style), props.listStyle)}
-      triggerClass={joinClassNames(triggerCompiled().className, props.triggerClass)}
-      triggerStyle={mergeSolidStyles(toSolidStyle(triggerCompiled().style), props.triggerStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      listClass={joinClassNames(listCompiled().class, props.listClass)}
+      listStyle={props.listStyle}
+      triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
+      triggerStyle={props.triggerStyle}
       triggerSelectedClass={joinClassNames(
-        triggerSelectedCompiled().className,
+        triggerSelectedCompiled().class,
         props.triggerSelectedClass,
       )}
-      triggerSelectedStyle={mergeSolidStyles(
-        toSolidStyle(triggerSelectedCompiled().style),
-        props.triggerSelectedStyle,
-      )}
-      indicatorClass={joinClassNames(indicatorCompiled().className, props.indicatorClass)}
-      indicatorStyle={mergeSolidStyles(
-        toSolidStyle(indicatorCompiled().style),
-        props.indicatorStyle,
-      )}
-      contentClass={joinClassNames(contentCompiled().className, props.contentClass)}
-      contentStyle={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.contentStyle)}
+      triggerSelectedStyle={{ ...props.triggerSelectedStyle }}
+      indicatorClass={joinClassNames(indicatorCompiled().class, props.indicatorClass)}
+      indicatorStyle={{ ...props.indicatorStyle }}
+      contentClass={joinClassNames(contentCompiled().class, props.contentClass)}
+      contentStyle={props.contentStyle}
     />
   )
 }

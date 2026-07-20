@@ -5,7 +5,6 @@ import * as stylex from "@stylexjs/stylex"
 import { useSiteI18n } from "./AppShell"
 import { scrollToHash } from "../shared/scrollToHash"
 import { LocaleToggleButton } from "../shared/LocaleToggleButton"
-import { sx } from "../shared/stylex"
 
 const styles = stylex.create({
   root: {
@@ -122,40 +121,56 @@ export function Topbar(props: { onToggleTheme: () => void }) {
   const i18n = useSiteI18n()
 
   return (
-    <header {...sx(styles.root)} role="banner">
-      <A {...sx(styles.brand)} aria-label="Tabora 首页" href="/">
-        <TaboraMark {...sx(styles.brandMark)} />
+    <header {...stylex.attrs(styles.root)} role="banner">
+      <A {...stylex.attrs(styles.brand)} aria-label="Tabora 首页" href="/">
+        <TaboraMark {...stylex.attrs(styles.brandMark)} />
         <span>Tabora</span>
       </A>
-      <nav {...sx(styles.nav)} aria-label="主导航">
-        <A {...sx(styles.navLink)} href="/#workbench" onClick={() => scrollToHash("#workbench")}>
+      <nav {...stylex.attrs(styles.nav)} aria-label="主导航">
+        <A
+          {...stylex.attrs(styles.navLink)}
+          href="/#workbench"
+          onClick={() => scrollToHash("#workbench")}
+        >
           {i18n.t("nav.workbench")}
         </A>
-        <A {...sx(styles.navLink)} href="/#anatomy" onClick={() => scrollToHash("#anatomy")}>
+        <A
+          {...stylex.attrs(styles.navLink)}
+          href="/#anatomy"
+          onClick={() => scrollToHash("#anatomy")}
+        >
           {i18n.t("nav.anatomy")}
         </A>
-        <A {...sx(styles.navLink)} href="/#layouts" onClick={() => scrollToHash("#layouts")}>
+        <A
+          {...stylex.attrs(styles.navLink)}
+          href="/#layouts"
+          onClick={() => scrollToHash("#layouts")}
+        >
           {i18n.t("nav.layouts")}
         </A>
-        <A {...sx(styles.navLink)} href="/#plugins" onClick={() => scrollToHash("#plugins")}>
+        <A
+          {...stylex.attrs(styles.navLink)}
+          href="/#plugins"
+          onClick={() => scrollToHash("#plugins")}
+        >
           {i18n.t("nav.plugins")}
         </A>
-        <A {...sx(styles.navLink)} href="/download">
+        <A {...stylex.attrs(styles.navLink)} href="/download">
           {i18n.t("nav.download")}
         </A>
-        <A {...sx(styles.navLink, isDocs() && styles.navLinkActive)} href="/docs">
+        <A {...stylex.attrs(styles.navLink, isDocs() && styles.navLinkActive)} href="/docs">
           {i18n.t("nav.docs")}
         </A>
       </nav>
-      <div {...sx(styles.actions)}>
+      <div {...stylex.attrs(styles.actions)}>
         <LocaleToggleButton xstyle={[styles.control, styles.localeControl]} />
         <button
-          {...sx(styles.control, styles.themeControl)}
+          {...stylex.attrs(styles.control, styles.themeControl)}
           type="button"
           aria-label={i18n.t("a11y.toggleTheme")}
           onClick={props.onToggleTheme}
         >
-          <span {...sx(styles.themeDot)} aria-hidden="true" />
+          <span {...stylex.attrs(styles.themeDot)} aria-hidden="true" />
         </button>
       </div>
     </header>

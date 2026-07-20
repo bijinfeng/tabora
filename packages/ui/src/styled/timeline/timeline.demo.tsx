@@ -1,15 +1,16 @@
+import * as stylex from "@stylexjs/stylex"
 import { Badge } from "../badge"
 import { Timeline } from "./timeline.styled"
 
-import { demoStyles, sx } from "../demoStyles"
+import { demoStyles } from "../demoStyles"
 export function TimelineDemo() {
   return (
-    <div {...sx(demoStyles.controlStack)}>
-      <div {...sx(demoStyles.stackCompact)}>
+    <div {...stylex.attrs(demoStyles.controlStack)}>
+      <div {...stylex.attrs(demoStyles.stackCompact)}>
         <strong>最近同步记录</strong>
         <span>适合展示按时间推进的事件链，比如导入、同步、发布或错误恢复。</span>
       </div>
-      <div {...sx(demoStyles.row)}>
+      <div {...stylex.attrs(demoStyles.row)}>
         <Badge variant="success">同步正常</Badge>
       </div>
       <Timeline

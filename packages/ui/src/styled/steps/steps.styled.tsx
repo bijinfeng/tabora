@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Steps as Primitive } from "../../primitives/steps/steps"
 import type { StepItem, StepsProps } from "../../primitives/steps/steps"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -71,34 +71,28 @@ export type StyledStepsProps = StepsProps & {
 }
 
 export function Steps(props: StyledStepsProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const stepCompiled = () => stylex.props(styles.step)
-  const markerCompiled = () => stylex.props(styles.marker)
-  const markerActiveCompiled = () => stylex.props(styles.markerActive)
-  const bodyCompiled = () => stylex.props(styles.body)
-  const descriptionCompiled = () => stylex.props(styles.description)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const stepCompiled = () => stylex.attrs(styles.step)
+  const markerCompiled = () => stylex.attrs(styles.marker)
+  const markerActiveCompiled = () => stylex.attrs(styles.markerActive)
+  const bodyCompiled = () => stylex.attrs(styles.body)
+  const descriptionCompiled = () => stylex.attrs(styles.description)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      stepClass={joinClassNames(stepCompiled().className, props.stepClass)}
-      stepStyle={mergeSolidStyles(toSolidStyle(stepCompiled().style), props.stepStyle)}
-      markerClass={joinClassNames(markerCompiled().className, props.markerClass)}
-      markerStyle={mergeSolidStyles(toSolidStyle(markerCompiled().style), props.markerStyle)}
-      markerActiveClass={joinClassNames(markerActiveCompiled().className, props.markerActiveClass)}
-      markerActiveStyle={mergeSolidStyles(
-        toSolidStyle(markerActiveCompiled().style),
-        props.markerActiveStyle,
-      )}
-      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
-      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
-      descriptionClass={joinClassNames(descriptionCompiled().className, props.descriptionClass)}
-      descriptionStyle={mergeSolidStyles(
-        toSolidStyle(descriptionCompiled().style),
-        props.descriptionStyle,
-      )}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      stepClass={joinClassNames(stepCompiled().class, props.stepClass)}
+      stepStyle={props.stepStyle}
+      markerClass={joinClassNames(markerCompiled().class, props.markerClass)}
+      markerStyle={props.markerStyle}
+      markerActiveClass={joinClassNames(markerActiveCompiled().class, props.markerActiveClass)}
+      markerActiveStyle={{ ...props.markerActiveStyle }}
+      bodyClass={joinClassNames(bodyCompiled().class, props.bodyClass)}
+      bodyStyle={props.bodyStyle}
+      descriptionClass={joinClassNames(descriptionCompiled().class, props.descriptionClass)}
+      descriptionStyle={{ ...props.descriptionStyle }}
     />
   )
 }

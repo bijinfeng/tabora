@@ -5,7 +5,7 @@ import { codeTokenStyles } from "./codeHighlight.styles"
 type CodeTokenKind = keyof typeof codeTokenStyles
 
 const token = (kind: CodeTokenKind, value: string) => {
-  const className = stylex.props(codeTokenStyles[kind]).className ?? ""
+  const className = stylex.attrs(codeTokenStyles[kind]).class ?? ""
   return `<span class="${className}" data-code-token="${kind}">${value}</span>`
 }
 

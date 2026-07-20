@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Progress as P } from "../../primitives/progress/progress"
 import type { ProgressProps } from "../../primitives/progress/progress"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const indeterminateMotion = stylex.keyframes({
   "0%": {
@@ -88,7 +88,7 @@ export type StyledProgressProps = ProgressProps & {
 
 export function Progress(props: StyledProgressProps) {
   const rootCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       props.variant === "circular" && styles.circularRoot,
       props.variant !== "circular" && styles.linearRoot,
       props.variant !== "circular" && props.size === "sm" && styles.sm,
@@ -96,40 +96,31 @@ export function Progress(props: StyledProgressProps) {
       props.variant !== "circular" && props.size === "lg" && styles.lg,
       props.xstyle,
     )
-  const trackCompiled = () => stylex.props(styles.track)
+  const trackCompiled = () => stylex.attrs(styles.track)
   const fillCompiled = () =>
-    stylex.props(styles.fill, props.indeterminate && styles.fillIndeterminate)
-  const svgCompiled = () => stylex.props(styles.circularSvg)
-  const circularBgCompiled = () => stylex.props(styles.circularBg)
-  const circularFillCompiled = () => stylex.props(styles.circularFill)
-  const circularTextCompiled = () => stylex.props(styles.circularText)
+    stylex.attrs(styles.fill, props.indeterminate && styles.fillIndeterminate)
+  const svgCompiled = () => stylex.attrs(styles.circularSvg)
+  const circularBgCompiled = () => stylex.attrs(styles.circularBg)
+  const circularFillCompiled = () => stylex.attrs(styles.circularFill)
+  const circularTextCompiled = () => stylex.attrs(styles.circularText)
 
   return (
     <P
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      trackClass={joinClassNames(trackCompiled().className, props.trackClass)}
-      trackStyle={mergeSolidStyles(toSolidStyle(trackCompiled().style), props.trackStyle)}
-      fillClass={joinClassNames(fillCompiled().className, props.fillClass)}
-      fillStyle={mergeSolidStyles(toSolidStyle(fillCompiled().style), props.fillStyle)}
-      svgClass={joinClassNames(svgCompiled().className, props.svgClass)}
-      svgStyle={mergeSolidStyles(toSolidStyle(svgCompiled().style), props.svgStyle)}
-      circularBgClass={joinClassNames(circularBgCompiled().className, props.circularBgClass)}
-      circularBgStyle={mergeSolidStyles(
-        toSolidStyle(circularBgCompiled().style),
-        props.circularBgStyle,
-      )}
-      circularFillClass={joinClassNames(circularFillCompiled().className, props.circularFillClass)}
-      circularFillStyle={mergeSolidStyles(
-        toSolidStyle(circularFillCompiled().style),
-        props.circularFillStyle,
-      )}
-      circularTextClass={joinClassNames(circularTextCompiled().className, props.circularTextClass)}
-      circularTextStyle={mergeSolidStyles(
-        toSolidStyle(circularTextCompiled().style),
-        props.circularTextStyle,
-      )}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      trackClass={joinClassNames(trackCompiled().class, props.trackClass)}
+      trackStyle={props.trackStyle}
+      fillClass={joinClassNames(fillCompiled().class, props.fillClass)}
+      fillStyle={props.fillStyle}
+      svgClass={joinClassNames(svgCompiled().class, props.svgClass)}
+      svgStyle={props.svgStyle}
+      circularBgClass={joinClassNames(circularBgCompiled().class, props.circularBgClass)}
+      circularBgStyle={{ ...props.circularBgStyle }}
+      circularFillClass={joinClassNames(circularFillCompiled().class, props.circularFillClass)}
+      circularFillStyle={{ ...props.circularFillStyle }}
+      circularTextClass={joinClassNames(circularTextCompiled().class, props.circularTextClass)}
+      circularTextStyle={{ ...props.circularTextStyle }}
     />
   )
 }

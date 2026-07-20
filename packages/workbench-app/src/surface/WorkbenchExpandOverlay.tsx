@@ -203,7 +203,7 @@ export function WorkbenchExpandOverlay(props: {
     <Show when={props.expandState}>
       {(expand) => (
         <div
-          {...stylex.props(styles.overlay)}
+          {...stylex.attrs(styles.overlay)}
           data-workbench-overlay="expand"
           onClick={props.onClose}
           onKeyDown={(event) => event.key === "Escape" && props.onClose()}
@@ -211,15 +211,15 @@ export function WorkbenchExpandOverlay(props: {
           aria-modal="true"
           aria-label={expand().title}
         >
-          <div {...stylex.props(styles.shell)} onClick={(event) => event.stopPropagation()}>
-            <div {...stylex.props(styles.header)}>
-              <div {...stylex.props(styles.title)}>
-                <span {...stylex.props(styles.titleIcon)}>
+          <div {...stylex.attrs(styles.shell)} onClick={(event) => event.stopPropagation()}>
+            <div {...stylex.attrs(styles.header)}>
+              <div {...stylex.attrs(styles.title)}>
+                <span {...stylex.attrs(styles.titleIcon)}>
                   {props.widgetIconForProps(expand().props)}
                 </span>
-                <div {...stylex.props(styles.titleTexts)}>
-                  <span {...stylex.props(styles.titleText)}>{expand().title}</span>
-                  <span {...stylex.props(styles.titleMeta)}>
+                <div {...stylex.attrs(styles.titleTexts)}>
+                  <span {...stylex.attrs(styles.titleText)}>{expand().title}</span>
+                  <span {...stylex.attrs(styles.titleMeta)}>
                     {expand().mode === "settings"
                       ? (props.tShell?.("chrome.expand.meta.settings") ?? "实例设置")
                       : (props.tShell?.("chrome.expand.meta.expand") ?? "插件展开视图")}
@@ -227,7 +227,7 @@ export function WorkbenchExpandOverlay(props: {
                 </div>
               </div>
               <button
-                {...stylex.props(styles.close)}
+                {...stylex.attrs(styles.close)}
                 type="button"
                 ref={(element) => (closeButtonRef = element)}
                 onClick={props.onClose}
@@ -240,12 +240,12 @@ export function WorkbenchExpandOverlay(props: {
                 <X size={18} />
               </button>
             </div>
-            <div {...stylex.props(styles.body)}>
+            <div {...stylex.attrs(styles.body)}>
               {(() => {
                 const View = props.getView(expand().viewId)
                 if (!View) {
                   return (
-                    <div {...stylex.props(styles.missing)} role="alert">
+                    <div {...stylex.attrs(styles.missing)} role="alert">
                       {props.tShell
                         ? props.tShell("chrome.expand.viewMissing", { viewId: expand().viewId })
                         : `展开视图不可用：${expand().viewId}`}
@@ -269,7 +269,7 @@ export function WorkbenchExpandOverlay(props: {
               })()}
             </div>
             <div
-              {...stylex.props(
+              {...stylex.attrs(
                 styles.footer,
                 Boolean(expand().footerViewId) && styles.footerWithPlugin,
               )}
@@ -281,10 +281,10 @@ export function WorkbenchExpandOverlay(props: {
                 if (!FooterView) {
                   return (
                     <>
-                      <span {...stylex.props(styles.meta)} data-workbench-overlay-meta>
+                      <span {...stylex.attrs(styles.meta)} data-workbench-overlay-meta>
                         {expand().instanceId}
                       </span>
-                      <span {...stylex.props(styles.hint)} data-workbench-overlay-close-hint>
+                      <span {...stylex.attrs(styles.hint)} data-workbench-overlay-close-hint>
                         {props.tShell?.("chrome.expand.footerHint") ??
                           "Esc 关闭 · 双击打开 · 右键菜单"}
                       </span>
@@ -301,7 +301,7 @@ export function WorkbenchExpandOverlay(props: {
                       : {})}
                   >
                     <div
-                      {...stylex.props(styles.pluginFooter)}
+                      {...stylex.attrs(styles.pluginFooter)}
                       data-workbench-overlay-plugin-footer
                       data-tabora-plugin-id={expand().props.pluginId}
                     >

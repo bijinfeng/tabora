@@ -1,7 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "./stylex"
-
 const styles = stylex.create({
   root: {
     backgroundColor: "rgb(var(--tbr-color-surface))",
@@ -27,7 +25,7 @@ const styles = stylex.create({
 export function SiteToast(props: { visible: boolean; message: string }) {
   return (
     <div
-      {...sx(styles.root, props.visible && styles.visible)}
+      {...stylex.attrs(styles.root, props.visible && styles.visible)}
       role="status"
       aria-live="polite"
       data-toast

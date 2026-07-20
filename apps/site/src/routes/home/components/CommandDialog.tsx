@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { sx } from "../../../shared/stylex"
 import type { HomePageContent } from "../homePrototypeContent"
 
 const styles = stylex.create({
@@ -94,7 +93,7 @@ export function CommandDialog(props: {
 }) {
   return (
     <div
-      {...sx(styles.overlay, props.open && styles.overlayOpen)}
+      {...stylex.attrs(styles.overlay, props.open && styles.overlayOpen)}
       data-command-dialog
       data-site-command-dialog
       data-component="SiteCommandDialog"
@@ -103,8 +102,8 @@ export function CommandDialog(props: {
         if (event.target === event.currentTarget) props.close()
       }}
     >
-      <div {...sx(styles.palette)} role="dialog" aria-modal="true" aria-label="命令面板">
-        <div {...sx(styles.head)}>
+      <div {...stylex.attrs(styles.palette)} role="dialog" aria-modal="true" aria-label="命令面板">
+        <div {...stylex.attrs(styles.head)}>
           <svg
             width="18"
             height="18"
@@ -118,24 +117,24 @@ export function CommandDialog(props: {
             <path d="m20 20-3.5-3.5" />
           </svg>
           <input
-            {...sx(styles.input)}
+            {...stylex.attrs(styles.input)}
             ref={props.setInputRef}
             value={props.content.command.query}
             aria-label="命令搜索示例"
           />
-          <span {...sx(styles.kbd)}>Esc</span>
+          <span {...stylex.attrs(styles.kbd)}>Esc</span>
         </div>
-        <div {...sx(styles.list)}>
+        <div {...stylex.attrs(styles.list)}>
           {props.content.command.items.map(
             (item: [string, string, string, string], index: number) => (
-              <div {...sx(styles.item, index === 0 && styles.itemActive)}>
-                <span {...sx(styles.kbd)}>{item[0]}</span>
+              <div {...stylex.attrs(styles.item, index === 0 && styles.itemActive)}>
+                <span {...stylex.attrs(styles.kbd)}>{item[0]}</span>
                 <div>
                   <strong>{item[1]}</strong>
                   <br />
-                  <span {...sx(styles.itemDescription)}>{item[2]}</span>
+                  <span {...stylex.attrs(styles.itemDescription)}>{item[2]}</span>
                 </div>
-                <span {...sx(styles.meta)}>{item[3]}</span>
+                <span {...stylex.attrs(styles.meta)}>{item[3]}</span>
               </div>
             ),
           )}

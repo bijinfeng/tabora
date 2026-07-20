@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { RadioGroup as P } from "../../primitives/radioGroup/radioGroup"
 import type { RadioGroupProps, RadioGroupOption } from "../../primitives/radioGroup/radioGroup"
-import { toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -114,40 +113,40 @@ export type StyledRadioGroupProps<V extends string> = Omit<
 }
 
 export function RadioGroup<V extends string>(props: StyledRadioGroupProps<V>) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const listCompiled = () =>
-    stylex.props(
+    stylex.attrs(
       styles.list,
       props.direction === "horizontal" && styles.listHorizontal,
       (!props.direction || props.direction === "vertical") && styles.listVertical,
     )
-  const itemCompiled = () => stylex.props(styles.item)
-  const itemCheckedCompiled = () => stylex.props(styles.itemChecked)
-  const itemDisabledCompiled = () => stylex.props(styles.itemDisabled)
-  const inputCompiled = () => stylex.props(styles.input)
-  const controlCompiled = () => stylex.props(styles.control)
-  const controlCheckedCompiled = () => stylex.props(styles.controlChecked)
-  const contentCompiled = () => stylex.props(styles.content)
-  const labelCompiled = () => stylex.props(styles.label)
-  const descriptionCompiled = () => stylex.props(styles.description)
+  const itemCompiled = () => stylex.attrs(styles.item)
+  const itemCheckedCompiled = () => stylex.attrs(styles.itemChecked)
+  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
+  const inputCompiled = () => stylex.attrs(styles.input)
+  const controlCompiled = () => stylex.attrs(styles.control)
+  const controlCheckedCompiled = () => stylex.attrs(styles.controlChecked)
+  const contentCompiled = () => stylex.attrs(styles.content)
+  const labelCompiled = () => stylex.attrs(styles.label)
+  const descriptionCompiled = () => stylex.attrs(styles.description)
 
   return (
     <P
       {...props}
-      class={rootCompiled().className}
-      style={toSolidStyle(rootCompiled().style)}
-      listClass={listCompiled().className}
-      listStyle={toSolidStyle(listCompiled().style)}
-      itemClass={itemCompiled().className}
-      itemCheckedClass={itemCheckedCompiled().className}
-      itemDisabledClass={itemDisabledCompiled().className}
-      inputClass={inputCompiled().className}
-      inputStyle={toSolidStyle(inputCompiled().style)}
-      controlClass={controlCompiled().className}
-      controlCheckedClass={controlCheckedCompiled().className}
-      contentClass={contentCompiled().className}
-      labelClass={labelCompiled().className}
-      descriptionClass={descriptionCompiled().className}
+      class={rootCompiled().class}
+      style={undefined}
+      listClass={listCompiled().class}
+      listStyle={undefined}
+      itemClass={itemCompiled().class}
+      itemCheckedClass={itemCheckedCompiled().class}
+      itemDisabledClass={itemDisabledCompiled().class}
+      inputClass={inputCompiled().class}
+      inputStyle={undefined}
+      controlClass={controlCompiled().class}
+      controlCheckedClass={controlCheckedCompiled().class}
+      contentClass={contentCompiled().class}
+      labelClass={labelCompiled().class}
+      descriptionClass={descriptionCompiled().class}
     />
   )
 }

@@ -1,7 +1,8 @@
+import * as stylex from "@stylexjs/stylex"
 import { Badge, Button, FieldRow, Switch } from "@tabora/ui"
 import { createSignal, onMount } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { className, styles, sx } from "./styles"
+import { className, styles } from "./styles"
 
 function formatSyncTime(iso: string): string {
   const date = new Date(iso)
@@ -73,9 +74,9 @@ export function SyncSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   return (
-    <div {...sx(styles.panelStack)} data-settings-panel="sync">
-      <section {...sx(styles.group)}>
-        <div {...sx(styles.groupTitle)}>
+    <div {...stylex.attrs(styles.panelStack)} data-settings-panel="sync">
+      <section {...stylex.attrs(styles.group)}>
+        <div {...stylex.attrs(styles.groupTitle)}>
           同步状态<span>{overallStatus()}</span>
         </div>
         <FieldRow
@@ -110,7 +111,7 @@ export function SyncSettingsPanel(props: SettingsPanelViewProps) {
             </Button>
           }
         />
-        <span {...sx(styles.authStatus)}>{status()}</span>
+        <span {...stylex.attrs(styles.authStatus)}>{status()}</span>
       </section>
     </div>
   )

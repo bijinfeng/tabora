@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Popover as P } from "../../primitives/popover/popover"
 import type { PopoverProps } from "../../primitives/popover/popover"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const scaleIn = stylex.keyframes({
   from: {
@@ -51,22 +51,22 @@ export type StyledPopoverProps = PopoverProps & {
 }
 
 export function Popover(props: StyledPopoverProps) {
-  const contentCompiled = () => stylex.props(styles.content, props.xstyle)
-  const arrowCompiled = () => stylex.props(styles.arrow)
-  const titleCompiled = () => stylex.props(styles.title)
-  const bodyCompiled = () => stylex.props(styles.body)
+  const contentCompiled = () => stylex.attrs(styles.content, props.xstyle)
+  const arrowCompiled = () => stylex.attrs(styles.arrow)
+  const titleCompiled = () => stylex.attrs(styles.title)
+  const bodyCompiled = () => stylex.attrs(styles.body)
 
   return (
     <P
       {...props}
-      class={joinClassNames(contentCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(contentCompiled().style), props.style)}
-      arrowClass={joinClassNames(arrowCompiled().className, props.arrowClass)}
-      arrowStyle={mergeSolidStyles(toSolidStyle(arrowCompiled().style), props.arrowStyle)}
-      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
-      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
-      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
-      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
+      class={joinClassNames(contentCompiled().class, props.class)}
+      style={props.style}
+      arrowClass={joinClassNames(arrowCompiled().class, props.arrowClass)}
+      arrowStyle={props.arrowStyle}
+      titleClass={joinClassNames(titleCompiled().class, props.titleClass)}
+      titleStyle={props.titleStyle}
+      bodyClass={joinClassNames(bodyCompiled().class, props.bodyClass)}
+      bodyStyle={props.bodyStyle}
     />
   )
 }

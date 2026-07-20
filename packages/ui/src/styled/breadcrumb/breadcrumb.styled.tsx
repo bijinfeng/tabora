@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Breadcrumb as P } from "../../primitives/breadcrumb/breadcrumb"
 import type { BreadcrumbProps, BreadcrumbItem } from "../../primitives/breadcrumb/breadcrumb"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -54,28 +54,25 @@ export type StyledBreadcrumbProps = BreadcrumbProps & {
 }
 
 export function Breadcrumb(props: StyledBreadcrumbProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const wrapCompiled = () => stylex.props(styles.wrap)
-  const separatorCompiled = () => stylex.props(styles.separator)
-  const linkCompiled = () => stylex.props(styles.link)
-  const currentCompiled = () => stylex.props(styles.current)
+  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const wrapCompiled = () => stylex.attrs(styles.wrap)
+  const separatorCompiled = () => stylex.attrs(styles.separator)
+  const linkCompiled = () => stylex.attrs(styles.link)
+  const currentCompiled = () => stylex.attrs(styles.current)
 
   return (
     <P
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      wrapClass={joinClassNames(wrapCompiled().className, props.wrapClass)}
-      wrapStyle={mergeSolidStyles(toSolidStyle(wrapCompiled().style), props.wrapStyle)}
-      separatorClass={joinClassNames(separatorCompiled().className, props.separatorClass)}
-      separatorStyle={mergeSolidStyles(
-        toSolidStyle(separatorCompiled().style),
-        props.separatorStyle,
-      )}
-      linkClass={joinClassNames(linkCompiled().className, props.linkClass)}
-      linkStyle={mergeSolidStyles(toSolidStyle(linkCompiled().style), props.linkStyle)}
-      currentClass={joinClassNames(currentCompiled().className, props.currentClass)}
-      currentStyle={mergeSolidStyles(toSolidStyle(currentCompiled().style), props.currentStyle)}
+      class={joinClassNames(rootCompiled().class, props.class)}
+      style={props.style}
+      wrapClass={joinClassNames(wrapCompiled().class, props.wrapClass)}
+      wrapStyle={props.wrapStyle}
+      separatorClass={joinClassNames(separatorCompiled().class, props.separatorClass)}
+      separatorStyle={{ ...props.separatorStyle }}
+      linkClass={joinClassNames(linkCompiled().class, props.linkClass)}
+      linkStyle={props.linkStyle}
+      currentClass={joinClassNames(currentCompiled().class, props.currentClass)}
+      currentStyle={props.currentStyle}
     />
   )
 }

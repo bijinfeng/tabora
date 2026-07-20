@@ -1,10 +1,11 @@
+import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button, Field, Input, Select, Switch } from "@tabora/ui"
 import { GripVertical, Pencil, Plus, Search, Trash2 } from "lucide-solid"
 import { displayUrl, ICON_COLORS, initialsFromTitle, MAX_LINKS } from "./quick-links-data"
 import { useQuickLinksExpandSession } from "./quick-links-expand-session"
-import { styles, sx } from "./styles"
+import { styles } from "./styles"
 
 export function QuickLinksExpand(props: WidgetViewProps) {
   const session = useQuickLinksExpandSession(props)
@@ -38,12 +39,12 @@ export function QuickLinksExpand(props: WidgetViewProps) {
   } = session
 
   return (
-    <div {...sx(styles.expand)} data-widget-expand="quick-links">
-      <div {...sx(styles.main)}>
+    <div {...stylex.attrs(styles.expand)} data-widget-expand="quick-links">
+      <div {...stylex.attrs(styles.main)}>
         <Show when={panel() === "links"}>
-          <div {...sx(styles.panel)} data-view="links">
-            <div {...sx(styles.sectionHead)}>
-              <strong {...sx(styles.sectionTitle)}>常用入口</strong>
+          <div {...stylex.attrs(styles.panel)} data-view="links">
+            <div {...stylex.attrs(styles.sectionHead)}>
+              <strong {...stylex.attrs(styles.sectionTitle)}>常用入口</strong>
               <span>按最近访问排序</span>
             </div>
             <Input
@@ -54,33 +55,33 @@ export function QuickLinksExpand(props: WidgetViewProps) {
               aria-label="搜索快捷入口"
               leadingIcon={<Search size={14} />}
             />
-            <div {...sx(styles.list)} aria-label="展开后的快捷入口列表">
-              <Show when={loaded()} fallback={<p {...sx(styles.empty)}>加载中...</p>}>
+            <div {...stylex.attrs(styles.list)} aria-label="展开后的快捷入口列表">
+              <Show when={loaded()} fallback={<p {...stylex.attrs(styles.empty)}>加载中...</p>}>
                 <For each={filteredLinks()}>
                   {(link) => (
-                    <div {...sx(styles.rowWrap)}>
+                    <div {...stylex.attrs(styles.rowWrap)}>
                       <button
-                        {...sx(styles.row)}
+                        {...stylex.attrs(styles.row)}
                         data-quick-link-row
                         type="button"
                         onClick={() => startEditEntry(link)}
                       >
                         <span
-                          {...sx(styles.rowMark)}
+                          {...stylex.attrs(styles.rowMark)}
                           style={link.color ? { background: link.color, color: "#fff" } : undefined}
                         >
                           {initialsFromTitle(link.title)}
                         </span>
-                        <span {...sx(styles.copy)}>
-                          <strong {...sx(styles.primary)}>{link.title}</strong>
-                          <span {...sx(styles.secondary)}>
+                        <span {...stylex.attrs(styles.copy)}>
+                          <strong {...stylex.attrs(styles.primary)}>{link.title}</strong>
+                          <span {...stylex.attrs(styles.secondary)}>
                             {displayUrl(link.url)} · {groupName(link.groupId)}
                           </span>
                         </span>
                       </button>
-                      <div {...sx(styles.rowActions)}>
+                      <div {...stylex.attrs(styles.rowActions)}>
                         <button
-                          {...sx(styles.rowAction)}
+                          {...stylex.attrs(styles.rowAction)}
                           type="button"
                           aria-label="编辑"
                           onClick={() => startEditEntry(link)}
@@ -88,7 +89,7 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                           <Pencil size={14} />
                         </button>
                         <button
-                          {...sx(styles.rowAction, styles.deleteAction)}
+                          {...stylex.attrs(styles.rowAction, styles.deleteAction)}
                           type="button"
                           aria-label="删除"
                           onClick={() => void deleteEntry(link.id)}
@@ -99,17 +100,21 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                     </div>
                   )}
                 </For>
-                <button {...sx(styles.row, styles.rowAdd)} type="button" onClick={startAddEntry}>
-                  <span {...sx(styles.rowMark)}>
+                <button
+                  {...stylex.attrs(styles.row, styles.rowAdd)}
+                  type="button"
+                  onClick={startAddEntry}
+                >
+                  <span {...stylex.attrs(styles.rowMark)}>
                     <Plus size={14} />
                   </span>
-                  <span {...sx(styles.copy)}>
-                    <strong {...sx(styles.primary)}>添加入口</strong>
-                    <span {...sx(styles.secondary)}>粘贴链接后自动补全标题与图标</span>
+                  <span {...stylex.attrs(styles.copy)}>
+                    <strong {...stylex.attrs(styles.primary)}>添加入口</strong>
+                    <span {...stylex.attrs(styles.secondary)}>粘贴链接后自动补全标题与图标</span>
                   </span>
                 </button>
                 <Show when={filteredLinks().length === 0 && query().trim()}>
-                  <p {...sx(styles.empty)}>没有匹配 "{query().trim()}" 的入口</p>
+                  <p {...stylex.attrs(styles.empty)}>没有匹配 "{query().trim()}" 的入口</p>
                 </Show>
               </Show>
             </div>
@@ -117,21 +122,21 @@ export function QuickLinksExpand(props: WidgetViewProps) {
         </Show>
 
         <Show when={panel() === "groups"}>
-          <div {...sx(styles.panel)} data-view="groups">
-            <div {...sx(styles.sectionHead)}>
-              <strong {...sx(styles.sectionTitle)}>管理分组</strong>
+          <div {...stylex.attrs(styles.panel)} data-view="groups">
+            <div {...stylex.attrs(styles.sectionHead)}>
+              <strong {...stylex.attrs(styles.sectionTitle)}>管理分组</strong>
               <span>显示控制 · 新增分组</span>
             </div>
-            <div {...sx(styles.groupList)}>
+            <div {...stylex.attrs(styles.groupList)}>
               <For each={groups()}>
                 {(group) => (
-                  <div {...sx(styles.groupRow)}>
-                    <span {...sx(styles.grip)} aria-hidden="true">
+                  <div {...stylex.attrs(styles.groupRow)}>
+                    <span {...stylex.attrs(styles.grip)} aria-hidden="true">
                       <GripVertical size={14} />
                     </span>
-                    <span {...sx(styles.copy)}>
-                      <strong {...sx(styles.primary)}>{group.name}</strong>
-                      <span {...sx(styles.secondary)}>
+                    <span {...stylex.attrs(styles.copy)}>
+                      <strong {...stylex.attrs(styles.primary)}>{group.name}</strong>
+                      <span {...stylex.attrs(styles.secondary)}>
                         {groupEntryNames(group.id)} · {groupEntryCount(group.id)} 个入口
                       </span>
                     </span>
@@ -144,7 +149,7 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                 )}
               </For>
             </div>
-            <div {...sx(styles.inlineCreate)}>
+            <div {...stylex.attrs(styles.inlineCreate)}>
               <Input
                 size="sm"
                 value={newGroupName()}
@@ -163,12 +168,12 @@ export function QuickLinksExpand(props: WidgetViewProps) {
         </Show>
 
         <Show when={panel() === "entry"}>
-          <div {...sx(styles.panel)} data-view="entry">
-            <div {...sx(styles.sectionHead)}>
-              <strong {...sx(styles.sectionTitle)}>添加入口</strong>
+          <div {...stylex.attrs(styles.panel)} data-view="entry">
+            <div {...stylex.attrs(styles.sectionHead)}>
+              <strong {...stylex.attrs(styles.sectionTitle)}>添加入口</strong>
               <span>保存后进入当前分组</span>
             </div>
-            <form {...sx(styles.form)} onSubmit={(event) => event.preventDefault()}>
+            <form {...stylex.attrs(styles.form)} onSubmit={(event) => event.preventDefault()}>
               <Field label="入口链接" htmlFor={`ql-entry-url-${props.instanceId}`}>
                 <Input
                   size="sm"
@@ -180,7 +185,7 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                   aria-label="入口链接"
                 />
               </Field>
-              <div {...sx(styles.fieldRow)}>
+              <div {...stylex.attrs(styles.fieldRow)}>
                 <Field label="显示名称" htmlFor={`ql-entry-title-${props.instanceId}`}>
                   <Input
                     size="sm"
@@ -206,11 +211,14 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                 label="图标色"
                 helper="粘贴链接后可手动编辑名称、分组和图标色。保存后插入到入口列表顶部，并同步卡片里的入口数量。"
               >
-                <div {...sx(styles.colors)} role="group" aria-label="图标色">
+                <div {...stylex.attrs(styles.colors)} role="group" aria-label="图标色">
                   <For each={ICON_COLORS}>
                     {(color) => (
                       <button
-                        {...sx(styles.swatch, entryColor() === color && styles.swatchActive)}
+                        {...stylex.attrs(
+                          styles.swatch,
+                          entryColor() === color && styles.swatchActive,
+                        )}
                         type="button"
                         style={{ "--ql-swatch": color }}
                         aria-label={`图标色 ${color}`}
@@ -226,36 +234,38 @@ export function QuickLinksExpand(props: WidgetViewProps) {
         </Show>
       </div>
 
-      <aside {...sx(styles.side)} data-quick-links-side aria-label="快捷入口配置">
-        <div {...sx(styles.sectionHead)}>
-          <strong {...sx(styles.sectionTitle)}>配置</strong>
+      <aside {...stylex.attrs(styles.side)} data-quick-links-side aria-label="快捷入口配置">
+        <div {...stylex.attrs(styles.sectionHead)}>
+          <strong {...stylex.attrs(styles.sectionTitle)}>配置</strong>
           <span>{groups().length} 组</span>
         </div>
-        <div {...sx(styles.infoCard)}>
-          <div {...sx(styles.infoLine)}>
+        <div {...stylex.attrs(styles.infoCard)}>
+          <div {...stylex.attrs(styles.infoLine)}>
             <span>入口数量</span>
-            <strong {...sx(styles.infoValue)}>
+            <strong {...stylex.attrs(styles.infoValue)}>
               {links().length} / {MAX_LINKS}
             </strong>
           </div>
-          <div {...sx(styles.infoLine)}>
+          <div {...stylex.attrs(styles.infoLine)}>
             <span>打开方式</span>
-            <strong {...sx(styles.infoValue)}>当前标签页</strong>
+            <strong {...stylex.attrs(styles.infoValue)}>当前标签页</strong>
           </div>
-          <div {...sx(styles.infoLine)}>
+          <div {...stylex.attrs(styles.infoLine)}>
             <span>最近访问</span>
-            <strong {...sx(styles.infoValue)}>{recentLink()?.title ?? "—"}</strong>
+            <strong {...stylex.attrs(styles.infoValue)}>{recentLink()?.title ?? "—"}</strong>
           </div>
         </div>
-        <div {...sx(styles.infoCard)}>
-          <div {...sx(styles.sectionHead)}>
-            <strong {...sx(styles.sectionTitle)}>分组</strong>
+        <div {...stylex.attrs(styles.infoCard)}>
+          <div {...stylex.attrs(styles.sectionHead)}>
+            <strong {...stylex.attrs(styles.sectionTitle)}>分组</strong>
             <span>{groups().length} 组</span>
           </div>
-          <div {...sx(styles.chips)}>
+          <div {...stylex.attrs(styles.chips)}>
             <For each={groups()}>
               {(group) => (
-                <span {...sx(styles.chip, !group.visible && styles.chipHidden)}>{group.name}</span>
+                <span {...stylex.attrs(styles.chip, !group.visible && styles.chipHidden)}>
+                  {group.name}
+                </span>
               )}
             </For>
           </div>

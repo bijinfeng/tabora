@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Divider as P } from "../../primitives/divider/divider"
 import type { DividerProps } from "../../primitives/divider/divider"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -22,14 +22,8 @@ export type StyledDividerProps = DividerProps & {
 }
 
 export function Divider(props: StyledDividerProps) {
-  const compiled = () => stylex.props(styles.root, props.xstyle)
+  const compiled = () => stylex.attrs(styles.root, props.xstyle)
 
-  return (
-    <P
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <P {...props} class={joinClassNames(compiled().class, props.class)} style={props.style} />
 }
 export type { StyledDividerProps as DividerProps }
