@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, font, radius, shadow, zIndex } from "../stylexTokens.stylex"
+import { color, font, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
   overlay: {

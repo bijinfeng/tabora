@@ -47,8 +47,7 @@ describe("builtinPlugins", () => {
 
       expect(manifest.exports["./styles.css"]).toBe("./src/styles.css")
       expect(manifest.publishConfig.exports["./styles.css"]).toBe("./dist/styles.css")
-      expect(manifest.scripts.build).toContain("build-stylex-package.mjs")
-      expect(manifest.scripts.build).toContain(stylePackage.buildEntry)
+      expect(manifest.scripts.build).toBe(`vp pack ${stylePackage.buildEntry}`)
       expect(manifest.dependencies["@stylexjs/stylex"]).toBe("catalog:style")
     }
   })

@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Kbd as P } from "../../primitives/kbd/kbd"
 import type { KbdProps } from "../../primitives/kbd/kbd"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -24,19 +23,13 @@ const styles = stylex.create({
   },
 })
 
-export type StyledKbdProps = KbdProps & {
+export type StyledKbdProps = Omit<KbdProps, "attrs" | "class" | "style"> & {
   xstyle?: StyleXStyles
 }
 
 export function Kbd(props: StyledKbdProps) {
-  const compiled = () => stylex.props(styles.root, props.xstyle)
+  const attrs = () => stylex.attrs(styles.root, props.xstyle)
 
-  return (
-    <P
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <P {...props} attrs={attrs()} />
 }
 export type { StyledKbdProps as KbdProps }

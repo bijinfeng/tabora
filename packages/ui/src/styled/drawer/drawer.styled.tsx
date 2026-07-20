@@ -1,9 +1,9 @@
+import { Dialog as KDialog } from "@kobalte/core/dialog"
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
-
-import { Drawer as Primitive } from "../../primitives/drawer/drawer"
-import type { DrawerProps } from "../../primitives/drawer/drawer"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
+import { X } from "lucide-solid"
+import { Show } from "solid-js"
+import type { JSX } from "solid-js"
 
 const styles = stylex.create({
   root: {
@@ -115,64 +115,59 @@ const styles = stylex.create({
   },
 })
 
-export type StyledDrawerProps = DrawerProps & {
+export type DrawerProps = {
+  open: boolean
+  onClose: () => void
+  title: JSX.Element
+  description?: JSX.Element
+  footer?: JSX.Element
+  side?: "right" | "left"
+  size?: "sm" | "md" | "lg"
   xstyle?: StyleXStyles
+  children: JSX.Element
 }
 
-export function Drawer(props: StyledDrawerProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const scrimCompiled = () => stylex.props(styles.scrim)
-  const panelCompiled = () => stylex.props(styles.panel)
-  const panelSideCompiled = () =>
-    stylex.props(
-      (!props.side || props.side === "right") && styles.right,
-      props.side === "left" && styles.left,
-    )
-  const panelSizeCompiled = () =>
-    stylex.props(props.size === "sm" && styles.sm, props.size === "lg" && styles.lg)
-  const headerCompiled = () => stylex.props(styles.header)
-  const titleCompiled = () => stylex.props(styles.title)
-  const descriptionCompiled = () => stylex.props(styles.description)
-  const closeCompiled = () => stylex.props(styles.close)
-  const bodyCompiled = () => stylex.props(styles.body)
-  const footerCompiled = () => stylex.props(styles.footer)
-
+export function Drawer(props: DrawerProps) {
   return (
-    <Primitive
-      {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      scrimClass={joinClassNames(scrimCompiled().className, props.scrimClass)}
-      scrimStyle={mergeSolidStyles(toSolidStyle(scrimCompiled().style), props.scrimStyle)}
-      panelClass={joinClassNames(panelCompiled().className, props.panelClass)}
-      panelStyle={mergeSolidStyles(toSolidStyle(panelCompiled().style), props.panelStyle)}
-      panelSideClass={joinClassNames(panelSideCompiled().className, props.panelSideClass)}
-      panelSideStyle={mergeSolidStyles(
-        toSolidStyle(panelSideCompiled().style),
-        props.panelSideStyle,
-      )}
-      panelSizeClass={joinClassNames(panelSizeCompiled().className, props.panelSizeClass)}
-      panelSizeStyle={mergeSolidStyles(
-        toSolidStyle(panelSizeCompiled().style),
-        props.panelSizeStyle,
-      )}
-      headerClass={joinClassNames(headerCompiled().className, props.headerClass)}
-      headerStyle={mergeSolidStyles(toSolidStyle(headerCompiled().style), props.headerStyle)}
-      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
-      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
-      descriptionClass={joinClassNames(descriptionCompiled().className, props.descriptionClass)}
-      descriptionStyle={mergeSolidStyles(
-        toSolidStyle(descriptionCompiled().style),
-        props.descriptionStyle,
-      )}
-      closeClass={joinClassNames(closeCompiled().className, props.closeClass)}
-      closeStyle={mergeSolidStyles(toSolidStyle(closeCompiled().style), props.closeStyle)}
-      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
-      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
-      footerClass={joinClassNames(footerCompiled().className, props.footerClass)}
-      footerStyle={mergeSolidStyles(toSolidStyle(footerCompiled().style), props.footerStyle)}
-    />
+    <KDialog
+      open={props.open}
+      onOpenChange={(open) => {
+        if (!open) props.onClose()
+      }}
+    >
+      <KDialog.Portal>
+        <div {...stylex.attrs(styles.root, props.xstyle)} data-drawer-root>
+          <KDialog.Overlay {...stylex.attrs(styles.scrim)} aria-label="关闭" />
+          <KDialog.Content
+            {...stylex.attrs(
+              styles.panel,
+              props.side === "left" ? styles.left : styles.right,
+              props.size === "sm" && styles.sm,
+              props.size === "lg" && styles.lg,
+            )}
+            data-side={props.side ?? "right"}
+            data-size={props.size ?? "md"}
+          >
+            <header {...stylex.attrs(styles.header)}>
+              <div>
+                <KDialog.Title {...stylex.attrs(styles.title)}>{props.title}</KDialog.Title>
+                <Show when={props.description}>
+                  <KDialog.Description {...stylex.attrs(styles.description)}>
+                    {props.description}
+                  </KDialog.Description>
+                </Show>
+              </div>
+              <KDialog.CloseButton {...stylex.attrs(styles.close)} type="button" aria-label="关闭">
+                <X size={16} strokeWidth={2} />
+              </KDialog.CloseButton>
+            </header>
+            <div {...stylex.attrs(styles.body)}>{props.children}</div>
+            <Show when={props.footer}>
+              <footer {...stylex.attrs(styles.footer)}>{props.footer}</footer>
+            </Show>
+          </KDialog.Content>
+        </div>
+      </KDialog.Portal>
+    </KDialog>
   )
 }
-
-export type { StyledDrawerProps as DrawerProps }

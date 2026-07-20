@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { CardSection as Primitive } from "../../primitives/cardSection/cardSection"
 import type { CardSectionProps } from "../../primitives/cardSection/cardSection"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -34,30 +33,42 @@ const styles = stylex.create({
   },
 })
 
-export type StyledCardSectionProps = CardSectionProps & {
+export type StyledCardSectionProps = Omit<
+  CardSectionProps,
+  | "attrs"
+  | "class"
+  | "style"
+  | "headerAttrs"
+  | "headerClass"
+  | "headerStyle"
+  | "titleAttrs"
+  | "titleClass"
+  | "titleStyle"
+  | "trailingAttrs"
+  | "trailingClass"
+  | "trailingStyle"
+  | "bodyAttrs"
+  | "bodyClass"
+  | "bodyStyle"
+> & {
   xstyle?: StyleXStyles
 }
 
 export function CardSection(props: StyledCardSectionProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const headerCompiled = () => stylex.props(styles.header)
-  const titleCompiled = () => stylex.props(styles.title)
-  const trailingCompiled = () => stylex.props(styles.trailing)
-  const bodyCompiled = () => stylex.props(styles.body)
+  const rootAttrs = () => stylex.attrs(styles.root, props.xstyle)
+  const headerAttrs = () => stylex.attrs(styles.header)
+  const titleAttrs = () => stylex.attrs(styles.title)
+  const trailingAttrs = () => stylex.attrs(styles.trailing)
+  const bodyAttrs = () => stylex.attrs(styles.body)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      headerClass={joinClassNames(headerCompiled().className, props.headerClass)}
-      headerStyle={mergeSolidStyles(toSolidStyle(headerCompiled().style), props.headerStyle)}
-      titleClass={joinClassNames(titleCompiled().className, props.titleClass)}
-      titleStyle={mergeSolidStyles(toSolidStyle(titleCompiled().style), props.titleStyle)}
-      trailingClass={joinClassNames(trailingCompiled().className, props.trailingClass)}
-      trailingStyle={mergeSolidStyles(toSolidStyle(trailingCompiled().style), props.trailingStyle)}
-      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
-      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
+      attrs={rootAttrs()}
+      headerAttrs={headerAttrs()}
+      titleAttrs={titleAttrs()}
+      trailingAttrs={trailingAttrs()}
+      bodyAttrs={bodyAttrs()}
     />
   )
 }

@@ -4,7 +4,7 @@ import { ListRow } from "@tabora/ui"
 import { For, Show } from "solid-js"
 
 import type { ShellTranslation } from "../i18n"
-import { color, radius, shadow, zIndex } from "../stylexTokens.stylex"
+import { color, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import type { WidgetContextSection } from "./WorkbenchShellChrome.types"
 
 const styles = stylex.create({

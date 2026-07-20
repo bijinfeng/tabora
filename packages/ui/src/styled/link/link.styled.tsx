@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Link as P } from "../../primitives/link/link"
 import type { LinkProps } from "../../primitives/link/link"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -32,19 +31,13 @@ const styles = stylex.create({
   },
 })
 
-export type StyledLinkProps = LinkProps & {
+export type StyledLinkProps = Omit<LinkProps, "attrs" | "class" | "style"> & {
   xstyle?: StyleXStyles
 }
 
 export function Link(props: StyledLinkProps) {
-  const compiled = () => stylex.props(styles.root, props.muted && styles.muted, props.xstyle)
+  const attrs = () => stylex.attrs(styles.root, props.muted && styles.muted, props.xstyle)
 
-  return (
-    <P
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <P {...props} attrs={attrs()} />
 }
 export type { StyledLinkProps as LinkProps }

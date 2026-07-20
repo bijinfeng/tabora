@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Timeline as Primitive } from "../../primitives/timeline/timeline"
 import type { TimelineItem, TimelineProps } from "../../primitives/timeline/timeline"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -56,36 +55,50 @@ const styles = stylex.create({
   },
 })
 
-export type StyledTimelineProps = TimelineProps & {
+export type StyledTimelineProps = Omit<
+  TimelineProps,
+  | "attrs"
+  | "class"
+  | "style"
+  | "itemAttrs"
+  | "itemClass"
+  | "itemStyle"
+  | "dotAttrs"
+  | "dotClass"
+  | "dotStyle"
+  | "bodyAttrs"
+  | "bodyClass"
+  | "bodyStyle"
+  | "titleAttrs"
+  | "titleClass"
+  | "titleStyle"
+  | "descriptionAttrs"
+  | "descriptionClass"
+  | "descriptionStyle"
+  | "metaAttrs"
+  | "metaClass"
+  | "metaStyle"
+> & {
   xstyle?: StyleXStyles
 }
 
 export function Timeline(props: StyledTimelineProps) {
-  const rootCompiled = () => stylex.props(styles.root, props.xstyle)
-  const itemCompiled = () => stylex.props(styles.item)
-  const dotCompiled = () => stylex.props(styles.dot)
-  const bodyCompiled = () => stylex.props(styles.body)
-  const descriptionCompiled = () => stylex.props(styles.description)
-  const metaCompiled = () => stylex.props(styles.meta)
+  const rootAttrs = () => stylex.attrs(styles.root, props.xstyle)
+  const itemAttrs = () => stylex.attrs(styles.item)
+  const dotAttrs = () => stylex.attrs(styles.dot)
+  const bodyAttrs = () => stylex.attrs(styles.body)
+  const descriptionAttrs = () => stylex.attrs(styles.description)
+  const metaAttrs = () => stylex.attrs(styles.meta)
 
   return (
     <Primitive
       {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      itemClass={joinClassNames(itemCompiled().className, props.itemClass)}
-      itemStyle={mergeSolidStyles(toSolidStyle(itemCompiled().style), props.itemStyle)}
-      dotClass={joinClassNames(dotCompiled().className, props.dotClass)}
-      dotStyle={mergeSolidStyles(toSolidStyle(dotCompiled().style), props.dotStyle)}
-      bodyClass={joinClassNames(bodyCompiled().className, props.bodyClass)}
-      bodyStyle={mergeSolidStyles(toSolidStyle(bodyCompiled().style), props.bodyStyle)}
-      descriptionClass={joinClassNames(descriptionCompiled().className, props.descriptionClass)}
-      descriptionStyle={mergeSolidStyles(
-        toSolidStyle(descriptionCompiled().style),
-        props.descriptionStyle,
-      )}
-      metaClass={joinClassNames(metaCompiled().className, props.metaClass)}
-      metaStyle={mergeSolidStyles(toSolidStyle(metaCompiled().style), props.metaStyle)}
+      attrs={rootAttrs()}
+      itemAttrs={itemAttrs()}
+      dotAttrs={dotAttrs()}
+      bodyAttrs={bodyAttrs()}
+      descriptionAttrs={descriptionAttrs()}
+      metaAttrs={metaAttrs()}
     />
   )
 }

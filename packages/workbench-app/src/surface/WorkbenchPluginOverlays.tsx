@@ -5,7 +5,7 @@ import { createEffect, Show } from "solid-js"
 import type { JSX } from "solid-js"
 
 import type { ShellTranslation, WorkbenchShellPluginViewBoundaryCopy } from "../i18n"
-import { color, motion, radius, shadow, zIndex } from "../stylexTokens.stylex"
+import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 type SolidView<Props = Record<string, unknown>> = (props: Props) => JSX.Element
 

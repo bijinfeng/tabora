@@ -10,7 +10,7 @@ import {
   type SearchProviderContributionDescriptor,
 } from "@tabora/orchestrator"
 import { Kbd } from "@tabora/ui"
-import { color, font, motion, radius, shadow, zIndex } from "./stylexTokens.stylex"
+import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 const styles = stylex.create({
   overlay: {

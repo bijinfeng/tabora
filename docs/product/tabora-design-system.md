@@ -45,7 +45,7 @@
 
 | 设计事实                          | 仓库落点                                                                              | 说明                                                                                                                     |
 | --------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Refined Sage 语义 token           | `packages/theme/`                                                                     | `@tabora/theme` 负责把主题贡献应用为 CSS custom properties，不在插件里硬编码大面积颜色。                                 |
+| Refined Sage 语义 token           | `packages/theme/`                                                                     | `@tabora/theme` 负责把主题贡献应用为 CSS custom properties；StyleX typed token 从 `@tabora/theme/tokens.stylex` 导入。   |
 | 应用品牌图标与 favicon / 扩展图标 | `packages/brand/` + `apps/site/vite.config.ts` + `apps/extension/wxt.config.ts`       | `@tabora/brand` 保存唯一 SVG 图标源；站点 favicon 由 Vite 注入，扩展图标由 `auto-icons` 从同一源自动生成。               |
 | 基础组件 API 与状态               | `packages/ui/`                                                                        | `@tabora/ui` 提供插件内容区基础组件；组件 API、状态和组合模式以源码、测试和消费方实现为准。                              |
 | Dashboard / Focus 双布局宿主结构  | `plugins/official/layout-dashboard/` + `packages/workbench-app/`                      | Dashboard 与 Focus 由同一个官方布局插件贡献并复用 rail、动作入口和样式；卡片壳、设置宿主、展开层等通用宿主容器在 shell。 |
@@ -67,6 +67,8 @@
 - 浮层阴影、拖拽阴影和遮罩统一走 `color-shadow` / `color-shadow-strong` / `color-scrim`，透明度按场景单独控制，不再写死黑色或深色 `rgba(...)`。
 - 搜索栏 glow、内高光和轻抬升效果优先复用 `color-text` / `color-accent` / `color-inverse` 并叠加透明度，不新增临时 raw color。
 - 组件和插件默认只消费 semantic / component token，不直接消费原始色值。
+- Solid host / Kobalte slot 直接使用 `stylex.attrs()`；variant / size 用普通 typed object map，不新增 `sx()` wrapper 或 recipe DSL。
+- 多 slot 组件只暴露产品语义和明确的根 `xstyle`，不把内部节点扩散成 `*Class` / `*Style` 公共参数。
 - hover、focus、active、selected、loading 只改变颜色、边框、阴影和内容反馈，不改变外部尺寸。
 
 ### 4.2 宿主容器

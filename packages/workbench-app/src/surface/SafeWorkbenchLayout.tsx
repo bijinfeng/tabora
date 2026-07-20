@@ -11,7 +11,7 @@ import type {
   WorkbenchShellPluginViewBoundaryCopy,
   WorkbenchShellWidgetCopy,
 } from "../i18n"
-import { color, font, radius, space } from "../stylexTokens.stylex"
+import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 import type { SafeLayoutModel, SolidView } from "./WorkbenchShellChrome.types"
 
 const styles = stylex.create({

@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Badge as BadgePrimitive } from "../../primitives/badge/badge"
 import type { BadgeProps } from "../../primitives/badge/badge"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -90,13 +89,13 @@ const styles = stylex.create({
   },
 })
 
-export type StyledBadgeProps = BadgeProps & {
+export type StyledBadgeProps = Omit<BadgeProps, "attrs" | "class" | "style"> & {
   xstyle?: StyleXStyles
 }
 
 export function Badge(props: StyledBadgeProps) {
-  const compiled = () =>
-    stylex.props(
+  const attrs = () =>
+    stylex.attrs(
       styles.root,
       (!props.size || props.size === "md") && props.variant !== "dot" && styles.md,
       props.size === "sm" && props.variant !== "dot" && styles.sm,
@@ -119,13 +118,7 @@ export function Badge(props: StyledBadgeProps) {
       props.xstyle,
     )
 
-  return (
-    <BadgePrimitive
-      {...props}
-      class={joinClassNames(compiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(compiled().style), props.style)}
-    />
-  )
+  return <BadgePrimitive {...props} attrs={attrs()} />
 }
 
 export type { StyledBadgeProps as BadgeProps }

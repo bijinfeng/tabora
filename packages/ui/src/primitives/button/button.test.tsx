@@ -67,13 +67,17 @@ describe("Button", () => {
       grow: {
         flexGrow: 1,
       },
+      width: (value: number) => ({
+        width: value,
+      }),
     })
 
-    render(() => <Button xstyle={local.grow}>Save</Button>, root)
+    render(() => <Button xstyle={[local.grow, local.width(144)]}>Save</Button>, root)
 
     const btn = root.querySelector("button")!
     expect(btn.className).not.toContain("tbr-btn")
     expect(btn.className.length).toBeGreaterThan(0)
+    expect(btn.getAttribute("style")).toMatch(/144(?:px)?/)
   })
 })
 

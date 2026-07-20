@@ -12,7 +12,7 @@ import {
 } from "@tabora/orchestrator"
 import { Button, EmptyState, InlineError } from "@tabora/ui"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
-import { color, font, motion, radius, shadow, space, zIndex } from "./stylexTokens.stylex"
+import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
 

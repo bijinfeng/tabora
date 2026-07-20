@@ -2,14 +2,26 @@ import path from "node:path"
 import solid from "vite-plugin-solid"
 import { defineConfig } from "vite-plus"
 import type { PackUserConfig } from "vite-plus/pack"
+import { createTaboraStylexPackPlugins, taboraStylexWorkspaceRoot } from "@tabora/stylex-config"
 
 type PackageExports = Record<string, unknown>
 
 type PackageManifestLike = {
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
   exports?: unknown
   publishConfig?: {
     exports?: unknown
   }
+}
+
+function packageUsesStylexStyles(pkg?: PackageManifestLike) {
+  return (
+    [pkg?.dependencies, pkg?.devDependencies, pkg?.peerDependencies].some(
+      (dependencies) => dependencies?.["@stylexjs/stylex"] !== undefined,
+    ) && typeof cssExportsFrom(pkg?.exports)["./styles.css"] === "string"
+  )
 }
 
 function cssExportsFrom(exportsField: unknown): Record<string, string> {
@@ -35,7 +47,12 @@ function packageCssAssets(pkg?: PackageManifestLike) {
 }
 
 function packageCssCopyEntries(pkg?: PackageManifestLike) {
+  const stylexSource = packageUsesStylexStyles(pkg)
+    ? cssExportsFrom(pkg?.exports)["./styles.css"]
+    : undefined
+
   return packageCssAssets(pkg)
+    .filter(({ source }) => source !== stylexSource)
     .filter(({ source, publish }) => source.startsWith("./src/") && publish.startsWith("./dist/"))
     .map(({ source, publish }) => {
       const from = source.slice(2)
@@ -55,19 +72,15 @@ function packageCssCopyEntries(pkg?: PackageManifestLike) {
 const pack = {
   dts: true,
   copy: (options) => packageCssCopyEntries(options.pkg),
-  exports: {
-    devExports: true,
-    customExports(exports, context) {
-      return {
-        ...exports,
-        ...cssExportsFrom(
-          context.isPublish ? context.pkg?.publishConfig?.exports : context.pkg?.exports,
-        ),
-      }
-    },
-  },
+  exports: false,
   platform: "browser",
-  plugins: [solid()],
+  plugins: [
+    ...createTaboraStylexPackPlugins({
+      packageDir: process.cwd(),
+      rootDir: taboraStylexWorkspaceRoot,
+    }),
+    solid(),
+  ],
 } as PackUserConfig
 
 export default defineConfig({

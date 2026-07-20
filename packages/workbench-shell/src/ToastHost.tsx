@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { ToastRecord } from "@tabora/orchestrator"
-import { color, font, motion, radius, shadow, zIndex } from "./stylexTokens.stylex"
+import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 export type ToastMessage = ToastRecord
 

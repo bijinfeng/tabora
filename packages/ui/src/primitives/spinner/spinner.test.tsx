@@ -10,4 +10,15 @@ describe("Spinner", () => {
     const el = root.querySelector("[role='status']")!
     expect(el.getAttribute("aria-label")).toBe("加载中")
   })
+
+  it("spreads raw DOM attrs onto the status host", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(() => <Spinner attrs={{ class: "custom", style: "width:18px" }} />, root)
+
+    const el = root.querySelector("[role='status']") as HTMLElement
+    expect(el.className).toBe("custom")
+    expect(el.getAttribute("style")).toMatch(/18(?:px)?/)
+  })
 })

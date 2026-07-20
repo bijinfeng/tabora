@@ -16,13 +16,14 @@
     }
   },
   "scripts": {
-    "build": "node ../../scripts/build-stylex-package.mjs --package . --entry src/index.ts --css-name styles.css",
+    "build": "vp pack src/index.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@stylexjs/stylex": "catalog:style",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
+    "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import { Input } from "../../styled/input/input.styled"
+import { HeadlessInput } from "./input"
 
 describe("Input", () => {
   it("renders controlled value and calls onInput", () => {
@@ -39,5 +40,31 @@ describe("Input", () => {
     expect(el.className.length).toBeGreaterThan(0)
     expect(el.getAttribute("data-size")).toBe("sm")
     expect(el.hasAttribute("data-invalid")).toBe(true)
+  })
+
+  it("forwards raw DOM attrs to wrapper and leading icon slots", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <HeadlessInput
+          value=""
+          onInput={() => {}}
+          aria-label="搜索"
+          leadingIcon={<span>搜索图标</span>}
+          wrapperAttrs={{ class: "wrapper", style: "width:144px" }}
+          leadingIconAttrs={{ class: "leading", style: "color:rgb(1,2,3)" }}
+        />
+      ),
+      root,
+    )
+
+    const wrapper = root.firstElementChild as HTMLElement
+    const leadingIcon = wrapper.firstElementChild as HTMLElement
+    expect(wrapper.className).toBe("wrapper")
+    expect(wrapper.getAttribute("style")).toMatch(/144(?:px)?/)
+    expect(leadingIcon.className).toBe("leading")
+    expect(leadingIcon.getAttribute("style")).toMatch(/rgb\(1,\s*2,\s*3\)/)
   })
 })

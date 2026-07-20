@@ -3,7 +3,6 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { Avatar as P } from "../../primitives/avatar/avatar"
 import type { AvatarProps } from "../../primitives/avatar/avatar"
-import { joinClassNames, mergeSolidStyles, toSolidStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -47,13 +46,24 @@ const styles = stylex.create({
   },
 })
 
-export type StyledAvatarProps = AvatarProps & {
+export type StyledAvatarProps = Omit<
+  AvatarProps,
+  | "attrs"
+  | "class"
+  | "style"
+  | "imgAttrs"
+  | "imgClass"
+  | "imgStyle"
+  | "fallbackAttrs"
+  | "fallbackClass"
+  | "fallbackStyle"
+> & {
   xstyle?: StyleXStyles
 }
 
 export function Avatar(props: StyledAvatarProps) {
-  const rootCompiled = () =>
-    stylex.props(
+  const rootAttrs = () =>
+    stylex.attrs(
       styles.root,
       props.size === "sm" && styles.sm,
       (!props.size || props.size === "md") && styles.md,
@@ -61,16 +71,8 @@ export function Avatar(props: StyledAvatarProps) {
       props.size === "xl" && styles.xl,
       props.xstyle,
     )
-  const imgCompiled = () => stylex.props(styles.img)
+  const imgAttrs = () => stylex.attrs(styles.img)
 
-  return (
-    <P
-      {...props}
-      class={joinClassNames(rootCompiled().className, props.class)}
-      style={mergeSolidStyles(toSolidStyle(rootCompiled().style), props.style)}
-      imgClass={joinClassNames(imgCompiled().className, props.imgClass)}
-      imgStyle={mergeSolidStyles(toSolidStyle(imgCompiled().style), props.imgStyle)}
-    />
-  )
+  return <P {...props} attrs={rootAttrs()} imgAttrs={imgAttrs()} />
 }
 export type { StyledAvatarProps as AvatarProps }
