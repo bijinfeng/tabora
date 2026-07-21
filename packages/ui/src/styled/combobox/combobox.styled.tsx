@@ -38,12 +38,9 @@ const styles = stylex.create({
     borderStyle: "solid",
     borderWidth: 1,
     boxShadow: "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08)",
-    left: 0,
     maxHeight: 200,
     overflowY: "auto",
-    position: "absolute",
-    right: 0,
-    top: "calc(100% + 4px)",
+    position: "relative",
     zIndex: 50,
   },
   option: {

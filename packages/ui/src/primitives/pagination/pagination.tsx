@@ -27,7 +27,7 @@ export function Pagination(props: PaginationProps) {
       : props.pageButtonStyle
 
   return (
-    <div class={props.class} style={props.style}>
+    <div class={props.class} style={props.style} data-tbr-pagination>
       <KPagination
         page={props.page}
         count={props.total}

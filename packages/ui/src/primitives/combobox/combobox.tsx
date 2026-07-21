@@ -76,7 +76,9 @@ export function Combobox<V extends string>(props: ComboboxProps<V>) {
         onInputChange={local.onInput}
         onChange={onChange}
         placeholder={local.placeholder}
-        triggerMode="focus"
+        flip={false}
+        placement="bottom-start"
+        triggerMode="input"
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         itemComponent={(itemProps: any) => (
           <KCombobox.Item item={itemProps.item} class={local.optionClass}>
@@ -84,7 +86,9 @@ export function Combobox<V extends string>(props: ComboboxProps<V>) {
           </KCombobox.Item>
         )}
       >
-        <KCombobox.Input {...inputProps()} />
+        <KCombobox.Control>
+          <KCombobox.Input {...inputProps()} />
+        </KCombobox.Control>
         <KCombobox.Portal>
           <KCombobox.Content {...optionalPartProps(local.dropdownClass, local.dropdownStyle)}>
             <KCombobox.Listbox />

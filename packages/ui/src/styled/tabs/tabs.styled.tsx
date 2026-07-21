@@ -59,6 +59,10 @@ const styles = stylex.create({
       cursor: "not-allowed",
       opacity: 0.4,
     },
+    "[data-selected]": {
+      color: "rgb(var(--tbr-color-accent))",
+      fontWeight: 650,
+    },
   },
   underlineTrigger: {
     backgroundColor: "transparent",
@@ -86,20 +90,15 @@ const styles = stylex.create({
     minHeight: 30,
     paddingBlock: 5,
     paddingInline: 12,
+    "[data-selected]": {
+      backgroundColor: "rgb(var(--tbr-color-surface))",
+      boxShadow: "0 1px 3px rgb(var(--tbr-color-shadow) / 0.08)",
+    },
   },
   smTrigger: {
     fontSize: 12,
     paddingBlock: 4,
     paddingInline: 10,
-  },
-  selected: {
-    color: "rgb(var(--tbr-color-accent))",
-    fontWeight: 650,
-  },
-  pillsSelected: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    boxShadow: "0 1px 3px rgb(var(--tbr-color-shadow) / 0.08)",
-    color: "rgb(var(--tbr-color-accent))",
   },
   indicator: {
     backgroundColor: "rgb(var(--tbr-color-accent))",
@@ -141,8 +140,6 @@ export function Tabs(props: StyledTabsProps) {
       props.variant === "pills" && styles.pillsTrigger,
       props.size === "sm" && styles.smTrigger,
     )
-  const triggerSelectedCompiled = () =>
-    stylex.attrs(styles.selected, props.variant === "pills" && styles.pillsSelected)
   const indicatorCompiled = () =>
     stylex.attrs(styles.indicator, props.variant === "pills" && styles.indicatorHidden)
   const contentCompiled = () => stylex.attrs(styles.content)
@@ -156,10 +153,6 @@ export function Tabs(props: StyledTabsProps) {
       listStyle={props.listStyle}
       triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
       triggerStyle={props.triggerStyle}
-      triggerSelectedClass={joinClassNames(
-        triggerSelectedCompiled().class,
-        props.triggerSelectedClass,
-      )}
       triggerSelectedStyle={{ ...props.triggerSelectedStyle }}
       indicatorClass={joinClassNames(indicatorCompiled().class, props.indicatorClass)}
       indicatorStyle={{ ...props.indicatorStyle }}

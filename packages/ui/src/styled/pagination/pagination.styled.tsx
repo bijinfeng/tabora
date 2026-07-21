@@ -39,12 +39,12 @@ const styles = stylex.create({
       cursor: "not-allowed",
       opacity: 0.35,
     },
-  },
-  active: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-accent))",
-    fontWeight: 650,
+    "[data-current]": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      borderColor: "rgb(var(--tbr-color-accent))",
+      color: "rgb(var(--tbr-color-accent))",
+      fontWeight: 650,
+    },
   },
   ellipsis: {
     alignItems: "center",
@@ -64,7 +64,6 @@ export type StyledPaginationProps = PaginationProps & {
 export function Pagination(props: StyledPaginationProps) {
   const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const buttonCompiled = () => stylex.attrs(styles.button)
-  const activeCompiled = () => stylex.attrs(styles.active)
   const ellipsisCompiled = () => stylex.attrs(styles.ellipsis)
 
   return (
@@ -74,7 +73,6 @@ export function Pagination(props: StyledPaginationProps) {
       style={props.style}
       pageButtonClass={joinClassNames(buttonCompiled().class, props.pageButtonClass)}
       pageButtonStyle={{ ...props.pageButtonStyle }}
-      pageButtonActiveClass={joinClassNames(activeCompiled().class, props.pageButtonActiveClass)}
       pageButtonActiveStyle={{ ...props.pageButtonActiveStyle }}
       ellipsisClass={joinClassNames(ellipsisCompiled().class, props.ellipsisClass)}
       ellipsisStyle={props.ellipsisStyle}

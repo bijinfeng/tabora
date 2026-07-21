@@ -35,11 +35,11 @@ const styles = stylex.create({
       backgroundColor: "rgb(var(--tbr-color-surface-hover))",
       color: "rgb(var(--tbr-color-text))",
     },
-  },
-  pressed: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    color: "rgb(var(--tbr-color-accent))",
-    fontWeight: 650,
+    "[data-pressed]": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      color: "rgb(var(--tbr-color-accent))",
+      fontWeight: 650,
+    },
   },
 })
 
@@ -50,8 +50,6 @@ export type StyledMenubarProps = MenubarProps & {
 export function Menubar(props: StyledMenubarProps) {
   const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const itemCompiled = () => stylex.attrs(styles.item)
-  const itemPressedCompiled = () => stylex.attrs(styles.pressed)
-
   return (
     <Primitive
       {...props}
@@ -59,7 +57,6 @@ export function Menubar(props: StyledMenubarProps) {
       style={props.style}
       itemClass={joinClassNames(itemCompiled().class, props.itemClass)}
       itemStyle={props.itemStyle}
-      itemPressedClass={joinClassNames(itemPressedCompiled().class, props.itemPressedClass)}
       itemPressedStyle={{ ...props.itemPressedStyle }}
     />
   )

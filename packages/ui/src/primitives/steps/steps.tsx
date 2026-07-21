@@ -29,46 +29,48 @@ export function Steps(props: StepsProps) {
   return (
     <ol class={props.class} style={props.style}>
       <For each={props.steps}>
-        {(step, index) => (
-          <li
-            class={props.stepClass}
-            style={props.stepStyle}
-            data-state={
-              index() < props.current
-                ? "complete"
-                : index() === props.current
-                  ? "active"
-                  : "pending"
-            }
-          >
-            <span
-              class={[
-                props.markerClass,
-                index() <= props.current ? props.markerActiveClass : undefined,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={
-                index() <= props.current
-                  ? { ...props.markerStyle, ...props.markerActiveStyle }
-                  : props.markerStyle
-              }
-            >
-              {index() + 1}
-            </span>
-            <span class={props.bodyClass} style={props.bodyStyle}>
-              <strong class={props.titleClass} style={props.titleStyle}>
-                {step.title}
-              </strong>
-              {step.description && (
-                <span class={props.descriptionClass} style={props.descriptionStyle}>
-                  {step.description}
-                </span>
-              )}
-            </span>
-          </li>
-        )}
+        {(step, index) => <Step step={step} index={index()} props={props} />}
       </For>
     </ol>
+  )
+}
+
+function Step(props: { step: StepItem; index: number; props: StepsProps }) {
+  const state = () =>
+    props.index < props.props.current
+      ? "complete"
+      : props.index === props.props.current
+        ? "active"
+        : "pending"
+
+  return (
+    <li class={props.props.stepClass} style={props.props.stepStyle} data-state={state()}>
+      <span
+        class={[
+          props.props.markerClass,
+          props.index <= props.props.current ? props.props.markerActiveClass : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        style={
+          props.index <= props.props.current
+            ? { ...props.props.markerStyle, ...props.props.markerActiveStyle }
+            : props.props.markerStyle
+        }
+        data-state={state()}
+      >
+        {props.index + 1}
+      </span>
+      <span class={props.props.bodyClass} style={props.props.bodyStyle} data-state={state()}>
+        <strong class={props.props.titleClass} style={props.props.titleStyle}>
+          {props.step.title}
+        </strong>
+        {props.step.description && (
+          <span class={props.props.descriptionClass} style={props.props.descriptionStyle}>
+            {props.step.description}
+          </span>
+        )}
+      </span>
+    </li>
   )
 }

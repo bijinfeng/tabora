@@ -38,6 +38,15 @@ const styles = stylex.create({
       outline: "2px solid rgb(var(--tbr-color-focus))",
       outlineOffset: -2,
     },
+    "[data-pressed]": {
+      backgroundColor: "rgb(var(--tbr-color-surface))",
+      boxShadow: "0 1px 2px rgb(var(--tbr-color-shadow) / 0.06)",
+      color: "rgb(var(--tbr-color-text))",
+    },
+    "[data-disabled]": {
+      cursor: "not-allowed",
+      opacity: 0.4,
+    },
   },
   itemSm: {
     fontSize: 11,
@@ -50,15 +59,6 @@ const styles = stylex.create({
     height: 30,
     paddingBlock: 0,
     paddingInline: 12,
-  },
-  itemSelected: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    boxShadow: "0 1px 2px rgb(var(--tbr-color-shadow) / 0.06)",
-    color: "rgb(var(--tbr-color-text))",
-  },
-  itemDisabled: {
-    cursor: "not-allowed",
-    opacity: 0.4,
   },
 })
 
@@ -84,17 +84,12 @@ export function SegmentedControl<V extends string>(props: StyledSegmentedControl
       props.size === "sm" && styles.itemSm,
       (!props.size || props.size === "md") && styles.itemMd,
     )
-  const itemSelectedCompiled = () => stylex.attrs(styles.itemSelected)
-  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
-
   return (
     <Primitive
       {...props}
       class={rootCompiled().class}
       style={undefined}
       itemClass={itemCompiled().class}
-      itemSelectedClass={itemSelectedCompiled().class}
-      itemDisabledClass={itemDisabledCompiled().class}
     />
   )
 }

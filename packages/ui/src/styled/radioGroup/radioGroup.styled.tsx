@@ -42,14 +42,14 @@ const styles = stylex.create({
       outline: "2px solid rgb(var(--tbr-color-focus))",
       outlineOffset: 2,
     },
-  },
-  itemChecked: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-  },
-  itemDisabled: {
-    cursor: "not-allowed",
-    opacity: 0.45,
+    "[data-checked]": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      borderColor: "rgb(var(--tbr-color-accent))",
+    },
+    "[data-disabled]": {
+      cursor: "not-allowed",
+      opacity: 0.45,
+    },
   },
   input: {
     clip: "rect(0, 0, 0, 0)",
@@ -70,10 +70,10 @@ const styles = stylex.create({
     transitionProperty: "border-color, box-shadow",
     transitionTimingFunction: "var(--tbr-ease)",
     width: 18,
-  },
-  controlChecked: {
-    borderColor: "rgb(var(--tbr-color-accent))",
-    boxShadow: "inset 0 0 0 5px rgb(var(--tbr-color-accent))",
+    "[data-checked]": {
+      borderColor: "rgb(var(--tbr-color-accent))",
+      boxShadow: "inset 0 0 0 5px rgb(var(--tbr-color-accent))",
+    },
   },
   content: {
     display: "flex",
@@ -121,11 +121,8 @@ export function RadioGroup<V extends string>(props: StyledRadioGroupProps<V>) {
       (!props.direction || props.direction === "vertical") && styles.listVertical,
     )
   const itemCompiled = () => stylex.attrs(styles.item)
-  const itemCheckedCompiled = () => stylex.attrs(styles.itemChecked)
-  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
   const inputCompiled = () => stylex.attrs(styles.input)
   const controlCompiled = () => stylex.attrs(styles.control)
-  const controlCheckedCompiled = () => stylex.attrs(styles.controlChecked)
   const contentCompiled = () => stylex.attrs(styles.content)
   const labelCompiled = () => stylex.attrs(styles.label)
   const descriptionCompiled = () => stylex.attrs(styles.description)
@@ -138,12 +135,9 @@ export function RadioGroup<V extends string>(props: StyledRadioGroupProps<V>) {
       listClass={listCompiled().class}
       listStyle={undefined}
       itemClass={itemCompiled().class}
-      itemCheckedClass={itemCheckedCompiled().class}
-      itemDisabledClass={itemDisabledCompiled().class}
       inputClass={inputCompiled().class}
       inputStyle={undefined}
       controlClass={controlCompiled().class}
-      controlCheckedClass={controlCheckedCompiled().class}
       contentClass={contentCompiled().class}
       labelClass={labelCompiled().class}
       descriptionClass={descriptionCompiled().class}

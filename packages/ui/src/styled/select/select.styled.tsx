@@ -213,14 +213,14 @@ const styles = stylex.create({
       boxShadow: "none",
       outline: "none",
     },
-  },
-  itemSelected: {
-    backgroundColor: "rgb(var(--tbr-color-accent) / 0.08)",
-    color: "rgb(var(--tbr-color-accent))",
-  },
-  itemDisabled: {
-    cursor: "not-allowed",
-    opacity: 0.4,
+    "[data-selected]": {
+      backgroundColor: "rgb(var(--tbr-color-accent) / 0.08)",
+      color: "rgb(var(--tbr-color-accent))",
+    },
+    "[data-disabled]": {
+      cursor: "not-allowed",
+      opacity: 0.4,
+    },
   },
   itemCheck: {
     alignItems: "center",
@@ -296,8 +296,6 @@ export function Select<V extends string>(props: StyledSelectProps<V>) {
   const contentCompiled = () => stylex.attrs(styles.content)
   const listboxCompiled = () => stylex.attrs(styles.listbox)
   const itemCompiled = () => stylex.attrs(styles.item)
-  const itemSelectedCompiled = () => stylex.attrs(styles.itemSelected)
-  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
   const itemCheckCompiled = () => stylex.attrs(styles.itemCheck)
   const itemLabelCompiled = () => stylex.attrs(styles.itemLabel)
 
@@ -319,8 +317,6 @@ export function Select<V extends string>(props: StyledSelectProps<V>) {
       contentStyle={undefined}
       listboxClass={listboxCompiled().class}
       itemClass={itemCompiled().class}
-      itemSelectedClass={itemSelectedCompiled().class}
-      itemDisabledClass={itemDisabledCompiled().class}
       itemCheckClass={itemCheckCompiled().class}
       itemLabelClass={itemLabelCompiled().class}
     />
