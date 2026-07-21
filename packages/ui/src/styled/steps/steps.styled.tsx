@@ -15,20 +15,23 @@ const styles = stylex.create({
     padding: 0,
   },
   step: {
-    alignItems: "flex-start",
-    display: "flex",
+    alignItems: "center",
+    display: "grid",
     flex: 1,
-    gap: 8,
+    gridTemplateRows: "24px auto",
     minWidth: 0,
     position: "relative",
     ":not(:last-child)::after": {
       backgroundColor: "rgb(var(--tbr-color-line))",
       content: '""',
       height: 2,
-      left: 28,
+      left: "calc(50% + 14px)",
       position: "absolute",
-      right: 8,
+      right: "calc(-50% + 14px)",
       top: 12,
+    },
+    "[data-state=complete]::after": {
+      backgroundColor: "rgb(var(--tbr-color-accent))",
     },
   },
   marker: {
@@ -47,18 +50,38 @@ const styles = stylex.create({
     justifyContent: "center",
     width: 24,
     zIndex: 1,
-  },
-  markerActive: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-accent))",
+    "[data-state=active]": {
+      backgroundColor: "rgb(var(--tbr-color-accent))",
+      borderColor: "rgb(var(--tbr-color-accent))",
+      color: "rgb(var(--tbr-color-surface))",
+    },
+    "[data-state=complete]": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      borderColor: "rgb(var(--tbr-color-accent))",
+      color: "rgb(var(--tbr-color-accent))",
+      fontSize: 0,
+    },
+    "[data-state=complete]::before": {
+      backgroundColor: "rgb(var(--tbr-color-accent))",
+      borderRadius: "50%",
+      content: '""',
+      height: 7,
+      width: 7,
+    },
   },
   body: {
-    color: "rgb(var(--tbr-color-text))",
+    alignItems: "center",
+    color: "rgb(var(--tbr-color-text-muted))",
     display: "grid",
     fontSize: 11,
     gap: 2,
-    paddingRight: 12,
+    justifyItems: "center",
+    paddingTop: 5,
+    textAlign: "center",
+    width: "100%",
+    "[data-state=active]": {
+      color: "rgb(var(--tbr-color-accent))",
+    },
   },
   description: {
     color: "rgb(var(--tbr-color-text-muted))",
@@ -74,7 +97,6 @@ export function Steps(props: StyledStepsProps) {
   const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const stepCompiled = () => stylex.attrs(styles.step)
   const markerCompiled = () => stylex.attrs(styles.marker)
-  const markerActiveCompiled = () => stylex.attrs(styles.markerActive)
   const bodyCompiled = () => stylex.attrs(styles.body)
   const descriptionCompiled = () => stylex.attrs(styles.description)
 
@@ -87,7 +109,6 @@ export function Steps(props: StyledStepsProps) {
       stepStyle={props.stepStyle}
       markerClass={joinClassNames(markerCompiled().class, props.markerClass)}
       markerStyle={props.markerStyle}
-      markerActiveClass={joinClassNames(markerActiveCompiled().class, props.markerActiveClass)}
       markerActiveStyle={{ ...props.markerActiveStyle }}
       bodyClass={joinClassNames(bodyCompiled().class, props.bodyClass)}
       bodyStyle={props.bodyStyle}

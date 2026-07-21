@@ -21,10 +21,10 @@ const styles = stylex.create({
     ":hover": {
       backgroundColor: "rgb(var(--tbr-color-surface-hover))",
     },
-  },
-  rowSelected: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    color: "rgb(var(--tbr-color-accent))",
+    "[data-selected]": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      color: "rgb(var(--tbr-color-accent))",
+    },
   },
   buttonBase: {
     backgroundColor: "transparent",
@@ -45,12 +45,12 @@ const styles = stylex.create({
     transitionProperty: "transform",
     transitionTimingFunction: "var(--tbr-ease)",
     width: 18,
-  },
-  toggleOpen: {
-    transform: "rotate(90deg)",
-  },
-  toggleEmpty: {
-    visibility: "hidden",
+    "[data-open]": {
+      transform: "rotate(90deg)",
+    },
+    "[data-empty]": {
+      visibility: "hidden",
+    },
   },
   label: {
     alignItems: "center",
@@ -75,10 +75,7 @@ export type StyledTreeViewProps = TreeViewProps & {
 export function TreeView(props: StyledTreeViewProps) {
   const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const rowCompiled = () => stylex.attrs(styles.row)
-  const rowSelectedCompiled = () => stylex.attrs(styles.rowSelected)
   const toggleCompiled = () => stylex.attrs(styles.buttonBase, styles.toggle)
-  const toggleOpenCompiled = () => stylex.attrs(styles.toggleOpen)
-  const toggleEmptyCompiled = () => stylex.attrs(styles.toggleEmpty)
   const labelCompiled = () => stylex.attrs(styles.buttonBase, styles.label)
   const iconCompiled = () => stylex.attrs(styles.icon)
 
@@ -89,13 +86,10 @@ export function TreeView(props: StyledTreeViewProps) {
       style={props.style}
       rowClass={joinClassNames(rowCompiled().class, props.rowClass)}
       rowStyle={props.rowStyle}
-      rowSelectedClass={joinClassNames(rowSelectedCompiled().class, props.rowSelectedClass)}
       rowSelectedStyle={{ ...props.rowSelectedStyle }}
       toggleClass={joinClassNames(toggleCompiled().class, props.toggleClass)}
       toggleStyle={props.toggleStyle}
-      toggleOpenClass={joinClassNames(toggleOpenCompiled().class, props.toggleOpenClass)}
       toggleOpenStyle={{ ...props.toggleOpenStyle }}
-      toggleEmptyClass={joinClassNames(toggleEmptyCompiled().class, props.toggleEmptyClass)}
       toggleEmptyStyle={{ ...props.toggleEmptyStyle }}
       labelClass={joinClassNames(labelCompiled().class, props.labelClass)}
       labelStyle={props.labelStyle}

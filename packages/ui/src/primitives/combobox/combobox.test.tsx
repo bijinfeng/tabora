@@ -5,7 +5,7 @@ import { Combobox, type ComboboxOption } from "./combobox"
 import { Combobox as StyledCombobox } from "../../styled/combobox/combobox.styled"
 
 describe("Combobox", () => {
-  it("renders input and opens dropdown on focus", () => {
+  it("renders input and opens dropdown on input", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
 
@@ -34,7 +34,10 @@ describe("Combobox", () => {
 
     const input = root.querySelector("#test-combo") as HTMLInputElement
     expect(input).toBeTruthy()
-    input.focus()
+    input.value = "天"
+    input.dispatchEvent(
+      new InputEvent("input", { bubbles: true, data: "天", inputType: "insertText" }),
+    )
 
     const option = [...document.body.querySelectorAll("[role='option']")].at(-1) as HTMLElement
     expect(option).toBeTruthy()
@@ -67,7 +70,10 @@ describe("Combobox", () => {
     )
 
     const input = root.querySelector("#styled-combo") as HTMLInputElement
-    input.focus()
+    input.value = "天"
+    input.dispatchEvent(
+      new InputEvent("input", { bubbles: true, data: "天", inputType: "insertText" }),
+    )
 
     const wrapper = root.firstElementChild as HTMLElement
     const option = [...document.body.querySelectorAll("[role='option']")].at(-1) as HTMLElement
