@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { radius } from "@tabora/theme/tokens.stylex"
 import { Skeleton as P, SkeletonText as PT } from "../../primitives/skeleton/skeleton"
 import type { SkeletonProps, SkeletonTextProps } from "../../primitives/skeleton/skeleton"
 import { joinClassNames } from "../../stylex"
@@ -19,15 +20,15 @@ const pulse = stylex.keyframes({
 
 const styles = stylex.create({
   root: {
-    animationDuration: "1.5s",
+    animationDuration: "1500ms",
     animationIterationCount: "infinite",
     animationName: pulse,
     animationTimingFunction: "ease-in-out",
     backgroundColor: "rgb(var(--tbr-color-line) / 0.5)",
-    borderRadius: "var(--tbr-radius-2)",
+    borderRadius: radius.r2,
   },
   rounded: {
-    borderRadius: 999,
+    borderRadius: radius.pill,
   },
 })
 

@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { ErrorBoundary } from "solid-js"
 import type { JSX } from "solid-js"
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
+import { Button } from "@tabora/ui"
 
 const styles = stylex.create({
   fallback: {
@@ -76,14 +77,16 @@ export function createPluginErrorFallback(
       <pre {...stylex.attrs(styles.details)}>
         {error instanceof Error ? error.message : String(error)}
       </pre>
-      <button
-        {...stylex.attrs(styles.retry)}
+      <Button
+        size="sm"
+        variant="secondary"
+        xstyle={styles.retry}
         data-plugin-error-retry
         type="button"
         onClick={() => reset?.()}
       >
         {copy?.retry ?? "重试"}
-      </button>
+      </Button>
     </div>
   )
 }

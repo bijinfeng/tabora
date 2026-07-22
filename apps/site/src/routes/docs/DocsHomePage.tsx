@@ -149,7 +149,6 @@ export function DocsHomePage() {
             </>
           ))}
         </aside>
-
         <DocsGuideSections
           content={content()}
           locale={i18n.locale()}

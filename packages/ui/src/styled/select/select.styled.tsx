@@ -2,40 +2,40 @@ import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 import { splitProps } from "solid-js"
 
+import { color, font, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { Select as Primitive } from "../../primitives/select/select"
 import type { SelectProps, SelectOption } from "../../primitives/select/select"
 
 const styles = stylex.create({
   trigger: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     boxShadow: "none",
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     cursor: "pointer",
     display: "inline-flex",
     fontFamily: "inherit",
     fontSize: 13,
-    fontWeight: 500,
-    gap: 8,
+    fontWeight: font.medium,
+    gap: 6,
     justifyContent: "space-between",
-    minWidth: 188,
-    transitionDuration: "var(--tbr-dur-fast)",
+    minWidth: 180,
+    transitionDuration: motion.fast,
     transitionProperty: "border-color, background-color, box-shadow",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     whiteSpace: "nowrap",
     width: "100%",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
     },
     ":focus-visible": {
-      borderColor: "rgb(var(--tbr-color-focus))",
-      boxShadow:
-        "0 0 0 1px rgb(var(--tbr-color-focus)), 0 0 0 4px rgb(var(--tbr-color-accent) / 0.14)",
+      borderColor: color.accent,
+      boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.12)",
       outline: "none",
     },
   },
@@ -53,28 +53,24 @@ const styles = stylex.create({
   triggerMultiple: {
     height: "auto",
     minHeight: 36,
-    paddingBottom: 4,
-    paddingLeft: 8,
-    paddingRight: 36,
-    paddingTop: 4,
+    paddingBlock: 4,
+    paddingInline: 8,
   },
   triggerMultipleSm: {
     minHeight: 28,
-    paddingBottom: 2,
-    paddingLeft: 6,
-    paddingRight: 32,
-    paddingTop: 2,
+    paddingBlock: 2,
+    paddingInline: 6,
   },
   triggerDisabled: {
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    backgroundColor: color.surfaceSoft,
     cursor: "not-allowed",
     opacity: 0.5,
   },
   triggerInvalid: {
-    borderColor: "rgb(var(--tbr-color-danger))",
+    borderColor: color.danger,
   },
   value: {
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     flex: 1,
     minWidth: 0,
     overflow: "hidden",
@@ -82,14 +78,14 @@ const styles = stylex.create({
     textOverflow: "ellipsis",
   },
   valueInvalid: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
   },
   valuePlaceholder: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
   },
   icon: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     flex: "none",
     height: 16,
@@ -105,12 +101,12 @@ const styles = stylex.create({
   },
   tag: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-accent) / 0.12)",
-    borderRadius: 4,
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    borderRadius: radius.r1,
+    color: color.accent,
     display: "inline-flex",
     fontSize: 11,
-    fontWeight: 600,
+    fontWeight: font.semibold,
     gap: 3,
     height: 22,
     paddingBlock: 0,
@@ -128,36 +124,35 @@ const styles = stylex.create({
     justifyContent: "center",
     opacity: 0.6,
     padding: 0,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "opacity",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
       opacity: 1,
     },
   },
   tagMore: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-line) / 0.5)",
-    borderRadius: 4,
-    color: "rgb(var(--tbr-color-text-muted))",
+    backgroundColor: color.line,
+    borderRadius: radius.r1,
+    color: color.textMuted,
     display: "inline-flex",
     fontSize: 11,
-    fontWeight: 600,
+    fontWeight: font.semibold,
     height: 22,
     paddingBlock: 0,
     paddingInline: 6,
   },
   placeholder: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
   },
   content: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow:
-      "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08), 0 0 1px rgb(var(--tbr-color-shadow) / 0.06)",
+    boxShadow: shadow.floating,
     boxSizing: "border-box",
     maxHeight: 260,
     maxWidth: "var(--kb-select-trigger-width)",
@@ -187,23 +182,23 @@ const styles = stylex.create({
     borderWidth: 0,
     borderRadius: 0,
     boxSizing: "border-box",
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     cursor: "pointer",
     display: "flex",
     fontSize: 13,
-    fontWeight: 500,
+    fontWeight: font.medium,
     gap: 8,
     maxWidth: "100%",
     minHeight: 34,
     outline: "none",
-    paddingBlock: 0,
+    paddingBlock: 8,
     paddingInline: 12,
-    transitionDuration: "120ms",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, color",
-    transitionTimingFunction: "ease",
+    transitionTimingFunction: motion.ease,
     width: "100%",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+      backgroundColor: color.surfaceHover,
     },
     ":focus": {
       boxShadow: "none",
@@ -214,17 +209,27 @@ const styles = stylex.create({
       outline: "none",
     },
     "[data-selected]": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.08)",
-      color: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accentSoft,
+      color: color.accent,
+      fontWeight: font.semibold,
     },
     "[data-disabled]": {
       cursor: "not-allowed",
-      opacity: 0.4,
+      opacity: 0.5,
     },
+  },
+  itemSelected: {
+    backgroundColor: color.accentSoft,
+    color: color.accent,
+    fontWeight: font.semibold,
+  },
+  itemDisabled: {
+    cursor: "not-allowed",
+    opacity: 0.5,
   },
   itemCheck: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-accent))",
+    color: color.accent,
     display: "inline-flex",
     flex: "none",
     height: 16,
@@ -296,6 +301,8 @@ export function Select<V extends string>(props: StyledSelectProps<V>) {
   const contentCompiled = () => stylex.attrs(styles.content)
   const listboxCompiled = () => stylex.attrs(styles.listbox)
   const itemCompiled = () => stylex.attrs(styles.item)
+  const itemSelectedCompiled = () => stylex.attrs(styles.itemSelected)
+  const itemDisabledCompiled = () => stylex.attrs(styles.itemDisabled)
   const itemCheckCompiled = () => stylex.attrs(styles.itemCheck)
   const itemLabelCompiled = () => stylex.attrs(styles.itemLabel)
 
@@ -317,6 +324,8 @@ export function Select<V extends string>(props: StyledSelectProps<V>) {
       contentStyle={undefined}
       listboxClass={listboxCompiled().class}
       itemClass={itemCompiled().class}
+      itemSelectedClass={itemSelectedCompiled().class}
+      itemDisabledClass={itemDisabledCompiled().class}
       itemCheckClass={itemCheckCompiled().class}
       itemLabelClass={itemLabelCompiled().class}
     />

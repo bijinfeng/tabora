@@ -3,6 +3,7 @@ import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { WidgetSize } from "@tabora/plugin-api"
 import { Search, X } from "lucide-solid"
+import { Button, IconButton, Input } from "@tabora/ui"
 
 import type { ShellTranslation } from "../i18n"
 import type { AvailableWidget } from "./WorkbenchShellChrome.types"
@@ -227,14 +228,14 @@ function ModalHeader(props: {
       </div>
       <div {...stylex.attrs(styles.headerContext)}>
         <span {...stylex.attrs(styles.pill)}>{props.groupLabel}</span>
-        <button
-          type="button"
-          {...stylex.attrs(styles.iconButton)}
+        <IconButton
+          size="sm"
+          xstyle={styles.iconButton}
           aria-label={props.closeAria}
           onClick={props.onClose}
         >
           <X size={16} />
-        </button>
+        </IconButton>
       </div>
     </div>
   )
@@ -258,13 +259,13 @@ function LeftColumn(props: {
           <span {...stylex.attrs(styles.searchIcon)} aria-hidden="true">
             <Search size={14} />
           </span>
-          <input
+          <Input
             type="search"
-            {...stylex.attrs(styles.searchInput)}
+            xstyle={styles.searchInput}
             placeholder={props.t("chrome.addWidget.searchPlaceholder", "搜索卡片…")}
             aria-label={props.t("chrome.addWidget.searchPlaceholder", "搜索卡片")}
             value={props.query}
-            onInput={(event) => props.onQueryChange(event.currentTarget.value)}
+            onInput={props.onQueryChange}
           />
         </div>
       </div>
@@ -312,15 +313,16 @@ function LeftColumn(props: {
 
 function CategoryTab(props: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      {...stylex.attrs(styles.tab, props.active && styles.selected)}
+    <Button
+      size="sm"
+      variant="ghost"
+      xstyle={[styles.tab, props.active && styles.selected]}
       role="tab"
       aria-selected={props.active}
       onClick={props.onClick}
     >
       {props.label}
-    </button>
+    </Button>
   )
 }
 
@@ -332,9 +334,10 @@ function WidgetRow(props: {
   t: TFn
 }) {
   return (
-    <button
-      type="button"
-      {...stylex.attrs(styles.item, props.selected && styles.selected)}
+    <Button
+      size="sm"
+      variant="ghost"
+      xstyle={[styles.item, props.selected && styles.selected]}
       aria-pressed={props.selected}
       onClick={props.onSelect}
     >
@@ -355,7 +358,7 @@ function WidgetRow(props: {
         </span>
         <span {...stylex.attrs(styles.sizeHint)}>{defaultSize(props.widget)}</span>
       </span>
-    </button>
+    </Button>
   )
 }
 
@@ -494,16 +497,17 @@ function SizeSelector(props: {
             const disabled = () => !props.supportedSizes.includes(size)
             const active = () => props.effectiveSize === size
             return (
-              <button
-                type="button"
-                {...stylex.attrs(styles.sizeButton, active() && styles.selected)}
+              <Button
+                size="sm"
+                variant="ghost"
+                xstyle={[styles.sizeButton, active() && styles.selected]}
                 role="radio"
                 aria-checked={active()}
                 disabled={disabled()}
                 onClick={() => props.onChange(size)}
               >
                 {size}
-              </button>
+              </Button>
             )
           }}
         </For>
@@ -560,29 +564,23 @@ function ModalFooter(props: {
         </span>
       </div>
       <div {...stylex.attrs(styles.footerActions)}>
-        <button
-          type="button"
-          {...stylex.attrs(styles.button, styles.buttonSubtle)}
-          onClick={props.onCancel}
-        >
+        <Button xstyle={[styles.button, styles.buttonSubtle]} onClick={props.onCancel}>
           {props.t("chrome.addWidget.cancel", "取消")}
-        </button>
-        <button
-          type="button"
-          {...stylex.attrs(styles.button)}
+        </Button>
+        <Button
+          xstyle={styles.button}
           disabled={props.disabled}
           onClick={(e) => e.preventDefault()}
         >
           {props.t("chrome.addWidget.details", "查看详情")}
-        </button>
-        <button
-          type="button"
-          {...stylex.attrs(styles.button, styles.buttonPrimary)}
+        </Button>
+        <Button
+          xstyle={[styles.button, styles.buttonPrimary]}
           disabled={props.disabled}
           onClick={props.onConfirm}
         >
           {props.t("chrome.addWidget.confirm", "添加到工作台")}
-        </button>
+        </Button>
       </div>
     </div>
   )

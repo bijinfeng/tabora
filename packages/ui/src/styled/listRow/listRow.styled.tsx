@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { ListRow as Primitive } from "../../primitives/listRow/listRow"
 import type { ListRowProps } from "../../primitives/listRow/listRow"
 import { joinClassNames } from "../../stylex"
@@ -10,7 +11,7 @@ const styles = stylex.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderColor: "transparent",
-    borderRadius: "var(--tbr-radius-control)",
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     color: "inherit",
@@ -22,24 +23,27 @@ const styles = stylex.create({
     paddingBlock: 8,
     paddingInline: 12,
     textAlign: "inherit",
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, border-color, color",
+    transitionTimingFunction: motion.ease,
     width: "100%",
     ":hover": {
-      backgroundColor: "var(--tbr-list-row-hover-bg, rgb(var(--tbr-color-accent) / 0.06))",
+      backgroundColor: color.surfaceHover,
     },
   },
   interactive: {
     cursor: "pointer",
     ":hover": {
-      backgroundColor: "var(--tbr-list-row-hover-bg, rgb(var(--tbr-color-accent) / 0.06))",
-      borderColor: "var(--tbr-list-row-hover-border, rgb(var(--tbr-color-line)))",
+      backgroundColor: color.surfaceHover,
+      borderColor: color.line,
     },
   },
   selected: {
-    backgroundColor: "rgb(var(--tbr-color-accent) / 0.08)",
-    borderColor: "rgb(var(--tbr-color-accent) / 0.35)",
+    backgroundColor: color.accentSoft,
+    borderColor: color.accent,
   },
   divider: {
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
     borderRadius: 0,
@@ -57,16 +61,16 @@ const styles = stylex.create({
     fontSize: 13,
   },
   primaryDanger: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
   },
   secondary: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontSize: 11,
     marginTop: 1,
   },
   trailing: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     display: "flex",
     flexShrink: 0,
     fontSize: 11,

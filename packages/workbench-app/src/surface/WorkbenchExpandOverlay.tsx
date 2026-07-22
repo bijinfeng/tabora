@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { PluginViewBoundary } from "@tabora/workbench-shell"
 import { X } from "lucide-solid"
+import { IconButton } from "@tabora/ui"
 import { createEffect, Show } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -226,9 +227,9 @@ export function WorkbenchExpandOverlay(props: {
                   </span>
                 </div>
               </div>
-              <button
-                {...stylex.attrs(styles.close)}
-                type="button"
+              <IconButton
+                size="sm"
+                xstyle={styles.close}
                 ref={(element) => (closeButtonRef = element)}
                 onClick={props.onClose}
                 aria-label={
@@ -238,7 +239,7 @@ export function WorkbenchExpandOverlay(props: {
                 }
               >
                 <X size={18} />
-              </button>
+              </IconButton>
             </div>
             <div {...stylex.attrs(styles.body)}>
               {(() => {

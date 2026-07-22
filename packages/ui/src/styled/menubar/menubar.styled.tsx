@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, radius } from "@tabora/theme/tokens.stylex"
 import { Menubar as Primitive } from "../../primitives/menubar/menubar"
 import type { MenubarItem, MenubarProps } from "../../primitives/menubar/menubar"
 import { joinClassNames } from "../../stylex"
@@ -8,9 +9,9 @@ import { joinClassNames } from "../../stylex"
 const styles = stylex.create({
   root: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     display: "inline-flex",
@@ -21,8 +22,8 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: "var(--tbr-radius-2)",
-    color: "rgb(var(--tbr-color-text-muted))",
+    borderRadius: radius.r2,
+    color: color.textMuted,
     cursor: "pointer",
     fontFamily: "inherit",
     fontSize: 12,
@@ -32,12 +33,12 @@ const styles = stylex.create({
     paddingInline: 12,
     whiteSpace: "nowrap",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      color: "rgb(var(--tbr-color-text))",
+      backgroundColor: color.surfaceHover,
+      color: color.text,
     },
     "[data-pressed]": {
-      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-      color: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accentSoft,
+      color: color.accent,
       fontWeight: 650,
     },
   },

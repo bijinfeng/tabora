@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Checkbox, Skeleton } from "@tabora/ui"
+import { Button, Checkbox, Skeleton } from "@tabora/ui"
 import { ChevronDown, ChevronRight, Circle, ArrowUpRight } from "lucide-solid"
 import { styles } from "./styles"
 
@@ -139,30 +139,33 @@ export function TodoCard(props: WidgetViewProps) {
   return (
     <div {...stylex.attrs(styles.root)} data-todo-card>
       <div {...stylex.attrs(styles.toolbar)}>
-        <button
-          {...stylex.attrs(styles.tab, filter() === "todo" && styles.active)}
-          type="button"
+        <Button
+          size="sm"
+          variant="ghost"
+          xstyle={[styles.tab, filter() === "todo" && styles.active]}
           onClick={() => setFilter("todo")}
         >
           未完成
           <span {...stylex.attrs(styles.badge)}>{todoCount()}</span>
-        </button>
-        <button
-          {...stylex.attrs(styles.tab, filter() === "all" && styles.active)}
-          type="button"
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          xstyle={[styles.tab, filter() === "all" && styles.active]}
           onClick={() => setFilter("all")}
         >
           全部
-        </button>
+        </Button>
         <div {...stylex.attrs(styles.spacer)} />
-        <button
-          {...stylex.attrs(styles.outlineButton)}
+        <Button
+          size="sm"
+          variant="secondary"
+          xstyle={styles.outlineButton}
           data-todo-expand
-          type="button"
           onClick={() => props.host.openExpand()}
         >
           展开 <ArrowUpRight size={12} />
-        </button>
+        </Button>
       </div>
 
       <div {...stylex.attrs(styles.list)}>

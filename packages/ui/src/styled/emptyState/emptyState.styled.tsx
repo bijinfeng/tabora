@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color } from "@tabora/theme/tokens.stylex"
 import { EmptyState as Primitive } from "../../primitives/emptyState/emptyState"
 import type { EmptyStateProps } from "../../primitives/emptyState/emptyState"
 import { joinClassNames } from "../../stylex"
@@ -21,13 +22,13 @@ const styles = stylex.create({
     padding: 12,
   },
   title: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 12,
     lineHeight: 1.4,
     maxWidth: 220,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontSize: 12,
     lineHeight: 1.4,
     maxWidth: 220,

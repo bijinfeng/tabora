@@ -1,5 +1,6 @@
 import { TaboraMark } from "@tabora/brand"
 import { A, useLocation } from "@solidjs/router"
+import { IconButton } from "@tabora/ui"
 import * as stylex from "@stylexjs/stylex"
 
 import { useSiteI18n } from "./AppShell"
@@ -78,33 +79,12 @@ const styles = stylex.create({
     display: "inline-flex",
     gap: 10,
   },
-  control: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    border: "1px solid rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-pill)",
-    color: "rgb(var(--tbr-color-text-muted))",
-    cursor: "pointer",
-    display: "inline-flex",
-    fontSize: 12,
-    fontWeight: 680,
-    justifyContent: "center",
-    minHeight: 32,
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-      color: "rgb(var(--tbr-color-text))",
-    },
-    ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
-      outlineOffset: 2,
-    },
-  },
   localeControl: {
+    height: 32,
     paddingInline: 12,
   },
   themeControl: {
-    padding: 0,
+    height: 32,
     width: 32,
   },
   themeDot: {
@@ -163,15 +143,16 @@ export function Topbar(props: { onToggleTheme: () => void }) {
         </A>
       </nav>
       <div {...stylex.attrs(styles.actions)}>
-        <LocaleToggleButton xstyle={[styles.control, styles.localeControl]} />
-        <button
-          {...stylex.attrs(styles.control, styles.themeControl)}
-          type="button"
+        <LocaleToggleButton xstyle={styles.localeControl} />
+        <IconButton
+          size="sm"
+          variant="secondary"
+          xstyle={styles.themeControl}
           aria-label={i18n.t("a11y.toggleTheme")}
           onClick={props.onToggleTheme}
         >
           <span {...stylex.attrs(styles.themeDot)} aria-hidden="true" />
-        </button>
+        </IconButton>
       </div>
     </header>
   )

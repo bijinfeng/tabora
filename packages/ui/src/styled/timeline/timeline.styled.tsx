@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, radius } from "@tabora/theme/tokens.stylex"
 import { Timeline as Primitive } from "../../primitives/timeline/timeline"
 import type { TimelineItem, TimelineProps } from "../../primitives/timeline/timeline"
 
@@ -19,7 +20,7 @@ const styles = stylex.create({
     paddingBottom: 10,
     position: "relative",
     ":not(:last-child)::before": {
-      backgroundColor: "rgb(var(--tbr-color-line))",
+      backgroundColor: color.line,
       bottom: 0,
       content: '""',
       left: 5,
@@ -29,8 +30,8 @@ const styles = stylex.create({
     },
   },
   dot: {
-    backgroundColor: "rgb(var(--tbr-color-line-strong))",
-    borderRadius: "var(--tbr-radius-pill)",
+    backgroundColor: color.lineStrong,
+    borderRadius: radius.pill,
     flex: "none",
     height: 10,
     marginTop: 4,
@@ -38,19 +39,19 @@ const styles = stylex.create({
     zIndex: 1,
   },
   body: {
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     display: "grid",
     fontSize: 13,
     gap: 2,
     minWidth: 0,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     lineHeight: 1.45,
   },
   meta: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontSize: 10,
   },
 })

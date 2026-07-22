@@ -26,7 +26,7 @@ export function Chip(props: ChipProps) {
           }}
           aria-label="移除"
         >
-          <X size={16} strokeWidth={2} />
+          <X size={10} strokeWidth={2} />
         </button>
       )}
     </span>

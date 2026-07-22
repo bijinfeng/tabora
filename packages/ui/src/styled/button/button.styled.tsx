@@ -1,122 +1,128 @@
 import * as stylex from "@stylexjs/stylex"
-import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessButton, HeadlessIconButton } from "../../primitives/button/button"
 import type { HeadlessButtonProps, HeadlessIconButtonProps } from "../../primitives/button/button"
+import type { XStyle } from "../../stylex"
 
 const styles = stylex.create({
   buttonBase: {
     alignItems: "center",
     borderColor: "transparent",
-    borderRadius: "var(--tbr-radius-control)",
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     cursor: "pointer",
     display: "inline-flex",
     fontFamily: "inherit",
-    fontWeight: "var(--tbr-font-weight-semibold, 600)",
+    fontWeight: font.semibold,
     gap: 6,
     justifyContent: "center",
     lineHeight: 1,
-    transitionDuration: "var(--tbr-dur-fast)",
-    transitionProperty: "background-color, border-color, color, transform",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, border-color, color",
+    transitionTimingFunction: motion.ease,
     whiteSpace: "nowrap",
     ":focus-visible": {
-      boxShadow: "0 0 0 4px rgb(var(--tbr-color-focus) / 0.18)",
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      boxShadow: "0 0 0 4px rgb(var(--tbr-color-accent) / 0.18)",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
     ":disabled": {
       cursor: "not-allowed",
-      opacity: 0.45,
+      opacity: 0.5,
     },
   },
   buttonFullWidth: {
     width: "100%",
   },
   buttonSm: {
-    borderRadius: "var(--tbr-radius-2)",
+    borderRadius: radius.control,
     fontSize: 12,
-    height: "var(--tbr-control-sm)",
+    height: 28,
     paddingBlock: 0,
     paddingInline: 10,
   },
   buttonMd: {
     fontSize: 13,
-    height: "var(--tbr-control-md)",
+    height: 36,
     paddingBlock: 0,
     paddingInline: 12,
   },
   buttonLg: {
     fontSize: 14,
-    height: "var(--tbr-control-lg)",
+    height: 44,
     paddingBlock: 0,
     paddingInline: 18,
   },
   primary: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-inverse))",
+    backgroundColor: color.accent,
+    borderColor: color.accent,
+    color: color.inverse,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent-hover))",
+      backgroundColor: color.accentHover,
+      borderColor: color.accentHover,
     },
     ":active": {
-      backgroundColor: "color-mix(in srgb, rgb(var(--tbr-color-accent-hover)) 90%, black)",
-      transform: "translateY(1px)",
+      backgroundColor: color.accentHover,
     },
   },
   secondary: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    color: "rgb(var(--tbr-color-text))",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    color: color.text,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.08)",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
     },
     ":active": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.14)",
+      backgroundColor: color.surfaceHover,
     },
   },
   subtle: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    backgroundColor: color.accentSoft,
     borderColor: "transparent",
-    color: "rgb(var(--tbr-color-accent))",
+    color: color.accent,
     ":hover": {
       backgroundColor:
-        "color-mix(in srgb, rgb(var(--tbr-color-accent-soft)) 70%, rgb(var(--tbr-color-accent)))",
+        "color-mix(in srgb, rgb(var(--tbr-color-accent-soft)) 78%, rgb(var(--tbr-color-surface-hover)))",
     },
     ":active": {
       backgroundColor:
-        "color-mix(in srgb, rgb(var(--tbr-color-accent-soft)) 50%, rgb(var(--tbr-color-accent)))",
+        "color-mix(in srgb, rgb(var(--tbr-color-accent-soft)) 60%, rgb(var(--tbr-color-surface-hover)))",
     },
   },
   ghost: {
     backgroundColor: "transparent",
     borderColor: "transparent",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.06)",
-      color: "rgb(var(--tbr-color-text))",
+      backgroundColor: color.surfaceHover,
+      color: color.text,
     },
     ":active": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.12)",
+      backgroundColor: color.surfaceHover,
     },
   },
   danger: {
-    backgroundColor: "rgb(var(--tbr-color-danger))",
-    color: "rgb(var(--tbr-color-inverse))",
+    backgroundColor: color.danger,
+    borderColor: color.danger,
+    color: color.inverse,
     ":hover": {
-      backgroundColor: "color-mix(in srgb, rgb(var(--tbr-color-danger)) 85%, black)",
+      backgroundColor:
+        "color-mix(in srgb, rgb(var(--tbr-color-danger)) 86%, rgb(var(--tbr-color-text)))",
+      borderColor:
+        "color-mix(in srgb, rgb(var(--tbr-color-danger)) 86%, rgb(var(--tbr-color-text)))",
     },
     ":active": {
-      backgroundColor: "color-mix(in srgb, rgb(var(--tbr-color-danger)) 75%, black)",
-      transform: "translateY(1px)",
+      backgroundColor:
+        "color-mix(in srgb, rgb(var(--tbr-color-danger)) 78%, rgb(var(--tbr-color-text)))",
     },
   },
   dangerSubtle: {
-    backgroundColor: "rgb(var(--tbr-color-danger-soft))",
+    backgroundColor: color.dangerSoft,
     borderColor: "transparent",
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
     ":hover": {
       backgroundColor:
         "color-mix(in srgb, rgb(var(--tbr-color-danger-soft)) 84%, rgb(var(--tbr-color-surface-hover)))",
@@ -126,65 +132,68 @@ const styles = stylex.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderColor: "transparent",
-    borderRadius: "var(--tbr-radius-control)",
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     cursor: "pointer",
     display: "inline-flex",
     justifyContent: "center",
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      boxShadow: "0 0 0 4px rgb(var(--tbr-color-accent) / 0.18)",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.08)",
-      color: "rgb(var(--tbr-color-text))",
+      backgroundColor: color.surfaceHover,
+      color: color.text,
     },
     ":disabled": {
       cursor: "not-allowed",
-      opacity: 0.45,
+      opacity: 0.5,
     },
   },
   iconSecondary: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    color: "rgb(var(--tbr-color-text))",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    color: color.text,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.08)",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
     },
   },
   iconDanger: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-danger) / 0.08)",
+      backgroundColor: color.dangerSoft,
     },
   },
   iconSm: {
-    borderRadius: "var(--tbr-radius-2)",
+    borderRadius: radius.control,
     height: 26,
     width: 26,
   },
   iconMd: {
+    borderRadius: radius.panel,
     height: 32,
     width: 32,
   },
   iconLg: {
+    borderRadius: radius.panel,
     height: 38,
     width: 38,
   },
 })
 
 export type ButtonProps = Omit<HeadlessButtonProps, "class" | "style"> & {
-  xstyle?: StyleXStyles
+  xstyle?: XStyle
 }
 
-export type IconButtonProps = Omit<HeadlessIconButtonProps, "class" | "style"> & {
-  xstyle?: StyleXStyles
+export type IconButtonProps = Omit<HeadlessIconButtonProps, "class"> & {
+  xstyle?: XStyle
 }
 
 const buttonVariantStyles = {
@@ -236,7 +245,7 @@ export function IconButton(props: IconButtonProps) {
       props.xstyle,
     )
 
-  return <HeadlessIconButton {...props} {...attrs()} />
+  return <HeadlessIconButton {...props} class={attrs().class} style={props.style} />
 }
 
 export type ButtonVariant = HeadlessButtonProps["variant"]

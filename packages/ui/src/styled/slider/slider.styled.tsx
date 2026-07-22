@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { Slider as P } from "../../primitives/slider/slider"
 import type { SliderProps } from "../../primitives/slider/slider"
 
@@ -14,32 +15,31 @@ const styles = stylex.create({
     width: "100%",
   },
   track: {
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderRadius: 999,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.pill,
     height: 4,
     position: "relative",
     width: "100%",
   },
   fill: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderRadius: 999,
+    backgroundColor: color.accent,
+    borderRadius: radius.pill,
     height: "100%",
     position: "absolute",
   },
   thumb: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderColor: "rgb(var(--tbr-color-surface))",
+    backgroundColor: color.accent,
+    borderColor: color.surface,
     borderRadius: "50%",
     borderStyle: "solid",
     borderWidth: 2,
-    boxShadow: "0 1px 3px rgb(var(--tbr-color-shadow) / 0.12)",
+    boxShadow: shadow.sm,
     display: "block",
     height: 16,
-    top: "50%",
-    transform: "translate(-50%, -50%)",
+    marginTop: -6,
     width: 16,
     ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 3,
     },
   },

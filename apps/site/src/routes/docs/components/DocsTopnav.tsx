@@ -1,4 +1,5 @@
 import { A } from "@solidjs/router"
+import { IconButton } from "@tabora/ui"
 import * as stylex from "@stylexjs/stylex"
 
 import { useSiteI18n, useSiteTheme } from "../../../app/AppShell"
@@ -75,30 +76,9 @@ const styles = stylex.create({
     flex: "0 0 auto",
     marginLeft: "auto",
   },
-  iconButton: {
-    alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    border: "1px solid rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
-    color: "rgb(var(--tbr-color-text-muted))",
-    cursor: "pointer",
-    display: "inline-flex",
+  themeControl: {
     height: 30,
-    justifyContent: "center",
-    padding: 0,
     width: 30,
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-      color: "rgb(var(--tbr-color-text))",
-    },
-    ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
-      outlineOffset: 2,
-    },
-  },
-  hidden: {
-    display: "none",
   },
 })
 
@@ -129,38 +109,40 @@ export function DocsTopnav() {
         </A>
       </nav>
       <div {...stylex.attrs(styles.actions)}>
-        <button
-          {...stylex.attrs(styles.iconButton)}
-          type="button"
+        <IconButton
+          size="sm"
+          variant="secondary"
+          xstyle={styles.themeControl}
           aria-label={i18n.t("a11y.toggleTheme")}
           onClick={theme.toggleDark}
         >
-          <svg
-            {...stylex.attrs(theme.dark() && styles.hidden)}
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-          <svg
-            {...stylex.attrs(!theme.dark() && styles.hidden)}
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="5" />
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-        </button>
+          {theme.dark() ? (
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+            </svg>
+          ) : (
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          )}
+        </IconButton>
       </div>
     </header>
   )

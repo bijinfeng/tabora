@@ -45,7 +45,7 @@ export function TagInput(props: TagInputProps) {
               disabled={props.disabled}
               onClick={() => removeTag(tag)}
             >
-              <X size={16} strokeWidth={2} />
+              <X size={10} strokeWidth={2.5} />
             </button>
           </span>
         )}

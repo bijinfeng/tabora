@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { Dialog as P } from "../../primitives/dialog/dialog"
 import type { DialogProps } from "../../primitives/dialog/dialog"
 import { joinClassNames } from "../../stylex"
@@ -26,27 +27,27 @@ const scaleIn = stylex.keyframes({
 const styles = stylex.create({
   overlay: {
     alignItems: "center",
-    animationDuration: "var(--tbr-dur-normal)",
+    animationDuration: motion.normal,
     animationName: fadeIn,
-    animationTimingFunction: "var(--tbr-ease)",
+    animationTimingFunction: motion.ease,
     backdropFilter: "blur(2px)",
     backgroundColor: "rgb(var(--tbr-color-scrim) / 0.2)",
     display: "flex",
     inset: 0,
     justifyContent: "center",
     position: "fixed",
-    zIndex: 300,
+    zIndex: zIndex.modal,
   },
   panel: {
-    animationDuration: "var(--tbr-dur-normal)",
+    animationDuration: motion.normal,
     animationName: scaleIn,
-    animationTimingFunction: "var(--tbr-ease)",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-panel)",
+    animationTimingFunction: motion.ease,
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.panel,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow: "0 8px 32px rgb(var(--tbr-color-shadow) / 0.12)",
+    boxShadow: shadow.floating,
     display: "flex",
     flexDirection: "column",
     gap: 9,
@@ -63,10 +64,10 @@ const styles = stylex.create({
     lineHeight: 1.25,
   },
   headerDestructive: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
   },
   body: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 12,
     lineHeight: 1.45,
   },

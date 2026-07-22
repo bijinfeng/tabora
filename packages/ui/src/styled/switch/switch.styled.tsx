@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { Switch as Primitive } from "../../primitives/switch/switch"
 import type { SwitchProps } from "../../primitives/switch/switch"
 
@@ -12,7 +13,7 @@ const styles = stylex.create({
     fontSize: 13,
     gap: 8,
     ":focus-within": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
   },
@@ -28,16 +29,16 @@ const styles = stylex.create({
     width: 1,
   },
   control: {
-    backgroundColor: "rgb(var(--tbr-color-line-strong))",
-    borderRadius: 999,
+    backgroundColor: color.lineStrong,
+    borderRadius: radius.pill,
     flexShrink: 0,
     position: "relative",
-    transitionDuration: "var(--tbr-dur-normal)",
+    transitionDuration: motion.normal,
     transitionProperty: "background-color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
   },
   controlChecked: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accent,
   },
   controlSm: {
     height: 16,
@@ -48,15 +49,15 @@ const styles = stylex.create({
     width: 36,
   },
   thumb: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
+    backgroundColor: color.surface,
     borderRadius: "50%",
-    boxShadow: "0 1px 2px rgb(var(--tbr-color-shadow) / 0.12)",
+    boxShadow: shadow.sm,
     left: 2,
     position: "absolute",
     top: 2,
-    transitionDuration: "var(--tbr-dur-normal)",
+    transitionDuration: motion.normal,
     transitionProperty: "left, opacity",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
   },
   thumbSm: {
     height: 12,

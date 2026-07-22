@@ -5,6 +5,9 @@ import { Route, Router } from "@solidjs/router"
 import { AppShell, getSiteHref, getSiteRoutePath, isPrototypeRoute } from "./AppShell"
 import { PrototypeTopnav } from "../shared/PrototypeTopnav"
 import { SiteToast } from "../shared/SiteToast"
+import prototypeTopnavSource from "../shared/PrototypeTopnav.tsx?raw"
+import homePageSource from "../routes/home/HomePage.tsx?raw"
+import workbenchPreviewSource from "../routes/home/components/WorkbenchPreview.tsx?raw"
 
 describe("AppShell route path handling", () => {
   it("normalizes the GitHub Pages base path before choosing the page shell", () => {
@@ -31,7 +34,7 @@ describe("AppShell route path handling", () => {
     expect(getSiteHref("https://example.com", "/tabora/")).toBe("https://example.com")
   })
 
-  it("lets the Solid router apply the base path to topnav route links once", () => {
+  it("keeps the UI link button route explicit under the router base", () => {
     const root = document.createElement("div")
     window.history.pushState({}, "", "/tabora/")
     document.body.append(root)
@@ -55,7 +58,7 @@ describe("AppShell route path handling", () => {
 
     expect(
       root.querySelector<HTMLAnchorElement>("[data-site-nav-actions] a")?.getAttribute("href"),
-    ).toBe("/tabora/download")
+    ).toBe("/download")
     expect(root.querySelector<HTMLAnchorElement>("[data-site-logo]")?.getAttribute("href")).toBe(
       "/tabora",
     )
@@ -88,5 +91,22 @@ describe("AppShell route path handling", () => {
 
     dispose()
     root.remove()
+  })
+
+  it("uses the shared IconButton for the theme toggle", () => {
+    expect(prototypeTopnavSource).toContain(
+      '<IconButton\n            size="lg"\n            variant="secondary"',
+    )
+  })
+
+  it("keeps the landing navigation and workbench rail aligned with the landing prototype", () => {
+    expect(prototypeTopnavSource).toContain('i18n.t("nav.officialPlugins")')
+    expect(homePageSource).toContain('i18n.t("action.devDocs")')
+    expect(prototypeTopnavSource).not.toContain("LocaleToggleButton")
+    expect(prototypeTopnavSource).toContain('import { Button, IconButton } from "@tabora/ui"')
+    expect(workbenchPreviewSource).toContain(
+      'import { Button, IconButton, Input } from "@tabora/ui"',
+    )
+    expect(workbenchPreviewSource).toContain('<IconButton variant="ghost"')
   })
 })

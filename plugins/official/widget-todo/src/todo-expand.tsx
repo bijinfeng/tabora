@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Checkbox, Input } from "@tabora/ui"
+import { Button, Checkbox, Input } from "@tabora/ui"
 import { ChevronDown, ChevronRight, Plus } from "lucide-solid"
 import { styles } from "./styles"
 
@@ -186,59 +186,64 @@ export function TodoExpand(props: WidgetViewProps) {
     <div {...stylex.attrs(styles.expandRoot)} data-widget-expand="todo">
       <div {...stylex.attrs(styles.header)}>
         <span {...stylex.attrs(styles.title)}>待办</span>
-        <button
-          {...stylex.attrs(styles.primaryButton)}
-          type="button"
+        <Button
+          size="sm"
+          variant="primary"
+          xstyle={styles.primaryButton}
           onClick={() => setAddingGroupId(DEFAULT_GROUP_ID)}
         >
           <Plus size={14} />
           新建任务
-        </button>
+        </Button>
       </div>
 
       <div {...stylex.attrs(styles.tabs)}>
-        <button
-          {...stylex.attrs(styles.tab, view() === "list" && styles.active)}
-          type="button"
+        <Button
+          size="sm"
+          variant="ghost"
+          xstyle={[styles.tab, view() === "list" && styles.active]}
           onClick={() => setView("list")}
         >
           列表
-        </button>
-        <button
-          {...stylex.attrs(styles.tab, view() === "board" && styles.active)}
-          type="button"
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          xstyle={[styles.tab, view() === "board" && styles.active]}
           onClick={() => setView("board")}
         >
           看板
-        </button>
+        </Button>
       </div>
 
       <div {...stylex.attrs(styles.filters)}>
-        <button
-          {...stylex.attrs(styles.tab, filter() === "todo" && styles.active)}
-          type="button"
+        <Button
+          size="sm"
+          variant="ghost"
+          xstyle={[styles.tab, filter() === "todo" && styles.active]}
           onClick={() => setFilter("todo")}
         >
           未完成
           <span {...stylex.attrs(styles.badge)}>{todoCount()}</span>
-        </button>
-        <button
-          {...stylex.attrs(styles.tab, filter() === "all" && styles.active)}
-          type="button"
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          xstyle={[styles.tab, filter() === "all" && styles.active]}
           onClick={() => setFilter("all")}
         >
           全部
-        </button>
+        </Button>
         <div {...stylex.attrs(styles.spacer)} />
-        <button {...stylex.attrs(styles.toolButton)} type="button">
+        <Button size="sm" variant="ghost" xstyle={styles.toolButton}>
           排序
-        </button>
-        <button {...stylex.attrs(styles.toolButton)} type="button">
+        </Button>
+        <Button size="sm" variant="ghost" xstyle={styles.toolButton}>
           分组
-        </button>
-        <button {...stylex.attrs(styles.toolButton)} type="button">
+        </Button>
+        <Button size="sm" variant="ghost" xstyle={styles.toolButton}>
           字段
-        </button>
+        </Button>
       </div>
 
       <Show when={view() === "list"}>
@@ -331,9 +336,10 @@ export function TodoExpand(props: WidgetViewProps) {
                       </Show>
 
                       <Show when={addingGroupId() !== group.id}>
-                        <button
-                          {...stylex.attrs(styles.addButton)}
-                          type="button"
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          xstyle={styles.addButton}
                           onClick={() => {
                             setAddingGroupId(group.id)
                             setNewTaskText("")
@@ -341,7 +347,7 @@ export function TodoExpand(props: WidgetViewProps) {
                         >
                           <Plus size={12} />
                           新建任务
-                        </button>
+                        </Button>
                       </Show>
                     </div>
                   </Show>
@@ -369,9 +375,10 @@ export function TodoExpand(props: WidgetViewProps) {
             </div>
           </Show>
 
-          <button
-            {...stylex.attrs(styles.addButton)}
-            type="button"
+          <Button
+            size="sm"
+            variant="ghost"
+            xstyle={styles.addButton}
             onClick={() => {
               setAddingGroup(true)
               setNewGroupName("")
@@ -379,7 +386,7 @@ export function TodoExpand(props: WidgetViewProps) {
           >
             <Plus size={12} />
             新建分组
-          </button>
+          </Button>
         </div>
       </Show>
 

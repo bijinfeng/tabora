@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Button, DatePicker, IconButton, Input } from "@tabora/ui"
+import { Button, DatePicker, IconButton, Input, Textarea } from "@tabora/ui"
 import { ChevronDown, Eye, List, Plus, Search, Star, Trash } from "lucide-solid"
 import { styles } from "./styles"
 
@@ -54,6 +54,7 @@ export function NotesExpand(props: WidgetViewProps) {
   const [calYear, setCalYear] = createSignal(new Date().getFullYear())
   const [calMonth, setCalMonth] = createSignal(new Date().getMonth())
   const [searchQuery, setSearchQuery] = createSignal("")
+  const [captureValue, setCaptureValue] = createSignal("")
   let editTimer: ReturnType<typeof setTimeout> | undefined
 
   onMount(async () => {
@@ -137,24 +138,23 @@ export function NotesExpand(props: WidgetViewProps) {
     return result
   })
 
-  function handleCaptureKey(e: KeyboardEvent, el: HTMLTextAreaElement) {
+  function handleCaptureKey(e: KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      const content = el.value
+      const content = captureValue()
       if (content.trim()) {
         void addNote(content)
-        el.value = ""
-        el.style.height = "auto"
+        setCaptureValue("")
       }
     }
   }
 
-  function handleEditInput(el: HTMLTextAreaElement) {
+  function handleEditInput(content: string) {
     const id = editingId()
     if (!id) return
     if (editTimer) clearTimeout(editTimer)
     editTimer = setTimeout(() => {
-      void saveEdit(id, el.value)
+      void saveEdit(id, content)
     }, 400)
   }
 
@@ -197,12 +197,13 @@ export function NotesExpand(props: WidgetViewProps) {
           <span {...stylex.attrs(styles.sideSectionTitle)}>筛选</span>
         </div>
         <div {...stylex.attrs(styles.sideList)}>
-          <button
-            {...stylex.attrs(
+          <Button
+            size="sm"
+            variant="ghost"
+            xstyle={[
               styles.sideButton,
               currentFilter() === "all" && !currentCalDate() && styles.sideButtonActive,
-            )}
-            type="button"
+            ]}
             onClick={() => selectFilter("all")}
           >
             <List size={13} />
@@ -215,13 +216,11 @@ export function NotesExpand(props: WidgetViewProps) {
             >
               {notes().length}
             </span>
-          </button>
-          <button
-            {...stylex.attrs(
-              styles.sideButton,
-              currentFilter() === "starred" && styles.sideButtonActive,
-            )}
-            type="button"
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            xstyle={[styles.sideButton, currentFilter() === "starred" && styles.sideButtonActive]}
             onClick={() => selectFilter("starred")}
           >
             <Star size={13} fill={currentFilter() === "starred" ? "currentColor" : "none"} />
@@ -234,7 +233,7 @@ export function NotesExpand(props: WidgetViewProps) {
             >
               {starCount()}
             </span>
-          </button>
+          </Button>
         </div>
         <div {...stylex.attrs(styles.sideSection)}>
           <span {...stylex.attrs(styles.sideSectionTitle)}>标签</span>
@@ -242,12 +241,13 @@ export function NotesExpand(props: WidgetViewProps) {
         <div {...stylex.attrs(styles.sideTags)}>
           <For each={allTags().slice(0, 8)}>
             {([tag, count]) => (
-              <button
-                {...stylex.attrs(
+              <Button
+                size="sm"
+                variant="ghost"
+                xstyle={[
                   styles.sideButton,
                   currentFilter() === `tag:${tag}` && styles.sideButtonActive,
-                )}
-                type="button"
+                ]}
                 onClick={() => selectFilter(`tag:${tag}`)}
               >
                 <span
@@ -267,7 +267,7 @@ export function NotesExpand(props: WidgetViewProps) {
                 >
                   {count}
                 </span>
-              </button>
+              </Button>
             )}
           </For>
           <Show when={allTags().length === 0}>
@@ -282,16 +282,15 @@ export function NotesExpand(props: WidgetViewProps) {
             <IconButton size="sm" variant="ghost" aria-label="附加文件">
               <Plus size={15} />
             </IconButton>
-            <textarea
-              {...stylex.attrs(styles.textarea)}
-              rows="1"
+            <Textarea
+              size="sm"
+              xstyle={styles.textarea}
+              rows={1}
+              value={captureValue()}
+              onInput={setCaptureValue}
               placeholder="记点什么...（Enter 发送）"
               aria-label="新建便签内容"
-              onInput={(e) => {
-                e.currentTarget.style.height = "auto"
-                e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 100)}px`
-              }}
-              onKeyDown={(e) => handleCaptureKey(e, e.currentTarget)}
+              onKeyDown={handleCaptureKey}
             />
           </div>
           <div {...stylex.attrs(styles.captureFooter)}>
@@ -406,11 +405,12 @@ export function NotesExpand(props: WidgetViewProps) {
                   >
                     <div {...stylex.attrs(styles.edit)}>
                       <div {...stylex.attrs(styles.editArea)}>
-                        <textarea
-                          {...stylex.attrs(styles.textarea, styles.editTextarea)}
+                        <Textarea
+                          size="sm"
+                          xstyle={[styles.textarea, styles.editTextarea]}
                           value={note.content}
+                          onInput={handleEditInput}
                           aria-label={`编辑 ${note.content.slice(0, 30)}`}
-                          onInput={(e) => handleEditInput(e.currentTarget)}
                           onKeyDown={(e) => handleEditKey(e, note.id, e.currentTarget)}
                         />
                       </div>

@@ -3,7 +3,7 @@ import type { JSX } from "solid-js"
 import { onCleanup, onMount, Show } from "solid-js"
 import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
-import { ContextMenu, type ContextMenuItem } from "@tabora/ui"
+import { ContextMenu, IconButton, type ContextMenuItem } from "@tabora/ui"
 import { X } from "lucide-solid"
 import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { widgetCardStyleVars } from "./WidgetCardShell.stylex"
@@ -224,15 +224,15 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
           <span>{props.title}</span>
         </h3>
         <div {...stylex.attrs(styles.actions)} data-widget-card-actions>
-          <button
-            {...stylex.attrs(styles.action)}
-            type="button"
+          <IconButton
+            size="sm"
+            xstyle={styles.action}
             data-widget-card-remove
             aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
             onClick={() => props.callbacks.onRemove()}
           >
             <X size={15} />
-          </button>
+          </IconButton>
         </div>
       </div>
       <div {...stylex.attrs(styles.body)} data-widget-card-body>

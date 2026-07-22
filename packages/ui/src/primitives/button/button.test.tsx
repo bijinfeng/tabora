@@ -41,6 +41,25 @@ describe("Button", () => {
     expect(root.querySelector("button")!.type).toBe("submit")
   })
 
+  it("renders a navigable anchor when href is provided", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <Button href="/download">下载</Button>, root)
+
+    const link = root.querySelector("a")!
+    expect(link.getAttribute("href")).toBe("/download")
+    expect(link.textContent).toBe("下载")
+    expect(link.getAttribute("data-variant")).toBe("secondary")
+  })
+
+  it("forwards data attributes to the rendered control", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <Button data-testid="save-control">保存</Button>, root)
+
+    expect(root.querySelector("button")?.getAttribute("data-testid")).toBe("save-control")
+  })
+
   it("uses StyleX classes while preserving variant state attributes", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

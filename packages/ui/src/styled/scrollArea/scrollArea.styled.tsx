@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, radius } from "@tabora/theme/tokens.stylex"
 import { ScrollArea as Primitive } from "../../primitives/scrollArea/scrollArea"
 import type { ScrollAreaProps } from "../../primitives/scrollArea/scrollArea"
 import { joinClassNames } from "../../stylex"
@@ -9,10 +10,10 @@ const styles = stylex.create({
   root: {
     maxWidth: "100%",
     overflow: "auto",
-    scrollbarColor: "rgb(var(--tbr-color-line-strong)) transparent",
+    scrollbarColor: `${color.lineStrong} transparent`,
     scrollbarWidth: "thin",
     ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
     "::-webkit-scrollbar": {
@@ -20,8 +21,8 @@ const styles = stylex.create({
       width: 6,
     },
     "::-webkit-scrollbar-thumb": {
-      backgroundColor: "rgb(var(--tbr-color-line-strong))",
-      borderRadius: "var(--tbr-radius-pill)",
+      backgroundColor: color.lineStrong,
+      borderRadius: radius.pill,
     },
   },
 })

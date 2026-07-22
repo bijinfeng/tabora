@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { PluginViewBoundary } from "@tabora/workbench-shell"
 import { X } from "lucide-solid"
+import { IconButton } from "@tabora/ui"
 import { createEffect, Show } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -173,16 +174,16 @@ export function WorkbenchPluginModal(props: {
         aria-modal="true"
       >
         <div {...stylex.attrs(styles.modal)} onClick={(event) => event.stopPropagation()}>
-          <button
-            {...stylex.attrs(styles.close)}
-            type="button"
+          <IconButton
+            size="sm"
+            xstyle={styles.close}
             data-modal-close
             ref={(element) => (closeRef = element)}
             aria-label={props.tShell?.("chrome.modal.close") ?? "关闭"}
             onClick={props.onClose}
           >
             <X size={16} />
-          </button>
+          </IconButton>
           <div {...stylex.attrs(styles.modalBody)}>
             <Show when={props.viewId}>
               {(viewId) => (
@@ -224,16 +225,16 @@ export function WorkbenchFullscreenOverlay(props: {
         role="dialog"
         aria-modal="true"
       >
-        <button
-          {...stylex.attrs(styles.fullscreenClose)}
-          type="button"
+        <IconButton
+          size="sm"
+          xstyle={styles.fullscreenClose}
           data-fullscreen-close
           ref={(element) => (closeRef = element)}
           aria-label={props.tShell?.("chrome.fullscreen.close") ?? "关闭全屏视图"}
           onClick={props.onClose}
         >
           <X size={18} />
-        </button>
+        </IconButton>
         <div {...stylex.attrs(styles.fullscreenBody)}>
           <Show when={props.viewId}>
             {(viewId) => (

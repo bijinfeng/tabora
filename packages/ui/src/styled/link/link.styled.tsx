@@ -1,32 +1,33 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Link as P } from "../../primitives/link/link"
 import type { LinkProps } from "../../primitives/link/link"
 
 const styles = stylex.create({
   root: {
-    color: "rgb(var(--tbr-color-accent))",
+    color: color.accent,
     cursor: "pointer",
-    fontWeight: 500,
+    fontWeight: font.medium,
     textDecoration: "none",
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      color: "rgb(var(--tbr-color-accent-hover))",
+      color: color.accentHover,
       textDecoration: "underline",
     },
     ":focus-visible": {
-      borderRadius: 2,
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      borderRadius: radius.r1,
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
   },
   muted: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     ":hover": {
-      color: "rgb(var(--tbr-color-text))",
+      color: color.text,
     },
   },
 })

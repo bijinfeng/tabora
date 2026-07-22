@@ -49,17 +49,18 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
         <div {...stylex.attrs(styles.configList)} aria-label="选择插件配置">
           <For each={PLUGIN_INSTANCES}>
             {(instance) => (
-              <button
-                type="button"
-                {...stylex.attrs(
+              <Button
+                size="md"
+                variant="ghost"
+                xstyle={[
                   styles.configButton,
                   instance.id === activeInstanceId() && styles.selected,
-                )}
+                ]}
                 onClick={() => setActiveInstanceId(instance.id)}
               >
                 <strong>{instance.plugin}</strong>
                 <span>{instance.summary}</span>
-              </button>
+              </Button>
             )}
           </For>
         </div>

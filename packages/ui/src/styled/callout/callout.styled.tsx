@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, radius } from "@tabora/theme/tokens.stylex"
 import {
   Alert as PrimitiveAlert,
   Banner as PrimitiveBanner,
@@ -11,7 +12,7 @@ const styles = stylex.create({
   root: {
     alignItems: "flex-start",
     borderColor: "currentColor",
-    borderRadius: "var(--tbr-radius-control)",
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     display: "flex",
@@ -27,22 +28,22 @@ const styles = stylex.create({
   info: {
     backgroundColor: "rgb(var(--tbr-color-info) / 0.08)",
     borderColor: "rgb(var(--tbr-color-info) / 0.2)",
-    color: "rgb(var(--tbr-color-info))",
+    color: color.info,
   },
   success: {
     backgroundColor: "rgb(var(--tbr-color-success) / 0.08)",
     borderColor: "rgb(var(--tbr-color-success) / 0.2)",
-    color: "rgb(var(--tbr-color-success))",
+    color: color.success,
   },
   warning: {
     backgroundColor: "rgb(var(--tbr-color-warning) / 0.08)",
     borderColor: "rgb(var(--tbr-color-warning) / 0.2)",
-    color: "rgb(var(--tbr-color-warning))",
+    color: color.warning,
   },
   danger: {
     backgroundColor: "rgb(var(--tbr-color-danger) / 0.08)",
     borderColor: "rgb(var(--tbr-color-danger) / 0.2)",
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
   },
   icon: {
     alignItems: "center",
@@ -60,10 +61,10 @@ const styles = stylex.create({
     minWidth: 0,
   },
   title: {
-    fontWeight: 650,
+    fontWeight: font.semibold,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     lineHeight: 1.35,
   },
@@ -75,7 +76,7 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: "var(--tbr-radius-2)",
+    borderRadius: radius.r2,
     color: "currentColor",
     cursor: "pointer",
     display: "inline-flex",
@@ -84,7 +85,7 @@ const styles = stylex.create({
     justifyContent: "center",
     width: 24,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
     },
   },
 })

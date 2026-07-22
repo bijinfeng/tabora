@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { Button, Input } from "@tabora/ui"
 import {
   displayUrl,
   getDefaultLinks,
@@ -48,11 +49,11 @@ export function QuickLinksCard(props: WidgetViewProps) {
     <div {...stylex.attrs(styles.card)} data-quick-links-card>
       <Show when={showSearch()}>
         <div {...stylex.attrs(styles.search)} role="search">
-          <input
-            {...stylex.attrs(styles.searchInput)}
-            type="text"
+          <Input
+            size="sm"
             value={query()}
-            onInput={(event) => setQuery(event.currentTarget.value)}
+            onInput={setQuery}
+            xstyle={styles.searchInput}
             placeholder="搜索快捷入口…"
             aria-label="搜索快捷入口"
           />
@@ -65,17 +66,18 @@ export function QuickLinksCard(props: WidgetViewProps) {
         <For each={visibleLinks()}>
           {(link) => (
             <li {...stylex.attrs(styles.item, props.size === "S" && styles.itemSmall)}>
-              <button
-                {...stylex.attrs(styles.link)}
+              <Button
+                size="sm"
+                variant="ghost"
+                xstyle={styles.link}
                 data-quick-link
-                type="button"
                 onClick={() => void props.host.openExternal(link.url)}
               >
                 <span {...stylex.attrs(styles.mark)}>{initialsFromTitle(link.title)}</span>
                 <span {...stylex.attrs(styles.label, props.size === "S" && styles.labelHidden)}>
                   {link.title}
                 </span>
-              </button>
+              </Button>
             </li>
           )}
         </For>
@@ -83,16 +85,17 @@ export function QuickLinksCard(props: WidgetViewProps) {
           <li {...stylex.attrs(styles.empty)}>未找到匹配的快捷入口</li>
         </Show>
         <li {...stylex.attrs(styles.item, styles.itemAdd, props.size === "S" && styles.itemSmall)}>
-          <button
-            {...stylex.attrs(styles.link)}
-            type="button"
+          <Button
+            size="sm"
+            variant="ghost"
+            xstyle={styles.link}
             onClick={() => props.host.openExpand()}
           >
             <span {...stylex.attrs(styles.addMark)}>+</span>
             <span {...stylex.attrs(styles.label, props.size === "S" && styles.labelHidden)}>
               添加
             </span>
-          </button>
+          </Button>
         </li>
       </ul>
     </div>

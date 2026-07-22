@@ -44,7 +44,7 @@ export function Checkbox(props: CheckboxProps) {
         <KCheckbox.Indicator>
           <Show
             when={props.checked === "indeterminate"}
-            fallback={<Check size={16} strokeWidth={2} />}
+            fallback={<Check size={10} strokeWidth={1.5} />}
           >
             <Minus size={16} strokeWidth={2} />
           </Show>

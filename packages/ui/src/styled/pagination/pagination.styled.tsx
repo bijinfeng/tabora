@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Pagination as P } from "../../primitives/pagination/pagination"
 import type { PaginationProps } from "../../primitives/pagination/pagination"
 import { joinClassNames } from "../../stylex"
@@ -13,12 +14,12 @@ const styles = stylex.create({
   },
   button: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-2)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.r2,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     cursor: "pointer",
     display: "inline-flex",
     fontFamily: "inherit",
@@ -28,27 +29,27 @@ const styles = stylex.create({
     minWidth: 32,
     paddingBlock: 0,
     paddingInline: 6,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.06)",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
     },
     ":disabled": {
       cursor: "not-allowed",
-      opacity: 0.35,
+      opacity: 0.5,
     },
     "[data-current]": {
-      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-      borderColor: "rgb(var(--tbr-color-accent))",
-      color: "rgb(var(--tbr-color-accent))",
-      fontWeight: 650,
+      backgroundColor: color.accentSoft,
+      borderColor: color.accent,
+      color: color.accent,
+      fontWeight: font.semibold,
     },
   },
   ellipsis: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     display: "flex",
     fontSize: 13,
     height: 32,

@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { InlineError, Input, Kbd } from "@tabora/ui"
+import { Button, InlineError, Input, Kbd } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
 import { styles } from "./styles"
 
@@ -147,9 +147,10 @@ export function SearchCommandBar(props: SearchViewProps) {
       >
         <form {...stylex.attrs(styles.searchBar)} onSubmit={handleSubmit}>
           <div {...stylex.attrs(styles.searchProvider)}>
-            <button
-              {...stylex.attrs(styles.searchProviderButton)}
-              type="button"
+            <Button
+              size="sm"
+              variant="secondary"
+              xstyle={styles.searchProviderButton}
               aria-label="切换搜索引擎"
               aria-expanded={providerOpen()}
               onClick={() => setProviderOpen((open) => !open)}
@@ -157,18 +158,19 @@ export function SearchCommandBar(props: SearchViewProps) {
               <span {...stylex.attrs(styles.searchProviderDot)} aria-hidden="true" />
               <span {...stylex.attrs(styles.searchProviderLabel)}>{activeProvider()!.title}</span>
               <span {...stylex.attrs(styles.searchProviderCaret)}>▾</span>
-            </button>
+            </Button>
             <Show when={providerOpen()}>
               <div {...stylex.attrs(styles.searchProviderDropdown)} data-search-provider-dropdown>
                 <For each={providers()}>
                   {(provider) => (
-                    <button
-                      {...stylex.attrs(
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      xstyle={[
                         styles.searchProviderOption,
                         provider.id === activeProvider()!.id && styles.selected,
-                      )}
+                      ]}
                       data-search-provider-option
-                      type="button"
                       onMouseDown={(event) => {
                         event.preventDefault()
                         handleProviderChange(provider.id)
@@ -178,7 +180,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                         {provider.id === activeProvider()!.id ? "✓" : ""}
                       </span>
                       <span>{provider.title}</span>
-                    </button>
+                    </Button>
                   )}
                 </For>
               </div>
@@ -235,11 +237,13 @@ export function SearchCommandBar(props: SearchViewProps) {
                       .flatMap((resultGroup) => resultGroup.items)
                       .findIndex((candidate) => candidate.id === item.id)
                     return (
-                      <button
-                        {...stylex.attrs(
+                      <Button
+                        size="md"
+                        variant="ghost"
+                        xstyle={[
                           styles.searchItem,
                           props.activeResultIndex === globalIdx && styles.searchItemActive,
-                        )}
+                        ]}
                         data-search-suggestion
                         onMouseDown={(event) => {
                           event.preventDefault()
@@ -253,7 +257,6 @@ export function SearchCommandBar(props: SearchViewProps) {
                           }
                           void props.host.executeSelection(globalIdx)
                         }}
-                        type="button"
                       >
                         <span {...stylex.attrs(styles.searchItemIcon)} data-search-suggestion-icon>
                           {item.icon}
@@ -270,7 +273,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                         <Show when={item.hint}>
                           <Kbd>{item.hint!}</Kbd>
                         </Show>
-                      </button>
+                      </Button>
                     )
                   }}
                 </For>

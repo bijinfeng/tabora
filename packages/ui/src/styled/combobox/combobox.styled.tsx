@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { Combobox as P } from "../../primitives/combobox/combobox"
 import type { ComboboxProps, ComboboxOption } from "../../primitives/combobox/combobox"
 
@@ -10,35 +11,41 @@ const styles = stylex.create({
     position: "relative",
   },
   input: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     fontFamily: "inherit",
     fontSize: 13,
-    height: "var(--tbr-control-md)",
+    height: 36,
     paddingBlock: 0,
     paddingInline: 12,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "border-color, box-shadow",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: 260,
+    "::placeholder": {
+      color: color.textSubtle,
+    },
+    ":hover": {
+      borderColor: color.lineStrong,
+    },
     ":focus": {
-      borderColor: "rgb(var(--tbr-color-accent))",
+      borderColor: color.accent,
       boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.12)",
       outline: "none",
     },
   },
   dropdown: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow: "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08)",
-    maxHeight: 200,
+    boxShadow: shadow.floating,
+    maxHeight: 220,
     overflowY: "auto",
     position: "relative",
     zIndex: 50,
@@ -48,11 +55,15 @@ const styles = stylex.create({
     fontSize: 13,
     paddingBlock: 8,
     paddingInline: 12,
-    transitionDuration: "120ms",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color",
-    transitionTimingFunction: "ease",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.06)",
+      backgroundColor: color.surfaceHover,
+    },
+    "[data-selected]": {
+      backgroundColor: color.surfaceHover,
+      fontWeight: font.medium,
     },
   },
 })

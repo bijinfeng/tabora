@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { Popover as P } from "../../primitives/popover/popover"
 import type { PopoverProps } from "../../primitives/popover/popover"
 import { joinClassNames } from "../../stylex"
@@ -18,19 +19,19 @@ const scaleIn = stylex.keyframes({
 
 const styles = stylex.create({
   content: {
-    animationDuration: "120ms",
+    animationDuration: motion.fast,
     animationName: scaleIn,
-    animationTimingFunction: "var(--tbr-ease)",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-panel)",
+    animationTimingFunction: motion.ease,
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.panel,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow: "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08)",
+    boxShadow: shadow.floating,
     minWidth: 200,
     outline: "none",
     padding: 12,
-    zIndex: 50,
+    zIndex: zIndex.dropdown,
   },
   arrow: {
     zIndex: 1,
@@ -41,7 +42,7 @@ const styles = stylex.create({
     marginBottom: 5,
   },
   body: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     lineHeight: 1.4,
   },

@@ -19,6 +19,7 @@ export type HeadlessInputProps = {
   trailingIcon?: JSX.Element
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
+  inputAttrs?: Record<`data-${string}`, string | undefined>
   controlAttrs?: SolidAttrs<HTMLInputElement>
   wrapperClass?: string | undefined
   wrapperStyle?: JSX.CSSProperties | undefined
@@ -37,9 +38,12 @@ export type HeadlessInputProps = {
   trailingButtonAttrs?: SolidAttrs<HTMLButtonElement>
   "aria-label"?: string
   id?: string
+  maxLength?: number
+  autofocus?: boolean
   onKeyDown?: (e: KeyboardEvent) => void
   onFocus?: () => void
   onBlur?: () => void
+  ref?: (element: HTMLInputElement) => void
 }
 
 export function HeadlessInput(props: HeadlessInputProps) {
@@ -64,8 +68,10 @@ export function HeadlessInput(props: HeadlessInputProps) {
   // Determine padding adjustments
   const hasLeading = () => !!props.leadingIcon
   const hasTrailing = () => !!props.trailingIcon || props.clearable || isPasswordType()
-  const controlAttrs = (): SolidAttrs<HTMLInputElement> =>
-    props.controlAttrs ?? { class: props.class, style: props.style }
+  const controlAttrs = (): SolidAttrs<HTMLInputElement> => ({
+    ...props.inputAttrs,
+    ...(props.controlAttrs ?? { class: props.class, style: props.style }),
+  })
   const wrapperAttrs = (): SolidAttrs<HTMLSpanElement> =>
     props.wrapperAttrs ?? { class: props.wrapperClass, style: props.wrapperStyle }
   const leadingIconAttrs = (): SolidAttrs<HTMLSpanElement> =>
@@ -88,6 +94,8 @@ export function HeadlessInput(props: HeadlessInputProps) {
         data-invalid={props.invalid ? "" : undefined}
         type={props.type ?? "text"}
         id={props.id}
+        maxLength={props.maxLength}
+        autofocus={props.autofocus}
         value={props.value}
         placeholder={props.placeholder}
         disabled={props.disabled}
@@ -97,6 +105,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
         onKeyDown={(e) => props.onKeyDown?.(e)}
         onFocus={() => props.onFocus?.()}
         onBlur={() => props.onBlur?.()}
+        ref={props.ref}
       />
     )
   }
@@ -117,6 +126,8 @@ export function HeadlessInput(props: HeadlessInputProps) {
         data-has-trailing={hasTrailing() ? "" : undefined}
         type={effectiveType()}
         id={props.id}
+        maxLength={props.maxLength}
+        autofocus={props.autofocus}
         value={props.value}
         placeholder={props.placeholder}
         disabled={props.disabled}
@@ -126,6 +137,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
         onKeyDown={(e) => props.onKeyDown?.(e)}
         onFocus={() => props.onFocus?.()}
         onBlur={() => props.onBlur?.()}
+        ref={props.ref}
       />
       <Show when={props.trailingIcon && !props.clearable && !isPasswordType()}>
         <span {...trailingIconAttrs()} aria-hidden="true">

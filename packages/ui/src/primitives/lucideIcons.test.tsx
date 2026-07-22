@@ -21,13 +21,13 @@ function root() {
   return el
 }
 
-function expectLucideIcon(container: Element | null) {
+function expectLucideIcon(container: Element | null, size = 16, strokeWidth = 2) {
   expect(container).toBeTruthy()
   const icon = container?.querySelector("svg.lucide")
   expect(icon).toBeTruthy()
-  expect(icon?.getAttribute("width")).toBe("16")
-  expect(icon?.getAttribute("height")).toBe("16")
-  expect(icon?.getAttribute("stroke-width")).toBe("2")
+  expect(icon?.getAttribute("width")).toBe(String(size))
+  expect(icon?.getAttribute("height")).toBe(String(size))
+  expect(icon?.getAttribute("stroke-width")).toBe(String(strokeWidth))
 }
 
 describe("built-in component icons", () => {
@@ -60,18 +60,19 @@ describe("built-in component icons", () => {
       el,
     )
 
-    expectLucideIcon(el.querySelector("input[type='checkbox']")?.parentElement ?? null)
+    expectLucideIcon(el.querySelector("input[type='checkbox']")?.parentElement ?? null, 10, 1.5)
     expectLucideIcon(
       Array.from(el.querySelectorAll("button"))
         .find((button) => button.textContent?.includes("一"))
         ?.querySelector("span[aria-hidden='true']") ?? null,
+      10,
     )
     expectLucideIcon(
       Array.from(el.querySelectorAll("button"))
         .find((button) => button.textContent?.includes("更多"))
         ?.querySelector("span[aria-hidden='true']") ?? null,
     )
-    expectLucideIcon(el.querySelector("button[aria-label='水果']"))
+    expectLucideIcon(el.querySelector("button[aria-label='水果']"), 10)
     expect(document.body.querySelector("[data-checked] span[aria-hidden='true']")).toBeTruthy()
     expectLucideIcon(
       Array.from(document.body.querySelectorAll("[role='menuitem'], [role='menuitemcheckbox']"))
@@ -103,8 +104,8 @@ describe("built-in component icons", () => {
       el,
     )
 
-    expectLucideIcon(el.querySelector("button[aria-label='移除']"))
-    expectLucideIcon(el.querySelector("button[aria-label='移除 设计']"))
+    expectLucideIcon(el.querySelector("button[aria-label='移除']"), 10)
+    expectLucideIcon(el.querySelector("button[aria-label='移除 设计']"), 10, 2.5)
     expectLucideIcon(document.body.querySelector("button[aria-label='关闭']"))
     expectLucideIcon(el.querySelector("button[aria-label='上一页']"))
     expectLucideIcon(el.querySelector("button[aria-label='下一页']"))

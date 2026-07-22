@@ -5,12 +5,14 @@ import { X } from "lucide-solid"
 import { Show } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { color, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
+
 const styles = stylex.create({
   root: {
     inset: 0,
     pointerEvents: "none",
     position: "fixed",
-    zIndex: 70,
+    zIndex: zIndex.overlay,
   },
   scrim: {
     backgroundColor: "rgb(var(--tbr-color-scrim) / 0.28)",
@@ -21,13 +23,12 @@ const styles = stylex.create({
     position: "absolute",
   },
   panel: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
+    backgroundColor: color.surface,
+    borderColor: color.line,
     borderStyle: "solid",
     borderWidth: 1,
     bottom: 0,
-    boxShadow:
-      "0 20px 48px rgb(var(--tbr-color-shadow-strong) / 0.18), 0 0 1px rgb(var(--tbr-color-shadow) / 0.08)",
+    boxShadow: shadow.floating,
     display: "flex",
     flexDirection: "column",
     pointerEvents: "auto",
@@ -36,11 +37,13 @@ const styles = stylex.create({
     width: "min(90vw, 420px)",
   },
   right: {
-    borderRadius: "var(--tbr-radius-panel) 0 0 var(--tbr-radius-panel)",
+    borderBottomLeftRadius: radius.panel,
+    borderTopLeftRadius: radius.panel,
     right: 0,
   },
   left: {
-    borderRadius: "0 var(--tbr-radius-panel) var(--tbr-radius-panel) 0",
+    borderBottomRightRadius: radius.panel,
+    borderTopRightRadius: radius.panel,
     left: 0,
   },
   sm: {
@@ -51,7 +54,7 @@ const styles = stylex.create({
   },
   header: {
     alignItems: "center",
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
     display: "flex",
@@ -63,7 +66,7 @@ const styles = stylex.create({
   footer: {
     alignItems: "center",
     borderBottom: "none",
-    borderTopColor: "rgb(var(--tbr-color-line))",
+    borderTopColor: color.line,
     borderTopStyle: "solid",
     borderTopWidth: 1,
     display: "flex",
@@ -73,14 +76,14 @@ const styles = stylex.create({
     paddingInline: 12,
   },
   title: {
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     fontSize: 14,
     fontWeight: 650,
     lineHeight: 1.35,
     margin: 0,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 12,
     lineHeight: 1.45,
     marginBottom: 0,
@@ -92,10 +95,10 @@ const styles = stylex.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderColor: "transparent",
-    borderRadius: "var(--tbr-radius-2)",
+    borderRadius: radius.r2,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     cursor: "pointer",
     display: "inline-flex",
     fontFamily: "inherit",
@@ -103,8 +106,8 @@ const styles = stylex.create({
     justifyContent: "center",
     width: 28,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      color: "rgb(var(--tbr-color-text))",
+      backgroundColor: color.surfaceHover,
+      color: color.text,
     },
   },
   body: {

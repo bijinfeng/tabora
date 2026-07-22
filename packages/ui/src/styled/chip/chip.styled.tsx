@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Chip as P } from "../../primitives/chip/chip"
 import type { ChipProps } from "../../primitives/chip/chip"
 import { joinClassNames } from "../../stylex"
@@ -8,31 +9,32 @@ import { joinClassNames } from "../../stylex"
 const styles = stylex.create({
   root: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: 999,
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
+    borderRadius: radius.pill,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     cursor: "default",
     display: "inline-flex",
     fontSize: 12,
-    fontWeight: 500,
+    fontWeight: font.medium,
     gap: 4,
     height: 24,
     paddingBlock: 0,
     paddingInline: 8,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      borderColor: "rgb(var(--tbr-color-line-strong))",
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
     },
   },
   selected: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    borderColor: color.accent,
+    color: color.accent,
   },
   remove: {
     alignItems: "center",
@@ -40,7 +42,7 @@ const styles = stylex.create({
     borderStyle: "none",
     borderWidth: 0,
     borderRadius: "50%",
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     cursor: "pointer",
     display: "inline-flex",
     fontSize: 10,
@@ -49,8 +51,8 @@ const styles = stylex.create({
     padding: 0,
     width: 14,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-danger) / 0.1)",
-      color: "rgb(var(--tbr-color-danger))",
+      backgroundColor: color.dangerSoft,
+      color: color.danger,
     },
   },
 })

@@ -1,6 +1,8 @@
 import { A } from "@solidjs/router"
+import { Button, Input } from "@tabora/ui"
 import * as stylex from "@stylexjs/stylex"
-import type { SiteI18nApi } from "../../../app/AppShell"
+import { createSignal } from "solid-js"
+import { getSiteHref, type SiteI18nApi } from "../../../app/AppShell"
 import type { HomePageContent } from "../homePrototypeContent"
 
 const styles = stylex.create({
@@ -237,39 +239,10 @@ const styles = stylex.create({
     gap: 12,
     justifyContent: "center",
   },
-  button: {
-    alignItems: "center",
-    border: "1px solid transparent",
-    borderRadius: "var(--tbr-radius-control)",
-    cursor: "pointer",
-    display: "inline-flex",
+  actionButton: {
     fontSize: 14,
-    fontWeight: 620,
-    justifyContent: "center",
-    minHeight: 40,
+    height: 40,
     paddingInline: 16,
-    textDecoration: "none",
-    ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
-      outlineOffset: 2,
-    },
-  },
-  primary: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-inverse))",
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent-hover))",
-    },
-  },
-  secondary: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    color: "rgb(var(--tbr-color-text))",
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-    },
   },
   waitlist: {
     display: "flex",
@@ -281,19 +254,10 @@ const styles = stylex.create({
     },
   },
   input: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    border: "1px solid rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
-    color: "rgb(var(--tbr-color-text))",
     flex: 1,
-    minHeight: 42,
+    height: 42,
     minWidth: 0,
-    outline: 0,
     paddingInline: 13,
-    ":focus": {
-      borderColor: "rgb(var(--tbr-color-accent))",
-      boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent-soft))",
-    },
   },
 })
 
@@ -302,6 +266,8 @@ export function FeatureSections(props: {
   i18n: SiteI18nApi
   showToast: (message: string) => void
 }) {
+  const [email, setEmail] = createSignal("")
+
   return (
     <>
       <section {...stylex.attrs(styles.section)} data-od-id="stats" data-component="SiteStatStrip">
@@ -465,40 +431,47 @@ export function FeatureSections(props: {
           <h2 {...stylex.attrs(styles.heading)}>{props.content.cta.title}</h2>
           <p {...stylex.attrs(styles.centeredLead)}>{props.content.cta.body}</p>
           <div {...stylex.attrs(styles.actionRow)}>
-            <A {...stylex.attrs(styles.button, styles.primary)} href="/download">
+            <Button
+              href={getSiteHref("/download")}
+              size="md"
+              variant="primary"
+              xstyle={styles.actionButton}
+            >
               {props.content.cta.primary}
-            </A>
-            <A {...stylex.attrs(styles.button, styles.secondary)} href="/docs">
+            </Button>
+            <Button
+              href={getSiteHref("/docs")}
+              size="md"
+              variant="secondary"
+              xstyle={styles.actionButton}
+            >
               {props.content.cta.secondary}
-            </A>
+            </Button>
           </div>
           <form
             {...stylex.attrs(styles.waitlist)}
             data-waitlist
             onSubmit={(event) => {
               event.preventDefault()
-              const form = event.currentTarget
-              const emailValue = new FormData(form).get("email")
-              const email = typeof emailValue === "string" ? emailValue : ""
-              if (!email.includes("@")) {
+              if (!email().includes("@")) {
                 props.showToast(props.i18n.t("waitlist.invalidEmail"))
                 return
               }
-              form.reset()
+              setEmail("")
               props.showToast(props.i18n.t("waitlist.success"))
             }}
           >
-            <input
-              {...stylex.attrs(styles.input)}
+            <Input
+              value={email()}
+              onInput={setEmail}
+              xstyle={styles.input}
               type="email"
-              name="email"
               placeholder="name@example.com"
               aria-label="邮箱"
-              required
             />
-            <button {...stylex.attrs(styles.button, styles.secondary)} type="submit">
+            <Button size="md" variant="secondary" xstyle={styles.actionButton} type="submit">
               {props.i18n.t("waitlist.submit")}
-            </button>
+            </Button>
           </form>
         </div>
       </section>

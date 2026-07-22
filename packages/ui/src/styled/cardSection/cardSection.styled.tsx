@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font } from "@tabora/theme/tokens.stylex"
 import { CardSection as Primitive } from "../../primitives/cardSection/cardSection"
 import type { CardSectionProps } from "../../primitives/cardSection/cardSection"
 
@@ -11,7 +12,7 @@ const styles = stylex.create({
   },
   header: {
     alignItems: "center",
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
     display: "flex",
@@ -21,7 +22,7 @@ const styles = stylex.create({
   },
   title: {
     fontSize: 12,
-    fontWeight: 650,
+    fontWeight: font.semibold,
     margin: 0,
   },
   trailing: {

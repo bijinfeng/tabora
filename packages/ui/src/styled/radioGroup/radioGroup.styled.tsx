@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { RadioGroup as P } from "../../primitives/radioGroup/radioGroup"
 import type { RadioGroupProps, RadioGroupOption } from "../../primitives/radioGroup/radioGroup"
 
@@ -23,7 +24,7 @@ const styles = stylex.create({
   item: {
     alignItems: "flex-start",
     borderColor: "transparent",
-    borderRadius: "var(--tbr-radius-control)",
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     cursor: "pointer",
@@ -32,23 +33,23 @@ const styles = stylex.create({
     gap: 8,
     paddingBlock: 6,
     paddingInline: 8,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, opacity",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.04)",
+      backgroundColor: color.surfaceHover,
     },
     ":focus-within": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
     "[data-checked]": {
-      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-      borderColor: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accentSoft,
+      borderColor: color.accent,
     },
     "[data-disabled]": {
       cursor: "not-allowed",
-      opacity: 0.45,
+      opacity: 0.5,
     },
   },
   input: {
@@ -59,20 +60,20 @@ const styles = stylex.create({
     width: 1,
   },
   control: {
-    borderColor: "rgb(var(--tbr-color-line-strong))",
+    borderColor: color.lineStrong,
     borderRadius: "50%",
     borderStyle: "solid",
     borderWidth: 1.5,
     flexShrink: 0,
     height: 18,
     marginTop: 1,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "border-color, box-shadow",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: 18,
     "[data-checked]": {
-      borderColor: "rgb(var(--tbr-color-accent))",
-      boxShadow: "inset 0 0 0 5px rgb(var(--tbr-color-accent))",
+      borderColor: color.accent,
+      boxShadow: `inset 0 0 0 5px ${color.accent}`,
     },
   },
   content: {
@@ -80,10 +81,10 @@ const styles = stylex.create({
     flexDirection: "column",
   },
   label: {
-    fontWeight: 500,
+    fontWeight: font.medium,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     marginTop: 2,
   },

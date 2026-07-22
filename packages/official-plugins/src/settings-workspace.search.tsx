@@ -1,5 +1,14 @@
 import * as stylex from "@stylexjs/stylex"
-import { Checkbox, FieldRow, Input, ListRow, SegmentedControl, Slider, Switch } from "@tabora/ui"
+import {
+  Button,
+  Checkbox,
+  FieldRow,
+  Input,
+  ListRow,
+  SegmentedControl,
+  Slider,
+  Switch,
+} from "@tabora/ui"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
@@ -184,9 +193,10 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                     !isEnabled() && styles.disabled,
                   )}
                   primary={
-                    <button
-                      type="button"
-                      {...stylex.attrs(styles.providerMain)}
+                    <Button
+                      size="md"
+                      variant="ghost"
+                      xstyle={styles.providerMain}
                       data-search-provider-main
                       onClick={() => {
                         if (!isEnabled()) return
@@ -203,7 +213,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                           {providerAlias(provider)}
                         </span>
                       </span>
-                    </button>
+                    </Button>
                   }
                   trailing={
                     <div {...stylex.attrs(styles.inlineActions)}>

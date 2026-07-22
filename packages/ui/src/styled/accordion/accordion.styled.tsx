@@ -1,21 +1,23 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Accordion as P } from "../../primitives/accordion/accordion"
 import type { AccordionItem, AccordionProps } from "../../primitives/accordion/accordion"
 import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-card)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.card,
     borderStyle: "solid",
     borderWidth: 1,
     overflow: "hidden",
+    width: 320,
   },
   item: {
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
     ":last-child": {
@@ -27,7 +29,7 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     cursor: "pointer",
     display: "flex",
     fontFamily: "inherit",
@@ -36,34 +38,31 @@ const styles = stylex.create({
     justifyContent: "space-between",
     paddingBlock: 9,
     paddingInline: 12,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: "100%",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.04)",
+      backgroundColor: color.surfaceHover,
     },
     ":disabled": {
       cursor: "not-allowed",
-      opacity: 0.4,
+      opacity: 0.5,
     },
   },
   arrow: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     height: 16,
     justifyContent: "center",
-    transitionDuration: "var(--tbr-dur-normal)",
+    transitionDuration: motion.normal,
     transitionProperty: "transform",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: 16,
-    [stylex.when.ancestor("[data-expanded]")]: {
-      transform: "rotate(180deg)",
-    },
   },
   content: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 12,
     lineHeight: 1.4,
     paddingBlock: 9,

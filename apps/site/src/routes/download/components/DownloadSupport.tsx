@@ -1,5 +1,5 @@
-import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
+import { Button, Collapsible } from "@tabora/ui"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
 
 const styles = stylex.create({
@@ -86,6 +86,11 @@ const styles = stylex.create({
   faqItem: {
     borderBottom: "1px solid rgb(var(--tbr-color-line))",
   },
+  faqRoot: {
+    borderRadius: 0,
+    borderWidth: 0,
+    borderBottom: "1px solid rgb(var(--tbr-color-line))",
+  },
   faqTrigger: {
     alignItems: "center",
     backgroundColor: "transparent",
@@ -132,6 +137,8 @@ const styles = stylex.create({
     lineHeight: 1.65,
     maxWidth: "72ch",
     paddingBottom: 20,
+    paddingInline: 0,
+    paddingTop: 0,
   },
   cta: {
     textAlign: "center",
@@ -223,33 +230,30 @@ export function DownloadSupport(props: {
 
           <div {...stylex.attrs(styles.faqList)} aria-label="常见问题">
             {props.content.faq.items.map((item: [string, string], index: number) => (
-              <div {...stylex.attrs(styles.faqItem)} data-faq-item data-site-faq-item>
-                <button
-                  {...stylex.attrs(styles.faqTrigger)}
-                  type="button"
-                  data-faq-trigger
-                  aria-expanded={props.openFaq.has(index)}
-                  onClick={() => props.toggleFaq(index)}
-                >
-                  {item[0]}
+              <Collapsible
+                unstyled
+                xstyle={[styles.faqItem, styles.faqRoot]}
+                open={props.openFaq.has(index)}
+                onOpenChange={() => props.toggleFaq(index)}
+                title={item[0]}
+                indicator={
                   <span
                     {...stylex.attrs(
                       styles.faqIcon,
                       props.openFaq.has(index) && styles.faqIconOpen,
                     )}
-                    aria-hidden="true"
                   >
                     +
                   </span>
-                </button>
-                <div
-                  {...stylex.attrs(styles.faqBody)}
-                  data-faq-body
-                  hidden={!props.openFaq.has(index)}
-                >
-                  <p {...stylex.attrs(styles.body)}>{item[1]}</p>
-                </div>
-              </div>
+                }
+                triggerClass={stylex.attrs(styles.faqTrigger).class}
+                contentClass={stylex.attrs(styles.faqBody).class}
+                rootAttrs={{ "data-faq-item": "", "data-site-faq-item": "" }}
+                triggerAttrs={{ "data-faq-trigger": "" }}
+                contentAttrs={{ "data-faq-body": "" }}
+              >
+                <p {...stylex.attrs(styles.body)}>{item[1]}</p>
+              </Collapsible>
             ))}
           </div>
         </div>
@@ -265,12 +269,12 @@ export function DownloadSupport(props: {
           <h2 {...stylex.attrs(styles.title)}>{props.content.cta.title}</h2>
           <p {...stylex.attrs(styles.lead)}>{props.content.cta.body}</p>
           <div {...stylex.attrs(styles.actions)}>
-            <A {...stylex.attrs(styles.button, styles.primary)} href="/docs">
+            <Button href="/docs" xstyle={[styles.button, styles.primary]}>
               {props.content.cta.primary}
-            </A>
-            <A {...stylex.attrs(styles.button, styles.secondary)} href="/">
+            </Button>
+            <Button href="/" xstyle={[styles.button, styles.secondary]}>
               {props.content.cta.secondary}
-            </A>
+            </Button>
           </div>
         </div>
       </section>

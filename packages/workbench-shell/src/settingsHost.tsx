@@ -10,7 +10,7 @@ import {
   type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
   type SettingsSectionId,
 } from "@tabora/orchestrator"
-import { Button, EmptyState, InlineError } from "@tabora/ui"
+import { Button, EmptyState, IconButton, InlineError } from "@tabora/ui"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
 
@@ -580,16 +580,16 @@ export function SettingsHost(props: SettingsHostProps) {
                 </span>
               </div>
             </div>
-            <button
-              {...stylex.attrs(styles.close)}
-              type="button"
+            <IconButton
+              size="sm"
+              xstyle={styles.close}
               data-settings-close
               onClick={handleClose}
               ref={(el) => (closeButtonRef = el)}
               aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
             >
               <X size={16} />
-            </button>
+            </IconButton>
           </header>
           <div {...stylex.attrs(styles.body)}>
             <nav
@@ -597,12 +597,10 @@ export function SettingsHost(props: SettingsHostProps) {
               data-settings-nav
               aria-label={props.copy?.sidebarTitle ?? "设置导航"}
             >
-              <button
-                {...stylex.attrs(
-                  styles.account,
-                  activeSection() === "account" ? styles.selected : null,
-                )}
-                type="button"
+              <Button
+                size="sm"
+                variant="ghost"
+                xstyle={[styles.account, activeSection() === "account" ? styles.selected : null]}
                 data-settings-section="account"
                 aria-current={activeSection() === "account" ? "page" : undefined}
                 onClick={() => handleSectionChange("account")}
@@ -617,18 +615,19 @@ export function SettingsHost(props: SettingsHostProps) {
                     {props.copy?.accountNavMeta ?? "本地模式"}
                   </span>
                 </span>
-              </button>
+              </Button>
               <div {...stylex.attrs(styles.kicker)}>
                 {props.copy?.workspaceGroupTitle ?? "工作台"}
               </div>
               <For each={workspaceSections()}>
                 {(section) => (
-                  <button
-                    {...stylex.attrs(
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    xstyle={[
                       styles.navButton,
                       section.id === activeSection() ? styles.selected : null,
-                    )}
-                    type="button"
+                    ]}
                     data-settings-section={section.id}
                     aria-current={section.id === activeSection() ? "page" : undefined}
                     onClick={() => handleSectionChange(section.id)}
@@ -637,7 +636,7 @@ export function SettingsHost(props: SettingsHostProps) {
                     <Show when={sectionNavMeta(section.id)}>
                       <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
                     </Show>
-                  </button>
+                  </Button>
                 )}
               </For>
               <div {...stylex.attrs(styles.kicker)}>
@@ -645,12 +644,13 @@ export function SettingsHost(props: SettingsHostProps) {
               </div>
               <For each={extensionSections()}>
                 {(section) => (
-                  <button
-                    {...stylex.attrs(
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    xstyle={[
                       styles.navButton,
                       section.id === activeSection() ? styles.selected : null,
-                    )}
-                    type="button"
+                    ]}
                     data-settings-section={section.id}
                     aria-current={section.id === activeSection() ? "page" : undefined}
                     onClick={() => handleSectionChange(section.id)}
@@ -659,7 +659,7 @@ export function SettingsHost(props: SettingsHostProps) {
                     <Show when={sectionNavMeta(section.id)}>
                       <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
                     </Show>
-                  </button>
+                  </Button>
                 )}
               </For>
             </nav>

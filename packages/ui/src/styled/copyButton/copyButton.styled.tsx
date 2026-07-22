@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { CopyButton as P } from "../../primitives/copyButton/copyButton"
 import type { CopyButtonProps } from "../../primitives/copyButton/copyButton"
 import { joinClassNames } from "../../stylex"
@@ -8,12 +9,12 @@ import { joinClassNames } from "../../stylex"
 const styles = stylex.create({
   root: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-2)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.r2,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     cursor: "pointer",
     display: "inline-flex",
     fontFamily: "inherit",
@@ -22,18 +23,18 @@ const styles = stylex.create({
     height: 28,
     paddingBlock: 0,
     paddingInline: 10,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.06)",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
     },
   },
   copied: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    borderColor: color.accent,
+    color: color.accent,
   },
 })
 

@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Button, Field, Input, Select, Switch } from "@tabora/ui"
+import { Button, Field, IconButton, Input, Select, Switch } from "@tabora/ui"
 import { GripVertical, Pencil, Plus, Search, Trash2 } from "lucide-solid"
 import { displayUrl, ICON_COLORS, initialsFromTitle, MAX_LINKS } from "./quick-links-data"
 import { useQuickLinksExpandSession } from "./quick-links-expand-session"
@@ -60,10 +60,11 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                 <For each={filteredLinks()}>
                   {(link) => (
                     <div {...stylex.attrs(styles.rowWrap)}>
-                      <button
-                        {...stylex.attrs(styles.row)}
+                      <Button
+                        size="md"
+                        variant="ghost"
+                        xstyle={styles.row}
                         data-quick-link-row
-                        type="button"
                         onClick={() => startEditEntry(link)}
                       >
                         <span
@@ -78,31 +79,34 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                             {displayUrl(link.url)} · {groupName(link.groupId)}
                           </span>
                         </span>
-                      </button>
+                      </Button>
                       <div {...stylex.attrs(styles.rowActions)}>
-                        <button
-                          {...stylex.attrs(styles.rowAction)}
-                          type="button"
+                        <IconButton
+                          size="sm"
+                          variant="ghost"
+                          xstyle={styles.rowAction}
                           aria-label="编辑"
                           onClick={() => startEditEntry(link)}
                         >
                           <Pencil size={14} />
-                        </button>
-                        <button
-                          {...stylex.attrs(styles.rowAction, styles.deleteAction)}
-                          type="button"
+                        </IconButton>
+                        <IconButton
+                          size="sm"
+                          variant="danger"
+                          xstyle={[styles.rowAction, styles.deleteAction]}
                           aria-label="删除"
                           onClick={() => void deleteEntry(link.id)}
                         >
                           <Trash2 size={14} />
-                        </button>
+                        </IconButton>
                       </div>
                     </div>
                   )}
                 </For>
-                <button
-                  {...stylex.attrs(styles.row, styles.rowAdd)}
-                  type="button"
+                <Button
+                  size="md"
+                  variant="ghost"
+                  xstyle={[styles.row, styles.rowAdd]}
                   onClick={startAddEntry}
                 >
                   <span {...stylex.attrs(styles.rowMark)}>
@@ -112,7 +116,7 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                     <strong {...stylex.attrs(styles.primary)}>添加入口</strong>
                     <span {...stylex.attrs(styles.secondary)}>粘贴链接后自动补全标题与图标</span>
                   </span>
-                </button>
+                </Button>
                 <Show when={filteredLinks().length === 0 && query().trim()}>
                   <p {...stylex.attrs(styles.empty)}>没有匹配 "{query().trim()}" 的入口</p>
                 </Show>
@@ -214,17 +218,17 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                 <div {...stylex.attrs(styles.colors)} role="group" aria-label="图标色">
                   <For each={ICON_COLORS}>
                     {(color) => (
-                      <button
-                        {...stylex.attrs(
-                          styles.swatch,
-                          entryColor() === color && styles.swatchActive,
-                        )}
-                        type="button"
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        xstyle={[styles.swatch, entryColor() === color && styles.swatchActive]}
                         style={{ "--ql-swatch": color }}
                         aria-label={`图标色 ${color}`}
                         aria-pressed={entryColor() === color}
                         onClick={() => setEntryColor(color)}
-                      />
+                      >
+                        <span aria-hidden="true" />
+                      </IconButton>
                     )}
                   </For>
                 </div>

@@ -2,32 +2,13 @@ import * as stylex from "@stylexjs/stylex"
 import { TaboraMark } from "@tabora/brand"
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { LayoutHostAPI } from "@tabora/plugin-api"
-import { DropdownMenu } from "@tabora/ui"
+import { Button, DropdownMenu, IconButton, Input } from "@tabora/ui"
+import { CircleDot, LayoutDashboard } from "lucide-solid"
 import { HostActionIcon } from "./host-action-icon"
 import { className, styles } from "./styles"
 import type { ActiveGroupSetter, RailGroup, RailGroupContextMenu, RailGroupSetter } from "./types"
 
 const groupIcons = ["T", "◐", "◇", "★", "◈", "⌘", "⚡", "◔", "♥", "■", "◆", "▲", "●", "✦"]
-
-function LayoutDashboardIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  )
-}
-
-function LayoutFocusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
 
 export function WorkbenchRail(props: {
   host: LayoutHostAPI
@@ -234,21 +215,21 @@ export function WorkbenchRail(props: {
                 {...stylex.attrs(styles.railGroup)}
                 onContextMenu={(event) => openGroupMenu(event, group.id)}
               >
-                <button
-                  {...stylex.attrs(
+                <IconButton
+                  size="md"
+                  xstyle={[
                     styles.railButton,
                     group.id === activeGroupId() && styles.railButtonActive,
-                  )}
+                  ]}
                   aria-label={`分组 ${group.name}`}
                   title={`${group.name} · 右键菜单${shortcut() ? ` · ${shortcut()}` : ""}`}
-                  type="button"
                   onClick={() => switchGroup(group.id)}
                 >
                   <span {...stylex.attrs(styles.groupIcon)}>{group.icon}</span>
                   <Show when={shortcut()}>
                     {(label) => <span {...stylex.attrs(styles.groupShortcut)}>{label()}</span>}
                   </Show>
-                </button>
+                </IconButton>
                 <span {...stylex.attrs(styles.groupTip)}>{group.name} · Dashboard</span>
               </div>
             )
@@ -256,21 +237,21 @@ export function WorkbenchRail(props: {
         </For>
         <Show when={inlineOpen()}>
           <div {...stylex.attrs(styles.placeholderWrap)}>
-            <button
-              {...stylex.attrs(styles.railButton, styles.placeholder)}
-              type="button"
+            <IconButton
+              size="md"
+              xstyle={[styles.railButton, styles.placeholder]}
               aria-label="正在命名"
             >
               ●
-            </button>
+            </IconButton>
             <div {...stylex.attrs(styles.inlinePop)} data-rail-inline-pop>
-              <input
-                {...stylex.attrs(styles.inlineInput)}
+              <Input
+                xstyle={styles.inlineInput}
                 ref={(element) => {
                   inlineInput = element
                 }}
                 value={inlineName()}
-                onInput={(event) => setInlineName(event.currentTarget.value)}
+                onInput={setInlineName}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault()
@@ -286,7 +267,7 @@ export function WorkbenchRail(props: {
                   }, 150)
                 }}
                 placeholder="分组名 · Enter 创建"
-                maxlength={20}
+                maxLength={20}
                 aria-label="分组名"
               />
               <span {...stylex.attrs(styles.inlineHint)}>
@@ -298,15 +279,15 @@ export function WorkbenchRail(props: {
         </Show>
       </div>
       <div {...stylex.attrs(styles.divider)} />
-      <button
-        {...stylex.attrs(styles.railButton)}
+      <IconButton
+        size="md"
+        xstyle={styles.railButton}
         aria-label="新建分组"
         title="新建分组（⌘ ⇧ N）"
-        type="button"
         onClick={startCreateGroup}
       >
         <HostActionIcon id="add-widget" icon="+" size={16} />
-      </button>
+      </IconButton>
       <div {...stylex.attrs(styles.spacer)} />
       <Show when={layoutAction()}>
         {(action) => (
@@ -330,7 +311,7 @@ export function WorkbenchRail(props: {
                     <span {...stylex.attrs(styles.layoutDescription)}>控制面板：多卡片并列</span>
                   </span>
                 ),
-                icon: <LayoutDashboardIcon />,
+                icon: <LayoutDashboard size={16} />,
                 checked: isDashboardLayout(),
                 onClick: () => selectLayout("dashboard"),
               },
@@ -342,7 +323,7 @@ export function WorkbenchRail(props: {
                     <span {...stylex.attrs(styles.layoutDescription)}>深度专注：主卡 + 卫星</span>
                   </span>
                 ),
-                icon: <LayoutFocusIcon />,
+                icon: <CircleDot size={16} />,
                 checked: !isDashboardLayout(),
                 onClick: () => selectLayout("focus"),
               },
@@ -357,15 +338,15 @@ export function WorkbenchRail(props: {
       </Show>
       <For each={utilityActions()}>
         {(action) => (
-          <button
-            {...stylex.attrs(styles.railButton, action.isActive && styles.railButtonActive)}
+          <IconButton
+            size="md"
+            xstyle={[styles.railButton, action.isActive && styles.railButtonActive]}
             aria-label={action.label}
             title={action.label}
-            type="button"
             onClick={() => action.run()}
           >
             <HostActionIcon id={action.id} icon={action.icon} />
-          </button>
+          </IconButton>
         )}
       </For>
       <Show when={activeGroupMenu()}>
@@ -380,37 +361,39 @@ export function WorkbenchRail(props: {
             role="menu"
             aria-label={`分组 ${menu().group.name} 菜单`}
           >
-            <button
-              {...stylex.attrs(styles.menuItem)}
+            <Button
+              size="sm"
+              variant="ghost"
+              xstyle={styles.menuItem}
               data-group-menu-item
               type="button"
               onClick={() => renameGroup(menu().group.id)}
             >
               <span>重命名</span>
               <kbd {...stylex.attrs(styles.menuKbd)}>F2</kbd>
-            </button>
+            </Button>
             <div {...stylex.attrs(styles.menuSeparator)} />
             <div {...stylex.attrs(styles.menuLabel)}>图标</div>
             <div {...stylex.attrs(styles.menuIcons)}>
               <For each={groupIcons}>
                 {(icon) => (
-                  <button
-                    {...stylex.attrs(
-                      styles.menuIcon,
-                      icon === menu().group.icon && styles.menuIconActive,
-                    )}
+                  <IconButton
+                    size="sm"
+                    xstyle={[styles.menuIcon, icon === menu().group.icon && styles.menuIconActive]}
                     data-group-menu-icon
-                    type="button"
+                    aria-label={`选择图标 ${icon}`}
                     onClick={() => setGroupIcon(menu().group.id, icon)}
                   >
                     {icon}
-                  </button>
+                  </IconButton>
                 )}
               </For>
             </div>
             <div {...stylex.attrs(styles.menuSeparator)} />
-            <button
-              {...stylex.attrs(styles.menuItem, styles.menuItemDanger)}
+            <Button
+              size="sm"
+              variant="danger-subtle"
+              xstyle={[styles.menuItem, styles.menuItemDanger]}
               data-group-menu-item
               data-danger
               type="button"
@@ -421,7 +404,7 @@ export function WorkbenchRail(props: {
               <Show when={menu().group.isDefault}>
                 <kbd {...stylex.attrs(styles.menuKbd)}>默认</kbd>
               </Show>
-            </button>
+            </Button>
           </div>
         )}
       </Show>

@@ -213,7 +213,7 @@ export function Select<V extends string>(props: SelectProps<V>) {
             </Show>
           </div>
           <KSelect.Icon class={local.iconClass} aria-hidden="true">
-            <ChevronDown size={16} strokeWidth={2} />
+            <ChevronDown size={10} strokeWidth={2} />
           </KSelect.Icon>
         </KSelect.Trigger>
         <KSelect.Portal>
@@ -264,7 +264,7 @@ export function Select<V extends string>(props: SelectProps<V>) {
           </KSelect.Value>
         </span>
         <KSelect.Icon class={local.iconClass} aria-hidden="true">
-          <ChevronDown size={16} strokeWidth={2} />
+          <ChevronDown size={10} strokeWidth={2} />
         </KSelect.Icon>
       </KSelect.Trigger>
       <KSelect.Portal>

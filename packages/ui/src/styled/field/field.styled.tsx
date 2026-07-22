@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font } from "@tabora/theme/tokens.stylex"
 import { Field as Primitive } from "../../primitives/field/field"
 import type { FieldProps } from "../../primitives/field/field"
 import { joinClassNames } from "../../stylex"
@@ -12,22 +13,22 @@ const styles = stylex.create({
     gap: 4,
   },
   label: {
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     fontSize: 12,
-    fontWeight: 650,
+    fontWeight: font.semibold,
   },
   required: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
     marginLeft: 2,
   },
   helper: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     lineHeight: 1.4,
   },
   error: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
     display: "flex",
     fontSize: 11,
     gap: 4,

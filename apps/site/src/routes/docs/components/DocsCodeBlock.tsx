@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
+import { Button } from "@tabora/ui"
 
 import type { DocsCodeBlock as DocsCodeBlockContent, DocsTable } from "../docsPageContent"
 
@@ -24,22 +25,9 @@ const styles = stylex.create({
     paddingInline: 14,
   },
   copy: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    border: "1px solid rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-2)",
-    color: "rgb(var(--tbr-color-text-muted))",
-    cursor: "pointer",
     fontSize: 11,
-    minHeight: 26,
+    height: 26,
     paddingInline: 9,
-    ":hover": {
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-      color: "rgb(var(--tbr-color-text))",
-    },
-    ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
-      outlineOffset: 2,
-    },
   },
   window: {
     minWidth: 0,
@@ -90,16 +78,17 @@ export function DocsCodeBlock(props: { block: DocsCodeBlockContent }) {
     <div {...stylex.attrs(styles.block)} data-docs-code>
       <div {...stylex.attrs(styles.head)}>
         <span>{props.block.label}</span>
-        <button
-          {...stylex.attrs(styles.copy)}
-          type="button"
+        <Button
+          size="sm"
+          variant="secondary"
+          xstyle={styles.copy}
           data-copy-button
           data-copy={props.block.copyId}
           data-copy-default={props.block.copyLabel}
           data-copy-success={props.block.copiedLabel}
         >
           {props.block.copyLabel}
-        </button>
+        </Button>
       </div>
       <div {...stylex.attrs(styles.window)}>
         <pre {...stylex.attrs(styles.pre)}>

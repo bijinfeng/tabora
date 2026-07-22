@@ -13,6 +13,7 @@ export type HeadlessTextareaProps = {
   style?: JSX.CSSProperties | undefined
   "aria-label"?: string
   id?: string
+  onKeyDown?: (e: KeyboardEvent & { currentTarget: HTMLTextAreaElement }) => void
 }
 
 export function HeadlessTextarea(props: HeadlessTextareaProps) {
@@ -31,6 +32,7 @@ export function HeadlessTextarea(props: HeadlessTextareaProps) {
       data-invalid={props.invalid ? "" : undefined}
       data-size={props.size ?? "md"}
       onInput={(e) => props.onInput(e.currentTarget.value)}
+      onKeyDown={(e) => props.onKeyDown?.(e)}
     />
   )
 }

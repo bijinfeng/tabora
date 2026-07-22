@@ -1,8 +1,8 @@
 import { A } from "@solidjs/router"
+import { Button, IconButton } from "@tabora/ui"
 import * as stylex from "@stylexjs/stylex"
 
-import { useSiteI18n, useSiteTheme } from "../app/AppShell"
-import { LocaleToggleButton } from "./LocaleToggleButton"
+import { getSiteHref, useSiteI18n, useSiteTheme } from "../app/AppShell"
 
 const styles = stylex.create({
   root: {
@@ -78,59 +78,10 @@ const styles = stylex.create({
     display: "flex",
     gap: 10,
   },
-  button: {
-    alignItems: "center",
-    border: "1px solid transparent",
-    borderRadius: "var(--tbr-radius-control)",
-    cursor: "pointer",
-    display: "inline-flex",
+  actionButton: {
     fontSize: 14,
-    fontWeight: 620,
-    gap: 8,
-    justifyContent: "center",
-    minHeight: 38,
+    height: 38,
     paddingInline: 16,
-    textDecoration: "none",
-    transition:
-      "background-color 160ms var(--tbr-ease), border-color 160ms var(--tbr-ease), color 160ms var(--tbr-ease)",
-    whiteSpace: "nowrap",
-    ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
-      outlineOffset: 2,
-    },
-  },
-  primary: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-inverse))",
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent-hover))",
-      borderColor: "rgb(var(--tbr-color-accent-hover))",
-    },
-  },
-  secondary: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    color: "rgb(var(--tbr-color-text))",
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-    },
-  },
-  localeControl: {
-    "@media (max-width: 560px)": {
-      display: "none",
-    },
-  },
-  iconButton: {
-    padding: 0,
-    width: 38,
-  },
-  hidden: {
-    display: "none",
-  },
-  icon: {
-    display: "block",
   },
 })
 
@@ -177,28 +128,35 @@ export function PrototypeTopnav(props: {
             {i18n.t("nav.product")}
           </A>
           <A
+            {...stylex.attrs(styles.navLink, props.active === "download" && styles.navLinkActive)}
+            href="/download"
+          >
+            {i18n.t("nav.download")}
+          </A>
+          <A
             {...stylex.attrs(styles.navLink, props.active === "docs" && styles.navLinkActive)}
             href="/docs"
           >
             {i18n.t("nav.docs")}
           </A>
+          <A {...stylex.attrs(styles.navLink)} href="/#plugins">
+            {i18n.t("nav.officialPlugins")}
+          </A>
         </nav>
         <div {...stylex.attrs(styles.actions)} data-site-nav-actions>
           {props.actions?.map((action) => (
-            <A
-              {...stylex.attrs(
-                styles.button,
-                action.variant === "primary" ? styles.primary : styles.secondary,
-              )}
-              href={action.href}
+            <Button
+              href={getSiteHref(action.href)}
+              size="md"
+              variant={action.variant}
+              xstyle={styles.actionButton}
             >
               {action.label}
-            </A>
+            </Button>
           ))}
-          <LocaleToggleButton xstyle={[styles.button, styles.secondary, styles.localeControl]} />
-          <button
-            {...stylex.attrs(styles.button, styles.secondary, styles.iconButton)}
-            type="button"
+          <IconButton
+            size="lg"
+            variant="secondary"
             data-dark-toggle
             aria-label={i18n.t("a11y.toggleTheme")}
             onClick={() => {
@@ -206,32 +164,33 @@ export function PrototypeTopnav(props: {
               emitThemeToast()
             }}
           >
-            <svg
-              {...stylex.attrs(styles.icon, theme.dark() && styles.hidden)}
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-            <svg
-              {...stylex.attrs(styles.icon, !theme.dark() && styles.hidden)}
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="5" />
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-            </svg>
-          </button>
+            {theme.dark() ? (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              </svg>
+            ) : (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </IconButton>
         </div>
       </div>
     </header>

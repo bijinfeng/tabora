@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
+import { Button } from "@tabora/ui"
 
 import type { DownloadPageContent } from "../downloadPrototypeContent"
 
@@ -115,22 +116,9 @@ const styles = stylex.create({
     paddingInline: 14,
   },
   copyButton: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    border: "1px solid rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-2)",
-    color: "rgb(var(--tbr-color-text))",
-    cursor: "pointer",
     fontSize: 12,
-    minHeight: 28,
+    height: 28,
     paddingInline: 9,
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-    },
-    ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
-      outlineOffset: 2,
-    },
   },
   codeWindow: {
     maxHeight: 440,
@@ -199,9 +187,10 @@ export function InstallSection(props: {
           <div {...stylex.attrs(styles.code)} data-docs-code>
             <div {...stylex.attrs(styles.codeHead)}>
               <span>local preview</span>
-              <button
-                {...stylex.attrs(styles.copyButton)}
-                type="button"
+              <Button
+                size="sm"
+                variant="secondary"
+                xstyle={styles.copyButton}
                 data-copy-button
                 data-copy-target="#download-install-code"
                 onClick={async () => {
@@ -218,7 +207,7 @@ export function InstallSection(props: {
                 }}
               >
                 {props.content.dev.copyLabel}
-              </button>
+              </Button>
             </div>
             <div {...stylex.attrs(styles.codeWindow)}>
               <pre {...stylex.attrs(styles.pre)}>

@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { PluginInstance } from "@tabora/plugin-api"
+import { Button, IconButton } from "@tabora/ui"
 
 import { HostActionIcon } from "./host-action-icon"
 import { dateLabel, fallbackText, greeting } from "./i18n"
@@ -50,9 +51,10 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
             <div {...stylex.attrs(styles.focusActions)}>
               <Show when={layoutSwitchAction()}>
                 {(action) => (
-                  <button
-                    {...stylex.attrs(styles.focusControl, styles.focusIconButton)}
-                    type="button"
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    xstyle={[styles.focusControl, styles.focusIconButton]}
                     aria-label={action().label}
                     title={action().label}
                     onClick={() => {
@@ -61,17 +63,18 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                     }}
                   >
                     <HostActionIcon id={action().id} icon={action().icon} size={15} />
-                  </button>
+                  </IconButton>
                 )}
               </Show>
-              <button
-                {...stylex.attrs(styles.focusControl, styles.focusCommand)}
-                type="button"
+              <Button
+                size="sm"
+                variant="ghost"
+                xstyle={[styles.focusControl, styles.focusCommand]}
                 onClick={() => commandAction()?.run() ?? props.host.openCommandPalette()}
               >
                 <span>{t("search.placeholder")}</span>
                 <kbd {...stylex.attrs(styles.focusKbd)}>⌘K</kbd>
-              </button>
+              </Button>
             </div>
           </header>
 
@@ -79,13 +82,14 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
             <Show
               when={heroInstance()}
               fallback={
-                <button
-                  {...stylex.attrs(styles.focusEmpty)}
-                  type="button"
+                <Button
+                  size="md"
+                  variant="ghost"
+                  xstyle={styles.focusEmpty}
                   onClick={() => props.host.openAddWidget()}
                 >
                   {t("focus.empty")}
-                </button>
+                </Button>
               }
             >
               {(instance) => (
@@ -100,15 +104,16 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
             <section {...stylex.attrs(styles.satellites)} aria-label="可切换卡片">
               <For each={satelliteInstances()}>
                 {(instance) => (
-                  <button
-                    {...stylex.attrs(styles.satellite)}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    xstyle={styles.satellite}
                     data-focus-satellite
-                    type="button"
                     onClick={() => setSelectedHeroId(instance.id)}
                   >
                     <span {...stylex.attrs(styles.satelliteTitle)}>{widgetTitle(instance)}</span>
                     <span {...stylex.attrs(styles.satelliteMeta)}>{t("focus.switchHero")}</span>
-                  </button>
+                  </Button>
                 )}
               </For>
             </section>

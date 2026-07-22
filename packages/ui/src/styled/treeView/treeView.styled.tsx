@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { TreeView as Primitive } from "../../primitives/treeView/treeView"
 import type { TreeViewItem, TreeViewProps } from "../../primitives/treeView/treeView"
 import { joinClassNames } from "../../stylex"
@@ -13,17 +14,17 @@ const styles = stylex.create({
   },
   row: {
     alignItems: "center",
-    borderRadius: "var(--tbr-radius-2)",
-    color: "rgb(var(--tbr-color-text))",
+    borderRadius: radius.r2,
+    color: color.text,
     display: "flex",
     gap: 4,
     minHeight: 30,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
     },
     "[data-selected]": {
-      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-      color: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accentSoft,
+      color: color.accent,
     },
   },
   buttonBase: {
@@ -36,14 +37,14 @@ const styles = stylex.create({
   },
   toggle: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     fontSize: 14,
     height: 18,
     justifyContent: "center",
-    transitionDuration: "var(--tbr-dur-normal)",
+    transitionDuration: motion.normal,
     transitionProperty: "transform",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: 18,
     "[data-open]": {
       transform: "rotate(90deg)",
@@ -64,7 +65,7 @@ const styles = stylex.create({
     textAlign: "left",
   },
   icon: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
   },
 })
 

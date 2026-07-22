@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { SegmentedControl as Primitive } from "../../primitives/segmentedControl/segmentedControl"
 import type {
   SegmentedControlProps,
@@ -9,9 +10,9 @@ import type {
 
 const styles = stylex.create({
   root: {
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     display: "inline-flex",
@@ -22,26 +23,26 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: "var(--tbr-radius-2)",
-    color: "rgb(var(--tbr-color-text-muted))",
+    borderRadius: radius.r2,
+    color: color.textMuted,
     cursor: "pointer",
     fontFamily: "inherit",
-    fontWeight: 600,
-    transitionDuration: "var(--tbr-dur-fast)",
+    fontWeight: font.semibold,
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, box-shadow, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     whiteSpace: "nowrap",
     ":hover": {
-      color: "rgb(var(--tbr-color-text))",
+      color: color.text,
     },
     ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: -2,
     },
     "[data-pressed]": {
-      backgroundColor: "rgb(var(--tbr-color-surface))",
+      backgroundColor: color.surface,
       boxShadow: "0 1px 2px rgb(var(--tbr-color-shadow) / 0.06)",
-      color: "rgb(var(--tbr-color-text))",
+      color: color.text,
     },
     "[data-disabled]": {
       cursor: "not-allowed",

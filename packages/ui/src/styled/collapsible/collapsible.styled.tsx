@@ -1,14 +1,16 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
+import { splitProps } from "solid-js"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Collapsible as P } from "../../primitives/collapsible/collapsible"
 import type { CollapsibleProps } from "../../primitives/collapsible/collapsible"
 import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     overflow: "hidden",
@@ -18,39 +20,39 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     cursor: "pointer",
     display: "flex",
     fontFamily: "inherit",
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: font.semibold,
     justifyContent: "space-between",
     paddingBlock: 8,
     paddingInline: 12,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: "100%",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.04)",
+      backgroundColor: color.surfaceHover,
     },
   },
   arrow: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     height: 16,
     justifyContent: "center",
-    transitionDuration: "var(--tbr-dur-normal)",
+    transitionDuration: motion.normal,
     transitionProperty: "transform",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: 16,
     [stylex.when.ancestor("[data-expanded]")]: {
       transform: "rotate(90deg)",
     },
   },
   content: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 12,
     lineHeight: 1.4,
     paddingBottom: 10,
@@ -62,25 +64,27 @@ const styles = stylex.create({
 
 export type StyledCollapsibleProps = CollapsibleProps & {
   xstyle?: StyleXStyles
+  unstyled?: boolean
 }
 
 export function Collapsible(props: StyledCollapsibleProps) {
-  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const [local, primitiveProps] = splitProps(props, ["unstyled", "xstyle"])
+  const rootCompiled = () => stylex.attrs(!local.unstyled && styles.root, local.xstyle)
   const triggerCompiled = () => stylex.attrs(styles.trigger)
   const arrowCompiled = () => stylex.attrs(styles.arrow)
   const contentCompiled = () => stylex.attrs(styles.content)
 
   return (
     <P
-      {...props}
-      class={joinClassNames(rootCompiled().class, props.class)}
-      style={props.style}
-      triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
-      triggerStyle={props.triggerStyle}
-      arrowClass={joinClassNames(arrowCompiled().class, props.arrowClass)}
-      arrowStyle={props.arrowStyle}
-      contentClass={joinClassNames(contentCompiled().class, props.contentClass)}
-      contentStyle={props.contentStyle}
+      {...primitiveProps}
+      class={joinClassNames(rootCompiled().class, primitiveProps.class)}
+      style={primitiveProps.style}
+      triggerClass={joinClassNames(triggerCompiled().class, primitiveProps.triggerClass)}
+      triggerStyle={primitiveProps.triggerStyle}
+      arrowClass={joinClassNames(arrowCompiled().class, primitiveProps.arrowClass)}
+      arrowStyle={primitiveProps.arrowStyle}
+      contentClass={joinClassNames(contentCompiled().class, primitiveProps.contentClass)}
+      contentStyle={primitiveProps.contentStyle}
     />
   )
 }

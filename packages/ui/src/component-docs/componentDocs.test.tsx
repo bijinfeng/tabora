@@ -126,7 +126,7 @@ describe("component docs catalog", () => {
       root,
     )
 
-    expect(root.textContent).toContain("插件接入问答")
+    expect(root.textContent).toContain("外观设置")
     expect(root.textContent).toContain("插件设置列表")
     expect(root.textContent).toContain("复制插件标识")
     expect(root.textContent).toContain("最近同步记录")

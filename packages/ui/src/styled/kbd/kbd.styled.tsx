@@ -1,22 +1,23 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, radius } from "@tabora/theme/tokens.stylex"
 import { Kbd as P } from "../../primitives/kbd/kbd"
 import type { KbdProps } from "../../primitives/kbd/kbd"
 
 const styles = stylex.create({
   root: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: 4,
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
+    borderRadius: radius.r1,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
-    fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
+    fontFamily: font.mono,
     fontSize: 10,
-    fontWeight: 500,
+    fontWeight: font.medium,
     height: 20,
     paddingBlock: 0,
     paddingInline: 6,

@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import { FieldRow, SegmentedControl, Select, Slider } from "@tabora/ui"
+import { FieldRow, IconButton, SegmentedControl, Select, Slider } from "@tabora/ui"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 import { className, styles } from "./styles"
@@ -58,13 +58,16 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
             <div {...stylex.attrs(styles.swatchRow)} aria-label="强调色">
               <For each={ACCENT_TONES}>
                 {(tone) => (
-                  <button
-                    type="button"
-                    {...stylex.attrs(styles.swatch, accentTone() === tone.id && styles.selected)}
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    xstyle={[styles.swatch, accentTone() === tone.id && styles.selected]}
                     style={{ "background-color": tone.color }}
                     aria-label={tone.label}
                     onClick={() => setAccentTone(tone.id)}
-                  />
+                  >
+                    <span aria-hidden="true" />
+                  </IconButton>
                 )}
               </For>
             </div>

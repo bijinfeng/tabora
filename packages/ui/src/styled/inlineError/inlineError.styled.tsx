@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, radius } from "@tabora/theme/tokens.stylex"
 import { InlineError as Primitive } from "../../primitives/inlineError/inlineError"
 import type { InlineErrorProps } from "../../primitives/inlineError/inlineError"
 
@@ -9,10 +10,10 @@ const styles = stylex.create({
     alignItems: "center",
     backgroundColor: "rgb(var(--tbr-color-danger) / 0.05)",
     borderColor: "rgb(var(--tbr-color-danger) / 0.25)",
-    borderRadius: "var(--tbr-radius-control)",
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
     display: "flex",
     fontSize: 11,
     gap: 6,

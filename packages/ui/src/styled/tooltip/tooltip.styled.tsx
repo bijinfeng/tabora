@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius, zIndex } from "@tabora/theme/tokens.stylex"
 import { Tooltip as Primitive } from "../../primitives/tooltip/tooltip"
 import type { TooltipPlacement, TooltipProps } from "../../primitives/tooltip/tooltip"
 import { joinClassNames } from "../../stylex"
@@ -21,21 +22,21 @@ const styles = stylex.create({
     display: "inline-flex",
   },
   content: {
-    animationDuration: "var(--tbr-dur-fast)",
+    animationDuration: motion.fast,
     animationName: tooltipIn,
-    animationTimingFunction: "var(--tbr-ease)",
-    backgroundColor: "rgb(var(--tbr-color-text))",
-    borderRadius: "var(--tbr-radius-2)",
-    color: "rgb(var(--tbr-color-surface))",
+    animationTimingFunction: motion.ease,
+    backgroundColor: color.text,
+    borderRadius: radius.r2,
+    color: color.surface,
     fontSize: 11,
     fontWeight: 500,
     paddingBlock: 4,
     paddingInline: 10,
     position: "relative",
     whiteSpace: "nowrap",
-    zIndex: 100,
+    zIndex: zIndex.dropdown,
     "::after": {
-      backgroundColor: "rgb(var(--tbr-color-text))",
+      backgroundColor: color.text,
       content: '""',
       height: 6,
       position: "absolute",

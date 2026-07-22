@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Progress as P } from "../../primitives/progress/progress"
 import type { ProgressProps } from "../../primitives/progress/progress"
 import { joinClassNames } from "../../stylex"
@@ -16,8 +17,8 @@ const indeterminateMotion = stylex.keyframes({
 
 const styles = stylex.create({
   linearRoot: {
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderRadius: 999,
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.pill,
     overflow: "hidden",
     width: "100%",
   },
@@ -35,18 +36,18 @@ const styles = stylex.create({
     width: "100%",
   },
   fill: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderRadius: 999,
+    backgroundColor: color.accent,
+    borderRadius: radius.pill,
     height: "100%",
-    transitionDuration: "300ms",
+    transitionDuration: motion.normal,
     transitionProperty: "width",
-    transitionTimingFunction: "ease",
+    transitionTimingFunction: motion.ease,
   },
   fillIndeterminate: {
-    animationDuration: "1.5s",
+    animationDuration: motion.normal,
     animationIterationCount: "infinite",
     animationName: indeterminateMotion,
-    animationTimingFunction: "ease-in-out",
+    animationTimingFunction: motion.ease,
     width: "40%",
   },
   circularRoot: {
@@ -58,24 +59,24 @@ const styles = stylex.create({
   },
   circularBg: {
     fill: "none",
-    stroke: "rgb(var(--tbr-color-surface-soft))",
+    stroke: color.surfaceSoft,
     strokeWidth: 4,
   },
   circularFill: {
     fill: "none",
-    stroke: "rgb(var(--tbr-color-accent))",
+    stroke: color.accent,
     strokeLinecap: "round",
     strokeWidth: 4,
-    transitionDuration: "300ms",
+    transitionDuration: motion.normal,
     transitionProperty: "stroke-dashoffset",
-    transitionTimingFunction: "ease",
+    transitionTimingFunction: motion.ease,
   },
   circularText: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     display: "flex",
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: font.bold,
     inset: 0,
     justifyContent: "center",
     position: "absolute",

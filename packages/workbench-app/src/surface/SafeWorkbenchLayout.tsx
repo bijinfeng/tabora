@@ -3,6 +3,7 @@ import { TaboraMark } from "@tabora/brand"
 import type { PluginInstance, WidgetViewProps, WidgetSize } from "@tabora/plugin-api"
 import { PluginViewBoundary, WidgetCardShell } from "@tabora/workbench-shell"
 import { Moon, Sun } from "lucide-solid"
+import { Button } from "@tabora/ui"
 import { For } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -132,12 +133,11 @@ export function SafeWorkbenchLayout(props: {
           <span>Tabora</span>
         </span>
         <div {...stylex.attrs(styles.spacer)} />
-        <button {...stylex.attrs(styles.button)} type="button" onClick={props.onOpenCommandPalette}>
+        <Button xstyle={styles.button} onClick={props.onOpenCommandPalette}>
           {props.tShell?.("chrome.toolbar.search") ?? "搜索"}
-        </button>
-        <button
-          {...stylex.attrs(styles.button)}
-          type="button"
+        </Button>
+        <Button
+          xstyle={styles.button}
           aria-label={
             props.isDark
               ? (props.tShell?.("chrome.toolbar.toggleThemeToLight") ?? "切换到明亮主题")
@@ -146,10 +146,10 @@ export function SafeWorkbenchLayout(props: {
           onClick={props.onToggleTheme}
         >
           {props.isDark ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-        <button {...stylex.attrs(styles.button)} type="button" onClick={props.onOpenSettings}>
+        </Button>
+        <Button xstyle={styles.button} onClick={props.onOpenSettings}>
           {props.tShell?.("chrome.toolbar.settings") ?? "设置"}
-        </button>
+        </Button>
       </div>
       <div {...stylex.attrs(styles.list)}>
         <For each={props.instances}>

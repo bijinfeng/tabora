@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { ContextMenu as Primitive } from "../../primitives/contextMenu/contextMenu"
 import type { ContextMenuItem, ContextMenuProps } from "../../primitives/contextMenu/contextMenu"
 import { joinClassNames } from "../../stylex"
@@ -12,13 +13,12 @@ const styles = stylex.create({
     gap: 6,
   },
   content: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow:
-      "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08), 0 0 1px rgb(var(--tbr-color-shadow) / 0.06)",
+    boxShadow: shadow.floating,
     maxWidth: 260,
     minWidth: 180,
     overflow: "hidden",
@@ -30,7 +30,7 @@ const styles = stylex.create({
     borderStyle: "none",
     borderWidth: 0,
     borderRadius: 0,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     cursor: "pointer",
     display: "flex",
     fontFamily: "inherit",
@@ -39,34 +39,34 @@ const styles = stylex.create({
     paddingBlock: 6,
     paddingInline: 10,
     textAlign: "left",
-    transitionDuration: "120ms",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color",
-    transitionTimingFunction: "ease",
+    transitionTimingFunction: motion.ease,
     width: "100%",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
     },
     "[data-highlighted]": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
     },
     "[data-disabled]": {
       backgroundColor: "transparent",
       cursor: "not-allowed",
-      opacity: 0.45,
+      opacity: 0.5,
     },
   },
   danger: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-danger-soft))",
+      backgroundColor: color.dangerSoft,
     },
     "[data-highlighted]": {
-      backgroundColor: "rgb(var(--tbr-color-danger-soft))",
+      backgroundColor: color.dangerSoft,
     },
   },
   icon: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     justifyContent: "center",
     width: 16,
@@ -76,19 +76,19 @@ const styles = stylex.create({
     minWidth: 0,
   },
   trailing: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     fontWeight: 500,
     marginLeft: "auto",
   },
   kbd: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
     fontSize: 10,
     marginLeft: "auto",
   },
   separator: {
-    backgroundColor: "rgb(var(--tbr-color-line))",
+    backgroundColor: color.line,
     borderStyle: "none",
     borderWidth: 0,
     color: "inherit",

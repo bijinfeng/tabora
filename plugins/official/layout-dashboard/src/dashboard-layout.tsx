@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import { LayoutGrid } from "lucide-solid"
+import { Button } from "@tabora/ui"
 
 import { dateLabel, fallbackText, greeting } from "./i18n"
 import { WorkbenchRail } from "./workbench-rail"
@@ -101,13 +102,14 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
             </div>
             <div {...stylex.attrs(styles.greetingActions)}>
               <Show when={addWidgetAction()}>
-                <button
-                  {...stylex.attrs(styles.toolbarButton)}
-                  type="button"
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  xstyle={styles.toolbarButton}
                   onClick={openAddWidgetForActiveGroup}
                 >
                   <span>{t("actions.addWidget")}</span>
-                </button>
+                </Button>
               </Show>
             </div>
           </div>
@@ -125,9 +127,10 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                   <Show
                     when={activeMainGridInstances().length > 0}
                     fallback={
-                      <button
-                        {...stylex.attrs(styles.emptyGroup)}
-                        type="button"
+                      <Button
+                        size="md"
+                        variant="ghost"
+                        xstyle={styles.emptyGroup}
                         onClick={openAddWidgetForActiveGroup}
                       >
                         <div {...stylex.attrs(styles.emptyIcon)}>
@@ -138,7 +141,7 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                           点击 <span {...stylex.attrs(styles.emptyAction)}>添加第一个</span>{" "}
                           开始使用
                         </div>
-                      </button>
+                      </Button>
                     }
                   >
                     <For each={activeMainGridInstances()}>

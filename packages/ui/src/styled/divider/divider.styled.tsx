@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color } from "@tabora/theme/tokens.stylex"
 import { Divider as P } from "../../primitives/divider/divider"
 import type { DividerProps } from "../../primitives/divider/divider"
 import { joinClassNames } from "../../stylex"
@@ -9,7 +10,7 @@ const styles = stylex.create({
   root: {
     borderStyle: "none",
     borderWidth: 0,
-    borderTopColor: "rgb(var(--tbr-color-line))",
+    borderTopColor: color.line,
     borderTopStyle: "solid",
     borderTopWidth: 1,
     marginBlock: 12,

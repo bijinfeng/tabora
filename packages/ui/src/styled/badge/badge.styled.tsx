@@ -1,15 +1,16 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, radius } from "@tabora/theme/tokens.stylex"
 import { Badge as BadgePrimitive } from "../../primitives/badge/badge"
 import type { BadgeProps } from "../../primitives/badge/badge"
 
 const styles = stylex.create({
   root: {
     alignItems: "center",
-    borderRadius: 999,
+    borderRadius: radius.pill,
     display: "inline-flex",
-    fontWeight: 600,
+    fontWeight: font.semibold,
     whiteSpace: "nowrap",
   },
   md: {
@@ -25,31 +26,31 @@ const styles = stylex.create({
     paddingInline: 6,
   },
   neutral: {
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderColor: "rgb(var(--tbr-color-line))",
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
   },
   accent: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    color: color.accent,
   },
   success: {
     backgroundColor: "rgb(var(--tbr-color-success) / 0.1)",
-    color: "rgb(var(--tbr-color-success))",
+    color: color.success,
   },
   warning: {
     backgroundColor: "rgb(var(--tbr-color-warning) / 0.1)",
-    color: "rgb(var(--tbr-color-warning))",
+    color: color.warning,
   },
   danger: {
     backgroundColor: "rgb(var(--tbr-color-danger) / 0.1)",
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
   },
   counter: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    color: color.accent,
     fontVariantNumeric: "tabular-nums",
     minWidth: "auto",
   },
@@ -73,19 +74,19 @@ const styles = stylex.create({
     width: 8,
   },
   dotNeutral: {
-    backgroundColor: "rgb(var(--tbr-color-line-strong))",
+    backgroundColor: color.lineStrong,
   },
   dotAccent: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accent,
   },
   dotSuccess: {
-    backgroundColor: "rgb(var(--tbr-color-success))",
+    backgroundColor: color.success,
   },
   dotWarning: {
-    backgroundColor: "rgb(var(--tbr-color-warning))",
+    backgroundColor: color.warning,
   },
   dotDanger: {
-    backgroundColor: "rgb(var(--tbr-color-danger))",
+    backgroundColor: color.danger,
   },
 })
 

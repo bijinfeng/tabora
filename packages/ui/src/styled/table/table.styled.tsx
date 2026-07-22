@@ -1,15 +1,16 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, radius } from "@tabora/theme/tokens.stylex"
 import { Table as Primitive } from "../../primitives/table/table"
 import type { TableColumn, TableProps } from "../../primitives/table/table"
 import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     overflow: "auto",
@@ -21,13 +22,13 @@ const styles = stylex.create({
     width: "100%",
   },
   headerCell: {
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    backgroundColor: color.surfaceSoft,
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     fontSize: 11,
-    fontWeight: 650,
+    fontWeight: font.semibold,
     paddingBlock: 9,
     paddingInline: 12,
     textAlign: "left",
@@ -35,24 +36,24 @@ const styles = stylex.create({
   },
   row: {
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+      backgroundColor: color.surfaceHover,
     },
   },
   rowSelected: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    backgroundColor: color.accentSoft,
   },
   cell: {
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     lineHeight: 1.5,
     paddingBlock: 8,
     paddingInline: 12,
   },
   cellSelected: {
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    color: color.accent,
   },
   cellLastRow: {
     borderBottomWidth: 0,

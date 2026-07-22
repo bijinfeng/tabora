@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { HoverCard as Primitive } from "../../primitives/hoverCard/hoverCard"
 import type { HoverCardProps } from "../../primitives/hoverCard/hoverCard"
 import { joinClassNames } from "../../stylex"
@@ -22,38 +23,37 @@ const styles = stylex.create({
   },
   trigger: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderRadius: "var(--tbr-radius-control)",
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    borderRadius: radius.control,
+    color: color.accent,
     display: "inline-flex",
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 500,
     minHeight: 24,
     paddingBlock: 2,
     paddingInline: 8,
   },
   content: {
-    animationDuration: "120ms",
+    animationDuration: motion.fast,
     animationName: scaleIn,
-    animationTimingFunction: "var(--tbr-ease)",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-panel)",
+    animationTimingFunction: motion.ease,
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.panel,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow:
-      "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08), 0 0 1px rgb(var(--tbr-color-shadow) / 0.06)",
-    color: "rgb(var(--tbr-color-text))",
+    boxShadow: shadow.floating,
+    color: color.text,
     display: "grid",
     gap: 6,
     padding: 10,
     width: 250,
-    zIndex: 55,
+    zIndex: zIndex.dropdown,
   },
   media: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.control,
     display: "flex",
     justifyContent: "center",
     minHeight: 58,
@@ -63,12 +63,12 @@ const styles = stylex.create({
     fontWeight: 650,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     lineHeight: 1.35,
   },
   meta: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontSize: 10,
   },
 })

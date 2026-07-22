@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { ToastRecord } from "@tabora/orchestrator"
+import { Button } from "@tabora/ui"
 import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 export type ToastMessage = ToastRecord
@@ -110,14 +111,16 @@ export function ToastHost(props: {
               </span>
               <Show when={toast.action}>
                 {(action) => (
-                  <button
-                    {...stylex.attrs(styles.action)}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    xstyle={styles.action}
                     data-toast-action
                     type="button"
                     onClick={() => props.onAction?.(action().commandId)}
                   >
                     {action().label}
-                  </button>
+                  </Button>
                 )}
               </Show>
             </div>

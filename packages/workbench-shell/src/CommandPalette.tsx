@@ -9,7 +9,7 @@ import {
   type CommandPaletteItem,
   type SearchProviderContributionDescriptor,
 } from "@tabora/orchestrator"
-import { Kbd } from "@tabora/ui"
+import { Button, Input, Kbd } from "@tabora/ui"
 import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 const styles = stylex.create({
@@ -310,9 +310,9 @@ export function CommandPalette(props: CommandPaletteProps) {
             <span {...stylex.attrs(styles.searchIcon)} aria-hidden="true">
               <Search size={16} />
             </span>
-            <input
-              {...stylex.attrs(styles.input)}
-              data-command-palette-input
+            <Input
+              xstyle={styles.input}
+              inputAttrs={{ "data-command-palette-input": "" }}
               type="text"
               value={props.query}
               placeholder={props.copy?.placeholder ?? "搜索命令、卡片或输入 @bing 天气"}
@@ -320,8 +320,8 @@ export function CommandPalette(props: CommandPaletteProps) {
               ref={(element) => {
                 inputRef = element
               }}
-              onInput={(event) => {
-                props.onQueryChange(event.currentTarget.value)
+              onInput={(value) => {
+                props.onQueryChange(value)
                 props.onActiveIdxChange(0)
               }}
               onKeyDown={handleKeyDown}
@@ -346,12 +346,10 @@ export function CommandPalette(props: CommandPaletteProps) {
                       {(item) => {
                         const index = items().indexOf(item)
                         return (
-                          <button
-                            {...stylex.attrs(
-                              styles.item,
-                              index === props.activeIdx && styles.itemActive,
-                            )}
-                            type="button"
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            xstyle={[styles.item, index === props.activeIdx && styles.itemActive]}
                             data-command-palette-item
                             data-active={index === props.activeIdx ? "" : undefined}
                             onMouseDown={(event) => {
@@ -372,7 +370,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                             <Show when={item.hint}>
                               <Kbd>{item.hint!}</Kbd>
                             </Show>
-                          </button>
+                          </Button>
                         )
                       }}
                     </For>

@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { DropdownMenu as P } from "../../primitives/dropdownMenu/dropdownMenu"
 import type {
   DropdownMenuAlign,
@@ -23,24 +24,23 @@ const scaleIn = stylex.keyframes({
 
 const styles = stylex.create({
   content: {
-    animationDuration: "120ms",
+    animationDuration: motion.fast,
     animationName: scaleIn,
-    animationTimingFunction: "var(--tbr-ease)",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    animationTimingFunction: motion.ease,
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow:
-      "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08), 0 0 1px rgb(var(--tbr-color-shadow) / 0.06)",
+    boxShadow: shadow.floating,
     maxWidth: 260,
     minWidth: 180,
     overflow: "hidden",
     padding: 0,
-    zIndex: 50,
+    zIndex: zIndex.dropdown,
   },
   title: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
     fontWeight: 650,
     paddingBottom: 4,
@@ -57,7 +57,7 @@ const styles = stylex.create({
     borderStyle: "none",
     borderWidth: 0,
     borderRadius: 0,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     cursor: "pointer",
     display: "flex",
     fontFamily: "inherit",
@@ -65,33 +65,33 @@ const styles = stylex.create({
     gap: 7,
     paddingBlock: 6,
     paddingInline: 10,
-    transitionDuration: "120ms",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color",
-    transitionTimingFunction: "ease",
+    transitionTimingFunction: motion.ease,
     width: "100%",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
     },
     "[data-highlighted]": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
     },
     "[data-disabled]": {
       backgroundColor: "transparent",
       cursor: "not-allowed",
-      opacity: 0.4,
+      opacity: 0.5,
     },
   },
   danger: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-danger-soft))",
+      backgroundColor: color.dangerSoft,
     },
     "[data-highlighted]": {
-      backgroundColor: "rgb(var(--tbr-color-danger-soft))",
+      backgroundColor: color.dangerSoft,
     },
   },
   separator: {
-    backgroundColor: "rgb(var(--tbr-color-line))",
+    backgroundColor: color.line,
     borderStyle: "none",
     borderWidth: 0,
     color: "inherit",
@@ -101,8 +101,8 @@ const styles = stylex.create({
   },
   icon: {
     alignItems: "center",
-    borderRadius: 4,
-    color: "rgb(var(--tbr-color-text-muted))",
+    borderRadius: radius.r2,
+    color: color.textMuted,
     display: "flex",
     flex: "none",
     fontSize: 9,
@@ -119,7 +119,7 @@ const styles = stylex.create({
     justifyContent: "center",
     width: 14,
     "::before": {
-      backgroundColor: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accent,
       borderRadius: "50%",
       content: '""',
       height: 6,
@@ -131,7 +131,7 @@ const styles = stylex.create({
     minWidth: 0,
   },
   kbd: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontFamily: '"SFMono-Regular", Consolas, monospace',
     fontSize: 10,
   },

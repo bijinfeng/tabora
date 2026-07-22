@@ -1,4 +1,5 @@
 import { Accordion as KAccordion } from "@kobalte/core/accordion"
+import { useCollapsibleContext } from "@kobalte/core/collapsible"
 import type { JSX } from "solid-js"
 import { For } from "solid-js"
 import { ChevronDown } from "lucide-solid"
@@ -12,6 +13,7 @@ export type AccordionItem = {
 
 export type AccordionProps = {
   items: AccordionItem[]
+  defaultValue?: string[]
   multiple?: boolean
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
@@ -32,11 +34,32 @@ function optionalPartProps(className: string | undefined, style: JSX.CSSProperti
   }
 }
 
+function AccordionArrow(props: {
+  class: string | undefined
+  style: JSX.CSSProperties | undefined
+}) {
+  const context = useCollapsibleContext()
+
+  return (
+    <span
+      class={props.class}
+      style={{
+        ...props.style,
+        transform: context.isOpen() ? "rotate(180deg)" : props.style?.transform,
+      }}
+      aria-hidden="true"
+    >
+      <ChevronDown size={10} strokeWidth={2} />
+    </span>
+  )
+}
+
 export function Accordion(props: AccordionProps) {
   return (
     <KAccordion
       class={props.class}
       style={props.style}
+      {...(props.defaultValue !== undefined ? { defaultValue: props.defaultValue } : {})}
       multiple={props.multiple ?? false}
       collapsible={true}
     >
@@ -48,12 +71,10 @@ export function Accordion(props: AccordionProps) {
             value={item.id}
             {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
           >
-            <KAccordion.Header>
+            <KAccordion.Header style={{ margin: 0 }}>
               <KAccordion.Trigger class={props.triggerClass} style={props.triggerStyle}>
                 {item.title}
-                <span class={props.arrowClass} style={props.arrowStyle} aria-hidden="true">
-                  <ChevronDown size={16} strokeWidth={2} />
-                </span>
+                <AccordionArrow class={props.arrowClass} style={props.arrowStyle} />
               </KAccordion.Trigger>
             </KAccordion.Header>
             <KAccordion.Content {...optionalPartProps(props.contentClass, props.contentStyle)}>

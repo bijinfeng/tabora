@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Breadcrumb as P } from "../../primitives/breadcrumb/breadcrumb"
 import type { BreadcrumbProps, BreadcrumbItem } from "../../primitives/breadcrumb/breadcrumb"
 import { joinClassNames } from "../../stylex"
@@ -17,7 +18,7 @@ const styles = stylex.create({
     display: "flex",
   },
   separator: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontSize: 10,
     marginBlock: 0,
     marginInline: 6,
@@ -27,25 +28,25 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: 4,
-    color: "rgb(var(--tbr-color-text-muted))",
+    borderRadius: radius.r1,
+    color: color.textMuted,
     cursor: "pointer",
     fontFamily: "inherit",
     fontSize: 13,
     paddingBlock: 2,
     paddingInline: 4,
     textDecoration: "none",
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent) / 0.04)",
-      color: "rgb(var(--tbr-color-text))",
+      backgroundColor: color.surfaceHover,
+      color: color.text,
     },
   },
   current: {
-    color: "rgb(var(--tbr-color-text))",
-    fontWeight: 650,
+    color: color.text,
+    fontWeight: font.semibold,
   },
 })
 

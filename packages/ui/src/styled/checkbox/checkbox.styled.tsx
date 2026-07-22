@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Checkbox as Primitive } from "../../primitives/checkbox/checkbox"
 import type { CheckboxProps } from "../../primitives/checkbox/checkbox"
 
@@ -12,7 +13,7 @@ const styles = stylex.create({
     fontSize: 13,
     gap: 8,
     ":focus-within": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
   },
@@ -29,26 +30,26 @@ const styles = stylex.create({
   },
   control: {
     alignItems: "center",
-    borderColor: "rgb(var(--tbr-color-line-strong))",
-    borderRadius: "var(--tbr-radius-1)",
+    borderColor: color.lineStrong,
+    borderRadius: radius.r1,
     borderStyle: "solid",
     borderWidth: 1.5,
     display: "flex",
     flexShrink: 0,
     height: 16,
     justifyContent: "center",
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: 16,
     ":hover": {
-      borderColor: "rgb(var(--tbr-color-accent))",
+      borderColor: color.accent,
     },
   },
   controlChecked: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderColor: "rgb(var(--tbr-color-accent))",
-    color: "rgb(var(--tbr-color-inverse))",
+    backgroundColor: color.accent,
+    borderColor: color.accent,
+    color: color.inverse,
   },
   label: {
     fontSize: 13,

@@ -1,4 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
+import { Button, IconButton, Input } from "@tabora/ui"
+import { createSignal } from "solid-js"
 
 import type { HomePageContent } from "../homePrototypeContent"
 
@@ -121,27 +123,14 @@ const styles = stylex.create({
     gap: 4,
   },
   railButton: {
-    backgroundColor: "transparent",
-    border: "1px solid transparent",
-    borderRadius: "var(--tbr-radius-control)",
-    color: "rgb(var(--tbr-color-text-muted))",
-    cursor: "pointer",
-    display: "grid",
     height: 36,
-    placeItems: "center",
     width: 36,
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      color: "rgb(var(--tbr-color-text))",
-    },
-    ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
-      outlineOffset: 2,
-    },
   },
   railButtonActive: {
     backgroundColor: "rgb(var(--tbr-color-accent-soft))",
     borderColor: "rgb(var(--tbr-color-accent))",
+    borderStyle: "solid",
+    borderWidth: 1,
     color: "rgb(var(--tbr-color-accent))",
   },
   railDivider: {
@@ -419,6 +408,8 @@ const styles = stylex.create({
 })
 
 export function WorkbenchPreview(props: { content: HomePageContent }) {
+  const [command, setCommand] = createSignal(props.content.mock.commandPlaceholder)
+
   return (
     <div
       {...stylex.attrs(styles.shell)}
@@ -441,23 +432,23 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
             T
           </span>
           <div {...stylex.attrs(styles.railGroups)} role="tablist" aria-label="分组">
-            <button
-              {...stylex.attrs(styles.railButton, styles.railButtonActive)}
-              type="button"
+            <IconButton
+              variant="ghost"
               aria-label="默认分组"
+              xstyle={[styles.railButton, styles.railButtonActive]}
               aria-current="true"
             >
               <span>T</span>
-            </button>
-            <button {...stylex.attrs(styles.railButton)} type="button" aria-label="设计稿">
+            </IconButton>
+            <IconButton variant="ghost" aria-label="设计稿" xstyle={styles.railButton}>
               <span>◐</span>
-            </button>
-            <button {...stylex.attrs(styles.railButton)} type="button" aria-label="阅读">
+            </IconButton>
+            <IconButton variant="ghost" aria-label="阅读" xstyle={styles.railButton}>
               <span>★</span>
-            </button>
+            </IconButton>
           </div>
           <div {...stylex.attrs(styles.railDivider)} aria-hidden="true" />
-          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="新建分组">
+          <IconButton variant="ghost" aria-label="新建分组" xstyle={styles.railButton}>
             <svg
               width="14"
               height="14"
@@ -470,9 +461,9 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-          </button>
+          </IconButton>
           <div {...stylex.attrs(styles.railSpacer)} />
-          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="切换布局">
+          <IconButton variant="ghost" aria-label="切换布局" xstyle={styles.railButton}>
             <svg
               width="16"
               height="16"
@@ -487,8 +478,8 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <rect x="3" y="14" width="7" height="7" rx="1" />
               <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
-          </button>
-          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="主题">
+          </IconButton>
+          <IconButton variant="ghost" aria-label="主题" xstyle={styles.railButton}>
             <svg
               width="16"
               height="16"
@@ -506,8 +497,8 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <line x1="1" y1="12" x2="3" y2="12" />
               <line x1="21" y1="12" x2="23" y2="12" />
             </svg>
-          </button>
-          <button {...stylex.attrs(styles.railButton)} type="button" aria-label="设置">
+          </IconButton>
+          <IconButton variant="ghost" aria-label="设置" xstyle={styles.railButton}>
             <svg
               width="16"
               height="16"
@@ -520,7 +511,7 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-          </button>
+          </IconButton>
         </aside>
 
         <div {...stylex.attrs(styles.workspace)}>
@@ -529,9 +520,9 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               {props.content.mock.greeting}
               <span {...stylex.attrs(styles.greetingMuted)}> · {props.content.mock.date}</span>
             </span>
-            <button {...stylex.attrs(styles.greetingAdd)} type="button">
+            <Button size="sm" variant="secondary" xstyle={styles.greetingAdd}>
               {props.content.mock.addCard}
-            </button>
+            </Button>
           </div>
 
           <label {...stylex.attrs(styles.command)}>
@@ -563,9 +554,11 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-3.5-3.5" />
             </svg>
-            <input
-              {...stylex.attrs(styles.commandInput)}
-              value={props.content.mock.commandPlaceholder}
+            <Input
+              size="sm"
+              xstyle={styles.commandInput}
+              value={command()}
+              onInput={setCommand}
               aria-label="命令搜索"
             />
             <span {...stylex.attrs(styles.kbd)}>⌘K</span>
@@ -600,10 +593,10 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               </div>
               <div {...stylex.attrs(styles.quickLinks)}>
                 {props.content.mock.widgets.links.items.map((item: [string, string]) => (
-                  <button {...stylex.attrs(styles.quickLink)} type="button">
+                  <Button size="sm" variant="ghost" xstyle={styles.quickLink}>
                     <strong {...stylex.attrs(styles.quickLinkTitle)}>{item[0]}</strong>
                     <span {...stylex.attrs(styles.quickLinkMeta)}>{item[1]}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </article>

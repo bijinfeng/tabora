@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { Tabs as Primitive } from "../../primitives/tabs/tabs"
 import type { TabsProps } from "../../primitives/tabs/tabs"
 import { joinClassNames } from "../../stylex"
@@ -14,7 +15,7 @@ const styles = stylex.create({
   },
   underlineList: {
     alignItems: "center",
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
     display: "flex",
@@ -24,8 +25,8 @@ const styles = stylex.create({
   },
   pillsList: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surfaceSoft,
+    borderRadius: radius.control,
     display: "flex",
     gap: 4,
     maxWidth: "100%",
@@ -44,15 +45,15 @@ const styles = stylex.create({
     gap: 6,
     justifyContent: "center",
     lineHeight: 1,
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, color, box-shadow",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     whiteSpace: "nowrap",
     ":hover": {
-      color: "rgb(var(--tbr-color-text))",
+      color: color.text,
     },
     ":focus-visible": {
-      outline: "2px solid rgb(var(--tbr-color-focus))",
+      outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },
     ":disabled": {
@@ -60,8 +61,8 @@ const styles = stylex.create({
       opacity: 0.4,
     },
     "[data-selected]": {
-      color: "rgb(var(--tbr-color-accent))",
-      fontWeight: 650,
+      color: color.accent,
+      fontWeight: font.semibold,
     },
   },
   underlineTrigger: {
@@ -71,9 +72,9 @@ const styles = stylex.create({
     borderBottomColor: "transparent",
     borderBottomStyle: "solid",
     borderBottomWidth: 2,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: font.semibold,
     marginBottom: -1,
     minHeight: 34,
     paddingBlock: 8,
@@ -83,16 +84,16 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: "var(--tbr-radius-control)",
-    color: "rgb(var(--tbr-color-text-muted))",
+    borderRadius: radius.control,
+    color: color.textMuted,
     fontSize: 12,
-    fontWeight: 500,
+    fontWeight: font.medium,
     minHeight: 30,
     paddingBlock: 5,
     paddingInline: 12,
     "[data-selected]": {
-      backgroundColor: "rgb(var(--tbr-color-surface))",
-      boxShadow: "0 1px 3px rgb(var(--tbr-color-shadow) / 0.08)",
+      backgroundColor: color.surface,
+      boxShadow: shadow.sm,
     },
   },
   smTrigger: {
@@ -101,21 +102,22 @@ const styles = stylex.create({
     paddingInline: 10,
   },
   indicator: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderRadius: "1px 1px 0 0",
+    backgroundColor: color.accent,
+    borderTopLeftRadius: radius.r1,
+    borderTopRightRadius: radius.r1,
     bottom: -1,
     height: 2,
     left: 0,
     position: "absolute",
-    transitionDuration: "200ms",
+    transitionDuration: motion.normal,
     transitionProperty: "left, width",
-    transitionTimingFunction: "ease",
+    transitionTimingFunction: motion.ease,
   },
   indicatorHidden: {
     display: "none",
   },
   content: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 13,
     lineHeight: 1.62,
     minWidth: 0,

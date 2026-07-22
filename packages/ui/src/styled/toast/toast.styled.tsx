@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { Toast as Primitive } from "../../primitives/toast/toast"
 import type { ToastProps, ToastVariant } from "../../primitives/toast/toast"
 import { joinClassNames } from "../../stylex"
@@ -8,14 +9,13 @@ import { joinClassNames } from "../../stylex"
 const styles = stylex.create({
   root: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow:
-      "0 4px 16px rgb(var(--tbr-color-shadow) / 0.08), 0 0 1px rgb(var(--tbr-color-shadow) / 0.06)",
-    color: "rgb(var(--tbr-color-text))",
+    boxShadow: shadow.floating,
+    color: color.text,
     display: "inline-flex",
     fontSize: 12,
     gap: 6,
@@ -32,16 +32,16 @@ const styles = stylex.create({
     width: 14,
   },
   iconInfo: {
-    color: "rgb(var(--tbr-color-info))",
+    color: color.info,
   },
   iconSuccess: {
-    color: "rgb(var(--tbr-color-success))",
+    color: color.success,
   },
   iconWarning: {
-    color: "rgb(var(--tbr-color-warning))",
+    color: color.warning,
   },
   iconDanger: {
-    color: "rgb(var(--tbr-color-danger))",
+    color: color.danger,
   },
   body: {
     display: "grid",
@@ -54,14 +54,14 @@ const styles = stylex.create({
     fontWeight: 600,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
   },
   action: {
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    color: "rgb(var(--tbr-color-accent))",
+    color: color.accent,
     cursor: "pointer",
     fontFamily: "inherit",
     fontSize: 12,

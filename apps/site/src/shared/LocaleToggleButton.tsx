@@ -1,18 +1,19 @@
-import * as stylex from "@stylexjs/stylex"
+import { Button } from "@tabora/ui"
+import type { StyleXStyles } from "@stylexjs/stylex"
 import { useSiteI18n } from "../app/AppShell"
-import type { XStyle } from "./stylex"
 
-export function LocaleToggleButton(props: { xstyle?: XStyle }) {
+export function LocaleToggleButton(props: { xstyle?: StyleXStyles }) {
   const i18n = useSiteI18n()
 
   return (
-    <button
-      {...stylex.attrs(props.xstyle)}
-      type="button"
+    <Button
+      size="sm"
+      variant="secondary"
+      xstyle={props.xstyle}
       aria-label={i18n.t("a11y.toggleLocale")}
       onClick={() => i18n.toggleLocale()}
     >
       {i18n.t("locale.switch")}
-    </button>
+    </Button>
   )
 }

@@ -1,21 +1,22 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font } from "@tabora/theme/tokens.stylex"
 import { Avatar as P } from "../../primitives/avatar/avatar"
 import type { AvatarProps } from "../../primitives/avatar/avatar"
 
 const styles = stylex.create({
   root: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderColor: "rgb(var(--tbr-color-line))",
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
     borderRadius: "50%",
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     flexShrink: 0,
-    fontWeight: 650,
+    fontWeight: font.semibold,
     justifyContent: "center",
     overflow: "hidden",
   },

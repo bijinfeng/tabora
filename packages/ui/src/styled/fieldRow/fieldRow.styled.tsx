@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font } from "@tabora/theme/tokens.stylex"
 import { FieldRow as Primitive } from "../../primitives/fieldRow/fieldRow"
 import type { FieldRowProps } from "../../primitives/fieldRow/fieldRow"
 import { joinClassNames } from "../../stylex"
@@ -9,8 +10,8 @@ const styles = stylex.create({
   root: {
     display: "flex",
     flexDirection: "column",
-    gap: 8,
-    paddingBlock: 10,
+    gap: 6,
+    paddingBlock: 8,
     paddingInline: 0,
   },
   main: {
@@ -27,13 +28,13 @@ const styles = stylex.create({
     minWidth: 0,
   },
   label: {
-    color: "rgb(var(--tbr-color-text))",
-    fontSize: 13,
-    fontWeight: 600,
+    color: color.text,
+    fontSize: 12,
+    fontWeight: font.semibold,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-subtle))",
-    fontSize: 12,
+    color: color.textSubtle,
+    fontSize: 11,
     lineHeight: 1.4,
   },
   trailing: {

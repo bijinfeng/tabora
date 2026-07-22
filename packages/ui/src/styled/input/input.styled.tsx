@@ -1,8 +1,9 @@
 import * as stylex from "@stylexjs/stylex"
-import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessInput } from "../../primitives/input/input"
 import type { HeadlessInputProps } from "../../primitives/input/input"
+import type { XStyle } from "../../stylex"
 
 const styles = stylex.create({
   wrapper: {
@@ -11,44 +12,44 @@ const styles = stylex.create({
     width: "100%",
   },
   control: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-control)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     display: "block",
     fontFamily: "inherit",
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "border-color, box-shadow",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: "100%",
     "::placeholder": {
-      color: "rgb(var(--tbr-color-text-muted))",
+      color: color.textSubtle,
     },
     ":hover": {
-      borderColor: "rgb(var(--tbr-color-line-strong))",
+      borderColor: color.lineStrong,
     },
     ":focus": {
-      borderColor: "rgb(var(--tbr-color-accent))",
-      boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.18)",
+      borderColor: color.accent,
+      boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.12)",
       outline: "none",
     },
     ":disabled": {
-      backgroundColor: "rgb(var(--tbr-color-line) / 0.4)",
+      backgroundColor: color.surfaceSoft,
       cursor: "not-allowed",
       opacity: 0.5,
     },
   },
   sm: {
     fontSize: 12,
-    height: "var(--tbr-control-sm)",
+    height: 28,
     paddingBlock: 0,
     paddingInline: 10,
   },
   md: {
     fontSize: 13,
-    height: "var(--tbr-control-md)",
+    height: 36,
     paddingBlock: 0,
     paddingInline: 12,
   },
@@ -65,11 +66,11 @@ const styles = stylex.create({
     paddingRight: 32,
   },
   invalid: {
-    borderColor: "rgb(var(--tbr-color-danger))",
+    borderColor: color.danger,
   },
   sideIcon: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     fontSize: 13,
     justifyContent: "center",
@@ -98,8 +99,8 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: 3,
-    color: "rgb(var(--tbr-color-text-muted))",
+    borderRadius: radius.r1,
+    color: color.textMuted,
     cursor: "pointer",
     display: "inline-flex",
     height: 20,
@@ -109,13 +110,13 @@ const styles = stylex.create({
     right: 8,
     top: "50%",
     transform: "translateY(-50%)",
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "background-color, color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     width: 20,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-line) / 0.5)",
-      color: "rgb(var(--tbr-color-text))",
+      backgroundColor: color.surfaceHover,
+      color: color.text,
     },
   },
   trailingButton: {
@@ -123,7 +124,7 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     cursor: "pointer",
     display: "inline-flex",
     justifyContent: "center",
@@ -132,11 +133,11 @@ const styles = stylex.create({
     right: 10,
     top: "50%",
     transform: "translateY(-50%)",
-    transitionDuration: "var(--tbr-dur-fast)",
+    transitionDuration: motion.fast,
     transitionProperty: "color",
-    transitionTimingFunction: "var(--tbr-ease)",
+    transitionTimingFunction: motion.ease,
     ":hover": {
-      color: "rgb(var(--tbr-color-text))",
+      color: color.text,
     },
   },
 })
@@ -162,7 +163,7 @@ type HeadlessInputStyleProp =
   | "trailingButtonAttrs"
 
 export type InputProps = Omit<HeadlessInputProps, HeadlessInputStyleProp> & {
-  xstyle?: StyleXStyles
+  xstyle?: XStyle
 }
 
 export function Input(props: InputProps) {

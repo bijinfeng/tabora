@@ -1,4 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
+import { Search } from "lucide-solid"
+import { Input } from "@tabora/ui"
 
 import type { HomePageContent } from "../homePrototypeContent"
 
@@ -104,23 +106,13 @@ export function CommandDialog(props: {
     >
       <div {...stylex.attrs(styles.palette)} role="dialog" aria-modal="true" aria-label="命令面板">
         <div {...stylex.attrs(styles.head)}>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-          <input
-            {...stylex.attrs(styles.input)}
+          <Search size={18} strokeWidth={2} aria-hidden="true" />
+          <Input
+            xstyle={styles.input}
             ref={props.setInputRef}
             value={props.content.command.query}
             aria-label="命令搜索示例"
+            onInput={() => undefined}
           />
           <span {...stylex.attrs(styles.kbd)}>Esc</span>
         </div>

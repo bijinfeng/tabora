@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, font, radius } from "@tabora/theme/tokens.stylex"
 import { Steps as Primitive } from "../../primitives/steps/steps"
 import type { StepItem, StepsProps } from "../../primitives/steps/steps"
 import { joinClassNames } from "../../stylex"
@@ -13,6 +14,7 @@ const styles = stylex.create({
     listStyle: "none",
     margin: 0,
     padding: 0,
+    width: 440,
   },
   step: {
     alignItems: "center",
@@ -22,47 +24,48 @@ const styles = stylex.create({
     minWidth: 0,
     position: "relative",
     ":not(:last-child)::after": {
-      backgroundColor: "rgb(var(--tbr-color-line))",
+      backgroundColor: color.line,
       content: '""',
       height: 2,
-      left: "calc(50% + 14px)",
+      left: "calc(50% + 12px)",
       position: "absolute",
-      right: "calc(-50% + 14px)",
+      right: "calc(-50% + 12px)",
       top: 12,
     },
     "[data-state=complete]::after": {
-      backgroundColor: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accent,
     },
   },
   marker: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-pill)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.pill,
     borderStyle: "solid",
     borderWidth: 1,
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "inline-flex",
     flex: "none",
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: font.bold,
     height: 24,
     justifyContent: "center",
+    justifySelf: "center",
     width: 24,
     zIndex: 1,
     "[data-state=active]": {
-      backgroundColor: "rgb(var(--tbr-color-accent))",
-      borderColor: "rgb(var(--tbr-color-accent))",
-      color: "rgb(var(--tbr-color-surface))",
+      backgroundColor: color.accent,
+      borderColor: color.accent,
+      color: color.inverse,
     },
     "[data-state=complete]": {
-      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-      borderColor: "rgb(var(--tbr-color-accent))",
-      color: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accentSoft,
+      borderColor: color.accent,
+      color: color.accent,
       fontSize: 0,
     },
     "[data-state=complete]::before": {
-      backgroundColor: "rgb(var(--tbr-color-accent))",
+      backgroundColor: color.accent,
       borderRadius: "50%",
       content: '""',
       height: 7,
@@ -71,7 +74,7 @@ const styles = stylex.create({
   },
   body: {
     alignItems: "center",
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     display: "grid",
     fontSize: 11,
     gap: 2,
@@ -80,11 +83,11 @@ const styles = stylex.create({
     textAlign: "center",
     width: "100%",
     "[data-state=active]": {
-      color: "rgb(var(--tbr-color-accent))",
+      color: color.accent,
     },
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     lineHeight: 1.45,
   },
 })

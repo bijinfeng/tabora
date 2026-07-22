@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
+import { color, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { CommandPalette as Primitive } from "../../primitives/commandPalette/commandPalette"
 import type {
   CommandPaletteGroup,
@@ -15,23 +16,22 @@ const styles = stylex.create({
     width: "min(100%, 560px)",
   },
   box: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderColor: "rgb(var(--tbr-color-line))",
-    borderRadius: "var(--tbr-radius-panel)",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.panel,
     borderStyle: "solid",
     borderWidth: 1,
-    boxShadow:
-      "0 20px 48px rgb(var(--tbr-color-shadow-strong) / 0.16), 0 0 1px rgb(var(--tbr-color-shadow) / 0.08)",
+    boxShadow: shadow.floating,
     overflow: "hidden",
   },
   input: {
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderBottomColor: "rgb(var(--tbr-color-line))",
+    borderBottomColor: color.line,
     borderBottomStyle: "solid",
     borderBottomWidth: 1,
-    color: "rgb(var(--tbr-color-text))",
+    color: color.text,
     fontFamily: "inherit",
     fontSize: 14,
     height: 48,
@@ -40,7 +40,7 @@ const styles = stylex.create({
     paddingInline: 16,
     width: "100%",
     "::placeholder": {
-      color: "rgb(var(--tbr-color-text-subtle))",
+      color: color.textSubtle,
     },
   },
   list: {
@@ -54,7 +54,7 @@ const styles = stylex.create({
     },
   },
   groupLabel: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontSize: 10,
     fontWeight: 700,
     letterSpacing: "0.06em",
@@ -69,8 +69,8 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: "var(--tbr-radius-control)",
-    color: "rgb(var(--tbr-color-text))",
+    borderRadius: radius.control,
+    color: color.text,
     cursor: "pointer",
     display: "flex",
     fontFamily: "inherit",
@@ -81,19 +81,19 @@ const styles = stylex.create({
     textAlign: "left",
     width: "100%",
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
       outline: "none",
     },
     ":focus-visible": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      backgroundColor: color.surfaceHover,
       outline: "none",
     },
   },
   icon: {
     alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-    borderRadius: 5,
-    color: "rgb(var(--tbr-color-accent))",
+    backgroundColor: color.accentSoft,
+    borderRadius: radius.r2,
+    color: color.accent,
     display: "inline-flex",
     flex: "none",
     fontSize: 12,
@@ -112,16 +112,16 @@ const styles = stylex.create({
     fontWeight: 600,
   },
   description: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 11,
   },
   kbd: {
-    color: "rgb(var(--tbr-color-text-subtle))",
+    color: color.textSubtle,
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
     fontSize: 10,
   },
   empty: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: color.textMuted,
     fontSize: 13,
     paddingBlock: 28,
     paddingInline: 12,
