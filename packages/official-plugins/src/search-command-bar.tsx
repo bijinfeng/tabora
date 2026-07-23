@@ -4,6 +4,7 @@ import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { Button, InlineError, Input, Kbd } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
+import { Check, ChevronDown } from "lucide-solid"
 import { styles } from "./styles"
 
 type SearchResultItem = SearchViewProps["results"][number]["items"][number]
@@ -191,7 +192,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                 data-search-provider-dot
               />
               <span {...stylex.attrs(styles.searchProviderLabel)}>{activeProvider()!.title}</span>
-              <span {...stylex.attrs(styles.searchProviderCaret)}>▾</span>
+              <ChevronDown size={10} {...stylex.attrs(styles.searchProviderCaret)} />
             </Button>
             <Show when={providerOpen()}>
               <div {...stylex.attrs(styles.searchProviderDropdown)} data-search-provider-dropdown>
@@ -211,7 +212,9 @@ export function SearchCommandBar(props: SearchViewProps) {
                       }}
                     >
                       <span {...stylex.attrs(styles.searchCheck)}>
-                        {provider.id === activeProvider()!.id ? "✓" : ""}
+                        <Show when={provider.id === activeProvider()!.id}>
+                          <Check size={10} />
+                        </Show>
                       </span>
                       <span>{provider.title}</span>
                     </Button>

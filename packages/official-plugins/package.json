@@ -29,6 +29,7 @@
     "@tabora/plugin-todo": "workspace:*",
     "@tabora/plugin-weather": "workspace:*",
     "@tabora/ui": "workspace:*",
+    "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

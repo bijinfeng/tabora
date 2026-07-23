@@ -60,12 +60,13 @@ describe("WidgetCardShell", () => {
     expect(host.querySelector("[data-workbench-grid-item]")?.getAttribute("aria-label")).toBe(
       "便签",
     )
+    // 无 header：插件内容占满卡片，卡片本体作为拖拽手柄。
     expect(host.querySelector("[data-widget-card-header]")).toBeNull()
-    expect(host.querySelector("[data-widget-card-title]")).toBeNull()
+    expect(host.querySelector("[data-widget-card-title]")).toBeTruthy()
     expect(host.querySelector("[data-widget-card-body]")).toBeTruthy()
+    expect(host.querySelector("[data-widget-card-body]")?.textContent).toContain("内容")
     expect(host.querySelector(".grid-item")).toBeNull()
     expect(host.querySelector(".widget-card")).toBeNull()
-    expect(host.querySelector(".card-title")).toBeNull()
     dispose()
   })
 

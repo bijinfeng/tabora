@@ -6,10 +6,10 @@ export type WidgetGridSpan = {
 }
 
 export const WIDGET_GRID_GEOMETRY: Record<WidgetSize, WidgetGridSpan> = {
-  S: { colSpan: 1, rowSpan: 1 },
-  M: { colSpan: 2, rowSpan: 1 },
-  L: { colSpan: 2, rowSpan: 2 },
-  XL: { colSpan: 4, rowSpan: 2 },
+  S: { colSpan: 1, rowSpan: 1 }, // 1x1 正方
+  M: { colSpan: 2, rowSpan: 1 }, // 2x1
+  L: { colSpan: 2, rowSpan: 2 }, // 2x2
+  XL: { colSpan: 4, rowSpan: 2 }, // 4x2
 }
 
 export function widgetGridSpan(size: WidgetSize): WidgetGridSpan {

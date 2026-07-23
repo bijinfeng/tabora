@@ -4,7 +4,7 @@ import type { PluginInstance, WidgetViewProps, WidgetSize } from "@tabora/plugin
 import { PluginViewBoundary, WidgetCardShell } from "@tabora/workbench-shell"
 import { Moon, Sun } from "lucide-solid"
 import { Button } from "@tabora/ui"
-import { For } from "solid-js"
+import { For, onCleanup } from "solid-js"
 import type { JSX } from "solid-js"
 
 import type {
@@ -14,6 +14,7 @@ import type {
 } from "../i18n"
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 import type { SafeLayoutModel, SolidView } from "./WorkbenchShellChrome.types"
+import { observeSquareGridUnit } from "../shared/workbenchGrid"
 
 const styles = stylex.create({
   root: {
@@ -83,14 +84,10 @@ const styles = stylex.create({
   list: {
     display: "grid",
     gap: 12,
-    gridTemplateColumns: "repeat(16, minmax(0, 1fr))",
+    // 行高由 JS 同步为列宽，保证网格单元为正方。
+    gridAutoRows: "var(--tbr-grid-unit, auto)",
+    gridTemplateColumns: "repeat(10, minmax(0, 1fr))",
     minWidth: 0,
-    "@media (max-width: 1024px)": {
-      gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
-    },
-    "@media (max-width: 768px)": {
-      gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
-    },
     "@media (max-width: 480px)": {
       gridTemplateColumns: "minmax(0, 1fr)",
     },
@@ -151,7 +148,12 @@ export function SafeWorkbenchLayout(props: {
           {props.tShell?.("chrome.toolbar.settings") ?? "设置"}
         </Button>
       </div>
-      <div {...stylex.attrs(styles.list)}>
+      <div
+        {...stylex.attrs(styles.list)}
+        ref={(element) => {
+          if (element) onCleanup(observeSquareGridUnit(element))
+        }}
+      >
         <For each={props.instances}>
           {(instance) => {
             const widget = props.widgetContribution(instance)

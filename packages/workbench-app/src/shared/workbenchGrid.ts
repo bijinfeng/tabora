@@ -13,6 +13,31 @@ export function gridRowSpan(size: WidgetSize): number {
   return widgetGridRowSpan(size)
 }
 
+// 把网格行高同步为单列宽度，使每个单元格为正方，1x1/2x1/2x2/4x2 呈现真实比例。
+export function syncSquareGridUnit(grid: HTMLElement): void {
+  const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean)
+  if (cols.length <= 1) {
+    grid.style.removeProperty("--tbr-grid-unit")
+    return
+  }
+  const colWidth = Number.parseFloat(cols[0]!)
+  if (Number.isFinite(colWidth) && colWidth > 0) {
+    grid.style.setProperty("--tbr-grid-unit", `${colWidth}px`)
+  }
+}
+
+// 在元素挂载时监听尺寸变化并保持正方单元；返回清理函数。
+export function observeSquareGridUnit(grid: HTMLElement): () => void {
+  if (typeof ResizeObserver === "undefined") {
+    syncSquareGridUnit(grid)
+    return () => {}
+  }
+  const observer = new ResizeObserver(() => syncSquareGridUnit(grid))
+  observer.observe(grid)
+  syncSquareGridUnit(grid)
+  return () => observer.disconnect()
+}
+
 export function assignGridOrder(
   instances: PluginInstance[],
   updatedAt = new Date().toISOString(),

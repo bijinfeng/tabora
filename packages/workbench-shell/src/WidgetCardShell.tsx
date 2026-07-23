@@ -46,6 +46,7 @@ function gridRowSpan(size: WidgetSize): number {
 const styles = stylex.create({
   gridItem: {
     [widgetCardStyleVars.actionsOpacity]: 0,
+    [widgetCardStyleVars.actionsPointerEvents]: "none",
     [widgetCardStyleVars.headerCursor]: "grab",
     gridColumn: "span var(--widget-col-span, 1)",
     gridRow: "span var(--widget-row-span, 1)",
@@ -53,20 +54,25 @@ const styles = stylex.create({
     minWidth: 0,
     ":hover": {
       [widgetCardStyleVars.actionsOpacity]: 1,
+      [widgetCardStyleVars.actionsPointerEvents]: "auto",
     },
     ":focus-within": {
       [widgetCardStyleVars.actionsOpacity]: 1,
+      [widgetCardStyleVars.actionsPointerEvents]: "auto",
     },
     "@media (hover: none)": {
       [widgetCardStyleVars.actionsOpacity]: 1,
+      [widgetCardStyleVars.actionsPointerEvents]: "auto",
     },
     "@media (max-width: 768px)": {
       gridColumn: "span 1",
       gridRow: "auto",
+      minHeight: 150,
     },
   },
   dragging: {
     [widgetCardStyleVars.actionsOpacity]: 1,
+    [widgetCardStyleVars.actionsPointerEvents]: "auto",
     [widgetCardStyleVars.headerCursor]: "grabbing",
   },
   card: {
@@ -75,12 +81,14 @@ const styles = stylex.create({
     borderRadius: radius.card,
     borderStyle: "solid",
     borderWidth: 1,
+    cursor: widgetCardStyleVars.headerCursor,
     display: "flex",
     flexDirection: "column",
     height: "100%",
     overflow: "visible",
     padding: 0,
     position: "relative",
+    touchAction: "none",
     transitionDuration: motion.fast,
     transitionProperty: "border-color",
     transitionTimingFunction: motion.ease,
@@ -173,8 +181,9 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
     <div
       {...stylex.attrs(styles.card, props.callbacks.isDragging && styles.cardDragging)}
       data-widget-card
+      data-widget-card-title
     >
-      <div {...stylex.attrs(styles.actions)} data-widget-card-actions>
+      <div {...stylex.attrs(styles.actions)} data-widget-card-actions data-prevent-expand="true">
         <IconButton
           size="sm"
           xstyle={styles.action}
