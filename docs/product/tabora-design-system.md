@@ -136,7 +136,7 @@
 
 - `docs/design/workbench-prototype.html`、`docs/design/landing.html`、`docs/design/download.html`
   这些文件只作为可视原型或静态预览资产，不再作为当前设计事实源。
-- 旧版设计体系与组件规范大文档已由 `DESIGN.md` 接管职责，避免双写双维护。
+- 工作台旧版独立布局、卡片和弹窗设计稿已收敛到 `docs/design/workbench-prototype.html`；旧版设计体系大文档已由 `DESIGN.md` 接管职责，避免双写双维护。
 
 ## 8. 维护原则
 

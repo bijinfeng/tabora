@@ -10,7 +10,7 @@
 
 - 当前插件化工作台 PRD：`mpz36lun-tabora-plugin-workbench-prd.md`
 - Core AI 网关与设置 PRD：`mpz35mfq-15-core-ai-gateway-prd.md`
-- 设置弹窗原型：`mpz35mfq-10-设置窗口独立原型.html`
+- 工作台与设置原型：`docs/design/workbench-prototype.html`
 - 设计事实源：`mpz358lo-DESIGN.md`
 - 同步实现事实源（Supabase 后端、schema、API 契约、同步引擎）：`docs/technical/tabora-data-sync-technical-design.md`
 

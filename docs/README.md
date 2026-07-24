@@ -88,21 +88,10 @@
 
 只在需要看原型效果时读：
 
-- `docs/design/workbench-prototype.html`：工作台主交互原型（Stream 布局、卡片、命令面板）。
-- `docs/design/focus-layout-prototype.html`：Focus 布局原型。
+- `docs/design/workbench-prototype.html`：当前唯一保留的工作台交互原型，集中展示布局、卡片、弹窗、设置和命令面板等设计。
 - `docs/design/component-spec.html`：基础组件规范预览。
 - `docs/design/composite-spec.html`：官网/文档组合组件规范预览。
 - `docs/design/landing.html`、`docs/design/download.html`、`docs/design/docs.html`：官网三页预览。
-- `docs/design/添加卡片弹窗原型.html`：添加卡片弹窗交互。
-- `docs/design/卡片展开弹窗原型.html`：卡片展开弹窗壳。
-- `docs/design/快捷入口卡片原型.html`：快捷入口卡片及其弹窗。
-- `docs/design/待办卡片原型.html`：待办卡片及其弹窗。
-- `docs/design/天气卡片原型.html`：天气卡片及其弹窗。
-- `docs/design/设置窗口原型.html`：设置窗口独立原型，包含 AI 模型提供商、模型配置和插件 AI 授权设置。
-- `docs/design/卡片尺寸Dashboard与Focus对比原型.html`：Dashboard 与 Focus 卡片尺寸对照原型。
-- `docs/design/股票查看卡片原型.html`：股票查看卡片及其弹窗。
-- `docs/design/图片压缩卡片原型.html`：本地图片压缩卡片及其弹窗。
-- `docs/design/彩票中奖查询卡片原型.html`：彩票中奖查询、票面识别与核奖弹窗。
 
 这些 HTML 是预览资产，不承载规范事实。与 `DESIGN.md` 冲突时以 `DESIGN.md` 为准。
 

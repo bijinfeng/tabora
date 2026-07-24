@@ -47,7 +47,7 @@ expand-shell
 2. 视图通过 `views: { card, expand?, settings? }` 注册 view id 字符串，宿主用 `registry.views` 解析为组件。footer 应沿用「view id → 组件」这一既有同构模式，而不是让插件把组件实例塞进 props。
 3. `ExpandState`（`WorkbenchShellChrome.types.ts`）与 `WorkbenchExpandState`（`WorkbenchShellInteractions.ts`）是字段相同的重复定义，任何 expand state 结构变更要同步两处。
 4. 现有 footer 文案走 i18n key `chrome.expand.footerHint`，回退逻辑要保留。
-5. 设计稿 `docs/design/卡片展开弹窗原型.html` 的 `.expand-footer` 是 `justify-content: flex-end`，右对齐放操作/提示；自定义 footer 需要兼容这一布局。
+5. 当前统一原型 `docs/design/workbench-prototype.html` 的 `.expand-footer` 同时容纳元信息和操作区；自定义 footer 需要兼容宿主的双端布局，不能破坏既有提示与关闭行为。
 
 ## 4. 方案选型
 
