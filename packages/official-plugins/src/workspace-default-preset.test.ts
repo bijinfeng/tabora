@@ -103,6 +103,15 @@ describe("officialDefaultWorkspacePreset", () => {
     expect(presetPluginIds.has(defaultSearchProvider?.pluginId ?? "")).toBe(true)
   })
 
+  it("enables the four search providers shown in the dashboard prototype", () => {
+    expect(officialDefaultWorkspacePreset.search.enabledProviderIds).toEqual([
+      "official.search.google",
+      "official.search.bing",
+      "official.search.duckduckgo",
+      "official.search.github",
+    ])
+  })
+
   it("includes every preset instance plugin in preset.plugins", () => {
     const presetPluginIds = new Set(officialDefaultWorkspacePreset.plugins)
 

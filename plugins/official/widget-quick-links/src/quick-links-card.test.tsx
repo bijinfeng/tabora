@@ -67,10 +67,9 @@ describe("QuickLinksCard", () => {
     expect(root.querySelector("[data-quick-links-card]")).toBeTruthy()
     expect(root.querySelector(".quick-links")).toBeNull()
     expect(root.textContent).toContain("GitHub")
-    expect(root.textContent).toContain("Notion")
-    expect(root.textContent).toContain("Linear")
-    expect(root.textContent).toContain("Figma")
-    expect(root.textContent).toContain("YouTube")
+    expect(root.querySelector("button[aria-label='Notion']")).toBeTruthy()
+    expect(root.querySelector("button[aria-label='Linear']")).toBeTruthy()
+    expect(root.querySelector("button[aria-label='Figma']")).toBeTruthy()
     root.remove()
   })
 
@@ -90,6 +89,16 @@ describe("QuickLinksCard", () => {
 
     expect(openExternal).toHaveBeenCalledWith("https://github.com")
     expect(root.textContent).toContain("GitHub")
+    root.remove()
+  })
+
+  it("renders the size-specific quick-link composition", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <QuickLinksCard {...makeProps({ size: "L" })} />, root)
+    await flushMount()
+
+    expect(root.querySelector("[data-quick-links-variant='L']")).toBeTruthy()
     root.remove()
   })
 })

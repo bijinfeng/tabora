@@ -34,6 +34,7 @@ const STORAGE_KEY = "notes-items"
 
 export function NotesCard(props: WidgetViewProps) {
   const [notes, setNotes] = createSignal<Note[]>([])
+  const cardSize = () => props.size ?? "L"
 
   onMount(async () => {
     const saved = await props.data.get<Note[]>(STORAGE_KEY)
@@ -43,7 +44,17 @@ export function NotesCard(props: WidgetViewProps) {
   const displayNotes = () => notes().slice(0, 4)
 
   return (
-    <div {...stylex.attrs(styles.cardRoot)} data-notes-card>
+    <div
+      {...stylex.attrs(
+        styles.cardRoot,
+        props.size === "S" && styles.cardSmall,
+        props.size === "M" && styles.cardMedium,
+        props.size === "L" && styles.cardLarge,
+        props.size === "XL" && styles.cardExtraLarge,
+      )}
+      data-notes-card
+      data-notes-variant={cardSize()}
+    >
       <div {...stylex.attrs(styles.cardBody)}>
         <For each={displayNotes()}>
           {(note, index) => (

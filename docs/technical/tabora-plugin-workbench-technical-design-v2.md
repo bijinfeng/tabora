@@ -500,36 +500,34 @@ if (completed.instances) {
 
 ### 设计原则
 
-**固定比例是底线**：插件开发者必须知道确切的宽高比才能适配不同尺寸的卡片样式。
+**固定网格跨度是底线**：插件开发者必须知道语义尺寸对应的列/行跨度，才能为不同尺寸适配卡片内容。
 
-Dashboard 使用 **16 列网格系统**，提供中等密度的灵活布局。
+Dashboard 使用 **10 列逻辑网格系统**。网格行高由布局 view 根据单列实际宽度同步，保证 `S=1x1` 为正方形，其它尺寸由列/行跨度组合得到。
 
 ### 网格定义
 
-| 尺寸 | colSpan | 占比        | aspect-ratio   | 用途                       |
-| ---- | ------- | ----------- | -------------- | -------------------------- |
-| S    | 3       | 3/16 (19%)  | 3:2 (1.50:1)   | 纯展示：时钟、天气、小数据 |
-| M    | 4       | 1/4 (25%)   | 16:10 (1.60:1) | 轻交互：快捷链接、开关     |
-| L    | 6       | 3/8 (37.5%) | 16:9 (1.78:1)  | 中等交互：待办、便签       |
-| XL   | 8       | 1/2 (50%)   | 21:9 (2.33:1)  | 丰富交互：复杂表单、图表   |
+| 尺寸 | colSpan | rowSpan | 用途                       |
+| ---- | ------- | ------- | -------------------------- |
+| S    | 1       | 1       | 纯展示：时钟、天气、小数据 |
+| M    | 2       | 1       | 轻交互：快捷链接、开关     |
+| L    | 2       | 2       | 中等交互：待办、便签       |
+| XL   | 4       | 2       | 丰富交互：复杂表单、图表   |
 
 ### 实际尺寸（1200px 容器）
 
-| 尺寸 | 宽度  | 高度  | 说明     |
-| ---- | ----- | ----- | -------- |
-| S    | 217px | 145px | 小巧紧凑 |
-| M    | 292px | 183px | 标准卡片 |
-| L    | 444px | 250px | 宽松布局 |
-| XL   | 595px | 255px | 横向展示 |
+| 尺寸 | 宽度约 | 高度约 | 说明     |
+| ---- | ------ | ------ | -------- |
+| S    | 109px  | 109px  | 小巧紧凑 |
+| M    | 230px  | 109px  | 标准横卡 |
+| L    | 230px  | 230px  | 方形详情 |
+| XL   | 472px  | 230px  | 横向展示 |
 
 ### 响应式断点
 
-| 屏幕宽度   | 网格列数 |
-| ---------- | -------- |
-| > 1100px   | 16 列    |
-| 768-1100px | 12 列    |
-| 500-768px  | 8 列     |
-| < 500px    | 1 列     |
+| 屏幕宽度 | 网格列数 |
+| -------- | -------- |
+| > 768px  | 10 列    |
+| <= 768px | 1 列     |
 
 ### 技术实现
 
@@ -538,22 +536,10 @@ Dashboard 使用 **16 列网格系统**，提供中等密度的灵活布局。
 ```css
 .workbench-grid {
   display: grid;
-  grid-template-columns: repeat(16, minmax(0, 1fr));
-  gap: 10px;
-  align-items: start; /* 防止同行卡片互相拉伸 */
-}
-
-.grid-item[data-widget-size="S"] {
-  aspect-ratio: 3 / 2;
-}
-.grid-item[data-widget-size="M"] {
-  aspect-ratio: 16 / 10;
-}
-.grid-item[data-widget-size="L"] {
-  aspect-ratio: 16 / 9;
-}
-.grid-item[data-widget-size="XL"] {
-  aspect-ratio: 21 / 9;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-auto-rows: var(--dashboard-grid-cell, 96px);
+  gap: 12px;
+  align-items: stretch;
 }
 ```
 
@@ -562,23 +548,23 @@ Dashboard 使用 **16 列网格系统**，提供中等密度的灵活布局。
 ```typescript
 // packages/plugin-api/src/widgetGeometry.ts
 export const WIDGET_GRID_GEOMETRY: Record<WidgetSize, WidgetGridSpan> = {
-  S: { colSpan: 3, rowSpan: 1 },
-  M: { colSpan: 4, rowSpan: 1 },
-  L: { colSpan: 6, rowSpan: 1 },
-  XL: { colSpan: 8, rowSpan: 1 },
+  S: { colSpan: 1, rowSpan: 1 },
+  M: { colSpan: 2, rowSpan: 1 },
+  L: { colSpan: 2, rowSpan: 2 },
+  XL: { colSpan: 4, rowSpan: 2 },
 }
 ```
 
 ### 关键设计决策
 
-1. **16 列而非 12 列**：提供更密集的布局，同时保持灵活性
-2. **align-items: start**：防止同行不同高度的卡片互相拉伸，保持 aspect-ratio
-3. **所有 rowSpan = 1**：高度完全由 aspect-ratio 控制，插件开发者可预测
-4. **XL 占 1/2 宽**：可以并排两个超大卡片，不会独占整行
+1. **10 列逻辑网格**：让 `1x1 / 2x1 / 2x2 / 4x2` 四种尺寸直接映射到用户可理解的网格单位。
+2. **行高跟随列宽**：布局 view 用 `ResizeObserver` 同步单元格尺寸，`S` 始终是正方形。
+3. **尺寸只表达跨度**：卡片外壳不再通过 aspect-ratio 控制高度，插件只需按宿主给定内容区适配。
+4. **XL 占 4/10 宽**：可以并排多个宽卡片，同时避免单个卡片独占整行。
 
 ### 插件开发指南
 
-插件开发者可以依赖固定的 aspect-ratio 进行精确布局设计：
+插件开发者可以依赖固定的语义跨度进行布局设计。宿主卡片外壳只提供边框、grid span、错误边界和右上角移除按钮；插件 card view 负责内容区 padding、滚动和截断：
 
 ```css
 /* 针对不同尺寸优化布局 */
@@ -1222,7 +1208,7 @@ plugins/
 4. 把官方 dashboard/focus 布局放入同一个官方布局 package（`plugins/official/layout-dashboard`），依赖面只有 plugin-api/platform-kernel/solid-js 等布局所需依赖（隔离硬证据）。
 5. 新增 `plugins/layout-diy-masonry`：第三方差异化 DIY 布局，验证只靠公开契约就能实现瀑布流分列、浮动菜单、自定义图标等创新形态。
 6. `official-plugins` 装配层引入三个布局 package，删除原 `layout-workbench-*.tsx` 内联实现。
-7. `App.tsx` 引入 `WidgetCardShell` 卡片壳，将拖拽/双击/右键/尺寸条等交互通过 `WidgetHostCallbacks` 闭包注入；layout view 负责包裹 `.workbench-grid`，`WidgetCardShell` 根据 `@tabora/plugin-api/widgetGeometry` 的 widget size span 写入 grid CSS 变量，避免协议驱动布局丢失原型的 4 列卡片排布。
+7. `App.tsx` 引入 `WidgetCardShell` 卡片壳，将拖拽/双击/右键/移除等交互通过 `WidgetHostCallbacks` 闭包注入；layout view 负责包裹 10 列主网格并同步单元格行高，`WidgetCardShell` 根据 `@tabora/plugin-api/widgetGeometry` 的 widget size span 写入 grid CSS 变量，避免协议驱动布局丢失当前原型的 `1x1 / 2x1 / 2x2 / 4x2` 卡片排布。
 
 ### Phase X1-X8: 插件系统可扩展性收尾 ✅ 已完成
 

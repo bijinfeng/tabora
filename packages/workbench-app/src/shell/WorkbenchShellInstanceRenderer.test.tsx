@@ -215,7 +215,7 @@ describe("createWorkbenchInstanceRenderer", () => {
     dispose()
   })
 
-  it("opens the widget context menu when right-clicking the sortable title handle", () => {
+  it("opens the widget context menu when right-clicking the widget card", () => {
     const onOpenWidgetContextMenu = vi.fn()
     const renderer = createWorkbenchInstanceRenderer({
       ...baseOptions(),
@@ -224,7 +224,7 @@ describe("createWorkbenchInstanceRenderer", () => {
     })
 
     const { host, dispose } = mount(renderer.renderWidget(instance()))
-    const title = host.querySelector("[data-widget-card-title]") as HTMLElement
+    const card = host.querySelector("[data-widget-instance-id='widget-1']") as HTMLElement
     const event = new MouseEvent("contextmenu", {
       bubbles: true,
       cancelable: true,
@@ -233,7 +233,7 @@ describe("createWorkbenchInstanceRenderer", () => {
       button: 2,
     })
 
-    title.dispatchEvent(event)
+    card.dispatchEvent(event)
 
     expect(onOpenWidgetContextMenu).toHaveBeenCalledWith(
       expect.objectContaining({

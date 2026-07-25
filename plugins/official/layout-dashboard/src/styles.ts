@@ -91,9 +91,9 @@ export const styles = stylex.create({
       default: "block",
       [mobile]: "none",
     },
-    height: 36,
+    height: 28,
     marginBottom: 8,
-    width: 36,
+    width: 28,
   },
   railGroups: {
     alignItems: "center",
@@ -447,11 +447,6 @@ export const styles = stylex.create({
     },
     width: "100%",
   },
-  dashboardTopbar: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
   greeting: {
     alignItems: {
       default: "center",
@@ -486,6 +481,16 @@ export const styles = stylex.create({
     justifyContent: {
       default: "flex-end",
       [mobile]: "flex-start",
+    },
+    opacity: 0.74,
+    transitionDuration: "var(--tbr-dur-fast)",
+    transitionProperty: "opacity",
+    transitionTimingFunction: "var(--tbr-ease)",
+    ":hover": {
+      opacity: 1,
+    },
+    ":focus-within": {
+      opacity: 1,
     },
   },
   toolbarButton: {
@@ -530,12 +535,16 @@ export const styles = stylex.create({
     minWidth: 0,
   },
   gridContainer: {
-    alignItems: "start",
+    alignItems: "stretch",
     display: "grid",
-    gap: 10,
-    gridAutoRows: "auto",
+    gap: 12,
+    gridAutoFlow: "dense",
+    gridAutoRows: {
+      default: "var(--dashboard-grid-cell, 96px)",
+      [mobile]: "auto",
+    },
     gridTemplateColumns: {
-      default: "repeat(16, minmax(0, 1fr))",
+      default: "repeat(10, minmax(0, 1fr))",
       [mobile]: "minmax(0, 1fr)",
     },
   },

@@ -3,6 +3,7 @@ import { render } from "solid-js/web"
 import type { JSX } from "solid-js"
 import type { LayoutHostAPI, PluginInstance, RegionSlot } from "@tabora/plugin-api"
 import { DashboardLayout, FocusLayout, layoutDashboard } from "./index"
+import { syncDashboardGridCellSize } from "./dashboard-layout"
 
 function instance(overrides: Partial<PluginInstance>): PluginInstance {
   return {
@@ -71,6 +72,25 @@ function makeSlot(id: string, instances: PluginInstance[] = []): RegionSlot<JSX.
 }
 
 describe("DashboardLayout", () => {
+  it("按实际列宽同步 10 列网格行高，移动单列时取消强制正方形", () => {
+    const grid = document.createElement("div")
+    document.body.appendChild(grid)
+    Object.defineProperty(grid, "clientWidth", { configurable: true, value: 1118 })
+    grid.style.display = "grid"
+    grid.style.gridTemplateColumns = "repeat(10, 100px)"
+    grid.style.columnGap = "12px"
+
+    syncDashboardGridCellSize(grid)
+
+    expect(grid.style.getPropertyValue("--dashboard-grid-cell")).toBe("101px")
+
+    grid.style.gridTemplateColumns = "100px"
+    syncDashboardGridCellSize(grid)
+
+    expect(grid.style.getPropertyValue("--dashboard-grid-cell")).toBe("")
+    grid.remove()
+  })
+
   it("渲染 rail 强制入口与 mainGrid", () => {
     const host = document.createElement("div")
     document.body.appendChild(host)
@@ -97,6 +117,26 @@ describe("DashboardLayout", () => {
     expect(host.querySelector(".layout-dashboard")).toBeNull()
     expect(host.querySelector("[data-testid='region-mainGrid']")).toBeTruthy()
     dispose()
+  })
+
+  it("keeps the header action group subtly faded like the prototype before hover", () => {
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    const dispose = render(
+      () => (
+        <DashboardLayout
+          isMobile={false}
+          host={makeHost()}
+          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+        />
+      ),
+      host,
+    )
+
+    expect(host.querySelector("[data-dashboard-greeting-actions]")).toBeTruthy()
+    expect(host.querySelector("[data-dashboard-greeting-actions] button")).toBeTruthy()
+    dispose()
+    host.remove()
   })
 
   it("persists rail groups through the layout host state and restores them on remount", () => {

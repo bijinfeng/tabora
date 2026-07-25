@@ -44,6 +44,15 @@ describe("NotesCard", () => {
     root.remove()
   })
 
+  it("renders the size-specific memo composition", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesCard {...makeProps()} />, root)
+
+    expect(root.querySelector("[data-notes-variant='L']")).toBeTruthy()
+    root.remove()
+  })
+
   it("renders the new note button", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

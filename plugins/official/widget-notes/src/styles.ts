@@ -7,6 +7,29 @@ export const styles = stylex.create({
     height: "100%",
     minHeight: 0,
   },
+  cardSmall: {
+    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    borderRadius: "var(--tbr-radius-control)",
+    padding: 6,
+  },
+  cardMedium: {
+    backgroundColor: "rgb(var(--tbr-color-accent) / 0.04)",
+    borderRadius: "var(--tbr-radius-control)",
+    padding: 8,
+  },
+  cardLarge: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    borderRadius: "var(--tbr-radius-control)",
+    padding: 10,
+  },
+  cardExtraLarge: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    borderLeftColor: "rgb(var(--tbr-color-accent) / 0.28)",
+    borderLeftStyle: "solid",
+    borderLeftWidth: 2,
+    borderRadius: "var(--tbr-radius-control)",
+    padding: 12,
+  },
   cardBody: {
     flex: 1,
     minHeight: 0,

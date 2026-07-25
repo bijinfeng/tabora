@@ -234,6 +234,101 @@ describe("SearchCommandBar", () => {
     root.remove()
   })
 
+  it("keeps the inline query input chrome-free inside the shared search shell", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+            ],
+          })}
+        />
+      ),
+      root,
+    )
+
+    expect(root.querySelector("[data-search-bar-shell]")).toBeTruthy()
+    expect(root.querySelector("[data-search-inline-input]")).toBeTruthy()
+    expect(root.querySelector("[data-search-provider-trigger]")).toBeTruthy()
+    expect(root.querySelector("[data-search-provider-dot]")).toBeTruthy()
+    root.remove()
+  })
+
+  it("uses the prototype suggestion row spacing and icon size", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+            ],
+            isOpen: true,
+            results: [
+              {
+                id: "commands",
+                label: "常用命令",
+                items: [
+                  { id: "add-widget", icon: "+", name: "添加卡片", desc: "向工作台添加新卡片" },
+                ],
+              },
+            ],
+          })}
+        />
+      ),
+      root,
+    )
+
+    expect(root.querySelector("[data-search-suggestions-surface]")).toBeTruthy()
+    expect(root.querySelector("[data-search-suggestion]")).toBeTruthy()
+    expect(root.querySelector("[data-search-suggestion-icon]")).toBeTruthy()
+    root.remove()
+  })
+
+  it("uses the accent-soft icon treatment for the generated web-search suggestion", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+            ],
+            isOpen: true,
+            query: "tabora",
+          })}
+        />
+      ),
+      root,
+    )
+
+    expect(root.querySelector("[data-search-suggestion-icon]")?.textContent).toBe("搜")
+    root.remove()
+  })
+
   it("closes the provider dropdown with Escape and outside click", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
@@ -274,6 +369,98 @@ describe("SearchCommandBar", () => {
     document.body.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }))
     expect(root.querySelector("[data-search-provider-dropdown]")).toBeNull()
 
+    root.remove()
+  })
+
+  it("opens the provider dropdown from a pointer interaction", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+              {
+                id: "official.search.bing",
+                title: "Bing",
+                shortcut: "b",
+                urlTemplate: "https://bing.example/search?q={query}",
+              },
+            ],
+          })}
+        />
+      ),
+      root,
+    )
+
+    root
+      .querySelector<HTMLButtonElement>("[data-search-provider-trigger]")
+      ?.dispatchEvent(new Event("pointerdown", { bubbles: true }))
+
+    expect(root.querySelector("[data-search-provider-dropdown]")).toBeTruthy()
+    root.remove()
+  })
+
+  it("renders every search provider supplied by enabled plugins", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <SearchCommandBar
+          {...searchViewProps({
+            providers: [
+              {
+                id: "official.search.google",
+                title: "Google",
+                shortcut: "g",
+                urlTemplate: "https://google.example/search?q={query}",
+              },
+              {
+                id: "official.search.bing",
+                title: "Bing",
+                shortcut: "b",
+                urlTemplate: "https://bing.example/search?q={query}",
+              },
+              {
+                id: "official.search.baidu",
+                title: "百度",
+                shortcut: "d",
+                urlTemplate: "https://baidu.example/search?q={query}",
+              },
+              {
+                id: "official.search.duckduckgo",
+                title: "DuckDuckGo",
+                shortcut: "dd",
+                urlTemplate: "https://duckduckgo.example/search?q={query}",
+              },
+              {
+                id: "official.search.github",
+                title: "GitHub",
+                shortcut: "gh",
+                urlTemplate: "https://github.example/search?q={query}",
+              },
+            ],
+          })}
+        />
+      ),
+      root,
+    )
+
+    root.querySelector<HTMLButtonElement>("[data-search-provider-trigger]")?.click()
+
+    expect(
+      Array.from(root.querySelectorAll("[data-search-provider-option]")).map(
+        (option) => option.textContent,
+      ),
+    ).toEqual(["✓Google", "Bing", "百度", "DuckDuckGo", "GitHub"])
     root.remove()
   })
 })

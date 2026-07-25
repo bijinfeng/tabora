@@ -52,13 +52,17 @@ function mount(cb: WidgetHostCallbacks, props?: Record<string, unknown>) {
 }
 
 describe("WidgetCardShell", () => {
-  it("渲染标题和子内容", () => {
+  it("渲染无头部卡片壳和满铺子内容", () => {
     const { host, dispose } = mount(makeCallbacks())
-    expect(host.textContent).toContain("便签")
     expect(host.querySelector("[data-testid='content']")).toBeTruthy()
     expect(host.querySelector("[data-workbench-grid-item]")).toBeTruthy()
     expect(host.querySelector("[data-widget-card]")).toBeTruthy()
-    expect(host.querySelector("[data-widget-card-title]")?.textContent).toContain("便签")
+    expect(host.querySelector("[data-workbench-grid-item]")?.getAttribute("aria-label")).toBe(
+      "便签",
+    )
+    expect(host.querySelector("[data-widget-card-header]")).toBeNull()
+    expect(host.querySelector("[data-widget-card-title]")).toBeNull()
+    expect(host.querySelector("[data-widget-card-body]")).toBeTruthy()
     expect(host.querySelector(".grid-item")).toBeNull()
     expect(host.querySelector(".widget-card")).toBeNull()
     expect(host.querySelector(".card-title")).toBeNull()
@@ -68,7 +72,7 @@ describe("WidgetCardShell", () => {
   it("通过 CSS 变量暴露当前尺寸跨度，而不是写死内联网格属性", () => {
     const { host, dispose } = mount(makeCallbacks())
     const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
-    expect(card.style.getPropertyValue("--widget-col-span")).toBe("4")
+    expect(card.style.getPropertyValue("--widget-col-span")).toBe("2")
     expect(card.style.getPropertyValue("--widget-row-span")).toBe("1")
     expect(card.style.gridColumn).toBe("")
     expect(card.style.gridRow).toBe("")
@@ -102,6 +106,17 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
+  it("renders the remove button as a compact circular control", () => {
+    const { host, dispose } = mount(makeCallbacks())
+    const removeBtn = host.querySelector("[data-widget-card-remove]") as HTMLButtonElement
+    const styles = getComputedStyle(removeBtn)
+
+    expect(styles.width).toBe("18px")
+    expect(styles.height).toBe("18px")
+    expect(styles.borderRadius).toBe("999px")
+    dispose()
+  })
+
   it("右键触发 onContextMenu", () => {
     const cb = makeCallbacks()
     const { host, dispose } = mount(cb)
@@ -131,7 +146,7 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  it("启用 sortable 绑定时把根节点和标题拖拽手柄交给外部库", () => {
+  it("启用 sortable 绑定时把卡片网格项同时作为根节点和拖拽手柄交给外部库", () => {
     const cb = {
       ...makeCallbacks(),
       bindSortableRoot: vi.fn(),
@@ -143,7 +158,7 @@ describe("WidgetCardShell", () => {
       host.querySelector("[data-widget-instance-id='w1']"),
     )
     expect(cb.bindSortableHandle).toHaveBeenCalledWith(
-      host.querySelector("[data-widget-card-title]"),
+      host.querySelector("[data-widget-instance-id='w1']"),
     )
     dispose()
   })

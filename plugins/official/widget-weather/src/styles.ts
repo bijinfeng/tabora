@@ -2,6 +2,16 @@ import * as stylex from "@stylexjs/stylex"
 
 export const styles = stylex.create({
   root: { display: "flex", flexDirection: "column", height: "100%", minHeight: 0 },
+  rootSmall: {
+    backgroundColor: "rgb(var(--tbr-color-accent) / 0.04)",
+    borderRadius: "var(--tbr-radius-control)",
+    padding: 8,
+  },
+  rootMedium: {
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    borderRadius: "var(--tbr-radius-control)",
+    padding: 10,
+  },
   body: { display: "flex", flex: 1, flexDirection: "column", gap: 10, minHeight: 0 },
   stack: { display: "grid", gap: 8 },
   now: { alignItems: "center", display: "flex", gap: 12 },

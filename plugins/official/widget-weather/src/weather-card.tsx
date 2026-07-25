@@ -9,9 +9,18 @@ import { styles } from "./styles"
 
 export function WeatherCard(props: WidgetViewProps) {
   const store = createWeatherStore(props)
+  const cardSize = () => props.size ?? "S"
 
   return (
-    <div {...stylex.attrs(styles.root)} data-weather-card>
+    <div
+      {...stylex.attrs(
+        styles.root,
+        props.size === "S" && styles.rootSmall,
+        props.size === "M" && styles.rootMedium,
+      )}
+      data-weather-card
+      data-weather-variant={cardSize()}
+    >
       <Show
         when={store.snapshot()}
         fallback={

@@ -229,8 +229,8 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
     globalToolbar: !!document.querySelector(".toolbar"),
     layoutSwitch: !!document.querySelector('[data-workbench-rail] button[aria-label="切换布局"]'),
     grid: !!document.querySelector("[data-layout-grid]"),
-    cardTitles: [...document.querySelectorAll("[data-widget-card-title]")].map(
-      (node) => node.textContent?.trim() ?? "",
+    cardTitles: [...document.querySelectorAll("[data-workbench-grid-item]")].map(
+      (node) => node.getAttribute("aria-label") ?? "",
     ),
     overflowX: hasHorizontalOverflow(),
   }
@@ -268,7 +268,7 @@ async function readContextMenuSizeOptions(title: string): Promise<string[]> {
 
 function readGridItemByTitle(title: string): HTMLElement {
   const item = [...document.querySelectorAll<HTMLElement>("[data-workbench-grid-item]")].find(
-    (node) => node.textContent?.includes(title),
+    (node) => node.getAttribute("aria-label") === title,
   )
   if (!item) {
     throw new Error(`Grid item was not found: ${title}`)
@@ -284,7 +284,7 @@ async function dragFirstGridItemToSecond(): Promise<{ before: string[]; after: s
     throw new Error("At least two grid items are required for drag sorting")
   }
 
-  const sourceHandle = source.querySelector<HTMLElement>("[data-widget-card-title]")
+  const sourceHandle = source
   if (!sourceHandle) {
     throw new Error("Source widget drag handle was not found for pointer drag")
   }

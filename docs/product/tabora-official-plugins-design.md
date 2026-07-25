@@ -296,7 +296,7 @@ MVP 组件清单：
 | `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
-当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 `.workbench-grid` 容器，`WidgetCardShell` 负责按 widget size 设置 grid span 和稳定卡片高度。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
+当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 10 列主网格容器和单元格行高同步，`WidgetCardShell` 负责按 widget size 设置 grid span、提供无头部卡片外壳和右上角移除按钮。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
 
 默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/workbench-prototype.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、快捷入口、待办、便签和天气摘要。完整插件管理从设置中心进入。
 
@@ -445,7 +445,7 @@ workbench-shell
 
 - 左侧 rail 宽度控制在 56-64px，固定、低干扰。
 - 顶部命令搜索在内容区顶部，宽度受限，方便快速聚焦。
-- 主网格宽度稳定，默认桌面 4 列。
+- 主网格宽度稳定，默认桌面为 10 列逻辑网格。
 - 主网格不固定一屏高度，允许自然纵向滚动。
 - 首屏优先展示快捷入口、便签和待办。
 - 移动端单列，卡片按顺序堆叠。
@@ -471,6 +471,7 @@ workbench-shell
 - `rail` 提供主页、添加卡片、插件和设置等工作台级入口。
 - `topbar` 只接收 search 实例。
 - `mainGrid` 只接收 widget 实例。
+- Dashboard 尺寸跨度固定为 `S=1x1`、`M=2x1`、`L=2x2`、`XL=4x2`。
 - 移动端布局不产生横向滚动。
 - 卡片超过首屏时，主网格可纵向滚动且不压缩卡片到不可读。
 - layout 失败时有安全回退。
@@ -487,7 +488,7 @@ Focus 是 MVP 第二种官方布局，由 `official.layout.workbench-dashboard` 
 | -------- | -------------------- | --------------------------------------- |
 | Rail     | 固定左侧 56px 图标栏 | 复用同一 rail，移动端同样收为底部工具栏 |
 | 搜索     | 常驻搜索栏           | 居中命令入口 + ⌘K 浮层唤起              |
-| 卡片排列 | 4 列自适应网格       | 一个主卡片 + 下方 satellite 切换卡片    |
+| 卡片排列 | 10 列逻辑网格        | 一个主卡片 + 下方 satellite 切换卡片    |
 | 首屏     | 搜索 + 网格直接可见  | 问候 / 命令入口 + 主卡片直接可见        |
 | 信息密度 | 高（并行多卡片）     | 中低（当前卡片优先）                    |
 
@@ -1066,8 +1067,8 @@ MVP widget 清单：
 
 每个 widget 卡片应遵循：
 
-- 标题由宿主卡片 header 渲染。
-- 插件 view 只负责 body 内容。
+- 宿主卡片外壳不渲染标题 header，标题仅作为可访问名称和展开视图标题来源。
+- 插件 card view 负责完整卡片内容区，包括内部留白、滚动和截断。
 - 支持尺寸必须由 manifest 声明。
 - 卡片内操作不影响宿主布局尺寸。
 - 多实例数据应按实例隔离，除非产品明确要求全局共享。
@@ -1075,12 +1076,12 @@ MVP widget 清单：
 
 ### 11.4 Widget 尺寸语义
 
-| 尺寸 | 用途                      | 示例                     |
-| ---- | ------------------------- | ------------------------ |
-| S    | 一个核心状态或 1-2 个入口 | 天气温度、单个快捷入口组 |
-| M    | 默认工作卡片              | 便签、待办、快捷入口     |
-| L    | 详情更多、列表更多        | 长便签、多链接、多待办   |
-| XL   | 复杂列表或全宽视图        | 待办计划、RSS、日历      |
+| 尺寸 | 用途                           | 示例                     |
+| ---- | ------------------------------ | ------------------------ |
+| S    | 1x1，一个核心状态或 1-2 个入口 | 天气温度、单个快捷入口组 |
+| M    | 2x1，默认横向工作卡片          | 便签、待办、快捷入口     |
+| L    | 2x2，详情更多、列表更多        | 长便签、多链接、多待办   |
+| XL   | 4x2，复杂列表或宽视图          | 待办计划、RSS、日历      |
 
 ### 11.6 快捷入口 `quick-links`
 
@@ -1194,7 +1195,7 @@ V1.5：
 
 打开展开编辑：
 
-1. 用户点击卡片 header 的展开按钮。
+1. 用户双击卡片或从右键菜单选择展开。
 2. 宿主打开统一 expand overlay。
 3. 插件渲染 `official.widgets.notes.expand`。
 4. 用户在更大的编辑区输入。
@@ -1792,7 +1793,7 @@ add widget panel
 ### 14.3 调整尺寸流程
 
 ```txt
-widget header size control
+widget context menu size control
   -> read contribution.supportedSizes
   -> user selects size
   -> host maps semantic size to grid span
@@ -1809,7 +1810,7 @@ widget header size control
 ### 14.4 打开展开流程
 
 ```txt
-widget header expand
+widget double-click or context menu expand
   -> check contribution.views.expand
   -> host expand overlay
   -> PluginViewBoundary

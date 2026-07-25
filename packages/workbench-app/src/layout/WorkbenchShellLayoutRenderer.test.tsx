@@ -206,7 +206,7 @@ describe("createWorkbenchLayoutRenderer", () => {
     })
 
     const { host, dispose } = mount(renderer.renderActiveLayout())
-    const title = host.querySelector("[data-widget-card-title]") as HTMLElement
+    const card = host.querySelector("[data-widget-instance-id='widget-1']") as HTMLElement
     const event = new MouseEvent("contextmenu", {
       bubbles: true,
       cancelable: true,
@@ -215,7 +215,7 @@ describe("createWorkbenchLayoutRenderer", () => {
       button: 2,
     })
 
-    title.dispatchEvent(event)
+    card.dispatchEvent(event)
 
     expect(safeLayout.onOpenContextMenu).toHaveBeenCalledWith(
       expect.objectContaining({

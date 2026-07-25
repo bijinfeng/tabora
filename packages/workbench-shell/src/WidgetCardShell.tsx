@@ -1,11 +1,11 @@
 import * as stylex from "@stylexjs/stylex"
 import type { JSX } from "solid-js"
-import { onCleanup, onMount, Show } from "solid-js"
+import { onCleanup, Show } from "solid-js"
 import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
 import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
 import { ContextMenu, IconButton, type ContextMenuItem } from "@tabora/ui"
-import { X } from "lucide-solid"
-import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
+import { Minus } from "lucide-solid"
+import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { widgetCardStyleVars } from "./WidgetCardShell.stylex"
 
 export type WidgetHostCallbacks = {
@@ -47,7 +47,6 @@ const styles = stylex.create({
   gridItem: {
     [widgetCardStyleVars.actionsOpacity]: 0,
     [widgetCardStyleVars.headerCursor]: "grab",
-    aspectRatio: "16 / 10",
     gridColumn: "span var(--widget-col-span, 1)",
     gridRow: "span var(--widget-row-span, 1)",
     minHeight: 0,
@@ -62,22 +61,9 @@ const styles = stylex.create({
       [widgetCardStyleVars.actionsOpacity]: 1,
     },
     "@media (max-width: 768px)": {
-      aspectRatio: "auto",
       gridColumn: "span 1",
       gridRow: "auto",
     },
-  },
-  sizeS: {
-    aspectRatio: "3 / 2",
-  },
-  sizeM: {
-    aspectRatio: "16 / 10",
-  },
-  sizeL: {
-    aspectRatio: "16 / 9",
-  },
-  sizeXL: {
-    aspectRatio: "21 / 9",
   },
   dragging: {
     [widgetCardStyleVars.actionsOpacity]: 1,
@@ -92,8 +78,8 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     height: "100%",
-    paddingBlock: 10,
-    paddingInline: 11,
+    overflow: "visible",
+    padding: 0,
     position: "relative",
     transitionDuration: motion.fast,
     transitionProperty: "border-color",
@@ -112,57 +98,41 @@ const styles = stylex.create({
     opacity: 0.92,
     zIndex: zIndex.sticky,
   },
-  header: {
-    alignItems: "center",
-    cursor: widgetCardStyleVars.headerCursor,
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    minHeight: 22,
-    touchAction: "none",
-  },
-  title: {
-    alignItems: "center",
-    display: "flex",
-    fontSize: 12,
-    fontWeight: font.bold,
-    gap: 5,
-    letterSpacing: 0,
-    margin: 0,
-  },
-  titleIcon: {
-    color: color.textSubtle,
-    display: "inline-flex",
-    flexShrink: 0,
-    height: 13,
-    width: 13,
-  },
   actions: {
+    alignItems: "center",
     display: "flex",
     gap: 2,
     opacity: widgetCardStyleVars.actionsOpacity,
+    pointerEvents: "none",
+    position: "absolute",
+    right: -3,
+    top: -3,
     transitionDuration: motion.fast,
     transitionProperty: "opacity",
     transitionTimingFunction: motion.ease,
+    zIndex: 1,
   },
   action: {
     alignItems: "center",
-    backgroundColor: "transparent",
+    backgroundColor: color.surface,
     borderStyle: "none",
     borderWidth: 0,
-    borderRadius: radius.r2,
-    color: color.textMuted,
+    borderRadius: radius.pill,
+    boxShadow: shadow.sm,
+    color: color.textSubtle,
     cursor: "pointer",
     display: "flex",
-    height: 22,
+    height: 18,
     justifyContent: "center",
+    pointerEvents: "auto",
     transitionDuration: motion.fast,
-    transitionProperty: "background-color, color",
+    transitionProperty: "background-color, box-shadow, color",
     transitionTimingFunction: motion.ease,
-    width: 22,
+    width: 18,
     ":hover": {
-      backgroundColor: color.dangerSoft,
-      color: color.danger,
+      backgroundColor: color.surface,
+      boxShadow: shadow.md,
+      color: color.textMuted,
     },
     ":focus-visible": {
       outlineColor: color.focus,
@@ -172,40 +142,31 @@ const styles = stylex.create({
     },
   },
   body: {
+    display: "grid",
     flex: 1,
+    height: "100%",
     minHeight: 0,
+    minWidth: 0,
     overflowX: "hidden",
-    overflowY: "auto",
-    overscrollBehavior: "contain",
+    overflowY: "hidden",
+    width: "100%",
   },
 })
 
 function gridItemXstyle(size: WidgetSize, dragging: boolean) {
-  return [
-    styles.gridItem,
-    size === "S" && styles.sizeS,
-    size === "M" && styles.sizeM,
-    size === "L" && styles.sizeL,
-    size === "XL" && styles.sizeXL,
-    dragging && styles.dragging,
-  ]
+  void size
+  return [styles.gridItem, dragging && styles.dragging]
 }
 
 export function WidgetCardShell(props: WidgetCardShellProps) {
-  let titleRef: HTMLHeadingElement | undefined
-
-  const bindRoot = (element: HTMLElement | undefined) => {
+  const bindGridItem = (element: HTMLElement | undefined) => {
     props.callbacks.bindSortableRoot?.(element)
+    props.callbacks.bindSortableHandle?.(element)
   }
 
-  onMount(() => {
-    props.callbacks.bindSortableHandle?.(titleRef)
-    if (props.callbacks.bindSortableRoot || props.callbacks.bindSortableHandle) {
-      onCleanup(() => {
-        props.callbacks.bindSortableHandle?.(undefined)
-        props.callbacks.bindSortableRoot?.(undefined)
-      })
-    }
+  onCleanup(() => {
+    props.callbacks.bindSortableHandle?.(undefined)
+    props.callbacks.bindSortableRoot?.(undefined)
   })
 
   const cardInner = (
@@ -213,27 +174,24 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       {...stylex.attrs(styles.card, props.callbacks.isDragging && styles.cardDragging)}
       data-widget-card
     >
-      <div {...stylex.attrs(styles.header)} data-widget-card-header>
-        <h3
-          {...stylex.attrs(styles.title)}
-          ref={(element) => (titleRef = element)}
-          data-allow-expand="true"
-          data-widget-card-title
+      <div {...stylex.attrs(styles.actions)} data-widget-card-actions>
+        <IconButton
+          size="sm"
+          xstyle={styles.action}
+          style={{
+            width: "18px",
+            height: "18px",
+            "border-radius": "999px",
+          }}
+          data-widget-card-remove
+          aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
+          onClick={(event) => {
+            event.stopPropagation()
+            props.callbacks.onRemove()
+          }}
         >
-          <span {...stylex.attrs(styles.titleIcon)}>{props.icon}</span>
-          <span>{props.title}</span>
-        </h3>
-        <div {...stylex.attrs(styles.actions)} data-widget-card-actions>
-          <IconButton
-            size="sm"
-            xstyle={styles.action}
-            data-widget-card-remove
-            aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
-            onClick={() => props.callbacks.onRemove()}
-          >
-            <X size={15} />
-          </IconButton>
-        </div>
+          <Minus size={10} />
+        </IconButton>
       </div>
       <div {...stylex.attrs(styles.body)} data-widget-card-body>
         {props.children}
@@ -265,7 +223,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
         <div
           {...gridItemProps}
           {...stylex.attrs(...gridItemXstyle(props.currentSize, props.callbacks.isDragging))}
-          ref={bindRoot}
+          ref={bindGridItem}
           onContextMenu={(event) => {
             event.preventDefault()
             props.callbacks.onContextMenu(event)
@@ -278,7 +236,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       <ContextMenu
         items={props.contextMenuItems!}
         onSelect={(key) => props.onContextMenuSelect?.(key)}
-        triggerRef={bindRoot}
+        triggerRef={bindGridItem}
         xstyle={gridItemXstyle(props.currentSize, props.callbacks.isDragging)}
         triggerProps={gridItemProps}
         aria-label={props.title}

@@ -108,6 +108,22 @@ describe("WeatherCard", () => {
     root.remove()
   })
 
+  it("renders the compact size-specific weather composition", async () => {
+    const props = makeProps({ size: "S" })
+    ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {})),
+    )
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <WeatherCard {...props} />, root)
+    await flush()
+
+    expect(root.querySelector("[data-weather-variant='S']")).toBeTruthy()
+    root.remove()
+  })
+
   it("falls back to an error state with retry when no data is available", async () => {
     const props = makeProps()
     ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)

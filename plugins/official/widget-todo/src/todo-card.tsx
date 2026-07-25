@@ -119,6 +119,8 @@ export function TodoCard(props: WidgetViewProps) {
   })
 
   const todoCount = createMemo(() => items().filter((i) => !i.done).length)
+  const cardSize = () => props.size ?? "S"
+  const nextItem = createMemo(() => items().find((item) => !item.done))
 
   function formatDate(iso?: string) {
     if (!iso) return ""
@@ -137,106 +139,166 @@ export function TodoCard(props: WidgetViewProps) {
   }
 
   return (
-    <div {...stylex.attrs(styles.root)} data-todo-card>
-      <div {...stylex.attrs(styles.toolbar)}>
-        <Button
-          size="sm"
-          variant="ghost"
-          xstyle={[styles.tab, filter() === "todo" && styles.active]}
-          onClick={() => setFilter("todo")}
-        >
-          未完成
-          <span {...stylex.attrs(styles.badge)}>{todoCount()}</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          xstyle={[styles.tab, filter() === "all" && styles.active]}
-          onClick={() => setFilter("all")}
-        >
-          全部
-        </Button>
-        <div {...stylex.attrs(styles.spacer)} />
-        <Button
-          size="sm"
-          variant="secondary"
-          xstyle={styles.outlineButton}
-          data-todo-expand
-          onClick={() => props.host.openExpand()}
-        >
-          展开 <ArrowUpRight size={12} />
-        </Button>
-      </div>
+    <div
+      {...stylex.attrs(
+        styles.root,
+        props.size === "S" && styles.rootSmall,
+        props.size === "M" && styles.rootMedium,
+        props.size === "L" && styles.rootLarge,
+        props.size === "XL" && styles.rootExtraLarge,
+      )}
+      data-todo-card
+      data-todo-variant={cardSize()}
+    >
+      <Show when={cardSize() === "M"}>
+        <div {...stylex.attrs(styles.nextCard)}>
+          <div {...stylex.attrs(styles.nextHead)}>
+            <span>Next task</span>
+            <strong>
+              {items().filter((item) => item.done).length}/{items().length}
+            </strong>
+          </div>
+          <Show when={!loading()} fallback={<Skeleton height="42px" width="100%" />}>
+            <Show
+              when={nextItem()}
+              fallback={<div {...stylex.attrs(styles.nextTask)}>今天的任务已完成</div>}
+            >
+              {(item) => (
+                <button
+                  {...stylex.attrs(styles.nextTask)}
+                  type="button"
+                  onClick={() => void toggleItem(item().id)}
+                >
+                  <span {...stylex.attrs(styles.nextCheck)} aria-hidden="true" />
+                  <span {...stylex.attrs(styles.nextCopy)}>
+                    <strong>{item().text}</strong>
+                    <small>{item().dueDate ? formatDate(item().dueDate) : "今天"} · 点击完成</small>
+                  </span>
+                  <ArrowUpRight size={13} />
+                </button>
+              )}
+            </Show>
+          </Show>
+          <div {...stylex.attrs(styles.nextProgress)}>
+            <i
+              {...stylex.attrs(styles.nextProgressFill)}
+              style={{
+                width: `${items().length ? Math.round(((items().length - todoCount()) / items().length) * 100) : 100}%`,
+              }}
+            />
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            xstyle={styles.nextExpand}
+            data-todo-expand
+            onClick={() => props.host.openExpand()}
+          >
+            查看全部
+          </Button>
+        </div>
+      </Show>
+      <Show when={cardSize() !== "M"}>
+        <div {...stylex.attrs(styles.toolbar)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            xstyle={[styles.tab, filter() === "todo" && styles.active]}
+            onClick={() => setFilter("todo")}
+          >
+            未完成
+            <span {...stylex.attrs(styles.badge)}>{todoCount()}</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            xstyle={[styles.tab, filter() === "all" && styles.active]}
+            onClick={() => setFilter("all")}
+          >
+            全部
+          </Button>
+          <div {...stylex.attrs(styles.spacer)} />
+          <Button
+            size="sm"
+            variant="secondary"
+            xstyle={styles.outlineButton}
+            data-todo-expand
+            onClick={() => props.host.openExpand()}
+          >
+            展开 <ArrowUpRight size={12} />
+          </Button>
+        </div>
 
-      <div {...stylex.attrs(styles.list)}>
-        <Show
-          when={!loading()}
-          fallback={
-            <div {...stylex.attrs(styles.skeleton)}>
-              <Skeleton height="24px" width="100%" />
-              <Skeleton height="24px" width="90%" />
-              <Skeleton height="24px" width="85%" />
-            </div>
-          }
-        >
-          <For each={groups()}>
-            {(group) => {
-              const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
-              return (
-                <Show when={groupItems().length > 0}>
-                  <div {...stylex.attrs(styles.group)}>
-                    <div
-                      {...stylex.attrs(styles.groupHeader)}
-                      onClick={() => void toggleGroup(group.id)}
-                    >
-                      <span {...stylex.attrs(styles.arrow)}>
-                        {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                      </span>
-                      <span {...stylex.attrs(styles.groupName)}>{group.name}</span>
-                      <span {...stylex.attrs(styles.count)}>{groupItems().length}</span>
-                    </div>
-
-                    <Show when={!group.collapsed}>
-                      <div {...stylex.attrs(styles.groupItems)}>
-                        <For each={groupItems()}>
-                          {(item) => (
-                            <div {...stylex.attrs(styles.item, item.done && styles.done)}>
-                              <span
-                                {...stylex.attrs(styles.priorityDot)}
-                                style={{ color: PRIORITY_COLORS[item.priority] }}
-                              >
-                                <Circle size={7} fill="currentColor" />
-                              </span>
-                              <Checkbox
-                                checked={item.done}
-                                aria-label={`标记 ${item.text} 完成`}
-                                onChange={() => void toggleItem(item.id)}
-                              />
-                              <span {...stylex.attrs(styles.text, item.done && styles.textDone)}>
-                                {item.text}
-                              </span>
-                              <Show when={item.dueDate}>
-                                <span
-                                  {...stylex.attrs(
-                                    styles.due,
-                                    isOverdue(item.dueDate) && styles.overdue,
-                                  )}
-                                >
-                                  {formatDate(item.dueDate)}
-                                </span>
-                              </Show>
-                            </div>
-                          )}
-                        </For>
+        <div {...stylex.attrs(styles.list)}>
+          <Show
+            when={!loading()}
+            fallback={
+              <div {...stylex.attrs(styles.skeleton)}>
+                <Skeleton height="24px" width="100%" />
+                <Skeleton height="24px" width="90%" />
+                <Skeleton height="24px" width="85%" />
+              </div>
+            }
+          >
+            <For each={groups()}>
+              {(group) => {
+                const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
+                return (
+                  <Show when={groupItems().length > 0}>
+                    <div {...stylex.attrs(styles.group)}>
+                      <div
+                        {...stylex.attrs(styles.groupHeader)}
+                        onClick={() => void toggleGroup(group.id)}
+                      >
+                        <span {...stylex.attrs(styles.arrow)}>
+                          {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                        </span>
+                        <span {...stylex.attrs(styles.groupName)}>{group.name}</span>
+                        <span {...stylex.attrs(styles.count)}>{groupItems().length}</span>
                       </div>
-                    </Show>
-                  </div>
-                </Show>
-              )
-            }}
-          </For>
-        </Show>
-      </div>
+
+                      <Show when={!group.collapsed}>
+                        <div {...stylex.attrs(styles.groupItems)}>
+                          <For each={groupItems()}>
+                            {(item) => (
+                              <div {...stylex.attrs(styles.item, item.done && styles.done)}>
+                                <span
+                                  {...stylex.attrs(styles.priorityDot)}
+                                  style={{ color: PRIORITY_COLORS[item.priority] }}
+                                >
+                                  <Circle size={7} fill="currentColor" />
+                                </span>
+                                <Checkbox
+                                  checked={item.done}
+                                  aria-label={`标记 ${item.text} 完成`}
+                                  onChange={() => void toggleItem(item.id)}
+                                />
+                                <span {...stylex.attrs(styles.text, item.done && styles.textDone)}>
+                                  {item.text}
+                                </span>
+                                <Show when={item.dueDate}>
+                                  <span
+                                    {...stylex.attrs(
+                                      styles.due,
+                                      isOverdue(item.dueDate) && styles.overdue,
+                                    )}
+                                  >
+                                    {formatDate(item.dueDate)}
+                                  </span>
+                                </Show>
+                              </div>
+                            )}
+                          </For>
+                        </div>
+                      </Show>
+                    </div>
+                  </Show>
+                )
+              }}
+            </For>
+          </Show>
+        </div>
+      </Show>
     </div>
   )
 }

@@ -17,6 +17,7 @@ export function SearchCommandBar(props: SearchViewProps) {
   let wrapperRef: HTMLDivElement | undefined
   const providers = createMemo(() => props.providers)
   const [providerOpen, setProviderOpen] = createSignal(false)
+  const [searchFocused, setSearchFocused] = createSignal(false)
   const [query, setQuery] = createSignal(props.query)
   const activeProvider = createMemo(() =>
     resolveDefaultProvider(providers(), props.activeProviderId),
@@ -111,6 +112,10 @@ export function SearchCommandBar(props: SearchViewProps) {
     }
   }
 
+  function toggleProviderDropdown() {
+    setProviderOpen((open) => !open)
+  }
+
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
       if (!providerOpen()) return
@@ -145,17 +150,46 @@ export function SearchCommandBar(props: SearchViewProps) {
           </InlineError>
         }
       >
-        <form {...stylex.attrs(styles.searchBar)} onSubmit={handleSubmit}>
+        <form
+          {...stylex.attrs(styles.searchBar)}
+          data-search-bar-shell
+          onSubmit={handleSubmit}
+          onFocusIn={() => setSearchFocused(true)}
+          onFocusOut={() => {
+            setTimeout(() => {
+              const activeElement = document.activeElement
+              if (activeElement instanceof Node && wrapperRef?.contains(activeElement)) return
+
+              setSearchFocused(false)
+              setProviderOpen(false)
+              props.host.close()
+            }, 200)
+          }}
+        >
           <div {...stylex.attrs(styles.searchProvider)}>
             <Button
               size="sm"
               variant="secondary"
-              xstyle={styles.searchProviderButton}
+              xstyle={[
+                styles.searchProviderButton,
+                searchFocused() && styles.searchProviderButtonFocused,
+              ]}
               aria-label="切换搜索引擎"
               aria-expanded={providerOpen()}
-              onClick={() => setProviderOpen((open) => !open)}
+              data-search-provider-trigger
+              onPointerDown={(event) => {
+                event.preventDefault()
+                toggleProviderDropdown()
+              }}
+              onClick={(event) => {
+                if (event.detail === 0) toggleProviderDropdown()
+              }}
             >
-              <span {...stylex.attrs(styles.searchProviderDot)} aria-hidden="true" />
+              <span
+                {...stylex.attrs(styles.searchProviderDot)}
+                aria-hidden="true"
+                data-search-provider-dot
+              />
               <span {...stylex.attrs(styles.searchProviderLabel)}>{activeProvider()!.title}</span>
               <span {...stylex.attrs(styles.searchProviderCaret)}>▾</span>
             </Button>
@@ -186,26 +220,27 @@ export function SearchCommandBar(props: SearchViewProps) {
               </div>
             </Show>
           </div>
-          <span {...stylex.attrs(styles.searchDivider)} aria-hidden="true" />
+          <span
+            {...stylex.attrs(styles.searchDivider, searchFocused() && styles.searchDividerFocused)}
+            aria-hidden="true"
+          />
           <Input
             type="search"
             value={query()}
+            xstyle={styles.searchInput}
+            inputAttrs={{ "data-search-inline-input": "" }}
             onInput={(nextQuery) => {
               setQuery(nextQuery)
               props.host.setQuery(nextQuery)
             }}
             onKeyDown={handleKeyDown}
             onFocus={() => props.host.open()}
-            onBlur={() =>
-              setTimeout(() => {
-                setProviderOpen(false)
-                props.host.close()
-              }, 200)
-            }
             placeholder="搜索网页、命令或卡片"
             aria-label="搜索内容"
           />
-          <span {...stylex.attrs(styles.searchKbd)}>⌘K</span>
+          <span {...stylex.attrs(styles.searchKbd, searchFocused() && styles.searchKbdFocused)}>
+            ⌘K
+          </span>
         </form>
       </Show>
 
@@ -224,7 +259,7 @@ export function SearchCommandBar(props: SearchViewProps) {
       </Show>
 
       <Show when={props.isOpen && visibleResults().length > 0}>
-        <div {...stylex.attrs(styles.searchSuggestions)}>
+        <div {...stylex.attrs(styles.searchSuggestions)} data-search-suggestions-surface>
           <For each={visibleResults()}>
             {(group) => (
               <>
@@ -258,7 +293,13 @@ export function SearchCommandBar(props: SearchViewProps) {
                           void props.host.executeSelection(globalIdx)
                         }}
                       >
-                        <span {...stylex.attrs(styles.searchItemIcon)} data-search-suggestion-icon>
+                        <span
+                          {...stylex.attrs(
+                            styles.searchItemIcon,
+                            item.id.startsWith("web-search:") && styles.searchItemSearchIcon,
+                          )}
+                          data-search-suggestion-icon
+                        >
                           {item.icon}
                         </span>
                         <span {...stylex.attrs(styles.searchItemText)}>
@@ -271,7 +312,7 @@ export function SearchCommandBar(props: SearchViewProps) {
                           <span {...stylex.attrs(styles.searchItemDescription)}>{item.desc}</span>
                         </span>
                         <Show when={item.hint}>
-                          <Kbd>{item.hint!}</Kbd>
+                          <Kbd xstyle={styles.searchItemHint}>{item.hint!}</Kbd>
                         </Show>
                       </Button>
                     )

@@ -34,27 +34,25 @@ describe("TodoCard", () => {
     await Promise.resolve()
   }
 
-  it("renders group header and filter tabs", async () => {
+  it("renders the compact next-task card at M size", async () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <TodoCard {...makeProps()} />, root)
     await flushMount()
     expect(root.querySelector("[data-todo-card]")).toBeTruthy()
     expect(root.querySelector(".todo-card-widget")).toBeNull()
-    expect(root.textContent).toContain("未完成")
-    expect(root.textContent).toContain("全部")
-    expect(root.textContent).toContain("默认分组")
+    expect(root.textContent).toContain("Next task")
     root.remove()
   })
 
-  it("renders expand button", () => {
+  it("keeps an expand action on the compact card", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     const props = makeProps()
     render(() => <TodoCard {...props} />, root)
     const expandBtn = root.querySelector("[data-todo-expand]")
     expect(expandBtn).toBeTruthy()
-    expect(expandBtn?.textContent).toContain("展开")
+    expect(expandBtn?.textContent).toContain("查看全部")
     root.remove()
   })
 
@@ -64,7 +62,16 @@ describe("TodoCard", () => {
     render(() => <TodoCard {...makeProps()} />, root)
     await flushMount()
     expect(root.textContent).toContain("补齐 widget 尺寸菜单")
-    expect(root.textContent).toContain("清理插件设置中的导入导出项")
+    root.remove()
+  })
+
+  it("renders the size-specific todo composition", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <TodoCard {...makeProps()} />, root)
+    await flushMount()
+
+    expect(root.querySelector("[data-todo-variant='M']")).toBeTruthy()
     root.remove()
   })
 })
