@@ -9,6 +9,8 @@ const AUTHENTICATED_ACTIONS = [
   "api::attachment.attachment.access",
   "api::attachment.attachment.bind",
   "api::attachment.attachment.unbind",
+  // Strapi upload 插件的上传动作（附件 prepare→上传→commit 三段式的中间步）
+  "plugin::upload.content-api.upload",
 ]
 
 async function grantAuthenticatedActions(strapi: Core.Strapi): Promise<void> {
