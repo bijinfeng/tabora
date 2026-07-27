@@ -245,14 +245,17 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
               getSession: async () => {
                 const s = await authClient.getSession()
                 if (!s) return null
-                const result: { userId?: string; sessionId: string } = { sessionId: s.sessionId }
-                if (s.userId !== undefined) result.userId = s.userId
+                // 纯 JWT 无 sessionId；以 userId 作为会话标识（无则用固定占位）
+                const result: { userId?: string; sessionId: string } = {
+                  sessionId: s.userId !== undefined ? String(s.userId) : "active",
+                }
+                if (s.userId !== undefined) result.userId = String(s.userId)
                 return result
               },
               getCurrentUser: async () => {
                 const u = await authClient.getCurrentUser()
                 if (!u) return null
-                const result: { id: string; email?: string } = { id: u.id }
+                const result: { id: string; email?: string } = { id: String(u.id) }
                 if (u.email !== undefined) result.email = u.email
                 return result
               },

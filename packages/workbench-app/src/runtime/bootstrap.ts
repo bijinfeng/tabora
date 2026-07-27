@@ -1,5 +1,5 @@
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createDirectusAuthClient, type DirectusAuthClient } from "@tabora/auth"
+import { createStrapiAuthClient, type StrapiAuthClient } from "@tabora/auth"
 import {
   createChromeStorageAuthStorage,
   createLocalStorageAuthStorage,
@@ -61,7 +61,7 @@ export type WorkbenchRuntimeBootstrap = {
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
   syncManager?: SyncManager
-  authClient?: DirectusAuthClient
+  authClient?: StrapiAuthClient
 }
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
@@ -395,14 +395,14 @@ export function createWorkbenchRuntimeBootstrap(
     i18n,
   })
 
-  let authClient: DirectusAuthClient | undefined = undefined
+  let authClient: StrapiAuthClient | undefined = undefined
   const authApiBaseUrl = options.shellConfig.auth?.apiBaseUrl
   if (authApiBaseUrl) {
     const authStorage =
       options.host.platform === "extension"
         ? createChromeStorageAuthStorage()
         : createLocalStorageAuthStorage()
-    authClient = createDirectusAuthClient({ apiBaseUrl: authApiBaseUrl, storage: authStorage })
+    authClient = createStrapiAuthClient({ apiBaseUrl: authApiBaseUrl, storage: authStorage })
   }
 
   // Create sync manager (optional, only when auth is configured and available)

@@ -1,8 +1,8 @@
-import type { DirectusAuthClient } from "@tabora/auth"
+import type { StrapiAuthClient } from "@tabora/auth"
 import type { HostAdapter } from "@tabora/host-adapters"
 import {
   createChangeDetector,
-  createDirectusGatewayClient,
+  createStrapiGatewayClient,
   createLocalChangeQueue,
   createSyncEngine,
   type ChangeDetector,
@@ -16,7 +16,7 @@ export type SyncManagerConfig = {
   syncMetaRepo: SyncMetaRepository
   host: HostAdapter
   apiBaseUrl: string
-  authClient: DirectusAuthClient
+  authClient: StrapiAuthClient
 }
 
 export type SyncManager = {
@@ -32,10 +32,10 @@ export type SyncManager = {
  * This is the main entry point for integrating sync into the workbench.
  */
 export function createSyncManager(config: SyncManagerConfig): SyncManager {
-  // Create Directus gateway client (auth token pulled from the auth client)
-  const gatewayClient = createDirectusGatewayClient({
+  // Create Strapi gateway client (auth token pulled from the auth client)
+  const gatewayClient = createStrapiGatewayClient({
     apiBaseUrl: config.apiBaseUrl,
-    getAccessToken: async () => (await config.authClient.getSession())?.accessToken ?? null,
+    getAccessToken: async () => (await config.authClient.getSession())?.jwt ?? null,
   })
 
   // Create local change queue
