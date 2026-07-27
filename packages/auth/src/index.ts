@@ -1,9 +1,9 @@
 export {
-  createDirectusAuthClient,
-  type DirectusAuthClient,
-  type DirectusAuthClientConfig,
-  type DirectusSession,
+  createStrapiAuthClient,
+  type StrapiAuthClient,
+  type StrapiAuthClientConfig,
+  type StrapiSession,
   type CurrentUser,
-} from "./directusAuthClient"
+} from "./strapiAuthClient"
 
-export { mapDirectusError, AUTH_ERROR_MESSAGES, type AuthError, type AuthErrorCode } from "./errors"
+export { mapStrapiError, AUTH_ERROR_MESSAGES, type AuthError, type AuthErrorCode } from "./errors"
