@@ -38,6 +38,9 @@
     "src/admin/",
     // Do not include test files
     "**/*.test.*",
+    "tests/",
+    // Vitest config is ESM tooling, typechecked by its own toolchain
+    "vitest.config.ts",
     // Do not include plugins in the server compilation
     "src/plugins/**"
   ]
