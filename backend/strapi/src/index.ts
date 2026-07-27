@@ -1,20 +1,38 @@
-// import type { Core } from '@strapi/strapi';
+import type { Core } from "@strapi/strapi"
+
+// 需要授予 Authenticated 角色的自定义 API 动作（登录用户可访问）
+const AUTHENTICATED_ACTIONS = [
+  "api::sync.sync.pull",
+  "api::sync.sync.push",
+  "api::attachment.attachment.prepare",
+  "api::attachment.attachment.commit",
+  "api::attachment.attachment.access",
+  "api::attachment.attachment.bind",
+  "api::attachment.attachment.unbind",
+]
+
+async function grantAuthenticatedActions(strapi: Core.Strapi): Promise<void> {
+  const roleService = strapi.plugin("users-permissions").service("role")
+  const role = await strapi.db
+    .query("plugin::users-permissions.role")
+    .findOne({ where: { type: "authenticated" } })
+  if (!role) return
+
+  const permissionQuery = strapi.db.query("plugin::users-permissions.permission")
+  for (const action of AUTHENTICATED_ACTIONS) {
+    const existing = await permissionQuery.findOne({ where: { action, role: role.id } })
+    if (!existing) {
+      await permissionQuery.create({ data: { action, role: role.id } })
+    }
+  }
+  // 触发权限缓存刷新
+  void roleService
+}
 
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
   register(/* { strapi }: { strapi: Core.Strapi } */) {},
 
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    await grantAuthenticatedActions(strapi)
+  },
 }
