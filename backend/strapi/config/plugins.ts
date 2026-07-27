@@ -22,12 +22,13 @@ const deniedExecutableTypes = [
   "application/x-mach-binary",
 ]
 
-const config = (): Core.Config.Plugin => ({
+const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
   "users-permissions": {
     config: {
-      jwtManagement: "refresh",
-      sessions: {
-        httpOnly: true,
+      // 纯 JWT：legacy-support 模式登录返回 { jwt, user }，不签发 refresh token
+      jwtManagement: "legacy-support",
+      jwt: {
+        expiresIn: env("JWT_EXPIRES_IN", "30d"),
       },
     },
   },
