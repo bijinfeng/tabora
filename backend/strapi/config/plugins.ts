@@ -38,6 +38,22 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
         allowedTypes: allowedMediaTypes,
         deniedTypes: deniedExecutableTypes,
       },
+      // dev 用本地 provider；生产设 UPLOAD_PROVIDER=aws-s3 走 S3
+      ...(env("UPLOAD_PROVIDER", "local") === "aws-s3"
+        ? {
+            provider: "aws-s3",
+            providerOptions: {
+              s3Options: {
+                region: env("AWS_REGION"),
+                credentials: {
+                  accessKeyId: env("AWS_ACCESS_KEY_ID"),
+                  secretAccessKey: env("AWS_ACCESS_SECRET"),
+                },
+                params: { Bucket: env("AWS_BUCKET") },
+              },
+            },
+          }
+        : { provider: "local" }),
     },
   },
 })
