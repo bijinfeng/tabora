@@ -1,46 +1,39 @@
 import { describe, expect, it } from "vitest"
-import { mapDirectusError, AUTH_ERROR_MESSAGES } from "./errors"
+import { mapStrapiError, AUTH_ERROR_MESSAGES } from "./errors"
 
-describe("mapDirectusError", () => {
-  it("maps INVALID_CREDENTIALS from status 401", () => {
-    const result = mapDirectusError(401, {
-      errors: [{ extensions: { code: "INVALID_CREDENTIALS" } }],
-    })
+describe("mapStrapiError", () => {
+  it("maps 401 to INVALID_CREDENTIALS", () => {
+    const result = mapStrapiError(401, { error: { name: "UnauthorizedError" } })
     expect(result.code).toBe("INVALID_CREDENTIALS")
   })
 
-  it("maps RECORD_NOT_UNIQUE to EMAIL_IN_USE", () => {
-    const result = mapDirectusError(400, {
-      errors: [{ extensions: { code: "RECORD_NOT_UNIQUE" } }],
+  it("maps email-in-use message to EMAIL_IN_USE", () => {
+    const result = mapStrapiError(400, {
+      error: { name: "ApplicationError", message: "Email is already taken" },
     })
     expect(result.code).toBe("EMAIL_IN_USE")
   })
 
-  it("maps INVALID_PAYLOAD from status 400", () => {
-    const result = mapDirectusError(400, { errors: [{ extensions: { code: "INVALID_PAYLOAD" } }] })
+  it("maps ValidationError to INVALID_PAYLOAD", () => {
+    const result = mapStrapiError(400, { error: { name: "ValidationError" } })
     expect(result.code).toBe("INVALID_PAYLOAD")
   })
 
-  it("prefers directusCode over status 401", () => {
-    const result = mapDirectusError(401, {
-      errors: [{ extensions: { code: "RECORD_NOT_UNIQUE" } }],
+  it("prefers email-in-use over generic 400", () => {
+    const result = mapStrapiError(400, {
+      error: { name: "ValidationError", message: "email is already exists" },
     })
     expect(result.code).toBe("EMAIL_IN_USE")
   })
 
-  it("falls back to INVALID_CREDENTIALS for status 401 with no directusCode", () => {
-    const result = mapDirectusError(401, {})
-    expect(result.code).toBe("INVALID_CREDENTIALS")
+  it("falls back to INVALID_CREDENTIALS for bare 400/401", () => {
+    expect(mapStrapiError(400, {}).code).toBe("INVALID_CREDENTIALS")
+    expect(mapStrapiError(401, {}).code).toBe("INVALID_CREDENTIALS")
   })
 
-  it("falls back to UNKNOWN for unrecognized codes", () => {
-    const result = mapDirectusError(500, { errors: [{ extensions: { code: "WEIRD" } }] })
-    expect(result.code).toBe("UNKNOWN")
-  })
-
-  it("falls back to UNKNOWN when body has no errors array", () => {
-    const result = mapDirectusError(500, {})
-    expect(result.code).toBe("UNKNOWN")
+  it("falls back to UNKNOWN for other statuses", () => {
+    expect(mapStrapiError(500, {}).code).toBe("UNKNOWN")
+    expect(mapStrapiError(500, { error: { name: "Whatever" } }).code).toBe("UNKNOWN")
   })
 
   it("has a Chinese message for every error code", () => {
