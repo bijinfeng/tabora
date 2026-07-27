@@ -5,11 +5,15 @@ packages:
   - plugins/*/*
   - backend/directus
   - backend/directus/extensions/*
+  - backend/strapi
   - tooling/*
 
 allowBuilds:
+  "@swc/core": false
   argon2: true
+  better-sqlite3: true
   braintrust: true
+  core-js-pure: false
   esbuild: true
   isolated-vm: true
   oracledb: true
