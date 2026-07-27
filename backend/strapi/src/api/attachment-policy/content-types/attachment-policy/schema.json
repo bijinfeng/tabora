@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "attachment_policies",
+  "info": {
+    "singularName": "attachment-policy",
+    "pluralName": "attachment-policies",
+    "displayName": "AttachmentPolicy"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "entity_type": {
+      "type": "string",
+      "required": true,
+      "maxLength": 128,
+      "unique": true
+    },
+    "mime_whitelist": {
+      "type": "json"
+    },
+    "max_size_bytes": {
+      "type": "biginteger"
+    }
+  }
+}

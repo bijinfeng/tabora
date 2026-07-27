@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "attachment_refs",
+  "info": {
+    "singularName": "attachment-ref",
+    "pluralName": "attachment-refs",
+    "displayName": "AttachmentRef"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "entity_type": {
+      "type": "string",
+      "required": true,
+      "maxLength": 128
+    },
+    "entity_id": {
+      "type": "string",
+      "required": true,
+      "maxLength": 512
+    },
+    "file": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::upload.file"
+    },
+    "uploaded_by": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}
