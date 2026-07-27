@@ -28,23 +28,19 @@ export {
   type ConflictResolution,
 } from "./conflictModel"
 
-// Directus auth (S1) - re-exported for S3 sync migration
-export {
-  createDirectusAuthClient,
-  type DirectusAuthClient,
-  type DirectusSession,
-} from "@tabora/auth"
+// Strapi auth (S1) - re-exported for S3 sync migration
+export { createStrapiAuthClient, type StrapiAuthClient, type StrapiSession } from "@tabora/auth"
 
-// Directus gateway client (S3) - HTTP client + 字段映射，对接 S2 同步网关
+// Strapi gateway client (S3) - HTTP client + 字段映射，对接 Strapi 同步网关
 export {
-  createDirectusGatewayClient,
-  type DirectusGatewayClient,
-  type DirectusGatewayClientConfig,
-  type DirectusGatewayError,
-  type DirectusGatewayResult,
-  type DirectusGatewayPushRecord,
-  type DirectusPushConflict,
-  type DirectusPushResponse,
-  type DirectusPullRecord,
-  type DirectusPullResponse,
-} from "./directusGatewayClient"
+  createStrapiGatewayClient,
+  type StrapiGatewayClient,
+  type StrapiGatewayClientConfig,
+  type StrapiGatewayError,
+  type StrapiGatewayResult,
+  type StrapiGatewayPushRecord,
+  type StrapiPushConflict,
+  type StrapiPushResponse,
+  type StrapiPullRecord,
+  type StrapiPullResponse,
+} from "./strapiGatewayClient"

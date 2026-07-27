@@ -1,6 +1,6 @@
 import type { TaboraDatabase, SyncMetaRepository, PluginDataRow } from "@tabora/storage"
 import type { Workspace, PluginInstance, PluginRecord } from "@tabora/plugin-api"
-import type { DirectusGatewayClient } from "./directusGatewayClient"
+import type { StrapiGatewayClient } from "./strapiGatewayClient"
 import type { LocalChangeQueue } from "./localChangeQueue"
 import { rejectSensitiveFields } from "./sensitiveFilter"
 
@@ -14,7 +14,7 @@ export type SyncAuthSession = {
 
 export type SyncEngineConfig = {
   database: TaboraDatabase
-  gatewayClient: DirectusGatewayClient
+  gatewayClient: StrapiGatewayClient
   changeQueue: LocalChangeQueue
   syncMetaRepo: SyncMetaRepository
   authSession: SyncAuthSession

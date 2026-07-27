@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { createDirectusGatewayClient } from "./directusGatewayClient"
+import { createStrapiGatewayClient } from "./strapiGatewayClient"
 
-const BASE = "http://api.test/tabora"
+const BASE = "http://api.test"
 
 function jsonResponse(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -69,7 +69,7 @@ const SAMPLE_RECORDS = [
   },
 ]
 
-describe("createDirectusGatewayClient", () => {
+describe("createStrapiGatewayClient", () => {
   let fetchMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -86,7 +86,7 @@ describe("createDirectusGatewayClient", () => {
   }
 
   function client(token: string | null = "tok") {
-    return createDirectusGatewayClient({
+    return createStrapiGatewayClient({
       apiBaseUrl: BASE,
       getAccessToken: async () => token,
     })
@@ -99,7 +99,7 @@ describe("createDirectusGatewayClient", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, init] = callArgs()
-    expect(url).toBe(`${BASE}/sync/records`)
+    expect(url).toBe(`${BASE}/api/sync/records`)
     expect(init.method).toBe("POST")
     expect(init.headers).toMatchObject({
       "Content-Type": "application/json",
@@ -176,7 +176,9 @@ describe("createDirectusGatewayClient", () => {
     await client().pull("2026-07-15T00:00:00.000Z")
 
     const url = callArgs()[0]
-    expect(url).toBe(`${BASE}/sync/records?since=${encodeURIComponent("2026-07-15T00:00:00.000Z")}`)
+    expect(url).toBe(
+      `${BASE}/api/sync/records?since=${encodeURIComponent("2026-07-15T00:00:00.000Z")}`,
+    )
   })
 
   it("pull without cursor sends no query", async () => {
@@ -184,7 +186,7 @@ describe("createDirectusGatewayClient", () => {
 
     await client().pull()
 
-    expect(callArgs()[0]).toBe(`${BASE}/sync/records`)
+    expect(callArgs()[0]).toBe(`${BASE}/api/sync/records`)
   })
 
   it("pull sends bearer header and GET method", async () => {
@@ -311,7 +313,7 @@ describe("createDirectusGatewayClient", () => {
   })
 
   it("maps HTTP 401 to AUTH_FAILED", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(401, { errors: [{ message: "Invalid token" }] }))
+    fetchMock.mockResolvedValueOnce(jsonResponse(401, { error: { message: "Invalid token" } }))
 
     const result = await client().pull()
 
@@ -322,7 +324,7 @@ describe("createDirectusGatewayClient", () => {
   })
 
   it("maps HTTP 400 to INVALID_PAYLOAD", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(400, { errors: [{ message: "Bad batch" }] }))
+    fetchMock.mockResolvedValueOnce(jsonResponse(400, { error: { message: "Bad batch" } }))
 
     const result = await client().push("dev-abc", SAMPLE_RECORDS)
 
@@ -345,13 +347,13 @@ describe("createDirectusGatewayClient", () => {
 
   it("strips trailing slash from apiBaseUrl", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, pullBody()))
-    const c = createDirectusGatewayClient({
+    const c = createStrapiGatewayClient({
       apiBaseUrl: `${BASE}/`,
       getAccessToken: async () => "tok",
     })
 
     await c.pull()
 
-    expect(callArgs()[0]).toBe(`${BASE}/sync/records`)
+    expect(callArgs()[0]).toBe(`${BASE}/api/sync/records`)
   })
 })

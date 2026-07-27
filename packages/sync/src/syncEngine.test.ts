@@ -102,7 +102,7 @@ function setup() {
   return { engine, database, gatewayClient, changeQueue, syncMetaRepo, authSession }
 }
 
-describe("createSyncEngine (Directus contract)", () => {
+describe("createSyncEngine (Strapi contract)", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
