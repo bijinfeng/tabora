@@ -138,6 +138,12 @@ export function aqiLabel(aqi: number | null): string {
   return "严重污染"
 }
 
+// 等级去掉「空气」前缀，供已经有「空气」列头的场景使用（如 L 的指标格）
+export function aqiGrade(aqi: number | null): string {
+  const label = aqiLabel(aqi)
+  return label.startsWith("空气") ? label.slice(2) : label
+}
+
 function dayLabel(index: number): string {
   return index === 0 ? "今天" : index === 1 ? "明天" : index === 2 ? "后天" : `第 ${index + 1} 天`
 }
@@ -269,7 +275,8 @@ export async function fetchWeather(city: string, signal?: AbortSignal): Promise<
     windDirection: forecast.current.wind_direction_10m,
     precipitation: Math.round(forecast.current.precipitation_probability ?? 0),
     aqi: typeof air.current?.us_aqi === "number" ? Math.round(air.current.us_aqi) : null,
-    hours: pickUpcomingHours(forecast.hourly, 5),
+    // XL 卡片需要 6 小时，其余尺寸各自截取
+    hours: pickUpcomingHours(forecast.hourly, 6),
     days,
   }
 }

@@ -106,7 +106,7 @@ describe("fetchWeather", () => {
     expect(snapshot.humidity).toBe(45)
     expect(snapshot.windSpeed).toBe(12)
     expect(snapshot.aqi).toBe(42)
-    expect(snapshot.hours).toHaveLength(5)
+    expect(snapshot.hours).toHaveLength(6)
     expect(snapshot.days).toHaveLength(3)
     expect(snapshot.days[0]).toMatchObject({ label: "今天", high: 24, low: 17 })
   })

@@ -20,7 +20,7 @@ export const officialPluginWeather: BuiltinPlugin = {
           title: "天气",
           icon: "sun",
           description: "查看本地天气与预报",
-          supportedSizes: ["S", "M"],
+          supportedSizes: ["S", "M", "L", "XL"],
           defaultSize: "S",
           allowMultipleInstances: true,
           defaultConfig: { city: "北京", unit: "celsius" },
