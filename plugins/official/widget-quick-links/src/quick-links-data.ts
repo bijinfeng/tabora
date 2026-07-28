@@ -72,10 +72,13 @@ export function displayUrl(url: string): string {
     .replace(/\/+$/, "")
 }
 
-/** 取标题前两位生成图标字样，英文返回首两位大写，中文取首字，与设计稿一致。 */
+/**
+ * 取标题前两位生成图标字样，中文取首字。
+ * 设计稿的字样是首字母大写 + 次字母小写（Gh / No / Li），不是全大写。
+ */
 export function initialsFromTitle(title: string): string {
   const normalized = title.trim()
   if (!normalized) return "Ln"
-  if (/^[a-z0-9]/i.test(normalized)) return normalized.slice(0, 2).toUpperCase()
-  return normalized.slice(0, 1)
+  if (!/^[a-z0-9]/i.test(normalized)) return normalized.slice(0, 1)
+  return normalized.slice(0, 1).toUpperCase() + normalized.slice(1, 2).toLowerCase()
 }

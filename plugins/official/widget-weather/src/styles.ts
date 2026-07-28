@@ -2,10 +2,12 @@ import * as stylex from "@stylexjs/stylex"
 
 export const styles = stylex.create({
   root: {
+    borderRadius: "inherit",
     color: "rgb(var(--tbr-color-text))",
     height: "100%",
     minHeight: 0,
     minWidth: 0,
+    overflow: "hidden",
     width: "100%",
   },
   // S：光感轨道 + 居中温度，四角为城市/状态/温度区间。

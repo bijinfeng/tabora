@@ -150,13 +150,13 @@ const styles = stylex.create({
     },
   },
   body: {
+    borderRadius: radius.card,
     display: "grid",
     flex: 1,
     height: "100%",
     minHeight: 0,
     minWidth: 0,
-    overflowX: "hidden",
-    overflowY: "hidden",
+    overflow: "hidden",
     width: "100%",
   },
 })
