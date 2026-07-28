@@ -3,10 +3,10 @@ WORKDIR /app
 RUN corepack enable pnpm
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY backend/strapi/package.json ./backend/strapi/
-# Increase network timeouts for slow connections
+# Increase network timeouts for slow connections and skip prepare scripts
 RUN pnpm config set fetch-timeout 600000 && \
     pnpm config set fetch-retries 5 && \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --ignore-scripts
 
 FROM node:22-alpine AS build
 WORKDIR /app
@@ -23,10 +23,10 @@ RUN corepack enable pnpm
 # Copy package files and install production dependencies only
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY backend/strapi/package.json ./backend/strapi/
-# Increase network timeouts for slow connections
+# Increase network timeouts for slow connections and skip prepare scripts
 RUN pnpm config set fetch-timeout 600000 && \
     pnpm config set fetch-retries 5 && \
-    pnpm install --frozen-lockfile --prod
+    pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built application
 COPY --from=build /app/backend/strapi/dist ./backend/strapi/dist
