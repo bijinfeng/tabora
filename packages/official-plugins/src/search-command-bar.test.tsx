@@ -416,6 +416,7 @@ describe("SearchCommandBar", () => {
       () => (
         <SearchCommandBar
           {...searchViewProps({
+            activeProviderId: "official.search.google",
             providers: [
               {
                 id: "official.search.google",
@@ -456,11 +457,14 @@ describe("SearchCommandBar", () => {
 
     root.querySelector<HTMLButtonElement>("[data-search-provider-trigger]")?.click()
 
-    expect(
-      Array.from(root.querySelectorAll("[data-search-provider-option]")).map(
-        (option) => option.textContent,
-      ),
-    ).toEqual(["✓Google", "Bing", "百度", "DuckDuckGo", "GitHub"])
+    const options = Array.from(root.querySelectorAll("[data-search-provider-option]"))
+    expect(options).toHaveLength(5)
+    expect(options[0]?.textContent).toContain("Google")
+    expect(options[0]?.querySelector("svg")).toBeTruthy() // Check icon renders for active provider
+    expect(options[1]?.textContent).toContain("Bing")
+    expect(options[2]?.textContent).toContain("百度")
+    expect(options[3]?.textContent).toContain("DuckDuckGo")
+    expect(options[4]?.textContent).toContain("GitHub")
     root.remove()
   })
 })

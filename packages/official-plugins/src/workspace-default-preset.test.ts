@@ -107,6 +107,7 @@ describe("officialDefaultWorkspacePreset", () => {
     expect(officialDefaultWorkspacePreset.search.enabledProviderIds).toEqual([
       "official.search.google",
       "official.search.bing",
+      "official.search.baidu",
       "official.search.duckduckgo",
       "official.search.github",
     ])
