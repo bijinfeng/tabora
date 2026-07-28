@@ -1,85 +1,302 @@
 import * as stylex from "@stylexjs/stylex"
 
 export const styles = stylex.create({
-  cardRoot: {
-    display: "flex",
-    flexDirection: "column",
+  // S variant (semantic card)
+  small: {
+    width: "100%",
     height: "100%",
-    minHeight: 0,
-  },
-  cardSmall: {
-    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
-    borderRadius: "var(--tbr-radius-control)",
-    padding: 6,
-  },
-  cardMedium: {
-    backgroundColor: "rgb(var(--tbr-color-accent) / 0.04)",
-    borderRadius: "var(--tbr-radius-control)",
-    padding: 8,
-  },
-  cardLarge: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderRadius: "var(--tbr-radius-control)",
-    padding: 10,
-  },
-  cardExtraLarge: {
-    backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderLeftColor: "rgb(var(--tbr-color-accent) / 0.28)",
-    borderLeftStyle: "solid",
-    borderLeftWidth: 2,
-    borderRadius: "var(--tbr-radius-control)",
-    padding: 12,
-  },
-  cardBody: {
-    flex: 1,
-    minHeight: 0,
-    overflowY: "auto",
-    paddingInline: 2,
-  },
-  cardRow: {
-    alignItems: "center",
-    borderBottomColor: "rgb(var(--tbr-color-line))",
-    borderBottomStyle: "solid",
-    borderBottomWidth: 1,
-    cursor: "pointer",
-    display: "flex",
-    gap: 8,
-    paddingBlock: 8,
-    transitionDuration: "var(--tbr-dur-fast)",
-    transitionProperty: "opacity",
-    transitionTimingFunction: "var(--tbr-ease)",
-    ":hover": {
-      opacity: 0.7,
-    },
-  },
-  cardRowLast: {
-    borderBottomWidth: 0,
-  },
-  dot: {
-    backgroundColor: "rgb(var(--tbr-color-line-strong))",
-    borderRadius: "50%",
-    flexShrink: 0,
-    height: 5,
-    width: 5,
-  },
-  dotStarred: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-  },
-  cardText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 1.4,
     minWidth: 0,
+    minHeight: 0,
+    padding: "clamp(7px, 8cqw, 11px)",
+    display: "grid",
+    gridTemplateRows: "auto minmax(0, 1fr) auto",
+    gap: "clamp(4px, 5cqw, 7px)",
+    cursor: "pointer",
+    containerType: "inline-size",
+  },
+  smallHead: {
+    minWidth: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 4,
+  },
+  smallDate: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontFamily: "ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, monospace",
+    fontSize: "clamp(4px, 5cqw, 7px)",
+  },
+  smallState: {
+    color: "rgb(var(--tbr-color-accent))",
+    fontSize: "clamp(4px, 5cqw, 7px)",
+    fontWeight: 700,
+  },
+  smallCopy: {
+    display: "-webkit-box",
     overflow: "hidden",
+    alignSelf: "center",
+    fontSize: "clamp(7px, 9cqw, 11px)",
+    fontWeight: 520,
+    lineHeight: 1.45,
+    WebkitBoxOrient: "vertical",
+    WebkitLineClamp: 4,
+  },
+  smallCopyEmpty: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+  },
+  smallFoot: {
+    minWidth: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 4,
+    paddingTop: "clamp(3px, 4cqw, 5px)",
+    borderTop: "1px solid rgb(var(--tbr-color-line))",
+  },
+  smallTag: {
+    overflow: "hidden",
+    color: "rgb(var(--tbr-color-accent))",
+    fontSize: "clamp(4px, 5cqw, 7px)",
+    fontWeight: 700,
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
-  time: {
+  smallReplies: {
+    flex: "0 0 auto",
     color: "rgb(var(--tbr-color-text-subtle))",
-    flexShrink: 0,
-    fontSize: 11,
-    fontVariantNumeric: "tabular-nums",
+    fontSize: "clamp(4px, 5cqw, 6px)",
   },
+
+  // M variant
+  medium: {
+    width: "100%",
+    height: "100%",
+    minWidth: 0,
+    minHeight: 0,
+    display: "grid",
+    gridTemplateRows: "auto minmax(0, 1fr) auto",
+    gap: 6,
+    padding: 8,
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: 9,
+    background:
+      "radial-gradient(circle at 100% 0, color-mix(in srgb, rgb(var(--tbr-color-accent)) 11%, transparent), transparent 38%), rgb(var(--tbr-color-surface))",
+    overflow: "hidden",
+  },
+  mediumHead: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+  mediumFoot: {
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+
+  // L variant
+  large: {
+    width: "100%",
+    height: "100%",
+    minWidth: 0,
+    minHeight: 0,
+    display: "grid",
+    gridTemplateRows: "auto auto minmax(0, 1fr) auto",
+    gap: 7,
+    padding: 9,
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: 9,
+    background:
+      "radial-gradient(circle at 100% 0, color-mix(in srgb, rgb(var(--tbr-color-accent)) 11%, transparent), transparent 38%), rgb(var(--tbr-color-surface))",
+    overflow: "hidden",
+  },
+  largeHead: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+  largeFoot: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+
+  // XL variant
+  xlarge: {
+    width: "100%",
+    height: "100%",
+    minWidth: 0,
+    minHeight: 0,
+    display: "grid",
+    gridTemplateRows: "auto auto minmax(0, 1fr) auto",
+    gap: 7,
+    padding: 10,
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: 9,
+    background:
+      "radial-gradient(circle at 100% 0, color-mix(in srgb, rgb(var(--tbr-color-accent)) 11%, transparent), transparent 38%), rgb(var(--tbr-color-surface))",
+    overflow: "hidden",
+  },
+  xlargeHead: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+  xlargeFoot: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+
+  // Shared elements
+  kicker: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontSize: 7,
+    fontWeight: 750,
+    letterSpacing: "0.11em",
+    textTransform: "uppercase",
+  },
+  addButton: {
+    display: "grid",
+    placeItems: "center",
+    width: 25,
+    height: 25,
+    flex: "0 0 auto",
+    border:
+      "1px solid color-mix(in srgb, rgb(var(--tbr-color-accent)) 30%, rgb(var(--tbr-color-line)))",
+    borderRadius: 7,
+    background:
+      "color-mix(in srgb, rgb(var(--tbr-color-accent)) 8%, rgb(var(--tbr-color-surface)))",
+    color: "rgb(var(--tbr-color-accent))",
+    font: "700 14px/1 inherit",
+    cursor: "pointer",
+    ":hover": {
+      background: "rgb(var(--tbr-color-accent))",
+      color: "rgb(var(--tbr-color-accent-text))",
+    },
+  },
+  latest: {
+    minHeight: 0,
+    display: "grid",
+    alignContent: "start",
+    color: "rgb(var(--tbr-color-text))",
+    fontSize: 11,
+    fontWeight: 540,
+    lineHeight: 1.52,
+    whiteSpace: "pre-wrap",
+    overflow: "hidden",
+    cursor: "pointer",
+  },
+  latestEmpty: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+  },
+  widgetTime: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontSize: 7,
+  },
+  widgetCount: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontSize: 7,
+  },
+  widgetTag: {
+    overflow: "hidden",
+    color: "rgb(var(--tbr-color-accent))",
+    fontSize: 7,
+    fontWeight: 700,
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  capture: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 7,
+    padding: "7px 8px",
+    border:
+      "1px solid color-mix(in srgb, rgb(var(--tbr-color-accent)) 24%, rgb(var(--tbr-color-line)))",
+    borderRadius: 7,
+    background:
+      "color-mix(in srgb, rgb(var(--tbr-color-accent)) 5%, rgb(var(--tbr-color-surface-soft)))",
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontFamily: "inherit",
+    fontSize: 8,
+    textAlign: "left",
+    cursor: "text",
+  },
+  captureText: {
+    color: "rgb(var(--tbr-color-text-muted))",
+  },
+  captureMark: {
+    color: "rgb(var(--tbr-color-accent))",
+    fontSize: 13,
+    lineHeight: 1,
+  },
+  previewList: {
+    minHeight: 0,
+    display: "grid",
+    alignContent: "start",
+    gap: 5,
+    overflow: "hidden",
+  },
+  previewListXL: {
+    minHeight: 0,
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    alignContent: "start",
+    gap: 6,
+    overflow: "hidden",
+  },
+  preview: {
+    minWidth: 0,
+    display: "grid",
+    gap: 3,
+    padding: "6px 7px",
+    border: "1px solid rgb(var(--tbr-color-line))",
+    borderRadius: 7,
+    background: "rgb(var(--tbr-color-surface-soft))",
+    cursor: "pointer",
+  },
+  previewFirst: {
+    gridColumn: "1 / -1",
+  },
+  previewHead: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+  previewTime: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    fontSize: 7,
+  },
+  previewContent: {
+    overflow: "hidden",
+    color: "rgb(var(--tbr-color-text))",
+    fontSize: 8,
+    lineHeight: 1.4,
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  viewAll: {
+    padding: 0,
+    borderStyle: "none",
+    borderWidth: 0,
+    background: "transparent",
+    color: "rgb(var(--tbr-color-text-muted))",
+    font: "650 8px/1 inherit",
+    cursor: "pointer",
+    ":hover": {
+      color: "rgb(var(--tbr-color-accent))",
+    },
+  },
+
+  // Expand view styles (preserved from original)
   cardFooter: {
     paddingBlockStart: 8,
     paddingInline: 2,
@@ -216,7 +433,7 @@ export const styles = stylex.create({
     paddingBlock: 12,
     paddingInline: 16,
   },
-  capture: {
+  captureExpand: {
     backgroundColor: "rgb(var(--tbr-color-surface))",
     borderColor: "rgb(var(--tbr-color-line))",
     borderRadius: "var(--tbr-radius-control)",

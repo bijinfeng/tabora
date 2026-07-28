@@ -277,7 +277,7 @@ export function NotesExpand(props: WidgetViewProps) {
       </div>
 
       <div {...stylex.attrs(styles.main)} data-notes-main>
-        <div {...stylex.attrs(styles.capture)} data-notes-capture>
+        <div {...stylex.attrs(styles.captureExpand)} data-notes-capture>
           <div {...stylex.attrs(styles.captureInner)}>
             <IconButton size="sm" variant="ghost" aria-label="附加文件">
               <Plus size={15} />

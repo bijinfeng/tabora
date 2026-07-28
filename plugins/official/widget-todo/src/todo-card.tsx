@@ -1,8 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
-import { createSignal, For, Show, createMemo } from "solid-js"
+import { createMemo, createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Button, Checkbox, Skeleton } from "@tabora/ui"
-import { ChevronDown, ChevronRight, Circle, ArrowUpRight } from "lucide-solid"
+import { Skeleton } from "@tabora/ui"
 import { styles } from "./styles"
 
 type Priority = "high" | "medium" | "low" | "none"
@@ -16,289 +15,347 @@ type TodoItem = {
   groupId: string
 }
 
-type TodoGroup = {
-  id: string
-  name: string
-  collapsed: boolean
-}
-
-const PRIORITY_COLORS: Record<Priority, string> = {
-  high: "var(--tbr-color-danger)",
-  medium: "var(--tbr-color-warning)",
-  low: "var(--tbr-color-accent)",
-  none: "var(--tbr-color-subtle)",
-}
-
 const DEFAULT_GROUP_ID = "default"
+
+const MONTH_LABELS = [
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AUG",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DEC",
+]
+const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
+
+const SEED_ITEMS: TodoItem[] = [
+  {
+    id: "seed-1",
+    text: "复核 Dashboard 布局协议",
+    done: true,
+    priority: "high",
+    groupId: DEFAULT_GROUP_ID,
+  },
+  {
+    id: "seed-2",
+    text: "补齐 widget 尺寸菜单",
+    done: false,
+    priority: "medium",
+    dueDate: "2025-12-31",
+    groupId: DEFAULT_GROUP_ID,
+  },
+  {
+    id: "seed-3",
+    text: "清理插件设置中的导入导出项",
+    done: false,
+    priority: "low",
+    groupId: DEFAULT_GROUP_ID,
+  },
+]
+
+function formatDate(iso?: string): string {
+  if (!iso) return ""
+  const d = new Date(iso)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+function todayLabel(): string {
+  const d = new Date()
+  return `${MONTH_LABELS[d.getMonth()]} ${d.getDate()} · ${WEEKDAY_LABELS[d.getDay()]}`
+}
+
+/** 时间轴左列与看板右下角的时间标签：有截止日期就用它，否则留占位。 */
+function dueLabel(item: TodoItem): string {
+  return item.dueDate ? formatDate(item.dueDate) : "待定"
+}
+
+function statusTag(item: TodoItem): string {
+  if (item.done) return "完成"
+  if (item.priority === "high") return "重要"
+  return "计划"
+}
 
 export function TodoCard(props: WidgetViewProps) {
   const [items, setItems] = createSignal<TodoItem[]>([])
-  const [groups, setGroups] = createSignal<TodoGroup[]>([
-    { id: DEFAULT_GROUP_ID, name: "默认分组", collapsed: false },
-  ])
-  const [filter, setFilter] = createSignal<"todo" | "all">("todo")
   const [loading, setLoading] = createSignal(true)
 
   const storageKey = "v2_items"
-  const groupsKey = "v2_groups"
 
-  void props.data.get<TodoItem[]>(storageKey).then(async (saved) => {
-    if (saved !== null && saved !== undefined) {
-      setItems(saved) // 使用保存的数据，即使是空数组
-    } else {
-      // 仅在从未保存过时才初始化种子数据
-      setItems([
-        {
-          id: "seed-1",
-          text: "复核 Dashboard 布局协议",
-          done: true,
-          priority: "high",
-          groupId: DEFAULT_GROUP_ID,
-        },
-        {
-          id: "seed-2",
-          text: "补齐 widget 尺寸菜单",
-          done: false,
-          priority: "medium",
-          dueDate: "2025-12-31",
-          groupId: DEFAULT_GROUP_ID,
-        },
-        {
-          id: "seed-3",
-          text: "清理插件设置中的导入导出项",
-          done: false,
-          priority: "low",
-          groupId: DEFAULT_GROUP_ID,
-        },
-      ])
-    }
+  void props.data.get<TodoItem[]>(storageKey).then((saved) => {
+    // 保存过空数组也算用户意图，只在从未保存时才铺种子数据
+    if (saved !== null && saved !== undefined) setItems(saved)
+    else setItems(SEED_ITEMS)
     setLoading(false)
   })
-
-  void props.data.get<TodoGroup[]>(groupsKey).then(async (saved) => {
-    if (saved !== null && saved !== undefined) {
-      setGroups(saved)
-    }
-    // 不需要 else，已有默认值
-  })
-
-  async function persistItems(updated: TodoItem[]) {
-    await props.data.save(storageKey, updated)
-  }
-
-  async function persistGroups(updated: TodoGroup[]) {
-    await props.data.save(groupsKey, updated)
-  }
 
   async function toggleItem(id: string) {
     const next = items().map((i) => (i.id === id ? { ...i, done: !i.done } : i))
     setItems(next)
-    await persistItems(next)
+    await props.data.save(storageKey, next)
   }
 
-  async function toggleGroup(groupId: string) {
-    const next = groups().map((g) => (g.id === groupId ? { ...g, collapsed: !g.collapsed } : g))
-    setGroups(next)
-    await persistGroups(next)
-  }
-
-  const filteredItems = createMemo(() => {
-    const all = items()
-    if (filter() === "todo") return all.filter((i) => !i.done)
-    return all
-  })
-
-  const itemsByGroup = createMemo(() => {
-    const map = new Map<string, TodoItem[]>()
-    for (const g of groups()) map.set(g.id, [])
-    for (const item of filteredItems()) {
-      const existing = map.get(item.groupId) ?? []
-      map.set(item.groupId, [...existing, item])
-    }
-    return map
-  })
-
-  const todoCount = createMemo(() => items().filter((i) => !i.done).length)
   const cardSize = () => props.size ?? "S"
-  const nextItem = createMemo(() => items().find((item) => !item.done))
+  const openItems = createMemo(() => items().filter((i) => !i.done))
+  const doneCount = createMemo(() => items().length - openItems().length)
+  const progress = createMemo(() => Math.round((doneCount() / Math.max(items().length, 1)) * 100))
+  const nextItem = createMemo(() => openItems()[0])
+  const isEmpty = () => items().length === 0
 
-  function formatDate(iso?: string) {
-    if (!iso) return ""
-    const d = new Date(iso)
-    return `${d.getMonth() + 1}/${d.getDate()}`
-  }
+  const openExpand = () => props.host.openExpand()
 
-  function isOverdue(iso?: string) {
-    if (!iso) return false
-    const dueDate = new Date(iso)
-    const today = new Date()
-    // 只比较日期部分，忽略时间
-    today.setHours(0, 0, 0, 0)
-    dueDate.setHours(0, 0, 0, 0)
-    return dueDate < today
-  }
+  // 时间轴取前三条，看板分「今天 / 稍后」各两条，跟设计稿的信息密度一致
+  const timelineItems = createMemo(() => items().slice(0, 3))
+  const todayItems = createMemo(() => items().slice(0, 2))
+  const laterItems = createMemo(() => items().slice(2, 4))
 
   return (
-    <div
-      {...stylex.attrs(
-        styles.root,
-        props.size === "S" && styles.rootSmall,
-        props.size === "M" && styles.rootMedium,
-        props.size === "L" && styles.rootLarge,
-        props.size === "XL" && styles.rootExtraLarge,
-      )}
-      data-todo-card
-      data-todo-variant={cardSize()}
-    >
+    <div {...stylex.attrs(styles.card)} data-todo-card data-todo-variant={cardSize()}>
+      <Show when={cardSize() === "S"}>
+        <div {...stylex.attrs(styles.small)} aria-label="待办">
+          <div {...stylex.attrs(styles.smallHead)}>
+            <span>待办</span>
+            <span {...stylex.attrs(styles.mono)}>
+              {doneCount()}/{items().length}
+            </span>
+          </div>
+          <SmallRing empty={isEmpty()} progress={progress()} />
+          <div {...stylex.attrs(styles.smallNext)}>
+            <Show when={!isEmpty()} fallback="点击添加第一项待办">
+              下一项 · {nextItem()?.text ?? "全部完成"}
+            </Show>
+          </div>
+        </div>
+      </Show>
+
       <Show when={cardSize() === "M"}>
-        <div {...stylex.attrs(styles.nextCard)}>
+        <div {...stylex.attrs(styles.medium)}>
           <div {...stylex.attrs(styles.nextHead)}>
             <span>Next task</span>
-            <strong>
-              {items().filter((item) => item.done).length}/{items().length}
+            <strong {...stylex.attrs(styles.nextHeadCount)}>
+              {doneCount()}/{items().length}
             </strong>
           </div>
-          <Show when={!loading()} fallback={<Skeleton height="42px" width="100%" />}>
+          <Show when={!loading()} fallback={<Skeleton height="30px" width="100%" />}>
             <Show
               when={nextItem()}
-              fallback={<div {...stylex.attrs(styles.nextTask)}>今天的任务已完成</div>}
+              fallback={<NextTaskEmpty empty={isEmpty()} onClick={openExpand} />}
             >
               {(item) => (
                 <button
-                  {...stylex.attrs(styles.nextTask)}
+                  {...stylex.attrs(styles.hit, styles.nextTask)}
                   type="button"
                   onClick={() => void toggleItem(item().id)}
                 >
-                  <span {...stylex.attrs(styles.nextCheck)} aria-hidden="true" />
+                  <span {...stylex.attrs(styles.check)} aria-hidden="true" />
                   <span {...stylex.attrs(styles.nextCopy)}>
-                    <strong>{item().text}</strong>
-                    <small>{item().dueDate ? formatDate(item().dueDate) : "今天"} · 点击完成</small>
+                    <strong {...stylex.attrs(styles.nextTitle)}>{item().text}</strong>
+                    <span {...stylex.attrs(styles.nextMeta)}>{dueLabel(item())} · 点击完成</span>
                   </span>
-                  <ArrowUpRight size={13} />
+                  <span {...stylex.attrs(styles.nextArrow)} aria-hidden="true">
+                    →
+                  </span>
                 </button>
               )}
             </Show>
           </Show>
           <div {...stylex.attrs(styles.nextProgress)}>
-            <i
-              {...stylex.attrs(styles.nextProgressFill)}
-              style={{
-                width: `${items().length ? Math.round(((items().length - todoCount()) / items().length) * 100) : 100}%`,
-              }}
-            />
+            <i {...stylex.attrs(styles.nextProgressFill)} style={{ width: `${progress()}%` }} />
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            xstyle={styles.nextExpand}
-            data-todo-expand
-            onClick={() => props.host.openExpand()}
-          >
-            查看全部
-          </Button>
         </div>
       </Show>
-      <Show when={cardSize() !== "M"}>
-        <div {...stylex.attrs(styles.toolbar)}>
-          <Button
-            size="sm"
-            variant="ghost"
-            xstyle={[styles.tab, filter() === "todo" && styles.active]}
-            onClick={() => setFilter("todo")}
-          >
-            未完成
-            <span {...stylex.attrs(styles.badge)}>{todoCount()}</span>
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            xstyle={[styles.tab, filter() === "all" && styles.active]}
-            onClick={() => setFilter("all")}
-          >
-            全部
-          </Button>
-          <div {...stylex.attrs(styles.spacer)} />
-          <Button
-            size="sm"
-            variant="secondary"
-            xstyle={styles.outlineButton}
-            data-todo-expand
-            onClick={() => props.host.openExpand()}
-          >
-            展开 <ArrowUpRight size={12} />
-          </Button>
+
+      <Show when={cardSize() === "L"}>
+        <div {...stylex.attrs(styles.large)}>
+          <div {...stylex.attrs(styles.timelineHead)}>
+            <div {...stylex.attrs(styles.timelineTitle)}>
+              <span {...stylex.attrs(styles.timelineKicker)}>{todayLabel()}</span>
+              <strong {...stylex.attrs(styles.timelineHeading)}>今日计划</strong>
+            </div>
+            <TimelineRing empty={isEmpty()} progress={progress()} />
+          </div>
+          <div {...stylex.attrs(styles.timelineList)}>
+            <Show when={!loading()} fallback={<Skeleton height="84px" width="100%" />}>
+              <Show
+                when={!isEmpty()}
+                fallback={
+                  <button
+                    {...stylex.attrs(styles.hit, styles.timelineEmpty)}
+                    type="button"
+                    onClick={openExpand}
+                  >
+                    <strong>添加今天的第一项任务</strong>
+                    <span {...stylex.attrs(styles.timelineEmptyPlus)}>＋</span>
+                  </button>
+                }
+              >
+                <span {...stylex.attrs(styles.timelineAxis)} aria-hidden="true" />
+                <For each={timelineItems()}>
+                  {(item) => <TimelineRow item={item} onToggle={(id) => void toggleItem(id)} />}
+                </For>
+              </Show>
+            </Show>
+          </div>
+          <div {...stylex.attrs(styles.timelineFoot)}>
+            <span {...stylex.attrs(styles.timelineFootLead)}>{openItems().length} 项待处理</span>
+            <span {...stylex.attrs(styles.timelineFootTail)}>
+              {isEmpty() ? "尚未创建任务" : "双击展开"}
+            </span>
+          </div>
         </div>
+      </Show>
 
-        <div {...stylex.attrs(styles.list)}>
-          <Show
-            when={!loading()}
-            fallback={
-              <div {...stylex.attrs(styles.skeleton)}>
-                <Skeleton height="24px" width="100%" />
-                <Skeleton height="24px" width="90%" />
-                <Skeleton height="24px" width="85%" />
+      <Show when={cardSize() === "XL"}>
+        <div {...stylex.attrs(styles.extraLarge)}>
+          <div {...stylex.attrs(styles.boardHead)}>
+            <div {...stylex.attrs(styles.boardTitle)}>
+              <strong {...stylex.attrs(styles.boardHeading)}>任务看板</strong>
+              <span {...stylex.attrs(styles.boardKicker)}>PERSONAL WORKFLOW</span>
+            </div>
+            <div {...stylex.attrs(styles.boardSummary)}>
+              <span {...stylex.attrs(styles.boardChip)}>{openItems().length} 待处理</span>
+              <span {...stylex.attrs(styles.boardChip)}>{doneCount()} 已完成</span>
+            </div>
+          </div>
+          <div {...stylex.attrs(styles.boardColumns)}>
+            <section {...stylex.attrs(styles.boardColumn)}>
+              <div {...stylex.attrs(styles.boardColumnHead)}>
+                <span>今天</span>
+                <span>{todayItems().length}</span>
               </div>
-            }
-          >
-            <For each={groups()}>
-              {(group) => {
-                const groupItems = createMemo(() => itemsByGroup().get(group.id) ?? [])
-                return (
-                  <Show when={groupItems().length > 0}>
-                    <div {...stylex.attrs(styles.group)}>
-                      <div
-                        {...stylex.attrs(styles.groupHeader)}
-                        onClick={() => void toggleGroup(group.id)}
+              <div {...stylex.attrs(styles.boardStack)}>
+                <Show when={!loading()} fallback={<Skeleton height="42px" width="100%" />}>
+                  <Show
+                    when={todayItems().length > 0}
+                    fallback={
+                      <button
+                        {...stylex.attrs(styles.hit, styles.boardEmpty, styles.boardEmptyAction)}
+                        type="button"
+                        onClick={openExpand}
                       >
-                        <span {...stylex.attrs(styles.arrow)}>
-                          {group.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                        </span>
-                        <span {...stylex.attrs(styles.groupName)}>{group.name}</span>
-                        <span {...stylex.attrs(styles.count)}>{groupItems().length}</span>
-                      </div>
-
-                      <Show when={!group.collapsed}>
-                        <div {...stylex.attrs(styles.groupItems)}>
-                          <For each={groupItems()}>
-                            {(item) => (
-                              <div {...stylex.attrs(styles.item, item.done && styles.done)}>
-                                <span
-                                  {...stylex.attrs(styles.priorityDot)}
-                                  style={{ color: PRIORITY_COLORS[item.priority] }}
-                                >
-                                  <Circle size={7} fill="currentColor" />
-                                </span>
-                                <Checkbox
-                                  checked={item.done}
-                                  aria-label={`标记 ${item.text} 完成`}
-                                  onChange={() => void toggleItem(item.id)}
-                                />
-                                <span {...stylex.attrs(styles.text, item.done && styles.textDone)}>
-                                  {item.text}
-                                </span>
-                                <Show when={item.dueDate}>
-                                  <span
-                                    {...stylex.attrs(
-                                      styles.due,
-                                      isOverdue(item.dueDate) && styles.overdue,
-                                    )}
-                                  >
-                                    {formatDate(item.dueDate)}
-                                  </span>
-                                </Show>
-                              </div>
-                            )}
-                          </For>
-                        </div>
-                      </Show>
-                    </div>
+                        ＋ 添加今天的任务
+                      </button>
+                    }
+                  >
+                    <For each={todayItems()}>
+                      {(item) => <BoardTask item={item} onToggle={(id) => void toggleItem(id)} />}
+                    </For>
                   </Show>
-                )
-              }}
-            </For>
-          </Show>
+                </Show>
+              </div>
+            </section>
+            <section {...stylex.attrs(styles.boardColumn)}>
+              <div {...stylex.attrs(styles.boardColumnHead)}>
+                <span>稍后</span>
+                <span>{laterItems().length}</span>
+              </div>
+              <div {...stylex.attrs(styles.boardStack)}>
+                <Show when={!loading()} fallback={<Skeleton height="42px" width="100%" />}>
+                  <Show
+                    when={laterItems().length > 0}
+                    fallback={<div {...stylex.attrs(styles.boardEmpty)}>暂无任务</div>}
+                  >
+                    <For each={laterItems()}>
+                      {(item) => <BoardTask item={item} onToggle={(id) => void toggleItem(id)} />}
+                    </For>
+                  </Show>
+                </Show>
+              </div>
+            </section>
+          </div>
         </div>
       </Show>
     </div>
+  )
+}
+
+function TimelineRing(props: { empty: boolean; progress: number }) {
+  return (
+    <div
+      {...stylex.attrs(styles.timelineRing, props.empty && styles.timelineRingEmpty)}
+      style={{ "--todo-progress": `${props.progress}%` }}
+      aria-hidden="true"
+    >
+      <strong {...stylex.attrs(styles.timelineRingValue)}>{props.progress}%</strong>
+    </div>
+  )
+}
+
+function TimelineRow(props: { item: TodoItem; onToggle: (id: string) => void }) {
+  return (
+    <button
+      {...stylex.attrs(styles.hit, styles.timelineRow)}
+      type="button"
+      onClick={() => props.onToggle(props.item.id)}
+    >
+      <span {...stylex.attrs(styles.timelineTime)}>{dueLabel(props.item)}</span>
+      <span
+        {...stylex.attrs(styles.timelineNode, props.item.done && styles.timelineNodeDone)}
+        aria-hidden="true"
+      />
+      <strong {...stylex.attrs(styles.timelineText, props.item.done && styles.timelineTextDone)}>
+        {props.item.text}
+      </strong>
+      <span {...stylex.attrs(styles.timelineTag)}>{statusTag(props.item)}</span>
+    </button>
+  )
+}
+
+// 无任务与全部完成两种空态：前者虚线待创建，后者实心已勾选
+function NextTaskEmpty(props: { empty: boolean; onClick: () => void }) {
+  return (
+    <button
+      {...stylex.attrs(styles.hit, styles.nextTask, props.empty && styles.nextTaskEmpty)}
+      type="button"
+      onClick={props.onClick}
+    >
+      <span {...stylex.attrs(styles.check, !props.empty && styles.checkDone)} aria-hidden="true" />
+      <span {...stylex.attrs(styles.nextCopy)}>
+        <strong {...stylex.attrs(styles.nextTitle)}>
+          {props.empty ? "添加第一项待办" : "今天的任务已完成"}
+        </strong>
+        <span {...stylex.attrs(styles.nextMeta)}>
+          {props.empty ? "今天 · 点击创建" : "可以休息一下"}
+        </span>
+      </span>
+      <span {...stylex.attrs(styles.nextArrow)} aria-hidden="true">
+        {props.empty ? "＋" : "✓"}
+      </span>
+    </button>
+  )
+}
+
+// stylex 的 babel 插件只能静态求值 props/参数，signal 调用要先落成布尔 prop
+function SmallRing(props: { empty: boolean; progress: number }) {
+  return (
+    <div
+      {...stylex.attrs(styles.smallRing, props.empty && styles.smallRingEmpty)}
+      aria-hidden="true"
+    >
+      <span {...stylex.attrs(styles.smallRingValue, styles.mono)}>{props.progress}%</span>
+    </div>
+  )
+}
+
+function BoardTask(props: { item: TodoItem; onToggle: (id: string) => void }) {
+  return (
+    <button
+      {...stylex.attrs(styles.hit, styles.boardTask)}
+      type="button"
+      onClick={() => props.onToggle(props.item.id)}
+    >
+      <span
+        {...stylex.attrs(styles.check, props.item.done && styles.checkDone)}
+        aria-hidden="true"
+      />
+      <strong {...stylex.attrs(styles.boardTaskText, props.item.done && styles.boardTaskTextDone)}>
+        {props.item.text}
+      </strong>
+      <em {...stylex.attrs(styles.boardTaskDue)}>{dueLabel(props.item)}</em>
+    </button>
   )
 }

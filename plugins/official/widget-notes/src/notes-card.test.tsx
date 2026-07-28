@@ -39,34 +39,33 @@ describe("NotesCard", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesCard {...makeProps()} />, root)
-    expect(root.querySelector("[data-notes-card]")).toBeTruthy()
-    expect(root.querySelector(".notes-widget")).toBeNull()
+    expect(root.textContent).toContain("My memo stream")
     root.remove()
   })
 
   it("renders the size-specific memo composition", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <NotesCard {...makeProps()} />, root)
-
-    expect(root.querySelector("[data-notes-variant='L']")).toBeTruthy()
+    render(() => <NotesCard {...makeProps()} size="M" />, root)
+    expect(root.textContent).toContain("Latest memo")
     root.remove()
   })
 
-  it("renders the new note button", () => {
+  it("renders the add button", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
-    render(() => <NotesCard {...makeProps()} />, root)
-    expect(root.textContent).toContain("新建便签")
+    render(() => <NotesCard {...makeProps()} size="M" />, root)
+    expect(root.textContent).toContain("＋")
     root.remove()
   })
 
-  it("calls openExpand when clicking the new note button", () => {
+  it("calls openExpand when clicking the add button", () => {
     const props = makeProps()
+    props.size = "M"
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesCard {...props} />, root)
-    const btn = root.querySelector("[data-notes-card-footer] button")
+    const btn = root.querySelector("button")
     expect(btn).toBeTruthy()
     if (btn) {
       const event = new MouseEvent("click", { bubbles: true })
@@ -77,21 +76,21 @@ describe("NotesCard", () => {
     root.remove()
   })
 
-  it("renders saved notes", async () => {
+  it("renders saved notes in L size", async () => {
     const saved = [
       {
         id: "a",
-        content: "hello world",
+        content: "hello world\nmultiline",
         starred: false,
-        createdAt: "2026-01-01",
-        updatedAt: "2026-01-02",
+        createdAt: "2026-01-01T08:00:00Z",
+        updatedAt: "2026-01-02T08:00:00Z",
       },
       {
         id: "b",
         content: "second line",
         starred: true,
-        createdAt: "2026-01-01",
-        updatedAt: "2026-01-02",
+        createdAt: "2026-01-01T08:00:00Z",
+        updatedAt: "2026-01-02T08:00:00Z",
       },
     ]
     const props = makeProps()
@@ -103,34 +102,31 @@ describe("NotesCard", () => {
     await flushMount()
     expect(root.textContent).toContain("hello world")
     expect(root.textContent).toContain("second line")
-    expect(root.querySelector("[data-note-row][data-starred]")).toBeTruthy()
     root.remove()
   })
 
-  it("shows up to 4 notes", async () => {
+  it("shows L size limit of 2 preview notes", async () => {
     const saved = [
-      { id: "1", content: "one", starred: false, createdAt: "2026-01-01", updatedAt: "2026-01-01" },
-      { id: "2", content: "two", starred: false, createdAt: "2026-01-01", updatedAt: "2026-01-01" },
+      {
+        id: "1",
+        content: "one",
+        starred: false,
+        createdAt: "2026-01-01T08:00:00Z",
+        updatedAt: "2026-01-01T08:00:00Z",
+      },
+      {
+        id: "2",
+        content: "two",
+        starred: false,
+        createdAt: "2026-01-01T08:00:00Z",
+        updatedAt: "2026-01-01T08:00:00Z",
+      },
       {
         id: "3",
         content: "three",
         starred: false,
-        createdAt: "2026-01-01",
-        updatedAt: "2026-01-01",
-      },
-      {
-        id: "4",
-        content: "four",
-        starred: false,
-        createdAt: "2026-01-01",
-        updatedAt: "2026-01-01",
-      },
-      {
-        id: "5",
-        content: "five",
-        starred: false,
-        createdAt: "2026-01-01",
-        updatedAt: "2026-01-01",
+        createdAt: "2026-01-01T08:00:00Z",
+        updatedAt: "2026-01-01T08:00:00Z",
       },
     ]
     const props = makeProps()
@@ -141,8 +137,8 @@ describe("NotesCard", () => {
     render(() => <NotesCard {...props} />, root)
     await flushMount()
     expect(root.textContent).toContain("one")
-    expect(root.textContent).toContain("four")
-    expect(root.textContent).not.toContain("five")
+    expect(root.textContent).toContain("two")
+    expect(root.textContent).not.toContain("three")
     root.remove()
   })
 })
