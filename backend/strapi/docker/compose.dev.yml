@@ -12,10 +12,10 @@ services:
 
   strapi:
     build:
-      context: ../..
-      dockerfile: backend/strapi/Dockerfile
+      context: ..
+      dockerfile: Dockerfile
       target: deps
-    command: pnpm --dir backend/strapi develop
+    command: npm run develop
     environment:
       NODE_ENV: development
       DATABASE_CLIENT: postgres
@@ -33,9 +33,8 @@ services:
       JWT_SECRET: devjwt
       ENCRYPTION_KEY: devencryption
     volumes:
-      - ../..:/app
+      - ..:/app
       - /app/node_modules
-      - /app/backend/strapi/node_modules
     ports:
       - "1337:1337"
     depends_on:

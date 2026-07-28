@@ -1,5 +1,7 @@
 # Strapi Docker 部署
 
+**重要**: Strapi 已从 pnpm monorepo 独立出来，使用 npm 管理依赖。
+
 ## 开发环境
 
 开发环境使用热重载，代码挂载到容器内：

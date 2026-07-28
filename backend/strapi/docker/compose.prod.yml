@@ -16,8 +16,8 @@ services:
 
   strapi:
     build:
-      context: ../..
-      dockerfile: backend/strapi/Dockerfile
+      context: ..
+      dockerfile: Dockerfile
     ports:
       - "${PORT:-1337}:1337"
     environment:
@@ -37,7 +37,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
     volumes:
-      - strapi_uploads:/app/backend/strapi/public/uploads
+      - strapi_uploads:/app/public/uploads
     depends_on:
       postgres:
         condition: service_healthy
