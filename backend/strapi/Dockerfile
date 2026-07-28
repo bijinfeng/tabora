@@ -14,7 +14,7 @@ RUN corepack enable pnpm
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/backend/strapi/node_modules ./backend/strapi/node_modules
 COPY . .
-RUN pnpm --filter @tabora/strapi-backend build
+RUN cd backend/strapi && pnpm build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
