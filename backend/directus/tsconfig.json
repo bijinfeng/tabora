@@ -1,4 +1,0 @@
-{
-  "extends": "@tabora/tsconfig/base.json",
-  "include": ["extensions/*/dist", "scripts", "tests", "vitest.config.ts"]
-}
