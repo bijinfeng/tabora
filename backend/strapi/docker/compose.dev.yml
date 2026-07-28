@@ -1,38 +1,45 @@
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: tabora
       POSTGRES_USER: tabora
       POSTGRES_PASSWORD: tabora
     ports:
       - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
 
   strapi:
     build:
       context: ../..
       dockerfile: backend/strapi/Dockerfile
-    env_file:
-      - ../.env.example
+      target: deps
+    command: pnpm --dir backend/strapi develop
     environment:
+      NODE_ENV: development
       DATABASE_CLIENT: postgres
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_NAME: tabora
       DATABASE_USERNAME: tabora
       DATABASE_PASSWORD: tabora
+      HOST: 0.0.0.0
+      PORT: 1337
+      APP_KEYS: "dev1,dev2,dev3,dev4"
+      API_TOKEN_SALT: devsalt
+      ADMIN_JWT_SECRET: devadminjwt
+      TRANSFER_TOKEN_SALT: devtransfer
+      JWT_SECRET: devjwt
+      ENCRYPTION_KEY: devencryption
     volumes:
-      - ..:/workspace/backend/strapi:ro
+      - ../..:/app
+      - /app/node_modules
+      - /app/backend/strapi/node_modules
     ports:
       - "1337:1337"
     depends_on:
       - postgres
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./nginx/strapi.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - strapi
+volumes:
+  postgres_dev_data:

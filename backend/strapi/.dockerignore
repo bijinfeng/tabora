@@ -1,0 +1,41 @@
+# Strapi-specific .dockerignore
+# 当构建上下文为 backend/strapi/ 时使用
+
+# Development files
+node_modules/
+.tmp/
+.cache/
+database/*.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build artifacts (if building from backend/strapi)
+dist/
+build/
+
+# Misc
+.DS_Store
+*.pem
