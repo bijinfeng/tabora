@@ -6,16 +6,16 @@ import { describe, expect, it } from "vitest"
 
 const playgroundDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const repositoryRoot = path.resolve(playgroundDir, "..", "..")
-const viteBinaryPath =
+const vpBinaryPath =
   process.platform === "win32"
-    ? path.join(repositoryRoot, "node_modules", ".bin", "vite.cmd")
-    : path.join(repositoryRoot, "node_modules", ".bin", "vite")
+    ? path.join(repositoryRoot, "node_modules", ".bin", "vp.cmd")
+    : path.join(repositoryRoot, "node_modules", ".bin", "vp")
 
 function readDevServerStartup(): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(
-      viteBinaryPath,
-      ["--host", "127.0.0.1", "--port", "5179", "--clearScreen", "false"],
+      vpBinaryPath,
+      ["dev", "--host", "127.0.0.1", "--port", "5179", "--clearScreen", "false"],
       {
         cwd: playgroundDir,
         env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1" },

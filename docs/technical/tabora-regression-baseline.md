@@ -280,7 +280,7 @@ pnpm test:e2e
 如果 E2E 未覆盖本轮风险，需手动启动 playground 检查：
 
 ```bash
-pnpm --filter @tabora/playground exec vite --host 127.0.0.1 --port 5173 --strictPort
+pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 ### L5：设计、视觉、交互和可访问性

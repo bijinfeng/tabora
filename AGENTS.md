@@ -168,7 +168,7 @@ pnpm check:fix
 pnpm test
 pnpm build
 pnpm --filter @tabora/playground build
-pnpm --filter @tabora/playground exec vite --host 127.0.0.1 --port 5173 --strictPort
+pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 `pnpm check` 覆盖格式化、lint、type check。文档变更至少跑 `pnpm check`。代码变更按范围追加 `pnpm test` 和 `pnpm build`。

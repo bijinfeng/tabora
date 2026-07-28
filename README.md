@@ -44,7 +44,7 @@ pnpm dev
 也可以固定本地地址启动：
 
 ```bash
-pnpm --filter @tabora/playground exec vite --host 127.0.0.1 --port 5173 --strictPort
+pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 常用命令：
