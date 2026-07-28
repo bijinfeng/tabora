@@ -35,42 +35,42 @@ Tabora 的本地工作台已经有多分组、插件实例、卡片布局、插�
 
 ## 3. 已确认决策
 
-| 主题     | V1 决策                                                               |
-| -------- | --------------------------------------------------------------------- |
-| 同步形态 | 官方账号云同步                                                        |
-| 账号体系 | 官方账号支持注册、登录、退出登录和会话恢复；未登录时保持本地模式      |
-| 产品入口 | 设置中心一级分类「数据同步」                                          |
-| 首页暴露 | 不做 Dashboard 卡片，只保留轻量提醒                                   |
-| 加密策略 | 服务端加密存储 + 敏感数据排除                                         |
-| E2EE     | 完整端到端加密不进入 V1                                               |
-| 同步范围 | 工作区结构、插件配置、插件显式声明的可同步业务数据                    |
-| 敏感排除 | API Key、本机路径、缓存、临时图片、OCR 原图、导出结果、设备特有偏好   |
-| 冲突策略 | 自动记录级合并，无法合并进入冲突收件箱                                |
-| 设备策略 | 登录官方账号后自动注册当前设备，设置页可移除其他设备                  |
-| 触发策略 | 后台自动同步为主，保留「立即同步」                                    |
-| 后端平台 | Supabase（Auth + Postgres + Edge Functions）                          |
-| 同步模型 | state-based 当前态：云端每行一条记录 + `updatedAt` + tombstone 软删除 |
-| 访问形态 | 客户端只经 Supabase Edge Function 同步网关读写，不直连数据表          |
-| 加密语义 | 平台级加密（传输 TLS + 存储 at-rest）+ 敏感字段永不上传，非 E2EE      |
+| 主题     | V1 决策                                                                       |
+| -------- | ----------------------------------------------------------------------------- |
+| 同步形态 | 官方账号云同步                                                                |
+| 账号体系 | 官方账号支持注册、登录、退出登录和会话恢复；未登录时保持本地模式              |
+| 产品入口 | 设置中心一级分类「数据同步」                                                  |
+| 首页暴露 | 不做 Dashboard 卡片，只保留轻量提醒                                           |
+| 加密策略 | 服务端加密存储 + 敏感数据排除                                                 |
+| E2EE     | 完整端到端加密不进入 V1                                                       |
+| 同步范围 | 工作区结构、插件配置、插件显式声明的可同步业务数据                            |
+| 敏感排除 | API Key、本机路径、缓存、临时图片、OCR 原图、导出结果、设备特有偏好           |
+| 冲突策略 | 自动记录级合并，无法合并进入冲突收件箱                                        |
+| 设备策略 | 登录官方账号后自动注册当前设备，设置页可移除其他设备                          |
+| 触发策略 | 后台自动同步为主，保留「立即同步」                                            |
+| 后端平台 | Strapi 5（users-permissions + custom sync controller）                        |
+| 同步模型 | state-based 当前态：云端每行一条记录 + `record_updated_at` + tombstone 软删除 |
+| 访问形态 | 客户端只经 Strapi 自定义 sync controller 读写，不直连数据表                   |
+| 加密语义 | 平台级加密（传输 TLS + 存储 at-rest）+ 敏感字段永不上传，非 E2EE              |
 
-### 3.1 核心技术决策（V0.2 锁定）
+### 3.1 核心技术决策（V0.2 锁定，2026-07-27 更新为 Strapi）
 
-本节锁定影响 Supabase 表结构与同步 API 形态的三个技术决策。后续技术方案与实现以此为准。
+本节锁定影响 Strapi 表结构与同步 API 形态的三个技术决策。后续技术方案与实现以此为准。
 
 **决策一：云端事实源采用 state-based 当前态模型。**
 
-- 云端为每个可同步实体保存「当前状态」单行记录，携带稳定 `recordKey`、`updatedAt` 和软删除标记（tombstone：保留主键 + `deletedAt`，不物理删除）。
-- 合并语义即 state-based：`last-write-wins` 比较 `updatedAt`；`record-merge` 在记录级按字段合并。这与 Supabase「一行一记录 + `updated_at` + RLS」天然贴合，服务端无需回放事件流。
+- 云端为每个可同步实体保存「当前状态」单行记录，携带稳定 `recordKey`、`record_updated_at` 和软删除标记（tombstone：保留主键 + `deleted`，不物理删除）。
+- 合并语义即 state-based：`last-write-wins` 比较 `record_updated_at`；`record-merge` 在记录级按字段合并。这与 Strapi「一行一记录 + `record_updated_at` + owner relation」天然贴合，服务端无需回放事件流。
 - 第 17 节的 `SyncChange` **降级为客户端本地待上传队列的内部结构**，不作为云端事实源，云端不落地事件流表。
 - 删除必须走 tombstone 传播，避免「一端删除、另一端重新上传导致复活」。tombstone 保留策略见技术方案。
 
-**决策二：客户端只经 Supabase Edge Function 同步网关访问云端。**
+**决策二：客户端只经 Strapi 自定义 sync controller 访问云端。**
 
-- 所有同步读写经唯一的 Edge Function 端点，客户端（core）不直连 Postgres 数据表。
-- 网关在服务端完成：敏感字段过滤、危险声明拒绝（`apiKey` / `token` / `filePath` 等，见第 8 节）、记录级冲突检测、快照触发。
+- 所有同步读写经唯一的 `/api/sync/records` 端点（pull/push），客户端（core）不直连 Postgres 数据表。
+- controller 在服务端完成：敏感字段过滤、危险声明拒绝（`apiKey` / `token` / `filePath` 等，见第 8 节）、记录级冲突检测、快照触发。
 - 这满足第 6.4 / 第 9 节「插件不能访问账号 token、不能直连云端接口」与第 15 节「服务端字段过滤」两条强约束，且贴合 Tabora「插件只经 core 访问平台能力」的架构边界。
-- `service_role` 密钥只存在于 Edge Function 运行时，绝不进入扩展 / 前端 / 插件。
-- 数据表仍开启 RLS 作为纵深防御（`TO authenticated using (account_id = (select auth.uid()))`，UPDATE 同时给 `USING` 和 `WITH CHECK`），即使未来出现直连路径也不越权。
+- Strapi JWT 和数据库权限只存在于 controller 运行时，绝不进入扩展 / 前端 / 插件。
+- 数据表通过 `owner` relation 隔离用户数据，controller 中 `ctx.state.user.id` 作为纵深防御，即使未来出现直连路径也不越权。
 
 **决策三：V1 加密语义为平台级加密 + 敏感字段永不上传，明确非 E2EE。**
 

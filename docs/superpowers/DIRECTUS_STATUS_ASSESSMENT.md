@@ -1,4 +1,6 @@
-# Directus 后端实施状态评估
+# Directus 后端实施状态评估（历史文档）
+
+> **注意：本文档为历史记录。2026-07-27 后端已迁移至 Strapi 5，见 `docs/superpowers/specs/2026-07-27-directus-to-strapi-migration-design.md`。**
 
 > 生成时间：2026-07-17
 > 评估范围：S1 前端认证 + S2 后端同步网关 + S3 前端同步集成

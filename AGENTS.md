@@ -52,7 +52,7 @@ MVP 不做：
 - AI 生成插件。
 - 复杂 WebGL 背景编辑器。
 
-> 官方账号与数据同步已单独立项，不属于原 MVP 范围，作为独立工作线推进。需求与核心技术决策见 `docs/technical/mpz35mfq-16-data-sync-prd.md`（后端采用 Supabase，state-based 同步 + Edge Function 网关 + 平台级加密）。
+> 官方账号与数据同步已单独立项，不属于原 MVP 范围，作为独立工作线推进。需求与核心技术决策见 `docs/technical/mpz35mfq-16-data-sync-prd.md`（后端采用 Strapi 5，state-based 同步 + 纯 JWT 认证 + 自定义 sync controller）。
 
 ## 工程结构
 

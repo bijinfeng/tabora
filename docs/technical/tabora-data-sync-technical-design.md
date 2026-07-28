@@ -1,28 +1,39 @@
 # Tabora 官方账号数据同步技术方案
 
-版本：V0.1
+版本：V0.2 (Strapi 5 实现)
 
-日期：2026-07-06
+日期：2026-07-27
 
-状态：技术设计稿（对齐数据同步 PRD V0.2 已锁定决策）
+状态：技术设计稿（2026-07-27 更新为 Strapi 5 实现）
 
 关联文档：
 
 - 需求与决策事实源：`docs/technical/mpz35mfq-16-data-sync-prd.md`
 - 平台技术方案 V2：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 回归治理：`docs/technical/tabora-regression-baseline.md`
+- Strapi 迁移设计：`docs/superpowers/specs/2026-07-27-directus-to-strapi-migration-design.md`
 
-## 0. 本文档定位
+## 0. 本文档定位与迁移说明
 
-本文档是数据同步的**实现事实源**。PRD 负责需求、范围与产品决策；本文档负责 Supabase 后端形态、数据模型、API 契约、客户端同步引擎和包边界。
+本文档是数据同步的**实现事实源**。PRD 负责需求、范围与产品决策；本文档负责后端形态、数据模型、API 契约、客户端同步引擎和包边界。
 
-PRD §3.1 已锁定三条核心决策，本方案以此为前提，不再重复论证：
+**2026-07-27 更新：** 原设计基于 Supabase（Auth + Edge Functions + RLS），现已迁移至 **Strapi 5**（users-permissions + custom sync controller）。核心决策保持不变：
 
-1. 云端事实源为 **state-based 当前态**（每行一条记录 + `updatedAt` + tombstone 软删除）。
-2. 客户端只经 **Supabase Edge Function 同步网关**读写，不直连数据表。
+1. 云端事实源为 **state-based 当前态**（每行一条记录 + `record_updated_at` + tombstone 软删除）。
+2. 客户端只经 **Strapi 自定义 sync controller** 读写（`/api/sync/records`），不直连数据表。
 3. 加密语义为**平台级加密 + 敏感字段永不上传**，非 E2EE。
 
-## 1. 后端总体形态
+Strapi 实现与 Supabase 概念映射：
+
+- `auth.users` → `plugin::users-permissions.user`（Strapi users-permissions 插件托管）
+- Edge Function `sync-gateway` → Strapi custom controller `api::sync.sync`（`pull`/`push` actions）
+- RLS `auth.uid()` → controller `ctx.state.user.id` + `owner` relation
+- `service_role` → Strapi JWT（服务端验证 `ctx.state.user`）
+- Email OTP → 纯 JWT 认证（`/api/auth/local`，无 refresh token）
+
+本文档后续章节保留原 Supabase 设计作为架构参考，实际实现见 `backend/strapi/` 代码和迁移设计文档。
+
+## 1. 后端总体形态（Strapi 5 实现）
 
 ```txt
 ┌─────────────────────────────────────────────┐
@@ -34,50 +45,39 @@ PRD §3.1 已锁定三条核心决策，本方案以此为前提，不再重复�
 │    - push / pull / merge                       │
 │    - 冲突检测与冲突收件箱模型                   │
 │    - 快照触发                                   │
-│    - 会话持有（supabase-js + 自定义 storage）   │
+│    - 会话持有（@tabora/auth StrapiAuthClient）│
 └───────────────┬───────────────────────────────┘
                 │ 仅经网关，HTTPS
-                │ Authorization: Bearer <access_token>
+                │ Authorization: Bearer <jwt>
                 ▼
 ┌─────────────────────────────────────────────┐
-│ Supabase Edge Function: sync-gateway          │
-│  （唯一同步端点，Deno runtime）                │
-│    - 校验 JWT，解析 auth.uid()                 │
+│ Strapi 5 Custom Controller: api::sync.sync   │
+│  （唯一同步端点，Node.js/TypeScript）         │
+│    - 校验 JWT，解析 ctx.state.user.id         │
 │    - 敏感字段过滤 + 危险声明拒绝               │
 │    - state-based 合并 / 冲突检测              │
 │    - 快照触发                                   │
-│    - 用 service_role 访问 Postgres            │
+│    - 用 strapi.db.query 访问 Postgres         │
 └───────────────┬───────────────────────────────┘
-                │ service_role（仅存在于网关运行时）
+                │ Strapi 内部 DB 层（owner relation 隔离）
                 ▼
 ┌─────────────────────────────────────────────┐
-│ Supabase Postgres                             │
-│    - auth.users（Supabase Auth 托管）          │
-│    - public.profiles                           │
-│    - public.sync_devices                       │
-│    - public.synced_records                     │
-│    - public.sync_snapshots                     │
-│    - public.sync_conflicts                     │
-│  全表开启 RLS（纵深防御）                       │
+│ Postgres (SQLite dev / Postgres prod)         │
+│    - up_users（Strapi users-permissions 托管）│
+│    - synced_records (owner relation)          │
+│    - (未来) sync_snapshots                     │
+│    - (未来) sync_conflicts                     │
+│  权限通过 owner relation + ctx.state.user 隔离│
 │                                               │
-│ Supabase Auth（Email OTP）                     │
+│ Strapi users-permissions（Email/Password JWT）│
 └─────────────────────────────────────────────┘
 ```
 
 关键边界：
 
-- **插件永远拿不到 supabase client、access token 或网关 URL。** 插件只经 core runtime 的 storage repository 读写本地数据，同步由 core 在后台完成。
-- **service_role 只存在于 Edge Function 运行时环境变量**，绝不进入扩展包、前端 bundle 或任何插件。
-- 客户端持有的是 Supabase **publishable key**（`anon` 的现代替代）+ 用户 access token，只用于调用 Auth 和网关，不用于直连表。
-
-## 2. Supabase 项目与 Auth 配置
-
-### 2.1 项目
-
-- 一个 Supabase 项目承载 Auth + Postgres + Edge Functions。
-- Data API 依赖：本方案客户端不使用 Data (REST/GraphQL) API，同步表不需要向 `anon` / `authenticated` 暴露。2026-04-28 起新表默认不暴露 Data API，与本方案安全预期一致，无需额外收敛。
-
-### 2.2 Email OTP
+- **插件永远拿不到 Strapi client、JWT 或网关 URL。** 插件只经 core runtime 的 storage repository 读写本地数据，同步由 core 在后台完成。
+- **Strapi JWT secret 只存在于服务端配置**，绝不进入扩展包、前端 bundle 或任何插件。
+- 客户端持有的是用户 JWT（30 天过期），只用于调用 Auth 和 sync controller，不用于直连表。
 
 V1 用邮箱验证码，对应 Supabase 无密码登录的 OTP 形态：
 
