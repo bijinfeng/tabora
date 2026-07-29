@@ -7,6 +7,10 @@ node_modules/
 .cache/
 database/*.db
 
+# Package-manager metadata unused by npm Docker builds
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
 # Environment files
 .env
 .env.local
@@ -31,10 +35,20 @@ pnpm-debug.log*
 # Testing
 coverage/
 .nyc_output/
+tests/
+vitest.config.ts
 
 # Build artifacts (if building from backend/strapi)
 dist/
 build/
+
+# Local Docker deployment material
+docker/
+README.md
+
+# Persistent runtime content must not be baked into the image
+database/
+public/uploads/
 
 # Misc
 .DS_Store

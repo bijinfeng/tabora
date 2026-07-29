@@ -116,15 +116,32 @@ docker run --rm -v strapi_uploads:/data -v $(pwd):/backup alpine tar xzf /backup
 2. **build**: 构建 Strapi admin 面板和编译 TypeScript
 3. **runner**: 最终镜像，仅包含生产依赖和构建产物
 
+`deps` 阶段包含 `python3`、`make` 和 `g++`，仅用于 `better-sqlite3` 等原生模块在预编译包不可用时的回退编译。构建完成后执行 `npm prune --omit=dev`；`runner` 只复制裁剪后的生产依赖、`dist`、`config`、`public` 和 `favicon.png`，不带入构建工具。npm 下载缓存通过 BuildKit cache mount 复用，只加速构建，不会进入镜像层。
+
+容器以 UID/GID `1001` 的 `strapi` 非 root 用户运行。`/app/public/uploads` 会在降权前创建并授权给该用户，因此 `strapi_uploads` Docker volume 可以继续保存用户上传文件。
+
 **为何不在安装前设置 `NODE_ENV=production`？**
 
-Strapi 文档明确要求：构建 admin 面板需要 devDependencies（如 `@strapi/admin`、Webpack 等）。如果过早设置 `NODE_ENV=production`，`pnpm install` 会跳过这些依赖，导致构建失败。
+Strapi 文档明确要求：构建 admin 面板需要 devDependencies（如 `@strapi/admin`、Webpack 等）。如果过早设置 `NODE_ENV=production`，`npm install` 会跳过这些依赖，导致构建失败。
 
 正确流程：
 
 1. 安装全量依赖（无 `NODE_ENV=production`）
 2. 构建（此时可以访问 devDependencies）
-3. 在最终镜像重新安装，这次只装生产依赖（`--prod`）
+3. 构建后在 build stage 删除 devDependencies（`npm prune --omit=dev`）
+4. 最终镜像复制已裁剪的生产依赖，不重复安装原生模块
+
+### 检查镜像体积
+
+构建后可检查镜像总大小和各层大小，记录 `Size` 与最大的 `SIZE` 层，作为后续依赖变更的对比基准：
+
+```bash
+docker build --tag tabora-strapi:optimized --file ../Dockerfile ..
+docker image inspect tabora-strapi:optimized --format '{{.Size}}'
+docker history --no-trunc --format 'table {{.Size}}\t{{.CreatedBy}}' tabora-strapi:optimized
+```
+
+生产镜像不会包含本地 `node_modules`、测试、数据库文件、已有上传文件或 npm 下载缓存。
 
 ### 数据库连接池
 
