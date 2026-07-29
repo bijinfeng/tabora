@@ -11,7 +11,6 @@
 - 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
 - 设计事实源：`DESIGN.md`
 - 工作台原型参考：`docs/design/workbench-prototype.html`
-- 设计实现映射：`docs/product/tabora-design-system.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 文档地图：`docs/README.md`
 
@@ -86,7 +85,7 @@ Tabora 打开后的第一屏必须来自官方插件装配，而不是平台直�
 
 ## 3. 全局设计语言
 
-Tabora 的视觉与交互事实源以根目录 `DESIGN.md` 为准。`docs/design/workbench-prototype.html` 只作为可交互原型参考，`docs/product/tabora-design-system.md` 只负责把这些事实映射到当前仓库实现。本章保留官方插件层面的摘要，用于说明内置插件如何遵守统一视觉、token、基础组件和宿主容器规范。
+Tabora 的视觉与交互事实源以根目录 `DESIGN.md` 为准。`docs/design/workbench-prototype.html` 只作为可交互原型参考。本章保留官方插件层面的摘要，用于说明内置插件如何遵守统一视觉、token、基础组件和宿主容器规范。
 
 ### 3.1 产品气质
 

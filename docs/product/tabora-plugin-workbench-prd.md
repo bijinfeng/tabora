@@ -11,7 +11,6 @@
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - 设计事实源：`DESIGN.md`
 - 当前工作台交互原型：`docs/design/workbench-prototype.html`
-- 设计实现映射：`docs/product/tabora-design-system.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 文档地图：`docs/README.md`
 

@@ -20,7 +20,7 @@ Tabora 是一个插件优先的个人工作台新标签页产品。它不是把�
 
 文档地图会说明当前事实源、历史规格和不同任务的阅读路径。不要在 `AGENTS.md` 中复制完整文档目录，避免双写双维护。
 
-UI、token、基础组件、宿主容器视觉、交互模式或可访问性相关任务，需要额外优先阅读根目录 `DESIGN.md`。`docs/design/workbench-prototype.html`、`docs/design/landing.html` 和 `docs/design/download.html` 只作为可视原型或静态预览参考；`docs/product/tabora-design-system.md` 只作为仓库实现映射补充。
+UI、token、基础组件、宿主容器视觉、交互模式或可访问性相关任务，需要额外优先阅读根目录 `DESIGN.md`。`docs/design/workbench-prototype.html`、`docs/design/landing.html` 和 `docs/design/download.html` 只作为可视原型或静态预览参考。
 
 文档内容以中文为主。新增产品、技术、计划类文档也优先使用中文。
 
@@ -391,7 +391,6 @@ MVP 面板：
 - PRD：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - 设计事实源：`DESIGN.md`
-- 设计实现映射：`docs/product/tabora-design-system.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 
 如果未来新增计划文档、阶段记录或实现进度文档，需要先在 `docs/README.md` 登记入口，再同步更新相关事实源；不要引用已经删除或当前分支不存在的文档路径。

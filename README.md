@@ -20,7 +20,7 @@ Tabora 当前处于 MVP 实现阶段，目标是验证一套可扩展的新标�
 - IndexedDB 本地持久化、主题 token、背景渲染、settings host、toast、modal、fullscreen 和插件错误边界。
 - `external-open` 最小权限桥。
 
-MVP 暂不包含远程插件市场、不可信远程插件沙箱、在线安装升级、云同步、账号系统、团队工作区或完整插件开发者工具。
+原 MVP 暂不包含远程插件市场、不可信远程插件沙箱、在线安装升级、团队工作区或完整插件开发者工具。官方账号与数据同步已作为独立工作线推进，需求与核心技术决策见 `docs/technical/tabora-data-sync-prd.md`。
 
 ## 快速开始
 
@@ -125,7 +125,6 @@ docs/              # 产品、设计、技术和回归事实源
 - 产品范围：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件：`docs/product/tabora-official-plugins-design.md`
 - 视觉与交互：`DESIGN.md`
-- 设计实现映射：`docs/product/tabora-design-system.md`
 - 技术架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 回归治理：`docs/technical/tabora-regression-baseline.md`
 

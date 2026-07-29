@@ -16184,10 +16184,6 @@
         if (e && e.target !== document.getElementById("settingsOverlay")) return
         document.getElementById("settingsOverlay").classList.remove("open")
       }
-      // 兼容旧调用：切页转发到新设置窗口
-      function switchSettingsTab(tab) {
-        swinActivateView(tab)
-      }
       function toggleTheme() {
         setTheme(isDark ? "light" : "dark")
       }

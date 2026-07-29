@@ -43,16 +43,8 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     return idFor(pluginId, key, "ws", workspaceId)
   }
 
-  function legacyIdForWorkspace(pluginId: string, key: string, workspaceId: string): string {
-    return idFor(pluginId, key, workspaceId)
-  }
-
   function idForInstance(pluginId: string, key: string, instanceId: string): string {
     return idFor(pluginId, key, "inst", instanceId)
-  }
-
-  function legacyIdForInstance(pluginId: string, key: string, instanceId: string): string {
-    return idFor(pluginId, key, instanceId)
   }
 
   return {
@@ -81,9 +73,7 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
       workspaceId: string,
       key: string,
     ): Promise<T | undefined> {
-      const row =
-        (await database.pluginData.get(idForWorkspace(pluginId, key, workspaceId))) ??
-        (await database.pluginData.get(legacyIdForWorkspace(pluginId, key, workspaceId)))
+      const row = await database.pluginData.get(idForWorkspace(pluginId, key, workspaceId))
       return row?.value as T | undefined
     },
     async getAllByWorkspace<T = unknown>(pluginId: string, workspaceId: string): Promise<T[]> {
@@ -106,7 +96,6 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     },
     async removeForWorkspace(pluginId, workspaceId, key) {
       await database.pluginData.delete(idForWorkspace(pluginId, key, workspaceId))
-      await database.pluginData.delete(legacyIdForWorkspace(pluginId, key, workspaceId))
     },
     async removeByWorkspace(workspaceId) {
       await database.pluginData.where("workspaceId").equals(workspaceId).delete()
@@ -116,9 +105,7 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
       instanceId: string,
       key: string,
     ): Promise<T | undefined> {
-      const row =
-        (await database.pluginData.get(idForInstance(pluginId, key, instanceId))) ??
-        (await database.pluginData.get(legacyIdForInstance(pluginId, key, instanceId)))
+      const row = await database.pluginData.get(idForInstance(pluginId, key, instanceId))
       return row?.value as T | undefined
     },
     async getAllByInstance<T = unknown>(pluginId: string, instanceId: string): Promise<T[]> {
@@ -141,7 +128,6 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     },
     async removeForInstance(pluginId, instanceId, key) {
       await database.pluginData.delete(idForInstance(pluginId, key, instanceId))
-      await database.pluginData.delete(legacyIdForInstance(pluginId, key, instanceId))
     },
   }
 }

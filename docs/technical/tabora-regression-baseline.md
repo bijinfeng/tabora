@@ -13,7 +13,6 @@
 - 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件设计：`docs/product/tabora-official-plugins-design.md`
 - 设计事实源：`DESIGN.md`
-- 设计实现映射：`docs/product/tabora-design-system.md`
 - 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 
 ## 1. 文档目标
@@ -92,7 +91,7 @@ Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
 
 1. `docs/README.md`：新增事实源或入口时先登记。
 2. PRD / 官方插件设计：产品口径变化。
-3. `DESIGN.md` / 设计实现映射：视觉、交互、组件边界变化。
+3. `DESIGN.md`：视觉、交互、组件边界变化。
 4. 技术方案：包边界、运行机制、协议、存储、权限变化。
 5. 本文档：回归基准、检查项、已知债务、命令矩阵变化。
 
@@ -156,7 +155,7 @@ git diff --stat
 | ---------------------------------------- | -------------------------------------------- |
 | MVP 范围、用户流程、验收标准变化         | PRD                                          |
 | 官方插件职责、默认装配、插件交互变化     | 官方插件设计                                 |
-| token、视觉、组件语义、可访问性变化      | `DESIGN.md` + 设计实现映射                   |
+| token、视觉、组件语义、可访问性变化      | `DESIGN.md`                                  |
 | 包边界、协议、runtime、storage、权限变化 | 技术方案                                     |
 | 回归命令、风险基准、已知债务变化         | 本文档                                       |
 | 新增事实源或计划入口                     | `docs/README.md`                             |
@@ -703,7 +702,7 @@ Agent 必须：
 
 必做：
 
-- L1：PRD / 设计实现映射 / 技术方案是否需要同步。
+- L1：PRD / `DESIGN.md` / 技术方案是否需要同步。
 - L2：layout 只依赖公开 contract。
 - L3：`pnpm test` + `pnpm check` + `pnpm build`。
 - L4：Dashboard / Focus / 第三方 layout 切换。

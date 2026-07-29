@@ -633,8 +633,6 @@ footer 区域渲染规则：
 - widget 声明并注册了 `views.expandFooter` 时，宿主在 `expand-footer` 内用 `PluginViewBoundary` 隔离渲染该 footer 视图；footer 视图崩溃只局部兜底，不影响 body。
 - 否则回退默认 footer：左侧实例 ID，右侧 `chrome.expand.footerHint`（Esc 提示）。
 
-> 详细技术方案见 `docs/technical/tabora-expand-footer-injection-design.md`。
-
 ## 8. 上下文菜单子系统
 
 ### 8.1 右键菜单协议

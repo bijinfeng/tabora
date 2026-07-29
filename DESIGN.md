@@ -3,8 +3,6 @@ name: Tabora
 description: Plugin-first personal workbench for a browser new tab page.
 design_version: "2.0"
 style: refined-sage
-sources:
-  implementation_mapping: docs/product/tabora-design-system.md
 visual_references:
   workbench_prototype: docs/design/workbench-prototype.html
   site_preview: docs/design/landing.html
