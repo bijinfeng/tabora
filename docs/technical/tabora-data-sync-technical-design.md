@@ -1,555 +1,179 @@
-# Tabora 官方账号数据同步技术方案
+# Tabora 官方账号与数据同步技术方案
 
-版本：V0.2 (Strapi 5 实现)
+版本：V0.3
 
-日期：2026-07-27
+日期：2026-07-29
 
-状态：技术设计稿（2026-07-27 更新为 Strapi 5 实现）
+状态：当前实现事实源
 
 关联文档：
 
-- 需求与决策事实源：`docs/technical/mpz35mfq-16-data-sync-prd.md`
-- 平台技术方案 V2：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
+- 需求与产品决策：`docs/technical/tabora-data-sync-prd.md`
+- 平台架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 回归治理：`docs/technical/tabora-regression-baseline.md`
-- Strapi 迁移设计：`docs/superpowers/specs/2026-07-27-directus-to-strapi-migration-design.md`
+- 后端项目：`backend/strapi/README.md`
 
-## 0. 本文档定位与迁移说明
+## 1. 文档定位
 
-本文档是数据同步的**实现事实源**。PRD 负责需求、范围与产品决策；本文档负责后端形态、数据模型、API 契约、客户端同步引擎和包边界。
+本文档描述当前已落地的官方账号与同步实现。同步 PRD 负责产品范围、用户流程和验收；本文档负责 Strapi、客户端同步包、运行时接线与 API 契约。
 
-**2026-07-27 更新：** 原设计基于 Supabase（Auth + Edge Functions + RLS），现已迁移至 **Strapi 5**（users-permissions + custom sync controller）。核心决策保持不变：
+代码是实现细节的最终依据。文档不将规划中的设备管理、快照、冲突收件箱或 E2EE 描述成已经交付的能力。
 
-1. 云端事实源为 **state-based 当前态**（每行一条记录 + `record_updated_at` + tombstone 软删除）。
-2. 客户端只经 **Strapi 自定义 sync controller** 读写（`/api/sync/records`），不直连数据表。
-3. 加密语义为**平台级加密 + 敏感字段永不上传**，非 E2EE。
+## 2. 当前实现概览
 
-Strapi 实现与 Supabase 概念映射：
-
-- `auth.users` → `plugin::users-permissions.user`（Strapi users-permissions 插件托管）
-- Edge Function `sync-gateway` → Strapi custom controller `api::sync.sync`（`pull`/`push` actions）
-- RLS `auth.uid()` → controller `ctx.state.user.id` + `owner` relation
-- `service_role` → Strapi JWT（服务端验证 `ctx.state.user`）
-- Email OTP → 纯 JWT 认证（`/api/auth/local`，无 refresh token）
-
-本文档后续章节保留原 Supabase 设计作为架构参考，实际实现见 `backend/strapi/` 代码和迁移设计文档。
-
-## 1. 后端总体形态（Strapi 5 实现）
-
-```txt
-┌─────────────────────────────────────────────┐
-│ 客户端（extension newtab / playground / 未来 desktop） │
-│                                               │
-│  @tabora/sync (core 同步引擎)                  │
-│    - 本地变更监听（Dexie hooks）               │
-│    - 待上传队列（SyncChange，本地内部结构）     │
-│    - push / pull / merge                       │
-│    - 冲突检测与冲突收件箱模型                   │
-│    - 快照触发                                   │
-│    - 会话持有（@tabora/auth StrapiAuthClient）│
-└───────────────┬───────────────────────────────┘
-                │ 仅经网关，HTTPS
-                │ Authorization: Bearer <jwt>
-                ▼
-┌─────────────────────────────────────────────┐
-│ Strapi 5 Custom Controller: api::sync.sync   │
-│  （唯一同步端点，Node.js/TypeScript）         │
-│    - 校验 JWT，解析 ctx.state.user.id         │
-│    - 敏感字段过滤 + 危险声明拒绝               │
-│    - state-based 合并 / 冲突检测              │
-│    - 快照触发                                   │
-│    - 用 strapi.db.query 访问 Postgres         │
-└───────────────┬───────────────────────────────┘
-                │ Strapi 内部 DB 层（owner relation 隔离）
-                ▼
-┌─────────────────────────────────────────────┐
-│ Postgres (SQLite dev / Postgres prod)         │
-│    - up_users（Strapi users-permissions 托管）│
-│    - synced_records (owner relation)          │
-│    - (未来) sync_snapshots                     │
-│    - (未来) sync_conflicts                     │
-│  权限通过 owner relation + ctx.state.user 隔离│
-│                                               │
-│ Strapi users-permissions（Email/Password JWT）│
-└─────────────────────────────────────────────┘
+```text
+playground / extension
+  |
+  | @tabora/auth: Strapi JWT 会话
+  | @tabora/sync: 本地变更队列、push、pull、合并
+  v
+Strapi 5
+  |- users-permissions: 邮箱密码认证和 JWT
+  |- api::sync.sync: 唯一同步 controller
+  |- api::synced-record.synced-record: 当前态记录
+  `- SQLite（开发）/ PostgreSQL（生产）
 ```
 
-关键边界：
+`packages/workbench-app/src/runtime/bootstrap.ts` 仅在 shell 配置提供 `auth.apiBaseUrl` 时创建 `StrapiAuthClient` 和 `SyncManager`。未配置时，工作台不创建同步网络客户端，保持纯本地模式。
 
-- **插件永远拿不到 Strapi client、JWT 或网关 URL。** 插件只经 core runtime 的 storage repository 读写本地数据，同步由 core 在后台完成。
-- **Strapi JWT secret 只存在于服务端配置**，绝不进入扩展包、前端 bundle 或任何插件。
-- 客户端持有的是用户 JWT（30 天过期），只用于调用 Auth 和 sync controller，不用于直连表。
+## 3. 认证与会话
 
-V1 用邮箱验证码，对应 Supabase 无密码登录的 OTP 形态：
+### 3.1 后端
 
-```ts
-// 发送验证码（注册与登录共用；shouldCreateUser 控制是否允许新建）
-await supabase.auth.signInWithOtp({
-  email,
-  options: { shouldCreateUser: true },
-})
+Strapi 的 users-permissions 插件承载用户与 JWT。客户端使用以下端点：
 
-// 校验 6 位验证码
-const { data, error } = await supabase.auth.verifyOtp({
-  email,
-  token, // 用户输入的 6 位码
-  type: "email",
-})
+| 操作         | HTTP 端点                        |
+| ------------ | -------------------------------- |
+| 注册         | `POST /api/auth/local/register`  |
+| 登录         | `POST /api/auth/local`           |
+| 当前用户     | `GET /api/users/me`              |
+| 请求重置密码 | `POST /api/auth/forgot-password` |
+| 重置密码     | `POST /api/auth/reset-password`  |
+
+`backend/strapi/config/plugins.ts` 配置 JWT 有效期。Strapi 在同步 controller 中把已验证用户提供为 `ctx.state.user`。
+
+### 3.2 客户端
+
+`@tabora/auth` 的 `createStrapiAuthClient` 保存 `{ jwt, userId?, expiresAt? }`。`expiresAt` 由 JWT 的 `exp` 解析而来，解析失败不会阻断会话保存。
+
+不同宿主使用对应存储适配器：扩展使用 `chrome.storage`，网页宿主使用 `localStorage`。退出登录只删除本地会话；收到 `401` 的当前用户请求同样清除本地会话。
+
+用户 JWT 只由 workbench runtime 提供给同步网关客户端。插件 API 不暴露 JWT、认证 client 或后端 URL。
+
+## 4. 同步数据模型与 API 契约
+
+### 4.1 记录模型
+
+服务端接受并保存以下记录类型：
+
+```text
+workspace | pluginInstance | plugin | pluginData
 ```
 
-必须的配置项：
+每条记录在服务端关联 owner，并包含以下语义字段：
 
-- **邮件模板改为发送验证码而非 magic link**：默认模板发的是 `{{ .ConfirmationURL }}`（magic link）。要发 6 位码，模板必须使用 `{{ .Token }}`。这是能否走"验证码"体验的硬前提。
-- **生产必须接自建 SMTP**（SES / Resend / Postmark 等）：Supabase 内置邮件服务有严格发信限流，且 2026-06-03 起免费层邮件模板定制受限。仅用于开发联调可暂用内置。
-- **注册 vs 登录的区分**：`shouldCreateUser: true` 时邮箱不存在会新建账号，存在则登录。UI 需按 PRD §6.1 让用户明确当前是创建还是登录；后端不额外区分。
-- 会话有效期与刷新：使用 Supabase 默认 access token + refresh token 自动续期；`AuthSession`（PRD §17）中的 `sessionId` 对应 Supabase session，不自建。
+| 字段                | 含义               |
+| ------------------- | ------------------ |
+| `type`              | 记录类型           |
+| `id`                | 类型内稳定记录键   |
+| `data`              | 当前有效负载       |
+| `version`           | 服务端版本号       |
+| `client_timestamp`  | 客户端写入时间     |
+| `device_id`         | 最后写入设备标识   |
+| `deleted`           | tombstone 删除标记 |
+| `record_updated_at` | 服务端记录更新时间 |
 
-### 2.3 账号身份映射
+数据库 content type 使用 `owner` relation 隔离用户记录。开发环境默认使用 SQLite，生产环境使用 PostgreSQL。客户端生成并在本地 `syncMeta` 中缓存 `deviceId`，首次 push 后跨重启复用。
 
-- PRD 的 `SyncAccount.accountId` **直接等于 `auth.users.id`**，不自建账号 id 体系。
-- `displayName`、协议确认时间等 profile 字段放独立 `public.profiles` 表，**不写入 `raw_user_meta_data`**（用户可改，不可用于任何授权判断）。
+### 4.2 Push
 
-## 3. 数据库 Schema
+`POST /api/sync/records` 接收最多 100 条记录的数组。客户端将本地变更队列中的对象序列化为：
 
-> **落地状态（2026-07-06）**：本节 5 表 + RLS 已在远端 tabora 项目（`ajetfjtfterbkczrbjlq`）验证通过 security/performance advisors，并落成迁移文件 `supabase/migrations/20260706092225_create_sync_schema.sql`（手写，已与远端 MCP 跨核对一致）。后续结构变更走 `execute_sql` 迭代 + `migration new` 追加迁移。
-
-所有业务表放 `public` schema 并开启 RLS。字段用 `snake_case`（Postgres 惯例），客户端/网关边界处映射为 camelCase。
-
-### 3.1 profiles
-
-```sql
-create table public.profiles (
-  account_id uuid primary key references auth.users (id) on delete cascade,
-  display_name text not null,
-  terms_accepted_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+```json
+[
+  {
+    "type": "pluginData",
+    "id": "official.widget.todo:task-42",
+    "data": { "title": "完成文档整理" },
+    "version": null,
+    "client_timestamp": "2026-07-29T10:00:00.000Z",
+    "device_id": "f95f289a-13bb-4de9-8a9f-e7ef48d4477d",
+    "deleted": false
+  }
+]
 ```
 
-### 3.2 sync_devices
-
-对应 PRD §11。设备"移除"是撤销后续同步资格，用 `status` 表达，不物理删除。
-
-```sql
-create table public.sync_devices (
-  device_id text not null,
-  account_id uuid not null references auth.users (id) on delete cascade,
-  name text not null,
-  type text not null check (type in ('macos','windows','ios','android','browser')),
-  first_login_at timestamptz not null default now(),
-  last_sync_at timestamptz,
-  status text not null default 'online'
-    check (status in ('current','online','offline','removed')),
-  primary key (account_id, device_id)
-);
-```
-
-网关在每次同步请求中校验设备 `status != 'removed'`，被移除设备的同步请求被拒绝，直到重新注册。
-
-### 3.3 synced_records（云端事实源核心表）
-
-state-based 当前态：每个可同步实体一行，按 `updated_at` 合并，删除走 tombstone。
-
-```sql
-create table public.synced_records (
-  account_id uuid not null references auth.users (id) on delete cascade,
-  scope text not null check (scope in ('core','plugin')),
-  entity_type text not null,          -- 'workspace' | 'group' | 'pluginInstance' | 'todo.tasks' 等
-  record_key text not null,           -- 插件声明的稳定 recordKey，或 core 对象 ID
-  payload jsonb not null,             -- 已过滤敏感字段后的记录体
-  updated_at timestamptz not null,    -- 合并比较基准（权威时间戳，见 §6.4）
-  deleted_at timestamptz,             -- 非空即 tombstone
-  schema_version integer not null default 1,
-  last_writer_device_id text not null,
-  server_updated_at timestamptz not null default now(),
-  primary key (account_id, scope, entity_type, record_key)
-);
-
-create index on public.synced_records (account_id, server_updated_at);
-```
-
-- 主键保证同一实体全局单行，天然满足"每行一条记录"。
-- `server_updated_at` 供增量 pull 用作 cursor（客户端记住上次拉取的 `server_updated_at`，只拉更新的行）。
-- tombstone 保留策略：删除记录保留行并置 `deleted_at`，避免多设备复活。**保留期建议 90 天**后由定时清理任务物理删除（pg_cron，V1 可先不清理，作为后续优化）。
-
-### 3.4 sync_snapshots
-
-对应 PRD §14。快照是恢复点，不是通用时光机。
-
-```sql
-create table public.sync_snapshots (
-  snapshot_id uuid primary key default gen_random_uuid(),
-  account_id uuid not null references auth.users (id) on delete cascade,
-  reason text not null,               -- 'first-sync' | 'bulk-merge' | 'conflict-batch' | 'manual'
-  payload jsonb not null,             -- 快照范围见 PRD §14（core 结构 + 实例配置 + 已声明可同步插件数据）
-  created_at timestamptz not null default now()
-);
-
-create index on public.sync_snapshots (account_id, created_at desc);
-```
-
-快照可能较大，V1 直接存 jsonb；若单快照超出合理体积，后续迁移到 Supabase Storage 存对象、表内只留引用（后续优化）。
-
-### 3.5 sync_conflicts
-
-对应 PRD §13 冲突收件箱。
-
-```sql
-create table public.sync_conflicts (
-  conflict_id uuid primary key default gen_random_uuid(),
-  account_id uuid not null references auth.users (id) on delete cascade,
-  scope text not null,
-  entity_type text not null,
-  record_key text not null,
-  local_device_id text not null,
-  remote_device_id text not null,
-  local_summary text not null,
-  remote_summary text not null,
-  local_payload jsonb not null,
-  remote_payload jsonb not null,
-  status text not null default 'open' check (status in ('open','resolved','ignored')),
-  created_at timestamptz not null default now(),
-  resolved_at timestamptz
-);
-
-create index on public.sync_conflicts (account_id, status, created_at desc);
-```
-
-## 4. RLS 策略
-
-即便客户端只经网关（网关用 service_role，绕过 RLS），所有表仍开 RLS 作为纵深防御：一旦未来出现直连路径或密钥泄漏边界变化，用户之间不越权。
-
-```sql
-alter table public.profiles       enable row level security;
-alter table public.sync_devices   enable row level security;
-alter table public.synced_records enable row level security;
-alter table public.sync_snapshots enable row level security;
-alter table public.sync_conflicts enable row level security;
-```
-
-每张表按"仅本账号"授权，`select auth.uid()` 包裹以命中 initplan 优化：
+成功响应位于 Strapi 的 `data` 包装中，并包含 `accepted`、`conflicts`、`rejected` 和 `server_time`。已有记录在客户端版本不匹配，或客户端时间不晚于服务端更新时间时视为冲突；冲突响应携带服务端版本、数据、更新时间和设备标识。
 
-```sql
--- 以 synced_records 为例，其余表同构
-create policy "own rows select" on public.synced_records
-  for select to authenticated
-  using ( (select auth.uid()) = account_id );
+### 4.3 Pull
 
-create policy "own rows insert" on public.synced_records
-  for insert to authenticated
-  with check ( (select auth.uid()) = account_id );
+`GET /api/sync/records` 接受可选的 `since=<ISO 时间>`。首次拉取不带游标；后续请求使用上次响应的 `server_time`。响应返回记录数组和新的 `server_time`，一次最多返回 1000 条记录。
 
--- UPDATE 必须同时给 USING 和 WITH CHECK，否则可被改 account_id 转移他人
-create policy "own rows update" on public.synced_records
-  for update to authenticated
-  using ( (select auth.uid()) = account_id )
-  with check ( (select auth.uid()) = account_id );
+服务端对已删除记录返回 `deleted: true` 与 `data: null`。客户端据此删除本地实体而不是重新上传旧内容，保证 tombstone 能跨设备传播。
 
-create policy "own rows delete" on public.synced_records
-  for delete to authenticated
-  using ( (select auth.uid()) = account_id );
-```
+### 4.4 合并与失败语义
 
-安全约束（来自 Supabase 安全 checklist，落地必须守）：
+同步为 state-based 当前态模型，不保存云端事件流。服务端以记录级 last-write-wins 判定写入；客户端遇到冲突时采用服务端返回的记录并将本地队列项出队。若应用服务端内容失败，队列项保留以便重试。
 
-- 不使用 `auth.role()`，用 `TO authenticated` + 所有权谓词。
-- `TO authenticated` 单独用只是认证不是授权（BOLA/IDOR），必须带 `account_id = auth.uid()` 所有权判断。
-- 不用 `SECURITY DEFINER` 函数来"解决"权限报错。确需绕 RLS 的内部查询放非暴露 schema，函数体内校验 `auth.uid()`。
-- 授权字段不放 `raw_user_meta_data`（用户可改）；如需放 JWT，用 `app_metadata`。
+客户端将 `401` 映射为 `AUTH_FAILED`，`400` 映射为 `INVALID_PAYLOAD`，网络异常映射为 `NETWORK_ERROR`，其他非成功状态映射为 `SERVER_ERROR`。这些错误不会影响本地数据读写。
 
-## 5. Edge Function 同步网关
+## 5. 客户端同步引擎与运行时接线
 
-### 5.1 端点形态
+`@tabora/sync` 由以下部分组成：
 
-单一 Edge Function `sync-gateway`，按 action 分发（避免多个函数间嵌套调用触发 2026-03-11 起的递归限流）：
+| 模块                        | 职责                                        |
+| --------------------------- | ------------------------------------------- |
+| `createChangeDetector`      | 监听本地数据库变更并创建待上传记录          |
+| `createLocalChangeQueue`    | 读写持久化的本地同步队列                    |
+| `createStrapiGatewayClient` | 处理认证头、push/pull 请求和错误归一        |
+| `createSyncEngine`          | 执行 push、pull、冲突应用和游标持久化       |
+| `createSyncManager`         | 创建稳定 `deviceId`、启动变更监听并调度同步 |
 
-```txt
-POST /functions/v1/sync-gateway
-Authorization: Bearer <access_token>
-Content-Type: application/json
+`SyncManager` 的触发规则：
 
-{ "action": "...", "deviceId": "...", ... }
-```
+1. 启动后启动变更监听并安排一次同步。
+2. 本地变更经 2 秒延迟合并后同步。
+3. 页面从后台回到前台时同步。
+4. 浏览器恢复网络连接时同步。
+5. 设置界面的“立即同步”操作调用同一调度入口。
 
-网关启动即用请求头的 JWT 解析出用户：
-
-```ts
-// Deno / Edge Function
-const authClient = createClient(SUPABASE_URL, PUBLISHABLE_KEY, {
-  global: { headers: { Authorization: req.headers.get("Authorization")! } },
-})
-const {
-  data: { user },
-  error,
-} = await authClient.auth.getUser()
-if (!user) return json(401, { error: "unauthorized" })
-
-// 数据读写用 service_role client（仅网关运行时可见）
-const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
-```
+调度前检查会话；未登录直接跳过，不创建网络请求。运行时仅记录错误，不让同步异常破坏 workbench 初始化。
 
-`verify_jwt` 保持开启（默认），确保只有携带有效 JWT 的请求进入函数体。
+## 6. 安全与权限边界
 
-### 5.2 Actions
+- 同步 controller 要求 `ctx.state.user.id`，未认证请求返回 `401`。
+- 查询和写入同时按 owner 过滤；用户不能读取或修改其他用户的记录。
+- 服务端使用敏感字段过滤，拒绝或过滤 API key、token、密码、私钥和文件路径等危险字段。客户端过滤不是唯一防线。
+- 插件只使用 runtime context 暴露的本地 storage 能力；它们不能读取 JWT、认证存储、同步队列或同步端点。
+- 删除使用 tombstone，而不是立即物理删除，避免离线设备重新同步时恢复旧记录。
 
-| action                                | 说明                                                 | 请求要点                                                                                                                                               | 响应要点                                                                  |
-| ------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `register-device`                     | 登录后注册/更新当前设备                              | `deviceId`、`name`、`type`                                                                                                                             | 设备记录，`status`                                                        |
-| `push`                                | 上传本地待同步记录（已过滤前的原始体，服务端再过滤） | `records: SyncPushRecord[]`（含 `scope`/`entityType`/`recordKey`/`payload`/`clientUpdatedAt`/`deleted`）、`declarations`（本次涉及插件集合的同步声明） | 每条 `accepted` / `conflict` / `rejected(reason)`；服务端权威 `updatedAt` |
-| `pull`                                | 增量拉取                                             | `sinceServerUpdatedAt` (cursor)                                                                                                                        | `records`（含 tombstone）、新 `cursor`                                    |
-| `snapshot`                            | 触发一次快照                                         | `reason`、`payload`                                                                                                                                    | `snapshotId`                                                              |
-| `list-devices` / `remove-device`      | 设备管理                                             | `deviceId`（remove）                                                                                                                                   | 设备列表 / 结果                                                           |
-| `list-conflicts` / `resolve-conflict` | 冲突收件箱                                           | `conflictId`、`resolution`（`keep-local`/`keep-remote`/`merged`/`ignore`）、`mergedPayload?`                                                           | 冲突列表 / 结果                                                           |
+平台依赖 HTTPS 保护传输，并由部署环境保护持久化存储。由于平台仍可在服务端处理有效负载，该实现不是端到端加密。
 
-### 5.3 服务端职责（PRD §15 主防线）
+## 7. 已交付与后续能力
 
-网关是敏感过滤和危险声明拒绝的**唯一可信执行点**：
+### 7.1 已交付
 
-1. **危险声明拒绝**：`push` 携带的插件同步声明，若 `excludeFields` 未覆盖、或字段名命中危险模式（`apiKey`、`token`、`accessToken`、`secret`、`password`、`filePath`、绝对路径样式的值），整条记录 `rejected`，不落库。
-2. **敏感字段过滤**：按 core 内置排除表 + 插件声明 `excludeFields`，从 `payload` 剔除敏感字段后才写 `synced_records`。
-3. **state-based 合并 / 冲突检测**：见 §7。
-4. **快照触发**：首次开启同步、大批量合并、冲突批处理前，先写 `sync_snapshots`。
+- Strapi 邮箱密码认证与纯 JWT 会话。
+- 认证客户端、宿主存储适配和 workbench runtime 接线。
+- 同步记录 content type、owner 隔离、敏感字段过滤、push/pull controller。
+- 本地变更检测、持久化队列、增量拉取、服务端优先冲突处理与 tombstone。
+- 同步相关的单元与契约测试。
 
-即使客户端也做一遍过滤（减少上传体积），服务端过滤不可省略——客户端不可信。
+### 7.2 后续能力
 
-## 6. 客户端同步引擎（@tabora/sync）
+- 用户可见的设备列表、命名、撤销和跨设备会话管理。
+- 服务端持久化冲突记录、冲突收件箱和手动合并 UI。
+- 自动快照、恢复入口和历史版本浏览。
+- 插件声明的细粒度字段合并器。
+- 文件原件同步、容量管理、团队协作和完整 E2EE。
 
-> **状态：已实现**（2026-07-07，S5 完成）
-
-### 6.1 包边界与放置
+## 8. 验证入口
 
-同步是 core 能力，但**不放进 `@tabora/platform-kernel`**（kernel 只放通用运行机制，不含具体后端/业务）。新建独立包 `@tabora/sync`：
-
-```txt
-packages/sync/
-  src/
-    index.ts
-    syncEngine.ts          # 编排 push/pull/merge/重试
-    localChangeQueue.ts    # SyncChange 本地队列（IndexedDB）
-    changeDetector.ts      # 监听 Dexie 变更 -> 生成待上传项
-    conflictModel.ts       # 冲突收件箱模型
-    gatewayClient.ts       # 调用 sync-gateway 的唯一出口
-    authSession.ts         # supabase-js + 自定义 storage adapter
-    sensitiveFilter.ts     # 客户端预过滤（与服务端对齐，减体积）
-```
+| 验证项                     | 命令                             |
+| -------------------------- | -------------------------------- |
+| Strapi 契约与敏感字段测试  | `pnpm --dir backend/strapi test` |
+| 认证与同步客户端测试       | `pnpm test`                      |
+| 格式、lint、类型和架构检查 | `pnpm check`                     |
+| 全仓构建                   | `pnpm build`                     |
 
-实现路径：
-
-- `authSession.ts`：封装 supabase-js Email OTP（signInWithOtp / verifyOtp / getSession / signOut / refreshSession），注入 S4 的 AuthStorage adapter。
-- `gatewayClient.ts`：调用 sync-gateway 的唯一出口，封装 8 个 actions（register-device / push / pull / snapshot / list-devices / remove-device / list-conflicts / resolve-conflict）。
-- `sensitiveFilter.ts`：客户端敏感字段预过滤（apiKey / token / password / secret / filepath 关键词 + Unix/Windows 路径检测），与服务端规则对齐。
-- `localChangeQueue.ts`：封装 S3 的 syncQueueRepository，提供队列操作（enqueue / dequeue / getPending / markAsSyncing / markAsFailed）。
-- `changeDetector.ts`：监听 Dexie hooks（workspaces / pluginInstances / plugins / pluginData 的 creating / updating / deleting），自动生成 SyncChange 入队。
-- `syncEngine.ts`：主同步编排器，协调 push（上传本地变更 + 敏感过滤）、pull（拉取云端变更 + 应用到本地 + 处理 tombstone）、sync（完整同步周期）。
-- `conflictModel.ts`：冲突收件箱模型（V1 内存实现，预留接口供后续持久化）。
-- 单元测试：`sensitiveFilter.test.ts`（覆盖敏感字段检测核心路径）。
-
-依赖方向：
-
-- `@tabora/sync` 可依赖 `@tabora/storage`（读写本地）、`@tabora/plugin-api`（类型/声明）、`@tabora/host-adapters`（AuthStorage）、`supabase-js`。
-- `@tabora/sync` **不被** `@tabora/ui` / `@tabora/plugin-api` 依赖，不含插件业务逻辑。
-- 同步设置 UI 作为 core 设置面板贡献，经 shell 装配；插件不感知 `@tabora/sync`。
-- `pnpm check:architecture` 需新增守卫：插件 package 不得依赖 `@tabora/sync`；`@tabora/plugin-api`、`@tabora/ui` 不得依赖 `@tabora/sync`。（守卫规则待 S6 集成时添加）
-
-> 待确认：包名与是否独立成包（备选：并入 `@tabora/workbench-app` 的 core runtime 层）。本方案按独立包 `@tabora/sync` 设计，最终以架构评审为准。
-
-### 6.2 会话持有（浏览器扩展硬坑）
-
-> **状态：已实现**（2026-07-07，S4 完成）
-
-扩展 MV3 的 background/service worker 没有 `localStorage`，supabase-js 默认 storage 失效，session 无法持久化。必须注入自定义 storage adapter：
-
-```ts
-const chromeStorageAdapter = {
-  getItem: (k) => chrome.storage.local.get(k).then((r) => r[k] ?? null),
-  setItem: (k, v) => chrome.storage.local.set({ [k]: v }),
-  removeItem: (k) => chrome.storage.local.remove(k),
-}
-createClient(url, publishableKey, {
-  auth: {
-    storage: chromeStorageAdapter,
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-})
-```
-
-playground（普通 web）用默认 `localStorage`。adapter 由 host-adapters 层按宿主注入，`@tabora/sync` 只依赖抽象 storage 接口。
-
-实现路径：
-
-- `packages/host-adapters/src/authStorage.ts`：定义 `AuthStorage` 接口和两个实现（`createLocalStorageAuthStorage` / `createChromeStorageAuthStorage`）。
-- `createLocalStorageAuthStorage()`：基于浏览器标准 `localStorage`，用于 web/playground。
-- `createChromeStorageAuthStorage()`：基于 `chrome.storage.local` API，用于 MV3 扩展 service worker（session 持久化到扩展存储，不受 worker 重启影响）。
-- 单元测试：`authStorage.test.ts`（覆盖两个 adapter 的核心路径，chrome API 用 vitest mock）。
-- 后续 S5（`@tabora/sync`）在创建 supabase client 时，由 host-adapters 注入对应 adapter。
-
-### 6.3 本地变更捕获与队列 & bootstrap 装配集成
-
-> **状态：已实现**（2026-07-07，S6 完成）
-
-**本地变更捕获（已实现）：**
-
-- `changeDetector` 通过 Dexie hooks（`creating`/`updating`/`deleting`）监听 `workspaces`、`pluginInstances`、`plugins`、`pluginData` 的写入。
-- 每次写入生成一条本地 `SyncChange`（PRD §17，**仅本地内部结构**），入 `localChangeQueue`（存 IndexedDB 一张新表 `syncQueue`，见 §9）。
-- 短延迟合并：同一 `(scope, entityType, recordKey)` 的多次变更在延迟窗口内合并为最新态，再上传（PRD §12）。
-- 触发时机（PRD §12）：本地变更后短延迟、应用启动、后台回前台、网络恢复、登录成功、手动"立即同步"。
-
-**bootstrap 装配集成（已实现）：**
-
-实现路径：
-
-1. **syncManager.ts**：创建同步管理器，封装 authSession + gatewayClient + changeDetector + syncEngine 的完整生命周期
-   - 根据 host.platform 自动选择 authStorage adapter（extension → chromeStorage，web → localStorage）
-   - 设备注册逻辑：首次同步时自动调用 register-device，持久化 deviceId
-   - 触发时机实现：
-     - 应用启动：syncManager.start() 自动触发首次同步
-     - 本地变更：changeDetector 监听 Dexie hooks，2 秒防抖后触发同步
-     - 后台回前台：监听 document.visibilitychange 事件
-     - 网络恢复：监听 window.online 事件
-     - 手动同步：暴露 triggerSync() API 供 UI 调用
-   - 失败回退：所有同步错误仅 console.error，不阻塞本地工作台
-
-2. **bootstrap.ts 集成**：
-   - 在 WorkbenchRuntimeRepositories 中添加 syncQueueRepo 和 syncMetaRepo
-   - 在 WorkbenchRuntimeBootstrap 中添加可选的 syncManager 字段
-   - createWorkbenchRuntimeBootstrap 中检查环境变量（SUPABASE_URL / SUPABASE_ANON_KEY / SYNC_GATEWAY_URL）
-   - 如果环境变量存在，创建 syncManager 并自动启动；失败则跳过，不影响 workbench 启动
-
-3. **StorageAdapter 更新**：
-   - 在 StorageRepositories 类型中添加 syncQueueRepo 和 syncMetaRepo
-   - createWebStorageAdapter 中创建并返回 sync 相关 repositories
-
-4. **架构守卫规则**：
-   - PLUGIN_IMPORT_RULES：禁止插件 import @tabora/sync
-   - UI_IMPORT_RULES：禁止 @tabora/ui import @tabora/sync
-   - UI_DEPENDENCY_RULES：禁止 @tabora/ui 依赖 @tabora/sync
-   - 确保同步能力仅由 workbench-app 核心持有，插件和 UI 组件无感知
-
-5. **测试更新**：
-   - WorkbenchShellRuntimeState.test.ts 中添加 syncQueueRepo 和 syncMetaRepo 的 mock
-
-**环境变量配置示例：**
-
-```bash
-# .env (playground / extension)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SYNC_GATEWAY_URL=https://your-project.supabase.co/functions/v1/sync-gateway
-```
-
-未配置环境变量时，workbench 正常启动，syncManager 为 undefined，应用以纯本地模式运行。
-
-### 6.4 权威时间戳兜底
-
-PRD §8 要求 `updatedAt` 由插件写入时维护，但插件不打或打错会静默丢数据。约束：
-
-- core 在把插件记录纳入队列时，若 `updatedAt` 缺失或明显不合理（早于上次已知值），**用 core 侧可信时间盖写** `clientUpdatedAt`。
-- 网关最终以 `server_updated_at`（服务端时间）记录落库时刻，`updated_at` 用于合并比较。LWW 比较用客户端声明的 `updatedAt`，但同值/异常时以 `server_updated_at` 打破平局，避免时钟漂移导致乱序。
-
-### 6.5 增量 pull
-
-- 客户端持久化每个账号的 `pullCursor`（上次 `pull` 返回的 `server_updated_at` 上界）。
-- `pull` 只返回 `server_updated_at > cursor` 的行，含 tombstone。
-- 本地按 tombstone 删除对应记录（core 对象删实例/分组；插件数据经 repository 删除）。
-
-## 7. 合并与冲突
-
-### 7.1 state-based 合并
-
-网关处理 `push` 中每条记录：
-
-1. 读取云端同 `(account_id, scope, entity_type, record_key)` 当前行。
-2. 云端不存在 → 直接插入（`accepted`）。
-3. 云端存在：
-   - `last-write-wins`：比较 `updated_at`，客户端较新则覆盖（保留 tombstone 语义），否则忽略并返回云端较新态供客户端回写。
-   - `record-merge`：按字段合并。字段互不重叠 → 自动合并（`accepted`）；同一字段两端都改且值不同 → 冲突。
-
-### 7.2 冲突判定与收件箱
-
-- 仅当 `record-merge` 下同字段并发冲突、且无法按 `updated_at` 安全取舍时，写入 `sync_conflicts`（`status='open'`），该记录本轮不覆盖云端。
-- 客户端 `list-conflicts` 拉取，渲染 PRD §13 冲突条目（设备、时间、两端摘要、建议动作）。
-- 用户选择 `keep-local`/`keep-remote`/`merged`/`ignore`，经 `resolve-conflict` 写回合并记录并触发一次同步。
-
-### 7.3 首次开启同步（PRD §6.3）
-
-- `initialize-cloud-from-local`：先 `snapshot(first-sync)`，再把本地全量作为 `push` 上传。
-- `merge-cloud-with-local`：先 `snapshot(first-sync)`，`pull` 云端全量，与本地做一轮 §7.1 合并，冲突进收件箱。
-- `skip-for-now`：仅登录 + 注册设备，不开同步。
-
-## 8. 敏感字段过滤规则
-
-core 内置排除（永不上传，PRD §15 / §7.2）：
-
-- 任意名为 `apiKey`/`token`/`accessToken`/`refreshToken`/`secret`/`password` 的字段。
-- 本机绝对路径样式的值（`/Users/...`、`C:\...`、`file://`）。
-- 缓存、临时图片、OCR 原图、导出结果对应的字段/集合（插件通过不声明这些集合来排除，core 不接收即不上传）。
-
-插件声明排除（PRD §8 `excludeFields`）：叠加在内置规则之上。
-
-执行点：客户端 `sensitiveFilter` 预过滤（减体积）+ 网关服务端过滤（主防线）。两侧规则表同源，放 `@tabora/plugin-api` 或共享常量，避免漂移。
-
-## 9. 本地存储增强
-
-> **状态：已实现**（2026-07-07，S3 完成）
-
-`@tabora/storage` 的 Dexie schema 已从 version 1（6 表）升至 version 2（8 表），新增同步专用表：
-
-```txt
-syncQueue: "id, [scope+entityType+recordKey], status, queuedAt"
-syncMeta:  "key"   // 存 pullCursor、账号态、设备 ID、schemaVersion 等
-```
-
-实现路径：
-
-- `packages/storage/src/database.ts`：Dexie version 2，新增 `syncQueue`、`syncMeta` 表定义和类型。
-- `packages/storage/src/syncQueueRepository.ts`：同步队列 CRUD 操作（add/get/getAllPending/getByRecord/updateStatus/remove/removeByRecord/clear/count）。
-- `packages/storage/src/syncMetaRepository.ts`：同步元数据键值存储（get/set/remove/clear/getAll）。
-- 单元测试：`syncQueueRepository.test.ts`、`syncMetaRepository.test.ts`（覆盖核心路径，使用 `fake-indexeddb`）。
-
-约束（对齐平台技术方案 §13）：
-
-- 同步队列是 core-owned 数据，**不混入 `pluginData`**（插件业务数据路径），也不混入 workspace 装配数据。
-- 插件业务数据仍只经 repository 读写；`@tabora/sync` 读它们用于生成同步项，不改变插件访问路径。
-- `syncMeta.schemaVersion` 承接 PRD §20.1 的 IndexedDB→云端结构演进：payload 带 `schema_version`，网关/客户端按版本做前向兼容或迁移。
-
-## 10. 失败与回退
-
-对齐 PRD §16 与平台技术方案 §14（同步失败绝不阻塞本地工作台）：
-
-- 网关不可达 / 5xx / 网络离线：记录留在 `syncQueue`，指数退避重试，不弹阻断式错误。
-- 401（会话过期）：暂停同步，提示重新登录，本地照常可用。
-- 设备被移除（网关返回资格失效）：停止同步，提示重新登录注册。
-- 危险声明 `rejected`：不重试该记录，记录 warning 供调试，不影响其他记录。
-- 快照/恢复失败：保留原状态并给出原因（PRD §14）。
-
-## 11. 验收（技术层，补 PRD §19 的产品验收）
-
-- push/pull 幂等：重复上传同一记录不产生重复行、不错误覆盖较新态。
-- 离线重放：离线期间多次本地写入，恢复后合并为最新态正确上传。
-- LWW 正确性：并发写同一记录，`updated_at` 较新者胜；同值以 `server_updated_at` 打破平局。
-- tombstone 生效：一端删除，另一端 pull 后本地删除，且不被旧态重新上传复活。
-- 敏感过滤：含 `apiKey`/绝对路径的 payload 经网关后云端不含这些字段；危险声明被 `rejected`。
-- RLS：用伪造 `account_id` 直连（模拟直连路径）无法读写他人行。
-- 会话持久化：扩展 MV3 环境重启 service worker 后 session 仍可恢复。
-
-## 12. 待确认 / 后续
-
-- `@tabora/sync` 是否独立成包（vs 并入 workbench-app core runtime）——待架构评审。
-- tombstone 与快照的物理清理任务（pg_cron）——V1 可暂缓，作为后续优化。
-- 大快照迁移到 Supabase Storage——V1 存 jsonb，超阈值后再迁。
-- 自建 SMTP 供应商选型——生产上线前必须确定。
-- `SyncedRecord.payload` 的 jsonb 索引策略——按实际查询模式在实现期补 GIN 索引评估。
-
-## 13. 验证入口
-
-本方案落地涉及 storage schema、新包、架构守卫，属跨包变更，至少运行：
-
-```bash
-pnpm check
-pnpm check:architecture
-pnpm test
-pnpm build
-```
-
-Supabase 侧变更（表、RLS、Edge Function）落地后，用 `get_advisors`（安全 + 性能）核对，并按 §11 技术验收编写针对同步引擎的单测与集成测试。
+修改认证或同步契约时，还应启动 Strapi 并以有效 JWT 验证注册、登录、push、pull、owner 隔离和 tombstone 路径。

@@ -159,14 +159,12 @@ docker compose -f backend/strapi/docker/compose.prod.yml up -d
 
 ## 技术文档
 
-- 迁移设计：`docs/superpowers/specs/2026-07-27-directus-to-strapi-migration-design.md`
-- 实施计划：`docs/superpowers/plans/2026-07-27-directus-to-strapi-migration.md`
 - 数据同步技术方案：`docs/technical/tabora-data-sync-technical-design.md`
-- 同步 PRD：`docs/technical/mpz35mfq-16-data-sync-prd.md`
+- 同步 PRD：`docs/technical/tabora-data-sync-prd.md`
 
 ## 关键约束
 
-- **纯 JWT 认证**：无 refresh token，客户端持久化 JWT 并在过期前刷新
+- **纯 JWT 认证**：无 refresh token，客户端持久化 JWT；过期后重新登录
 - **敏感字段过滤**：sync controller 服务端过滤 `apiKey`/`token`/`filePath` 等字段
 - **冲突检测**：版本不匹配或客户端时间戳不晚于服务端时间 → conflict
 - **Tombstone 删除**：`deleted=true` 保留记录，防止跨设备删除复活
