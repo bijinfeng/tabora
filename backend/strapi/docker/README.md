@@ -112,11 +112,12 @@ docker run --rm -v strapi_uploads:/data -v $(pwd):/backup alpine tar xzf /backup
 
 ### Dockerfile 多阶段构建
 
-1. **deps**: 安装全量依赖（包含 devDependencies）
-2. **build**: 构建 Strapi admin 面板和编译 TypeScript
-3. **runner**: 最终镜像，仅包含生产依赖和构建产物
+1. **build**: 安装全量依赖（包含 devDependencies），构建 Strapi Admin 面板并编译 TypeScript。
+2. **runner**: 依据 `package-lock.json` 独立执行 `npm ci --omit=dev`，仅安装生产依赖和构建产物。
 
-`deps` 阶段包含 `python3`、`make` 和 `g++`，仅用于 `better-sqlite3` 等原生模块在预编译包不可用时的回退编译。构建完成后执行 `npm prune --omit=dev`；`runner` 只复制裁剪后的生产依赖、`dist`、`config`、`public` 和 `favicon.png`，不带入构建工具。npm 下载缓存通过 BuildKit cache mount 复用，只加速构建，不会进入镜像层。
+`build` 阶段包含 `python3`、`make` 和 `g++`，只用于本地 SQLite 开发依赖 `better-sqlite3` 等原生模块在预编译包不可用时的回退编译。生产 compose 固定使用 PostgreSQL，因此 `better-sqlite3` 是开发依赖，runner 不会安装它，也不带入编译工具。
+
+runner 在安装 production dependencies 后执行 `scripts/prune-production-files.mjs`，只删除 source map、TypeScript 类型/源码、测试、示例和文档文件；JavaScript 运行文件与许可证保留。npm 下载缓存通过 BuildKit cache mount 复用，只加速构建，不会进入镜像层。
 
 容器以 UID/GID `1001` 的 `strapi` 非 root 用户运行。`/app/public/uploads` 会在降权前创建并授权给该用户，因此 `strapi_uploads` Docker volume 可以继续保存用户上传文件。
 
@@ -128,8 +129,8 @@ Strapi 文档明确要求：构建 admin 面板需要 devDependencies（如 `@st
 
 1. 安装全量依赖（无 `NODE_ENV=production`）
 2. 构建（此时可以访问 devDependencies）
-3. 构建后在 build stage 删除 devDependencies（`npm prune --omit=dev`）
-4. 最终镜像复制已裁剪的生产依赖，不重复安装原生模块
+3. runner 依据 lockfile 独立安装 production dependencies（`npm ci --omit=dev`）
+4. runner 裁剪仅开发/调试文件并复制构建产物
 
 ### 检查镜像体积
 

@@ -21,7 +21,6 @@
     "@strapi/provider-email-sendmail": "5.51.0",
     "@strapi/provider-upload-aws-s3": "5.51.0",
     "@strapi/strapi": "5.51.0",
-    "better-sqlite3": "12.8.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.30.3",
@@ -32,6 +31,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "better-sqlite3": "12.8.0",
     "typescript": "^5",
     "vite": "^8.1.5",
     "vitest": "^4.1.10"

@@ -160,6 +160,7 @@ docker compose -f backend/strapi/docker/compose.prod.yml up -d
 生产环境需配置：
 
 - PostgreSQL 连接 (`DATABASE_*`)
+- SQLite 仅用于本地开发；生产镜像不会安装 `better-sqlite3`。
 - AWS S3 (`UPLOAD_PROVIDER=aws-s3`, `AWS_*`)
 - 可用邮件 provider（设置 `EMAIL_PROVIDER` 及 provider 对应配置；不要将开发态 `EMAIL_DEV_*` 指向生产 SMTP）
 - 强随机密钥 (`APP_KEYS`, `JWT_SECRET`, etc.)

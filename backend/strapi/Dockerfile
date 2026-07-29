@@ -1,16 +1,13 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:22-alpine AS deps
+FROM node:22-alpine AS build
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
-FROM deps AS build
-WORKDIR /app
 COPY . .
-RUN npm run build \
-  && npm prune --omit=dev
+RUN npm run build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -19,12 +16,16 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 strapi \
   && adduser --system --uid 1001 --ingroup strapi strapi
 
-# The build stage prunes development dependencies after compiling native
-# modules, so the runner never needs the compiler toolchain or npm cache.
+# Install the production tree from the lockfile rather than copying build
+# dependencies. The build-only SQLite driver is omitted because production
+# deployments use PostgreSQL.
 COPY --chown=strapi:strapi package*.json ./
+COPY --from=build --chown=strapi:strapi /app/scripts/prune-production-files.mjs ./scripts/prune-production-files.mjs
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev \
+  && node scripts/prune-production-files.mjs node_modules \
+  && rm -rf scripts
 
 # Copy only runtime application files from the build stage.
-COPY --from=build --chown=strapi:strapi /app/node_modules ./node_modules
 COPY --from=build --chown=strapi:strapi /app/dist ./dist
 COPY --from=build --chown=strapi:strapi /app/config ./config
 COPY --from=build --chown=strapi:strapi /app/public ./public
