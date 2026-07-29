@@ -307,6 +307,7 @@ export type SettingsPanelViewProps = {
     createWorkspace?(name: string): Promise<void>
     switchWorkspace?(id: string): Promise<void>
     deleteWorkspace?(id: string): Promise<void>
+    updateAccountNavigation?(account: { name: string; meta: string; avatar: string }): void
     auth?: {
       getSession(): Promise<{ userId?: string; sessionId: string } | null>
       getCurrentUser(): Promise<{ id: string; email?: string } | null>

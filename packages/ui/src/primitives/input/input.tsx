@@ -15,6 +15,7 @@ export type HeadlessInputProps = {
   invalid?: boolean
   type?: InputType
   clearable?: boolean
+  passwordVisibilityToggle?: boolean
   leadingIcon?: JSX.Element
   trailingIcon?: JSX.Element
   class?: string | undefined
@@ -39,6 +40,7 @@ export type HeadlessInputProps = {
   "aria-label"?: string
   id?: string
   maxLength?: number
+  autocomplete?: string
   autofocus?: boolean
   onKeyDown?: (e: KeyboardEvent) => void
   onFocus?: () => void
@@ -51,7 +53,10 @@ export function HeadlessInput(props: HeadlessInputProps) {
 
   const hasValue = () => props.value.length > 0
   const isPasswordType = () => props.type === "password"
-  const effectiveType = () => (isPasswordType() && showPassword() ? "text" : (props.type ?? "text"))
+  const canTogglePasswordVisibility = () =>
+    isPasswordType() && props.passwordVisibilityToggle !== false
+  const effectiveType = () =>
+    canTogglePasswordVisibility() && showPassword() ? "text" : (props.type ?? "text")
 
   const handleClear = () => {
     props.onInput("")
@@ -63,11 +68,11 @@ export function HeadlessInput(props: HeadlessInputProps) {
 
   // Determine if wrapper is needed
   const needsWrapper =
-    props.clearable || isPasswordType() || props.leadingIcon || props.trailingIcon
+    props.clearable || canTogglePasswordVisibility() || props.leadingIcon || props.trailingIcon
 
   // Determine padding adjustments
   const hasLeading = () => !!props.leadingIcon
-  const hasTrailing = () => !!props.trailingIcon || props.clearable || isPasswordType()
+  const hasTrailing = () => !!props.trailingIcon || props.clearable || canTogglePasswordVisibility()
   const controlAttrs = (): SolidAttrs<HTMLInputElement> => ({
     ...props.inputAttrs,
     ...(props.controlAttrs ?? { class: props.class, style: props.style }),
@@ -95,6 +100,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
         type={props.type ?? "text"}
         id={props.id}
         maxLength={props.maxLength}
+        autocomplete={props.autocomplete}
         autofocus={props.autofocus}
         value={props.value}
         placeholder={props.placeholder}
@@ -127,6 +133,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
         type={effectiveType()}
         id={props.id}
         maxLength={props.maxLength}
+        autocomplete={props.autocomplete}
         autofocus={props.autofocus}
         value={props.value}
         placeholder={props.placeholder}
@@ -139,7 +146,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
         onBlur={() => props.onBlur?.()}
         ref={props.ref}
       />
-      <Show when={props.trailingIcon && !props.clearable && !isPasswordType()}>
+      <Show when={props.trailingIcon && !props.clearable && !canTogglePasswordVisibility()}>
         <span {...trailingIconAttrs()} aria-hidden="true">
           {props.trailingIcon}
         </span>
@@ -155,7 +162,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
           <X size={14} strokeWidth={2} />
         </button>
       </Show>
-      <Show when={isPasswordType() && !props.disabled}>
+      <Show when={canTogglePasswordVisibility() && !props.disabled}>
         <button
           type="button"
           {...trailingButtonAttrs()}

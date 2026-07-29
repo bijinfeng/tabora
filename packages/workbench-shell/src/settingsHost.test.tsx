@@ -1,7 +1,7 @@
 import { createComponent } from "solid-js"
 import type { JSX } from "solid-js"
 import { render } from "solid-js/web"
-import type { SettingsPanelContribution } from "@tabora/plugin-api"
+import type { SettingsPanelContribution, SettingsPanelViewProps } from "@tabora/plugin-api"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   SettingsHost,
@@ -303,6 +303,50 @@ describe("settings host composition", () => {
     expect(root.querySelector("[data-settings-close]")?.getAttribute("aria-label")).toBe(
       "Close settings",
     )
+  })
+
+  it("updates account navigation when the account panel reports a signed-in session", () => {
+    const panels: SettingsPanelDescriptor[] = [
+      {
+        id: "official.settings.workspace.account",
+        title: "账号",
+        view: "account.view",
+        section: "account",
+        pluginId: "official.settings.workspace",
+        scope: "workspace",
+      },
+    ]
+    const AccountPanel = (props: SettingsPanelViewProps) => {
+      props.host.updateAccountNavigation?.({
+        name: "a@test.com",
+        meta: "已登录",
+        avatar: "A",
+      })
+      return <div />
+    }
+
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels,
+        activeSectionId: "account",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => AccountPanel,
+        panelProps: () =>
+          ({
+            panelId: "official.settings.workspace.account",
+            pluginId: "official.settings.workspace",
+            scope: "workspace",
+            host: { close: vi.fn(), setDirty: vi.fn() },
+          }) as unknown as SettingsPanelViewProps,
+      }),
+    )
+
+    const account = root.querySelector('[data-settings-section="account"]')
+    expect(account?.textContent).toContain("a@test.com")
+    expect(account?.textContent).toContain("已登录")
+    expect(account?.textContent).toContain("A")
   })
 
   it("keeps the settings container open when a panel view fails", () => {

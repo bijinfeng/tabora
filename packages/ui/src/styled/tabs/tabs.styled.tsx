@@ -126,6 +126,9 @@ const styles = stylex.create({
 
 export type StyledTabsProps = TabsProps & {
   xstyle?: StyleXStyles
+  listXstyle?: StyleXStyles
+  triggerXstyle?: StyleXStyles
+  triggerSelectedXstyle?: StyleXStyles
 }
 
 export function Tabs(props: StyledTabsProps) {
@@ -134,6 +137,7 @@ export function Tabs(props: StyledTabsProps) {
     stylex.attrs(
       (!props.variant || props.variant === "underline") && styles.underlineList,
       props.variant === "pills" && styles.pillsList,
+      props.listXstyle,
     )
   const triggerCompiled = () =>
     stylex.attrs(
@@ -141,7 +145,9 @@ export function Tabs(props: StyledTabsProps) {
       (!props.variant || props.variant === "underline") && styles.underlineTrigger,
       props.variant === "pills" && styles.pillsTrigger,
       props.size === "sm" && styles.smTrigger,
+      props.triggerXstyle,
     )
+  const triggerSelectedCompiled = () => stylex.attrs(props.triggerSelectedXstyle)
   const indicatorCompiled = () =>
     stylex.attrs(styles.indicator, props.variant === "pills" && styles.indicatorHidden)
   const contentCompiled = () => stylex.attrs(styles.content)
@@ -155,6 +161,10 @@ export function Tabs(props: StyledTabsProps) {
       listStyle={props.listStyle}
       triggerClass={joinClassNames(triggerCompiled().class, props.triggerClass)}
       triggerStyle={props.triggerStyle}
+      triggerSelectedClass={joinClassNames(
+        triggerSelectedCompiled().class,
+        props.triggerSelectedClass,
+      )}
       triggerSelectedStyle={{ ...props.triggerSelectedStyle }}
       indicatorClass={joinClassNames(indicatorCompiled().class, props.indicatorClass)}
       indicatorStyle={{ ...props.indicatorStyle }}

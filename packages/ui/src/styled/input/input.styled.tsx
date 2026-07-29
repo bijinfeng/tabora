@@ -164,6 +164,7 @@ type HeadlessInputStyleProp =
 
 export type InputProps = Omit<HeadlessInputProps, HeadlessInputStyleProp> & {
   xstyle?: XStyle
+  controlXstyle?: XStyle
 }
 
 export function Input(props: InputProps) {
@@ -187,6 +188,7 @@ export function Input(props: InputProps) {
         Boolean(props.clearable) ||
         props.type === "password"
       ) && props.xstyle,
+      props.controlXstyle,
     )
   const wrapperAttrs = () =>
     stylex.attrs(
@@ -194,7 +196,7 @@ export function Input(props: InputProps) {
       (Boolean(props.leadingIcon) ||
         Boolean(props.trailingIcon) ||
         Boolean(props.clearable) ||
-        props.type === "password") &&
+        (props.type === "password" && props.passwordVisibilityToggle !== false)) &&
         props.xstyle,
     )
   const leadingIconAttrs = () =>

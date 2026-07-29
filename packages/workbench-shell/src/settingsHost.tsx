@@ -59,6 +59,12 @@ export type SettingsHostCopy = {
   saveLabel?: string
 }
 
+type AccountNavigation = {
+  name: string
+  meta: string
+  avatar: string
+}
+
 const SECTION_FALLBACK_DESCRIPTIONS: Record<SettingsSectionId, string> = {
   general: "工作区、布局和基础行为。所有设置只影响当前个人工作台。",
   appearance: "主题、背景和强调色。视觉配置来自主题插件。",
@@ -110,6 +116,10 @@ const styles = stylex.create({
     transitionProperty: "transform",
     transitionTimingFunction: motion.ease,
     width: "min(760px, calc(100vw - 48px))",
+    "@media (min-width: 1024px)": {
+      height: "min(600px, calc(100vh - 64px))",
+      width: "min(920px, calc(100vw - 48px))",
+    },
     "@media (max-width: 768px)": {
       width: "calc(100vw - 32px)",
     },
@@ -472,6 +482,7 @@ export function SettingsHost(props: SettingsHostProps) {
   const [isEntering, setIsEntering] = createSignal(false)
   const [isClosing, setIsClosing] = createSignal(false)
   const [statusText, setStatusText] = createSignal<string | null>(null)
+  const [accountNavigation, setAccountNavigation] = createSignal<AccountNavigation | null>(null)
 
   const handleClose = () => {
     if (isClosing()) return
@@ -501,6 +512,12 @@ export function SettingsHost(props: SettingsHostProps) {
   const activeSectionDescription = () =>
     props.copy?.sectionDescription?.(activeSection()) ??
     SECTION_FALLBACK_DESCRIPTIONS[activeSection()]
+  const accountNavigationName = () =>
+    accountNavigation()?.name ?? props.copy?.accountNavName ?? "未登录"
+  const accountNavigationMeta = () =>
+    accountNavigation()?.meta ?? props.copy?.accountNavMeta ?? "本地模式"
+  const accountNavigationAvatar = () =>
+    accountNavigation()?.avatar ?? props.copy?.accountNavAvatar ?? "未"
   const sectionNavMeta = (sectionId: SettingsSectionId) => {
     const panelCount = navigator().sections[sectionId].panels.length
     if (sectionId === "about") return props.copy?.sectionMeta?.(sectionId) ?? "V2"
@@ -606,14 +623,10 @@ export function SettingsHost(props: SettingsHostProps) {
                 onClick={() => handleSectionChange("account")}
                 aria-label={sectionTitle("account")}
               >
-                <span {...stylex.attrs(styles.avatar)}>{props.copy?.accountNavAvatar ?? "未"}</span>
+                <span {...stylex.attrs(styles.avatar)}>{accountNavigationAvatar()}</span>
                 <span {...stylex.attrs(styles.accountCopy)}>
-                  <strong {...stylex.attrs(styles.accountName)}>
-                    {props.copy?.accountNavName ?? "未登录"}
-                  </strong>
-                  <span {...stylex.attrs(styles.accountMeta)}>
-                    {props.copy?.accountNavMeta ?? "本地模式"}
-                  </span>
+                  <strong {...stylex.attrs(styles.accountName)}>{accountNavigationName()}</strong>
+                  <span {...stylex.attrs(styles.accountMeta)}>{accountNavigationMeta()}</span>
                 </span>
               </Button>
               <div {...stylex.attrs(styles.kicker)}>
@@ -727,7 +740,14 @@ export function SettingsHost(props: SettingsHostProps) {
                             )
                           let content: JSX.Element
                           try {
-                            content = createComponent(View, props.panelProps(panel))
+                            const panelProps = props.panelProps(panel)
+                            content = createComponent(View, {
+                              ...panelProps,
+                              host: {
+                                ...panelProps.host,
+                                updateAccountNavigation: (account) => setAccountNavigation(account),
+                              },
+                            })
                           } catch (error) {
                             return createPluginErrorFallback(error, panel.id, panel.title)
                           }

@@ -78,7 +78,7 @@
 - `docs/design/composite-spec.html`：官网/文档组合组件规范预览。
 - `docs/design/landing.html`、`docs/design/download.html`、`docs/design/docs.html`：官网三页预览。
 
-这些 HTML 是预览资产，不承载规范事实。与 `DESIGN.md` 冲突时以 `DESIGN.md` 为准。
+这些 HTML 是预览资产，不承载规范事实，也不纳入自动格式化、lint 或测试覆盖目标。与 `DESIGN.md` 冲突时以 `DESIGN.md` 为准。
 
 ### 官方插件
 

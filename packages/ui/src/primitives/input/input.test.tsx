@@ -9,13 +9,22 @@ describe("Input", () => {
     document.body.appendChild(root)
     const onInput = vi.fn()
     render(
-      () => <Input value="hello" onInput={onInput} aria-label="搜索" placeholder="输入" />,
+      () => (
+        <Input
+          value="hello"
+          onInput={onInput}
+          aria-label="搜索"
+          autocomplete="email"
+          placeholder="输入"
+        />
+      ),
       root,
     )
     const el = root.querySelector("input")!
     expect(el.value).toBe("hello")
     expect(el.placeholder).toBe("输入")
     expect(el.getAttribute("aria-label")).toBe("搜索")
+    expect(el.autocomplete).toBe("email")
     el.value = "world"
     el.dispatchEvent(new Event("input", { bubbles: true }))
     expect(onInput).toHaveBeenCalledWith("world")
@@ -66,5 +75,27 @@ describe("Input", () => {
     expect(wrapper.getAttribute("style")).toMatch(/144(?:px)?/)
     expect(leadingIcon.className).toBe("leading")
     expect(leadingIcon.getAttribute("style")).toMatch(/rgb\(1,\s*2,\s*3\)/)
+  })
+
+  it("can render a password field without the visibility-toggle wrapper", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <Input
+          value="secret"
+          onInput={() => {}}
+          type="password"
+          passwordVisibilityToggle={false}
+          aria-label="密码"
+        />
+      ),
+      root,
+    )
+
+    expect(root.firstElementChild?.tagName).toBe("INPUT")
+    expect(root.querySelector<HTMLInputElement>("input")?.type).toBe("password")
+    expect(root.querySelector("button")).toBeNull()
   })
 })
