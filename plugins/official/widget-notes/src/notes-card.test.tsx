@@ -55,7 +55,19 @@ describe("NotesCard", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesCard {...makeProps()} size="M" />, root)
-    expect(root.textContent).toContain("＋")
+    expect(root.querySelector('[aria-label="记录 Memo"] svg')).toBeTruthy()
+    root.remove()
+  })
+
+  it("uses the secondary small icon button treatment for adding a memo", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesCard {...makeProps()} size="M" />, root)
+
+    const button = root.querySelector<HTMLButtonElement>('button[aria-label="记录 Memo"]')
+    expect(button?.getAttribute("data-variant")).toBe("secondary")
+    expect(button?.getAttribute("data-size")).toBe("sm")
+
     root.remove()
   })
 

@@ -1,5 +1,8 @@
+import "fake-indexeddb/auto"
 import { describe, expect, it, vi } from "vitest"
+import { createSyncQueueRepository, createTaboraDatabase } from "@tabora/storage"
 import type { LocalChange, LocalChangeQueue } from "./localChangeQueue"
+import { createLocalChangeQueue } from "./localChangeQueue"
 import { createChangeDetector } from "./changeDetector"
 
 type HookCb = (...args: any[]) => void
@@ -32,7 +35,13 @@ function makeDatabase() {
   function fire(table: string, hookName: string, ...args: any[]) {
     const cb = tables.get(table)?.get(hookName)
     if (!cb) throw new Error(`no hook ${table}.${hookName} registered`)
-    cb(...args)
+    const completeSubscribers: Array<() => void> = []
+    cb(...args, {
+      on(event: string, subscriber: () => void) {
+        if (event === "complete") completeSubscribers.push(subscriber)
+      },
+    })
+    completeSubscribers.forEach((subscriber) => subscriber())
   }
 
   return { database, fire }
@@ -50,7 +59,7 @@ function makeQueue() {
 }
 
 describe("createChangeDetector", () => {
-  it("normalizes pluginData creates to entityType 'pluginData' while keeping pluginId in payload", () => {
+  it("normalizes pluginData creates to entityType 'pluginData' while keeping pluginId in payload", async () => {
     const { database, fire } = makeDatabase()
     const { queue, enqueued } = makeQueue()
 
@@ -64,7 +73,7 @@ describe("createChangeDetector", () => {
       note: "hi",
     })
 
-    expect(enqueued).toHaveLength(1)
+    await vi.waitFor(() => expect(enqueued).toHaveLength(1))
     const change = enqueued[0]
     expect(change).toBeDefined()
     expect(change?.entityType).toBe("pluginData")
@@ -74,7 +83,7 @@ describe("createChangeDetector", () => {
     expect((change!.payload as { pluginId?: string }).pluginId).toBe("todo-plugin")
   })
 
-  it("uses the core entityType for workspace creates", () => {
+  it("uses the core entityType for workspace creates", async () => {
     const { database, fire } = makeDatabase()
     const { queue, enqueued } = makeQueue()
 
@@ -87,9 +96,81 @@ describe("createChangeDetector", () => {
       updatedAt: "2026-07-15T08:00:00.000Z",
     })
 
-    expect(enqueued).toHaveLength(1)
+    await vi.waitFor(() => expect(enqueued).toHaveLength(1))
     expect(enqueued[0]?.entityType).toBe("workspace")
     expect(enqueued[0]?.scope).toBe("core")
     expect(enqueued[0]?.recordKey).toBe("w1")
+  })
+
+  it("queues a hook-triggered plugin change after its source transaction completes", async () => {
+    const databaseName = `change-detector-${crypto.randomUUID()}`
+    const database = createTaboraDatabase(databaseName)
+    const queue = createLocalChangeQueue(createSyncQueueRepository(database))
+    const detector = createChangeDetector({ database, changeQueue: queue })
+    detector.start()
+
+    await database.plugins.put({
+      id: "official.widgets.todo",
+      version: "1.0.0",
+      source: "builtin",
+      enabled: true,
+      status: "active",
+      installedAt: "2026-07-29T00:00:00.000Z",
+      updatedAt: "2026-07-29T00:00:00.000Z",
+      manifest: {},
+      grantedPermissions: [],
+    } as any)
+
+    await vi.waitFor(async () => {
+      const pending = await queue.getPending()
+      expect(pending).toHaveLength(1)
+      expect(pending[0]).toMatchObject({
+        scope: "core",
+        entityType: "plugin",
+        recordKey: "official.widgets.todo",
+      })
+    })
+
+    database.close()
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(databaseName)
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+    })
+  })
+
+  it("does not queue a change when its source transaction rolls back", async () => {
+    const databaseName = `change-detector-rollback-${crypto.randomUUID()}`
+    const database = createTaboraDatabase(databaseName)
+    const queue = createLocalChangeQueue(createSyncQueueRepository(database))
+    const detector = createChangeDetector({ database, changeQueue: queue })
+    detector.start()
+
+    await expect(
+      database.transaction("rw", database.plugins, async () => {
+        await database.plugins.put({
+          id: "official.widgets.todo",
+          version: "1.0.0",
+          source: "builtin",
+          enabled: true,
+          status: "active",
+          installedAt: "2026-07-29T00:00:00.000Z",
+          updatedAt: "2026-07-29T00:00:00.000Z",
+          manifest: {},
+          grantedPermissions: [],
+        } as any)
+        throw new Error("force rollback")
+      }),
+    ).rejects.toThrow("force rollback")
+
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    await expect(queue.getPending()).resolves.toEqual([])
+
+    database.close()
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(databaseName)
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+    })
   })
 })

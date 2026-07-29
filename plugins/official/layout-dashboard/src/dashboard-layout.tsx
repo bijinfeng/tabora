@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import { LayoutGrid } from "lucide-solid"
+import { LayoutGrid, Plus } from "lucide-solid"
 import { Button } from "@tabora/ui"
 
 import { dateLabel, fallbackText, greeting } from "./i18n"
@@ -57,7 +57,7 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
   const defaultGroup = (): RailGroup => ({
     id: "default",
     name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
-    icon: "◐",
+    icon: "circle-dot",
     isDefault: true,
     widgets: [],
   })
@@ -152,6 +152,7 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                 xstyle={styles.toolbarButton}
                 onClick={openAddWidgetForActiveGroup}
               >
+                <Plus size={12} aria-hidden="true" />
                 <span>{t("actions.addWidget")}</span>
               </Button>
             </Show>

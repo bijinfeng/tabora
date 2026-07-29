@@ -1,14 +1,68 @@
 import * as stylex from "@stylexjs/stylex"
+import type { JSX } from "solid-js"
 import { TaboraMark } from "@tabora/brand"
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { LayoutHostAPI } from "@tabora/plugin-api"
 import { Button, DropdownMenu, IconButton, Input } from "@tabora/ui"
-import { CircleDot, LayoutDashboard } from "lucide-solid"
+import {
+  Circle,
+  CircleDot,
+  Command,
+  Diamond,
+  Heart,
+  Hexagon,
+  LayoutDashboard,
+  Sparkles,
+  Square,
+  Star,
+  Triangle,
+  Zap,
+} from "lucide-solid"
 import { HostActionIcon } from "./host-action-icon"
 import { className, styles } from "./styles"
 import type { ActiveGroupSetter, RailGroup, RailGroupContextMenu, RailGroupSetter } from "./types"
 
-const groupIcons = ["T", "◐", "◇", "★", "◈", "⌘", "⚡", "◔", "♥", "■", "◆", "▲", "●", "✦"]
+const groupIcons = [
+  "circle-dot",
+  "circle",
+  "diamond",
+  "star",
+  "hexagon",
+  "command",
+  "zap",
+  "heart",
+  "square",
+  "triangle",
+  "sparkles",
+]
+
+function GroupIcon(props: { icon: string; size?: number }): JSX.Element {
+  const size = props.size ?? 16
+  switch (props.icon) {
+    case "circle-dot":
+      return <CircleDot size={size} />
+    case "diamond":
+      return <Diamond size={size} />
+    case "star":
+      return <Star size={size} />
+    case "hexagon":
+      return <Hexagon size={size} />
+    case "command":
+      return <Command size={size} />
+    case "zap":
+      return <Zap size={size} />
+    case "heart":
+      return <Heart size={size} />
+    case "square":
+      return <Square size={size} />
+    case "triangle":
+      return <Triangle size={size} />
+    case "sparkles":
+      return <Sparkles size={size} />
+    default:
+      return <Circle size={size} />
+  }
+}
 
 export function WorkbenchRail(props: {
   host: LayoutHostAPI
@@ -29,7 +83,7 @@ export function WorkbenchRail(props: {
   const fallbackDefaultGroup = (): RailGroup => ({
     id: "default",
     name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
-    icon: "◐",
+    icon: "circle-dot",
     isDefault: true,
     widgets: [],
   })
@@ -45,9 +99,8 @@ export function WorkbenchRail(props: {
 
   const isDashboardLayout = () => layoutAction()?.icon === "layout-focus"
 
-  function pickDefaultIcon(name: string) {
-    const first = name.trim()[0] ?? ""
-    return /[A-Za-z]/.test(first) ? first.toUpperCase() : "◐"
+  function pickDefaultIcon() {
+    return "circle-dot"
   }
 
   function startCreateGroup() {
@@ -76,7 +129,7 @@ export function WorkbenchRail(props: {
     const id = `group-${groupCounter}`
     setGroups((items) => [
       ...items,
-      { id, name, icon: pickDefaultIcon(name), isDefault: false, widgets: [] },
+      { id, name, icon: pickDefaultIcon(), isDefault: false, widgets: [] },
     ])
     setActiveGroupId(id)
     setGroupMenu(null)
@@ -225,7 +278,9 @@ export function WorkbenchRail(props: {
                   title={`${group.name} · 右键菜单${shortcut() ? ` · ${shortcut()}` : ""}`}
                   onClick={() => switchGroup(group.id)}
                 >
-                  <span {...stylex.attrs(styles.groupIcon)}>{group.icon}</span>
+                  <span {...stylex.attrs(styles.groupIcon)}>
+                    <GroupIcon icon={group.icon} />
+                  </span>
                   <Show when={shortcut()}>
                     {(label) => <span {...stylex.attrs(styles.groupShortcut)}>{label()}</span>}
                   </Show>
@@ -242,7 +297,7 @@ export function WorkbenchRail(props: {
               xstyle={[styles.railButton, styles.placeholder]}
               aria-label="正在命名"
             >
-              ●
+              <Circle size={16} />
             </IconButton>
             <div {...stylex.attrs(styles.inlinePop)} data-rail-inline-pop>
               <Input
@@ -286,7 +341,7 @@ export function WorkbenchRail(props: {
         title="新建分组（⌘ ⇧ N）"
         onClick={startCreateGroup}
       >
-        <HostActionIcon id="add-widget" icon="+" size={16} />
+        <HostActionIcon id="add-widget" icon="plus" size={16} />
       </IconButton>
       <div {...stylex.attrs(styles.spacer)} />
       <Show when={layoutAction()}>
@@ -381,10 +436,10 @@ export function WorkbenchRail(props: {
                     size="sm"
                     xstyle={[styles.menuIcon, icon === menu().group.icon && styles.menuIconActive]}
                     data-group-menu-icon
-                    aria-label={`选择图标 ${icon}`}
+                    aria-label="选择分组图标"
                     onClick={() => setGroupIcon(menu().group.id, icon)}
                   >
-                    {icon}
+                    <GroupIcon icon={icon} />
                   </IconButton>
                 )}
               </For>

@@ -21,7 +21,7 @@ describe("ToastHost", () => {
 
     expect(root.textContent).toContain("A")
     expect(root.textContent).toContain("B")
-    expect(root.querySelectorAll("[data-toast-icon]")[0]?.textContent).toBe("✓")
+    expect(root.querySelector("[data-toast-icon] svg")).toBeTruthy()
     expect(root.querySelectorAll("[data-toast-message]")[1]?.textContent).toBe("B")
     expect(root.querySelector(".toast-item")).toBeNull()
 

@@ -119,7 +119,7 @@ describe("workbench widget helpers", () => {
     expect(entries[0]).toMatchObject({
       instanceId: "widget-1",
       name: "便签",
-      icon: "✎",
+      icon: "pencil",
     })
   })
 

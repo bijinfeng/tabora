@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, Show, createMemo } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button, Checkbox, Input } from "@tabora/ui"
-import { ChevronDown, ChevronRight, Plus } from "lucide-solid"
+import { ChevronDown, ChevronRight, Circle, Plus } from "lucide-solid"
 import { styles } from "./styles"
 
 type Priority = "high" | "medium" | "low" | "none"
@@ -296,7 +296,7 @@ export function TodoExpand(props: WidgetViewProps) {
                                   item.priority === "low" && styles.priorityLow,
                                 )}
                               >
-                                ● {PRIORITY_LABELS[item.priority]}
+                                <Circle size={8} /> {PRIORITY_LABELS[item.priority]}
                               </span>
                             </div>
                             <div

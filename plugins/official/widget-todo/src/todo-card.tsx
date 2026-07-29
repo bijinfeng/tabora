@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Skeleton } from "@tabora/ui"
+import { ArrowRight, Check, Plus } from "lucide-solid"
 import { styles } from "./styles"
 
 type Priority = "high" | "medium" | "low" | "none"
@@ -157,7 +158,7 @@ export function TodoCard(props: WidgetViewProps) {
                     <span {...stylex.attrs(styles.nextMeta)}>{dueLabel(item())} · 点击完成</span>
                   </span>
                   <span {...stylex.attrs(styles.nextArrow)} aria-hidden="true">
-                    →
+                    <ArrowRight size={14} />
                   </span>
                 </button>
               )}
@@ -189,7 +190,9 @@ export function TodoCard(props: WidgetViewProps) {
                     onClick={openExpand}
                   >
                     <strong>添加今天的第一项任务</strong>
-                    <span {...stylex.attrs(styles.timelineEmptyPlus)}>＋</span>
+                    <span {...stylex.attrs(styles.timelineEmptyPlus)}>
+                      <Plus size={14} />
+                    </span>
                   </button>
                 }
               >
@@ -237,7 +240,7 @@ export function TodoCard(props: WidgetViewProps) {
                         type="button"
                         onClick={openExpand}
                       >
-                        ＋ 添加今天的任务
+                        <Plus size={14} /> 添加今天的任务
                       </button>
                     }
                   >
@@ -323,7 +326,7 @@ function NextTaskEmpty(props: { empty: boolean; onClick: () => void }) {
         </span>
       </span>
       <span {...stylex.attrs(styles.nextArrow)} aria-hidden="true">
-        {props.empty ? "＋" : "✓"}
+        {props.empty ? <Plus size={14} /> : <Check size={14} />}
       </span>
     </button>
   )

@@ -1,9 +1,13 @@
 import type { TaboraDatabase } from "@tabora/storage"
-import type { LocalChangeQueue } from "./localChangeQueue"
+import type { LocalChange, LocalChangeQueue } from "./localChangeQueue"
 
 export type ChangeDetectorConfig = {
   database: TaboraDatabase
   changeQueue: LocalChangeQueue
+}
+
+type SourceTransaction = {
+  on(event: "complete", subscriber: () => void): void
 }
 
 /**
@@ -13,78 +17,106 @@ export type ChangeDetectorConfig = {
 export function createChangeDetector(config: ChangeDetectorConfig) {
   const { database, changeQueue } = config
 
+  function enqueueAfterCommit(transaction: SourceTransaction, change: LocalChange) {
+    transaction.on("complete", () => {
+      setTimeout(() => {
+        void changeQueue.enqueue(change).catch((error: unknown) => {
+          console.error("Failed to queue local sync change", error)
+        })
+      }, 0)
+    })
+  }
+
   function start() {
     // Monitor workspaces table
-    database.workspaces.hook("creating", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "core",
-        entityType: "workspace",
-        recordKey: obj.id,
-        payload: obj,
-        clientUpdatedAt: obj.updatedAt ?? new Date().toISOString(),
-        deleted: false,
-      })
-    })
+    database.workspaces.hook(
+      "creating",
+      (_primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "core",
+          entityType: "workspace",
+          recordKey: obj.id,
+          payload: obj,
+          clientUpdatedAt: obj.updatedAt ?? new Date().toISOString(),
+          deleted: false,
+        })
+      },
+    )
 
-    database.workspaces.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "core",
-        entityType: "workspace",
-        recordKey: obj.id,
-        payload: { ...obj, ...mods },
-        clientUpdatedAt: mods.updatedAt ?? new Date().toISOString(),
-        deleted: false,
-      })
-    })
+    database.workspaces.hook(
+      "updating",
+      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "core",
+          entityType: "workspace",
+          recordKey: obj.id,
+          payload: { ...obj, ...mods },
+          clientUpdatedAt: mods.updatedAt ?? new Date().toISOString(),
+          deleted: false,
+        })
+      },
+    )
 
-    database.workspaces.hook("deleting", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "core",
-        entityType: "workspace",
-        recordKey: obj.id,
-        payload: obj,
-        clientUpdatedAt: new Date().toISOString(),
-        deleted: true,
-      })
-    })
+    database.workspaces.hook(
+      "deleting",
+      (_primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "core",
+          entityType: "workspace",
+          recordKey: obj.id,
+          payload: obj,
+          clientUpdatedAt: new Date().toISOString(),
+          deleted: true,
+        })
+      },
+    )
 
     // Monitor pluginInstances table
-    database.pluginInstances.hook("creating", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "core",
-        entityType: "pluginInstance",
-        recordKey: obj.id,
-        payload: obj,
-        clientUpdatedAt: obj.createdAt ?? new Date().toISOString(),
-        deleted: false,
-      })
-    })
+    database.pluginInstances.hook(
+      "creating",
+      (_primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "core",
+          entityType: "pluginInstance",
+          recordKey: obj.id,
+          payload: obj,
+          clientUpdatedAt: obj.createdAt ?? new Date().toISOString(),
+          deleted: false,
+        })
+      },
+    )
 
-    database.pluginInstances.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "core",
-        entityType: "pluginInstance",
-        recordKey: obj.id,
-        payload: { ...obj, ...mods },
-        clientUpdatedAt: new Date().toISOString(),
-        deleted: false,
-      })
-    })
+    database.pluginInstances.hook(
+      "updating",
+      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "core",
+          entityType: "pluginInstance",
+          recordKey: obj.id,
+          payload: { ...obj, ...mods },
+          clientUpdatedAt: new Date().toISOString(),
+          deleted: false,
+        })
+      },
+    )
 
-    database.pluginInstances.hook("deleting", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "core",
-        entityType: "pluginInstance",
-        recordKey: obj.id,
-        payload: obj,
-        clientUpdatedAt: new Date().toISOString(),
-        deleted: true,
-      })
-    })
+    database.pluginInstances.hook(
+      "deleting",
+      (_primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "core",
+          entityType: "pluginInstance",
+          recordKey: obj.id,
+          payload: obj,
+          clientUpdatedAt: new Date().toISOString(),
+          deleted: true,
+        })
+      },
+    )
 
     // Monitor plugins table
-    database.plugins.hook("creating", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
+    database.plugins.hook("creating", (_primKey: any, obj: any, transaction: SourceTransaction) => {
+      enqueueAfterCommit(transaction, {
         scope: "core",
         entityType: "plugin",
         recordKey: obj.id,
@@ -94,19 +126,22 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
       })
     })
 
-    database.plugins.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "core",
-        entityType: "plugin",
-        recordKey: obj.id,
-        payload: { ...obj, ...mods },
-        clientUpdatedAt: new Date().toISOString(),
-        deleted: false,
-      })
-    })
+    database.plugins.hook(
+      "updating",
+      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "core",
+          entityType: "plugin",
+          recordKey: obj.id,
+          payload: { ...obj, ...mods },
+          clientUpdatedAt: new Date().toISOString(),
+          deleted: false,
+        })
+      },
+    )
 
-    database.plugins.hook("deleting", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
+    database.plugins.hook("deleting", (_primKey: any, obj: any, transaction: SourceTransaction) => {
+      enqueueAfterCommit(transaction, {
         scope: "core",
         entityType: "plugin",
         recordKey: obj.id,
@@ -119,38 +154,47 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     // Monitor pluginData table (plugin-scope changes)
     // NOTE: entityType is the literal "pluginData" (the backend enum value); the
     // originating pluginId stays in the payload (obj.pluginId), so no info is lost.
-    database.pluginData.hook("creating", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "plugin",
-        entityType: "pluginData",
-        recordKey: obj.id,
-        payload: obj,
-        clientUpdatedAt: obj.updatedAt ?? new Date().toISOString(),
-        deleted: false,
-      })
-    })
+    database.pluginData.hook(
+      "creating",
+      (_primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "plugin",
+          entityType: "pluginData",
+          recordKey: obj.id,
+          payload: obj,
+          clientUpdatedAt: obj.updatedAt ?? new Date().toISOString(),
+          deleted: false,
+        })
+      },
+    )
 
-    database.pluginData.hook("updating", (mods: any, _primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "plugin",
-        entityType: "pluginData",
-        recordKey: obj.id,
-        payload: { ...obj, ...mods },
-        clientUpdatedAt: mods.updatedAt ?? new Date().toISOString(),
-        deleted: false,
-      })
-    })
+    database.pluginData.hook(
+      "updating",
+      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "plugin",
+          entityType: "pluginData",
+          recordKey: obj.id,
+          payload: { ...obj, ...mods },
+          clientUpdatedAt: mods.updatedAt ?? new Date().toISOString(),
+          deleted: false,
+        })
+      },
+    )
 
-    database.pluginData.hook("deleting", (_primKey: any, obj: any) => {
-      void changeQueue.enqueue({
-        scope: "plugin",
-        entityType: "pluginData",
-        recordKey: obj.id,
-        payload: obj,
-        clientUpdatedAt: new Date().toISOString(),
-        deleted: true,
-      })
-    })
+    database.pluginData.hook(
+      "deleting",
+      (_primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(transaction, {
+          scope: "plugin",
+          entityType: "pluginData",
+          recordKey: obj.id,
+          payload: obj,
+          clientUpdatedAt: new Date().toISOString(),
+          deleted: true,
+        })
+      },
+    )
   }
 
   function stop() {

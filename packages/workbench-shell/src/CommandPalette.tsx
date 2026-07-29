@@ -1,6 +1,24 @@
 import * as stylex from "@stylexjs/stylex"
-import { createEffect, createMemo, For, Show } from "solid-js"
-import { History, Search } from "lucide-solid"
+import { createEffect, createMemo, Show } from "solid-js"
+import {
+  AtSign,
+  Circle,
+  CircleHelp,
+  Command,
+  CornerDownLeft,
+  History,
+  LayoutDashboard,
+  Link2,
+  PanelTop,
+  Plus,
+  Puzzle,
+  Search,
+  Settings,
+  SunMoon,
+  Target,
+  Pencil,
+  CheckSquare,
+} from "lucide-solid"
 import type { SearchCommandEntry, SearchHistoryEntry, SearchWidgetEntry } from "@tabora/plugin-api"
 import {
   buildSearchUrl,
@@ -9,7 +27,7 @@ import {
   type CommandPaletteItem,
   type SearchProviderContributionDescriptor,
 } from "@tabora/orchestrator"
-import { Button, Input, Kbd } from "@tabora/ui"
+import { CommandResultList, Input, Kbd } from "@tabora/ui"
 import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 const styles = stylex.create({
@@ -74,97 +92,54 @@ const styles = stylex.create({
     flexShrink: 0,
     opacity: 0.58,
   },
-  results: {
-    maxHeight: 300,
-    overflowY: "auto",
-  },
-  group: {
-    color: color.textSubtle,
-    fontSize: 10,
-    fontWeight: font.bold,
-    letterSpacing: "0.06em",
-    paddingBottom: 2,
-    paddingLeft: 14,
-    paddingRight: 14,
-    paddingTop: 8,
-    textTransform: "uppercase",
-  },
-  item: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    borderStyle: "none",
-    borderWidth: 0,
-    color: color.text,
-    cursor: "pointer",
-    display: "flex",
-    fontFamily: font.sans,
-    fontSize: 13,
-    gap: 10,
-    paddingBlock: 9,
-    paddingInline: 14,
-    textAlign: "left",
-    transitionDuration: motion.fast,
-    transitionProperty: "background-color",
-    transitionTimingFunction: motion.ease,
-    width: "100%",
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-    },
-    ":focus-visible": {
-      backgroundColor: color.surfaceHover,
-      outlineColor: color.focus,
-      outlineOffset: -2,
-      outlineStyle: "solid",
-      outlineWidth: 2,
-    },
-  },
-  itemActive: {
-    backgroundColor: color.surfaceHover,
-  },
-  itemIcon: {
-    alignItems: "center",
-    backgroundColor: color.surfaceSoft,
-    borderRadius: radius.control,
-    display: "flex",
-    flexShrink: 0,
-    fontSize: 12,
-    height: 24,
-    justifyContent: "center",
-    width: 24,
-  },
-  itemText: {
-    flex: 1,
-    lineHeight: 1.25,
-    minWidth: 0,
-    textAlign: "left",
-  },
-  itemName: {
-    display: "block",
-  },
-  itemDescription: {
-    color: color.textMuted,
-    display: "block",
-    fontSize: 11,
-    lineHeight: 1.25,
-  },
-  empty: {
-    color: color.textMuted,
-    fontSize: 13,
-    padding: 24,
-    textAlign: "center",
-  },
 })
 
-// Map icon names to lucide components
-function getIconComponent(iconName: string) {
-  switch (iconName) {
+function getIconComponent(item: CommandPaletteItem) {
+  switch (item.icon) {
     case "history":
       return <History size={16} />
     case "search":
       return <Search size={16} />
-    default:
-      return iconName // Fallback to string for unknown icons
+    case "at-sign":
+      return <AtSign size={16} />
+    case "command":
+      return <Command size={16} />
+    case "corner-down-left":
+      return <CornerDownLeft size={16} />
+    case "theme":
+      return <SunMoon size={16} />
+    case "layout-dashboard":
+      return <LayoutDashboard size={16} />
+    case "plus":
+      return <Plus size={16} />
+    case "puzzle":
+      return <Puzzle size={16} />
+    case "settings":
+      return <Settings size={16} />
+    case "circle-help":
+      return <CircleHelp size={16} />
+    case "target":
+      return <Target size={16} />
+    case "link":
+      return <Link2 size={16} />
+    case "pencil":
+      return <Pencil size={16} />
+    case "check-square":
+      return <CheckSquare size={16} />
+    case "sun":
+      return <SunMoon size={16} />
   }
+
+  if (item.id.startsWith("provider-")) return <AtSign size={16} />
+  if (item.id.includes("search")) return <Search size={16} />
+  if (item.id.includes("command")) return <Command size={16} />
+  if (item.id.includes("theme")) return <SunMoon size={16} />
+  if (item.id.includes("layout")) return <LayoutDashboard size={16} />
+  if (item.id.includes("add")) return <Plus size={16} />
+  if (item.id.includes("widget")) return <PanelTop size={16} />
+  if (item.id.includes("plugin")) return <Puzzle size={16} />
+  if (item.id.includes("settings")) return <Settings size={16} />
+  return <Circle size={16} />
 }
 
 export type CommandItem = SearchCommandEntry
@@ -331,54 +306,30 @@ export function CommandPalette(props: CommandPaletteProps) {
               <Kbd>esc</Kbd>
             </span>
           </div>
-          <div {...stylex.attrs(styles.results)}>
-            <Show
-              when={items().length > 0}
-              fallback={
-                <div {...stylex.attrs(styles.empty)}>{props.copy?.empty ?? "未找到匹配结果"}</div>
-              }
-            >
-              <For each={Object.entries(grouped())}>
-                {([group, groupItems]) => (
-                  <>
-                    <div {...stylex.attrs(styles.group)}>{group}</div>
-                    <For each={groupItems}>
-                      {(item) => {
-                        const index = items().indexOf(item)
-                        return (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            xstyle={[styles.item, index === props.activeIdx && styles.itemActive]}
-                            data-command-palette-item
-                            data-active={index === props.activeIdx ? "" : undefined}
-                            onMouseDown={(event) => {
-                              event.preventDefault()
-                              item.action()
-                              if (item.closeAfterAction !== false) {
-                                close()
-                              }
-                            }}
-                          >
-                            <span {...stylex.attrs(styles.itemIcon)}>
-                              {getIconComponent(item.icon)}
-                            </span>
-                            <span {...stylex.attrs(styles.itemText)}>
-                              <span {...stylex.attrs(styles.itemName)}>{item.name}</span>
-                              <span {...stylex.attrs(styles.itemDescription)}>{item.desc}</span>
-                            </span>
-                            <Show when={item.hint}>
-                              <Kbd>{item.hint!}</Kbd>
-                            </Show>
-                          </Button>
-                        )
-                      }}
-                    </For>
-                  </>
-                )}
-              </For>
-            </Show>
-          </div>
+          <CommandResultList
+            groups={Object.entries(grouped()).map(([group, groupItems]) => ({
+              id: group,
+              label: group,
+              items: groupItems.map((item) => {
+                const index = items().indexOf(item)
+                return {
+                  id: item.id,
+                  icon: getIconComponent(item),
+                  name: item.name,
+                  description: item.desc,
+                  hint: item.hint,
+                  active: index === props.activeIdx,
+                  onSelect: () => {
+                    item.action()
+                    if (item.closeAfterAction !== false) {
+                      close()
+                    }
+                  },
+                }
+              }),
+            }))}
+            emptyText={props.copy?.empty ?? "未找到匹配结果"}
+          />
         </div>
       </div>
     </Show>

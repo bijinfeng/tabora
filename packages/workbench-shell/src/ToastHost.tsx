@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { ToastRecord } from "@tabora/orchestrator"
 import { Button } from "@tabora/ui"
+import { Check } from "lucide-solid"
 import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 export type ToastMessage = ToastRecord
@@ -104,7 +105,7 @@ export function ToastHost(props: {
           {(toast) => (
             <div {...stylex.attrs(styles.item)} data-toast-type={toast.type} data-toast-item>
               <span {...stylex.attrs(styles.icon)} aria-hidden="true" data-toast-icon>
-                ✓
+                <Check size={16} />
               </span>
               <span {...stylex.attrs(styles.message)} data-toast-message>
                 {toast.message}

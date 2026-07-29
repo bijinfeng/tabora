@@ -1,6 +1,16 @@
 import * as stylex from "@stylexjs/stylex"
 import { Button, IconButton, Input } from "@tabora/ui"
 import { createSignal } from "solid-js"
+import {
+  ChevronDown,
+  CircleDot,
+  LayoutDashboard,
+  Plus,
+  Search,
+  Settings,
+  Star,
+  Sun,
+} from "lucide-solid"
 
 import type { HomePageContent } from "../homePrototypeContent"
 
@@ -438,79 +448,28 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               xstyle={[styles.railButton, styles.railButtonActive]}
               aria-current="true"
             >
-              <span>T</span>
+              <CircleDot size={16} />
             </IconButton>
             <IconButton variant="ghost" aria-label="设计稿" xstyle={styles.railButton}>
-              <span>◐</span>
+              <CircleDot size={16} />
             </IconButton>
             <IconButton variant="ghost" aria-label="阅读" xstyle={styles.railButton}>
-              <span>★</span>
+              <Star size={16} />
             </IconButton>
           </div>
           <div {...stylex.attrs(styles.railDivider)} aria-hidden="true" />
           <IconButton variant="ghost" aria-label="新建分组" xstyle={styles.railButton}>
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              aria-hidden="true"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Plus size={14} />
           </IconButton>
           <div {...stylex.attrs(styles.railSpacer)} />
           <IconButton variant="ghost" aria-label="切换布局" xstyle={styles.railButton}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
+            <LayoutDashboard size={16} />
           </IconButton>
           <IconButton variant="ghost" aria-label="主题" xstyle={styles.railButton}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="5" />
-              <line x1="12" y1="1" x2="12" y2="3" />
-              <line x1="12" y1="21" x2="12" y2="23" />
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-              <line x1="1" y1="12" x2="3" y2="12" />
-              <line x1="21" y1="12" x2="23" y2="12" />
-            </svg>
+            <Sun size={16} />
           </IconButton>
           <IconButton variant="ghost" aria-label="设置" xstyle={styles.railButton}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
+            <Settings size={16} />
           </IconButton>
         </aside>
 
@@ -529,31 +488,10 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
             <span {...stylex.attrs(styles.providerBadge)}>
               <span {...stylex.attrs(styles.providerDot)} aria-hidden="true" />
               Google
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                aria-hidden="true"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
+              <ChevronDown size={10} />
             </span>
             <span {...stylex.attrs(styles.commandSep)} aria-hidden="true" />
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
+            <Search size={15} />
             <Input
               size="sm"
               xstyle={styles.commandInput}

@@ -139,6 +139,29 @@ describe("DashboardLayout", () => {
     host.remove()
   })
 
+  it("renders the add-widget action with a Lucide icon", () => {
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    const dispose = render(
+      () => (
+        <DashboardLayout
+          isMobile={false}
+          host={makeHost()}
+          regions={{ topbar: makeSlot("topbar"), mainGrid: makeSlot("mainGrid") }}
+        />
+      ),
+      host,
+    )
+
+    const button = host.querySelector<HTMLButtonElement>("[data-dashboard-greeting-actions] button")
+    expect(button?.textContent).toContain("添加卡片")
+    expect(button?.textContent).not.toContain("+")
+    expect(button?.querySelector("svg")?.getAttribute("width")).toBe("12")
+
+    dispose()
+    host.remove()
+  })
+
   it("persists rail groups through the layout host state and restores them on remount", () => {
     let stored: unknown
     const firstRoot = document.createElement("div")
@@ -253,7 +276,8 @@ describe("DashboardLayout", () => {
     host.querySelectorAll<HTMLButtonElement>("[data-group-menu-icon]")[3]?.click()
     expect(
       host.querySelector<HTMLButtonElement>('button[aria-label="分组 Research"]')?.textContent,
-    ).toContain("★")
+    ).toContain("⌘2")
+    expect(host.querySelector('button[aria-label="分组 Research"] svg')).toBeTruthy()
     expect(layoutHost.showToast).toHaveBeenCalledWith("已更新「Research」图标", {
       type: "success",
     })
@@ -334,7 +358,7 @@ describe("DashboardLayout", () => {
 })
 
 describe("FocusLayout", () => {
-  it("渲染 rail、focus hero 和 satellite 切换入口", () => {
+  it("渲染 rail、focus hero、卫星预览和切换入口", () => {
     const host = document.createElement("div")
     document.body.appendChild(host)
     const dispose = render(
@@ -369,7 +393,57 @@ describe("FocusLayout", () => {
     expect(host.querySelector("[data-workbench-rail]")).toBeTruthy()
     expect(host.querySelector("[data-layout='focus']")).toBeTruthy()
     expect(host.querySelector("[data-testid='focus-instance-weather-1']")).toBeTruthy()
-    expect(host.querySelector("button[data-focus-satellite]")).toBeTruthy()
+    expect(host.querySelector("[data-focus-hero]")).toBeTruthy()
+    expect(host.querySelector("[data-focus-card-head]")).toBeTruthy()
+    expect(host.querySelector("[data-focus-plugin][data-focus-preview]")).toBeTruthy()
+    expect(host.querySelector("[data-focus-satellite]")).toBeTruthy()
+    dispose()
+  })
+
+  it("超过四张卫星卡时显示分页器并允许切换 Hero", () => {
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    const layoutHost = makeHost()
+    const dispose = render(
+      () => (
+        <FocusLayout
+          isMobile={false}
+          host={layoutHost}
+          regions={{
+            focus: {
+              ...makeSlot("focus"),
+              instances: [
+                instance({ id: "focus-1", contributionId: "quick-links", size: "M" }),
+                instance({ id: "focus-2", contributionId: "todo", size: "S" }),
+                instance({ id: "focus-3", contributionId: "notes", size: "L" }),
+                instance({ id: "focus-4", contributionId: "weather", size: "S" }),
+                instance({ id: "focus-5", contributionId: "todo", size: "S" }),
+                instance({ id: "focus-6", contributionId: "notes", size: "L" }),
+              ],
+              renderInstance: (current) => <div data-testid={`focus-instance-${current.id}`} />,
+            },
+          }}
+        />
+      ),
+      host,
+    )
+
+    expect(host.querySelector("[aria-label='卫星卡片分页']")).toBeTruthy()
+    expect(host.querySelector("[data-focus-page-label]")).toBeTruthy()
+    expect(host.querySelectorAll("[data-focus-satellite]")).toHaveLength(4)
+    expect(host.textContent).toContain("1 / 2")
+
+    host.querySelector<HTMLElement>("[data-focus-satellite]")?.click()
+    expect(host.querySelector("[data-testid='focus-instance-focus-2']")).toBeTruthy()
+    expect(layoutHost.showToast).toHaveBeenCalledWith("已切换 Hero → 待办", {
+      type: "success",
+    })
+
+    host.querySelector<HTMLButtonElement>('button[aria-label="下一组卫星卡片"]')?.click()
+
+    expect(host.querySelectorAll("[data-focus-satellite]")).toHaveLength(1)
+    expect(host.textContent).toContain("2 / 2")
+
     dispose()
   })
 })

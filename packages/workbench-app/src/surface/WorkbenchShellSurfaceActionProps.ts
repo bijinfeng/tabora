@@ -1,7 +1,7 @@
 import type { WidgetSize } from "@tabora/plugin-api"
 
 import type { WorkbenchShell } from "../shell/WorkbenchShellContext"
-import { resolveWidgetIconLabel } from "../shared/shellHelpers"
+import { renderWorkbenchWidgetIcon } from "../shared/WorkbenchShellIcons"
 import type { AvailableWidget } from "./WorkbenchShellChrome.types"
 
 function detectWidgetSource(pluginId: string, publisher?: string): "official" | "third-party" {
@@ -32,7 +32,7 @@ export function createWorkbenchShellSurfaceActionProps(shell: WorkbenchShell) {
     addWidgetModal: {
       open: overlays.addWidgetOpen(),
       availableWidgets,
-      widgetIconLabel: resolveWidgetIconLabel,
+      renderWidgetIcon: renderWorkbenchWidgetIcon,
       ...(overlays.addWidgetContext()?.activeGroupLabel
         ? { activeGroupLabel: overlays.addWidgetContext()!.activeGroupLabel }
         : {}),

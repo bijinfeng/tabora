@@ -26,7 +26,6 @@ export function Link(props: LinkProps) {
       onClick={props.onClick}
     >
       {props.children}
-      {props.external ? " ↗" : ""}
     </a>
   )
 }

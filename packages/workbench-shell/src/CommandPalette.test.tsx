@@ -53,6 +53,7 @@ describe("CommandPalette", () => {
     document.body.appendChild(root)
     render(() => <Controlled isOpen={true} />, root)
     expect(root.querySelector("[data-command-palette-panel]")).toBeTruthy()
+    expect(root.querySelector("[data-command-result-list]")).toBeTruthy()
     expect(root.querySelector(".cmd-panel")).toBeNull()
     root.remove()
   })
@@ -111,6 +112,12 @@ describe("CommandPalette", () => {
     render(() => <Controlled isOpen={true} />, root)
     expect(root.textContent).toContain("常用命令")
     expect(root.textContent).toContain("切换主题")
+    expect(root.querySelectorAll("[data-command-result-icon] svg")).toHaveLength(3)
+    expect(
+      Array.from(root.querySelectorAll("[data-command-result-icon]")).map(
+        (node) => node.textContent,
+      ),
+    ).toEqual(["", "", ""])
     root.remove()
   })
 

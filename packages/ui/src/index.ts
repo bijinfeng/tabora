@@ -69,6 +69,13 @@ export type {
   CommandPaletteProps,
 } from "./styled/commandPalette"
 
+export { CommandResultList } from "./styled/commandResultList"
+export type {
+  CommandResultGroup,
+  CommandResultItem,
+  CommandResultListProps,
+} from "./styled/commandResultList"
+
 export { Toast } from "./styled/toast"
 export type { ToastProps, ToastVariant } from "./styled/toast"
 

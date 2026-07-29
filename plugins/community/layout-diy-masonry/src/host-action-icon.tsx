@@ -4,6 +4,7 @@ import type { HostActionId } from "@tabora/plugin-api"
 import {
   Boxes,
   CircleHelp,
+  Circle,
   House,
   LayoutDashboard,
   Moon,
@@ -21,12 +22,11 @@ export function HostActionIcon(props: {
 }): JSX.Element {
   const size = () => props.size ?? 18
   const isSun = () => {
-    const glyph = props.icon ?? ""
-    return glyph.includes("sun") || glyph.includes("☀") || glyph.includes("☼")
+    return props.icon === "sun"
   }
 
   return (
-    <Switch fallback={<span aria-hidden="true">{props.icon}</span>}>
+    <Switch fallback={<Circle size={size()} />}>
       <Match when={props.id === "home"}>
         <House size={size()} />
       </Match>

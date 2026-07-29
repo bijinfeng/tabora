@@ -42,17 +42,17 @@ export type CommandExecutor = (commandId: string, context: CommandExecutionConte
 export function resolveWidgetIconLabel(icon?: string): string {
   switch (icon) {
     case "target":
-      return "◎"
+      return "target"
     case "link":
-      return "↗"
+      return "link"
     case "pencil":
-      return "✎"
+      return "pencil"
     case "check-square":
-      return "✓"
+      return "check-square"
     case "sun":
-      return "☼"
+      return "sun"
     default:
-      return "▦"
+      return "layout-dashboard"
   }
 }
 

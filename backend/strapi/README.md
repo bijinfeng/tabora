@@ -25,6 +25,7 @@ pnpm develop
 
 - API: http://localhost:1337
 - Admin Panel: http://localhost:1337/admin
+- Mailpit（Docker 开发环境）: http://localhost:8025
 
 首次启动需创建管理员账号（仅用于 Admin Panel）。
 
@@ -48,6 +49,13 @@ DATABASE_FILENAME=.tmp/data.db
 
 # 认证 JWT 过期
 JWT_EXPIRES_IN=30d
+
+# 邮件（开发默认投递到本机 Mailpit）
+EMAIL_PROVIDER=sendmail
+EMAIL_DEV_HOST=127.0.0.1
+EMAIL_DEV_PORT=1025
+EMAIL_DEFAULT_FROM=no-reply@tabora.local
+EMAIL_DEFAULT_REPLY_TO=support@tabora.local
 
 # 附件上传 provider（dev 默认 local；生产设 aws-s3）
 UPLOAD_PROVIDER=local
@@ -140,6 +148,8 @@ pnpm test
 docker compose -f backend/strapi/docker/compose.dev.yml up -d
 ```
 
+开发环境的密码重置邮件会投递到 Mailpit。打开 `http://localhost:8025`，从邮件正文复制重置链接中的 `code` 并粘贴到设置中心。
+
 ### Docker Compose (生产)
 
 ```bash
@@ -151,6 +161,7 @@ docker compose -f backend/strapi/docker/compose.prod.yml up -d
 
 - PostgreSQL 连接 (`DATABASE_*`)
 - AWS S3 (`UPLOAD_PROVIDER=aws-s3`, `AWS_*`)
+- 可用邮件 provider（设置 `EMAIL_PROVIDER` 及 provider 对应配置；不要将开发态 `EMAIL_DEV_*` 指向生产 SMTP）
 - 强随机密钥 (`APP_KEYS`, `JWT_SECRET`, etc.)
 
 ### Nginx

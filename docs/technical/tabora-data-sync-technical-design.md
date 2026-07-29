@@ -52,6 +52,8 @@ Strapi 的 users-permissions 插件承载用户与 JWT。客户端使用以下�
 
 `backend/strapi/config/plugins.ts` 配置 JWT 有效期。Strapi 在同步 controller 中把已验证用户提供为 `ctx.state.user`。
 
+密码重置使用 Strapi email provider 发送链接，浏览器只将邮件中的 `code` 交给 `POST /api/auth/reset-password`，不从 API 响应或同步数据中暴露重置码。开发环境默认通过 Mailpit（SMTP `127.0.0.1:1025`，Web UI `http://localhost:8025`）捕获邮件；部署环境必须配置受支持的正式 provider 及其凭据。
+
 ### 3.2 客户端
 
 `@tabora/auth` 的 `createStrapiAuthClient` 保存 `{ jwt, userId?, expiresAt? }`。`expiresAt` 由 JWT 的 `exp` 解析而来，解析失败不会阻断会话保存。

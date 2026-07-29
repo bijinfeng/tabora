@@ -2,9 +2,23 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { Button, InlineError, Input, Kbd } from "@tabora/ui"
+import { Button, CommandResultList, InlineError, Input } from "@tabora/ui"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
-import { Check, ChevronDown } from "lucide-solid"
+import {
+  AtSign,
+  Check,
+  ChevronDown,
+  Circle,
+  Command,
+  CornerDownLeft,
+  LayoutDashboard,
+  PanelTop,
+  Plus,
+  Puzzle,
+  Search,
+  Settings,
+  SunMoon,
+} from "lucide-solid"
 import { styles } from "./styles"
 
 type SearchResultItem = SearchViewProps["results"][number]["items"][number]
@@ -12,6 +26,24 @@ type SearchSuggestionItem = SearchResultItem & {
   submitQuery?: string
   submitProviderId?: string
   sourceResultId?: string
+}
+
+function getSearchResultIcon(item: Pick<SearchResultItem, "id" | "icon">) {
+  if (item.icon === "corner-down-left") return <CornerDownLeft size={16} />
+  if (item.id.startsWith("provider-") || item.icon === "at-sign") {
+    return <AtSign size={16} />
+  }
+  if (item.id.startsWith("web-") || item.id.startsWith("web-search:") || item.icon === "search") {
+    return <Search size={16} />
+  }
+  if (item.id.includes("command")) return <Command size={16} />
+  if (item.id.includes("theme")) return <SunMoon size={16} />
+  if (item.id.includes("layout")) return <LayoutDashboard size={16} />
+  if (item.id.includes("add")) return <Plus size={16} />
+  if (item.id.includes("widget")) return <PanelTop size={16} />
+  if (item.id.includes("plugin")) return <Puzzle size={16} />
+  if (item.id.includes("settings")) return <Settings size={16} />
+  return <Circle size={16} />
 }
 
 export function SearchCommandBar(props: SearchViewProps) {
@@ -62,7 +94,7 @@ export function SearchCommandBar(props: SearchViewProps) {
               items: [
                 {
                   id: `web-search:${provider.id}`,
-                  icon: "搜",
+                  icon: "search",
                   name: `使用 ${provider.title} 搜索 “${query().trim()}”`,
                   desc: "通过 external-open 权限桥打开",
                   hint: provider.shortcut,
@@ -263,67 +295,38 @@ export function SearchCommandBar(props: SearchViewProps) {
 
       <Show when={props.isOpen && visibleResults().length > 0}>
         <div {...stylex.attrs(styles.searchSuggestions)} data-search-suggestions-surface>
-          <For each={visibleResults()}>
-            {(group) => (
-              <>
-                <div {...stylex.attrs(styles.searchGroup)} data-search-suggestion-group>
-                  {group.label}
-                </div>
-                <For each={group.items}>
-                  {(item) => {
-                    const globalIdx = props.results
-                      .flatMap((resultGroup) => resultGroup.items)
-                      .findIndex((candidate) => candidate.id === item.id)
-                    return (
-                      <Button
-                        size="md"
-                        variant="ghost"
-                        xstyle={[
-                          styles.searchItem,
-                          props.activeResultIndex === globalIdx && styles.searchItemActive,
-                        ]}
-                        data-search-suggestion
-                        onMouseDown={(event) => {
-                          event.preventDefault()
-                          if (item.id.startsWith("web-search:")) {
-                            void props.host.submit(query(), item.id.slice("web-search:".length))
-                            return
-                          }
-                          if (hasSubmitAction(item)) {
-                            void props.host.submit(item.submitQuery, item.submitProviderId)
-                            return
-                          }
-                          void props.host.executeSelection(globalIdx)
-                        }}
-                      >
-                        <span
-                          {...stylex.attrs(
-                            styles.searchItemIcon,
-                            item.id.startsWith("web-search:") && styles.searchItemSearchIcon,
-                          )}
-                          data-search-suggestion-icon
-                        >
-                          {item.icon}
-                        </span>
-                        <span {...stylex.attrs(styles.searchItemText)}>
-                          <span
-                            {...stylex.attrs(styles.searchItemName)}
-                            data-search-suggestion-name
-                          >
-                            {item.name}
-                          </span>
-                          <span {...stylex.attrs(styles.searchItemDescription)}>{item.desc}</span>
-                        </span>
-                        <Show when={item.hint}>
-                          <Kbd xstyle={styles.searchItemHint}>{item.hint!}</Kbd>
-                        </Show>
-                      </Button>
-                    )
-                  }}
-                </For>
-              </>
-            )}
-          </For>
+          <CommandResultList
+            groups={visibleResults().map((group) => ({
+              id: group.id,
+              label: group.label,
+              items: group.items.map((item) => {
+                const globalIdx = props.results
+                  .flatMap((resultGroup) => resultGroup.items)
+                  .findIndex((candidate) => candidate.id === item.id)
+
+                return {
+                  id: item.id,
+                  icon: getSearchResultIcon(item),
+                  name: item.name,
+                  description: item.desc,
+                  hint: item.hint,
+                  active: props.activeResultIndex === globalIdx,
+                  accentIcon: item.id.startsWith("web-search:"),
+                  onSelect: () => {
+                    if (item.id.startsWith("web-search:")) {
+                      void props.host.submit(query(), item.id.slice("web-search:".length))
+                      return
+                    }
+                    if (hasSubmitAction(item)) {
+                      void props.host.submit(item.submitQuery, item.submitProviderId)
+                      return
+                    }
+                    void props.host.executeSelection(globalIdx)
+                  },
+                }
+              }),
+            }))}
+          />
         </div>
       </Show>
     </div>
@@ -349,7 +352,7 @@ function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
     github && {
       ...github,
       id: `quick-github-runtime:${github.id}`,
-      icon: "↵",
+      icon: "corner-down-left",
       name: "@github tabora runtime",
       desc: "用 GitHub 搜索插件运行时相关内容",
       submitQuery: "tabora plugin runtime",
@@ -358,19 +361,19 @@ function emptyInlineSuggestions(results: SearchViewProps["results"]): Array<{
     },
     addWidget && {
       ...addWidget,
-      icon: "↵",
+      icon: "corner-down-left",
       name: "添加便签卡片",
       desc: "创建一个新的 notes widget 实例",
     },
     pluginManager && {
       ...pluginManager,
-      icon: "↵",
+      icon: "corner-down-left",
       name: "打开插件管理",
       desc: "查看 layout / widget / theme 贡献",
     },
     toggleTheme && {
       ...toggleTheme,
-      icon: "↵",
+      icon: "corner-down-left",
       name: "切换到暗色主题",
       desc: "验证 Sage Dark token",
     },

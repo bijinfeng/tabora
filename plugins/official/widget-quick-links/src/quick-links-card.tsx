@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { Button } from "@tabora/ui"
+import { ArrowUpRight, Plus } from "lucide-solid"
 import { getDefaultLinks, initialsFromTitle, LINKS_KEY, type QuickLink } from "./quick-links-data"
 import { styles } from "./styles"
 
@@ -89,7 +90,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                   aria-label="添加入口"
                   onClick={() => props.host.openExpand()}
                 >
-                  ＋
+                  <Plus size={12} />
                 </button>
               </div>
             }
@@ -104,7 +105,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                 >
                   <span {...stylex.attrs(styles.primaryMark)}>{mark(featured())}</span>
                   <span {...stylex.attrs(styles.primaryArrow)} aria-hidden="true">
-                    ↗
+                    <ArrowUpRight size={12} />
                   </span>
                   <span {...stylex.attrs(styles.primaryCopy)}>
                     <strong {...stylex.attrs(styles.primaryTitle)}>{featured().title}</strong>
@@ -131,7 +132,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                     aria-label="添加入口"
                     onClick={() => props.host.openExpand()}
                   >
-                    ＋
+                    <Plus size={12} />
                   </button>
                 </div>
               </div>
@@ -174,7 +175,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                     aria-label="添加入口"
                     onClick={() => props.host.openExpand()}
                   >
-                    ＋
+                    <Plus size={12} />
                   </button>
                 </Show>
               </div>
@@ -220,7 +221,7 @@ export function QuickLinksCard(props: WidgetViewProps) {
                           </span>
                         </span>
                         <span {...stylex.attrs(styles.tileArrow)} aria-hidden="true">
-                          ↗
+                          <ArrowUpRight size={12} />
                         </span>
                       </button>
                     )}
@@ -230,13 +231,15 @@ export function QuickLinksCard(props: WidgetViewProps) {
                     type="button"
                     onClick={() => props.host.openExpand()}
                   >
-                    <span {...stylex.attrs(styles.tileMark)}>＋</span>
+                    <span {...stylex.attrs(styles.tileMark)}>
+                      <Plus size={14} />
+                    </span>
                     <span {...stylex.attrs(styles.tileCopy)}>
                       <strong {...stylex.attrs(styles.tileTitle)}>添加入口</strong>
                       <span {...stylex.attrs(styles.tileHint)}>链接或命令</span>
                     </span>
                     <span {...stylex.attrs(styles.tileArrow)} aria-hidden="true">
-                      ＋
+                      <Plus size={12} />
                     </span>
                   </button>
                 </div>

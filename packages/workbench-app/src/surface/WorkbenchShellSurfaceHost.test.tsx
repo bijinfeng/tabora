@@ -166,7 +166,7 @@ describe("WorkbenchShellSurfaceHost", () => {
         {
           pluginId: "official.widget.todo",
           id: "todo",
-          icon: "✓",
+          icon: "check-square",
           title: "待办",
           description: "记录当天任务",
         },
@@ -186,6 +186,17 @@ describe("WorkbenchShellSurfaceHost", () => {
 
     expect(root.textContent).toContain("待办")
     expect(root.textContent).toContain("记录当天任务")
+    expect(root.querySelector("[data-add-widget-icon] svg")).toBeTruthy()
+    expect(root.querySelector("[data-add-widget-icon]")?.textContent).toBe("")
+
+    const footer = root.querySelector("[data-workbench-overlay-footer]")
+    expect(footer?.textContent).not.toContain("浏览插件市场")
+    expect(footer?.textContent).not.toContain("Enter 添加")
+    expect(footer?.textContent).not.toContain("查看详情")
+    expect(footer?.querySelectorAll("button")).toHaveLength(2)
+    expect(
+      Array.from(footer?.querySelectorAll("button") ?? []).map((button) => button.textContent),
+    ).toEqual(["取消", "添加到工作台"])
 
     root.remove()
   })

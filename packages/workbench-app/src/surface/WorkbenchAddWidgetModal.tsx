@@ -58,7 +58,7 @@ function applyVars(template: string, vars?: Record<string, string | number>): st
 export function WorkbenchAddWidgetModal(props: {
   open: boolean
   availableWidgets: AvailableWidget[]
-  widgetIconLabel: (icon?: string) => string
+  renderWidgetIcon: (icon?: string) => JSX.Element
   tShell?: ShellTranslation
   activeGroupLabel?: string
   onAdd: (pluginId: string, widgetId: string, size?: WidgetSize) => void
@@ -188,7 +188,7 @@ export function WorkbenchAddWidgetModal(props: {
               widgets={filteredWidgets()}
               selectedIndex={selectedIndex()}
               onSelect={handleSelect}
-              widgetIconLabel={props.widgetIconLabel}
+              renderWidgetIcon={props.renderWidgetIcon}
               t={t}
             />
             <RightColumn
@@ -249,7 +249,7 @@ function LeftColumn(props: {
   widgets: Array<{ widget: AvailableWidget; category: Category }>
   selectedIndex: number
   onSelect: (index: number) => void
-  widgetIconLabel: (icon?: string) => string
+  renderWidgetIcon: (icon?: string) => JSX.Element
   t: TFn
 }) {
   return (
@@ -300,7 +300,7 @@ function LeftColumn(props: {
                 widget={widget}
                 selected={index() === props.selectedIndex}
                 onSelect={() => props.onSelect(index())}
-                widgetIconLabel={props.widgetIconLabel}
+                renderWidgetIcon={props.renderWidgetIcon}
                 t={props.t}
               />
             )}
@@ -330,7 +330,7 @@ function WidgetRow(props: {
   widget: AvailableWidget
   selected: boolean
   onSelect: () => void
-  widgetIconLabel: (icon?: string) => string
+  renderWidgetIcon: (icon?: string) => JSX.Element
   t: TFn
 }) {
   return (
@@ -341,7 +341,9 @@ function WidgetRow(props: {
       aria-pressed={props.selected}
       onClick={props.onSelect}
     >
-      <span {...stylex.attrs(styles.itemIcon)}>{props.widgetIconLabel(props.widget.icon)}</span>
+      <span {...stylex.attrs(styles.itemIcon)} data-add-widget-icon>
+        {props.renderWidgetIcon(props.widget.icon)}
+      </span>
       <span {...stylex.attrs(styles.itemInfo)}>
         <span {...stylex.attrs(styles.itemName)}>{props.widget.title}</span>
         <Show when={props.widget.description}>
@@ -554,31 +556,11 @@ function ModalFooter(props: {
 }) {
   return (
     <div {...stylex.attrs(styles.footer)} data-workbench-overlay-footer>
-      <div {...stylex.attrs(styles.footerLeft)}>
-        <a {...stylex.attrs(styles.marketplace)} href="#" onClick={(e) => e.preventDefault()}>
-          {props.t("chrome.addWidget.marketplace", "浏览插件市场")}
-        </a>
-        <span {...stylex.attrs(styles.divider)} />
-        <span {...stylex.attrs(styles.footerHint)}>
-          {props.t("chrome.addWidget.shortcutHint", "Enter 添加 · Esc 关闭")}
-        </span>
-      </div>
       <div {...stylex.attrs(styles.footerActions)}>
-        <Button xstyle={[styles.button, styles.buttonSubtle]} onClick={props.onCancel}>
+        <Button variant="secondary" onClick={props.onCancel}>
           {props.t("chrome.addWidget.cancel", "取消")}
         </Button>
-        <Button
-          xstyle={styles.button}
-          disabled={props.disabled}
-          onClick={(e) => e.preventDefault()}
-        >
-          {props.t("chrome.addWidget.details", "查看详情")}
-        </Button>
-        <Button
-          xstyle={[styles.button, styles.buttonPrimary]}
-          disabled={props.disabled}
-          onClick={props.onConfirm}
-        >
+        <Button variant="primary" disabled={props.disabled} onClick={props.onConfirm}>
           {props.t("chrome.addWidget.confirm", "添加到工作台")}
         </Button>
       </div>

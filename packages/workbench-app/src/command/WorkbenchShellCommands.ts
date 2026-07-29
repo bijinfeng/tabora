@@ -36,7 +36,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
   return [
     {
       id: "open-command-palette",
-      icon: "⌘K",
+      icon: "command",
       title: t?.("commands.openCommandPalette.title") ?? "打开命令",
       description: t?.("commands.openCommandPalette.description") ?? "搜索命令、卡片和搜索源",
       keywords: ["command", "palette", "search", "cmd"],
@@ -45,7 +45,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "toggle-theme",
-      icon: "明",
+      icon: "theme",
       title: t?.("commands.toggleTheme.title") ?? "切换主题",
       description: options.isDark()
         ? (t?.("commands.toggleTheme.description.toLight") ?? "暗色 → 明亮")
@@ -56,7 +56,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "toggle-layout",
-      icon: "▦",
+      icon: "layout-dashboard",
       title: t?.("commands.toggleLayout.title") ?? "切换布局",
       description:
         options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
@@ -68,7 +68,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "add-widget",
-      icon: "+",
+      icon: "plus",
       title: t?.("commands.addWidget.title") ?? "添加卡片",
       description: t?.("commands.addWidget.description") ?? "向工作台添加新卡片",
       keywords: ["widget", "card", "module"],
@@ -77,7 +77,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "open-plugin-manager",
-      icon: "◈",
+      icon: "puzzle",
       title: t?.("commands.openPluginManager.title") ?? "打开插件管理",
       description:
         t?.("commands.openPluginManager.description") ?? "查看 layout / widget / theme 贡献",
@@ -86,7 +86,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "open-settings",
-      icon: "⚙",
+      icon: "settings",
       title: t?.("commands.openSettings.title") ?? "打开设置",
       description: t?.("commands.openSettings.description") ?? "配置工作台",
       keywords: ["settings", "preferences", "config"],
@@ -95,7 +95,7 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
     },
     {
       id: "open-shortcuts",
-      icon: "?",
+      icon: "circle-help",
       title: t?.("commands.openShortcuts.title") ?? "快捷键参考",
       description: t?.("commands.openShortcuts.description") ?? "查看所有快捷键",
       category: "workspace",

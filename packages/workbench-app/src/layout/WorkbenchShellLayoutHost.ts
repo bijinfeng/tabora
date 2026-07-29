@@ -51,27 +51,27 @@ export function createWorkbenchLayoutHostAPI(options: {
           {
             id: "home",
             label: t?.("layoutHost.rail.home") ?? "分组 我的工作台",
-            icon: "⌂",
+            icon: "home",
             isActive: true,
             run: () => options.runRailAction("home"),
           },
           {
             id: "add-widget",
             label: t?.("layoutHost.rail.addWidget") ?? "添加卡片",
-            icon: "+",
+            icon: "plus",
             run: () => options.runRailAction("add-widget"),
           },
           layoutToggle,
           {
             id: "theme",
             label: t?.("layoutHost.rail.toggleTheme") ?? "切换主题",
-            icon: "☼",
+            icon: "moon",
             run: () => options.runRailAction("theme"),
           },
           {
             id: "settings",
             label: t?.("layoutHost.common.settings") ?? "设置",
-            icon: "⚙",
+            icon: "settings",
             run: () => options.runRailAction("settings"),
           },
         ]
@@ -82,7 +82,7 @@ export function createWorkbenchLayoutHostAPI(options: {
           {
             id: "command",
             label: t?.("layoutHost.common.command") ?? "命令",
-            icon: "⌘K",
+            icon: "search",
             shortcut: "⌘K",
             run: () => options.setCommandPaletteOpen(true),
           },
@@ -92,7 +92,7 @@ export function createWorkbenchLayoutHostAPI(options: {
             label: options.isDark()
               ? (t?.("layoutHost.themeTarget.light") ?? "明亮")
               : (t?.("layoutHost.themeTarget.dark") ?? "暗色"),
-            icon: options.isDark() ? "☀" : "☾",
+            icon: options.isDark() ? "sun" : "moon",
             shortcut: "⌘T",
             run: () => {
               options.switchTheme(
@@ -103,7 +103,7 @@ export function createWorkbenchLayoutHostAPI(options: {
           {
             id: "settings",
             label: t?.("layoutHost.common.settings") ?? "设置",
-            icon: "⚙",
+            icon: "settings",
             run: () => options.runRailAction("settings"),
           },
         ]
@@ -114,14 +114,14 @@ export function createWorkbenchLayoutHostAPI(options: {
           {
             id: "command",
             label: t?.("layoutHost.common.command") ?? "命令",
-            icon: "⌘K",
+            icon: "search",
             shortcut: "⌘K",
             run: () => options.setCommandPaletteOpen(true),
           },
           {
             id: "add-widget",
             label: t?.("layoutHost.rail.addWidget") ?? "添加卡片",
-            icon: "+",
+            icon: "plus",
             run: () => options.setAddWidgetOpen(true),
           },
           layoutToggle,
@@ -130,7 +130,7 @@ export function createWorkbenchLayoutHostAPI(options: {
             label: options.isDark()
               ? (t?.("layoutHost.themeTarget.light") ?? "明亮")
               : (t?.("layoutHost.themeTarget.dark") ?? "暗色"),
-            icon: options.isDark() ? "☀" : "☾",
+            icon: options.isDark() ? "sun" : "moon",
             shortcut: "⌘T",
             run: () => {
               options.switchTheme(
@@ -141,7 +141,7 @@ export function createWorkbenchLayoutHostAPI(options: {
           {
             id: "settings",
             label: t?.("layoutHost.common.settings") ?? "设置",
-            icon: "⚙",
+            icon: "settings",
             run: () => options.openSettings(options.shellConfig.settingsPanelIds.appearance),
           },
         ]

@@ -1,4 +1,10 @@
 services:
+  mailpit:
+    image: axllent/mailpit:v1.28.2
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -32,12 +38,18 @@ services:
       TRANSFER_TOKEN_SALT: devtransfer
       JWT_SECRET: devjwt
       ENCRYPTION_KEY: devencryption
+      EMAIL_PROVIDER: sendmail
+      EMAIL_DEV_HOST: mailpit
+      EMAIL_DEV_PORT: 1025
+      EMAIL_DEFAULT_FROM: no-reply@tabora.local
+      EMAIL_DEFAULT_REPLY_TO: support@tabora.local
     volumes:
       - ..:/app
       - /app/node_modules
     ports:
       - "1337:1337"
     depends_on:
+      - mailpit
       - postgres
 
 volumes:

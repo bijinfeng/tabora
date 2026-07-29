@@ -11,6 +11,7 @@ import {
 } from "@tabora/ui"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import { Check } from "lucide-solid"
 
 import {
   providerAlias,
@@ -218,7 +219,9 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                   trailing={
                     <div {...stylex.attrs(styles.inlineActions)}>
                       <span {...stylex.attrs(styles.providerState)}>
-                        {isDefault() ? "✓ 当前" : ""}
+                        <Show when={isDefault()}>
+                          <Check size={14} /> 当前
+                        </Show>
                       </span>
                       <SettingsSwitch
                         checked={isEnabled()}

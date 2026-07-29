@@ -54,14 +54,14 @@ const providers: SearchProviderContribution[] = [
 ]
 
 describe("shell helper widget resolvers", () => {
-  it("maps supported widget icon names to compact labels and falls back safely", () => {
-    expect(resolveWidgetIconLabel("target")).toBe("◎")
-    expect(resolveWidgetIconLabel("link")).toBe("↗")
-    expect(resolveWidgetIconLabel("pencil")).toBe("✎")
-    expect(resolveWidgetIconLabel("check-square")).toBe("✓")
-    expect(resolveWidgetIconLabel("sun")).toBe("☼")
-    expect(resolveWidgetIconLabel("unknown")).toBe("▦")
-    expect(resolveWidgetIconLabel()).toBe("▦")
+  it("maps supported widget icon names to Lucide identifiers and falls back safely", () => {
+    expect(resolveWidgetIconLabel("target")).toBe("target")
+    expect(resolveWidgetIconLabel("link")).toBe("link")
+    expect(resolveWidgetIconLabel("pencil")).toBe("pencil")
+    expect(resolveWidgetIconLabel("check-square")).toBe("check-square")
+    expect(resolveWidgetIconLabel("sun")).toBe("sun")
+    expect(resolveWidgetIconLabel("unknown")).toBe("layout-dashboard")
+    expect(resolveWidgetIconLabel()).toBe("layout-dashboard")
   })
 
   it("builds searchable entries only for widget instances with registered contributions", () => {
@@ -81,7 +81,7 @@ describe("shell helper widget resolvers", () => {
     expect(entries).toMatchObject([
       {
         instanceId: "enabled-widget",
-        icon: "◎",
+        icon: "target",
         name: "今日重点",
         desc: "定位到 今日重点 卡片",
       },

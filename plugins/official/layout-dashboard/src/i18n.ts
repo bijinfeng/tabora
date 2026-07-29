@@ -18,7 +18,7 @@ export function fallbackText(key: string): string {
     "greeting.morning": "早上好",
     "greeting.afternoon": "下午好",
     "greeting.evening": "晚上好",
-    "actions.addWidget": "+ 添加卡片",
+    "actions.addWidget": "添加卡片",
     "search.placeholder": "搜索或命令",
     "focus.empty": "添加第一张卡片",
     "focus.switchHero": "切换到主卡片",

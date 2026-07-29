@@ -61,10 +61,10 @@ describe("createWorkbenchShellCommandModels", () => {
     expect(models.commandItems().map((command) => command.name)).toContain("打开插件管理")
     expect(models.commandItems().map((command) => [command.name, command.icon])).toEqual(
       expect.arrayContaining([
-        ["切换主题", "明"],
-        ["切换布局", "▦"],
-        ["打开插件管理", "◈"],
-        ["打开设置", "⚙"],
+        ["切换主题", "theme"],
+        ["切换布局", "layout-dashboard"],
+        ["打开插件管理", "puzzle"],
+        ["打开设置", "settings"],
       ]),
     )
   })
@@ -120,10 +120,10 @@ describe("createWorkbenchShellCommandModels", () => {
     expect(models.commandItems().map((command) => command.name)).toContain("Open plugin manager")
     expect(models.commandItems().map((command) => [command.name, command.icon])).toEqual(
       expect.arrayContaining([
-        ["Toggle theme", "明"],
-        ["Toggle layout", "▦"],
-        ["Open plugin manager", "◈"],
-        ["Open settings", "⚙"],
+        ["Toggle theme", "theme"],
+        ["Toggle layout", "layout-dashboard"],
+        ["Open plugin manager", "puzzle"],
+        ["Open settings", "settings"],
       ]),
     )
 

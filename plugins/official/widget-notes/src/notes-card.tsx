@@ -1,6 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
+import { IconButton } from "@tabora/ui"
+import { ArrowRight, Plus } from "lucide-solid"
 import { styles } from "./styles"
 
 type Note = {
@@ -98,15 +100,16 @@ export function NotesCard(props: WidgetViewProps) {
         <div {...stylex.attrs(styles.medium)}>
           <div {...stylex.attrs(styles.mediumHead)}>
             <span {...stylex.attrs(styles.kicker)}>Latest memo</span>
-            <button
-              {...stylex.attrs(styles.addButton)}
-              type="button"
+            <IconButton
+              variant="secondary"
+              size="sm"
+              xstyle={styles.addButton}
               title="记录 Memo"
               aria-label="记录 Memo"
               onClick={handleAdd}
             >
-              ＋
-            </button>
+              <Plus size={14} />
+            </IconButton>
           </div>
           <div
             {...stylex.attrs(styles.latest, isEmpty() && styles.latestEmpty)}
@@ -135,7 +138,9 @@ export function NotesCard(props: WidgetViewProps) {
           </div>
           <button {...stylex.attrs(styles.capture)} type="button" onClick={handleAdd}>
             <span {...stylex.attrs(styles.captureText)}>记录此刻的想法…</span>
-            <strong {...stylex.attrs(styles.captureMark)}>＋</strong>
+            <strong {...stylex.attrs(styles.captureMark)}>
+              <Plus size={14} />
+            </strong>
           </button>
           <div {...stylex.attrs(styles.previewList)}>
             <Show when={previewNotes().length === 0}>
@@ -167,7 +172,7 @@ export function NotesCard(props: WidgetViewProps) {
           <div {...stylex.attrs(styles.largeFoot)}>
             <span {...stylex.attrs(styles.widgetTime)}>最近记录</span>
             <button {...stylex.attrs(styles.viewAll)} type="button" onClick={handleOpen}>
-              查看全部 →
+              查看全部 <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -181,7 +186,9 @@ export function NotesCard(props: WidgetViewProps) {
           </div>
           <button {...stylex.attrs(styles.capture)} type="button" onClick={handleAdd}>
             <span {...stylex.attrs(styles.captureText)}>记录灵感、会议重点或收藏链接…</span>
-            <strong {...stylex.attrs(styles.captureMark)}>＋</strong>
+            <strong {...stylex.attrs(styles.captureMark)}>
+              <Plus size={14} />
+            </strong>
           </button>
           <div {...stylex.attrs(styles.previewListXL)}>
             <Show when={previewNotes().length === 0}>
@@ -215,7 +222,7 @@ export function NotesCard(props: WidgetViewProps) {
               最近记录 · {latest() ? formatRelativeTime(latest()!.updatedAt) : "暂无"}
             </span>
             <button {...stylex.attrs(styles.viewAll)} type="button" onClick={handleOpen}>
-              开始记录 →
+              开始记录 <ArrowRight size={14} />
             </button>
           </div>
         </div>

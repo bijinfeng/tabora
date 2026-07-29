@@ -116,7 +116,7 @@ describe("SearchCommandBar", () => {
       root,
     )
 
-    const button = root.querySelector("[data-search-suggestion]") as HTMLButtonElement | null
+    const button = root.querySelector("[data-command-result-item]") as HTMLButtonElement | null
     expect(button?.textContent).toContain("在 Google 中搜索")
     button?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }))
 
@@ -179,20 +179,21 @@ describe("SearchCommandBar", () => {
     )
 
     expect(
-      Array.from(root.querySelectorAll("[data-search-suggestion-group]")).map(
+      Array.from(root.querySelectorAll("[data-command-result-group]")).map(
         (node) => node.textContent,
       ),
     ).toEqual(["建议"])
     expect(
-      Array.from(root.querySelectorAll("[data-search-suggestion-name]")).map(
+      Array.from(root.querySelectorAll("[data-command-result-name]")).map(
         (node) => node.textContent,
       ),
     ).toEqual(["@github tabora runtime", "添加便签卡片", "打开插件管理", "切换到暗色主题"])
+    expect(root.querySelectorAll("[data-command-result-icon] svg")).toHaveLength(4)
     expect(
-      Array.from(root.querySelectorAll("[data-search-suggestion-icon]")).map(
+      Array.from(root.querySelectorAll("[data-command-result-icon]")).map(
         (node) => node.textContent,
       ),
-    ).toEqual(["↵", "↵", "↵", "↵"])
+    ).toEqual(["", "", "", ""])
     expect(root.textContent).not.toContain("常用命令")
     expect(root.textContent).not.toContain("核心卡片")
     root.remove()
@@ -296,8 +297,9 @@ describe("SearchCommandBar", () => {
     )
 
     expect(root.querySelector("[data-search-suggestions-surface]")).toBeTruthy()
-    expect(root.querySelector("[data-search-suggestion]")).toBeTruthy()
-    expect(root.querySelector("[data-search-suggestion-icon]")).toBeTruthy()
+    expect(root.querySelector("[data-command-result-list]")).toBeTruthy()
+    expect(root.querySelector("[data-command-result-item]")).toBeTruthy()
+    expect(root.querySelector("[data-command-result-icon]")).toBeTruthy()
     root.remove()
   })
 
@@ -325,7 +327,8 @@ describe("SearchCommandBar", () => {
       root,
     )
 
-    expect(root.querySelector("[data-search-suggestion-icon]")?.textContent).toBe("搜")
+    expect(root.querySelector("[data-command-result-icon] svg")).toBeTruthy()
+    expect(root.querySelector("[data-command-result-icon]")?.textContent).toBe("")
     root.remove()
   })
 

@@ -56,6 +56,22 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
         : { provider: "local" }),
     },
   },
+  email: {
+    config: {
+      provider: env("EMAIL_PROVIDER", "sendmail"),
+      providerOptions:
+        env("NODE_ENV", "development") === "development"
+          ? {
+              devHost: env("EMAIL_DEV_HOST", "127.0.0.1"),
+              devPort: env.int("EMAIL_DEV_PORT", 1025),
+            }
+          : {},
+      settings: {
+        defaultFrom: env("EMAIL_DEFAULT_FROM", "no-reply@tabora.local"),
+        defaultReplyTo: env("EMAIL_DEFAULT_REPLY_TO", "support@tabora.local"),
+      },
+    },
+  },
 })
 
 export default config

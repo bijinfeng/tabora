@@ -94,7 +94,7 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
-    ignorePatterns: ["examples/**"],
+    ignorePatterns: ["docs/**", "examples/**"],
     rules: {
       "no-console": ["error", { allow: ["warn", "error"] }],
     },
@@ -109,6 +109,7 @@ export default defineConfig({
     ],
   },
   fmt: {
+    ignorePatterns: ["docs/**"],
     singleQuote: false,
     semi: false,
   },
