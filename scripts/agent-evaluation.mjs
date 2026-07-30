@@ -13,7 +13,9 @@ try {
 
   const violations = validateAgentEvaluationCases(cases)
   if (violations.length > 0) {
-    process.stderr.write(`Agent evaluation case validation failed:\n${violations.map((item) => `- ${item}`).join("\n")}\n`)
+    process.stderr.write(
+      `Agent evaluation case validation failed:\n${violations.map((item) => `- ${item}`).join("\n")}\n`,
+    )
     process.exitCode = 1
   } else {
     process.stdout.write(`${buildAgentEvaluationReport(cases)}\n`)

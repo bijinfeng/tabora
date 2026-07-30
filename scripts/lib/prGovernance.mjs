@@ -50,10 +50,7 @@ function hasRegressionSummaryOutput(section) {
 }
 
 function hasCompletedBullet(section, label) {
-  const bulletPattern = new RegExp(
-    `^\\s*-\\s*${escapeRegExp(label)}\\s*[：:]\\s*(.+)$`,
-    "m",
-  )
+  const bulletPattern = new RegExp(`^\\s*-\\s*${escapeRegExp(label)}\\s*[：:]\\s*(.+)$`, "m")
   const match = bulletPattern.exec(section)
   return Boolean(match?.[1] && hasSubstantiveContent(match[1]))
 }

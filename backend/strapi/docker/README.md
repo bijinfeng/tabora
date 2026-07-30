@@ -113,13 +113,18 @@ docker run --rm -v strapi_uploads:/data -v $(pwd):/backup alpine tar xzf /backup
 ### Dockerfile 多阶段构建
 
 1. **build**: 安装全量依赖（包含 devDependencies），构建 Strapi Admin 面板并编译 TypeScript。
-2. **runner**: 依据 `package-lock.json` 独立执行 `npm ci --omit=dev`，仅安装生产依赖和构建产物。
+2. **production-dependencies**: 依据 `package-lock.json` 独立执行 `npm ci --omit=dev`，裁剪仅开发文件和与目标 `os/cpu/libc` 不兼容的原生可选包。
+3. **runner**: 基于与 Node 阶段同版本的纯 Alpine，只复制 Node 可执行文件、必要的 C++ 运行库、生产依赖、`tsconfig.json` 和构建产物。
 
 `build` 阶段包含 `python3`、`make` 和 `g++`，只用于本地 SQLite 开发依赖 `better-sqlite3` 等原生模块在预编译包不可用时的回退编译。生产 compose 固定使用 PostgreSQL，因此 `better-sqlite3` 是开发依赖，runner 不会安装它，也不带入编译工具。
 
-runner 在安装 production dependencies 后执行 `scripts/prune-production-files.mjs`，只删除 source map、TypeScript 类型/源码、测试、示例和文档文件；JavaScript 运行文件与许可证保留。npm 下载缓存通过 BuildKit cache mount 复用，只加速构建，不会进入镜像层。
+production-dependencies 在安装依赖后执行 `scripts/prune-production-files.mjs`，删除 source map、TypeScript 类型/源码、测试、示例和文档文件，并依据包的 `os`、`cpu`、`libc` 声明移除当前平台不可用的原生可选包；JavaScript 运行文件、许可证和当前平台二进制保留。npm 下载缓存通过 BuildKit cache mount 复用，只加速构建，不会进入镜像层。
 
-容器以 UID/GID `1001` 的 `strapi` 非 root 用户运行。`/app/public/uploads` 会在降权前创建并授权给该用户，因此 `strapi_uploads` Docker volume 可以继续保存用户上传文件。
+最终 runner 不包含 npm、Yarn、Corepack、apk 安装层或 Node C/C++ 头文件，直接通过 Node 执行 Strapi CLI。Node 构建阶段与 runner 都固定使用 Alpine 3.24，生产依赖仍由官方 Node 镜像中的 npm 安装，最终运行环境与依赖安装环境同为 Alpine/musl。
+
+runner 保留 `tsconfig.json` 仅用于让 Strapi CLI 识别 `outDir=dist`，实际加载的是 `dist/config/*.js` 和 `dist/src/index.js`；源码态 `config/*.ts` 不进入生产镜像。
+
+容器以 UID/GID `1001` 的 `strapi` 非 root 用户运行。`/app/public/uploads` 和 Strapi 启动时需要的 `/app/database/migrations` 会在降权前创建并授权给该用户，因此 `strapi_uploads` Docker volume 可以继续保存用户上传文件，数据库迁移初始化也不会因只读应用目录失败。
 
 **为何不在安装前设置 `NODE_ENV=production`？**
 
@@ -129,8 +134,9 @@ Strapi 文档明确要求：构建 admin 面板需要 devDependencies（如 `@st
 
 1. 安装全量依赖（无 `NODE_ENV=production`）
 2. 构建（此时可以访问 devDependencies）
-3. runner 依据 lockfile 独立安装 production dependencies（`npm ci --omit=dev`）
-4. runner 裁剪仅开发/调试文件并复制构建产物
+3. production-dependencies 依据 lockfile 独立安装 production dependencies（`npm ci --omit=dev`）
+4. production-dependencies 裁剪开发文件和不兼容的原生可选包
+5. runner 只复制 Node、生产依赖、`tsconfig.json` 和构建产物
 
 ### 检查镜像体积
 

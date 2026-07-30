@@ -13,7 +13,8 @@
     "noEmitOnError": true,
     "noImplicitThis": true,
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "types": ["node"]
   },
   "include": [
     // Include root files
@@ -36,9 +37,6 @@
 
     // Do not include admin files in the server compilation
     "src/admin/",
-    // Do not include test files
-    "**/*.test.*",
-    "tests/",
     // Vitest config is ESM tooling, typechecked by its own toolchain
     "vitest.config.ts",
     // Do not include plugins in the server compilation

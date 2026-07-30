@@ -13,7 +13,10 @@ export function validateAgentEvaluationCases(cases) {
     if (!Array.isArray(evaluationCase.allowedPaths) || evaluationCase.allowedPaths.length === 0) {
       violations.push(`${prefix} requires at least one allowed path`)
     }
-    if (!Array.isArray(evaluationCase.requiredEvidence) || evaluationCase.requiredEvidence.length === 0) {
+    if (
+      !Array.isArray(evaluationCase.requiredEvidence) ||
+      evaluationCase.requiredEvidence.length === 0
+    ) {
       violations.push(`${prefix} requires at least one evidence command`)
     }
     if (

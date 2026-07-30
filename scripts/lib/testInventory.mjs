@@ -7,13 +7,7 @@ const OBSERVABLE_ASSERTION_PATTERN =
   /\.(?:toBe|toBeTruthy|toBeFalsy|toBeNull|toBeDefined|toEqual|toStrictEqual|toContain|toMatchObject|toHaveTextContent|toBeInTheDocument|toHaveAttribute|toHaveProperty|toThrow)\s*\(/g
 const SNAPSHOT_ASSERTION_PATTERN = /\.toMatch(?:Inline)?Snapshot\s*\(/g
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/
-const IGNORED_DIRECTORY_NAMES = new Set([
-  ".git",
-  ".pnpm-store",
-  "coverage",
-  "dist",
-  "node_modules",
-])
+const IGNORED_DIRECTORY_NAMES = new Set([".git", ".pnpm-store", "coverage", "dist", "node_modules"])
 
 export function analyzeTestSource(options) {
   const executableSource = stripNonExecutableText(options.source)

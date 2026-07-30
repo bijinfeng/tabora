@@ -14,7 +14,9 @@ if (!eventPath) {
     const violations = findPullRequestGovernanceViolations(body)
 
     if (violations.length > 0) {
-      process.stderr.write(`PR governance check failed:\n${violations.map((item) => `- ${item}`).join("\n")}\n`)
+      process.stderr.write(
+        `PR governance check failed:\n${violations.map((item) => `- ${item}`).join("\n")}\n`,
+      )
       process.exitCode = 1
     } else {
       process.stdout.write("PR governance check passed.\n")
