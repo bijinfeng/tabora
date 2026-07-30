@@ -55,11 +55,7 @@ describe("regression summary helpers", () => {
 
     expect(
       collectSuggestedCommands({
-        changedFiles: [
-          "apps/playground/src/App.tsx",
-          ".github/workflows/release-extension.yml",
-          ".github/workflows/deploy-playground.yml",
-        ],
+        changedFiles: ["apps/playground/src/App.tsx", ".github/workflows/release-extension.yml"],
         changeTypes,
       }),
     ).toEqual([
@@ -69,7 +65,6 @@ describe("regression summary helpers", () => {
       "pnpm check",
       "pnpm build",
       "pnpm test:e2e",
-      "pnpm --filter @tabora/playground build",
       "pnpm --filter @tabora/extension zip",
       "pnpm --filter @tabora/extension zip:firefox",
     ])

@@ -36,7 +36,6 @@
 | 测试盘点审查     | `docs/technical/tabora-test-inventory-audit-2026-07-30.md`      | 查看当前盘点候选的保留、重构或删除依据                                     |
 | Agent 评测       | `docs/technical/tabora-agent-evaluation.md`                     | 在隔离 worktree 中评估 agent 是否遵守范围、测试与交付规范                  |
 | Agent 任务模板   | `docs/technical/agent-task-template.md`                         | 需要让 coding agent 按规范拆解任务、形成 PR / final 回归摘要时             |
-| Playground 部署  | `docs/technical/playground-github-actions-deploy.md`            | 修改 playground 发布链路或服务器部署                                       |
 | Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
 | 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围与设置入口（需求与决策）                                 |
 | 数据同步实现     | `docs/technical/tabora-data-sync-technical-design.md`           | Strapi 后端形态、DB schema、认证、自定义 sync controller、同步引擎与包边界 |
@@ -129,7 +128,6 @@
 
 读：
 
-- `docs/technical/playground-github-actions-deploy.md`
 - `docs/technical/extension-github-actions-publish.md`
 - 对应 `.github/workflows/` 文件。
 

@@ -222,9 +222,6 @@ export function collectSuggestedCommands(options) {
     commands.push("pnpm test:e2e")
   }
 
-  if (options.changedFiles.includes(".github/workflows/deploy-playground.yml")) {
-    commands.push("pnpm --filter @tabora/playground build")
-  }
   if (options.changedFiles.includes(".github/workflows/release-extension.yml")) {
     commands.push(
       "pnpm --filter @tabora/extension zip",
