@@ -33,12 +33,16 @@ describe("createSyncManager", () => {
 
   beforeEach(async () => {
     await deleteTestDatabase()
+    const realSetTimeout = globalThis.setTimeout
+    vi.spyOn(globalThis, "setTimeout").mockImplementation(((handler, timeout, ...args) =>
+      realSetTimeout(handler, timeout === 2_000 ? 0 : timeout, ...args)) as typeof setTimeout)
     fetchMock = vi.fn()
     vi.stubGlobal("fetch", fetchMock)
   })
 
   afterEach(async () => {
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
     await deleteTestDatabase()
   })
 
@@ -111,7 +115,7 @@ describe("createSyncManager", () => {
     expect(resolved).toHaveBeenCalledTimes(1)
 
     database.close()
-  }, 7_000)
+  })
 
   it("rejects a manual sync when there is no active auth session", async () => {
     const database = createTaboraDatabase(DATABASE_NAME)
@@ -128,13 +132,14 @@ describe("createSyncManager", () => {
       } as unknown as StrapiAuthClient,
     })
 
-    await expect(manager.triggerSync()).rejects.toMatchObject({
+    const syncPromise = manager.triggerSync()
+    await expect(syncPromise).rejects.toMatchObject({
       code: "AUTH_FAILED",
     })
     expect(fetchMock).not.toHaveBeenCalled()
 
     database.close()
-  }, 7_000)
+  })
 
   it("automatically schedules sync after a committed local database change", async () => {
     const database = createTaboraDatabase(DATABASE_NAME)
@@ -186,7 +191,7 @@ describe("createSyncManager", () => {
     expect(await syncQueueRepo.count()).toBe(0)
 
     database.close()
-  }, 7_000)
+  })
 
   it("schedules a follow-up sync for changes queued while a sync is in progress", async () => {
     const database = createTaboraDatabase(DATABASE_NAME)
@@ -280,5 +285,5 @@ describe("createSyncManager", () => {
     } finally {
       database.close()
     }
-  }, 12_000)
+  })
 })

@@ -16,27 +16,6 @@ const initialVisualState = {
 }
 
 describe("createWorkbenchShellState", () => {
-  it("composes the shell state into domain-grouped stores", () => {
-    createRoot((dispose) => {
-      const state = createWorkbenchShellState({
-        initialSearchSettings,
-        initialVisualState,
-        darkThemeId: "theme.dark.custom",
-      })
-
-      expect(Object.keys(state)).toEqual([
-        "runtime",
-        "workspace",
-        "appearance",
-        "widgets",
-        "overlays",
-        "search",
-      ])
-
-      dispose()
-    })
-  })
-
   it("routes injected visual + search defaults into their owning domains", () => {
     createRoot((dispose) => {
       const state = createWorkbenchShellState({

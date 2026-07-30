@@ -22,7 +22,7 @@ export type TaboraStylexPluginOptions = {
 }
 
 export function createTaboraStylexVitePlugin(options: TaboraStylexPluginOptions) {
-  return stylex.vite({
+  const plugin = stylex.vite({
     ...stylexSharedOptions,
     dev: options.dev,
     devMode: options.devMode,
@@ -31,6 +31,14 @@ export function createTaboraStylexVitePlugin(options: TaboraStylexPluginOptions)
       rootDir: options.rootDir,
     },
   })
+  if (typeof plugin.configureServer === "function") {
+    const configureServer = plugin.configureServer.bind(plugin)
+    plugin.configureServer = (server: { httpServer: unknown }) => {
+      if (!server.httpServer) return
+      return configureServer(server)
+    }
+  }
+  return plugin
 }
 
 type PackageManifest = {

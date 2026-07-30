@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { definePackageUnitTestProject, defineUnitTestConfig } from "./config"
+import {
+  defineNodePackageUnitTestProject,
+  definePackageUnitTestProject,
+  defineUnitTestConfig,
+} from "./config"
 
 describe("defineUnitTestConfig", () => {
   it("applies shared unit-test defaults and preserves custom include patterns", () => {
@@ -39,5 +43,14 @@ describe("defineUnitTestConfig", () => {
       .flat()
       .find((plugin) => plugin && typeof plugin === "object" && "name" in plugin)
     expect(stylexPlugin).toMatchObject({ __stylexDevMode: "css-only" })
+  })
+
+  it("creates lightweight Node projects without Solid or StyleX plugins", () => {
+    const config = defineNodePackageUnitTestProject()
+
+    expect(config.test?.environment).toBe("node")
+    expect(config.test?.include).toEqual(["src/**/*.test.ts", "src/**/*.test.tsx"])
+    expect(config.test?.exclude).toContain("**/*.e2e.test.ts")
+    expect(config.plugins ?? []).toEqual([])
   })
 })

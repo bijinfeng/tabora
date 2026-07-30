@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -27,8 +27,21 @@ describe("StyleX shared config", () => {
       devMode: "off",
       rootDir: "/repo",
     })
+    const use = vi.fn()
+    const setIntervalSpy = vi.spyOn(globalThis, "setInterval").mockReturnValue(1 as never)
+
+    expect(plugin.configureServer).toBeTypeOf("function")
+    if (typeof plugin.configureServer === "function") {
+      plugin.configureServer({
+        httpServer: null,
+        middlewares: { use },
+      } as never)
+    }
 
     expect(plugin).toBeDefined()
+    expect(use).not.toHaveBeenCalled()
+    expect(setIntervalSpy).not.toHaveBeenCalled()
+    setIntervalSpy.mockRestore()
   })
 
   it("creates a three-plugin pack pipeline for a StyleX package stylesheet", () => {

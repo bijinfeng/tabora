@@ -72,3 +72,27 @@ export function definePackageUnitTestConfig(config: UserConfig = {}) {
 export function definePackageUnitTestProject(config: UserConfig = {}) {
   return defineProject(definePackageUnitTestConfig(config))
 }
+
+export function defineNodeUnitTestConfig(config: UserConfig = {}) {
+  return mergeConfig(
+    defineConfig({
+      logLevel: "error",
+      test: {
+        environment: "node",
+        exclude: sharedUnitExclude,
+      },
+    }),
+    config,
+  )
+}
+
+export function defineNodePackageUnitTestProject(config: UserConfig = {}) {
+  return defineProject(
+    defineNodeUnitTestConfig({
+      test: {
+        include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+      },
+      ...config,
+    }),
+  )
+}

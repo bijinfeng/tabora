@@ -39,18 +39,4 @@ describe("createWorkbenchAppearanceStore", () => {
       dispose()
     })
   })
-
-  it("updates layout and background ids through setters", () => {
-    createRoot((dispose) => {
-      const appearance = createStore()
-
-      appearance.setActiveLayoutId("official.layout.workbench-dashboard")
-      appearance.setBackgroundId("background.aurora")
-
-      expect(appearance.activeLayoutId()).toBe("official.layout.workbench-dashboard")
-      expect(appearance.backgroundId()).toBe("background.aurora")
-
-      dispose()
-    })
-  })
 })

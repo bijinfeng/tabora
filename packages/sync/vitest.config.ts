@@ -1,3 +1,3 @@
-import { definePackageUnitTestProject } from "../../tooling/vitest/config"
+import { defineNodePackageUnitTestProject } from "../../tooling/vitest/config"
 
-export default definePackageUnitTestProject()
+export default defineNodePackageUnitTestProject()

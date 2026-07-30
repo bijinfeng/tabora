@@ -33,7 +33,6 @@
 | 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md` | 修改协议、runtime、storage、shell、包边界                                  |
 | 回归治理         | `docs/technical/tabora-regression-baseline.md`                  | 每轮迭代后选择回归层级、验证命令、报告模板                                 |
 | 测试治理         | `docs/technical/tabora-test-governance.md`                      | 盘点冗余测试、决定测试是否必要、审查测试变更                               |
-| 测试盘点审查     | `docs/technical/tabora-test-inventory-audit-2026-07-30.md`      | 查看当前盘点候选的保留、重构或删除依据                                     |
 | Agent 评测       | `docs/technical/tabora-agent-evaluation.md`                     | 在隔离 worktree 中评估 agent 是否遵守范围、测试与交付规范                  |
 | Agent 任务模板   | `docs/technical/agent-task-template.md`                         | 需要让 coding agent 按规范拆解任务、形成 PR / final 回归摘要时             |
 | Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
@@ -152,7 +151,8 @@
 
 ## 文档维护规则
 
-- 新增长期事实源前，先在本文档登记入口和读取条件。
+- 只有未来迭代会反复使用、描述当前有效事实且后续会持续维护的长期事实源，才在本文档登记入口和读取条件。
+- 计划、设计过程稿、日期审计、阶段记录、实现进度、交付证据和 retrospective 不登记；通过相关 PR、final 或长期事实源按需引用。
 - 不在 `AGENTS.md`、本文档、PRD、技术方案之间复制大段同一规则；只保留摘要并链接事实源。
 - 修改验证标准、已知债务或 agent 工作流时，同步 `docs/technical/tabora-regression-baseline.md`。
 

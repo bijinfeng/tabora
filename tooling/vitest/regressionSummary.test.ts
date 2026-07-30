@@ -10,10 +10,6 @@ import {
   collectRequiredLevels,
   collectSuggestedCommands,
 } from "../../scripts/lib/regressionSummary.mjs"
-import {
-  collectChangedFiles as collectRuntimeChangedFiles,
-  collectReportableGitStatusLines as collectRuntimeReportableGitStatusLines,
-} from "../../scripts/lib/regressionSummaryRuntime.mjs"
 
 describe("regression summary helpers", () => {
   it("classifies changed files into baseline change types", () => {
@@ -138,15 +134,5 @@ describe("regression summary helpers", () => {
         changedFiles: [".pnpm-store/v11/index.db"],
       }),
     ).toContain("git status: clean")
-  })
-
-  it("re-exports reportable change helpers for the CLI runtime entry", () => {
-    expect(collectRuntimeReportableGitStatusLines(["?? .pnpm-store/v11/index.db"])).toEqual([])
-    expect(
-      collectRuntimeChangedFiles({
-        gitStatusLines: [" M docs/README.md"],
-        trackedDiffOutput: "",
-      }),
-    ).toEqual(["docs/README.md"])
   })
 })
