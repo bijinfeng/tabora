@@ -11,11 +11,58 @@ const CHANGE_TYPE_ORDER = [
   "release",
 ]
 
+const AGENT_GOVERNANCE_DOCUMENTS = new Set([
+  ".github/copilot-instructions.md",
+  ".github/pull_request_template.md",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "GEMINI.md",
+])
+
+const LOCAL_TOOL_NOISE_PREFIXES = [".pnpm-store/"]
+
+const FOCUSED_TEST_RULES = [
+  "packages/ai-runtime",
+  "packages/auth",
+  "packages/brand",
+  "packages/builtin-plugin-registry",
+  "packages/host-adapters",
+  "packages/official-plugins",
+  "packages/orchestrator",
+  "packages/platform-kernel",
+  "packages/plugin-api",
+  "packages/storage",
+  "packages/sync",
+  "packages/theme",
+  "packages/ui",
+  "packages/workbench-app",
+  "packages/workbench-shell",
+  "apps/playground",
+  "apps/site",
+  "backend/strapi",
+  "tooling/stylex",
+  "tooling/vitest",
+  "plugins/community/layout-diy-masonry",
+  "plugins/official/layout-dashboard",
+  "plugins/official/widget-notes",
+  "plugins/official/widget-quick-links",
+  "plugins/official/widget-todo",
+  "plugins/official/widget-weather",
+].map((directory) => ({
+  directory: `${directory}/`,
+  command: `pnpm --dir ${directory} exec vitest run --config vitest.config.ts`,
+}))
+
 const CHANGE_TYPE_RULES = [
   {
     type: "docs",
     matches: (filePath) =>
-      filePath === "AGENTS.md" || filePath === "DESIGN.md" || filePath.startsWith("docs/"),
+      AGENT_GOVERNANCE_DOCUMENTS.has(filePath) ||
+      filePath === "DESIGN.md" ||
+      filePath.startsWith(".claude/") ||
+      filePath.startsWith(".github/instructions/") ||
+      filePath.startsWith(".github/PULL_REQUEST_TEMPLATE/") ||
+      filePath.startsWith("docs/"),
   },
   {
     type: "protocol",
@@ -60,6 +107,8 @@ const CHANGE_TYPE_RULES = [
       filePath.startsWith("scripts/") ||
       filePath.startsWith("tooling/") ||
       filePath === "package.json" ||
+      filePath === ".gitignore" ||
+      filePath === ".claude/settings.json" ||
       filePath === "pnpm-lock.yaml" ||
       filePath === "pnpm-workspace.yaml" ||
       filePath === "vite.config.ts" ||
@@ -121,9 +170,11 @@ const KNOWN_DEBT_RULES = [
 export function collectChangeTypes(changedFiles) {
   return sortByOrder(
     unique(
-      changedFiles.flatMap((filePath) =>
-        CHANGE_TYPE_RULES.filter((rule) => rule.matches(filePath)).map((rule) => rule.type),
-      ),
+      changedFiles
+        .filter(isReportableChangedFile)
+        .flatMap((filePath) =>
+          CHANGE_TYPE_RULES.filter((rule) => rule.matches(filePath)).map((rule) => rule.type),
+        ),
     ),
     CHANGE_TYPE_ORDER,
   )
@@ -184,30 +235,54 @@ export function collectSuggestedCommands(options) {
   return unique(commands)
 }
 
+export function collectFocusedTestCommands(changedFiles) {
+  return FOCUSED_TEST_RULES.filter((rule) =>
+    changedFiles.some((filePath) => filePath.startsWith(rule.directory)),
+  ).map((rule) => rule.command)
+}
+
 export function collectKnownDebtTouched(changedFiles) {
   return unique(
-    KNOWN_DEBT_RULES.filter((rule) => changedFiles.some((filePath) => rule.matches(filePath))).map(
-      (rule) => rule.label,
-    ),
+    KNOWN_DEBT_RULES.filter((rule) =>
+      changedFiles.filter(isReportableChangedFile).some((filePath) => rule.matches(filePath)),
+    ).map((rule) => rule.label),
   )
 }
 
+export function collectChangedFiles(options) {
+  const fromStatus = options.gitStatusLines.map(extractGitStatusPath)
+  const fromDiff = options.trackedDiffOutput
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+
+  return unique([...fromDiff, ...fromStatus]).filter(isReportableChangedFile)
+}
+
+export function collectReportableGitStatusLines(gitStatusLines) {
+  return gitStatusLines.filter((line) => isReportableChangedFile(extractGitStatusPath(line)))
+}
+
 export function buildRegressionSummary(options) {
-  const changedFiles = unique(options.changedFiles)
+  const gitStatusLines = collectReportableGitStatusLines(options.gitStatusLines)
+  const changedFiles = unique(options.changedFiles).filter(isReportableChangedFile)
   const changeTypes = collectChangeTypes(changedFiles)
   const requiredLevels = collectRequiredLevels(changeTypes)
   const commands = collectSuggestedCommands({ changedFiles, changeTypes })
+  const focusedTestCommands = collectFocusedTestCommands(changedFiles)
   const debts = collectKnownDebtTouched(changedFiles)
 
   return [
     "Regression Baseline Summary",
-    `- git status: ${options.gitStatusLines.length > 0 ? "dirty" : "clean"}`,
+    `- git status: ${gitStatusLines.length > 0 ? "dirty" : "clean"}`,
     `- changed files: ${changedFiles.length > 0 ? "" : "none"}`,
     ...formatList(changedFiles),
     `- change types: ${changeTypes.length > 0 ? changeTypes.join(", ") : "none"}`,
     `- required levels: ${requiredLevels.length > 0 ? requiredLevels.join(", ") : "none"}`,
     `- commands to run: ${commands.length > 0 ? "" : "none"}`,
     ...formatList(commands),
+    `- focused tests before the full suite: ${focusedTestCommands.length > 0 ? "" : "none"}`,
+    ...formatList(focusedTestCommands),
     `- known debt touched: ${debts.length > 0 ? debts.join(", ") : "none"}`,
   ].join("\n")
 }
@@ -229,4 +304,14 @@ function sortByOrder(values, order) {
 
 function formatList(values) {
   return values.map((value) => `  - ${value}`)
+}
+
+function extractGitStatusPath(gitStatusLine) {
+  const filePath = gitStatusLine.slice(3)
+  const renameSeparator = " -> "
+  return filePath.includes(renameSeparator) ? filePath.split(renameSeparator).at(-1) : filePath
+}
+
+function isReportableChangedFile(filePath) {
+  return !LOCAL_TOOL_NOISE_PREFIXES.some((prefix) => filePath.startsWith(prefix))
 }

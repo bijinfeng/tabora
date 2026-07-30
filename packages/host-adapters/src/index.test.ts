@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { createExtensionHostAdapter } from "./extension"
 import { createWebHostAdapter } from "./web"
-import {
-  createExtensionHostAdapter as createExtensionHostAdapterFromIndex,
-  createWebHostAdapter as createWebHostAdapterFromIndex,
-} from "./index"
 
 describe("host adapters", () => {
   it("creates web adapter with expected platform defaults", () => {
@@ -21,10 +17,5 @@ describe("host adapters", () => {
 
     expect(adapter.platform).toBe("extension")
     expect(adapter.id).toBe("host.extension")
-  })
-
-  it("re-exports platform adapters from the package index", () => {
-    expect(createWebHostAdapterFromIndex).toBe(createWebHostAdapter)
-    expect(createExtensionHostAdapterFromIndex).toBe(createExtensionHostAdapter)
   })
 })

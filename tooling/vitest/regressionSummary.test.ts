@@ -2,11 +2,18 @@ import { describe, expect, it } from "vitest"
 
 import {
   buildRegressionSummary,
+  collectChangedFiles,
   collectChangeTypes,
+  collectFocusedTestCommands,
   collectKnownDebtTouched,
+  collectReportableGitStatusLines,
   collectRequiredLevels,
   collectSuggestedCommands,
 } from "../../scripts/lib/regressionSummary.mjs"
+import {
+  collectChangedFiles as collectRuntimeChangedFiles,
+  collectReportableGitStatusLines as collectRuntimeReportableGitStatusLines,
+} from "../../scripts/lib/regressionSummaryRuntime.mjs"
 
 describe("regression summary helpers", () => {
   it("classifies changed files into baseline change types", () => {
@@ -19,6 +26,17 @@ describe("regression summary helpers", () => {
         "scripts/check-architecture.mjs",
       ]),
     ).toEqual(["docs", "protocol", "orchestrator", "quality", "release"])
+  })
+
+  it("classifies agent instruction and delivery template changes as docs governance", () => {
+    expect(
+      collectChangeTypes([
+        ".claude/CLAUDE.md",
+        ".github/copilot-instructions.md",
+        ".github/pull_request_template.md",
+        "GEMINI.md",
+      ]),
+    ).toEqual(["docs"])
   })
 
   it("collects required levels and suggested commands conservatively", () => {
@@ -57,6 +75,20 @@ describe("regression summary helpers", () => {
     ])
   })
 
+  it("recommends focused test projects from changed package paths", () => {
+    expect(
+      collectFocusedTestCommands([
+        "packages/plugin-api/src/manifestSchema.ts",
+        "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
+        "plugins/official/widget-notes/src/notes-card.tsx",
+      ]),
+    ).toEqual([
+      "pnpm --dir packages/plugin-api exec vitest run --config vitest.config.ts",
+      "pnpm --dir packages/workbench-app exec vitest run --config vitest.config.ts",
+      "pnpm --dir plugins/official/widget-notes exec vitest run --config vitest.config.ts",
+    ])
+  })
+
   it("reports touched known debt and renders a readable summary", () => {
     const summary = buildRegressionSummary({
       gitStatusLines: [
@@ -89,5 +121,37 @@ describe("regression summary helpers", () => {
     expect(summary).toContain("required levels: none")
     expect(summary).toContain("commands to run: none")
     expect(summary).toContain("known debt touched: none")
+  })
+
+  it("ignores local package-manager store noise in status and changed files", () => {
+    const gitStatusLines = [
+      "?? .pnpm-store/v11/index.db",
+      "?? .pnpm-store/v11/index.db-shm",
+      "?? .pnpm-store/v11/index.db-wal",
+    ]
+
+    expect(collectReportableGitStatusLines(gitStatusLines)).toEqual([])
+    expect(
+      collectChangedFiles({
+        gitStatusLines,
+        trackedDiffOutput: ".pnpm-store/v11/index.db\n",
+      }),
+    ).toEqual([])
+    expect(
+      buildRegressionSummary({
+        gitStatusLines,
+        changedFiles: [".pnpm-store/v11/index.db"],
+      }),
+    ).toContain("git status: clean")
+  })
+
+  it("re-exports reportable change helpers for the CLI runtime entry", () => {
+    expect(collectRuntimeReportableGitStatusLines(["?? .pnpm-store/v11/index.db"])).toEqual([])
+    expect(
+      collectRuntimeChangedFiles({
+        gitStatusLines: [" M docs/README.md"],
+        trackedDiffOutput: "",
+      }),
+    ).toEqual(["docs/README.md"])
   })
 })

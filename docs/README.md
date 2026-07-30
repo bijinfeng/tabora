@@ -32,6 +32,10 @@
 | AI Agent Runtime | `docs/product/tabora-ai-agent-runtime-design.md`                | 判断 AI 基础设施、agent 协议、插件 AI 授权和 MVP 路线                      |
 | 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md` | 修改协议、runtime、storage、shell、包边界                                  |
 | 回归治理         | `docs/technical/tabora-regression-baseline.md`                  | 每轮迭代后选择回归层级、验证命令、报告模板                                 |
+| 测试治理         | `docs/technical/tabora-test-governance.md`                      | 盘点冗余测试、决定测试是否必要、审查测试变更                               |
+| 测试盘点审查     | `docs/technical/tabora-test-inventory-audit-2026-07-30.md`      | 查看当前盘点候选的保留、重构或删除依据                                     |
+| Agent 评测       | `docs/technical/tabora-agent-evaluation.md`                     | 在隔离 worktree 中评估 agent 是否遵守范围、测试与交付规范                  |
+| Agent 任务模板   | `docs/technical/agent-task-template.md`                         | 需要让 coding agent 按规范拆解任务、形成 PR / final 回归摘要时             |
 | Playground 部署  | `docs/technical/playground-github-actions-deploy.md`            | 修改 playground 发布链路或服务器部署                                       |
 | Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
 | 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围与设置入口（需求与决策）                                 |
@@ -130,6 +134,23 @@
 - 对应 `.github/workflows/` 文件。
 
 按 `docs/technical/tabora-regression-baseline.md` 的 L8 做发布前回归。
+
+### Agent 协作和交付
+
+读：
+
+- `docs/technical/tabora-regression-baseline.md`
+- `docs/technical/tabora-test-governance.md`
+- `docs/technical/agent-task-template.md`
+
+重点确认：
+
+- Agent 入口文件只做轻量指引，不复制事实源正文。
+- 完成前运行 `node scripts/regression-summary.mjs`，再按输出选择验证命令。
+- 新增、修改或清理测试前运行 `pnpm test:inventory`，候选项逐项确认后才删除。
+- 使用 `node scripts/regression-summary.mjs` 输出的 focused tests 先做定向反馈，再运行全量要求的命令。
+- PR 会由 `pr-governance` workflow 校验交付字段是否已填写。
+- PR 或 final 回复要说明事实源同步、验证结果、未覆盖项和风险。
 
 ## 文档维护规则
 

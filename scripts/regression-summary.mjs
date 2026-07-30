@@ -2,6 +2,8 @@ import { execFileSync } from "node:child_process"
 
 import {
   buildRegressionSummary,
+  collectChangedFiles,
+  collectReportableGitStatusLines,
   parseGitStatusLines,
   resolveRepositoryRoot,
 } from "./lib/regressionSummaryRuntime.mjs"
@@ -17,10 +19,11 @@ try {
     gitStatusLines,
     trackedDiffOutput,
   })
+  const reportableGitStatusLines = collectReportableGitStatusLines(gitStatusLines)
 
   process.stdout.write(
     `${buildRegressionSummary({
-      gitStatusLines,
+      gitStatusLines: reportableGitStatusLines,
       changedFiles,
     })}\n`,
   )
@@ -35,13 +38,4 @@ function execGit(args, cwd) {
     cwd,
     encoding: "utf8",
   })
-}
-
-function collectChangedFiles(options) {
-  const fromStatus = options.gitStatusLines.map((line) => line.slice(3))
-  const fromDiff = options.trackedDiffOutput
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-  return [...new Set([...fromDiff, ...fromStatus])]
 }

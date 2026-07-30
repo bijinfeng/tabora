@@ -23,6 +23,8 @@
     "check:architecture": "node scripts/check-architecture.mjs",
     "strapi:build": "pnpm --dir backend/strapi build",
     "quality": "node scripts/quality-report.mjs",
+    "agent:eval:check": "node scripts/agent-evaluation.mjs",
+    "test:inventory": "node scripts/test-inventory.mjs",
     "regression:summary": "node scripts/regression-summary.mjs"
   },
   "dependencies": {

@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "docs-only-change",
+      "title": "同步技术事实源",
+      "prompt": "修改既有技术口径，并同步文档地图；不要改变产品或运行时代码。",
+      "allowedPaths": ["docs/**"],
+      "requiredEvidence": ["pnpm check", "git diff --check"],
+      "forbiddenOutcomes": ["新增无行为目标的测试", "修改 packages 或 apps 源码"],
+      "scoring": [
+        { "criterion": "事实源与文档地图同步", "points": 4 },
+        { "criterion": "变更严格限定在文档范围", "points": 3 },
+        { "criterion": "报告真实验证与风险", "points": 3 }
+      ]
+    },
+    {
+      "id": "plugin-contract-change",
+      "title": "插件协议变更",
+      "prompt": "为 manifest contract 增加一个明确的必填字段，并更新 schema 与最小行为测试。",
+      "allowedPaths": ["packages/plugin-api/**", "docs/**"],
+      "requiredEvidence": [
+        "pnpm exec vitest run --config packages/plugin-api/vitest.config.ts",
+        "pnpm check",
+        "pnpm build"
+      ],
+      "forbiddenOutcomes": ["为旧 manifest 添加隐式 backfill", "跳过 schema 的失败用例"],
+      "scoring": [
+        { "criterion": "类型和 schema contract 一致", "points": 4 },
+        { "criterion": "测试证明有效和无效输入", "points": 4 },
+        { "criterion": "更新受影响的技术事实源", "points": 2 }
+      ]
+    },
+    {
+      "id": "shell-ui-change",
+      "title": "宿主 UI 行为变更",
+      "prompt": "调整一个 workbench shell 交互，复用 @tabora/ui primitive，并证明浏览器路径不回退。",
+      "allowedPaths": [
+        "packages/workbench-app/**",
+        "packages/workbench-shell/**",
+        "packages/ui/**",
+        "docs/**"
+      ],
+      "requiredEvidence": ["pnpm test", "pnpm check", "pnpm test:e2e"],
+      "forbiddenOutcomes": [
+        "手搓已有 @tabora/ui 基础组件",
+        "仅用 snapshot 代替交互断言",
+        "遗漏浏览器检查"
+      ],
+      "scoring": [
+        { "criterion": "遵守 UI 与宿主边界", "points": 4 },
+        { "criterion": "测试覆盖可观察交互", "points": 3 },
+        { "criterion": "验证与风险说明完整", "points": 3 }
+      ]
+    },
+    {
+      "id": "test-cleanup",
+      "title": "清理重复测试",
+      "prompt": "根据 test inventory 审查候选，只删除已由更高价值测试或类型系统覆盖的测试。",
+      "allowedPaths": ["packages/**", "tooling/**", "docs/**"],
+      "requiredEvidence": ["pnpm test:inventory", "pnpm test", "pnpm check"],
+      "forbiddenOutcomes": [
+        "按 mock 数量批量删除",
+        "删除未写明替代覆盖证据的测试",
+        "为了清理而修改业务行为"
+      ],
+      "scoring": [
+        { "criterion": "每项删除都有替代覆盖证据", "points": 5 },
+        { "criterion": "保留高价值边界与编排测试", "points": 3 },
+        { "criterion": "盘点结论和验证可审计", "points": 2 }
+      ]
+    }
+  ]
+}

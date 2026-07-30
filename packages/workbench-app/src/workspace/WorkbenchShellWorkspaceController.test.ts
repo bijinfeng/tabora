@@ -465,20 +465,4 @@ describe("createWorkbenchWorkspaceController", () => {
     expect(kernel.setPluginEnabled).toHaveBeenNthCalledWith(2, "plugin.widgets", true)
     expect(syncPluginStyles).toHaveBeenCalledTimes(2)
   })
-
-  it("proxies workspace lifecycle methods through the shared workspace state actions", async () => {
-    const { controller } = controllerSetup()
-
-    await controller.exportWorkspace()
-    await controller.importWorkspace("{}")
-    await controller.createWorkspace("新工作区")
-    await controller.switchWorkspace("workspace-2")
-    await controller.deleteWorkspace("workspace-2")
-
-    expect(mocks.workspaceStateActions.exportWorkspace).toHaveBeenCalled()
-    expect(mocks.workspaceStateActions.importWorkspace).toHaveBeenCalledWith("{}")
-    expect(mocks.workspaceStateActions.createWorkspace).toHaveBeenCalledWith("新工作区")
-    expect(mocks.workspaceStateActions.switchWorkspace).toHaveBeenCalledWith("workspace-2")
-    expect(mocks.workspaceStateActions.deleteWorkspace).toHaveBeenCalledWith("workspace-2")
-  })
 })
