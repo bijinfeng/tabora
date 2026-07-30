@@ -39,7 +39,13 @@ export function createLocalChangeQueue(syncQueueRepo: SyncQueueRepository): Loca
 
       if (existing) {
         // Update existing entry with latest state (merge in delay window)
-        await syncQueueRepo.updateStatus(existing.id, "pending", {})
+        await syncQueueRepo.updateStatus(existing.id, "pending", {
+          payload: change.payload,
+          clientUpdatedAt: change.clientUpdatedAt,
+          deleted: change.deleted,
+          failureReason: undefined,
+          lastAttemptAt: undefined,
+        })
         return
       }
 

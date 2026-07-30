@@ -27,6 +27,18 @@ export type SyncManager = {
   triggerSync(): Promise<void>
 }
 
+type SyncManagerErrorCode = "AUTH_FAILED" | "SYNC_FAILED" | "SYNC_CANCELLED"
+
+class SyncManagerError extends Error {
+  constructor(
+    readonly code: SyncManagerErrorCode,
+    message: string,
+  ) {
+    super(message)
+    this.name = "SyncManagerError"
+  }
+}
+
 /**
  * Create sync manager - orchestrates change detection and the sync engine.
  * This is the main entry point for integrating sync into the workbench.
@@ -70,38 +82,106 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
   const changeDetector = createChangeDetector({
     database: config.database,
     changeQueue,
+    onChange: triggerBackgroundSync,
   })
 
   let syncTimer: ReturnType<typeof setTimeout> | null = null
+  let scheduledSync: Promise<void> | null = null
+  let resolveScheduledSync: (() => void) | null = null
+  let rejectScheduledSync: ((reason: unknown) => void) | null = null
+  let syncInProgress = false
+  let followUpRequested = false
   let isRunning = false
+  let isStopped = false
 
-  async function triggerSync() {
+  async function runSync() {
+    const session = await config.authClient.getSession()
+    if (!session) {
+      throw new SyncManagerError("AUTH_FAILED", "请先登录后再同步")
+    }
+
+    try {
+      // Run sync (the engine resolves the device id lazily via getDeviceId)
+      const result = await syncEngine.sync()
+      if (!result.success) {
+        console.error("Sync failed:", result.errors)
+        const code = result.errors.includes("No active session") ? "AUTH_FAILED" : "SYNC_FAILED"
+        throw new SyncManagerError(code, result.errors[0] ?? "同步失败，请稍后重试")
+      }
+    } catch (err) {
+      if (err instanceof SyncManagerError) {
+        throw err
+      }
+      console.error("Sync error:", err)
+      throw new SyncManagerError(
+        "SYNC_FAILED",
+        err instanceof Error ? err.message : "同步失败，请稍后重试",
+      )
+    }
+  }
+
+  function clearScheduledSync() {
+    scheduledSync = null
+    resolveScheduledSync = null
+    rejectScheduledSync = null
+  }
+
+  function finishScheduledSync() {
+    const shouldScheduleFollowUp = followUpRequested && !isStopped
+    syncInProgress = false
+    followUpRequested = false
+    clearScheduledSync()
+    if (shouldScheduleFollowUp) {
+      triggerBackgroundSync()
+    }
+  }
+
+  function resolveSync() {
+    const resolve = resolveScheduledSync
+    finishScheduledSync()
+    resolve?.()
+  }
+
+  function rejectSync(error: unknown) {
+    const reject = rejectScheduledSync
+    finishScheduledSync()
+    reject?.(error)
+  }
+
+  function triggerSync(): Promise<void> {
     // Debounce: if already scheduled, don't schedule again
-    if (syncTimer) {
-      return
+    if (scheduledSync) {
+      if (syncInProgress) {
+        followUpRequested = true
+      }
+      return scheduledSync
     }
 
     // Short delay to batch multiple changes
-    syncTimer = setTimeout(async () => {
-      syncTimer = null
+    scheduledSync = new Promise((resolve, reject) => {
+      resolveScheduledSync = resolve
+      rejectScheduledSync = reject
+      syncTimer = setTimeout(() => {
+        syncTimer = null
+        syncInProgress = true
+        void runSync().then(resolveSync, rejectSync)
+      }, 2000)
+    })
+    return scheduledSync
+  }
 
-      try {
-        // Check if we have a session
-        const session = await config.authClient.getSession()
-        if (!session) {
-          // No session, skip sync
-          return
-        }
+  function triggerBackgroundSync() {
+    void triggerSync().catch(() => {})
+  }
 
-        // Run sync (the engine resolves the device id lazily via getDeviceId)
-        const result = await syncEngine.sync()
-        if (!result.success) {
-          console.error("Sync failed:", result.errors)
-        }
-      } catch (err) {
-        console.error("Sync error:", err)
-      }
-    }, 2000) // 2 second delay
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      triggerBackgroundSync()
+    }
+  }
+
+  const handleOnline = () => {
+    triggerBackgroundSync()
   }
 
   function start() {
@@ -109,27 +189,22 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
       return
     }
     isRunning = true
+    isStopped = false
 
     // Start change detector
     changeDetector.start()
 
     // Trigger initial sync on start
-    void triggerSync()
+    triggerBackgroundSync()
 
     // Listen for visibility change (background to foreground)
     if (typeof document !== "undefined") {
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-          void triggerSync()
-        }
-      })
+      document.addEventListener("visibilitychange", handleVisibilityChange)
     }
 
     // Listen for online event (network recovery)
     if (typeof window !== "undefined") {
-      window.addEventListener("online", () => {
-        void triggerSync()
-      })
+      window.addEventListener("online", handleOnline)
     }
   }
 
@@ -138,6 +213,7 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
       return
     }
     isRunning = false
+    isStopped = true
 
     // Stop change detector
     changeDetector.stop()
@@ -146,6 +222,14 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
     if (syncTimer) {
       clearTimeout(syncTimer)
       syncTimer = null
+      rejectSync(new SyncManagerError("SYNC_CANCELLED", "同步已取消"))
+    }
+
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+    if (typeof window !== "undefined") {
+      window.removeEventListener("online", handleOnline)
     }
   }
 

@@ -12,7 +12,13 @@ export type SyncQueueRepository = {
   updateStatus(
     id: string,
     status: SyncQueueRow["status"],
-    updates?: { lastAttemptAt?: string; failureReason?: string },
+    updates?: {
+      lastAttemptAt?: string | undefined
+      failureReason?: string | undefined
+      payload?: unknown
+      clientUpdatedAt?: string
+      deleted?: boolean
+    },
   ): Promise<void>
   remove(id: string): Promise<void>
   removeByRecord(scope: string, entityType: string, recordKey: string): Promise<void>
@@ -41,7 +47,28 @@ export function createSyncQueueRepository(database: TaboraDatabase): SyncQueueRe
         .first()
     },
     async updateStatus(id, status, updates) {
-      await database.syncQueue.update(id, { status, ...updates })
+      await database.syncQueue.update(id, (row) => {
+        row.status = status
+        if (!updates) return
+
+        if ("lastAttemptAt" in updates) {
+          if (updates.lastAttemptAt === undefined) {
+            delete row.lastAttemptAt
+          } else {
+            row.lastAttemptAt = updates.lastAttemptAt
+          }
+        }
+        if ("failureReason" in updates) {
+          if (updates.failureReason === undefined) {
+            delete row.failureReason
+          } else {
+            row.failureReason = updates.failureReason
+          }
+        }
+        if ("payload" in updates) row.payload = updates.payload
+        if (updates.clientUpdatedAt !== undefined) row.clientUpdatedAt = updates.clientUpdatedAt
+        if (updates.deleted !== undefined) row.deleted = updates.deleted
+      })
     },
     async remove(id) {
       await database.syncQueue.delete(id)

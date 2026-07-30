@@ -3,6 +3,7 @@ import type { Workspace, PluginInstance, PluginRecord } from "@tabora/plugin-api
 import type { StrapiGatewayClient } from "./strapiGatewayClient"
 import type { LocalChangeQueue } from "./localChangeQueue"
 import { rejectSensitiveFields } from "./sensitiveFilter"
+import { withoutChangeDetection } from "./changeDetectionGuard"
 
 /**
  * Minimal auth session dependency: the sync engine only needs to know whether
@@ -166,13 +167,15 @@ export function createSyncEngine(config: SyncEngineConfig) {
     conflicts = response.data.conflicts.length
     for (const conflict of response.data.conflicts) {
       try {
-        await applyRemoteRecord(database, {
-          scope: conflict.type === "pluginData" ? "plugin" : "core",
-          entityType: conflict.type,
-          recordKey: conflict.id,
-          payload: conflict.server_data,
-          deleted: conflict.server_data === null,
-        })
+        await withoutChangeDetection(database, () =>
+          applyRemoteRecord(database, {
+            scope: conflict.type === "pluginData" ? "plugin" : "core",
+            entityType: conflict.type,
+            recordKey: conflict.id,
+            payload: conflict.server_data,
+            deleted: conflict.server_data === null,
+          }),
+        )
       } catch (err) {
         errors.push(
           `Failed to apply conflict ${conflict.type}/${conflict.id}: ${err instanceof Error ? err.message : "unknown"}`,
@@ -224,13 +227,15 @@ export function createSyncEngine(config: SyncEngineConfig) {
     // Apply records to local database
     for (const record of records) {
       try {
-        await applyRemoteRecord(database, {
-          scope: record.scope,
-          entityType: record.entityType,
-          recordKey: record.recordKey,
-          payload: record.payload,
-          deleted: record.deleted,
-        })
+        await withoutChangeDetection(database, () =>
+          applyRemoteRecord(database, {
+            scope: record.scope,
+            entityType: record.entityType,
+            recordKey: record.recordKey,
+            payload: record.payload,
+            deleted: record.deleted,
+          }),
+        )
         applied++
       } catch (err) {
         errors.push(

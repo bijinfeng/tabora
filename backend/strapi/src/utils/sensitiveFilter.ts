@@ -1,5 +1,8 @@
 const SENSITIVE_KEYWORDS = ["apikey", "token", "password", "secret", "filepath"]
 
+// Keys that contain sensitive keywords but are safe (e.g., design tokens, not auth tokens)
+const SAFE_KEYS = ["tokens"] // theme design tokens
+
 const FILE_PATH_PATTERNS = [/^\/[A-Za-z]+\//, /^[A-Z]:\\/, /^file:\/\//]
 
 function isFilePath(value: unknown): boolean {
@@ -27,7 +30,10 @@ export function findSensitiveFieldPath(payload: unknown, path = ""): string | nu
     const fullPath = path ? `${path}.${key}` : key
     const lowerKey = key.toLowerCase()
 
-    if (SENSITIVE_KEYWORDS.some((keyword) => lowerKey.includes(keyword))) {
+    if (
+      !SAFE_KEYS.includes(lowerKey) &&
+      SENSITIVE_KEYWORDS.some((keyword) => lowerKey.includes(keyword))
+    ) {
       return fullPath
     }
     if (isFilePath(value)) {

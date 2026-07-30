@@ -2,7 +2,7 @@
 
 版本：V0.3
 
-日期：2026-07-29
+日期：2026-07-30
 
 状态：当前实现事实源
 
@@ -117,7 +117,7 @@ workspace | pluginInstance | plugin | pluginData
 
 同步为 state-based 当前态模型，不保存云端事件流。服务端以记录级 last-write-wins 判定写入；客户端遇到冲突时采用服务端返回的记录并将本地队列项出队。若应用服务端内容失败，队列项保留以便重试。
 
-客户端将 `401` 映射为 `AUTH_FAILED`，`400` 映射为 `INVALID_PAYLOAD`，网络异常映射为 `NETWORK_ERROR`，其他非成功状态映射为 `SERVER_ERROR`。这些错误不会影响本地数据读写。
+客户端将 `401` 和 Strapi action 授权层对匿名请求返回的 `403` 映射为 `AUTH_FAILED`，`400` 映射为 `INVALID_PAYLOAD`，网络异常映射为 `NETWORK_ERROR`，其他非成功状态映射为 `SERVER_ERROR`。这些错误不会影响本地数据读写。
 
 ## 5. 客户端同步引擎与运行时接线
 
@@ -143,7 +143,7 @@ workspace | pluginInstance | plugin | pluginData
 
 ## 6. 安全与权限边界
 
-- 同步 controller 要求 `ctx.state.user.id`，未认证请求返回 `401`。
+- 同步 controller 要求 `ctx.state.user.id`。无 JWT 时，users-permissions action 授权层通常在 controller 前返回 `403`；若请求进入 controller 但没有用户则返回 `401`。客户端将两者统一视为认证失败。
 - 查询和写入同时按 owner 过滤；用户不能读取或修改其他用户的记录。
 - 服务端使用敏感字段过滤，拒绝或过滤 API key、token、密码、私钥和文件路径等危险字段。客户端过滤不是唯一防线。
 - 插件只使用 runtime context 暴露的本地 storage 能力；它们不能读取 JWT、认证存储、同步队列或同步端点。
@@ -157,8 +157,9 @@ workspace | pluginInstance | plugin | pluginData
 
 - Strapi 邮箱密码认证与纯 JWT 会话。
 - 认证客户端、宿主存储适配和 workbench runtime 接线。
-- 同步记录 content type、owner 隔离、敏感字段过滤、push/pull controller。
-- 本地变更检测、持久化队列、增量拉取、服务端优先冲突处理与 tombstone。
+- 同步记录 content type、owner 隔离、敏感字段过滤（排除设计 tokens）、push/pull controller。
+- 本地变更检测（带 guard 抑制远程写入反向入队）、持久化队列、增量拉取、服务端优先冲突处理与 tombstone。
+- 同步 manager 调度：2s 防抖、在线恢复、页面可见性触发、手动立即同步。
 - 同步相关的单元与契约测试。
 
 ### 7.2 后续能力

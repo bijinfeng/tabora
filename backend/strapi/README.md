@@ -89,8 +89,8 @@ pnpm test
 
 ### 数据同步 (自定义 controller)
 
-- `GET /api/sync/records` - 拉取增量 (query: `since`, `limit`)
-- `POST /api/sync/records` - 批量推送 (body: `changes[]`)
+- `GET /api/sync/records` - 拉取增量 (query: `since`, `types`)
+- `POST /api/sync/records` - 批量推送最多 100 条记录 (body: 记录数组)
 
 ### 附件 (自定义 controller + upload 插件)
 
@@ -184,7 +184,8 @@ docker compose -f backend/strapi/docker/compose.prod.yml up -d
 
 ## 开发提示
 
-- 运行测试前需启动 Strapi (`pnpm develop`)，contract 测试为端到端验证
+- `pnpm test:strapi` 覆盖 Strapi 纯函数与契约测试，不要求运行服务
+- 改动认证或同步契约后，启动 Strapi (`pnpm dev:strapi`) 手工验证 push/pull 路径
 - Admin Panel 管理员账号独立于 API 用户（users-permissions）
 - 修改 content-type schema 后需重启 Strapi
 - SQLite 数据库位于 `.tmp/data.db`（已 gitignore）

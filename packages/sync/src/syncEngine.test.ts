@@ -1,5 +1,13 @@
+import "fake-indexeddb/auto"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import type { SyncQueueRow } from "@tabora/storage"
+import {
+  createSyncMetaRepository,
+  createSyncQueueRepository,
+  createTaboraDatabase,
+  type SyncQueueRow,
+} from "@tabora/storage"
+import { createChangeDetector } from "./changeDetector"
+import { createLocalChangeQueue } from "./localChangeQueue"
 import { createSyncEngine, type SyncEngineConfig } from "./syncEngine"
 
 const DEVICE_ID = "device-1"
@@ -318,5 +326,60 @@ describe("createSyncEngine (Strapi contract)", () => {
     expect(result.success).toBe(false)
     expect(gatewayClient.push).not.toHaveBeenCalled()
     expect(gatewayClient.pull).not.toHaveBeenCalled()
+  })
+
+  it("does not enqueue remote records again when pull applies them locally", async () => {
+    const databaseName = `sync-engine-remote-apply-${crypto.randomUUID()}`
+    const database = createTaboraDatabase(databaseName)
+    const changeQueue = createLocalChangeQueue(createSyncQueueRepository(database))
+    const syncMetaRepo = createSyncMetaRepository(database)
+    const changeDetector = createChangeDetector({ database, changeQueue })
+    changeDetector.start()
+    const gatewayClient = {
+      push: vi.fn().mockResolvedValue(pushOk()),
+      pull: vi.fn().mockResolvedValue(
+        pullOk([
+          {
+            scope: "core",
+            entityType: "workspace",
+            recordKey: "remote-w1",
+            payload: {
+              id: "remote-w1",
+              name: "Remote Workspace",
+              activeLayoutId: "official.layout.workbench-dashboard",
+              activeThemeId: "official.theme.light",
+              activeBackgroundProviderId: "official.background.default",
+              regions: {},
+              createdAt: "2026-07-30T01:00:00.000Z",
+              updatedAt: "2026-07-30T01:00:00.000Z",
+            },
+            serverUpdatedAt: "2026-07-30T01:00:01.000Z",
+            deleted: false,
+          },
+        ]),
+      ),
+    }
+    const engine = createSyncEngine({
+      database,
+      gatewayClient,
+      changeQueue,
+      syncMetaRepo,
+      authSession: { getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1" }) },
+      getDeviceId: vi.fn().mockResolvedValue(DEVICE_ID),
+    })
+
+    try {
+      const result = await engine.pull()
+      expect(result.errors).toEqual([])
+      await new Promise((resolve) => setTimeout(resolve, 20))
+      expect(await changeQueue.getPending()).toEqual([])
+    } finally {
+      database.close()
+      await new Promise<void>((resolve, reject) => {
+        const request = indexedDB.deleteDatabase(databaseName)
+        request.onsuccess = () => resolve()
+        request.onerror = () => reject(request.error)
+      })
+    }
   })
 })

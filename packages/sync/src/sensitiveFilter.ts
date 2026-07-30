@@ -6,6 +6,9 @@
 
 const SENSITIVE_KEYWORDS = ["apikey", "token", "password", "secret", "filepath"]
 
+// Keys that contain sensitive keywords but are safe (e.g., design tokens, not auth tokens)
+const SAFE_KEYS = ["tokens"] // theme design tokens
+
 const FILE_PATH_PATTERNS = [
   /^\/[A-Za-z]+\//, // Unix absolute paths: /Users/, /home/
   /^[A-Z]:\\/, // Windows absolute paths: C:\
@@ -53,8 +56,8 @@ export function rejectSensitiveFields(payload: unknown, path = ""): void {
     const lowerKey = key.toLowerCase()
     const fullPath = path ? `${path}.${key}` : key
 
-    // Check for sensitive keywords in key names
-    if (SENSITIVE_KEYWORDS.some((kw) => lowerKey.includes(kw))) {
+    // Check for sensitive keywords in key names, but skip safe keys
+    if (!SAFE_KEYS.includes(lowerKey) && SENSITIVE_KEYWORDS.some((kw) => lowerKey.includes(kw))) {
       throw new SensitiveFieldError(fullPath, `Sensitive key name: ${fullPath}`)
     }
 

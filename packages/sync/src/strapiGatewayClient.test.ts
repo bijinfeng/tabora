@@ -323,6 +323,17 @@ describe("createStrapiGatewayClient", () => {
     expect(result.error.message).toBe("Invalid token")
   })
 
+  it("maps HTTP 403 from Strapi route authorization to AUTH_FAILED", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(403, { error: { message: "Forbidden" } }))
+
+    const result = await client().pull()
+
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected error")
+    expect(result.error.code).toBe("AUTH_FAILED")
+    expect(result.error.message).toBe("Forbidden")
+  })
+
   it("maps HTTP 400 to INVALID_PAYLOAD", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(400, { error: { message: "Bad batch" } }))
 

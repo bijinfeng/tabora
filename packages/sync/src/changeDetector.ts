@@ -1,9 +1,11 @@
 import type { TaboraDatabase } from "@tabora/storage"
 import type { LocalChange, LocalChangeQueue } from "./localChangeQueue"
+import { isChangeDetectionSuppressed } from "./changeDetectionGuard"
 
 export type ChangeDetectorConfig = {
   database: TaboraDatabase
   changeQueue: LocalChangeQueue
+  onChange?: () => void
 }
 
 type SourceTransaction = {
@@ -18,11 +20,18 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
   const { database, changeQueue } = config
 
   function enqueueAfterCommit(transaction: SourceTransaction, change: LocalChange) {
+    if (isChangeDetectionSuppressed(database)) return
+
     transaction.on("complete", () => {
       setTimeout(() => {
-        void changeQueue.enqueue(change).catch((error: unknown) => {
-          console.error("Failed to queue local sync change", error)
-        })
+        void changeQueue
+          .enqueue(change)
+          .then(() => {
+            config.onChange?.()
+          })
+          .catch((error: unknown) => {
+            console.error("Failed to queue local sync change", error)
+          })
       }, 0)
     })
   }

@@ -79,10 +79,10 @@ const ERROR_MESSAGES: Record<StrapiGatewayError["code"], string> = {
 
 /**
  * 将 HTTP status 归一化为网关错误码：
- * 401 → AUTH_FAILED，400 → INVALID_PAYLOAD，其余非 2xx → SERVER_ERROR。
+ * 401/403 → AUTH_FAILED，400 → INVALID_PAYLOAD，其余非 2xx → SERVER_ERROR。
  */
 function statusToCode(status: number): StrapiGatewayError["code"] {
-  if (status === 401) return "AUTH_FAILED"
+  if (status === 401 || status === 403) return "AUTH_FAILED"
   if (status === 400) return "INVALID_PAYLOAD"
   return "SERVER_ERROR"
 }

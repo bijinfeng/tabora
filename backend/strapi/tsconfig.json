@@ -37,8 +37,10 @@
 
     // Do not include admin files in the server compilation
     "src/admin/",
-    // Vitest config is ESM tooling, typechecked by its own toolchain
+    // Vitest config and specs are ESM tooling, typechecked by vitest itself;
+    // tests/ 引入 .mjs 脚本，放进 server 编译会报隐式 any
     "vitest.config.ts",
+    "tests/",
     // Do not include plugins in the server compilation
     "src/plugins/**"
   ]
