@@ -20,8 +20,17 @@ export function createPlaygroundWorkbenchComposition(): WorkbenchComposition {
   })
 }
 
+export function resolvePlaygroundApiBaseUrl(): string | undefined {
+  const configured = import.meta.env.VITE_TABORA_API_BASE?.trim()
+  if (configured) {
+    return configured
+  }
+  // 未配置时回退到当前页面地址，方便同域部署直接访问后端
+  return typeof window === "undefined" ? undefined : window.location.origin
+}
+
 export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
-  const apiBaseUrl = import.meta.env.VITE_TABORA_API_BASE?.trim()
+  const apiBaseUrl = resolvePlaygroundApiBaseUrl()
   return createWorkbenchRuntimeBootstrap({
     host: createWebHostAdapter({
       id: "host.playground",
