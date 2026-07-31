@@ -87,13 +87,7 @@ export function createWorkbenchInstanceRenderer(options: {
       const widget = options.widgetContribution(instance)
       const model = options.widgetRenderModel(instance)
       if (!model) {
-        return (
-          <div {...stylex.attrs(styles.empty)}>
-            {options.tShell
-              ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: instance.id })
-              : `卡片实例无效：${instance.id}`}
-          </div>
-        )
+        return null
       }
 
       const View = widget

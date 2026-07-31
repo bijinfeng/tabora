@@ -438,25 +438,44 @@ export const styles = stylex.create({
   providerList: {
     display: "flex",
     flexDirection: "column",
-    gap: 6,
+    gap: 7,
   },
+  // 经 xstyle 传入 ListRow，与 ListRow.root 在同一次 stylex.attrs() 里合并。
+  // 走 class 传入时两边的 padding / minHeight / borderRadius 由样式表规则顺序决定胜负，不可控。
   providerRow: {
-    ...interactiveSurface,
     alignItems: "center",
+    backgroundColor: "rgb(var(--tbr-color-surface))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    borderRadius: 7,
+    borderStyle: "solid",
+    borderWidth: 1,
     display: "grid",
     gap: 10,
     gridTemplateColumns: {
       default: "minmax(0, 1fr) auto",
       [mobile]: "minmax(0, 1fr)",
     },
-    minHeight: 42,
-    paddingBlock: 9,
-    paddingInline: 10,
+    minHeight: "auto",
+    paddingBlock: 8,
+    paddingInline: 8,
     width: "100%",
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+    },
+  },
+  // ListRow.root 的 :hover 是独立 key，选中行 hover 时会把 accent-soft 盖成灰色，这里钉住。
+  providerRowSelected: {
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+    },
   },
   disabled: {
     opacity: 0.58,
   },
+  // 覆盖 Button 基础样式的泄漏项：buttonBase 的 justifyContent: center 会把内容簇整体居中，
+  // 每行簇宽不同（Google / DuckDuckGo）导致标题左缘参差；buttonMd 的 paddingInline: 12 在
+  // StyleX 里以 longhand 胜过这里的 padding 简写；height: 36 与行高叠加把行撑高；
+  // lineHeight: 1 让 CJK 字形光学偏下。全部显式声明。
   providerMain: {
     alignItems: "center",
     backgroundColor: "transparent",
@@ -466,24 +485,33 @@ export const styles = stylex.create({
     cursor: "pointer",
     display: "flex",
     fontFamily: "inherit",
+    fontWeight: "inherit",
     gap: 10,
+    height: "auto",
+    justifyContent: "flex-start",
+    lineHeight: "normal",
     minWidth: 0,
-    padding: 0,
+    paddingBlock: 0,
+    paddingInline: 0,
     textAlign: "left",
     width: "100%",
     ":disabled": {
       cursor: "not-allowed",
+      // 行上已有 styles.disabled 的 0.58；Button 的 :disabled 0.5 会叠乘到约 0.29。
+      opacity: 1,
     },
     ":focus-visible": {
       outline: "2px solid rgb(var(--tbr-color-focus))",
       outlineOffset: 2,
     },
   },
+  // 设计稿把类型标签放在行尾 meta 区（.field-note），与开关同侧，标题左缘因此对齐。
   providerKind: {
-    color: "rgb(var(--tbr-color-text-muted))",
+    color: "rgb(var(--tbr-color-text-subtle))",
     flexShrink: 0,
-    fontSize: 11,
-    fontWeight: 650,
+    fontSize: 10,
+    lineHeight: 1.3,
+    whiteSpace: "nowrap",
   },
   providerText: {
     display: "flex",
@@ -495,6 +523,7 @@ export const styles = stylex.create({
     color: "rgb(var(--tbr-color-text))",
     fontSize: 12,
     fontWeight: 650,
+    lineHeight: 1.25,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
@@ -502,16 +531,23 @@ export const styles = stylex.create({
   providerAlias: {
     color: "rgb(var(--tbr-color-text-muted))",
     fontSize: 11,
+    fontWeight: 400,
+    lineHeight: 1.3,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
+  // Check 图标与「当前」需要 flex 居中，靠基线对齐会错位；minWidth 保证各行开关纵向对齐。
   providerState: {
+    alignItems: "center",
     color: "rgb(var(--tbr-color-accent))",
+    display: "inline-flex",
     fontSize: 11,
     fontWeight: 600,
+    gap: 3,
+    justifyContent: "flex-end",
     minWidth: 42,
-    textAlign: "right",
+    whiteSpace: "nowrap",
   },
   pluginHelp: {
     color: "rgb(var(--tbr-color-text-muted))",

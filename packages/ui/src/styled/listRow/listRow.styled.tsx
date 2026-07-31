@@ -1,10 +1,10 @@
 import * as stylex from "@stylexjs/stylex"
-import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { ListRow as Primitive } from "../../primitives/listRow/listRow"
 import type { ListRowProps } from "../../primitives/listRow/listRow"
 import { joinClassNames } from "../../stylex"
+import type { XStyle } from "../../stylex"
 
 const styles = stylex.create({
   root: {
@@ -78,7 +78,9 @@ const styles = stylex.create({
 })
 
 export type StyledListRowProps = ListRowProps & {
-  xstyle?: StyleXStyles
+  // XStyle 而非 StyleXStyles：条件样式需要传数组（含 false 分支），
+  // 且必须与 root 在同一次 stylex.attrs() 里合并才有确定的覆盖顺序。同包 Button 亦用 XStyle。
+  xstyle?: XStyle
 }
 
 export function ListRow(props: StyledListRowProps) {

@@ -328,18 +328,27 @@ const styles = stylex.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderColor: "transparent",
-    borderRadius: radius.control,
+    borderRadius: 7,
     borderStyle: "solid",
     borderWidth: 1,
     color: color.textMuted,
     cursor: "pointer",
     display: "flex",
     fontSize: 11,
-    fontWeight: font.semibold,
+    fontWeight: 600,
     gap: 8,
     height: 28,
     justifyContent: "space-between",
+    // Button 基础样式是 lineHeight: 1，行盒被压到 11px；中日韩字形在零 half-leading 下
+    // 光学中心会偏下，flex 居中的是行盒不是字形。设计稿的 .nav-button 未声明 line-height，
+    // 继承 normal，这里跟随。
+    lineHeight: "normal",
+    paddingBlock: 0,
     paddingInline: 8,
+    textAlign: "left",
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, border-color, color",
+    transitionTimingFunction: motion.ease,
     ":hover": {
       backgroundColor: color.surfaceHover,
       color: color.text,
@@ -349,6 +358,20 @@ const styles = stylex.create({
       outlineOffset: 2,
       outlineStyle: "solid",
       outlineWidth: 2,
+    },
+  },
+  navButtonActive: {
+    backgroundColor: color.accentSoft,
+    borderColor: "color-mix(in srgb, rgb(var(--tbr-color-accent)) 28%, rgb(var(--tbr-color-line)))",
+    color: color.accent,
+    ":hover": {
+      backgroundColor: color.accentSoft,
+      borderColor:
+        "color-mix(in srgb, rgb(var(--tbr-color-accent)) 28%, rgb(var(--tbr-color-line)))",
+      color: color.accent,
+    },
+    ":active": {
+      backgroundColor: color.accentSoft,
     },
   },
   navCount: {
@@ -642,7 +665,7 @@ export function SettingsHost(props: SettingsHostProps) {
                     variant="ghost"
                     xstyle={[
                       styles.navButton,
-                      section.id === activeSection() ? styles.selected : null,
+                      section.id === activeSection() ? styles.navButtonActive : null,
                     ]}
                     data-settings-section={section.id}
                     aria-current={section.id === activeSection() ? "page" : undefined}
@@ -665,7 +688,7 @@ export function SettingsHost(props: SettingsHostProps) {
                     variant="ghost"
                     xstyle={[
                       styles.navButton,
-                      section.id === activeSection() ? styles.selected : null,
+                      section.id === activeSection() ? styles.navButtonActive : null,
                     ]}
                     data-settings-section={section.id}
                     aria-current={section.id === activeSection() ? "page" : undefined}

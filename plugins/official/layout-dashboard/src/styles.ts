@@ -111,7 +111,7 @@ export const styles = stylex.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderColor: "transparent",
-    borderRadius: 6,
+    borderRadius: 10,
     borderStyle: "solid",
     borderWidth: 1,
     color: "rgb(var(--tbr-color-text-muted))",
@@ -127,9 +127,8 @@ export const styles = stylex.create({
     transitionTimingFunction: "var(--tbr-ease)",
     width: 38,
     ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
-      borderColor: "rgb(var(--tbr-color-accent))",
-      color: "rgb(var(--tbr-color-accent))",
+      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      color: "rgb(var(--tbr-color-text))",
     },
     ":focus-visible": {
       outline: "2px solid rgb(var(--tbr-color-focus))",

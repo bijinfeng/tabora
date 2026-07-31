@@ -72,18 +72,17 @@ function baseOptions(): Parameters<typeof createWorkbenchInstanceRenderer>[0] {
 }
 
 describe("createWorkbenchInstanceRenderer", () => {
-  it("renders widget error state when the widget model is missing", () => {
+  it("renders nothing when the widget model is missing", () => {
     const renderer = createWorkbenchInstanceRenderer({
       ...baseOptions(),
       widgetRenderModel: () => null,
     })
 
-    const { host, dispose } = mount(renderer.renderWidget(instance()))
-    expect(host.textContent).toContain("卡片实例无效")
-    dispose()
+    const result = renderer.renderWidget(instance())
+    expect(result).toBeNull()
   })
 
-  it("renders localized widget error state when a shell translation function is provided", () => {
+  it("renders nothing when the widget model is missing regardless of translation", () => {
     const renderer = createWorkbenchInstanceRenderer({
       ...baseOptions(),
       widgetRenderModel: () => null,
@@ -95,9 +94,8 @@ describe("createWorkbenchInstanceRenderer", () => {
       },
     } as Parameters<typeof createWorkbenchInstanceRenderer>[0])
 
-    const { host, dispose } = mount(renderer.renderWidget(instance()))
-    expect(host.textContent).toContain("Invalid widget instance: widget-1")
-    dispose()
+    const result = renderer.renderWidget(instance())
+    expect(result).toBeNull()
   })
 
   it("renders the search contribution view when the view is registered", () => {

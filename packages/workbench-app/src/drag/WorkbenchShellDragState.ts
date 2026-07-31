@@ -10,6 +10,9 @@ type PersistedInstancesSource = {
   getPersistedInstances: () => PluginInstance[]
 }
 
+// 指针位移超过该值才算真的拖拽（px）。
+const dndDragMovementThreshold = 4
+
 export function createWorkbenchDndKitDragHandlers(options: {
   getPersistedInstances: () => PluginInstance[]
   getDragState: () => WorkbenchDndDragState | null
@@ -21,18 +24,40 @@ export function createWorkbenchDndKitDragHandlers(options: {
   const documentRoot = options.documentRoot ?? document
   let stopDndPointerTracking: (() => void) | null = null
   let lastTargetId: string | null = null
+  // 指针起点与「是否真的移动过」。dnd-kit 的 PointerSensor 在「鼠标 + 目标落在
+  // source.handle 内」时返回零激活约束，而 WidgetCardShell 把整张卡片同时绑成 root 和
+  // handle，于是任何 pointerdown 都会激活拖拽——单纯点击也会走到 finishDndDrag。
+  // 没有位移的「拖拽」不该落库排序，否则单击就把卡片换位（卡片从第二次点击下方挪走，
+  // 双击也就打不开展开视图）。
+  let dragOrigin: { x: number; y: number } | null = null
+  let dragMoved = false
+
+  function trackDndPointerMovement(event: PointerEvent): void {
+    if (!dragOrigin) {
+      dragOrigin = { x: event.clientX, y: event.clientY }
+      return
+    }
+    if (dragMoved) return
+    const dx = event.clientX - dragOrigin.x
+    const dy = event.clientY - dragOrigin.y
+    // 阈值过滤鼠标抖动：按下时的 1~2px 漂移不算拖拽。
+    if (Math.hypot(dx, dy) >= dndDragMovementThreshold) dragMoved = true
+  }
 
   function startDndDrag(sourceId: string | null): void {
     if (!sourceId) return
 
     stopDndPointerTracking?.()
     lastTargetId = null
+    dragOrigin = null
+    dragMoved = false
     options.setDragState({
       sourceId,
     })
     syncDndBodyState(true, documentRoot)
 
     const handlePointerMove = (event: PointerEvent) => {
+      trackDndPointerMovement(event)
       previewDndDrag(sourceId, resolveDndNativeEventTargetId(event, sourceId, documentRoot))
     }
     const handlePointerUp = (event: PointerEvent) => {
@@ -73,10 +98,16 @@ export function createWorkbenchDndKitDragHandlers(options: {
     }
 
     const resolvedTargetId = targetId ?? lastTargetId
+    const moved = dragMoved
     lastTargetId = null
+    dragOrigin = null
+    dragMoved = false
 
     if (canceled || !sourceId) return
     if (!resolvedTargetId || sourceId === resolvedTargetId) {
+      // 指针没真的移动过 = 这是一次点击，不是拖拽。此时读 DOM 顺序去落库是错的：
+      // 单击会被当成排序（并弹「排序已更新」），卡片从指针下方挪走，双击随之失效。
+      if (!moved) return
       persistRenderedDomOrderFallback(sourceId)
       return
     }

@@ -186,11 +186,11 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
               const isDefault = () => provider.id === defaultId()
               return (
                 <ListRow
-                  class={className(
+                  xstyle={[
                     styles.providerRow,
-                    isDefault() && styles.selected,
+                    isDefault() && styles.providerRowSelected,
                     !isEnabled() && styles.disabled,
-                  )}
+                  ]}
                   primary={
                     <Button
                       size="md"
@@ -203,9 +203,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                       }}
                       disabled={!isEnabled()}
                     >
-                      <span {...stylex.attrs(styles.providerKind)}>
-                        {providerKindLabel(provider)}
-                      </span>
                       <span {...stylex.attrs(styles.providerText)}>
                         <span {...stylex.attrs(styles.providerTitle)}>{provider.title}</span>
                         <span {...stylex.attrs(styles.providerAlias)}>
@@ -216,6 +213,9 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                   }
                   trailing={
                     <div {...stylex.attrs(styles.inlineActions)}>
+                      <span {...stylex.attrs(styles.providerKind)}>
+                        {providerKindLabel(provider)}
+                      </span>
                       <span {...stylex.attrs(styles.providerState)}>
                         <Show when={isDefault()}>
                           <Check size={14} /> 当前
