@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
-import { Search } from "lucide-solid"
+import Search from "lucide-solid/icons/search"
 import { Accordion } from "./accordion/accordion"
 import { Banner } from "./callout/callout"
 import { Checkbox } from "./checkbox/checkbox"

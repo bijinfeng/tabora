@@ -1,8 +1,10 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { WidgetSize, WidgetViewProps } from "@tabora/plugin-api"
-import { Button, InlineError, Skeleton } from "@tabora/ui"
-import { RefreshCw } from "lucide-solid"
+import { Button } from "@tabora/ui/button"
+import { InlineError } from "@tabora/ui/inline-error"
+import { Skeleton } from "@tabora/ui/skeleton"
+import RefreshCw from "lucide-solid/icons/refresh-cw"
 import { createWeatherStore } from "./weather-store"
 import {
   aqiGrade,

@@ -1,4 +1,4 @@
-import { Button } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
 import { componentDocItems, getComponentDoc } from "@tabora/ui/component-docs"
 import { useNavigate, useParams } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
@@ -106,7 +106,9 @@ export function ComponentDocsPage() {
           </section>
         }
       >
-        <For each={visibleDocs()}>{(doc) => <ComponentDocCard doc={doc} />}</For>
+        <For each={visibleDocs()}>
+          {(doc) => <ComponentDocCard doc={doc} deferDemo={!selectedDoc()} />}
+        </For>
       </Show>
     </DocsShell>
   )

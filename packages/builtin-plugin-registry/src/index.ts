@@ -1,6 +1,7 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { layoutDiyMasonry } from "@tabora/layout-diy-masonry"
+import { layoutDiyMasonryManifest } from "@tabora/layout-diy-masonry/manifest"
 import { officialPlugins } from "@tabora/official-plugins"
+import { createLazyBuiltinPlugin } from "@tabora/platform-kernel"
 import officialPluginsStylesHref from "@tabora/official-plugins/styles.css?url"
 import layoutDashboardStylesHref from "@tabora/layout-dashboard/styles.css?url"
 import layoutDiyMasonryStylesHref from "@tabora/layout-diy-masonry/styles.css?url"
@@ -9,29 +10,8 @@ import quickLinksStylesHref from "@tabora/plugin-quick-links/styles.css?url"
 import todoStylesHref from "@tabora/plugin-todo/styles.css?url"
 import weatherStylesHref from "@tabora/plugin-weather/styles.css?url"
 
-export {
-  officialPlugins,
-  officialDefaultWorkspacePreset as builtinDefaultWorkspacePreset,
-} from "@tabora/official-plugins"
-
-export const builtinWorkbenchShellConfig = {
-  themeIds: {
-    light: "official.theme.light",
-    dark: "official.theme.dark",
-  },
-  layoutIds: {
-    dashboard: "official.layout.workbench-dashboard",
-    focus: "official.layout.workbench-focus",
-  },
-  settingsPanelIds: {
-    appearance: "official.settings.workspace.appearance",
-    plugins: "official.settings.plugins",
-  },
-  searchHistory: {
-    pluginId: "official.search.command-bar",
-    key: "search-history",
-  },
-} as const
+export { officialPlugins } from "@tabora/official-plugins"
+export { builtinDefaultWorkspacePreset, builtinWorkbenchShellConfig } from "./workspace"
 
 const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "official.layout.workbench-dashboard": { "./styles.css": layoutDashboardStylesHref },
@@ -49,6 +29,14 @@ function attachStyleAssets(plugin: BuiltinPlugin): BuiltinPlugin {
   const styleAssetUrls = styleAssetUrlsByPluginId[plugin.manifest.id]
   return styleAssetUrls ? { ...plugin, styleAssetUrls } : plugin
 }
+
+const layoutDiyMasonry = createLazyBuiltinPlugin({
+  manifest: layoutDiyMasonryManifest,
+  enabled: true,
+  async load() {
+    return (await import("@tabora/layout-diy-masonry")).layoutDiyMasonry
+  },
+})
 
 export const builtinPlugins: BuiltinPlugin[] = [...officialPlugins, layoutDiyMasonry].map(
   attachStyleAssets,

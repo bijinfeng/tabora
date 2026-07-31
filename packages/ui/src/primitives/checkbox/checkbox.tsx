@@ -1,7 +1,8 @@
 import { Checkbox as KCheckbox } from "@kobalte/core/checkbox"
 import type { JSX } from "solid-js"
 import { Show } from "solid-js"
-import { Check, Minus } from "lucide-solid"
+import Check from "lucide-solid/icons/check"
+import Minus from "lucide-solid/icons/minus"
 
 export type CheckboxProps = {
   checked: boolean | "indeterminate"

@@ -1,17 +1,15 @@
 import * as stylex from "@stylexjs/stylex"
-import {
-  Button,
-  Checkbox,
-  FieldRow,
-  Input,
-  ListRow,
-  SegmentedControl,
-  Slider,
-  Switch,
-} from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
+import { Checkbox } from "@tabora/ui/checkbox"
+import { FieldRow } from "@tabora/ui/field-row"
+import { Input } from "@tabora/ui/input"
+import { ListRow } from "@tabora/ui/list-row"
+import { SegmentedControl } from "@tabora/ui/segmented-control"
+import { Slider } from "@tabora/ui/slider"
+import { Switch } from "@tabora/ui/switch"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
-import { Check } from "lucide-solid"
+import Check from "lucide-solid/icons/check"
 
 import {
   providerAlias,

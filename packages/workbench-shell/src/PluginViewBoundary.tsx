@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { ErrorBoundary } from "solid-js"
 import type { JSX } from "solid-js"
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
-import { Button } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
 
 const styles = stylex.create({
   fallback: {

@@ -11,27 +11,27 @@ import { builtinPlugins } from "./index"
 const stylePackages = [
   {
     manifest: officialPluginsManifest,
-    buildEntry: "src/index.ts",
+    buildEntry: "src/index.ts src/workspace-default-preset.ts",
   },
   {
     manifest: layoutDashboardManifest,
-    buildEntry: "src/index.tsx",
+    buildEntry: "src/index.tsx src/manifest.ts",
   },
   {
     manifest: widgetNotesManifest,
-    buildEntry: "src/index.ts",
+    buildEntry: "src/index.ts src/manifest.ts",
   },
   {
     manifest: widgetQuickLinksManifest,
-    buildEntry: "src/index.ts",
+    buildEntry: "src/index.ts src/manifest.ts",
   },
   {
     manifest: widgetTodoManifest,
-    buildEntry: "src/index.ts",
+    buildEntry: "src/index.ts src/manifest.ts",
   },
   {
     manifest: widgetWeatherManifest,
-    buildEntry: "src/index.ts",
+    buildEntry: "src/index.ts src/manifest.ts",
   },
 ] as const
 
@@ -72,6 +72,28 @@ describe("builtinPlugins", () => {
     expect(builtinPlugins.map((plugin) => plugin.manifest.id)).toContain(
       "community.layout.diy-masonry",
     )
+  })
+
+  it("keeps view implementation loading out of plugin discovery", () => {
+    const lazyPluginIds = [
+      "official.layout.workbench-dashboard",
+      "official.search.command-bar",
+      "official.widgets.weather",
+      "official.widgets.todo",
+      "official.widgets.quick-links",
+      "official.widgets.notes",
+      "official.plugin-manager",
+      "official.settings.workspace",
+      "community.layout.diy-masonry",
+    ]
+
+    expect(
+      Object.fromEntries(
+        builtinPlugins
+          .filter((plugin) => lazyPluginIds.includes(plugin.manifest.id))
+          .map((plugin) => [plugin.manifest.id, typeof plugin.preload]),
+      ),
+    ).toEqual(Object.fromEntries(lazyPluginIds.map((pluginId) => [pluginId, "function"])))
   })
 
   it("attaches resolved stylesheet assets to styled builtin plugins", () => {

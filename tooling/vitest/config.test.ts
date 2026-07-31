@@ -45,6 +45,27 @@ describe("defineUnitTestConfig", () => {
     expect(stylexPlugin).toMatchObject({ __stylexDevMode: "css-only" })
   })
 
+  it("prints the slowest imports only when profiling is requested", () => {
+    const previousValue = process.env.TABORA_VITEST_PROFILE_IMPORTS
+    process.env.TABORA_VITEST_PROFILE_IMPORTS = "1"
+
+    try {
+      const config = defineUnitTestConfig()
+
+      expect(config.test?.experimental?.importDurations).toEqual({
+        limit: 20,
+        print: true,
+      })
+      expect(defineNodePackageUnitTestProject().test?.experimental?.importDurations).toEqual({
+        limit: 20,
+        print: true,
+      })
+    } finally {
+      if (previousValue === undefined) delete process.env.TABORA_VITEST_PROFILE_IMPORTS
+      else process.env.TABORA_VITEST_PROFILE_IMPORTS = previousValue
+    }
+  })
+
   it("creates lightweight Node projects without Solid or StyleX plugins", () => {
     const config = defineNodePackageUnitTestProject()
 

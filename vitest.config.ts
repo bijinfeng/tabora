@@ -1,7 +1,12 @@
 import { defineConfig } from "vitest/config"
 
+import { resolveImportDurationsConfig } from "./tooling/vitest/config"
+
 export default defineConfig({
   test: {
+    experimental: {
+      importDurations: resolveImportDurationsConfig(),
+    },
     pool: "threads",
     projects: [
       "packages/*/vitest.config.ts",

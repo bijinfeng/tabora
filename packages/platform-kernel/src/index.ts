@@ -1,5 +1,6 @@
 export * from "./eventBus"
 export * from "./extensionRegistry"
+export * from "./lazyBuiltinPlugin"
 export * from "./pluginKernel"
 export * from "./pluginLoader"
 export * from "./runtimeContext"

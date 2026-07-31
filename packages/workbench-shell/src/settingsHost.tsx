@@ -1,7 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import { createComponent, createEffect, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import { Settings, X } from "lucide-solid"
+import Settings from "lucide-solid/icons/settings"
+import X from "lucide-solid/icons/x"
 import type { PluginManifest, SettingsPanelViewProps } from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
@@ -10,7 +11,9 @@ import {
   type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
   type SettingsSectionId,
 } from "@tabora/orchestrator"
-import { Button, EmptyState, IconButton, InlineError } from "@tabora/ui"
+import { Button, IconButton } from "@tabora/ui/button"
+import { EmptyState } from "@tabora/ui/empty-state"
+import { InlineError } from "@tabora/ui/inline-error"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
 

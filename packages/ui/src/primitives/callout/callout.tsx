@@ -1,6 +1,10 @@
 import type { JSX } from "solid-js"
 import { Show } from "solid-js"
-import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from "lucide-solid"
+import CircleAlert from "lucide-solid/icons/circle-alert"
+import CircleCheck from "lucide-solid/icons/circle-check"
+import Info from "lucide-solid/icons/info"
+import TriangleAlert from "lucide-solid/icons/triangle-alert"
+import X from "lucide-solid/icons/x"
 
 import type { SolidAttrs } from "../../stylex"
 

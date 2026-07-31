@@ -1,8 +1,10 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Skeleton } from "@tabora/ui"
-import { ArrowRight, Check, Plus } from "lucide-solid"
+import { Skeleton } from "@tabora/ui/skeleton"
+import ArrowRight from "lucide-solid/icons/arrow-right"
+import Check from "lucide-solid/icons/check"
+import Plus from "lucide-solid/icons/plus"
 import { styles } from "./styles"
 
 type Priority = "high" | "medium" | "low" | "none"

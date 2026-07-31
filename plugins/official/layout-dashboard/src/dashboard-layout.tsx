@@ -1,8 +1,9 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import { LayoutGrid, Plus } from "lucide-solid"
-import { Button } from "@tabora/ui"
+import LayoutGrid from "lucide-solid/icons/layout-grid"
+import Plus from "lucide-solid/icons/plus"
+import { Button } from "@tabora/ui/button"
 
 import { dateLabel, fallbackText, greeting } from "./i18n"
 import { WorkbenchRail } from "./workbench-rail"

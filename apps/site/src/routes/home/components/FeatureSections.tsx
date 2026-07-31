@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router"
-import { Button, Input } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
+import { Input } from "@tabora/ui/input"
 import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 import { getSiteHref, type SiteI18nApi } from "../../../app/AppShell"

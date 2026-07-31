@@ -4,7 +4,7 @@ import solid from "vite-plugin-solid"
 import { defineConfig } from "vitest/config"
 
 import { createTaboraStylexVitePlugin } from "@tabora/stylex-config"
-import { sharedUnitInlineDeps } from "../../tooling/vitest/config"
+import { resolveImportDurationsConfig, sharedUnitInlineDeps } from "../../tooling/vitest/config"
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..")
 
@@ -20,6 +20,9 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    experimental: {
+      importDurations: resolveImportDurationsConfig(),
+    },
     server: {
       deps: {
         inline: [...sharedUnitInlineDeps, "lucide-solid"],

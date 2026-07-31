@@ -7,7 +7,7 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import type { ToastOptions } from "@tabora/orchestrator"
-import type { ContextMenuItem as WorkbenchContextMenuItem } from "@tabora/ui"
+import type { ContextMenuItem as WorkbenchContextMenuItem } from "@tabora/ui/context-menu"
 
 import {
   buildWorkbenchWidgetExpandState,

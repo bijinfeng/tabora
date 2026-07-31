@@ -1,14 +1,12 @@
 import type { JSX } from "solid-js"
-import {
-  Cloud,
-  CloudDrizzle,
-  CloudFog,
-  CloudLightning,
-  CloudRain,
-  CloudSnow,
-  CloudSun,
-  Sun,
-} from "lucide-solid"
+import Cloud from "lucide-solid/icons/cloud"
+import CloudDrizzle from "lucide-solid/icons/cloud-drizzle"
+import CloudFog from "lucide-solid/icons/cloud-fog"
+import CloudLightning from "lucide-solid/icons/cloud-lightning"
+import CloudRain from "lucide-solid/icons/cloud-rain"
+import CloudSnow from "lucide-solid/icons/cloud-snow"
+import CloudSun from "lucide-solid/icons/cloud-sun"
+import Sun from "lucide-solid/icons/sun"
 import { weatherCodeToIcon } from "./weather-data"
 
 const ICON_COMPONENTS: Record<string, (props: { size?: number }) => JSX.Element> = {

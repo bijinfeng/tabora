@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { builtinDefaultWorkspacePreset } from "@tabora/builtin-plugin-registry"
-import { createDefaultWorkspaceFromPreset } from "@tabora/workbench-app"
+import { builtinDefaultWorkspacePreset } from "@tabora/builtin-plugin-registry/workspace"
+import { createDefaultWorkspaceFromPreset } from "@tabora/workbench-app/default-workspace-seed"
 
 describe("createDefaultWorkspaceFromPreset", () => {
   it("creates workspace and instances from the official preset", () => {

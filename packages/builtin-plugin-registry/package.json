@@ -5,16 +5,18 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./workspace": "./src/workspace.ts"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./workspace": "./dist/workspace.js"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts",
+    "build": "vp pack src/index.ts src/workspace.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

@@ -1,6 +1,7 @@
 import type { JSX } from "solid-js"
 import { createSignal } from "solid-js"
-import { Check, Copy } from "lucide-solid"
+import Check from "lucide-solid/icons/check"
+import Copy from "lucide-solid/icons/copy"
 
 export type CopyButtonProps = {
   value: string

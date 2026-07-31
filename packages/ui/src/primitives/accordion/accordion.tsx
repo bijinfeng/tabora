@@ -2,7 +2,7 @@ import { Accordion as KAccordion } from "@kobalte/core/accordion"
 import { useCollapsibleContext } from "@kobalte/core/collapsible"
 import type { JSX } from "solid-js"
 import { For } from "solid-js"
-import { ChevronDown } from "lucide-solid"
+import ChevronDown from "lucide-solid/icons/chevron-down"
 
 export type AccordionItem = {
   id: string

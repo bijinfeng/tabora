@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
-import type { WorkspaceExport } from "@tabora/workbench-app"
-import { parseExport, prepareImport } from "@tabora/workbench-app"
+import {
+  parseExport,
+  prepareImport,
+  type WorkspaceExport,
+} from "@tabora/workbench-app/workspace-portability"
 
 describe("prepareImport", () => {
   it("rejects current schema exports without an explicit active background provider", () => {

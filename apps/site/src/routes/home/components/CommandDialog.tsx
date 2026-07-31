@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
-import { Search } from "lucide-solid"
-import { Input } from "@tabora/ui"
+import Search from "lucide-solid/icons/search"
+import { Input } from "@tabora/ui/input"
 
 import type { HomePageContent } from "../homePrototypeContent"
 

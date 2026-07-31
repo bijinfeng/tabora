@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import { ListRow } from "@tabora/ui"
+import { ListRow } from "@tabora/ui/list-row"
 import { For, Show } from "solid-js"
 
 import type { ShellTranslation } from "../i18n"

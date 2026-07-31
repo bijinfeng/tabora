@@ -5,16 +5,28 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./package.json": "./package.json"
+    "./background-resolver": "./src/background-resolver.ts",
+    "./default-workspace-seed": "./src/default-workspace-seed.ts",
+    "./package.json": "./package.json",
+    "./workbench-grid": "./src/workbench-grid.ts",
+    "./workspace-portability": "./src/workspace-portability.ts",
+    "./workspace-session": "./src/workspace-session.ts",
+    "./workspace-transfer": "./src/workspace-transfer.ts"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
-      "./package.json": "./package.json"
+      "./background-resolver": "./dist/background-resolver.js",
+      "./default-workspace-seed": "./dist/default-workspace-seed.js",
+      "./package.json": "./package.json",
+      "./workbench-grid": "./dist/workbench-grid.js",
+      "./workspace-portability": "./dist/workspace-portability.js",
+      "./workspace-session": "./dist/workspace-session.js",
+      "./workspace-transfer": "./dist/workspace-transfer.js"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts",
+    "build": "vp pack src/index.ts src/background-resolver.ts src/default-workspace-seed.ts src/workbench-grid.ts src/workspace-portability.ts src/workspace-session.ts src/workspace-transfer.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

@@ -13,7 +13,7 @@ import {
   WidgetCardShell,
   type WidgetHostCallbacks,
 } from "@tabora/workbench-shell"
-import type { ContextMenuItem } from "@tabora/ui"
+import type { ContextMenuItem } from "@tabora/ui/context-menu"
 
 import type { InstanceRenderer } from "../layout/layoutEngine"
 import { isWorkbenchInteractiveElement } from "../surface/WorkbenchShellInteractions"

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 import {
   builtinDefaultWorkspacePreset,
   builtinWorkbenchShellConfig,
-} from "@tabora/builtin-plugin-registry"
+} from "@tabora/builtin-plugin-registry/workspace"
 import {
   createTaboraDatabase,
   createInstanceRepository,
@@ -19,7 +19,7 @@ import {
   updateWorkspaceBackground,
   updateWorkspaceRecord,
   updateWorkspaceTheme,
-} from "@tabora/workbench-app"
+} from "@tabora/workbench-app/workspace-session"
 
 function deleteTestDatabase() {
   const request = indexedDB.deleteDatabase("tabora-workspace-session-test")

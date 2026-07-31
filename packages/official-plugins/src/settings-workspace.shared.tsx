@@ -1,4 +1,5 @@
-import { InlineError, Switch } from "@tabora/ui"
+import { InlineError } from "@tabora/ui/inline-error"
+import { Switch } from "@tabora/ui/switch"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 
 export function SettingsInlineError(props: { children: string }) {

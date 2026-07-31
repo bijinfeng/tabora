@@ -20,6 +20,7 @@ export type BuiltinPlugin = {
   manifest: PluginManifest
   styleAssetUrls?: Record<string, string>
   enabled: boolean
+  preload?(): Promise<void>
   activate(
     context: PluginRuntimeContext,
   ): void | PluginActivationDisposer | Promise<void | PluginActivationDisposer>
@@ -239,6 +240,21 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       }
     },
     async activateEnabledPlugins() {
+      const preloadResults = new Map<
+        BuiltinPlugin,
+        Promise<{ ok: true } | { ok: false; error: unknown }>
+      >()
+      for (const plugin of plugins) {
+        if (!plugin.enabled || compatibilityReason(plugin) || !plugin.preload) continue
+        preloadResults.set(
+          plugin,
+          plugin.preload().then(
+            () => ({ ok: true }),
+            (error: unknown) => ({ ok: false, error }),
+          ),
+        )
+      }
+
       for (const plugin of plugins) {
         if (!plugin.enabled) {
           continue
@@ -258,6 +274,8 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
           continue
         }
         try {
+          const preloadResult = await preloadResults.get(plugin)
+          if (preloadResult && !preloadResult.ok) throw preloadResult.error
           const activated = await activatePlugin(plugin)
 
           if (lifecycleStore && activated) {

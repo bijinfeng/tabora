@@ -1,17 +1,14 @@
 import "fake-indexeddb/auto"
 import { beforeEach, describe, expect, it } from "vitest"
-import { builtinDefaultWorkspacePreset } from "@tabora/builtin-plugin-registry"
+import { builtinDefaultWorkspacePreset } from "@tabora/builtin-plugin-registry/workspace"
 import {
   createTaboraDatabase,
   createInstanceRepository,
   createPluginDataRepository,
   createWorkspaceRepository,
 } from "@tabora/storage"
-import {
-  createWorkspaceSession,
-  exportWorkspaceData,
-  importWorkspaceData,
-} from "@tabora/workbench-app"
+import { createWorkspaceSession } from "@tabora/workbench-app/workspace-session"
+import { exportWorkspaceData, importWorkspaceData } from "@tabora/workbench-app/workspace-transfer"
 
 function deleteTestDatabase() {
   const request = indexedDB.deleteDatabase("tabora-workspace-transfer-test")

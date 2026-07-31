@@ -1,6 +1,10 @@
 import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
-import { Pencil, Copy, ArrowUp, Lock, Trash2 } from "lucide-solid"
+import ArrowUp from "lucide-solid/icons/arrow-up"
+import Copy from "lucide-solid/icons/copy"
+import Lock from "lucide-solid/icons/lock"
+import Pencil from "lucide-solid/icons/pencil"
+import Trash2 from "lucide-solid/icons/trash-2"
 
 import { demoStyles } from "../demoStyles"
 import { Button } from "../button"

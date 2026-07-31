@@ -1,7 +1,7 @@
 import { Dialog as KDialog } from "@kobalte/core/dialog"
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
-import { X } from "lucide-solid"
+import X from "lucide-solid/icons/x"
 import { Show } from "solid-js"
 import type { JSX } from "solid-js"
 

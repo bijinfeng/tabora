@@ -2,24 +2,26 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { SearchViewProps } from "@tabora/plugin-api"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import { Button, CommandResultList, InlineError, Input } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
+import { CommandResultList } from "@tabora/ui/command-result-list"
+import { InlineError } from "@tabora/ui/inline-error"
+import { Input } from "@tabora/ui/input"
 import { resolveDefaultProvider } from "@tabora/orchestrator"
-import {
-  AtSign,
-  Check,
-  ChevronDown,
-  Circle,
-  Command,
-  CornerDownLeft,
-  LayoutDashboard,
-  PanelTop,
-  Plus,
-  Puzzle,
-  Search,
-  Settings,
-  SunMoon,
-} from "lucide-solid"
+import AtSign from "lucide-solid/icons/at-sign"
+import Check from "lucide-solid/icons/check"
+import ChevronDown from "lucide-solid/icons/chevron-down"
+import Circle from "lucide-solid/icons/circle"
+import Command from "lucide-solid/icons/command"
+import CornerDownLeft from "lucide-solid/icons/corner-down-left"
+import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
+import PanelTop from "lucide-solid/icons/panel-top"
+import Plus from "lucide-solid/icons/plus"
+import Puzzle from "lucide-solid/icons/puzzle"
+import Search from "lucide-solid/icons/search"
+import Settings from "lucide-solid/icons/settings"
+import SunMoon from "lucide-solid/icons/sun-moon"
 import { styles } from "./styles"
+import { officialSearchCommandBarManifest } from "./ui-plugin-manifests"
 
 type SearchResultItem = SearchViewProps["results"][number]["items"][number]
 type SearchSuggestionItem = SearchResultItem & {
@@ -408,27 +410,7 @@ function hasSubmitAction(
 
 export const officialSearchCommandBar: BuiltinPlugin = {
   enabled: true,
-  manifest: {
-    id: "official.search.command-bar",
-    name: "Tabora Search Command Bar",
-    version: "0.0.0",
-    apiVersion: "1.0.0",
-    entry: "./search-command-bar",
-    styles: [{ href: "./styles.css", scope: "plugin", order: 30 }],
-    engine: { platform: "^0.1.0" },
-    permissions: [{ type: "external-open", hosts: ["*"] }],
-    contributes: {
-      searches: [
-        {
-          id: "official.search.command-bar",
-          title: "搜索栏",
-          defaultProviderIds: ["official.search.google", "official.search.bing"],
-          supportsSuggestions: true,
-          view: "official.search.command-bar.view",
-        },
-      ],
-    },
-  },
+  manifest: officialSearchCommandBarManifest,
   activate(context) {
     context.registry.views.register("official.search.command-bar.view", (props: SearchViewProps) =>
       SearchCommandBar(props),

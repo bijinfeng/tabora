@@ -1,6 +1,9 @@
-import { Badge } from "@tabora/ui"
-import { ComponentDocDemo, type ComponentDocItem } from "@tabora/ui/component-docs"
+import { Badge } from "@tabora/ui/badge"
+import type { ComponentDocItem } from "@tabora/ui/component-docs"
+import { ComponentDocDemo } from "@tabora/ui/component-docs/renderers"
+import { Skeleton } from "@tabora/ui/skeleton"
 import * as stylex from "@stylexjs/stylex"
+import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js"
 
 const styles = stylex.create({
   root: {
@@ -92,7 +95,45 @@ const styles = stylex.create({
   },
 })
 
-export function ComponentDocCard(props: { doc: ComponentDocItem }) {
+export function ComponentDocCard(props: { doc: ComponentDocItem; deferDemo?: boolean }) {
+  let demoHost: HTMLDivElement | undefined
+  let observer: IntersectionObserver | undefined
+  const [shouldRenderDemo, setShouldRenderDemo] = createSignal(!props.deferDemo)
+  const setDemoHost = (element: HTMLDivElement) => {
+    demoHost = element
+  }
+
+  createEffect(() => {
+    if (!props.deferDemo) {
+      setShouldRenderDemo(true)
+    }
+  })
+
+  onMount(() => {
+    if (!props.deferDemo || typeof IntersectionObserver === "undefined") {
+      setShouldRenderDemo(true)
+      return
+    }
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) {
+          return
+        }
+
+        setShouldRenderDemo(true)
+        observer?.disconnect()
+      },
+      { rootMargin: "400px 0px" },
+    )
+
+    if (demoHost) {
+      observer.observe(demoHost)
+    }
+  })
+
+  onCleanup(() => observer?.disconnect())
+
   return (
     <section {...stylex.attrs(styles.root)} id={props.doc.id} data-component-doc>
       <div {...stylex.attrs(styles.head)}>
@@ -106,8 +147,13 @@ export function ComponentDocCard(props: { doc: ComponentDocItem }) {
         <div {...stylex.attrs(styles.panel, styles.demoPanel)}>
           <div {...stylex.attrs(styles.label)}>使用方案</div>
           <p {...stylex.attrs(styles.body)}>{props.doc.usage}</p>
-          <div {...stylex.attrs(styles.render)} data-docs-demo>
-            <ComponentDocDemo id={props.doc.id} />
+          <div ref={setDemoHost} {...stylex.attrs(styles.render)} data-docs-demo>
+            <Show
+              when={shouldRenderDemo()}
+              fallback={<Skeleton aria-label="组件示例等待加载" height="120px" width="100%" />}
+            >
+              <ComponentDocDemo id={props.doc.id} />
+            </Show>
           </div>
         </div>
         <div {...stylex.attrs(styles.panel, styles.codePanel)}>

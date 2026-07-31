@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 import type { BackgroundProviderContribution } from "@tabora/plugin-api"
-import { resolveBackgroundStyle, resolveBackgroundValue } from "@tabora/workbench-app"
+import {
+  resolveBackgroundStyle,
+  resolveBackgroundValue,
+} from "@tabora/workbench-app/background-resolver"
 
 function cssFunction(name: "rgb" | "rgba", args: string) {
   return [name, `(${args})`].join("")

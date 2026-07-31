@@ -1,8 +1,9 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Button } from "@tabora/ui"
-import { ArrowUpRight, Plus } from "lucide-solid"
+import { Button } from "@tabora/ui/button"
+import ArrowUpRight from "lucide-solid/icons/arrow-up-right"
+import Plus from "lucide-solid/icons/plus"
 import { getDefaultLinks, initialsFromTitle, LINKS_KEY, type QuickLink } from "./quick-links-data"
 import { styles } from "./styles"
 

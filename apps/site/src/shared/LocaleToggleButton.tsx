@@ -1,4 +1,4 @@
-import { Button } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
 import type { StyleXStyles } from "@stylexjs/stylex"
 import { useSiteI18n } from "../app/AppShell"
 

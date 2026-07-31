@@ -1,6 +1,7 @@
 import { Pagination as KPagination } from "@kobalte/core/pagination"
 import type { JSX } from "solid-js"
-import { ChevronLeft, ChevronRight } from "lucide-solid"
+import ChevronLeft from "lucide-solid/icons/chevron-left"
+import ChevronRight from "lucide-solid/icons/chevron-right"
 
 export type PaginationProps = {
   page: number

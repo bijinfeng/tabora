@@ -103,10 +103,13 @@ describe("AppShell route path handling", () => {
     expect(prototypeTopnavSource).toContain('i18n.t("nav.officialPlugins")')
     expect(homePageSource).toContain('i18n.t("action.devDocs")')
     expect(prototypeTopnavSource).not.toContain("LocaleToggleButton")
-    expect(prototypeTopnavSource).toContain('import { Button, IconButton } from "@tabora/ui"')
-    expect(workbenchPreviewSource).toContain(
-      'import { Button, IconButton, Input } from "@tabora/ui"',
+    expect(prototypeTopnavSource).toContain(
+      'import { Button, IconButton } from "@tabora/ui/button"',
     )
+    expect(workbenchPreviewSource).toContain(
+      'import { Button, IconButton } from "@tabora/ui/button"',
+    )
+    expect(workbenchPreviewSource).toContain('import { Input } from "@tabora/ui/input"')
     expect(workbenchPreviewSource).toContain('<IconButton variant="ghost"')
   })
 })

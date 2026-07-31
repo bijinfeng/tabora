@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js"
 import { createSignal, For } from "solid-js"
-import { X } from "lucide-solid"
+import X from "lucide-solid/icons/x"
 
 export type TagInputProps = {
   value: string[]

@@ -16,6 +16,15 @@ const sharedUnitExclude = ["**/*.e2e.test.ts", "**/*.e2e.test.tsx"]
 
 export { sharedUnitExclude, sharedUnitInlineDeps }
 
+export function resolveImportDurationsConfig() {
+  if (process.env.TABORA_VITEST_PROFILE_IMPORTS !== "1") return
+
+  return {
+    limit: 20,
+    print: true as const,
+  }
+}
+
 function stripMissingSourcemapCommentPlugin() {
   return {
     name: "tabora:strip-missing-sourcemap-comment",
@@ -49,6 +58,9 @@ export function defineUnitTestConfig(config: UserConfig = {}) {
       test: {
         environment: "happy-dom",
         exclude: sharedUnitExclude,
+        experimental: {
+          importDurations: resolveImportDurationsConfig(),
+        },
         server: {
           deps: {
             inline: sharedUnitInlineDeps,
@@ -80,6 +92,9 @@ export function defineNodeUnitTestConfig(config: UserConfig = {}) {
       test: {
         environment: "node",
         exclude: sharedUnitExclude,
+        experimental: {
+          importDurations: resolveImportDurationsConfig(),
+        },
       },
     }),
     config,

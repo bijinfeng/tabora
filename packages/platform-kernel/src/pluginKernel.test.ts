@@ -3,6 +3,120 @@ import type { PluginManifest } from "@tabora/plugin-api"
 import { createPluginKernel } from "./pluginKernel"
 
 describe("createPluginKernel", () => {
+  it("starts enabled plugin preloads together and preserves activation order", async () => {
+    const events: string[] = []
+    let releaseFirst!: () => void
+    let releaseSecond!: () => void
+    const firstReady = new Promise<void>((resolve) => {
+      releaseFirst = resolve
+    })
+    const secondReady = new Promise<void>((resolve) => {
+      releaseSecond = resolve
+    })
+    const createManifest = (id: string): PluginManifest => ({
+      id,
+      name: id,
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    })
+    const kernel = createPluginKernel()
+
+    await kernel.discover([
+      {
+        manifest: createManifest("official.preload-first"),
+        enabled: true,
+        async preload() {
+          events.push("preload:first")
+          await firstReady
+        },
+        activate() {
+          events.push("activate:first")
+        },
+      },
+      {
+        manifest: createManifest("official.preload-second"),
+        enabled: true,
+        async preload() {
+          events.push("preload:second")
+          await secondReady
+        },
+        activate() {
+          events.push("activate:second")
+        },
+      },
+    ])
+
+    const activation = kernel.activateEnabledPlugins()
+    await Promise.resolve()
+
+    expect(events).toEqual(["preload:first", "preload:second"])
+
+    releaseSecond()
+    releaseFirst()
+    await activation
+
+    expect(events).toEqual(["preload:first", "preload:second", "activate:first", "activate:second"])
+  })
+
+  it("isolates preload failures and continues activating later plugins", async () => {
+    const saved: Array<{ id: string; status: string; lastError?: string }> = []
+    const activations: string[] = []
+    const createManifest = (id: string): PluginManifest => ({
+      id,
+      name: id,
+      version: "0.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {},
+    })
+    const kernel = createPluginKernel({
+      lifecycleStore: {
+        async save(record) {
+          saved.push({
+            id: record.id,
+            status: record.status,
+            ...(record.lastError ? { lastError: record.lastError } : {}),
+          })
+        },
+      },
+    })
+
+    await kernel.discover([
+      {
+        manifest: createManifest("official.preload-fails"),
+        enabled: true,
+        async preload() {
+          throw new Error("chunk missing")
+        },
+        activate() {
+          activations.push("failed")
+        },
+      },
+      {
+        manifest: createManifest("official.preload-healthy"),
+        enabled: true,
+        async preload() {},
+        activate() {
+          activations.push("healthy")
+        },
+      },
+    ])
+
+    await kernel.activateEnabledPlugins()
+
+    expect(activations).toEqual(["healthy"])
+    expect(saved).toContainEqual({
+      id: "official.preload-fails",
+      status: "error",
+      lastError: "chunk missing",
+    })
+    expect(saved).toContainEqual({ id: "official.preload-healthy", status: "active" })
+  })
+
   it("activates enabled plugins and exposes registered views", async () => {
     const manifest: PluginManifest = {
       id: "official.test",

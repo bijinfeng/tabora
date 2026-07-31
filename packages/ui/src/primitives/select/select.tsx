@@ -2,7 +2,9 @@ import { Select as KSelect } from "@kobalte/core/select"
 import type { SelectRootItemComponentProps } from "@kobalte/core/select"
 import { For, Show, splitProps } from "solid-js"
 import type { JSX } from "solid-js"
-import { Check, ChevronDown, X } from "lucide-solid"
+import Check from "lucide-solid/icons/check"
+import ChevronDown from "lucide-solid/icons/chevron-down"
+import X from "lucide-solid/icons/x"
 
 export type SelectOption<V extends string> = { value: V; label: string; disabled?: boolean }
 

@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
-import { Button, Collapsible } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
+import { Collapsible } from "@tabora/ui/collapsible"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
 
 const styles = stylex.create({

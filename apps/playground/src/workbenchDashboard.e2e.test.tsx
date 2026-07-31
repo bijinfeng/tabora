@@ -177,7 +177,7 @@ describe("workbench dashboard layout", () => {
     expect(focusLayoutButton).toBeTruthy()
     await userEvent.click(focusLayoutButton!)
     await waitFor(() => expect(document.querySelector('[data-layout="focus"]')).toBeTruthy())
-    await waitFor(() => expect(document.querySelector('[aria-label="专注卡片"]')).toBeTruthy())
+    await waitFor(() => expect(document.querySelector('[aria-label="专注主卡片"]')).toBeTruthy())
     expect(document.querySelectorAll("[data-focus-satellite]").length).toBeGreaterThan(0)
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
 

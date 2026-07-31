@@ -1,19 +1,17 @@
 import { Match, Switch } from "solid-js"
 import type { JSX } from "solid-js"
 import type { HostActionId } from "@tabora/plugin-api"
-import {
-  Boxes,
-  CircleHelp,
-  Circle,
-  House,
-  LayoutDashboard,
-  Moon,
-  PanelLeft,
-  Plus,
-  Search,
-  Settings,
-  Sun,
-} from "lucide-solid"
+import Boxes from "lucide-solid/icons/boxes"
+import Circle from "lucide-solid/icons/circle"
+import CircleHelp from "lucide-solid/icons/circle-help"
+import House from "lucide-solid/icons/house"
+import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
+import Moon from "lucide-solid/icons/moon"
+import PanelLeft from "lucide-solid/icons/panel-left"
+import Plus from "lucide-solid/icons/plus"
+import Search from "lucide-solid/icons/search"
+import Settings from "lucide-solid/icons/settings"
+import Sun from "lucide-solid/icons/sun"
 
 export function HostActionIcon(props: {
   id: HostActionId

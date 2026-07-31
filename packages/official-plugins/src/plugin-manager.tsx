@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { For } from "solid-js"
 import type { PluginManifest, PluginPermission, SettingsPanelViewProps } from "@tabora/plugin-api"
 import { assessPermissionRisk } from "@tabora/plugin-api"
-import { Switch } from "@tabora/ui"
+import { Switch } from "@tabora/ui/switch"
 import { styles } from "./styles"
 
 export type PluginSummary = SettingsPanelViewProps["plugins"][number]

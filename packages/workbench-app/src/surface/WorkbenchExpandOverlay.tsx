@@ -1,8 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import type { WidgetViewProps } from "@tabora/plugin-api"
 import { PluginViewBoundary } from "@tabora/workbench-shell"
-import { X } from "lucide-solid"
-import { IconButton } from "@tabora/ui"
+import X from "lucide-solid/icons/x"
+import { IconButton } from "@tabora/ui/button"
 import { createEffect, Show } from "solid-js"
 import type { JSX } from "solid-js"
 

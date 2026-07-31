@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import { Button } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
 
 import type { DocsCodeBlock as DocsCodeBlockContent, DocsTable } from "../docsPageContent"
 

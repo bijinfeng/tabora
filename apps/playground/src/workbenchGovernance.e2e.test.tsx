@@ -224,14 +224,14 @@ async function enterSearchQuery(query: string): Promise<void> {
   await userEvent.type(input, query)
   await waitFor(() =>
     expect(
-      [...document.querySelectorAll<HTMLElement>("[data-search-suggestion]")].some((node) =>
+      [...document.querySelectorAll<HTMLElement>("[data-command-result-item]")].some((node) =>
         node.textContent?.includes("使用 Google 搜索"),
       ),
     ).toBe(true),
   )
-  const searchButton = [...document.querySelectorAll<HTMLElement>("[data-search-suggestion]")].find(
-    (node) => node.textContent?.includes("使用 Google 搜索"),
-  )
+  const searchButton = [
+    ...document.querySelectorAll<HTMLElement>("[data-command-result-item]"),
+  ].find((node) => node.textContent?.includes("使用 Google 搜索"))
   if (!searchButton) {
     throw new Error("Web search suggestion was not found")
   }

@@ -3,21 +3,21 @@ import type { JSX } from "solid-js"
 import { TaboraMark } from "@tabora/brand"
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type { LayoutHostAPI } from "@tabora/plugin-api"
-import { Button, DropdownMenu, IconButton, Input } from "@tabora/ui"
-import {
-  Circle,
-  CircleDot,
-  Command,
-  Diamond,
-  Heart,
-  Hexagon,
-  LayoutDashboard,
-  Sparkles,
-  Square,
-  Star,
-  Triangle,
-  Zap,
-} from "lucide-solid"
+import { Button, IconButton } from "@tabora/ui/button"
+import { DropdownMenu } from "@tabora/ui/dropdown-menu"
+import { Input } from "@tabora/ui/input"
+import Circle from "lucide-solid/icons/circle"
+import CircleDot from "lucide-solid/icons/circle-dot"
+import Command from "lucide-solid/icons/command"
+import Diamond from "lucide-solid/icons/diamond"
+import Heart from "lucide-solid/icons/heart"
+import Hexagon from "lucide-solid/icons/hexagon"
+import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
+import Sparkles from "lucide-solid/icons/sparkles"
+import Square from "lucide-solid/icons/square"
+import Star from "lucide-solid/icons/star"
+import Triangle from "lucide-solid/icons/triangle"
+import Zap from "lucide-solid/icons/zap"
 import { HostActionIcon } from "./host-action-icon"
 import { className, styles } from "./styles"
 import type { ActiveGroupSetter, RailGroup, RailGroupContextMenu, RailGroupSetter } from "./types"

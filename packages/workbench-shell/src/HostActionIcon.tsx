@@ -1,7 +1,14 @@
 import { Match, Switch } from "solid-js"
 import type { JSX } from "solid-js"
 import type { HostActionId } from "@tabora/plugin-api"
-import { Boxes, Circle, House, Moon, Plus, Search, Settings, Sun } from "lucide-solid"
+import Boxes from "lucide-solid/icons/boxes"
+import Circle from "lucide-solid/icons/circle"
+import House from "lucide-solid/icons/house"
+import Moon from "lucide-solid/icons/moon"
+import Plus from "lucide-solid/icons/plus"
+import Search from "lucide-solid/icons/search"
+import Settings from "lucide-solid/icons/settings"
+import Sun from "lucide-solid/icons/sun"
 
 export type HostActionIconProps = {
   /** Stable host action id, used to pick a consistent SVG icon. */

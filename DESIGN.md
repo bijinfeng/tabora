@@ -223,6 +223,7 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 - variant / size 使用普通 typed object map 选择 StyleX styles；不引入 recipe / TV DSL。
 - 消费方视觉覆盖只通过明确的根 `xstyle` 或组件已定义的组合 API；多 slot 组件不公开成组的 `*Class` / `*Style` 参数。
 - 不新增 package-local `sx()`、`toSolidStyle()` 或重复的 class/style merge helper；未迁移组件按上述规则渐进收敛。
+- 业务代码优先从稳定组件 subpath 精确导入，例如 `@tabora/ui/button`、`@tabora/ui/input`、`@tabora/ui/select`，避免顶层 `@tabora/ui` barrel 扩大测试与开发时的模块转换图；新增 subpath 时必须同步 source export、publish export 和 package build entry。
 - package 构建由共享 StyleX Vite/Rolldown 配置抽取 CSS。`@tabora/ui`、shell、layout 与每个可独立启停的插件仍各自输出一份 CSS asset，不合并插件加载边界。
 
 - Button：主操作触发器。每个可视区域最多一个 primary。支持变体、尺寸、loading、disabled。
@@ -279,7 +280,7 @@ Widget 支持多实例、多尺寸、拖拽排序、右键尺寸菜单、双击�
 
 ## Icons
 
-默认图标库是 `lucide-solid`。内容区图标 16px，rail 和导航图标 20px，描边宽度 2px，颜色继承 `currentColor`。
+默认图标库是 `lucide-solid`。业务代码必须从 `lucide-solid/icons/*` 精确导入单个图标，避免顶层 barrel 展开完整图标模块图。内容区图标 16px，rail 和导航图标 20px，描边宽度 2px，颜色继承 `currentColor`。
 
 图标必须匹配动作语义。新增 UI 不使用 emoji 作为功能图标；天气等领域图标可以使用自定义 SVG。
 

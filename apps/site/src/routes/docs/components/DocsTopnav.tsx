@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router"
-import { IconButton } from "@tabora/ui"
+import { IconButton } from "@tabora/ui/button"
 import * as stylex from "@stylexjs/stylex"
 
 import { useSiteI18n, useSiteTheme } from "../../../app/AppShell"

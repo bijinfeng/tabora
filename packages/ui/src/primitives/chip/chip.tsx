@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js"
-import { X } from "lucide-solid"
+import X from "lucide-solid/icons/x"
 
 export type ChipProps = {
   selected?: boolean

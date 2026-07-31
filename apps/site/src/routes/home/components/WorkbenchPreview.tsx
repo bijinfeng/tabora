@@ -1,16 +1,15 @@
 import * as stylex from "@stylexjs/stylex"
-import { Button, IconButton, Input } from "@tabora/ui"
+import { Button, IconButton } from "@tabora/ui/button"
+import { Input } from "@tabora/ui/input"
 import { createSignal } from "solid-js"
-import {
-  ChevronDown,
-  CircleDot,
-  LayoutDashboard,
-  Plus,
-  Search,
-  Settings,
-  Star,
-  Sun,
-} from "lucide-solid"
+import ChevronDown from "lucide-solid/icons/chevron-down"
+import CircleDot from "lucide-solid/icons/circle-dot"
+import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
+import Plus from "lucide-solid/icons/plus"
+import Search from "lucide-solid/icons/search"
+import Settings from "lucide-solid/icons/settings"
+import Star from "lucide-solid/icons/star"
+import Sun from "lucide-solid/icons/sun"
 
 import type { HomePageContent } from "../homePrototypeContent"
 

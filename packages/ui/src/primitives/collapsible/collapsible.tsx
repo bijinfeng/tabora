@@ -1,6 +1,6 @@
 import { Collapsible as KCollapsible } from "@kobalte/core/collapsible"
 import type { JSX } from "solid-js"
-import { ChevronRight } from "lucide-solid"
+import ChevronRight from "lucide-solid/icons/chevron-right"
 
 export type CollapsibleProps = {
   open?: boolean

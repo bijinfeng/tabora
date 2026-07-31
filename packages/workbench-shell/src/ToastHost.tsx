@@ -1,8 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { ToastRecord } from "@tabora/orchestrator"
-import { Button } from "@tabora/ui"
-import { Check } from "lucide-solid"
+import { Button } from "@tabora/ui/button"
+import Check from "lucide-solid/icons/check"
 import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 export type ToastMessage = ToastRecord

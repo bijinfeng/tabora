@@ -53,6 +53,105 @@ const officialPluginStyleFiles = [
   "plugins/official/widget-weather/src/styles.ts",
 ]
 
+const uiSubpathEntries = [
+  ["./badge", "./src/badge.ts", "./dist/badge.js"],
+  ["./button", "./src/button.ts", "./dist/button.js"],
+  ["./checkbox", "./src/checkbox.ts", "./dist/checkbox.js"],
+  ["./collapsible", "./src/collapsible.ts", "./dist/collapsible.js"],
+  ["./command-result-list", "./src/command-result-list.ts", "./dist/command-result-list.js"],
+  ["./context-menu", "./src/context-menu.ts", "./dist/context-menu.js"],
+  ["./date-picker", "./src/date-picker.ts", "./dist/date-picker.js"],
+  ["./dropdown-menu", "./src/dropdown-menu.ts", "./dist/dropdown-menu.js"],
+  ["./empty-state", "./src/empty-state.ts", "./dist/empty-state.js"],
+  ["./field", "./src/field.ts", "./dist/field.js"],
+  ["./field-row", "./src/field-row.ts", "./dist/field-row.js"],
+  ["./inline-error", "./src/inline-error.ts", "./dist/inline-error.js"],
+  ["./input", "./src/input.ts", "./dist/input.js"],
+  ["./kbd", "./src/kbd.ts", "./dist/kbd.js"],
+  ["./list-row", "./src/list-row.ts", "./dist/list-row.js"],
+  ["./segmented-control", "./src/segmented-control.ts", "./dist/segmented-control.js"],
+  ["./select", "./src/select.ts", "./dist/select.js"],
+  ["./skeleton", "./src/skeleton.ts", "./dist/skeleton.js"],
+  ["./slider", "./src/slider.ts", "./dist/slider.js"],
+  ["./switch", "./src/switch.ts", "./dist/switch.js"],
+  ["./tabs", "./src/tabs.ts", "./dist/tabs.js"],
+  ["./textarea", "./src/textarea.ts", "./dist/textarea.js"],
+] as const
+
+const uiBuildScript = `vp pack src/index.ts src/component-docs/index.ts ${uiSubpathEntries
+  .map(([, sourceTarget]) => sourceTarget.slice(2))
+  .join(" ")}`
+
+const performanceSubpathPackages = [
+  {
+    manifestPath: "packages/official-plugins/package.json",
+    entries: [
+      [
+        "./workspace-default-preset",
+        "./src/workspace-default-preset.ts",
+        "./dist/workspace-default-preset.js",
+      ],
+    ],
+    build: "vp pack src/index.ts src/workspace-default-preset.ts",
+  },
+  {
+    manifestPath: "packages/builtin-plugin-registry/package.json",
+    entries: [["./workspace", "./src/workspace.ts", "./dist/workspace.js"]],
+    build: "vp pack src/index.ts src/workspace.ts",
+  },
+  {
+    manifestPath: "packages/workbench-app/package.json",
+    entries: [
+      ["./background-resolver", "./src/background-resolver.ts", "./dist/background-resolver.js"],
+      [
+        "./default-workspace-seed",
+        "./src/default-workspace-seed.ts",
+        "./dist/default-workspace-seed.js",
+      ],
+      ["./workbench-grid", "./src/workbench-grid.ts", "./dist/workbench-grid.js"],
+      [
+        "./workspace-portability",
+        "./src/workspace-portability.ts",
+        "./dist/workspace-portability.js",
+      ],
+      ["./workspace-session", "./src/workspace-session.ts", "./dist/workspace-session.js"],
+      ["./workspace-transfer", "./src/workspace-transfer.ts", "./dist/workspace-transfer.js"],
+    ],
+    build:
+      "vp pack src/index.ts src/background-resolver.ts src/default-workspace-seed.ts src/workbench-grid.ts src/workspace-portability.ts src/workspace-session.ts src/workspace-transfer.ts",
+  },
+  {
+    manifestPath: "plugins/official/layout-dashboard/package.json",
+    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
+    build: "vp pack src/index.tsx src/manifest.ts",
+  },
+  {
+    manifestPath: "plugins/official/widget-notes/package.json",
+    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
+    build: "vp pack src/index.ts src/manifest.ts",
+  },
+  {
+    manifestPath: "plugins/official/widget-quick-links/package.json",
+    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
+    build: "vp pack src/index.ts src/manifest.ts",
+  },
+  {
+    manifestPath: "plugins/official/widget-todo/package.json",
+    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
+    build: "vp pack src/index.ts src/manifest.ts",
+  },
+  {
+    manifestPath: "plugins/official/widget-weather/package.json",
+    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
+    build: "vp pack src/index.ts src/manifest.ts",
+  },
+  {
+    manifestPath: "plugins/community/layout-diy-masonry/package.json",
+    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
+    build: "vp pack src/index.tsx src/manifest.ts",
+  },
+] as const
+
 describe("governance rules", () => {
   it("rejects component CSS and non-placeholder StyleX package exports", () => {
     expect(
@@ -816,20 +915,40 @@ describe("governance rules", () => {
     expect(manifest.exports["./style.css"]).toBeUndefined()
     expect(manifest.exports["./styles.css"]).toBe("./src/styles.css")
     expect(manifest.publishConfig.exports["./styles.css"]).toBe("./dist/styles.css")
-    expect(manifest.scripts.build).toBe("vp pack src/index.ts src/component-docs/index.ts")
+    for (const [exportKey, sourceTarget, publishTarget] of uiSubpathEntries) {
+      expect(manifest.exports[exportKey], exportKey).toBe(sourceTarget)
+      expect(manifest.publishConfig.exports[exportKey], exportKey).toBe(publishTarget)
+    }
+    expect(manifest.scripts.build).toBe(uiBuildScript)
+  })
+
+  it("keeps performance-sensitive package subpaths publishable", async () => {
+    for (const { manifestPath, entries, build } of performanceSubpathPackages) {
+      const manifest = JSON.parse(await readRepositoryText(".", manifestPath))
+      for (const [exportKey, sourceTarget, publishTarget] of entries) {
+        expect(manifest.exports[exportKey], `${manifestPath}:${exportKey}`).toBe(sourceTarget)
+        expect(manifest.publishConfig.exports[exportKey], `${manifestPath}:${exportKey}`).toBe(
+          publishTarget,
+        )
+      }
+      expect(manifest.scripts.build, manifestPath).toBe(build)
+    }
   })
 
   it("keeps StyleX packages on the shared Vite+ pack pipeline", async () => {
     const expectedBuilds = new Map([
-      ["packages/ui/package.json", "vp pack src/index.ts src/component-docs/index.ts"],
+      ["packages/ui/package.json", uiBuildScript],
       ["packages/workbench-shell/package.json", "vp pack src/index.ts"],
-      ["packages/official-plugins/package.json", "vp pack src/index.ts"],
-      ["plugins/community/layout-diy-masonry/package.json", "vp pack src/index.tsx"],
-      ["plugins/official/layout-dashboard/package.json", "vp pack src/index.tsx"],
-      ["plugins/official/widget-notes/package.json", "vp pack src/index.ts"],
-      ["plugins/official/widget-quick-links/package.json", "vp pack src/index.ts"],
-      ["plugins/official/widget-todo/package.json", "vp pack src/index.ts"],
-      ["plugins/official/widget-weather/package.json", "vp pack src/index.ts"],
+      ["packages/official-plugins/package.json", performanceSubpathPackages[0].build],
+      [
+        "plugins/community/layout-diy-masonry/package.json",
+        "vp pack src/index.tsx src/manifest.ts",
+      ],
+      ["plugins/official/layout-dashboard/package.json", "vp pack src/index.tsx src/manifest.ts"],
+      ["plugins/official/widget-notes/package.json", "vp pack src/index.ts src/manifest.ts"],
+      ["plugins/official/widget-quick-links/package.json", "vp pack src/index.ts src/manifest.ts"],
+      ["plugins/official/widget-todo/package.json", "vp pack src/index.ts src/manifest.ts"],
+      ["plugins/official/widget-weather/package.json", "vp pack src/index.ts src/manifest.ts"],
     ])
 
     for (const [filePath, expectedBuild] of expectedBuilds) {

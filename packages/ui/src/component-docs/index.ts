@@ -1,4 +1,3 @@
-export { ComponentDocDemo, componentDocDemoRenderers } from "./demos"
 export { componentDocItems, componentDocsCategories, getComponentDoc } from "./metadata"
 export type {
   ComponentDocDemoProps,

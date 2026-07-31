@@ -1,24 +1,22 @@
 import * as stylex from "@stylexjs/stylex"
 import { createEffect, createMemo, Show } from "solid-js"
-import {
-  AtSign,
-  Circle,
-  CircleHelp,
-  Command,
-  CornerDownLeft,
-  History,
-  LayoutDashboard,
-  Link2,
-  PanelTop,
-  Plus,
-  Puzzle,
-  Search,
-  Settings,
-  SunMoon,
-  Target,
-  Pencil,
-  CheckSquare,
-} from "lucide-solid"
+import AtSign from "lucide-solid/icons/at-sign"
+import CheckSquare from "lucide-solid/icons/check-square"
+import Circle from "lucide-solid/icons/circle"
+import CircleHelp from "lucide-solid/icons/circle-help"
+import Command from "lucide-solid/icons/command"
+import CornerDownLeft from "lucide-solid/icons/corner-down-left"
+import History from "lucide-solid/icons/history"
+import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
+import Link2 from "lucide-solid/icons/link-2"
+import PanelTop from "lucide-solid/icons/panel-top"
+import Pencil from "lucide-solid/icons/pencil"
+import Plus from "lucide-solid/icons/plus"
+import Puzzle from "lucide-solid/icons/puzzle"
+import Search from "lucide-solid/icons/search"
+import Settings from "lucide-solid/icons/settings"
+import SunMoon from "lucide-solid/icons/sun-moon"
+import Target from "lucide-solid/icons/target"
 import type { SearchCommandEntry, SearchHistoryEntry, SearchWidgetEntry } from "@tabora/plugin-api"
 import {
   buildSearchUrl,
@@ -27,7 +25,9 @@ import {
   type CommandPaletteItem,
   type SearchProviderContributionDescriptor,
 } from "@tabora/orchestrator"
-import { CommandResultList, Input, Kbd } from "@tabora/ui"
+import { CommandResultList } from "@tabora/ui/command-result-list"
+import { Input } from "@tabora/ui/input"
+import { Kbd } from "@tabora/ui/kbd"
 import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 
 const styles = stylex.create({

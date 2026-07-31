@@ -1,5 +1,6 @@
 import { Button, IconButton } from "./button.styled"
-import { Plus, Ellipsis } from "lucide-solid"
+import Ellipsis from "lucide-solid/icons/ellipsis"
+import Plus from "lucide-solid/icons/plus"
 import * as stylex from "@stylexjs/stylex"
 
 import { demoStyles } from "../demoStyles"

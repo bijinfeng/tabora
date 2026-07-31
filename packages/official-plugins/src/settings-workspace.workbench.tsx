@@ -1,15 +1,13 @@
 import * as stylex from "@stylexjs/stylex"
-import {
-  Button,
-  Checkbox,
-  FieldRow,
-  InlineError,
-  Input,
-  Kbd,
-  SegmentedControl,
-  Select,
-  Switch,
-} from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
+import { Checkbox } from "@tabora/ui/checkbox"
+import { FieldRow } from "@tabora/ui/field-row"
+import { InlineError } from "@tabora/ui/inline-error"
+import { Input } from "@tabora/ui/input"
+import { Kbd } from "@tabora/ui/kbd"
+import { SegmentedControl } from "@tabora/ui/segmented-control"
+import { Select } from "@tabora/ui/select"
+import { Switch } from "@tabora/ui/switch"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api"
 import { className, styles } from "./styles"

@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js"
 import { For, Show } from "solid-js"
-import { ChevronRight } from "lucide-solid"
+import ChevronRight from "lucide-solid/icons/chevron-right"
 
 export type TreeViewItem = {
   id: string

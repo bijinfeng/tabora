@@ -1,7 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 import type { JSX } from "solid-js"
-import { ChevronLeft, ChevronRight } from "lucide-solid"
+import ChevronLeft from "lucide-solid/icons/chevron-left"
+import ChevronRight from "lucide-solid/icons/chevron-right"
 import { For } from "solid-js"
 
 import { joinClassNames } from "../../stylex"

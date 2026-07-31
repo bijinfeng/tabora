@@ -1,7 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import { Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api"
-import { Button, InlineError } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
+import { InlineError } from "@tabora/ui/inline-error"
 import { useQuickLinksExpandSession } from "./quick-links-expand-session"
 import { styles } from "./styles"
 

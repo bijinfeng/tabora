@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
-import { Search, Calendar } from "lucide-solid"
+import Calendar from "lucide-solid/icons/calendar"
+import Search from "lucide-solid/icons/search"
 
 import { Input } from "./input.styled"
 import { InlineError } from "../inlineError"

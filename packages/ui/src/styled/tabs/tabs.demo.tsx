@@ -1,7 +1,9 @@
 import * as stylex from "@stylexjs/stylex"
 import type { JSX } from "solid-js"
 import { createSignal } from "solid-js"
-import { Boxes, Search, Settings } from "lucide-solid"
+import Boxes from "lucide-solid/icons/boxes"
+import Search from "lucide-solid/icons/search"
+import Settings from "lucide-solid/icons/settings"
 
 import { demoStyles } from "../demoStyles"
 import { Badge } from "../badge"

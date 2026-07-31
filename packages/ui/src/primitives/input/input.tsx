@@ -1,5 +1,7 @@
 import { createSignal, Show, type JSX } from "solid-js"
-import { X, Eye, EyeOff } from "lucide-solid"
+import Eye from "lucide-solid/icons/eye"
+import EyeOff from "lucide-solid/icons/eye-off"
+import X from "lucide-solid/icons/x"
 
 import type { SolidAttrs } from "../../stylex"
 
