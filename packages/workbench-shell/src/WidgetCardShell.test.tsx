@@ -30,6 +30,16 @@ function makeCallbacks(): WidgetHostCallbacks {
   }
 }
 
+// jsdom 在部分版本里没有 PointerEvent 构造器，回退成带坐标的 MouseEvent；
+// 组件只读 target / clientX / clientY，两者等价。
+function pointerDown(coords: { clientX: number; clientY: number }): Event {
+  const init = { bubbles: true, ...coords }
+  if (typeof PointerEvent === "function") {
+    return new PointerEvent("pointerdown", init)
+  }
+  return new MouseEvent("pointerdown", init)
+}
+
 function mount(cb: WidgetHostCallbacks, props?: Record<string, unknown>) {
   const host = document.createElement("div")
   document.body.appendChild(host)
@@ -141,6 +151,97 @@ describe("WidgetCardShell", () => {
     const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
 
     card.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    card.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 2 }))
+
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
+    dispose()
+  })
+
+  // 回归：dnd-kit 激活拖拽时对 pointerdown 调 preventDefault，会抑制 mousedown /
+  // click / dblclick。真实指针下 click 根本不派发，只能靠 pointerdown 判双击。
+  it("两次相邻 pointerdown 触发展开（click 被 dnd-kit 抑制时的真实指针路径）", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    card.dispatchEvent(pointerDown({ clientX: 51, clientY: 50 }))
+
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
+    dispose()
+  })
+
+  it("单次 pointerdown 不触发展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+
+    expect(cb.onExpand).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it("两次 pointerdown 间距过大时不算双击", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    card.dispatchEvent(pointerDown({ clientX: 200, clientY: 50 }))
+
+    expect(cb.onExpand).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it("两次 pointerdown 间隔过久时不算双击", async () => {
+    vi.useFakeTimers()
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    vi.advanceTimersByTime(600)
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+
+    expect(cb.onExpand).not.toHaveBeenCalled()
+    dispose()
+    vi.useRealTimers()
+  })
+
+  it("三击只展开一次", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
+    dispose()
+  })
+
+  it("在移除按钮上双击不展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const removeButton = host.querySelector("[data-widget-card-remove]") as HTMLElement
+
+    removeButton.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    removeButton.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+
+    expect(cb.onExpand).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it("真实指针双击后紧随的合成 click 不重复展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    card.dispatchEvent(pointerDown({ clientX: 50, clientY: 50 }))
+    // 浏览器若仍派发 click(detail=2)，不应再展开一次。
     card.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 2 }))
 
     expect(cb.onExpand).toHaveBeenCalledTimes(1)

@@ -191,6 +191,34 @@ describe("workbench dashboard layout", () => {
       expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
     )
   }, 45_000)
+
+  // 回归：真实指针双击必须打开展开视图。
+  // 上面的主用例用 dispatchEvent 派发合成 click(detail=1/2)，绕过了真实指针路径，
+  // 所以它一直是绿的，却没覆盖用户实际遇到的问题。这里用 userEvent.dblClick()
+  // 走 Playwright 真实输入，才能覆盖 dnd-kit 在 pointerdown 上激活拖拽后
+  // （body.setPointerCapture + click preventDefault）双击是否还能到达卡片。
+  it("opens the expand overlay on a real pointer double-click", async () => {
+    await mountFreshWorkbench()
+
+    const card = readGridItemByTitle("便签")
+    await userEvent.dblClick(card)
+
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="expand"]')).toBeTruthy(),
+    )
+  }, 45_000)
+
+  // 回归：真实指针单击不得触发排序。
+  it("does not reorder cards on a real pointer single click", async () => {
+    await mountFreshWorkbench()
+
+    const before = readGridOrder()
+    await userEvent.click(readGridItemByTitle("便签"))
+
+    // 排序落库走 setTimeout(…, 0) + 异步持久化，给它足够时间暴露问题。
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(readGridOrder()).toEqual(before)
+  }, 45_000)
 })
 
 async function mountFreshWorkbench(): Promise<void> {

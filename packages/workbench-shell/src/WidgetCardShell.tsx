@@ -167,7 +167,53 @@ function gridItemXstyle(size: WidgetSize, dragging: boolean) {
   return [styles.gridItem, dragging && styles.dragging]
 }
 
+// 真实指针双击的判定窗口：两次 pointerdown 的时间差与位移上限。
+const doubleClickWindowMs = 400
+const doubleClickSlopPx = 10
+
 export function WidgetCardShell(props: WidgetCardShellProps) {
+  // dnd-kit 的 PointerSensor 激活拖拽时对 pointerdown 调了 preventDefault()
+  // （@dnd-kit/dom/index.js:2088）。按 Pointer Events 规范，这会抑制后续的兼容鼠标
+  // 事件——mousedown / click / dblclick 都不再派发，所以下面 onClick 里的
+  // detail === 2 在真实指针下永远不会命中，双击打不开展开视图。
+  // pointerdown 本身不受影响，仍然到达卡片，因此改由它自行判定双击。
+  // 合成事件（e2e / 单测直接 dispatch click）不走 pointerdown，仍由 onClick 兜住，
+  // 两条路径用 expandOpenedByPointer 去重。
+  let lastPointerDownAt = 0
+  let lastPointerDownX = 0
+  let lastPointerDownY = 0
+  let expandOpenedByPointer = false
+
+  const handleGridItemPointerDown = (event: PointerEvent) => {
+    // 卡片右上角操作区标了 data-prevent-expand，点它不该展开。
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest("[data-prevent-expand='true']")
+    ) {
+      lastPointerDownAt = 0
+      return
+    }
+
+    const now = Date.now()
+    const isSecondTap =
+      lastPointerDownAt > 0 &&
+      now - lastPointerDownAt <= doubleClickWindowMs &&
+      Math.hypot(event.clientX - lastPointerDownX, event.clientY - lastPointerDownY) <=
+        doubleClickSlopPx
+
+    if (isSecondTap) {
+      // 归零，避免三击时第三次又判成一次双击。
+      lastPointerDownAt = 0
+      expandOpenedByPointer = true
+      props.callbacks.onExpand()
+      return
+    }
+
+    lastPointerDownAt = now
+    lastPointerDownX = event.clientX
+    lastPointerDownY = event.clientY
+  }
+
   const bindGridItem = (element: HTMLElement | undefined) => {
     props.callbacks.bindSortableRoot?.(element)
     props.callbacks.bindSortableHandle?.(element)
@@ -220,7 +266,13 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
     "data-dragging": props.callbacks.isDragging ? "" : undefined,
     "aria-label": props.title,
     tabIndex: 0,
+    onPointerDown: handleGridItemPointerDown,
     onClick: (event: MouseEvent) => {
+      // 真实指针下 pointerdown 已判过双击，这里不再重复展开。
+      if (expandOpenedByPointer) {
+        expandOpenedByPointer = false
+        return
+      }
       if (event.detail === 2) props.callbacks.onExpand()
     },
     onDblClick: props.callbacks.onDblClick,
