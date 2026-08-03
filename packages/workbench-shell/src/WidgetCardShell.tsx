@@ -114,40 +114,24 @@ const styles = stylex.create({
     opacity: widgetCardStyleVars.actionsOpacity,
     pointerEvents: "none",
     position: "absolute",
-    right: -3,
-    top: -3,
+    // 26px 按钮按原比例外挂在卡片右上角外沿。
+    right: -6,
+    top: -6,
     transitionDuration: motion.fast,
     transitionProperty: "opacity",
     transitionTimingFunction: motion.ease,
     zIndex: 1,
   },
   action: {
-    alignItems: "center",
+    // 只声明 IconButton 给不了的东西：悬浮在卡片上的圆形徽标外观。
+    // 尺寸（26×26）、圆角、hover、focus-visible、transition 全部走 size="sm" 默认值，
+    // 26px 也正好越过 WCAG 2.2 AA 的 24px 触控目标下限。
     backgroundColor: color.surface,
-    borderStyle: "none",
-    borderWidth: 0,
     borderRadius: radius.pill,
     boxShadow: shadow.sm,
-    color: color.textSubtle,
-    cursor: "pointer",
-    display: "flex",
-    height: 18,
-    justifyContent: "center",
     pointerEvents: "auto",
-    transitionDuration: motion.fast,
-    transitionProperty: "background-color, box-shadow, color",
-    transitionTimingFunction: motion.ease,
-    width: 18,
     ":hover": {
-      backgroundColor: color.surface,
       boxShadow: shadow.md,
-      color: color.textMuted,
-    },
-    ":focus-visible": {
-      outlineColor: color.focus,
-      outlineOffset: 2,
-      outlineStyle: "solid",
-      outlineWidth: 2,
     },
   },
   body: {
@@ -234,11 +218,6 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
         <IconButton
           size="sm"
           xstyle={styles.action}
-          style={{
-            width: "18px",
-            height: "18px",
-            "border-radius": "999px",
-          }}
           data-widget-card-remove
           aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
           onClick={(event) => {
@@ -246,7 +225,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
             props.callbacks.onRemove()
           }}
         >
-          <Minus size={10} />
+          <Minus size={14} />
         </IconButton>
       </div>
       <div {...stylex.attrs(styles.body)} data-widget-card-body>
@@ -276,6 +255,14 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       if (event.detail === 2) props.callbacks.onExpand()
     },
     onDblClick: props.callbacks.onDblClick,
+    // 卡片可聚焦（tabIndex 0），键盘用户需要和双击等价的展开入口。
+    // 只处理落在卡片本身的按键：卡片内的操作按钮和插件内容自己消费回车/空格。
+    onKeyDown: (event: KeyboardEvent) => {
+      if (event.target !== event.currentTarget) return
+      if (event.key !== "Enter" && event.key !== " ") return
+      event.preventDefault()
+      props.callbacks.onExpand()
+    },
   }
 
   return (

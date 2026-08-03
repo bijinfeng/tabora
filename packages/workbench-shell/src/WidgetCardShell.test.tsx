@@ -117,14 +117,15 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  it("renders the remove button as a compact circular control", () => {
+  // 移除按钮的尺寸必须来自 IconButton size="sm"（26×26），不能用 inline style 压小。
+  // 原先压成 18×18 既覆盖了组件默认样式，也低于 WCAG 2.2 AA 的 24px 触控目标下限。
+  it("移除按钮不用 inline style 覆盖 IconButton 默认尺寸", () => {
     const { host, dispose } = mount(makeCallbacks())
     const removeBtn = host.querySelector("[data-widget-card-remove]") as HTMLButtonElement
-    const styles = getComputedStyle(removeBtn)
 
-    expect(styles.width).toBe("18px")
-    expect(styles.height).toBe("18px")
-    expect(styles.borderRadius).toBe("999px")
+    expect(removeBtn.style.width).toBe("")
+    expect(removeBtn.style.height).toBe("")
+    expect(removeBtn.style.borderRadius).toBe("")
     dispose()
   })
 
@@ -142,6 +143,31 @@ describe("WidgetCardShell", () => {
   it("does not render a visible expand button because prototype uses double-click", () => {
     const { host, dispose } = mount(makeCallbacks())
     expect(host.querySelector("button[aria-label^='展开']")).toBeNull()
+    dispose()
+  })
+
+  // 卡片带 tabIndex=0 会进入 Tab 序，但展开原先只有指针路径，键盘用户聚焦后无操作可做。
+  it("键盘 Enter / 空格在聚焦卡片时触发展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    card.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Enter" }))
+    expect(cb.onExpand).toHaveBeenCalledTimes(1)
+
+    card.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: " " }))
+    expect(cb.onExpand).toHaveBeenCalledTimes(2)
+    dispose()
+  })
+
+  it("卡片内控件上的 Enter 不冒泡成展开", () => {
+    const cb = makeCallbacks()
+    const { host, dispose } = mount(cb)
+    const removeBtn = host.querySelector("[data-widget-card-remove]") as HTMLButtonElement
+
+    removeBtn.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Enter" }))
+
+    expect(cb.onExpand).not.toHaveBeenCalled()
     dispose()
   })
 

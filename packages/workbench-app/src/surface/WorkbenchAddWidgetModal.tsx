@@ -1,20 +1,20 @@
 import * as stylex from "@stylexjs/stylex"
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { WidgetSize } from "@tabora/plugin-api"
 import Search from "lucide-solid/icons/search"
 import X from "lucide-solid/icons/x"
 import { Button, IconButton } from "@tabora/ui/button"
 import { Input } from "@tabora/ui/input"
+import { WidgetCardShell, type WidgetHostCallbacks } from "@tabora/workbench-shell"
 
 import type { ShellTranslation } from "../i18n"
 import type { AvailableWidget } from "./WorkbenchShellChrome.types"
 import { styles } from "./WorkbenchAddWidgetModal.styles"
 
-type Category = "recommended" | "info" | "productivity" | "tools" | "installed"
+type Category = "info" | "productivity" | "tools" | "installed"
 
 const CATEGORY_LABELS: Record<Category, string> = {
-  recommended: "推荐",
   info: "信息",
   productivity: "生产力",
   tools: "工具",
@@ -23,7 +23,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
 
 const SIZE_OPTIONS: WidgetSize[] = ["S", "M", "L", "XL"]
 
-// 推荐分组里的排序优先级——越靠前展示越早。可根据数据补充。
+// 列表内的展示优先级——越靠前展示越早。可根据数据补充。
 const FEATURED_ORDER = ["quick-links", "todo", "notes", "weather"]
 
 function featuredRank(widget: AvailableWidget): number {
@@ -36,12 +36,13 @@ function featuredRank(widget: AvailableWidget): number {
   return FEATURED_ORDER.length
 }
 
+// 没有"推荐"桶了，未命中信息 / 生产力关键词的卡片归到"工具"，
+// 否则它们会落进一个没有对应 tab 的分类里，筛选时永远看不到。
 function bucketCategory(widget: AvailableWidget): Category {
   const id = `${widget.pluginId}.${widget.id}`.toLowerCase()
   if (/weather|news|stock|info/.test(id)) return "info"
   if (/todo|notes|today|focus|task/.test(id)) return "productivity"
-  if (/quick-link|links|launcher|tool/.test(id)) return "tools"
-  return "recommended"
+  return "tools"
 }
 
 function defaultSize(widget: AvailableWidget): WidgetSize {
@@ -61,6 +62,7 @@ export function WorkbenchAddWidgetModal(props: {
   open: boolean
   availableWidgets: AvailableWidget[]
   renderWidgetIcon: (icon?: string) => JSX.Element
+  renderWidgetPreview?: (pluginId: string, widgetId: string, size: WidgetSize) => JSX.Element
   tShell?: ShellTranslation
   activeGroupLabel?: string
   onAdd: (pluginId: string, widgetId: string, size?: WidgetSize) => void
@@ -150,10 +152,29 @@ export function WorkbenchAddWidgetModal(props: {
     }
   }
 
+  // 键盘事件挂在 overlay 上，只有焦点落在 overlay 子树里才会冒泡到这里。
+  // 打开时若不主动聚焦，Esc / Enter / 上下键在用户点进弹窗前全部失效。
+  // 关闭时把焦点还给打开弹窗的元素，避免焦点掉回 body。
+  let overlayRef: HTMLDivElement | undefined
+  let restoreFocusTo: HTMLElement | null = null
+
+  createEffect(() => {
+    if (!props.open) return
+    const previous = document.activeElement
+    restoreFocusTo = previous instanceof HTMLElement ? previous : null
+    overlayRef?.focus()
+
+    onCleanup(() => {
+      restoreFocusTo?.focus()
+      restoreFocusTo = null
+    })
+  })
+
   return (
     <Show when={props.open}>
       <div
         {...stylex.attrs(styles.overlay)}
+        ref={(element) => (overlayRef = element)}
         data-workbench-overlay="add-widget"
         onClick={props.onClose}
         onKeyDown={handleOverlayKeyDown}
@@ -196,6 +217,10 @@ export function WorkbenchAddWidgetModal(props: {
             <RightColumn
               widget={selectedWidget()}
               effectiveSize={effectiveSize()}
+              renderWidgetIcon={props.renderWidgetIcon}
+              {...(props.renderWidgetPreview
+                ? { renderWidgetPreview: props.renderWidgetPreview }
+                : {})}
               onSizeChange={setChosenSize}
               onConfirm={handleConfirm}
               t={t}
@@ -273,9 +298,9 @@ function LeftColumn(props: {
       </div>
       <div {...stylex.attrs(styles.tabs)} role="tablist">
         <CategoryTab
-          label={props.t("chrome.addWidget.tab.recommended", "推荐")}
-          active={props.activeCategory === "all" || props.activeCategory === "recommended"}
-          onClick={() => props.onCategoryChange("recommended")}
+          label={props.t("chrome.addWidget.tab.all", "全部")}
+          active={props.activeCategory === "all"}
+          onClick={() => props.onCategoryChange("all")}
         />
         <For each={["info", "productivity", "tools", "installed"] as const}>
           {(cat) => (
@@ -369,6 +394,8 @@ function WidgetRow(props: {
 function RightColumn(props: {
   widget: AvailableWidget | undefined
   effectiveSize: WidgetSize | undefined
+  renderWidgetIcon: (icon?: string) => JSX.Element
+  renderWidgetPreview?: (pluginId: string, widgetId: string, size: WidgetSize) => JSX.Element
   onSizeChange: (size: WidgetSize) => void
   onConfirm: () => void
   t: TFn
@@ -388,7 +415,15 @@ function RightColumn(props: {
           return (
             <>
               <PreviewHead widget={widget} effectiveSize={props.effectiveSize} t={props.t} />
-              <PreviewArea widget={widget} effectiveSize={props.effectiveSize} t={props.t} />
+              <PreviewArea
+                widget={widget}
+                effectiveSize={props.effectiveSize}
+                renderWidgetIcon={props.renderWidgetIcon}
+                {...(props.renderWidgetPreview
+                  ? { renderWidgetPreview: props.renderWidgetPreview }
+                  : {})}
+                t={props.t}
+              />
               <div {...stylex.attrs(styles.detailRow)}>
                 <SizeSelector
                   supportedSizes={widget.supportedSizes ?? SIZE_OPTIONS}
@@ -430,11 +465,31 @@ function PreviewHead(props: {
   )
 }
 
+const PREVIEW_CALLBACKS: WidgetHostCallbacks = {
+  onDblClick: () => {},
+  onContextMenu: () => {},
+  onResize: () => {},
+  onRemove: () => {},
+  onExpand: () => {},
+  isDragging: false,
+}
+
 function PreviewArea(props: {
   widget: AvailableWidget
   effectiveSize: WidgetSize | undefined
+  renderWidgetIcon: (icon?: string) => JSX.Element
+  renderWidgetPreview?: (pluginId: string, widgetId: string, size: WidgetSize) => JSX.Element
   t: TFn
 }) {
+  // 预览用真实的 WidgetCardShell 包真实的插件 card view：外框和工作台同一个组件，
+  // 内容也是同一个 view（同一份 registry 解析），卡片样式或插件视图改动都不需要
+  // 在这里同步第二份。尺寸差异由 grid span 表达。
+  const previewSize = () => props.effectiveSize ?? defaultSize(props.widget)
+
+  // 拿不到 view 时退回描述文案，至少不是空白卡片。
+  const previewContent = () =>
+    props.renderWidgetPreview?.(props.widget.pluginId, props.widget.id, previewSize())
+
   return (
     <div {...stylex.attrs(styles.previewArea)}>
       <div {...stylex.attrs(styles.workspacePreview)}>
@@ -445,34 +500,43 @@ function PreviewArea(props: {
           </span>
           <span>{props.t("chrome.addWidget.workspaceBar.placement", "添加后放到分组末尾")}</span>
         </div>
-        <div {...stylex.attrs(styles.workspaceGrid)}>
-          <div
-            {...stylex.attrs(
-              styles.previewWidget,
-              props.effectiveSize === "S" && styles.previewS,
-              props.effectiveSize === "L" && styles.previewL,
-              props.effectiveSize === "XL" && styles.previewXL,
-            )}
+        <div {...stylex.attrs(styles.workspaceGrid)} data-add-widget-preview-grid>
+          <WidgetCardShell
+            instance={{
+              id: "add-widget-preview",
+              workspaceId: "add-widget-preview",
+              pluginId: props.widget.pluginId,
+              contributionId: props.widget.id,
+              extensionPoint: "widget",
+              regionId: "preview",
+              enabled: true,
+              size: previewSize(),
+              config: {},
+              createdAt: "",
+              updatedAt: "",
+            }}
+            title={props.widget.title}
+            icon={props.renderWidgetIcon(props.widget.icon)}
+            supportedSizes={props.widget.supportedSizes ?? [previewSize()]}
+            currentSize={previewSize()}
+            callbacks={PREVIEW_CALLBACKS}
           >
-            <div {...stylex.attrs(styles.previewWidgetHead)}>
-              <span {...stylex.attrs(styles.previewWidgetTitle)}>{props.widget.title}</span>
-              <span
-                {...stylex.attrs(
-                  styles.badge,
-                  props.widget.source !== "official" && styles.thirdParty,
-                )}
-              >
-                {props.widget.source === "official"
-                  ? props.t("chrome.addWidget.badge.official", "官方")
-                  : props.t("chrome.addWidget.badge.thirdParty", "第三方")}
-              </span>
-            </div>
-            <div {...stylex.attrs(styles.previewWidgetBody)}>
-              <Show when={props.widget.description} fallback={<span>{props.widget.title}</span>}>
-                {props.widget.description}
-              </Show>
-            </div>
-          </div>
+            <Show
+              when={previewContent()}
+              fallback={
+                <div {...stylex.attrs(styles.previewWidgetBody)}>
+                  <Show
+                    when={props.widget.description}
+                    fallback={<span>{props.widget.title}</span>}
+                  >
+                    {props.widget.description}
+                  </Show>
+                </div>
+              }
+            >
+              {previewContent()}
+            </Show>
+          </WidgetCardShell>
         </div>
       </div>
     </div>

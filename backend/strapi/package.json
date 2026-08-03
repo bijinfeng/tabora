@@ -16,11 +16,11 @@
     "upgrade:dry": "npx @strapi/upgrade latest --dry"
   },
   "dependencies": {
-    "@strapi/database": "5.51.0",
-    "@strapi/plugin-users-permissions": "5.51.0",
-    "@strapi/provider-email-sendmail": "5.51.0",
-    "@strapi/provider-upload-aws-s3": "5.51.0",
-    "@strapi/strapi": "5.51.0",
+    "@strapi/database": "5.51.1",
+    "@strapi/plugin-users-permissions": "5.51.1",
+    "@strapi/provider-email-sendmail": "5.51.1",
+    "@strapi/provider-upload-aws-s3": "5.51.1",
+    "@strapi/strapi": "5.51.1",
     "pg": "^8.22.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
