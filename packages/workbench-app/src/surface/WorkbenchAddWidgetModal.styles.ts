@@ -114,7 +114,7 @@ export const styles = stylex.create({
   searchWrap: { position: "relative" },
   searchIcon: {
     color: color.textSubtle,
-    left: 12,
+    left: 9,
     pointerEvents: "none",
     position: "absolute",
     top: "50%",
@@ -128,11 +128,11 @@ export const styles = stylex.create({
     borderWidth: 1,
     color: color.text,
     fontFamily: font.sans,
-    fontSize: 13,
-    height: 36,
+    fontSize: 12,
+    height: 28,
     outline: "none",
-    paddingLeft: 34,
-    paddingRight: 12,
+    paddingLeft: 30,
+    paddingRight: 10,
     width: "100%",
     ":focus": {
       borderColor: color.accent,
@@ -307,48 +307,20 @@ export const styles = stylex.create({
     paddingInline: 7,
     whiteSpace: "nowrap",
   },
+  // 预览区只做居中舞台：不再画假的工作台头部和外层容器边框，
+  // 卡片单独居中展示，尺寸由舞台的 grid track 精确表达。
   previewArea: {
-    backgroundColor: color.surface,
-    borderColor: color.line,
-    borderRadius: radius.card,
-    borderStyle: "solid",
-    borderWidth: 1,
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "center",
     marginBottom: 8,
     minHeight: 198,
     overflow: "hidden",
     padding: 9,
   },
-  workspacePreview: { display: "grid", gap: 8, gridTemplateRows: "auto 1fr", minHeight: 178 },
-  workspaceBar: {
-    alignItems: "center",
-    color: color.textSubtle,
-    display: "flex",
-    fontSize: 10,
-    justifyContent: "space-between",
-  },
-  workspaceGroup: {
-    alignItems: "center",
-    color: color.textMuted,
-    display: "inline-flex",
-    fontWeight: font.semibold,
-    gap: 6,
-  },
-  dot: { backgroundColor: color.accent, borderRadius: radius.pill, height: 6, width: 6 },
-  // 预览渲染真实 WidgetCardShell，卡片是 height:100% 的 grid item，
-  // 这里提供和工作台一致的 4 列栅格上下文，让 S/M/L/XL 的 span 差异如实体现。
-  workspaceGrid: {
-    backgroundColor: color.surfaceSoft,
-    borderColor: color.line,
-    borderRadius: radius.panel,
-    borderStyle: "solid",
-    borderWidth: 1,
-    display: "grid",
-    gap: 9,
-    gridAutoRows: 58,
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    minHeight: 154,
-    padding: 9,
-  },
+  // 舞台是一张按卡片 span 定尺的网格，WidgetCardShell 作为唯一 grid item 填满它。
+  // track 尺寸走内联 style（随选中尺寸变化），这里只声明为 grid。
+  previewStage: { display: "grid" },
   previewWidgetBody: { color: color.textMuted, fontSize: 11, lineHeight: 1.45 },
   detailRow: {
     display: "grid",

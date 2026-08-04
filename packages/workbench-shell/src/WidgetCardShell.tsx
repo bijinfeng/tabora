@@ -28,6 +28,8 @@ export type WidgetCardShellProps = {
   currentSize: WidgetSize
   children: JSX.Element
   callbacks: WidgetHostCallbacks
+  /** 预览模式：只展示卡片外观与内容，不渲染移除等操作按钮。 */
+  preview?: boolean
   /** 右键菜单项；提供时卡片用 @tabora/ui ContextMenu 渲染原生右键菜单 */
   contextMenuItems?: ContextMenuItem[]
   onContextMenuSelect?: (key: string) => void
@@ -214,20 +216,22 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
       data-widget-card
       data-widget-card-title
     >
-      <div {...stylex.attrs(styles.actions)} data-widget-card-actions data-prevent-expand="true">
-        <IconButton
-          size="sm"
-          xstyle={styles.action}
-          data-widget-card-remove
-          aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
-          onClick={(event) => {
-            event.stopPropagation()
-            props.callbacks.onRemove()
-          }}
-        >
-          <Minus size={14} />
-        </IconButton>
-      </div>
+      <Show when={!props.preview}>
+        <div {...stylex.attrs(styles.actions)} data-widget-card-actions data-prevent-expand="true">
+          <IconButton
+            size="sm"
+            xstyle={styles.action}
+            data-widget-card-remove
+            aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
+            onClick={(event) => {
+              event.stopPropagation()
+              props.callbacks.onRemove()
+            }}
+          >
+            <Minus size={14} />
+          </IconButton>
+        </div>
+      </Show>
       <div {...stylex.attrs(styles.body)} data-widget-card-body>
         {props.children}
       </div>

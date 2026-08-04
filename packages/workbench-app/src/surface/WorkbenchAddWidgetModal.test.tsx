@@ -22,6 +22,7 @@ function mount(overrides?: {
   onClose?: () => void
   onAdd?: () => void
   renderWidgetPreview?: (pluginId: string, widgetId: string, size: WidgetSize) => JSX.Element
+  availableWidgets?: AvailableWidget[]
 }) {
   const root = document.createElement("div")
   document.body.appendChild(root)
@@ -32,7 +33,7 @@ function mount(overrides?: {
     () => (
       <WorkbenchAddWidgetModal
         open
-        availableWidgets={widgets}
+        availableWidgets={overrides?.availableWidgets ?? widgets}
         renderWidgetIcon={() => <span />}
         {...(overrides?.renderWidgetPreview
           ? { renderWidgetPreview: overrides.renderWidgetPreview }
@@ -132,6 +133,71 @@ describe("WorkbenchAddWidgetModal", () => {
 
     const grid = overlay.querySelector("[data-add-widget-preview-grid]") as HTMLElement
     expect(grid.textContent).toContain("快速记录")
+    dispose()
+  })
+
+  // 回归：预览卡片只展示外观，不该出现工作台上的移除按钮。
+  it("预览卡片不渲染移除按钮", () => {
+    const { overlay, dispose } = mount({})
+
+    const grid = overlay.querySelector("[data-add-widget-preview-grid]") as HTMLElement
+    expect(grid.querySelector("[data-widget-card-remove]")).toBeNull()
+    dispose()
+  })
+
+  // 回归：切换尺寸后，舞台的 grid track 数与卡片自身的 span 必须一致，
+  // 否则卡片按旧 span 占位、填不满新舞台（曾因 WidgetCardShell 挂载时定型 span 复现）。
+  it("切换尺寸后舞台 track 与卡片 span 一致，各比例正确", () => {
+    const { overlay, dispose } = mount({
+      availableWidgets: [
+        {
+          pluginId: "official.widgets",
+          id: "widget.full",
+          title: "全尺寸卡片",
+          description: "d",
+          source: "official",
+          supportedSizes: ["S", "M", "L", "XL"],
+          defaultSize: "M",
+        },
+      ],
+    })
+
+    const stage = overlay.querySelector("[data-add-widget-preview-grid]") as HTMLElement
+    // 每次尺寸变化 SizeSelector 会重渲染按钮，捕获的旧引用会失效，故每轮重新查询。
+    const clickSize = (label: string) => {
+      const btn = [...overlay.querySelectorAll("[role='dialog'] button")].find(
+        (b) => b.textContent?.trim() === label,
+      ) as HTMLButtonElement | undefined
+      btn?.click()
+    }
+
+    // [尺寸, 期望列数, 期望行数]
+    const cases: [string, number, number][] = [
+      ["S", 1, 1],
+      ["M", 2, 1],
+      ["L", 2, 2],
+      ["XL", 4, 2],
+    ]
+
+    // jsdom 不展开 repeat()，保留字面量 "repeat(N, 76px)"，直接读 N。
+    const repeatCount = (value: string) => Number(value.match(/repeat\((\d+),/)?.[1] ?? 0)
+
+    for (const [label, cols, rows] of cases) {
+      clickSize(label)
+      const tplCols = stage.style.getPropertyValue("grid-template-columns")
+      const tplRows = stage.style.getPropertyValue("grid-template-rows")
+      expect(repeatCount(tplCols), `${label} 舞台列数`).toBe(cols)
+      expect(repeatCount(tplRows), `${label} 舞台行数`).toBe(rows)
+
+      const card = stage.querySelector("[data-workbench-grid-item]") as HTMLElement
+      expect(card.getAttribute("data-widget-size"), `${label} 卡片尺寸`).toBe(label)
+      expect(card.style.getPropertyValue("--widget-col-span"), `${label} 卡片列 span`).toBe(
+        `${cols}`,
+      )
+      expect(card.style.getPropertyValue("--widget-row-span"), `${label} 卡片行 span`).toBe(
+        `${rows}`,
+      )
+    }
     dispose()
   })
 })

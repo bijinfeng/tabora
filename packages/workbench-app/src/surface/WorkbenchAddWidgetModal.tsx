@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js"
 import type { JSX } from "solid-js"
+import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api"
 import type { WidgetSize } from "@tabora/plugin-api"
 import Search from "lucide-solid/icons/search"
 import X from "lucide-solid/icons/x"
@@ -22,6 +23,10 @@ const CATEGORY_LABELS: Record<Category, string> = {
 }
 
 const SIZE_OPTIONS: WidgetSize[] = ["S", "M", "L", "XL"]
+
+// 预览舞台的单元边长（正方，px）。S=1x1、M=2x1、L=2x2、XL=4x2 都按此边长排布，
+// 保证各尺寸比例真实，且 XL(4 单元宽) 仍能容纳在预览区可视宽度内。
+const PREVIEW_UNIT = 76
 
 // 列表内的展示优先级——越靠前展示越早。可根据数据补充。
 const FEATURED_ORDER = ["quick-links", "todo", "notes", "weather"]
@@ -422,7 +427,6 @@ function RightColumn(props: {
                 {...(props.renderWidgetPreview
                   ? { renderWidgetPreview: props.renderWidgetPreview }
                   : {})}
-                t={props.t}
               />
               <div {...stylex.attrs(styles.detailRow)}>
                 <SizeSelector
@@ -479,7 +483,6 @@ function PreviewArea(props: {
   effectiveSize: WidgetSize | undefined
   renderWidgetIcon: (icon?: string) => JSX.Element
   renderWidgetPreview?: (pluginId: string, widgetId: string, size: WidgetSize) => JSX.Element
-  t: TFn
 }) {
   // 预览用真实的 WidgetCardShell 包真实的插件 card view：外框和工作台同一个组件，
   // 内容也是同一个 view（同一份 registry 解析），卡片样式或插件视图改动都不需要
@@ -490,54 +493,64 @@ function PreviewArea(props: {
   const previewContent = () =>
     props.renderWidgetPreview?.(props.widget.pluginId, props.widget.id, previewSize())
 
+  // 舞台按卡片的 span 精确定尺：单元恒为正方边长 PREVIEW_UNIT，
+  // 所以 S(1x1) 是正方、M(2x1) 是 2:1、L(2x2) 正方、XL(4x2) 是 2:1，比例真实。
+  const stageStyle = () => {
+    const cols = widgetGridColumnSpan(previewSize())
+    const rows = widgetGridRowSpan(previewSize())
+    return {
+      "grid-template-columns": `repeat(${cols}, ${PREVIEW_UNIT}px)`,
+      "grid-template-rows": `repeat(${rows}, ${PREVIEW_UNIT}px)`,
+    }
+  }
+
   return (
     <div {...stylex.attrs(styles.previewArea)}>
-      <div {...stylex.attrs(styles.workspacePreview)}>
-        <div {...stylex.attrs(styles.workspaceBar)}>
-          <span {...stylex.attrs(styles.workspaceGroup)}>
-            <span {...stylex.attrs(styles.dot)} />
-            {props.t("chrome.addWidget.workspaceBar.todayGroup", "今日")}
-          </span>
-          <span>{props.t("chrome.addWidget.workspaceBar.placement", "添加后放到分组末尾")}</span>
-        </div>
-        <div {...stylex.attrs(styles.workspaceGrid)} data-add-widget-preview-grid>
-          <WidgetCardShell
-            instance={{
-              id: "add-widget-preview",
-              workspaceId: "add-widget-preview",
-              pluginId: props.widget.pluginId,
-              contributionId: props.widget.id,
-              extensionPoint: "widget",
-              regionId: "preview",
-              enabled: true,
-              size: previewSize(),
-              config: {},
-              createdAt: "",
-              updatedAt: "",
-            }}
-            title={props.widget.title}
-            icon={props.renderWidgetIcon(props.widget.icon)}
-            supportedSizes={props.widget.supportedSizes ?? [previewSize()]}
-            currentSize={previewSize()}
-            callbacks={PREVIEW_CALLBACKS}
-          >
-            <Show
-              when={previewContent()}
-              fallback={
-                <div {...stylex.attrs(styles.previewWidgetBody)}>
-                  <Show
-                    when={props.widget.description}
-                    fallback={<span>{props.widget.title}</span>}
-                  >
-                    {props.widget.description}
-                  </Show>
-                </div>
-              }
+      <div {...stylex.attrs(styles.previewStage)} style={stageStyle()} data-add-widget-preview-grid>
+        {/* WidgetCardShell 的 grid span 在挂载时定型（见 WidgetCardShell gridItemProps），
+            真实工作台靠 <For> 换实例引用重挂载来刷新；预览是单一常驻实例，尺寸变化不重挂
+            就会让卡片仍按旧 span 占位、填不满新舞台。用 keyed 让尺寸变化重建卡片，行为对齐工作台。 */}
+        <Show when={previewSize()} keyed>
+          {(size) => (
+            <WidgetCardShell
+              instance={{
+                id: "add-widget-preview",
+                workspaceId: "add-widget-preview",
+                pluginId: props.widget.pluginId,
+                contributionId: props.widget.id,
+                extensionPoint: "widget",
+                regionId: "preview",
+                enabled: true,
+                size,
+                config: {},
+                createdAt: "",
+                updatedAt: "",
+              }}
+              title={props.widget.title}
+              icon={props.renderWidgetIcon(props.widget.icon)}
+              supportedSizes={props.widget.supportedSizes ?? [size]}
+              currentSize={size}
+              callbacks={PREVIEW_CALLBACKS}
+              preview
             >
-              {previewContent()}
-            </Show>
-          </WidgetCardShell>
-        </div>
+              <Show
+                when={previewContent()}
+                fallback={
+                  <div {...stylex.attrs(styles.previewWidgetBody)}>
+                    <Show
+                      when={props.widget.description}
+                      fallback={<span>{props.widget.title}</span>}
+                    >
+                      {props.widget.description}
+                    </Show>
+                  </div>
+                }
+              >
+                {previewContent()}
+              </Show>
+            </WidgetCardShell>
+          )}
+        </Show>
       </div>
     </div>
   )
@@ -623,10 +636,10 @@ function ModalFooter(props: {
   return (
     <div {...stylex.attrs(styles.footer)} data-workbench-overlay-footer>
       <div {...stylex.attrs(styles.footerActions)}>
-        <Button variant="secondary" onClick={props.onCancel}>
+        <Button size="sm" variant="secondary" onClick={props.onCancel}>
           {props.t("chrome.addWidget.cancel", "取消")}
         </Button>
-        <Button variant="primary" disabled={props.disabled} onClick={props.onConfirm}>
+        <Button size="sm" variant="primary" disabled={props.disabled} onClick={props.onConfirm}>
           {props.t("chrome.addWidget.confirm", "添加到工作台")}
         </Button>
       </div>

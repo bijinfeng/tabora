@@ -173,7 +173,7 @@ export function NotesCard(props: WidgetViewProps) {
           <div {...stylex.attrs(styles.largeFoot)}>
             <span {...stylex.attrs(styles.widgetTime)}>最近记录</span>
             <button {...stylex.attrs(styles.viewAll)} type="button" onClick={handleOpen}>
-              查看全部 <ArrowRight size={14} />
+              查看全部 <ArrowRight size={7} />
             </button>
           </div>
         </div>
@@ -223,7 +223,7 @@ export function NotesCard(props: WidgetViewProps) {
               最近记录 · {latest() ? formatRelativeTime(latest()!.updatedAt) : "暂无"}
             </span>
             <button {...stylex.attrs(styles.viewAll)} type="button" onClick={handleOpen}>
-              开始记录 <ArrowRight size={14} />
+              开始记录 <ArrowRight size={7} />
             </button>
           </div>
         </div>
