@@ -1,3 +1,7 @@
+import {
+  createOfficialAccountSyncPlugin,
+  type AccountSyncPluginOptions,
+} from "@tabora/official-plugins"
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import { layoutDiyMasonryManifest } from "@tabora/layout-diy-masonry/manifest"
 import { officialPlugins } from "@tabora/official-plugins"
@@ -41,3 +45,7 @@ const layoutDiyMasonry = createLazyBuiltinPlugin({
 export const builtinPlugins: BuiltinPlugin[] = [...officialPlugins, layoutDiyMasonry].map(
   attachStyleAssets,
 )
+
+export function createBuiltinAccountSyncPlugin(options: AccountSyncPluginOptions): BuiltinPlugin {
+  return attachStyleAssets(createOfficialAccountSyncPlugin(options))
+}

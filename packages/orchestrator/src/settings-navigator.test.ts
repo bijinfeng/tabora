@@ -15,7 +15,7 @@ function panel(
   return {
     id,
     title: id,
-    view: `${id}.view`,
+    content: { kind: "custom-view", view: `${id}.view` },
     section: "general",
     scope: "workspace",
     ...(order !== undefined ? { order } : {}),

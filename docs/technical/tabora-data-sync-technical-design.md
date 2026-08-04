@@ -1,8 +1,8 @@
 # Tabora 官方账号与数据同步技术方案
 
-版本：V0.3
+版本：V0.4
 
-日期：2026-07-30
+日期：2026-08-04
 
 状态：当前实现事实源
 
@@ -34,7 +34,7 @@ Strapi 5
   `- SQLite（开发）/ PostgreSQL（生产）
 ```
 
-`packages/workbench-app/src/runtime/bootstrap.ts` 仅在 shell 配置提供 `auth.apiBaseUrl` 时创建 `StrapiAuthClient` 和 `SyncManager`。未配置时，工作台不创建同步网络客户端，保持纯本地模式。
+`official.account-sync` 是可选 builtin 插件。playground 仅在配置云端 API 时把它加入 builtin 装配；插件自身创建认证客户端和 `SyncManager`，并在 activation 时启动同步、注册账号与同步设置面板。FNOS 不装配该插件，工作台 bootstrap 不创建认证客户端、同步队列或同步定时器，改由本地 Fastify 服务持久化数据。
 
 ## 3. 认证与会话
 
@@ -60,7 +60,18 @@ Strapi 的 users-permissions 插件承载用户与 JWT。客户端使用以下�
 
 不同宿主使用对应存储适配器：扩展使用 `chrome.storage`，网页宿主使用 `localStorage`。退出登录只删除本地会话；收到 `401` 的当前用户请求同样清除本地会话。
 
-用户 JWT 只由 workbench runtime 提供给同步网关客户端。插件 API 不暴露 JWT、认证 client 或后端 URL。
+用户 JWT 只在账号插件内部提供给同步网关客户端。通用插件 API 不暴露 JWT、认证 client 或后端 URL；`SettingsPanelViewProps.host` 也不暴露 `auth/sync` 特例。
+
+### 3.3 账号与同步设置 provider
+
+`official.account-sync` 在 manifest 中声明两个 `content.kind: "schema"` 的 settings panel，激活时通过受作用域约束的 provider registry 注册：
+
+| Provider | 拥有的业务能力 |
+| -------- | ------------------ |
+| `official.account-sync.account.provider` | 会话恢复、登录、注册、退出、找回和重置密码的状态机、校验与 actions |
+| `official.account-sync.sync.provider` | 最近同步状态、手动同步 action 和 `lastSyncAt` 持久化 |
+
+provider 只返回语义页面模型，官方 `SettingsSchemaRenderer` 使用 `@tabora/ui` 渲染。运行时 schema 严格拒绝 CSS/class/style 字段；password 字段必须为 `ephemeral` 且不能由 provider 返回默认值。renderer 在每次 action 后销毁当前表单值，不写入 storage、日志或快照。
 
 ## 4. 同步数据模型与 API 契约
 
@@ -131,6 +142,8 @@ workspace | pluginInstance | plugin | pluginData
 | `createSyncEngine`          | 执行 push、pull、冲突应用和游标持久化       |
 | `createSyncManager`         | 创建稳定 `deviceId`、启动变更监听并调度同步 |
 
+账号插件的 lifecycle 是同步调度的唯一入口：插件未装配、未激活或被禁用时，不会启动 change detector、浏览器事件监听或 2 秒同步计时器。
+
 `SyncManager` 的触发规则：
 
 1. 启动后启动变更监听并安排一次同步。
@@ -156,7 +169,8 @@ workspace | pluginInstance | plugin | pluginData
 ### 7.1 已交付
 
 - Strapi 邮箱密码认证与纯 JWT 会话。
-- 认证客户端、宿主存储适配和 workbench runtime 接线。
+- 认证客户端、宿主存储适配和可选账号插件接线。
+- 账号/同步声明式 settings provider、官方安全 renderer 与敏感表单字段约束。
 - 同步记录 content type、owner 隔离、敏感字段过滤（排除设计 tokens）、push/pull controller。
 - 本地变更检测（带 guard 抑制远程写入反向入队）、持久化队列、增量拉取、服务端优先冲突处理与 tombstone。
 - 同步 manager 调度：2s 防抖、在线恢复、页面可见性触发、手动立即同步。

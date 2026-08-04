@@ -38,4 +38,16 @@ describe("createExtensionRegistry", () => {
 
     expect(registry.views.get("official.notes.card")).toBe(replacementView)
   })
+
+  it("registers settings providers and disposes only the matching registration", () => {
+    const registry = createExtensionRegistry()
+    const first = { getModel: () => ({ version: 1 as const, nodes: [] }), dispatch: () => {} }
+    const replacement = { getModel: () => ({ version: 1 as const, nodes: [] }), dispatch: () => {} }
+
+    const disposeFirst = registry.settings.register("official.account.provider", first)
+    registry.settings.register("official.account.provider", replacement)
+    disposeFirst()
+
+    expect(registry.settings.get("official.account.provider")).toBe(replacement)
+  })
 })

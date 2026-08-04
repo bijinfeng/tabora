@@ -17,9 +17,6 @@
     "build": "vp pack src/index.ts",
     "test": "vitest run --config vitest.config.ts"
   },
-  "dependencies": {
-    "@tabora/host-adapters": "workspace:*"
-  },
   "devDependencies": {
     "@tabora/tsconfig": "workspace:*"
   }

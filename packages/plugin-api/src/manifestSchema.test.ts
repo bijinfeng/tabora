@@ -131,7 +131,7 @@ describe("pluginManifestSchema", () => {
           {
             id: "official.settings.ai",
             title: "AI",
-            view: "official.settings.ai.view",
+            content: { kind: "custom-view", view: "official.settings.ai.view" },
             section: "ai",
             scope: "global",
           },
@@ -367,7 +367,10 @@ describe("pluginManifestSchema", () => {
           {
             id: "official.settings.workspace.appearance",
             title: "外观",
-            view: "official.settings.workspace.appearance.view",
+            content: {
+              kind: "custom-view",
+              view: "official.settings.workspace.appearance.view",
+            },
             order: 20,
           },
         ],
@@ -390,7 +393,10 @@ describe("pluginManifestSchema", () => {
           {
             id: "official.settings.workspace.appearance",
             title: "外观",
-            view: "official.settings.workspace.appearance.view",
+            content: {
+              kind: "custom-view",
+              view: "official.settings.workspace.appearance.view",
+            },
             section: "appearance",
             scope: "workspace",
             order: 20,
@@ -398,7 +404,10 @@ describe("pluginManifestSchema", () => {
           {
             id: "official.widget.notes.settings",
             title: "便签实例",
-            view: "official.widget.notes.settings.view",
+            content: {
+              kind: "custom-view",
+              view: "official.widget.notes.settings.view",
+            },
             section: "general",
             scope: "instance",
           },
@@ -413,6 +422,59 @@ describe("pluginManifestSchema", () => {
     expect(result.success ? result.data.contributes.settingsPanels?.[1]?.scope : undefined).toBe(
       "instance",
     )
+  })
+
+  it("accepts an explicitly versioned schema settings provider", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "official.account-sync",
+      name: "Account Sync",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./account-sync",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "official.settings.account",
+            title: "账号",
+            section: "account",
+            scope: "global",
+            content: {
+              kind: "schema",
+              provider: "official.account-sync.account.provider",
+              schemaVersion: 1,
+            },
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects the removed settings view field even when content is explicit", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "legacy.settings",
+      name: "Legacy Settings",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./settings",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "legacy.settings.panel",
+            title: "Legacy",
+            view: "legacy.settings.view",
+            section: "general",
+            scope: "workspace",
+            content: { kind: "custom-view", view: "legacy.settings.view" },
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(false)
   })
 
   it("accepts background provider source values", () => {

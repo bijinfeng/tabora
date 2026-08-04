@@ -1,5 +1,6 @@
-import { createWebHostAdapter } from "@tabora/host-adapters"
+import { createWebHostAdapter, createWebStorageAdapter } from "@tabora/host-adapters"
 import {
+  createBuiltinAccountSyncPlugin,
   builtinDefaultWorkspacePreset,
   builtinPlugins,
   builtinWorkbenchShellConfig,
@@ -31,14 +32,21 @@ export function resolvePlaygroundApiBaseUrl(): string | undefined {
 
 export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
   const apiBaseUrl = resolvePlaygroundApiBaseUrl()
+  const storageAdapter = createWebStorageAdapter()
+  const host = createWebHostAdapter({ id: "host.playground" })
+  const accountSyncPlugin = apiBaseUrl
+    ? createBuiltinAccountSyncPlugin({
+        host,
+        storageAdapter,
+        apiBaseUrl,
+      })
+    : null
+
   return createWorkbenchRuntimeBootstrap({
-    host: createWebHostAdapter({
-      id: "host.playground",
-    }),
-    plugins: builtinPlugins,
+    host,
+    plugins: accountSyncPlugin ? [...builtinPlugins, accountSyncPlugin] : builtinPlugins,
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
-    shellConfig: apiBaseUrl
-      ? { ...builtinWorkbenchShellConfig, auth: { apiBaseUrl } }
-      : builtinWorkbenchShellConfig,
+    shellConfig: builtinWorkbenchShellConfig,
+    storageAdapter,
   })
 }

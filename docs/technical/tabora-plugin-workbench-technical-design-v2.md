@@ -115,7 +115,8 @@ packages/
 - `@tabora/ui/component-docs` 只同步导出组件文档 metadata 与类型；真实 demo 由 `@tabora/ui/component-docs/renderers` 的显式动态 import registry 按 ID 加载。官网单组件路由可立即挂载对应 demo，“全部组件”目录只在卡片接近可视区时挂载，并对加载中和失败提供局部状态。新增文档组件时必须同时维护 metadata 与 loader ID；catalog contract 测试校验二者一一对应，但不应重复渲染已有独立行为测试覆盖的全部组件。
 - Phase X2 已完成布局协议语义收口：`HostActionId` 已包含 `layout-switch`、`shortcuts`、`plugin-manager` 等稳定动作 ID，布局切换不再伪装为 `theme` action；`RegionSlot` 为泛型渲染结果契约，`plugin-api` 不绑定 Solid JSX，workbench shell 的 `createLayoutEngine` 会按 `region.accepts` 过滤实例，避免 extension point 错配；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖，保持第三方 layout 依赖面隔离；playground / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误 fallback 会记录状态并触发 toast。
 - Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和 safe layout fallback 属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
-- `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope`、workspace `activeBackgroundProviderId`、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
+- `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope/content、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope/content`、workspace `activeBackgroundProviderId`、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
+- settings panel 的 `content` 必须显式选择 `{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`。Kernel 为 schema provider 提供受 manifest 声明限制的 registry，停用插件时与 view 一起注销；宿主不再通过 `SettingsPanelViewProps.host` 注入账号或同步业务 API。
 - 2026-07-13 AI Runtime P0 补充：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginRuntimeContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 `AiRuntimeBridge` 并传入 kernel；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
 - 2026-06-07 发布前兼容性清理补充：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
 - `@tabora/plugin-api` 当前额外导出 `workbenchSearchSettingsSchema`、`pluginInstanceSchema`、`workspaceSchema`、`workspaceExportSchema` 作为当前工作台协议事实源。`WorkbenchSearchSettings` 当前协议为完整显式配置：`defaultProviderId: string`、`enabledProviderIds: string[]`，并要求默认 provider 必须属于启用列表。workspace hydration、import/export 和 preset 链路统一走 schema 校验；缺失字段、旧导出或不满足约束的数据直接拒绝，不再按“首个 provider”或“全量 providers”做 silent backfill。
@@ -124,7 +125,7 @@ packages/
 - 插件依赖边界已由测试守卫：官方、community、example 插件源码和 package manifest 不得依赖 `@tabora/workbench-shell`、`@tabora/storage` 或 app 源码/package。
 - 2026-06-09 架构优化收口补充：`@tabora/orchestrator` 不再依赖 `@tabora/storage` 或 `solid-js`；playground / extension 生产依赖不再直接声明官方插件、layout package 或 core runtime package；`WidgetSize -> grid span` 映射统一由 `@tabora/plugin-api` 的 `widgetGeometry` 导出，避免 workbench grid、widget shell 和 drag sort model 三套映射漂移。
 - 2026-06-09 架构优化第二轮补充：search provider 在 runtime catalog 中带有 `pluginId/pluginName` owner descriptor，inline search 和 shell `CommandPalette` 的外部打开都使用 provider owner 进行 `external-open` 权限判断；插件禁用会执行 activation disposer 并注销已注册 view，active contribution list 只来自 enabled plugin，plugin summaries 仍保留全部插件用于管理面板；`LayoutHostAPI.getGlobalActions("menu")` 成为第一等全局动作 surface；safe layout fallback 也会用 `data-tabora-plugin-id` 包裹 widget view，保证 plugin scoped styles 生效；runtime context 的 `getConfig/setConfig` 临时 API 已删除，实例数据通过 widget props 的 `data` 与 scoped data host 显式传递；Dexie schema 仅保留当前有 repository/runtime path 的 MVP 表，搜索历史继续作为 plugin-owned workspace data 存于 `pluginData`。
-- 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。
+- 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。bootstrap 可接收不带 Dexie database 的 host storage adapter；此类宿主仍使用统一 repository port，但不提供基于 Dexie 的导入/导出。FNOS 以 HTTP adapter 把 repository 操作交给本地 Fastify + SQLite。账号与同步则由 `official.account-sync` 可选插件装配，避免纯本地宿主初始化认证与同步 runtime。
 - 2026-06-06 治理收口补充：`@tabora/workbench-app` 已新增 `shellController` 纯 helper，统一承接 plugin owner `external-open` 权限判断，以及基于切换前 workspace/instances 生成 layout switch plan 与 snapshot 的纯模型，避免 shell 在实例迁移后再生成失真的 snapshot；同日又承接了 theme/background/grid/workspace session/import-export 等共享 shell helper，extension 不再通过相对路径直接 import playground 源码。
 - 2026-06-07 搜索与主题治理补充：`@tabora/workbench-app` 的 search helper / state、`@tabora/orchestrator` 的搜索模型、以及官方 search/settings 插件已统一删除“首项 provider”隐式兜底。theme resolver 仅在精确命中 theme 时返回对应 token；未命中时应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再回退到 `themes[0]`。同日 `CommandPalette` 与 `SearchCommandBar` 的 provider token、`@` 路由和 suggestions 生成进一步收敛到 `@tabora/orchestrator` 的共享 model，官方插件不再维护独立的 search-model 转导出层；`SearchViewProps` 也已升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，搜索栏只负责渲染和事件转发。
 - 2026-06-07 治理自动化补充：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 目前除 architecture/check/test/build 外，已新增按路径触发的 `browser-smoke` job，执行 `pnpm exec playwright install --with-deps chromium` + `pnpm test:e2e`；nightly workflow 继续保留全量 browser smoke，release/deploy workflow 在打包前输出 regression summary。`check:architecture` 同步新增 workflow contract 守卫，禁止 PR browser smoke job、路径门禁或 Chromium 安装步骤漂移。
@@ -801,19 +802,13 @@ V2 原型采用左侧分类导航 + 右侧内容区的结构。当前 PRD 已明
 建议的分层方案：
 
 ```text
-SettingsHost (shell 提供)
-  ├── SettingsNav (侧栏导航，来自 orchestrator)
-  │   ├── 通用 (平台 tab + 对应 settings-panel panels)
-  │   ├── 外观 (平台 tab + 对应 settings-panel panels)
-  │   ├── 搜索 (平台 tab + 对应 settings-panel panels)
-  │   ├── 插件 (平台 tab + 对应 settings-panel panels)
-  │   ├── AI (平台 tab + 对应 settings-panel panels)
-  │   └── 关于 (平台 tab + 对应 settings-panel panels)
+SettingsSurfaceHost (shell 提供，不可替换)
+  ├── SettingsNav (侧栏导航，orchestrator 按已启用 contribution 组织)
   └── SettingsContent (右侧内容区)
-      └── SettingsTab (每个 tab 由 orchestrator 管理容器与顺序)
-          ├── PlatformSection
-          └── PluginViewBoundary
-              └── SettingsPanelView (插件贡献)
+      └── PluginViewBoundary
+          ├── SettingsSchemaRenderer (官方默认安全 renderer)
+          │   └── SettingsPanelProvider (插件模型、状态机和 actions)
+          └── SettingsPanelCustomView (复杂场景逃生口)
 ```
 
 每个标签页的内容：
@@ -827,13 +822,15 @@ SettingsHost (shell 提供)
 
 ### 11.2 SettingsPanel 贡献的新角色
 
-`settings-panel` contribution 在 V2 中的定位有所变化：
+`settings-panel` contribution 将容器所有权、视觉所有权和业务所有权明确分开：
 
-- **MVP 阶段**：设置中心的导航骨架、标签页顺序、平台内置信息块由 orchestrator 负责；插件化设置内容仍通过 `settings-panel` contribution 注册 view，并在对应 tab 中渲染。
-- **MVP 阶段**：官方至少需要提供 `official.settings.workspace.appearance`、`official.settings.workspace.search`、`official.settings.plugins` 等 panel，验证 `settings-panel` 扩展点、错误边界和持久化闭环。
-- **V1.1+ 阶段**：允许更多插件注册复杂设置视图，例如权限详情、调试信息、插件私有偏好等。
+- `SettingsSurfaceHost` 只负责 modal、导航、焦点、滚动和错误边界；它不知道账号、同步、AI 或其他具体设置。
+- `schema` 是默认路径。插件 provider 返回 `stack/group/text/field/status/actions` 语义节点，并处理 `dispatch(action, values)`；默认 renderer 用 `@tabora/ui` 统一渲染。
+- schema 不得携带 CSS、className、StyleX 样式、原始 token 或可执行 UI 代码。运行时使用严格 Zod schema 拒绝未知字段；password 字段必须为 `persistence: "ephemeral"` 且不允许 provider 给出默认值。
+- provider 只能注册 manifest 已声明的 ID；停用或激活失败时由 kernel 统一回收。renderer 失败只影响当前 panel。
+- `custom-view` 仅用于 schema 无法表达的复杂交互，仍必须使用宿主容器、`PluginViewBoundary` 和 `@tabora/ui`。
 
-这种分层保持了 V2 原型中的“固定导航 + 插件内容混排”结构，同时不牺牲 MVP 对 `settings-panel` 协议的验证价值。
+官方 `appearance/search/plugins` 面板当前显式声明为 `custom-view`；`official.account-sync` 作为第一个 schema provider，验证了页面状态机、敏感字段和按需装配闭环。
 
 ## 12. 扩展点 Props Contract V2
 

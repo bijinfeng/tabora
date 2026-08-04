@@ -1,7 +1,12 @@
-import type { AuthStorage } from "@tabora/host-adapters"
 import { mapStrapiError, type AuthError } from "./errors"
 
 const SESSION_KEY = "tabora.auth.session"
+
+export type AuthStorage = {
+  getItem(key: string): Promise<string | null>
+  setItem(key: string, value: string): Promise<void>
+  removeItem(key: string): Promise<void>
+}
 
 export type StrapiSession = {
   jwt: string

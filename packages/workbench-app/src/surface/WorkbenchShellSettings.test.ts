@@ -23,7 +23,10 @@ function panel(overrides: Partial<SettingsPanelDescriptor> = {}): SettingsPanelD
   return {
     id: "official.settings.workspace.appearance",
     title: "Appearance",
-    view: "official.settings.workspace.appearance.view",
+    content: {
+      kind: "custom-view",
+      view: "official.settings.workspace.appearance.view",
+    },
     section: "appearance",
     order: 10,
     pluginId: "official.settings",

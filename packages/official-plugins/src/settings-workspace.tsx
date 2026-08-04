@@ -1,18 +1,14 @@
 import type { BuiltinPlugin } from "@tabora/platform-kernel"
-export { AccountSettingsPanel } from "./settings-workspace.account"
 export { AiSettingsPanel } from "./settings-workspace.ai"
 export { AppearanceSettingsPanel } from "./settings-workspace.appearance"
 export { PluginRuntimeSettingsPanel } from "./settings-workspace.plugins"
 export { SearchSettingsPanel } from "./settings-workspace.search"
-export { SyncSettingsPanel } from "./settings-workspace.sync"
 export { WorkbenchSettingsPanel } from "./settings-workspace.workbench"
 
-import { AccountSettingsPanel } from "./settings-workspace.account"
 import { AiSettingsPanel } from "./settings-workspace.ai"
 import { AppearanceSettingsPanel } from "./settings-workspace.appearance"
 import { PluginRuntimeSettingsPanel } from "./settings-workspace.plugins"
 import { SearchSettingsPanel } from "./settings-workspace.search"
-import { SyncSettingsPanel } from "./settings-workspace.sync"
 import { WorkbenchSettingsPanel } from "./settings-workspace.workbench"
 import { officialSettingsWorkspaceManifest } from "./ui-plugin-manifests"
 
@@ -20,10 +16,6 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
   enabled: true,
   manifest: officialSettingsWorkspaceManifest,
   activate(context) {
-    context.registry.views.register(
-      "official.settings.workspace.account.view",
-      AccountSettingsPanel,
-    )
     context.registry.views.register(
       "official.settings.workspace.appearance.view",
       AppearanceSettingsPanel,
@@ -34,7 +26,6 @@ export const officialSettingsWorkspace: BuiltinPlugin = {
       WorkbenchSettingsPanel,
     )
     context.registry.views.register("official.settings.workspace.ai.view", AiSettingsPanel)
-    context.registry.views.register("official.settings.workspace.sync.view", SyncSettingsPanel)
     context.registry.views.register(
       "official.settings.workspace.plugins.view",
       PluginRuntimeSettingsPanel,

@@ -1,9 +1,4 @@
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createStrapiAuthClient, type StrapiAuthClient } from "@tabora/auth"
-import {
-  createChromeStorageAuthStorage,
-  createLocalStorageAuthStorage,
-} from "@tabora/host-adapters"
 import { createPluginCatalog, type PluginCatalog } from "@tabora/orchestrator"
 import type { AiRuntimeBridge, WorkspacePresetContribution } from "@tabora/plugin-api"
 import {
@@ -36,7 +31,6 @@ import {
 
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
 import { createWorkbenchI18nStore, type WorkbenchI18nStore } from "../i18n"
-import { createSyncManager, type SyncManager } from "./syncManager"
 
 export type WorkbenchRuntimeRepositories = {
   workspaceRepo: WorkspaceRepository
@@ -50,7 +44,7 @@ export type WorkbenchRuntimeRepositories = {
 
 export type WorkbenchRuntimeBootstrap = {
   host: HostAdapter
-  database: TaboraDatabase
+  database?: TaboraDatabase
   repositories: WorkbenchRuntimeRepositories
   catalog: PluginCatalog
   kernel: PluginKernel
@@ -60,8 +54,6 @@ export type WorkbenchRuntimeBootstrap = {
   shellConfig: WorkbenchShellConfig
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
-  syncManager?: SyncManager
-  authClient?: StrapiAuthClient
 }
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
@@ -78,7 +70,8 @@ export function createWorkbenchRuntimeBootstrap(
   options: CreateWorkbenchRuntimeBootstrapOptions,
 ): WorkbenchRuntimeBootstrap {
   const storageAdapter = options.storageAdapter
-  const database = storageAdapter?.database ?? createTaboraDatabase(options.databaseName)
+  const defaultDatabase = storageAdapter ? undefined : createTaboraDatabase(options.databaseName)
+  const database = storageAdapter?.database ?? defaultDatabase
   const i18n = createWorkbenchI18nStore()
   i18n.registerMessages("tabora.shell", [
     {
@@ -363,13 +356,13 @@ export function createWorkbenchRuntimeBootstrap(
     },
   ])
   const repositories = storageAdapter?.repositories ?? {
-    workspaceRepo: createWorkspaceRepository(database),
-    instanceRepo: createInstanceRepository(database),
-    pluginDataRepo: createPluginDataRepository(database),
-    pluginRecordRepo: createPluginRecordRepository(database),
-    workspaceSnapshotRepo: createWorkspaceSnapshotRepository(database),
-    syncQueueRepo: createSyncQueueRepository(database),
-    syncMetaRepo: createSyncMetaRepository(database),
+    workspaceRepo: createWorkspaceRepository(defaultDatabase!),
+    instanceRepo: createInstanceRepository(defaultDatabase!),
+    pluginDataRepo: createPluginDataRepository(defaultDatabase!),
+    pluginRecordRepo: createPluginRecordRepository(defaultDatabase!),
+    workspaceSnapshotRepo: createWorkspaceSnapshotRepository(defaultDatabase!),
+    syncQueueRepo: createSyncQueueRepository(defaultDatabase!),
+    syncMetaRepo: createSyncMetaRepository(defaultDatabase!),
   }
   const { pluginRecordRepo } = repositories
   const loadResult = loadBuiltinPlugins(options.plugins)
@@ -385,37 +378,9 @@ export function createWorkbenchRuntimeBootstrap(
     i18n,
   })
 
-  let authClient: StrapiAuthClient | undefined = undefined
-  const authApiBaseUrl = options.shellConfig.auth?.apiBaseUrl
-  if (authApiBaseUrl) {
-    const authStorage =
-      options.host.platform === "extension"
-        ? createChromeStorageAuthStorage()
-        : createLocalStorageAuthStorage()
-    authClient = createStrapiAuthClient({ apiBaseUrl: authApiBaseUrl, storage: authStorage })
-  }
-
-  // Create sync manager (optional, only when auth is configured and available)
-  let syncManager: SyncManager | undefined = undefined
-  if (authApiBaseUrl && authClient) {
-    try {
-      syncManager = createSyncManager({
-        database,
-        syncQueueRepo: repositories.syncQueueRepo,
-        syncMetaRepo: repositories.syncMetaRepo,
-        host: options.host,
-        apiBaseUrl: authApiBaseUrl,
-        authClient,
-      })
-      syncManager.start()
-    } catch (error) {
-      console.error("Failed to create sync manager:", error)
-    }
-  }
-
   return {
     host: options.host,
-    database,
+    ...(database ? { database } : {}),
     repositories,
     catalog,
     kernel,
@@ -425,7 +390,5 @@ export function createWorkbenchRuntimeBootstrap(
     shellConfig: options.shellConfig,
     pluginStyles,
     rejectedPlugins: loadResult.rejected,
-    ...(syncManager ? { syncManager } : {}),
-    ...(authClient ? { authClient } : {}),
   }
 }

@@ -63,3 +63,4 @@ catalogs:
 
 minimumReleaseAgeExclude:
   - vite-plugin-solid@2.11.14
+  - fastify@5.11.2

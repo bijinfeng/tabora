@@ -150,7 +150,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     instanceRepo,
     pluginDataRepo,
     workspaceSnapshotRepo,
-    database,
+    ...(database ? { database } : {}),
     kernel,
     pluginCatalog,
     getWorkspaceState: workspaceState,
@@ -205,8 +205,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     showToast,
   })
   onCleanup(hostRuntime.dispose)
-  const authClient = runtime.authClient
-  const syncManager = runtime.syncManager
   const buildSettingsPanelProps = createWorkbenchSettingsPanelPropsBuilder({
     getWorkspace: workspaceState,
     getWorkspaces: workspaceList,
@@ -231,57 +229,18 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       setDefaultSearchProvider: workspaceController.setDefaultSearchProvider,
       setSearchProviderEnabled: workspaceController.setSearchProviderEnabled,
       togglePluginEnabled: workspaceController.togglePluginEnabled,
-      exportWorkspace: workspaceController.exportWorkspace,
-      importWorkspace: workspaceController.importWorkspace,
+      ...(database
+        ? {
+            exportWorkspace: workspaceController.exportWorkspace,
+            importWorkspace: workspaceController.importWorkspace,
+          }
+        : {}),
       createWorkspace: async (name) => {
         const ws = await workspaceController.createWorkspace(name)
         await workspaceController.switchWorkspace(ws.id)
       },
       switchWorkspace: workspaceController.switchWorkspace,
       deleteWorkspace: workspaceController.deleteWorkspace,
-      ...(authClient
-        ? {
-            auth: {
-              getSession: async () => {
-                const s = await authClient.getSession()
-                if (!s) return null
-                // 纯 JWT 无 sessionId；以 userId 作为会话标识（无则用固定占位）
-                const result: { userId?: string; sessionId: string } = {
-                  sessionId: s.userId !== undefined ? String(s.userId) : "active",
-                }
-                if (s.userId !== undefined) result.userId = String(s.userId)
-                return result
-              },
-              getCurrentUser: async () => {
-                const u = await authClient.getCurrentUser()
-                if (!u) return null
-                const result: { id: string; email?: string } = { id: String(u.id) }
-                if (u.email !== undefined) result.email = u.email
-                return result
-              },
-              login: async (email: string, password: string) => {
-                await authClient.login(email, password)
-              },
-              register: (email: string, password: string) => authClient.register(email, password),
-              logout: () => authClient.logout(),
-              requestPasswordReset: (email: string) => authClient.requestPasswordReset(email),
-              resetPassword: (code: string, password: string) =>
-                authClient.resetPassword(code, password),
-            },
-          }
-        : {}),
-      ...(syncManager
-        ? {
-            sync: {
-              triggerSync: async () => {
-                await syncManager.triggerSync()
-                await runtime.repositories.syncMetaRepo.set("lastSyncAt", new Date().toISOString())
-              },
-              getLastSyncAt: async () =>
-                (await runtime.repositories.syncMetaRepo.get("lastSyncAt")) ?? null,
-            },
-          }
-        : {}),
     },
   })
 
@@ -307,6 +266,8 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     state,
     catalog: pluginCatalog,
     views: kernel.registry.views,
+    settingsProviders: kernel.registry.settings,
+    settingsProviderContext: () => ({ locale: runtime.i18n.locale() }),
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent,

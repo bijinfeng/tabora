@@ -7,7 +7,14 @@ import { createWorkbenchShellSettingsHostCopy } from "../i18n"
 
 export function createWorkbenchShellSurfaceSettingsProps(shell: WorkbenchShell) {
   const { overlays, workspace, runtime } = shell.state
-  const { catalog, views, buildSettingsPanelProps, tShell } = shell
+  const {
+    catalog,
+    views,
+    settingsProviders,
+    settingsProviderContext,
+    buildSettingsPanelProps,
+    tShell,
+  } = shell
 
   return {
     settingsHost: {
@@ -17,6 +24,9 @@ export function createWorkbenchShellSurfaceSettingsProps(shell: WorkbenchShell) 
       onSectionChange: overlays.setActiveSettingsSectionId,
       onClose: () => overlays.setSettingsOpen(false),
       getView: (viewId: string) => resolveWorkbenchView<SettingsPanelViewProps>(views, viewId),
+      getSettingsProvider: (providerId: string) =>
+        settingsProviders.has(providerId) ? settingsProviders.get(providerId) : undefined,
+      providerContext: settingsProviderContext(),
       panelProps: buildSettingsPanelProps,
       ...(tShell ? { copy: createWorkbenchShellSettingsHostCopy(tShell) } : {}),
       aboutContent: (

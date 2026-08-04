@@ -17,6 +17,22 @@ const settingsPanelSectionSchema = z.enum([
 
 const settingsPanelScopeSchema = z.enum(["global", "workspace", "plugin", "instance"])
 
+const settingsPanelContentSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("schema"),
+      provider: z.string().min(1),
+      schemaVersion: z.literal(1),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("custom-view"),
+      view: z.string().min(1),
+    })
+    .strict(),
+])
+
 const hostPlatformSchema = z.enum(["web", "extension", "desktop-webview"])
 
 const hostCapabilitySchema = z.enum([
@@ -305,14 +321,16 @@ export const pluginManifestSchema = z.object({
       .optional(),
     settingsPanels: z
       .array(
-        z.object({
-          id: z.string().min(1),
-          title: z.string().min(1),
-          view: z.string().min(1),
-          section: settingsPanelSectionSchema,
-          scope: settingsPanelScopeSchema,
-          order: z.number().int().optional(),
-        }),
+        z
+          .object({
+            id: z.string().min(1),
+            title: z.string().min(1),
+            section: settingsPanelSectionSchema,
+            scope: settingsPanelScopeSchema,
+            order: z.number().int().optional(),
+            content: settingsPanelContentSchema,
+          })
+          .strict(),
       )
       .optional(),
     commands: z.array(commandContributionSchema).optional(),

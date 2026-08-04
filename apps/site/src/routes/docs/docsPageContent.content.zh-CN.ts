@@ -132,10 +132,13 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
   "id": "official.widgets.today-focus",
   "name": "Today Focus",
   "version": "1.0.0",
-  "contributions": {
-    "widgets": [{ "id": "today-focus", "title": "今日重点", "entry": "./TodayFocusWidget.tsx", "sizes": ["medium", "large"] }]
+  "apiVersion": "1.0.0",
+  "entry": "./index",
+  "engine": { "platform": "^0.1.0" },
+  "contributes": {
+    "widgets": [{ "id": "today-focus", "title": "今日重点", "supportedSizes": ["M", "L"], "defaultSize": "M", "allowMultipleInstances": false, "views": { "card": "official.widgets.today-focus.card" } }]
   },
-  "permissions": ["storage:read", "storage:write"]
+  "permissions": [{ "type": "storage", "scope": "plugin" }]
 }`,
           },
         },
@@ -145,13 +148,13 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
       eyebrow: "MANIFEST",
       title: "Manifest 只描述能力，不写宿主实现",
       description:
-        "所有贡献点通过 contributions 字段声明。插件不能直接创建全局容器，只能请求 runtime 提供的宿主能力。",
+        "所有贡献点通过 contributes 字段声明。插件不能直接创建全局容器，只能请求 runtime 提供的宿主能力。",
       anatomyTitle: "字段结构",
       anatomyItems: [
         "id — 全局唯一，格式 namespace.category.name",
         "name — 用户可见的显示名称",
         "version — 遵循 semver，宿主用于更新判断",
-        "contributions — 声明贡献点对象，支持 widgets / layouts / searchProviders / settingsPanels",
+        "contributes — 声明贡献点对象，支持 widgets / layouts / searchProviders / settingsPanels",
         "permissions — 需要的宿主权限列表，用户可在设置中撤销",
       ],
       codeBlock: {
@@ -163,25 +166,35 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
   "id": "official.widgets.today-focus",
   "name": "Today Focus",
   "version": "1.0.0",
-  "contributions": {
+  "apiVersion": "1.0.0",
+  "entry": "./index",
+  "engine": { "platform": "^0.1.0" },
+  "contributes": {
     "widgets": [
       {
         "id": "today-focus",
         "title": "今日重点",
-        "entry": "./TodayFocusWidget.tsx",
-        "sizes": ["medium", "large"],
-        "settingsPanel": "today-focus-settings"
+        "supportedSizes": ["M", "L"],
+        "defaultSize": "M",
+        "allowMultipleInstances": false,
+        "views": { "card": "official.widgets.today-focus.card" }
       }
     ],
     "settingsPanels": [
       {
         "id": "today-focus-settings",
         "title": "今日重点设置",
-        "entry": "./TodayFocusSettings.tsx"
+        "section": "general",
+        "scope": "plugin",
+        "content": {
+          "kind": "schema",
+          "provider": "official.widgets.today-focus.settings",
+          "schemaVersion": 1
+        }
       }
     ]
   },
-  "permissions": ["storage:read", "storage:write"]
+  "permissions": [{ "type": "storage", "scope": "plugin" }]
 }`,
       },
       table: {
@@ -190,8 +203,8 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           ["id", "string", "✓", "全局唯一标识符，推荐三段式命名"],
           ["name", "string", "✓", "用户可见名称，不超过 32 字符"],
           ["version", "string", "✓", "semver 格式：1.0.0"],
-          ["contributions", "object", "✓", "贡献点声明对象，至少一个子字段"],
-          ["permissions", "string[]", "—", "需要的权限列表，默认空数组"],
+          ["contributes", "object", "✓", "贡献点声明对象，至少一个子字段"],
+          ["permissions", "PluginPermission[]", "—", "需要的权限列表，默认空数组"],
           ["description", "string", "—", "插件描述，显示在设置面板和商店"],
         ],
       },
@@ -294,15 +307,19 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
     contributions: {
       eyebrow: "CONTRIBUTION TYPES",
       title: "四类贡献点覆盖工作台全部可见体验",
-      description:
-        "每类贡献点都在 manifest 的 contributions 字段声明。宿主在启动时发现并挂载它们。",
+      description: "每类贡献点都在 manifest 的 contributes 字段声明。宿主在启动时发现并挂载它们。",
       table: {
         columns: ["贡献点", "字段名", "用途", "尺寸约束"],
         rows: [
           ["Widget", "widgets", "工作台卡片内容区", "small / medium / large"],
           ["Layout", "layouts", "自定义整体布局方案", "全屏，宿主管理容器"],
           ["Search Provider", "searchProviders", "搜索框自定义数据源", "下拉列表，宿主渲染"],
-          ["Settings Panel", "settingsPanels", "插件专属设置界面", "宿主 modal 内"],
+          [
+            "Settings Panel",
+            "settingsPanels",
+            "语义 schema 或显式 custom view",
+            "宿主 modal 内统一渲染",
+          ],
         ],
       },
       doTitle: "✓ 应当",

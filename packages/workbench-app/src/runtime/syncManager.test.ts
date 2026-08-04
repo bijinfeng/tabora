@@ -5,9 +5,8 @@ import {
   createSyncQueueRepository,
   createTaboraDatabase,
 } from "@tabora/storage"
-import type { HostAdapter } from "@tabora/host-adapters"
 import type { StrapiAuthClient } from "@tabora/auth"
-import { createSyncManager } from "./syncManager"
+import { createSyncManager } from "@tabora/sync"
 
 const BASE = "http://api.test"
 const DATABASE_NAME = "tabora-sync-manager-test"
@@ -55,7 +54,6 @@ describe("createSyncManager", () => {
       syncQueueRepo,
       syncMetaRepo,
       apiBaseUrl: BASE,
-      host: { id: "host.test", platform: "web", capabilities: {} } as HostAdapter,
       authClient: {
         getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: 1 }),
       } as unknown as StrapiAuthClient,
@@ -126,7 +124,6 @@ describe("createSyncManager", () => {
       syncQueueRepo,
       syncMetaRepo,
       apiBaseUrl: BASE,
-      host: { id: "host.test", platform: "web", capabilities: {} } as HostAdapter,
       authClient: {
         getSession: vi.fn().mockResolvedValue(null),
       } as unknown as StrapiAuthClient,
@@ -150,7 +147,6 @@ describe("createSyncManager", () => {
       syncQueueRepo,
       syncMetaRepo,
       apiBaseUrl: BASE,
-      host: { id: "host.test", platform: "web", capabilities: {} } as HostAdapter,
       authClient: {
         getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: 1 }),
       } as unknown as StrapiAuthClient,
@@ -202,7 +198,6 @@ describe("createSyncManager", () => {
       syncQueueRepo,
       syncMetaRepo,
       apiBaseUrl: BASE,
-      host: { id: "host.test", platform: "web", capabilities: {} } as HostAdapter,
       authClient: {
         getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: 1 }),
       } as unknown as StrapiAuthClient,

@@ -6,6 +6,7 @@ import { officialPluginTodoManifest } from "@tabora/plugin-todo/manifest"
 import { officialPluginWeatherManifest } from "@tabora/plugin-weather/manifest"
 
 import { officialBackgroundBasic } from "./background-basic"
+export { createOfficialAccountSyncPlugin, type AccountSyncPluginOptions } from "./account-sync"
 import { officialSearchProvidersBasic } from "./search-providers-basic"
 import { officialThemeDefaultPack } from "./theme-default-pack"
 import {

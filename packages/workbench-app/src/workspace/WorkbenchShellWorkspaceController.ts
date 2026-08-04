@@ -62,7 +62,7 @@ export function createWorkbenchWorkspaceController(options: {
   instanceRepo: InstanceRepo
   pluginDataRepo: PluginDataRepo
   workspaceSnapshotRepo: WorkspaceSnapshotRepo
-  database: TaboraDatabase
+  database?: TaboraDatabase
   kernel: { setPluginEnabled: (pluginId: string, enabled: boolean) => Promise<void> }
   pluginCatalog: {
     pluginIds: () => string[]
@@ -138,7 +138,7 @@ export function createWorkbenchWorkspaceController(options: {
     workspaceRepo: options.workspaceRepo,
     instanceRepo: options.instanceRepo,
     pluginDataRepo: options.pluginDataRepo,
-    database: options.database,
+    ...(options.database ? { database: options.database } : {}),
     availablePluginIds: () => options.pluginCatalog.pluginIds(),
     getWorkspaceState: options.getWorkspaceState,
     setWorkspaceState: options.setWorkspaceState,

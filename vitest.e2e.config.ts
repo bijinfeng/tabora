@@ -19,6 +19,9 @@ export default defineBrowserE2eConfig({
       enabled: true,
       headless: true,
       provider: playwright({
+        contextOptions: {
+          locale: "zh-CN",
+        },
         launchOptions: {
           channel: "chrome",
         },

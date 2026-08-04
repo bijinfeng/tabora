@@ -41,7 +41,9 @@ export type HeadlessInputProps = {
   trailingButtonAttrs?: SolidAttrs<HTMLButtonElement>
   "aria-label"?: string
   id?: string
+  minLength?: number
   maxLength?: number
+  required?: boolean
   autocomplete?: string
   autofocus?: boolean
   onKeyDown?: (e: KeyboardEvent) => void
@@ -101,7 +103,9 @@ export function HeadlessInput(props: HeadlessInputProps) {
         data-invalid={props.invalid ? "" : undefined}
         type={props.type ?? "text"}
         id={props.id}
+        minLength={props.minLength}
         maxLength={props.maxLength}
+        required={props.required}
         autocomplete={props.autocomplete}
         autofocus={props.autofocus}
         value={props.value}
@@ -134,7 +138,9 @@ export function HeadlessInput(props: HeadlessInputProps) {
         data-has-trailing={hasTrailing() ? "" : undefined}
         type={effectiveType()}
         id={props.id}
+        minLength={props.minLength}
         maxLength={props.maxLength}
+        required={props.required}
         autocomplete={props.autocomplete}
         autofocus={props.autofocus}
         value={props.value}

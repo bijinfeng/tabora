@@ -278,6 +278,7 @@ MVP 组件清单：
 | `official.widgets.weather`            | Weather Widget             | `widget`                                     | 是       | 已接入 Open-Meteo 真实数据；卡片 + 展开弹窗                                              | 提供天气摘要与预报，按 `DESIGN.md` 进入默认工作台  |
 | `official.plugin-manager`             | Plugin Manager             | `settings-panel`                             | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件贡献能力和权限摘要                         |
 | `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | 已实现轻量 settings host 面板贡献：外观、搜索；插件面板由 `official.plugin-manager` 贡献 | 聚合插件、外观、搜索等全局设置面板                 |
+| `official.account-sync`                | Tabora Account & Sync      | `settings-panel`                             | 按宿主选择 | playground 配置云端 API 时装配；FNOS 完全本地时不装配                                  | 提供账号与数据同步两个设置面板，并管理同步 lifecycle |
 
 ## 5. 默认装配方案
 
@@ -304,7 +305,7 @@ MVP 组件清单：
 建议顺序：
 
 ```txt
-theme -> background -> layout -> search providers -> command search -> widgets -> plugin manager -> settings
+theme -> background -> layout -> search providers -> command search -> widgets -> plugin manager -> settings -> account-sync（可选）
 ```
 
 原因：
@@ -314,6 +315,7 @@ theme -> background -> layout -> search providers -> command search -> widgets -
 - search providers 先于 search command bar，方便搜索 UI 读取可用搜索源。
 - widgets 在布局区域准备后渲染。
 - plugin manager 和 settings 属于管理能力，可在默认工作台之后加载，但 MVP 需要提供可打开的轻量设置中心来验证 `settings-panel` 扩展点闭环。
+- `official.account-sync` 只由具备网络与本地同步存储能力的宿主按需装配；FNOS 等完全本地宿主不加载它，也不显示账号和同步设置。
 
 ### 5.3 默认页面交互示例
 
@@ -1626,7 +1628,7 @@ V2：
 
 ### 13.1 产品定位
 
-工作区设置插件用于聚合设置入口。根据 MVP 决策，它应进入 MVP 范围，但只做轻量版本：宿主提供 settings host，插件贡献设置面板，官方设置插件组织插件、外观和搜索三个最小入口。
+工作区设置插件用于提供外观、搜索和工作区等通用面板。宿主提供 settings host 与官方 schema renderer，orchestrator 按已启用插件的 contributions 组织导航；布局插件不负责设置弹窗。
 
 设置中心不是完整偏好设置产品。MVP 目标是验证 `settings-panel` 扩展点、统一设置入口、设置面板错误隔离和关键全局配置持久化，复杂能力延后。
 
@@ -1641,6 +1643,8 @@ MVP settings panels：
 | `official.settings.plugins`              | 插件 | 插件名称、ID、版本、启用状态、贡献能力、权限摘要 | 只读展示         |
 | `official.settings.workspace.appearance` | 外观 | 当前主题、可用主题、当前背景、可用背景           | 可切换并持久化   |
 | `official.settings.workspace.search`     | 搜索 | 默认搜索源、已启用搜索源、搜索源 shortcut        | 可选择默认搜索源 |
+| `official.settings.account-sync.account` | 账号 | 注册、登录、退出和密码重置                       | 仅账号插件装配时显示 |
+| `official.settings.account-sync.sync`    | 数据同步 | 最近同步时间、同步范围和立即同步操作          | 仅账号插件装配时显示 |
 
 后续 settings panels：
 
@@ -1657,9 +1661,9 @@ MVP settings panels：
 1. 用户点击工具栏设置按钮。
 2. 宿主打开 settings host。
 3. settings host 读取已启用插件贡献的 `settings-panel`。
-4. 设置插件组织左侧导航。
+4. orchestrator 按 panel 的 `section/order` 组织左侧导航，没有 contribution 的业务分类不显示。
 5. 默认打开“插件”面板。
-6. 面板内容通过 view registry 渲染。
+6. `schema` panel 通过 provider registry + 官方 renderer 渲染；`custom-view` panel 通过 view registry 渲染。
 
 切换主题：
 
@@ -1704,7 +1708,8 @@ MVP settings panels：
 - 使用开关、select、segmented control、button。
 - 不使用介绍性长文案。
 - 危险操作放在独立区域。
-- 设置面板之间视觉一致，但具体内容由插件 view 渲染。
+- 默认由官方 schema renderer 使用 `@tabora/ui` 保持视觉一致；插件只提供语义模型、状态机和 actions，不在 schema 中携带样式。
+- schema 不足以表达的复杂面板可显式使用 `custom-view`，但仍使用统一宿主容器和错误边界。
 
 ### 13.5 参考对象
 
@@ -1725,6 +1730,8 @@ MVP：
 - 外观面板支持主题和背景切换。
 - 搜索面板支持默认搜索源选择。
 - 设置面板错误隔离。
+- 声明式 schema renderer 和 `custom-view` 逃生口。
+- 账号/同步插件按需装配，未装配时不显示对应分类。
 
 V1.1：
 
@@ -1745,6 +1752,8 @@ V1.5：
 
 - 设置入口由 `settings-panel` contribution 组成。
 - 设置面板不直接依赖某个 shell。
+- settings host 不包含账号、同步或其他插件的业务特例。
+- schema 严格拒绝样式逃生字段，密码只存在 renderer 内存中。
 - 每个设置项有明确持久化位置。
 - 设置变更有即时反馈或明确保存按钮。
 - 单个设置面板失败时，其他设置面板继续可用。

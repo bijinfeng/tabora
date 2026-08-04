@@ -6,9 +6,10 @@ import type {
   PluginRecord,
 } from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
-import { createExtensionRegistry, type ViewRegistrationDisposer } from "./extensionRegistry"
+import { createExtensionRegistry, type ExtensionRegistrationDisposer } from "./extensionRegistry"
 import {
   collectPluginManifestViewIds,
+  collectPluginManifestSettingsProviderIds,
   createPluginRuntimeContext,
   type PluginI18nService,
   type PluginRuntimeContext,
@@ -59,31 +60,51 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     {
       plugin: BuiltinPlugin
       explicitDisposer: PluginActivationDisposer | undefined
-      registrationDisposers: ViewRegistrationDisposer[]
+      registrationDisposers: ExtensionRegistrationDisposer[]
     }
   >()
 
-  function viewConflictReason(target: BuiltinPlugin, peers: BuiltinPlugin[]): string | undefined {
-    const targetViewIds = Array.from(collectPluginManifestViewIds(target.manifest))
-    if (targetViewIds.length === 0) return undefined
+  function registrationConflictReason(
+    target: BuiltinPlugin,
+    peers: BuiltinPlugin[],
+  ): string | undefined {
+    const targetRegistrations = [
+      ...Array.from(collectPluginManifestViewIds(target.manifest)).map((id) => ({
+        kind: "view",
+        id,
+      })),
+      ...Array.from(collectPluginManifestSettingsProviderIds(target.manifest)).map((id) => ({
+        kind: "settings provider",
+        id,
+      })),
+    ]
+    if (targetRegistrations.length === 0) return undefined
 
-    const peerViewOwners = new Map<string, string>()
+    const peerRegistrationOwners = new Map<string, string>()
     for (const peer of peers) {
       for (const viewId of collectPluginManifestViewIds(peer.manifest)) {
-        peerViewOwners.set(viewId, peer.manifest.id)
+        peerRegistrationOwners.set(`view:${viewId}`, peer.manifest.id)
+      }
+      for (const providerId of collectPluginManifestSettingsProviderIds(peer.manifest)) {
+        peerRegistrationOwners.set(`settings provider:${providerId}`, peer.manifest.id)
       }
     }
 
     const conflicts = Array.from(
       new Set(
-        targetViewIds
-          .map((viewId) => ({ viewId, owner: peerViewOwners.get(viewId) }))
-          .filter((entry): entry is { viewId: string; owner: string } => Boolean(entry.owner))
-          .map((entry) => `${entry.viewId} (already provided by "${entry.owner}")`),
+        targetRegistrations
+          .map((registration) => ({
+            ...registration,
+            owner: peerRegistrationOwners.get(`${registration.kind}:${registration.id}`),
+          }))
+          .filter((entry): entry is { kind: string; id: string; owner: string } =>
+            Boolean(entry.owner),
+          )
+          .map((entry) => `${entry.kind} ${entry.id} (already provided by "${entry.owner}")`),
       ),
     )
 
-    return conflicts.length > 0 ? `Conflicting view IDs: ${conflicts.join(", ")}` : undefined
+    return conflicts.length > 0 ? `Conflicting registrations: ${conflicts.join(", ")}` : undefined
   }
 
   function compatibilityReason(plugin: BuiltinPlugin): string | undefined {
@@ -146,7 +167,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       try {
         dispose()
       } catch (error: unknown) {
-        logDisposerError(pluginId, "view registration disposer", error)
+        logDisposerError(pluginId, "extension registration disposer", error)
       }
     }
 
@@ -157,7 +178,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     const pluginId = plugin.manifest.id
     if (activePlugins.has(pluginId)) return false
 
-    const registrationDisposers: ViewRegistrationDisposer[] = []
+    const registrationDisposers: ExtensionRegistrationDisposer[] = []
     const context = createPluginRuntimeContext({
       pluginId,
       events,
@@ -184,7 +205,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         try {
           dispose()
         } catch (disposerError: unknown) {
-          logDisposerError(pluginId, "view registration disposer", disposerError)
+          logDisposerError(pluginId, "extension registration disposer", disposerError)
         }
       }
       throw error
@@ -201,7 +222,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       )
       const conflictReasons = new Map<string, string>()
       for (const plugin of discoveredPlugins) {
-        const reason = viewConflictReason(
+        const reason = registrationConflictReason(
           plugin,
           discoveredPlugins.filter((peer) => peer !== plugin),
         )
@@ -307,7 +328,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       const plugin = plugins.find((p) => p.manifest.id === pluginId)
       if (!plugin) return
       const conflictReason = enabled
-        ? viewConflictReason(
+        ? registrationConflictReason(
             plugin,
             plugins.filter((peer) => peer.manifest.id !== pluginId && peer.enabled),
           )

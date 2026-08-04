@@ -67,7 +67,7 @@ const plugins: BuiltinPlugin[] = [
           {
             id: "alpha.settings",
             title: "Alpha Settings",
-            view: "alpha.settings.view",
+            content: { kind: "custom-view", view: "alpha.settings.view" },
             section: "general",
             scope: "workspace",
             order: 20,
@@ -138,7 +138,7 @@ const plugins: BuiltinPlugin[] = [
           {
             id: "beta.settings",
             title: "Beta Settings",
-            view: "beta.settings.view",
+            content: { kind: "custom-view", view: "beta.settings.view" },
             section: "general",
             scope: "workspace",
             order: 10,

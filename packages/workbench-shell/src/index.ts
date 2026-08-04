@@ -1,4 +1,5 @@
 export { CommandPalette, type CommandItem, type CommandPaletteProps } from "./CommandPalette"
+export { SettingsSchemaRenderer, type SettingsSchemaRendererProps } from "./SettingsSchemaRenderer"
 export { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 export { ToastHost, type ToastMessage } from "./ToastHost"
 export {

@@ -124,7 +124,10 @@ describe("createPluginRuntimeContext permissions", () => {
           {
             id: "official.background.panel",
             title: "Background",
-            view: "official.background.css-renderer.view",
+            content: {
+              kind: "custom-view",
+              view: "official.background.css-renderer.view",
+            },
             section: "appearance",
             scope: "workspace",
           },
@@ -228,5 +231,51 @@ describe("createPluginRuntimeContext permissions", () => {
     registrationDisposers[0]!()
 
     expect(registry.views.has("plugin.example.view")).toBe(false)
+  })
+
+  it("allows only manifest-declared settings providers and collects their disposer", () => {
+    const registrationDisposers: Array<() => void> = []
+    const registry = createExtensionRegistry()
+    const manifest: PluginManifest = {
+      id: "plugin.example",
+      name: "Example",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "plugin.example.settings",
+            title: "Settings",
+            section: "general",
+            scope: "workspace",
+            content: {
+              kind: "schema",
+              provider: "plugin.example.settings.provider",
+              schemaVersion: 1,
+            },
+          },
+        ],
+      },
+    }
+    const context = createPluginRuntimeContext({
+      pluginId: manifest.id,
+      events: createEventBus(),
+      registry,
+      manifest,
+      registrationDisposers,
+    })
+    const provider = { getModel: () => ({ version: 1 as const, nodes: [] }), dispatch: () => {} }
+
+    context.registry.settings.register("plugin.example.settings.provider", provider)
+
+    expect(registry.settings.get("plugin.example.settings.provider")).toBe(provider)
+    expect(() =>
+      context.registry.settings.register("plugin.example.undeclared.provider", provider),
+    ).toThrow("attempted to register undeclared settings provider")
+
+    registrationDisposers[0]!()
+    expect(registry.settings.has("plugin.example.settings.provider")).toBe(false)
   })
 })

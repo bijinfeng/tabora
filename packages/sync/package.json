@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@tabora/auth": "workspace:*",
-    "@tabora/host-adapters": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/storage": "workspace:*"
   },

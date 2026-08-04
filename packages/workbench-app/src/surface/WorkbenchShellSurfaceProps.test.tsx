@@ -69,7 +69,7 @@ describe("createWorkbenchShellSurfaceProps", () => {
         pluginId: "plugin.enabled",
         id: "settings.visible",
         title: "Visible Settings",
-        view: "visible.settings",
+        content: { kind: "custom-view", view: "visible.settings" },
         section: "general",
         scope: "workspace",
         order: 10,
@@ -101,7 +101,7 @@ describe("createWorkbenchShellSurfaceProps", () => {
             {
               id: "settings.hidden",
               title: "Hidden Settings",
-              view: "hidden.settings",
+              content: { kind: "custom-view", view: "hidden.settings" },
               section: "general",
               scope: "workspace",
             },

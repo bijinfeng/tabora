@@ -37,7 +37,7 @@ function panel(
   return {
     id,
     title: id,
-    view: `${id}.view`,
+    content: { kind: "custom-view", view: `${id}.view` },
     section: "general",
     scope: "workspace",
     ...(order !== undefined ? { order } : {}),
@@ -147,7 +147,7 @@ describe("settings host composition", () => {
       {
         id: "official.settings.workspace.workbench",
         title: "Test",
-        view: "test.view",
+        content: { kind: "custom-view", view: "test.view" },
         section: "general",
         order: 10,
         pluginId: "plugin-a",
@@ -164,6 +164,7 @@ describe("settings host composition", () => {
         onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: (viewId) => views.get(viewId),
+        getSettingsProvider: () => undefined,
         panelProps: () => ({
           panelId: "official.settings.workspace.workbench",
           pluginId: "plugin-a",
@@ -207,11 +208,17 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
-        panels: [],
+        panels: [
+          {
+            ...panel("plugins", 10, { section: "plugins" }),
+            pluginId: "plugin-a",
+          },
+        ],
         activeSectionId: "general",
         onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: () => undefined,
+        getSettingsProvider: () => undefined,
         panelProps: () => ({}) as never,
       }),
     )
@@ -228,23 +235,28 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
-        panels: [],
+        panels: [
+          {
+            ...panel("plugins", 10, { section: "plugins" }),
+            pluginId: "plugin-a",
+          },
+        ],
         activeSectionId: "plugins",
         onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: () => undefined,
+        getSettingsProvider: () => undefined,
         panelProps: () => ({}) as never,
       }),
     )
 
     expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("工作台")
     expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("扩展")
-    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain("未登录")
     expect(
-      [
-        ...root.querySelectorAll('[data-settings-section]:not([data-settings-section="account"])'),
-      ].map((node) => node.querySelector("span")?.textContent),
-    ).toEqual(["通用", "外观", "搜索", "AI", "数据同步", "插件", "关于"])
+      [...root.querySelectorAll("[data-settings-section]")].map(
+        (node) => node.querySelector("span")?.textContent,
+      ),
+    ).toEqual(["插件", "关于"])
     expect(root.querySelector("[data-settings-panel-header]")?.textContent).toContain("插件")
     expect(
       root.querySelector('[data-settings-section="plugins"]')?.getAttribute("aria-current"),
@@ -255,11 +267,17 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
-        panels: [],
+        panels: [
+          {
+            ...panel("plugins", 10, { section: "plugins" }),
+            pluginId: "plugin-a",
+          },
+        ],
         activeSectionId: "plugins",
         onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: () => undefined,
+        getSettingsProvider: () => undefined,
         panelProps: () => ({}) as never,
         copy: {
           sidebarTitle: "Settings",
@@ -283,48 +301,47 @@ describe("settings host composition", () => {
           },
           workspaceGroupTitle: "Workbench",
           extensionGroupTitle: "Extensions",
-          accountNavName: "Signed out",
-          accountNavMeta: "Local mode",
         },
       }),
     )
 
     expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("Workbench")
     expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("Extensions")
-    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain(
-      "Signed out",
-    )
     expect(
-      [
-        ...root.querySelectorAll('[data-settings-section]:not([data-settings-section="account"])'),
-      ].map((node) => node.querySelector("span")?.textContent),
-    ).toEqual(["General", "Appearance", "Search", "AI", "Data sync", "Plugins", "About"])
+      [...root.querySelectorAll("[data-settings-section]")].map(
+        (node) => node.querySelector("span")?.textContent,
+      ),
+    ).toEqual(["Plugins", "About"])
     expect(root.querySelector("[data-settings-panel-header]")?.textContent).toContain("Plugins")
     expect(root.querySelector("[data-settings-close]")?.getAttribute("aria-label")).toBe(
       "Close settings",
     )
   })
 
-  it("updates account navigation when the account panel reports a signed-in session", () => {
+  it("shows account navigation only while the account plugin contributes a panel", () => {
     const panels: SettingsPanelDescriptor[] = [
       {
         id: "official.settings.workspace.account",
         title: "账号",
-        view: "account.view",
+        content: {
+          kind: "schema",
+          provider: "official.account-sync.account.provider",
+          schemaVersion: 1,
+        },
         section: "account",
         pluginId: "official.settings.workspace",
         scope: "workspace",
       },
     ]
-    const AccountPanel = (props: SettingsPanelViewProps) => {
-      props.host.updateAccountNavigation?.({
-        name: "a@test.com",
-        meta: "已登录",
-        avatar: "A",
-      })
-      return <div />
-    }
-
+    const panelProps = vi.fn(
+      () =>
+        ({
+          panelId: "official.settings.workspace.account",
+          pluginId: "official.settings.workspace",
+          scope: "workspace",
+          host: { close: vi.fn(), setDirty: vi.fn() },
+        }) as unknown as SettingsPanelViewProps,
+    )
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
@@ -332,21 +349,20 @@ describe("settings host composition", () => {
         activeSectionId: "account",
         onSectionChange: vi.fn(),
         onClose: vi.fn(),
-        getView: () => AccountPanel,
-        panelProps: () =>
-          ({
-            panelId: "official.settings.workspace.account",
-            pluginId: "official.settings.workspace",
-            scope: "workspace",
-            host: { close: vi.fn(), setDirty: vi.fn() },
-          }) as unknown as SettingsPanelViewProps,
+        getView: () => undefined,
+        getSettingsProvider: () => ({
+          getModel: () => ({ version: 1, nodes: [] }),
+          dispatch: () => {},
+        }),
+        panelProps,
       }),
     )
 
-    const account = root.querySelector('[data-settings-section="account"]')
-    expect(account?.textContent).toContain("a@test.com")
-    expect(account?.textContent).toContain("已登录")
-    expect(account?.textContent).toContain("A")
+    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain("账号")
+    expect(
+      root.querySelector('[data-settings-section="account"]')?.getAttribute("aria-current"),
+    ).toBe("page")
+    expect(panelProps).not.toHaveBeenCalled()
   })
 
   it("keeps the settings container open when a panel view fails", () => {
@@ -354,7 +370,7 @@ describe("settings host composition", () => {
       {
         id: "official.settings.workspace.workbench",
         title: "Broken",
-        view: "broken.view",
+        content: { kind: "custom-view", view: "broken.view" },
         section: "general",
         order: 10,
         pluginId: "plugin-a",
@@ -378,6 +394,7 @@ describe("settings host composition", () => {
         onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: (viewId) => views.get(viewId),
+        getSettingsProvider: () => undefined,
         panelProps: () => ({
           panelId: "official.settings.workspace.workbench",
           pluginId: "plugin-a",
@@ -427,7 +444,7 @@ describe("settings host composition", () => {
             id: "missing.panel",
             pluginId: "official.missing",
             title: "缺失面板",
-            view: "missing.view",
+            content: { kind: "custom-view", view: "missing.view" },
             section: "general",
             scope: "workspace",
           },
@@ -436,6 +453,7 @@ describe("settings host composition", () => {
         onSectionChange: vi.fn(),
         onClose: vi.fn(),
         getView: () => undefined,
+        getSettingsProvider: () => undefined,
         panelProps: () => ({}) as never,
       }),
     )

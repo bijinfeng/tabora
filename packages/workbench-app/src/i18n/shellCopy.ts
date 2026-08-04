@@ -62,18 +62,11 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     sectionMeta,
     workspaceGroupTitle: t("settingsHost.group.workspace"),
     extensionGroupTitle: t("settingsHost.group.extensions"),
-    accountNavName: t("settingsHost.account.navName"),
-    accountNavMeta: t("settingsHost.account.navMeta"),
-    accountNavAvatar: t("settingsHost.account.navAvatar"),
     windowSubtitle: t("settingsHost.windowSubtitle"),
     statusReady: t("settingsHost.status.ready"),
     statusSectionChanged: (sectionTitleText: string) =>
       t("settingsHost.status.sectionChanged", { sectionTitle: sectionTitleText }),
-    statusReset: t("settingsHost.status.reset"),
-    statusSaved: t("settingsHost.status.saved"),
-    resetLabel: t("settingsHost.action.reset"),
     cancelLabel: t("settingsHost.action.cancel"),
-    saveLabel: t("settingsHost.action.save"),
   }
 }
 

@@ -2,6 +2,7 @@ export {
   createStrapiAuthClient,
   type StrapiAuthClient,
   type StrapiAuthClientConfig,
+  type AuthStorage,
   type StrapiSession,
   type CurrentUser,
 } from "./strapiAuthClient"

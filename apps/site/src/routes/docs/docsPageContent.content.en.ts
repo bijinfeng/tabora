@@ -132,10 +132,13 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
   "id": "official.widgets.today-focus",
   "name": "Today Focus",
   "version": "1.0.0",
-  "contributions": {
-    "widgets": [{ "id": "today-focus", "title": "Today Focus", "entry": "./TodayFocusWidget.tsx", "sizes": ["medium", "large"] }]
+  "apiVersion": "1.0.0",
+  "entry": "./index",
+  "engine": { "platform": "^0.1.0" },
+  "contributes": {
+    "widgets": [{ "id": "today-focus", "title": "Today Focus", "supportedSizes": ["M", "L"], "defaultSize": "M", "allowMultipleInstances": false, "views": { "card": "official.widgets.today-focus.card" } }]
   },
-  "permissions": ["storage:read", "storage:write"]
+  "permissions": [{ "type": "storage", "scope": "plugin" }]
 }`,
           },
         },
@@ -145,13 +148,13 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
       eyebrow: "MANIFEST",
       title: "Manifest describes capabilities, not host implementation",
       description:
-        "All contribution points are declared through the contributions field. Plugins cannot create global containers directly and must request host capabilities from runtime.",
+        "All contribution points are declared through the contributes field. Plugins cannot create global containers directly and must request host capabilities from runtime.",
       anatomyTitle: "Field structure",
       anatomyItems: [
         "id — globally unique, formatted as namespace.category.name",
         "name — user-facing display name",
         "version — follows semver for host update decisions",
-        "contributions — declares widgets / layouts / searchProviders / settingsPanels",
+        "contributes — declares widgets / layouts / searchProviders / settingsPanels",
         "permissions — required host permissions that can be revoked in settings",
       ],
       codeBlock: {
@@ -163,25 +166,35 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
   "id": "official.widgets.today-focus",
   "name": "Today Focus",
   "version": "1.0.0",
-  "contributions": {
+  "apiVersion": "1.0.0",
+  "entry": "./index",
+  "engine": { "platform": "^0.1.0" },
+  "contributes": {
     "widgets": [
       {
         "id": "today-focus",
         "title": "Today Focus",
-        "entry": "./TodayFocusWidget.tsx",
-        "sizes": ["medium", "large"],
-        "settingsPanel": "today-focus-settings"
+        "supportedSizes": ["M", "L"],
+        "defaultSize": "M",
+        "allowMultipleInstances": false,
+        "views": { "card": "official.widgets.today-focus.card" }
       }
     ],
     "settingsPanels": [
       {
         "id": "today-focus-settings",
         "title": "Today Focus settings",
-        "entry": "./TodayFocusSettings.tsx"
+        "section": "general",
+        "scope": "plugin",
+        "content": {
+          "kind": "schema",
+          "provider": "official.widgets.today-focus.settings",
+          "schemaVersion": 1
+        }
       }
     ]
   },
-  "permissions": ["storage:read", "storage:write"]
+  "permissions": [{ "type": "storage", "scope": "plugin" }]
 }`,
       },
       table: {
@@ -191,12 +204,17 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
           ["name", "string", "✓", "User-visible name, under 32 characters"],
           ["version", "string", "✓", "Semver format: 1.0.0"],
           [
-            "contributions",
+            "contributes",
             "object",
             "✓",
             "Contribution declaration object with at least one child field",
           ],
-          ["permissions", "string[]", "—", "Requested permissions, empty array by default"],
+          [
+            "permissions",
+            "PluginPermission[]",
+            "—",
+            "Requested permissions, empty array by default",
+          ],
           ["description", "string", "—", "Plugin description shown in settings or marketplace"],
         ],
       },
@@ -304,7 +322,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
       eyebrow: "CONTRIBUTION TYPES",
       title: "Four contribution types cover the visible workbench experience",
       description:
-        "Each contribution type is declared through the manifest's contributions field. The host discovers and mounts them at startup.",
+        "Each contribution type is declared through the manifest's contributes field. The host discovers and mounts them at startup.",
       table: {
         columns: ["Contribution", "Field", "Usage", "Size constraint"],
         rows: [
@@ -321,7 +339,12 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
             "Custom search source",
             "Dropdown rendered by the host",
           ],
-          ["Settings Panel", "settingsPanels", "Plugin-specific settings UI", "Inside host modal"],
+          [
+            "Settings Panel",
+            "settingsPanels",
+            "Semantic schema or explicit custom view",
+            "Rendered consistently inside the host modal",
+          ],
         ],
       },
       doTitle: "✓ Do",

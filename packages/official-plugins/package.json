@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@stylexjs/stylex": "catalog:style",
+    "@tabora/auth": "workspace:*",
+    "@tabora/host-adapters": "workspace:*",
     "@tabora/layout-dashboard": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",

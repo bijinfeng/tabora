@@ -1,7 +1,8 @@
 import { createContext, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 import type { PluginCatalog } from "@tabora/orchestrator"
-import type { ViewRegistry } from "@tabora/platform-kernel"
+import type { SettingsPanelProviderContext } from "@tabora/plugin-api"
+import type { SettingsProviderRegistry, ViewRegistry } from "@tabora/platform-kernel"
 
 import type { createWorkbenchShellControllerRuntime } from "./WorkbenchShellControllerRuntime"
 import type { createWorkbenchSettingsPanelPropsBuilder } from "../surface/WorkbenchShellSettings"
@@ -13,6 +14,8 @@ export type WorkbenchShell = {
   state: WorkbenchShellStateBundle
   catalog: PluginCatalog
   views: ViewRegistry
+  settingsProviders: SettingsProviderRegistry
+  settingsProviderContext: () => SettingsPanelProviderContext
   controllerRuntime: ReturnType<typeof createWorkbenchShellControllerRuntime>
   buildSettingsPanelProps: ReturnType<typeof createWorkbenchSettingsPanelPropsBuilder>
   layoutContent: () => JSX.Element

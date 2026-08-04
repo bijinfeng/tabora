@@ -62,6 +62,11 @@ export function createWorkbenchShellSurfaceStub(
     get: () => undefined,
   } as unknown as WorkbenchShell["views"]
 
+  const settingsProviders = {
+    has: () => false,
+    get: () => undefined,
+  } as unknown as WorkbenchShell["settingsProviders"]
+
   const widgetController = {
     addWidget: overrides.addWidget ?? (async () => {}),
     widgetContribution: overrides.widgetContribution ?? (() => undefined),
@@ -96,6 +101,8 @@ export function createWorkbenchShellSurfaceStub(
     state,
     catalog,
     views,
+    settingsProviders,
+    settingsProviderContext: () => ({}),
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent: overrides.layoutContent ?? (() => null),

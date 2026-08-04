@@ -5,7 +5,7 @@ import type {
   PluginPermission,
 } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
-import type { ExtensionRegistry, ViewRegistrationDisposer } from "./extensionRegistry"
+import type { ExtensionRegistrationDisposer, ExtensionRegistry } from "./extensionRegistry"
 
 export type PluginUiBridge = {
   openModal(viewId: string, props?: Record<string, unknown>): void
@@ -83,10 +83,18 @@ export function collectPluginManifestViewIds(manifest: PluginManifest): Set<stri
   }
 
   for (const panel of manifest.contributes.settingsPanels ?? []) {
-    views.add(panel.view)
+    if (panel.content.kind === "custom-view") views.add(panel.content.view)
   }
 
   return views
+}
+
+export function collectPluginManifestSettingsProviderIds(manifest: PluginManifest): Set<string> {
+  const providers = new Set<string>()
+  for (const panel of manifest.contributes.settingsPanels ?? []) {
+    if (panel.content.kind === "schema") providers.add(panel.content.provider)
+  }
+  return providers
 }
 
 export function createPluginRuntimeContext(options: {
@@ -95,12 +103,15 @@ export function createPluginRuntimeContext(options: {
   registry: ExtensionRegistry
   manifest?: PluginManifest
   grantedPermissions?: PluginPermission[]
-  registrationDisposers?: ViewRegistrationDisposer[]
+  registrationDisposers?: ExtensionRegistrationDisposer[]
   ai?: AiRuntimeBridge
   i18n?: PluginI18nService
 }): PluginRuntimeContext {
   const grantedPermissions = options.grantedPermissions ?? []
   const declaredViews = options.manifest ? collectPluginManifestViewIds(options.manifest) : null
+  const declaredSettingsProviders = options.manifest
+    ? collectPluginManifestSettingsProviderIds(options.manifest)
+    : new Set<string>()
 
   function canAccessView(viewId: string): boolean {
     if (viewId.startsWith(`${options.pluginId}.`)) return true
@@ -118,6 +129,19 @@ export function createPluginRuntimeContext(options: {
           )
         }
         const dispose = options.registry.views.register(viewId, view)
+        options.registrationDisposers?.push(dispose)
+        return dispose
+      },
+    },
+    settings: {
+      ...options.registry.settings,
+      register(providerId, provider) {
+        if (!declaredSettingsProviders.has(providerId)) {
+          throw new Error(
+            `Plugin "${options.pluginId}" attempted to register undeclared settings provider: ${providerId}`,
+          )
+        }
+        const dispose = options.registry.settings.register(providerId, provider)
         options.registrationDisposers?.push(dispose)
         return dispose
       },

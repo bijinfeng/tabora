@@ -3,7 +3,12 @@ import { createComponent, createEffect, createSignal, For, Show } from "solid-js
 import type { JSX } from "solid-js"
 import Settings from "lucide-solid/icons/settings"
 import X from "lucide-solid/icons/x"
-import type { PluginManifest, SettingsPanelViewProps } from "@tabora/plugin-api"
+import type {
+  PluginManifest,
+  SettingsPanelProvider,
+  SettingsPanelProviderContext,
+  SettingsPanelViewProps,
+} from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
   normalizeSettingsPanelDescriptor,
@@ -15,6 +20,7 @@ import { Button, IconButton } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
+import { SettingsSchemaRenderer } from "./SettingsSchemaRenderer"
 import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
@@ -30,6 +36,8 @@ export type SettingsHostProps = {
   onSectionChange: (sectionId: SettingsSectionId) => void
   onClose: () => void
   getView: (viewId: string) => ((props: SettingsPanelViewProps) => JSX.Element) | undefined
+  getSettingsProvider: (providerId: string) => SettingsPanelProvider | undefined
+  providerContext?: SettingsPanelProviderContext
   panelProps: (panel: SettingsPanelDescriptor) => SettingsPanelViewProps
   aboutContent?: JSX.Element
   copy?: SettingsHostCopy
@@ -49,23 +57,10 @@ export type SettingsHostCopy = {
   sectionMeta?: (sectionId: SettingsSectionId) => string
   workspaceGroupTitle?: string
   extensionGroupTitle?: string
-  accountNavName?: string
-  accountNavMeta?: string
-  accountNavAvatar?: string
   windowSubtitle?: string
   statusReady?: string
   statusSectionChanged?: (sectionTitle: string) => string
-  statusReset?: string
-  statusSaved?: string
-  resetLabel?: string
   cancelLabel?: string
-  saveLabel?: string
-}
-
-type AccountNavigation = {
-  name: string
-  meta: string
-  avatar: string
 }
 
 const SECTION_FALLBACK_DESCRIPTIONS: Record<SettingsSectionId, string> = {
@@ -80,7 +75,7 @@ const SECTION_FALLBACK_DESCRIPTIONS: Record<SettingsSectionId, string> = {
 }
 
 const WORKSPACE_SECTION_IDS: SettingsSectionId[] = ["general", "appearance", "search"]
-const EXTENSION_SECTION_IDS: SettingsSectionId[] = ["ai", "sync", "plugins", "about"]
+const EXTENSION_SECTION_IDS: SettingsSectionId[] = ["account", "ai", "sync", "plugins", "about"]
 
 const styles = stylex.create({
   overlay: {
@@ -257,73 +252,6 @@ const styles = stylex.create({
     paddingTop: 6,
     textTransform: "uppercase",
   },
-  account: {
-    alignItems: "center",
-    backgroundColor: color.surface,
-    borderColor: color.line,
-    borderRadius: radius.control,
-    borderStyle: "solid",
-    borderWidth: 1,
-    color: color.text,
-    cursor: "pointer",
-    display: "grid",
-    gap: 8,
-    gridTemplateColumns: "28px minmax(0, 1fr)",
-    marginBottom: 7,
-    minHeight: 48,
-    padding: 7,
-    textAlign: "left",
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-      borderColor: color.lineStrong,
-    },
-    ":focus-visible": {
-      outlineColor: color.focus,
-      outlineOffset: 2,
-      outlineStyle: "solid",
-      outlineWidth: 2,
-    },
-  },
-  selected: {
-    backgroundColor: color.accentSoft,
-    borderColor: color.accent,
-    color: color.accent,
-  },
-  avatar: {
-    alignItems: "center",
-    backgroundColor: color.accentSoft,
-    borderColor: color.line,
-    borderRadius: radius.pill,
-    borderStyle: "solid",
-    borderWidth: 1,
-    color: color.accent,
-    display: "inline-flex",
-    fontSize: 11,
-    fontWeight: font.bold,
-    height: 28,
-    justifyContent: "center",
-    width: 28,
-  },
-  accountCopy: {
-    display: "grid",
-    gap: 2,
-    minWidth: 0,
-  },
-  accountName: {
-    fontSize: 11,
-    lineHeight: 1.2,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  accountMeta: {
-    color: color.textSubtle,
-    fontSize: 10,
-    lineHeight: 1.25,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
   navButton: {
     alignItems: "center",
     backgroundColor: "transparent",
@@ -419,20 +347,11 @@ const styles = stylex.create({
     gap: 14,
     minHeight: 0,
   },
-  accountPanel: {
-    display: "grid",
-    flex: 1,
-    placeItems: "center",
-  },
   stack: {
     display: "flex",
     flexDirection: "column",
     gap: 14,
     minHeight: 0,
-  },
-  accountStack: {
-    margin: "auto",
-    width: "min(100%, 322px)",
   },
   empty: {
     color: color.textMuted,
@@ -508,7 +427,6 @@ export function SettingsHost(props: SettingsHostProps) {
   const [isEntering, setIsEntering] = createSignal(false)
   const [isClosing, setIsClosing] = createSignal(false)
   const [statusText, setStatusText] = createSignal<string | null>(null)
-  const [accountNavigation, setAccountNavigation] = createSignal<AccountNavigation | null>(null)
 
   const handleClose = () => {
     if (isClosing()) return
@@ -538,21 +456,23 @@ export function SettingsHost(props: SettingsHostProps) {
   const activeSectionDescription = () =>
     props.copy?.sectionDescription?.(activeSection()) ??
     SECTION_FALLBACK_DESCRIPTIONS[activeSection()]
-  const accountNavigationName = () =>
-    accountNavigation()?.name ?? props.copy?.accountNavName ?? "未登录"
-  const accountNavigationMeta = () =>
-    accountNavigation()?.meta ?? props.copy?.accountNavMeta ?? "本地模式"
-  const accountNavigationAvatar = () =>
-    accountNavigation()?.avatar ?? props.copy?.accountNavAvatar ?? "未"
   const sectionNavMeta = (sectionId: SettingsSectionId) => {
     const panelCount = navigator().sections[sectionId].panels.length
     if (sectionId === "about") return props.copy?.sectionMeta?.(sectionId) ?? "V2"
     return panelCount > 0 ? String(panelCount) : ""
   }
   const workspaceSections = () =>
-    SETTINGS_SECTIONS.filter((section) => WORKSPACE_SECTION_IDS.includes(section.id))
+    SETTINGS_SECTIONS.filter(
+      (section) =>
+        WORKSPACE_SECTION_IDS.includes(section.id) &&
+        navigator().sections[section.id].panels.length,
+    )
   const extensionSections = () =>
-    SETTINGS_SECTIONS.filter((section) => EXTENSION_SECTION_IDS.includes(section.id))
+    SETTINGS_SECTIONS.filter(
+      (section) =>
+        EXTENSION_SECTION_IDS.includes(section.id) &&
+        (section.id === "about" || navigator().sections[section.id].panels.length),
+    )
 
   const handleSectionChange = (sectionId: SettingsSectionId) => {
     props.onSectionChange(sectionId)
@@ -560,14 +480,6 @@ export function SettingsHost(props: SettingsHostProps) {
       props.copy?.statusSectionChanged?.(sectionTitle(sectionId)) ??
         `已切换到${sectionTitle(sectionId)}`,
     )
-  }
-
-  const handleReset = () => {
-    setStatusText(props.copy?.statusReset ?? "已恢复当前页默认值")
-  }
-
-  const handleSave = () => {
-    setStatusText(props.copy?.statusSaved ?? "设置已保存到本地")
   }
 
   createEffect(() => {
@@ -640,21 +552,6 @@ export function SettingsHost(props: SettingsHostProps) {
               data-settings-nav
               aria-label={props.copy?.sidebarTitle ?? "设置导航"}
             >
-              <Button
-                size="sm"
-                variant="ghost"
-                xstyle={[styles.account, activeSection() === "account" ? styles.selected : null]}
-                data-settings-section="account"
-                aria-current={activeSection() === "account" ? "page" : undefined}
-                onClick={() => handleSectionChange("account")}
-                aria-label={sectionTitle("account")}
-              >
-                <span {...stylex.attrs(styles.avatar)}>{accountNavigationAvatar()}</span>
-                <span {...stylex.attrs(styles.accountCopy)}>
-                  <strong {...stylex.attrs(styles.accountName)}>{accountNavigationName()}</strong>
-                  <span {...stylex.attrs(styles.accountMeta)}>{accountNavigationMeta()}</span>
-                </span>
-              </Button>
               <div {...stylex.attrs(styles.kicker)}>
                 {props.copy?.workspaceGroupTitle ?? "工作台"}
               </div>
@@ -703,28 +600,15 @@ export function SettingsHost(props: SettingsHostProps) {
               </For>
             </nav>
             <div {...stylex.attrs(styles.main)} data-active-view={activeSection()}>
-              <Show when={activeSection() !== "account"}>
-                <div {...stylex.attrs(styles.panelHeader)} data-settings-panel-header>
-                  <div>
-                    <strong {...stylex.attrs(styles.panelHeaderTitle)}>
-                      {activeSectionTitle()}
-                    </strong>
-                    <span {...stylex.attrs(styles.panelHeaderDescription)}>
-                      {activeSectionDescription()}
-                    </span>
-                  </div>
-                  <Button size="sm" variant="secondary" onClick={handleReset}>
-                    {props.copy?.resetLabel ?? "恢复默认"}
-                  </Button>
+              <div {...stylex.attrs(styles.panelHeader)} data-settings-panel-header>
+                <div>
+                  <strong {...stylex.attrs(styles.panelHeaderTitle)}>{activeSectionTitle()}</strong>
+                  <span {...stylex.attrs(styles.panelHeaderDescription)}>
+                    {activeSectionDescription()}
+                  </span>
                 </div>
-              </Show>
-              <div
-                {...stylex.attrs(
-                  styles.panelView,
-                  activeSection() === "account" ? styles.accountPanel : null,
-                )}
-                data-view={activeSection()}
-              >
+              </div>
+              <div {...stylex.attrs(styles.panelView)} data-view={activeSection()}>
                 <Show
                   when={activeSection() !== "about"}
                   fallback={
@@ -747,16 +631,31 @@ export function SettingsHost(props: SettingsHostProps) {
                       />
                     }
                   >
-                    <div
-                      {...stylex.attrs(
-                        styles.stack,
-                        activeSection() === "account" ? styles.accountStack : null,
-                      )}
-                      data-settings-panel-stack
-                    >
+                    <div {...stylex.attrs(styles.stack)} data-settings-panel-stack>
                       <For each={activePanels()}>
                         {(panel) => {
-                          const View = props.getView(panel.view)
+                          if (panel.content.kind === "schema") {
+                            const provider = props.getSettingsProvider(panel.content.provider)
+                            if (!provider)
+                              return (
+                                <InlineError xstyle={styles.missing}>
+                                  {props.copy?.panelMissing(panel.id) ??
+                                    `设置面板不可用：${panel.id}`}
+                                </InlineError>
+                              )
+                            return (
+                              <PluginViewBoundary instanceId={panel.id} title={panel.title}>
+                                <div data-tabora-plugin-id={panel.pluginId}>
+                                  <SettingsSchemaRenderer
+                                    provider={provider}
+                                    context={props.providerContext ?? {}}
+                                  />
+                                </div>
+                              </PluginViewBoundary>
+                            )
+                          }
+
+                          const View = props.getView(panel.content.view)
                           if (!View)
                             return (
                               <InlineError xstyle={styles.missing}>
@@ -767,13 +666,7 @@ export function SettingsHost(props: SettingsHostProps) {
                           let content: JSX.Element
                           try {
                             const panelProps = props.panelProps(panel)
-                            content = createComponent(View, {
-                              ...panelProps,
-                              host: {
-                                ...panelProps.host,
-                                updateAccountNavigation: (account) => setAccountNavigation(account),
-                              },
-                            })
+                            content = createComponent(View, panelProps)
                           } catch (error) {
                             return createPluginErrorFallback(error, panel.id, panel.title)
                           }
@@ -796,11 +689,8 @@ export function SettingsHost(props: SettingsHostProps) {
               {statusText() ?? props.copy?.statusReady ?? "设置已就绪"}
             </span>
             <div {...stylex.attrs(styles.footerActions)}>
-              <Button size="sm" variant="secondary" onClick={handleClose}>
+              <Button size="sm" variant="primary" onClick={handleClose}>
                 {props.copy?.cancelLabel ?? "取消"}
-              </Button>
-              <Button size="sm" variant="primary" onClick={handleSave}>
-                {props.copy?.saveLabel ?? "保存设置"}
               </Button>
             </div>
           </footer>

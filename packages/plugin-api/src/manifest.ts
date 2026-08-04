@@ -1,5 +1,6 @@
 import type { PluginInstance, Workspace } from "./workspace"
 import type { AiPermissionAccess } from "./ai"
+import type { SettingsPanelScope, SettingsSectionId } from "./settings"
 
 export type ExtensionPoint =
   | "layout"
@@ -289,7 +290,7 @@ export type SearchViewProps = {
 export type SettingsPanelViewProps = {
   panelId: string
   pluginId: string
-  scope: "global" | "workspace" | "plugin" | "instance"
+  scope: SettingsPanelScope
   locale?: "zh-CN" | "en-US"
   availableLocales?: Array<{ value: "zh-CN" | "en-US"; label: string }>
   host: {
@@ -307,20 +308,6 @@ export type SettingsPanelViewProps = {
     createWorkspace?(name: string): Promise<void>
     switchWorkspace?(id: string): Promise<void>
     deleteWorkspace?(id: string): Promise<void>
-    updateAccountNavigation?(account: { name: string; meta: string; avatar: string }): void
-    auth?: {
-      getSession(): Promise<{ userId?: string; sessionId: string } | null>
-      getCurrentUser(): Promise<{ id: string; email?: string } | null>
-      login(email: string, password: string): Promise<void>
-      register(email: string, password: string): Promise<void>
-      logout(): Promise<void>
-      requestPasswordReset(email: string): Promise<void>
-      resetPassword(code: string, password: string): Promise<void>
-    }
-    sync?: {
-      triggerSync(): Promise<void>
-      getLastSyncAt(): Promise<string | null>
-    }
   }
   workspaces?: Workspace[]
   workspace: Workspace
@@ -347,10 +334,19 @@ export type SettingsPanelViewProps = {
 export type SettingsPanelContribution = {
   id: string
   title: string
-  view: string
-  section: "general" | "appearance" | "search" | "account" | "ai" | "sync" | "plugins" | "about"
-  scope: "global" | "workspace" | "plugin" | "instance"
+  section: SettingsSectionId
+  scope: SettingsPanelScope
   order?: number
+  content:
+    | {
+        kind: "schema"
+        provider: string
+        schemaVersion: 1
+      }
+    | {
+        kind: "custom-view"
+        view: string
+      }
 }
 
 export type CommandContribution = {

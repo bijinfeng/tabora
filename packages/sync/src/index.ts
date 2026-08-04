@@ -44,3 +44,5 @@ export {
   type StrapiPullRecord,
   type StrapiPullResponse,
 } from "./strapiGatewayClient"
+
+export { createSyncManager, type SyncManager, type SyncManagerConfig } from "./syncManager"

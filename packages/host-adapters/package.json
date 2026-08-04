@@ -18,6 +18,8 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
+    "@tabora/storage": "workspace:*",
+    "@tabora/sync": "workspace:*",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

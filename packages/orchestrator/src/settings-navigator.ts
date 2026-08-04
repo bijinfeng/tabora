@@ -1,15 +1,10 @@
-import type { SettingsPanelContribution } from "@tabora/plugin-api"
+import type {
+  SettingsPanelContribution,
+  SettingsPanelScope,
+  SettingsSectionId,
+} from "@tabora/plugin-api"
 
-export type SettingsSectionId =
-  | "general"
-  | "appearance"
-  | "search"
-  | "account"
-  | "ai"
-  | "sync"
-  | "plugins"
-  | "about"
-export type SettingsPanelScope = "global" | "workspace" | "plugin" | "instance"
+export type { SettingsPanelScope, SettingsSectionId }
 
 export type SettingsPanelDescriptor = SettingsPanelContribution & {
   pluginId: string

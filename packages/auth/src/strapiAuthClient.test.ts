@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createStrapiAuthClient } from "./strapiAuthClient"
-import type { AuthStorage } from "@tabora/host-adapters"
+import type { AuthStorage } from "./strapiAuthClient"
 
 function memoryStorage(): AuthStorage {
   const map = new Map<string, string>()

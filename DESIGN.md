@@ -257,6 +257,13 @@ Widget 支持多实例、多尺寸、拖拽排序、右键尺寸菜单、双击�
 
 设置中心是轻量 settings host：左侧分类导航，右侧内容区。MVP 面板包含插件只读信息、外观主题与背景、默认搜索源和搜索源启用状态。
 
+设置页面采用“安全容器 + 声明式模型 + 统一 renderer”的默认路径：
+
+- `SettingsHost` 只拥有弹窗、分类导航、焦点、滚动和错误边界，不包含账号、同步或其他业务特例。
+- 插件的 settings provider 拥有页面状态机、校验、actions 和领域副作用；它返回语义 schema，不返回 CSS、className、StyleX 样式或原始 token。
+- 官方默认 `SettingsSchemaRenderer` 只用 `@tabora/ui` 控件渲染 schema，保证明暗主题、密度、焦点和可访问性一致。密码字段必须标记为 `ephemeral`，renderer 不得将其写入 storage、日志或快照。
+- 表达能力超出官方 schema 的复杂页面可显式声明 `custom-view`，但仍渲染在同一 `SettingsHost` 和插件错误边界内。
+
 关键操作使用 Toast 提供非阻塞反馈。快捷键必须可发现，至少包含参考入口或提示面板。
 
 ## Accessibility

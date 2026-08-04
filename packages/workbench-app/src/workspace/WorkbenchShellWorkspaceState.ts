@@ -20,7 +20,7 @@ export function createWorkbenchWorkspaceState(options: {
   workspaceRepo: WorkspaceRepo
   instanceRepo: InstanceRepo
   pluginDataRepo: PluginDataRepo
-  database: TaboraDatabase
+  database?: TaboraDatabase
   availablePluginIds: () => string[]
   getWorkspaceState: () => Workspace | null
   setWorkspaceState: (workspace: Workspace) => void
@@ -59,6 +59,9 @@ export function createWorkbenchWorkspaceState(options: {
   }
 
   async function exportWorkspace(): Promise<string> {
+    if (!options.database) {
+      throw new Error("Workspace export is unavailable for this storage adapter")
+    }
     return exportWorkspaceData({
       workspace: requireWorkspace(options.getWorkspaceState()),
       instanceRepo: options.instanceRepo,
@@ -67,6 +70,9 @@ export function createWorkbenchWorkspaceState(options: {
   }
 
   async function importWorkspace(json: string): Promise<{ warnings: string[] }> {
+    if (!options.database) {
+      throw new Error("Workspace import is unavailable for this storage adapter")
+    }
     const result = await importWorkspaceData({
       json,
       workspaceRepo: options.workspaceRepo,
