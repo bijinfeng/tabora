@@ -1,0 +1,35 @@
+{
+  "name": "@tabora/fnos",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev:frontend": "vp dev --config vite.frontend.config.ts",
+    "dev:backend": "npm --workspace backend run start",
+    "build:frontend": "vp build --config vite.frontend.config.ts",
+    "serve:dist": "cross-env FRONTEND_DIST=../frontend/dist npm --workspace backend run start",
+    "start": "npm run build:frontend && npm run serve:dist",
+    "build": "pnpm run build:frontend"
+  },
+  "dependencies": {
+    "@tabora/builtin-plugin-registry": "workspace:*",
+    "@tabora/host-adapters": "workspace:*",
+    "@tabora/ui": "workspace:*",
+    "@tabora/workbench-app": "workspace:*",
+    "@tabora/workbench-shell": "workspace:*",
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@tabora/brand": "workspace:*",
+    "@tabora/stylex-config": "workspace:*",
+    "@tabora/tsconfig": "workspace:*",
+    "cross-env": "^7.0.3",
+    "fnpack": "^0.0.0",
+    "vite": "catalog:build",
+    "vite-plugin-solid": "catalog:build"
+  }
+}
