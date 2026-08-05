@@ -1,3 +1,5 @@
+import type { PluginNetworkBridge } from "@tabora/plugin-api"
+
 export type HostPlatform = "web" | "extension" | "desktop-webview"
 
 export type HostCapabilities = {
@@ -15,6 +17,7 @@ export type HostAdapter = {
   id: string
   platform: HostPlatform
   capabilities: HostCapabilities
+  network?: PluginNetworkBridge
 }
 
 export function defineHostAdapter(adapter: HostAdapter): HostAdapter {
@@ -25,9 +28,11 @@ export { createWebHostAdapter } from "./web"
 export { createExtensionHostAdapter } from "./extension"
 export type { AuthStorage } from "./authStorage"
 export { createLocalStorageAuthStorage, createChromeStorageAuthStorage } from "./authStorage"
+export { createAccountSyncService, type AccountSyncService } from "./accountSyncService"
 export { createWebStorageAdapter } from "@tabora/storage"
-export { createSyncManager } from "@tabora/sync"
-export type { SyncManager, SyncManagerConfig } from "@tabora/sync"
+export { migrateWorkspaceContributionRefs } from "@tabora/storage"
+export { createPluginSyncCollections, createSyncManager } from "@tabora/sync"
+export type { PluginSyncCollections, SyncManager, SyncManagerConfig } from "@tabora/sync"
 export type {
   PluginDataRow,
   StorageAdapter,

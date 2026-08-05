@@ -53,9 +53,7 @@ export function createWorkbenchShellSurfaceActionProps(shell: WorkbenchShell) {
       id: `add-widget-preview:${pluginId}:${widgetId}`,
       // 预览实例不落库，workspaceId 仅为满足类型的占位值。
       workspaceId: "",
-      pluginId,
-      contributionId: widgetId,
-      extensionPoint: "widget",
+      contribution: { pluginId, kind: "widget", id: widgetId },
       regionId: "add-widget-preview",
       enabled: true,
       size,
@@ -107,7 +105,17 @@ export function createWorkbenchShellSurfaceActionProps(shell: WorkbenchShell) {
     },
     toastHost: {
       toasts: runtime.toasts(),
-      onAction: (commandId: string) => controllerRuntime.runCommand(commandId, {}),
+      onAction: (commandId: string) => {
+        try {
+          void Promise.resolve(controllerRuntime.runCommand(commandId, {})).catch(
+            (error: unknown) => {
+              shell.state.runtime.showToast(error instanceof Error ? error.message : "命令执行失败")
+            },
+          )
+        } catch (error: unknown) {
+          shell.state.runtime.showToast(error instanceof Error ? error.message : "命令执行失败")
+        }
+      },
     },
     commandPalette: controllerRuntime.searchSurfaces.buildCommandPaletteProps(),
   }

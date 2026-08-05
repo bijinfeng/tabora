@@ -6,9 +6,7 @@ function instance(size: WidgetSize = "M"): PluginInstance {
   return {
     id: "todo-1",
     workspaceId: "default",
-    pluginId: "official.widgets.todo",
-    contributionId: "todo",
-    extensionPoint: "widget",
+    contribution: { pluginId: "official.widgets.todo", kind: "widget", id: "todo" },
     regionId: "mainGrid",
     enabled: true,
     size,
@@ -38,7 +36,7 @@ describe("createWidgetContextMenuModel", () => {
     expect(model.sections[2]!.items[0]!.danger).toBe(true)
   })
 
-  it("runs the corresponding callback for each action", () => {
+  it("runs the corresponding callback for each action", async () => {
     const onResize = vi.fn()
     const onExpand = vi.fn()
     const onRemove = vi.fn()
@@ -50,9 +48,9 @@ describe("createWidgetContextMenuModel", () => {
       onRemove,
     })
 
-    model.sections[0]!.items[0]!.run()
-    model.sections[1]!.items[0]!.run()
-    model.sections[2]!.items[0]!.run()
+    await model.sections[0]!.items[0]!.run()
+    await model.sections[1]!.items[0]!.run()
+    await model.sections[2]!.items[0]!.run()
 
     expect(onExpand).toHaveBeenCalledWith("todo-1")
     expect(onResize).toHaveBeenCalledWith("todo-1", "S")
@@ -74,7 +72,7 @@ describe("createWidgetContextMenuModel", () => {
     expect(model.sections[1]!.items.map((item) => item.isCurrent)).toEqual([false, false, false])
   })
 
-  it("merges ordered plugin context menu items before remove", () => {
+  it("merges ordered plugin context menu items before remove", async () => {
     const runCommand = vi.fn()
     const model = createWidgetContextMenuModel({
       instance: instance(),
@@ -109,15 +107,15 @@ describe("createWidgetContextMenuModel", () => {
     ])
     expect(model.sections[2]!.items.map((item) => item.label)).toEqual(["聚焦待办", "清空待办"])
 
-    model.sections[2]!.items[0]!.run()
-    model.sections[2]!.items[1]!.run()
+    await model.sections[2]!.items[0]!.run()
+    await model.sections[2]!.items[1]!.run()
 
     expect(runCommand).toHaveBeenCalledWith("todo.focus", { instance: instance() })
     expect(runCommand).toHaveBeenCalledWith("todo.clear", { instance: instance() })
     expect(model.sections[2]!.items[1]!.danger).toBe(true)
   })
 
-  it("adds an instance settings action before remove when explicitly configured", () => {
+  it("adds an instance settings action before remove when explicitly configured", async () => {
     const onOpenSettings = vi.fn()
     const model = createWidgetContextMenuModel({
       instance: instance(),
@@ -137,7 +135,7 @@ describe("createWidgetContextMenuModel", () => {
     ])
     expect(model.sections[2]!.items.map((item) => item.label)).toEqual(["实例设置"])
 
-    model.sections[2]!.items[0]!.run()
+    await model.sections[2]!.items[0]!.run()
 
     expect(onOpenSettings).toHaveBeenCalledWith("todo-1")
   })
@@ -216,7 +214,7 @@ describe("createWidgetContextMenuModel", () => {
     expect(model.sections.map((section) => section.id)).toEqual(["expand", "size", "remove"])
   })
 
-  it("passes the current widget instance context when running a plugin command", () => {
+  it("passes the current widget instance context when running a plugin command", async () => {
     const widget = instance("XL")
     const runCommand = vi.fn()
     const model = createWidgetContextMenuModel({
@@ -236,7 +234,7 @@ describe("createWidgetContextMenuModel", () => {
       onRemove: vi.fn(),
     })
 
-    model.sections[2]!.items[0]!.run()
+    await model.sections[2]!.items[0]!.run()
 
     expect(runCommand).toHaveBeenCalledWith("todo.inspect", { instance: widget })
   })

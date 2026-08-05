@@ -109,9 +109,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -124,8 +122,18 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
 
 function searchSettings(): WorkbenchSearchSettings {
   return {
-    defaultProviderId: "official.search.google",
-    enabledProviderIds: ["official.search.google"],
+    defaultProvider: {
+      pluginId: "official.search-providers.basic",
+      kind: "search-provider",
+      id: "official.search.google",
+    },
+    enabledProviders: [
+      {
+        pluginId: "official.search-providers.basic",
+        kind: "search-provider",
+        id: "official.search.google",
+      },
+    ],
   }
 }
 
@@ -138,11 +146,17 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
       urlTemplate: "https://google.example/search?q={query}",
       pluginId: "official.search-providers.basic",
       pluginName: "基础搜索源",
+      ref: {
+        pluginId: "official.search-providers.basic",
+        kind: "search-provider",
+        id: "official.search.google",
+      },
     },
   ]
   const layoutContribution: LayoutContribution = {
     id: "official.layout.workbench-dashboard",
     title: "Dashboard",
+    view: "official.layout.workbench-dashboard.view",
     regions: [],
     defaultRegions: {},
     supportsResponsive: true,
@@ -200,6 +214,10 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
           throw new Error("unreachable")
         }),
       },
+      registryCommands: {
+        has: vi.fn(() => true),
+        execute: vi.fn(async () => true),
+      },
       instanceRepo: {
         save: vi.fn(async () => {}),
         remove: vi.fn(async () => {}),
@@ -210,12 +228,24 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
       },
     },
     state: {
-      workspace: vi.fn(() => ({
+      workspace: vi.fn((): import("@tabora/plugin-api").Workspace => ({
         id: "workspace-1",
         name: "默认工作区",
-        activeLayoutId: "official.layout.workbench-dashboard",
-        activeThemeId: "official.theme.light",
-        activeBackgroundProviderId: "official.background.default",
+        activeLayout: {
+          pluginId: "official.layout",
+          kind: "layout" as const,
+          id: "official.layout.workbench-dashboard",
+        },
+        activeTheme: {
+          pluginId: "official.theme",
+          kind: "theme" as const,
+          id: "official.theme.light",
+        },
+        activeBackgroundProvider: {
+          pluginId: "official.background",
+          kind: "background-provider" as const,
+          id: "official.background.default",
+        },
         regions: {},
         createdAt: "2026-06-07T00:00:00.000Z",
         updatedAt: "2026-06-07T00:00:00.000Z",
@@ -356,7 +386,11 @@ describe("createWorkbenchShellControllerRuntime", () => {
     await dragOptions.persistGridOrder([instance()])
     expect(persistGridOrder).toHaveBeenCalledWith([expect.objectContaining({ id: "widget-1" })])
 
-    viewOptions.buildInlineSearchViewProps(instance({ extensionPoint: "search" }))
+    viewOptions.buildInlineSearchViewProps(
+      instance({
+        contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
+      }),
+    )
     expect(buildInlineSearchViewProps).toHaveBeenCalledWith(
       expect.objectContaining({ id: "widget-1" }),
     )

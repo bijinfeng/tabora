@@ -30,7 +30,7 @@ import {
 import { requireWorkspace } from "../shared/WorkbenchShellUtils"
 import type { WidgetRenderModel } from "../shared/shellHelpers"
 
-type WidgetIdentity = Pick<PluginInstance, "pluginId" | "contributionId">
+type WidgetIdentity = Pick<PluginInstance, "contribution">
 type WidgetContextMenuState = { x: number; y: number; instanceId: string } | null
 type WidgetContributionLike = Pick<
   WidgetContribution,
@@ -61,13 +61,13 @@ export function createWorkbenchWidgetController(options: {
   tShell?: ShellTranslation
   focusWidgetInstance: (instanceId: string) => boolean
   availableCommandIds: () => string[] | Set<string>
-  runCommand: (commandId: string, context: { instance: PluginInstance }) => boolean
+  runCommand: (commandId: string, context: { instance: PluginInstance }) => Promise<boolean>
   requestAnimationFrame?: (callback: FrameRequestCallback) => number
 }) {
   let lastExpandTrigger: HTMLElement | null = null
 
   const widgetContribution = (instance: WidgetIdentity) =>
-    options.resolveWidgetContribution(instance.pluginId, instance.contributionId)
+    options.resolveWidgetContribution(instance.contribution.pluginId, instance.contribution.id)
 
   const widgetRenderModel = (instance: PluginInstance): WidgetRenderModel | null =>
     options.resolveWidgetRenderModel(instance)

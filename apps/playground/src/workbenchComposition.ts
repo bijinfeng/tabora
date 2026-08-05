@@ -1,4 +1,9 @@
-import { createWebHostAdapter, createWebStorageAdapter } from "@tabora/host-adapters"
+import {
+  createAccountSyncService,
+  createPluginSyncCollections,
+  createWebHostAdapter,
+  createWebStorageAdapter,
+} from "@tabora/host-adapters"
 import {
   createBuiltinAccountSyncPlugin,
   builtinDefaultWorkspacePreset,
@@ -23,22 +28,23 @@ export function createPlaygroundWorkbenchComposition(): WorkbenchComposition {
 
 export function resolvePlaygroundApiBaseUrl(): string | undefined {
   const configured = import.meta.env.VITE_TABORA_API_BASE?.trim()
-  if (configured) {
-    return configured
-  }
-  // 未配置时回退到当前页面地址，方便同域部署直接访问后端
-  return typeof window === "undefined" ? undefined : window.location.origin
+  return configured || undefined
 }
 
 export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
   const apiBaseUrl = resolvePlaygroundApiBaseUrl()
-  const storageAdapter = createWebStorageAdapter()
+  const storageAdapter = createWebStorageAdapter(undefined, { enableSync: Boolean(apiBaseUrl) })
   const host = createWebHostAdapter({ id: "host.playground" })
   const accountSyncPlugin = apiBaseUrl
     ? createBuiltinAccountSyncPlugin({
-        host,
-        storageAdapter,
-        apiBaseUrl,
+        service: createAccountSyncService({
+          host,
+          storageAdapter,
+          apiBaseUrl,
+          syncCollections: createPluginSyncCollections(
+            builtinPlugins.map((plugin) => plugin.module.manifest),
+          ),
+        }),
       })
     : null
 

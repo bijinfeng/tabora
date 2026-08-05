@@ -1,5 +1,5 @@
 import { createSignal, type Accessor } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { PluginNetworkAccess, WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { DEFAULT_CITY, fetchWeather, type WeatherSnapshot } from "./weather-data"
 
 const CACHE_KEY = "weather-snapshot"
@@ -18,7 +18,9 @@ export function resolveConfiguredCity(config: Record<string, unknown>): string {
 }
 
 // 卡片与展开弹窗各自建立 store：先读实例缓存即时渲染，再请求刷新。
-export function createWeatherStore(props: WidgetViewProps): WeatherStore {
+export function createWeatherStore(
+  props: WidgetViewProps & { network: PluginNetworkAccess },
+): WeatherStore {
   const [snapshot, setSnapshot] = createSignal<WeatherSnapshot | null>(null)
   const [loading, setLoading] = createSignal(false)
   const [error, setError] = createSignal<string | null>(null)
@@ -32,7 +34,7 @@ export function createWeatherStore(props: WidgetViewProps): WeatherStore {
     setLoading(true)
     setError(null)
     try {
-      const result = await fetchWeather(target)
+      const result = await fetchWeather(target, props.network)
       if (token !== requestToken) return
       setSnapshot(result)
       await props.data.save(CACHE_KEY, result)

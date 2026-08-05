@@ -60,13 +60,14 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     initialSearchSettings: composition.initialState.searchSettings,
     initialVisualState: {
       layoutId:
-        composition.initialState.workspace?.activeLayoutId ??
-        runtime.defaultWorkspacePreset.layoutId,
+        composition.initialState.workspace?.activeLayout.id ??
+        runtime.defaultWorkspacePreset.layout.id,
       themeId:
-        composition.initialState.workspace?.activeThemeId ?? runtime.defaultWorkspacePreset.themeId,
+        composition.initialState.workspace?.activeTheme.id ??
+        runtime.defaultWorkspacePreset.theme.id,
       backgroundId:
-        composition.initialState.workspace?.activeBackgroundProviderId ??
-        runtime.defaultWorkspacePreset.backgroundProviderId,
+        composition.initialState.workspace?.activeBackgroundProvider.id ??
+        runtime.defaultWorkspacePreset.backgroundProvider.id,
     },
     darkThemeId: runtime.shellConfig.themeIds.dark,
   })
@@ -113,7 +114,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
   } = state.search
   const responsive = createWorkbenchResponsiveState()
   const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
-  const { database, catalog: pluginCatalog, kernel, plugins, repositories } = runtime
+  const { database, catalog: pluginCatalog, kernel, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
   const pluginStyleManager = createPluginStyleManager(document)
   const refreshPluginRecords = async () => {
@@ -123,7 +124,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     pluginStyleManager.apply(
       activePluginStyles({
         styles: runtime.pluginStyles,
-        plugins,
+        plugins: kernel.plugins,
         records: pluginRecords(),
       }),
     )
@@ -182,7 +183,10 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     shellConfig: runtime.shellConfig,
     setAddWidgetOpen,
     openSettings,
-    switchTheme: workspaceController.switchTheme,
+    switchTheme: async (themeId) => {
+      const theme = pluginCatalog.listThemes().find((candidate) => candidate.id === themeId)
+      if (theme) await workspaceController.switchTheme(theme.ref)
+    },
     windowOpen: (url, target) => {
       window.open(url, target)
     },
@@ -222,7 +226,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     host: {
       close: () => setSettingsOpen(false),
       setDirty: () => {},
-      switchLayout: workspaceController.switchLayout,
+      switchLayout: async (layout) => workspaceController.switchLayout(layout.id),
       switchTheme: workspaceController.switchTheme,
       switchBackground: workspaceController.switchBackground,
       switchLocale: workspaceController.switchLocale,

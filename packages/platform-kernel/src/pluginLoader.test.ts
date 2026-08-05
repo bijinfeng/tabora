@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
-import type { BuiltinPlugin } from "./pluginKernel"
-import type { PluginManifest } from "@tabora/plugin-api"
+import type { PluginManifest, PluginModule } from "@tabora/plugin-api"
+import { createBuiltinPluginPackage, type LoadedPluginPackage } from "./pluginKernel"
 import { createBuiltinPluginLoader, parseTrustedLocalPluginPackage } from "./pluginLoader"
 
-const plugin: BuiltinPlugin = {
+const plugin: PluginModule = {
   manifest: {
     id: "test.plugin",
     name: "Test Plugin",
@@ -13,34 +13,53 @@ const plugin: BuiltinPlugin = {
     engine: { platform: "tabora" },
     contributes: {},
   },
-  enabled: true,
   activate() {},
+}
+
+function builtin(
+  module: PluginModule,
+  styleAssetUrls?: Record<string, string>,
+): LoadedPluginPackage {
+  return createBuiltinPluginPackage(module, styleAssetUrls ? { styleAssetUrls } : {})
 }
 
 describe("createBuiltinPluginLoader", () => {
   it("returns builtin plugin records with source recorded", async () => {
-    const loader = createBuiltinPluginLoader([plugin])
+    const loader = createBuiltinPluginLoader([builtin(plugin)])
 
     const result = await loader.load()
 
     expect(result.loaded).toHaveLength(1)
-    expect(result.loaded[0]?.plugin).toBe(plugin)
+    expect(result.loaded[0]?.module).toBe(plugin)
     expect(result.loaded[0]?.source).toBe("builtin")
     expect(result.rejected).toEqual([])
   })
 
+  it("rejects a non-builtin package instead of relabeling it as trusted", async () => {
+    const loader = createBuiltinPluginLoader([{ ...builtin(plugin), source: "local-trusted" }])
+
+    const result = await loader.load()
+
+    expect(result.loaded).toEqual([])
+    expect(result.rejected).toMatchObject([
+      {
+        source: "local-trusted",
+        reason: 'Builtin loader only accepts packages with source "builtin"',
+      },
+    ])
+  })
+
   it("resolves builtin plugin stylesheet asset urls", async () => {
-    const styledPlugin: BuiltinPlugin = {
+    const styledPlugin: PluginModule = {
       ...plugin,
       manifest: {
         ...plugin.manifest,
         styles: [{ href: "./styles.css", scope: "plugin", order: 20 }],
       },
-      styleAssetUrls: {
-        "./styles.css": "/assets/test-plugin.css",
-      },
     }
-    const loader = createBuiltinPluginLoader([styledPlugin])
+    const loader = createBuiltinPluginLoader([
+      builtin(styledPlugin, { "./styles.css": "/assets/test-plugin.css" }),
+    ])
 
     const result = await loader.load()
 
@@ -58,13 +77,13 @@ describe("createBuiltinPluginLoader", () => {
 
   it("rejects invalid manifests", async () => {
     const loader = createBuiltinPluginLoader([
-      {
+      builtin({
         ...plugin,
         manifest: {
           ...plugin.manifest,
           id: "",
         },
-      },
+      }),
     ])
 
     const result = await loader.load()
@@ -80,13 +99,13 @@ describe("createBuiltinPluginLoader", () => {
 
   it("loads plugins with compatible api versions", async () => {
     const loader = createBuiltinPluginLoader([
-      {
+      builtin({
         ...plugin,
         manifest: {
           ...plugin.manifest,
           apiVersion: "1.5.0",
         },
-      },
+      }),
     ])
 
     const result = await loader.load()
@@ -97,13 +116,13 @@ describe("createBuiltinPluginLoader", () => {
 
   it("rejects plugins with future major api versions", async () => {
     const loader = createBuiltinPluginLoader([
-      {
+      builtin({
         ...plugin,
         manifest: {
           ...plugin.manifest,
           apiVersion: "2.0.0",
         },
-      },
+      }),
     ])
 
     const result = await loader.load()
@@ -120,7 +139,7 @@ describe("createBuiltinPluginLoader", () => {
   it("rejects plugins without apiVersion", async () => {
     const { apiVersion: _apiVersion, ...manifest } = plugin.manifest
     const loader = createBuiltinPluginLoader([
-      { ...plugin, manifest: manifest as unknown as PluginManifest },
+      builtin({ ...plugin, manifest: manifest as unknown as PluginManifest }),
     ])
 
     const result = await loader.load()

@@ -17,9 +17,7 @@ function widgetInstance(id: string, x: number, workspaceId = "default"): PluginI
   return {
     id,
     workspaceId,
-    pluginId: "official.widgets.productivity",
-    contributionId: "notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "official.widgets.productivity", kind: "widget", id: "notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -74,5 +72,36 @@ describe("createInstanceRepository", () => {
     await expect(repository.getByWorkspace("default")).resolves.toMatchObject([
       { id: "default-item" },
     ])
+  })
+
+  it("migrates legacy instance identity only while reading storage and rewrites the canonical row", async () => {
+    const database = createTaboraDatabase("tabora-instance-test")
+    const repository = createInstanceRepository(database)
+    await database.pluginInstances.put({
+      id: "legacy-notes",
+      workspaceId: "default",
+      pluginId: "official.widgets.notes",
+      contributionId: "notes",
+      extensionPoint: "widget",
+      regionId: "mainGrid",
+      enabled: true,
+      size: "M",
+      config: {},
+      createdAt: "2026-05-26T00:00:00.000Z",
+      updatedAt: "2026-05-26T00:00:00.000Z",
+    })
+
+    await expect(repository.get("legacy-notes")).resolves.toMatchObject({
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
+    })
+    await expect(database.pluginInstances.get("legacy-notes")).resolves.toEqual(
+      expect.objectContaining({
+        contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
+      }),
+    )
+    const raw = (await database.pluginInstances.get("legacy-notes")) as Record<string, unknown>
+    expect(raw).not.toHaveProperty("pluginId")
+    expect(raw).not.toHaveProperty("contributionId")
+    expect(raw).not.toHaveProperty("extensionPoint")
   })
 })

@@ -25,7 +25,7 @@ function gridShape(instance: PluginInstance): Omit<GridPlacement, "x" | "y"> {
 }
 
 function withGridOrder(instance: PluginInstance, x: number): PluginInstance {
-  if (instance.extensionPoint !== "widget") {
+  if (instance.contribution.kind !== "widget") {
     return instance
   }
 
@@ -57,8 +57,8 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
     !target ||
     !source.enabled ||
     !target.enabled ||
-    source.extensionPoint !== "widget" ||
-    target.extensionPoint !== "widget" ||
+    source.contribution.kind !== "widget" ||
+    target.contribution.kind !== "widget" ||
     !source.size ||
     !target.size
   ) {
@@ -74,7 +74,7 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
       (instance) =>
         instance.enabled &&
         instance.regionId === source.regionId &&
-        instance.extensionPoint === "widget" &&
+        instance.contribution.kind === "widget" &&
         Boolean(instance.size),
     ),
   )
@@ -93,7 +93,8 @@ export function createDragSortPlan(options: DragSortPlanOptions): DragSortPlan {
   )
   const affectedSlots = visualSort(
     options.instances.filter(
-      (instance) => instance.regionId === source.regionId && instance.extensionPoint === "widget",
+      (instance) =>
+        instance.regionId === source.regionId && instance.contribution.kind === "widget",
     ),
   )
   const reorderedQueue = [...reordered]

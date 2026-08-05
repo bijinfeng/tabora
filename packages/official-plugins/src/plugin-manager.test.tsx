@@ -21,7 +21,7 @@ describe("PluginManagerCard", () => {
               requiredCapabilities: ["localFile"],
               supportedPlatforms: ["desktop-webview"],
               permissions: [],
-              contributes: {},
+              contributionKinds: [],
             },
           ]}
           host={{ togglePluginEnabled: vi.fn() } as never}

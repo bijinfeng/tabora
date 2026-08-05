@@ -8,7 +8,8 @@ import { SegmentedControl } from "@tabora/ui/segmented-control"
 import { Slider } from "@tabora/ui/slider"
 import { Switch } from "@tabora/ui/switch"
 import { createMemo, createSignal, For, Show } from "solid-js"
-import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+import { contributionRefKey, sameContributionRef } from "@tabora/plugin-api/sdk"
 import Check from "lucide-solid/icons/check"
 
 import {
@@ -20,6 +21,8 @@ import {
 import { className, styles } from "./styles"
 
 export function SearchSettingsPanel(props: SettingsPanelViewProps) {
+  const searchSettings = () => props.data.searchSettings
+  const searchProviders = () => props.data.searchProviders ?? []
   const [placeholder, setPlaceholder] = createSignal("搜索网页、命令或卡片")
   const [prefixes, setPrefixes] = createSignal("@ / # / :")
   const [includeWidgetActions, setIncludeWidgetActions] = createSignal(true)
@@ -28,26 +31,32 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
   const [includeCommands, setIncludeCommands] = createSignal(true)
   const [includeHistory, setIncludeHistory] = createSignal(false)
   const [debounceMs, setDebounceMs] = createSignal(180)
-  const enabledIds = () => props.searchSettings.enabledProviderIds
+  const enabledProviders = () => searchSettings()?.enabledProviders ?? []
+  const isProviderEnabled = (provider: NonNullable<SettingsPanelData["searchProviders"]>[number]) =>
+    enabledProviders().some((ref) => sameContributionRef(ref, provider.ref))
 
-  const enabledProviders = createMemo(() =>
-    props.searchProviders.filter((provider) => enabledIds().includes(provider.id)),
+  const enabledProviderEntries = createMemo(() =>
+    searchProviders().filter((provider) => isProviderEnabled(provider)),
   )
   const providerOptions = () =>
-    props.searchProviders.map((provider) => ({
-      value: provider.id,
+    searchProviders().map((provider) => ({
+      value: contributionRefKey(provider.ref),
       label: provider.title,
-      disabled: !enabledIds().includes(provider.id),
+      disabled: !isProviderEnabled(provider) || !props.host.setDefaultSearchProvider,
     }))
 
   const configurationError = createMemo(() => {
-    if (enabledIds().length === 0) return "至少启用一个搜索源"
-    if (!enabledIds().includes(props.searchSettings.defaultProviderId)) {
+    if (enabledProviders().length === 0) return "至少启用一个搜索源"
+    if (
+      !enabledProviders().some((provider) =>
+        sameContributionRef(provider, searchSettings()?.defaultProvider ?? provider),
+      )
+    ) {
       return "默认搜索源未启用，请重新选择"
     }
     if (
-      !props.searchProviders.some(
-        (provider) => provider.id === props.searchSettings.defaultProviderId,
+      !searchProviders().some((provider) =>
+        sameContributionRef(provider.ref, searchSettings()?.defaultProvider ?? provider.ref),
       )
     ) {
       return "默认搜索源不可用，请重新选择"
@@ -55,11 +64,17 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
     return null
   })
 
-  const defaultId = () => props.searchSettings.defaultProviderId
+  const defaultKey = () =>
+    contributionRefKey(
+      searchSettings()?.defaultProvider ?? {
+        pluginId: "",
+        kind: "search-provider" as const,
+        id: "",
+      },
+    )
 
-  function handleToggle(providerId: string) {
-    const currentlyEnabled = enabledIds().includes(providerId)
-    void props.host.setSearchProviderEnabled?.(providerId, !currentlyEnabled)
+  function handleToggle(provider: NonNullable<SettingsPanelData["searchProviders"]>[number]) {
+    void props.host.setSearchProviderEnabled?.(provider.ref, !isProviderEnabled(provider))
   }
 
   return (
@@ -68,7 +83,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
         <div {...stylex.attrs(styles.groupTitle)}>
           默认搜索源
           <span {...stylex.attrs(styles.groupTitleMeta)}>
-            {enabledProviders()[0]?.title ?? "未配置"}
+            {enabledProviderEntries()[0]?.title ?? "未配置"}
           </span>
         </div>
         <FieldRow
@@ -91,13 +106,22 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           trailing={
             <Show
               when={providerOptions().length > 0}
-              fallback={<span {...stylex.attrs(styles.rowMeta)}>{defaultId()}</span>}
+              fallback={
+                <span {...stylex.attrs(styles.rowMeta)}>
+                  {searchSettings()?.defaultProvider.id ?? "未配置"}
+                </span>
+              }
             >
               <SegmentedControl<string>
                 size="sm"
-                value={defaultId()}
+                value={defaultKey()}
                 options={providerOptions()}
-                onChange={(providerId) => void props.host.setDefaultSearchProvider(providerId)}
+                onChange={(key) => {
+                  const provider = searchProviders().find(
+                    (candidate) => contributionRefKey(candidate.ref) === key,
+                  )
+                  if (provider) void props.host.setDefaultSearchProvider?.(provider.ref)
+                }}
                 aria-label="默认搜索引擎"
               />
             </Show>
@@ -177,13 +201,16 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
       <section {...stylex.attrs(styles.group)}>
         <div {...stylex.attrs(styles.groupTitle)}>
           搜索源管理
-          <span {...stylex.attrs(styles.groupTitleMeta)}>{enabledProviders().length} 个启用</span>
+          <span {...stylex.attrs(styles.groupTitleMeta)}>
+            {enabledProviderEntries().length} 个启用
+          </span>
         </div>
         <div {...stylex.attrs(styles.providerList)} id="settings-search-provider-select">
-          <For each={props.searchProviders}>
+          <For each={searchProviders()}>
             {(provider) => {
-              const isEnabled = () => enabledIds().includes(provider.id)
-              const isDefault = () => provider.id === defaultId()
+              const isEnabled = () => isProviderEnabled(provider)
+              const isDefault = () =>
+                sameContributionRef(provider.ref, searchSettings()?.defaultProvider ?? provider.ref)
               return (
                 <ListRow
                   xstyle={[
@@ -199,9 +226,9 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                       data-search-provider-main
                       onClick={() => {
                         if (!isEnabled()) return
-                        void props.host.setDefaultSearchProvider(provider.id)
+                        void props.host.setDefaultSearchProvider?.(provider.ref)
                       }}
-                      disabled={!isEnabled()}
+                      disabled={!isEnabled() || !props.host.setDefaultSearchProvider}
                     >
                       <span {...stylex.attrs(styles.providerText)}>
                         <span {...stylex.attrs(styles.providerTitle)}>{provider.title}</span>
@@ -224,7 +251,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
                       <SettingsSwitch
                         checked={isEnabled()}
                         label={`${isEnabled() ? "禁用" : "启用"} ${provider.title}`}
-                        onChange={() => handleToggle(provider.id)}
+                        onChange={() => handleToggle(provider)}
                       />
                     </div>
                   }

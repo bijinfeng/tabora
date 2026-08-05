@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { QuickLinksCard } from "./quick-links-card"
 
 function makeProps(overrides?: Partial<WidgetViewProps>): WidgetViewProps {

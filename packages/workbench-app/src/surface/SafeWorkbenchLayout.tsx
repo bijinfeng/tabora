@@ -106,7 +106,7 @@ export function SafeWorkbenchLayout(props: {
   instances: PluginInstance[]
   tShell?: ShellTranslation
   widgetContribution: (
-    instance: Pick<PluginInstance, "pluginId" | "contributionId">,
+    instance: Pick<PluginInstance, "contribution">,
   ) => { icon?: string; views: { card: string } } | null | undefined
   resolveWidgetModel: (instance: PluginInstance) => SafeLayoutModel | null
   getView: (viewId: string) => SolidView<WidgetViewProps> | undefined
@@ -196,7 +196,7 @@ export function SafeWorkbenchLayout(props: {
                   title={model.title}
                   {...(props.pluginViewBoundaryCopy ? { copy: props.pluginViewBoundaryCopy } : {})}
                 >
-                  <div data-tabora-plugin-id={instance.pluginId}>
+                  <div data-tabora-plugin-id={instance.contribution.pluginId}>
                     {View(props.buildWidgetViewProps(instance, model))}
                   </div>
                 </PluginViewBoundary>

@@ -40,14 +40,14 @@ function createOptions(
 }
 
 describe("createWorkbenchShellCommandModels", () => {
-  it("uses injected shell ids for theme toggle, layout toggle, and settings entry", () => {
+  it("uses injected shell ids for theme toggle, layout toggle, and settings entry", async () => {
     const options = createOptions()
     const models = createWorkbenchShellCommandModels(options)
 
-    models.runCommand("toggle-theme", {})
-    models.runCommand("toggle-layout", {})
-    models.runCommand("open-settings", {})
-    models.runCommand("open-plugin-manager", {})
+    await models.runCommand("toggle-theme", {})
+    await models.runCommand("toggle-layout", {})
+    await models.runCommand("open-settings", {})
+    await models.runCommand("open-plugin-manager", {})
 
     expect(options.switchTheme).toHaveBeenCalledWith("theme.dark.custom")
     expect(options.switchLayout).toHaveBeenCalledWith("layout.focus.custom")
@@ -97,7 +97,7 @@ describe("createWorkbenchShellCommandModels", () => {
     ).toContain("open-plugin-manager")
   })
 
-  it("uses tShell for platform command labels and shortcut toast", () => {
+  it("uses tShell for platform command labels and shortcut toast", async () => {
     const showToast = vi.fn()
     const models = createWorkbenchShellCommandModels(
       createOptions({
@@ -127,7 +127,42 @@ describe("createWorkbenchShellCommandModels", () => {
       ]),
     )
 
-    models.runCommand("open-shortcuts", {})
+    await models.runCommand("open-shortcuts", {})
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining("Shortcuts:"))
+  })
+
+  it("keeps command failures observable for programmatic callers and contained at palette and shortcut edges", async () => {
+    const showToast = vi.fn()
+    const runPluginCommand = vi.fn(async () => {
+      throw new Error("plugin command failed")
+    })
+    const models = createWorkbenchShellCommandModels(
+      createOptions({
+        showToast,
+        pluginCommands: [{ id: "official.commands.test.run", title: "Run", category: "test" }],
+        pluginKeybindings: [
+          {
+            id: "official.commands.test.run.keybinding",
+            commandId: "official.commands.test.run",
+            key: "mod+j",
+          },
+        ],
+        hasPluginCommandHandler: () => true,
+        runPluginCommand,
+      }),
+    )
+
+    await expect(models.runCommand("official.commands.test.run", {})).rejects.toThrow(
+      "plugin command failed",
+    )
+
+    const paletteEntry = models
+      .commandItems()
+      .find((entry) => entry.id === "official.commands.test.run")
+    await paletteEntry?.action()
+    expect(showToast).toHaveBeenCalledWith("plugin command failed")
+
+    expect(models.shortcutRegistry().execute("mod+j")).toBe(true)
+    await vi.waitFor(() => expect(showToast).toHaveBeenCalledTimes(2))
   })
 })

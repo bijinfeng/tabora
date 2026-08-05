@@ -1,4 +1,16 @@
-import type { ExtensionPoint, PluginManifest, PluginPermission, WidgetSize } from "./manifest"
+import type {
+  BackgroundProviderContributionRef,
+  BackgroundRendererContributionRef,
+  LayoutContributionRef,
+  PluginManifest,
+  PluginPermission,
+  RegionContributionRef,
+  RegionContentKind,
+  SettingsHostActionId,
+  SettingsHostReadId,
+  ThemeContributionRef,
+  WidgetSize,
+} from "./manifest"
 
 export type GridPlacement = {
   x: number
@@ -10,17 +22,17 @@ export type GridPlacement = {
 
 export type RegionState = {
   regionId: string
-  accepts: ExtensionPoint[]
+  accepts: RegionContentKind[]
   instances: Array<{ instanceId: string }>
 }
 
 export type Workspace = {
   id: string
   name: string
-  activeLayoutId: string
-  activeThemeId: string
-  activeBackgroundProviderId: string
-  activeBackgroundRendererId?: string
+  activeLayout: LayoutContributionRef
+  activeTheme: ThemeContributionRef
+  activeBackgroundProvider: BackgroundProviderContributionRef
+  activeBackgroundRenderer?: BackgroundRendererContributionRef
   config?: Record<string, unknown>
   regions: Record<string, RegionState>
   createdAt: string
@@ -30,9 +42,8 @@ export type Workspace = {
 export type PluginInstance = {
   id: string
   workspaceId: string
-  pluginId: string
-  contributionId: string
-  extensionPoint: ExtensionPoint
+  /** Canonical persisted identity. */
+  contribution: RegionContributionRef
   regionId: string
   enabled: boolean
   size?: WidgetSize
@@ -55,4 +66,8 @@ export type PluginRecord = {
   disabledReason?: string
   manifest: PluginManifest
   grantedPermissions: PluginPermission[]
+  /** Host-approved subset of settings panel action requests. */
+  grantedSettingsHostActions?: SettingsHostActionId[]
+  /** Host-approved subset of settings panel read requests. */
+  grantedSettingsHostReads?: SettingsHostReadId[]
 }

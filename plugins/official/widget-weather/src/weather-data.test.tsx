@@ -6,6 +6,11 @@ import {
   weatherCodeToText,
   windDirectionLabel,
 } from "./weather-data"
+import type { PluginNetworkAccess } from "@tabora/plugin-api/sdk"
+
+function network(fetch: PluginNetworkAccess["fetch"]): PluginNetworkAccess {
+  return { canFetch: () => true, fetch }
+}
 
 describe("weather-data mappings", () => {
   it("maps WMO codes to Chinese text", () => {
@@ -95,9 +100,7 @@ describe("fetchWeather", () => {
         },
       })
     })
-    vi.stubGlobal("fetch", fetchMock)
-
-    const snapshot = await fetchWeather("北京")
+    const snapshot = await fetchWeather("北京", network(fetchMock))
 
     expect(snapshot.city).toBe("北京")
     expect(snapshot.district).toBe("海淀区")
@@ -147,19 +150,14 @@ describe("fetchWeather", () => {
         },
       })
     })
-    vi.stubGlobal("fetch", fetchMock)
-
-    const snapshot = await fetchWeather("上海")
+    const snapshot = await fetchWeather("上海", network(fetchMock))
     expect(snapshot.city).toBe("上海")
     expect(snapshot.aqi).toBeNull()
   })
 
   it("throws a helpful error when the city is not found", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => jsonResponse({ results: [] })),
-    )
-    await expect(fetchWeather("不存在城")).rejects.toThrow(/未找到城市/)
+    const fetchMock = vi.fn(async () => jsonResponse({ results: [] }))
+    await expect(fetchWeather("不存在城", network(fetchMock))).rejects.toThrow(/未找到城市/)
   })
 })
 

@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import { DatePicker } from "@tabora/ui/date-picker"
 import { Input } from "@tabora/ui/input"

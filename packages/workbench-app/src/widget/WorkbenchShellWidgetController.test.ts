@@ -17,9 +17,17 @@ function workspace(): Workspace {
   return {
     id: "workspace-1",
     name: "默认工作区",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    activeBackgroundProviderId: "official.background.default",
+    activeLayout: {
+      pluginId: "official.layout",
+      kind: "layout",
+      id: "official.layout.workbench-dashboard",
+    },
+    activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+    activeBackgroundProvider: {
+      pluginId: "official.background",
+      kind: "background-provider",
+      id: "official.background.default",
+    },
     regions: {},
     createdAt: baseDate,
     updatedAt: baseDate,
@@ -30,9 +38,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -146,7 +152,7 @@ function createController(options: {
     showToast,
     focusWidgetInstance,
     availableCommandIds: () => [],
-    runCommand: (_commandId, _context) => false,
+    runCommand: async (_commandId, _context) => false,
     ...(options.tShell ? { tShell: options.tShell } : {}),
   })
 

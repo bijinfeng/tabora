@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { pluginManifestSchema } from "./manifestSchema"
+import { pluginManifestSchema, validatePluginManifestComposition } from "./manifestSchema"
 
 function cssRgb(channels: readonly number[]) {
   return ["rgb", `(${channels.join(", ")})`].join("")
@@ -28,6 +28,9 @@ describe("pluginManifestSchema", () => {
       entry: "./entry",
       engine: { platform: "^0.1.0" },
       contributes: {
+        commands: [
+          { id: "official.widgets.productivity.clear", title: "Clear", category: "widget" },
+        ],
         widgets: [
           {
             id: "notes",
@@ -35,7 +38,10 @@ describe("pluginManifestSchema", () => {
             supportedSizes: ["S", "M", "L"],
             defaultSize: "M",
             allowMultipleInstances: true,
-            views: { card: "official.notes.card", expand: "official.notes.expand" },
+            views: {
+              card: "official.widgets.productivity.card",
+              expand: "official.widgets.productivity.expand",
+            },
           },
         ],
       },
@@ -53,6 +59,7 @@ describe("pluginManifestSchema", () => {
       entry: "./entry",
       engine: { platform: "^0.1.0" },
       contributes: {
+        commands: [{ id: "official.widgets.notes.clear", title: "Clear", category: "widget" }],
         widgets: [
           {
             id: "notes",
@@ -61,9 +68,9 @@ describe("pluginManifestSchema", () => {
             defaultSize: "M",
             allowMultipleInstances: true,
             views: {
-              card: "official.notes.card",
-              expand: "official.notes.expand",
-              settings: "official.notes.settings",
+              card: "official.widgets.notes.card",
+              expand: "official.widgets.notes.expand",
+              settings: "official.widgets.notes.settings",
             },
           },
         ],
@@ -207,6 +214,7 @@ describe("pluginManifestSchema", () => {
       entry: "./entry",
       engine: { platform: "^0.1.0" },
       contributes: {
+        commands: [{ id: "official.widgets.notes.clear", title: "Clear", category: "widget" }],
         widgets: [
           {
             id: "notes",
@@ -214,12 +222,12 @@ describe("pluginManifestSchema", () => {
             supportedSizes: ["S", "M", "L"],
             defaultSize: "M",
             allowMultipleInstances: true,
-            views: { card: "official.notes.card" },
+            views: { card: "official.widgets.notes.card" },
             contextMenus: [
               {
                 id: "notes.clear",
                 label: "清空便签",
-                commandId: "official.notes.clear",
+                commandId: "official.widgets.notes.clear",
                 order: 30,
                 danger: true,
                 when: "widget",
@@ -243,12 +251,12 @@ describe("pluginManifestSchema", () => {
       supportedSizes: ["S", "M"],
       defaultSize: "M",
       allowMultipleInstances: true,
-      views: { card: "official.notes.card" },
+      views: { card: "official.widgets.productivity.card" },
     }
 
     for (const contextMenu of [
-      { label: "清空便签", commandId: "official.notes.clear" },
-      { id: "notes.clear", commandId: "official.notes.clear" },
+      { label: "清空便签", commandId: "official.widgets.productivity.clear" },
+      { id: "notes.clear", commandId: "official.widgets.productivity.clear" },
     ]) {
       const result = pluginManifestSchema.safeParse({
         id: "bad.widget.context-menu",
@@ -312,13 +320,6 @@ describe("pluginManifestSchema", () => {
             view: "official.layout.workbench-dashboard.view",
             regions: [
               {
-                id: "rail",
-                title: "工作台导航",
-                accepts: ["layout"],
-                required: true,
-                maxInstances: 1,
-              },
-              {
                 id: "topbar",
                 title: "顶部搜索区",
                 accepts: ["search"],
@@ -333,7 +334,6 @@ describe("pluginManifestSchema", () => {
               },
             ],
             defaultRegions: {
-              rail: [],
               topbar: [{ instanceId: "search-main" }],
               mainGrid: [
                 { instanceId: "today-focus-1" },
@@ -402,11 +402,11 @@ describe("pluginManifestSchema", () => {
             order: 20,
           },
           {
-            id: "official.widget.notes.settings",
+            id: "official.settings.workspace.notes.settings",
             title: "便签实例",
             content: {
               kind: "custom-view",
-              view: "official.widget.notes.settings.view",
+              view: "official.settings.workspace.notes.settings.view",
             },
             section: "general",
             scope: "instance",
@@ -486,6 +486,14 @@ describe("pluginManifestSchema", () => {
       entry: "./background-basic",
       engine: { platform: "^0.1.0" },
       contributes: {
+        backgroundRenderers: [
+          {
+            id: "background.canvas.renderer",
+            title: "Canvas renderer",
+            accepts: ["canvas"],
+            view: "official.background.basic.canvas.view",
+          },
+        ],
         backgroundProviders: [
           {
             id: "background.css",
@@ -515,7 +523,7 @@ describe("pluginManifestSchema", () => {
             id: "background.canvas",
             title: "Canvas",
             sourceType: "generated",
-            source: { type: "canvas", view: "background.canvas.view" },
+            source: { type: "canvas", view: "official.background.basic.canvas.view" },
           },
         ],
       },
@@ -538,7 +546,7 @@ describe("pluginManifestSchema", () => {
             id: "official.background.css-renderer",
             title: "CSS 背景渲染器",
             accepts: ["css", "gradient"],
-            view: "official.background.css-renderer.view",
+            view: "official.background.basic.css-renderer.view",
           },
         ],
       },
@@ -584,17 +592,40 @@ describe("pluginManifestSchema", () => {
             id: "official.workspace.default",
             title: "默认工作区",
             plugins: ["official.widgets.todo"],
-            layoutId: "official.layout.workbench-dashboard",
-            themeId: "official.theme.light",
-            backgroundProviderId: "background.gradient-green",
-            search: { defaultProviderId: "official.search.google" },
+            layout: {
+              pluginId: "official.layout",
+              kind: "layout",
+              id: "official.layout.workbench-dashboard",
+            },
+            theme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+            backgroundProvider: {
+              pluginId: "official.background",
+              kind: "background-provider",
+              id: "background.gradient-green",
+            },
+            search: {
+              defaultProvider: {
+                pluginId: "official.search",
+                kind: "search-provider",
+                id: "official.search.google",
+              },
+              enabledProviders: [
+                {
+                  pluginId: "official.search",
+                  kind: "search-provider",
+                  id: "official.search.google",
+                },
+              ],
+            },
             regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
             instances: [
               {
-                pluginId: "official.widgets.todo",
-                contributionId: "todo",
                 instanceId: "todo-1",
-                extensionPoint: "widget",
+                contribution: {
+                  pluginId: "official.widgets.todo",
+                  kind: "widget",
+                  id: "todo",
+                },
                 regionId: "mainGrid",
               },
             ],
@@ -617,7 +648,7 @@ describe("pluginManifestSchema", () => {
       contributes: {
         commands: [
           {
-            id: "official.command.add-widget",
+            id: "official.commands.workspace.add-widget",
             title: "添加卡片",
             description: "向工作台添加新卡片",
             icon: "+",
@@ -668,10 +699,17 @@ describe("pluginManifestSchema", () => {
       entry: "./keybindings",
       engine: { platform: "^0.1.0" },
       contributes: {
+        commands: [
+          {
+            id: "official.keybindings.workspace.open-settings",
+            title: "Open settings",
+            category: "workspace",
+          },
+        ],
         keybindings: [
           {
-            id: "official.keybinding.open-settings",
-            commandId: "open-settings",
+            id: "official.keybindings.workspace.open-settings",
+            commandId: "official.keybindings.workspace.open-settings",
             key: "mod+,",
             platform: "mac",
             when: "workspace",
@@ -742,6 +780,79 @@ describe("pluginManifestSchema", () => {
 
     expect(result.success).toBe(false)
   })
+
+  it("rejects duplicate local contribution IDs in the same contribution kind", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "example.duplicate-contributions",
+      name: "Duplicate contributions",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        commands: [
+          { id: "duplicate", title: "First", category: "example" },
+          { id: "duplicate", title: "Second", category: "example" },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects registration IDs that belong to another plugin namespace", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "example.owner",
+      name: "Owner test",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        commands: [{ id: "example.other.run", title: "Run", category: "test" }],
+        widgets: [
+          {
+            id: "widget",
+            title: "Widget",
+            supportedSizes: ["S"],
+            defaultSize: "S",
+            allowMultipleInstances: false,
+            views: { card: "example.other.widget.view" },
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects region contributions that are not renderable region content", () => {
+    const result = pluginManifestSchema.safeParse({
+      id: "example.invalid-region-kind",
+      name: "Invalid region kind",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./index",
+      engine: { platform: "^0.1.0" },
+      contributes: {
+        layouts: [
+          {
+            id: "main",
+            title: "Main",
+            view: "example.main.view",
+            regions: [
+              { id: "main", title: "Main", accepts: ["theme"], required: true },
+              { id: "widgets", title: "Widgets", accepts: ["widget"], required: true },
+            ],
+            defaultRegions: { main: [], widgets: [] },
+            supportsResponsive: true,
+          },
+        ],
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
 })
 
 describe("layout 最小强制规则", () => {
@@ -785,5 +896,81 @@ describe("layout 最小强制规则", () => {
 
   it("合格：缺 search/settings region 仍通过", () => {
     expect(pluginManifestSchema.safeParse(manifestWith(baseLayout)).success).toBe(true)
+  })
+})
+
+describe("validatePluginManifestComposition", () => {
+  const base = {
+    name: "Plugin",
+    version: "1.0.0",
+    apiVersion: "1.0.0",
+    entry: "./index",
+    engine: { platform: "^0.1.0" },
+  }
+
+  it("rejects unresolved preset plugin, contribution, and layout default instance references", () => {
+    expect(() =>
+      validatePluginManifestComposition([
+        {
+          ...base,
+          id: "example.layout",
+          contributes: {
+            layouts: [
+              {
+                id: "layout",
+                title: "Layout",
+                view: "example.layout.view",
+                regions: [{ id: "grid", title: "Grid", accepts: ["widget"] }],
+                defaultRegions: { grid: [{ instanceId: "missing" }] },
+                supportsResponsive: true,
+              },
+            ],
+          },
+        },
+        {
+          ...base,
+          id: "example.preset",
+          contributes: {
+            workspacePresets: [
+              {
+                id: "preset",
+                title: "Preset",
+                plugins: ["example.layout", "missing.plugin"],
+                layout: { pluginId: "example.layout", kind: "layout", id: "layout" },
+                theme: { pluginId: "missing.plugin", kind: "theme", id: "missing-theme" },
+                backgroundProvider: {
+                  pluginId: "missing.plugin",
+                  kind: "background-provider",
+                  id: "missing-background",
+                },
+                search: {
+                  defaultProvider: {
+                    pluginId: "missing.plugin",
+                    kind: "search-provider",
+                    id: "missing-provider",
+                  },
+                  enabledProviders: [
+                    {
+                      pluginId: "missing.plugin",
+                      kind: "search-provider",
+                      id: "missing-provider",
+                    },
+                  ],
+                },
+                regions: [{ regionId: "grid", accepts: ["widget"] }],
+                instances: [
+                  {
+                    instanceId: "widget-1",
+                    contribution: { pluginId: "missing.plugin", kind: "widget", id: "missing" },
+                    regionId: "grid",
+                    size: "S",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ]),
+    ).toThrow("Invalid plugin manifest composition")
   })
 })

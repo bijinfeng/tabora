@@ -13,9 +13,13 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Main",
-    activeLayoutId: "layout.previous",
-    activeThemeId: "theme.light",
-    activeBackgroundProviderId: "background.gradient-green",
+    activeLayout: { pluginId: "official.layout", kind: "layout", id: "layout.previous" },
+    activeTheme: { pluginId: "official.theme", kind: "theme", id: "theme.light" },
+    activeBackgroundProvider: {
+      pluginId: "official.background",
+      kind: "background-provider",
+      id: "background.gradient-green",
+    },
     config: {},
     regions: {
       old: { regionId: "old", accepts: ["widget"], instances: [{ instanceId: "widget-1" }] },
@@ -30,9 +34,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "old",
     enabled: true,
     size: "M",
@@ -47,6 +49,7 @@ function layout(regions: LayoutContribution["regions"]): LayoutContribution {
   return {
     id: "layout.next",
     title: "Next",
+    view: "layout.next.view",
     regions,
     defaultRegions: {},
     supportsResponsive: true,
@@ -128,11 +131,13 @@ describe("switchWorkbenchLayout", () => {
       plan: plan(),
     }))
     const saveSnapshot = vi.fn(async () => {})
-    const persistWorkspaceLayout = vi.fn(async () => ({
-      ...currentWorkspace,
-      activeLayoutId: "layout.next",
-      regions: plan().nextRegions,
-    }))
+    const persistWorkspaceLayout = vi.fn(
+      async (): Promise<Workspace> => ({
+        ...currentWorkspace,
+        activeLayout: { pluginId: "official.layout", kind: "layout", id: "layout.next" },
+        regions: plan().nextRegions,
+      }),
+    )
     const setCtxMenu = vi.fn()
     const setExpandState = vi.fn()
     const setInstances = vi.fn()
@@ -167,7 +172,7 @@ describe("switchWorkbenchLayout", () => {
     )
     expect(setWorkspaceState).toHaveBeenCalledWith(
       expect.objectContaining({
-        activeLayoutId: "layout.next",
+        activeLayout: { pluginId: "official.layout", kind: "layout", id: "layout.next" },
         regions: plan().nextRegions,
       }),
     )

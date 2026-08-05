@@ -34,7 +34,15 @@ export function createWorkbenchShellSurfaceOverlayProps(shell: WorkbenchShell) {
       expandState: overlays.expandState(),
       getView: (viewId: string) => resolveWorkbenchView<WidgetViewProps>(shell.views, viewId),
       widgetIconForProps: (viewProps: WidgetViewProps) =>
-        renderWorkbenchWidgetIcon(widgetController.widgetContribution(viewProps)?.icon),
+        renderWorkbenchWidgetIcon(
+          widgetController.widgetContribution({
+            contribution: {
+              pluginId: viewProps.pluginId,
+              kind: "widget",
+              id: viewProps.contributionId,
+            },
+          })?.icon,
+        ),
       onClose: widgetController.closeExpand,
       ...(tShell ? { tShell } : {}),
       ...(pluginViewBoundaryCopy ? { pluginViewBoundaryCopy } : {}),

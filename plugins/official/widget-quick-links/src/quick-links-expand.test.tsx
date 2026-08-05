@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { QuickLinksExpand } from "./quick-links-expand"
 import { QuickLinksExpandFooter } from "./quick-links-expand-footer"
 

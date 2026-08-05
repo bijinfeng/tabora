@@ -1,4 +1,11 @@
-import type { SettingsPanelViewProps, Workspace } from "@tabora/plugin-api"
+import type {
+  SettingsHostActionId,
+  SettingsHostReadId,
+  SettingsPanelData,
+  SettingsPanelViewProps,
+  SettingsWorkspaceSummary,
+  Workspace,
+} from "@tabora/plugin-api"
 import {
   resolveInitialSettingsSectionId,
   type SettingsPanelDescriptor,
@@ -6,6 +13,20 @@ import {
 } from "@tabora/workbench-shell"
 
 import { requireWorkspace } from "../shared/WorkbenchShellUtils"
+
+function workspaceSummary(workspace: Workspace): SettingsWorkspaceSummary {
+  return {
+    id: workspace.id,
+    name: workspace.name,
+    activeLayout: workspace.activeLayout,
+    activeTheme: workspace.activeTheme,
+    activeBackgroundProvider: workspace.activeBackgroundProvider,
+    ...(workspace.activeBackgroundRenderer
+      ? { activeBackgroundRenderer: workspace.activeBackgroundRenderer }
+      : {}),
+    regionCount: Object.keys(workspace.regions).length,
+  }
+}
 
 export function openWorkbenchSettings(
   options: {
@@ -24,49 +45,105 @@ export function buildWorkbenchSettingsPanelProps(
   options: {
     workspace: Workspace | null
     workspaces: Workspace[]
-    layouts: SettingsPanelViewProps["layouts"]
-    themes: SettingsPanelViewProps["themes"]
-    backgrounds: SettingsPanelViewProps["backgrounds"]
-    searchProviders: SettingsPanelViewProps["searchProviders"]
-    searchSettings: SettingsPanelViewProps["searchSettings"]
-    plugins: SettingsPanelViewProps["plugins"]
+    layouts: NonNullable<SettingsPanelData["layouts"]>
+    themes: NonNullable<SettingsPanelData["themes"]>
+    backgrounds: NonNullable<SettingsPanelData["backgrounds"]>
+    searchProviders: NonNullable<SettingsPanelData["searchProviders"]>
+    searchSettings: NonNullable<SettingsPanelData["searchSettings"]>
+    plugins: NonNullable<SettingsPanelData["plugins"]>
     locale: SettingsPanelViewProps["locale"]
     availableLocales: SettingsPanelViewProps["availableLocales"]
     host: SettingsPanelViewProps["host"]
+    instanceId?: string
   },
 ): SettingsPanelViewProps {
+  const host: SettingsPanelViewProps["host"] = {
+    close: () => options.host.close(),
+    setDirty: (isDirty) => options.host.setDirty(isDirty),
+  }
+
+  const grants = new Set<SettingsHostActionId>(panel.grantedHostActions ?? [])
+  const readGrants = new Set<SettingsHostReadId>(panel.grantedHostReads ?? [])
+  if (grants.has("workspace.theme.write") && options.host.switchTheme) {
+    host.switchTheme = (themeId) => Promise.resolve(options.host.switchTheme?.(themeId))
+  }
+  if (grants.has("workspace.background.write") && options.host.switchBackground) {
+    host.switchBackground = (backgroundId) =>
+      Promise.resolve(options.host.switchBackground?.(backgroundId))
+  }
+  if (grants.has("workspace.search.write") && options.host.setDefaultSearchProvider) {
+    host.setDefaultSearchProvider = (providerId) =>
+      Promise.resolve(options.host.setDefaultSearchProvider?.(providerId))
+  }
+  if (grants.has("workspace.layout.write") && options.host.switchLayout) {
+    host.switchLayout = (layoutId) => options.host.switchLayout!(layoutId)
+  }
+  if (grants.has("workspace.locale.write") && options.host.switchLocale) {
+    host.switchLocale = (locale) => options.host.switchLocale!(locale)
+  }
+  if (grants.has("workspace.search.write") && options.host.setSearchProviderEnabled) {
+    host.setSearchProviderEnabled = (providerId, enabled) =>
+      options.host.setSearchProviderEnabled!(providerId, enabled)
+  }
+  if (grants.has("workspace.transfer")) {
+    if (options.host.exportWorkspace) host.exportWorkspace = () => options.host.exportWorkspace!()
+    if (options.host.importWorkspace)
+      host.importWorkspace = (json) => options.host.importWorkspace!(json)
+  }
+  if (grants.has("workspace.manage")) {
+    if (options.host.createWorkspace)
+      host.createWorkspace = (name) => options.host.createWorkspace!(name)
+    if (options.host.switchWorkspace)
+      host.switchWorkspace = (id) => options.host.switchWorkspace!(id)
+    if (options.host.deleteWorkspace)
+      host.deleteWorkspace = (id) => options.host.deleteWorkspace!(id)
+  }
+  if (grants.has("plugins.manage") && options.host.togglePluginEnabled) {
+    host.togglePluginEnabled = (pluginId, enabled) =>
+      options.host.togglePluginEnabled!(pluginId, enabled)
+  }
+
+  const data: SettingsPanelData = {}
+  if (readGrants.has("workspace.current.read")) {
+    data.workspace = workspaceSummary(requireWorkspace(options.workspace))
+  }
+  if (readGrants.has("workspace.list.read")) {
+    data.workspaces = options.workspaces.map(workspaceSummary)
+  }
+  if (readGrants.has("catalog.layouts.read")) data.layouts = options.layouts
+  if (readGrants.has("catalog.themes.read")) data.themes = options.themes
+  if (readGrants.has("catalog.backgrounds.read")) data.backgrounds = options.backgrounds
+  if (readGrants.has("catalog.search-providers.read"))
+    data.searchProviders = options.searchProviders
+  if (readGrants.has("workspace.search.read")) data.searchSettings = options.searchSettings
+  if (readGrants.has("plugins.read")) data.plugins = options.plugins
+
   return {
     panelId: panel.id,
     pluginId: panel.pluginId,
     scope: panel.scope,
+    ...(panel.scope === "instance" && options.instanceId ? { instanceId: options.instanceId } : {}),
     ...(options.locale ? { locale: options.locale } : {}),
     ...(options.availableLocales ? { availableLocales: options.availableLocales } : {}),
-    host: options.host,
-    workspace: requireWorkspace(options.workspace),
-    workspaces: options.workspaces,
-    layouts: options.layouts,
-    themes: options.themes,
-    backgrounds: options.backgrounds,
-    searchProviders: options.searchProviders,
-    searchSettings: options.searchSettings,
-    plugins: options.plugins,
+    host,
+    data,
   }
 }
 
 export function createWorkbenchSettingsPanelPropsBuilder(options: {
   getWorkspace: () => Workspace | null
   getWorkspaces: () => Workspace[]
-  getLayouts: () => SettingsPanelViewProps["layouts"]
-  getThemes: () => SettingsPanelViewProps["themes"]
-  getBackgrounds: () => SettingsPanelViewProps["backgrounds"]
-  getSearchProviders: () => SettingsPanelViewProps["searchProviders"]
-  getSearchSettings: () => SettingsPanelViewProps["searchSettings"]
-  getPlugins: () => SettingsPanelViewProps["plugins"]
+  getLayouts: () => NonNullable<SettingsPanelData["layouts"]>
+  getThemes: () => NonNullable<SettingsPanelData["themes"]>
+  getBackgrounds: () => NonNullable<SettingsPanelData["backgrounds"]>
+  getSearchProviders: () => NonNullable<SettingsPanelData["searchProviders"]>
+  getSearchSettings: () => NonNullable<SettingsPanelData["searchSettings"]>
+  getPlugins: () => NonNullable<SettingsPanelData["plugins"]>
   getLocale: () => SettingsPanelViewProps["locale"]
   getAvailableLocales: () => SettingsPanelViewProps["availableLocales"]
   host: SettingsPanelViewProps["host"]
 }) {
-  return (panel: SettingsPanelDescriptor): SettingsPanelViewProps =>
+  return (panel: SettingsPanelDescriptor, instanceId?: string): SettingsPanelViewProps =>
     buildWorkbenchSettingsPanelProps(panel, {
       workspace: options.getWorkspace(),
       workspaces: options.getWorkspaces(),
@@ -79,5 +156,6 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
       locale: options.getLocale(),
       availableLocales: options.getAvailableLocales(),
       host: options.host,
+      ...(instanceId ? { instanceId } : {}),
     })
 }

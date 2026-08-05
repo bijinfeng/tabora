@@ -6,7 +6,7 @@ import type {
   Workspace,
 } from "@tabora/plugin-api"
 import type { PluginCatalog, ToastOptions } from "@tabora/orchestrator"
-import type { ViewRegistry } from "@tabora/platform-kernel"
+import type { CommandHandlerRegistry, ViewRegistry } from "@tabora/platform-kernel"
 import type { InstanceRepository, PluginDataRepository } from "@tabora/storage"
 
 import { renderWorkbenchWidgetIcon } from "../shared/WorkbenchShellIcons"
@@ -51,6 +51,7 @@ type ControllerCatalog = Pick<
   | "findSearchContribution"
 >
 type ControllerRegistryViews = Pick<ViewRegistry, "has" | "get">
+type ControllerRegistryCommands = Pick<CommandHandlerRegistry, "has" | "execute">
 type ControllerPlugins = Array<{
   manifest: {
     contributes: Pick<PluginManifest["contributes"], "commands" | "keybindings">
@@ -68,6 +69,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     plugins: ControllerPlugins
     pluginCatalog: ControllerCatalog
     registryViews: ControllerRegistryViews
+    registryCommands: ControllerRegistryCommands
     instanceRepo: ControllerInstanceRepo
     pluginDataRepo: ControllerPluginDataRepo
   }
@@ -129,9 +131,12 @@ export function createWorkbenchShellControllerRuntime(options: {
     (plugin) => plugin.manifest.contributes.keybindings ?? [],
   )
 
-  const runPluginCommand = (_commandId: string, _context: CommandExecutionContext) => {
-    // Plugin command execution is routed here so widget context stays available for the future bus.
-  }
+  const runPluginCommand = (commandId: string, context: CommandExecutionContext) =>
+    options.services.registryCommands.execute(commandId, {
+      commandId,
+      source: context.source ?? "programmatic",
+      ...(context.instance ? { instanceId: context.instance.id } : {}),
+    })
 
   const commandRuntime: CommandRuntime = createWorkbenchShellCommandModels({
     isDark: options.state.isDark,
@@ -150,6 +155,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     switchLayout: (layoutId) => {
       void options.controllers.workspaceController.switchLayout(layoutId)
     },
+    hasPluginCommandHandler: options.services.registryCommands.has,
     runPluginCommand,
   })
 
@@ -173,8 +179,8 @@ export function createWorkbenchShellControllerRuntime(options: {
       resolveWidgetRenderModel(
         instance,
         options.services.pluginCatalog.findWidgetContribution(
-          instance.pluginId,
-          instance.contributionId,
+          instance.contribution.pluginId,
+          instance.contribution.id,
         ),
       ),
     hasView: (viewId) => options.services.registryViews.has(viewId),

@@ -1,5 +1,4 @@
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import type { WorkspacePresetContribution } from "@tabora/plugin-api"
+import type { PluginModule, WorkspacePresetContribution } from "@tabora/plugin-api/sdk"
 
 export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   id: "official.workspace.default",
@@ -17,18 +16,38 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
     "official.plugin-manager",
     "official.settings.workspace",
   ],
-  layoutId: "official.layout.workbench-dashboard",
-  themeId: "official.theme.light",
-  backgroundProviderId: "background.gradient-green",
+  layout: {
+    pluginId: "official.layout.workbench-dashboard",
+    kind: "layout",
+    id: "official.layout.workbench-dashboard",
+  },
+  theme: {
+    pluginId: "official.theme.default-pack",
+    kind: "theme",
+    id: "official.theme.light",
+  },
+  backgroundProvider: {
+    pluginId: "official.background.basic",
+    kind: "background-provider",
+    id: "background.gradient-green",
+  },
   search: {
-    defaultProviderId: "official.search.google",
-    enabledProviderIds: [
+    defaultProvider: {
+      pluginId: "official.search-providers.basic",
+      kind: "search-provider",
+      id: "official.search.google",
+    },
+    enabledProviders: [
       "official.search.google",
       "official.search.bing",
       "official.search.baidu",
       "official.search.duckduckgo",
       "official.search.github",
-    ],
+    ].map((id) => ({
+      pluginId: "official.search-providers.basic",
+      kind: "search-provider" as const,
+      id,
+    })),
   },
   regions: [
     { regionId: "topbar", accepts: ["search"] },
@@ -36,48 +55,42 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   ],
   instances: [
     {
-      pluginId: "official.search.command-bar",
-      contributionId: "official.search.command-bar",
+      contribution: {
+        pluginId: "official.search.command-bar",
+        kind: "search",
+        id: "official.search.command-bar",
+      },
       instanceId: "search-main",
-      extensionPoint: "search",
       regionId: "topbar",
     },
     {
-      pluginId: "official.widgets.quick-links",
-      contributionId: "quick-links",
+      contribution: { pluginId: "official.widgets.quick-links", kind: "widget", id: "quick-links" },
       instanceId: "quick-links-1",
-      extensionPoint: "widget",
       regionId: "mainGrid",
       size: "M",
     },
     {
-      pluginId: "official.widgets.todo",
-      contributionId: "todo",
+      contribution: { pluginId: "official.widgets.todo", kind: "widget", id: "todo" },
       instanceId: "todo-1",
-      extensionPoint: "widget",
       regionId: "mainGrid",
       size: "S",
     },
     {
-      pluginId: "official.widgets.notes",
-      contributionId: "notes",
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       instanceId: "notes-1",
-      extensionPoint: "widget",
       regionId: "mainGrid",
       size: "L",
     },
     {
-      pluginId: "official.widgets.weather",
-      contributionId: "weather",
+      contribution: { pluginId: "official.widgets.weather", kind: "widget", id: "weather" },
       instanceId: "weather-1",
-      extensionPoint: "widget",
       regionId: "mainGrid",
       size: "S",
     },
   ],
 }
 
-export const officialWorkspacePresetPack: BuiltinPlugin = {
+export const officialWorkspacePresetPack: PluginModule = {
   manifest: {
     id: "official.workspace-presets",
     name: "官方工作区预设",
@@ -89,6 +102,5 @@ export const officialWorkspacePresetPack: BuiltinPlugin = {
       workspacePresets: [officialDefaultWorkspacePreset],
     },
   },
-  enabled: true,
   activate() {},
 }

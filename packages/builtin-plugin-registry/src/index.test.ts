@@ -55,21 +55,25 @@ describe("builtinPlugins", () => {
   it("includes the official plugin pack plus community verification layouts", () => {
     expect(builtinPlugins.length).toBeGreaterThan(officialPlugins.length)
     expect(
-      builtinPlugins.some((plugin) => plugin.manifest.id === "official.layout.workbench-dashboard"),
+      builtinPlugins.some(
+        (plugin) => plugin.module.manifest.id === "official.layout.workbench-dashboard",
+      ),
     ).toBe(true)
     expect(
-      builtinPlugins.some((plugin) => plugin.manifest.id === "community.layout.diy-masonry"),
+      builtinPlugins.some((plugin) => plugin.module.manifest.id === "community.layout.diy-masonry"),
     ).toBe(true)
   })
 
   it("keeps community verification layouts out of officialPlugins", () => {
     expect(
-      officialPlugins.some((plugin) => plugin.manifest.id === "community.layout.diy-masonry"),
+      officialPlugins.some(
+        (plugin) => plugin.module.manifest.id === "community.layout.diy-masonry",
+      ),
     ).toBe(false)
   })
 
   it("exposes the current builtin list for shell bootstrap", () => {
-    expect(builtinPlugins.map((plugin) => plugin.manifest.id)).toContain(
+    expect(builtinPlugins.map((plugin) => plugin.module.manifest.id)).toContain(
       "community.layout.diy-masonry",
     )
   })
@@ -90,21 +94,21 @@ describe("builtinPlugins", () => {
     expect(
       Object.fromEntries(
         builtinPlugins
-          .filter((plugin) => lazyPluginIds.includes(plugin.manifest.id))
-          .map((plugin) => [plugin.manifest.id, typeof plugin.preload]),
+          .filter((plugin) => lazyPluginIds.includes(plugin.module.manifest.id))
+          .map((plugin) => [plugin.module.manifest.id, typeof plugin.preload]),
       ),
     ).toEqual(Object.fromEntries(lazyPluginIds.map((pluginId) => [pluginId, "function"])))
   })
 
   it("attaches resolved stylesheet assets to styled builtin plugins", () => {
-    const styledPlugins = builtinPlugins.filter((plugin) => plugin.manifest.styles?.length)
+    const styledPlugins = builtinPlugins.filter((plugin) => plugin.module.manifest.styles?.length)
     const missingStyleAssets = styledPlugins.flatMap((plugin) =>
-      (plugin.manifest.styles ?? [])
+      (plugin.module.manifest.styles ?? [])
         .filter((style) => !Object.hasOwn(plugin.styleAssetUrls ?? {}, style.href))
-        .map((style) => ({ pluginId: plugin.manifest.id, href: style.href })),
+        .map((style) => ({ pluginId: plugin.module.manifest.id, href: style.href })),
     )
 
-    expect(styledPlugins.map((plugin) => plugin.manifest.id)).toEqual(
+    expect(styledPlugins.map((plugin) => plugin.module.manifest.id)).toEqual(
       expect.arrayContaining([
         "official.layout.workbench-dashboard",
         "official.search.command-bar",
@@ -121,9 +125,9 @@ describe("builtinPlugins", () => {
               "official.search.command-bar",
               "official.plugin-manager",
               "official.settings.workspace",
-            ].includes(plugin.manifest.id),
+            ].includes(plugin.module.manifest.id),
           )
-          .map((plugin) => [plugin.manifest.id, plugin.manifest.styles?.[0]?.href]),
+          .map((plugin) => [plugin.module.manifest.id, plugin.module.manifest.styles?.[0]?.href]),
       ),
     ).toEqual({
       "official.search.command-bar": "./styles.css",

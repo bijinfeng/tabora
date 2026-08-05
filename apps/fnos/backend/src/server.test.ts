@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest"
+import type { Workspace } from "@tabora/plugin-api"
 
 import { createFnosStorageAdapter } from "../../frontend/src/localStorageAdapter"
 import { createFnosServer } from "./server"
@@ -42,17 +43,66 @@ describe("FNOS 本地存储服务", () => {
     ).toBe(404)
   })
 
+  it("拒绝将本地 API 暴露给外部 Origin", async () => {
+    const server = createFnosServer({ databasePath: ":memory:" })
+    servers.push(server)
+
+    const external = await server.inject({
+      method: "OPTIONS",
+      url: "/api/local-store/workspaces",
+      headers: {
+        origin: "https://attacker.example",
+        "access-control-request-method": "GET",
+      },
+    })
+    expect(external.headers["access-control-allow-origin"]).toBeUndefined()
+
+    const local = await server.inject({
+      method: "OPTIONS",
+      url: "/api/local-store/workspaces",
+      headers: {
+        origin: "http://127.0.0.1:5173",
+        "access-control-request-method": "GET",
+      },
+    })
+    expect(local.headers["access-control-allow-origin"]).toBe("http://127.0.0.1:5173")
+  })
+
   it("前端 repository 将工作区与插件数据写入本地服务", async () => {
     const server = createFnosServer({ databasePath: ":memory:" })
     servers.push(server)
     const apiBaseUrl = await server.listen({ host: "127.0.0.1", port: 0 })
     const adapter = createFnosStorageAdapter(apiBaseUrl)
-    const workspace = {
+    const workspace: Workspace = {
       id: "default",
       name: "我的工作台",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "official.background.default",
+      activeLayout: {
+        pluginId: "official.layout.workbench-dashboard",
+        kind: "layout",
+        id: "official.layout.workbench-dashboard",
+      },
+      activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+      activeBackgroundProvider: {
+        pluginId: "official.background",
+        kind: "background-provider",
+        id: "official.background.default",
+      },
+      config: {
+        search: {
+          defaultProvider: {
+            pluginId: "official.search",
+            kind: "search-provider",
+            id: "official.search.google",
+          },
+          enabledProviders: [
+            {
+              pluginId: "official.search",
+              kind: "search-provider",
+              id: "official.search.google",
+            },
+          ],
+        },
+      },
       regions: {},
       createdAt: "2026-08-04T00:00:00.000Z",
       updatedAt: "2026-08-04T00:00:00.000Z",
@@ -76,5 +126,6 @@ describe("FNOS 本地存储服务", () => {
     ).toEqual([
       { query: "Tabora", providerId: "official.search.google", timestamp: workspace.createdAt },
     ])
+    expect(adapter.sync).toBeUndefined()
   })
 })

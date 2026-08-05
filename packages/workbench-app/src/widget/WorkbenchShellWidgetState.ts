@@ -41,9 +41,11 @@ export async function addWorkbenchWidget(options: {
   const nextInstance: PluginInstance = {
     id: instanceId,
     workspaceId: options.workspaceId,
-    pluginId: options.pluginId,
-    contributionId: options.contributionId,
-    extensionPoint: "widget",
+    contribution: {
+      pluginId: options.pluginId,
+      kind: "widget",
+      id: options.contributionId,
+    },
     regionId,
     enabled: true,
     size: initialSize,

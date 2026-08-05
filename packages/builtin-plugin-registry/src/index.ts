@@ -2,10 +2,10 @@ import {
   createOfficialAccountSyncPlugin,
   type AccountSyncPluginOptions,
 } from "@tabora/official-plugins"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { LoadedPluginPackage } from "@tabora/platform-kernel"
 import { layoutDiyMasonryManifest } from "@tabora/layout-diy-masonry/manifest"
 import { officialPlugins } from "@tabora/official-plugins"
-import { createLazyBuiltinPlugin } from "@tabora/platform-kernel"
+import { createBuiltinPluginPackage, createLazyBuiltinPlugin } from "@tabora/platform-kernel"
 import officialPluginsStylesHref from "@tabora/official-plugins/styles.css?url"
 import layoutDashboardStylesHref from "@tabora/layout-dashboard/styles.css?url"
 import layoutDiyMasonryStylesHref from "@tabora/layout-diy-masonry/styles.css?url"
@@ -29,23 +29,24 @@ const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "community.layout.diy-masonry": { "./styles.css": layoutDiyMasonryStylesHref },
 }
 
-function attachStyleAssets(plugin: BuiltinPlugin): BuiltinPlugin {
-  const styleAssetUrls = styleAssetUrlsByPluginId[plugin.manifest.id]
-  return styleAssetUrls ? { ...plugin, styleAssetUrls } : plugin
+function attachStyleAssets(pluginPackage: LoadedPluginPackage): LoadedPluginPackage {
+  const styleAssetUrls = styleAssetUrlsByPluginId[pluginPackage.module.manifest.id]
+  return styleAssetUrls ? { ...pluginPackage, styleAssetUrls } : pluginPackage
 }
 
 const layoutDiyMasonry = createLazyBuiltinPlugin({
   manifest: layoutDiyMasonryManifest,
-  enabled: true,
   async load() {
     return (await import("@tabora/layout-diy-masonry")).layoutDiyMasonry
   },
 })
 
-export const builtinPlugins: BuiltinPlugin[] = [...officialPlugins, layoutDiyMasonry].map(
+export const builtinPlugins: LoadedPluginPackage[] = [...officialPlugins, layoutDiyMasonry].map(
   attachStyleAssets,
 )
 
-export function createBuiltinAccountSyncPlugin(options: AccountSyncPluginOptions): BuiltinPlugin {
-  return attachStyleAssets(createOfficialAccountSyncPlugin(options))
+export function createBuiltinAccountSyncPlugin(
+  options: AccountSyncPluginOptions,
+): LoadedPluginPackage {
+  return attachStyleAssets(createBuiltinPluginPackage(createOfficialAccountSyncPlugin(options)))
 }

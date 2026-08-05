@@ -19,8 +19,16 @@ function makeDatabase() {
     const tableHooks = new Map<string, HookCb>()
     tables.set(name, tableHooks)
     return {
-      hook(hookName: string, cb: HookCb) {
-        tableHooks.set(hookName, cb)
+      hook(hookName: string, cb?: HookCb) {
+        if (cb) {
+          tableHooks.set(hookName, cb)
+          return undefined
+        }
+        return {
+          unsubscribe(callback: HookCb) {
+            if (tableHooks.get(hookName) === callback) tableHooks.delete(hookName)
+          },
+        }
       },
     }
   }
@@ -59,18 +67,42 @@ function makeQueue() {
 }
 
 describe("createChangeDetector", () => {
-  it("normalizes pluginData creates to entityType 'pluginData' while keeping pluginId in payload", async () => {
+  it("queues manifest-declared record collections with stable IDs and redacts excluded fields", async () => {
     const { database, fire } = makeDatabase()
     const { queue, enqueued } = makeQueue()
 
-    const detector = createChangeDetector({ database: database as any, changeQueue: queue })
+    const detector = createChangeDetector({
+      database: database as any,
+      changeQueue: queue,
+      syncCollections: new Map([
+        [
+          "todo-plugin",
+          new Map([
+            [
+              "todos",
+              {
+                id: "todos",
+                recordKey: "id",
+                updatedAt: "updatedAt",
+                merge: "lww",
+                schemaVersion: 1,
+                excludedFields: ["localOnly"],
+              },
+            ],
+          ]),
+        ],
+      ]),
+    })
     detector.start()
 
     fire("pluginData", "creating", "pd1", {
       id: "pd1",
       pluginId: "todo-plugin",
+      key: "collection:todos",
+      collection: "todos",
+      recordId: "todo-1",
       updatedAt: "2026-07-15T08:00:00.000Z",
-      note: "hi",
+      value: { title: "Ship", localOnly: "do not upload" },
     })
 
     await vi.waitFor(() => expect(enqueued).toHaveLength(1))
@@ -79,8 +111,49 @@ describe("createChangeDetector", () => {
     expect(change?.entityType).toBe("pluginData")
     expect(change?.scope).toBe("plugin")
     expect(change?.recordKey).toBe("pd1")
-    // pluginId is preserved in the payload (no info loss).
+    // Plugin and record identities are preserved while declared local-only fields are redacted.
     expect((change!.payload as { pluginId?: string }).pluginId).toBe("todo-plugin")
+    expect((change!.payload as { recordId?: string }).recordId).toBe("todo-1")
+    expect((change!.payload as { value?: Record<string, unknown> }).value).toEqual({
+      title: "Ship",
+    })
+  })
+
+  it("keeps undeclared pluginData local-only", async () => {
+    const { database, fire } = makeDatabase()
+    const { queue, enqueued } = makeQueue()
+    const detector = createChangeDetector({
+      database: database as any,
+      changeQueue: queue,
+      syncCollections: new Map([
+        [
+          "todo-plugin",
+          new Map([
+            [
+              "todos",
+              {
+                id: "todos",
+                recordKey: "id",
+                updatedAt: "updatedAt",
+                merge: "lww",
+                schemaVersion: 1,
+              },
+            ],
+          ]),
+        ],
+      ]),
+    })
+    detector.start()
+
+    fire("pluginData", "creating", "pd-local", {
+      id: "pd-local",
+      pluginId: "todo-plugin",
+      key: "draft",
+      updatedAt: "2026-07-15T08:00:00.000Z",
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(enqueued).toEqual([])
   })
 
   it("uses the core entityType for workspace creates", async () => {
@@ -100,6 +173,21 @@ describe("createChangeDetector", () => {
     expect(enqueued[0]?.entityType).toBe("workspace")
     expect(enqueued[0]?.scope).toBe("core")
     expect(enqueued[0]?.recordKey).toBe("w1")
+  })
+
+  it("removes hooks on stop and can register one fresh set after restart", async () => {
+    const { database, fire } = makeDatabase()
+    const { queue, enqueued } = makeQueue()
+    const detector = createChangeDetector({ database: database as any, changeQueue: queue })
+
+    detector.start()
+    detector.stop()
+    expect(() => fire("workspaces", "creating", "w1", { id: "w1" })).toThrow("no hook")
+
+    detector.start()
+    fire("workspaces", "creating", "w2", { id: "w2" })
+    await vi.waitFor(() => expect(enqueued).toHaveLength(1))
+    expect(enqueued[0]?.recordKey).toBe("w2")
   })
 
   it("queues a hook-triggered plugin change after its source transaction completes", async () => {

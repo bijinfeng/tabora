@@ -41,7 +41,7 @@ export function createWorkbenchShellHostRuntime(
     canPluginOpenExternal({
       pluginId,
       url,
-      plugins: options.runtime.plugins,
+      plugins: options.runtime.kernel.plugins,
     }) && openExternal(url)
 
   const runRailAction = (actionId: string) =>

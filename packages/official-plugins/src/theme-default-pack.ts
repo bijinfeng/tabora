@@ -1,7 +1,6 @@
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginModule } from "@tabora/plugin-api/sdk"
 
-export const officialThemeDefaultPack: BuiltinPlugin = {
-  enabled: true,
+export const officialThemeDefaultPack: PluginModule = {
   manifest: {
     id: "official.theme.default-pack",
     name: "Tabora Default Theme Pack",

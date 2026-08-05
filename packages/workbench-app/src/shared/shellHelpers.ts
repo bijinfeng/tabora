@@ -1,5 +1,5 @@
-import { intersectionWith } from "es-toolkit/array"
 import type {
+  SearchProviderContributionRef,
   PluginInstance,
   SearchProviderContribution,
   SearchWidgetEntry,
@@ -7,6 +7,7 @@ import type {
   WidgetSize,
   WorkbenchSearchSettings,
 } from "@tabora/plugin-api"
+import { sameContributionRef } from "@tabora/plugin-api"
 import type { CommandActionMap } from "@tabora/orchestrator"
 
 export type WidgetContributionResolver = (
@@ -29,15 +30,19 @@ export type BuildSearchableWidgetEntriesOptions = {
 
 export type CommandExecutionContext = {
   instance?: PluginInstance
+  source?: "palette" | "shortcut" | "context-menu" | "programmatic"
 }
 
 export type CreateCommandExecutorOptions = {
   actions: CommandActionMap
   pluginCommandIds?: string[] | Set<string>
-  runPluginCommand?: (commandId: string, context: CommandExecutionContext) => void
+  runPluginCommand?: (commandId: string, context: CommandExecutionContext) => Promise<boolean>
 }
 
-export type CommandExecutor = (commandId: string, context: CommandExecutionContext) => boolean
+export type CommandExecutor = (
+  commandId: string,
+  context: CommandExecutionContext,
+) => Promise<boolean>
 
 export function resolveWidgetIconLabel(icon?: string): string {
   switch (icon) {
@@ -74,9 +79,12 @@ export function buildSearchableWidgetEntries(
   options: BuildSearchableWidgetEntriesOptions,
 ): SearchWidgetEntry[] {
   return options.instances
-    .filter((instance) => instance.extensionPoint === "widget")
+    .filter((instance) => instance.contribution.kind === "widget")
     .flatMap((instance) => {
-      const widget = options.resolveWidgetContribution(instance.pluginId, instance.contributionId)
+      const widget = options.resolveWidgetContribution(
+        instance.contribution.pluginId,
+        instance.contribution.id,
+      )
       if (!widget) return []
       return [
         {
@@ -96,16 +104,15 @@ export function createCommandExecutor(options: CreateCommandExecutorOptions): Co
       ? options.pluginCommandIds
       : new Set(options.pluginCommandIds ?? [])
 
-  return (commandId, context) => {
+  return async (commandId, context) => {
     const action = options.actions[commandId]
     if (action) {
-      action()
+      await action()
       return true
     }
 
     if (pluginCommandIds.has(commandId) && options.runPluginCommand) {
-      options.runPluginCommand(commandId, context)
-      return true
+      return options.runPluginCommand(commandId, context)
     }
 
     return false
@@ -113,25 +120,25 @@ export function createCommandExecutor(options: CreateCommandExecutorOptions): Co
 }
 
 export function resolveEnabledProviderIds(settings: WorkbenchSearchSettings): string[] {
-  return settings.enabledProviderIds
+  return settings.enabledProviders.map((provider) => provider.id)
 }
 
-export function resolveEnabledSearchProviders<TProvider extends SearchProviderContribution>(
+type SearchProviderWithRef = SearchProviderContribution & { ref: SearchProviderContributionRef }
+
+export function resolveEnabledSearchProviders<TProvider extends SearchProviderWithRef>(
   settings: WorkbenchSearchSettings,
   providers: TProvider[],
 ): TProvider[] {
-  return intersectionWith(
-    providers,
-    resolveEnabledProviderIds(settings),
-    (provider, id) => provider.id === id,
+  return providers.filter((provider) =>
+    settings.enabledProviders.some((ref) => sameContributionRef(provider.ref, ref)),
   )
 }
 
 export function resolveDefaultProviderForSearch(
   settings: WorkbenchSearchSettings,
-  providers: SearchProviderContribution[],
+  providers: SearchProviderWithRef[],
 ): string {
-  return providers.some((provider) => provider.id === settings.defaultProviderId)
-    ? settings.defaultProviderId
+  return providers.some((provider) => sameContributionRef(provider.ref, settings.defaultProvider))
+    ? settings.defaultProvider.id
     : ""
 }

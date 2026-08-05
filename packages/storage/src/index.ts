@@ -1,5 +1,6 @@
 export * from "./database"
 export * from "./workspaceRepository"
+export * from "./workspaceIdentityMigration"
 export * from "./instanceRepository"
 export * from "./pluginDataRepository"
 export * from "./pluginRecordRepository"

@@ -18,8 +18,11 @@ type RuntimeStub = {
     events: {
       emit: ReturnType<typeof vi.fn>
     }
+    plugins: Array<{
+      manifest: Pick<PluginManifest, "id">
+      installation: { grantedPermissions: Array<{ type: "external-open"; hosts: string[] }> }
+    }>
   }
-  plugins: Array<{ manifest: Pick<PluginManifest, "id" | "permissions"> }>
 }
 
 function createRuntimeStub(): RuntimeStub {
@@ -28,15 +31,15 @@ function createRuntimeStub(): RuntimeStub {
       events: {
         emit: vi.fn(),
       },
-    },
-    plugins: [
-      {
-        manifest: {
-          id: "plugin.notes",
-          permissions: [{ type: "external-open", hosts: ["example.com"] }],
+      plugins: [
+        {
+          manifest: { id: "plugin.notes" },
+          installation: {
+            grantedPermissions: [{ type: "external-open", hosts: ["example.com"] }],
+          },
         },
-      },
-    ],
+      ],
+    },
   }
 }
 
@@ -44,9 +47,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",

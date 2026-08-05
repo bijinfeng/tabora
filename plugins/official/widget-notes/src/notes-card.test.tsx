@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import { NotesCard } from "./notes-card"
 import { NotesExpand } from "./notes-expand"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 
 function makeProps(): WidgetViewProps {
   return {

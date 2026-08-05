@@ -1,6 +1,8 @@
 import type {
+  BackgroundProviderContributionRef,
   BackgroundProviderContribution,
   ThemeContribution,
+  ThemeContributionRef,
   ThemeTokenSet,
   Workspace,
 } from "@tabora/plugin-api"
@@ -30,15 +32,15 @@ export function applyWorkbenchBackgroundSelection(options: {
 
 export async function switchWorkbenchTheme(options: {
   workspace: Workspace
-  themeId: string
+  theme: ThemeContributionRef
   themes: ThemeContribution[]
   setThemeId: (themeId: string) => void
   applyTheme: (tokens: ThemeTokenSet) => void
-  persistTheme: (workspaceId: string, themeId: string) => Promise<Workspace | null>
+  persistTheme: (workspaceId: string, theme: ThemeContributionRef) => Promise<Workspace | null>
   setWorkspaceState: (workspace: Workspace) => void
 }) {
-  applyWorkbenchThemeSelection(options)
-  const workspace = await options.persistTheme(options.workspace.id, options.themeId)
+  applyWorkbenchThemeSelection({ ...options, themeId: options.theme.id })
+  const workspace = await options.persistTheme(options.workspace.id, options.theme)
   if (workspace) {
     options.setWorkspaceState(workspace)
   }
@@ -46,15 +48,18 @@ export async function switchWorkbenchTheme(options: {
 
 export async function switchWorkbenchBackground(options: {
   workspace: Workspace
-  backgroundId: string
+  background: BackgroundProviderContributionRef
   backgrounds: BackgroundProviderContribution[]
   setBackgroundId: (backgroundId: string) => void
   applyBackground: (style: Record<string, string>) => void
-  persistBackground: (workspaceId: string, backgroundId: string) => Promise<Workspace | null>
+  persistBackground: (
+    workspaceId: string,
+    background: BackgroundProviderContributionRef,
+  ) => Promise<Workspace | null>
   setWorkspaceState: (workspace: Workspace) => void
 }) {
-  applyWorkbenchBackgroundSelection(options)
-  const workspace = await options.persistBackground(options.workspace.id, options.backgroundId)
+  applyWorkbenchBackgroundSelection({ ...options, backgroundId: options.background.id })
+  const workspace = await options.persistBackground(options.workspace.id, options.background)
   if (workspace) {
     options.setWorkspaceState(workspace)
   }

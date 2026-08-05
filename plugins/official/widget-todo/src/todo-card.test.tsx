@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import { TodoCard } from "./todo-card"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 
 function makeProps(): WidgetViewProps {
   return {

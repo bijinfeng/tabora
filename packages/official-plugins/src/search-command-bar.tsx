@@ -1,7 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
-import type { SearchViewProps } from "@tabora/plugin-api"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginModule, SearchViewProps } from "@tabora/plugin-api/sdk"
 import { Button } from "@tabora/ui/button"
 import { CommandResultList } from "@tabora/ui/command-result-list"
 import { InlineError } from "@tabora/ui/inline-error"
@@ -408,11 +407,10 @@ function hasSubmitAction(
   )
 }
 
-export const officialSearchCommandBar: BuiltinPlugin = {
-  enabled: true,
+export const officialSearchCommandBar: PluginModule = {
   manifest: officialSearchCommandBarManifest,
   activate(context) {
-    context.registry.views.register("official.search.command-bar.view", (props: SearchViewProps) =>
+    context.views.register("official.search.command-bar.view", (props: SearchViewProps) =>
       SearchCommandBar(props),
     )
   },

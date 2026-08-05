@@ -526,7 +526,7 @@ export function findSourceInvariantViolations(options) {
 
   if (
     options.filePath === "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx" &&
-    !/data-tabora-plugin-id=\{instance\.pluginId\}/.test(options.source)
+    !/data-tabora-plugin-id=\{instance\.contribution\.pluginId\}/.test(options.source)
   ) {
     return [
       {

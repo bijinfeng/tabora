@@ -1,4 +1,4 @@
-import type { PluginManifest } from "@tabora/plugin-api"
+import type { PluginManifest } from "@tabora/plugin-api/sdk"
 
 export const layoutDashboardManifest: PluginManifest = {
   id: "official.layout.workbench-dashboard",
@@ -31,8 +31,6 @@ export const layoutDashboardManifest: PluginManifest = {
             { instanceId: "todo-1" },
             { instanceId: "notes-1" },
             { instanceId: "weather-1" },
-            { instanceId: "quick-links-2" },
-            { instanceId: "todo-2" },
           ],
         },
         supportsResponsive: true,
@@ -40,7 +38,7 @@ export const layoutDashboardManifest: PluginManifest = {
       {
         id: "official.layout.workbench-focus",
         title: "工作台专注布局",
-        view: "official.layout.workbench-focus.view",
+        view: "official.layout.workbench-dashboard.focus.view",
         regions: [{ id: "focus", title: "专注卡片", accepts: ["widget"], required: true }],
         defaultRegions: {
           focus: [

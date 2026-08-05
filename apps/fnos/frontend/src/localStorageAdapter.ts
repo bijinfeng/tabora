@@ -1,18 +1,17 @@
 import type { PluginInstance, PluginRecord, Workspace } from "@tabora/plugin-api"
-import type {
-  PluginDataRow,
-  StorageAdapter,
-  SyncMetaRow,
-  SyncQueueRow,
-  WorkspaceSnapshot,
+import {
+  migrateWorkspaceContributionRefs,
+  type PluginDataRow,
+  type StorageAdapter,
+  type WorkspaceSnapshot,
 } from "@tabora/host-adapters"
+
+type PluginDataRecordScope = { workspaceId?: string; instanceId?: string }
 
 type LocalStoreCollection =
   | "plugin-data"
   | "plugin-instances"
   | "plugin-records"
-  | "sync-meta"
-  | "sync-queue"
   | "workspace-snapshots"
   | "workspaces"
 
@@ -36,6 +35,19 @@ function pluginDataInstanceId(pluginId: string, key: string, instanceId: string)
 
 function pluginDataGlobalId(pluginId: string, key: string): string {
   return pluginDataId([pluginId, key])
+}
+
+function pluginDataRecordId(
+  pluginId: string,
+  collection: string,
+  recordId: string,
+  scope: { workspaceId?: string; instanceId?: string } = {},
+): string {
+  if (scope.instanceId)
+    return pluginDataId([pluginId, "collection", collection, recordId, "inst", scope.instanceId])
+  if (scope.workspaceId)
+    return pluginDataId([pluginId, "collection", collection, recordId, "ws", scope.workspaceId])
+  return pluginDataId([pluginId, "collection", collection, recordId])
 }
 
 function createLocalStoreClient(apiBaseUrl: string, fetcher: FetchLike) {
@@ -82,18 +94,30 @@ export function createFnosStorageAdapter(
   fetcher: FetchLike = fetch,
 ): StorageAdapter {
   const store = createLocalStoreClient(apiBaseUrl, fetcher)
-  const getQueueByRecord = async (scope: string, entityType: string, recordKey: string) => {
-    const rows = await store.getAll<SyncQueueRow>("sync-queue")
-    return rows.find(
-      (row) => row.scope === scope && row.entityType === entityType && row.recordKey === recordKey,
+  const normalizeWorkspace = async (
+    workspace: Workspace | undefined,
+  ): Promise<Workspace | undefined> => {
+    if (!workspace) return undefined
+    const records = await store.getAll<PluginRecord>("plugin-records")
+    const migrated = migrateWorkspaceContributionRefs(
+      workspace,
+      records.map((record) => record.manifest),
     )
+    if (migrated !== workspace) await store.save("workspaces", migrated.id, migrated)
+    return migrated
   }
 
   return {
     repositories: {
       workspaceRepo: {
-        get: (id) => store.get<Workspace>("workspaces", id),
-        getAll: () => store.getAll<Workspace>("workspaces"),
+        async get(id) {
+          return normalizeWorkspace(await store.get<Workspace>("workspaces", id))
+        },
+        async getAll() {
+          const workspaces = await store.getAll<Workspace>("workspaces")
+          const normalized = await Promise.all(workspaces.map(normalizeWorkspace))
+          return normalized.filter((workspace): workspace is Workspace => Boolean(workspace))
+        },
         save: (workspace) => store.save("workspaces", workspace.id, workspace),
         remove: (id) => store.remove("workspaces", id),
       },
@@ -224,6 +248,73 @@ export function createFnosStorageAdapter(
         },
         removeForInstance: (pluginId, instanceId, key) =>
           store.remove("plugin-data", pluginDataInstanceId(pluginId, key, instanceId)),
+        records: {
+          async get<T = unknown>(
+            pluginId: string,
+            collection: string,
+            recordId: string,
+            scope: PluginDataRecordScope = {},
+          ) {
+            const row = await store.get<PluginDataRow>(
+              "plugin-data",
+              pluginDataRecordId(pluginId, collection, recordId, scope),
+            )
+            if (!row || row.collection !== collection || row.recordId !== recordId) return undefined
+            return {
+              id: recordId,
+              value: row.value as T,
+              updatedAt: row.updatedAt,
+              ...(row.workspaceId ? { workspaceId: row.workspaceId } : {}),
+              ...(row.instanceId ? { instanceId: row.instanceId } : {}),
+            }
+          },
+          async list<T = unknown>(
+            pluginId: string,
+            collection: string,
+            scope: PluginDataRecordScope = {},
+          ) {
+            const rows = await store.getAll<PluginDataRow>("plugin-data")
+            return rows
+              .filter(
+                (row) =>
+                  row.pluginId === pluginId &&
+                  row.collection === collection &&
+                  Boolean(row.recordId) &&
+                  row.workspaceId === scope.workspaceId &&
+                  row.instanceId === scope.instanceId,
+              )
+              .map((row) => ({
+                id: row.recordId!,
+                value: row.value as T,
+                updatedAt: row.updatedAt,
+                ...(row.workspaceId ? { workspaceId: row.workspaceId } : {}),
+                ...(row.instanceId ? { instanceId: row.instanceId } : {}),
+              }))
+          },
+          async save(pluginId, collection, record) {
+            await store.save(
+              "plugin-data",
+              pluginDataRecordId(pluginId, collection, record.id, record),
+              {
+                id: pluginDataRecordId(pluginId, collection, record.id, record),
+                pluginId,
+                collection,
+                recordId: record.id,
+                key: `collection:${collection}`,
+                value: record.value,
+                updatedAt: record.updatedAt,
+                ...(record.workspaceId ? { workspaceId: record.workspaceId } : {}),
+                ...(record.instanceId ? { instanceId: record.instanceId } : {}),
+              },
+            )
+          },
+          remove(pluginId, collection, recordId, scope = {}) {
+            return store.remove(
+              "plugin-data",
+              pluginDataRecordId(pluginId, collection, recordId, scope),
+            )
+          },
+        },
       },
       pluginRecordRepo: {
         get: (id) => store.get<PluginRecord>("plugin-records", id),
@@ -240,52 +331,6 @@ export function createFnosStorageAdapter(
             .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
             .at(-1)
         },
-      },
-      syncQueueRepo: {
-        async add(item) {
-          const id = crypto.randomUUID()
-          await store.save("sync-queue", id, { ...item, id })
-          return id
-        },
-        get: (id) => store.get<SyncQueueRow>("sync-queue", id),
-        async getAllPending() {
-          const rows = await store.getAll<SyncQueueRow>("sync-queue")
-          return rows
-            .filter((row) => row.status === "pending")
-            .sort((left, right) => left.queuedAt.localeCompare(right.queuedAt))
-        },
-        getByRecord: getQueueByRecord,
-        async updateStatus(id, status, updates) {
-          const current = await store.get<SyncQueueRow>("sync-queue", id)
-          if (!current) return
-          await store.save("sync-queue", id, { ...current, ...updates, status })
-        },
-        remove: (id) => store.remove("sync-queue", id),
-        async removeByRecord(scope, entityType, recordKey) {
-          const row = await getQueueByRecord(scope, entityType, recordKey)
-          if (row) await store.remove("sync-queue", row.id)
-        },
-        async clear() {
-          const rows = await store.getAll<SyncQueueRow>("sync-queue")
-          await Promise.all(rows.map((row) => store.remove("sync-queue", row.id)))
-        },
-        async count() {
-          return (await store.getAll<SyncQueueRow>("sync-queue")).length
-        },
-      },
-      syncMetaRepo: {
-        async get(key) {
-          return (await store.get<SyncMetaRow>("sync-meta", key))?.value
-        },
-        async set(key, value) {
-          await store.save("sync-meta", key, { key, value })
-        },
-        remove: (key) => store.remove("sync-meta", key),
-        async clear() {
-          const rows = await store.getAll<SyncMetaRow>("sync-meta")
-          await Promise.all(rows.map((row) => store.remove("sync-meta", row.key)))
-        },
-        getAll: () => store.getAll<SyncMetaRow>("sync-meta"),
       },
     },
   }

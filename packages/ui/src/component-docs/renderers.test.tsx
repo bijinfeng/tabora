@@ -17,7 +17,7 @@ describe("component doc demo loaders", () => {
     const dispose = render(() => <ComponentDocDemo id="button" />, root)
 
     expect(root.textContent).toContain("正在加载示例")
-    await vi.waitFor(() => expect(root.textContent).toContain("危险柔和"))
+    await vi.waitFor(() => expect(root.textContent).toContain("危险柔和"), { timeout: 5_000 })
 
     dispose()
     root.remove()

@@ -16,28 +16,6 @@ export function assessPermissionRisk(permission: PluginPermission): PermissionRi
         risk: "medium",
         description: `可打开外部链接: ${permission.hosts.join(", ")}`,
       }
-    case "storage":
-      return { permission, risk: "low", description: `插件数据存储 (${permission.scope} 范围)` }
-    case "workspace":
-      return {
-        permission,
-        risk: "medium",
-        description: `工作区 ${permission.access === "write" ? "读写" : "只读"} 访问`,
-      }
-    case "network":
-      return { permission, risk: "high", description: `网络访问: ${permission.hosts.join(", ")}` }
-    case "clipboard":
-      return {
-        permission,
-        risk: "high",
-        description: `剪贴板 ${permission.access === "write" ? "读写" : "只读"} 访问`,
-      }
-    case "local-file":
-      return {
-        permission,
-        risk: "critical",
-        description: `本地文件系统 ${permission.access === "write" ? "读写" : "只读"} 访问`,
-      }
     default:
       return { permission, risk: "low", description: `未知权限类型: ${permission.type}` }
   }

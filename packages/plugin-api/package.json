@@ -4,16 +4,20 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./sdk": "./src/sdk.ts",
+    "./host": "./src/host.ts",
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
+      "./sdk": "./dist/sdk.js",
+      "./host": "./dist/host.js",
       "./package.json": "./package.json"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts",
+    "build": "vp pack src/index.ts src/sdk.ts src/host.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

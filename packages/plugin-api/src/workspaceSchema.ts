@@ -2,28 +2,36 @@ import { z } from "zod"
 
 const widgetSizeSchema = z.enum(["S", "M", "L", "XL"])
 
-const extensionPointSchema = z.enum([
-  "layout",
-  "widget",
-  "search",
-  "search-provider",
-  "background-provider",
-  "background-renderer",
-  "theme",
-  "settings-panel",
-])
+const regionContentKindSchema = z.enum(["widget", "search"])
+
+const contributionRefSchema = (
+  kind: "layout" | "theme" | "search-provider" | "background-provider" | "background-renderer",
+) =>
+  z.object({
+    pluginId: z.string().min(1),
+    kind: z.literal(kind),
+    id: z.string().min(1),
+  })
+
+const searchProviderRefSchema = contributionRefSchema("search-provider")
 
 export const workbenchSearchSettingsSchema = z
   .object({
-    defaultProviderId: z.string().min(1),
-    enabledProviderIds: z.array(z.string().min(1)).min(1),
+    defaultProvider: searchProviderRefSchema,
+    enabledProviders: z.array(searchProviderRefSchema).min(1),
   })
   .superRefine((value, ctx) => {
-    if (!value.enabledProviderIds.includes(value.defaultProviderId)) {
+    if (
+      !value.enabledProviders.some(
+        (provider) =>
+          provider.pluginId === value.defaultProvider.pluginId &&
+          provider.id === value.defaultProvider.id,
+      )
+    ) {
       ctx.addIssue({
         code: "custom",
-        message: "defaultProviderId must be included in enabledProviderIds",
-        path: ["defaultProviderId"],
+        message: "defaultProvider must be included in enabledProviders",
+        path: ["defaultProvider"],
       })
     }
   })
@@ -40,9 +48,11 @@ export const pluginInstanceSchema = z
   .object({
     id: z.string().min(1),
     workspaceId: z.string().min(1),
-    pluginId: z.string().min(1),
-    contributionId: z.string().min(1),
-    extensionPoint: extensionPointSchema,
+    contribution: z.object({
+      pluginId: z.string().min(1),
+      kind: regionContentKindSchema,
+      id: z.string().min(1),
+    }),
     regionId: z.string().min(1),
     enabled: z.boolean(),
     size: widgetSizeSchema.optional(),
@@ -52,7 +62,7 @@ export const pluginInstanceSchema = z
     updatedAt: z.string().min(1),
   })
   .superRefine((value, ctx) => {
-    if (value.extensionPoint === "widget" && !value.size) {
+    if (value.contribution.kind === "widget" && !value.size) {
       ctx.addIssue({
         code: "custom",
         message: "widget instances must declare size",
@@ -60,7 +70,7 @@ export const pluginInstanceSchema = z
       })
     }
 
-    if (value.extensionPoint !== "widget" && value.size !== undefined) {
+    if (value.contribution.kind !== "widget" && value.size !== undefined) {
       ctx.addIssue({
         code: "custom",
         message: "non-widget instances must not declare size",
@@ -71,7 +81,7 @@ export const pluginInstanceSchema = z
 
 const regionStateSchema = z.object({
   regionId: z.string().min(1),
-  accepts: z.array(extensionPointSchema).min(1),
+  accepts: z.array(regionContentKindSchema).min(1),
   instances: z.array(
     z.object({
       instanceId: z.string().min(1),
@@ -95,10 +105,10 @@ const workspaceConfigSchema = z
 export const workspaceSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
-  activeLayoutId: z.string().min(1),
-  activeThemeId: z.string().min(1),
-  activeBackgroundProviderId: z.string().min(1),
-  activeBackgroundRendererId: z.string().min(1).optional(),
+  activeLayout: contributionRefSchema("layout"),
+  activeTheme: contributionRefSchema("theme"),
+  activeBackgroundProvider: contributionRefSchema("background-provider"),
+  activeBackgroundRenderer: contributionRefSchema("background-renderer").optional(),
   config: workspaceConfigSchema,
   regions: z.record(z.string(), regionStateSchema),
   createdAt: z.string().min(1),

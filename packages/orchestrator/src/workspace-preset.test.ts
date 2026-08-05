@@ -6,12 +6,26 @@ const preset: WorkspacePresetContribution = {
   id: "official.workspace.default",
   title: "默认工作区",
   plugins: ["official.search.command-bar", "official.widgets.notes"],
-  layoutId: "official.layout.workbench-dashboard",
-  themeId: "official.theme.light",
-  backgroundProviderId: "background.gradient-green",
+  layout: {
+    pluginId: "official.layout.workbench-dashboard",
+    kind: "layout",
+    id: "official.layout.workbench-dashboard",
+  },
+  theme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+  backgroundProvider: {
+    pluginId: "official.background",
+    kind: "background-provider",
+    id: "background.gradient-green",
+  },
   search: {
-    defaultProviderId: "official.search.google",
-    enabledProviderIds: ["official.search.google"],
+    defaultProvider: {
+      pluginId: "official.search",
+      kind: "search-provider",
+      id: "official.search.google",
+    },
+    enabledProviders: [
+      { pluginId: "official.search", kind: "search-provider", id: "official.search.google" },
+    ],
   },
   regions: [
     { regionId: "topbar", accepts: ["search"] },
@@ -19,17 +33,17 @@ const preset: WorkspacePresetContribution = {
   ],
   instances: [
     {
-      pluginId: "official.search.command-bar",
-      contributionId: "official.search.command-bar",
+      contribution: {
+        pluginId: "official.search.command-bar",
+        kind: "search",
+        id: "official.search.command-bar",
+      },
       instanceId: "search-main",
-      extensionPoint: "search",
       regionId: "topbar",
     },
     {
-      pluginId: "official.widgets.notes",
-      contributionId: "notes",
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       instanceId: "notes-1",
-      extensionPoint: "widget",
       regionId: "mainGrid",
       size: "L",
       config: { color: "green", nested: { enabled: true }, tags: ["daily"] },
@@ -49,9 +63,9 @@ describe("applyWorkspacePreset", () => {
     expect(result.workspace).toMatchObject({
       id: "default",
       name: "默认工作区",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "background.gradient-green",
+      activeLayout: preset.layout,
+      activeTheme: preset.theme,
+      activeBackgroundProvider: preset.backgroundProvider,
       config: { search: preset.search },
     })
     expect(result.workspace.regions["topbar"]?.instances).toEqual([{ instanceId: "search-main" }])
@@ -61,9 +75,7 @@ describe("applyWorkspacePreset", () => {
     expect(result.instances[1]).toMatchObject({
       id: "notes-1",
       workspaceId: "default",
-      pluginId: "official.widgets.notes",
-      contributionId: "notes",
-      extensionPoint: "widget",
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       regionId: "mainGrid",
       size: "L",
       config: { color: "green", nested: { enabled: true }, tags: ["daily"] },
@@ -97,10 +109,8 @@ describe("applyWorkspacePreset", () => {
           ...preset,
           instances: [
             {
-              pluginId: "official.widgets.todo",
-              contributionId: "todo",
+              contribution: { pluginId: "official.widgets.todo", kind: "widget", id: "todo" },
               instanceId: "todo-1",
-              extensionPoint: "widget",
               regionId: "mainGrid",
             },
           ],
@@ -122,10 +132,8 @@ describe("applyWorkspacePreset", () => {
           instances: [
             ...preset.instances,
             {
-              pluginId: "official.widgets.todo",
-              contributionId: "todo",
+              contribution: { pluginId: "official.widgets.todo", kind: "widget", id: "todo" },
               instanceId: "todo-1",
-              extensionPoint: "widget",
               regionId: "missing",
               size: "S",
             },
@@ -148,10 +156,8 @@ describe("applyWorkspacePreset", () => {
           instances: [
             ...preset.instances,
             {
-              pluginId: "official.widgets.todo",
-              contributionId: "todo",
+              contribution: { pluginId: "official.widgets.todo", kind: "widget", id: "todo" },
               instanceId: "todo-1",
-              extensionPoint: "widget",
               regionId: "topbar",
               size: "S",
             },
@@ -162,7 +168,7 @@ describe("applyWorkspacePreset", () => {
         now: "2026-06-05T00:00:00.000Z",
       }),
     ).toThrow(
-      'Workspace preset "official.workspace.default" instance "todo-1" uses extension point "widget" incompatible with region "topbar"',
+      'Workspace preset "official.workspace.default" instance "todo-1" uses contribution kind "widget" incompatible with region "topbar"',
     )
   })
 
@@ -177,15 +183,19 @@ describe("applyWorkspacePreset", () => {
     })
 
     result.workspace.regions["topbar"]!.accepts.push("widget")
-    ;(result.workspace.config!.search as { enabledProviderIds: string[] }).enabledProviderIds.push(
-      "official.search.github",
-    )
+    ;(
+      result.workspace.config!.search as { enabledProviders: Array<{ id: string }> }
+    ).enabledProviders.push({
+      id: "official.search.github",
+    })
     result.instances[1]!.config.color = "blue"
     ;(result.instances[1]!.config.nested as { enabled: boolean }).enabled = false
     ;(result.instances[1]!.config.tags as string[]).push("mutated")
 
     expect(preset.regions[0]!.accepts).toEqual(["search"])
-    expect(preset.search.enabledProviderIds).toEqual(["official.search.google"])
+    expect(preset.search.enabledProviders.map((provider) => provider.id)).toEqual([
+      "official.search.google",
+    ])
     expect(preset.instances[1]!.config).toEqual({
       color: "green",
       nested: { enabled: true },

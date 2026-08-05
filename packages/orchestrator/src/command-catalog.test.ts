@@ -3,7 +3,7 @@ import { createCommandCatalog, createCommandPaletteCommands } from "./command-ca
 import { createCommandPaletteItems } from "./command-palette-model"
 
 describe("createCommandCatalog", () => {
-  it("returns platform command entries with registered actions", () => {
+  it("returns platform command entries with registered actions", async () => {
     const action = vi.fn()
     const catalog = createCommandCatalog({
       platformCommands: [
@@ -32,7 +32,7 @@ describe("createCommandCatalog", () => {
       shortcut: "mod+,",
     })
 
-    entries[0]!.action()
+    await entries[0]!.action()
     expect(action).toHaveBeenCalledOnce()
   })
 

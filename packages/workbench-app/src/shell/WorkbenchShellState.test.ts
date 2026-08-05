@@ -5,8 +5,14 @@ import type { WorkbenchSearchSettings } from "@tabora/plugin-api"
 import { createWorkbenchShellState } from "./WorkbenchShellState"
 
 const initialSearchSettings: WorkbenchSearchSettings = {
-  defaultProviderId: "official.search.google",
-  enabledProviderIds: ["official.search.google"],
+  defaultProvider: {
+    pluginId: "official.search",
+    kind: "search-provider",
+    id: "official.search.google",
+  },
+  enabledProviders: [
+    { pluginId: "official.search", kind: "search-provider", id: "official.search.google" },
+  ],
 }
 
 const initialVisualState = {

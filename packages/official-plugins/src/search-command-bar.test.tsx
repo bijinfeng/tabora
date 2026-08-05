@@ -1,6 +1,6 @@
 import { render } from "solid-js/web"
 import { describe, expect, it, vi } from "vitest"
-import type { SearchViewProps } from "@tabora/plugin-api"
+import type { SearchViewProps } from "@tabora/plugin-api/sdk"
 
 import { SearchCommandBar } from "./search-command-bar"
 

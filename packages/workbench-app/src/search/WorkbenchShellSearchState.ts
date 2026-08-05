@@ -1,11 +1,15 @@
 import type {
+  SearchProviderContributionRef,
   SearchHistoryEntry,
   SearchProviderContribution,
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
+import { sameContributionRef } from "@tabora/plugin-api"
 
-type SearchProviderSummary = Pick<SearchProviderContribution, "id">
+type SearchProviderSummary = Pick<SearchProviderContribution, "id"> & {
+  ref: SearchProviderContributionRef
+}
 
 type UpdateWorkspace = (mutator: (workspace: Workspace) => Workspace) => Promise<void>
 type SearchSettingsUpdater = (
@@ -24,18 +28,18 @@ type WorkspaceSearchDataSaver = (
 ) => Promise<void>
 
 export function resolveWorkbenchEnabledProviderIds(settings: WorkbenchSearchSettings): string[] {
-  return settings.enabledProviderIds
+  return settings.enabledProviders.map((provider) => provider.id)
 }
 
 export async function setWorkbenchDefaultSearchProvider(options: {
-  providerId: string
+  provider: SearchProviderContributionRef
   providers: SearchProviderSummary[]
   updateWorkspace: UpdateWorkspace
   setSearchSettings: SearchSettingsUpdater
   warn: (message: string) => void
 }) {
-  if (!options.providers.some((provider) => provider.id === options.providerId)) {
-    options.warn(`Unknown search provider: "${options.providerId}"`)
+  if (!options.providers.some((provider) => sameContributionRef(provider.ref, options.provider))) {
+    options.warn(`Unknown search provider: "${options.provider.id}"`)
     return
   }
 
@@ -43,19 +47,19 @@ export async function setWorkbenchDefaultSearchProvider(options: {
     const currentSearch = (workspace.config?.search as Record<string, unknown>) ?? {}
     workspace.config = {
       ...(workspace.config ?? {}),
-      search: { ...currentSearch, defaultProviderId: options.providerId },
+      search: { ...currentSearch, defaultProvider: options.provider },
     }
     return workspace
   })
 
   options.setSearchSettings((previous) => ({
     ...previous,
-    defaultProviderId: options.providerId,
+    defaultProvider: options.provider,
   }))
 }
 
 export async function setWorkbenchSearchProviderEnabled(options: {
-  providerId: string
+  provider: SearchProviderContributionRef
   enabled: boolean
   currentSettings: WorkbenchSearchSettings
   providers: SearchProviderSummary[]
@@ -63,27 +67,34 @@ export async function setWorkbenchSearchProviderEnabled(options: {
   setSearchSettings: SearchSettingsUpdater
   warn: (message: string) => void
 }) {
-  if (!options.providers.some((provider) => provider.id === options.providerId)) {
-    options.warn(`Unknown search provider: "${options.providerId}"`)
+  if (!options.providers.some((item) => sameContributionRef(item.ref, options.provider))) {
+    options.warn(`Unknown search provider: "${options.provider.id}"`)
     return
   }
 
-  const currentEnabled = resolveWorkbenchEnabledProviderIds(options.currentSettings)
-
-  if (!options.enabled && options.currentSettings.defaultProviderId === options.providerId) {
-    options.warn(`Cannot disable the default search provider: "${options.providerId}"`)
+  if (
+    !options.enabled &&
+    sameContributionRef(options.currentSettings.defaultProvider, options.provider)
+  ) {
+    options.warn(`Cannot disable the default search provider: "${options.provider.id}"`)
     return
   }
 
   const nextEnabled = options.enabled
-    ? [...new Set([...currentEnabled, options.providerId])]
-    : currentEnabled.filter((id) => id !== options.providerId)
+    ? options.currentSettings.enabledProviders.some((item) =>
+        sameContributionRef(item, options.provider),
+      )
+      ? options.currentSettings.enabledProviders
+      : [...options.currentSettings.enabledProviders, options.provider]
+    : options.currentSettings.enabledProviders.filter(
+        (item) => !sameContributionRef(item, options.provider),
+      )
 
   await options.updateWorkspace((workspace) => {
     const currentSearch = workspace.config?.search as WorkbenchSearchSettings
     workspace.config = {
       ...(workspace.config ?? {}),
-      search: { ...currentSearch, enabledProviderIds: nextEnabled },
+      search: { ...currentSearch, enabledProviders: nextEnabled },
     }
     return workspace
   })
@@ -91,7 +102,7 @@ export async function setWorkbenchSearchProviderEnabled(options: {
   options.setSearchSettings((previous) => {
     return {
       ...previous,
-      enabledProviderIds: nextEnabled,
+      enabledProviders: nextEnabled,
     }
   })
 }

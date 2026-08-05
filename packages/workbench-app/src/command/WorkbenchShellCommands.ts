@@ -28,7 +28,8 @@ export type WorkbenchShellCommandModelsOptions = {
   showToast: (message: string) => void
   switchTheme: (themeId: string) => void
   switchLayout: (layoutId: string) => void
-  runPluginCommand?: (commandId: string, context: CommandExecutionContext) => void
+  hasPluginCommandHandler?: (commandId: string) => boolean
+  runPluginCommand?: (commandId: string, context: CommandExecutionContext) => Promise<boolean>
 }
 
 function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandContribution[] {
@@ -117,7 +118,7 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
   commandItems: () => ReturnType<typeof createCommandPaletteCommands>
   availableCommandIds: () => string[]
   shortcutRegistry: () => ShortcutRegistry
-  runCommand: (commandId: string, context: CommandExecutionContext) => boolean
+  runCommand: (commandId: string, context: CommandExecutionContext) => Promise<boolean>
 } {
   const actions = (): CommandActionMap => ({
     "open-command-palette": () => options.setCommandPaletteOpen(true),
@@ -155,6 +156,17 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
       platformKeybindings: platformKeybindings(),
       pluginKeybindings: options.pluginKeybindings,
       commands: actions(),
+      executeCommand: async (commandId) => {
+        const action = actions()[commandId]
+        if (action) {
+          await action()
+          return
+        }
+        await options.runPluginCommand?.(commandId, { source: "shortcut" })
+      },
+      onCommandError: (error) => {
+        options.showToast(error instanceof Error ? error.message : "命令执行失败")
+      },
     })
 
   return {
@@ -163,6 +175,18 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
         platformCommands: platformCommands(options),
         pluginCommands: options.pluginCommands,
         actions: actions(),
+        ...(options.hasPluginCommandHandler
+          ? { hasPluginCommandHandler: options.hasPluginCommandHandler }
+          : {}),
+        ...(options.runPluginCommand
+          ? {
+              executePluginCommand: (commandId: string) =>
+                options.runPluginCommand!(commandId, { source: "palette" }),
+              onCommandError: (error) => {
+                options.showToast(error instanceof Error ? error.message : "命令执行失败")
+              },
+            }
+          : {}),
       }),
     availableCommandIds: () => [
       ...platformCommands(options).map((command) => command.id),
@@ -174,6 +198,6 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
         actions: actions(),
         pluginCommandIds: options.pluginCommands.map((command) => command.id),
         ...(options.runPluginCommand ? { runPluginCommand: options.runPluginCommand } : {}),
-      })(commandId, context),
+      })(commandId, { ...context, source: context.source ?? "programmatic" }),
   }
 }

@@ -1,4 +1,4 @@
-import type { PluginManifest } from "@tabora/plugin-api"
+import type { PluginManifest } from "@tabora/plugin-api/sdk"
 
 export const officialSearchCommandBarManifest: PluginManifest = {
   id: "official.search.command-bar",
@@ -14,7 +14,18 @@ export const officialSearchCommandBarManifest: PluginManifest = {
       {
         id: "official.search.command-bar",
         title: "搜索栏",
-        defaultProviderIds: ["official.search.google", "official.search.bing"],
+        defaultProviders: [
+          {
+            pluginId: "official.search-providers.basic",
+            kind: "search-provider",
+            id: "official.search.google",
+          },
+          {
+            pluginId: "official.search-providers.basic",
+            kind: "search-provider",
+            id: "official.search.bing",
+          },
+        ],
         supportsSuggestions: true,
         view: "official.search.command-bar.view",
       },
@@ -39,6 +50,8 @@ export const officialPluginManagerManifest: PluginManifest = {
         section: "plugins",
         scope: "workspace",
         order: 10,
+        hostActions: ["plugins.manage"],
+        hostReads: ["plugins.read"],
       },
     ],
   },
@@ -64,6 +77,12 @@ export const officialSettingsWorkspaceManifest: PluginManifest = {
         section: "appearance",
         scope: "workspace",
         order: 20,
+        hostActions: [
+          "workspace.theme.write",
+          "workspace.background.write",
+          "workspace.locale.write",
+        ],
+        hostReads: ["workspace.current.read", "catalog.themes.read", "catalog.backgrounds.read"],
       },
       {
         id: "official.settings.workspace.search",
@@ -72,6 +91,8 @@ export const officialSettingsWorkspaceManifest: PluginManifest = {
         section: "search",
         scope: "workspace",
         order: 30,
+        hostActions: ["workspace.search.write"],
+        hostReads: ["catalog.search-providers.read", "workspace.search.read"],
       },
       {
         id: "official.settings.workspace.workbench",
@@ -83,6 +104,8 @@ export const officialSettingsWorkspaceManifest: PluginManifest = {
         section: "general",
         scope: "workspace",
         order: 40,
+        hostActions: ["workspace.layout.write", "workspace.transfer", "workspace.manage"],
+        hostReads: ["workspace.current.read", "workspace.list.read", "catalog.layouts.read"],
       },
       {
         id: "official.settings.workspace.ai",
@@ -99,6 +122,7 @@ export const officialSettingsWorkspaceManifest: PluginManifest = {
         section: "plugins",
         scope: "workspace",
         order: 20,
+        hostReads: ["plugins.read"],
       },
     ],
   },

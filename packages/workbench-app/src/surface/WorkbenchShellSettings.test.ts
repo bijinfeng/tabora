@@ -1,16 +1,32 @@
-import type { SettingsPanelViewProps, WorkbenchSearchSettings, Workspace } from "@tabora/plugin-api"
+import type {
+  SettingsPanelData,
+  SettingsPanelViewProps,
+  WorkbenchSearchSettings,
+  Workspace,
+} from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 import type { SettingsPanelDescriptor } from "@tabora/workbench-shell"
 
 import { buildWorkbenchSettingsPanelProps, openWorkbenchSettings } from "./WorkbenchShellSettings"
 
+const refs = {
+  layout: (id: string) => ({ pluginId: "official.layout", kind: "layout" as const, id }),
+  theme: (id: string) => ({ pluginId: "official.theme", kind: "theme" as const, id }),
+  background: (id: string) => ({
+    pluginId: "official.background",
+    kind: "background-provider" as const,
+    id,
+  }),
+  provider: (id: string) => ({ pluginId: "official.search", kind: "search-provider" as const, id }),
+}
+
 function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Main",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    activeBackgroundProviderId: "official.background.default",
+    activeLayout: refs.layout("official.layout.workbench-dashboard"),
+    activeTheme: refs.theme("official.theme.light"),
+    activeBackgroundProvider: refs.background("official.background.default"),
     config: {},
     regions: {},
     createdAt: "2026-06-06T00:00:00.000Z",
@@ -29,8 +45,12 @@ function panel(overrides: Partial<SettingsPanelDescriptor> = {}): SettingsPanelD
     },
     section: "appearance",
     order: 10,
-    pluginId: "official.settings",
+    pluginId: "official.settings.workspace",
     scope: "workspace",
+    hostActions: ["workspace.theme.write"],
+    grantedHostActions: ["workspace.theme.write"],
+    hostReads: ["workspace.current.read"],
+    grantedHostReads: ["workspace.current.read"],
     ...overrides,
   }
 }
@@ -76,6 +96,32 @@ describe("openWorkbenchSettings", () => {
 })
 
 describe("buildWorkbenchSettingsPanelProps", () => {
+  it("only exposes an instance id to an instance-scoped panel with an explicit target", () => {
+    const options = {
+      workspace: workspace(),
+      workspaces: [],
+      layouts: [],
+      themes: [],
+      backgrounds: [],
+      searchProviders: [],
+      searchSettings: {
+        defaultProvider: refs.provider("official.search.google"),
+        enabledProviders: [refs.provider("official.search.google")],
+      },
+      plugins: [],
+      locale: "zh-CN" as const,
+      availableLocales: [],
+      host: settingsHost(),
+    }
+    const instancePanel = panel({ scope: "instance" })
+
+    expect(buildWorkbenchSettingsPanelProps(instancePanel, options).instanceId).toBeUndefined()
+    expect(
+      buildWorkbenchSettingsPanelProps(instancePanel, { ...options, instanceId: "weather-1" })
+        .instanceId,
+    ).toBe("weather-1")
+  })
+
   it("throws when the workspace has not been loaded yet", () => {
     expect(() =>
       buildWorkbenchSettingsPanelProps(panel(), {
@@ -86,8 +132,8 @@ describe("buildWorkbenchSettingsPanelProps", () => {
         backgrounds: [],
         searchProviders: [],
         searchSettings: {
-          defaultProviderId: "official.search.google",
-          enabledProviderIds: ["official.search.google"],
+          defaultProvider: refs.provider("official.search.google"),
+          enabledProviders: [refs.provider("official.search.google")],
         },
         plugins: [],
         locale: "zh-CN",
@@ -97,22 +143,23 @@ describe("buildWorkbenchSettingsPanelProps", () => {
     ).toThrow("Workspace is not ready")
   })
 
-  it("builds the settings panel props from the provided workspace state", () => {
+  it("builds the settings panel props from the provided workspace state", async () => {
     const searchSettings: WorkbenchSearchSettings = {
-      defaultProviderId: "official.search.google",
-      enabledProviderIds: ["official.search.google"],
+      defaultProvider: refs.provider("official.search.google"),
+      enabledProviders: [refs.provider("official.search.google")],
     }
-    const plugins: SettingsPanelViewProps["plugins"] = [
+    const plugins: NonNullable<SettingsPanelData["plugins"]> = [
       {
         id: "official.settings",
         name: "Settings",
         version: "1.0.0",
         enabled: true,
         permissions: [],
-        contributes: {},
+        contributionKinds: [],
       },
     ]
-    const host = settingsHost()
+    const switchTheme = vi.fn(async () => {})
+    const host = { ...settingsHost(), switchTheme }
     const currentWorkspace = workspace()
     const workspaces = [currentWorkspace, workspace({ id: "workspace-2", name: "Second" })]
 
@@ -132,13 +179,58 @@ describe("buildWorkbenchSettingsPanelProps", () => {
 
     expect(result).toMatchObject({
       panelId: "official.settings.workspace.appearance",
-      pluginId: "official.settings",
+      pluginId: "official.settings.workspace",
       scope: "workspace",
-      workspace: currentWorkspace,
-      workspaces,
-      searchSettings,
-      plugins,
+      data: {
+        workspace: {
+          id: currentWorkspace.id,
+          name: currentWorkspace.name,
+          activeLayout: currentWorkspace.activeLayout,
+          activeTheme: currentWorkspace.activeTheme,
+          activeBackgroundProvider: currentWorkspace.activeBackgroundProvider,
+          regionCount: 0,
+        },
+      },
     })
-    expect(result.host).toBe(host)
+    expect(result.host).not.toBe(host)
+    await result.host.switchTheme?.(refs.theme("official.theme.dark"))
+    expect(switchTheme).toHaveBeenCalledWith(refs.theme("official.theme.dark"))
+    expect("togglePluginEnabled" in result.host).toBe(false)
+  })
+
+  it("does not expose requested workspace controls until the host grants them", async () => {
+    const close = vi.fn()
+    const host = { ...settingsHost(), close }
+    const result = buildWorkbenchSettingsPanelProps(
+      panel({
+        pluginId: "community.plugin",
+        hostActions: ["workspace.theme.write"],
+        grantedHostActions: [],
+        hostReads: [],
+        grantedHostReads: [],
+      }),
+      {
+        workspace: workspace(),
+        workspaces: [],
+        layouts: [],
+        themes: [],
+        backgrounds: [],
+        searchProviders: [],
+        searchSettings: {
+          defaultProvider: refs.provider("official.search.google"),
+          enabledProviders: [],
+        },
+        plugins: [],
+        locale: "zh-CN",
+        availableLocales: [],
+        host,
+      },
+    )
+
+    result.host.close()
+    expect(close).toHaveBeenCalledOnce()
+    expect("switchTheme" in result.host).toBe(false)
+    expect("togglePluginEnabled" in result.host).toBe(false)
+    expect(result.data).toEqual({})
   })
 })

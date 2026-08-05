@@ -80,6 +80,17 @@ export type SettingsPanelAction = {
 
 export type SettingsPanelProviderContext = {
   locale?: "zh-CN" | "en-US"
+  panel?: {
+    id: string
+    pluginId: string
+    scope: SettingsPanelScope
+    /** Present when the settings panel targets a particular plugin instance. */
+    instanceId?: string
+  }
+  /** Signals that the panel is no longer active; providers must not commit stale async state. */
+  signal?: AbortSignal
+  /** Ask the shell-owned renderer to retrieve a fresh model. */
+  invalidate?(): void
 }
 
 export type SettingsPanelProvider = {

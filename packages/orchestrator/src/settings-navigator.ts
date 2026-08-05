@@ -1,5 +1,7 @@
 import type {
   SettingsPanelContribution,
+  SettingsHostActionId,
+  SettingsHostReadId,
   SettingsPanelScope,
   SettingsSectionId,
 } from "@tabora/plugin-api"
@@ -8,6 +10,10 @@ export type { SettingsPanelScope, SettingsSectionId }
 
 export type SettingsPanelDescriptor = SettingsPanelContribution & {
   pluginId: string
+  /** Host-approved subset of this panel's requested hostActions. */
+  grantedHostActions?: SettingsHostActionId[]
+  /** Host-approved subset of this panel's requested host reads. */
+  grantedHostReads?: SettingsHostReadId[]
 }
 
 type SettingsPanelInput = SettingsPanelContribution & {

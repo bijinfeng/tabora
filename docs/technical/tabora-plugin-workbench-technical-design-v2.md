@@ -108,14 +108,14 @@ packages/
 - `DESIGN.md` 中的组件 catalog 是**设计 catalog**，不是 `@tabora/ui` 的 1:1 导出清单。
 - `@tabora/ui` 承接插件内容区基础组件和低层可访问 primitive，如 `Button`、`Input`、`Field`、`ListRow`、`CardSection`、`Kbd`、`Dialog`、`Drawer`、`Toast`、`ContextMenu`、通用 `CommandPalette` 等。
 - Tabora 宿主级容器由 shell / `@tabora/workbench-app` / `@tabora/workbench-shell` 提供，例如 `WidgetCardShell`、全局 `ModalHost`、`FullscreenHost`、`SettingsHost`、`ToastHost`、`WorkbenchRail`、`WorkbenchGrid`、shell 全局命令面板和快捷键面板。宿主可复用 design spec 或 primitive，但不能把宿主所有权下沉到 `@tabora/ui`。
-- 插件样式由插件 manifest 的 `styles` 声明归属：`scope: "plugin"` 的样式必须依赖宿主注入的 `data-tabora-plugin-id` 容器完成选择器收口，layout 这类需要影响页面骨架的样式可显式声明 `scope: "global"`。builtin 装配层通过 `@tabora/builtin-plugin-registry` 把 manifest 中的相对 `href` 映射为 Vite 可加载的 CSS asset URL；可信本地插件可基于 `baseUrl` 解析相对样式。`@tabora/workbench-app` bootstrap 汇总 loader 输出的 `pluginStyles`，`PluginStyleManager` 按插件启用状态和声明顺序在运行时插入 / 移除 `<link data-tabora-plugin-style>`。playground 与 extension 入口只导入 app / `@tabora/ui` / `@tabora/workbench-shell` 的宿主基础样式，不再手动 import 官方插件、layout 或第三方插件 CSS，也不提供 `@tabora/official-plugins/styles.css` 兼容聚合入口。
+- 插件样式由 manifest 的 `styles` 声明归属：`scope: "plugin"` 的 CSS 由宿主读取后逐条前缀为该插件的 `data-tabora-plugin-id` 容器，并以受管理的 `<style data-tabora-plugin-style>` 插入；`:root`、`html`、`body`、`:host`、`:global()` 以及 `@keyframes`、`@font-face`、`@property`、`@page` 等无法安全收口的规则会被拒绝，不能静默退化为全局样式。layout 这类确实需要影响页面骨架的样式可显式声明 `scope: "global"`，但 loader 只允许 builtin 使用。builtin 装配层通过 `@tabora/builtin-plugin-registry` 把 manifest 中的相对 `href` 映射为 Vite 可加载的 CSS asset URL；可信本地插件可基于 `baseUrl` 解析相对样式。`@tabora/workbench-app` bootstrap 汇总 loader 输出的 `pluginStyles`，并按插件启用状态和声明顺序加载 / 移除。此策略隔离声明的样式资产，不把同一 JS realm 误述为安全沙箱；不可信远程代码仍必须走独立 sandbox runtime。playground 与 extension 入口只导入 app / `@tabora/ui` / `@tabora/workbench-shell` 的宿主基础样式，不再手动 import 官方插件、layout 或第三方插件 CSS，也不提供 `@tabora/official-plugins/styles.css` 兼容聚合入口。
 - StyleX authoring 与构建统一由 `@tabora/stylex-config` 管理：Solid host / Kobalte slot 使用 `stylex.attrs()`；跨 package 语义变量由 `@tabora/theme/tokens.stylex` 的 `defineVars` 提供；variant 使用普通 object map。根 `vite.config.ts` 把共享 Rolldown/unplugin pipeline 注入 `vp pack`，对声明 `./styles.css` 的 StyleX package 合并 source global CSS 与抽取规则、验证非空并写入 manifest 声明的 `dist/styles.css`。各 package 不再调用 StyleX CLI 或创建 `.stylex-build`。UI、shell、layout、官方插件 pack 和每个可独立启停的插件仍保留独立 CSS asset，`@tabora/builtin-plugin-registry` 的 `?url` 映射与运行时 style lifecycle 不变。非 StyleX CSS export 继续按 package source/publish 声明复制，不按包名写特殊分支。
 - 默认工作区 preset 的归属也已与样式装配保持一致：`@tabora/workbench-app` 不再直接依赖 `@tabora/official-plugins` 或内置官方 preset 常量；shell 入口统一从 `@tabora/builtin-plugin-registry` 注入默认 builtin plugin 列表、默认 workspace preset 与 shell 装配配置，再由 runtime bootstrap / session seed / shell initial visual state / host command-layout bridge 显式消费。
 - Package 聚合入口只用于真实 shell、插件 pack 或完整公开 API 的装配。测试和业务代码只消费 preset、workspace/session、import-export、grid、background resolver、plugin manifest 或 UI primitive 等独立能力时，必须优先使用与构建入口一致的稳定 package subpath，避免加载无关插件、UI 或 shell 模块图；新增这类 subpath 时应同步 source/publish exports、构建 entry 和架构 contract。Builtin plugin 发现阶段只加载 manifest、启用状态和样式映射；包含 view 的实现通过 lazy descriptor 在激活前并行 preload，再按插件声明顺序执行 `activate`，单个 loader 失败继续由 kernel 记录为局部插件错误，不阻断后续插件。
 - `@tabora/ui/component-docs` 只同步导出组件文档 metadata 与类型；真实 demo 由 `@tabora/ui/component-docs/renderers` 的显式动态 import registry 按 ID 加载。官网单组件路由可立即挂载对应 demo，“全部组件”目录只在卡片接近可视区时挂载，并对加载中和失败提供局部状态。新增文档组件时必须同时维护 metadata 与 loader ID；catalog contract 测试校验二者一一对应，但不应重复渲染已有独立行为测试覆盖的全部组件。
 - Phase X2 已完成布局协议语义收口：`HostActionId` 已包含 `layout-switch`、`shortcuts`、`plugin-manager` 等稳定动作 ID，布局切换不再伪装为 `theme` action；`RegionSlot` 为泛型渲染结果契约，`plugin-api` 不绑定 Solid JSX，workbench shell 的 `createLayoutEngine` 会按 `region.accepts` 过滤实例，避免 extension point 错配；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖，保持第三方 layout 依赖面隔离；playground / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误 fallback 会记录状态并触发 toast。
 - Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和 safe layout fallback 属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
-- `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope/content、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope/content`、workspace `activeBackgroundProviderId`、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
+- `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope/content、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope/content`、workspace canonical contribution ref（含 `activeBackgroundProvider`）、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
 - settings panel 的 `content` 必须显式选择 `{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`。Kernel 为 schema provider 提供受 manifest 声明限制的 registry，停用插件时与 view 一起注销；宿主不再通过 `SettingsPanelViewProps.host` 注入账号或同步业务 API。
 - 2026-07-13 AI Runtime P0 补充：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginRuntimeContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 `AiRuntimeBridge` 并传入 kernel；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
 - 2026-06-07 发布前兼容性清理补充：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
@@ -935,19 +935,18 @@ type SettingsPanelViewProps = {
   panelId: string
   pluginId: string
   scope: "global" | "workspace" | "plugin" | "instance"
+  instanceId?: string // 仅 instance scope 且宿主明确指定目标时存在
   host: {
     close(): void
     setDirty(isDirty: boolean): void
-    showToast(message: string): void
-    navigateTo(tab: string): void
+    // 仅出现 manifest hostActions 请求且宿主授予的 action
   }
-  // 由 orchestrator 注入的当前工作台配置
-  workspace: {
-    activeLayoutId: string
-    activeThemeId: string
-    availableLayouts: LayoutContribution[]
-    availableThemes: ThemeContribution[]
-    availableSearchProviders: SearchProviderContribution[]
+  data: {
+    // 仅出现 manifest hostReads 请求且宿主授予的只读 DTO
+    workspace?: SettingsWorkspaceSummary
+    layouts?: OwnedContribution<LayoutContribution, "layout">[]
+    themes?: OwnedContribution<ThemeContribution, "theme">[]
+    searchProviders?: OwnedContribution<SearchProviderContribution, "search-provider">[]
   }
 }
 ```
@@ -965,7 +964,7 @@ type SettingsPanelContribution = {
 }
 ```
 
-当前上线前阶段不再按旧 id 推断 section，也不为缺失 scope 的旧 manifest 做默认补齐。SettingsHost 以 orchestrator navigator 作为主路径，panel props 中带入 scope，widget instance settings 通过实例级数据隔离路径保存。
+当前上线前阶段不再按旧 id 推断 section，也不为缺失 scope 的旧 manifest 做默认补齐。SettingsHost 以 orchestrator navigator 作为主路径，panel props 中带入 scope；`scope: "instance"` 的 panel 在未传入明确 `instanceId` 时不得出现在导航或渲染树中，schema context 和 custom-view props 都只在显式目标存在时携带该 ID。
 
 ### 12.4 Workspace Preset
 
@@ -1051,7 +1050,7 @@ class TaboraDatabase extends Dexie {
 
 `permissionGrants`、`eventLogs`、`searchHistory`、`shortcutBindings` 暂不进入 MVP schema，直到对应 repository 或 runtime port 落地。当前搜索历史由官方 search command bar 作为 plugin-owned workspace data 写入 `pluginData`，避免平台 schema 与插件数据路径双写。
 
-`external-open` 在当前 MVP 中仍采用“manifest 声明 + runtime host 判断”的最小闭环：`PermissionBridge` 只基于插件声明的 host 列表判断是否允许打开外链，不提供平台级持久授权记录，也不承诺跨会话审计。若后续扩展到 `network`、`clipboard`、`local-file` 等需要用户交互授权的能力，应统一引入独立 permission repository / host grant store，而不是把授权结果混入 workspace 表或 `pluginData`。
+`external-open` 与 `network` 都采用“manifest 请求 + host grant + runtime host 判断”的最小闭环：两者都按 hostname 求 request/grant 交集；`context.network.fetch()` 还必须经宿主注入的 network bridge 执行，插件业务不得直接调用全局 `fetch`。host 缺少 network capability 或 bridge 时，声明 network permission 的插件会在激活前跳过。当前不提供平台级持久授权记录或跨会话审计；后续 `clipboard`、`local-file` 等需要用户交互授权的能力也必须引入独立 permission repository / host grant store，而不是把授权结果混入 workspace 表或 `pluginData`。
 
 ### 13.3 Workspace Snapshot
 
@@ -1075,6 +1074,45 @@ workspaceSnapshotRepository.getLast(workspaceId): WorkspaceSnapshot | undefined
 当前 shell 在切换布局前保存 snapshot。`createLayoutSwitchPlan` 输出 `placedInstances`、`unplacedInstances`、`nextRegions` 和 snapshot；不兼容目标布局 region 的实例保留数据并进入 `unplaced` 区域，不删除、不做旧 layout ID 迁移。
 
 这里明确 snapshot 的边界：它服务于“布局切换后的装配回滚”，而不是通用时光机。当前 snapshot 只覆盖 `workspace.regions` 与完整 `instances` 列表，不覆盖 `pluginData`、插件启用状态记录或其他宿主运行时状态。因此“一键回滚”语义仅保证区域拓扑与实例摆放可恢复，不保证插件业务数据一起回退。
+
+### 13.4 Plugin SDK v1 边界
+
+插件协议分为四层，禁止把它们收进同一个 `BuiltinPlugin` 或 runtime context：
+
+```text
+1. declaration：PluginManifest、ContributionRef、settings/sync/command metadata
+2. runtime registration：PluginModule.activate() 注册自己的 view/provider/command handler
+3. host services：scoped data、UI、i18n、permission-gated external/network/file/AI 服务
+4. host internal：installed record、runtime state、loader assets、workspace persistence model
+```
+
+`PluginModule` 只属于插件作者，包含 `manifest` 与 `activate(context)`。`InstalledPluginRecord` 保存 source、用户期望的启用状态与实际 permission grants；`LoadedPluginPackage` 保存 loader 解析后的 module 与资源；`PluginRuntimeState` 保存 active/error/skipped 等易变状态。插件 manifest 中的 permissions 是请求，不是 grant。
+
+contribution 在 manifest 内只要求插件本地唯一 ID；kernel 生成 canonical `ContributionRef { pluginId, kind, id }` 并用于 catalog、workspace/template 和冲突诊断。持久化的 `PluginInstance` 只保存这一引用；旧 `pluginId / contributionId / extensionPoint` 只允许在 import 迁移边界读取，迁移完成后不得进入 runtime 或再次写入存储。只有 `RegionContentKind`（当前为 widget、search surface）能被 layout region 接收；theme、background、settings panel、command 和 keybinding 不属于 region instance。
+
+存储仓库也是旧本地数据的受控迁移边界：它读取 legacy row 后校验、转换并立即覆写为 canonical row；`save()` 只接受 canonical instance。manifest 的单包校验建立 owner-aware 的本地 symbol table（注册型 view / command / settings provider 必须属于 manifest namespace），kernel 在完整发现批次上再执行 composition 校验，解析 workspace preset 的 plugin、contribution、region 与 layout default instance 链接。command 执行链统一返回 `Promise<boolean>`：programmatic 调用者可 await 结果，palette、shortcut、toast 等 UI 触发边界捕获 rejection 并显示局部失败提示。
+
+manifest 校验除字段形状外，还必须验证引用完整性：插件包 ID 在一次发现中全局唯一；同一插件内的 view、provider、command、keybinding、widget context menu、layout region/defaultRegions 和 preset 引用均须可解析且符合所属插件。所有 manifest 引用的 view 由 kernel 纳入该插件的注册白名单；`canvas` 背景 source 的 view 也属于这一规则。发现期错误必须拒绝该包，不能等到首次渲染才暴露为白屏或未注册 view。
+
+`PluginContext` 只能提供当前插件的 scoped registration facade，不暴露全局 Registry 的 `get/has`。command handler 必须在 activation 中注册，停用时和 view/provider 一起回收。runtime service 由 host 的实际服务集合提供；capability 表示服务是否存在，permission grant 表示插件是否能调用，服务调用仍必须执行范围检查。尚未实现 bridge 的 permission 不得出现在可授权 manifest 协议中；storage、workspace、network、clipboard、local-file、external-open 和 AI 任一项一旦公开，必须同时拥有 scope 收敛的 host service、request/grant 校验和拒绝时的明确错误。
+
+插件 view 不得绕过 kernel 直接操作全局 overlay。modal/fullscreen 的目标 view 必须同时属于调用插件、已在 manifest 声明且已注册；关闭操作只影响调用插件拥有的 overlay。widget view 的 data/config/instance action 同样由按 plugin + workspace + instance scope 构造的 facade 提供，不能取得 repository、其他实例或其他插件的数据。
+
+`@tabora/plugin-api/sdk` 是插件作者唯一允许导入的入口，只导出 manifest、runtime facade、view props、settings schema、layout view DTO 与安全辅助类型；插件边界测试禁止 `plugins/**` 和官方插件 pack 直接导入根 `@tabora/plugin-api`。`@tabora/plugin-api/host` 承载 Workspace、PluginInstance、PluginRecord、workspace schema 与 host-only validation；shell、storage、orchestrator 等宿主代码可以使用它。layout plugin 收到的 `LayoutInstance` 是只读投影，不含 workspace ID、创建时间或更新等持久化元数据。若 view 需要宿主状态，应通过只读 DTO，而不是泄漏持久化实体。
+
+同步集合是 manifest 的可选声明。所有 plugin data 默认 `local-only`；只有显式声明 stable record key、updatedAt、merge 策略、schema version 与 excluded fields 的 collection 才能由同步基础设施观察。collection 是结构化记录空间，不是任意 repository key：每条记录必须保存 collection ID、稳定业务 record ID、scope、updatedAt 和 payload，ChangeDetector 据此决定是否入队并在上传前剔除 excluded fields。`StorageAdapter.repositories` 只包含 workspace、instance、plugin data、plugin record 与 snapshot 等核心端口；`StorageAdapter.sync` 是账号同步宿主显式装配的可选 queue/meta 端口。FNOS 不装配该插件时不创建认证、同步队列或同步调度。
+
+`SyncManager.stop()` 是完整资源释放：必须注销数据库 change hooks、取消 timer、移除浏览器事件监听并阻止停止后的 public trigger 继续发起同步。重新启用账号插件只能创建一套监听器和一条变更队列路径。
+
+账号/同步官方插件不接收 `StorageAdapter`、`TaboraDatabase` 或 Dexie table。host adapter 以 `AccountSyncService` 注入 auth client、sync manager 与 sync meta port；web / extension 只有在显式装配账号插件时创建该服务，FNOS 不创建它。
+
+SettingsHost 是 shell 容器。schema provider 每次渲染都接收由 host 构造的受限 context：panel id、plugin id、scope、locale，以及 cancellation signal / invalidate；provider 不读取宿主 store。instance scope 还必须带有目标 instance identity，不能只靠字符串 scope 推断。custom-view 仍只能通过其明确声明的 view props 使用窄 facade，不能取得 registry、storage 或全局 overlay 控制权。custom-view 的可读数据必须用 `hostReads` 声明，再由宿主逐项授予；props 中只出现 `SettingsWorkspaceSummary`、catalog 摘要、搜索设置或插件摘要等只读 DTO，绝不注入 `Workspace`、regions、完整 manifest 或 repository record。custom-view 所需的 host action 以 panel contribution 的 `hostActions` 声明，再由宿主依据来源、platform capability 与 grant 逐项授予；不得以官方 plugin ID 白名单决定权限。未授予的 read 不出现在 `data` 中，未授予的 action 不出现在 `host` facade 中，绝不静默 no-op。
+
+Theme token applier 只管理它自己最近一次写入的 CSS custom properties。切换主题时必须清理前一主题独有 token（包括 `@tabora/ui` 映射 token），但不得删除宿主或其他插件独立写入的变量。
+
+Background applier 同样追踪它最近写入的 CSS properties；切换背景时移除上一背景独有属性后再应用新样式，未知 provider 则只应用安全页面底色。
+
+FNOS 的本地 Fastify API 只监听 loopback；CORS 仅允许无 Origin 的同源请求及 `localhost`/`127.0.0.1`/`[::1]` 本机开发 Origin，不能以 `origin: true` 向任意跨站页面开放本地数据。
 
 ## 14. 错误回退体系
 

@@ -1,14 +1,28 @@
-import type { ExtensionPoint } from "./manifest"
-import type { PluginInstance } from "./workspace"
+import type { RegionContentKind } from "./manifest"
+
+/** Read-only instance projection exposed to layout plugins; it omits persistence metadata. */
+export type LayoutInstance = {
+  id: string
+  contribution: {
+    pluginId: string
+    kind: RegionContentKind
+    id: string
+  }
+  regionId: string
+  enabled: boolean
+  size?: "S" | "M" | "L" | "XL"
+  grid?: { x: number; y: number; colSpan: number; rowSpan: number; locked?: boolean }
+  config: Readonly<Record<string, unknown>>
+}
 
 export type RegionSlot<TRendered = unknown> = {
   regionId: string
   title: string
-  accepts: ExtensionPoint[]
-  instances: PluginInstance[]
+  accepts: RegionContentKind[]
+  instances: LayoutInstance[]
   isEmpty: boolean
   render: () => TRendered
-  renderInstance: (instance: PluginInstance) => TRendered
+  renderInstance: (instance: LayoutInstance) => TRendered
 }
 
 export type HostSurface = "rail" | "toolbar" | "menu"
@@ -35,7 +49,7 @@ export type HostActionItem = {
 
 export type AddWidgetContext = {
   activeGroupLabel?: string
-  onAdded?: (instance: PluginInstance) => void
+  onAdded?: (instance: LayoutInstance) => void
 }
 
 export type LayoutHostAPI = {

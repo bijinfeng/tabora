@@ -1,12 +1,15 @@
 import type { CommandContribution, SearchCommandEntry } from "@tabora/plugin-api"
 
-export type CommandActionMap = Record<string, (() => void) | undefined>
+export type CommandActionMap = Record<string, (() => void | Promise<void>) | undefined>
 
 export type CommandCatalogOptions = {
   platformCommands: CommandContribution[]
   pluginCommands?: CommandContribution[]
   actions?: CommandActionMap
   supportedCapabilities?: string[]
+  hasPluginCommandHandler?: (commandId: string) => boolean
+  executePluginCommand?: (commandId: string) => Promise<boolean>
+  onCommandError?: (error: unknown, commandId: string) => void
 }
 
 export type CommandCatalog = {
@@ -35,8 +38,22 @@ function commandDescription(command: CommandContribution): string {
 function toCommandEntry(
   command: CommandContribution,
   actions: CommandActionMap,
+  options: Pick<
+    CommandCatalogOptions,
+    "hasPluginCommandHandler" | "executePluginCommand" | "onCommandError"
+  >,
 ): SearchCommandEntry | null {
-  const action = actions[command.id]
+  const action =
+    actions[command.id] ??
+    (options.hasPluginCommandHandler?.(command.id) && options.executePluginCommand
+      ? async () => {
+          try {
+            await options.executePluginCommand!(command.id)
+          } catch (error: unknown) {
+            options.onCommandError?.(error, command.id)
+          }
+        }
+      : undefined)
   if (!action) return null
 
   const entry: SearchCommandEntry = {
@@ -67,7 +84,7 @@ export function createCommandPaletteCommands(options: CommandCatalogOptions): Se
     .sort(comparePluginCommands)
 
   return [...platformCommands, ...pluginCommands].flatMap((command) => {
-    const entry = toCommandEntry(command, actions)
+    const entry = toCommandEntry(command, actions, options)
     return entry ? [entry] : []
   })
 }

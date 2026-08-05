@@ -1,24 +1,101 @@
+import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
 import { describe, expect, it, vi } from "vitest"
-import type { SettingsPanelViewProps, Workspace } from "@tabora/plugin-api"
+import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+import type { Workspace } from "@tabora/plugin-api/host"
 
 import {
-  AppearanceSettingsPanel,
-  SearchSettingsPanel,
-  WorkbenchSettingsPanel,
+  AppearanceSettingsPanel as AppearanceSettingsPanelView,
+  SearchSettingsPanel as SearchSettingsPanelView,
+  WorkbenchSettingsPanel as WorkbenchSettingsPanelView,
 } from "./settings-workspace"
+
+type LegacySettingsPanelProps = Omit<SettingsPanelViewProps, "data"> & {
+  workspace: Workspace
+  workspaces?: Workspace[]
+  layouts: NonNullable<SettingsPanelData["layouts"]>
+  themes: NonNullable<SettingsPanelData["themes"]>
+  backgrounds: NonNullable<SettingsPanelData["backgrounds"]>
+  searchProviders: NonNullable<SettingsPanelData["searchProviders"]>
+  searchSettings: NonNullable<SettingsPanelData["searchSettings"]>
+  plugins: NonNullable<SettingsPanelData["plugins"]>
+}
+
+function workspaceSummary(value: Workspace) {
+  return {
+    id: value.id,
+    name: value.name,
+    activeLayout: value.activeLayout,
+    activeTheme: value.activeTheme,
+    activeBackgroundProvider: value.activeBackgroundProvider,
+    regionCount: Object.keys(value.regions).length,
+  }
+}
+
+function toSettingsPanelProps(input: LegacySettingsPanelProps): SettingsPanelViewProps {
+  const {
+    workspace: currentWorkspace,
+    workspaces,
+    layouts,
+    themes,
+    backgrounds,
+    searchProviders,
+    searchSettings,
+    plugins,
+    ...props
+  } = input
+  return {
+    ...props,
+    data: {
+      workspace: workspaceSummary(currentWorkspace),
+      ...(workspaces ? { workspaces: workspaces.map(workspaceSummary) } : {}),
+      layouts,
+      themes,
+      backgrounds,
+      searchProviders,
+      searchSettings,
+      plugins,
+    },
+  }
+}
+
+function SearchSettingsPanel(props: LegacySettingsPanelProps) {
+  return createComponent(SearchSettingsPanelView, toSettingsPanelProps(props))
+}
+
+function AppearanceSettingsPanel(props: LegacySettingsPanelProps) {
+  return createComponent(AppearanceSettingsPanelView, toSettingsPanelProps(props))
+}
+
+function WorkbenchSettingsPanel(props: LegacySettingsPanelProps) {
+  return createComponent(WorkbenchSettingsPanelView, toSettingsPanelProps(props))
+}
+
+const refs = {
+  layout: (id: string) => ({ pluginId: "official.layout", kind: "layout" as const, id }),
+  theme: (id: string) => ({ pluginId: "official.theme", kind: "theme" as const, id }),
+  background: (id: string) => ({
+    pluginId: "official.background",
+    kind: "background-provider" as const,
+    id,
+  }),
+  provider: (id: string) => ({ pluginId: "official.search", kind: "search-provider" as const, id }),
+}
 
 function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Default",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    activeBackgroundProviderId: "official.background.default",
+    activeLayout: refs.layout("official.layout.workbench-dashboard"),
+    activeTheme: refs.theme("official.theme.light"),
+    activeBackgroundProvider: refs.background("official.background.default"),
     config: {
       search: {
-        defaultProviderId: "official.search.google",
-        enabledProviderIds: ["official.search.google", "official.search.bing"],
+        defaultProvider: refs.provider("official.search.google"),
+        enabledProviders: [
+          refs.provider("official.search.google"),
+          refs.provider("official.search.bing"),
+        ],
       },
     },
     regions: {},
@@ -83,17 +160,22 @@ describe("SearchSettingsPanel", () => {
               title: "Google",
               shortcut: "@google",
               urlTemplate: "https://google.example/search?q={query}",
+              ref: refs.provider("official.search.google"),
             },
             {
               id: "official.search.github",
               title: "GitHub",
               shortcut: "@github",
               urlTemplate: "https://github.example/search?q={query}",
+              ref: refs.provider("official.search.github"),
             },
           ]}
           searchSettings={{
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google", "official.search.github"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [
+              refs.provider("official.search.google"),
+              refs.provider("official.search.github"),
+            ],
           }}
           plugins={[]}
         />
@@ -108,7 +190,7 @@ describe("SearchSettingsPanel", () => {
     expect(root.querySelector("[data-selected] svg")).toBeTruthy()
     expect(root.textContent).toContain("@github")
     ;(root.querySelectorAll("[data-search-provider-main]")[1] as HTMLButtonElement).click()
-    expect(setDefaultSearchProvider).toHaveBeenCalledWith("official.search.github")
+    expect(setDefaultSearchProvider).toHaveBeenCalledWith(refs.provider("official.search.github"))
     root.remove()
   })
 
@@ -133,11 +215,15 @@ describe("SearchSettingsPanel", () => {
               id: "official.search.bing",
               title: "Bing",
               urlTemplate: "https://bing.example/search?q={query}",
+              ref: refs.provider("official.search.bing"),
             },
           ]}
           searchSettings={{
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google", "official.search.bing"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [
+              refs.provider("official.search.google"),
+              refs.provider("official.search.bing"),
+            ],
           }}
           plugins={[]}
         />
@@ -181,16 +267,21 @@ describe("SearchSettingsPanel", () => {
               id: "official.search.google",
               title: "Google",
               urlTemplate: "https://google.example/search?q={query}",
+              ref: refs.provider("official.search.google"),
             },
             {
               id: "official.search.bing",
               title: "Bing",
               urlTemplate: "https://bing.example/search?q={query}",
+              ref: refs.provider("official.search.bing"),
             },
           ]}
           searchSettings={{
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google", "official.search.bing"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [
+              refs.provider("official.search.google"),
+              refs.provider("official.search.bing"),
+            ],
           }}
           plugins={[]}
         />
@@ -201,7 +292,10 @@ describe("SearchSettingsPanel", () => {
     const toggle = root.querySelector('[aria-label="禁用 Google"]') as HTMLInputElement | null
     toggle?.click()
 
-    expect(setSearchProviderEnabled).toHaveBeenCalledWith("official.search.google", false)
+    expect(setSearchProviderEnabled).toHaveBeenCalledWith(
+      refs.provider("official.search.google"),
+      false,
+    )
     expect(setDefaultSearchProvider).not.toHaveBeenCalled()
     root.remove()
   })
@@ -228,11 +322,12 @@ describe("SearchSettingsPanel", () => {
               title: "Google",
               shortcut: "@google",
               urlTemplate: "https://google.example/search?q={query}",
+              ref: refs.provider("official.search.google"),
             },
           ]}
           searchSettings={{
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [refs.provider("official.search.google")],
           }}
           plugins={[]}
         />
@@ -272,30 +367,54 @@ describe("AppearanceSettingsPanel", () => {
             {
               id: "official.layout.workbench-dashboard",
               title: "Dashboard",
+              view: "official.layout.workbench-dashboard.view",
               regions: [],
               defaultRegions: {},
               supportsResponsive: true,
+              ref: refs.layout("official.layout.workbench-dashboard"),
             },
             {
               id: "official.layout.focus",
               title: "Focus",
+              view: "official.layout.focus.view",
               regions: [],
               defaultRegions: {},
               supportsResponsive: true,
+              ref: refs.layout("official.layout.focus"),
             },
           ]}
           themes={[
-            { id: "official.theme.light", title: "明亮 · Sage Light", tokens: {} },
-            { id: "official.theme.dark", title: "暗色 · Sage Dark", tokens: {} },
+            {
+              id: "official.theme.light",
+              title: "明亮 · Sage Light",
+              tokens: {},
+              ref: refs.theme("official.theme.light"),
+            },
+            {
+              id: "official.theme.dark",
+              title: "暗色 · Sage Dark",
+              tokens: {},
+              ref: refs.theme("official.theme.dark"),
+            },
           ]}
           backgrounds={[
-            { id: "official.background.default", title: "纯色 1", sourceType: "generated" },
-            { id: "official.background.gradient", title: "渐变 1", sourceType: "generated" },
+            {
+              id: "official.background.default",
+              title: "纯色 1",
+              sourceType: "generated",
+              ref: refs.background("official.background.default"),
+            },
+            {
+              id: "official.background.gradient",
+              title: "渐变 1",
+              sourceType: "generated",
+              ref: refs.background("official.background.gradient"),
+            },
           ]}
           searchProviders={[]}
           searchSettings={{
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [refs.provider("official.search.google")],
           }}
           plugins={[]}
           locale="zh-CN"
@@ -317,7 +436,7 @@ describe("AppearanceSettingsPanel", () => {
     expect(root.textContent).toContain("正文大小")
     expect(root.textContent).toContain("当前语言")
     buttonByText(root, "暗色").click()
-    expect(switchTheme).toHaveBeenCalledWith("official.theme.dark")
+    expect(switchTheme).toHaveBeenCalledWith(refs.theme("official.theme.dark"))
     root.remove()
   })
 })
@@ -351,8 +470,8 @@ describe("WorkbenchSettingsPanel", () => {
           backgrounds={[]}
           searchProviders={[]}
           searchSettings={{
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [refs.provider("official.search.google")],
           }}
           plugins={[]}
         />

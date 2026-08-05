@@ -40,8 +40,18 @@ export function createWorkbenchShellSurfaceStub(
 ): WorkbenchShell {
   const state = createWorkbenchShellState({
     initialSearchSettings: {
-      defaultProviderId: "official.search.google",
-      enabledProviderIds: ["official.search.google"],
+      defaultProvider: {
+        pluginId: "official.search-providers.basic",
+        kind: "search-provider",
+        id: "official.search.google",
+      },
+      enabledProviders: [
+        {
+          pluginId: "official.search-providers.basic",
+          kind: "search-provider",
+          id: "official.search.google",
+        },
+      ],
     },
     initialVisualState: {
       layoutId: "official.layout.workbench-dashboard",

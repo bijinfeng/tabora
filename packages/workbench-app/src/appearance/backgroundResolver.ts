@@ -1,6 +1,7 @@
 import type { BackgroundProviderContribution, ResolvedBackgroundValue } from "@tabora/plugin-api"
 
 const SAFE_BACKGROUND_STYLE = { background: "rgb(var(--color-page))" }
+const appliedBackgroundProperties = new WeakMap<HTMLElement, Set<string>>()
 
 export function resolveBackgroundValue(
   providerId: string,
@@ -29,8 +30,16 @@ export function resolveBackgroundStyle(
   return SAFE_BACKGROUND_STYLE
 }
 
-export function applyBackgroundStyle(style: Record<string, string>): void {
-  for (const [prop, value] of Object.entries(style)) {
-    ;(document.body.style as unknown as Record<string, string>)[prop] = value
+export function applyBackgroundStyle(
+  style: Record<string, string>,
+  element: HTMLElement = document.body,
+): void {
+  const nextProperties = new Set(Object.keys(style))
+  for (const property of appliedBackgroundProperties.get(element) ?? []) {
+    if (!nextProperties.has(property)) element.style.removeProperty(property)
   }
+  for (const [prop, value] of Object.entries(style)) {
+    element.style.setProperty(prop, value)
+  }
+  appliedBackgroundProperties.set(element, nextProperties)
 }

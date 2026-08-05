@@ -1,23 +1,18 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import type { JSX } from "solid-js"
-import type { LayoutHostAPI, PluginInstance, RegionSlot } from "@tabora/plugin-api"
+import type { LayoutHostAPI, LayoutInstance, RegionSlot } from "@tabora/plugin-api/sdk"
 import { DashboardLayout, FocusLayout, layoutDashboard } from "./index"
 import { syncDashboardGridCellSize } from "./dashboard-layout"
 
-function instance(overrides: Partial<PluginInstance>): PluginInstance {
+function instance(overrides: Partial<LayoutInstance>): LayoutInstance {
   return {
     id: "widget-1",
-    workspaceId: "workspace-1",
-    pluginId: "official.widgets.weather",
-    contributionId: "weather",
-    extensionPoint: "widget",
+    contribution: { pluginId: "official.widgets.weather", kind: "widget", id: "weather" },
     regionId: "focus",
     enabled: true,
     config: {},
     size: "M",
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
   }
 }
@@ -59,7 +54,7 @@ function makeHost(overrides?: {
   }
 }
 
-function makeSlot(id: string, instances: PluginInstance[] = []): RegionSlot<JSX.Element> {
+function makeSlot(id: string, instances: LayoutInstance[] = []): RegionSlot<JSX.Element> {
   return {
     regionId: id,
     title: id,
@@ -102,7 +97,10 @@ describe("DashboardLayout", () => {
           regions={{
             topbar: makeSlot("topbar"),
             mainGrid: makeSlot("mainGrid", [
-              instance({ id: "weather-1", contributionId: "weather" }),
+              instance({
+                id: "weather-1",
+                contribution: { pluginId: "plugin.widgets", kind: "widget", id: "weather" },
+              }),
             ]),
           }}
         />
@@ -372,14 +370,20 @@ describe("FocusLayout", () => {
               instances: [
                 instance({
                   id: "weather-1",
-                  pluginId: "official.widgets.weather",
-                  contributionId: "weather",
+                  contribution: {
+                    pluginId: "official.widgets.weather",
+                    kind: "widget",
+                    id: "weather",
+                  },
                   size: "M",
                 }),
                 instance({
                   id: "todo-1",
-                  pluginId: "official.widgets.todo",
-                  contributionId: "todo",
+                  contribution: {
+                    pluginId: "official.widgets.todo",
+                    kind: "widget",
+                    id: "todo",
+                  },
                   size: "S",
                 }),
               ],
@@ -413,12 +417,36 @@ describe("FocusLayout", () => {
             focus: {
               ...makeSlot("focus"),
               instances: [
-                instance({ id: "focus-1", contributionId: "quick-links", size: "M" }),
-                instance({ id: "focus-2", contributionId: "todo", size: "S" }),
-                instance({ id: "focus-3", contributionId: "notes", size: "L" }),
-                instance({ id: "focus-4", contributionId: "weather", size: "S" }),
-                instance({ id: "focus-5", contributionId: "todo", size: "S" }),
-                instance({ id: "focus-6", contributionId: "notes", size: "L" }),
+                instance({
+                  id: "focus-1",
+                  contribution: { pluginId: "plugin.widgets", kind: "widget", id: "quick-links" },
+                  size: "M",
+                }),
+                instance({
+                  id: "focus-2",
+                  contribution: { pluginId: "plugin.widgets", kind: "widget", id: "todo" },
+                  size: "S",
+                }),
+                instance({
+                  id: "focus-3",
+                  contribution: { pluginId: "plugin.widgets", kind: "widget", id: "notes" },
+                  size: "L",
+                }),
+                instance({
+                  id: "focus-4",
+                  contribution: { pluginId: "plugin.widgets", kind: "widget", id: "weather" },
+                  size: "S",
+                }),
+                instance({
+                  id: "focus-5",
+                  contribution: { pluginId: "plugin.widgets", kind: "widget", id: "todo" },
+                  size: "S",
+                }),
+                instance({
+                  id: "focus-6",
+                  contribution: { pluginId: "plugin.widgets", kind: "widget", id: "notes" },
+                  size: "L",
+                }),
               ],
               renderInstance: (current) => <div data-testid={`focus-instance-${current.id}`} />,
             },

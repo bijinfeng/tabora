@@ -27,27 +27,29 @@ describe("createExtensionRegistry", () => {
     expect(registry.views.has("official.notes.card")).toBe(false)
   })
 
-  it("does not let an old disposer remove a replacement view", () => {
+  it("rejects a duplicate view registration and retains the original registration", () => {
     const registry = createExtensionRegistry()
     const firstView = () => null
     const replacementView = () => null
 
-    const disposeFirst = registry.views.register("official.notes.card", firstView)
-    registry.views.register("official.notes.card", replacementView)
-    disposeFirst()
+    registry.views.register("official.notes.card", firstView)
 
-    expect(registry.views.get("official.notes.card")).toBe(replacementView)
+    expect(() => registry.views.register("official.notes.card", replacementView)).toThrow(
+      "View already registered: official.notes.card",
+    )
+    expect(registry.views.get("official.notes.card")).toBe(firstView)
   })
 
-  it("registers settings providers and disposes only the matching registration", () => {
+  it("rejects a duplicate settings provider registration", () => {
     const registry = createExtensionRegistry()
     const first = { getModel: () => ({ version: 1 as const, nodes: [] }), dispatch: () => {} }
     const replacement = { getModel: () => ({ version: 1 as const, nodes: [] }), dispatch: () => {} }
 
-    const disposeFirst = registry.settings.register("official.account.provider", first)
-    registry.settings.register("official.account.provider", replacement)
-    disposeFirst()
+    registry.settings.register("official.account.provider", first)
 
-    expect(registry.settings.get("official.account.provider")).toBe(replacement)
+    expect(() => registry.settings.register("official.account.provider", replacement)).toThrow(
+      "Settings provider already registered: official.account.provider",
+    )
+    expect(registry.settings.get("official.account.provider")).toBe(first)
   })
 })

@@ -62,13 +62,13 @@ export function buildWorkbenchWidgetViewProps(
 ): WidgetViewProps {
   return {
     instanceId: options.instance.id,
-    pluginId: options.instance.pluginId,
-    contributionId: options.instance.contributionId,
+    pluginId: options.instance.contribution.pluginId,
+    contributionId: options.instance.contribution.id,
     size: options.model.currentSize,
     supportedSizes: options.model.supportedSizes,
     config: options.instance.config,
     data: createWorkbenchScopedData({
-      pluginId: options.instance.pluginId,
+      pluginId: options.instance.contribution.pluginId,
       instanceId: options.instance.id,
       pluginDataRepo: options.pluginDataRepo,
     }),
@@ -96,7 +96,7 @@ export function buildWorkbenchWidgetViewProps(
           ...(typeof props === "object" && props !== null
             ? (props as Record<string, unknown>)
             : {}),
-          pluginId: options.instance.pluginId,
+          pluginId: options.instance.contribution.pluginId,
         })
       },
       closeModal() {
@@ -109,7 +109,7 @@ export function buildWorkbenchWidgetViewProps(
         options.showToast(message, toastOptions)
       },
       async openExternal(url) {
-        return options.openExternalForPlugin(options.instance.pluginId, url)
+        return options.openExternalForPlugin(options.instance.contribution.pluginId, url)
       },
     },
   }

@@ -406,6 +406,12 @@ importers:
 
   packages/host-adapters:
     dependencies:
+      '@tabora/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../plugin-api
       '@tabora/storage':
         specifier: workspace:*
         version: link:../storage
@@ -684,9 +690,6 @@ importers:
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../../packages/plugin-api
@@ -709,9 +712,6 @@ importers:
       '@tabora/brand':
         specifier: workspace:*
         version: link:../../../packages/brand
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../../packages/plugin-api
@@ -734,9 +734,6 @@ importers:
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../../packages/plugin-api
@@ -759,9 +756,6 @@ importers:
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../../packages/plugin-api
@@ -784,9 +778,6 @@ importers:
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../../packages/plugin-api
@@ -809,9 +800,6 @@ importers:
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../../packages/platform-kernel
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../../packages/plugin-api

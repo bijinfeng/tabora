@@ -46,9 +46,7 @@ describe("workspaceTransfer", () => {
     await instanceRepo.save({
       id: instanceAId,
       workspaceId: workspaceA.id,
-      pluginId: "official.widgets.notes",
-      contributionId: "notes",
-      extensionPoint: "widget",
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       regionId: "mainGrid",
       enabled: true,
       size: "M",
@@ -59,9 +57,7 @@ describe("workspaceTransfer", () => {
     await instanceRepo.save({
       id: instanceBId,
       workspaceId: workspaceB.id,
-      pluginId: "official.widgets.notes",
-      contributionId: "notes",
-      extensionPoint: "widget",
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       regionId: "mainGrid",
       enabled: true,
       size: "M",
@@ -132,9 +128,7 @@ describe("workspaceTransfer", () => {
     await sourceInstanceRepo.save({
       id: instanceId,
       workspaceId: workspace.id,
-      pluginId: "official.widgets.notes",
-      contributionId: "notes",
-      extensionPoint: "widget",
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       regionId: "mainGrid",
       enabled: true,
       size: "M",

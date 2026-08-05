@@ -1,10 +1,14 @@
 import type {
   BackgroundProviderContribution,
+  BackgroundProviderContributionRef,
+  LayoutContributionRef,
   LayoutContribution,
   PluginInstance,
   SearchHistoryEntry,
   SearchProviderContribution,
+  SearchProviderContributionRef,
   ThemeContribution,
+  ThemeContributionRef,
   ThemeTokenSet,
   WorkbenchSearchSettings,
   Workspace,
@@ -66,11 +70,15 @@ export function createWorkbenchWorkspaceController(options: {
   kernel: { setPluginEnabled: (pluginId: string, enabled: boolean) => Promise<void> }
   pluginCatalog: {
     pluginIds: () => string[]
-    listThemes: () => ThemeContribution[]
-    listBackgroundProviders: () => BackgroundProviderContribution[]
-    listLayouts: () => LayoutContribution[]
+    listThemes: () => Array<ThemeContribution & { ref: ThemeContributionRef }>
+    listBackgroundProviders: () => Array<
+      BackgroundProviderContribution & { ref: BackgroundProviderContributionRef }
+    >
+    listLayouts: () => Array<LayoutContribution & { ref: LayoutContributionRef }>
     findLayoutContribution: (layoutId: string) => LayoutContribution | undefined
-    listSearchProviders: () => SearchProviderContribution[]
+    listSearchProviders: () => Array<
+      SearchProviderContribution & { ref: SearchProviderContributionRef }
+    >
   }
   getWorkspaceState: () => Workspace | null
   getInstances: () => PluginInstance[]
@@ -174,7 +182,11 @@ export function createWorkbenchWorkspaceController(options: {
           workspaceRepo: options.workspaceRepo,
           workspaceId,
           mutator(workspace) {
-            workspace.activeLayoutId = nextLayoutId
+            const nextLayout = options.pluginCatalog
+              .listLayouts()
+              .find((layout) => layout.id === nextLayoutId)
+            if (!nextLayout?.ref) return workspace
+            workspace.activeLayout = nextLayout.ref as LayoutContributionRef
             workspace.regions = regions
             return workspace
           },
@@ -187,9 +199,9 @@ export function createWorkbenchWorkspaceController(options: {
     await workspaceStateActions.updateWorkspace(mutator)
   }
 
-  async function setDefaultSearchProvider(providerId: string) {
+  async function setDefaultSearchProvider(provider: SearchProviderContributionRef) {
     await setWorkbenchDefaultSearchProvider({
-      providerId,
+      provider,
       providers: options.pluginCatalog.listSearchProviders(),
       updateWorkspace,
       setSearchSettings: options.setSearchSettings,
@@ -197,9 +209,12 @@ export function createWorkbenchWorkspaceController(options: {
     })
   }
 
-  async function setSearchProviderEnabled(providerId: string, enabled: boolean) {
+  async function setSearchProviderEnabled(
+    provider: SearchProviderContributionRef,
+    enabled: boolean,
+  ) {
     await setWorkbenchSearchProviderEnabled({
-      providerId,
+      provider,
       enabled,
       currentSettings: options.getSearchSettings(),
       providers: options.pluginCatalog.listSearchProviders(),
@@ -227,35 +242,35 @@ export function createWorkbenchWorkspaceController(options: {
     })
   }
 
-  async function switchTheme(themeId: string) {
+  async function switchTheme(theme: ThemeContributionRef) {
     await switchWorkbenchTheme({
       workspace: requireWorkspace(options.getWorkspaceState()),
-      themeId,
+      theme,
       themes: options.pluginCatalog.listThemes(),
       setThemeId: options.setThemeId,
       applyTheme: options.applyTheme,
-      persistTheme: (workspaceId, nextThemeId) =>
+      persistTheme: (workspaceId, nextTheme) =>
         updateWorkspaceTheme({
           workspaceRepo: options.workspaceRepo,
           workspaceId,
-          themeId: nextThemeId,
+          theme: nextTheme,
         }),
       setWorkspaceState: options.setWorkspaceState,
     })
   }
 
-  async function switchBackground(backgroundId: string) {
+  async function switchBackground(background: BackgroundProviderContributionRef) {
     await switchWorkbenchBackground({
       workspace: requireWorkspace(options.getWorkspaceState()),
-      backgroundId,
+      background,
       backgrounds: options.pluginCatalog.listBackgroundProviders(),
       setBackgroundId: options.setBackgroundId,
       applyBackground: options.applyBackground,
-      persistBackground: (workspaceId, nextBackgroundId) =>
+      persistBackground: (workspaceId, nextBackground) =>
         updateWorkspaceBackground({
           workspaceRepo: options.workspaceRepo,
           workspaceId,
-          backgroundId: nextBackgroundId,
+          background: nextBackground,
         }),
       setWorkspaceState: options.setWorkspaceState,
     })

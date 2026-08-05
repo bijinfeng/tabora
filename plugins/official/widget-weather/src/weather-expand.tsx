@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, Show } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { PluginNetworkAccess, WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button } from "@tabora/ui/button"
 import { InlineError } from "@tabora/ui/inline-error"
 import { SegmentedControl } from "@tabora/ui/segmented-control"
@@ -53,7 +53,7 @@ function buildAdvice(snap: WeatherSnapshot): Advice[] {
   return [commute, drying, sport]
 }
 
-export function WeatherExpand(props: WidgetViewProps) {
+export function WeatherExpand(props: WidgetViewProps & { network: PluginNetworkAccess }) {
   const store = createWeatherStore(props)
   const [view, setView] = createSignal<WeatherView>("hourly")
 

@@ -47,7 +47,7 @@ export function buildWorkbenchContextMenuModel(options: {
   resolveWidgetRenderModel: (instance: PluginInstance) => WidgetRenderModel | null
   resolveContextMenus: (instance: PluginInstance) => WidgetContextMenuContribution[]
   availableCommandIds: string[] | Set<string>
-  runCommand: (commandId: string, context: { instance: PluginInstance }) => boolean
+  runCommand: (commandId: string, context: { instance: PluginInstance }) => Promise<boolean>
   hasInstanceSettings: (instance: PluginInstance) => boolean
   onResize: (instanceId: string, size: WidgetSize) => void
   onExpand: (instanceId: string) => void

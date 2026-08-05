@@ -10,8 +10,6 @@ const localStoreCollections = [
   "plugin-data",
   "plugin-instances",
   "plugin-records",
-  "sync-meta",
-  "sync-queue",
   "workspace-snapshots",
   "workspaces",
 ] as const
@@ -29,6 +27,19 @@ function isLocalStoreCollection(value: string): value is LocalStoreCollection {
 
 function defaultDatabasePath(): string {
   return process.env.FNOS_DATABASE_PATH ?? resolve(process.cwd(), "data", "tabora.db")
+}
+
+function isTrustedLocalOrigin(origin: string | undefined): boolean {
+  if (!origin) return true
+  try {
+    const url = new URL(origin)
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      (url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]")
+    )
+  } catch {
+    return false
+  }
 }
 
 function createLocalStore(databasePath: string): Database.Database {
@@ -54,7 +65,11 @@ export function createFnosServer(options: FnosServerOptions = {}): FastifyInstan
   const database = createLocalStore(options.databasePath ?? defaultDatabasePath())
   const server = Fastify({ logger: false })
 
-  void server.register(cors, { origin: true })
+  void server.register(cors, {
+    origin(origin, callback) {
+      callback(null, isTrustedLocalOrigin(origin))
+    },
+  })
 
   server.addHook("onClose", async () => {
     database.close()

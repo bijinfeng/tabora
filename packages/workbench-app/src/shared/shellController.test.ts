@@ -9,9 +9,13 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Main",
-    activeLayoutId: "layout.previous",
-    activeThemeId: "theme.light",
-    activeBackgroundProviderId: "background.gradient-green",
+    activeLayout: { pluginId: "plugin.layout", kind: "layout", id: "layout.previous" },
+    activeTheme: { pluginId: "plugin.theme", kind: "theme", id: "theme.light" },
+    activeBackgroundProvider: {
+      pluginId: "plugin.background",
+      kind: "background-provider",
+      id: "background.gradient-green",
+    },
     config: {},
     regions: {
       old: { regionId: "old", accepts: ["widget"], instances: [{ instanceId: "widget-1" }] },
@@ -26,9 +30,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "old",
     enabled: true,
     size: "M",
@@ -43,6 +45,7 @@ function layout(regions: LayoutContribution["regions"]): LayoutContribution {
   return {
     id: "layout.next",
     title: "Next",
+    view: "layout.next.view",
     regions,
     defaultRegions: {},
     supportsResponsive: true,
@@ -56,17 +59,24 @@ describe("canPluginOpenExternal", () => {
         id: "trusted.widget",
         permissions: [{ type: "external-open" as const, hosts: ["example.com"] }],
       },
+      installation: {
+        grantedPermissions: [{ type: "external-open" as const, hosts: ["example.com"] }],
+      },
     },
     {
       manifest: {
         id: "wildcard.widget",
         permissions: [{ type: "external-open" as const, hosts: ["*"] }],
       },
+      installation: {
+        grantedPermissions: [{ type: "external-open" as const, hosts: ["*"] }],
+      },
     },
     {
       manifest: {
         id: "plain.widget",
       },
+      installation: { grantedPermissions: [] },
     },
   ]
 
@@ -149,19 +159,17 @@ describe("createLayoutSwitchExecution", () => {
 
   it("moves incompatible instances into the unplaced region without mutating the snapshot", () => {
     const themeInstance = instance({
-      id: "theme-1",
-      pluginId: "plugin.theme",
-      contributionId: "theme.default",
-      extensionPoint: "theme",
-      regionId: "themeRegion",
+      id: "search-1",
+      contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
+      regionId: "searchRegion",
     })
 
     const result = createLayoutSwitchExecution({
       workspace: workspace({
         regions: {
-          themeRegion: {
-            regionId: "themeRegion",
-            accepts: ["theme"],
+          searchRegion: {
+            regionId: "searchRegion",
+            accepts: ["widget"],
             instances: [{ instanceId: "theme-1" }],
           },
         },

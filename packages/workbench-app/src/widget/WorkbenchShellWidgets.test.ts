@@ -20,9 +20,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -109,7 +107,13 @@ describe("workbench widget helpers", () => {
   it("builds searchable widget entries from instances and contribution resolver", () => {
     const focus = vi.fn()
     const entries = buildWorkbenchSearchableWidgets({
-      instances: [instance(), instance({ id: "search-1", extensionPoint: "search" })],
+      instances: [
+        instance(),
+        instance({
+          id: "search-1",
+          contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
+        }),
+      ],
       resolveWidgetContribution: (_pluginId, contributionId) =>
         contributionId === "widget.notes" ? widget("notes", "便签", "pencil") : undefined,
       buildFocusAction: (instanceId) => () => focus(instanceId),
@@ -128,7 +132,7 @@ describe("workbench widget helpers", () => {
       instance({ id: "widget-1", updatedAt: "2026-06-06T00:00:00.000Z" }),
       instance({
         id: "widget-2",
-        contributionId: "widget.todo",
+        contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.todo" },
         updatedAt: "2026-06-06T00:00:00.000Z",
       }),
     ]

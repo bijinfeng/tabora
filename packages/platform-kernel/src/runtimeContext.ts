@@ -1,36 +1,20 @@
 import type {
   AiPermissionAccess,
   AiRuntimeBridge,
+  PluginCommandHandler,
+  PluginContext,
+  PluginI18nBridge,
+  PluginI18nMessageBundle,
   PluginManifest,
+  PluginNetworkBridge,
   PluginPermission,
+  PluginSettingsRegistration,
+  PluginViewRegistration,
 } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
 import type { ExtensionRegistrationDisposer, ExtensionRegistry } from "./extensionRegistry"
 
-export type PluginUiBridge = {
-  openModal(viewId: string, props?: Record<string, unknown>): void
-  closeModal(): void
-  openFullscreen(viewId: string, props?: Record<string, unknown>): void
-  closeFullscreen(): void
-  showToast(
-    message: string,
-    options?: {
-      type?: "success" | "error" | "warning" | "info"
-      duration?: number
-      action?: { label: string; commandId: string }
-    },
-  ): void
-}
-
-export type PermissionBridge = {
-  canOpenExternal(url: string): boolean
-  openExternal(url: string): boolean
-}
-
-export type I18nMessageBundle = {
-  locale: string
-  messages: Record<string, string>
-}
+export type I18nMessageBundle = PluginI18nMessageBundle
 
 export type PluginI18nService = {
   locale(): string
@@ -40,26 +24,8 @@ export type PluginI18nService = {
   formatNumber(value: number, options?: Intl.NumberFormatOptions): string
 }
 
-export type PluginI18nBridge = {
-  locale(): string
-  registerMessages(bundles: I18nMessageBundle[]): void
-  t(key: string, vars?: Record<string, string | number>): string
-  formatDate(date: Date, options?: Intl.DateTimeFormatOptions): string
-  formatNumber(value: number, options?: Intl.NumberFormatOptions): string
-}
-
-export type PluginRuntimeContext = {
-  pluginId: string
-  registry: ExtensionRegistry
-  ui: PluginUiBridge
-  permissions: PermissionBridge
-  ai?: AiRuntimeBridge
-  i18n?: PluginI18nBridge
-  logger: {
-    warn(message: string): void
-    error(message: string): void
-  }
-}
+/** @deprecated Use PluginContext from @tabora/plugin-api. */
+export type PluginRuntimeContext = PluginContext
 
 export function collectPluginManifestViewIds(manifest: PluginManifest): Set<string> {
   const views = new Set<string>()
@@ -71,6 +37,7 @@ export function collectPluginManifestViewIds(manifest: PluginManifest): Set<stri
   for (const widget of manifest.contributes.widgets ?? []) {
     views.add(widget.views.card)
     if (widget.views.expand) views.add(widget.views.expand)
+    if (widget.views.expandFooter) views.add(widget.views.expandFooter)
     if (widget.views.settings) views.add(widget.views.settings)
   }
 
@@ -97,54 +64,80 @@ export function collectPluginManifestSettingsProviderIds(manifest: PluginManifes
   return providers
 }
 
+export function collectPluginManifestCommandIds(manifest: PluginManifest): Set<string> {
+  return new Set((manifest.contributes.commands ?? []).map((command) => command.id))
+}
+
 export function createPluginRuntimeContext(options: {
   pluginId: string
   events: EventBus
   registry: ExtensionRegistry
   manifest?: PluginManifest
+  requestedPermissions?: PluginPermission[]
   grantedPermissions?: PluginPermission[]
   registrationDisposers?: ExtensionRegistrationDisposer[]
   ai?: AiRuntimeBridge
+  network?: PluginNetworkBridge
   i18n?: PluginI18nService
-}): PluginRuntimeContext {
+}): PluginContext {
   const grantedPermissions = options.grantedPermissions ?? []
+  const requestedPermissions = options.requestedPermissions ?? options.manifest?.permissions ?? []
   const declaredViews = options.manifest ? collectPluginManifestViewIds(options.manifest) : null
   const declaredSettingsProviders = options.manifest
     ? collectPluginManifestSettingsProviderIds(options.manifest)
     : new Set<string>()
+  const declaredCommands = options.manifest
+    ? collectPluginManifestCommandIds(options.manifest)
+    : new Set<string>()
 
   function canAccessView(viewId: string): boolean {
-    if (viewId.startsWith(`${options.pluginId}.`)) return true
-    return declaredViews?.has(viewId) ?? false
+    return viewId.startsWith(`${options.pluginId}.`) && (declaredViews?.has(viewId) ?? false)
   }
 
-  const registry: ExtensionRegistry = {
-    ...options.registry,
-    views: {
-      ...options.registry.views,
-      register(viewId, view) {
-        if (!canAccessView(viewId)) {
-          throw new Error(
-            `Plugin "${options.pluginId}" attempted to register undeclared view: ${viewId}`,
-          )
-        }
-        const dispose = options.registry.views.register(viewId, view)
-        options.registrationDisposers?.push(dispose)
-        return dispose
-      },
+  function canOpenView(viewId: string): boolean {
+    return canAccessView(viewId) && options.registry.views.has(viewId)
+  }
+
+  function ownsRegistration(id: string): boolean {
+    return id.startsWith(`${options.pluginId}.`)
+  }
+
+  const views: PluginViewRegistration = {
+    register(viewId, view) {
+      if (!canAccessView(viewId)) {
+        throw new Error(
+          `Plugin "${options.pluginId}" attempted to register undeclared view: ${viewId}`,
+        )
+      }
+      const dispose = options.registry.views.register(viewId, view)
+      options.registrationDisposers?.push(dispose)
+      return dispose
     },
-    settings: {
-      ...options.registry.settings,
-      register(providerId, provider) {
-        if (!declaredSettingsProviders.has(providerId)) {
-          throw new Error(
-            `Plugin "${options.pluginId}" attempted to register undeclared settings provider: ${providerId}`,
-          )
-        }
-        const dispose = options.registry.settings.register(providerId, provider)
-        options.registrationDisposers?.push(dispose)
-        return dispose
-      },
+  }
+
+  const settings: PluginSettingsRegistration = {
+    register(providerId, provider) {
+      if (!ownsRegistration(providerId) || !declaredSettingsProviders.has(providerId)) {
+        throw new Error(
+          `Plugin "${options.pluginId}" attempted to register undeclared settings provider: ${providerId}`,
+        )
+      }
+      const dispose = options.registry.settings.register(providerId, provider)
+      options.registrationDisposers?.push(dispose)
+      return dispose
+    },
+  }
+
+  const commands = {
+    register(commandId: string, handler: PluginCommandHandler) {
+      if (!ownsRegistration(commandId) || !declaredCommands.has(commandId)) {
+        throw new Error(
+          `Plugin "${options.pluginId}" attempted to register undeclared command handler: ${commandId}`,
+        )
+      }
+      const dispose = options.registry.commands.register(commandId, handler)
+      options.registrationDisposers?.push(dispose)
+      return dispose
     },
   }
 
@@ -155,21 +148,45 @@ export function createPluginRuntimeContext(options: {
     } catch {
       return false
     }
-    return grantedPermissions.some((permission) => {
-      if (permission.type !== "external-open") return false
-      return permission.hosts.some((host) => host === "*" || host === hostname)
-    })
+    return [requestedPermissions, grantedPermissions].every((permissions) =>
+      permissions.some((permission) => {
+        if (permission.type !== "external-open") return false
+        return permission.hosts.some((host) => host === "*" || host === hostname)
+      }),
+    )
+  }
+
+  function canFetch(url: string): boolean {
+    let hostname: string
+    try {
+      hostname = new URL(url).hostname
+    } catch {
+      return false
+    }
+    return (
+      options.network !== undefined &&
+      [requestedPermissions, grantedPermissions].every((permissions) =>
+        permissions.some((permission) => {
+          if (permission.type !== "network") return false
+          return permission.hosts.some((host) => host === "*" || host === hostname)
+        }),
+      )
+    )
   }
 
   function hasAiAccess(access: AiPermissionAccess): boolean {
-    return grantedPermissions.some((permission) => {
-      if (permission.type !== "ai") return false
-      return permission.access.includes(access)
-    })
+    return [requestedPermissions, grantedPermissions].every((permissions) =>
+      permissions.some(
+        (permission) => permission.type === "ai" && permission.access.includes(access),
+      ),
+    )
   }
 
   function hasAnyAiAccess(): boolean {
-    return grantedPermissions.some((permission) => permission.type === "ai")
+    return (
+      requestedPermissions.some((permission) => permission.type === "ai") &&
+      grantedPermissions.some((permission) => permission.type === "ai")
+    )
   }
 
   function requireAiAccess(access: AiPermissionAccess): void {
@@ -222,10 +239,12 @@ export function createPluginRuntimeContext(options: {
 
   return {
     pluginId: options.pluginId,
-    registry,
+    views,
+    settings,
+    commands,
     ui: {
       openModal(viewId, props) {
-        if (!canAccessView(viewId)) {
+        if (!canOpenView(viewId)) {
           throw new Error(
             `Plugin "${options.pluginId}" attempted to open undeclared modal view: ${viewId}`,
           )
@@ -236,10 +255,10 @@ export function createPluginRuntimeContext(options: {
         })
       },
       closeModal() {
-        options.events.emit("ui.modal.close", null)
+        options.events.emit("ui.modal.close", { pluginId: options.pluginId })
       },
       openFullscreen(viewId, props) {
-        if (!canAccessView(viewId)) {
+        if (!canOpenView(viewId)) {
           throw new Error(
             `Plugin "${options.pluginId}" attempted to open undeclared fullscreen view: ${viewId}`,
           )
@@ -250,7 +269,7 @@ export function createPluginRuntimeContext(options: {
         })
       },
       closeFullscreen() {
-        options.events.emit("ui.fullscreen.close", null)
+        options.events.emit("ui.fullscreen.close", { pluginId: options.pluginId })
       },
       showToast(message, toastOptions) {
         options.events.emit("ui.toast.show", { message, options: toastOptions })
@@ -262,6 +281,17 @@ export function createPluginRuntimeContext(options: {
         if (!canOpenExternal(url)) return false
         options.events.emit("host.external.open", { url })
         return true
+      },
+    },
+    network: {
+      canFetch,
+      async fetch(url, init) {
+        if (!canFetch(url)) {
+          throw new Error(
+            `Plugin "${options.pluginId}" attempted network access without permission: ${url}`,
+          )
+        }
+        return options.network!.fetch(url, init)
       },
     },
     ...(ai ? { ai } : {}),

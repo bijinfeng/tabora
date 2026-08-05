@@ -5,6 +5,17 @@ import {
   type WorkspaceExport,
 } from "@tabora/workbench-app/workspace-portability"
 
+const refs = {
+  layout: (id: string) => ({ pluginId: "official.layout", kind: "layout" as const, id }),
+  theme: (id: string) => ({ pluginId: "official.theme", kind: "theme" as const, id }),
+  background: (id: string) => ({
+    pluginId: "official.background",
+    kind: "background-provider" as const,
+    id,
+  }),
+  provider: (id: string) => ({ pluginId: "official.search", kind: "search-provider" as const, id }),
+}
+
 describe("prepareImport", () => {
   it("rejects current schema exports without an explicit active background provider", () => {
     const data = {
@@ -33,9 +44,9 @@ describe("prepareImport", () => {
       workspace: {
         id: "workspace-imported",
         name: "导入工作区",
-        activeLayoutId: "official.layout.workbench-dashboard",
-        activeThemeId: "official.theme.light",
-        activeBackgroundProviderId: "background.gradient-green",
+        activeLayout: refs.layout("official.layout.workbench-dashboard"),
+        activeTheme: refs.theme("official.theme.light"),
+        activeBackgroundProvider: refs.background("background.gradient-green"),
         config: {
           search: {
             defaultProviderId: "official.search.google",
@@ -59,13 +70,13 @@ describe("prepareImport", () => {
       workspace: {
         id: "workspace-imported",
         name: "导入工作区",
-        activeLayoutId: "official.layout.workbench-dashboard",
-        activeThemeId: "official.theme.light",
-        activeBackgroundProviderId: "background.gradient-green",
+        activeLayout: refs.layout("official.layout.workbench-dashboard"),
+        activeTheme: refs.theme("official.theme.light"),
+        activeBackgroundProvider: refs.background("background.gradient-green"),
         config: {
           search: {
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [refs.provider("official.search.google")],
           },
         },
         regions: {},
@@ -76,9 +87,7 @@ describe("prepareImport", () => {
         {
           id: "notes-1",
           workspaceId: "source-workspace",
-          pluginId: "official.widgets.notes",
-          contributionId: "notes",
-          extensionPoint: "widget",
+          contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
           regionId: "mainGrid",
           enabled: true,
           size: "M",
@@ -114,13 +123,13 @@ describe("prepareImport", () => {
       workspace: {
         id: "workspace-imported",
         name: "导入工作区",
-        activeLayoutId: "official.layout.workbench-dashboard",
-        activeThemeId: "official.theme.light",
-        activeBackgroundProviderId: "background.gradient-green",
+        activeLayout: refs.layout("official.layout.workbench-dashboard"),
+        activeTheme: refs.theme("official.theme.light"),
+        activeBackgroundProvider: refs.background("background.gradient-green"),
         config: {
           search: {
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google"],
+            defaultProvider: refs.provider("official.search.google"),
+            enabledProviders: [refs.provider("official.search.google")],
           },
         },
         regions: {},
@@ -131,9 +140,7 @@ describe("prepareImport", () => {
         {
           id: "notes-1",
           workspaceId: "source-workspace",
-          pluginId: "official.widgets.notes",
-          contributionId: "notes",
-          extensionPoint: "widget",
+          contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
           regionId: "mainGrid",
           enabled: true,
           size: "M",
@@ -144,9 +151,7 @@ describe("prepareImport", () => {
         {
           id: "ghost-1",
           workspaceId: "source-workspace",
-          pluginId: "missing.plugin",
-          contributionId: "ghost",
-          extensionPoint: "widget",
+          contribution: { pluginId: "missing.plugin", kind: "widget", id: "ghost" },
           regionId: "mainGrid",
           enabled: true,
           size: "S",
@@ -180,7 +185,7 @@ describe("prepareImport", () => {
     const result = prepareImport(data, ["official.widgets.notes"])
 
     expect(result.instances).toHaveLength(1)
-    expect(result.instances[0]?.pluginId).toBe("official.widgets.notes")
+    expect(result.instances[0]?.contribution.pluginId).toBe("official.widgets.notes")
     expect(result.pluginDataRows).toHaveLength(1)
     expect(result.pluginDataRows[0]?.pluginId).toBe("official.widgets.notes")
     expect(result.warnings).toEqual([

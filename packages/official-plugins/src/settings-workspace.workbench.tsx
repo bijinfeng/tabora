@@ -9,7 +9,8 @@ import { SegmentedControl } from "@tabora/ui/segmented-control"
 import { Select } from "@tabora/ui/select"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For, Show } from "solid-js"
-import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+import { contributionRefKey } from "@tabora/plugin-api/sdk"
 import { className, styles } from "./styles"
 
 export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
@@ -23,6 +24,21 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   const [restoreLayout, setRestoreLayout] = createSignal(true)
   const [restoreSize, setRestoreSize] = createSignal(true)
   const [restoreFilter, setRestoreFilter] = createSignal(false)
+  const workspace = () =>
+    props.data.workspace ?? {
+      id: "",
+      name: "未授权工作区",
+      activeLayout: { pluginId: "", kind: "layout" as const, id: "" },
+      activeTheme: { pluginId: "", kind: "theme" as const, id: "" },
+      activeBackgroundProvider: {
+        pluginId: "",
+        kind: "background-provider" as const,
+        id: "",
+      },
+      regionCount: 0,
+    }
+  const workspaces = () => props.data.workspaces ?? []
+  const layouts = () => props.data.layouts ?? []
 
   async function handleExport() {
     try {
@@ -32,7 +48,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement("a")
       anchor.href = url
-      anchor.download = `tabora-workspace-${props.workspace.name}.json`
+      anchor.download = `tabora-workspace-${workspace().name}.json`
       anchor.click()
       URL.revokeObjectURL(url)
     } catch (err: unknown) {
@@ -74,18 +90,16 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
     setNewWorkspaceName("")
   }
 
-  const workspaces = () => props.workspaces ?? []
   const workspaceOptions = () => {
-    const list = workspaces().length > 0 ? workspaces() : [props.workspace]
+    const list = workspaces().length > 0 ? workspaces() : [workspace()]
     return list.map((workspace) => ({ value: workspace.id, label: workspace.name }))
   }
   const layoutOptions = () =>
-    props.layouts.map((layout) => ({ value: layout.id, label: layoutShortLabel(layout) }))
-  const widgetInstanceCount = () =>
-    Object.values(props.workspace.regions).reduce(
-      (total, region) => total + region.instances.length,
-      0,
-    )
+    layouts().map((layout) => ({
+      value: contributionRefKey(layout.ref),
+      label: layoutShortLabel(layout),
+    }))
+  const widgetInstanceCount = () => workspace().regionCount
   const stepColumns = (delta: number) =>
     setDefaultColumns((value) => Math.min(6, Math.max(3, value + delta)))
 
@@ -98,11 +112,11 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
         <FieldRow
           class={className(styles.fieldRow)}
           label="当前工作区"
-          description={`${props.workspace.name} · 保存布局、卡片和背景配置`}
+          description={`${workspace().name} · 保存布局、卡片和背景配置`}
           trailing={
             <Select<string>
               size="sm"
-              value={props.workspace.id}
+              value={workspace().id}
               options={workspaceOptions()}
               disabled={workspaces().length <= 1 || !props.host.switchWorkspace}
               onChange={(workspaceId) => void props.host.switchWorkspace?.(workspaceId)}
@@ -118,14 +132,19 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
             <Show
               when={layoutOptions().length > 0}
               fallback={
-                <span {...stylex.attrs(styles.rowMeta)}>{props.workspace.activeLayoutId}</span>
+                <span {...stylex.attrs(styles.rowMeta)}>{workspace().activeLayout.id}</span>
               }
             >
               <SegmentedControl<string>
                 size="sm"
-                value={props.workspace.activeLayoutId}
+                value={contributionRefKey(workspace().activeLayout)}
                 options={layoutOptions()}
-                onChange={(layoutId) => void props.host.switchLayout?.(layoutId)}
+                onChange={(key) => {
+                  const layout = layouts().find(
+                    (candidate) => contributionRefKey(candidate.ref) === key,
+                  )
+                  if (layout) void props.host.switchLayout?.(layout.ref)
+                }}
                 aria-label="默认布局"
               />
             </Show>
@@ -274,32 +293,32 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
         <Show when={workspaces().length > 1}>
           <div {...stylex.attrs(styles.list)}>
             <For each={workspaces()}>
-              {(workspace) => (
+              {(workspaceItem) => (
                 <div {...stylex.attrs(styles.listItem)}>
                   <span
                     {...stylex.attrs(
                       styles.listName,
-                      workspace.id === props.workspace.id && styles.listNameActive,
+                      workspaceItem.id === workspace().id && styles.listNameActive,
                     )}
                   >
-                    {workspace.name}
-                    {workspace.id === props.workspace.id ? " · 当前" : ""}
+                    {workspaceItem.name}
+                    {workspaceItem.id === workspace().id ? " · 当前" : ""}
                   </span>
                   <div {...stylex.attrs(styles.inlineActions)}>
-                    <Show when={workspace.id !== props.workspace.id}>
+                    <Show when={workspaceItem.id !== workspace().id}>
                       <Button
                         size="sm"
                         variant="subtle"
-                        onClick={() => void props.host.switchWorkspace?.(workspace.id)}
+                        onClick={() => void props.host.switchWorkspace?.(workspaceItem.id)}
                       >
                         切换
                       </Button>
                     </Show>
-                    <Show when={workspace.id !== "default"}>
+                    <Show when={workspaceItem.id !== "default"}>
                       <Button
                         size="sm"
                         variant="danger-subtle"
-                        onClick={() => void props.host.deleteWorkspace?.(workspace.id)}
+                        onClick={() => void props.host.deleteWorkspace?.(workspaceItem.id)}
                       >
                         删除
                       </Button>
@@ -326,7 +345,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   )
 }
 
-function layoutShortLabel(layout: SettingsPanelViewProps["layouts"][number]) {
+function layoutShortLabel(layout: NonNullable<SettingsPanelData["layouts"]>[number]) {
   const key = `${layout.id} ${layout.title}`.toLowerCase()
   if (key.includes("dashboard") || key.includes("仪表盘")) return "Dashboard"
   if (key.includes("stream") || key.includes("focus") || key.includes("专注")) return "Stream"

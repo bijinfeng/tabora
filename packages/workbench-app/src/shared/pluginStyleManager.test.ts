@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ResolvedPluginStyle } from "@tabora/platform-kernel"
 
-import { activePluginStyles, createPluginStyleManager } from "./pluginStyleManager"
+import { activePluginStyles, createPluginStyleManager, scopePluginCss } from "./pluginStyleManager"
 
 function style(overrides: Partial<ResolvedPluginStyle> = {}): ResolvedPluginStyle {
   return {
@@ -30,8 +30,18 @@ describe("createPluginStyleManager", () => {
     const manager = createPluginStyleManager(document)
 
     manager.apply([
-      style({ pluginId: "plugin.b", href: "data:text/css,.plugin-b{}", order: 20 }),
-      style({ pluginId: "plugin.a", href: "data:text/css,.plugin-a{}", order: 10 }),
+      style({
+        pluginId: "plugin.b",
+        href: "data:text/css,.plugin-b{}",
+        order: 20,
+        scope: "global",
+      }),
+      style({
+        pluginId: "plugin.a",
+        href: "data:text/css,.plugin-a{}",
+        order: 10,
+        scope: "global",
+      }),
     ])
 
     expect(links().map((link) => link.href)).toEqual([
@@ -39,17 +49,19 @@ describe("createPluginStyleManager", () => {
       "data:text/css,.plugin-b{}",
     ])
     expect(links()[0]?.dataset.taboraPluginStyle).toBe("plugin.a")
-    expect(links()[0]?.dataset.taboraStyleScope).toBe("plugin")
+    expect(links()[0]?.dataset.taboraStyleScope).toBe("global")
   })
 
   it("removes stylesheets that are no longer active", () => {
     const manager = createPluginStyleManager(document)
 
     manager.apply([
-      style({ pluginId: "plugin.a", href: "data:text/css,.plugin-a{}" }),
-      style({ pluginId: "plugin.b", href: "data:text/css,.plugin-b{}" }),
+      style({ pluginId: "plugin.a", href: "data:text/css,.plugin-a{}", scope: "global" }),
+      style({ pluginId: "plugin.b", href: "data:text/css,.plugin-b{}", scope: "global" }),
     ])
-    manager.apply([style({ pluginId: "plugin.b", href: "data:text/css,.plugin-b{}" })])
+    manager.apply([
+      style({ pluginId: "plugin.b", href: "data:text/css,.plugin-b{}", scope: "global" }),
+    ])
 
     expect(links().map((link) => link.dataset.taboraPluginStyle)).toEqual(["plugin.b"])
   })
@@ -57,10 +69,36 @@ describe("createPluginStyleManager", () => {
   it("cleans up managed stylesheets on dispose", () => {
     const manager = createPluginStyleManager(document)
 
-    manager.apply([style()])
+    manager.apply([style({ scope: "global" })])
     manager.dispose()
 
     expect(links()).toEqual([])
+  })
+
+  it("loads scoped CSS into a host-owned style element with every selector boundary-prefixed", async () => {
+    const fetchCss = vi.fn(async () => ".card, .title:hover { color: red; }")
+    const manager = createPluginStyleManager(document, { fetchCss })
+
+    manager.apply([style({ pluginId: "plugin.weather", href: "/weather.css" })])
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const node = document.head.querySelector<HTMLStyleElement>(
+      'style[data-tabora-plugin-style="plugin.weather"]',
+    )
+    expect(fetchCss).toHaveBeenCalledWith("/weather.css")
+    expect(node?.textContent).toBe(
+      '[data-tabora-plugin-id="plugin.weather"] .card, [data-tabora-plugin-id="plugin.weather"] .title:hover{ color: red; }',
+    )
+  })
+
+  it("rejects unsafe global selectors and global at-rules in scoped CSS", () => {
+    expect(() => scopePluginCss(":root { color: red; }", "plugin.example")).toThrow(
+      "may not target global selector",
+    )
+    expect(() =>
+      scopePluginCss("@keyframes pulse { to { opacity: 0; } }", "plugin.example"),
+    ).toThrow("may not declare global rule")
   })
 })
 

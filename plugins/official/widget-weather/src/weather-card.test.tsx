@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import { WeatherCard } from "./weather-card"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { PluginNetworkAccess, WidgetViewProps } from "@tabora/plugin-api/sdk"
 import type { WeatherSnapshot } from "./weather-data"
 
 function snapshot(overrides?: Partial<WeatherSnapshot>): WeatherSnapshot {
@@ -34,7 +34,9 @@ function snapshot(overrides?: Partial<WeatherSnapshot>): WeatherSnapshot {
   }
 }
 
-function makeProps(overrides?: Partial<WidgetViewProps>): WidgetViewProps {
+type WeatherViewProps = WidgetViewProps & { network: PluginNetworkAccess }
+
+function makeProps(overrides?: Partial<WeatherViewProps>): WeatherViewProps {
   return {
     instanceId: "weather-1",
     pluginId: "official.widgets.weather",
@@ -56,6 +58,10 @@ function makeProps(overrides?: Partial<WidgetViewProps>): WidgetViewProps {
       showToast: vi.fn(),
       openExternal: vi.fn().mockResolvedValue(true),
     },
+    network: {
+      canFetch: () => true,
+      fetch: (url, init) => fetch(url, init),
+    },
     ...overrides,
   }
 }
@@ -66,15 +72,12 @@ async function flush() {
 
 // 用缓存快照渲染指定尺寸的卡片，网络请求保持挂起
 async function mount(
-  overrides?: Partial<WidgetViewProps>,
+  overrides?: Partial<WeatherViewProps>,
   snapshotOverrides?: Partial<WeatherSnapshot>,
 ) {
   const props = makeProps(overrides)
   ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot(snapshotOverrides))
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(() => new Promise(() => {})),
-  )
+  props.network.fetch = vi.fn(() => new Promise<Response>(() => {}))
   const root = document.createElement("div")
   document.body.appendChild(root)
   render(() => <WeatherCard {...props} />, root)
@@ -204,10 +207,7 @@ describe("WeatherCard", () => {
   it("falls back to an error state with retry when no data is available", async () => {
     const props = makeProps()
     ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response("boom", { status: 500 })),
-    )
+    props.network.fetch = vi.fn(async () => new Response("boom", { status: 500 }))
 
     const root = document.createElement("div")
     document.body.appendChild(root)

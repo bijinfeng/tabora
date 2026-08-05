@@ -1,5 +1,5 @@
 import { layoutDashboardManifest } from "@tabora/layout-dashboard/manifest"
-import { createLazyBuiltinPlugin } from "@tabora/platform-kernel"
+import { createBuiltinPluginPackage, createLazyBuiltinPlugin } from "@tabora/platform-kernel"
 import { officialPluginNotesManifest } from "@tabora/plugin-notes/manifest"
 import { officialPluginQuickLinksManifest } from "@tabora/plugin-quick-links/manifest"
 import { officialPluginTodoManifest } from "@tabora/plugin-todo/manifest"
@@ -21,7 +21,6 @@ import {
 
 export const layoutDashboard = createLazyBuiltinPlugin({
   manifest: layoutDashboardManifest,
-  enabled: true,
   async load() {
     return (await import("@tabora/layout-dashboard")).layoutDashboard
   },
@@ -29,7 +28,6 @@ export const layoutDashboard = createLazyBuiltinPlugin({
 
 export const officialSearchCommandBar = createLazyBuiltinPlugin({
   manifest: officialSearchCommandBarManifest,
-  enabled: true,
   async load() {
     return (await import("./search-command-bar")).officialSearchCommandBar
   },
@@ -37,7 +35,6 @@ export const officialSearchCommandBar = createLazyBuiltinPlugin({
 
 export const officialPluginWeather = createLazyBuiltinPlugin({
   manifest: officialPluginWeatherManifest,
-  enabled: true,
   async load() {
     return (await import("@tabora/plugin-weather")).officialPluginWeather
   },
@@ -45,7 +42,6 @@ export const officialPluginWeather = createLazyBuiltinPlugin({
 
 export const officialPluginTodo = createLazyBuiltinPlugin({
   manifest: officialPluginTodoManifest,
-  enabled: true,
   async load() {
     return (await import("@tabora/plugin-todo")).officialPluginTodo
   },
@@ -53,7 +49,6 @@ export const officialPluginTodo = createLazyBuiltinPlugin({
 
 export const officialPluginQuickLinks = createLazyBuiltinPlugin({
   manifest: officialPluginQuickLinksManifest,
-  enabled: true,
   async load() {
     return (await import("@tabora/plugin-quick-links")).officialPluginQuickLinks
   },
@@ -61,7 +56,6 @@ export const officialPluginQuickLinks = createLazyBuiltinPlugin({
 
 export const officialPluginNotes = createLazyBuiltinPlugin({
   manifest: officialPluginNotesManifest,
-  enabled: true,
   async load() {
     return (await import("@tabora/plugin-notes")).officialPluginNotes
   },
@@ -69,7 +63,6 @@ export const officialPluginNotes = createLazyBuiltinPlugin({
 
 export const officialPluginManager = createLazyBuiltinPlugin({
   manifest: officialPluginManagerManifest,
-  enabled: true,
   async load() {
     return (await import("./plugin-manager-entry")).officialPluginManager
   },
@@ -77,7 +70,6 @@ export const officialPluginManager = createLazyBuiltinPlugin({
 
 export const officialSettingsWorkspace = createLazyBuiltinPlugin({
   manifest: officialSettingsWorkspaceManifest,
-  enabled: true,
   async load() {
     return (await import("./settings-workspace")).officialSettingsWorkspace
   },
@@ -92,12 +84,12 @@ export {
 }
 
 export const officialPlugins = [
-  officialWorkspacePresetPack,
-  officialThemeDefaultPack,
-  officialBackgroundBasic,
+  createBuiltinPluginPackage(officialWorkspacePresetPack),
+  createBuiltinPluginPackage(officialThemeDefaultPack),
+  createBuiltinPluginPackage(officialBackgroundBasic),
   layoutDashboard,
   officialSearchCommandBar,
-  officialSearchProvidersBasic,
+  createBuiltinPluginPackage(officialSearchProvidersBasic),
   officialPluginWeather,
   officialPluginTodo,
   officialPluginQuickLinks,

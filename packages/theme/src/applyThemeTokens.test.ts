@@ -45,4 +45,14 @@ describe("applyThemeTokens", () => {
     expect(element.style.getPropertyValue("--tbr-control-lg")).toBe("44px")
     expect(element.style.getPropertyValue("--tbr-dur-normal")).toBe("180ms")
   })
+
+  it("removes tokens owned by the previous theme", () => {
+    const element = document.createElement("div")
+    applyThemeTokens(element, { "color-accent": "0 120 80", "radius-card": "12px" })
+    applyThemeTokens(element, { "color-accent": "80 120 240" })
+
+    expect(element.style.getPropertyValue("--color-accent")).toBe("80 120 240")
+    expect(element.style.getPropertyValue("--radius-card")).toBe("")
+    expect(element.style.getPropertyValue("--tbr-radius-card")).toBe("")
+  })
 })

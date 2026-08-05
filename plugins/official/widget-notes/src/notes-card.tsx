@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, onMount, Show } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { IconButton } from "@tabora/ui/button"
 import ArrowRight from "lucide-solid/icons/arrow-right"
 import Plus from "lucide-solid/icons/plus"

@@ -11,6 +11,12 @@ type ForbiddenPluginImport = {
   reason: string
 }
 
+type ForbiddenPluginImportRule = {
+  matches: (specifier: string) => boolean
+  reason: string
+  sourceOnly?: boolean
+}
+
 type ForbiddenPluginDependency = {
   filePath: string
   dependency: string
@@ -18,7 +24,12 @@ type ForbiddenPluginDependency = {
   reason: string
 }
 
-const FORBIDDEN_IMPORTS = [
+const FORBIDDEN_IMPORTS: ForbiddenPluginImportRule[] = [
+  {
+    matches: (specifier: string) => specifier === "@tabora/plugin-api",
+    reason: "plugins must import the author-facing @tabora/plugin-api/sdk entry",
+    sourceOnly: true,
+  },
   {
     matches: (specifier: string) =>
       specifier === "@tabora/workbench-shell" || specifier.startsWith("@tabora/workbench-shell/"),
@@ -110,12 +121,14 @@ function findForbiddenPluginDependencies(options: {
 }): ForbiddenPluginDependency[] {
   return DEPENDENCY_SECTIONS.flatMap((section) =>
     Object.keys(options.manifest[section] ?? {}).flatMap((dependency) =>
-      FORBIDDEN_IMPORTS.filter((rule) => rule.matches(dependency)).map((rule) => ({
-        filePath: options.filePath,
-        dependency,
-        section,
-        reason: rule.reason,
-      })),
+      FORBIDDEN_IMPORTS.filter((rule) => !rule.sourceOnly && rule.matches(dependency)).map(
+        (rule) => ({
+          filePath: options.filePath,
+          dependency,
+          section,
+          reason: rule.reason,
+        }),
+      ),
     ),
   )
 }
@@ -175,7 +188,7 @@ async function collectSourceFiles(dir: string, files: string[]): Promise<void> {
     const entryPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
       await collectSourceFiles(entryPath, files)
-    } else if (SOURCE_EXTENSIONS.has(path.extname(entry.name))) {
+    } else if (SOURCE_EXTENSIONS.has(path.extname(entry.name)) && !entry.name.endsWith(".d.ts")) {
       files.push(entryPath)
     }
   }
@@ -210,6 +223,7 @@ describe("plugin dependency boundaries", () => {
         source: `
           import { SettingsHost } from "@tabora/workbench-shell"
           import type { WorkspaceRepository } from "@tabora/storage"
+          import type { PluginInstance } from "@tabora/plugin-api"
           import { helper } from "../../apps/playground/src/helper"
         `,
       }),
@@ -223,6 +237,11 @@ describe("plugin dependency boundaries", () => {
         filePath: "plugins/example/src/index.ts",
         specifier: "@tabora/storage",
         reason: "plugins must use host-provided runtime data ports",
+      },
+      {
+        filePath: "plugins/example/src/index.ts",
+        specifier: "@tabora/plugin-api",
+        reason: "plugins must import the author-facing @tabora/plugin-api/sdk entry",
       },
       {
         filePath: "plugins/example/src/index.ts",

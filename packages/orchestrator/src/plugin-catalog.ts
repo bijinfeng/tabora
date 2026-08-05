@@ -1,14 +1,22 @@
 import type {
   BackgroundProviderContribution,
+  BackgroundRendererContribution,
+  CommandContribution,
+  ContributionRef,
+  KeybindingContribution,
   LayoutContribution,
+  PluginManifest,
   PluginRecord,
+  SettingsPanelData,
   SearchContribution,
   SearchProviderContribution,
-  SettingsPanelViewProps,
+  SettingsPanelContribution,
+  SettingsHostActionId,
+  SettingsHostReadId,
   ThemeContribution,
   WidgetContribution,
+  WorkspacePresetContribution,
 } from "@tabora/plugin-api"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
 import {
   normalizeSettingsPanelDescriptor,
   type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
@@ -22,6 +30,7 @@ export type PluginCatalogOptions = {
 }
 
 export type WidgetContributionDescriptor = WidgetContribution & {
+  ref?: ContributionRef
   pluginId: string
   pluginName: string
   pluginVersion: string
@@ -30,17 +39,56 @@ export type WidgetContributionDescriptor = WidgetContribution & {
 }
 
 export type SearchProviderContributionDescriptor = SearchProviderContribution & {
+  ref: ContributionRef & { kind: "search-provider" }
   pluginId: string
   pluginName: string
 }
 
 export type SettingsPanelDescriptor = NavigatorSettingsPanelDescriptor
 
+type ContributionDescriptor<T, K extends ContributionRef["kind"]> = T & {
+  ref: ContributionRef & { kind: K }
+}
+
+export type LayoutContributionDescriptor = ContributionDescriptor<LayoutContribution, "layout">
+export type SearchContributionDescriptor = ContributionDescriptor<SearchContribution, "search">
+export type ThemeContributionDescriptor = ContributionDescriptor<ThemeContribution, "theme">
+export type BackgroundProviderContributionDescriptor = ContributionDescriptor<
+  BackgroundProviderContribution,
+  "background-provider"
+>
+export type BackgroundRendererContributionDescriptor = ContributionDescriptor<
+  BackgroundRendererContribution,
+  "background-renderer"
+>
+export type SettingsPanelContributionDescriptor = ContributionDescriptor<
+  SettingsPanelContribution,
+  "settings-panel"
+>
+export type CommandContributionDescriptor = ContributionDescriptor<CommandContribution, "command">
+export type KeybindingContributionDescriptor = ContributionDescriptor<
+  KeybindingContribution,
+  "keybinding"
+>
+export type WorkspacePresetContributionDescriptor = ContributionDescriptor<
+  WorkspacePresetContribution,
+  "workspace-preset"
+>
+
 function byContributionOrder<T extends { title: string }>(left: T, right: T): number {
   return left.title.localeCompare(right.title)
 }
 
-export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCatalogOptions = {}) {
+type CatalogPlugin = {
+  manifest: PluginManifest
+  enabled: boolean
+  installation?: {
+    grantedSettingsHostActions?: SettingsHostActionId[]
+    grantedSettingsHostReads?: SettingsHostReadId[]
+  }
+}
+
+export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCatalogOptions = {}) {
   const fallbackWidgetIcon = options.fallbackWidgetIcon ?? "panel"
   const fallbackWidgetDescription =
     options.fallbackWidgetDescription ??
@@ -51,28 +99,46 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
     return plugins.map((plugin) => plugin.manifest.id)
   }
 
-  function listThemes(): ThemeContribution[] {
-    return activePlugins().flatMap((plugin) => plugin.manifest.contributes.themes ?? [])
+  function listThemes(): ThemeContributionDescriptor[] {
+    return activePlugins().flatMap((plugin) =>
+      (plugin.manifest.contributes.themes ?? []).map((theme) => ({
+        ...theme,
+        ref: { pluginId: plugin.manifest.id, kind: "theme", id: theme.id },
+      })),
+    )
   }
 
   function listSearchProviders(): SearchProviderContributionDescriptor[] {
     return activePlugins().flatMap((plugin) =>
       (plugin.manifest.contributes.searchProviders ?? []).map((provider) => ({
         ...provider,
+        ref: {
+          pluginId: plugin.manifest.id,
+          kind: "search-provider" as const,
+          id: provider.id,
+        },
         pluginId: plugin.manifest.id,
         pluginName: plugin.manifest.name,
       })),
     )
   }
 
-  function listBackgroundProviders(): BackgroundProviderContribution[] {
-    return activePlugins().flatMap(
-      (plugin) => plugin.manifest.contributes.backgroundProviders ?? [],
+  function listBackgroundProviders(): BackgroundProviderContributionDescriptor[] {
+    return activePlugins().flatMap((plugin) =>
+      (plugin.manifest.contributes.backgroundProviders ?? []).map((provider) => ({
+        ...provider,
+        ref: { pluginId: plugin.manifest.id, kind: "background-provider", id: provider.id },
+      })),
     )
   }
 
-  function listLayouts(): LayoutContribution[] {
-    return activePlugins().flatMap((plugin) => plugin.manifest.contributes.layouts ?? [])
+  function listLayouts(): LayoutContributionDescriptor[] {
+    return activePlugins().flatMap((plugin) =>
+      (plugin.manifest.contributes.layouts ?? []).map((layout) => ({
+        ...layout,
+        ref: { pluginId: plugin.manifest.id, kind: "layout", id: layout.id },
+      })),
+    )
   }
 
   function listWidgetContributions(): WidgetContributionDescriptor[] {
@@ -80,6 +146,7 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
       .flatMap((plugin) =>
         (plugin.manifest.contributes.widgets ?? []).map((widget) => ({
           ...widget,
+          ref: { pluginId: plugin.manifest.id, kind: "widget" as const, id: widget.id },
           pluginId: plugin.manifest.id,
           pluginName: plugin.manifest.name,
           pluginVersion: plugin.manifest.version,
@@ -96,12 +163,72 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
       .flatMap((plugin) =>
         (plugin.manifest.contributes.settingsPanels ?? []).map((panel) => ({
           ...normalizeSettingsPanelDescriptor({ ...panel, pluginId: plugin.manifest.id }),
+          ref: { pluginId: plugin.manifest.id, kind: "settings-panel", id: panel.id },
+          grantedHostActions: (panel.hostActions ?? []).filter((action) =>
+            plugin.installation?.grantedSettingsHostActions?.includes(action),
+          ),
+          grantedHostReads: (panel.hostReads ?? []).filter((read) =>
+            plugin.installation?.grantedSettingsHostReads?.includes(read),
+          ),
         })),
       )
       .sort(
         (left, right) =>
           (left.order ?? 10_000) - (right.order ?? 10_000) || left.title.localeCompare(right.title),
       )
+  }
+
+  function resolveContribution(ref: ContributionRef): unknown {
+    const plugin = activePlugins().find((item) => item.manifest.id === ref.pluginId)
+    if (!plugin) return undefined
+    switch (ref.kind) {
+      case "layout":
+        return listLayouts().find(
+          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
+        )
+      case "widget":
+        return listWidgetContributions().find(
+          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
+        )
+      case "search":
+        return plugin.manifest.contributes.searches
+          ?.map((item) => ({ ...item, ref }))
+          .find((item) => item.id === ref.id)
+      case "search-provider":
+        return listSearchProviders().find(
+          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
+        )
+      case "background-provider":
+        return listBackgroundProviders().find(
+          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
+        )
+      case "theme":
+        return listThemes().find(
+          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
+        )
+      case "settings-panel":
+        return plugin.manifest.contributes.settingsPanels
+          ?.map((item) => ({ ...item, ref }))
+          .find((item) => item.id === ref.id)
+      case "background-renderer":
+        return plugin.manifest.contributes.backgroundRenderers
+          ?.map((item) => ({ ...item, ref }))
+          .find((item) => item.id === ref.id)
+      case "command":
+        return plugin.manifest.contributes.commands
+          ?.map((item) => ({ ...item, ref }))
+          .find((item) => item.id === ref.id)
+      case "keybinding":
+        return plugin.manifest.contributes.keybindings
+          ?.map((item) => ({ ...item, ref }))
+          .find((item) => item.id === ref.id)
+      case "workspace-preset":
+        return plugin.manifest.contributes.workspacePresets
+          ?.map((item) => ({ ...item, ref }))
+          .find((item) => item.id === ref.id)
+      default:
+        return undefined
+    }
   }
 
   function findLayoutContribution(layoutId: string): LayoutContribution | undefined {
@@ -130,7 +257,7 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
       Pick<PluginRecord, "id"> &
         Partial<Pick<PluginRecord, "enabled" | "status" | "lastError" | "disabledReason">>
     > = [],
-  ): SettingsPanelViewProps["plugins"] {
+  ): NonNullable<SettingsPanelData["plugins"]> {
     const recordsById = new Map(records.map((record) => [record.id, record]))
     return plugins.map((plugin) => {
       const record = recordsById.get(plugin.manifest.id)
@@ -143,7 +270,28 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
         ...(record?.lastError ? { lastError: record.lastError } : {}),
         ...(record?.disabledReason ? { disabledReason: record.disabledReason } : {}),
         permissions: plugin.manifest.permissions ?? [],
-        contributes: plugin.manifest.contributes,
+        contributionKinds: (
+          Object.entries(plugin.manifest.contributes) as Array<
+            [keyof PluginManifest["contributes"], unknown]
+          >
+        )
+          .filter(([, contributions]) => Array.isArray(contributions) && contributions.length > 0)
+          .map(([kind]) => {
+            const contributionKinds = {
+              layouts: "layout",
+              widgets: "widget",
+              searches: "search",
+              searchProviders: "search-provider",
+              backgroundProviders: "background-provider",
+              backgroundRenderers: "background-renderer",
+              themes: "theme",
+              settingsPanels: "settings-panel",
+              commands: "command",
+              keybindings: "keybinding",
+              workspacePresets: "workspace-preset",
+            } as const
+            return contributionKinds[kind]
+          }),
         ...(plugin.manifest.requiredCapabilities
           ? { requiredCapabilities: plugin.manifest.requiredCapabilities }
           : {}),
@@ -166,6 +314,7 @@ export function createPluginCatalog(plugins: BuiltinPlugin[], options: PluginCat
     findLayoutContribution,
     findWidgetContribution,
     findSearchContribution,
+    resolveContribution,
     pluginSummaries,
   }
 }

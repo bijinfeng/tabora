@@ -1,8 +1,8 @@
-import type { PluginInstance, Workspace } from "./workspace"
 import type { AiPermissionAccess } from "./ai"
 import type { SettingsPanelScope, SettingsSectionId } from "./settings"
 
-export type ExtensionPoint =
+/** Every manifest contribution has one of these kinds. */
+export type ContributionKind =
   | "layout"
   | "widget"
   | "search"
@@ -12,16 +12,46 @@ export type ExtensionPoint =
   | "theme"
   | "settings-panel"
 
+/** Legacy alias retained while region contracts migrate to RegionContentKind. */
+export type ExtensionPoint = ContributionKind
+
+/** Only renderable content may be placed in a layout region. */
+export type RegionContentKind = "widget" | "search"
+
+/** Canonical host-side identity for a manifest contribution. */
+export type ContributionRefKind = ContributionKind | "command" | "keybinding" | "workspace-preset"
+
+export type ContributionRef<K extends ContributionRefKind = ContributionRefKind> = {
+  pluginId: string
+  kind: K
+  id: string
+}
+
+export function contributionRefKey(ref: ContributionRef): string {
+  return `${ref.pluginId}:${ref.kind}:${ref.id}`
+}
+
+export function sameContributionRef(left: ContributionRef, right: ContributionRef): boolean {
+  return left.pluginId === right.pluginId && left.kind === right.kind && left.id === right.id
+}
+
+/** A contribution that can be persisted in a layout region. */
+export type RegionContributionRef = ContributionRef<RegionContentKind>
+export type LayoutContributionRef = ContributionRef<"layout">
+export type ThemeContributionRef = ContributionRef<"theme">
+export type SearchProviderContributionRef = ContributionRef<"search-provider">
+export type BackgroundProviderContributionRef = ContributionRef<"background-provider">
+export type BackgroundRendererContributionRef = ContributionRef<"background-renderer">
+export type OwnedContribution<T, K extends ContributionRefKind> = T & {
+  ref: ContributionRef<K>
+}
+
 export type WidgetSize = "S" | "M" | "L" | "XL"
 
 export type PluginPermission =
   | { type: "ai"; access: AiPermissionAccess[] }
-  | { type: "storage"; scope: "plugin" }
-  | { type: "workspace"; access: "read" | "write" }
-  | { type: "network"; hosts: string[] }
-  | { type: "clipboard"; access: "read" | "write" }
-  | { type: "local-file"; access: "read" | "write" }
   | { type: "external-open"; hosts: string[] }
+  | { type: "network"; hosts: string[] }
 
 export type PluginStyleScope = "plugin" | "global"
 
@@ -29,6 +59,16 @@ export type PluginStyleContribution = {
   href: string
   scope?: PluginStyleScope
   order?: number
+}
+
+/** An explicitly portable plugin-data collection. All plugin data is local-only unless listed here. */
+export type PluginSyncCollection = {
+  id: string
+  recordKey: "id"
+  updatedAt: "updatedAt"
+  merge: "lww"
+  schemaVersion: number
+  excludedFields?: string[]
 }
 
 export type HostPlatform = "web" | "extension" | "desktop-webview"
@@ -74,7 +114,7 @@ export type WidgetContribution = {
 export type LayoutRegion = {
   id: string
   title: string
-  accepts: ExtensionPoint[]
+  accepts: RegionContentKind[]
   required?: boolean
   maxInstances?: number
 }
@@ -87,7 +127,7 @@ export type LayoutContribution = {
   id: string
   title: string
   preview?: string
-  view?: string
+  view: string
   regions: LayoutRegion[]
   defaultRegions: Record<string, PluginInstanceRef[]>
   supportsResponsive: boolean
@@ -96,7 +136,7 @@ export type LayoutContribution = {
 export type SearchContribution = {
   id: string
   title: string
-  defaultProviderIds?: string[]
+  defaultProviders?: SearchProviderContributionRef[]
   supportsSuggestions?: boolean
   view: string
 }
@@ -142,18 +182,18 @@ export type BackgroundSourceValue =
   | { type: "canvas"; view: string }
 
 export type WorkbenchSearchSettings = {
-  defaultProviderId: string
-  enabledProviderIds: string[]
+  defaultProvider: SearchProviderContributionRef
+  enabledProviders: SearchProviderContributionRef[]
 }
 
 export type WorkspacePresetRegionContribution = {
   regionId: string
-  accepts: ExtensionPoint[]
+  accepts: RegionContentKind[]
 }
 
 type WorkspacePresetInstanceBaseContribution = {
-  pluginId: string
-  contributionId: string
+  /** Canonical contribution identity persisted into the created instance. */
+  contribution: RegionContributionRef
   instanceId: string
   regionId: string
   config?: Record<string, unknown>
@@ -161,11 +201,11 @@ type WorkspacePresetInstanceBaseContribution = {
 
 export type WorkspacePresetInstanceContribution =
   | (WorkspacePresetInstanceBaseContribution & {
-      extensionPoint: "widget"
+      contribution: RegionContributionRef & { kind: "widget" }
       size: WidgetSize
     })
   | (WorkspacePresetInstanceBaseContribution & {
-      extensionPoint: Exclude<PluginInstance["extensionPoint"], "widget">
+      contribution: RegionContributionRef & { kind: Exclude<RegionContentKind, "widget"> }
       size?: never
     })
 
@@ -174,9 +214,9 @@ export type WorkspacePresetContribution = {
   title: string
   description?: string
   plugins: string[]
-  layoutId: string
-  themeId: string
-  backgroundProviderId: string
+  layout: LayoutContributionRef
+  theme: ThemeContributionRef
+  backgroundProvider: BackgroundProviderContributionRef
   search: WorkbenchSearchSettings
   instances: WorkspacePresetInstanceContribution[]
   regions: WorkspacePresetRegionContribution[]
@@ -238,7 +278,7 @@ export type SearchCommandEntry = {
   name: string
   desc: string
   shortcut?: string
-  action: () => void
+  action: () => void | Promise<void>
 }
 
 export type SearchWidgetEntry = {
@@ -287,21 +327,73 @@ export type SearchViewProps = {
   }
 }
 
+export type SettingsHostReadId =
+  | "workspace.current.read"
+  | "workspace.list.read"
+  | "catalog.layouts.read"
+  | "catalog.themes.read"
+  | "catalog.backgrounds.read"
+  | "catalog.search-providers.read"
+  | "workspace.search.read"
+  | "plugins.read"
+
+/** Read-only projection; intentionally not the host's persisted Workspace entity. */
+export type SettingsWorkspaceSummary = {
+  id: string
+  name: string
+  activeLayout: LayoutContributionRef
+  activeTheme: ThemeContributionRef
+  activeBackgroundProvider: BackgroundProviderContributionRef
+  activeBackgroundRenderer?: BackgroundRendererContributionRef
+  regionCount: number
+}
+
+export type SettingsPluginSummary = {
+  id: string
+  name: string
+  version: string
+  enabled: boolean
+  status?: string
+  lastError?: string
+  disabledReason?: string
+  requiredCapabilities?: HostCapabilityId[]
+  supportedPlatforms?: HostPlatform[]
+  permissions: PluginPermission[]
+  /** Contribution counts avoid leaking a plugin's entire executable declaration. */
+  contributionKinds: Array<ContributionRefKind>
+}
+
+export type SettingsPanelData = {
+  workspace?: SettingsWorkspaceSummary
+  workspaces?: SettingsWorkspaceSummary[]
+  layouts?: Array<OwnedContribution<LayoutContribution, "layout">>
+  themes?: Array<OwnedContribution<ThemeContribution, "theme">>
+  backgrounds?: Array<OwnedContribution<BackgroundProviderContribution, "background-provider">>
+  searchProviders?: Array<OwnedContribution<SearchProviderContribution, "search-provider">>
+  searchSettings?: WorkbenchSearchSettings
+  plugins?: SettingsPluginSummary[]
+}
+
 export type SettingsPanelViewProps = {
   panelId: string
   pluginId: string
   scope: SettingsPanelScope
+  /** Present only when an instance-scoped panel was opened for a concrete plugin instance. */
+  instanceId?: string
   locale?: "zh-CN" | "en-US"
   availableLocales?: Array<{ value: "zh-CN" | "en-US"; label: string }>
   host: {
     close(): void
     setDirty(isDirty: boolean): void
-    switchLayout?(layoutId: string): Promise<void>
-    switchTheme(themeId: string): Promise<void>
-    switchBackground(backgroundId: string): Promise<void>
+    switchLayout?(layout: LayoutContributionRef): Promise<void>
+    switchTheme?(theme: ThemeContributionRef): Promise<void>
+    switchBackground?(background: BackgroundProviderContributionRef): Promise<void>
     switchLocale?(locale: "zh-CN" | "en-US"): Promise<void>
-    setDefaultSearchProvider(providerId: string): Promise<void>
-    setSearchProviderEnabled?(providerId: string, enabled: boolean): Promise<void>
+    setDefaultSearchProvider?(provider: SearchProviderContributionRef): Promise<void>
+    setSearchProviderEnabled?(
+      provider: SearchProviderContributionRef,
+      enabled: boolean,
+    ): Promise<void>
     togglePluginEnabled?(pluginId: string, enabled: boolean): Promise<void>
     exportWorkspace?(): Promise<string>
     importWorkspace?(json: string): Promise<{ warnings: string[] }>
@@ -309,27 +401,20 @@ export type SettingsPanelViewProps = {
     switchWorkspace?(id: string): Promise<void>
     deleteWorkspace?(id: string): Promise<void>
   }
-  workspaces?: Workspace[]
-  workspace: Workspace
-  layouts: LayoutContribution[]
-  themes: ThemeContribution[]
-  backgrounds: BackgroundProviderContribution[]
-  searchProviders: SearchProviderContribution[]
-  searchSettings: WorkbenchSearchSettings
-  plugins: Array<{
-    id: string
-    name: string
-    version: string
-    enabled: boolean
-    status?: string
-    lastError?: string
-    disabledReason?: string
-    requiredCapabilities?: HostCapabilityId[]
-    supportedPlatforms?: HostPlatform[]
-    permissions: PluginPermission[]
-    contributes: PluginManifest["contributes"]
-  }>
+  /** Only properties explicitly requested by the panel and granted by the host are present. */
+  data: Readonly<SettingsPanelData>
 }
+
+/** Explicit host actions a custom settings view may request from its shell. */
+export type SettingsHostActionId =
+  | "workspace.layout.write"
+  | "workspace.theme.write"
+  | "workspace.background.write"
+  | "workspace.locale.write"
+  | "workspace.search.write"
+  | "workspace.transfer"
+  | "workspace.manage"
+  | "plugins.manage"
 
 export type SettingsPanelContribution = {
   id: string
@@ -337,6 +422,10 @@ export type SettingsPanelContribution = {
   section: SettingsSectionId
   scope: SettingsPanelScope
   order?: number
+  /** Requested host actions. The host grants a subset based on its capabilities and policy. */
+  hostActions?: SettingsHostActionId[]
+  /** Requested read-only host data. Missing grants are omitted from custom-view props. */
+  hostReads?: SettingsHostReadId[]
   content:
     | {
         kind: "schema"
@@ -387,6 +476,9 @@ export type PluginManifest = {
     platform: string
   }
   permissions?: PluginPermission[]
+  sync?: {
+    collections: PluginSyncCollection[]
+  }
   contributes: {
     layouts?: LayoutContribution[]
     widgets?: WidgetContribution[]

@@ -2,9 +2,9 @@ import { createEmitter } from "@solid-primitives/event-bus"
 
 export type EventPayloads = {
   "ui.modal.open": { viewId: string; props?: Record<string, unknown> }
-  "ui.modal.close": null
+  "ui.modal.close": { pluginId: string }
   "ui.fullscreen.open": { viewId: string; props?: Record<string, unknown> }
-  "ui.fullscreen.close": null
+  "ui.fullscreen.close": { pluginId: string }
   "ui.toast.show": {
     message: string
     options?: {

@@ -1,13 +1,12 @@
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginModule } from "@tabora/plugin-api/sdk"
 import { TodoCard } from "./todo-card"
 import { TodoExpand } from "./todo-expand"
 import { officialPluginTodoManifest } from "./manifest"
 
-export const officialPluginTodo: BuiltinPlugin = {
-  enabled: true,
+export const officialPluginTodo: PluginModule = {
   manifest: officialPluginTodoManifest,
   activate(context) {
-    context.registry.views.register("official.widgets.todo.card", TodoCard)
-    context.registry.views.register("official.widgets.todo.expand", TodoExpand)
+    context.views.register("official.widgets.todo.card", TodoCard)
+    context.views.register("official.widgets.todo.expand", TodoExpand)
   },
 }

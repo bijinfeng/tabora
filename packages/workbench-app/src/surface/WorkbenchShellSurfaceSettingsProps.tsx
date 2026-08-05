@@ -1,4 +1,5 @@
-import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import type { SettingsPanelProviderContext, SettingsPanelViewProps } from "@tabora/plugin-api"
+import type { SettingsPanelDescriptor } from "@tabora/workbench-shell"
 
 import type { WorkbenchShell } from "../shell/WorkbenchShellContext"
 import { WorkbenchSettingsAboutContent } from "./WorkbenchShellChrome"
@@ -26,7 +27,14 @@ export function createWorkbenchShellSurfaceSettingsProps(shell: WorkbenchShell) 
       getView: (viewId: string) => resolveWorkbenchView<SettingsPanelViewProps>(views, viewId),
       getSettingsProvider: (providerId: string) =>
         settingsProviders.has(providerId) ? settingsProviders.get(providerId) : undefined,
-      providerContext: settingsProviderContext(),
+      providerContext: (panel: SettingsPanelDescriptor): SettingsPanelProviderContext => ({
+        ...settingsProviderContext(),
+        panel: {
+          id: panel.id,
+          pluginId: panel.pluginId,
+          scope: panel.scope,
+        },
+      }),
       panelProps: buildSettingsPanelProps,
       ...(tShell ? { copy: createWorkbenchShellSettingsHostCopy(tShell) } : {}),
       aboutContent: (

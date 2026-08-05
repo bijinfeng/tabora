@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import type { PluginInstance } from "@tabora/plugin-api"
+import type { LayoutInstance } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import ChevronLeft from "lucide-solid/icons/chevron-left"
 import ChevronRight from "lucide-solid/icons/chevron-right"
@@ -13,21 +13,21 @@ import type { LayoutViewPropsWithI18n } from "./types"
 
 const satellitePageSize = 4
 
-function widgetTitle(instance: PluginInstance) {
+function widgetTitle(instance: LayoutInstance) {
   const titles: Record<string, string> = {
     "quick-links": "快捷入口",
     todo: "待办",
     notes: "便签",
     weather: "天气",
   }
-  return titles[instance.contributionId] ?? instance.contributionId
+  return titles[instance.contribution.id] ?? instance.contribution.id
 }
 
 function isKeyboardActivation(event: KeyboardEvent) {
   return event.key === "Enter" || event.key === " "
 }
 
-function previewInstance(instance: PluginInstance, size: "M" | "XL"): PluginInstance {
+function previewInstance(instance: LayoutInstance, size: "M" | "XL"): LayoutInstance {
   return { ...instance, size }
 }
 
@@ -102,7 +102,7 @@ export function FocusLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
     return satelliteInstances().slice(start, start + satellitePageSize)
   })
 
-  const selectHero = (instance: PluginInstance) => {
+  const selectHero = (instance: LayoutInstance) => {
     setSelectedHeroId(instance.id)
     props.host.showToast(`已切换 Hero → ${widgetTitle(instance)}`, { type: "success" })
   }

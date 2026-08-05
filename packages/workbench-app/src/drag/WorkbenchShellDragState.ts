@@ -138,7 +138,7 @@ export function createWorkbenchDndKitDragHandlers(options: {
         .filter(
           (instance) =>
             instance.regionId === source.regionId &&
-            instance.extensionPoint === "widget" &&
+            instance.contribution.kind === "widget" &&
             instance.enabled !== false,
         )
         .sort(byGrid)
@@ -201,7 +201,7 @@ function persistedWidgetIndex(instanceId: string, options: PersistedInstancesSou
   return instances
     .filter(
       (instance) =>
-        instance.extensionPoint === "widget" &&
+        instance.contribution.kind === "widget" &&
         instance.enabled !== false &&
         instance.regionId === source.regionId,
     )
@@ -247,7 +247,7 @@ function byGrid(left: PluginInstance, right: PluginInstance): number {
 function orderDisplayedInstances(instances: PluginInstance[]): PluginInstance[] {
   const sortedWidgetIds = new Map<string, number>()
   instances
-    .filter((instance) => instance.extensionPoint === "widget" && instance.enabled !== false)
+    .filter((instance) => instance.contribution.kind === "widget" && instance.enabled !== false)
     .sort(byGrid)
     .forEach((instance, index) => sortedWidgetIds.set(instance.id, index))
 

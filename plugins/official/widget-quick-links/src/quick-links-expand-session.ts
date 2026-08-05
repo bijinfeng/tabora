@@ -1,5 +1,5 @@
 import { createMemo, createSignal, onCleanup, type Accessor } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import {
   DEFAULT_GROUPS,
   displayUrl,

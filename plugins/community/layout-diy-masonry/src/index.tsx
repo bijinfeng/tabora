@@ -1,7 +1,6 @@
 import { createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
-import type { LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { LayoutInstance, LayoutViewProps, PluginModule } from "@tabora/plugin-api/sdk"
 import Menu from "lucide-solid/icons/menu"
 import * as stylex from "@stylexjs/stylex"
 
@@ -82,8 +81,8 @@ const styles = stylex.create({
   },
 })
 
-function splitIntoColumns(instances: PluginInstance[]): PluginInstance[][] {
-  const columns: PluginInstance[][] = Array.from({ length: COLUMN_COUNT }, () => [])
+function splitIntoColumns(instances: LayoutInstance[]): LayoutInstance[][] {
+  const columns: LayoutInstance[][] = Array.from({ length: COLUMN_COUNT }, () => [])
   instances.forEach((inst, index) => {
     columns[index % COLUMN_COUNT]!.push(inst)
   })
@@ -165,10 +164,9 @@ export function MasonryLayout(props: LayoutViewProps<JSX.Element>) {
   )
 }
 
-export const layoutDiyMasonry: BuiltinPlugin = {
-  enabled: true,
+export const layoutDiyMasonry: PluginModule = {
   manifest: layoutDiyMasonryManifest,
   activate(context) {
-    context.registry.views.register("community.layout.diy-masonry.view", MasonryLayout)
+    context.views.register("community.layout.diy-masonry.view", MasonryLayout)
   },
 }

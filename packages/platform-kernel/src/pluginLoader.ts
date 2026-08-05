@@ -1,14 +1,15 @@
 import {
   pluginManifestSchema,
   type PluginManifest,
+  type PluginModule,
   type PluginStyleContribution,
   type PluginStyleScope,
 } from "@tabora/plugin-api"
-import type { BuiltinPlugin } from "./pluginKernel"
+import type { LoadedPluginPackage, PluginPackageSource } from "./pluginKernel"
 
 export const TABORA_PLUGIN_API_VERSION = "1.0.0"
 
-export type PluginSource = "builtin" | "local-trusted" | "remote-untrusted"
+export type PluginSource = PluginPackageSource
 
 export type ResolvedPluginStyle = {
   pluginId: string
@@ -20,7 +21,8 @@ export type ResolvedPluginStyle = {
 }
 
 export type PluginLoadRecord = {
-  plugin: BuiltinPlugin
+  pluginPackage: LoadedPluginPackage
+  module: PluginModule
   manifest: PluginManifest
   source: PluginSource
   styles: ResolvedPluginStyle[]
@@ -80,14 +82,22 @@ function resolveManifestStyles(options: {
   baseUrl?: string
   styleAssetUrls?: Record<string, string>
 }): ResolvedPluginStyle[] {
-  return (options.manifest.styles ?? []).map((style) => ({
-    pluginId: options.manifest.id,
-    href: resolveStyleHref(style, options),
-    sourceHref: style.href,
-    scope: style.scope ?? "plugin",
-    order: style.order ?? 0,
-    source: options.source,
-  }))
+  return (options.manifest.styles ?? []).map((style) => {
+    const scope = style.scope ?? "plugin"
+    if (scope === "global" && options.source !== "builtin") {
+      throw new Error(
+        `Only builtin plugins may declare global styles: ${options.manifest.id}/${style.href}`,
+      )
+    }
+    return {
+      pluginId: options.manifest.id,
+      href: resolveStyleHref(style, options),
+      sourceHref: style.href,
+      scope,
+      order: style.order ?? 0,
+      source: options.source,
+    }
+  })
 }
 
 function majorVersion(version: string): number | null {
@@ -113,19 +123,43 @@ function apiCompatibilityRejection(manifest: PluginManifest): string | undefined
   return undefined
 }
 
-export function loadBuiltinPlugins(plugins: BuiltinPlugin[]): PluginLoadResult {
+/**
+ * Validate packages supplied by the trusted builtin composition. This loader deliberately
+ * refuses every other source: source admission and permission policy belong to the host,
+ * never to a manifest or to a convenient bootstrap conversion.
+ */
+export function loadBuiltinPlugins(plugins: LoadedPluginPackage[]): PluginLoadResult {
   const loaded: PluginLoadRecord[] = []
   const rejected: PluginLoadRejectedRecord[] = []
+  const seenPluginIds = new Set<string>()
 
-  for (const plugin of plugins) {
-    const parsed = pluginManifestSchema.safeParse(plugin.manifest)
+  for (const pluginPackage of plugins) {
+    if (pluginPackage.source !== "builtin") {
+      rejected.push({
+        source: pluginPackage.source,
+        reason: 'Builtin loader only accepts packages with source "builtin"',
+        manifest: pluginPackage.module.manifest,
+      })
+      continue
+    }
+    const { module } = pluginPackage
+    if (seenPluginIds.has(module.manifest.id)) {
+      rejected.push({
+        source: pluginPackage.source,
+        reason: `Duplicate plugin package id: ${module.manifest.id}`,
+        manifest: module.manifest,
+      })
+      continue
+    }
+    seenPluginIds.add(module.manifest.id)
+    const parsed = pluginManifestSchema.safeParse(module.manifest)
     if (!parsed.success) {
       rejected.push({
-        source: "builtin",
-        reason: hasApiVersion(plugin.manifest)
+        source: pluginPackage.source,
+        reason: hasApiVersion(module.manifest)
           ? "Invalid plugin manifest"
           : "Plugin manifest must declare apiVersion",
-        manifest: plugin.manifest,
+        manifest: module.manifest,
       })
       continue
     }
@@ -133,23 +167,32 @@ export function loadBuiltinPlugins(plugins: BuiltinPlugin[]): PluginLoadResult {
     const apiRejection = apiCompatibilityRejection(parsed.data as PluginManifest)
     if (apiRejection) {
       rejected.push({
-        source: "builtin",
+        source: pluginPackage.source,
         reason: apiRejection,
-        manifest: plugin.manifest,
+        manifest: module.manifest,
       })
       continue
     }
 
-    loaded.push({
-      plugin,
-      manifest: parsed.data as PluginManifest,
-      source: "builtin",
-      styles: resolveManifestStyles({
+    try {
+      loaded.push({
+        pluginPackage,
+        module,
         manifest: parsed.data as PluginManifest,
-        source: "builtin",
-        ...(plugin.styleAssetUrls ? { styleAssetUrls: plugin.styleAssetUrls } : {}),
-      }),
-    })
+        source: pluginPackage.source,
+        styles: resolveManifestStyles({
+          manifest: parsed.data as PluginManifest,
+          source: "builtin",
+          ...(pluginPackage.styleAssetUrls ? { styleAssetUrls: pluginPackage.styleAssetUrls } : {}),
+        }),
+      })
+    } catch (error) {
+      rejected.push({
+        source: pluginPackage.source,
+        reason: error instanceof Error ? error.message : String(error),
+        manifest: pluginPackage.module.manifest,
+      })
+    }
   }
 
   return { loaded, rejected }
@@ -165,7 +208,7 @@ function hasApiVersion(manifest: unknown): manifest is { apiVersion: string } {
   )
 }
 
-export function createBuiltinPluginLoader(plugins: BuiltinPlugin[]): PluginLoader {
+export function createBuiltinPluginLoader(plugins: LoadedPluginPackage[]): PluginLoader {
   return {
     async load() {
       return loadBuiltinPlugins(plugins)

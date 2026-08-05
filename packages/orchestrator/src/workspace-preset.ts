@@ -17,17 +17,17 @@ function cloneJsonValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
-type PresetInstanceSizeInput = {
-  instanceId: string
-  extensionPoint: PluginInstance["extensionPoint"]
-  size?: PluginInstance["size"]
-}
+type PresetInstanceSizeInput = Pick<
+  WorkspacePresetContribution["instances"][number],
+  "instanceId" | "contribution" | "size"
+>
 
 function resolvePresetInstanceSize(
   presetId: string,
   presetInstance: PresetInstanceSizeInput,
 ): Pick<PluginInstance, "size"> {
-  if (presetInstance.extensionPoint !== "widget") {
+  const contributionKind = presetInstance.contribution.kind
+  if (contributionKind !== "widget") {
     if (presetInstance.size !== undefined) {
       throw new Error(
         `Workspace preset "${presetId}" non-widget instance "${presetInstance.instanceId}" must not declare size`,
@@ -78,9 +78,10 @@ export function applyWorkspacePreset(
         `Workspace preset "${options.preset.id}" instance "${presetInstance.instanceId}" targets unknown region "${presetInstance.regionId}"`,
       )
     }
-    if (!region.accepts.includes(presetInstance.extensionPoint)) {
+    const contributionKind = presetInstance.contribution.kind
+    if (!region.accepts.includes(contributionKind)) {
       throw new Error(
-        `Workspace preset "${options.preset.id}" instance "${presetInstance.instanceId}" uses extension point "${presetInstance.extensionPoint}" incompatible with region "${presetInstance.regionId}"`,
+        `Workspace preset "${options.preset.id}" instance "${presetInstance.instanceId}" uses contribution kind "${contributionKind}" incompatible with region "${presetInstance.regionId}"`,
       )
     }
 
@@ -88,9 +89,7 @@ export function applyWorkspacePreset(
     instances.push({
       id: resolvedInstanceId,
       workspaceId: options.workspaceId,
-      pluginId: presetInstance.pluginId,
-      contributionId: presetInstance.contributionId,
-      extensionPoint: presetInstance.extensionPoint,
+      contribution: presetInstance.contribution,
       regionId: presetInstance.regionId,
       enabled: true,
       ...resolvePresetInstanceSize(options.preset.id, presetInstance),
@@ -104,13 +103,13 @@ export function applyWorkspacePreset(
     workspace: {
       id: options.workspaceId,
       name: options.workspaceName ?? options.preset.title,
-      activeLayoutId: options.preset.layoutId,
-      activeThemeId: options.preset.themeId,
-      activeBackgroundProviderId: options.preset.backgroundProviderId,
+      activeLayout: options.preset.layout,
+      activeTheme: options.preset.theme,
+      activeBackgroundProvider: options.preset.backgroundProvider,
       config: {
         search: {
-          defaultProviderId: options.preset.search.defaultProviderId,
-          enabledProviderIds: [...options.preset.search.enabledProviderIds],
+          defaultProvider: options.preset.search.defaultProvider,
+          enabledProviders: [...options.preset.search.enabledProviders],
         },
       },
       regions,

@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import { Field } from "@tabora/ui/field"
 import { Input } from "@tabora/ui/input"

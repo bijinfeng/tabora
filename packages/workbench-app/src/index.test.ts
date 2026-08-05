@@ -8,20 +8,37 @@ const defaultWorkspacePreset: WorkspacePresetContribution = {
   id: "preset.default",
   title: "Default Workspace",
   plugins: ["official.search.command-bar"],
-  layoutId: "official.layout.workbench-dashboard",
-  themeId: "official.theme.light",
-  backgroundProviderId: "official.background.default",
+  layout: {
+    pluginId: "official.layout",
+    kind: "layout",
+    id: "official.layout.workbench-dashboard",
+  },
+  theme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+  backgroundProvider: {
+    pluginId: "official.background",
+    kind: "background-provider",
+    id: "official.background.default",
+  },
   search: {
-    defaultProviderId: "official.search.google",
-    enabledProviderIds: ["official.search.google", "official.search.duckduckgo"],
+    defaultProvider: {
+      pluginId: "official.search",
+      kind: "search-provider",
+      id: "official.search.google",
+    },
+    enabledProviders: [
+      { pluginId: "official.search", kind: "search-provider", id: "official.search.google" },
+      { pluginId: "official.search", kind: "search-provider", id: "official.search.duckduckgo" },
+    ],
   },
   regions: [{ regionId: "topbar", accepts: ["search"] }],
   instances: [
     {
-      pluginId: "official.search.command-bar",
-      contributionId: "official.search.command-bar",
+      contribution: {
+        pluginId: "official.search.command-bar",
+        kind: "search",
+        id: "official.search.command-bar",
+      },
       instanceId: "search-main",
-      extensionPoint: "search",
       regionId: "topbar",
     },
   ],

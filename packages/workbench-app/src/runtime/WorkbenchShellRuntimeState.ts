@@ -79,9 +79,17 @@ export function wireWorkbenchRuntimeEvents(options: {
     const modalPayload = payload as { viewId: string; props?: Record<string, unknown> }
     options.setModalViewId(modalPayload.viewId)
     options.setModalProps(modalPayload.props ?? {})
+    modalOwnerPluginId =
+      typeof modalPayload.props?.pluginId === "string" ? modalPayload.props.pluginId : undefined
   })
-  const disposeModalClose = options.runtime.kernel.events.on("ui.modal.close", () => {
-    options.setModalViewId(null)
+  let modalOwnerPluginId: string | undefined
+  let fullscreenOwnerPluginId: string | undefined
+  const disposeModalClose = options.runtime.kernel.events.on("ui.modal.close", (payload) => {
+    const closePayload = (payload ?? {}) as { pluginId?: string }
+    if (closePayload.pluginId && closePayload.pluginId === modalOwnerPluginId) {
+      options.setModalViewId(null)
+      modalOwnerPluginId = undefined
+    }
   })
   const disposeFullscreenOpen = options.runtime.kernel.events.on(
     "ui.fullscreen.open",
@@ -89,11 +97,22 @@ export function wireWorkbenchRuntimeEvents(options: {
       const fullscreenPayload = payload as { viewId: string; props?: Record<string, unknown> }
       options.setFullscreenViewId(fullscreenPayload.viewId)
       options.setFullscreenProps(fullscreenPayload.props ?? {})
+      fullscreenOwnerPluginId =
+        typeof fullscreenPayload.props?.pluginId === "string"
+          ? fullscreenPayload.props.pluginId
+          : undefined
     },
   )
-  const disposeFullscreenClose = options.runtime.kernel.events.on("ui.fullscreen.close", () => {
-    options.setFullscreenViewId(null)
-  })
+  const disposeFullscreenClose = options.runtime.kernel.events.on(
+    "ui.fullscreen.close",
+    (payload) => {
+      const closePayload = (payload ?? {}) as { pluginId?: string }
+      if (closePayload.pluginId && closePayload.pluginId === fullscreenOwnerPluginId) {
+        options.setFullscreenViewId(null)
+        fullscreenOwnerPluginId = undefined
+      }
+    },
+  )
   const disposeToast = options.runtime.kernel.events.on("ui.toast.show", (payload) => {
     const toastPayload = payload as {
       message: string

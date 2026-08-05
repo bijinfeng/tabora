@@ -6,9 +6,7 @@ function instance(id: string, size?: WidgetSize): PluginInstance {
   return {
     id,
     workspaceId: "default",
-    pluginId: "official.widgets.productivity",
-    contributionId: "notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "official.widgets.productivity", kind: "widget", id: "notes" },
     regionId: "mainGrid",
     enabled: true,
     ...(size ? { size } : {}),

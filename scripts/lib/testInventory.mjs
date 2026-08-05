@@ -99,7 +99,7 @@ async function collectTestPaths(rootDir, directory) {
     }
   }
 
-  return testPaths.sort()
+  return testPaths.sort((left, right) => left.localeCompare(right))
 }
 
 function toRepositoryPath(rootDir, absolutePath) {

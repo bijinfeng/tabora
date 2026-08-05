@@ -16,9 +16,17 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Default",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    activeBackgroundProviderId: "official.background.default",
+    activeLayout: {
+      pluginId: "official.layout",
+      kind: "layout",
+      id: "official.layout.workbench-dashboard",
+    },
+    activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+    activeBackgroundProvider: {
+      pluginId: "official.background",
+      kind: "background-provider",
+      id: "official.background.default",
+    },
     regions: {},
     createdAt: "2026-06-07T00:00:00.000Z",
     updatedAt: "2026-06-07T00:00:00.000Z",
@@ -87,12 +95,13 @@ describe("switchWorkbenchTheme", () => {
     ]
     const setThemeId = vi.fn()
     const applyTheme = vi.fn()
-    const persistTheme = vi.fn(async () => workspace({ activeThemeId: "official.theme.dark" }))
+    const theme = { pluginId: "official.theme", kind: "theme" as const, id: "official.theme.dark" }
+    const persistTheme = vi.fn(async () => workspace({ activeTheme: theme }))
     const setWorkspaceState = vi.fn()
 
     await switchWorkbenchTheme({
       workspace: currentWorkspace,
-      themeId: "official.theme.dark",
+      theme,
       themes,
       setThemeId,
       applyTheme,
@@ -102,10 +111,8 @@ describe("switchWorkbenchTheme", () => {
 
     expect(setThemeId).toHaveBeenCalledWith("official.theme.dark")
     expect(applyTheme).toHaveBeenCalledWith({ "color-page": "10 10 10" })
-    expect(persistTheme).toHaveBeenCalledWith("workspace-1", "official.theme.dark")
-    expect(setWorkspaceState).toHaveBeenCalledWith(
-      expect.objectContaining({ activeThemeId: "official.theme.dark" }),
-    )
+    expect(persistTheme).toHaveBeenCalledWith("workspace-1", theme)
+    expect(setWorkspaceState).toHaveBeenCalledWith(expect.objectContaining({ activeTheme: theme }))
   })
 })
 
@@ -128,14 +135,17 @@ describe("switchWorkbenchBackground", () => {
     ]
     const setBackgroundId = vi.fn()
     const applyBackground = vi.fn()
-    const persistBackground = vi.fn(async () =>
-      workspace({ activeBackgroundProviderId: "official.background.dark" }),
-    )
+    const background = {
+      pluginId: "official.background",
+      kind: "background-provider" as const,
+      id: "official.background.dark",
+    }
+    const persistBackground = vi.fn(async () => workspace({ activeBackgroundProvider: background }))
     const setWorkspaceState = vi.fn()
 
     await switchWorkbenchBackground({
       workspace: currentWorkspace,
-      backgroundId: "official.background.dark",
+      background,
       backgrounds,
       setBackgroundId,
       applyBackground,
@@ -145,9 +155,9 @@ describe("switchWorkbenchBackground", () => {
 
     expect(setBackgroundId).toHaveBeenCalledWith("official.background.dark")
     expect(applyBackground).toHaveBeenCalledWith({ background: "rgb(10 10 10)" })
-    expect(persistBackground).toHaveBeenCalledWith("workspace-1", "official.background.dark")
+    expect(persistBackground).toHaveBeenCalledWith("workspace-1", background)
     expect(setWorkspaceState).toHaveBeenCalledWith(
-      expect.objectContaining({ activeBackgroundProviderId: "official.background.dark" }),
+      expect.objectContaining({ activeBackgroundProvider: background }),
     )
   })
 })

@@ -114,7 +114,10 @@ vi.mock("./WorkbenchShellState", () => ({
       setCmdPaletteOpen: vi.fn(),
     },
     search: {
-      searchSettings: () => ({ defaultProviderId: "", enabledProviderIds: [] }),
+      searchSettings: () => ({
+        defaultProvider: { pluginId: "test.search", kind: "search-provider", id: "default" },
+        enabledProviders: [],
+      }),
       setSearchSettings: vi.fn(),
       searchHistory: () => [],
       setSearchHistory: vi.fn(),
@@ -140,7 +143,10 @@ function composition() {
     initialState: {
       workspace: null,
       instances: [],
-      searchSettings: { defaultProviderId: "", enabledProviderIds: [] },
+      searchSettings: {
+        defaultProvider: { pluginId: "test.search", kind: "search-provider", id: "default" },
+        enabledProviders: [],
+      },
     },
   }
 }
@@ -148,9 +154,13 @@ function composition() {
 function runtime() {
   return {
     defaultWorkspacePreset: {
-      layoutId: "layout.dashboard.custom",
-      themeId: "theme.light.custom",
-      backgroundProviderId: "background.default",
+      layout: { pluginId: "test.layout", kind: "layout", id: "layout.dashboard.custom" },
+      theme: { pluginId: "test.theme", kind: "theme", id: "theme.light.custom" },
+      backgroundProvider: {
+        pluginId: "test.background",
+        kind: "background-provider",
+        id: "background.default",
+      },
     },
     shellConfig: {
       themeIds: { light: "theme.light.custom", dark: "theme.dark.custom" },

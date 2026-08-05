@@ -43,7 +43,7 @@ export function createWorkbenchShellRuntimes(options: {
     showToast,
   } = options
 
-  const { plugins, catalog: pluginCatalog, kernel, repositories } = runtime
+  const { catalog: pluginCatalog, kernel, repositories } = runtime
   const { instanceRepo, pluginDataRepo } = repositories
   const t = (key: string, vars?: Record<string, string | number>) =>
     runtime.i18n.t("tabora.shell", key, vars)
@@ -97,12 +97,27 @@ export function createWorkbenchShellRuntimes(options: {
     })
   }
 
+  const controllerWorkspaceActions = {
+    switchLayout: workspaceController.switchLayout,
+    switchTheme: async (themeId: string) => {
+      const theme = pluginCatalog.listThemes().find((candidate) => candidate.id === themeId)
+      if (theme) await workspaceController.switchTheme(theme.ref)
+    },
+    setDefaultSearchProvider: async (providerId: string) => {
+      const provider = pluginCatalog
+        .listSearchProviders()
+        .find((candidate) => candidate.id === providerId)
+      if (provider) await workspaceController.setDefaultSearchProvider(provider.ref)
+    },
+    saveSearchHistory: workspaceController.saveSearchHistory,
+  }
   const controllerRuntime = createWorkbenchShellControllerRuntime({
     tShell: t,
     services: {
-      plugins,
+      plugins: kernel.plugins,
       pluginCatalog,
       registryViews: kernel.registry.views,
+      registryCommands: kernel.registry.commands,
       instanceRepo,
       pluginDataRepo,
     },
@@ -146,7 +161,7 @@ export function createWorkbenchShellRuntimes(options: {
       pluginViewBoundaryCopy: createWorkbenchShellPluginViewBoundaryCopy(t),
     },
     controllers: {
-      workspaceController,
+      workspaceController: controllerWorkspaceActions,
       hostRuntime,
     },
   })
@@ -164,7 +179,7 @@ export function createWorkbenchShellRuntimes(options: {
     writeLayoutState,
     showToast,
     switchLayout: workspaceController.switchLayout,
-    switchTheme: workspaceController.switchTheme,
+    switchTheme: controllerWorkspaceActions.switchTheme,
     runRailAction: hostRuntime.runRailAction,
     catalog: pluginCatalog,
     instanceRenderer: controllerRuntime.viewRuntime.instanceRenderer,

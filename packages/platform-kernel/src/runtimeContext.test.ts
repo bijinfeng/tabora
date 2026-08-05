@@ -1,8 +1,29 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type { PluginManifest, PluginPermission } from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry } from "./extensionRegistry"
-import { createPluginRuntimeContext } from "./runtimeContext"
+import { collectPluginManifestViewIds, createPluginRuntimeContext } from "./runtimeContext"
+
+function manifestWithViews(...viewIds: string[]): PluginManifest {
+  return {
+    id: "plugin.example",
+    name: "Example",
+    version: "1.0.0",
+    apiVersion: "1.0.0",
+    entry: "./entry",
+    engine: { platform: "^1.0.0" },
+    contributes: {
+      widgets: viewIds.map((view, index) => ({
+        id: `view-${index}`,
+        title: view,
+        supportedSizes: ["S"],
+        defaultSize: "S",
+        allowMultipleInstances: false,
+        views: { card: view },
+      })),
+    },
+  }
+}
 
 function runtimeWith(grantedPermissions: PluginPermission[]) {
   const events = createEventBus()
@@ -15,12 +36,51 @@ function runtimeWith(grantedPermissions: PluginPermission[]) {
       pluginId: "official.search-providers.basic",
       events,
       registry: createExtensionRegistry(),
+      requestedPermissions: grantedPermissions,
       grantedPermissions,
     }),
   }
 }
 
 describe("createPluginRuntimeContext permissions", () => {
+  it("admits a widget's declared expand footer as a view registration", () => {
+    const manifest: PluginManifest = {
+      id: "plugin.example",
+      name: "Example",
+      version: "1.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^1.0.0" },
+      contributes: {
+        widgets: [
+          {
+            id: "widget",
+            title: "Widget",
+            supportedSizes: ["S"],
+            defaultSize: "S",
+            allowMultipleInstances: false,
+            views: {
+              card: "plugin.example.card",
+              expandFooter: "plugin.example.expand-footer",
+            },
+          },
+        ],
+      },
+    }
+    const registry = createExtensionRegistry()
+    const context = createPluginRuntimeContext({
+      pluginId: manifest.id,
+      events: createEventBus(),
+      registry,
+      manifest,
+    })
+
+    expect(collectPluginManifestViewIds(manifest)).toContain("plugin.example.expand-footer")
+    context.views.register("plugin.example.expand-footer", () => null)
+
+    expect(registry.views.has("plugin.example.expand-footer")).toBe(true)
+  })
+
   it("allows opening external URLs that match declared hosts", () => {
     const { context, opened } = runtimeWith([{ type: "external-open", hosts: ["github.com"] }])
 
@@ -37,10 +97,58 @@ describe("createPluginRuntimeContext permissions", () => {
     expect(opened).toEqual([])
   })
 
+  it("does not honor a persisted grant when the current manifest no longer requests it", () => {
+    const events = createEventBus()
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+      requestedPermissions: [],
+      grantedPermissions: [{ type: "external-open", hosts: ["github.com"] }],
+    })
+
+    expect(context.permissions.canOpenExternal("https://github.com/tabora")).toBe(false)
+  })
+
   it("allows wildcard external-open permissions for trusted official plugins", () => {
     const { context } = runtimeWith([{ type: "external-open", hosts: ["*"] }])
 
     expect(context.permissions.canOpenExternal("https://www.google.com/search?q=tabora")).toBe(true)
+  })
+
+  it("routes authorized network requests through the host bridge only", async () => {
+    const hostFetch = vi.fn(async () => new Response("ok"))
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
+      grantedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
+      network: { fetch: hostFetch },
+    })
+
+    expect(context.network.canFetch("https://api.example.com/data")).toBe(true)
+    await context.network.fetch("https://api.example.com/data", { method: "GET" })
+
+    expect(hostFetch).toHaveBeenCalledWith("https://api.example.com/data", { method: "GET" })
+  })
+
+  it("denies network hosts outside the request or grant without calling the host", async () => {
+    const hostFetch = vi.fn(async () => new Response("ok"))
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
+      grantedPermissions: [{ type: "network", hosts: ["other.example.com"] }],
+      network: { fetch: hostFetch },
+    })
+
+    expect(context.network.canFetch("https://api.example.com/data")).toBe(false)
+    await expect(context.network.fetch("https://api.example.com/data")).rejects.toThrow(
+      "attempted network access without permission",
+    )
+    expect(hostFetch).not.toHaveBeenCalled()
   })
 
   it("exposes a runtime toast bridge through typed UI events", () => {
@@ -52,6 +160,7 @@ describe("createPluginRuntimeContext permissions", () => {
       pluginId: "plugin.example",
       events,
       registry: createExtensionRegistry(),
+      manifest: manifestWithViews("plugin.example.modal", "plugin.example.fullscreen"),
     })
 
     context.ui.showToast("Saved", { type: "success", duration: 3000 })
@@ -70,11 +179,15 @@ describe("createPluginRuntimeContext permissions", () => {
     const fullscreens: unknown[] = []
     events.on("ui.modal.open", (payload) => modals.push(payload))
     events.on("ui.fullscreen.open", (payload) => fullscreens.push(payload))
+    const registry = createExtensionRegistry()
+    registry.views.register("plugin.example.modal", () => null)
+    registry.views.register("plugin.example.fullscreen", () => null)
 
     const context = createPluginRuntimeContext({
       pluginId: "plugin.example",
       events,
-      registry: createExtensionRegistry(),
+      registry,
+      manifest: manifestWithViews("plugin.example.modal", "plugin.example.fullscreen"),
     })
 
     context.ui.openModal("plugin.example.modal", { tab: "a", pluginId: "spoofed" })
@@ -107,7 +220,7 @@ describe("createPluginRuntimeContext permissions", () => {
     )
   })
 
-  it("allows opening declared modal views even if they are not prefixed with plugin id", () => {
+  it("rejects a declared view that is not owned by the plugin namespace", () => {
     const events = createEventBus()
     const modals: unknown[] = []
     events.on("ui.modal.open", (payload) => modals.push(payload))
@@ -142,14 +255,10 @@ describe("createPluginRuntimeContext permissions", () => {
       manifest,
     })
 
-    context.ui.openModal("official.background.css-renderer.view")
-
-    expect(modals).toEqual([
-      {
-        viewId: "official.background.css-renderer.view",
-        props: { pluginId: "official.background.basic" },
-      },
-    ])
+    expect(() => context.ui.openModal("official.background.css-renderer.view")).toThrow(
+      'Plugin "official.background.basic" attempted to open undeclared modal view: official.background.css-renderer.view',
+    )
+    expect(modals).toEqual([])
   })
 
   it("exposes a plugin-scoped i18n bridge when provided", () => {
@@ -200,6 +309,7 @@ describe("createPluginRuntimeContext permissions", () => {
       pluginId: "plugin.example",
       events: createEventBus(),
       registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate"] }],
       grantedPermissions: [{ type: "ai", access: ["generate"] }],
       ai: {
         generate: async (request) => ({ text: `reply:${request.prompt}` }),
@@ -219,11 +329,12 @@ describe("createPluginRuntimeContext permissions", () => {
       pluginId: "plugin.example",
       events: createEventBus(),
       registry,
+      manifest: manifestWithViews("plugin.example.view"),
       registrationDisposers,
     })
     const view = () => null
 
-    context.registry.views.register("plugin.example.view", view)
+    context.views.register("plugin.example.view", view)
 
     expect(registrationDisposers).toHaveLength(1)
     expect(registry.views.has("plugin.example.view")).toBe(true)
@@ -231,6 +342,20 @@ describe("createPluginRuntimeContext permissions", () => {
     registrationDisposers[0]!()
 
     expect(registry.views.has("plugin.example.view")).toBe(false)
+  })
+
+  it("exposes no global registry lookup and rejects another plugin's undeclared view", () => {
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      manifest: manifestWithViews("plugin.example.view"),
+    })
+
+    expect("registry" in context).toBe(false)
+    expect(() => context.views.register("other.plugin.view", () => null)).toThrow(
+      'Plugin "plugin.example" attempted to register undeclared view: other.plugin.view',
+    )
   })
 
   it("allows only manifest-declared settings providers and collects their disposer", () => {
@@ -268,12 +393,12 @@ describe("createPluginRuntimeContext permissions", () => {
     })
     const provider = { getModel: () => ({ version: 1 as const, nodes: [] }), dispatch: () => {} }
 
-    context.registry.settings.register("plugin.example.settings.provider", provider)
+    context.settings.register("plugin.example.settings.provider", provider)
 
     expect(registry.settings.get("plugin.example.settings.provider")).toBe(provider)
-    expect(() =>
-      context.registry.settings.register("plugin.example.undeclared.provider", provider),
-    ).toThrow("attempted to register undeclared settings provider")
+    expect(() => context.settings.register("plugin.example.undeclared.provider", provider)).toThrow(
+      "attempted to register undeclared settings provider",
+    )
 
     registrationDisposers[0]!()
     expect(registry.settings.has("plugin.example.settings.provider")).toBe(false)

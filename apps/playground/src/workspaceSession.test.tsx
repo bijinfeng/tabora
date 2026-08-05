@@ -21,6 +21,25 @@ import {
   updateWorkspaceTheme,
 } from "@tabora/workbench-app/workspace-session"
 
+const refs = {
+  layout: {
+    pluginId: "official.layout.workbench-dashboard",
+    kind: "layout" as const,
+    id: "official.layout.workbench-dashboard",
+  },
+  theme: (id: string) => ({ pluginId: "official.theme.default-pack", kind: "theme" as const, id }),
+  background: (id: string) => ({
+    pluginId: "official.background.basic",
+    kind: "background-provider" as const,
+    id,
+  }),
+  provider: (id: string) => ({
+    pluginId: "official.search-providers.basic",
+    kind: "search-provider" as const,
+    id,
+  }),
+}
+
 function deleteTestDatabase() {
   const request = indexedDB.deleteDatabase("tabora-workspace-session-test")
   return new Promise<void>((resolve, reject) => {
@@ -37,13 +56,13 @@ describe("workspaceSession", () => {
     const workspace: Workspace = {
       id: "default",
       name: "默认工作区",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "background.gradient-green",
+      activeLayout: refs.layout,
+      activeTheme: refs.theme("official.theme.light"),
+      activeBackgroundProvider: refs.background("background.gradient-green"),
       config: {
         search: {
-          defaultProviderId: "official.search.github",
-          enabledProviderIds: ["official.search.github"],
+          defaultProvider: refs.provider("official.search.github"),
+          enabledProviders: [refs.provider("official.search.github")],
         },
       },
       regions: {},
@@ -52,8 +71,8 @@ describe("workspaceSession", () => {
     }
 
     expect(readSearchSettings(workspace)).toEqual({
-      defaultProviderId: "official.search.github",
-      enabledProviderIds: ["official.search.github"],
+      defaultProvider: refs.provider("official.search.github"),
+      enabledProviders: [refs.provider("official.search.github")],
     })
   })
 
@@ -61,12 +80,12 @@ describe("workspaceSession", () => {
     const workspace: Workspace = {
       id: "default",
       name: "默认工作区",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "background.gradient-green",
+      activeLayout: refs.layout,
+      activeTheme: refs.theme("official.theme.light"),
+      activeBackgroundProvider: refs.background("background.gradient-green"),
       config: {
         search: {
-          defaultProviderId: "official.search.github",
+          defaultProvider: refs.provider("official.search.github"),
         },
       },
       regions: {},
@@ -93,7 +112,7 @@ describe("workspaceSession", () => {
 
     expect(session.workspace.id).toBe("default")
     expect(session.instances).toHaveLength(5)
-    expect(session.searchSettings.defaultProviderId).toBe("official.search.google")
+    expect(session.searchSettings.defaultProvider.id).toBe("official.search.google")
   })
 
   it("keeps existing default workspace instances unchanged", async () => {
@@ -106,39 +125,42 @@ describe("workspaceSession", () => {
     await workspaceRepo.save({
       id: "default",
       name: "默认工作区",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "background.gradient-green",
+      activeLayout: refs.layout,
+      activeTheme: refs.theme("official.theme.light"),
+      activeBackgroundProvider: refs.background("background.gradient-green"),
       config: {
         search: {
-          defaultProviderId: "official.search.google",
-          enabledProviderIds: ["official.search.google", "official.search.github"],
+          defaultProvider: refs.provider("official.search.google"),
+          enabledProviders: [
+            refs.provider("official.search.google"),
+            refs.provider("official.search.github"),
+          ],
         },
       },
       regions: {},
       createdAt: now,
       updatedAt: now,
     })
-    const existingInstances: PluginInstance[] = [
+    const existingInstances: PluginInstance[] = (
       [
-        "search-main",
-        "official.search.command-bar",
-        "official.search.command-bar",
-        "search",
-        "topbar",
-      ],
-      ["quick-links-1", "official.widgets.quick-links", "quick-links", "widget", "mainGrid"],
-      ["notes-1", "official.widgets.notes", "notes", "widget", "mainGrid"],
-      ["todo-1", "official.widgets.todo", "todo", "widget", "mainGrid"],
-    ].map(([id, pluginId, contributionId, extensionPoint, regionId]) => ({
+        [
+          "search-main",
+          "official.search.command-bar",
+          "official.search.command-bar",
+          "search",
+          "topbar",
+        ],
+        ["quick-links-1", "official.widgets.quick-links", "quick-links", "widget", "mainGrid"],
+        ["notes-1", "official.widgets.notes", "notes", "widget", "mainGrid"],
+        ["todo-1", "official.widgets.todo", "todo", "widget", "mainGrid"],
+      ] satisfies Array<[string, string, string, "widget" | "search", string]>
+    ).map(([id, pluginId, contributionId, kind, regionId]) => ({
       id,
       workspaceId: "default",
-      pluginId,
-      contributionId,
-      extensionPoint,
+      contribution: { pluginId, kind, id: contributionId },
       regionId,
       enabled: true,
-      size: "M",
+      ...(kind === "widget" ? { size: "M" as const } : {}),
       config: {},
       createdAt: now,
       updatedAt: now,
@@ -169,13 +191,16 @@ describe("workspaceSession", () => {
     await workspaceRepo.save({
       id: "default",
       name: "空工作区",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "background.gradient-green",
+      activeLayout: refs.layout,
+      activeTheme: refs.theme("official.theme.light"),
+      activeBackgroundProvider: refs.background("background.gradient-green"),
       config: {
         search: {
-          defaultProviderId: "official.search.google",
-          enabledProviderIds: ["official.search.google", "official.search.github"],
+          defaultProvider: refs.provider("official.search.google"),
+          enabledProviders: [
+            refs.provider("official.search.google"),
+            refs.provider("official.search.github"),
+          ],
         },
       },
       regions: {
@@ -354,7 +379,7 @@ describe("workspaceSession", () => {
         current.config = {
           ...(current.config ?? {}),
           search: {
-            defaultProviderId: "official.search.github",
+            defaultProvider: refs.provider("official.search.github"),
           },
         }
         return current
@@ -362,7 +387,7 @@ describe("workspaceSession", () => {
     })
 
     expect(updated?.config).toMatchObject({
-      search: { defaultProviderId: "official.search.github" },
+      search: { defaultProvider: refs.provider("official.search.github") },
     })
   })
 
@@ -381,15 +406,15 @@ describe("workspaceSession", () => {
     const themed = await updateWorkspaceTheme({
       workspaceRepo,
       workspaceId: workspace.id,
-      themeId: "official.theme.dark",
+      theme: refs.theme("official.theme.dark"),
     })
     const backgrounded = await updateWorkspaceBackground({
       workspaceRepo,
       workspaceId: workspace.id,
-      backgroundId: "background.gradient-blue",
+      background: refs.background("background.gradient-blue"),
     })
 
-    expect(themed?.activeThemeId).toBe("official.theme.dark")
-    expect(backgrounded?.activeBackgroundProviderId).toBe("background.gradient-blue")
+    expect(themed?.activeTheme.id).toBe("official.theme.dark")
+    expect(backgrounded?.activeBackgroundProvider.id).toBe("background.gradient-blue")
   })
 })

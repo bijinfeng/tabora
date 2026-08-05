@@ -38,10 +38,24 @@ const mocks = vi.hoisted(() => {
     switchWorkbenchLayout: vi.fn(async () => {}),
     createLayoutSwitchExecution: vi.fn(() => []),
     createWorkbenchWorkspaceState: vi.fn(() => workspaceStateActions),
-    updateWorkspaceRecord: vi.fn(async () => workspace({ activeLayoutId: "layout.next" })),
-    updateWorkspaceTheme: vi.fn(async () => workspace({ activeThemeId: "official.theme.dark" })),
+    updateWorkspaceRecord: vi.fn(async () =>
+      workspace({
+        activeLayout: { pluginId: "official.layout", kind: "layout", id: "layout.next" },
+      }),
+    ),
+    updateWorkspaceTheme: vi.fn(async () =>
+      workspace({
+        activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.dark" },
+      }),
+    ),
     updateWorkspaceBackground: vi.fn(async () =>
-      workspace({ activeBackgroundProviderId: "official.background.dark" }),
+      workspace({
+        activeBackgroundProvider: {
+          pluginId: "official.background",
+          kind: "background-provider",
+          id: "official.background.dark",
+        },
+      }),
     ),
     workspaceStateActions,
   }
@@ -82,14 +96,24 @@ vi.mock("./workspaceSession", () => ({
 import { createWorkbenchWorkspaceController } from "./WorkbenchShellWorkspaceController"
 
 const baseDate = "2026-06-07T00:00:00.000Z"
+const refs = {
+  layout: (id: string) => ({ pluginId: "official.layout", kind: "layout" as const, id }),
+  theme: (id: string) => ({ pluginId: "official.theme", kind: "theme" as const, id }),
+  background: (id: string) => ({
+    pluginId: "official.background",
+    kind: "background-provider" as const,
+    id,
+  }),
+  provider: (id: string) => ({ pluginId: "official.search", kind: "search-provider" as const, id }),
+}
 
 function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "默认工作区",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    activeBackgroundProviderId: "official.background.default",
+    activeLayout: refs.layout("official.layout.workbench-dashboard"),
+    activeTheme: refs.theme("official.theme.light"),
+    activeBackgroundProvider: refs.background("official.background.default"),
     config: {},
     regions: {},
     createdAt: baseDate,
@@ -102,9 +126,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -117,8 +139,8 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
 
 function searchSettings(overrides: Partial<WorkbenchSearchSettings> = {}): WorkbenchSearchSettings {
   return {
-    defaultProviderId: "official.search.google",
-    enabledProviderIds: ["official.search.google"],
+    defaultProvider: refs.provider("official.search.google"),
+    enabledProviders: [refs.provider("official.search.google")],
     ...overrides,
   }
 }
@@ -128,9 +150,9 @@ function defaultWorkspacePreset(): WorkspacePresetContribution {
     id: "preset.default",
     title: "Default Workspace",
     plugins: ["plugin.widgets"],
-    layoutId: "official.layout.workbench-dashboard",
-    themeId: "official.theme.light",
-    backgroundProviderId: "official.background.default",
+    layout: refs.layout("official.layout.workbench-dashboard"),
+    theme: refs.theme("official.theme.light"),
+    backgroundProvider: refs.background("official.background.default"),
     search: searchSettings(),
     regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
     instances: [],
@@ -169,38 +191,56 @@ function controllerSetup() {
     },
   ]
 
-  const themes: ThemeContribution[] = [
-    { id: "official.theme.light", title: "Light", tokens: { "color-page": "255 255 255" } },
-    { id: "official.theme.dark", title: "Dark", tokens: { "color-page": "10 10 10" } },
+  const themes: Array<ThemeContribution & { ref: ReturnType<typeof refs.theme> }> = [
+    {
+      id: "official.theme.light",
+      title: "Light",
+      tokens: { "color-page": "255 255 255" },
+      ref: refs.theme("official.theme.light"),
+    },
+    {
+      id: "official.theme.dark",
+      title: "Dark",
+      tokens: { "color-page": "10 10 10" },
+      ref: refs.theme("official.theme.dark"),
+    },
   ]
-  const backgrounds: BackgroundProviderContribution[] = [
+  const backgrounds: Array<
+    BackgroundProviderContribution & { ref: ReturnType<typeof refs.background> }
+  > = [
     {
       id: "official.background.default",
       title: "Default",
       sourceType: "generated",
       defaultCss: { background: "rgb(255 255 255)" },
+      ref: refs.background("official.background.default"),
     },
     {
       id: "official.background.dark",
       title: "Dark",
       sourceType: "generated",
       defaultCss: { background: "rgb(10 10 10)" },
+      ref: refs.background("official.background.dark"),
     },
   ]
-  const layouts: LayoutContribution[] = [
+  const layouts: Array<LayoutContribution & { ref: ReturnType<typeof refs.layout> }> = [
     {
       id: "official.layout.workbench-dashboard",
       title: "Dashboard",
+      view: "official.layout.workbench-dashboard.view",
       regions: [{ id: "mainGrid", title: "Grid", accepts: ["widget"] }],
       defaultRegions: {},
       supportsResponsive: true,
+      ref: refs.layout("official.layout.workbench-dashboard"),
     },
     {
       id: "layout.next",
       title: "Next",
+      view: "layout.next.view",
       regions: [{ id: "grid", title: "Grid", accepts: ["widget"] }],
       defaultRegions: {},
       supportsResponsive: true,
+      ref: refs.layout("layout.next"),
     },
   ]
   const providers = [
@@ -209,12 +249,14 @@ function controllerSetup() {
       title: "Google",
       shortcut: "g",
       urlTemplate: "https://google.example/search?q={query}",
+      ref: refs.provider("official.search.google"),
     },
     {
       id: "official.search.duckduckgo",
       title: "DuckDuckGo",
       shortcut: "d",
       urlTemplate: "https://duck.example/search?q={query}",
+      ref: refs.provider("official.search.duckduckgo"),
     },
   ]
 
@@ -395,19 +437,20 @@ describe("createWorkbenchWorkspaceController", () => {
   it("delegates search provider updates to the search state helpers with current catalog data", async () => {
     const { controller, providers, setSearchSettings } = controllerSetup()
 
-    await controller.setDefaultSearchProvider("official.search.duckduckgo")
-    await controller.setSearchProviderEnabled("official.search.duckduckgo", true)
+    const provider = refs.provider("official.search.duckduckgo")
+    await controller.setDefaultSearchProvider(provider)
+    await controller.setSearchProviderEnabled(provider, true)
 
     expect(mocks.setWorkbenchDefaultSearchProvider).toHaveBeenCalledWith(
       expect.objectContaining({
-        providerId: "official.search.duckduckgo",
+        provider,
         providers,
         setSearchSettings,
       }),
     )
     expect(mocks.setWorkbenchSearchProviderEnabled).toHaveBeenCalledWith(
       expect.objectContaining({
-        providerId: "official.search.duckduckgo",
+        provider,
         enabled: true,
         providers,
       }),
@@ -444,20 +487,22 @@ describe("createWorkbenchWorkspaceController", () => {
   it("delegates workspace theme/background switching and plugin enable toggles", async () => {
     const { controller, kernel, syncPluginStyles } = controllerSetup()
 
-    await controller.switchTheme("official.theme.dark")
-    await controller.switchBackground("official.background.dark")
+    const theme = refs.theme("official.theme.dark")
+    const background = refs.background("official.background.dark")
+    await controller.switchTheme(theme)
+    await controller.switchBackground(background)
     await controller.togglePluginEnabled("plugin.widgets", false)
     await controller.togglePluginEnabled("plugin.widgets", true)
 
     expect(mocks.switchWorkbenchTheme).toHaveBeenCalledWith(
       expect.objectContaining({
-        themeId: "official.theme.dark",
+        theme,
         workspace: expect.objectContaining({ id: "workspace-1" }),
       }),
     )
     expect(mocks.switchWorkbenchBackground).toHaveBeenCalledWith(
       expect.objectContaining({
-        backgroundId: "official.background.dark",
+        background,
         workspace: expect.objectContaining({ id: "workspace-1" }),
       }),
     )

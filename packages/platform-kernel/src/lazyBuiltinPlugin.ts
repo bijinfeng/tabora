@@ -1,17 +1,18 @@
-import type { PluginManifest } from "@tabora/plugin-api"
+import type { PluginManifest, PluginModule } from "@tabora/plugin-api"
 
-import type { BuiltinPlugin } from "./pluginKernel"
+import type { LoadedPluginPackage } from "./pluginKernel"
 
 type LazyBuiltinPluginOptions = {
   manifest: PluginManifest
-  enabled: boolean
-  load(): Promise<BuiltinPlugin>
+  load(): Promise<PluginModule>
+  styleAssetUrls?: Record<string, string>
 }
 
-export function createLazyBuiltinPlugin(options: LazyBuiltinPluginOptions): BuiltinPlugin {
-  let loadedPlugin: Promise<BuiltinPlugin> | undefined
+/** Creates a builtin loader package; enablement belongs to the kernel installation record. */
+export function createLazyBuiltinPlugin(options: LazyBuiltinPluginOptions): LoadedPluginPackage {
+  let loadedPlugin: Promise<PluginModule> | undefined
 
-  function loadPlugin(): Promise<BuiltinPlugin> {
+  function loadPlugin(): Promise<PluginModule> {
     loadedPlugin ??= options.load().then((plugin) => {
       if (plugin.manifest.id !== options.manifest.id) {
         throw new Error(
@@ -24,13 +25,16 @@ export function createLazyBuiltinPlugin(options: LazyBuiltinPluginOptions): Buil
   }
 
   return {
-    manifest: options.manifest,
-    enabled: options.enabled,
+    source: "builtin",
+    module: {
+      manifest: options.manifest,
+      async activate(context) {
+        return (await loadPlugin()).activate(context)
+      },
+    },
+    ...(options.styleAssetUrls ? { styleAssetUrls: options.styleAssetUrls } : {}),
     async preload() {
       await loadPlugin()
-    },
-    async activate(context) {
-      return (await loadPlugin()).activate(context)
     },
   }
 }

@@ -1,21 +1,12 @@
 import type {
-  ExtensionPoint,
   LayoutContribution,
   PluginInstance,
+  RegionContentKind,
   Workspace,
 } from "@tabora/plugin-api"
 
 const UNPLACED_REGION_ID = "unplaced"
-const UNPLACED_REGION_ACCEPTS: ExtensionPoint[] = [
-  "layout",
-  "widget",
-  "search",
-  "search-provider",
-  "background-provider",
-  "background-renderer",
-  "theme",
-  "settings-panel",
-]
+const UNPLACED_REGION_ACCEPTS: RegionContentKind[] = ["widget", "search"]
 
 export type LayoutSwitchPlanOptions = {
   workspace: Workspace
@@ -55,11 +46,11 @@ export function createLayoutSwitchPlan(options: LayoutSwitchPlanOptions): Layout
   for (const instance of instances) {
     const sameRegion = targetLayout.regions.find(
       (region) =>
-        region.id === instance.regionId && region.accepts.includes(instance.extensionPoint),
+        region.id === instance.regionId && region.accepts.includes(instance.contribution.kind),
     )
     const nextRegion =
       sameRegion ??
-      targetLayout.regions.find((region) => region.accepts.includes(instance.extensionPoint))
+      targetLayout.regions.find((region) => region.accepts.includes(instance.contribution.kind))
 
     if (!nextRegion) {
       unplacedInstances.push(instance)
@@ -87,9 +78,9 @@ export function createLayoutSwitchPlan(options: LayoutSwitchPlanOptions): Layout
     placedInstances,
     unplacedInstances,
     snapshot: {
-      id: `${workspace.id}:snapshot:${workspace.activeLayoutId}:${targetLayout.id}`,
+      id: `${workspace.id}:snapshot:${workspace.activeLayout.id}:${targetLayout.id}`,
       workspaceId: workspace.id,
-      layoutId: workspace.activeLayoutId,
+      layoutId: workspace.activeLayout.id,
       regions: workspace.regions,
       instances,
       createdAt,

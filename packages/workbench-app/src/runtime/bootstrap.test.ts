@@ -2,42 +2,55 @@ import "fake-indexeddb/auto"
 import { describe, expect, it } from "vitest"
 import { createWebHostAdapter } from "@tabora/host-adapters"
 import type { WorkspacePresetContribution } from "@tabora/plugin-api"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { createBuiltinPluginPackage, type LoadedPluginPackage } from "@tabora/platform-kernel"
 import type { StorageAdapter } from "@tabora/storage"
 
 import { createWorkbenchRuntimeBootstrap } from "./bootstrap"
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
 
-const testPlugins: BuiltinPlugin[] = [
-  {
-    manifest: {
-      id: "test.plugin",
-      name: "Test Plugin",
-      version: "0.0.1",
-      apiVersion: "1.0.0",
-      entry: "./index.ts",
-      engine: { platform: "^0.1.0" },
-      styles: [{ href: "./styles.css" }],
-      contributes: {},
+const testPlugins: LoadedPluginPackage[] = [
+  createBuiltinPluginPackage(
+    {
+      manifest: {
+        id: "test.plugin",
+        name: "Test Plugin",
+        version: "0.0.1",
+        apiVersion: "1.0.0",
+        entry: "./index.ts",
+        engine: { platform: "^0.1.0" },
+        styles: [{ href: "./styles.css" }],
+        contributes: {},
+      },
+      activate() {},
     },
-    styleAssetUrls: {
-      "./styles.css": "/assets/test-plugin.css",
-    },
-    enabled: true,
-    activate() {},
-  },
+    { styleAssetUrls: { "./styles.css": "/assets/test-plugin.css" } },
+  ),
 ]
 
 const defaultWorkspacePreset: WorkspacePresetContribution = {
   id: "preset.default",
   title: "Default Workspace",
   plugins: ["test.plugin"],
-  layoutId: "official.layout.workbench-dashboard",
-  themeId: "official.theme.light",
-  backgroundProviderId: "official.background.default",
+  layout: {
+    pluginId: "official.layout",
+    kind: "layout",
+    id: "official.layout.workbench-dashboard",
+  },
+  theme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+  backgroundProvider: {
+    pluginId: "official.background",
+    kind: "background-provider",
+    id: "official.background.default",
+  },
   search: {
-    defaultProviderId: "official.search.google",
-    enabledProviderIds: ["official.search.google"],
+    defaultProvider: {
+      pluginId: "official.search",
+      kind: "search-provider",
+      id: "official.search.google",
+    },
+    enabledProviders: [
+      { pluginId: "official.search", kind: "search-provider", id: "official.search.google" },
+    ],
   },
   regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
   instances: [],
@@ -74,7 +87,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(runtime.host.id).toBe("host.test")
     expect(runtime.kernel.plugins).toEqual([])
     expect(runtime.plugins[0]).toBe(testPlugins[0])
-    expect(runtime.catalog.plugins[0]).toBe(testPlugins[0])
+    expect(runtime.catalog.plugins).toEqual([])
     expect(runtime.repositories.workspaceRepo).toBeDefined()
     expect(runtime.repositories.instanceRepo).toBeDefined()
     expect(runtime.repositories.pluginDataRepo).toBeDefined()
@@ -166,38 +179,6 @@ describe("createWorkbenchRuntimeBootstrap", () => {
             return undefined
           },
         },
-        syncQueueRepo: {
-          async add() {
-            return "mock-id"
-          },
-          async get() {
-            return undefined
-          },
-          async getAllPending() {
-            return []
-          },
-          async getByRecord() {
-            return undefined
-          },
-          async updateStatus() {},
-          async remove() {},
-          async removeByRecord() {},
-          async clear() {},
-          async count() {
-            return 0
-          },
-        },
-        syncMetaRepo: {
-          async get() {
-            return undefined
-          },
-          async set() {},
-          async remove() {},
-          async clear() {},
-          async getAll() {
-            return []
-          },
-        },
       },
     }
 
@@ -217,7 +198,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     const runtime = createWorkbenchRuntimeBootstrap({
       host: createWebHostAdapter({ id: "host.test" }),
       plugins: [
-        {
+        createBuiltinPluginPackage({
           manifest: {
             id: "test.ai-plugin",
             name: "Test AI Plugin",
@@ -228,11 +209,10 @@ describe("createWorkbenchRuntimeBootstrap", () => {
             permissions: [{ type: "ai", access: ["generate"] }],
             contributes: {},
           },
-          enabled: true,
           async activate(context) {
             generatedText = (await context.ai!.generate({ prompt: "bootstrap" })).text
           },
-        },
+        }),
       ],
       defaultWorkspacePreset,
       shellConfig,

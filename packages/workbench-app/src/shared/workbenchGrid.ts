@@ -44,7 +44,7 @@ export function assignGridOrder(
 ): PluginInstance[] {
   const regionCounters = new Map<string, number>()
   for (const instance of instances) {
-    if (instance.extensionPoint !== "widget" || !instance.size) continue
+    if (instance.contribution.kind !== "widget" || !instance.size) continue
     const next = instance.grid ? instance.grid.x + 1 : 0
     regionCounters.set(
       instance.regionId,
@@ -53,7 +53,7 @@ export function assignGridOrder(
   }
 
   return instances.map((instance) => {
-    if (instance.extensionPoint !== "widget" || !instance.size) {
+    if (instance.contribution.kind !== "widget" || !instance.size) {
       return instance
     }
     if (instance.grid) {

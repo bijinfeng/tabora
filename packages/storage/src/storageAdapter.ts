@@ -11,12 +11,17 @@ import {
 } from "./workspaceSnapshotRepository"
 import { createWorkspaceRepository, type WorkspaceRepository } from "./workspaceRepository"
 
+/** Core local persistence available to every host. It deliberately has no sync state. */
 export type StorageRepositories = {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
   pluginDataRepo: PluginDataRepository
   pluginRecordRepo: PluginRecordRepository
   workspaceSnapshotRepo: WorkspaceSnapshotRepository
+}
+
+/** Optional infrastructure constructed only by a host that enables account sync. */
+export type SyncStorageRepositories = {
   syncQueueRepo: SyncQueueRepository
   syncMetaRepo: SyncMetaRepository
 }
@@ -24,11 +29,15 @@ export type StorageRepositories = {
 export type StorageAdapter = {
   database?: TaboraDatabase
   repositories: StorageRepositories
+  sync?: SyncStorageRepositories
 }
 
-export function createWebStorageAdapter(name?: string): StorageAdapter {
+export function createWebStorageAdapter(
+  name?: string,
+  options: { enableSync?: boolean } = {},
+): StorageAdapter {
   const database = createTaboraDatabase(name)
-  return {
+  const adapter: StorageAdapter = {
     database,
     repositories: {
       workspaceRepo: createWorkspaceRepository(database),
@@ -36,8 +45,13 @@ export function createWebStorageAdapter(name?: string): StorageAdapter {
       pluginDataRepo: createPluginDataRepository(database),
       pluginRecordRepo: createPluginRecordRepository(database),
       workspaceSnapshotRepo: createWorkspaceSnapshotRepository(database),
-      syncQueueRepo: createSyncQueueRepository(database),
-      syncMetaRepo: createSyncMetaRepository(database),
     },
   }
+  if (options.enableSync) {
+    adapter.sync = {
+      syncQueueRepo: createSyncQueueRepository(database),
+      syncMetaRepo: createSyncMetaRepository(database),
+    }
+  }
+  return adapter
 }

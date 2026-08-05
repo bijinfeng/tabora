@@ -2,6 +2,7 @@ import type {
   LayoutContribution,
   PluginInstance,
   PluginManifest,
+  PluginPermissionGrant,
   Workspace,
 } from "@tabora/plugin-api"
 import { createLayoutSwitchPlan, type LayoutSwitchPlan } from "@tabora/orchestrator"
@@ -11,7 +12,10 @@ const UNPLACED_REGION_ID = "unplaced"
 export function canPluginOpenExternal(options: {
   pluginId: string
   url: string
-  plugins: Array<{ manifest: Pick<PluginManifest, "id" | "permissions"> }>
+  plugins: Array<{
+    manifest: Pick<PluginManifest, "id">
+    installation: { grantedPermissions: PluginPermissionGrant[] }
+  }>
 }): boolean {
   let hostname: string
   try {
@@ -23,7 +27,7 @@ export function canPluginOpenExternal(options: {
   const plugin = options.plugins.find((item) => item.manifest.id === options.pluginId)
   if (!plugin) return false
 
-  return (plugin.manifest.permissions ?? []).some((permission) => {
+  return plugin.installation.grantedPermissions.some((permission) => {
     if (permission.type !== "external-open") return false
     return permission.hosts.some((host) => host === "*" || host === hostname)
   })

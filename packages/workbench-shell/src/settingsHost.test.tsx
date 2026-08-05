@@ -165,38 +165,62 @@ describe("settings host composition", () => {
         onClose: vi.fn(),
         getView: (viewId) => views.get(viewId),
         getSettingsProvider: () => undefined,
-        panelProps: () => ({
-          panelId: "official.settings.workspace.workbench",
-          pluginId: "plugin-a",
-          scope: "workspace",
-          host: {
-            close: vi.fn(),
-            setDirty: vi.fn(),
-            switchLayout: vi.fn(),
-            switchTheme: vi.fn(),
-            switchBackground: vi.fn(),
-            setDefaultSearchProvider: vi.fn(),
-          },
-          workspace: {
-            id: "default",
-            name: "默认工作区",
-            activeLayoutId: "official.layout.workbench-dashboard",
-            activeThemeId: "official.theme.light",
-            activeBackgroundProviderId: "background.gradient-green",
-            regions: {},
-            createdAt: "",
-            updatedAt: "",
-          },
-          layouts: [],
-          themes: [],
-          backgrounds: [],
-          searchProviders: [],
-          searchSettings: {
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google"],
-          },
-          plugins: [],
-        }),
+        panelProps: () =>
+          ({
+            panelId: "official.settings.workspace.workbench",
+            pluginId: "plugin-a",
+            scope: "workspace",
+            host: {
+              close: vi.fn(),
+              setDirty: vi.fn(),
+              switchLayout: vi.fn(),
+              switchTheme: vi.fn(),
+              switchBackground: vi.fn(),
+              setDefaultSearchProvider: vi.fn(),
+            },
+            workspace: {
+              id: "default",
+              name: "默认工作区",
+              activeLayout: {
+                pluginId: "official.layout",
+                kind: "layout",
+                id: "official.layout.workbench-dashboard",
+              },
+              activeTheme: {
+                pluginId: "official.theme",
+                kind: "theme",
+                id: "official.theme.light",
+              },
+              activeBackgroundProvider: {
+                pluginId: "official.background",
+                kind: "background-provider",
+                id: "background.gradient-green",
+              },
+              regions: {},
+              createdAt: "",
+              updatedAt: "",
+            },
+            layouts: [],
+            themes: [],
+            backgrounds: [],
+            searchProviders: [],
+            searchSettings: {
+              defaultProvider: {
+                pluginId: "official.search",
+                kind: "search-provider",
+                id: "official.search.google",
+              },
+              enabledProviders: [
+                {
+                  pluginId: "official.search",
+                  kind: "search-provider",
+                  id: "official.search.google",
+                },
+              ],
+            },
+            plugins: [],
+            data: {},
+          }) as unknown as SettingsPanelViewProps,
       }),
     )
 
@@ -365,6 +389,99 @@ describe("settings host composition", () => {
     expect(panelProps).not.toHaveBeenCalled()
   })
 
+  it("builds schema-provider context from the active panel identity", () => {
+    const panels: SettingsPanelDescriptor[] = [
+      {
+        id: "plugin.settings.account",
+        title: "账号",
+        content: { kind: "schema", provider: "plugin.settings.provider", schemaVersion: 1 },
+        section: "account",
+        pluginId: "plugin.account",
+        scope: "plugin",
+      },
+    ]
+    const providerContext = vi.fn((panel: SettingsPanelDescriptor) => ({
+      panel: { id: panel.id, pluginId: panel.pluginId, scope: panel.scope },
+    }))
+
+    mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels,
+        activeSectionId: "account",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => undefined,
+        getSettingsProvider: () => ({
+          getModel: () => ({ version: 1, nodes: [] }),
+          dispatch: () => {},
+        }),
+        providerContext,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    expect(providerContext).toHaveBeenCalledWith(panels[0])
+  })
+
+  it("does not expose an instance-scoped panel without a concrete instance target", () => {
+    const panels: SettingsPanelDescriptor[] = [
+      {
+        ...panel("plugin.settings.instance", 10, { scope: "instance" }),
+        pluginId: "plugin.example",
+      },
+    ]
+    const getView = vi.fn(() => () => <div>instance settings</div>)
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels,
+        activeSectionId: "general",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView,
+        getSettingsProvider: () => undefined,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    expect(root.textContent).not.toContain("instance settings")
+    expect(getView).not.toHaveBeenCalled()
+  })
+
+  it("passes the explicit target to an instance-scoped custom panel", () => {
+    const panels: SettingsPanelDescriptor[] = [
+      {
+        ...panel("plugin.settings.instance", 10, { scope: "instance" }),
+        pluginId: "plugin.example",
+      },
+    ]
+    const panelProps = vi.fn((_panel: SettingsPanelDescriptor, instanceId?: string) => ({
+      panelId: "plugin.settings.instance",
+      pluginId: "plugin.example",
+      scope: "instance" as const,
+      ...(instanceId ? { instanceId } : {}),
+      host: { close: vi.fn(), setDirty: vi.fn() },
+      data: {},
+    }))
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        panels,
+        activeSectionId: "general",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => (props) => <div>{props.instanceId}</div>,
+        getSettingsProvider: () => undefined,
+        panelProps,
+        instanceId: "weather-1",
+      }),
+    )
+
+    expect(root.textContent).toContain("weather-1")
+    expect(panelProps).toHaveBeenCalledWith(panels[0], "weather-1")
+  })
+
   it("keeps the settings container open when a panel view fails", () => {
     const panels: SettingsPanelDescriptor[] = [
       {
@@ -395,38 +512,62 @@ describe("settings host composition", () => {
         onClose: vi.fn(),
         getView: (viewId) => views.get(viewId),
         getSettingsProvider: () => undefined,
-        panelProps: () => ({
-          panelId: "official.settings.workspace.workbench",
-          pluginId: "plugin-a",
-          scope: "workspace",
-          host: {
-            close: vi.fn(),
-            setDirty: vi.fn(),
-            switchLayout: vi.fn(),
-            switchTheme: vi.fn(),
-            switchBackground: vi.fn(),
-            setDefaultSearchProvider: vi.fn(),
-          },
-          workspace: {
-            id: "default",
-            name: "默认工作区",
-            activeLayoutId: "official.layout.workbench-dashboard",
-            activeThemeId: "official.theme.light",
-            activeBackgroundProviderId: "background.gradient-green",
-            regions: {},
-            createdAt: "",
-            updatedAt: "",
-          },
-          layouts: [],
-          themes: [],
-          backgrounds: [],
-          searchProviders: [],
-          searchSettings: {
-            defaultProviderId: "official.search.google",
-            enabledProviderIds: ["official.search.google"],
-          },
-          plugins: [],
-        }),
+        panelProps: () =>
+          ({
+            panelId: "official.settings.workspace.workbench",
+            pluginId: "plugin-a",
+            scope: "workspace",
+            host: {
+              close: vi.fn(),
+              setDirty: vi.fn(),
+              switchLayout: vi.fn(),
+              switchTheme: vi.fn(),
+              switchBackground: vi.fn(),
+              setDefaultSearchProvider: vi.fn(),
+            },
+            workspace: {
+              id: "default",
+              name: "默认工作区",
+              activeLayout: {
+                pluginId: "official.layout",
+                kind: "layout",
+                id: "official.layout.workbench-dashboard",
+              },
+              activeTheme: {
+                pluginId: "official.theme",
+                kind: "theme",
+                id: "official.theme.light",
+              },
+              activeBackgroundProvider: {
+                pluginId: "official.background",
+                kind: "background-provider",
+                id: "background.gradient-green",
+              },
+              regions: {},
+              createdAt: "",
+              updatedAt: "",
+            },
+            layouts: [],
+            themes: [],
+            backgrounds: [],
+            searchProviders: [],
+            searchSettings: {
+              defaultProvider: {
+                pluginId: "official.search",
+                kind: "search-provider",
+                id: "official.search.google",
+              },
+              enabledProviders: [
+                {
+                  pluginId: "official.search",
+                  kind: "search-provider",
+                  id: "official.search.google",
+                },
+              ],
+            },
+            plugins: [],
+            data: {},
+          }) as unknown as SettingsPanelViewProps,
       }),
     )
 

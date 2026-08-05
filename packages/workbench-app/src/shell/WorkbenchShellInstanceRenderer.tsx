@@ -59,7 +59,7 @@ export function createWorkbenchInstanceRenderer(options: {
   registryViews: ViewRegistry
   tShell?: ShellTranslation
   widgetContribution: (
-    instance: Pick<PluginInstance, "pluginId" | "contributionId">,
+    instance: Pick<PluginInstance, "contribution">,
   ) => WidgetContributionLike | null | undefined
   widgetRenderModel: (instance: PluginInstance) => WidgetRenderModel | null
   findSearchContribution: (
@@ -130,7 +130,7 @@ export function createWorkbenchInstanceRenderer(options: {
             title={model.title}
             {...(options.pluginViewBoundaryCopy ? { copy: options.pluginViewBoundaryCopy } : {})}
           >
-            <div data-tabora-plugin-id={instance.pluginId}>
+            <div data-tabora-plugin-id={instance.contribution.pluginId}>
               {View(options.buildWidgetViewProps(instance, model))}
             </div>
           </PluginViewBoundary>
@@ -138,7 +138,10 @@ export function createWorkbenchInstanceRenderer(options: {
       )
     },
     renderSearch(instance: PluginInstance) {
-      const search = options.findSearchContribution(instance.pluginId, instance.contributionId)
+      const search = options.findSearchContribution(
+        instance.contribution.pluginId,
+        instance.contribution.id,
+      )
       if (!search) {
         return (
           <div {...stylex.attrs(styles.empty)}>
@@ -164,7 +167,7 @@ export function createWorkbenchInstanceRenderer(options: {
           title={search.title}
           {...(options.pluginViewBoundaryCopy ? { copy: options.pluginViewBoundaryCopy } : {})}
         >
-          <div data-tabora-plugin-id={instance.pluginId}>
+          <div data-tabora-plugin-id={instance.contribution.pluginId}>
             {createComponent(View, options.buildSearchViewProps(instance))}
           </div>
         </PluginViewBoundary>

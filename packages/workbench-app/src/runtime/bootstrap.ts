@@ -4,7 +4,7 @@ import type { AiRuntimeBridge, WorkspacePresetContribution } from "@tabora/plugi
 import {
   createPluginKernel,
   loadBuiltinPlugins,
-  type BuiltinPlugin,
+  type LoadedPluginPackage,
   type PluginLoadRejectedRecord,
   type PluginKernel,
   type ResolvedPluginStyle,
@@ -13,8 +13,6 @@ import {
   createInstanceRepository,
   createPluginDataRepository,
   createPluginRecordRepository,
-  createSyncMetaRepository,
-  createSyncQueueRepository,
   createTaboraDatabase,
   createWorkspaceRepository,
   createWorkspaceSnapshotRepository,
@@ -22,8 +20,6 @@ import {
   type PluginDataRepository,
   type PluginRecordRepository,
   type StorageAdapter,
-  type SyncMetaRepository,
-  type SyncQueueRepository,
   type TaboraDatabase,
   type WorkspaceRepository,
   type WorkspaceSnapshotRepository,
@@ -38,8 +34,6 @@ export type WorkbenchRuntimeRepositories = {
   pluginDataRepo: PluginDataRepository
   pluginRecordRepo: PluginRecordRepository
   workspaceSnapshotRepo: WorkspaceSnapshotRepository
-  syncQueueRepo: SyncQueueRepository
-  syncMetaRepo: SyncMetaRepository
 }
 
 export type WorkbenchRuntimeBootstrap = {
@@ -49,7 +43,7 @@ export type WorkbenchRuntimeBootstrap = {
   catalog: PluginCatalog
   kernel: PluginKernel
   i18n: WorkbenchI18nStore
-  plugins: BuiltinPlugin[]
+  plugins: LoadedPluginPackage[]
   defaultWorkspacePreset: WorkspacePresetContribution
   shellConfig: WorkbenchShellConfig
   pluginStyles: ResolvedPluginStyle[]
@@ -58,7 +52,7 @@ export type WorkbenchRuntimeBootstrap = {
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
   host: HostAdapter
-  plugins: BuiltinPlugin[]
+  plugins: LoadedPluginPackage[]
   defaultWorkspacePreset: WorkspacePresetContribution
   shellConfig: WorkbenchShellConfig
   databaseName?: string
@@ -361,22 +355,45 @@ export function createWorkbenchRuntimeBootstrap(
     pluginDataRepo: createPluginDataRepository(defaultDatabase!),
     pluginRecordRepo: createPluginRecordRepository(defaultDatabase!),
     workspaceSnapshotRepo: createWorkspaceSnapshotRepository(defaultDatabase!),
-    syncQueueRepo: createSyncQueueRepository(defaultDatabase!),
-    syncMetaRepo: createSyncMetaRepository(defaultDatabase!),
   }
   const { pluginRecordRepo } = repositories
   const loadResult = loadBuiltinPlugins(options.plugins)
-  const loadedPlugins = loadResult.loaded.map((record) => record.plugin)
+  const loadedPlugins = loadResult.loaded.map((record) => record.pluginPackage)
   const pluginStyles = loadResult.loaded.flatMap((record) => record.styles)
-  const catalog = createPluginCatalog(loadedPlugins)
+  const trustedBuiltinPermissionGrants = Object.fromEntries(
+    loadResult.loaded
+      .filter((record) => record.source === "builtin")
+      .map((record) => [record.manifest.id, record.manifest.permissions ?? []]),
+  )
+  const trustedBuiltinSettingsHostActionGrants = Object.fromEntries(
+    loadResult.loaded
+      .filter((record) => record.source === "builtin")
+      .map((record) => [
+        record.manifest.id,
+        record.manifest.contributes.settingsPanels?.flatMap((panel) => panel.hostActions ?? []) ??
+          [],
+      ]),
+  )
+  const trustedBuiltinSettingsHostReadGrants = Object.fromEntries(
+    loadResult.loaded
+      .filter((record) => record.source === "builtin")
+      .map((record) => [
+        record.manifest.id,
+        record.manifest.contributes.settingsPanels?.flatMap((panel) => panel.hostReads ?? []) ?? [],
+      ]),
+  )
   const kernel = createPluginKernel({
     lifecycleStore: pluginRecordRepo,
-    recordSource: "builtin",
     hostPlatform: options.host.platform,
     hostCapabilities: options.host.capabilities,
+    permissionGrants: trustedBuiltinPermissionGrants,
+    settingsHostActionGrants: trustedBuiltinSettingsHostActionGrants,
+    settingsHostReadGrants: trustedBuiltinSettingsHostReadGrants,
     ...(options.ai ? { ai: options.ai } : {}),
+    ...(options.host.network ? { network: options.host.network } : {}),
     i18n,
   })
+  const catalog = createPluginCatalog(kernel.plugins)
 
   return {
     host: options.host,

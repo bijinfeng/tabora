@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js"
-import type { LayoutHostAPI, PluginInstance, RegionSlot } from "@tabora/plugin-api"
+import type { LayoutHostAPI, LayoutInstance, PluginInstance, RegionSlot } from "@tabora/plugin-api"
 import type { PluginCatalog } from "@tabora/orchestrator"
 
 export type InstanceRenderer = {
@@ -21,14 +21,12 @@ function byGrid(a: PluginInstance, b: PluginInstance): number {
 }
 
 export function createLayoutEngine(deps: LayoutEngineDeps) {
-  function renderOne(instance: PluginInstance): JSX.Element {
-    if (instance.extensionPoint === "search") {
-      return deps.instanceRenderer.renderSearch(instance)
+  function renderOne(instance: LayoutInstance, persisted: PluginInstance): JSX.Element {
+    const renderable: PluginInstance = { ...persisted, ...instance }
+    if (renderable.contribution.kind === "search") {
+      return deps.instanceRenderer.renderSearch(renderable)
     }
-    if (instance.extensionPoint === "settings-panel" && deps.instanceRenderer.renderSettings) {
-      return deps.instanceRenderer.renderSettings(instance)
-    }
-    return deps.instanceRenderer.renderWidget(instance)
+    return deps.instanceRenderer.renderWidget(renderable)
   }
 
   function buildRegionSlots(
@@ -36,6 +34,7 @@ export function createLayoutEngine(deps: LayoutEngineDeps) {
     instances: PluginInstance[],
   ): Record<string, RegionSlot<JSX.Element>> {
     const layout = deps.catalog.findLayoutContribution(layoutId)
+    const persistedInstancesById = new Map(instances.map((instance) => [instance.id, instance]))
     const slots: Record<string, RegionSlot<JSX.Element>> = {}
     for (const region of layout?.regions ?? []) {
       const regionInstances = instances
@@ -43,7 +42,7 @@ export function createLayoutEngine(deps: LayoutEngineDeps) {
           (inst) =>
             inst.regionId === region.id &&
             inst.enabled !== false &&
-            region.accepts.includes(inst.extensionPoint),
+            region.accepts.includes(inst.contribution.kind),
         )
         .sort(byGrid)
       slots[region.id] = {
@@ -52,8 +51,16 @@ export function createLayoutEngine(deps: LayoutEngineDeps) {
         accepts: region.accepts,
         instances: regionInstances,
         isEmpty: regionInstances.length === 0,
-        render: () => regionInstances.map((inst) => renderOne(inst)),
-        renderInstance: (inst) => renderOne(inst),
+        render: () => regionInstances.map((inst) => renderOne(inst, inst)),
+        renderInstance: (inst) => {
+          const persisted = persistedInstancesById.get(inst.id)
+          if (!persisted) {
+            throw new Error(
+              `Layout requested an instance outside the current workspace: ${inst.id}`,
+            )
+          }
+          return renderOne(inst, persisted)
+        },
       }
     }
     return slots

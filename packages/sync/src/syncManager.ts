@@ -5,6 +5,7 @@ import { createChangeDetector, type ChangeDetector } from "./changeDetector"
 import { createLocalChangeQueue } from "./localChangeQueue"
 import { createStrapiGatewayClient } from "./strapiGatewayClient"
 import { createSyncEngine, type SyncEngine } from "./syncEngine"
+import type { PluginSyncCollections } from "./pluginSyncCollections"
 
 export type SyncManagerConfig = {
   database: TaboraDatabase
@@ -12,6 +13,8 @@ export type SyncManagerConfig = {
   syncMetaRepo: SyncMetaRepository
   apiBaseUrl: string
   authClient: StrapiAuthClient
+  /** Manifest-declared record collections approved for synchronization. */
+  syncCollections?: PluginSyncCollections
 }
 
 export type SyncManager = {
@@ -81,6 +84,7 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
   const changeDetector = createChangeDetector({
     database: config.database,
     changeQueue,
+    ...(config.syncCollections ? { syncCollections: config.syncCollections } : {}),
     onChange: triggerBackgroundSync,
   })
 
@@ -132,6 +136,9 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
   }
 
   function triggerSync(): Promise<void> {
+    if (isStopped) {
+      return Promise.reject(new SyncManagerError("SYNC_CANCELLED", "同步管理器已停止"))
+    }
     if (scheduledSync) {
       if (syncInProgress) followUpRequested = true
       return scheduledSync
@@ -167,9 +174,9 @@ export function createSyncManager(config: SyncManagerConfig): SyncManager {
   }
 
   function stop() {
+    isStopped = true
     if (!isRunning) return
     isRunning = false
-    isStopped = true
     changeDetector.stop()
     if (syncTimer) {
       clearTimeout(syncTimer)

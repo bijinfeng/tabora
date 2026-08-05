@@ -2,23 +2,23 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { page, userEvent } from "vitest/browser"
 import { render } from "solid-js/web"
 import { builtinPlugins } from "@tabora/builtin-plugin-registry"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginModule } from "@tabora/plugin-api"
+import type { LoadedPluginPackage } from "@tabora/platform-kernel"
 
 import { App } from "./App"
 
 type PluginSnapshot = {
-  activate: BuiltinPlugin["activate"]
-  permissions: BuiltinPlugin["manifest"]["permissions"] | undefined
+  activate: PluginModule["activate"]
+  permissions: PluginModule["manifest"]["permissions"] | undefined
 }
 
 const builtinPluginSnapshots = new Map<string, PluginSnapshot>(
   builtinPlugins.map((plugin) => {
-    const activate = Reflect.get(plugin, "activate") as BuiltinPlugin["activate"]
     return [
-      plugin.manifest.id,
+      plugin.module.manifest.id,
       {
-        activate: (context) => activate(context),
-        permissions: clonePermissions(plugin.manifest.permissions),
+        activate: plugin.module.activate.bind(plugin.module),
+        permissions: clonePermissions(plugin.module.manifest.permissions),
       },
     ]
   }),
@@ -156,7 +156,7 @@ async function mountFreshWorkbench(options: { readySelector?: string } = {}): Pr
 
 function patchPluginPermissions(
   pluginId: string,
-  permissions: BuiltinPlugin["manifest"]["permissions"],
+  permissions: PluginModule["manifest"]["permissions"],
 ): void {
   const plugin = requireBuiltinPlugin(pluginId)
   setPluginPermissions(plugin, clonePermissions(permissions))
@@ -164,15 +164,15 @@ function patchPluginPermissions(
 
 function patchLayoutToThrow(pluginId: string, viewId: string): void {
   const plugin = requireBuiltinPlugin(pluginId)
-  plugin.activate = (context) => {
-    context.registry.views.register(viewId, () => {
+  plugin.module.activate = (context) => {
+    context.views.register(viewId, () => {
       throw new Error("E2E layout failure")
     })
   }
 }
 
-function requireBuiltinPlugin(pluginId: string): BuiltinPlugin {
-  const plugin = builtinPlugins.find((item) => item.manifest.id === pluginId)
+function requireBuiltinPlugin(pluginId: string): LoadedPluginPackage {
+  const plugin = builtinPlugins.find((item) => item.module.manifest.id === pluginId)
   if (!plugin) {
     throw new Error(`Builtin plugin was not found: ${pluginId}`)
   }
@@ -181,27 +181,27 @@ function requireBuiltinPlugin(pluginId: string): BuiltinPlugin {
 
 function restoreBuiltinPlugins(): void {
   for (const plugin of builtinPlugins) {
-    const snapshot = builtinPluginSnapshots.get(plugin.manifest.id)
+    const snapshot = builtinPluginSnapshots.get(plugin.module.manifest.id)
     if (!snapshot) continue
-    plugin.activate = snapshot.activate
+    plugin.module.activate = snapshot.activate
     setPluginPermissions(plugin, clonePermissions(snapshot.permissions))
   }
 }
 
 function setPluginPermissions(
-  plugin: BuiltinPlugin,
-  permissions: BuiltinPlugin["manifest"]["permissions"],
+  plugin: LoadedPluginPackage,
+  permissions: PluginModule["manifest"]["permissions"],
 ): void {
   if (permissions) {
-    plugin.manifest.permissions = permissions
+    plugin.module.manifest.permissions = permissions
   } else {
-    delete plugin.manifest.permissions
+    delete plugin.module.manifest.permissions
   }
 }
 
 function clonePermissions(
-  permissions: BuiltinPlugin["manifest"]["permissions"],
-): BuiltinPlugin["manifest"]["permissions"] {
+  permissions: PluginModule["manifest"]["permissions"],
+): PluginModule["manifest"]["permissions"] {
   return permissions?.map((permission) => {
     if ("hosts" in permission && Array.isArray(permission.hosts)) {
       return { ...permission, hosts: [...permission.hosts] }

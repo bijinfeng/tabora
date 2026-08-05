@@ -1,4 +1,4 @@
-import type { PluginManifest } from "@tabora/plugin-api"
+import type { PluginManifest } from "@tabora/plugin-api/sdk"
 
 export const officialPluginNotesManifest: PluginManifest = {
   id: "official.widgets.notes",

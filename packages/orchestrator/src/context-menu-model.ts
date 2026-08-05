@@ -7,7 +7,7 @@ export type ContextMenuItem = {
   danger?: boolean
   /** 右侧灰色提示文案，如展开卡片的「双击」 */
   hint?: string
-  run: () => void
+  run: () => void | Promise<void>
 }
 
 export type ContextMenuSection = {
@@ -26,7 +26,7 @@ export type WidgetContextMenuModelOptions = {
   contextMenus?: WidgetContextMenuContribution[]
   availableCommandIds?: string[] | Set<string>
   hasCommand?: (commandId: string) => boolean
-  runCommand?: (commandId: string, context: { instance: PluginInstance }) => void
+  runCommand?: (commandId: string, context: { instance: PluginInstance }) => Promise<boolean>
   hasInstanceSettings?: boolean
   onResize: (instanceId: string, size: WidgetSize) => void
   onExpand: (instanceId: string) => void
@@ -38,7 +38,9 @@ function pluginContextMenuItems(
   instance: PluginInstance,
   contextMenus: WidgetContextMenuContribution[],
   hasCommand: (commandId: string) => boolean,
-  runCommand: ((commandId: string, context: { instance: PluginInstance }) => void) | undefined,
+  runCommand:
+    | ((commandId: string, context: { instance: PluginInstance }) => Promise<boolean>)
+    | undefined,
 ): ContextMenuItem[] {
   if (!runCommand) return []
 
@@ -55,7 +57,9 @@ function pluginContextMenuItems(
       const menuItem: ContextMenuItem = {
         id: item.id,
         label: item.label,
-        run: () => runCommand(commandId, { instance }),
+        run: async () => {
+          await runCommand(commandId, { instance })
+        },
       }
       if (item.danger) menuItem.danger = true
 

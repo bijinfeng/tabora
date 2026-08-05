@@ -1,4 +1,4 @@
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Field, Input, Button } from "@tabora/ui"
 import { createSignal } from "solid-js"
 import { For } from "solid-js"
@@ -62,29 +62,23 @@ export function HelloWorldCard(props: WidgetViewProps) {
 // 插件定义
 // ============================================================
 
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginModule } from "@tabora/plugin-api/sdk"
 
 /**
- * export default 或命名导出 BuiltinPlugin 对象。
+ * export default 或命名导出 PluginModule 对象。
  *
  * 必须包含：
  * - manifest: 声明插件 ID、名称、版本、贡献能力
  * - activate: 接收 PluginRuntimeContext，注册 view
  */
-export const helloWorldPlugin: BuiltinPlugin = {
-  enabled: true,
+export const helloWorldPlugin: PluginModule = {
   manifest: {
     id: "example.hello-world",
     name: "Hello World",
     version: "0.0.0",
+    apiVersion: "1.0.0",
     entry: "./index",
     engine: { platform: "^0.1.0" },
-
-    // 声明需要的权限（可选）
-    permissions: [
-      { type: "storage", scope: "plugin" },
-      { type: "workspace", access: "read" },
-    ],
 
     // 声明贡献的能力
     contributes: {
@@ -106,12 +100,11 @@ export const helloWorldPlugin: BuiltinPlugin = {
   /**
    * activate 在插件被激活时由平台内核调用。
    * context 提供：
-   *   - registry.views.register(viewId, component)  注册视图
+   *   - views.register(viewId, component)            注册本插件已声明视图
    *   - permissions.openExternal(url)                外部打开（权限桥）
-   *   - events.emit / events.on                      事件总线
    *   - ui.openModal / ui.closeModal                 模态窗口
    */
   activate(context) {
-    context.registry.views.register("example.hello-world.card", HelloWorldCard)
+    context.views.register("example.hello-world.card", HelloWorldCard)
   },
 }

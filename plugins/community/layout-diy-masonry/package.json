@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@stylexjs/stylex": "catalog:style",
-    "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"

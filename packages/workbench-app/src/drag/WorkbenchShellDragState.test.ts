@@ -12,9 +12,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-a",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -127,7 +125,7 @@ describe("createWorkbenchDndKitDragHandlers", () => {
       instance({ id: "widget-a", grid: { x: 0, y: 0, colSpan: 2, rowSpan: 1 } }),
       instance({
         id: "search-main",
-        extensionPoint: "search",
+        contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
         regionId: "topbar",
       }),
     ]

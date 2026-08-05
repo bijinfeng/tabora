@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginManifest } from "@tabora/plugin-api"
 import { createPluginCatalog } from "./plugin-catalog"
 
-const plugins: BuiltinPlugin[] = [
+const plugins: Array<{ manifest: PluginManifest; enabled: boolean }> = [
   {
     enabled: true,
     manifest: {
@@ -12,12 +12,13 @@ const plugins: BuiltinPlugin[] = [
       apiVersion: "1.0.0",
       entry: "./alpha",
       engine: { platform: "^0.1.0" },
-      permissions: [{ type: "storage", scope: "plugin" }],
+      permissions: [],
       contributes: {
         layouts: [
           {
             id: "alpha.layout",
             title: "Alpha Layout",
+            view: "alpha.layout.view",
             regions: [],
             defaultRegions: {},
             supportsResponsive: true,
@@ -75,7 +76,6 @@ const plugins: BuiltinPlugin[] = [
         ],
       },
     },
-    activate() {},
   },
   {
     enabled: false,
@@ -91,6 +91,7 @@ const plugins: BuiltinPlugin[] = [
           {
             id: "beta.layout",
             title: "Beta Layout",
+            view: "beta.layout.view",
             regions: [],
             defaultRegions: {},
             supportsResponsive: true,
@@ -146,7 +147,6 @@ const plugins: BuiltinPlugin[] = [
         ],
       },
     },
-    activate() {},
   },
 ]
 
@@ -217,6 +217,11 @@ describe("createPluginCatalog", () => {
         urlTemplate: "https://google.com/search?q={query}",
         pluginId: "plugin.alpha",
         pluginName: "Alpha",
+        ref: {
+          pluginId: "plugin.alpha",
+          kind: "search-provider",
+          id: "alpha.search.google",
+        },
       },
     ])
   })

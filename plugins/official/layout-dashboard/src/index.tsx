@@ -1,14 +1,12 @@
 import type { JSX } from "solid-js"
-import type { LayoutViewProps } from "@tabora/plugin-api"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { LayoutViewProps, PluginModule } from "@tabora/plugin-api/sdk"
 import { DashboardLayout } from "./dashboard-layout"
 import { FocusLayout } from "./focus-layout"
 import { layoutDashboardManifest } from "./manifest"
 
 export { DashboardLayout, FocusLayout }
 
-export const layoutDashboard: BuiltinPlugin = {
-  enabled: true,
+export const layoutDashboard: PluginModule = {
   manifest: layoutDashboardManifest,
   activate(context) {
     context.i18n?.registerMessages([
@@ -38,13 +36,13 @@ export const layoutDashboard: BuiltinPlugin = {
       },
     ])
 
-    context.registry.views.register(
+    context.views.register(
       "official.layout.workbench-dashboard.view",
       (props: LayoutViewProps<JSX.Element>) =>
         DashboardLayout({ ...props, ...(context.i18n ? { i18n: context.i18n } : {}) }),
     )
-    context.registry.views.register(
-      "official.layout.workbench-focus.view",
+    context.views.register(
+      "official.layout.workbench-dashboard.focus.view",
       (props: LayoutViewProps<JSX.Element>) =>
         FocusLayout({ ...props, ...(context.i18n ? { i18n: context.i18n } : {}) }),
     )

@@ -7,9 +7,7 @@ function makeInstance(): PluginInstance {
   return {
     id: "w1",
     workspaceId: "ws",
-    pluginId: "p",
-    contributionId: "c",
-    extensionPoint: "widget",
+    contribution: { pluginId: "p", kind: "widget", id: "c" },
     regionId: "grid",
     enabled: true,
     size: "M",

@@ -8,9 +8,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -26,9 +24,17 @@ function sessionState(overrides: Partial<WorkspaceSessionState> = {}): Workspace
     workspace: {
       id: "workspace-1",
       name: "Default",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "official.background.default",
+      activeLayout: {
+        pluginId: "official.layout",
+        kind: "layout",
+        id: "official.layout.workbench-dashboard",
+      },
+      activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+      activeBackgroundProvider: {
+        pluginId: "official.background",
+        kind: "background-provider",
+        id: "official.background.default",
+      },
       regions: {},
       createdAt: "2026-06-07T00:00:00.000Z",
       updatedAt: "2026-06-07T00:00:00.000Z",
@@ -42,8 +48,14 @@ function sessionState(overrides: Partial<WorkspaceSessionState> = {}): Workspace
       },
     ],
     searchSettings: {
-      defaultProviderId: "official.google",
-      enabledProviderIds: ["official.google"],
+      defaultProvider: {
+        pluginId: "official.search",
+        kind: "search-provider",
+        id: "official.google",
+      },
+      enabledProviders: [
+        { pluginId: "official.search", kind: "search-provider", id: "official.google" },
+      ],
     },
     locale: null,
     activeLayoutId: "official.layout.workbench-dashboard",

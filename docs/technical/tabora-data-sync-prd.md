@@ -17,7 +17,7 @@
 
 官方账号与数据同步由可选的官方 `official.account-sync` 插件提供，不是默认工作台的一部分。它让需要云端能力的宿主在多台设备之间延续工作区和已声明的插件数据，同时让纯本地宿主保持最小、离线可用的工作台。
 
-账号插件负责创建认证客户端、同步 manager、账号与同步设置面板，并在激活期间启动或停止同步。宿主只提供通用的本地存储与平台适配；平台与同步包仍负责离线队列、敏感字段过滤和记录合并。其他插件只声明可同步的数据集合，不能直接访问账号凭据或同步服务。
+账号插件负责账号与同步设置面板，并在激活期间启动或停止由宿主注入的账号同步服务。宿主组合根负责创建认证客户端和同步 manager；插件、普通插件 API 和 settings host 都不会得到数据库句柄、JWT 或云端 URL。平台与同步包仍负责离线队列、敏感字段过滤和记录合并。其他插件只声明可同步的数据集合，不能直接访问账号凭据或同步服务。
 
 ## 2. 已确认决策
 
@@ -88,7 +88,7 @@
 
 ### 6.2 插件数据声明
 
-插件业务数据默认仅保留本机。需要同步时，manifest 声明集合、稳定记录主键、更新时间和排除字段。平台只接受稳定主键，不接受展示名称作为记录标识。
+插件业务数据默认仅保留本机。需要同步时，manifest 声明 collection ID、稳定记录主键、更新时间、合并策略、schema version 和排除字段。每个 collection record 都独立保存业务 record ID 与 payload；平台不把任意 storage key 或展示名称当作同步记录标识。
 
 ```json
 {
@@ -97,11 +97,12 @@
   "sync": {
     "collections": [
       {
-        "name": "tasks",
+        "id": "tasks",
         "recordKey": "id",
         "updatedAt": "updatedAt",
-        "strategy": "record-merge",
-        "excludeFields": ["localReminderId"]
+        "merge": "lww",
+        "schemaVersion": 1,
+        "excludedFields": ["localReminderId"]
       }
     ]
   }

@@ -46,3 +46,4 @@ export {
 } from "./strapiGatewayClient"
 
 export { createSyncManager, type SyncManager, type SyncManagerConfig } from "./syncManager"
+export { createPluginSyncCollections, type PluginSyncCollections } from "./pluginSyncCollections"

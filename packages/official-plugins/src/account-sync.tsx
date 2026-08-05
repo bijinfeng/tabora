@@ -1,20 +1,13 @@
-import { createStrapiAuthClient, type StrapiAuthClient } from "@tabora/auth"
-import {
-  createChromeStorageAuthStorage,
-  createLocalStorageAuthStorage,
-  createSyncManager,
-  type HostAdapter,
-  type StorageAdapter,
-  type SyncManager,
-} from "@tabora/host-adapters"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import { type AccountSyncService, type SyncManager } from "@tabora/host-adapters"
+import type { StrapiAuthClient } from "@tabora/auth"
+import type { PluginModule } from "@tabora/plugin-api/sdk"
 import type {
   SettingsNode,
   SettingsPanelAction,
   SettingsPanelModel,
   SettingsPanelProvider,
   SettingsStatusTone,
-} from "@tabora/plugin-api"
+} from "@tabora/plugin-api/sdk"
 import {
   officialAccountSettingsProviderId,
   officialAccountSyncManifest,
@@ -22,9 +15,7 @@ import {
 } from "./ui-plugin-manifests"
 
 export type AccountSyncPluginOptions = {
-  host: HostAdapter
-  storageAdapter: StorageAdapter
-  apiBaseUrl: string
+  service: AccountSyncService
 }
 
 type AccountPhase = "login" | "register" | "reset-request" | "reset-verify" | "signed-in"
@@ -442,7 +433,7 @@ function formatSyncTime(iso: string): string {
 
 export function createSyncSettingsProvider(
   syncManager: Pick<SyncManager, "triggerSync">,
-  syncMetaRepo: StorageAdapter["repositories"]["syncMetaRepo"],
+  syncMetaRepo: AccountSyncService["syncMetaRepo"],
 ): SettingsPanelProvider {
   let status: ProviderStatus | null = null
 
@@ -490,37 +481,16 @@ export function createSyncSettingsProvider(
   }
 }
 
-export function createOfficialAccountSyncPlugin(options: AccountSyncPluginOptions): BuiltinPlugin {
-  const database = options.storageAdapter.database
-  if (!database) {
-    throw new Error("Account sync requires a host storage adapter with a local database")
-  }
-
-  const authStorage =
-    options.host.platform === "extension"
-      ? createChromeStorageAuthStorage()
-      : createLocalStorageAuthStorage()
-  const authClient = createStrapiAuthClient({
-    apiBaseUrl: options.apiBaseUrl,
-    storage: authStorage,
-  })
-  const syncMetaRepo = options.storageAdapter.repositories.syncMetaRepo
-  const syncManager = createSyncManager({
-    database,
-    syncQueueRepo: options.storageAdapter.repositories.syncQueueRepo,
-    syncMetaRepo,
-    apiBaseUrl: options.apiBaseUrl,
-    authClient,
-  })
+export function createOfficialAccountSyncPlugin(options: AccountSyncPluginOptions): PluginModule {
+  const { authClient, syncManager, syncMetaRepo } = options.service
   const accountProvider = createAccountSettingsProvider(authClient)
   const syncProvider = createSyncSettingsProvider(syncManager, syncMetaRepo)
 
   return {
-    enabled: true,
     manifest: officialAccountSyncManifest,
     activate(context) {
-      context.registry.settings.register(officialAccountSettingsProviderId, accountProvider)
-      context.registry.settings.register(officialSyncSettingsProviderId, syncProvider)
+      context.settings.register(officialAccountSettingsProviderId, accountProvider)
+      context.settings.register(officialSyncSettingsProviderId, syncProvider)
       syncManager.start()
       return () => syncManager.stop()
     },

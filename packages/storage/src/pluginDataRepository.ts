@@ -1,5 +1,41 @@
 import type { TaboraDatabase } from "./database"
 
+export type PluginDataRecordScope = {
+  workspaceId?: string
+  instanceId?: string
+}
+
+export type PluginDataRecord<T = unknown> = PluginDataRecordScope & {
+  id: string
+  value: T
+  updatedAt: string
+}
+
+export type PluginDataRecordRepository = {
+  get<T = unknown>(
+    pluginId: string,
+    collection: string,
+    recordId: string,
+    scope?: PluginDataRecordScope,
+  ): Promise<PluginDataRecord<T> | undefined>
+  list<T = unknown>(
+    pluginId: string,
+    collection: string,
+    scope?: PluginDataRecordScope,
+  ): Promise<Array<PluginDataRecord<T>>>
+  save<T = unknown>(
+    pluginId: string,
+    collection: string,
+    record: PluginDataRecord<T>,
+  ): Promise<void>
+  remove(
+    pluginId: string,
+    collection: string,
+    recordId: string,
+    scope?: PluginDataRecordScope,
+  ): Promise<void>
+}
+
 export type PluginDataRepository = {
   get<T = unknown>(pluginId: string, key: string): Promise<T | undefined>
   getAll<T = unknown>(pluginId: string): Promise<T[]>
@@ -32,6 +68,8 @@ export type PluginDataRepository = {
     value: T,
   ): Promise<void>
   removeForInstance(pluginId: string, instanceId: string, key: string): Promise<void>
+  /** Record-oriented API for explicitly declared sync collections. */
+  records?: PluginDataRecordRepository
 }
 
 export function createPluginDataRepository(database: TaboraDatabase): PluginDataRepository {
@@ -45,6 +83,79 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
 
   function idForInstance(pluginId: string, key: string, instanceId: string): string {
     return idFor(pluginId, key, "inst", instanceId)
+  }
+
+  function idForRecord(
+    pluginId: string,
+    collection: string,
+    recordId: string,
+    scope: PluginDataRecordScope = {},
+  ): string {
+    if (scope.instanceId)
+      return idFor(pluginId, "collection", collection, recordId, "inst", scope.instanceId)
+    if (scope.workspaceId)
+      return idFor(pluginId, "collection", collection, recordId, "ws", scope.workspaceId)
+    return idFor(pluginId, "collection", collection, recordId)
+  }
+
+  function matchesScope(
+    row: { workspaceId?: string; instanceId?: string },
+    scope: PluginDataRecordScope = {},
+  ): boolean {
+    return row.workspaceId === scope.workspaceId && row.instanceId === scope.instanceId
+  }
+
+  const records: PluginDataRecordRepository = {
+    async get<T = unknown>(
+      pluginId: string,
+      collection: string,
+      recordId: string,
+      scope: PluginDataRecordScope = {},
+    ) {
+      const row = await database.pluginData.get(idForRecord(pluginId, collection, recordId, scope))
+      if (!row || row.collection !== collection || row.recordId !== recordId) return undefined
+      return {
+        id: recordId,
+        value: row.value as T,
+        updatedAt: row.updatedAt,
+        ...(row.workspaceId ? { workspaceId: row.workspaceId } : {}),
+        ...(row.instanceId ? { instanceId: row.instanceId } : {}),
+      }
+    },
+    async list<T = unknown>(
+      pluginId: string,
+      collection: string,
+      scope: PluginDataRecordScope = {},
+    ) {
+      const rows = await database.pluginData
+        .where("[pluginId+collection]")
+        .equals([pluginId, collection])
+        .and((row) => Boolean(row.recordId) && matchesScope(row, scope))
+        .toArray()
+      return rows.map((row) => ({
+        id: row.recordId!,
+        value: row.value as T,
+        updatedAt: row.updatedAt,
+        ...(row.workspaceId ? { workspaceId: row.workspaceId } : {}),
+        ...(row.instanceId ? { instanceId: row.instanceId } : {}),
+      }))
+    },
+    async save(pluginId, collection, record) {
+      await database.pluginData.put({
+        id: idForRecord(pluginId, collection, record.id, record),
+        pluginId,
+        collection,
+        recordId: record.id,
+        key: `collection:${collection}`,
+        value: record.value,
+        updatedAt: record.updatedAt,
+        ...(record.workspaceId ? { workspaceId: record.workspaceId } : {}),
+        ...(record.instanceId ? { instanceId: record.instanceId } : {}),
+      })
+    },
+    async remove(pluginId, collection, recordId, scope = {}) {
+      await database.pluginData.delete(idForRecord(pluginId, collection, recordId, scope))
+    },
   }
 
   return {
@@ -129,5 +240,6 @@ export function createPluginDataRepository(database: TaboraDatabase): PluginData
     async removeForInstance(pluginId, instanceId, key) {
       await database.pluginData.delete(idForInstance(pluginId, key, instanceId))
     },
+    records,
   }
 }

@@ -175,9 +175,17 @@ describe("createSyncManager", () => {
     await database.workspaces.put({
       id: "w-auto",
       name: "Auto Sync",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "official.background.default",
+      activeLayout: {
+        pluginId: "official.layout",
+        kind: "layout",
+        id: "official.layout.workbench-dashboard",
+      },
+      activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+      activeBackgroundProvider: {
+        pluginId: "official.background",
+        kind: "background-provider",
+        id: "official.background.default",
+      },
       regions: {},
       createdAt: "2026-07-30T02:00:00.000Z",
       updatedAt: "2026-07-30T02:00:00.000Z",
@@ -256,9 +264,17 @@ describe("createSyncManager", () => {
       await database.workspaces.put({
         id: "w-second",
         name: "Second",
-        activeLayoutId: "official.layout.workbench-dashboard",
-        activeThemeId: "official.theme.light",
-        activeBackgroundProviderId: "official.background.default",
+        activeLayout: {
+          pluginId: "official.layout",
+          kind: "layout",
+          id: "official.layout.workbench-dashboard",
+        },
+        activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+        activeBackgroundProvider: {
+          pluginId: "official.background",
+          kind: "background-provider",
+          id: "official.background.default",
+        },
         regions: {},
         createdAt: "2026-07-30T02:10:02.000Z",
         updatedAt: "2026-07-30T02:10:02.000Z",

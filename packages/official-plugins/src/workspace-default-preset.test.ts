@@ -9,7 +9,7 @@ import type {
   ThemeContribution,
   WidgetContribution,
   SearchContribution,
-} from "@tabora/plugin-api"
+} from "@tabora/plugin-api/sdk"
 
 import { officialDefaultWorkspacePreset, officialPlugins } from "./index"
 
@@ -17,8 +17,8 @@ type ContributionMap = NonNullable<PluginManifest["contributes"]>
 
 function listBuiltinContributions<K extends keyof ContributionMap>(key: K) {
   return officialPlugins.flatMap((plugin) =>
-    (plugin.manifest.contributes[key] ?? []).map((contribution) => ({
-      pluginId: plugin.manifest.id,
+    (plugin.module.manifest.contributes[key] ?? []).map((contribution) => ({
+      pluginId: plugin.module.manifest.id,
       contribution,
     })),
   )
@@ -46,7 +46,7 @@ function resolveContributionKey(extensionPoint: ExtensionPoint) {
 }
 
 describe("officialDefaultWorkspacePreset", () => {
-  const builtinPluginIds = new Set(officialPlugins.map((plugin) => plugin.manifest.id))
+  const builtinPluginIds = new Set(officialPlugins.map((plugin) => plugin.module.manifest.id))
 
   it("references only builtin plugin manifest ids in preset.plugins", () => {
     expect(
@@ -74,27 +74,38 @@ describe("officialDefaultWorkspacePreset", () => {
     }>
 
     const layout = layouts.find(
-      ({ contribution }) => contribution.id === officialDefaultWorkspacePreset.layoutId,
+      ({ pluginId, contribution }) =>
+        pluginId === officialDefaultWorkspacePreset.layout.pluginId &&
+        contribution.id === officialDefaultWorkspacePreset.layout.id,
     )
     const theme = themes.find(
-      ({ contribution }) => contribution.id === officialDefaultWorkspacePreset.themeId,
+      ({ pluginId, contribution }) =>
+        pluginId === officialDefaultWorkspacePreset.theme.pluginId &&
+        contribution.id === officialDefaultWorkspacePreset.theme.id,
     )
     const background = backgrounds.find(
-      ({ contribution }) => contribution.id === officialDefaultWorkspacePreset.backgroundProviderId,
+      ({ pluginId, contribution }) =>
+        pluginId === officialDefaultWorkspacePreset.backgroundProvider.pluginId &&
+        contribution.id === officialDefaultWorkspacePreset.backgroundProvider.id,
     )
     const defaultSearchProvider = searchProviders.find(
-      ({ contribution }) =>
-        contribution.id === officialDefaultWorkspacePreset.search.defaultProviderId,
+      ({ pluginId, contribution }) =>
+        pluginId === officialDefaultWorkspacePreset.search.defaultProvider.pluginId &&
+        contribution.id === officialDefaultWorkspacePreset.search.defaultProvider.id,
     )
-    const enabledSearchProviders = officialDefaultWorkspacePreset.search.enabledProviderIds.map(
-      (providerId) => searchProviders.find(({ contribution }) => contribution.id === providerId),
+    const enabledSearchProviders = officialDefaultWorkspacePreset.search.enabledProviders.map(
+      (provider) =>
+        searchProviders.find(
+          ({ pluginId, contribution }) =>
+            pluginId === provider.pluginId && contribution.id === provider.id,
+        ),
     )
 
-    expect(layout?.contribution.id).toBe(officialDefaultWorkspacePreset.layoutId)
-    expect(theme?.contribution.id).toBe(officialDefaultWorkspacePreset.themeId)
-    expect(background?.contribution.id).toBe(officialDefaultWorkspacePreset.backgroundProviderId)
+    expect(layout?.contribution.id).toBe(officialDefaultWorkspacePreset.layout.id)
+    expect(theme?.contribution.id).toBe(officialDefaultWorkspacePreset.theme.id)
+    expect(background?.contribution.id).toBe(officialDefaultWorkspacePreset.backgroundProvider.id)
     expect(defaultSearchProvider?.contribution.id).toBe(
-      officialDefaultWorkspacePreset.search.defaultProviderId,
+      officialDefaultWorkspacePreset.search.defaultProvider.id,
     )
     expect(enabledSearchProviders.every(Boolean)).toBe(true)
     expect(presetPluginIds.has(layout?.pluginId ?? "")).toBe(true)
@@ -104,7 +115,9 @@ describe("officialDefaultWorkspacePreset", () => {
   })
 
   it("enables the four search providers shown in the dashboard prototype", () => {
-    expect(officialDefaultWorkspacePreset.search.enabledProviderIds).toEqual([
+    expect(
+      officialDefaultWorkspacePreset.search.enabledProviders.map((provider) => provider.id),
+    ).toEqual([
       "official.search.google",
       "official.search.bing",
       "official.search.baidu",
@@ -118,7 +131,7 @@ describe("officialDefaultWorkspacePreset", () => {
 
     expect(
       officialDefaultWorkspacePreset.instances
-        .map((instance) => instance.pluginId)
+        .map((instance) => instance.contribution.pluginId)
         .filter((pluginId) => !presetPluginIds.has(pluginId)),
     ).toEqual([])
   })
@@ -170,20 +183,25 @@ describe("officialDefaultWorkspacePreset", () => {
     }
 
     const pluginContributions = new Map(
-      officialPlugins.map((plugin) => [plugin.manifest.id, plugin.manifest.contributes]),
+      officialPlugins.map((plugin) => [
+        plugin.module.manifest.id,
+        plugin.module.manifest.contributes,
+      ]),
     )
 
     expect(
       officialDefaultWorkspacePreset.instances.flatMap((instance) => {
-        const pluginContributes = pluginContributions.get(instance.pluginId)
-        const key = resolveContributionKey(instance.extensionPoint)
-        const contributionIds = contributionIdsByPoint[instance.extensionPoint]
+        const pluginContributes = pluginContributions.get(instance.contribution.pluginId)
+        const key = resolveContributionKey(instance.contribution.kind)
+        const contributionIds = contributionIdsByPoint[instance.contribution.kind]
         const belongsToPlugin = (pluginContributes?.[key] ?? []).some(
-          (contribution) => contribution.id === instance.contributionId,
+          (contribution) => contribution.id === instance.contribution.id,
         )
 
-        if (!contributionIds.has(instance.contributionId) || !belongsToPlugin) {
-          return [`${instance.pluginId}:${instance.extensionPoint}:${instance.contributionId}`]
+        if (!contributionIds.has(instance.contribution.id) || !belongsToPlugin) {
+          return [
+            `${instance.contribution.pluginId}:${instance.contribution.kind}:${instance.contribution.id}`,
+          ]
         }
 
         return []

@@ -1,8 +1,12 @@
 import "fake-indexeddb/auto"
 import type { StrapiAuthClient } from "@tabora/auth"
-import { createWebHostAdapter, createWebStorageAdapter } from "@tabora/host-adapters"
-import { createPluginKernel } from "@tabora/platform-kernel"
-import type { SettingsPanelModel } from "@tabora/plugin-api"
+import {
+  createAccountSyncService,
+  createWebHostAdapter,
+  createWebStorageAdapter,
+} from "@tabora/host-adapters"
+import { createBuiltinPluginPackage, createPluginKernel } from "@tabora/platform-kernel"
+import type { SettingsPanelModel } from "@tabora/plugin-api/sdk"
 import { describe, expect, it, vi } from "vitest"
 
 import {
@@ -34,18 +38,19 @@ function modelText(model: SettingsPanelModel): string {
 
 describe("official.account-sync", () => {
   it("exposes account and sync providers only while the optional plugin is enabled", async () => {
-    const storageAdapter = createWebStorageAdapter("tabora-account-sync-plugin-test")
+    const storageAdapter = createWebStorageAdapter("tabora-account-sync-plugin-test", {
+      enableSync: true,
+    })
+    const host = createWebHostAdapter()
     const plugin = createOfficialAccountSyncPlugin({
-      host: createWebHostAdapter(),
-      storageAdapter,
-      apiBaseUrl: "http://api.test",
+      service: createAccountSyncService({ host, storageAdapter, apiBaseUrl: "http://api.test" }),
     })
     const kernel = createPluginKernel({
       hostPlatform: "web",
       hostCapabilities: { network: true, storage: true },
     })
 
-    await kernel.discover([plugin])
+    await kernel.discover([createBuiltinPluginPackage(plugin)])
     await kernel.activateEnabledPlugins()
 
     expect(kernel.registry.settings.has(officialAccountSettingsProviderId)).toBe(true)

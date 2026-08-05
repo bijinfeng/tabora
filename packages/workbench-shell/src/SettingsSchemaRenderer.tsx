@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import { createSignal, For, onMount, Show } from "solid-js"
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import type {
   SettingsFieldNode,
   SettingsNode,
@@ -179,12 +179,37 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
   const [loading, setLoading] = createSignal(true)
   const [busyActionId, setBusyActionId] = createSignal<string | null>(null)
   const [error, setError] = createSignal<string | null>(null)
+  const abortController = new AbortController()
+  let modelRequestVersion = 0
+
+  const abortFromParent = () => abortController.abort()
+  if (props.context.signal?.aborted) abortController.abort()
+  else props.context.signal?.addEventListener("abort", abortFromParent, { once: true })
+
+  onCleanup(() => {
+    props.context.signal?.removeEventListener("abort", abortFromParent)
+    abortController.abort()
+  })
+
+  function providerContext(): SettingsPanelProviderContext {
+    return {
+      ...props.context,
+      signal: abortController.signal,
+      invalidate() {
+        props.context.invalidate?.()
+        if (!abortController.signal.aborted) void loadModel()
+      },
+    }
+  }
 
   async function loadModel() {
+    if (abortController.signal.aborted) return
+    const requestVersion = ++modelRequestVersion
     setLoading(true)
     setError(null)
     try {
-      const rawModel = await props.provider.getModel(props.context)
+      const rawModel = await props.provider.getModel(providerContext())
+      if (abortController.signal.aborted || requestVersion !== modelRequestVersion) return
       const parsed = settingsPanelModelSchema.safeParse(rawModel)
       if (!parsed.success) {
         throw new Error("设置插件返回了不受支持的页面模型")
@@ -193,11 +218,14 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
       setModel(nextModel)
       setValues(initialValues(nextModel.nodes))
     } catch (cause) {
+      if (abortController.signal.aborted || requestVersion !== modelRequestVersion) return
       setModel(null)
       setValues({})
       setError(messageFor(cause))
     } finally {
-      setLoading(false)
+      if (!abortController.signal.aborted && requestVersion === modelRequestVersion) {
+        setLoading(false)
+      }
     }
   }
 
@@ -206,14 +234,15 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
     setBusyActionId(actionId)
     setError(null)
     try {
-      await props.provider.dispatch({ id: actionId, values: { ...values() } }, props.context)
+      await props.provider.dispatch({ id: actionId, values: { ...values() } }, providerContext())
+      if (abortController.signal.aborted) return
       // 包括密码在内的所有表单值只留在 renderer 内存中，每次 action 后销毁。
       setValues({})
       await loadModel()
     } catch (cause) {
-      setError(messageFor(cause))
+      if (!abortController.signal.aborted) setError(messageFor(cause))
     } finally {
-      setBusyActionId(null)
+      if (!abortController.signal.aborted) setBusyActionId(null)
     }
   }
 

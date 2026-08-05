@@ -1,45 +1,42 @@
 import * as stylex from "@stylexjs/stylex"
 import { For } from "solid-js"
-import type { PluginManifest, PluginPermission, SettingsPanelViewProps } from "@tabora/plugin-api"
-import { assessPermissionRisk } from "@tabora/plugin-api"
+import type {
+  PluginPermission,
+  SettingsPanelData,
+  SettingsPanelViewProps,
+} from "@tabora/plugin-api/sdk"
+import { assessPermissionRisk } from "@tabora/plugin-api/sdk"
 import { Switch } from "@tabora/ui/switch"
 import { styles } from "./styles"
 
-export type PluginSummary = SettingsPanelViewProps["plugins"][number]
+export type PluginSummary = NonNullable<SettingsPanelData["plugins"]>[number]
 
 export type PluginManagerCardProps = {
   plugins?: PluginSummary[]
   host?: SettingsPanelViewProps["host"]
 }
 
-function contributionLabels(contributes: PluginManifest["contributes"]): string[] {
-  const extensions: string[] = []
-  if (contributes.layouts?.length) extensions.push("布局")
-  if (contributes.widgets?.length) extensions.push(`卡片 (${contributes.widgets.length})`)
-  if (contributes.searches?.length) extensions.push("搜索")
-  if (contributes.searchProviders?.length) extensions.push("搜索源")
-  if (contributes.backgroundProviders?.length) extensions.push("背景")
-  if (contributes.backgroundRenderers?.length) extensions.push("背景渲染")
-  if (contributes.themes?.length) extensions.push("主题")
-  if (contributes.settingsPanels?.length) extensions.push("设置")
-  if (contributes.workspacePresets?.length) extensions.push("工作区预设")
-  return extensions
+function contributionLabels(kinds: PluginSummary["contributionKinds"]): string[] {
+  const labels = {
+    layout: "布局",
+    widget: "卡片",
+    search: "搜索",
+    "search-provider": "搜索源",
+    "background-provider": "背景",
+    "background-renderer": "背景渲染",
+    theme: "主题",
+    "settings-panel": "设置",
+    command: "命令",
+    keybinding: "快捷键",
+    "workspace-preset": "工作区预设",
+  } as const
+  return kinds.map((kind) => labels[kind])
 }
 
 function permissionLabel(permission: PluginPermission): string {
   switch (permission.type) {
     case "external-open":
       return `外部打开: ${permission.hosts.join(", ")}`
-    case "storage":
-      return `存储: ${permission.scope}`
-    case "workspace":
-      return `工作区: ${permission.access}`
-    case "network":
-      return `网络: ${permission.hosts.join(", ")}`
-    case "clipboard":
-      return `剪贴板: ${permission.access}`
-    case "local-file":
-      return `本地文件: ${permission.access}`
     default:
       return permission.type
   }
@@ -49,16 +46,6 @@ function permissionType(permission: PluginPermission): string {
   switch (permission.type) {
     case "external-open":
       return "外部打开"
-    case "storage":
-      return "存储"
-    case "workspace":
-      return "工作区"
-    case "network":
-      return "网络"
-    case "clipboard":
-      return "剪贴板"
-    case "local-file":
-      return "本地文件"
     default:
       return permission.type
   }
@@ -90,7 +77,7 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
         <div {...stylex.attrs(styles.list)}>
           <For each={plugins()}>
             {(plugin) => {
-              const extensions = contributionLabels(plugin.contributes)
+              const extensions = contributionLabels(plugin.contributionKinds)
               const permissions = plugin.permissions.map(permissionLabel)
               const status = pluginStatus(plugin)
               return (

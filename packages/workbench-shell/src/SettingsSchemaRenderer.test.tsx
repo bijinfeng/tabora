@@ -1,5 +1,5 @@
 import { render } from "solid-js/web"
-import type { SettingsPanelProvider } from "@tabora/plugin-api"
+import type { SettingsPanelProvider, SettingsPanelProviderContext } from "@tabora/plugin-api"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { SettingsSchemaRenderer } from "./SettingsSchemaRenderer"
@@ -13,10 +13,16 @@ afterEach(() => {
   }
 })
 
-function mount(provider: SettingsPanelProvider): HTMLElement {
+function mount(
+  provider: SettingsPanelProvider,
+  context: SettingsPanelProviderContext = {},
+): HTMLElement {
   const root = document.createElement("div")
   document.body.append(root)
-  const dispose = render(() => <SettingsSchemaRenderer provider={provider} context={{}} />, root)
+  const dispose = render(
+    () => <SettingsSchemaRenderer provider={provider} context={context} />,
+    root,
+  )
   mounts.push({ dispose, root })
   return root
 }
@@ -81,7 +87,10 @@ describe("SettingsSchemaRenderer", () => {
           id: "account.login",
           values: { email: "a@test.com", password: "secret-password" },
         },
-        {},
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+          invalidate: expect.any(Function),
+        }),
       ),
     )
     await vi.waitFor(() => expect(input(root, "password").value).toBe(""))
@@ -100,5 +109,23 @@ describe("SettingsSchemaRenderer", () => {
     await vi.waitFor(() => expect(root.textContent).toContain("设置插件返回了不受支持的页面模型"))
     expect(root.querySelector('[role="alert"]')).toBeTruthy()
     expect(root.textContent).not.toContain("Unsafe")
+  })
+
+  it("aborts a schema provider context when its panel is unmounted", async () => {
+    let receivedContext: SettingsPanelProviderContext | undefined
+    const provider: SettingsPanelProvider = {
+      getModel: vi.fn((context) => {
+        receivedContext = context
+        return { version: 1 as const, nodes: [] }
+      }),
+      dispatch: vi.fn(),
+    }
+    const root = mount(provider)
+
+    await vi.waitFor(() => expect(receivedContext?.signal).toBeDefined())
+    const mounted = mounts.find((entry) => entry.root === root)!
+    mounted.dispose()
+
+    expect(receivedContext?.signal?.aborted).toBe(true)
   })
 })

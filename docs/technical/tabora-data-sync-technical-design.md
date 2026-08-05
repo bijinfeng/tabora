@@ -34,7 +34,7 @@ Strapi 5
   `- SQLite（开发）/ PostgreSQL（生产）
 ```
 
-`official.account-sync` 是可选 builtin 插件。playground 仅在配置云端 API 时把它加入 builtin 装配；插件自身创建认证客户端和 `SyncManager`，并在 activation 时启动同步、注册账号与同步设置面板。FNOS 不装配该插件，工作台 bootstrap 不创建认证客户端、同步队列或同步定时器，改由本地 Fastify 服务持久化数据。
+`official.account-sync` 是可选 builtin 插件。playground / extension 只在显式配置云端 API 时把它加入 builtin 装配；组合根创建 `AccountSyncService`（认证客户端、`SyncManager` 和 sync meta port）并注入插件，插件在 activation 时启动/停止服务、注册账号与同步设置面板。FNOS 不装配该插件，工作台 bootstrap 不创建认证客户端、同步队列或同步定时器，改由本地 Fastify 服务持久化数据。
 
 ## 3. 认证与会话
 
@@ -60,7 +60,7 @@ Strapi 的 users-permissions 插件承载用户与 JWT。客户端使用以下�
 
 不同宿主使用对应存储适配器：扩展使用 `chrome.storage`，网页宿主使用 `localStorage`。退出登录只删除本地会话；收到 `401` 的当前用户请求同样清除本地会话。
 
-用户 JWT 只在账号插件内部提供给同步网关客户端。通用插件 API 不暴露 JWT、认证 client 或后端 URL；`SettingsPanelViewProps.host` 也不暴露 `auth/sync` 特例。
+用户 JWT 只在 host-owned `AccountSyncService` 内部提供给同步网关客户端。通用插件 API 不暴露 JWT、认证 client 或后端 URL；账号插件仅得到最小的服务操作面，`SettingsPanelViewProps.host` 也不暴露 `auth/sync` 特例。
 
 ### 3.3 账号与同步设置 provider
 

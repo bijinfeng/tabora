@@ -31,9 +31,17 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Main",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    activeBackgroundProviderId: "official.background.default",
+    activeLayout: {
+      pluginId: "official.layout",
+      kind: "layout",
+      id: "official.layout.workbench-dashboard",
+    },
+    activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+    activeBackgroundProvider: {
+      pluginId: "official.background",
+      kind: "background-provider",
+      id: "official.background.default",
+    },
     config: {},
     regions: {},
     createdAt: "2026-06-07T00:00:00.000Z",
@@ -46,9 +54,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -64,12 +70,26 @@ function createRuntime(records: PluginRecord[] = []) {
     id: "preset.default",
     title: "Default Workspace",
     plugins: ["plugin.widgets"],
-    layoutId: "official.layout.workbench-dashboard",
-    themeId: "official.theme.light",
-    backgroundProviderId: "official.background.default",
+    layout: {
+      pluginId: "official.layout",
+      kind: "layout",
+      id: "official.layout.workbench-dashboard",
+    },
+    theme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+    backgroundProvider: {
+      pluginId: "official.background",
+      kind: "background-provider",
+      id: "official.background.default",
+    },
     search: {
-      defaultProviderId: "official.search.google",
-      enabledProviderIds: ["official.search.google"],
+      defaultProvider: {
+        pluginId: "official.search",
+        kind: "search-provider",
+        id: "official.search.google",
+      },
+      enabledProviders: [
+        { pluginId: "official.search", kind: "search-provider", id: "official.search.google" },
+      ],
     },
     regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
     instances: [],
@@ -164,24 +184,6 @@ function createRuntime(records: PluginRecord[] = []) {
       workspaceSnapshotRepo: {
         save: vi.fn(async () => {}),
         getLast: vi.fn(async () => undefined),
-      },
-      syncQueueRepo: {
-        add: vi.fn(async () => "mock-id"),
-        remove: vi.fn(async () => {}),
-        getAllPending: vi.fn(async () => []),
-        updateStatus: vi.fn(async () => {}),
-        clear: vi.fn(async () => {}),
-        getByRecord: vi.fn(async () => undefined),
-        get: vi.fn(async () => undefined),
-        count: vi.fn(async () => 0),
-        removeByRecord: vi.fn(async () => {}),
-      },
-      syncMetaRepo: {
-        get: vi.fn(async () => undefined),
-        set: vi.fn(async () => {}),
-        remove: vi.fn(async () => {}),
-        clear: vi.fn(async () => {}),
-        getAll: vi.fn(async () => []),
       },
     },
   }
@@ -325,18 +327,21 @@ describe("wireWorkbenchRuntimeEvents", () => {
       openExternal,
     })
 
-    emit("ui.modal.open", { viewId: "modal.view", props: { tab: "a" } })
-    emit("ui.modal.close", null)
-    emit("ui.fullscreen.open", { viewId: "fullscreen.view", props: { page: 2 } })
-    emit("ui.fullscreen.close", null)
+    emit("ui.modal.open", { viewId: "modal.view", props: { tab: "a", pluginId: "plugin.a" } })
+    emit("ui.modal.close", { pluginId: "plugin.a" })
+    emit("ui.fullscreen.open", {
+      viewId: "fullscreen.view",
+      props: { page: 2, pluginId: "plugin.a" },
+    })
+    emit("ui.fullscreen.close", { pluginId: "plugin.a" })
     emit("ui.toast.show", { message: "saved", options: { type: "success" } })
     emit("host.external.open", { url: "https://example.com" })
 
     expect(setModalViewId).toHaveBeenNthCalledWith(1, "modal.view")
-    expect(setModalProps).toHaveBeenCalledWith({ tab: "a" })
+    expect(setModalProps).toHaveBeenCalledWith({ tab: "a", pluginId: "plugin.a" })
     expect(setModalViewId).toHaveBeenNthCalledWith(2, null)
     expect(setFullscreenViewId).toHaveBeenNthCalledWith(1, "fullscreen.view")
-    expect(setFullscreenProps).toHaveBeenCalledWith({ page: 2 })
+    expect(setFullscreenProps).toHaveBeenCalledWith({ page: 2, pluginId: "plugin.a" })
     expect(setFullscreenViewId).toHaveBeenNthCalledWith(2, null)
     expect(showToast).toHaveBeenCalledWith("saved", { type: "success" })
     expect(openExternal).toHaveBeenCalledWith("https://example.com")

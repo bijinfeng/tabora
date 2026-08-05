@@ -1,4 +1,4 @@
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginModule } from "@tabora/plugin-api/sdk"
 
 type RgbTriplet = readonly [number, number, number]
 
@@ -45,8 +45,7 @@ export function BackgroundRenderer() {
   return null
 }
 
-export const officialBackgroundBasic: BuiltinPlugin = {
-  enabled: true,
+export const officialBackgroundBasic: PluginModule = {
   manifest: {
     id: "official.background.basic",
     name: "Basic Background",
@@ -92,12 +91,12 @@ export const officialBackgroundBasic: BuiltinPlugin = {
           id: "official.background.css-renderer",
           title: "CSS 背景渲染器",
           accepts: ["css", "gradient"],
-          view: "official.background.css-renderer.view",
+          view: "official.background.basic.css-renderer.view",
         },
       ],
     },
   },
   activate(context) {
-    context.registry.views.register("official.background.css-renderer.view", BackgroundRenderer)
+    context.views.register("official.background.basic.css-renderer.view", BackgroundRenderer)
   },
 }

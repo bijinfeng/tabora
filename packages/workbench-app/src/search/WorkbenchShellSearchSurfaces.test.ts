@@ -2,14 +2,14 @@ import type {
   PluginInstance,
   SearchCommandEntry,
   SearchHistoryEntry,
-  SearchProviderContribution,
   SearchWidgetEntry,
 } from "@tabora/plugin-api"
+import type { SearchProviderContributionDescriptor } from "@tabora/orchestrator"
 import { describe, expect, it, vi } from "vitest"
 
 import { createWorkbenchSearchSurfaces } from "./WorkbenchShellSearchSurfaces"
 
-const providers: (SearchProviderContribution & { pluginId: string; pluginName: string })[] = [
+const providers: SearchProviderContributionDescriptor[] = [
   {
     id: "official.search.google",
     title: "Google",
@@ -17,6 +17,11 @@ const providers: (SearchProviderContribution & { pluginId: string; pluginName: s
     urlTemplate: "https://google.example/search?q={query}",
     pluginId: "official.search-providers.basic",
     pluginName: "基础搜索源",
+    ref: {
+      pluginId: "official.search-providers.basic",
+      kind: "search-provider",
+      id: "official.search.google",
+    },
   },
 ]
 
@@ -40,9 +45,11 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "search-1",
     workspaceId: "workspace-1",
-    pluginId: "official.search.command-bar",
-    contributionId: "official.search.command-bar",
-    extensionPoint: "search",
+    contribution: {
+      pluginId: "official.search.command-bar",
+      kind: "search",
+      id: "official.search.command-bar",
+    },
     regionId: "top",
     enabled: true,
     config: {},

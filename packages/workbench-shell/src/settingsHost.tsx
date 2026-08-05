@@ -37,8 +37,10 @@ export type SettingsHostProps = {
   onClose: () => void
   getView: (viewId: string) => ((props: SettingsPanelViewProps) => JSX.Element) | undefined
   getSettingsProvider: (providerId: string) => SettingsPanelProvider | undefined
-  providerContext?: SettingsPanelProviderContext
-  panelProps: (panel: SettingsPanelDescriptor) => SettingsPanelViewProps
+  providerContext?: (panel: SettingsPanelDescriptor) => SettingsPanelProviderContext
+  panelProps: (panel: SettingsPanelDescriptor, instanceId?: string) => SettingsPanelViewProps
+  /** Instance-scoped panels are hidden unless the host explicitly supplies this target. */
+  instanceId?: string
   aboutContent?: JSX.Element
   copy?: SettingsHostCopy
 }
@@ -422,7 +424,9 @@ export function resolveInitialSettingsSectionId(
 export function SettingsHost(props: SettingsHostProps) {
   let closeButtonRef: HTMLButtonElement | undefined
   let previousFocusedElement: HTMLElement | null = null
-  const navigator = () => createSettingsNavigator(props.panels)
+  const navigablePanels = () =>
+    props.panels.filter((panel) => panel.scope !== "instance" || Boolean(props.instanceId))
+  const navigator = () => createSettingsNavigator(navigablePanels())
 
   const [isEntering, setIsEntering] = createSignal(false)
   const [isClosing, setIsClosing] = createSignal(false)
@@ -648,7 +652,23 @@ export function SettingsHost(props: SettingsHostProps) {
                                 <div data-tabora-plugin-id={panel.pluginId}>
                                   <SettingsSchemaRenderer
                                     provider={provider}
-                                    context={props.providerContext ?? {}}
+                                    context={{
+                                      ...(props.providerContext?.(panel) ?? {
+                                        panel: {
+                                          id: panel.id,
+                                          pluginId: panel.pluginId,
+                                          scope: panel.scope,
+                                        },
+                                      }),
+                                      panel: {
+                                        id: panel.id,
+                                        pluginId: panel.pluginId,
+                                        scope: panel.scope,
+                                        ...(panel.scope === "instance" && props.instanceId
+                                          ? { instanceId: props.instanceId }
+                                          : {}),
+                                      },
+                                    }}
                                   />
                                 </div>
                               </PluginViewBoundary>
@@ -665,7 +685,10 @@ export function SettingsHost(props: SettingsHostProps) {
                             )
                           let content: JSX.Element
                           try {
-                            const panelProps = props.panelProps(panel)
+                            const panelProps = props.panelProps(
+                              panel,
+                              panel.scope === "instance" ? props.instanceId : undefined,
+                            )
                             content = createComponent(View, panelProps)
                           } catch (error) {
                             return createPluginErrorFallback(error, panel.id, panel.title)

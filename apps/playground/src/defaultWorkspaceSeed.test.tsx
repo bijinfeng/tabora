@@ -10,9 +10,9 @@ describe("createDefaultWorkspaceFromPreset", () => {
 
     expect(workspace.id).toBe("default")
     expect(workspace.name).toBe("默认工作区")
-    expect(workspace.activeLayoutId).toBe("official.layout.workbench-dashboard")
-    expect(workspace.activeThemeId).toBe("official.theme.light")
-    expect(workspace.activeBackgroundProviderId).toBe("background.gradient-green")
+    expect(workspace.activeLayout.id).toBe("official.layout.workbench-dashboard")
+    expect(workspace.activeTheme.id).toBe("official.theme.light")
+    expect(workspace.activeBackgroundProvider.id).toBe("background.gradient-green")
 
     expect(workspace.regions["rail"]).toBeUndefined()
     expect(Object.values(workspace.regions).flatMap((region) => region.accepts)).not.toContain(
@@ -42,13 +42,13 @@ describe("createDefaultWorkspaceFromPreset", () => {
 
     const searchInstance = instances.find((i) => i.regionId === "topbar")
     expect(searchInstance).toBeDefined()
-    expect(searchInstance!.extensionPoint).toBe("search")
-    expect(searchInstance!.pluginId).toBe("official.search.command-bar")
+    expect(searchInstance!.contribution.kind).toBe("search")
+    expect(searchInstance!.contribution.pluginId).toBe("official.search.command-bar")
 
     const widgetInstances = instances.filter((i) => i.regionId === "mainGrid")
     expect(widgetInstances).toHaveLength(4)
     for (const inst of widgetInstances) {
-      expect(inst.extensionPoint).toBe("widget")
+      expect(inst.contribution.kind).toBe("widget")
       expect(inst.enabled).toBe(true)
     }
     expect(instances.find((i) => i.id === "weather-1")?.size).toBe("S")

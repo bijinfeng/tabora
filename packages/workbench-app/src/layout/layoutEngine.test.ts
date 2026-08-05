@@ -1,11 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
-import type { PluginInstance } from "@tabora/plugin-api"
+import type { PluginInstance, PluginModule } from "@tabora/plugin-api"
 
 import { createLayoutEngine, type InstanceRenderer } from "./layoutEngine"
 
-const layoutPlugin: BuiltinPlugin = {
-  enabled: true,
+const layoutPlugin: PluginModule = {
   manifest: {
     id: "test.layout",
     name: "Test Layout",
@@ -35,14 +33,12 @@ const layoutPlugin: BuiltinPlugin = {
 function instance(
   id: string,
   regionId: string,
-  ep: PluginInstance["extensionPoint"],
+  kind: PluginInstance["contribution"]["kind"],
 ): PluginInstance {
   return {
     id,
     workspaceId: "ws",
-    pluginId: "p",
-    contributionId: "c",
-    extensionPoint: ep,
+    contribution: { pluginId: "p", kind, id: "c" },
     regionId,
     enabled: true,
     config: {},
@@ -69,7 +65,7 @@ function makeEngine(calls: string[]) {
   return createLayoutEngine({
     catalog: {
       findLayoutContribution: (id: string) =>
-        layoutPlugin.manifest.contributes.layouts!.find((l) => l.id === id),
+        layoutPlugin.manifest.contributes.layouts!.find((layout) => layout.id === id),
     } as never,
     instanceRenderer: makeRenderer(calls),
     hostActions: {

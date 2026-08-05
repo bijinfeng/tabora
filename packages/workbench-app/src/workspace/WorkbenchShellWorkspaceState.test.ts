@@ -88,9 +88,17 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Main",
-    activeLayoutId: "official.layout.workbench-dashboard",
-    activeThemeId: "official.theme.light",
-    activeBackgroundProviderId: "official.background.default",
+    activeLayout: {
+      pluginId: "official.layout",
+      kind: "layout",
+      id: "official.layout.workbench-dashboard",
+    },
+    activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+    activeBackgroundProvider: {
+      pluginId: "official.background",
+      kind: "background-provider",
+      id: "official.background.default",
+    },
     config: {},
     regions: {},
     createdAt: "2026-06-07T00:00:00.000Z",
@@ -103,9 +111,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -118,8 +124,14 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
 
 function searchSettings(): WorkbenchSearchSettings {
   return {
-    defaultProviderId: "official.search.google",
-    enabledProviderIds: ["official.search.google"],
+    defaultProvider: {
+      pluginId: "official.search",
+      kind: "search-provider",
+      id: "official.search.google",
+    },
+    enabledProviders: [
+      { pluginId: "official.search", kind: "search-provider", id: "official.search.google" },
+    ],
   }
 }
 
@@ -128,9 +140,17 @@ function defaultWorkspacePreset(): WorkspacePresetContribution {
     id: "preset.default",
     title: "Default Workspace",
     plugins: ["plugin.widgets"],
-    layoutId: "official.layout.workbench-dashboard",
-    themeId: "official.theme.light",
-    backgroundProviderId: "official.background.default",
+    layout: {
+      pluginId: "official.layout",
+      kind: "layout",
+      id: "official.layout.workbench-dashboard",
+    },
+    theme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+    backgroundProvider: {
+      pluginId: "official.background",
+      kind: "background-provider",
+      id: "official.background.default",
+    },
     search: searchSettings(),
     regions: [{ regionId: "mainGrid", accepts: ["widget"] }],
     instances: [],
@@ -153,8 +173,12 @@ describe("createWorkbenchWorkspaceState", () => {
   it("hydrates imported workspace state and reconciles imported instances", async () => {
     const importedWorkspace = workspace({
       id: "workspace-imported",
-      activeThemeId: "official.theme.dark",
-      activeBackgroundProviderId: "official.background.sunset",
+      activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.dark" },
+      activeBackgroundProvider: {
+        pluginId: "official.background",
+        kind: "background-provider",
+        id: "official.background.sunset",
+      },
     })
     const importedInstances = [instance({ workspaceId: importedWorkspace.id })]
     const reconciledInstances = [
@@ -218,14 +242,14 @@ describe("createWorkbenchWorkspaceState", () => {
     expect(clearExpandState).toHaveBeenCalled()
     expect(setWorkspaceState).toHaveBeenCalledWith(importedWorkspace)
     expect(reconcileInstancesForLayout).toHaveBeenCalledWith(
-      importedWorkspace.activeLayoutId,
+      importedWorkspace.activeLayout.id,
       importedInstances,
     )
     expect(setInstances).toHaveBeenCalledWith(reconciledInstances)
-    expect(setActiveLayoutId).toHaveBeenCalledWith(importedWorkspace.activeLayoutId)
-    expect(applyThemeSelection).toHaveBeenCalledWith(importedWorkspace.activeThemeId)
+    expect(setActiveLayoutId).toHaveBeenCalledWith(importedWorkspace.activeLayout.id)
+    expect(applyThemeSelection).toHaveBeenCalledWith(importedWorkspace.activeTheme.id)
     expect(applyBackgroundSelection).toHaveBeenCalledWith(
-      importedWorkspace.activeBackgroundProviderId,
+      importedWorkspace.activeBackgroundProvider.id,
     )
     expect(setSearchSettings).toHaveBeenCalledWith(searchSettings())
     expect(workspaceList).toEqual([workspace(), importedWorkspace])
@@ -275,9 +299,9 @@ describe("createWorkbenchWorkspaceState", () => {
       instances: [instance({ workspaceId: defaultWorkspace.id })],
       searchHistory: [] as SearchHistoryEntry[],
       searchSettings: searchSettings(),
-      activeLayoutId: defaultWorkspace.activeLayoutId,
-      activeThemeId: defaultWorkspace.activeThemeId,
-      activeBackgroundId: defaultWorkspace.activeBackgroundProviderId,
+      activeLayoutId: defaultWorkspace.activeLayout.id,
+      activeThemeId: defaultWorkspace.activeTheme.id,
+      activeBackgroundId: defaultWorkspace.activeBackgroundProvider.id,
     }
     mocks.ensureWorkspaceSession.mockResolvedValue(defaultSession)
 

@@ -2,71 +2,189 @@ import type {
   AiRuntimeBridge,
   HostCapabilityId,
   HostPlatform,
+  PluginActivationDisposer,
   PluginManifest,
+  PluginModule,
+  PluginNetworkBridge,
+  PluginPermissionGrant,
   PluginRecord,
+  SettingsHostActionId,
+  SettingsHostReadId,
 } from "@tabora/plugin-api"
+import { pluginManifestSchema, validatePluginManifestComposition } from "@tabora/plugin-api"
+
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry, type ExtensionRegistrationDisposer } from "./extensionRegistry"
 import {
-  collectPluginManifestViewIds,
   collectPluginManifestSettingsProviderIds,
+  collectPluginManifestViewIds,
   createPluginRuntimeContext,
   type PluginI18nService,
-  type PluginRuntimeContext,
 } from "./runtimeContext"
 
-export type PluginActivationDisposer = () => void
+export type PluginPackageSource = "builtin" | "local-trusted" | "remote-untrusted"
 
-export type BuiltinPlugin = {
-  manifest: PluginManifest
+/** Loader output: module code and static assets, without user state. */
+export type LoadedPluginPackage = {
+  module: PluginModule
+  source: PluginPackageSource
   styleAssetUrls?: Record<string, string>
-  enabled: boolean
   preload?(): Promise<void>
-  activate(
-    context: PluginRuntimeContext,
-  ): void | PluginActivationDisposer | Promise<void | PluginActivationDisposer>
+}
+
+export function createBuiltinPluginPackage(
+  module: PluginModule,
+  options: Pick<LoadedPluginPackage, "styleAssetUrls" | "preload"> = {},
+): LoadedPluginPackage {
+  return {
+    module,
+    source: "builtin",
+    ...options,
+  }
+}
+
+/** Host-owned install state. Manifest permissions are requests, never implicit grants. */
+export type InstalledPluginRecord = {
+  pluginId: string
+  source: PluginPackageSource
+  desiredEnabled: boolean
+  grantedPermissions: PluginPermissionGrant[]
+  grantedSettingsHostActions: SettingsHostActionId[]
+  grantedSettingsHostReads: SettingsHostReadId[]
+}
+
+/** Host-owned, ephemeral lifecycle state. */
+export type PluginRuntimeState = {
+  status: "inactive" | "activating" | "active" | "disabled" | "error" | "skipped"
+  error?: string
+  disabledReason?: string
+}
+
+/** Runtime projection for shell/catalog use. It never mutates the plugin module. */
+export type PluginRuntimePlugin = {
+  package: LoadedPluginPackage
+  module: PluginModule
+  manifest: PluginManifest
+  installation: InstalledPluginRecord
+  state: PluginRuntimeState
+  readonly enabled: boolean
 }
 
 export type PluginLifecycleStore = {
+  get?(id: string): Promise<PluginRecord | undefined>
   save(record: PluginRecord): Promise<void>
 }
 
 export type PluginKernelOptions = {
   lifecycleStore?: PluginLifecycleStore
-  recordSource?: PluginRecord["source"]
   hostPlatform?: HostPlatform
   hostCapabilities?: Partial<Record<HostCapabilityId, boolean>>
+  permissionGrants?: Readonly<Record<string, PluginPermissionGrant[] | undefined>>
+  /** Host policy grants for settings-panel host action requests. */
+  settingsHostActionGrants?: Readonly<Record<string, SettingsHostActionId[] | undefined>>
+  /** Host policy grants for custom settings view read projections. */
+  settingsHostReadGrants?: Readonly<Record<string, SettingsHostReadId[] | undefined>>
   ai?: AiRuntimeBridge
+  network?: PluginNetworkBridge
   i18n?: PluginI18nService
+  /** Executable code from remote-untrusted packages always requires a sandbox and is refused here. */
+  admittedSources?: ReadonlySet<Exclude<PluginPackageSource, "remote-untrusted">>
 }
 
 export type PluginKernel = {
   registry: ReturnType<typeof createExtensionRegistry>
   events: ReturnType<typeof createEventBus>
-  plugins: BuiltinPlugin[]
-  discover(plugins: BuiltinPlugin[]): Promise<void>
+  plugins: PluginRuntimePlugin[]
+  discover(packages: LoadedPluginPackage[]): Promise<void>
   activateEnabledPlugins(): Promise<void>
   setPluginEnabled(pluginId: string, enabled: boolean): Promise<void>
+}
+
+function pluginEnabled(plugin: PluginRuntimePlugin): boolean {
+  return (
+    plugin.installation.desiredEnabled &&
+    plugin.state.status !== "disabled" &&
+    plugin.state.status !== "error" &&
+    plugin.state.status !== "skipped"
+  )
+}
+
+function normalizeGrantedPermissions(
+  requested: PluginPermissionGrant[],
+  proposed: PluginPermissionGrant[],
+): PluginPermissionGrant[] {
+  const normalized: PluginPermissionGrant[] = []
+  for (const grant of proposed) {
+    const request = requested.find((candidate) => candidate.type === grant.type)
+    if (!request) continue
+    if (grant.type === "ai" && request.type === "ai") {
+      const access = grant.access.filter((item) => request.access.includes(item))
+      if (access.length) normalized.push({ type: "ai", access })
+      continue
+    }
+    if (grant.type === "external-open" && request.type === "external-open") {
+      const hosts = grant.hosts.filter(
+        (host) => request.hosts.includes("*") || request.hosts.includes(host),
+      )
+      if (hosts.length) normalized.push({ type: grant.type, hosts })
+      continue
+    }
+    if (grant.type === "network" && request.type === "network") {
+      const hosts = grant.hosts.filter(
+        (host) => request.hosts.includes("*") || request.hosts.includes(host),
+      )
+      if (hosts.length) normalized.push({ type: grant.type, hosts })
+      continue
+    }
+  }
+  return normalized
+}
+
+function normalizeGrantedSettingsHostActions(
+  requested: SettingsHostActionId[],
+  proposed: SettingsHostActionId[],
+): SettingsHostActionId[] {
+  return [...new Set(proposed.filter((action) => requested.includes(action)))]
+}
+
+function normalizeGrantedSettingsHostReads(
+  requested: SettingsHostReadId[],
+  proposed: SettingsHostReadId[],
+): SettingsHostReadId[] {
+  return [...new Set(proposed.filter((read) => requested.includes(read)))]
 }
 
 export function createPluginKernel(options: PluginKernelOptions = {}): PluginKernel {
   const events = createEventBus()
   const registry = createExtensionRegistry()
-  const plugins: BuiltinPlugin[] = []
-  const lifecycleStore = options.lifecycleStore
-  const recordSource = options.recordSource ?? "builtin"
+  const plugins: PluginRuntimePlugin[] = []
   const activePlugins = new Map<
     string,
     {
-      plugin: BuiltinPlugin
+      plugin: PluginRuntimePlugin
       explicitDisposer: PluginActivationDisposer | undefined
       registrationDisposers: ExtensionRegistrationDisposer[]
     }
   >()
+  // Local plugins must be admitted by a host-specific loader that verifies package origin and
+  // style isolation. The generic kernel therefore executes builtin code only by default.
+  const admittedSources =
+    options.admittedSources ??
+    new Set<Exclude<PluginPackageSource, "remote-untrusted">>(["builtin"])
+
+  function sourceAdmissionReason(pluginPackage: LoadedPluginPackage): string | undefined {
+    if (pluginPackage.source === "remote-untrusted") {
+      return "Remote untrusted executable plugins require a sandboxed runtime"
+    }
+    if (!admittedSources.has(pluginPackage.source)) {
+      return `Plugin source is not admitted by this host: ${pluginPackage.source}`
+    }
+    return undefined
+  }
 
   function registrationConflictReason(
-    target: BuiltinPlugin,
-    peers: BuiltinPlugin[],
+    target: PluginRuntimePlugin,
+    peers: PluginRuntimePlugin[],
   ): string | undefined {
     const targetRegistrations = [
       ...Array.from(collectPluginManifestViewIds(target.manifest)).map((id) => ({
@@ -76,6 +194,10 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       ...Array.from(collectPluginManifestSettingsProviderIds(target.manifest)).map((id) => ({
         kind: "settings provider",
         id,
+      })),
+      ...(target.manifest.contributes.commands ?? []).map((command) => ({
+        kind: "command",
+        id: command.id,
       })),
     ]
     if (targetRegistrations.length === 0) return undefined
@@ -87,6 +209,9 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       }
       for (const providerId of collectPluginManifestSettingsProviderIds(peer.manifest)) {
         peerRegistrationOwners.set(`settings provider:${providerId}`, peer.manifest.id)
+      }
+      for (const command of peer.manifest.contributes.commands ?? []) {
+        peerRegistrationOwners.set(`command:${command.id}`, peer.manifest.id)
       }
     }
 
@@ -107,7 +232,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     return conflicts.length > 0 ? `Conflicting registrations: ${conflicts.join(", ")}` : undefined
   }
 
-  function compatibilityReason(plugin: BuiltinPlugin): string | undefined {
+  function compatibilityReason(plugin: PluginRuntimePlugin): string | undefined {
     const { supportedPlatforms, requiredCapabilities } = plugin.manifest
     if (
       options.hostPlatform &&
@@ -124,20 +249,44 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       if (missing.length) return `Missing host capabilities: ${missing.join(", ")}`
     }
 
+    if (
+      plugin.manifest.permissions?.some((permission) => permission.type === "network") &&
+      options.hostCapabilities?.network !== true
+    ) {
+      return "Missing host capabilities: network"
+    }
+
+    if (
+      plugin.manifest.permissions?.some((permission) => permission.type === "network") &&
+      !options.network
+    ) {
+      return "Missing host network bridge"
+    }
+
     return undefined
   }
 
-  function buildRecord(plugin: BuiltinPlugin, overrides?: Partial<PluginRecord>): PluginRecord {
+  function buildRecord(
+    plugin: PluginRuntimePlugin,
+    overrides?: Partial<PluginRecord>,
+  ): PluginRecord {
     return {
       id: plugin.manifest.id,
       version: plugin.manifest.version,
-      source: recordSource,
-      enabled: plugin.enabled,
-      status: plugin.enabled ? "active" : "disabled",
+      source: plugin.package.source,
+      enabled: plugin.installation.desiredEnabled,
+      status:
+        plugin.state.status === "inactive" || plugin.state.status === "activating"
+          ? "disabled"
+          : plugin.state.status,
       installedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       manifest: plugin.manifest,
-      grantedPermissions: plugin.manifest.permissions ?? [],
+      grantedPermissions: plugin.installation.grantedPermissions,
+      grantedSettingsHostActions: plugin.installation.grantedSettingsHostActions,
+      grantedSettingsHostReads: plugin.installation.grantedSettingsHostReads,
+      ...(plugin.state.error ? { lastError: plugin.state.error } : {}),
+      ...(plugin.state.disabledReason ? { disabledReason: plugin.state.disabledReason } : {}),
       ...overrides,
     }
   }
@@ -174,7 +323,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     activePlugins.delete(pluginId)
   }
 
-  async function activatePlugin(plugin: BuiltinPlugin): Promise<boolean> {
+  async function activatePlugin(plugin: PluginRuntimePlugin): Promise<boolean> {
     const pluginId = plugin.manifest.id
     if (activePlugins.has(pluginId)) return false
 
@@ -184,19 +333,23 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       events,
       registry,
       manifest: plugin.manifest,
-      grantedPermissions: plugin.manifest.permissions ?? [],
+      requestedPermissions: plugin.manifest.permissions ?? [],
+      grantedPermissions: plugin.installation.grantedPermissions,
       registrationDisposers,
       ...(options.ai ? { ai: options.ai } : {}),
+      ...(options.network ? { network: options.network } : {}),
       ...(options.i18n ? { i18n: options.i18n } : {}),
     })
 
+    plugin.state = { status: "activating" }
     try {
-      const explicitDisposer = await plugin.activate(context)
+      const explicitDisposer = await plugin.module.activate(context)
       activePlugins.set(pluginId, {
         plugin,
         explicitDisposer: explicitDisposer ?? undefined,
         registrationDisposers,
       })
+      plugin.state = { status: "active" }
       return true
     } catch (error: unknown) {
       for (let index = registrationDisposers.length - 1; index >= 0; index -= 1) {
@@ -208,68 +361,169 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
           logDisposerError(pluginId, "extension registration disposer", disposerError)
         }
       }
+      plugin.state = {
+        status: "error",
+        error: error instanceof Error ? error.message : String(error),
+      }
       throw error
     }
+  }
+
+  /**
+   * Every activation path, including a manual re-enable, must cross the same preload
+   * boundary. Lazy packages use this to resolve their module/CSS chunk before they can
+   * expose registrations to the shell.
+   */
+  async function preloadPlugin(plugin: PluginRuntimePlugin): Promise<void> {
+    await plugin.package.preload?.()
   }
 
   return {
     registry,
     events,
     plugins,
-    async discover(discoveredPlugins) {
-      const nextPluginsById = new Map(
-        discoveredPlugins.map((plugin) => [plugin.manifest.id, plugin]),
+    async discover(discoveredPackages) {
+      const sourceRejections = discoveredPackages
+        .map((pluginPackage) => ({
+          pluginId: pluginPackage.module.manifest.id,
+          reason: sourceAdmissionReason(pluginPackage),
+        }))
+        .filter((entry): entry is { pluginId: string; reason: string } => Boolean(entry.reason))
+      if (sourceRejections.length > 0) {
+        throw new Error(
+          `Rejected plugin source: ${sourceRejections
+            .map((entry) => `${entry.pluginId}: ${entry.reason}`)
+            .join("; ")}`,
+        )
+      }
+      const parsedManifests: PluginManifest[] = []
+      for (const pluginPackage of discoveredPackages) {
+        const parsed = pluginManifestSchema.safeParse(pluginPackage.module.manifest)
+        if (!parsed.success) {
+          throw new Error(
+            `Invalid plugin manifest "${pluginPackage.module.manifest.id}": ${parsed.error.issues
+              .map((issue) => issue.message)
+              .join(", ")}`,
+          )
+        }
+        parsedManifests.push(parsed.data as PluginManifest)
+      }
+      validatePluginManifestComposition(parsedManifests)
+      const seenPluginIds = new Set<string>()
+      for (const pluginPackage of discoveredPackages) {
+        const pluginId = pluginPackage.module.manifest.id
+        if (seenPluginIds.has(pluginId)) {
+          throw new Error(`Duplicate plugin package id: ${pluginId}`)
+        }
+        seenPluginIds.add(pluginId)
+      }
+      const persistedRecordsById = new Map(
+        options.lifecycleStore?.get
+          ? (
+              await Promise.all(
+                discoveredPackages.map(async (pluginPackage) => {
+                  const record = await options.lifecycleStore!.get!(
+                    pluginPackage.module.manifest.id,
+                  )
+                  return record ? ([record.id, record] as const) : undefined
+                }),
+              )
+            ).filter((entry): entry is readonly [string, PluginRecord] => Boolean(entry))
+          : [],
       )
+      const previousById = new Map(plugins.map((plugin) => [plugin.manifest.id, plugin]))
+      const nextPlugins = discoveredPackages.map<PluginRuntimePlugin>((pluginPackage) => {
+        const previous = previousById.get(pluginPackage.module.manifest.id)
+        const persisted = persistedRecordsById.get(pluginPackage.module.manifest.id)
+        const requestedPermissions = pluginPackage.module.manifest.permissions ?? []
+        const persistedOrPreviousGrant =
+          previous?.installation.grantedPermissions ?? persisted?.grantedPermissions
+        const runtimePlugin: PluginRuntimePlugin = {
+          package: pluginPackage,
+          module: pluginPackage.module,
+          manifest: pluginPackage.module.manifest,
+          installation: {
+            pluginId: pluginPackage.module.manifest.id,
+            source: pluginPackage.source,
+            desiredEnabled: previous?.installation.desiredEnabled ?? persisted?.enabled ?? true,
+            grantedPermissions: normalizeGrantedPermissions(
+              requestedPermissions,
+              persistedOrPreviousGrant ??
+                options.permissionGrants?.[pluginPackage.module.manifest.id] ??
+                [],
+            ),
+            grantedSettingsHostActions: normalizeGrantedSettingsHostActions(
+              pluginPackage.module.manifest.contributes.settingsPanels?.flatMap(
+                (panel) => panel.hostActions ?? [],
+              ) ?? [],
+              previous?.installation.grantedSettingsHostActions ??
+                persisted?.grantedSettingsHostActions ??
+                options.settingsHostActionGrants?.[pluginPackage.module.manifest.id] ??
+                [],
+            ),
+            grantedSettingsHostReads: normalizeGrantedSettingsHostReads(
+              pluginPackage.module.manifest.contributes.settingsPanels?.flatMap(
+                (panel) => panel.hostReads ?? [],
+              ) ?? [],
+              previous?.installation.grantedSettingsHostReads ??
+                persisted?.grantedSettingsHostReads ??
+                options.settingsHostReadGrants?.[pluginPackage.module.manifest.id] ??
+                [],
+            ),
+          },
+          state: previous?.state ?? { status: "inactive" },
+          get enabled() {
+            return pluginEnabled(runtimePlugin)
+          },
+        }
+        return runtimePlugin
+      })
+      const nextPluginsById = new Map(nextPlugins.map((plugin) => [plugin.manifest.id, plugin]))
       const conflictReasons = new Map<string, string>()
-      for (const plugin of discoveredPlugins) {
+      for (const plugin of nextPlugins) {
         const reason = registrationConflictReason(
           plugin,
-          discoveredPlugins.filter((peer) => peer !== plugin),
+          nextPlugins.filter((peer) => peer !== plugin),
         )
         if (reason) conflictReasons.set(plugin.manifest.id, reason)
       }
       for (const [pluginId, active] of activePlugins) {
         const nextPlugin = nextPluginsById.get(pluginId)
-        if (!nextPlugin || nextPlugin !== active.plugin || compatibilityReason(nextPlugin)) {
+        if (
+          !nextPlugin ||
+          nextPlugin.package !== active.plugin.package ||
+          compatibilityReason(nextPlugin)
+        ) {
           runPluginDisposers(pluginId)
         }
       }
 
-      plugins.splice(0, plugins.length, ...discoveredPlugins)
+      plugins.splice(0, plugins.length, ...nextPlugins)
 
-      for (const plugin of discoveredPlugins) {
-        if (compatibilityReason(plugin) || conflictReasons.has(plugin.manifest.id)) {
-          plugin.enabled = false
+      for (const plugin of plugins) {
+        const reason = compatibilityReason(plugin) ?? conflictReasons.get(plugin.manifest.id)
+        if (reason) {
+          plugin.installation.desiredEnabled = false
+          plugin.state = { status: "skipped", disabledReason: reason }
         }
       }
 
-      if (lifecycleStore) {
-        for (const plugin of discoveredPlugins) {
-          const reason = compatibilityReason(plugin) ?? conflictReasons.get(plugin.manifest.id)
-          const record = buildRecord(plugin, {
-            installedAt: new Date().toISOString(),
-            ...(reason
-              ? {
-                  enabled: false,
-                  status: "skipped",
-                  disabledReason: reason,
-                }
-              : {}),
-          })
-          await lifecycleStore.save(record)
+      if (options.lifecycleStore) {
+        for (const plugin of plugins) {
+          await options.lifecycleStore.save(buildRecord(plugin))
         }
       }
     },
     async activateEnabledPlugins() {
       const preloadResults = new Map<
-        BuiltinPlugin,
+        PluginRuntimePlugin,
         Promise<{ ok: true } | { ok: false; error: unknown }>
       >()
       for (const plugin of plugins) {
-        if (!plugin.enabled || compatibilityReason(plugin) || !plugin.preload) continue
+        if (!pluginEnabled(plugin) || !plugin.package.preload) continue
         preloadResults.set(
           plugin,
-          plugin.preload().then(
+          plugin.package.preload().then(
             () => ({ ok: true }),
             (error: unknown) => ({ ok: false, error }),
           ),
@@ -277,45 +531,35 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       }
 
       for (const plugin of plugins) {
-        if (!plugin.enabled) {
-          continue
-        }
+        if (!pluginEnabled(plugin)) continue
         const reason = compatibilityReason(plugin)
         if (reason) {
-          plugin.enabled = false
-          if (lifecycleStore) {
-            await lifecycleStore.save(
-              buildRecord(plugin, {
-                enabled: false,
-                status: "skipped",
-                disabledReason: reason,
-              }),
-            )
-          }
+          plugin.installation.desiredEnabled = false
+          plugin.state = { status: "skipped", disabledReason: reason }
+          if (options.lifecycleStore) await options.lifecycleStore.save(buildRecord(plugin))
           continue
         }
         try {
           const preloadResult = await preloadResults.get(plugin)
           if (preloadResult && !preloadResult.ok) throw preloadResult.error
           const activated = await activatePlugin(plugin)
-
-          if (lifecycleStore && activated) {
-            await lifecycleStore.save(
-              buildRecord(plugin, {
-                status: "active",
-                lastActivatedAt: new Date().toISOString(),
-              }),
+          if (options.lifecycleStore && activated) {
+            await options.lifecycleStore.save(
+              buildRecord(plugin, { lastActivatedAt: new Date().toISOString() }),
             )
           }
         } catch (error: unknown) {
+          plugin.state = {
+            status: "error",
+            error: error instanceof Error ? error.message : String(error),
+          }
           console.error(
             `Plugin "${plugin.manifest.id}" failed to activate:`,
             error instanceof Error ? error.message : String(error),
           )
-          if (lifecycleStore) {
-            await lifecycleStore.save(
+          if (options.lifecycleStore) {
+            await options.lifecycleStore.save(
               buildRecord(plugin, {
-                status: "error",
                 lastError: error instanceof Error ? error.message : String(error),
                 lastActivatedAt: new Date().toISOString(),
               }),
@@ -325,81 +569,65 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       }
     },
     async setPluginEnabled(pluginId, enabled) {
-      const plugin = plugins.find((p) => p.manifest.id === pluginId)
+      const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
       if (!plugin) return
       const conflictReason = enabled
         ? registrationConflictReason(
             plugin,
-            plugins.filter((peer) => peer.manifest.id !== pluginId && peer.enabled),
+            plugins.filter(
+              (peer) => peer.manifest.id !== pluginId && peer.installation.desiredEnabled,
+            ),
           )
         : undefined
       const reason = compatibilityReason(plugin)
       if (enabled && (reason || conflictReason)) {
         const disabledReason = reason ?? conflictReason
         runPluginDisposers(pluginId)
-        plugin.enabled = false
-        if (lifecycleStore) {
-          await lifecycleStore.save(
-            buildRecord(plugin, {
-              enabled: false,
-              status: "skipped",
-              ...(disabledReason ? { disabledReason } : {}),
-              updatedAt: new Date().toISOString(),
-            }),
-          )
+        plugin.installation.desiredEnabled = false
+        plugin.state = {
+          status: "skipped",
+          ...(disabledReason ? { disabledReason } : {}),
         }
+        if (options.lifecycleStore) await options.lifecycleStore.save(buildRecord(plugin))
         return
       }
 
       if (!enabled) {
         runPluginDisposers(pluginId)
-        plugin.enabled = false
-
-        if (lifecycleStore) {
-          await lifecycleStore.save(
-            buildRecord(plugin, {
-              enabled: false,
-              status: "disabled",
-              updatedAt: new Date().toISOString(),
-              disabledReason: "用户手动禁用",
-            }),
-          )
-        }
+        plugin.installation.desiredEnabled = false
+        plugin.state = { status: "disabled", disabledReason: "用户手动禁用" }
+        if (options.lifecycleStore) await options.lifecycleStore.save(buildRecord(plugin))
         return
       }
 
       if (activePlugins.has(pluginId)) {
-        plugin.enabled = true
+        plugin.installation.desiredEnabled = true
         return
       }
 
-      plugin.enabled = true
-
+      plugin.installation.desiredEnabled = true
       try {
+        await preloadPlugin(plugin)
         await activatePlugin(plugin)
-        if (lifecycleStore) {
-          await lifecycleStore.save(
-            buildRecord(plugin, {
-              enabled: true,
-              status: "active",
-              lastActivatedAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }),
+        if (options.lifecycleStore) {
+          await options.lifecycleStore.save(
+            buildRecord(plugin, { lastActivatedAt: new Date().toISOString() }),
           )
         }
       } catch (error: unknown) {
+        plugin.state = {
+          status: "error",
+          error: error instanceof Error ? error.message : String(error),
+        }
         console.error(
           `Plugin "${pluginId}" failed to activate:`,
           error instanceof Error ? error.message : String(error),
         )
-        if (lifecycleStore) {
-          await lifecycleStore.save(
+        if (options.lifecycleStore) {
+          await options.lifecycleStore.save(
             buildRecord(plugin, {
-              enabled: true,
-              status: "error",
               lastError: error instanceof Error ? error.message : String(error),
               lastActivatedAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
             }),
           )
         }

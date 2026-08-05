@@ -516,9 +516,11 @@ function PreviewArea(props: {
               instance={{
                 id: "add-widget-preview",
                 workspaceId: "add-widget-preview",
-                pluginId: props.widget.pluginId,
-                contributionId: props.widget.id,
-                extensionPoint: "widget",
+                contribution: {
+                  pluginId: props.widget.pluginId,
+                  kind: "widget",
+                  id: props.widget.id,
+                },
                 regionId: "preview",
                 enabled: true,
                 size,

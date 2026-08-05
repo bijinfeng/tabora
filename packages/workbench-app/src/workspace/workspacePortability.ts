@@ -56,6 +56,44 @@ function readSchemaVersion(value: unknown): unknown {
     : undefined
 }
 
+/**
+ * Version-1 exports may predate ContributionRef. Convert only at the import boundary;
+ * runtime models never need to infer identity from the legacy fields.
+ */
+function migrateLegacyInstanceRefs(value: unknown): unknown {
+  if (!value || typeof value !== "object") return value
+  const exportData = value as Record<string, unknown>
+  if (!Array.isArray(exportData.instances)) return value
+
+  return {
+    ...exportData,
+    instances: exportData.instances.map((instance) => {
+      if (!instance || typeof instance !== "object") return instance
+      const row = instance as Record<string, unknown>
+      if (row.contribution !== undefined) return row
+      if (
+        typeof row.pluginId !== "string" ||
+        typeof row.contributionId !== "string" ||
+        typeof row.extensionPoint !== "string"
+      ) {
+        return row
+      }
+      return {
+        contribution: {
+          pluginId: row.pluginId,
+          kind: row.extensionPoint,
+          id: row.contributionId,
+        },
+        ...Object.fromEntries(
+          Object.entries(row).filter(
+            ([key]) => key !== "pluginId" && key !== "contributionId" && key !== "extensionPoint",
+          ),
+        ),
+      }
+    }),
+  }
+}
+
 export function parseExportResult(json: string): WorkspaceExportParseResult {
   let data: unknown
   try {
@@ -64,7 +102,7 @@ export function parseExportResult(json: string): WorkspaceExportParseResult {
     return { ok: false, error: { reason: "invalid-json", message: "导入数据不是有效的 JSON" } }
   }
 
-  const parsed = workspaceExportSchema.safeParse(data)
+  const parsed = workspaceExportSchema.safeParse(migrateLegacyInstanceRefs(data))
   if (!parsed.success) {
     const schemaVersion = readSchemaVersion(data)
     if (schemaVersion !== SCHEMA_VERSION) {
@@ -112,8 +150,8 @@ export function prepareImport(data: WorkspaceExport, availablePluginIds: string[
   const workspaceId = data.workspace.id
 
   const filteredInstances = data.instances.flatMap((instance) => {
-    if (!availablePluginIds.includes(instance.pluginId)) {
-      warnings.push(`插件 "${instance.pluginId}" 不存在 (实例: ${instance.id})`)
+    if (!availablePluginIds.includes(instance.contribution.pluginId)) {
+      warnings.push(`插件 "${instance.contribution.pluginId}" 不存在 (实例: ${instance.id})`)
       return []
     }
     return [{ ...instance, workspaceId }]

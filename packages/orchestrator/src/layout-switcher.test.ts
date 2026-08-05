@@ -9,9 +9,13 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
   return {
     id: "workspace-1",
     name: "Main",
-    activeLayoutId: "layout.previous",
-    activeThemeId: "theme.light",
-    activeBackgroundProviderId: "background.gradient-green",
+    activeLayout: { pluginId: "plugin.layout", kind: "layout", id: "layout.previous" },
+    activeTheme: { pluginId: "plugin.theme", kind: "theme", id: "theme.light" },
+    activeBackgroundProvider: {
+      pluginId: "plugin.background",
+      kind: "background-provider",
+      id: "background.gradient-green",
+    },
     regions: {
       search: { regionId: "search", accepts: ["search"], instances: [{ instanceId: "search-1" }] },
       grid: { regionId: "grid", accepts: ["widget"], instances: [{ instanceId: "widget-1" }] },
@@ -26,9 +30,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "grid",
     enabled: true,
     size: "M",
@@ -43,6 +45,7 @@ function layout(regions: LayoutContribution["regions"]): LayoutContribution {
   return {
     id: "layout.next",
     title: "Next",
+    view: "layout.next.view",
     regions,
     defaultRegions: {},
     supportsResponsive: true,
@@ -84,9 +87,7 @@ describe("createLayoutSwitchPlan", () => {
   test("search is not placed into widget region", () => {
     const searchInstance = instance({
       id: "search-1",
-      pluginId: "plugin.search",
-      contributionId: "search.command",
-      extensionPoint: "search",
+      contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
       regionId: "oldSearch",
     })
 
@@ -102,43 +103,32 @@ describe("createLayoutSwitchPlan", () => {
   })
 
   test("incompatible instance is returned as unplaced without deletion", () => {
-    const themeInstance = instance({
-      id: "theme-1",
-      pluginId: "plugin.theme",
-      contributionId: "theme.default",
-      extensionPoint: "theme",
-      regionId: "themeRegion",
+    const searchInstance = instance({
+      id: "search-1",
+      contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
+      regionId: "searchRegion",
     })
 
     const plan = createLayoutSwitchPlan({
       workspace: workspace(),
-      instances: [themeInstance],
+      instances: [searchInstance],
       targetLayout: layout([{ id: "grid", title: "Grid", accepts: ["widget"] }]),
     })
 
     expect(plan.placedInstances).toEqual([])
-    expect(plan.unplacedInstances).toEqual([themeInstance])
-    expect(plan.unplacedInstances[0]?.regionId).toBe("themeRegion")
+    expect(plan.unplacedInstances).toEqual([searchInstance])
+    expect(plan.unplacedInstances[0]?.regionId).toBe("searchRegion")
     expect(plan.nextRegions.unplaced).toEqual({
       regionId: "unplaced",
-      accepts: [
-        "layout",
-        "widget",
-        "search",
-        "search-provider",
-        "background-provider",
-        "background-renderer",
-        "theme",
-        "settings-panel",
-      ],
-      instances: [{ instanceId: "theme-1" }],
+      accepts: ["widget", "search"],
+      instances: [{ instanceId: "search-1" }],
     })
     expect(plan.nextRegions.grid?.instances).toEqual([])
   })
 
   test("snapshot captures a persistable previous workspace state", () => {
     const currentWorkspace = workspace({
-      activeLayoutId: "layout.previous",
+      activeLayout: { pluginId: "plugin.layout", kind: "layout", id: "layout.previous" },
       regions: {
         old: { regionId: "old", accepts: ["widget"], instances: [{ instanceId: "widget-1" }] },
       },

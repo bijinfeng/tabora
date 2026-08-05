@@ -20,9 +20,33 @@ describe("createWorkspaceRepository", () => {
     const workspace: Workspace = {
       id: "default",
       name: "默认",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "background.gradient-green",
+      activeLayout: {
+        pluginId: "official.layout.workbench-dashboard",
+        kind: "layout",
+        id: "official.layout.workbench-dashboard",
+      },
+      activeTheme: { pluginId: "official.theme", kind: "theme", id: "official.theme.light" },
+      activeBackgroundProvider: {
+        pluginId: "official.background",
+        kind: "background-provider",
+        id: "background.gradient-green",
+      },
+      config: {
+        search: {
+          defaultProvider: {
+            pluginId: "official.search",
+            kind: "search-provider",
+            id: "official.search.google",
+          },
+          enabledProviders: [
+            {
+              pluginId: "official.search",
+              kind: "search-provider",
+              id: "official.search.google",
+            },
+          ],
+        },
+      },
       regions: {},
       createdAt: "2026-05-26T00:00:00.000Z",
       updatedAt: "2026-05-26T00:00:00.000Z",

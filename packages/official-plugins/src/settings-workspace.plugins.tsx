@@ -7,7 +7,7 @@ import { Select } from "@tabora/ui/select"
 import { Slider } from "@tabora/ui/slider"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For } from "solid-js"
-import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import type { SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 import { className, styles } from "./styles"
 
 const PLUGIN_INSTANCES = [

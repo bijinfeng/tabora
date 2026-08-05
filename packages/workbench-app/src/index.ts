@@ -44,8 +44,8 @@ function deriveSearchSettingsFromPreset(
   preset: WorkspacePresetContribution,
 ): WorkbenchSearchSettings {
   return {
-    defaultProviderId: preset.search.defaultProviderId,
-    enabledProviderIds: [...preset.search.enabledProviderIds],
+    defaultProvider: preset.search.defaultProvider,
+    enabledProviders: [...preset.search.enabledProviders],
   }
 }
 

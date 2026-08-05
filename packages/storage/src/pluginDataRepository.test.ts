@@ -116,6 +116,31 @@ describe("createPluginDataRepository", () => {
     await expect(repo.getByInstance(pluginId, sharedId, "k")).resolves.toBe("instance")
   })
 
+  it("stores syncable collection records with a stable record id and scope", async () => {
+    const records = repo.records!
+    await records.save(pluginId, "notes", {
+      id: "note-1",
+      workspaceId: "workspace-a",
+      value: { text: "Local-first" },
+      updatedAt: "2026-08-04T00:00:00.000Z",
+    })
+
+    await expect(
+      records.get(pluginId, "notes", "note-1", { workspaceId: "workspace-a" }),
+    ).resolves.toEqual({
+      id: "note-1",
+      workspaceId: "workspace-a",
+      value: { text: "Local-first" },
+      updatedAt: "2026-08-04T00:00:00.000Z",
+    })
+    await expect(
+      records.list(pluginId, "notes", { workspaceId: "workspace-a" }),
+    ).resolves.toHaveLength(1)
+    await expect(records.list(pluginId, "notes", { workspaceId: "workspace-b" })).resolves.toEqual(
+      [],
+    )
+  })
+
   it("ignores legacy instance and workspace ids without scope prefixes", async () => {
     const legacyWorkspaceDb = createTaboraDatabase("test-plugin-data-legacy-workspace")
     const legacyWorkspaceRepo = createPluginDataRepository(legacyWorkspaceDb)

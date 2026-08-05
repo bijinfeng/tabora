@@ -1,7 +1,7 @@
 import { uniq } from "es-toolkit/array"
 import type { KeybindingContribution } from "@tabora/plugin-api"
 
-export type ShortcutCommandMap = Record<string, (() => void) | undefined>
+export type ShortcutCommandMap = Record<string, (() => void | Promise<void>) | undefined>
 
 export type ShortcutRegistryOptions = {
   platform: string
@@ -9,7 +9,8 @@ export type ShortcutRegistryOptions = {
   platformKeybindings?: KeybindingContribution[]
   pluginKeybindings?: KeybindingContribution[]
   commands?: ShortcutCommandMap
-  executeCommand?: (commandId: string) => void
+  executeCommand?: (commandId: string) => void | Promise<void>
+  onCommandError?: (error: unknown, commandId: string) => void
 }
 
 export type ShortcutBinding = KeybindingContribution & {
@@ -136,7 +137,9 @@ export function createShortcutRegistry(options: ShortcutRegistryOptions): Shortc
   function executeNormalizedKey(key: string): boolean {
     const binding = enabledByKey.get(normalizeShortcutKey(key))
     if (!binding || binding.disabled) return false
-    executeCommand(binding.commandId)
+    void Promise.resolve(executeCommand(binding.commandId)).catch((error: unknown) =>
+      options.onCommandError?.(error, binding.commandId),
+    )
     return true
   }
 

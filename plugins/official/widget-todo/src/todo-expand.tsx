@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { createSignal, For, Show, createMemo } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api"
+import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button } from "@tabora/ui/button"
 import { Checkbox } from "@tabora/ui/checkbox"
 import { Input } from "@tabora/ui/input"

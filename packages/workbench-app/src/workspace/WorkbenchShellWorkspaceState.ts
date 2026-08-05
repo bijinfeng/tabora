@@ -85,13 +85,13 @@ export function createWorkbenchWorkspaceState(options: {
     options.setWorkspaceState(result.workspace)
 
     const { instances } = await options.reconcileInstancesForLayout(
-      result.workspace.activeLayoutId,
+      result.workspace.activeLayout.id,
       result.instances,
     )
     options.setInstances(instances)
-    options.setActiveLayoutId(result.workspace.activeLayoutId)
-    options.applyThemeSelection(result.workspace.activeThemeId)
-    options.applyBackgroundSelection(result.workspace.activeBackgroundProviderId)
+    options.setActiveLayoutId(result.workspace.activeLayout.id)
+    options.applyThemeSelection(result.workspace.activeTheme.id)
+    options.applyBackgroundSelection(result.workspace.activeBackgroundProvider.id)
     options.setSearchSettings(readSearchSettings(result.workspace))
     options.setWorkspaceList((prev) => [...prev, result.workspace])
 

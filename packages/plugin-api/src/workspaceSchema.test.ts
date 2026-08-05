@@ -10,7 +10,11 @@ import {
 describe("workbenchSearchSettingsSchema", () => {
   it("rejects search settings without explicit enabled provider ids", () => {
     const result = workbenchSearchSettingsSchema.safeParse({
-      defaultProviderId: "official.search.google",
+      defaultProvider: {
+        pluginId: "official.search",
+        kind: "search-provider",
+        id: "official.search.google",
+      },
     })
 
     expect(result.success).toBe(false)
@@ -18,8 +22,14 @@ describe("workbenchSearchSettingsSchema", () => {
 
   it("rejects default providers that are not enabled", () => {
     const result = workbenchSearchSettingsSchema.safeParse({
-      defaultProviderId: "official.search.google",
-      enabledProviderIds: ["official.search.bing"],
+      defaultProvider: {
+        pluginId: "official.search",
+        kind: "search-provider",
+        id: "official.search.google",
+      },
+      enabledProviders: [
+        { pluginId: "official.search", kind: "search-provider", id: "official.search.bing" },
+      ],
     })
 
     expect(result.success).toBe(false)
@@ -31,9 +41,13 @@ describe("workspaceSchema", () => {
     const result = workspaceSchema.safeParse({
       id: "workspace-1",
       name: "Default",
-      activeLayoutId: "official.layout.workbench-dashboard",
-      activeThemeId: "official.theme.light",
-      activeBackgroundProviderId: "official.background.default",
+      activeLayout: { pluginId: "official.layout", kind: "layout", id: "dashboard" },
+      activeTheme: { pluginId: "official.theme", kind: "theme", id: "light" },
+      activeBackgroundProvider: {
+        pluginId: "official.background",
+        kind: "background-provider",
+        id: "default",
+      },
       config: {},
       regions: {},
       createdAt: "2026-06-07T00:00:00.000Z",
@@ -49,9 +63,7 @@ describe("pluginInstanceSchema", () => {
     const result = pluginInstanceSchema.safeParse({
       id: "notes-1",
       workspaceId: "workspace-1",
-      pluginId: "official.widgets.notes",
-      contributionId: "notes",
-      extensionPoint: "widget",
+      contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       regionId: "mainGrid",
       enabled: true,
       config: {},
@@ -71,12 +83,20 @@ describe("workspaceExportSchema", () => {
       workspace: {
         id: "workspace-1",
         name: "Default",
-        activeLayoutId: "official.layout.workbench-dashboard",
-        activeThemeId: "official.theme.light",
-        activeBackgroundProviderId: "official.background.default",
+        activeLayout: { pluginId: "official.layout", kind: "layout", id: "dashboard" },
+        activeTheme: { pluginId: "official.theme", kind: "theme", id: "light" },
+        activeBackgroundProvider: {
+          pluginId: "official.background",
+          kind: "background-provider",
+          id: "default",
+        },
         config: {
           search: {
-            defaultProviderId: "official.search.google",
+            defaultProvider: {
+              pluginId: "official.search",
+              kind: "search-provider",
+              id: "official.search.google",
+            },
           },
         },
         regions: {},

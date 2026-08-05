@@ -1,6 +1,9 @@
 import type {
+  BackgroundProviderContributionRef,
+  LayoutContributionRef,
   PluginInstance,
   SearchHistoryEntry,
+  ThemeContributionRef,
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
@@ -27,7 +30,7 @@ export function readSearchSettings(workspace: Workspace): WorkbenchSearchSetting
     throw new Error("Workspace search settings are invalid")
   }
 
-  return parsed.data
+  return parsed.data as WorkbenchSearchSettings
 }
 
 export function readLocale(workspace: Workspace): WorkbenchLocale | null {
@@ -82,9 +85,9 @@ export async function ensureWorkspaceSession(options: {
     searchHistory,
     searchSettings: readSearchSettings(workspace),
     locale: readLocale(workspace),
-    activeLayoutId: workspace.activeLayoutId,
-    activeThemeId: workspace.activeThemeId,
-    activeBackgroundId: workspace.activeBackgroundProviderId,
+    activeLayoutId: workspace.activeLayout.id,
+    activeThemeId: workspace.activeTheme.id,
+    activeBackgroundId: workspace.activeBackgroundProvider.id,
   }
 }
 
@@ -137,13 +140,13 @@ export async function updateWorkspaceRecord(options: {
 export async function updateWorkspaceTheme(options: {
   workspaceRepo: WorkspaceRepository
   workspaceId: string
-  themeId: string
+  theme: ThemeContributionRef
 }): Promise<Workspace | null> {
   return updateWorkspaceRecord({
     workspaceRepo: options.workspaceRepo,
     workspaceId: options.workspaceId,
     mutator(workspace) {
-      workspace.activeThemeId = options.themeId
+      workspace.activeTheme = options.theme
       return workspace
     },
   })
@@ -152,13 +155,13 @@ export async function updateWorkspaceTheme(options: {
 export async function updateWorkspaceBackground(options: {
   workspaceRepo: WorkspaceRepository
   workspaceId: string
-  backgroundId: string
+  background: BackgroundProviderContributionRef
 }): Promise<Workspace | null> {
   return updateWorkspaceRecord({
     workspaceRepo: options.workspaceRepo,
     workspaceId: options.workspaceId,
     mutator(workspace) {
-      workspace.activeBackgroundProviderId = options.backgroundId
+      workspace.activeBackgroundProvider = options.background
       return workspace
     },
   })
@@ -167,13 +170,13 @@ export async function updateWorkspaceBackground(options: {
 export async function updateWorkspaceLayout(options: {
   workspaceRepo: WorkspaceRepository
   workspaceId: string
-  layoutId: string
+  layout: LayoutContributionRef
 }): Promise<Workspace | null> {
   return updateWorkspaceRecord({
     workspaceRepo: options.workspaceRepo,
     workspaceId: options.workspaceId,
     mutator(workspace) {
-      workspace.activeLayoutId = options.layoutId
+      workspace.activeLayout = options.layout
       return workspace
     },
   })
@@ -204,8 +207,8 @@ export function resolveWorkspaceVisualState(workspace: Workspace): {
   activeBackgroundId: string
 } {
   return {
-    activeLayoutId: workspace.activeLayoutId,
-    activeThemeId: workspace.activeThemeId,
-    activeBackgroundId: workspace.activeBackgroundProviderId,
+    activeLayoutId: workspace.activeLayout.id,
+    activeThemeId: workspace.activeTheme.id,
+    activeBackgroundId: workspace.activeBackgroundProvider.id,
   }
 }

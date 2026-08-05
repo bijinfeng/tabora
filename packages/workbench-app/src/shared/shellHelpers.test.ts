@@ -1,6 +1,5 @@
 import type {
   PluginInstance,
-  SearchProviderContribution,
   WidgetContribution,
   WorkbenchSearchSettings,
 } from "@tabora/plugin-api"
@@ -18,15 +17,13 @@ import {
 function instance(
   id: string,
   contributionId: string,
-  extensionPoint: PluginInstance["extensionPoint"] = "widget",
+  kind: PluginInstance["contribution"]["kind"] = "widget",
   enabled = true,
 ): PluginInstance {
   return {
     id,
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId,
-    extensionPoint,
+    contribution: { pluginId: "plugin.widgets", kind, id: contributionId },
     regionId: "mainGrid",
     enabled,
     size: "M",
@@ -48,9 +45,24 @@ function widget(id: string, title: string, icon?: string): WidgetContribution {
   }
 }
 
-const providers: SearchProviderContribution[] = [
-  { id: "google", title: "Google", urlTemplate: "https://google.test?q={query}" },
-  { id: "duck", title: "DuckDuckGo", urlTemplate: "https://duck.test?q={query}" },
+const providerRef = (id: string) => ({
+  pluginId: "plugin.search",
+  kind: "search-provider" as const,
+  id,
+})
+const providers = [
+  {
+    id: "google",
+    title: "Google",
+    urlTemplate: "https://google.test?q={query}",
+    ref: providerRef("google"),
+  },
+  {
+    id: "duck",
+    title: "DuckDuckGo",
+    urlTemplate: "https://duck.test?q={query}",
+    ref: providerRef("duck"),
+  },
 ]
 
 describe("shell helper widget resolvers", () => {
@@ -70,7 +82,7 @@ describe("shell helper widget resolvers", () => {
       instances: [
         instance("enabled-widget", "today"),
         instance("disabled-widget", "notes", "widget", false),
-        instance("search-provider", "google", "search-provider"),
+        instance("search-provider", "google", "search"),
       ],
       resolveWidgetContribution: (_pluginId, contributionId) =>
         contributionId === "today" ? widget("today", "今日重点", "target") : undefined,
@@ -113,8 +125,8 @@ describe("shell helper widget resolvers", () => {
 describe("shell helper search settings resolvers", () => {
   it("returns the explicit enabled provider ids", () => {
     const settings: WorkbenchSearchSettings = {
-      defaultProviderId: "google",
-      enabledProviderIds: ["google", "duck"],
+      defaultProvider: providerRef("google"),
+      enabledProviders: [providerRef("google"), providerRef("duck")],
     }
 
     expect(resolveEnabledProviderIds(settings)).toEqual(["google", "duck"])
@@ -123,8 +135,8 @@ describe("shell helper search settings resolvers", () => {
 
   it("uses explicit enabled provider ids and preserves provider order", () => {
     const settings: WorkbenchSearchSettings = {
-      defaultProviderId: "duck",
-      enabledProviderIds: ["duck"],
+      defaultProvider: providerRef("duck"),
+      enabledProviders: [providerRef("duck")],
     }
 
     expect(resolveEnabledProviderIds(settings)).toEqual(["duck"])
@@ -134,24 +146,30 @@ describe("shell helper search settings resolvers", () => {
   it("returns an empty default provider when the configured id is unavailable", () => {
     expect(
       resolveDefaultProviderForSearch(
-        { defaultProviderId: "google", enabledProviderIds: ["duck"] },
+        { defaultProvider: providerRef("google"), enabledProviders: [providerRef("duck")] },
         providers,
       ),
     ).toBe("google")
     expect(
       resolveDefaultProviderForSearch(
-        { defaultProviderId: "missing", enabledProviderIds: ["google", "duck"] },
+        {
+          defaultProvider: providerRef("missing"),
+          enabledProviders: [providerRef("google"), providerRef("duck")],
+        },
         providers,
       ),
     ).toBe("")
     expect(
-      resolveDefaultProviderForSearch({ defaultProviderId: "google", enabledProviderIds: [] }, []),
+      resolveDefaultProviderForSearch(
+        { defaultProvider: providerRef("google"), enabledProviders: [] },
+        [],
+      ),
     ).toBe("")
   })
 })
 
 describe("shell helper command execution", () => {
-  it("routes platform commands to actions and plugin commands with context to the plugin runner", () => {
+  it("routes platform commands to actions and plugin commands with context to the plugin runner", async () => {
     const platformAction = vi.fn()
     const pluginRunner = vi.fn()
     const widgetInstance = instance("todo-1", "todo")
@@ -163,20 +181,20 @@ describe("shell helper command execution", () => {
       runPluginCommand: pluginRunner,
     })
 
-    runCommand("open-settings", { instance: widgetInstance })
-    runCommand("todo.inspect", { instance: widgetInstance })
+    await runCommand("open-settings", { instance: widgetInstance })
+    await runCommand("todo.inspect", { instance: widgetInstance })
 
     expect(platformAction).toHaveBeenCalledOnce()
     expect(pluginRunner).toHaveBeenCalledWith("todo.inspect", { instance: widgetInstance })
   })
 
-  it("reports unhandled plugin commands when no plugin runner is configured", () => {
+  it("reports unhandled plugin commands when no plugin runner is configured", async () => {
     const widgetInstance = instance("todo-1", "todo")
     const runCommand = createCommandExecutor({
       actions: {},
       pluginCommandIds: ["todo.unhandled"],
     })
 
-    expect(runCommand("todo.unhandled", { instance: widgetInstance })).toBe(false)
+    await expect(runCommand("todo.unhandled", { instance: widgetInstance })).resolves.toBe(false)
   })
 })

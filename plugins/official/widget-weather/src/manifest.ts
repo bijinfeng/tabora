@@ -1,4 +1,4 @@
-import type { PluginManifest } from "@tabora/plugin-api"
+import type { PluginManifest } from "@tabora/plugin-api/sdk"
 
 export const officialPluginWeatherManifest: PluginManifest = {
   id: "official.widgets.weather",
@@ -8,7 +8,17 @@ export const officialPluginWeatherManifest: PluginManifest = {
   entry: "./index",
   styles: [{ href: "./styles.css", scope: "plugin", order: 40 }],
   engine: { platform: "^0.1.0" },
-  permissions: [{ type: "network", hosts: ["open-meteo.com"] }],
+  requiredCapabilities: ["network"],
+  permissions: [
+    {
+      type: "network",
+      hosts: [
+        "geocoding-api.open-meteo.com",
+        "api.open-meteo.com",
+        "air-quality-api.open-meteo.com",
+      ],
+    },
+  ],
   contributes: {
     widgets: [
       {

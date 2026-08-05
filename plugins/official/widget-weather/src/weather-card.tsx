@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
-import type { WidgetSize, WidgetViewProps } from "@tabora/plugin-api"
+import type { PluginNetworkAccess, WidgetSize, WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button } from "@tabora/ui/button"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Skeleton } from "@tabora/ui/skeleton"
@@ -243,7 +243,7 @@ function ExtraLargeBody(props: { snap: WeatherSnapshot }) {
   )
 }
 
-export function WeatherCard(props: WidgetViewProps) {
+export function WeatherCard(props: WidgetViewProps & { network: PluginNetworkAccess }) {
   const store = createWeatherStore(props)
   const cardSize = (): WidgetSize => props.size ?? "S"
 

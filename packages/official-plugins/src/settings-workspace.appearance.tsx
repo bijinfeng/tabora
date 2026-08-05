@@ -5,7 +5,8 @@ import { SegmentedControl } from "@tabora/ui/segmented-control"
 import { Select } from "@tabora/ui/select"
 import { Slider } from "@tabora/ui/slider"
 import { createSignal, For, Show } from "solid-js"
-import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+import { contributionRefKey, sameContributionRef } from "@tabora/plugin-api/sdk"
 import { className, styles } from "./styles"
 
 export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
@@ -13,21 +14,38 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
   const [density, setDensity] = createSignal("compact")
   const [radius, setRadius] = createSignal(8)
   const [fontSize, setFontSize] = createSignal(13)
-  const activeTheme = () => props.workspace.activeThemeId
-  const activeBackground = () => props.workspace.activeBackgroundProviderId
+  const workspace = () => props.data.workspace
+  const themes = () => props.data.themes ?? []
+  const backgrounds = () => props.data.backgrounds ?? []
+  const activeTheme = () =>
+    workspace()?.activeTheme ?? { pluginId: "", kind: "theme" as const, id: "" }
+  const activeBackground = () =>
+    workspace()?.activeBackgroundProvider ?? {
+      pluginId: "",
+      kind: "background-provider" as const,
+      id: "",
+    }
   const localeValue = () => props.locale ?? "zh-CN"
   const localeOptions = () => props.availableLocales ?? []
   const canSwitchLocale = () =>
     typeof props.host.switchLocale === "function" && localeOptions().length > 0
   const themeOptions = () =>
-    props.themes.map((theme) => ({ value: theme.id, label: themeModeLabel(theme) }))
+    themes().map((theme) => ({
+      value: contributionRefKey(theme.ref),
+      label: themeModeLabel(theme),
+      disabled: !props.host.switchTheme,
+    }))
   const backgroundOptions = () =>
-    props.backgrounds.map((background) => ({ value: background.id, label: background.title }))
+    backgrounds().map((background) => ({
+      value: contributionRefKey(background.ref),
+      label: background.title,
+    }))
   const activeThemeTitle = () =>
-    props.themes.find((theme) => theme.id === activeTheme())?.title ?? activeTheme()
+    themes().find((theme) => sameContributionRef(theme.ref, activeTheme()))?.title ??
+    activeTheme().id
   const activeBackgroundTitle = () =>
-    props.backgrounds.find((background) => background.id === activeBackground())?.title ??
-    activeBackground()
+    backgrounds().find((background) => sameContributionRef(background.ref, activeBackground()))
+      ?.title ?? activeBackground().id
 
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="appearance">
@@ -42,13 +60,18 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           trailing={
             <Show
               when={themeOptions().length > 0}
-              fallback={<span {...stylex.attrs(styles.rowMeta)}>{activeTheme()}</span>}
+              fallback={<span {...stylex.attrs(styles.rowMeta)}>{activeTheme().id}</span>}
             >
               <SegmentedControl<string>
                 size="sm"
-                value={activeTheme()}
+                value={contributionRefKey(activeTheme())}
                 options={themeOptions()}
-                onChange={(themeId) => void props.host.switchTheme(themeId)}
+                onChange={(key) => {
+                  const theme = themes().find(
+                    (candidate) => contributionRefKey(candidate.ref) === key,
+                  )
+                  if (theme) void props.host.switchTheme?.(theme.ref)
+                }}
                 aria-label="界面模式"
               />
             </Show>
@@ -90,10 +113,15 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           trailing={
             <Select<string>
               size="sm"
-              value={activeBackground()}
+              value={contributionRefKey(activeBackground())}
               options={backgroundOptions()}
-              disabled={backgroundOptions().length === 0}
-              onChange={(backgroundId) => void props.host.switchBackground(backgroundId)}
+              disabled={backgroundOptions().length === 0 || !props.host.switchBackground}
+              onChange={(key) => {
+                const background = backgrounds().find(
+                  (candidate) => contributionRefKey(candidate.ref) === key,
+                )
+                if (background) void props.host.switchBackground?.(background.ref)
+              }}
               aria-label="页面背景"
             />
           }
@@ -191,7 +219,7 @@ const ACCENT_TONES = [
   { id: "clay", label: "Clay", color: "#8f4c45" },
 ]
 
-function themeModeLabel(theme: SettingsPanelViewProps["themes"][number]) {
+function themeModeLabel(theme: NonNullable<SettingsPanelData["themes"]>[number]) {
   const key = `${theme.id} ${theme.title}`.toLowerCase()
   if (key.includes("dark") || key.includes("暗")) return "暗色"
   if (key.includes("system") || key.includes("系统")) return "系统"

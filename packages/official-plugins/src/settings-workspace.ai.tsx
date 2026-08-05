@@ -5,7 +5,7 @@ import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For } from "solid-js"
-import type { SettingsPanelViewProps } from "@tabora/plugin-api"
+import type { SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 import { className, styles } from "./styles"
 
 const TEXT_MODEL_OPTIONS = ["GPT-4.1 Mini", "Claude 3.5 Sonnet", "Gemini 1.5 Pro"]

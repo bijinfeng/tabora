@@ -4,6 +4,8 @@
 //  - forecast：当前 + 逐小时 + 逐日
 //  - air-quality：US AQI
 
+import type { PluginNetworkAccess } from "@tabora/plugin-api/sdk"
+
 const GEOCODING_ENDPOINT = "https://geocoding-api.open-meteo.com/v1/search"
 const FORECAST_ENDPOINT = "https://api.open-meteo.com/v1/forecast"
 const AIR_QUALITY_ENDPOINT = "https://air-quality-api.open-meteo.com/v1/air-quality"
@@ -153,8 +155,12 @@ function toHourLabel(iso: string): string {
   return timePart.slice(0, 5)
 }
 
-async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, signal ? { signal } : undefined)
+async function fetchJson<T>(
+  network: PluginNetworkAccess,
+  url: string,
+  signal?: AbortSignal,
+): Promise<T> {
+  const response = await network.fetch(url, signal ? { signal } : undefined)
   if (!response.ok) {
     throw new Error(`请求失败：${response.status}`)
   }
@@ -172,9 +178,13 @@ type GeocodingResponse = {
   }>
 }
 
-export async function geocodeCity(city: string, signal?: AbortSignal): Promise<GeoLocation> {
+export async function geocodeCity(
+  city: string,
+  network: PluginNetworkAccess,
+  signal?: AbortSignal,
+): Promise<GeoLocation> {
   const url = `${GEOCODING_ENDPOINT}?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`
-  const data = await fetchJson<GeocodingResponse>(url, signal)
+  const data = await fetchJson<GeocodingResponse>(network, url, signal)
   const first = data.results?.[0]
   if (!first) {
     throw new Error(`未找到城市「${city}」`)
@@ -236,8 +246,12 @@ function pickUpcomingHours(hourly: ForecastResponse["hourly"], count: number): W
   return source.slice(0, count).map((entry) => entry.hour)
 }
 
-export async function fetchWeather(city: string, signal?: AbortSignal): Promise<WeatherSnapshot> {
-  const location = await geocodeCity(city, signal)
+export async function fetchWeather(
+  city: string,
+  network: PluginNetworkAccess,
+  signal?: AbortSignal,
+): Promise<WeatherSnapshot> {
+  const location = await geocodeCity(city, network, signal)
 
   const forecastUrl =
     `${FORECAST_ENDPOINT}?latitude=${location.latitude}&longitude=${location.longitude}` +
@@ -250,9 +264,9 @@ export async function fetchWeather(city: string, signal?: AbortSignal): Promise<
     `&current=us_aqi&timezone=auto`
 
   const [forecast, air] = await Promise.all([
-    fetchJson<ForecastResponse>(forecastUrl, signal),
+    fetchJson<ForecastResponse>(network, forecastUrl, signal),
     // AQI 是增强信息，失败不应阻断主天气
-    fetchJson<AirQualityResponse>(airUrl, signal).catch(() => ({}) as AirQualityResponse),
+    fetchJson<AirQualityResponse>(network, airUrl, signal).catch(() => ({}) as AirQualityResponse),
   ])
 
   const days: WeatherDay[] = forecast.daily.time.slice(0, 3).map((_, index) => ({

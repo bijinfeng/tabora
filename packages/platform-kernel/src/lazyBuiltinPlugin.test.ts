@@ -19,12 +19,10 @@ describe("createLazyBuiltinPlugin", () => {
     let activationCount = 0
     const plugin = createLazyBuiltinPlugin({
       manifest,
-      enabled: true,
       async load() {
         loadCount += 1
         return {
           manifest,
-          enabled: true,
           activate() {
             activationCount += 1
           },
@@ -35,7 +33,7 @@ describe("createLazyBuiltinPlugin", () => {
     expect(loadCount).toBe(0)
 
     await Promise.all([plugin.preload!(), plugin.preload!()])
-    await plugin.activate({} as never)
+    await plugin.module.activate({} as never)
 
     expect(loadCount).toBe(1)
     expect(activationCount).toBe(1)
@@ -44,11 +42,9 @@ describe("createLazyBuiltinPlugin", () => {
   it("rejects an implementation whose manifest does not match the descriptor", async () => {
     const plugin = createLazyBuiltinPlugin({
       manifest,
-      enabled: true,
       async load() {
         return {
           manifest: { ...manifest, id: "official.wrong-plugin" },
-          enabled: true,
           activate() {},
         }
       },

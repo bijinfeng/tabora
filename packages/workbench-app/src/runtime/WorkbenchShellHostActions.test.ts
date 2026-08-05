@@ -11,9 +11,7 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
     id: "widget-1",
     workspaceId: "workspace-1",
-    pluginId: "plugin.widgets",
-    contributionId: "widget.notes",
-    extensionPoint: "widget",
+    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
     regionId: "mainGrid",
     enabled: true,
     size: "M",
@@ -45,7 +43,7 @@ describe("persistWorkbenchGridOrder", () => {
       instance({ id: "widget-1", updatedAt: "2026-06-06T00:00:00.000Z" }),
       instance({
         id: "widget-2",
-        contributionId: "widget.todo",
+        contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.todo" },
         updatedAt: "2026-06-06T00:00:00.000Z",
       }),
     ]

@@ -1,7 +1,6 @@
-import type { BuiltinPlugin } from "@tabora/platform-kernel"
+import type { PluginModule } from "@tabora/plugin-api/sdk"
 
-export const officialSearchProvidersBasic: BuiltinPlugin = {
-  enabled: true,
+export const officialSearchProvidersBasic: PluginModule = {
   manifest: {
     id: "official.search-providers.basic",
     name: "Basic Search Providers",
