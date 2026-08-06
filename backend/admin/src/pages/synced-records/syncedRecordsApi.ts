@@ -1,0 +1,58 @@
+import { ADMIN_API_BASE_URL } from "../../config"
+
+export type SyncedRecord = {
+  id: string
+  ownerId: string
+  ownerEmail: string | null
+  recordType: string
+  recordId: string
+  data: unknown
+  version: number
+  deviceId: string
+  deleted: boolean
+  recordUpdatedAt: string | number
+}
+
+export type SyncedRecordStats = {
+  byType: Record<string, number>
+  tombstones: number
+  total: number
+}
+
+export type ListQuery = {
+  type?: string
+  deleted?: boolean
+  search?: string
+  limit: number
+  offset: number
+}
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${ADMIN_API_BASE_URL}${path}`, { credentials: "include" })
+  if (!res.ok) throw new Error(res.status === 403 ? "需要管理员权限" : "加载失败")
+  return (await res.json()) as T
+}
+
+export async function listSyncedRecords(
+  query: ListQuery,
+): Promise<{ records: SyncedRecord[]; total: number }> {
+  const params = new URLSearchParams()
+  if (query.type) params.set("type", query.type)
+  if (query.deleted !== undefined) params.set("deleted", String(query.deleted))
+  if (query.search) params.set("search", query.search)
+  params.set("limit", String(query.limit))
+  params.set("offset", String(query.offset))
+  return get(`/admin-api/synced-records?${params.toString()}`)
+}
+
+export async function fetchSyncedRecordStats(): Promise<SyncedRecordStats> {
+  return get("/admin-api/synced-records/stats")
+}
+
+export async function deleteSyncedRecord(id: string): Promise<void> {
+  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/synced-records/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  })
+  if (!res.ok) throw new Error("删除失败")
+}

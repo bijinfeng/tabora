@@ -1,0 +1,9 @@
+{
+  "extends": "@tabora/tsconfig/base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "jsx": "preserve",
+    "outDir": "dist"
+  },
+  "include": ["src", "drizzle.config.ts", "tsdown.config.ts", "vitest.config.ts"]
+}

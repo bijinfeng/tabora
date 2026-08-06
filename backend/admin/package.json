@@ -1,0 +1,26 @@
+{
+  "name": "@tabora/admin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@solidjs/router": "catalog:ui",
+    "@stylexjs/stylex": "catalog:style",
+    "@tabora/theme": "workspace:*",
+    "@tabora/ui": "workspace:*",
+    "better-auth": "^1.4.21",
+    "lucide-solid": "catalog:ui",
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@tabora/brand": "workspace:*",
+    "@tabora/stylex-config": "workspace:*",
+    "@tabora/tsconfig": "workspace:*",
+    "vite": "catalog:build",
+    "vite-plugin-solid": "catalog:build"
+  }
+}

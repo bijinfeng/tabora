@@ -1,0 +1,34 @@
+{
+  "name": "@tabora/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsdown --config tsdown.config.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "better-auth": "^1.4.21",
+    "better-sqlite3": "^13.0.2",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.11.2",
+    "pg": "^8.16.3",
+    "zod": "catalog:data"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.4.21",
+    "@tabora/tsconfig": "workspace:*",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "catalog:node",
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.5",
+    "tsdown": "catalog:build",
+    "tsx": "^4.19.2",
+    "vitest": "catalog:test"
+  }
+}
