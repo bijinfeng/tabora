@@ -1,4 +1,4 @@
-import { createStrapiAuthClient, type StrapiAuthClient } from "@tabora/auth"
+import { createBetterAuthClient, type AuthClient } from "@tabora/auth"
 import { createSyncManager, type PluginSyncCollections, type SyncManager } from "@tabora/sync"
 import type { StorageAdapter, SyncMetaRepository } from "@tabora/storage"
 
@@ -11,7 +11,7 @@ import type { HostAdapter } from "./index"
 
 /** Host-owned account and sync services. Plugins never receive a database handle. */
 export type AccountSyncService = {
-  authClient: StrapiAuthClient
+  authClient: AuthClient
   syncManager: SyncManager
   syncMetaRepo: SyncMetaRepository
 }
@@ -34,7 +34,7 @@ export function createAccountSyncService(options: {
     (options.host.platform === "extension"
       ? createChromeStorageAuthStorage()
       : createLocalStorageAuthStorage())
-  const authClient = createStrapiAuthClient({
+  const authClient = createBetterAuthClient({
     apiBaseUrl: options.apiBaseUrl,
     storage: authStorage,
   })

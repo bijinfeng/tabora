@@ -1,5 +1,5 @@
 import "fake-indexeddb/auto"
-import type { StrapiAuthClient } from "@tabora/auth"
+import type { AuthClient } from "@tabora/auth"
 import {
   createAccountSyncService,
   createWebHostAdapter,
@@ -19,10 +19,10 @@ import {
   officialSyncSettingsProviderId,
 } from "./ui-plugin-manifests"
 
-function authClient(overrides: Partial<StrapiAuthClient> = {}): StrapiAuthClient {
+function authClient(overrides: Partial<AuthClient> = {}): AuthClient {
   return {
     register: vi.fn().mockResolvedValue(undefined),
-    login: vi.fn().mockResolvedValue({ jwt: "jwt", userId: 1 }),
+    login: vi.fn().mockResolvedValue({ jwt: "jwt", userId: "u1" }),
     logout: vi.fn().mockResolvedValue(undefined),
     getSession: vi.fn().mockResolvedValue(null),
     getCurrentUser: vi.fn().mockResolvedValue(null),
@@ -65,8 +65,8 @@ describe("official.account-sync", () => {
 
   it("restores a signed-in session into the plugin-owned account model", async () => {
     const client = authClient({
-      getSession: vi.fn().mockResolvedValue({ jwt: "jwt", userId: 1 }),
-      getCurrentUser: vi.fn().mockResolvedValue({ id: 1, email: "a@test.com" }),
+      getSession: vi.fn().mockResolvedValue({ jwt: "jwt", userId: "u1" }),
+      getCurrentUser: vi.fn().mockResolvedValue({ id: "u1", email: "a@test.com" }),
     })
     const provider = createAccountSettingsProvider(client)
 
@@ -80,10 +80,10 @@ describe("official.account-sync", () => {
     const login = vi
       .fn()
       .mockRejectedValueOnce({ code: "INVALID_CREDENTIALS", message: "邮箱或密码错误" })
-      .mockResolvedValue({ jwt: "jwt", userId: 1 })
+      .mockResolvedValue({ jwt: "jwt", userId: "u1" })
     const client = authClient({
       login,
-      getCurrentUser: vi.fn().mockResolvedValue({ id: 1, email: "a@test.com" }),
+      getCurrentUser: vi.fn().mockResolvedValue({ id: "u1", email: "a@test.com" }),
     })
     const provider = createAccountSettingsProvider(client)
 
@@ -110,11 +110,11 @@ describe("official.account-sync", () => {
 
   it("validates registration confirmation before registering and logging in", async () => {
     const register = vi.fn().mockResolvedValue(undefined)
-    const login = vi.fn().mockResolvedValue({ jwt: "jwt", userId: 1 })
+    const login = vi.fn().mockResolvedValue({ jwt: "jwt", userId: "u1" })
     const client = authClient({
       register,
       login,
-      getCurrentUser: vi.fn().mockResolvedValue({ id: 1, email: "a@test.com" }),
+      getCurrentUser: vi.fn().mockResolvedValue({ id: "u1", email: "a@test.com" }),
     })
     const provider = createAccountSettingsProvider(client)
     await provider.dispatch({ id: "account.mode.register", values: {} }, {})

@@ -1,4 +1,4 @@
-import type { StrapiAuthClient } from "@tabora/auth"
+import type { AuthClient } from "@tabora/auth"
 import type { SyncMetaRepository, SyncQueueRepository, TaboraDatabase } from "@tabora/storage"
 
 import { createChangeDetector, type ChangeDetector } from "./changeDetector"
@@ -12,7 +12,7 @@ export type SyncManagerConfig = {
   syncQueueRepo: SyncQueueRepository
   syncMetaRepo: SyncMetaRepository
   apiBaseUrl: string
-  authClient: StrapiAuthClient
+  authClient: AuthClient
   /** Manifest-declared record collections approved for synchronization. */
   syncCollections?: PluginSyncCollections
 }

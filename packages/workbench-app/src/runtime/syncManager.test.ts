@@ -5,7 +5,7 @@ import {
   createSyncQueueRepository,
   createTaboraDatabase,
 } from "@tabora/storage"
-import type { StrapiAuthClient } from "@tabora/auth"
+import type { AuthClient } from "@tabora/auth"
 import { createSyncManager } from "@tabora/sync"
 
 const BASE = "http://api.test"
@@ -55,8 +55,8 @@ describe("createSyncManager", () => {
       syncMetaRepo,
       apiBaseUrl: BASE,
       authClient: {
-        getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: 1 }),
-      } as unknown as StrapiAuthClient,
+        getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: "u1" }),
+      } as unknown as AuthClient,
     })
     await syncQueueRepo.add({
       scope: "core",
@@ -126,7 +126,7 @@ describe("createSyncManager", () => {
       apiBaseUrl: BASE,
       authClient: {
         getSession: vi.fn().mockResolvedValue(null),
-      } as unknown as StrapiAuthClient,
+      } as unknown as AuthClient,
     })
 
     const syncPromise = manager.triggerSync()
@@ -148,8 +148,8 @@ describe("createSyncManager", () => {
       syncMetaRepo,
       apiBaseUrl: BASE,
       authClient: {
-        getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: 1 }),
-      } as unknown as StrapiAuthClient,
+        getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: "u1" }),
+      } as unknown as AuthClient,
     })
     fetchMock
       .mockResolvedValueOnce(
@@ -207,8 +207,8 @@ describe("createSyncManager", () => {
       syncMetaRepo,
       apiBaseUrl: BASE,
       authClient: {
-        getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: 1 }),
-      } as unknown as StrapiAuthClient,
+        getSession: vi.fn().mockResolvedValue({ jwt: "jwt-1", userId: "u1" }),
+      } as unknown as AuthClient,
     })
     manager.changeDetector.start()
     await syncQueueRepo.add({

@@ -1,5 +1,5 @@
 import { type AccountSyncService, type SyncManager } from "@tabora/host-adapters"
-import type { StrapiAuthClient } from "@tabora/auth"
+import type { AuthClient } from "@tabora/auth"
 import type { PluginModule } from "@tabora/plugin-api/sdk"
 import type {
   SettingsNode,
@@ -258,7 +258,7 @@ function accountModel(options: {
   }
 }
 
-export function createAccountSettingsProvider(authClient: StrapiAuthClient): SettingsPanelProvider {
+export function createAccountSettingsProvider(authClient: AuthClient): SettingsPanelProvider {
   let phase: AccountPhase = "login"
   let email = ""
   let accountEmail = ""
