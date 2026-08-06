@@ -1,4 +1,4 @@
-import { and, count, desc, eq, like, type SQL } from "drizzle-orm"
+import { and, asc, count, desc, eq, gt, like, type SQL } from "drizzle-orm"
 
 export type SyncedRecordRow = {
   id: string
@@ -78,7 +78,88 @@ export function createSyncedRecordQueries(db: any, tables: { syncedRecord: any; 
     async remove(id: string): Promise<void> {
       await db.delete(r).where(eq(r.id, id))
     },
+
+    // —— 客户端同步（owner scoped）——
+
+    async findOwned(
+      ownerId: string,
+      recordType: string,
+      recordId: string,
+    ): Promise<OwnedRow | null> {
+      const rows = (await db
+        .select()
+        .from(r)
+        .where(and(eq(r.ownerId, ownerId), eq(r.recordType, recordType), eq(r.recordId, recordId)))
+        .limit(1)) as OwnedRow[]
+      return rows[0] ?? null
+    },
+
+    async upsertOwned(input: {
+      id: string
+      ownerId: string
+      recordType: string
+      recordId: string
+      data: unknown
+      version: number
+      deviceId: string
+      deleted: boolean
+      recordUpdatedAt: Date
+    }): Promise<void> {
+      const existing = await db
+        .select({ id: r.id })
+        .from(r)
+        .where(
+          and(
+            eq(r.ownerId, input.ownerId),
+            eq(r.recordType, input.recordType),
+            eq(r.recordId, input.recordId),
+          ),
+        )
+        .limit(1)
+      const values = {
+        ownerId: input.ownerId,
+        recordType: input.recordType,
+        recordId: input.recordId,
+        data: input.deleted ? null : input.data,
+        version: input.version,
+        deviceId: input.deviceId,
+        deleted: input.deleted,
+        recordUpdatedAt: input.recordUpdatedAt,
+      }
+      if (existing[0]) {
+        await db.update(r).set(values).where(eq(r.id, existing[0].id))
+      } else {
+        await db.insert(r).values({ id: input.id, ...values })
+      }
+    },
+
+    async pullOwnedSince(
+      ownerId: string,
+      sinceMs: number | null,
+      limit: number,
+    ): Promise<OwnedRow[]> {
+      const conds: SQL[] = [eq(r.ownerId, ownerId)]
+      if (sinceMs !== null) conds.push(gt(r.recordUpdatedAt, new Date(sinceMs)))
+      return (await db
+        .select()
+        .from(r)
+        .where(and(...conds))
+        .orderBy(asc(r.recordUpdatedAt))
+        .limit(limit)) as OwnedRow[]
+    },
   }
+}
+
+export type OwnedRow = {
+  id: string
+  ownerId: string
+  recordType: string
+  recordId: string
+  data: unknown
+  version: number
+  deviceId: string
+  deleted: boolean
+  recordUpdatedAt: string | Date
 }
 
 export type SyncedRecordQueries = ReturnType<typeof createSyncedRecordQueries>

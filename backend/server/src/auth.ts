@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { APIError } from "better-auth/api"
-import { admin } from "better-auth/plugins"
+import { admin, bearer } from "better-auth/plugins"
 
 import type { DbHandle } from "./db"
 import type { AppEnv } from "./env"
@@ -17,7 +17,7 @@ export function createAuth(handle: DbHandle, env: AppEnv) {
     trustedOrigins: env.corsOrigins,
     database: drizzleAdapter(handle.db, { provider: handle.provider }),
     emailAndPassword: { enabled: true },
-    plugins: [admin()],
+    plugins: [admin(), bearer()],
     databaseHooks: {
       user: {
         create: {

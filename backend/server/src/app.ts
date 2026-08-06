@@ -6,6 +6,8 @@ import { createAuth } from "./auth"
 import type { DbHandle } from "./db"
 import type { AppEnv } from "./env"
 import { createSyncedRecordRoutes } from "./routes/adminSyncedRecords"
+import { createSyncRecordRoutes } from "./routes/syncRecords"
+import { createRequireUser } from "./userGuard"
 
 export type BuildAppOptions = {
   env: AppEnv
@@ -41,6 +43,11 @@ export function buildApp(options: BuildAppOptions): Hono {
   app.use("/admin-api/synced-records/*", requireAdmin)
   app.use("/admin-api/synced-records", requireAdmin)
   app.route("/admin-api/synced-records", createSyncedRecordRoutes(handle))
+
+  // 客户端数据同步：任何登录用户（cookie 或 bearer token），owner 隔离
+  const requireUser = createRequireUser(auth)
+  app.use("/api/sync/*", requireUser)
+  app.route("/api/sync", createSyncRecordRoutes(handle))
 
   return app
 }
