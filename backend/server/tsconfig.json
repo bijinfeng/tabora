@@ -5,5 +5,5 @@
     "jsx": "preserve",
     "outDir": "dist"
   },
-  "include": ["src", "drizzle.config.ts", "tsdown.config.ts", "vitest.config.ts"]
+  "include": ["src", "tsdown.config.ts", "vitest.config.ts"]
 }

@@ -7,8 +7,6 @@
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
     "build": "tsdown --config tsdown.config.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
@@ -21,12 +19,10 @@
     "zod": "catalog:data"
   },
   "devDependencies": {
-    "@better-auth/cli": "^1.4.21",
     "@tabora/tsconfig": "workspace:*",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "catalog:node",
     "@types/pg": "^8.15.5",
-    "drizzle-kit": "^0.31.5",
     "tsdown": "catalog:build",
     "tsx": "^4.19.2",
     "vitest": "catalog:test"
