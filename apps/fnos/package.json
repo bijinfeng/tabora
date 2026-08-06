@@ -21,8 +21,7 @@
     "pack:fnos": "pnpm run build && fnpack build --directory tabora"
   },
   "dependencies": {
-    "@fastify/cors": "^11.3.0",
-    "@fastify/static": "^10.1.2",
+    "@hono/node-server": "^2.1.0",
     "@tabora/builtin-plugin-registry": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
@@ -30,7 +29,7 @@
     "@tabora/workbench-app": "workspace:*",
     "@tabora/workbench-shell": "workspace:*",
     "better-sqlite3": "^13.0.2",
-    "fastify": "^5.11.2",
+    "hono": "^4.13.0",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

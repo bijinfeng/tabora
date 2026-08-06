@@ -15,7 +15,7 @@ overrides:
   emittery@0.13.0: 0.13.1
 
 allowBuilds:
-  "@prisma/client": set this to true or false
+  "@prisma/client": false
   "@swc/core": false
   argon2: true
   better-sqlite3: true

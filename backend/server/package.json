@@ -12,11 +12,11 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@fastify/cors": "^11.3.0",
+    "@hono/node-server": "^2.1.0",
     "better-auth": "^1.4.21",
     "better-sqlite3": "^13.0.2",
     "drizzle-orm": "^0.45.2",
-    "fastify": "^5.11.2",
+    "hono": "^4.13.0",
     "pg": "^8.16.3",
     "zod": "catalog:data"
   },
