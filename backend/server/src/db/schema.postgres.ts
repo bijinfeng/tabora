@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { boolean, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core"
 
 // better-auth 四表（Postgres dialect）+ admin 插件列。
 // 与 @better-auth/cli 为 pg provider 生成的结构一致。
@@ -70,4 +70,32 @@ export const syncedRecord = pgTable("synced_record", {
   deviceId: text("device_id").notNull(),
   deleted: boolean("deleted").notNull().default(false),
   recordUpdatedAt: timestamp("record_updated_at").notNull(),
+})
+
+export const attachmentPolicy = pgTable("attachment_policy", {
+  id: serial("id").primaryKey(),
+  entityType: text("entity_type").notNull().unique(),
+  mimeWhitelist: jsonb("mime_whitelist"),
+  maxSizeBytes: integer("max_size_bytes"),
+})
+
+export const attachmentFile = pgTable("attachment_file", {
+  id: serial("id").primaryKey(),
+  filename: text("filename").notNull(),
+  mime: text("mime").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  storageKey: text("storage_key").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+})
+
+export const attachmentRef = pgTable("attachment_ref", {
+  id: serial("id").primaryKey(),
+  fileId: integer("file_id")
+    .notNull()
+    .references(() => attachmentFile.id, { onDelete: "cascade" }),
+  uploadedBy: text("uploaded_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  entityType: text("entity_type").notNull(),
+  entityId: text("entity_id").notNull(),
 })

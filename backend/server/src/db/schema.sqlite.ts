@@ -74,3 +74,31 @@ export const syncedRecord = sqliteTable("synced_record", {
   deleted: integer("deleted", { mode: "boolean" }).notNull().default(false),
   recordUpdatedAt: integer("record_updated_at", { mode: "timestamp" }).notNull(),
 })
+
+export const attachmentPolicy = sqliteTable("attachment_policy", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  entityType: text("entity_type").notNull().unique(),
+  mimeWhitelist: text("mime_whitelist", { mode: "json" }),
+  maxSizeBytes: integer("max_size_bytes"),
+})
+
+export const attachmentFile = sqliteTable("attachment_file", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  filename: text("filename").notNull(),
+  mime: text("mime").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  storageKey: text("storage_key").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+})
+
+export const attachmentRef = sqliteTable("attachment_ref", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  fileId: integer("file_id")
+    .notNull()
+    .references(() => attachmentFile.id, { onDelete: "cascade" }),
+  uploadedBy: text("uploaded_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  entityType: text("entity_type").notNull(),
+  entityId: text("entity_id").notNull(),
+})

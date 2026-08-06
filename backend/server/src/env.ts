@@ -9,6 +9,7 @@ export type AppEnv = {
   databaseUrl: string
   authSecret: string
   baseUrl: string
+  uploadsDir: string
 }
 
 function parseClient(value: string | undefined): DatabaseClient {
@@ -34,5 +35,6 @@ export function loadEnv(): AppEnv {
     authSecret:
       process.env.BETTER_AUTH_SECRET ?? process.env.ADMIN_JWT_SECRET ?? "dev-insecure-secret",
     baseUrl: process.env.BETTER_AUTH_URL ?? `http://${host}:${port}`,
+    uploadsDir: process.env.UPLOADS_DIR ?? "./data/uploads",
   }
 }

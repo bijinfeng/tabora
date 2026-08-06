@@ -8,19 +8,8 @@ import { OverviewPage } from "./pages/overview/OverviewPage"
 import { PlaceholderPage } from "./pages/PlaceholderPage"
 import { UsersPage } from "./pages/users/UsersPage"
 import { SyncedRecordsPage } from "./pages/synced-records/SyncedRecordsPage"
-
-function AttachmentsPage() {
-  return <PlaceholderPage title="附件" description="附件文件、引用计数与绑定关系，待接入。" />
-}
-
-function AttachmentPoliciesPage() {
-  return (
-    <PlaceholderPage
-      title="附件策略"
-      description="按 entity_type 配置 MIME 白名单与大小上限，待接入。"
-    />
-  )
-}
+import { AttachmentsPage } from "./pages/attachments/AttachmentsPage"
+import { AttachmentPoliciesPage } from "./pages/attachments/AttachmentPoliciesPage"
 
 function SystemPage() {
   return (

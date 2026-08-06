@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
+import { createAttachmentQueries } from "./attachments"
 import * as schema from "./schema.postgres"
 import { createSyncedRecordQueries } from "./syncedRecords"
 
@@ -45,6 +46,22 @@ export function createPostgresDb(connectionString: string) {
       );
       CREATE INDEX IF NOT EXISTS idx_synced_record_owner ON synced_record(owner_id);
       CREATE INDEX IF NOT EXISTS idx_synced_record_type ON synced_record(record_type);
+      CREATE TABLE IF NOT EXISTS attachment_policy (
+        id SERIAL PRIMARY KEY,
+        entity_type TEXT NOT NULL UNIQUE, mime_whitelist JSONB, max_size_bytes INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS attachment_file (
+        id SERIAL PRIMARY KEY,
+        filename TEXT NOT NULL, mime TEXT NOT NULL, size_bytes INTEGER NOT NULL,
+        storage_key TEXT NOT NULL, created_at TIMESTAMP NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS attachment_ref (
+        id SERIAL PRIMARY KEY,
+        file_id INTEGER NOT NULL REFERENCES attachment_file(id) ON DELETE CASCADE,
+        uploaded_by TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+        entity_type TEXT NOT NULL, entity_id TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_attachment_ref_file ON attachment_ref(file_id);
     `)
   }
 
@@ -58,12 +75,19 @@ export function createPostgresDb(connectionString: string) {
     user: schema.user,
   })
 
+  const attachments = createAttachmentQueries(db, {
+    attachmentPolicy: schema.attachmentPolicy,
+    attachmentFile: schema.attachmentFile,
+    attachmentRef: schema.attachmentRef,
+  })
+
   return {
     db,
     provider: "pg" as const,
     migrate,
     countUsers,
     syncedRecords,
+    attachments,
     close: () => pool.end(),
   }
 }

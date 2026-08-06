@@ -2,10 +2,13 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 
 import { createRequireAdmin } from "./adminGuard"
+import { createLocalAttachmentStorage } from "./attachments/storage"
 import { createAuth } from "./auth"
 import type { DbHandle } from "./db"
 import type { AppEnv } from "./env"
+import { createAdminAttachmentRoutes } from "./routes/adminAttachments"
 import { createSyncedRecordRoutes } from "./routes/adminSyncedRecords"
+import { createAttachmentRoutes } from "./routes/attachments"
 import { createSyncRecordRoutes } from "./routes/syncRecords"
 import { createRequireUser } from "./userGuard"
 
@@ -48,6 +51,13 @@ export function buildApp(options: BuildAppOptions): Hono {
   const requireUser = createRequireUser(auth)
   app.use("/api/sync/*", requireUser)
   app.route("/api/sync", createSyncRecordRoutes(handle))
+
+  // 附件：用户上传/绑定/访问（登录用户），管理端列文件/策略（管理员）
+  const storage = createLocalAttachmentStorage(env.uploadsDir)
+  app.use("/api/attachments/*", requireUser)
+  app.route("/api/attachments", createAttachmentRoutes({ handle, storage }))
+  app.use("/admin-api/attachments/*", requireAdmin)
+  app.route("/admin-api/attachments", createAdminAttachmentRoutes({ handle, storage }))
 
   return app
 }
