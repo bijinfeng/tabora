@@ -3,5 +3,11 @@
   "compilerOptions": {
     "types": ["vite/client"]
   },
-  "include": ["frontend/src", "vite.frontend.config.ts"]
+  "include": [
+    "backend/src",
+    "frontend/src",
+    "scripts",
+    "tsdown.backend.config.ts",
+    "vite.frontend.config.ts"
+  ]
 }

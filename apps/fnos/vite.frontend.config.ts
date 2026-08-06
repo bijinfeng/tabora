@@ -9,6 +9,7 @@ import { createTaboraStylexVitePlugin } from "@tabora/stylex-config"
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 
 export default defineConfig(({ command }) => ({
+  base: "/app/tabora/",
   root: "frontend",
   plugins: [
     createTaboraStylexVitePlugin({

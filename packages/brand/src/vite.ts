@@ -22,6 +22,7 @@ interface PluginContextLike {
 
 export interface TaboraBrandFaviconPlugin {
   name: "tabora-brand-favicon"
+  configResolved(config: { base: string }): void
   configureServer(server: ViteDevServerLike): void
   transformIndexHtml(html: string): string
   generateBundle(this: PluginContextLike): void
@@ -40,12 +41,23 @@ function readSvgSource(assetPath: string) {
 
 export function taboraBrandFavicon(): TaboraBrandFaviconPlugin {
   const faviconSource = readSvgSource(taboraAppIconPath)
+  let faviconHref = "/favicon.svg"
+  let faviconPath = faviconHref
 
   return {
     name: "tabora-brand-favicon",
+    configResolved(config) {
+      const base = config.base.endsWith("/") ? config.base : `${config.base}/`
+      faviconHref = `${base}favicon.svg`
+      faviconPath = faviconHref.startsWith("http")
+        ? new URL(faviconHref).pathname
+        : faviconHref.startsWith("./")
+          ? `/${faviconHref.slice(2)}`
+          : faviconHref
+    },
     configureServer(server: ViteDevServerLike) {
       server.middlewares.use((req, res, next) => {
-        if (req.url !== "/favicon.svg") {
+        if (req.url?.split("?", 1)[0] !== faviconPath) {
           next()
           return
         }
@@ -58,7 +70,7 @@ export function taboraBrandFavicon(): TaboraBrandFaviconPlugin {
     transformIndexHtml(html: string) {
       return html.replace(
         "</head>",
-        '    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n  </head>',
+        `    <link rel="icon" type="image/svg+xml" href="${faviconHref}" />\n  </head>`,
       )
     },
     generateBundle() {

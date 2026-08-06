@@ -8,12 +8,17 @@
   ],
   "type": "module",
   "scripts": {
+    "check:icons": "tsx scripts/generate-icons.ts --check",
     "dev:frontend": "vp dev --config vite.frontend.config.ts",
     "dev:backend": "tsx backend/src/server.ts",
     "build:frontend": "vp build --config vite.frontend.config.ts",
-    "serve:dist": "cross-env FNOS_FRONTEND_DIST=frontend/dist tsx backend/src/server.ts",
+    "build:backend": "tsdown --config tsdown.backend.config.ts",
+    "serve:dist": "cross-env FNOS_FRONTEND_DIST=frontend/dist FNOS_GATEWAY_PREFIX=/app/tabora tsx backend/src/server.ts",
     "start": "pnpm run build:frontend && pnpm run serve:dist",
-    "build": "pnpm run build:frontend"
+    "generate:icons": "tsx scripts/generate-icons.ts",
+    "stage:fnos": "tsx scripts/stage-package.ts",
+    "build": "pnpm run generate:icons && pnpm run build:frontend && pnpm run build:backend && pnpm run stage:fnos",
+    "pack:fnos": "pnpm run build && fnpack build --directory tabora"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
@@ -34,7 +39,8 @@
     "@tabora/tsconfig": "workspace:*",
     "@types/better-sqlite3": "^9.6.0",
     "cross-env": "^7.0.3",
-    "fnpack": "^0.0.0",
+    "sharp": "^0.34.5",
+    "tsdown": "catalog:build",
     "tsx": "^4.19.2",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build"

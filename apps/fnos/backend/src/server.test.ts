@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import type { Workspace } from "@tabora/plugin-api"
 
@@ -6,9 +9,34 @@ import { createFnosServer } from "./server"
 
 describe("FNOS 本地存储服务", () => {
   const servers: Array<ReturnType<typeof createFnosServer>> = []
+  const temporaryDirectories: string[] = []
 
   afterEach(async () => {
     await Promise.all(servers.splice(0).map((server) => server.close()))
+    for (const directory of temporaryDirectories.splice(0)) {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it("通过飞牛统一网关前缀提供工作台和本地 API", async () => {
+    const frontendDist = mkdtempSync(join(tmpdir(), "tabora-fnos-static-"))
+    temporaryDirectories.push(frontendDist)
+    writeFileSync(join(frontendDist, "index.html"), "<main>Tabora FNOS</main>")
+
+    const server = createFnosServer({
+      databasePath: ":memory:",
+      frontendDist,
+      gatewayPrefix: "/app/tabora",
+    })
+    servers.push(server)
+
+    const health = await server.inject({ url: "/app/tabora/api/health" })
+    expect(health.statusCode).toBe(200)
+    expect(health.json()).toEqual({ status: "ok" })
+
+    const workbench = await server.inject({ url: "/app/tabora/" })
+    expect(workbench.statusCode).toBe(200)
+    expect(workbench.body).toContain("Tabora FNOS")
   })
 
   it("保存工作区后可读取，删除后不再返回", async () => {

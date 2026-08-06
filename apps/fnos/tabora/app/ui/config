@@ -1,0 +1,17 @@
+{
+  ".url": {
+    "tabora.main": {
+      "title": "Tabora",
+      "icon": "images/icon_{0}.png",
+      "type": "iframe",
+      "protocol": "",
+      "gatewayPrefix": "/app/tabora",
+      "gatewaySocket": "app.sock",
+      "url": "/app/tabora/",
+      "allUsers": false,
+      "control": {
+        "accessPerm": "readonly"
+      }
+    }
+  }
+}

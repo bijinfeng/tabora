@@ -1112,7 +1112,7 @@ Theme token applier 只管理它自己最近一次写入的 CSS custom propertie
 
 Background applier 同样追踪它最近写入的 CSS properties；切换背景时移除上一背景独有属性后再应用新样式，未知 provider 则只应用安全页面底色。
 
-FNOS 的本地 Fastify API 只监听 loopback；CORS 仅允许无 Origin 的同源请求及 `localhost`/`127.0.0.1`/`[::1]` 本机开发 Origin，不能以 `origin: true` 向任意跨站页面开放本地数据。
+FNOS 的生产包通过飞牛统一网关 `/app/tabora` 接入 NAS 登录态，Fastify 只监听 `${TRIM_APPDEST}/app.sock`，不暴露独立 TCP 端口；本地开发才监听 loopback。CORS 仅允许无 Origin 的同源请求及 `localhost`/`127.0.0.1`/`[::1]` 本机开发 Origin，不能以 `origin: true` 向任意跨站页面开放本地数据。当前设备级 SQLite 数据库尚未按 `X-Trim-Userid` 隔离，因此桌面入口保持管理员可见，不能直接开放给所有 NAS 用户。
 
 ## 14. 错误回退体系
 

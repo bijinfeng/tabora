@@ -30,7 +30,9 @@ export function resolveFnosLocalApiBaseUrl(): string {
     return "http://127.0.0.1:43120"
   }
 
-  return typeof window === "undefined" ? "http://127.0.0.1:43120" : window.location.origin
+  return typeof window === "undefined"
+    ? "http://127.0.0.1:43120"
+    : new URL(import.meta.env.BASE_URL, window.location.origin).href
 }
 
 export function createFnosRuntimeBootstrap(): WorkbenchRuntimeBootstrap {

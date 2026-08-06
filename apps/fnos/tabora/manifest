@@ -1,0 +1,23 @@
+appname=tabora
+version=1.0.0
+display_name=Tabora
+desc=插件优先的个人工作台，在飞牛 fnOS 上本地保存工作区、卡片与插件数据。
+platform=all
+source=thirdparty
+
+maintainer=Tabora
+maintainer_url=https://github.com/bijinfeng/tabora
+distributor=Tabora
+distributor_url=https://github.com/bijinfeng/tabora
+
+os_min_version=1.1.3100
+install_dep_apps=nodejs_v22
+
+desktop_uidir=ui
+desktop_applaunchname=tabora.main
+
+ctl_stop=true
+checkport=false
+disable_authorization_path=true
+
+changelog=接入飞牛统一网关，提供本地工作台与 SQLite 持久化。

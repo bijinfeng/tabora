@@ -1,0 +1,122 @@
+#!/bin/bash
+
+LOG_FILE="${TRIM_PKGVAR}/app.log"
+PID_FILE="${TRIM_PKGVAR}/app.pid"
+APP_DIR="${TRIM_APPDEST}/dist"
+SOCKET_PATH="${TRIM_APPDEST}/app.sock"
+GATEWAY_PREFIX="/app/tabora"
+DATABASE_PATH="${TRIM_PKGVAR}/tabora.db"
+
+export PATH="/var/apps/nodejs_v22/target/bin:${PATH}"
+
+log_msg() {
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+}
+
+report_error() {
+  log_msg "$1"
+  echo "$1" > "${TRIM_TEMP_LOGFILE:-$LOG_FILE}"
+}
+
+check_process() {
+  local pid="$1"
+  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+status_app() {
+  if [ -f "$PID_FILE" ]; then
+    local pid
+    pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
+    if check_process "$pid"; then
+      return 0
+    fi
+    rm -f "$PID_FILE"
+  fi
+
+  return 1
+}
+
+start_app() {
+  if status_app; then
+    return 0
+  fi
+
+  if ! command -v node >/dev/null 2>&1; then
+    report_error "未找到 nodejs_v22 运行时，请确认依赖应用已安装。"
+    return 1
+  fi
+  if [ ! -f "${APP_DIR}/server.mjs" ] || [ ! -f "${APP_DIR}/public/index.html" ]; then
+    report_error "Tabora 运行文件不完整，请重新安装应用。"
+    return 1
+  fi
+
+  mkdir -p "$TRIM_PKGVAR"
+  rm -f "$SOCKET_PATH"
+  log_msg "Starting Tabora..."
+
+  cd "$APP_DIR" || return 1
+  FNOS_DATABASE_PATH="$DATABASE_PATH" \
+    FNOS_FRONTEND_DIST="${APP_DIR}/public" \
+    FNOS_GATEWAY_PREFIX="$GATEWAY_PREFIX" \
+    FNOS_SOCKET_PATH="$SOCKET_PATH" \
+    node server.mjs >> "$LOG_FILE" 2>&1 &
+
+  local pid="$!"
+  echo "$pid" > "$PID_FILE"
+  sleep 1
+
+  if ! check_process "$pid"; then
+    rm -f "$PID_FILE" "$SOCKET_PATH"
+    report_error "Tabora 启动失败，请查看 ${LOG_FILE}。"
+    return 1
+  fi
+}
+
+stop_app() {
+  log_msg "Stopping Tabora..."
+
+  if [ ! -f "$PID_FILE" ]; then
+    rm -f "$SOCKET_PATH"
+    return 0
+  fi
+
+  local pid
+  pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
+  if ! check_process "$pid"; then
+    rm -f "$PID_FILE" "$SOCKET_PATH"
+    return 0
+  fi
+
+  kill -TERM "$pid" 2>> "$LOG_FILE" || true
+
+  local count=0
+  while check_process "$pid" && [ "$count" -lt 10 ]; do
+    sleep 1
+    count=$((count + 1))
+  done
+
+  if check_process "$pid"; then
+    kill -KILL "$pid" 2>> "$LOG_FILE" || true
+  fi
+
+  rm -f "$PID_FILE" "$SOCKET_PATH"
+}
+
+case "$1" in
+  start)
+    start_app
+    ;;
+  stop)
+    stop_app
+    ;;
+  status)
+    if status_app; then
+      exit 0
+    fi
+    exit 3
+    ;;
+  *)
+    report_error "Unknown command: $1"
+    exit 1
+    ;;
+esac

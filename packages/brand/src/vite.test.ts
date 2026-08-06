@@ -50,6 +50,15 @@ describe("taboraBrandFavicon", () => {
     expect(response.end).toHaveBeenCalledWith(expect.stringContaining("<svg"))
   })
 
+  it("uses the configured Vite base for subpath deployments", () => {
+    const plugin = taboraBrandFavicon()
+    plugin.configResolved({ base: "/app/tabora/" })
+
+    expect(plugin.transformIndexHtml("<html><head></head><body></body></html>")).toContain(
+      '<link rel="icon" type="image/svg+xml" href="/app/tabora/favicon.svg" />',
+    )
+  })
+
   it("emits the favicon during Vite build bundle generation", () => {
     const plugin = taboraBrandFavicon()
     const emitFile = vi.fn()
