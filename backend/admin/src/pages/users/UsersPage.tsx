@@ -13,6 +13,8 @@ import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 
 import { Pagination } from "../../components/Pagination"
+import { useToast } from "../../contexts/ToastContext"
+import { createDebounced } from "../../utils/createDebounced"
 import { CreateUserDialog } from "./CreateUserDialog"
 import { DeleteUserDialog } from "./DeleteUserDialog"
 import { styles } from "./users.styles"
@@ -22,28 +24,36 @@ const PAGE_SIZE = 20
 
 export function UsersPage() {
   const [search, setSearch] = createSignal("")
+  const debouncedSearch = createDebounced(search, 300)
   const [offset, setOffset] = createSignal(0)
   const [createOpen, setCreateOpen] = createSignal(false)
   const [deleteTarget, setDeleteTarget] = createSignal<AdminUser | null>(null)
   const [actionError, setActionError] = createSignal<string | null>(null)
 
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
 
   const data = useQuery(() => ({
-    queryKey: ["users", { search: search(), offset: offset() }],
+    queryKey: ["users", { search: debouncedSearch(), offset: offset() }],
     queryFn: () =>
       listUsers({
         limit: PAGE_SIZE,
         offset: offset(),
-        ...(search() ? { searchValue: search(), searchField: "email" } : {}),
+        ...(debouncedSearch() ? { searchValue: debouncedSearch(), searchField: "email" } : {}),
       }),
   }))
 
   const actionMutation = useMutation(() => ({
     mutationFn: (fn: () => Promise<void>) => fn(),
     onMutate: () => setActionError(null),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
-    onError: (err: Error) => setActionError(err.message),
+    onSuccess: () => {
+      showToast({ variant: "success", title: "操作成功" })
+      return queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+    onError: (err: Error) => {
+      setActionError(err.message)
+      showToast({ variant: "danger", title: "操作失败", description: err.message })
+    },
   }))
 
   const columns = buildColumns({
@@ -106,7 +116,10 @@ export function UsersPage() {
       <DeleteUserDialog
         user={deleteTarget()}
         onClose={() => setDeleteTarget(null)}
-        onDeleted={() => void queryClient.invalidateQueries({ queryKey: ["users"] })}
+        onDeleted={() => {
+          showToast({ variant: "success", title: "用户已删除" })
+          void queryClient.invalidateQueries({ queryKey: ["users"] })
+        }}
       />
     </div>
   )

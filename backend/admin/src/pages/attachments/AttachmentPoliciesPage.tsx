@@ -4,12 +4,14 @@ import { Button } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Table, type TableColumn } from "@tabora/ui/table"
-import { useQuery, useQueryClient } from "@tanstack/solid-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 import Plus from "lucide-solid/icons/plus"
 
+import { ConfirmDialog } from "../../components/ConfirmDialog"
+import { useToast } from "../../contexts/ToastContext"
 import { PolicyEditorDialog } from "./PolicyEditorDialog"
-import { listPolicies, type AttachmentPolicy } from "./attachmentsApi"
+import { deletePolicy, listPolicies, type AttachmentPolicy } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
 
 function formatSize(bytes: number | null): string {
@@ -21,10 +23,24 @@ function formatSize(bytes: number | null): string {
 export function AttachmentPoliciesPage() {
   const [editorOpen, setEditorOpen] = createSignal(false)
   const [editing, setEditing] = createSignal<AttachmentPolicy | null>(null)
+  const [deleteTarget, setDeleteTarget] = createSignal<AttachmentPolicy | null>(null)
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
   const data = useQuery(() => ({
     queryKey: ["attachment-policies"],
     queryFn: listPolicies,
+  }))
+
+  const deleteMutation = useMutation(() => ({
+    mutationFn: (entityType: string) => deletePolicy(entityType),
+    onSuccess: () => {
+      setDeleteTarget(null)
+      showToast({ variant: "success", title: "策略已删除" })
+      return queryClient.invalidateQueries({ queryKey: ["attachment-policies"] })
+    },
+    onError: (err: Error) => {
+      showToast({ variant: "danger", title: "删除失败", description: err.message })
+    },
   }))
 
   function openNew() {
@@ -35,6 +51,12 @@ export function AttachmentPoliciesPage() {
   function openEdit(policy: AttachmentPolicy) {
     setEditing(policy)
     setEditorOpen(true)
+  }
+
+  function confirmDelete() {
+    const policy = deleteTarget()
+    if (!policy || deleteMutation.isPending) return
+    deleteMutation.mutate(policy.entityType)
   }
 
   const columns: TableColumn<AttachmentPolicy>[] = [
@@ -68,6 +90,9 @@ export function AttachmentPoliciesPage() {
         <div {...stylex.attrs(styles.actionCell)}>
           <Button size="sm" variant="secondary" onClick={() => openEdit(p)}>
             编辑
+          </Button>
+          <Button size="sm" variant="danger-subtle" onClick={() => setDeleteTarget(p)}>
+            删除
           </Button>
         </div>
       ),
@@ -111,6 +136,16 @@ export function AttachmentPoliciesPage() {
         editing={editing()}
         onClose={() => setEditorOpen(false)}
         onSaved={() => void queryClient.invalidateQueries({ queryKey: ["attachment-policies"] })}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        title="删除附件策略"
+        description={`确认删除 entity_type「${deleteTarget()?.entityType ?? ""}」的策略？删除后该类实体上传将不再受此策略限制。`}
+        confirmLabel="删除"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
       />
     </div>
   )

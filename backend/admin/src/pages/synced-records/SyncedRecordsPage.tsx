@@ -9,7 +9,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 import Search from "lucide-solid/icons/search"
 
+import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { Pagination } from "../../components/Pagination"
+import { useToast } from "../../contexts/ToastContext"
+import { createDebounced } from "../../utils/createDebounced"
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
 import { styles } from "./syncedRecords.styles"
 import { deleteSyncedRecord, listSyncedRecords, type SyncedRecord } from "./syncedRecordsApi"
@@ -34,14 +37,17 @@ export function SyncedRecordsPage() {
   const [type, setType] = createSignal("")
   const [deleted, setDeleted] = createSignal("")
   const [search, setSearch] = createSignal("")
+  const debouncedSearch = createDebounced(search, 300)
   const [offset, setOffset] = createSignal(0)
   const [detail, setDetail] = createSignal<SyncedRecord | null>(null)
+  const [deleteTarget, setDeleteTarget] = createSignal<SyncedRecord | null>(null)
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
 
   const data = useQuery(() => ({
     queryKey: [
       "synced-records",
-      { type: type(), deleted: deleted(), search: search(), offset: offset() },
+      { type: type(), deleted: deleted(), search: debouncedSearch(), offset: offset() },
     ],
     queryFn: () =>
       listSyncedRecords({
@@ -49,7 +55,7 @@ export function SyncedRecordsPage() {
         offset: offset(),
         ...(type() ? { type: type() } : {}),
         ...(deleted() ? { deleted: deleted() === "true" } : {}),
-        ...(search() ? { search: search() } : {}),
+        ...(debouncedSearch() ? { search: debouncedSearch() } : {}),
       }),
   }))
 
@@ -57,11 +63,18 @@ export function SyncedRecordsPage() {
     mutationFn: (id: string) => deleteSyncedRecord(id),
     onSuccess: () => {
       setDetail(null)
+      setDeleteTarget(null)
+      showToast({ variant: "success", title: "记录已删除" })
       void queryClient.invalidateQueries({ queryKey: ["synced-records"] })
+    },
+    onError: (err: Error) => {
+      showToast({ variant: "danger", title: "删除失败", description: err.message })
     },
   }))
 
-  function handleDelete(record: SyncedRecord) {
+  function confirmDelete() {
+    const record = deleteTarget()
+    if (!record || deleteMutation.isPending) return
     deleteMutation.mutate(record.id)
   }
 
@@ -138,7 +151,20 @@ export function SyncedRecordsPage() {
       <RecordDetailDrawer
         record={detail()}
         onClose={() => setDetail(null)}
-        onDelete={(r) => handleDelete(r)}
+        onDelete={(r) => {
+          setDetail(null)
+          setDeleteTarget(r)
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        title="强制删除记录"
+        description={`确认删除记录 ${deleteTarget()?.recordId ?? ""}？该操作不可撤销，将从服务端永久移除该同步记录。`}
+        confirmLabel="删除"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
       />
     </div>
   )

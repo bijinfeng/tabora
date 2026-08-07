@@ -7,7 +7,9 @@ import { Table, type TableColumn } from "@tabora/ui/table"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 
+import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { Pagination } from "../../components/Pagination"
+import { useToast } from "../../contexts/ToastContext"
 import { deleteFile, listFiles, type AttachmentFile } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
 
@@ -27,7 +29,9 @@ function formatTime(value: string | number): string {
 export function AttachmentsPage() {
   const [error, setError] = createSignal<string | null>(null)
   const [offset, setOffset] = createSignal(0)
+  const [deleteTarget, setDeleteTarget] = createSignal<AttachmentFile | null>(null)
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
 
   const data = useQuery(() => ({
     queryKey: ["attachments", "files", offset()],
@@ -37,11 +41,20 @@ export function AttachmentsPage() {
   const deleteMutation = useMutation(() => ({
     mutationFn: (id: number) => deleteFile(id),
     onMutate: () => setError(null),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attachments", "files"] }),
-    onError: (err: Error) => setError(err.message),
+    onSuccess: () => {
+      setDeleteTarget(null)
+      showToast({ variant: "success", title: "附件已删除" })
+      return queryClient.invalidateQueries({ queryKey: ["attachments", "files"] })
+    },
+    onError: (err: Error) => {
+      setError(err.message)
+      showToast({ variant: "danger", title: "删除失败", description: err.message })
+    },
   }))
 
-  function handleDelete(file: AttachmentFile) {
+  function confirmDelete() {
+    const file = deleteTarget()
+    if (!file || deleteMutation.isPending) return
     deleteMutation.mutate(file.id)
   }
 
@@ -77,7 +90,7 @@ export function AttachmentsPage() {
       align: "end",
       cell: (f) => (
         <div {...stylex.attrs(styles.actionCell)}>
-          <Button size="sm" variant="danger-subtle" onClick={() => handleDelete(f)}>
+          <Button size="sm" variant="danger-subtle" onClick={() => setDeleteTarget(f)}>
             删除
           </Button>
         </div>
@@ -118,6 +131,16 @@ export function AttachmentsPage() {
           />
         )}
       </Show>
+
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        title="删除附件"
+        description={`确认删除「${deleteTarget()?.filename ?? ""}」？该操作不可撤销，文件将从存储中永久移除。`}
+        confirmLabel="删除"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

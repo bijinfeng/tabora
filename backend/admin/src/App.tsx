@@ -3,6 +3,7 @@ import { createMemo, Show, type JSX } from "solid-js"
 
 import { authClient } from "./auth/authClient"
 import { AuthGate } from "./auth/AuthGate"
+import { ToastProvider } from "./contexts/ToastContext"
 import { AdminShell } from "./shell/AdminShell"
 import { OverviewPage } from "./pages/overview/OverviewPage"
 import { UsersPage } from "./pages/users/UsersPage"
@@ -26,17 +27,19 @@ export function App() {
   }
 
   return (
-    <Show when={session().data} fallback={<AuthGate onSuccess={() => session().refetch()} />}>
-      <Router root={ShellLayout}>
-        <Route path="/" component={OverviewPage} />
-        <Route path="/users" component={UsersPage} />
-        <Route path="/synced-records" component={SyncedRecordsPage} />
-        <Route path="/attachments" component={AttachmentsPage} />
-        <Route path="/attachment-policies" component={AttachmentPoliciesPage} />
-        <Route path="/system" component={SystemPage} />
-        <Route path="/audit-log" component={AuditLogPage} />
-        <Route path="/settings" component={SettingsPage} />
-      </Router>
-    </Show>
+    <ToastProvider>
+      <Show when={session().data} fallback={<AuthGate onSuccess={() => session().refetch()} />}>
+        <Router root={ShellLayout}>
+          <Route path="/" component={OverviewPage} />
+          <Route path="/users" component={UsersPage} />
+          <Route path="/synced-records" component={SyncedRecordsPage} />
+          <Route path="/attachments" component={AttachmentsPage} />
+          <Route path="/attachment-policies" component={AttachmentPoliciesPage} />
+          <Route path="/system" component={SystemPage} />
+          <Route path="/audit-log" component={AuditLogPage} />
+          <Route path="/settings" component={SettingsPage} />
+        </Router>
+      </Show>
+    </ToastProvider>
   )
 }
