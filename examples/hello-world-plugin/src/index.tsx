@@ -69,7 +69,7 @@ import type { PluginModule } from "@tabora/plugin-api/sdk"
  *
  * 必须包含：
  * - manifest: 声明插件 ID、名称、版本、贡献能力
- * - activate: 接收 PluginRuntimeContext，注册 view
+ * - activate: 接收 PluginContext，注册 view
  */
 export const helloWorldPlugin: PluginModule = {
   manifest: {

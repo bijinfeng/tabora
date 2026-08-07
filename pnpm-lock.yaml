@@ -95,7 +95,6 @@ catalogs:
 overrides:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.6
   vitest: 4.1.10
-  emittery@0.13.0: 0.13.1
 
 importers:
 

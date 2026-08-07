@@ -57,7 +57,7 @@ export function createBetterAuthClient(config: BetterAuthClientConfig): AuthClie
     path: string,
     body: unknown,
     token?: string,
-  ): Promise<{ status: number; body: unknown; token: string | null }> {
+  ): Promise<{ body: unknown; token: string | null }> {
     let response: Response
     try {
       response = await fetch(`${base}${path}`, {
@@ -80,7 +80,7 @@ export function createBetterAuthClient(config: BetterAuthClientConfig): AuthClie
       }
     }
     if (!response.ok) throw mapAuthError(response.status, parsed)
-    return { status: response.status, body: parsed, token: response.headers.get("set-auth-token") }
+    return { body: parsed, token: response.headers.get("set-auth-token") }
   }
 
   return {

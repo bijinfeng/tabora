@@ -54,10 +54,17 @@ const officialPluginStyleFiles = [
 ]
 
 const uiSubpathEntries = [
+  ["./component-docs", "./src/component-docs/index.ts", "./dist/component-docs/index.js"],
+  [
+    "./component-docs/renderers",
+    "./src/component-docs/renderers.tsx",
+    "./dist/component-docs/renderers.js",
+  ],
   ["./badge", "./src/badge.ts", "./dist/badge.js"],
   ["./button", "./src/button.ts", "./dist/button.js"],
   ["./checkbox", "./src/checkbox.ts", "./dist/checkbox.js"],
   ["./collapsible", "./src/collapsible.ts", "./dist/collapsible.js"],
+  ["./command-palette", "./src/command-palette.ts", "./dist/command-palette.js"],
   ["./command-result-list", "./src/command-result-list.ts", "./dist/command-result-list.js"],
   ["./context-menu", "./src/context-menu.ts", "./dist/context-menu.js"],
   ["./date-picker", "./src/date-picker.ts", "./dist/date-picker.js"],
@@ -65,22 +72,27 @@ const uiSubpathEntries = [
   ["./empty-state", "./src/empty-state.ts", "./dist/empty-state.js"],
   ["./field", "./src/field.ts", "./dist/field.js"],
   ["./field-row", "./src/field-row.ts", "./dist/field-row.js"],
+  ["./hover-card", "./src/hover-card.ts", "./dist/hover-card.js"],
   ["./inline-error", "./src/inline-error.ts", "./dist/inline-error.js"],
   ["./input", "./src/input.ts", "./dist/input.js"],
   ["./kbd", "./src/kbd.ts", "./dist/kbd.js"],
   ["./list-row", "./src/list-row.ts", "./dist/list-row.js"],
+  ["./menubar", "./src/menubar.ts", "./dist/menubar.js"],
+  ["./scroll-area", "./src/scroll-area.ts", "./dist/scroll-area.js"],
   ["./segmented-control", "./src/segmented-control.ts", "./dist/segmented-control.js"],
   ["./select", "./src/select.ts", "./dist/select.js"],
   ["./skeleton", "./src/skeleton.ts", "./dist/skeleton.js"],
   ["./slider", "./src/slider.ts", "./dist/slider.js"],
+  ["./steps", "./src/steps.ts", "./dist/steps.js"],
   ["./switch", "./src/switch.ts", "./dist/switch.js"],
+  ["./table", "./src/table.ts", "./dist/table.js"],
   ["./tabs", "./src/tabs.ts", "./dist/tabs.js"],
   ["./textarea", "./src/textarea.ts", "./dist/textarea.js"],
+  ["./toast", "./src/toast.ts", "./dist/toast.js"],
+  ["./tree-view", "./src/tree-view.ts", "./dist/tree-view.js"],
 ] as const
 
-const uiBuildScript = `vp pack src/index.ts src/component-docs/index.ts ${uiSubpathEntries
-  .map(([, sourceTarget]) => sourceTarget.slice(2))
-  .join(" ")}`
+const uiBuildScript = `vp pack ${["src/index.ts", ...uiSubpathEntries.map(([, sourceTarget]) => sourceTarget.slice(2))].join(" ")}`
 
 const performanceSubpathPackages = [
   {

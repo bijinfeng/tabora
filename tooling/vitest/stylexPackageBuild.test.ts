@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest"
 
 const repositoryRoot = process.cwd()
 const execFileAsync = promisify(execFile)
+const vitePlusBinary = join(repositoryRoot, "node_modules/.bin/vp")
 
 describe("StyleX package build helper", () => {
   it("precompiles Solid TSX packages into JavaScript and a non-empty CSS asset", async () => {
@@ -65,9 +66,7 @@ describe("StyleX package build helper", () => {
         ["@layer reset {", "  :root {", "    --fixture-global: 1;", "  }", "}", ""].join("\n"),
       )
 
-      await execFileAsync("/usr/bin/env", ["pnpm", "exec", "vp", "pack", "src/index.tsx"], {
-        cwd: fixtureDir,
-      })
+      await execFileAsync(vitePlusBinary, ["pack", "src/index.tsx"], { cwd: fixtureDir })
 
       const distFiles = await readdir(join(fixtureDir, "dist"), { recursive: true })
       expect(distFiles).toContain("styles.css")

@@ -77,14 +77,31 @@ describe("regression summary helpers", () => {
         "packages/plugin-api/src/manifestSchema.ts",
         "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
         "tooling/vitest/prGovernance.test.ts",
+        "backend/admin/src/auth/errors.ts",
+        "backend/server/src/app.ts",
         "plugins/official/widget-notes/src/notes-card.tsx",
       ]),
     ).toEqual([
       "pnpm --dir packages/plugin-api exec vitest run --config vitest.config.ts",
       "pnpm --dir packages/workbench-app exec vitest run --config vitest.config.ts",
+      "pnpm --dir backend/admin exec vitest run --config vitest.config.ts",
+      "pnpm --dir backend/server exec vitest run --config vitest.config.ts",
       "pnpm exec vitest run --config tooling/vitest/vitest.config.ts",
       "pnpm --dir plugins/official/widget-notes exec vitest run --config vitest.config.ts",
     ])
+  })
+
+  it("classifies backend changes and requires test/check/build evidence", () => {
+    expect(
+      collectChangeTypes(["backend/admin/src/auth/errors.ts", "backend/server/src/app.ts"]),
+    ).toEqual(["backend"])
+    expect(collectRequiredLevels(["backend"])).toEqual(["L1", "L2", "L3", "L7"])
+    expect(
+      collectSuggestedCommands({
+        changedFiles: ["backend/admin/src/auth/errors.ts"],
+        changeTypes: ["backend"],
+      }),
+    ).toEqual(["pnpm quality", "pnpm test", "pnpm check", "pnpm build"])
   })
 
   it("does not treat directory-scoped AGENTS.md files as production test targets", () => {

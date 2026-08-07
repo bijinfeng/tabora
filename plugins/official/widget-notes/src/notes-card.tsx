@@ -4,16 +4,8 @@ import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { IconButton } from "@tabora/ui/button"
 import ArrowRight from "lucide-solid/icons/arrow-right"
 import Plus from "lucide-solid/icons/plus"
+import { NOTES_STORAGE_KEY, type Note } from "./notes-data"
 import { styles } from "./styles"
-
-type Note = {
-  id: string
-  content: string
-  tag?: string
-  starred: boolean
-  createdAt: string
-  updatedAt: string
-}
 
 function formatTime(iso: string): string {
   const date = new Date(iso)
@@ -41,15 +33,13 @@ function firstLine(content: string): string {
   return line ?? ""
 }
 
-const STORAGE_KEY = "notes-items"
-
 export function NotesCard(props: WidgetViewProps) {
   const [notes, setNotes] = createSignal<Note[]>([])
   const [loading, setLoading] = createSignal(true)
   const cardSize = () => props.size ?? "L"
 
   onMount(async () => {
-    const saved = await props.data.get<Note[]>(STORAGE_KEY)
+    const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
     if (saved && saved.length > 0) setNotes(saved)
     setLoading(false)
   })

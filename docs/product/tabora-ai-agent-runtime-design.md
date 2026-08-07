@@ -32,7 +32,7 @@ Tabora 的 AI 能力不定义为平台内置的单一聊天机器人，而定义
 P0 阶段采用 **Tabora 自有协议 + Vercel AI SDK adapter**：
 
 - `@tabora/plugin-api` 定义插件可见的 AI 请求、流式响应、工具声明、工具审批和 `ai` 权限类型。
-- `@tabora/platform-kernel` 只负责在 `PluginRuntimeContext` 中按权限暴露 `context.ai`，不直接依赖 Vercel AI SDK。
+- `@tabora/platform-kernel` 只负责在 `PluginContext` 中按权限暴露 `context.ai`，不直接依赖 Vercel AI SDK。
 - `@tabora/ai-runtime` 作为平台基础设施包，基于 Vercel AI SDK 的 `generateText` / `streamText` 实现默认 adapter。
 - 插件只依赖 Tabora 的 `context.ai`，不直接依赖 Vercel AI SDK，也不保存模型密钥。
 

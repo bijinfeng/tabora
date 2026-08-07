@@ -43,7 +43,7 @@ export function RegisterPage(props: { onSuccess: () => void }) {
       })
       props.onSuccess()
     } catch (err) {
-      setError(toAuthMessage(err as any))
+      setError(toAuthMessage(err))
     } finally {
       setSubmitting(false)
     }

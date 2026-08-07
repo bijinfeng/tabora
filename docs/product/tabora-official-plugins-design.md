@@ -272,9 +272,9 @@ MVP 组件清单：
 | `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已由独立 layout package 和 layout contribution 驱动                                      | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
 | `official.search.command-bar`         | Tabora Command Search      | `search`                                     | 是       | 已实现基础 UI 和外部打开权限桥；已使用 `@tabora/ui` 控件                                 | 提供命令搜索、搜索源选择和快捷建议                 |
 | `official.search-providers.basic`     | Basic Search Providers     | `search-provider`                            | 是       | 已实现基础搜索源声明                                                                     | 提供 Google、Bing、百度、DuckDuckGo、GitHub 搜索源 |
-| `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供快捷入口，验证外部打开和实例配置               |
-| `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供便签和弹窗编辑，验证插件数据和 modal           |
-| `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 当前在 productivity 包内；已使用 `@tabora/ui` 控件                                       | 提供待办列表，验证交互型 widget 和持久化           |
+| `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 已由独立 `@tabora/plugin-quick-links` package 提供；已使用 `@tabora/ui` 控件              | 提供快捷入口，验证外部打开和实例配置               |
+| `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 已由独立 `@tabora/plugin-notes` package 提供；已使用 `@tabora/ui` 控件                    | 提供便签和弹窗编辑，验证插件数据和 modal           |
+| `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 已由独立 `@tabora/plugin-todo` package 提供；已使用 `@tabora/ui` 控件                     | 提供待办列表，验证交互型 widget 和持久化           |
 | `official.widgets.weather`            | Weather Widget             | `widget`                                     | 是       | 已接入 Open-Meteo 真实数据；卡片 + 展开弹窗                                              | 提供天气摘要与预报，按 `DESIGN.md` 进入默认工作台  |
 | `official.plugin-manager`             | Plugin Manager             | `settings-panel`                             | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件贡献能力和权限摘要                         |
 | `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | 已实现轻量 settings host 面板贡献：外观、搜索；插件面板由 `official.plugin-manager` 贡献 | 聚合插件、外观、搜索等全局设置面板                 |
@@ -296,7 +296,7 @@ MVP 组件清单：
 | `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
-当前实现由 `plugins/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 10 列主网格容器和单元格行高同步，`WidgetCardShell` 负责按 widget size 设置 grid span、提供无头部卡片外壳和右上角移除按钮。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
+当前实现由 `plugins/official/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 10 列主网格容器和单元格行高同步，`WidgetCardShell` 负责按 widget size 设置 grid span、提供无头部卡片外壳和右上角移除按钮。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
 
 默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/workbench-prototype.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、快捷入口、待办、便签和天气摘要。完整插件管理从设置中心进入。
 
@@ -1183,7 +1183,7 @@ V1.5：
 
 #### 当前实现
 
-当前卡片和弹窗都使用 `localStorage` 的 `notes-content`，属于全局共享便签内容。后续应迁移到 plugin data，并支持按实例隔离。
+当前卡片和弹窗都通过宿主提供的实例级 `props.data` 读写便签内容；同一 widget 实例内共享，多个实例默认隔离。
 
 #### 交互示例
 
@@ -1256,8 +1256,7 @@ MVP：
 
 V1.1：
 
-- 使用 plugin data。
-- 按实例隔离。
+- 标签、置顶和更丰富的编辑能力。
 - 保存状态反馈。
 - 清空操作。
 
@@ -1284,7 +1283,7 @@ V1.5：
 
 #### 当前实现
 
-当前待办使用 `@tabora/storage` 的 plugin data repository，保存 `todo/items`。后续应加入 instanceId，避免多个待办实例共享同一列表，除非用户选择“共享列表”。
+当前待办通过宿主提供的实例级 `props.data` 保存 `v2_items` 和 `v2_groups`；多个待办实例默认使用独立列表。
 
 #### 交互示例
 
@@ -1367,7 +1366,6 @@ MVP：
 
 V1.1：
 
-- 按实例隔离数据。
 - 编辑 todo 文本。
 - 清空已完成。
 - 保存失败反馈。
@@ -1454,16 +1452,14 @@ V1.5：
 
 MVP：
 
-- mock 数据展示。
+- Open-Meteo 实时数据展示。
 - 基础 weather card。
-- 定时刷新示例。
+- 缓存回退、失败状态和手动重试。
 
 V1.1：
 
-- 城市配置。
-- 真实天气 provider。
-- 加载/失败状态。
-- 天气图标资源统一。
+- 多城市管理。
+- 更丰富天气指标。
 
 V1.5：
 
@@ -1909,14 +1905,14 @@ plugin view throws
 
 | 领域          | 当前情况                                                                                                                          | 建议                                        |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 默认布局      | 已由独立 `plugins/layout-dashboard` 贡献整体布局；rail 走 host actions，topbar/mainGrid 走 region slot，主网格由 layout view 包裹 | 继续补齐更完整响应式与视觉细节              |
-| UI 基础组件   | 控件样式主要在 app.css 和插件内                                                                                                   | 新增 `@tabora/ui`，官方插件优先复用基础组件 |
+| 默认布局      | 已由独立 `plugins/official/layout-dashboard` 贡献整体布局；rail 走 host actions，topbar/mainGrid 走 region slot，主网格由 layout view 包裹 | 继续补齐更完整响应式与视觉细节              |
+| UI 基础组件   | `@tabora/ui` 已提供按钮、输入、选择器、菜单、错误提示等基础组件，官方插件已按稳定 subpath 复用                                               | 继续补齐缺失组件并清理局部手搓控件          |
 | 搜索源读取    | 已从 `search-provider` contribution 动态读取                                                                                      | —                                           |
-| 快捷入口      | 链接写在插件 view 内                                                                                                              | 支持实例配置和 plugin data                  |
-| 便签存储      | 使用 `localStorage` 全局 key                                                                                                      | 迁移到 plugin data，并支持实例隔离          |
-| 待办存储      | 使用 pluginId + key，全实例共享                                                                                                   | 加入 instanceId 或明确共享列表策略          |
-| 天气数据      | mock 北京天气                                                                                                                     | 接入天气 provider，标明 demo 状态           |
-| 天气图标      | 使用天气符号                                                                                                                      | 换成统一图标资源                            |
+| 快捷入口      | 入口、分组和最近访问记录通过实例级 plugin data 保存，展开主体和 footer 通过 instanceId 共享临时会话                        | 导入浏览器书签、favicon 等增强能力          |
+| 便签存储      | 卡片和展开视图通过实例级 plugin data 读写，不再使用全局 `localStorage`                                                         | 标签、置顶和更丰富编辑能力                 |
+| 待办存储      | 通过实例级 plugin data 保存 `v2_items` / `v2_groups`，不同 widget 实例默认隔离                                               | 编辑文本、清空已完成和保存失败反馈         |
+| 天气数据      | 已接入 Open-Meteo，支持实例城市配置、缓存回退和失败状态                                                                          | 多城市管理和更丰富天气信息                 |
+| 天气图标      | 按 WMO code 映射到 `lucide-solid` 图标，不再使用天气符号                                                                         | 继续补齐极端天气状态                       |
 | 插件管理器    | 只读官方插件列表                                                                                                                  | 接入 plugin records、权限、错误和启用/禁用  |
 | 设置插件      | 已实现 MVP 轻量 settings host；插件、外观、搜索面板显式声明 `section/scope` 并经 settings navigator 进入                          | 新增权限详情、设置搜索                      |
 | 权限反馈      | 搜索外部打开已有桥；插件管理器可展示 required capabilities / supported platforms / skipped reason                                 | 增加更完整权限详情                          |
@@ -1926,13 +1922,13 @@ plugin view throws
 
 ## 17. 推荐推进优先级
 
-### P0：默认体验闭环
+### 已完成：默认体验闭环
 
 - 搜索栏读取真实 `search-provider` contributions。
-- 新增工作台仪表盘布局：轻 rail + 命令搜索 + 主网格。
-- 新增 `@tabora/ui` 基础组件包，并让官方插件逐步迁移到统一控件。
-- 快捷入口、便签、待办使用统一 plugin storage。
-- 默认工作台按交互原型样张包含命令搜索、快捷入口、待办、便签、天气和多实例样张卡片。
+- 工作台仪表盘布局提供轻 rail、命令搜索和主网格。
+- `@tabora/ui` 基础组件已交付，官方插件通过稳定 subpath 复用。
+- 快捷入口、便签、待办和天气使用实例级 plugin data。
+- 默认工作台包含命令搜索、快捷入口、待办、便签和天气卡片。
 - 插件错误边界覆盖 card、modal、fullscreen。
 - 提供轻量设置中心，聚合插件、外观和搜索面板。
 
@@ -1944,12 +1940,11 @@ plugin view throws
 - 更完整的权限说明和设置搜索。
 - 卡片实例设置与全局设置边界。
 
-### P2：真实内容能力
+### P2：真实内容能力增强
 
-- 真实天气 provider。
-- 自定义快捷入口。
-- 搜索历史和 provider shortcut。
-- 便签多实例隔离。
+- 多城市天气和更丰富天气信息。
+- 导入浏览器书签与 favicon。
+- 标签、置顶和更丰富的便签编辑。
 - 待办编辑、排序、清空已完成。
 
 ### P3：生态准备
@@ -1982,9 +1977,7 @@ plugin view throws
 ## 19. 开放问题
 
 - 天气是否首屏默认加入，还是只提供在添加面板中。
-- 天气真实数据使用哪个 provider，是否需要 network 权限和用户授权。
 - 快捷入口默认数据是官方推荐、用户空状态，还是导入浏览器书签。
-- 便签和待办多实例默认隔离，还是允许用户选择共享数据。
 - 插件管理器是否同时作为卡片出现，还是 MVP 只在设置中心出现。
 - 插件禁用关键能力时，是否允许禁用布局、主题、搜索这类结构级插件。
 - 背景 renderer 的 props contract 如何标准化。

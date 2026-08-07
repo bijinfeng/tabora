@@ -117,7 +117,7 @@ packages/
 - Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和 safe layout fallback 属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
 - `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope/content、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope/content`、workspace canonical contribution ref（含 `activeBackgroundProvider`）、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
 - settings panel 的 `content` 必须显式选择 `{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`。Kernel 为 schema provider 提供受 manifest 声明限制的 registry，停用插件时与 view 一起注销；宿主不再通过 `SettingsPanelViewProps.host` 注入账号或同步业务 API。
-- 2026-07-13 AI Runtime P0 补充：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginRuntimeContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 `AiRuntimeBridge` 并传入 kernel；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
+- 2026-07-13 AI Runtime P0 补充：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 `AiRuntimeBridge` 并传入 kernel；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
 - 2026-06-07 发布前兼容性清理补充：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
 - `@tabora/plugin-api` 当前额外导出 `workbenchSearchSettingsSchema`、`pluginInstanceSchema`、`workspaceSchema`、`workspaceExportSchema` 作为当前工作台协议事实源。`WorkbenchSearchSettings` 当前协议为完整显式配置：`defaultProviderId: string`、`enabledProviderIds: string[]`，并要求默认 provider 必须属于启用列表。workspace hydration、import/export 和 preset 链路统一走 schema 校验；缺失字段、旧导出或不满足约束的数据直接拒绝，不再按“首个 provider”或“全量 providers”做 silent backfill。
 - `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
@@ -1198,8 +1198,8 @@ packages/
   orchestrator/         # 编排层
     src/
       plugin-catalog.ts
-      search-engine.ts          # （Phase C 待实现）
-      search-router.ts
+      search-model.ts           # provider token、@ 路由和搜索 URL
+      command-palette-model.ts  # 命令面板和 inline 搜索结果模型
       drag-sort-model.ts
       context-menu-model.ts
       settings-navigator.ts
@@ -1241,8 +1241,8 @@ plugins/
 2. `manifestSchema` 新增最小强制 schema：layout 必须含至少一个 `accepts:["widget"]` 的 region 且 `view` 字段必填。
 3. `workbench-shell` 抽出 `WidgetCardShell`（卡片壳）和 `LayoutBoundary`（错误边界）。
 4. 把官方 dashboard/focus 布局放入同一个官方布局 package（`plugins/official/layout-dashboard`），依赖面只有 plugin-api/platform-kernel/solid-js 等布局所需依赖（隔离硬证据）。
-5. 新增 `plugins/layout-diy-masonry`：第三方差异化 DIY 布局，验证只靠公开契约就能实现瀑布流分列、浮动菜单、自定义图标等创新形态。
-6. `official-plugins` 装配层引入三个布局 package，删除原 `layout-workbench-*.tsx` 内联实现。
+5. 新增 `plugins/community/layout-diy-masonry`：第三方差异化 DIY 布局，验证只靠公开契约就能实现瀑布流分列、浮动菜单、自定义图标等创新形态。
+6. `official-plugins` 装配层引入布局 package，删除原 `layout-workbench-*.tsx` 内联实现。
 7. `App.tsx` 引入 `WidgetCardShell` 卡片壳，将拖拽/双击/右键/移除等交互通过 `WidgetHostCallbacks` 闭包注入；layout view 负责包裹 10 列主网格并同步单元格行高，`WidgetCardShell` 根据 `@tabora/plugin-api/widgetGeometry` 的 widget size span 写入 grid CSS 变量，避免协议驱动布局丢失当前原型的 `1x1 / 2x1 / 2x2 / 4x2` 卡片排布。
 
 ### Phase X1-X8: 插件系统可扩展性收尾 ✅ 已完成
@@ -1264,12 +1264,12 @@ plugins/
 3. 实现 `platform.safe-layout` fallback。已完成基础（renderSafeLayout）。
 4. 开发 `official.layout.workbench-focus` 布局。已完成（由 dashboard layout package 同插件贡献）。
 
-### Phase C: 搜索增强（1 周）
+### Phase C: 搜索增强（核心能力已完成）
 
-1. 实现 `SearchEngine`：模糊搜索、@语法路由、键盘导航状态机
-2. 实现 Dashboard 内联搜索建议 UI（SearchBar + Suggestions）
-3. 增强 CommandPalette：动态结果、分组显示、⌘K 同步，作为 Focus 的浮层搜索入口
-4. 搜索历史持久化
+1. `@tabora/orchestrator` 已提供 `search-model`：provider token、`@` 语法路由、默认 provider 和搜索 URL。
+2. Dashboard 内联搜索建议已由官方 `SearchCommandBar` 和 `command-palette-model` 提供。
+3. `CommandPalette` 已支持动态结果、分组显示和 `⌘K` 浮层入口。
+4. 搜索历史已通过 `workbench-app` 的 workspace plugin data 持久化。
 
 ### Phase D: 交互增强（部分已由 Phase X4/X5 覆盖）
 

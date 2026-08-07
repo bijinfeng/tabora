@@ -24,9 +24,6 @@ export type PluginI18nService = {
   formatNumber(value: number, options?: Intl.NumberFormatOptions): string
 }
 
-/** @deprecated Use PluginContext from @tabora/plugin-api. */
-export type PluginRuntimeContext = PluginContext
-
 export function collectPluginManifestViewIds(manifest: PluginManifest): Set<string> {
   const views = new Set<string>()
 

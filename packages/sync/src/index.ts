@@ -20,14 +20,6 @@ export {
 // Sensitive field filter
 export { rejectSensitiveFields, isSafeToSync, SensitiveFieldError } from "./sensitiveFilter"
 
-// Conflict model
-export {
-  createConflictInbox,
-  type ConflictInbox,
-  type ConflictRecord,
-  type ConflictResolution,
-} from "./conflictModel"
-
 // 同步网关客户端 - HTTP client + 字段映射，对接后端同步网关
 export {
   createSyncGatewayClient,

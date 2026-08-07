@@ -5,20 +5,8 @@ import { Skeleton } from "@tabora/ui/skeleton"
 import ArrowRight from "lucide-solid/icons/arrow-right"
 import Check from "lucide-solid/icons/check"
 import Plus from "lucide-solid/icons/plus"
+import { DEFAULT_GROUP_ID, TODO_ITEMS_KEY, type TodoItem } from "./todo-data"
 import { styles } from "./styles"
-
-type Priority = "high" | "medium" | "low" | "none"
-
-type TodoItem = {
-  id: string
-  text: string
-  done: boolean
-  priority: Priority
-  dueDate?: string
-  groupId: string
-}
-
-const DEFAULT_GROUP_ID = "default"
 
 const MONTH_LABELS = [
   "JAN",
@@ -87,9 +75,7 @@ export function TodoCard(props: WidgetViewProps) {
   const [items, setItems] = createSignal<TodoItem[]>([])
   const [loading, setLoading] = createSignal(true)
 
-  const storageKey = "v2_items"
-
-  void props.data.get<TodoItem[]>(storageKey).then((saved) => {
+  void props.data.get<TodoItem[]>(TODO_ITEMS_KEY).then((saved) => {
     // 保存过空数组也算用户意图，只在从未保存时才铺种子数据
     if (saved !== null && saved !== undefined) setItems(saved)
     else setItems(SEED_ITEMS)
@@ -99,7 +85,7 @@ export function TodoCard(props: WidgetViewProps) {
   async function toggleItem(id: string) {
     const next = items().map((i) => (i.id === id ? { ...i, done: !i.done } : i))
     setItems(next)
-    await props.data.save(storageKey, next)
+    await props.data.save(TODO_ITEMS_KEY, next)
   }
 
   const cardSize = () => props.size ?? "S"

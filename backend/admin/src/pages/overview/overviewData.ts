@@ -14,13 +14,6 @@ export type Metric = {
   hint?: string
 }
 
-export type RecentError = {
-  id: string
-  summary: string
-  detail: string
-  at: string
-}
-
 /** 把秒数格式化为 “Xd Xh Xm” 简洁形式。 */
 function formatUptime(sec: number): string {
   const d = Math.floor(sec / 86400)
@@ -72,9 +65,3 @@ export function deriveHealthStatuses(sys: SystemInfo | undefined): HealthStatus[
     },
   ]
 }
-
-/**
- * 最近同步错误当前无服务端摘要端点，保持空列表。
- * TODO(server): 接入错误/冲突摘要端点后填充。
- */
-export const recentErrors: RecentError[] = []

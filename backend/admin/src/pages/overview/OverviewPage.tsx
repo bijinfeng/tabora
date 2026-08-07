@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
-import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { useQuery } from "@tanstack/solid-query"
 import { For, Show } from "solid-js"
@@ -14,7 +13,7 @@ import { Legend } from "./charts/Legend"
 import { chartColor } from "./charts/palette"
 import { RecordStateChart } from "./charts/RecordStateChart"
 import { RecordTypesChart } from "./charts/RecordTypesChart"
-import { deriveHealthStatuses, recentErrors, type Metric } from "./overviewData"
+import { deriveHealthStatuses, type Metric } from "./overviewData"
 import { styles } from "./overview.styles"
 
 export function OverviewPage() {
@@ -141,21 +140,6 @@ export function OverviewPage() {
             />
           </ChartCard>
         </div>
-      </section>
-
-      <section {...stylex.attrs(styles.section)}>
-        <h2 {...stylex.attrs(styles.sectionTitle)}>最近同步错误</h2>
-        <Show
-          when={recentErrors.length > 0}
-          fallback={
-            <EmptyState
-              title="暂无同步错误"
-              description="接入服务端管理端点后，这里会展示被拒记录与冲突摘要。"
-            />
-          }
-        >
-          <For each={recentErrors}>{(error) => <div>{error.summary}</div>}</For>
-        </Show>
       </section>
     </div>
   )

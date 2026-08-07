@@ -10,9 +10,6 @@ packages:
 overrides:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.6
   vitest: 4.1.10
-  # emittery@0.13.0 是缺失 maps.js 的损坏发布，umzug 依赖它导致 Strapi 启动失败；
-  # 0.13.1 补齐该文件且 API 兼容。
-  emittery@0.13.0: 0.13.1
 
 allowBuilds:
   "@prisma/client": false

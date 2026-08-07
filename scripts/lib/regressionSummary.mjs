@@ -3,6 +3,7 @@ const CHANGE_TYPE_ORDER = [
   "protocol",
   "kernel",
   "storage",
+  "backend",
   "orchestrator",
   "shell",
   "plugin",
@@ -39,7 +40,8 @@ const FOCUSED_TEST_RULES = [
   "packages/workbench-shell",
   "apps/playground",
   "apps/site",
-  "backend/strapi",
+  "backend/admin",
+  "backend/server",
   "tooling/stylex",
   "tooling/vitest",
   "plugins/community/layout-diy-masonry",
@@ -78,6 +80,11 @@ const CHANGE_TYPE_RULES = [
   {
     type: "storage",
     matches: (filePath) => filePath.startsWith("packages/storage/"),
+  },
+  {
+    type: "backend",
+    matches: (filePath) =>
+      filePath.startsWith("backend/admin/") || filePath.startsWith("backend/server/"),
   },
   {
     type: "orchestrator",
@@ -129,6 +136,7 @@ const CHANGE_TYPE_LEVELS = {
   protocol: ["L1", "L2", "L3", "L6", "L7"],
   kernel: ["L1", "L2", "L3", "L6", "L7"],
   storage: ["L1", "L2", "L3", "L6", "L7"],
+  backend: ["L1", "L2", "L3", "L7"],
   orchestrator: ["L1", "L2", "L3", "L4", "L7"],
   shell: ["L1", "L2", "L3", "L4", "L5", "L6", "L7"],
   plugin: ["L1", "L2", "L3", "L4", "L5", "L7"],
@@ -195,9 +203,17 @@ export function collectRequiredLevels(changeTypes) {
 export function collectSuggestedCommands(options) {
   const commands = []
   const hasCodeChange = options.changeTypes.some((changeType) =>
-    ["protocol", "kernel", "storage", "orchestrator", "shell", "plugin", "ui", "quality"].includes(
-      changeType,
-    ),
+    [
+      "protocol",
+      "kernel",
+      "storage",
+      "backend",
+      "orchestrator",
+      "shell",
+      "plugin",
+      "ui",
+      "quality",
+    ].includes(changeType),
   )
   const needsArchitecture = options.changeTypes.some((changeType) =>
     ["protocol", "kernel", "storage", "orchestrator", "shell", "plugin"].includes(changeType),
@@ -206,9 +222,17 @@ export function collectSuggestedCommands(options) {
     ["orchestrator", "shell", "plugin", "ui"].includes(changeType),
   )
   const needsBuild = options.changeTypes.some((changeType) =>
-    ["protocol", "kernel", "storage", "orchestrator", "shell", "plugin", "ui", "release"].includes(
-      changeType,
-    ),
+    [
+      "protocol",
+      "kernel",
+      "storage",
+      "backend",
+      "orchestrator",
+      "shell",
+      "plugin",
+      "ui",
+      "release",
+    ].includes(changeType),
   )
 
   if (needsArchitecture) {

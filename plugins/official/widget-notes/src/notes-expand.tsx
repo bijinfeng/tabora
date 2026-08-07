@@ -12,15 +12,8 @@ import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 import Star from "lucide-solid/icons/star"
 import Trash from "lucide-solid/icons/trash"
+import { NOTES_STORAGE_KEY, type Note } from "./notes-data"
 import { styles } from "./styles"
-
-type Note = {
-  id: string
-  content: string
-  starred: boolean
-  createdAt: string
-  updatedAt: string
-}
 
 function uid(): string {
   return `n_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
@@ -53,8 +46,6 @@ function highlightText(text: string, query: string): Array<{ text: string; highl
     .map((part) => ({ text: part, highlighted: part.toLowerCase() === query.toLowerCase() }))
 }
 
-const STORAGE_KEY = "notes-items"
-
 export function NotesExpand(props: WidgetViewProps) {
   const [notes, setNotes] = createSignal<Note[]>([])
   const [currentFilter, setCurrentFilter] = createSignal("all")
@@ -67,13 +58,13 @@ export function NotesExpand(props: WidgetViewProps) {
   let editTimer: ReturnType<typeof setTimeout> | undefined
 
   onMount(async () => {
-    const saved = await props.data.get<Note[]>(STORAGE_KEY)
+    const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
     if (saved) setNotes(saved)
   })
 
   async function persist(updated: Note[]) {
     setNotes(updated)
-    await props.data.save(STORAGE_KEY, updated)
+    await props.data.save(NOTES_STORAGE_KEY, updated)
   }
 
   async function addNote(content: string) {

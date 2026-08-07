@@ -8,25 +8,15 @@ import ChevronDown from "lucide-solid/icons/chevron-down"
 import ChevronRight from "lucide-solid/icons/chevron-right"
 import Circle from "lucide-solid/icons/circle"
 import Plus from "lucide-solid/icons/plus"
+import {
+  DEFAULT_GROUP_ID,
+  TODO_GROUPS_KEY,
+  TODO_ITEMS_KEY,
+  type Priority,
+  type TodoGroup,
+  type TodoItem,
+} from "./todo-data"
 import { styles } from "./styles"
-
-type Priority = "high" | "medium" | "low" | "none"
-
-type TodoItem = {
-  id: string
-  text: string
-  done: boolean
-  priority: Priority
-  dueDate?: string
-  groupId: string
-  assignee?: string
-}
-
-type TodoGroup = {
-  id: string
-  name: string
-  collapsed: boolean
-}
 
 const PRIORITY_LABELS: Record<Priority, string> = {
   high: "高",
@@ -34,8 +24,6 @@ const PRIORITY_LABELS: Record<Priority, string> = {
   low: "低",
   none: "—",
 }
-
-const DEFAULT_GROUP_ID = "default"
 
 function generateUUID(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -57,12 +45,9 @@ export function TodoExpand(props: WidgetViewProps) {
   const [addingGroup, setAddingGroup] = createSignal(false)
   const [newGroupName, setNewGroupName] = createSignal("")
 
-  const storageKey = "v2_items"
-  const groupsKey = "v2_groups"
-
   void Promise.all([
-    props.data.get<TodoItem[]>(storageKey),
-    props.data.get<TodoGroup[]>(groupsKey),
+    props.data.get<TodoItem[]>(TODO_ITEMS_KEY),
+    props.data.get<TodoGroup[]>(TODO_GROUPS_KEY),
   ]).then(([savedItems, savedGroups]) => {
     if (savedGroups !== null && savedGroups !== undefined && savedGroups.length > 0) {
       setGroups(savedGroups)
@@ -101,11 +86,11 @@ export function TodoExpand(props: WidgetViewProps) {
   })
 
   async function persistItems(updated: TodoItem[]) {
-    await props.data.save(storageKey, updated)
+    await props.data.save(TODO_ITEMS_KEY, updated)
   }
 
   async function persistGroups(updated: TodoGroup[]) {
-    await props.data.save(groupsKey, updated)
+    await props.data.save(TODO_GROUPS_KEY, updated)
   }
 
   async function toggleItem(id: string) {
