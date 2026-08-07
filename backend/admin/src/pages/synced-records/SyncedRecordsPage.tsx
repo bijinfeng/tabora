@@ -6,7 +6,8 @@ import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
 import { Table, type TableColumn } from "@tabora/ui/table"
-import { createResource, createSignal, Show } from "solid-js"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
+import { createSignal, Show } from "solid-js"
 import Search from "lucide-solid/icons/search"
 
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
@@ -35,23 +36,33 @@ export function SyncedRecordsPage() {
   const [search, setSearch] = createSignal("")
   const [offset, setOffset] = createSignal(0)
   const [detail, setDetail] = createSignal<SyncedRecord | null>(null)
+  const queryClient = useQueryClient()
 
-  const [data, { refetch }] = createResource(
-    () => ({ type: type(), deleted: deleted(), search: search(), offset: offset() }),
-    (p) =>
+  const data = useQuery(() => ({
+    queryKey: [
+      "synced-records",
+      { type: type(), deleted: deleted(), search: search(), offset: offset() },
+    ],
+    queryFn: () =>
       listSyncedRecords({
         limit: PAGE_SIZE,
-        offset: p.offset,
-        ...(p.type ? { type: p.type } : {}),
-        ...(p.deleted ? { deleted: p.deleted === "true" } : {}),
-        ...(p.search ? { search: p.search } : {}),
+        offset: offset(),
+        ...(type() ? { type: type() } : {}),
+        ...(deleted() ? { deleted: deleted() === "true" } : {}),
+        ...(search() ? { search: search() } : {}),
       }),
-  )
+  }))
 
-  async function handleDelete(record: SyncedRecord) {
-    await deleteSyncedRecord(record.id)
-    setDetail(null)
-    await refetch()
+  const deleteMutation = useMutation(() => ({
+    mutationFn: (id: string) => deleteSyncedRecord(id),
+    onSuccess: () => {
+      setDetail(null)
+      void queryClient.invalidateQueries({ queryKey: ["synced-records"] })
+    },
+  }))
+
+  function handleDelete(record: SyncedRecord) {
+    deleteMutation.mutate(record.id)
   }
 
   const columns = buildColumns()
@@ -97,14 +108,14 @@ export function SyncedRecordsPage() {
         fallback={<InlineError>{(data.error as Error)?.message ?? "加载失败"}</InlineError>}
       >
         <Show
-          when={data.loading || (data() && data()!.records.length > 0)}
+          when={data.isPending || (data.data && data.data.records.length > 0)}
           fallback={
             <EmptyState title="暂无同步记录" description="调整筛选条件，或等待客户端上传数据。" />
           }
         >
           <Table
             columns={columns}
-            rows={data()?.records ?? []}
+            rows={data.data?.records ?? []}
             rowKey={(r) => r.id}
             onRowClick={(r) => setDetail(r)}
             aria-label="同步记录列表"
@@ -112,7 +123,7 @@ export function SyncedRecordsPage() {
         </Show>
       </Show>
 
-      <Show when={data()}>
+      <Show when={data.data}>
         {(d) => (
           <Pagination
             offset={offset()}
@@ -126,7 +137,7 @@ export function SyncedRecordsPage() {
       <RecordDetailDrawer
         record={detail()}
         onClose={() => setDetail(null)}
-        onDelete={(r) => void handleDelete(r)}
+        onDelete={(r) => handleDelete(r)}
       />
     </div>
   )

@@ -4,7 +4,8 @@ import { Button } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Table, type TableColumn } from "@tabora/ui/table"
-import { createResource, createSignal, Show } from "solid-js"
+import { useQuery, useQueryClient } from "@tanstack/solid-query"
+import { createSignal, Show } from "solid-js"
 import Plus from "lucide-solid/icons/plus"
 
 import { PolicyEditorDialog } from "./PolicyEditorDialog"
@@ -20,7 +21,11 @@ function formatSize(bytes: number | null): string {
 export function AttachmentPoliciesPage() {
   const [editorOpen, setEditorOpen] = createSignal(false)
   const [editing, setEditing] = createSignal<AttachmentPolicy | null>(null)
-  const [data, { refetch }] = createResource(listPolicies)
+  const queryClient = useQueryClient()
+  const data = useQuery(() => ({
+    queryKey: ["attachment-policies"],
+    queryFn: listPolicies,
+  }))
 
   function openNew() {
     setEditing(null)
@@ -84,7 +89,7 @@ export function AttachmentPoliciesPage() {
         fallback={<InlineError>{(data.error as Error)?.message ?? "加载失败"}</InlineError>}
       >
         <Show
-          when={data.loading || (data() && data()!.length > 0)}
+          when={data.isPending || (data.data && data.data.length > 0)}
           fallback={
             <EmptyState
               title="暂无附件策略"
@@ -94,7 +99,7 @@ export function AttachmentPoliciesPage() {
         >
           <Table
             columns={columns}
-            rows={data() ?? []}
+            rows={data.data ?? []}
             rowKey={(p) => String(p.id)}
             aria-label="附件策略列表"
           />
@@ -105,7 +110,7 @@ export function AttachmentPoliciesPage() {
         open={editorOpen()}
         editing={editing()}
         onClose={() => setEditorOpen(false)}
-        onSaved={() => void refetch()}
+        onSaved={() => void queryClient.invalidateQueries({ queryKey: ["attachment-policies"] })}
       />
     </div>
   )

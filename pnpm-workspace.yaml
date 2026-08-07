@@ -59,6 +59,7 @@ catalogs:
     "@solid-primitives/media": ^2.3.5
     "@solid-primitives/timer": ^1.4.4
     "@solidjs/router": ^0.16.1
+    "@tanstack/solid-query": ^5.101.4
     lucide-solid: ^1.16.0
     solid-js: ^1.9.13
   toolkit:

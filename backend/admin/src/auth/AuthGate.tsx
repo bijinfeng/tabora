@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { color, font } from "@tabora/theme/tokens.stylex"
-import { createResource, Match, Switch } from "solid-js"
+import { useQuery } from "@tanstack/solid-query"
+import { Match, Switch } from "solid-js"
 
 import { ADMIN_API_BASE_URL } from "../config"
 import { LoginPage } from "./LoginPage"
@@ -28,17 +29,17 @@ async function fetchHasAdmin(): Promise<boolean> {
 
 /** 未登录入口：探测是否已存在管理员，据此进注册或登录。 */
 export function AuthGate(props: { onSuccess: () => void }) {
-  const [hasAdmin] = createResource(fetchHasAdmin)
+  const hasAdmin = useQuery(() => ({ queryKey: ["admin-status"], queryFn: fetchHasAdmin }))
 
   return (
     <Switch fallback={<div {...stylex.attrs(styles.status)}>正在连接管理服务…</div>}>
       <Match when={hasAdmin.error}>
         <LoginPage onSuccess={props.onSuccess} />
       </Match>
-      <Match when={hasAdmin() === false}>
+      <Match when={hasAdmin.data === false}>
         <RegisterPage onSuccess={props.onSuccess} />
       </Match>
-      <Match when={hasAdmin() === true}>
+      <Match when={hasAdmin.data === true}>
         <LoginPage onSuccess={props.onSuccess} />
       </Match>
     </Switch>

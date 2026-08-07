@@ -4,7 +4,8 @@ import { Button } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Table, type TableColumn } from "@tabora/ui/table"
-import { createResource, createSignal, Show } from "solid-js"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
+import { createSignal, Show } from "solid-js"
 
 import { deleteFile, listFiles, type AttachmentFile } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
@@ -25,19 +26,22 @@ function formatTime(value: string | number): string {
 export function AttachmentsPage() {
   const [error, setError] = createSignal<string | null>(null)
   const [offset, setOffset] = createSignal(0)
-  const [data, { refetch }] = createResource(
-    () => offset(),
-    (o) => listFiles(PAGE_SIZE, o),
-  )
+  const queryClient = useQueryClient()
 
-  async function handleDelete(file: AttachmentFile) {
-    setError(null)
-    try {
-      await deleteFile(file.id)
-      await refetch()
-    } catch (err) {
-      setError((err as Error).message)
-    }
+  const data = useQuery(() => ({
+    queryKey: ["attachments", "files", offset()],
+    queryFn: () => listFiles(PAGE_SIZE, offset()),
+  }))
+
+  const deleteMutation = useMutation(() => ({
+    mutationFn: (id: number) => deleteFile(id),
+    onMutate: () => setError(null),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attachments", "files"] }),
+    onError: (err: Error) => setError(err.message),
+  }))
+
+  function handleDelete(file: AttachmentFile) {
+    deleteMutation.mutate(file.id)
   }
 
   const columns: TableColumn<AttachmentFile>[] = [
@@ -72,7 +76,7 @@ export function AttachmentsPage() {
       align: "end",
       cell: (f) => (
         <div {...stylex.attrs(styles.actionCell)}>
-          <Button size="sm" variant="danger-subtle" onClick={() => void handleDelete(f)}>
+          <Button size="sm" variant="danger-subtle" onClick={() => handleDelete(f)}>
             删除
           </Button>
         </div>
@@ -90,19 +94,19 @@ export function AttachmentsPage() {
         fallback={<InlineError>{(data.error as Error)?.message ?? "加载失败"}</InlineError>}
       >
         <Show
-          when={data.loading || (data() && data()!.files.length > 0)}
+          when={data.isPending || (data.data && data.data.files.length > 0)}
           fallback={<EmptyState title="暂无附件" description="用户通过插件上传附件后在此巡检。" />}
         >
           <Table
             columns={columns}
-            rows={data()?.files ?? []}
+            rows={data.data?.files ?? []}
             rowKey={(f) => String(f.id)}
             aria-label="附件文件列表"
           />
         </Show>
       </Show>
 
-      <Show when={data()}>
+      <Show when={data.data}>
         {(d) => (
           <Pagination
             offset={offset()}

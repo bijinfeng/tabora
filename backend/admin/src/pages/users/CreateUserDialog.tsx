@@ -5,6 +5,7 @@ import { Field } from "@tabora/ui/field"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
+import { useMutation } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 
 import { createUser } from "./usersApi"
@@ -23,41 +24,41 @@ export function CreateUserDialog(props: CreateUserDialogProps) {
   const [name, setName] = createSignal("")
   const [password, setPassword] = createSignal("")
   const [role, setRole] = createSignal<"user" | "admin">("user")
-  const [error, setError] = createSignal<string | null>(null)
-  const [submitting, setSubmitting] = createSignal(false)
+  const [validationError, setValidationError] = createSignal<string | null>(null)
 
   function reset() {
     setEmail("")
     setName("")
     setPassword("")
     setRole("user")
-    setError(null)
+    setValidationError(null)
   }
 
-  async function handleSubmit() {
-    if (submitting()) return
-    if (password().length < MIN_PASSWORD) {
-      setError(`密码至少 ${MIN_PASSWORD} 位`)
-      return
-    }
-    setError(null)
-    setSubmitting(true)
-    try {
-      await createUser({
-        email: email().trim(),
-        password: password(),
-        name: name().trim() || email().split("@")[0] || "User",
-        role: role(),
-      })
+  const mutation = useMutation(() => ({
+    mutationFn: createUser,
+    onSuccess: () => {
       reset()
       props.onCreated()
       props.onClose()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setSubmitting(false)
+    },
+  }))
+
+  function handleSubmit() {
+    if (mutation.isPending) return
+    if (password().length < MIN_PASSWORD) {
+      setValidationError(`密码至少 ${MIN_PASSWORD} 位`)
+      return
     }
+    setValidationError(null)
+    mutation.mutate({
+      email: email().trim(),
+      password: password(),
+      name: name().trim() || email().split("@")[0] || "User",
+      role: role(),
+    })
   }
+
+  const errorMessage = () => validationError() ?? (mutation.error as Error | null)?.message ?? null
 
   return (
     <Dialog
@@ -70,7 +71,7 @@ export function CreateUserDialog(props: CreateUserDialogProps) {
           <Button variant="secondary" onClick={props.onClose}>
             取消
           </Button>
-          <Button variant="primary" loading={submitting()} onClick={handleSubmit}>
+          <Button variant="primary" loading={mutation.isPending} onClick={handleSubmit}>
             创建
           </Button>
         </div>
@@ -111,8 +112,8 @@ export function CreateUserDialog(props: CreateUserDialogProps) {
             aria-label="用户角色"
           />
         </Field>
-        <Show when={error()}>
-          <InlineError>{error()}</InlineError>
+        <Show when={errorMessage()}>
+          <InlineError>{errorMessage()}</InlineError>
         </Show>
       </div>
     </Dialog>

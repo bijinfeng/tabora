@@ -2,7 +2,8 @@ import * as stylex from "@stylexjs/stylex"
 import { Dialog } from "@tabora/ui"
 import { Button } from "@tabora/ui/button"
 import { InlineError } from "@tabora/ui/inline-error"
-import { createSignal, Show } from "solid-js"
+import { useMutation } from "@tanstack/solid-query"
+import { Show } from "solid-js"
 
 import { removeUser, type AdminUser } from "./usersApi"
 import { styles } from "./users.styles"
@@ -14,23 +15,18 @@ type DeleteUserDialogProps = {
 }
 
 export function DeleteUserDialog(props: DeleteUserDialogProps) {
-  const [error, setError] = createSignal<string | null>(null)
-  const [submitting, setSubmitting] = createSignal(false)
-
-  async function handleDelete() {
-    const user = props.user
-    if (!user || submitting()) return
-    setError(null)
-    setSubmitting(true)
-    try {
-      await removeUser(user.id)
+  const mutation = useMutation(() => ({
+    mutationFn: (id: string) => removeUser(id),
+    onSuccess: () => {
       props.onDeleted()
       props.onClose()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setSubmitting(false)
-    }
+    },
+  }))
+
+  function handleDelete() {
+    const user = props.user
+    if (!user || mutation.isPending) return
+    mutation.mutate(user.id)
   }
 
   return (
@@ -45,14 +41,14 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
           <Button variant="secondary" onClick={props.onClose}>
             取消
           </Button>
-          <Button variant="danger" loading={submitting()} onClick={handleDelete}>
+          <Button variant="danger" loading={mutation.isPending} onClick={handleDelete}>
             删除
           </Button>
         </div>
       }
     >
-      <Show when={error()}>
-        <InlineError>{error()}</InlineError>
+      <Show when={mutation.error}>
+        <InlineError>{(mutation.error as Error)?.message}</InlineError>
       </Show>
     </Dialog>
   )

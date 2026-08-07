@@ -12,6 +12,7 @@
     "@stylexjs/stylex": "catalog:style",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
+    "@tanstack/solid-query": "catalog:ui",
     "better-auth": "^1.4.21",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"

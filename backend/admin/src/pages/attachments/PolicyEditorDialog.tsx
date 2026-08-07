@@ -4,6 +4,7 @@ import { Button } from "@tabora/ui/button"
 import { Field } from "@tabora/ui/field"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
+import { useMutation } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 
 import { upsertPolicy, type AttachmentPolicy } from "./attachmentsApi"
@@ -20,9 +21,16 @@ export function PolicyEditorDialog(props: Props) {
   const [entityType, setEntityType] = createSignal("")
   const [mimes, setMimes] = createSignal<string[]>([])
   const [maxSize, setMaxSize] = createSignal("")
-  const [error, setError] = createSignal<string | null>(null)
-  const [submitting, setSubmitting] = createSignal(false)
+  const [validationError, setValidationError] = createSignal<string | null>(null)
   let lastOpen = false
+
+  const mutation = useMutation(() => ({
+    mutationFn: upsertPolicy,
+    onSuccess: () => {
+      props.onSaved()
+      props.onClose()
+    },
+  }))
 
   // 打开时用 editing 初始化表单（新建则清空）
   const sync = () => {
@@ -31,34 +39,28 @@ export function PolicyEditorDialog(props: Props) {
       setEntityType(e?.entityType ?? "")
       setMimes(e?.mimeWhitelist ?? [])
       setMaxSize(e?.maxSizeBytes != null ? String(e.maxSizeBytes) : "")
-      setError(null)
+      setValidationError(null)
+      mutation.reset()
     }
     lastOpen = props.open
     return null
   }
 
-  async function handleSave() {
-    if (submitting()) return
+  function handleSave() {
+    if (mutation.isPending) return
     if (!entityType().trim()) {
-      setError("请输入 entity_type")
+      setValidationError("请输入 entity_type")
       return
     }
-    setError(null)
-    setSubmitting(true)
-    try {
-      await upsertPolicy({
-        entityType: entityType().trim(),
-        mimeWhitelist: mimes().length > 0 ? mimes() : null,
-        maxSizeBytes: maxSize().trim() ? Number(maxSize()) : null,
-      })
-      props.onSaved()
-      props.onClose()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setSubmitting(false)
-    }
+    setValidationError(null)
+    mutation.mutate({
+      entityType: entityType().trim(),
+      mimeWhitelist: mimes().length > 0 ? mimes() : null,
+      maxSizeBytes: maxSize().trim() ? Number(maxSize()) : null,
+    })
   }
+
+  const errorMessage = () => validationError() ?? (mutation.error as Error | null)?.message ?? null
 
   return (
     <>
@@ -73,7 +75,7 @@ export function PolicyEditorDialog(props: Props) {
             <Button variant="secondary" onClick={props.onClose}>
               取消
             </Button>
-            <Button variant="primary" loading={submitting()} onClick={handleSave}>
+            <Button variant="primary" loading={mutation.isPending} onClick={handleSave}>
               保存
             </Button>
           </div>
@@ -106,8 +108,8 @@ export function PolicyEditorDialog(props: Props) {
               placeholder="例如 5242880（5MB）"
             />
           </Field>
-          <Show when={error()}>
-            <InlineError>{error()}</InlineError>
+          <Show when={errorMessage()}>
+            <InlineError>{errorMessage()}</InlineError>
           </Show>
         </div>
       </Dialog>

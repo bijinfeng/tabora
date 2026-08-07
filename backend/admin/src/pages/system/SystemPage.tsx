@@ -3,7 +3,8 @@ import { Badge } from "@tabora/ui/badge"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Skeleton } from "@tabora/ui/skeleton"
-import { createResource, For, Show } from "solid-js"
+import { useQuery } from "@tanstack/solid-query"
+import { For, Show } from "solid-js"
 
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 import { fetchSystemInfo } from "./systemApi"
@@ -121,17 +122,17 @@ function InfoCard(props: { rows: RowItem[] }) {
 }
 
 export function SystemPage() {
-  const [info] = createResource(fetchSystemInfo)
+  const info = useQuery(() => ({ queryKey: ["system", "info"], queryFn: fetchSystemInfo }))
 
   return (
     <div {...stylex.attrs(styles.page)}>
-      <Show when={info.loading}>
+      <Show when={info.isPending}>
         <Skeleton />
       </Show>
       <Show when={info.error}>
         <InlineError>{(info.error as Error)?.message ?? "加载失败"}</InlineError>
       </Show>
-      <Show when={info()}>
+      <Show when={info.data}>
         {(d) => (
           <>
             <section {...stylex.attrs(styles.section)}>
@@ -238,7 +239,7 @@ export function SystemPage() {
           </>
         )}
       </Show>
-      <Show when={!info.loading && !info.error && !info()}>
+      <Show when={!info.isPending && !info.error && !info.data}>
         <EmptyState title="无数据" description="无法获取系统信息。" />
       </Show>
     </div>

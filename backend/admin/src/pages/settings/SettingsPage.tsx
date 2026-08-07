@@ -5,7 +5,8 @@ import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
 import { Switch } from "@tabora/ui/switch"
-import { createResource, createSignal, Show, type JSX } from "solid-js"
+import { useMutation, useQuery } from "@tanstack/solid-query"
+import { createSignal, Show, type JSX } from "solid-js"
 
 import { fetchSettings, saveSettings, testSmtp, type SettingsView } from "./settingsApi"
 import { styles } from "./settings.styles"
@@ -23,19 +24,27 @@ function Section(props: { title: string; desc?: string; children: JSX.Element })
 }
 
 export function SettingsPage() {
-  const [loaded] = createResource(fetchSettings)
+  const loaded = useQuery(() => ({ queryKey: ["settings"], queryFn: fetchSettings }))
   const [form, setForm] = createSignal<SettingsView | null>(null)
-  const [error, setError] = createSignal<string | null>(null)
   const [saved, setSaved] = createSignal(false)
-  const [saving, setSaving] = createSignal(false)
-  const [testing, setTesting] = createSignal(false)
   const [testResult, setTestResult] = createSignal<{ success: boolean; message: string } | null>(
     null,
   )
 
-  // resource 到达后初始化表单一次
+  const saveMutation = useMutation(() => ({
+    mutationFn: (next: SettingsView) => saveSettings(next),
+    onSuccess: () => setSaved(true),
+  }))
+
+  const testMutation = useMutation(() => ({
+    mutationFn: (to: string) => testSmtp(to),
+    onSuccess: () => setTestResult({ success: true, message: "测试邮件已发送，请检查收件箱" }),
+    onError: (err: Error) => setTestResult({ success: false, message: err.message }),
+  }))
+
+  // query 到达后初始化表单一次
   const model = () => {
-    const data = loaded()
+    const data = loaded.data
     if (data && !form()) setForm(data)
     return form()
   }
@@ -47,38 +56,22 @@ export function SettingsPage() {
     setSaved(false)
   }
 
-  async function handleSave() {
+  function handleSave() {
     const current = form()
-    if (!current || saving()) return
-    setSaving(true)
-    setError(null)
-    try {
-      await saveSettings(current)
-      setSaved(true)
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setSaving(false)
-    }
+    if (!current || saveMutation.isPending) return
+    setSaved(false)
+    saveMutation.mutate(current)
   }
 
-  async function handleTestSmtp() {
-    if (testing()) return
+  function handleTestSmtp() {
+    if (testMutation.isPending) return
     const current = form()
     if (!current?.contactEmail) {
       setTestResult({ success: false, message: "请先配置联系邮箱作为测试收件地址" })
       return
     }
-    setTesting(true)
     setTestResult(null)
-    try {
-      await testSmtp(current.contactEmail)
-      setTestResult({ success: true, message: "测试邮件已发送，请检查收件箱" })
-    } catch (err) {
-      setTestResult({ success: false, message: (err as Error).message })
-    } finally {
-      setTesting(false)
-    }
+    testMutation.mutate(current.contactEmail)
   }
 
   return (
@@ -88,7 +81,12 @@ export function SettingsPage() {
       </Show>
       <Show when={model()}>
         {(m) => (
-          <SettingsForm model={m()} patch={patch} onTestSmtp={handleTestSmtp} testing={testing()} />
+          <SettingsForm
+            model={m()}
+            patch={patch}
+            onTestSmtp={handleTestSmtp}
+            testing={testMutation.isPending}
+          />
         )}
       </Show>
       <Show when={testResult()}>
@@ -102,13 +100,13 @@ export function SettingsPage() {
       </Show>
       <Show when={form()}>
         <div {...stylex.attrs(styles.saveBar)}>
-          <Show when={error()}>
-            <InlineError>{error()}</InlineError>
+          <Show when={saveMutation.error}>
+            <InlineError>{(saveMutation.error as Error)?.message}</InlineError>
           </Show>
           <Show when={saved()}>
             <span {...stylex.attrs(styles.savedHint)}>已保存</span>
           </Show>
-          <Button variant="primary" loading={saving()} onClick={handleSave}>
+          <Button variant="primary" loading={saveMutation.isPending} onClick={handleSave}>
             保存设置
           </Button>
         </div>
@@ -138,14 +136,11 @@ function SettingsForm(props: {
             aria-label="开放公开注册"
           />
         </div>
-        <Field label="默认角色" htmlFor="set-role">
+        <Field label="默认角色" htmlFor="set-role" helper="新注册用户仅可为普通用户">
           <Select
             value={m.defaultRole}
             onChange={(v) => props.patch("defaultRole", v)}
-            options={[
-              { value: "user", label: "普通用户" },
-              { value: "admin", label: "管理员" },
-            ]}
+            options={[{ value: "user", label: "普通用户" }]}
             aria-label="默认角色"
           />
         </Field>

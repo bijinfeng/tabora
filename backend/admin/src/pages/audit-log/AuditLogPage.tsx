@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
-import { createResource, createSignal, For, Show } from "solid-js"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
+import { createSignal, For, Show } from "solid-js"
 import { Button, Input, Select } from "@tabora/ui"
 
 import { fetchAuditLogs, deleteOldAuditLogs, type AuditLogFilters } from "./auditLogApi"
@@ -7,7 +8,11 @@ import { styles } from "./auditLog.styles"
 
 export function AuditLogPage() {
   const [filters, setFilters] = createSignal<AuditLogFilters>({ limit: 50, offset: 0 })
-  const [data] = createResource(filters, fetchAuditLogs)
+  const queryClient = useQueryClient()
+  const data = useQuery(() => ({
+    queryKey: ["audit-logs", filters()],
+    queryFn: () => fetchAuditLogs(filters()),
+  }))
 
   const [cleanupDays, setCleanupDays] = createSignal("90")
   const [cleanupMessage, setCleanupMessage] = createSignal("")
@@ -30,19 +35,22 @@ export function AuditLogPage() {
     }))
   }
 
-  const handleCleanup = async () => {
-    try {
-      const days = Number.parseInt(cleanupDays(), 10)
-      if (Number.isNaN(days) || days < 1) {
-        setCleanupMessage("请输入有效的天数（大于 0）")
-        return
-      }
-      const result = await deleteOldAuditLogs(days)
+  const cleanupMutation = useMutation(() => ({
+    mutationFn: (days: number) => deleteOldAuditLogs(days),
+    onSuccess: (result) => {
       setCleanupMessage(`已删除 ${result.deletedCount} 条日志`)
-      setFilters((prev) => ({ ...prev })) // 刷新列表
-    } catch (error) {
-      setCleanupMessage(`删除失败: ${(error as Error).message}`)
+      void queryClient.invalidateQueries({ queryKey: ["audit-logs"] })
+    },
+    onError: (error: Error) => setCleanupMessage(`删除失败: ${error.message}`),
+  }))
+
+  const handleCleanup = () => {
+    const days = Number.parseInt(cleanupDays(), 10)
+    if (Number.isNaN(days) || days < 1) {
+      setCleanupMessage("请输入有效的天数（大于 0）")
+      return
     }
+    cleanupMutation.mutate(days)
   }
 
   const formatDate = (dateStr: string) => {
@@ -104,9 +112,9 @@ export function AuditLogPage() {
         </div>
       </div>
 
-      <Show when={!data.loading && !data.error} fallback={<div>加载中...</div>}>
+      <Show when={!data.isPending && !data.error} fallback={<div>加载中...</div>}>
         <Show
-          when={data()?.data.length}
+          when={data.data?.data.length}
           fallback={<div {...stylex.props(styles.emptyState)}>暂无审计日志</div>}
         >
           <table {...stylex.props(styles.table)}>
@@ -120,7 +128,7 @@ export function AuditLogPage() {
               </tr>
             </thead>
             <tbody>
-              <For each={data()?.data}>
+              <For each={data.data?.data}>
                 {(log) => (
                   <tr {...stylex.props(styles.tr)}>
                     <td {...stylex.props(styles.td)}>{formatDate(log.createdAt)}</td>
@@ -146,8 +154,11 @@ export function AuditLogPage() {
           <div {...stylex.props(styles.pagination)}>
             <div {...stylex.props(styles.paginationInfo)}>
               显示 {(filters().offset ?? 0) + 1} -{" "}
-              {Math.min((filters().offset ?? 0) + (filters().limit ?? 50), data()?.meta.total ?? 0)}{" "}
-              / 共 {data()?.meta.total} 条
+              {Math.min(
+                (filters().offset ?? 0) + (filters().limit ?? 50),
+                data.data?.meta.total ?? 0,
+              )}{" "}
+              / 共 {data.data?.meta.total} 条
             </div>
             <div {...stylex.props(styles.paginationButtons)}>
               <Button onClick={handlePrevPage} disabled={!filters().offset}>
@@ -156,8 +167,8 @@ export function AuditLogPage() {
               <Button
                 onClick={handleNextPage}
                 disabled={
-                  !data() ||
-                  (filters().offset ?? 0) + (filters().limit ?? 50) >= (data()?.meta.total ?? 0)
+                  !data.data ||
+                  (filters().offset ?? 0) + (filters().limit ?? 50) >= (data.data?.meta.total ?? 0)
                 }
               >
                 下一页

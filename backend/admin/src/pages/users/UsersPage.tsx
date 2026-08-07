@@ -6,7 +6,8 @@ import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Table, type TableColumn } from "@tabora/ui/table"
-import { createResource, createSignal, Show } from "solid-js"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
+import { createSignal, Show } from "solid-js"
 import MoreHorizontal from "lucide-solid/icons/ellipsis"
 import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
@@ -25,30 +26,29 @@ export function UsersPage() {
   const [deleteTarget, setDeleteTarget] = createSignal<AdminUser | null>(null)
   const [actionError, setActionError] = createSignal<string | null>(null)
 
-  const [data, { refetch }] = createResource(
-    () => ({ search: search(), offset: offset() }),
-    (params) =>
+  const queryClient = useQueryClient()
+
+  const data = useQuery(() => ({
+    queryKey: ["users", { search: search(), offset: offset() }],
+    queryFn: () =>
       listUsers({
         limit: PAGE_SIZE,
-        offset: params.offset,
-        ...(params.search ? { searchValue: params.search, searchField: "email" } : {}),
+        offset: offset(),
+        ...(search() ? { searchValue: search(), searchField: "email" } : {}),
       }),
-  )
+  }))
 
-  async function runAction(fn: () => Promise<void>) {
-    setActionError(null)
-    try {
-      await fn()
-      await refetch()
-    } catch (err) {
-      setActionError((err as Error).message)
-    }
-  }
+  const actionMutation = useMutation(() => ({
+    mutationFn: (fn: () => Promise<void>) => fn(),
+    onMutate: () => setActionError(null),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
+    onError: (err: Error) => setActionError(err.message),
+  }))
 
   const columns = buildColumns({
-    onSetRole: (u, role) => void runAction(() => setRole(u.id, role)),
-    onBan: (u) => void runAction(() => banUser(u.id, "管理员封禁")),
-    onUnban: (u) => void runAction(() => unbanUser(u.id)),
+    onSetRole: (u, role) => actionMutation.mutate(() => setRole(u.id, role)),
+    onBan: (u) => actionMutation.mutate(() => banUser(u.id, "管理员封禁")),
+    onUnban: (u) => actionMutation.mutate(() => unbanUser(u.id)),
     onDelete: (u) => setDeleteTarget(u),
   })
 
@@ -78,9 +78,14 @@ export function UsersPage() {
         <InlineError>{actionError()}</InlineError>
       </Show>
 
-      <UsersTable data={data()} loading={data.loading} error={data.error} columns={columns} />
+      <UsersTable
+        data={data.data}
+        loading={data.isPending}
+        error={data.error ?? undefined}
+        columns={columns}
+      />
 
-      <Show when={data()}>
+      <Show when={data.data}>
         {(d) => (
           <Pagination
             offset={offset()}
@@ -94,12 +99,12 @@ export function UsersPage() {
       <CreateUserDialog
         open={createOpen()}
         onClose={() => setCreateOpen(false)}
-        onCreated={() => void refetch()}
+        onCreated={() => void queryClient.invalidateQueries({ queryKey: ["users"] })}
       />
       <DeleteUserDialog
         user={deleteTarget()}
         onClose={() => setDeleteTarget(null)}
-        onDeleted={() => void refetch()}
+        onDeleted={() => void queryClient.invalidateQueries({ queryKey: ["users"] })}
       />
     </div>
   )

@@ -73,6 +73,9 @@ catalogs:
     '@solidjs/router':
       specifier: ^0.16.1
       version: 0.16.2
+    '@tanstack/solid-query':
+      specifier: ^5.101.4
+      version: 5.101.4
     lucide-solid:
       specifier: ^1.16.0
       version: 1.27.0
@@ -358,6 +361,9 @@ importers:
       '@tabora/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@tanstack/solid-query':
+        specifier: catalog:ui
+        version: 5.101.4(solid-js@1.9.14)
       better-auth:
         specifier: ^1.4.21
         version: 1.6.26(@prisma/client@5.22.0)(better-sqlite3@12.11.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@prisma/client@5.22.0)(@types/better-sqlite3@9.6.0)(@types/pg@8.20.4)(better-sqlite3@12.11.1)(kysely@0.29.4)(pg@8.22.0))(next@16.2.12(@babel/core@7.29.7)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.14)(vitest@4.1.10)
@@ -2447,6 +2453,14 @@ packages:
 
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
+
+  '@tanstack/query-core@5.101.4':
+    resolution: {integrity: sha512-gNwcvOJcRbLWPOLG/2OBm+zM+Yv+MKsXKEOWC57USuZDEsI71hEErQsiEGx5wX9rzWWkfwM0fVSPoiIFSsxfiw==}
+
+  '@tanstack/solid-query@5.101.4':
+    resolution: {integrity: sha512-w+QNX4al4zkfOfO6FYILouPX3yAxLANvBNz0cZqaBrSRKfBP3qNC179wu/eS2w1asH+QqEeI0rR2/s7gRGxnFA==}
+    peerDependencies:
+      solid-js: ^1.6.0
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -6287,6 +6301,13 @@ snapshots:
   '@swc/helpers@0.5.23':
     dependencies:
       tslib: 2.8.1
+
+  '@tanstack/query-core@5.101.4': {}
+
+  '@tanstack/solid-query@5.101.4(solid-js@1.9.14)':
+    dependencies:
+      '@tanstack/query-core': 5.101.4
+      solid-js: 1.9.14
 
   '@testing-library/dom@10.4.1':
     dependencies:

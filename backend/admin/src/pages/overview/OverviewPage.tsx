@@ -1,17 +1,21 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
 import { EmptyState } from "@tabora/ui/empty-state"
-import { createResource, For, Show } from "solid-js"
+import { useQuery } from "@tanstack/solid-query"
+import { For, Show } from "solid-js"
 
 import { fetchSyncedRecordStats } from "../synced-records/syncedRecordsApi"
 import { healthStatuses, recentErrors, type Metric } from "./overviewData"
 import { styles } from "./overview.styles"
 
 export function OverviewPage() {
-  const [stats] = createResource(fetchSyncedRecordStats)
+  const stats = useQuery(() => ({
+    queryKey: ["synced-records", "stats"],
+    queryFn: fetchSyncedRecordStats,
+  }))
 
   const metrics = (): Metric[] => {
-    const s = stats()
+    const s = stats.data
     const typeSummary = s
       ? Object.entries(s.byType)
           .map(([t, n]) => `${t}: ${n}`)
