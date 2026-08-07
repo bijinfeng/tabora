@@ -50,7 +50,7 @@
 | Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
 | FNOS 分发        | `apps/fnos/README.md`                                           | 修改飞牛 manifest、统一网关、生命周期脚本、FPK 构建和安装验证               |
 | 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围与设置入口（需求与决策）                                 |
-| 数据同步实现     | `docs/technical/tabora-data-sync-technical-design.md`           | Strapi 后端形态、DB schema、认证、自定义 sync controller、同步引擎与包边界 |
+| 数据同步实现     | `docs/technical/tabora-data-sync-technical-design.md`           | 后端形态（现为 backend/server）、DB schema、认证、sync 路由、同步引擎与包边界 |
 
 ## 按任务选择文档
 

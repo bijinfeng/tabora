@@ -4,14 +4,16 @@
 
 日期：2026-08-04
 
-状态：当前实现事实源
+状态：部分过时——后端已从 Strapi 迁移到自建 `backend/server`（better-auth + Hono）
+
+> **注意**：本文档描述的 Strapi 后端形态已废弃并从仓库移除。账号与同步后端现由 `backend/server` 提供：认证使用 better-auth（`/api/auth/*`），同步契约见 `backend/server/src/routes/syncRecords.ts`（`/api/sync/records`）。客户端侧 `@tabora/auth` 现使用 `createBetterAuthClient`，`@tabora/sync` 的网关客户端对接 `backend/server`。下文中关于 Strapi users-permissions、`createStrapiAuthClient` 与 Strapi controller 的描述仅供历史参考。
 
 关联文档：
 
 - 需求与产品决策：`docs/technical/tabora-data-sync-prd.md`
 - 平台架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 回归治理：`docs/technical/tabora-regression-baseline.md`
-- 后端项目：`backend/strapi/README.md`
+- 后端项目：`backend/server`
 
 ## 1. 文档定位
 

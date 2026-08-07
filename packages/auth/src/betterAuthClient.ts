@@ -1,7 +1,12 @@
 import { mapStrapiError, type AuthError } from "./errors"
-import type { AuthStorage } from "./strapiAuthClient"
 
 const TOKEN_KEY = "tabora.auth.token"
+
+export type AuthStorage = {
+  getItem(key: string): Promise<string | null>
+  setItem(key: string, value: string): Promise<void>
+  removeItem(key: string): Promise<void>
+}
 
 /** 中性会话形状：jwt 承载 bearer token，供同步网关作 Authorization 头。 */
 export type AuthSession = {

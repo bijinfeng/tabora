@@ -28,10 +28,7 @@ export {
   type ConflictResolution,
 } from "./conflictModel"
 
-// Strapi auth (S1) - re-exported for S3 sync migration
-export { createStrapiAuthClient, type StrapiAuthClient, type StrapiSession } from "@tabora/auth"
-
-// Strapi gateway client (S3) - HTTP client + 字段映射，对接 Strapi 同步网关
+// 同步网关客户端 - HTTP client + 字段映射，对接后端同步网关
 export {
   createStrapiGatewayClient,
   type StrapiGatewayClient,
