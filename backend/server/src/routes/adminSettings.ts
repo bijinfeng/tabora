@@ -25,6 +25,29 @@ export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailS
     if (!body || typeof body !== "object") {
       return c.json({ error: { message: "invalid payload" } }, 400)
     }
+
+    // 验证 SMTP 配置字段
+    if (body.smtpPort !== undefined) {
+      const port = Number(body.smtpPort)
+      if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        return c.json({ error: { message: "SMTP 端口必须在 1-65535 范围内" } }, 400)
+      }
+    }
+
+    if (body.smtpFrom !== undefined && body.smtpFrom !== "") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(body.smtpFrom)) {
+        return c.json({ error: { message: "发件人邮箱格式无效" } }, 400)
+      }
+    }
+
+    if (body.contactEmail !== undefined && body.contactEmail !== "") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(body.contactEmail)) {
+        return c.json({ error: { message: "联系邮箱格式无效" } }, 400)
+      }
+    }
+
     const patch: Partial<Settings> = {}
     for (const key of Object.keys(settingDefaults) as SettingKey[]) {
       if (!(key in body)) continue
@@ -33,6 +56,37 @@ export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailS
       if (SECRET_KEYS.includes(key) && value === "") continue
       ;(patch as Record<string, unknown>)[key] = value
     }
+
+    // 验证 SMTP 必填字段完整性：如果配置了任一字段，其他字段也必须配置
+    const currentSettings = await q.getAll()
+    const effectiveSmtp = {
+      smtpHost: patch.smtpHost ?? currentSettings.smtpHost,
+      smtpPort: patch.smtpPort ?? currentSettings.smtpPort,
+      smtpFrom: patch.smtpFrom ?? currentSettings.smtpFrom,
+      smtpUser: patch.smtpUser ?? currentSettings.smtpUser,
+      smtpPassword: patch.smtpPassword ?? currentSettings.smtpPassword,
+    }
+
+    const hasAnySmtp = Object.values(effectiveSmtp).some((v) => v !== "" && v !== 0)
+    if (hasAnySmtp) {
+      if (
+        !effectiveSmtp.smtpHost ||
+        !effectiveSmtp.smtpPort ||
+        !effectiveSmtp.smtpFrom ||
+        !effectiveSmtp.smtpUser ||
+        !effectiveSmtp.smtpPassword
+      ) {
+        return c.json(
+          {
+            error: {
+              message: "配置 SMTP 时必须填写所有字段：主机、端口、发件人、用户名、密码",
+            },
+          },
+          400,
+        )
+      }
+    }
+
     await q.setMany(patch)
     // SMTP 配置变更后重置邮件服务缓存
     const smtpKeys = ["smtpHost", "smtpPort", "smtpFrom", "smtpUser", "smtpPassword"] as const
