@@ -15,6 +15,7 @@
     "better-sqlite3": "^13.0.2",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.0",
+    "nodemailer": "^9.0.4",
     "pg": "^8.16.3",
     "zod": "catalog:data"
   },
@@ -22,6 +23,7 @@
     "@tabora/tsconfig": "workspace:*",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "catalog:node",
+    "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.15.5",
     "tsdown": "catalog:build",
     "tsx": "^4.19.2",

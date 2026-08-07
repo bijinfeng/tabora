@@ -5,6 +5,7 @@ import { createRequireAdmin } from "./adminGuard"
 import { createLocalAttachmentStorage } from "./attachments/storage"
 import { createAuth } from "./auth"
 import type { DbHandle } from "./db"
+import { createEmailService } from "./email"
 import type { AppEnv } from "./env"
 import { createAdminAttachmentRoutes } from "./routes/adminAttachments"
 import { createSyncedRecordRoutes } from "./routes/adminSyncedRecords"
@@ -23,7 +24,8 @@ export type BuildAppOptions = {
 /** 组装 Hono 应用：CORS(credentials)、better-auth handler、健康检查与管理端点。 */
 export function buildApp(options: BuildAppOptions): Hono {
   const { env, handle, startedAt } = options
-  const auth = createAuth(handle, env)
+  const emailService = createEmailService(handle)
+  const auth = createAuth(handle, env, emailService)
   const app = new Hono()
 
   app.use(
@@ -69,7 +71,7 @@ export function buildApp(options: BuildAppOptions): Hono {
   // 系统设置：可编辑配置项（管理员专用）
   app.use("/admin-api/settings/*", requireAdmin)
   app.use("/admin-api/settings", requireAdmin)
-  app.route("/admin-api/settings", createAdminSettingsRoutes(handle))
+  app.route("/admin-api/settings", createAdminSettingsRoutes(handle, emailService))
 
   return app
 }

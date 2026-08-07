@@ -2,9 +2,10 @@ import { Hono } from "hono"
 
 import type { DbHandle } from "../db"
 import { SECRET_KEYS, settingDefaults, type SettingKey, type Settings } from "../db/settings"
+import type { EmailService } from "../email"
 
 /** 管理员系统设置：GET(密钥脱敏)、PUT(局部更新)。经 requireAdmin。 */
-export function createAdminSettingsRoutes(handle: DbHandle) {
+export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailService) {
   const app = new Hono()
   const q = handle.settings
 
@@ -28,11 +29,16 @@ export function createAdminSettingsRoutes(handle: DbHandle) {
     for (const key of Object.keys(settingDefaults) as SettingKey[]) {
       if (!(key in body)) continue
       const value = body[key]
-      // 空字符串的密钥视为“不修改”，避免脱敏回显覆盖已存明文
+      // 空字符串的密钥视为"不修改"，避免脱敏回显覆盖已存明文
       if (SECRET_KEYS.includes(key) && value === "") continue
       ;(patch as Record<string, unknown>)[key] = value
     }
     await q.setMany(patch)
+    // SMTP 配置变更后重置邮件服务缓存
+    const smtpKeys = ["smtpHost", "smtpPort", "smtpFrom", "smtpUser", "smtpPassword"] as const
+    if (smtpKeys.some((k) => k in patch)) {
+      emailService.resetCache()
+    }
     return c.json({ data: { updated: Object.keys(patch) } })
   })
 
