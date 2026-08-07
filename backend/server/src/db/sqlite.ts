@@ -6,6 +6,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3"
 
 import { createAttachmentQueries } from "./attachments"
 import { buildDdl, buildTables } from "./schemaFactory"
+import { createSettingsQueries } from "./settings"
 import { createSyncedRecordQueries } from "./syncedRecords"
 
 export function createSqliteDb(file: string) {
@@ -35,6 +36,8 @@ export function createSqliteDb(file: string) {
     attachmentRef: schema.attachmentRef,
   })
 
+  const settings = createSettingsQueries(db, schema.setting)
+
   return {
     db,
     provider: "sqlite" as const,
@@ -42,6 +45,7 @@ export function createSqliteDb(file: string) {
     countUsers,
     syncedRecords,
     attachments,
+    settings,
     close: () => sqlite.close(),
   }
 }

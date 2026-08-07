@@ -123,6 +123,13 @@ export const schemaSpec: Record<string, TableSpec> = {
     },
     indexes: [{ columns: ["fileId"] }],
   },
+  setting: {
+    columns: {
+      key: { kind: "textPk" },
+      value: { kind: "json" },
+      updatedAt: { kind: "timestamp", notNull: true },
+    },
+  },
 }
 
 /** camelCase → snake_case。 */

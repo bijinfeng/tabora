@@ -39,8 +39,19 @@ export function createAttachmentRoutes(options: Options) {
     }
     const bytes = new Uint8Array(await file.arrayBuffer())
     const meta = { mime: file.type || "application/octet-stream", sizeBytes: bytes.byteLength }
+    // entity 专属策略优先；缺失时回退系统全局默认
+    let policy = toPolicyInput(await q.getPolicy(entityType))
+    if (!policy) {
+      const maxSize = await handle.settings.get("attachmentMaxSizeBytes")
+      const globalMimes = await handle.settings.get("attachmentMimeWhitelist")
+      policy = {
+        entityType,
+        mimeWhitelist: globalMimes.length > 0 ? globalMimes : null,
+        maxSizeBytes: maxSize > 0 ? maxSize : null,
+      }
+    }
     try {
-      validateAgainstPolicy(meta, toPolicyInput(await q.getPolicy(entityType)))
+      validateAgainstPolicy(meta, policy)
     } catch (error) {
       return c.json({ error: { message: (error as Error).message } }, 400)
     }

@@ -3,6 +3,7 @@ import Activity from "lucide-solid/icons/activity"
 import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
 import Paperclip from "lucide-solid/icons/paperclip"
 import RefreshCw from "lucide-solid/icons/refresh-cw"
+import Settings from "lucide-solid/icons/settings"
 import ShieldCheck from "lucide-solid/icons/shield-check"
 import Users from "lucide-solid/icons/users"
 
@@ -22,4 +23,5 @@ export const navItems: NavItem[] = [
   { path: "/attachments", label: "附件", icon: Paperclip },
   { path: "/attachment-policies", label: "附件策略", icon: ShieldCheck },
   { path: "/system", label: "系统监控", icon: Activity },
+  { path: "/settings", label: "系统设置", icon: Settings },
 ]

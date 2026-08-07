@@ -9,6 +9,7 @@ import type { AppEnv } from "./env"
 import { createAdminAttachmentRoutes } from "./routes/adminAttachments"
 import { createSyncedRecordRoutes } from "./routes/adminSyncedRecords"
 import { createAttachmentRoutes } from "./routes/attachments"
+import { createAdminSettingsRoutes } from "./routes/adminSettings"
 import { createSyncRecordRoutes } from "./routes/syncRecords"
 import { createSystemRoutes } from "./routes/system"
 import { createRequireUser } from "./userGuard"
@@ -64,6 +65,11 @@ export function buildApp(options: BuildAppOptions): Hono {
   // 系统监控：运行时信息与统计（管理员专用）
   app.use("/admin-api/system/*", requireAdmin)
   app.route("/admin-api/system", createSystemRoutes({ handle, env, startedAt }))
+
+  // 系统设置：可编辑配置项（管理员专用）
+  app.use("/admin-api/settings/*", requireAdmin)
+  app.use("/admin-api/settings", requireAdmin)
+  app.route("/admin-api/settings", createAdminSettingsRoutes(handle))
 
   return app
 }

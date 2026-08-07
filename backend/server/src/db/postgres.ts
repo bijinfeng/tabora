@@ -3,6 +3,7 @@ import { Pool } from "pg"
 
 import { createAttachmentQueries } from "./attachments"
 import { buildDdl, buildTables } from "./schemaFactory"
+import { createSettingsQueries } from "./settings"
 import { createSyncedRecordQueries } from "./syncedRecords"
 
 export function createPostgresDb(connectionString: string) {
@@ -30,6 +31,8 @@ export function createPostgresDb(connectionString: string) {
     attachmentRef: schema.attachmentRef,
   })
 
+  const settings = createSettingsQueries(db, schema.setting)
+
   return {
     db,
     provider: "pg" as const,
@@ -37,6 +40,7 @@ export function createPostgresDb(connectionString: string) {
     countUsers,
     syncedRecords,
     attachments,
+    settings,
     close: () => pool.end(),
   }
 }

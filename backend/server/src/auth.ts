@@ -23,16 +23,20 @@ export function createAuth(handle: DbHandle, env: AppEnv) {
         create: {
           async before(user, ctx) {
             const count = await handle.countUsers()
-            // 首个用户提权为超级管理员
+            // 首个用户始终提权为超级管理员（首运行初始化）
             if (count === 0) {
               return { data: { ...user, role: "admin" } }
             }
-            // 已有用户后关闭公开注册；admin 插件的创建（/admin/create-user）放行
+            // admin 插件创建（/admin/create-user）始终放行
             const path = ctx?.path ?? ""
-            if (path.startsWith("/sign-up")) {
+            if (!path.startsWith("/sign-up")) return undefined
+            // 公开注册按系统设置开关；开启时套用默认角色
+            const signupEnabled = await handle.settings.get("signupEnabled")
+            if (!signupEnabled) {
               throw new APIError("FORBIDDEN", { message: "注册已关闭，请联系管理员创建账号" })
             }
-            return undefined
+            const defaultRole = await handle.settings.get("defaultRole")
+            return { data: { ...user, role: defaultRole } }
           },
         },
       },
