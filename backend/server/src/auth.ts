@@ -19,6 +19,7 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
     database: drizzleAdapter(handle.db, { provider: handle.provider }),
     emailAndPassword: {
       enabled: true,
+      requireEmailVerification: true,
       async sendResetPassword({ user, url }) {
         const siteName = await handle.settings.get("siteName")
         await emailService.sendMail({
@@ -32,6 +33,21 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
             <p>此链接将在一段时间后失效。</p>
           `,
           text: `您好，\n\n您请求重置密码。请访问以下链接完成重置：\n\n${url}\n\n如果您没有请求重置密码，请忽略此邮件。\n此链接将在一段时间后失效。`,
+        })
+      },
+      async sendVerificationEmail({ user, url }: { user: any; url: string }) {
+        const siteName = await handle.settings.get("siteName")
+        await emailService.sendMail({
+          to: user.email,
+          subject: `${siteName} - 验证邮箱`,
+          html: `
+            <p>您好，</p>
+            <p>欢迎注册 ${siteName}！请点击下方链接验证您的邮箱：</p>
+            <p><a href="${url}">${url}</a></p>
+            <p>如果您没有注册账号，请忽略此邮件。</p>
+            <p>此链接将在一段时间后失效。</p>
+          `,
+          text: `您好，\n\n欢迎注册 ${siteName}！请访问以下链接验证您的邮箱：\n\n${url}\n\n如果您没有注册账号，请忽略此邮件。\n此链接将在一段时间后失效。`,
         })
       },
     },
