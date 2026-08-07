@@ -24,7 +24,11 @@ function formatTime(value: string | number): string {
 
 export function AttachmentsPage() {
   const [error, setError] = createSignal<string | null>(null)
-  const [data, { refetch }] = createResource(() => listFiles(PAGE_SIZE, 0))
+  const [offset, setOffset] = createSignal(0)
+  const [data, { refetch }] = createResource(
+    () => offset(),
+    (o) => listFiles(PAGE_SIZE, o),
+  )
 
   async function handleDelete(file: AttachmentFile) {
     setError(null)
@@ -97,6 +101,40 @@ export function AttachmentsPage() {
           />
         </Show>
       </Show>
+
+      <Show when={data()}>
+        {(d) => (
+          <Pagination
+            offset={offset()}
+            total={d().total}
+            onPrev={() => setOffset(Math.max(0, offset() - PAGE_SIZE))}
+            onNext={() => setOffset(offset() + PAGE_SIZE)}
+          />
+        )}
+      </Show>
+    </div>
+  )
+}
+
+function Pagination(props: {
+  offset: number
+  total: number
+  onPrev: () => void
+  onNext: () => void
+}) {
+  const from = () => (props.total === 0 ? 0 : props.offset + 1)
+  const to = () => Math.min(props.offset + PAGE_SIZE, props.total)
+  return (
+    <div {...stylex.attrs(styles.pagination)}>
+      <span>
+        {from()}–{to()} / 共 {props.total}
+      </span>
+      <Button size="sm" variant="secondary" disabled={props.offset === 0} onClick={props.onPrev}>
+        上一页
+      </Button>
+      <Button size="sm" variant="secondary" disabled={to() >= props.total} onClick={props.onNext}>
+        下一页
+      </Button>
     </div>
   )
 }

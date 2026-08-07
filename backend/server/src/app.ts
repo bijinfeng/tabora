@@ -37,7 +37,8 @@ export function buildApp(options: BuildAppOptions): Hono {
   app.use(
     "*",
     cors({
-      origin: env.corsOrigins.length > 0 ? env.corsOrigins : "*",
+      // 仅反射白名单内的源；配合 credentials:true 不能回退到 "*"（浏览器会拒绝，且不安全）
+      origin: env.corsOrigins,
       credentials: true,
       allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],

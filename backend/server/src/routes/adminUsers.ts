@@ -4,10 +4,13 @@ import { z } from "zod"
 import type { DbHandle } from "../db"
 import type { SyncEnv } from "../userGuard"
 
+/** 系统内合法角色白名单。禁止把 role 设为任意字符串（含越权提权）。 */
+const ROLE_VALUES = ["user", "admin"] as const
+
 const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email().optional(),
-  role: z.string().optional(),
+  role: z.enum(ROLE_VALUES).optional(),
 })
 
 const banUserSchema = z.object({
@@ -19,12 +22,17 @@ const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(1),
-  role: z.string().optional(),
+  role: z.enum(ROLE_VALUES).optional(),
 })
 
 const resetPasswordSchema = z.object({
   newPassword: z.string().min(8),
 })
+
+/** role 为逗号分隔字符串，含 "admin" 视为管理员。 */
+function hasAdminRole(role: string | null | undefined): boolean {
+  return (role ?? "").split(",").includes("admin")
+}
 
 /**
  * 管理端用户管理路由：列表、创建、编辑、禁用、删除、重置密码
@@ -96,6 +104,19 @@ export function createAdminUserRoutes(handle: DbHandle, auth: any) {
       return c.json({ error: { message: "用户不存在" } }, 404)
     }
 
+    // 降级保护：把 admin 改为非 admin 时，禁止降级自己 / 降级最后一个管理员
+    const demoting = parsed.data.role !== undefined && !hasAdminRole(parsed.data.role)
+    if (demoting && hasAdminRole(user.role)) {
+      const session = await auth.api.getSession({ headers: c.req.raw.headers })
+      if (session?.user?.id === id) {
+        return c.json({ error: { message: "不能降级当前登录的管理员账号" } }, 400)
+      }
+      const adminCount = await handle.users.countAdmins()
+      if (adminCount <= 1) {
+        return c.json({ error: { message: "不能降级最后一个管理员" } }, 400)
+      }
+    }
+
     const updates: { name?: string; email?: string; role?: string } = {}
     if (parsed.data.name !== undefined) updates.name = parsed.data.name
     if (parsed.data.email !== undefined) updates.email = parsed.data.email
@@ -142,6 +163,19 @@ export function createAdminUserRoutes(handle: DbHandle, auth: any) {
     const user = await handle.users.getById(id)
     if (!user) {
       return c.json({ error: { message: "用户不存在" } }, 404)
+    }
+
+    // 禁止删除当前登录管理员本人
+    const session = await auth.api.getSession({ headers: c.req.raw.headers })
+    if (session?.user?.id === id) {
+      return c.json({ error: { message: "不能删除当前登录的管理员账号" } }, 400)
+    }
+    // 禁止删除最后一个管理员
+    if (hasAdminRole(user.role)) {
+      const adminCount = await handle.users.countAdmins()
+      if (adminCount <= 1) {
+        return c.json({ error: { message: "不能删除最后一个管理员" } }, 400)
+      }
     }
 
     await handle.users.deleteUser(id)

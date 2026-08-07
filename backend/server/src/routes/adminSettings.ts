@@ -48,6 +48,11 @@ export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailS
       }
     }
 
+    // 默认注册角色只允许普通角色，禁止把公开注册默认提权为 admin
+    if (body.defaultRole !== undefined && body.defaultRole !== "user") {
+      return c.json({ error: { message: "默认注册角色只能为 user" } }, 400)
+    }
+
     const patch: Partial<Settings> = {}
     for (const key of Object.keys(settingDefaults) as SettingKey[]) {
       if (!(key in body)) continue

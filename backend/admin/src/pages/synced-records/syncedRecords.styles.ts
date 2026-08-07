@@ -71,4 +71,12 @@ export const styles = stylex.create({
     display: "flex",
     justifyContent: "flex-end",
   },
+  pagination: {
+    alignItems: "center",
+    color: color.textMuted,
+    display: "flex",
+    fontSize: 12,
+    gap: space.s4,
+    justifyContent: "flex-end",
+  },
 })

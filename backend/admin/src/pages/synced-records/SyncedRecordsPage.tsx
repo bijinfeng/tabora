@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
+import { Button } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
@@ -32,14 +33,15 @@ export function SyncedRecordsPage() {
   const [type, setType] = createSignal("")
   const [deleted, setDeleted] = createSignal("")
   const [search, setSearch] = createSignal("")
+  const [offset, setOffset] = createSignal(0)
   const [detail, setDetail] = createSignal<SyncedRecord | null>(null)
 
   const [data, { refetch }] = createResource(
-    () => ({ type: type(), deleted: deleted(), search: search() }),
+    () => ({ type: type(), deleted: deleted(), search: search(), offset: offset() }),
     (p) =>
       listSyncedRecords({
         limit: PAGE_SIZE,
-        offset: 0,
+        offset: p.offset,
         ...(p.type ? { type: p.type } : {}),
         ...(p.deleted ? { deleted: p.deleted === "true" } : {}),
         ...(p.search ? { search: p.search } : {}),
@@ -60,17 +62,31 @@ export function SyncedRecordsPage() {
         <div {...stylex.attrs(styles.searchBox)}>
           <Input
             value={search()}
-            onInput={setSearch}
+            onInput={(v) => {
+              setSearch(v)
+              setOffset(0)
+            }}
             placeholder="按记录 ID 搜索"
             leadingIcon={<Search size={16} />}
             clearable
             aria-label="搜索同步记录"
           />
         </div>
-        <Select value={type()} onChange={setType} options={TYPE_OPTIONS} aria-label="按类型筛选" />
+        <Select
+          value={type()}
+          onChange={(v) => {
+            setType(v)
+            setOffset(0)
+          }}
+          options={TYPE_OPTIONS}
+          aria-label="按类型筛选"
+        />
         <Select
           value={deleted()}
-          onChange={setDeleted}
+          onChange={(v) => {
+            setDeleted(v)
+            setOffset(0)
+          }}
           options={DELETED_OPTIONS}
           aria-label="按状态筛选"
         />
@@ -96,11 +112,45 @@ export function SyncedRecordsPage() {
         </Show>
       </Show>
 
+      <Show when={data()}>
+        {(d) => (
+          <Pagination
+            offset={offset()}
+            total={d().total}
+            onPrev={() => setOffset(Math.max(0, offset() - PAGE_SIZE))}
+            onNext={() => setOffset(offset() + PAGE_SIZE)}
+          />
+        )}
+      </Show>
+
       <RecordDetailDrawer
         record={detail()}
         onClose={() => setDetail(null)}
         onDelete={(r) => void handleDelete(r)}
       />
+    </div>
+  )
+}
+
+function Pagination(props: {
+  offset: number
+  total: number
+  onPrev: () => void
+  onNext: () => void
+}) {
+  const from = () => (props.total === 0 ? 0 : props.offset + 1)
+  const to = () => Math.min(props.offset + PAGE_SIZE, props.total)
+  return (
+    <div {...stylex.attrs(styles.pagination)}>
+      <span>
+        {from()}–{to()} / 共 {props.total}
+      </span>
+      <Button size="sm" variant="secondary" disabled={props.offset === 0} onClick={props.onPrev}>
+        上一页
+      </Button>
+      <Button size="sm" variant="secondary" disabled={to() >= props.total} onClick={props.onNext}>
+        下一页
+      </Button>
     </div>
   )
 }

@@ -27,6 +27,14 @@ export function createUserQueries(db: any, schema: { user: any; account: any }) 
     return rows[0] || null
   }
 
+  /** 统计具备 admin 角色的用户数（role 为逗号分隔，含 "admin" 视为管理员）。 */
+  async function countAdmins() {
+    const rows = (await db.select({ role: user.role }).from(user)) as Array<{
+      role: string | null
+    }>
+    return rows.filter((r) => (r.role ?? "").split(",").includes("admin")).length
+  }
+
   async function updateUser(id: string, data: { name?: string; email?: string; role?: string }) {
     await db.update(user).set(data).where(eq(user.id, id))
   }
@@ -64,6 +72,7 @@ export function createUserQueries(db: any, schema: { user: any; account: any }) 
     getAll,
     getById,
     getByEmail,
+    countAdmins,
     updateUser,
     banUser,
     unbanUser,

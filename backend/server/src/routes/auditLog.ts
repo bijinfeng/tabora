@@ -45,6 +45,14 @@ export function createAuditLogRoutes(options: Options) {
     })
   })
 
+  // GET /admin-api/audit-log/recent - 获取最近操作
+  // 注意：必须注册在 /:id 之前，否则 "recent" 会被 /:id 动态段捕获
+  app.get("/recent", async (c) => {
+    const limit = Number(new URL(c.req.url).searchParams.get("limit") || "10")
+    const logs = await handle.auditLog.getRecentActions(limit)
+    return c.json({ data: logs })
+  })
+
   // GET /admin-api/audit-log/:id - 获取单条日志详情
   app.get("/:id", async (c) => {
     const id = Number(c.req.param("id"))
@@ -55,13 +63,6 @@ export function createAuditLogRoutes(options: Options) {
     }
 
     return c.json({ data: log })
-  })
-
-  // GET /admin-api/audit-log/recent - 获取最近操作
-  app.get("/recent", async (c) => {
-    const limit = Number(new URL(c.req.url).searchParams.get("limit") || "10")
-    const logs = await handle.auditLog.getRecentActions(limit)
-    return c.json({ data: logs })
   })
 
   // DELETE /admin-api/audit-log/cleanup - 删除旧日志
