@@ -9,6 +9,7 @@ import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createSettingsQueries } from "./settings"
 import { createSyncedRecordQueries } from "./syncedRecords"
+import { createUserQueries } from "./users"
 
 export function createSqliteDb(file: string) {
   if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true })
@@ -41,6 +42,8 @@ export function createSqliteDb(file: string) {
 
   const emailQueue = createEmailQueueQueries(db, { emailQueue: schema.emailQueue })
 
+  const users = createUserQueries(db, { user: schema.user, account: schema.account })
+
   return {
     db,
     provider: "sqlite" as const,
@@ -50,6 +53,7 @@ export function createSqliteDb(file: string) {
     attachments,
     settings,
     emailQueue,
+    users,
     close: () => sqlite.close(),
   }
 }

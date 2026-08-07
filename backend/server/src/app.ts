@@ -9,7 +9,9 @@ import { createEmailService } from "./email"
 import { createEmailQueueProcessor } from "./emailQueueProcessor"
 import type { AppEnv } from "./env"
 import { createAdminAttachmentRoutes } from "./routes/adminAttachments"
+import { createAdminAttachmentPolicyRoutes } from "./routes/adminAttachmentPolicies"
 import { createAdminEmailQueueRoutes } from "./routes/adminEmailQueue"
+import { createAdminUserRoutes } from "./routes/adminUsers"
 import { createSyncedRecordRoutes } from "./routes/adminSyncedRecords"
 import { createAttachmentRoutes } from "./routes/attachments"
 import { createAdminSettingsRoutes } from "./routes/adminSettings"
@@ -54,6 +56,11 @@ export function buildApp(options: BuildAppOptions): Hono {
   app.use("/admin-api/synced-records", requireAdmin)
   app.route("/admin-api/synced-records", createSyncedRecordRoutes(handle))
 
+  // 管理端用户管理
+  app.use("/admin-api/users/*", requireAdmin)
+  app.use("/admin-api/users", requireAdmin)
+  app.route("/admin-api/users", createAdminUserRoutes(handle, auth))
+
   // 客户端数据同步：任何登录用户（cookie 或 bearer token），owner 隔离
   const requireUser = createRequireUser(auth)
   app.use("/api/sync/*", requireUser)
@@ -65,6 +72,11 @@ export function buildApp(options: BuildAppOptions): Hono {
   app.route("/api/attachments", createAttachmentRoutes({ handle, storage }))
   app.use("/admin-api/attachments/*", requireAdmin)
   app.route("/admin-api/attachments", createAdminAttachmentRoutes({ handle, storage }))
+
+  // 管理端附件策略
+  app.use("/admin-api/attachment-policies/*", requireAdmin)
+  app.use("/admin-api/attachment-policies", requireAdmin)
+  app.route("/admin-api/attachment-policies", createAdminAttachmentPolicyRoutes(handle))
 
   // 系统监控：运行时信息与统计（管理员专用）
   app.use("/admin-api/system/*", requireAdmin)

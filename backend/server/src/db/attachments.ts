@@ -35,8 +35,31 @@ export function createAttachmentQueries(
       return rows[0] ?? null
     },
 
+    async getAllPolicies(): Promise<PolicyRow[]> {
+      return (await db.select().from(p).orderBy(p.entityType)) as PolicyRow[]
+    },
+
     async listPolicies(): Promise<PolicyRow[]> {
       return (await db.select().from(p).orderBy(p.entityType)) as PolicyRow[]
+    },
+
+    async createPolicy(
+      entityType: string,
+      mimeWhitelist: string[] | null,
+      maxSizeBytes: number | null,
+    ): Promise<void> {
+      await db.insert(p).values({ entityType, mimeWhitelist, maxSizeBytes })
+    },
+
+    async updatePolicy(
+      entityType: string,
+      updates: { mimeWhitelist?: string[] | null; maxSizeBytes?: number | null },
+    ): Promise<void> {
+      await db.update(p).set(updates).where(eq(p.entityType, entityType))
+    },
+
+    async deletePolicy(entityType: string): Promise<void> {
+      await db.delete(p).where(eq(p.entityType, entityType))
     },
 
     async upsertPolicy(input: PolicyRow): Promise<void> {

@@ -6,6 +6,7 @@ import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createSettingsQueries } from "./settings"
 import { createSyncedRecordQueries } from "./syncedRecords"
+import { createUserQueries } from "./users"
 
 export function createPostgresDb(connectionString: string) {
   const pool = new Pool({ connectionString })
@@ -36,6 +37,8 @@ export function createPostgresDb(connectionString: string) {
 
   const emailQueue = createEmailQueueQueries(db, { emailQueue: schema.emailQueue })
 
+  const users = createUserQueries(db, { user: schema.user, account: schema.account })
+
   return {
     db,
     provider: "pg" as const,
@@ -45,6 +48,7 @@ export function createPostgresDb(connectionString: string) {
     attachments,
     settings,
     emailQueue,
+    users,
     close: () => pool.end(),
   }
 }

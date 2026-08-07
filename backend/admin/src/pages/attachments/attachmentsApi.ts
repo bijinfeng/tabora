@@ -39,8 +39,49 @@ export async function deleteFile(id: number): Promise<void> {
 }
 
 export async function listPolicies(): Promise<AttachmentPolicy[]> {
-  const data = await get<{ policies: AttachmentPolicy[] }>("/admin-api/attachments/policies")
-  return data.policies
+  const data = await get<{ data: AttachmentPolicy[] }>("/admin-api/attachment-policies")
+  return data.data
+}
+
+export async function createPolicy(input: {
+  entityType: string
+  mimeWhitelist: string[] | null
+  maxSizeBytes: number | null
+}): Promise<void> {
+  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/attachment-policies`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.error?.message || "创建策略失败")
+  }
+}
+
+export async function updatePolicy(
+  entityType: string,
+  input: {
+    mimeWhitelist?: string[] | null
+    maxSizeBytes?: number | null
+  },
+): Promise<void> {
+  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/attachment-policies/${entityType}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  if (!res.ok) throw new Error("更新策略失败")
+}
+
+export async function deletePolicy(entityType: string): Promise<void> {
+  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/attachment-policies/${entityType}`, {
+    method: "DELETE",
+    credentials: "include",
+  })
+  if (!res.ok) throw new Error("删除策略失败")
 }
 
 export async function upsertPolicy(input: {
@@ -48,15 +89,15 @@ export async function upsertPolicy(input: {
   mimeWhitelist: string[] | null
   maxSizeBytes: number | null
 }): Promise<void> {
-  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/attachments/policies`, {
-    method: "PUT",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      entity_type: input.entityType,
-      mime_whitelist: input.mimeWhitelist,
-      max_size_bytes: input.maxSizeBytes,
-    }),
-  })
-  if (!res.ok) throw new Error("保存策略失败")
+  // 检查是否已存在，决定创建还是更新
+  const policies = await listPolicies()
+  const existing = policies.find((p) => p.entityType === input.entityType)
+  if (existing) {
+    await updatePolicy(input.entityType, {
+      mimeWhitelist: input.mimeWhitelist,
+      maxSizeBytes: input.maxSizeBytes,
+    })
+  } else {
+    await createPolicy(input)
+  }
 }
