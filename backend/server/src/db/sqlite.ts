@@ -5,6 +5,7 @@ import Database from "better-sqlite3"
 import { drizzle } from "drizzle-orm/better-sqlite3"
 
 import { createAttachmentQueries } from "./attachments"
+import { createAuditLogQueries } from "./auditLog"
 import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createSettingsQueries } from "./settings"
@@ -44,6 +45,8 @@ export function createSqliteDb(file: string) {
 
   const users = createUserQueries(db, { user: schema.user, account: schema.account })
 
+  const auditLog = createAuditLogQueries(db, { auditLog: schema.auditLog })
+
   return {
     db,
     provider: "sqlite" as const,
@@ -54,6 +57,7 @@ export function createSqliteDb(file: string) {
     settings,
     emailQueue,
     users,
+    auditLog,
     close: () => sqlite.close(),
   }
 }

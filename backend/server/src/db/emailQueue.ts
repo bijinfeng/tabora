@@ -136,6 +136,26 @@ export function createEmailQueueQueries(db: any, schema: { emailQueue: any }) {
     return result.length
   }
 
+  async function getStats(): Promise<{
+    pending: number
+    processing: number
+    sent: number
+    failed: number
+  }> {
+    const results = await db
+      .select({ status: emailQueue.status, count: (eb: any) => eb.count() })
+      .from(emailQueue)
+      .groupBy(emailQueue.status)
+
+    const stats = { pending: 0, processing: 0, sent: 0, failed: 0 }
+    for (const row of results) {
+      const status = row.status as EmailQueueStatus
+      stats[status] = Number(row.count)
+    }
+
+    return stats
+  }
+
   return {
     enqueue,
     getPending,
@@ -144,5 +164,6 @@ export function createEmailQueueQueries(db: any, schema: { emailQueue: any }) {
     markFailed,
     getHistory,
     cleanupOld,
+    getStats,
   }
 }

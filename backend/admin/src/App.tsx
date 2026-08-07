@@ -10,6 +10,7 @@ import { SyncedRecordsPage } from "./pages/synced-records/SyncedRecordsPage"
 import { AttachmentsPage } from "./pages/attachments/AttachmentsPage"
 import { AttachmentPoliciesPage } from "./pages/attachments/AttachmentPoliciesPage"
 import { SystemPage } from "./pages/system/SystemPage"
+import { AuditLogPage } from "./pages/audit-log/AuditLogPage"
 import { SettingsPage } from "./pages/settings/SettingsPage"
 
 export function App() {
@@ -33,6 +34,7 @@ export function App() {
         <Route path="/attachments" component={AttachmentsPage} />
         <Route path="/attachment-policies" component={AttachmentPoliciesPage} />
         <Route path="/system" component={SystemPage} />
+        <Route path="/audit-log" component={AuditLogPage} />
         <Route path="/settings" component={SettingsPage} />
       </Router>
     </Show>

@@ -1,5 +1,6 @@
 import type { Component, ComponentProps } from "solid-js"
 import Activity from "lucide-solid/icons/activity"
+import FileText from "lucide-solid/icons/file-text"
 import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
 import Paperclip from "lucide-solid/icons/paperclip"
 import RefreshCw from "lucide-solid/icons/refresh-cw"
@@ -23,5 +24,6 @@ export const navItems: NavItem[] = [
   { path: "/attachments", label: "附件", icon: Paperclip },
   { path: "/attachment-policies", label: "附件策略", icon: ShieldCheck },
   { path: "/system", label: "系统监控", icon: Activity },
+  { path: "/audit-log", label: "审计日志", icon: FileText },
   { path: "/settings", label: "系统设置", icon: Settings },
 ]

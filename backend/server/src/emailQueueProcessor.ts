@@ -58,7 +58,18 @@ export function createEmailQueueProcessor(handle: DbHandle, emailService: EmailS
     }
   }
 
-  return { start, stop, processQueue }
+  async function getStats() {
+    const stats = await handle.emailQueue.getStats()
+    return {
+      pending: stats.pending,
+      processing: stats.processing,
+      sent: stats.sent,
+      failed: stats.failed,
+      isRunning: intervalId !== null,
+    }
+  }
+
+  return { start, stop, processQueue, getStats }
 }
 
 export type EmailQueueProcessor = ReturnType<typeof createEmailQueueProcessor>

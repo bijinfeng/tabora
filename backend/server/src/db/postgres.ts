@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
 import { createAttachmentQueries } from "./attachments"
+import { createAuditLogQueries } from "./auditLog"
 import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createSettingsQueries } from "./settings"
@@ -39,6 +40,8 @@ export function createPostgresDb(connectionString: string) {
 
   const users = createUserQueries(db, { user: schema.user, account: schema.account })
 
+  const auditLog = createAuditLogQueries(db, { auditLog: schema.auditLog })
+
   return {
     db,
     provider: "pg" as const,
@@ -49,6 +52,7 @@ export function createPostgresDb(connectionString: string) {
     settings,
     emailQueue,
     users,
+    auditLog,
     close: () => pool.end(),
   }
 }

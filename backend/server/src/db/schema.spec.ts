@@ -147,6 +147,21 @@ export const schemaSpec: Record<string, TableSpec> = {
     },
     indexes: [{ columns: ["status"] }, { columns: ["scheduledFor"] }],
   },
+
+  auditLog: {
+    columns: {
+      id: { kind: "autoPk" },
+      userId: { kind: "text" },
+      action: { kind: "text", notNull: true },
+      resourceType: { kind: "text" },
+      resourceId: { kind: "text" },
+      details: { kind: "text" },
+      ipAddress: { kind: "text" },
+      userAgent: { kind: "text" },
+      createdAt: { kind: "timestamp", notNull: true },
+    },
+    indexes: [{ columns: ["userId"] }, { columns: ["action"] }, { columns: ["createdAt"] }],
+  },
 }
 
 /** camelCase → snake_case。 */
