@@ -30,17 +30,17 @@ export {
 
 // 同步网关客户端 - HTTP client + 字段映射，对接后端同步网关
 export {
-  createStrapiGatewayClient,
-  type StrapiGatewayClient,
-  type StrapiGatewayClientConfig,
-  type StrapiGatewayError,
-  type StrapiGatewayResult,
-  type StrapiGatewayPushRecord,
-  type StrapiPushConflict,
-  type StrapiPushResponse,
-  type StrapiPullRecord,
-  type StrapiPullResponse,
-} from "./strapiGatewayClient"
+  createSyncGatewayClient,
+  type SyncGatewayClient,
+  type SyncGatewayClientConfig,
+  type SyncGatewayError,
+  type SyncGatewayResult,
+  type SyncGatewayPushRecord,
+  type SyncPushConflict,
+  type SyncPushResponse,
+  type SyncPullRecord,
+  type SyncPullResponse,
+} from "./syncGatewayClient"
 
 export { createSyncManager, type SyncManager, type SyncManagerConfig } from "./syncManager"
 export { createPluginSyncCollections, type PluginSyncCollections } from "./pluginSyncCollections"

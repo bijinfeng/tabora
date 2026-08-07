@@ -17,22 +17,22 @@ export const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   UNKNOWN: "操作失败，请稍后重试",
 }
 
-type StrapiErrorBody = {
+type AuthErrorBody = {
   error?: { name?: string; message?: string }
 }
 
 /**
- * 将 Strapi API 的错误响应归一化为统一的 AuthError。
+ * 将后端认证 API 的错误响应归一化为统一的 AuthError。
  *
- * Strapi 错误体形如 { error: { status, name, message } }。优先按 message 判定
+ * 错误体形如 { error: { status, name, message } }。优先按 message 判定
  * 邮箱占用；再按 name === "ValidationError" 归为 INVALID_PAYLOAD；否则用 HTTP
  * status 400/401 兜底为 INVALID_CREDENTIALS，其余情况归为 UNKNOWN。
  *
  * 注意：NETWORK_ERROR 由调用方在 fetch 失败（无 HTTP 响应）时自行构造，
  * RESET_INVALID 由密码重置业务逻辑抛出，二者都不在本函数的映射范围内。
  */
-export function mapStrapiError(status: number, body: unknown): AuthError {
-  const error = (body as StrapiErrorBody)?.error
+export function mapAuthError(status: number, body: unknown): AuthError {
+  const error = (body as AuthErrorBody)?.error
   const message = error?.message ?? ""
   let code: AuthErrorCode = "UNKNOWN"
 

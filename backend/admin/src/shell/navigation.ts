@@ -16,7 +16,7 @@ export type NavItem = {
   icon: IconComponent
 }
 
-/** 运维后台的一级导航；与 Strapi Admin Panel 的运维视角对齐。 */
+/** 运维后台的一级导航。 */
 export const navItems: NavItem[] = [
   { path: "/", label: "概览", icon: LayoutDashboard },
   { path: "/users", label: "用户", icon: Users },

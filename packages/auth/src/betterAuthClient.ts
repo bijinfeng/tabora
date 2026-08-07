@@ -1,4 +1,4 @@
-import { mapStrapiError, type AuthError } from "./errors"
+import { mapAuthError, type AuthError } from "./errors"
 
 const TOKEN_KEY = "tabora.auth.token"
 
@@ -79,7 +79,7 @@ export function createBetterAuthClient(config: BetterAuthClientConfig): AuthClie
         parsed = null
       }
     }
-    if (!response.ok) throw mapStrapiError(response.status, parsed)
+    if (!response.ok) throw mapAuthError(response.status, parsed)
     return { status: response.status, body: parsed, token: response.headers.get("set-auth-token") }
   }
 
@@ -95,7 +95,7 @@ export function createBetterAuthClient(config: BetterAuthClientConfig): AuthClie
 
     async login(email, password) {
       const result = await post("/api/auth/sign-in/email", { email, password })
-      if (!result.token) throw mapStrapiError(401, null)
+      if (!result.token) throw mapAuthError(401, null)
       await config.storage.setItem(TOKEN_KEY, result.token)
       const user = (result.body as { user?: { id?: string } })?.user
       return { jwt: result.token, ...(user?.id ? { userId: user.id } : {}) }

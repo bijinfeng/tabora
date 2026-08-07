@@ -1,13 +1,11 @@
-export type StrapiGatewayError = {
+export type SyncGatewayError = {
   code: "AUTH_FAILED" | "NETWORK_ERROR" | "INVALID_PAYLOAD" | "SERVER_ERROR"
   message: string
 }
 
-export type StrapiGatewayResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: StrapiGatewayError }
+export type SyncGatewayResult<T> = { ok: true; data: T } | { ok: false; error: SyncGatewayError }
 
-export type StrapiPushConflict = {
+export type SyncPushConflict = {
   type: string
   id: string
   server_version: number
@@ -16,14 +14,14 @@ export type StrapiPushConflict = {
   server_device_id: string
 }
 
-export type StrapiPushResponse = {
+export type SyncPushResponse = {
   accepted: string[]
-  conflicts: StrapiPushConflict[]
+  conflicts: SyncPushConflict[]
   rejected: Array<{ id: string; reason: string }>
   server_time: string
 }
 
-export type StrapiPullRecord = {
+export type SyncPullRecord = {
   scope: "core" | "plugin"
   entityType: string
   recordKey: string
@@ -32,12 +30,12 @@ export type StrapiPullRecord = {
   deleted: boolean
 }
 
-export type StrapiPullResponse = {
-  records: StrapiPullRecord[]
+export type SyncPullResponse = {
+  records: SyncPullRecord[]
   cursor: string
 }
 
-export type StrapiGatewayPushRecord = {
+export type SyncGatewayPushRecord = {
   scope: "core" | "plugin"
   entityType: string
   recordKey: string
@@ -46,17 +44,17 @@ export type StrapiGatewayPushRecord = {
   deleted: boolean
 }
 
-export type StrapiGatewayClientConfig = {
+export type SyncGatewayClientConfig = {
   apiBaseUrl: string
   getAccessToken: () => Promise<string | null>
 }
 
-export type StrapiGatewayClient = {
+export type SyncGatewayClient = {
   push(
     deviceId: string,
-    records: StrapiGatewayPushRecord[],
-  ): Promise<StrapiGatewayResult<StrapiPushResponse>>
-  pull(cursor?: string): Promise<StrapiGatewayResult<StrapiPullResponse>>
+    records: SyncGatewayPushRecord[],
+  ): Promise<SyncGatewayResult<SyncPushResponse>>
+  pull(cursor?: string): Promise<SyncGatewayResult<SyncPullResponse>>
 }
 
 // 后端同步网关的原始记录形状（GET /sync/records）
@@ -70,7 +68,7 @@ type RawPullRecord = {
   device_id: string
 }
 
-const ERROR_MESSAGES: Record<StrapiGatewayError["code"], string> = {
+const ERROR_MESSAGES: Record<SyncGatewayError["code"], string> = {
   AUTH_FAILED: "登录状态失效，请重新登录",
   NETWORK_ERROR: "网络异常，请稍后重试",
   INVALID_PAYLOAD: "同步数据格式不正确",
@@ -81,29 +79,29 @@ const ERROR_MESSAGES: Record<StrapiGatewayError["code"], string> = {
  * 将 HTTP status 归一化为网关错误码：
  * 401/403 → AUTH_FAILED，400 → INVALID_PAYLOAD，其余非 2xx → SERVER_ERROR。
  */
-function statusToCode(status: number): StrapiGatewayError["code"] {
+function statusToCode(status: number): SyncGatewayError["code"] {
   if (status === 401 || status === 403) return "AUTH_FAILED"
   if (status === 400) return "INVALID_PAYLOAD"
   return "SERVER_ERROR"
 }
 
-// 尽量取 Strapi 响应体 error.message，取不到用兜底文案
-function extractMessage(body: unknown, code: StrapiGatewayError["code"]): string {
+// 尽量取响应体 error.message，取不到用兜底文案
+function extractMessage(body: unknown, code: SyncGatewayError["code"]): string {
   const message = (body as { error?: { message?: string } })?.error?.message
   return typeof message === "string" && message.length > 0 ? message : ERROR_MESSAGES[code]
 }
 
-function authFailed(): { ok: false; error: StrapiGatewayError } {
+function authFailed(): { ok: false; error: SyncGatewayError } {
   return { ok: false, error: { code: "AUTH_FAILED", message: ERROR_MESSAGES.AUTH_FAILED } }
 }
 
-export function createStrapiGatewayClient(config: StrapiGatewayClientConfig): StrapiGatewayClient {
+export function createSyncGatewayClient(config: SyncGatewayClientConfig): SyncGatewayClient {
   const base = config.apiBaseUrl.replace(/\/$/, "")
 
   async function request<T>(
     path: string,
     init: { method: "GET" | "POST"; token: string; body?: unknown },
-  ): Promise<StrapiGatewayResult<T>> {
+  ): Promise<SyncGatewayResult<T>> {
     let response: Response
     try {
       response = await fetch(`${base}${path}`, {
@@ -148,7 +146,7 @@ export function createStrapiGatewayClient(config: StrapiGatewayClientConfig): St
         deleted: record.deleted,
       }))
 
-      return request<StrapiPushResponse>("/api/sync/records", {
+      return request<SyncPushResponse>("/api/sync/records", {
         method: "POST",
         token,
         body,
@@ -170,7 +168,7 @@ export function createStrapiGatewayClient(config: StrapiGatewayClientConfig): St
 
       if (!result.ok) return result
 
-      const records: StrapiPullRecord[] = result.data.records.map((record) => ({
+      const records: SyncPullRecord[] = result.data.records.map((record) => ({
         scope: record.type === "pluginData" ? "plugin" : "core",
         entityType: record.type,
         recordKey: record.id,

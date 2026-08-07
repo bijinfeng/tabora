@@ -3,7 +3,7 @@ import type { SyncMetaRepository, SyncQueueRepository, TaboraDatabase } from "@t
 
 import { createChangeDetector, type ChangeDetector } from "./changeDetector"
 import { createLocalChangeQueue } from "./localChangeQueue"
-import { createStrapiGatewayClient } from "./strapiGatewayClient"
+import { createSyncGatewayClient } from "./syncGatewayClient"
 import { createSyncEngine, type SyncEngine } from "./syncEngine"
 import type { PluginSyncCollections } from "./pluginSyncCollections"
 
@@ -39,7 +39,7 @@ class SyncManagerError extends Error {
 
 /** Coordinates local change detection, the gateway, and background sync scheduling. */
 export function createSyncManager(config: SyncManagerConfig): SyncManager {
-  const gatewayClient = createStrapiGatewayClient({
+  const gatewayClient = createSyncGatewayClient({
     apiBaseUrl: config.apiBaseUrl,
     getAccessToken: async () => (await config.authClient.getSession())?.jwt ?? null,
   })

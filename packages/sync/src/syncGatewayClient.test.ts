@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { createStrapiGatewayClient } from "./strapiGatewayClient"
+import { createSyncGatewayClient } from "./syncGatewayClient"
 
 const BASE = "http://api.test"
 
@@ -69,7 +69,7 @@ const SAMPLE_RECORDS = [
   },
 ]
 
-describe("createStrapiGatewayClient", () => {
+describe("createSyncGatewayClient", () => {
   let fetchMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -86,7 +86,7 @@ describe("createStrapiGatewayClient", () => {
   }
 
   function client(token: string | null = "tok") {
-    return createStrapiGatewayClient({
+    return createSyncGatewayClient({
       apiBaseUrl: BASE,
       getAccessToken: async () => token,
     })
@@ -323,7 +323,7 @@ describe("createStrapiGatewayClient", () => {
     expect(result.error.message).toBe("Invalid token")
   })
 
-  it("maps HTTP 403 from Strapi route authorization to AUTH_FAILED", async () => {
+  it("maps HTTP 403 from gateway route authorization to AUTH_FAILED", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(403, { error: { message: "Forbidden" } }))
 
     const result = await client().pull()
@@ -358,7 +358,7 @@ describe("createStrapiGatewayClient", () => {
 
   it("strips trailing slash from apiBaseUrl", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, pullBody()))
-    const c = createStrapiGatewayClient({
+    const c = createSyncGatewayClient({
       apiBaseUrl: `${BASE}/`,
       getAccessToken: async () => "tok",
     })
