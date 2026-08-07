@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
 import { createAttachmentQueries } from "./attachments"
+import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createSettingsQueries } from "./settings"
 import { createSyncedRecordQueries } from "./syncedRecords"
@@ -33,6 +34,8 @@ export function createPostgresDb(connectionString: string) {
 
   const settings = createSettingsQueries(db, schema.setting)
 
+  const emailQueue = createEmailQueueQueries(db, { emailQueue: schema.emailQueue })
+
   return {
     db,
     provider: "pg" as const,
@@ -41,6 +44,7 @@ export function createPostgresDb(connectionString: string) {
     syncedRecords,
     attachments,
     settings,
+    emailQueue,
     close: () => pool.end(),
   }
 }

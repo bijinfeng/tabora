@@ -6,8 +6,10 @@ import { createLocalAttachmentStorage } from "./attachments/storage"
 import { createAuth } from "./auth"
 import type { DbHandle } from "./db"
 import { createEmailService } from "./email"
+import { createEmailQueueProcessor } from "./emailQueueProcessor"
 import type { AppEnv } from "./env"
 import { createAdminAttachmentRoutes } from "./routes/adminAttachments"
+import { createAdminEmailQueueRoutes } from "./routes/adminEmailQueue"
 import { createSyncedRecordRoutes } from "./routes/adminSyncedRecords"
 import { createAttachmentRoutes } from "./routes/attachments"
 import { createAdminSettingsRoutes } from "./routes/adminSettings"
@@ -72,6 +74,15 @@ export function buildApp(options: BuildAppOptions): Hono {
   app.use("/admin-api/settings/*", requireAdmin)
   app.use("/admin-api/settings", requireAdmin)
   app.route("/admin-api/settings", createAdminSettingsRoutes(handle, emailService))
+
+  // 管理端邮件队列历史与清理
+  app.use("/admin-api/email-queue/*", requireAdmin)
+  app.use("/admin-api/email-queue", requireAdmin)
+  app.route("/admin-api/email-queue", createAdminEmailQueueRoutes(handle))
+
+  // 启动邮件队列处理器
+  const queueProcessor = createEmailQueueProcessor(handle, emailService)
+  queueProcessor.start(5000)
 
   return app
 }

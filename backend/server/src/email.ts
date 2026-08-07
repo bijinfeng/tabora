@@ -86,13 +86,43 @@ export function createEmailService(handle: DbHandle) {
     }
   }
 
+  /** 使用模板将邮件加入队列（异步发送，不阻塞请求） */
+  async function enqueueTemplatedEmail<T extends EmailTemplateType>(
+    to: string,
+    templateType: T,
+    variables: TemplateVariables[T],
+    options?: { scheduledFor?: Date; maxAttempts?: number },
+  ) {
+    try {
+      const renderer = await getRenderer()
+      const { subject, html, text } = renderer.render(templateType, variables)
+      const input: Parameters<typeof handle.emailQueue.enqueue>[0] = {
+        to,
+        subject,
+        html,
+        text,
+      }
+      if (options?.scheduledFor !== undefined) {
+        input.scheduledFor = options.scheduledFor
+      }
+      if (options?.maxAttempts !== undefined) {
+        input.maxAttempts = options.maxAttempts
+      }
+      return await handle.emailQueue.enqueue(input)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`[EmailService] Failed to enqueue email (${templateType}) to ${to}: ${message}`)
+      throw new Error(`邮件入队失败: ${message}`)
+    }
+  }
+
   /** 重置缓存（设置变更后调用） */
   function resetCache() {
     cachedTransporter = null
     cachedRenderer = null
   }
 
-  return { sendMail, sendTemplatedEmail, resetCache }
+  return { sendMail, sendTemplatedEmail, enqueueTemplatedEmail, resetCache }
 }
 
 export type EmailService = ReturnType<typeof createEmailService>

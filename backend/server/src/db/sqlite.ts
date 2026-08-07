@@ -5,6 +5,7 @@ import Database from "better-sqlite3"
 import { drizzle } from "drizzle-orm/better-sqlite3"
 
 import { createAttachmentQueries } from "./attachments"
+import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createSettingsQueries } from "./settings"
 import { createSyncedRecordQueries } from "./syncedRecords"
@@ -38,6 +39,8 @@ export function createSqliteDb(file: string) {
 
   const settings = createSettingsQueries(db, schema.setting)
 
+  const emailQueue = createEmailQueueQueries(db, { emailQueue: schema.emailQueue })
+
   return {
     db,
     provider: "sqlite" as const,
@@ -46,6 +49,7 @@ export function createSqliteDb(file: string) {
     syncedRecords,
     attachments,
     settings,
+    emailQueue,
     close: () => sqlite.close(),
   }
 }

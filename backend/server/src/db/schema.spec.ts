@@ -130,6 +130,23 @@ export const schemaSpec: Record<string, TableSpec> = {
       updatedAt: { kind: "timestamp", notNull: true },
     },
   },
+  emailQueue: {
+    columns: {
+      id: { kind: "autoPk" },
+      to: { kind: "text", notNull: true },
+      subject: { kind: "text", notNull: true },
+      html: { kind: "text", notNull: true },
+      text: { kind: "text" },
+      status: { kind: "text", notNull: true },
+      attempts: { kind: "int", notNull: true, default: 0 },
+      maxAttempts: { kind: "int", notNull: true, default: 3 },
+      lastError: { kind: "text" },
+      sentAt: { kind: "timestamp" },
+      createdAt: { kind: "timestamp", notNull: true },
+      scheduledFor: { kind: "timestamp" },
+    },
+    indexes: [{ columns: ["status"] }, { columns: ["scheduledFor"] }],
+  },
 }
 
 /** camelCase → snake_case。 */

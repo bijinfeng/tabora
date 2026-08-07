@@ -22,29 +22,29 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
       requireEmailVerification: true,
       async sendResetPassword({ user, url }) {
         try {
-          await emailService.sendTemplatedEmail(user.email, "passwordReset", {
+          await emailService.enqueueTemplatedEmail(user.email, "passwordReset", {
             userName: user.name,
             resetUrl: url,
             expiryHours: 24,
           })
         } catch (error) {
-          console.error("[Auth] Failed to send password reset email:", error)
+          console.error("[Auth] Failed to enqueue password reset email:", error)
           throw new APIError("BAD_REQUEST", {
-            message: "密码重置邮件发送失败，请检查 SMTP 配置或稍后重试",
+            message: "密码重置邮件入队失败，请检查系统配置或稍后重试",
           })
         }
       },
       async sendVerificationEmail({ user, url }: { user: any; url: string }) {
         try {
-          await emailService.sendTemplatedEmail(user.email, "emailVerification", {
+          await emailService.enqueueTemplatedEmail(user.email, "emailVerification", {
             userName: user.name,
             verificationUrl: url,
             expiryHours: 24,
           })
         } catch (error) {
-          console.error("[Auth] Failed to send verification email:", error)
+          console.error("[Auth] Failed to enqueue verification email:", error)
           throw new APIError("BAD_REQUEST", {
-            message: "验证邮件发送失败，请检查 SMTP 配置或稍后重试",
+            message: "验证邮件入队失败，请检查系统配置或稍后重试",
           })
         }
       },
