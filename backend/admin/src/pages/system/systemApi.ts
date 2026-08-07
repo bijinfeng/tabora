@@ -6,6 +6,14 @@ export type SystemInfo = {
     startedAt: string
     uptimeSec: number
     node: string
+    platform: string
+    arch: string
+  }
+  memory: {
+    rss: number
+    heapUsed: number
+    heapTotal: number
+    external: number
   }
   database: {
     client: "sqlite" | "postgres"
@@ -24,6 +32,18 @@ export type SystemInfo = {
   auth: {
     baseUrl: string
     secretConfigured: boolean
+  }
+  smtp: {
+    configured: boolean
+    host: string | null
+    port: number | null
+    from: string | null
+  }
+  emailQueue: {
+    pending: number
+    active: number
+    completed: number
+    failed: number
   }
 }
 

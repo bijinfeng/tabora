@@ -191,6 +191,50 @@ export function SystemPage() {
                 ]}
               />
             </section>
+
+            <section {...stylex.attrs(styles.section)}>
+              <h2 {...stylex.attrs(styles.sectionTitle)}>SMTP 邮件</h2>
+              <InfoCard
+                rows={[
+                  {
+                    label: "配置状态",
+                    value: d().smtp.configured ? "已配置" : "未配置",
+                    badge: d().smtp.configured ? "success" : "warning",
+                  },
+                  ...(d().smtp.configured
+                    ? [
+                        { label: "SMTP 主机", value: d().smtp.host ?? "—" },
+                        { label: "SMTP 端口", value: String(d().smtp.port ?? "—") },
+                        { label: "发件人地址", value: d().smtp.from ?? "—" },
+                      ]
+                    : []),
+                ]}
+              />
+            </section>
+
+            <section {...stylex.attrs(styles.section)}>
+              <h2 {...stylex.attrs(styles.sectionTitle)}>邮件队列</h2>
+              <InfoCard
+                rows={[
+                  { label: "待发送", value: String(d().emailQueue.pending) },
+                  { label: "发送中", value: String(d().emailQueue.active) },
+                  { label: "已完成", value: String(d().emailQueue.completed) },
+                  { label: "失败", value: String(d().emailQueue.failed) },
+                ]}
+              />
+            </section>
+
+            <section {...stylex.attrs(styles.section)}>
+              <h2 {...stylex.attrs(styles.sectionTitle)}>内存使用</h2>
+              <InfoCard
+                rows={[
+                  { label: "RSS", value: `${d().memory.rss} MB` },
+                  { label: "Heap Used", value: `${d().memory.heapUsed} MB` },
+                  { label: "Heap Total", value: `${d().memory.heapTotal} MB` },
+                  { label: "External", value: `${d().memory.external} MB` },
+                ]}
+              />
+            </section>
           </>
         )}
       </Show>
