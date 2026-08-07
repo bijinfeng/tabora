@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
-import { Button } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
@@ -10,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 import Search from "lucide-solid/icons/search"
 
+import { Pagination } from "../../components/Pagination"
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
 import { styles } from "./syncedRecords.styles"
 import { deleteSyncedRecord, listSyncedRecords, type SyncedRecord } from "./syncedRecordsApi"
@@ -127,6 +127,7 @@ export function SyncedRecordsPage() {
         {(d) => (
           <Pagination
             offset={offset()}
+            pageSize={PAGE_SIZE}
             total={d().total}
             onPrev={() => setOffset(Math.max(0, offset() - PAGE_SIZE))}
             onNext={() => setOffset(offset() + PAGE_SIZE)}
@@ -139,29 +140,6 @@ export function SyncedRecordsPage() {
         onClose={() => setDetail(null)}
         onDelete={(r) => handleDelete(r)}
       />
-    </div>
-  )
-}
-
-function Pagination(props: {
-  offset: number
-  total: number
-  onPrev: () => void
-  onNext: () => void
-}) {
-  const from = () => (props.total === 0 ? 0 : props.offset + 1)
-  const to = () => Math.min(props.offset + PAGE_SIZE, props.total)
-  return (
-    <div {...stylex.attrs(styles.pagination)}>
-      <span>
-        {from()}–{to()} / 共 {props.total}
-      </span>
-      <Button size="sm" variant="secondary" disabled={props.offset === 0} onClick={props.onPrev}>
-        上一页
-      </Button>
-      <Button size="sm" variant="secondary" disabled={to() >= props.total} onClick={props.onNext}>
-        下一页
-      </Button>
     </div>
   )
 }

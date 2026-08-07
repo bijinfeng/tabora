@@ -48,14 +48,6 @@ export const styles = stylex.create({
     gap: space.s3,
     justifyContent: "flex-end",
   },
-  pagination: {
-    alignItems: "center",
-    color: color.textMuted,
-    display: "flex",
-    fontSize: 12,
-    gap: space.s4,
-    justifyContent: "flex-end",
-  },
   actionCell: {
     display: "flex",
     justifyContent: "flex-end",
