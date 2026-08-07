@@ -49,6 +49,10 @@ export async function fetchSyncedRecordStats(): Promise<SyncedRecordStats> {
   return get("/admin-api/synced-records/stats")
 }
 
+export async function fetchSyncedRecordById(id: string): Promise<SyncedRecord> {
+  return get(`/admin-api/synced-records/${id}`)
+}
+
 export async function deleteSyncedRecord(id: string): Promise<void> {
   const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/synced-records/${id}`, {
     method: "DELETE",

@@ -39,6 +39,15 @@ export function createSyncedRecordRoutes(handle: DbHandle) {
     return c.json({ byType, tombstones, total })
   })
 
+  app.get("/:id", async (c) => {
+    const id = c.req.param("id")
+    const record = await queries.getById(id)
+    if (!record) {
+      return c.json({ error: "Record not found" }, 404)
+    }
+    return c.json(record)
+  })
+
   app.delete("/:id", async (c) => {
     await queries.remove(c.req.param("id"))
     return c.body(null, 204)

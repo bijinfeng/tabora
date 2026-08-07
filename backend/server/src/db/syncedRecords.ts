@@ -75,6 +75,27 @@ export function createSyncedRecordQueries(db: any, tables: { syncedRecord: any; 
       return Number(rows[0]?.value ?? 0)
     },
 
+    async getById(id: string): Promise<SyncedRecordRow | null> {
+      const rows = (await db
+        .select({
+          id: r.id,
+          ownerId: r.ownerId,
+          ownerEmail: u.email,
+          recordType: r.recordType,
+          recordId: r.recordId,
+          data: r.data,
+          version: r.version,
+          deviceId: r.deviceId,
+          deleted: r.deleted,
+          recordUpdatedAt: r.recordUpdatedAt,
+        })
+        .from(r)
+        .leftJoin(u, eq(r.ownerId, u.id))
+        .where(eq(r.id, id))
+        .limit(1)) as SyncedRecordRow[]
+      return rows[0] ?? null
+    },
+
     async remove(id: string): Promise<void> {
       await db.delete(r).where(eq(r.id, id))
     },
