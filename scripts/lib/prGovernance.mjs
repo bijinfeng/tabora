@@ -4,15 +4,29 @@ const REQUIRED_TEST_DECISIONS = [
   "`pnpm test:inventory` 候选项结论（保留 / 重构 / 删除）",
 ]
 
+const REQUIRED_REUSE_EVIDENCE = [
+  "已复用的现有实现",
+  "新增 public export / dependency / package / 生产文件",
+  "删除或替换的旧实现",
+  "生产 diff（additions / deletions）及必要性",
+]
+
 export function findPullRequestGovernanceViolations(body) {
   const violations = []
   const summary = getSection(body, "变更摘要")
+  const reuseEvidence = getSection(body, "复用与改动规模")
   const regressionBaseline = getSection(body, "Regression Baseline")
   const testDecision = getSection(body, "测试决策")
   const risks = getSection(body, "风险和未覆盖项")
 
   if (!hasSubstantiveContent(summary)) {
     violations.push("变更摘要缺少实质内容")
+  }
+
+  for (const evidence of REQUIRED_REUSE_EVIDENCE) {
+    if (!hasCompletedBullet(reuseEvidence, evidence)) {
+      violations.push(`复用与改动规模缺少：${evidence}`)
+    }
   }
 
   if (!hasRegressionSummaryOutput(regressionBaseline)) {
@@ -50,7 +64,11 @@ function hasRegressionSummaryOutput(section) {
 }
 
 function hasCompletedBullet(section, label) {
-  const bulletPattern = new RegExp(`^\\s*-\\s*${escapeRegExp(label)}\\s*[：:]\\s*(.+)$`, "m")
+  const horizontalSpace = "[\\t ]*"
+  const bulletPattern = new RegExp(
+    `^${horizontalSpace}-${horizontalSpace}${escapeRegExp(label)}${horizontalSpace}[：:]${horizontalSpace}(.+)$`,
+    "m",
+  )
   const match = bulletPattern.exec(section)
   return Boolean(match?.[1] && hasSubstantiveContent(match[1]))
 }

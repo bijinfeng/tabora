@@ -24,6 +24,13 @@
 - 回归基准：
 - docs/README：
 
+## 复用与改动规模
+
+- 已复用的现有实现：
+- 新增 public export / dependency / package / 生产文件：
+- 删除或替换的旧实现：
+- 生产 diff（additions / deletions）及必要性：
+
 ## Regression Baseline
 
 `node scripts/regression-summary.mjs` 输出：

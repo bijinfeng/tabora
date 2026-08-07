@@ -50,14 +50,17 @@ const FOCUSED_TEST_RULES = [
   "plugins/official/widget-weather",
 ].map((directory) => ({
   directory: `${directory}/`,
-  command: `pnpm --dir ${directory} exec vitest run --config vitest.config.ts`,
+  command:
+    directory === "tooling/vitest"
+      ? "pnpm exec vitest run --config tooling/vitest/vitest.config.ts"
+      : `pnpm --dir ${directory} exec vitest run --config vitest.config.ts`,
 }))
 
 const CHANGE_TYPE_RULES = [
   {
     type: "docs",
     matches: (filePath) =>
-      AGENT_GOVERNANCE_DOCUMENTS.has(filePath) ||
+      isAgentGovernanceDocument(filePath) ||
       filePath === "DESIGN.md" ||
       filePath.startsWith(".claude/") ||
       filePath.startsWith(".github/instructions/") ||
@@ -173,7 +176,9 @@ export function collectChangeTypes(changedFiles) {
       changedFiles
         .filter(isReportableChangedFile)
         .flatMap((filePath) =>
-          CHANGE_TYPE_RULES.filter((rule) => rule.matches(filePath)).map((rule) => rule.type),
+          isAgentGovernanceDocument(filePath)
+            ? ["docs"]
+            : CHANGE_TYPE_RULES.filter((rule) => rule.matches(filePath)).map((rule) => rule.type),
         ),
     ),
     CHANGE_TYPE_ORDER,
@@ -233,8 +238,12 @@ export function collectSuggestedCommands(options) {
 }
 
 export function collectFocusedTestCommands(changedFiles) {
+  const productionChangedFiles = changedFiles.filter(
+    (filePath) => !isAgentGovernanceDocument(filePath),
+  )
+
   return FOCUSED_TEST_RULES.filter((rule) =>
-    changedFiles.some((filePath) => filePath.startsWith(rule.directory)),
+    productionChangedFiles.some((filePath) => filePath.startsWith(rule.directory)),
   ).map((rule) => rule.command)
 }
 
@@ -307,6 +316,10 @@ function extractGitStatusPath(gitStatusLine) {
   const filePath = gitStatusLine.slice(3)
   const renameSeparator = " -> "
   return filePath.includes(renameSeparator) ? filePath.split(renameSeparator).at(-1) : filePath
+}
+
+function isAgentGovernanceDocument(filePath) {
+  return AGENT_GOVERNANCE_DOCUMENTS.has(filePath) || filePath.endsWith("/AGENTS.md")
 }
 
 function isReportableChangedFile(filePath) {

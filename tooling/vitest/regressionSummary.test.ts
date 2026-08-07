@@ -30,7 +30,11 @@ describe("regression summary helpers", () => {
         ".claude/CLAUDE.md",
         ".github/copilot-instructions.md",
         ".github/pull_request_template.md",
+        "apps/site/AGENTS.md",
+        "backend/admin/AGENTS.md",
         "GEMINI.md",
+        "packages/ui/AGENTS.md",
+        "plugins/AGENTS.md",
       ]),
     ).toEqual(["docs"])
   })
@@ -69,15 +73,28 @@ describe("regression summary helpers", () => {
   it("recommends focused test projects from changed package paths", () => {
     expect(
       collectFocusedTestCommands([
+        "packages/ui/AGENTS.md",
         "packages/plugin-api/src/manifestSchema.ts",
         "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
+        "tooling/vitest/prGovernance.test.ts",
         "plugins/official/widget-notes/src/notes-card.tsx",
       ]),
     ).toEqual([
       "pnpm --dir packages/plugin-api exec vitest run --config vitest.config.ts",
       "pnpm --dir packages/workbench-app exec vitest run --config vitest.config.ts",
+      "pnpm exec vitest run --config tooling/vitest/vitest.config.ts",
       "pnpm --dir plugins/official/widget-notes exec vitest run --config vitest.config.ts",
     ])
+  })
+
+  it("does not treat directory-scoped AGENTS.md files as production test targets", () => {
+    expect(
+      collectFocusedTestCommands([
+        "apps/site/AGENTS.md",
+        "packages/ui/AGENTS.md",
+        "plugins/AGENTS.md",
+      ]),
+    ).toEqual([])
   })
 
   it("reports touched known debt and renders a readable summary", () => {

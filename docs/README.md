@@ -6,9 +6,21 @@
 
 开始较大任务时默认只读：
 
-1. `AGENTS.md`：仓库级硬规则、架构边界、验证要求。
+1. 从根目录到目标路径读取完整的 `AGENTS.md` 指令链。
 2. `docs/README.md`：本文档，选择后续事实源。
 3. 与任务类型匹配的 1-3 个事实源。
+
+一次任务涉及多个目录时，分别解析每个目标路径；不要无差别读取所有目录级指令。
+
+## 目录级 Agent 指令
+
+| 适用路径                     | 额外约束重点                                      |
+| ---------------------------- | ------------------------------------------------- |
+| `backend/admin/AGENTS.md`    | 管理台、API/auth、TanStack Query 和破坏性操作边界 |
+| `apps/site/AGENTS.md`        | 官网/文档站、品牌复用、内容和路由边界             |
+| `plugins/AGENTS.md`          | manifest、runtime context、permission 和实例隔离  |
+| `packages/ui/AGENTS.md`      | primitive、Kobalte、public subpath 和宿主边界     |
+| `packages/workbench-app/AGENTS.md` | 跨 shell 组合、状态分层和 builtin 注入边界 |
 
 ## 事实源优先级
 
@@ -143,12 +155,13 @@
 
 重点确认：
 
-- Agent 入口文件只做轻量指引，不复制事实源正文。
+- Agent 入口文件只做轻量指引；实际约束来自目标路径适用的 `AGENTS.md` 指令链。
+- 写代码前搜索现有实现、调用点和公共导出，按“复用 → 扩展 → 私有 helper → 有真实消费者的公共抽象”选择。
 - 完成前运行 `node scripts/regression-summary.mjs`，再按输出选择验证命令。
 - 新增、修改或清理测试前运行 `pnpm test:inventory`，候选项逐项确认后才删除。
 - 使用 `node scripts/regression-summary.mjs` 输出的 focused tests 先做定向反馈，再运行全量要求的命令。
 - PR 会由 `pr-governance` workflow 校验交付字段是否已填写。
-- PR 或 final 回复要说明事实源同步、验证结果、未覆盖项和风险。
+- PR 或 final 回复要说明复用证据、生产 diff、新增公开面、事实源同步、验证结果、未覆盖项和风险。
 
 ## 文档维护规则
 

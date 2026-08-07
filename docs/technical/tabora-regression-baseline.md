@@ -1,8 +1,8 @@
 # Tabora 回归基准与 Agent 友好工程治理标准
 
-版本：V1.3
+版本：V1.4
 
-日期：2026-06-08
+日期：2026-08-07
 
 状态：作为每轮迭代后的回归检查基准；截至本版本无未解决实现债务，见 §10。
 
@@ -48,18 +48,22 @@
 Tabora 当前做法：
 
 - `AGENTS.md` 保留仓库级硬规则。
-- `.claude/CLAUDE.md`、`GEMINI.md`、`.github/copilot-instructions.md` 只作为不同 agent 的轻量入口，指向同一套事实源。
+- 容易在局部目录误用的边界由就近 `AGENTS.md` 补充；agent 按目标文件从根到最近祖先解析完整指令链。
+- `.claude/CLAUDE.md`、`GEMINI.md`、`.github/copilot-instructions.md` 只作为不同 agent 的轻量入口，不复制规则正文。
 - `docs/README.md` 作为文档地图。
 - 产品、设计、技术和回归基准拆成独立事实源。
 - `docs/technical/agent-task-template.md` 提供任务拆解和交付摘要模板，但不承载新的产品或技术事实。
+
+新增永久规则只处理不容易从代码推断、曾重复造成问题且能转成具体行动或检查的陷阱；版本、目录树、阶段进度和一次性提醒不进入 agent 指令。
 
 ### 2.2 上下文分层，按任务读取
 
 Agent 每轮不应无差别读取所有文档。正确路径是：
 
-1. 先读 `AGENTS.md` 和 `docs/README.md`。
-2. 根据任务类型读取 PRD、设计事实源、技术方案、官方插件设计或本回归基准。
-3. 再读相关源码和测试。
+1. 针对每个目标路径读取从根到最近祖先的 `AGENTS.md` 指令链。
+2. 读 `docs/README.md`。
+3. 根据任务类型读取 PRD、设计事实源、技术方案、官方插件设计或本回归基准。
+4. 再读相关源码和测试。
 
 这样可以减少“旧计划覆盖当前事实”的风险。
 
@@ -82,8 +86,12 @@ Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
 - 影响包或目录。
 - 不允许触碰的边界。
 - 必须通过的回归层级。
+- 搜索过的现有实现、调用点和公共导出，以及准备复用或扩展的所有者。
+- 预计生产 diff、新增生产文件、dependency、package 和 public export。
 
 如果一个任务同时涉及协议、storage、shell、UI 和发布，应该拆成多个可独立验证的阶段。
+
+边界清晰的小任务如果新增超过约 300 行生产代码、超过 3 个生产文件，或新增 dependency、workspace package、public export，应暂停并重新检查能否复用或收缩范围。它们是必须解释的审查信号，不是自动失败阈值；测试、文档、快照和生成文件不计入生产代码。
 
 ### 2.5 事实源必须随实现同步
 
@@ -104,6 +112,9 @@ Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
 每轮结束时，agent final 回复至少包含：
 
 - 改了什么。
+- 复用或扩展了哪些现有实现。
+- 新增了哪些 public export、dependency、package 或生产文件。
+- 删除或替换了哪些旧实现，以及生产 diff 的 additions / deletions。
 - 跑了什么验证命令。
 - 哪些检查未跑以及原因。
 - 是否有已知风险或剩余债务。
@@ -365,7 +376,12 @@ rg -n "\\bas any\\b|@ts-expect-error|@ts-ignore|!\\." apps packages plugins
 检查标准：
 
 - 一个模块只承担一个清晰责任：协议、编排、宿主容器、插件内容、存储、样式不要混写。
-- 优先复用现有 package / helper；新增抽象必须减少真实重复或隔离明确风险。
+- 写代码前搜索现有组件、helper、model、schema、package subpath、调用点和公共导出。
+- 选择顺序是直接复用、扩展职责所有者、调用方私有 helper，最后才是公共抽象。
+- 公共抽象必须有多个真实消费者或稳定边界；不创建只改名、只转发或只包一层调用的 helper、component、adapter。
+- 不为未来猜测增加配置、兼容、backfill、fallback、adapter 或扩展点。
+- 相似 JSX 优先收敛为数据、配置或同一渲染路径；新文件只对应新的独立职责。
+- 替换实现时同步迁移调用方并删除旧实现、死代码和过时导出。
 - 避免“上帝组件”：大型 Solid 组件新增逻辑时，应优先下沉为纯模型、hook/helper 或子组件。
 - 业务能力默认进入插件；平台层只保留通用机制。
 - 不做顺手重构；与本轮无关的重排、重命名、格式 churn 不进入同一轮。
@@ -569,23 +585,27 @@ Agent 必须：
    git status --short --untracked-files=all
    ```
 
-2. 运行：
+2. 针对每个目标路径读取从根到最近祖先的 `AGENTS.md` 指令链。
+3. 读取 `docs/README.md`，判断应该继续读哪些事实源。
+4. 运行：
 
    ```bash
    node scripts/regression-summary.mjs
    ```
 
-3. 读取 `docs/README.md`，判断应该继续读哪些事实源。
-4. 根据任务分类选择回归层级。
-5. 如果任务涉及 UI，优先读取 `DESIGN.md`。
-6. 如果任务涉及协议、runtime、storage、shell，优先读取技术方案和本文档。
+5. 根据任务分类选择回归层级。
+6. 如果任务涉及 UI，优先读取 `DESIGN.md`。
+7. 如果任务涉及协议、runtime、storage、shell，优先读取技术方案和本文档。
+8. 写代码前搜索现有实现、调用点、公共导出和相邻测试，记录复用决策与预计改动规模。
 
 ### 6.2 修改中
 
 Agent 应：
 
 - 优先使用 `rg` / `rg --files` 搜索。
-- 优先使用现有 package 和 helper，不发明平行抽象。
+- 按“复用 → 扩展 → 私有 helper → 有真实消费者的公共抽象”实现，不发明平行抽象。
+- 命中生产代码、文件、dependency、package 或 public export 审查信号时，先重新确认范围并记录必要性。
+- 替换实现时同步清理旧调用方、死代码和过时导出。
 - 修改前判断是否触碰事实源。
 - 不回滚用户或其他 agent 的改动。
 - 小范围修改，不做无关重构。
@@ -598,7 +618,7 @@ Agent 必须：
 - 再次运行 `node scripts/regression-summary.mjs`，确认实际 touched paths 对应的回归层级和命令。
 - 按本文件 L3-L8 运行对应命令。
 - 如果变更了事实源，同步 `docs/README.md`。
-- 用 §8 模板形成回归摘要。
+- 用 §8 模板记录复用、生产 diff、新增公开面、被替代实现和回归摘要。
 - 在 final 回复中说明验证命令和未覆盖风险。
 
 ## 7. 质量门禁判定
@@ -655,6 +675,13 @@ Agent 必须：
 - 技术方案:
 - 回归基准:
 - docs/README:
+
+复用与改动规模：
+
+- 已复用的现有实现:
+- 新增 public export / dependency / package / 生产文件:
+- 删除或替换的旧实现:
+- 生产 diff（additions / deletions）及必要性:
 
 自动化验证：
 
@@ -760,7 +787,7 @@ Agent 必须：
 
 登记格式：债务描述、影响、建议优先级。
 
-当前状态：截至 V1.3（2026-06-08）无未解决实现债务。此前债务已全部解决并由 `pnpm check:architecture` / `pnpm quality` 守卫防止回归。
+当前状态：截至 V1.4（2026-08-07）无未解决实现债务。此前债务已全部解决并由 `pnpm check:architecture` / `pnpm quality` 守卫防止回归。
 
 ## 11. 后续治理建议
 

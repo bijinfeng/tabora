@@ -1,430 +1,151 @@
 # AGENTS.md
 
-本文件约束在 Tabora 仓库中工作的 Codex 和其他通用 coding agent。除非子目录中存在更近的 `AGENTS.md` 覆盖，本文件适用于整个仓库。
+本文件约束在 Tabora 仓库中工作的 Codex 和其他通用 coding agent。
 
-## 快速理解项目
+## 指令解析
 
-Tabora 是一个插件优先的个人工作台新标签页产品。它不是把搜索、壁纸、卡片和设置写死在平台里的页面，而是一个由插件装配出来的模块仪表盘型工作台平台。
+- 用户当前指令优先于仓库指令。
+- 修改任何文件前，从仓库根目录开始，沿目标文件目录向下读取所有适用的 `AGENTS.md`；越接近目标文件的规则越具体，冲突时以更近的文件为准。
+- 一次任务涉及多个目录时，分别解析每个目标路径的指令链，不能只读其中一个目录的规则。
+- `.claude/CLAUDE.md`、`GEMINI.md` 和 `.github/copilot-instructions.md` 只是入口，不替代适用的 `AGENTS.md` 链。
 
-最高原则：
+## 项目原则
 
-> 任何具体业务能力默认优先放进插件；平台只保留通用运行机制。
+Tabora 是插件优先的个人工作台平台。
 
-平台负责插件运行内核、扩展点协议、宿主容器、存储、权限、事件和故障恢复。用户看到的轻 rail、命令搜索、搜索源、背景、主题、布局、卡片、弹窗、全屏视图和设置面板，都应来自官方或未来第三方插件。
+> 具体业务能力默认进入插件；平台只保留可被不同插件和宿主复用的运行机制。
 
-## 关键文档
+开始较大任务前读 `docs/README.md`，只继续读取与任务匹配的事实源。不要把历史计划、原型或当前实现自动当成最终产品口径。代码与事实源不一致时先查明真实状态，再同步正确一方。
 
-开始较大任务前先读文档地图：
+## 开始工作
 
-- `docs/README.md`
+1. 运行 `git status --short --untracked-files=all`，识别用户或其他 agent 的现有改动。
+2. 解析所有目标路径适用的 `AGENTS.md` 链。
+3. 读 `docs/README.md` 并选择必要事实源；UI 任务额外读 `DESIGN.md`。
+4. 运行 `node scripts/regression-summary.mjs`，记录初始改动分类和建议验证。
+5. 修改代码前先搜索现有实现、调用点、公共导出和相邻测试。
 
-文档地图会说明当前事实源、历史规格和不同任务的阅读路径。不要在 `AGENTS.md` 中复制完整文档目录，避免双写双维护。
+搜索文本和文件优先使用 `rg` / `rg --files`。项目工具版本以根 `package.json` 的 `engines` 和 `packageManager` 为准；只使用 pnpm，不使用 npm 或 yarn。
 
-UI、token、基础组件、宿主容器视觉、交互模式或可访问性相关任务，需要额外优先阅读根目录 `DESIGN.md`。`docs/design/workbench-prototype.html`、`docs/design/landing.html` 和 `docs/design/download.html` 只作为可视原型或静态预览参考。
+## 复用与最小改动
 
-文档内容以中文为主。新增产品、技术、计划类文档也优先使用中文。
+新增代码前按以下顺序选择：
 
-## 当前 MVP 口径
+1. 直接复用已有组件、函数、类型、schema、repository 或 package subpath。
+2. 在最接近职责所有者的现有实现上扩展。
+3. 仅在当前调用方内部建立私有 helper。
+4. 只有存在多个真实消费者，或存在需要长期稳定的明确边界时，才建立公共抽象。
 
-MVP 包含：
+必须遵守：
 
-- 插件发现、manifest 校验、激活、registry、runtime context。
-- 扩展点：`layout`、`widget`、`search`、`search-provider`、`background-provider`、`background-renderer`、`theme`、`settings-panel`。
-- 官方内置插件包。
-- `@tabora/ui` 基础组件包，用于插件内容区控件一致性。
-- 官方双布局：左侧轻 rail + 顶部命令搜索 + 主网格的仪表盘式布局，以及通过 `⌘K` 唤起搜索的流式布局。
-- 默认首屏核心卡片：今日重点、快捷入口、便签、待办；天气可作为可添加候选。
-- Widget 多实例、多尺寸、拖拽排序、右键尺寸菜单、双击展开、网格状态持久化。
-- 卡片过多时主网格纵向滚动，不横向滚动，不强行压缩到不可读。
-- 弹窗、全屏、轻量 settings host、Toast 轻通知、快捷键面板。
-- 主题 token、背景来源和背景渲染。
-- IndexedDB 本地持久化。
-- 插件错误边界。
-- `external-open` 最小权限桥。
+- 不创建只改名、只转发参数或只包一层调用的 helper / component / adapter。
+- 不为假设中的未来需求增加配置项、兼容层、backfill、fallback、adapter 或扩展点。
+- 相似 JSX / 分支优先用数据、配置或同一渲染路径表达，不复制整段结构。
+- 优先修改已有文件；只有出现新的独立职责时才新增文件，不为降低单文件行数制造大量小文件。
+- 替换实现时，在同一改动中迁移调用方，并删除旧实现、无效分支、死代码和过时导出。
+- 不做与任务无关的重命名、目录调整、格式化或“顺手重构”。
+- 两种方案都满足需求时，选择更短、更直接、依赖更少的一种。
 
-MVP 不做：
+以下是审查信号，不是自动拒绝条件：
 
-- 第三方远程插件市场。
-- 不可信远程插件沙箱运行时。
-- 在线插件安装和自动升级。
-- 团队或共享工作区。
-- 完整插件开发者工具。
-- AI 生成插件。
-- 复杂 WebGL 背景编辑器。
+- 一个边界清晰的小任务新增超过约 300 行生产代码。
+- 新增超过 3 个生产文件。
+- 新增 dependency、workspace package 或 public export。
 
-> 官方账号与数据同步已单独立项，不属于原 MVP 范围，作为独立工作线推进。需求与核心技术决策见 `docs/technical/tabora-data-sync-prd.md`（后端采用 Strapi 5，state-based 同步 + 纯 JWT 认证 + 自定义 sync controller）。
+命中任一信号时，实施前重新确认能否复用或收缩范围，并在 PR / final 中写明必要性。生产代码统计不包含测试、文档、快照和生成文件。
 
-## 工程结构
+## 架构硬边界
 
-```txt
-apps/
-  playground/
-    src/
-      App.tsx
-      bootstrap.tsx
-      workbenchComposition.ts
-  extension/
-    entrypoints/
-      newtab/
-        App.tsx
-        main.tsx
-        workbenchComposition.ts
+- `@tabora/plugin-api` 只放协议、类型和 schema，不放运行时逻辑或业务 UI。
+- `@tabora/platform-kernel` 只放插件生命周期、registry、event、runtime context 和 permission 等通用机制，不硬编码具体业务。
+- `@tabora/orchestrator` 负责跨插件编排模型，不拥有宿主 UI，也不直接依赖 storage 或 Solid。
+- `@tabora/storage` 分开保存 workspace 装配、plugin instance 状态和 plugin data；插件业务数据不能混入 workspace 装配数据。
+- `@tabora/workbench-app` 承担跨 shell 的应用组合与宿主编排；builtin 列表和默认 preset 由组合根注入，不在包内反向依赖官方插件集合。
+- `@tabora/workbench-shell` 拥有可复用的宿主级视图和容器；插件内容组件不进入这里。
+- `@tabora/ui` 只提供业务无关的基础组件和低层可访问 primitive，不依赖 kernel、storage、官方插件或 app，也不拥有工作台宿主容器。
+- `@tabora/official-plugins` 是官方插件 pack；`@tabora/builtin-plugin-registry` 才是 shell 默认 builtin 聚合入口。
+- app 是组合根。跨 playground、extension、site 或其他 app 复用的逻辑应进入合适 package，不能长期互相 import app 源码。
+- 插件只通过 manifest、contribution、registry、runtime context、permission 和 storage contract 接入，不访问宿主内部 store。
 
-packages/
-  builtin-plugin-registry/
-    src/
-      index.ts
-  plugin-api/
-    src/
-      manifest.ts
-      manifestSchema.ts
-      workspace.ts
-      index.ts
+安全与故障边界：
 
-  platform-kernel/
-    src/
-      eventBus.ts
-      extensionRegistry.ts
-      pluginKernel.ts
-      runtimeContext.ts
-      index.ts
+- 外部打开必须走 permission bridge，不直接使用 `window.open` 或裸 `_blank` 绕过权限。
+- 不为旧 manifest 或旧数据猜测字段、静默补默认值或添加隐式兼容；显式迁移必须有当前需求和 contract。
+- 插件失败必须局部化；widget、overlay、search、background 或 theme 的单点失败不能造成整页白屏。
+- 新的权限能力采用使用时授权，拒绝路径必须可恢复。
 
-  storage/
-    src/
-      database.ts
-      workspaceRepository.ts
-      instanceRepository.ts
-      pluginDataRepository.ts
-      index.ts
+## UI 实现
 
-  theme/
-    src/
-      applyThemeTokens.ts
-      index.ts
+- UI、token、布局、宿主容器、交互或可访问性任务以 `DESIGN.md` 为事实源。
+- `@tabora/ui` 已有的按钮、输入、选择器、菜单、Dialog、Drawer、Toast、CommandPalette 等一律复用；缺少通用能力时先判断是否应在 `@tabora/ui` 扩展。
+- 宿主级 `WidgetCardShell`、overlay/settings/toast host、rail、grid 和全局命令面板不放入 `@tabora/ui`。
+- 使用 theme token 和 CSS variables；明暗主题均可读，移动端不出现横向滚动。
+- 不嵌套卡片，不用 emoji 充当新图标；新图标优先 `lucide-solid`。
+- 表单输入有可访问名称；可点击元素有 hover、focus-visible 和 pointer cursor，状态变化不造成布局跳动。
 
-  official-plugins/
-    src/
-      index.ts
-      search-command-bar.tsx
-      search-providers-basic.ts
-      background-basic.ts
-      theme-default-pack.ts
-      plugin-manager.tsx
-      plugin-manager-entry.ts
-      settings-workspace.tsx
+## 测试与验证
 
-  workbench-app/
-    src/
-      bootstrap.ts
-      index.ts
+新增、修改或删除测试前，先写清它保护的用户可观察行为、协议 contract 或已复现缺陷。
 
-  host-adapters/
-    src/
-      extension.ts
-      web.ts
-      index.ts
+- 不为私有实现细节、单纯 mock 调用次数或无业务意义 snapshot 新增测试。
+- 不按 mock、snapshot、文件数或覆盖率数字批量删除测试。
+- 测试清理先运行 `pnpm test:inventory`，逐项证明替代覆盖后再删除。
+- 协作者调用断言只有在同时证明可观察结果或明确 side effect 时才有价值。
+- 协议、权限、数据迁移和已复现缺陷应包含失败路径。
 
-plugins/
-  official/
-    layout-dashboard/
-    layout-stream/
-    widget-notes/
-    widget-quick-links/
-    widget-today-focus/
-    widget-todo/
-    widget-weather/
-  community/
-    layout-diy-masonry/
-  examples/
-
-  ui/
-    src/
-      index.ts
-      styles.css
-      tokens.ts
-      primitives/
-      composites/
-
-tooling/
-  tsconfig/
-```
-
-## 技术栈和命令
-
-项目使用 pnpm workspace、Vite+、Solid、TypeScript、StyleX、Vitest、Dexie、Zod、tsdown。
-
-环境：
-
-- Node.js `>=24`
-- pnpm `11.5.2`
-- 包管理器只用 pnpm，不使用 npm 或 yarn。
-
-常用命令：
+完成前重新运行：
 
 ```bash
-pnpm dev
-pnpm check
-pnpm check:fix
-pnpm test
-pnpm build
-pnpm --filter @tabora/playground build
-pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
+node scripts/regression-summary.mjs
 ```
 
-`pnpm check` 覆盖格式化、lint、type check。文档变更至少跑 `pnpm check`。代码变更按范围追加 `pnpm test` 和 `pnpm build`。
+先执行摘要列出的 focused tests，再执行 `commands to run` 的完整要求；focused tests 不能替代全量验证。最低规则和回归层级以 `docs/technical/tabora-regression-baseline.md` 为准：
 
-## 代码风格
+- 文档或配置变更至少运行 `pnpm check`。
+- package / app / plugin 代码变更至少运行 `pnpm test` 和 `pnpm check`。
+- 跨包、协议、storage 或发布相关变更追加 `pnpm build`。
+- 前端视觉或交互变更启动对应 app，并用浏览器检查关键路径。
+- 所有改动运行 `git diff --check`。
 
-- TypeScript + ESM。
-- Solid 组件使用 `.tsx`。
-- 格式遵循 Vite+ 配置：双引号、无分号。
-- `no-console` 是 lint error；只允许 `console.warn` 和 `console.error`。
-- 搜索文件优先用 `rg` / `rg --files`。
-- 修改文件优先使用补丁或编辑工具，不用 shell 重定向拼文件。
-- 不做无关重构，不改无关格式。
-- 不回滚用户或其他 agent 的改动。
+不要把未运行的检查写成已通过；失败、已知 runner 噪声和未覆盖项分开报告。
 
-## 架构边界
+## 文档同步
 
-### `@tabora/plugin-api`
+产品口径、架构边界、协议、数据模型、运行机制、UI 规则、验证方式或实现状态变化时，同步对应长期事实源。
 
-只定义协议、类型和 schema：
+- `docs/README.md` 只登记会反复使用且持续维护的长期事实源。
+- 计划、阶段记录、交付证据和 retrospective 默认不进入文档地图。
+- 不在 `AGENTS.md` 中复制 PRD、完整目录树、版本号、阶段进度或大段事实源正文。
+- 新增仓库规则前确认它同时满足：不容易从代码推断、曾重复造成问题、能够转成具体行动或检查。一次性提醒放在任务或 PR，不永久写入指令文件。
 
-- manifest 类型。
-- contribution 类型。
-- workspace / region / plugin instance / grid placement / plugin record 数据模型。
-- Zod schema。
+## Git 与交付
 
-不要在这里放运行时逻辑或业务 UI。
-
-### `@tabora/platform-kernel`
-
-只放通用运行机制：
-
-- plugin kernel。
-- event bus。
-- extension registry。
-- runtime context。
-- permission bridge。
-
-不要硬编码具体搜索引擎、便签、待办、天气、背景分类等业务能力。
-
-### `@tabora/storage`
-
-封装 IndexedDB / Dexie：
-
-- workspace 装配状态。
-- plugin instance 状态。
-- plugin data。
-
-workspace / instance / pluginData 要分层。插件业务数据不要混入 workspace 装配数据。
-
-### `@tabora/theme`
-
-负责把 theme contribution 的 token 应用为 CSS custom properties。新视觉能力应优先走 token，不要在插件里硬编码大面积颜色。
-
-### `@tabora/ui`
-
-已交付。位于 `packages/ui`，负责插件内容区基础组件，统一官方插件和未来第三方插件的控件视觉、状态和可访问性。基于 `@kobalte/core` 提供 a11y 底层。
-
-允许依赖：
-
-- `solid-js`（catalog:ui）
-- `@tabora/theme`
-- `@kobalte/core`（catalog:ui）
-
-禁止依赖：
-
-- `@tabora/platform-kernel`
-- `@tabora/storage`
-- `@tabora/official-plugins`
-- `apps/playground`
-
-`@tabora/ui` 可以提供低层可访问 primitive，例如 `Dialog`、`Drawer`、`Popover`、`ContextMenu`、`Toast`、通用 `CommandPalette` 等。`@tabora/ui` 不提供 Tabora 宿主级容器，例如 `WidgetCardShell`、全局 `ModalHost`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid`、shell 拥有的全局 `CommandPalette` 等。这些容器由 shell / host 统一提供，插件只渲染内容区。
-
-### `@tabora/official-plugins`
-
-官方插件集合来自这里。它只表达“官方插件 pack”，不负责决定 shell 最终默认加载哪些 builtin plugins。官方插件也必须遵守和第三方插件一样的协议：
-
-- manifest 声明能力。
-- activate 阶段注册 view。
-- 宿主通过 registry 渲染 view。
-- 外部能力通过 runtime context 和权限桥请求。
-- 插件数据通过 storage repository 保存。
-- 内容区 UI 优先使用 `@tabora/ui` 基础组件。
-
-### `@tabora/builtin-plugin-registry`
-
-当前 shell 默认 builtin 装配入口：
-
-- 聚合 `@tabora/official-plugins` 与当前需要一起验证的 community builtin 插件。
-- playground / extension / 未来 desktop shell 通过它拿默认 builtin plugin 列表、默认 workspace preset 和 shell 装配配置。
-- 不承载插件运行时逻辑，不替代官方插件 pack。
-
-### `apps/playground`
-
-MVP 第一个 shell：
-
-- 启动 plugin kernel。
-- 加载 workspace 和 plugin instances。
-- 渲染默认工作台。
-- 提供 modal / fullscreen / settings host / external-open 宿主能力。
-- 用 `PluginViewBoundary` 隔离插件视图错误。
-
-核心包不能依赖 playground。
-
-## 插件开发规则
-
-- 具体业务能力默认放进插件。
-- manifest 只声明能力，不执行逻辑。
-- 上线前不保留历史兼容包袱：manifest 必须显式声明当前协议要求的字段，例如 `apiVersion`、settings panel 的 `section/scope`、插件兼容能力等；不要为旧 manifest 增加 id 推断、默认补齐、迁移或 backfill 逻辑。
-- 插件入口 `activate(context)` 只通过 runtime context 使用平台能力。
-- 插件不能直接访问宿主内部 store。
-- 插件不能直接创建全局 modal、fullscreen 或 settings 容器。
-- 插件不能直接 `window.open` 执行外部打开；需要走 `context.permissions.openExternal(url)`。
-- Widget 必须声明 `supportedSizes`、`defaultSize` 和 view id。
-- Widget 内容过长时内部滚动或截断，不撑破卡片。
-- 同一个 widget 可多实例，除非 contribution 显式禁止。
-- 多实例数据默认按 instance 隔离；共享数据必须在产品文档中说明。
-
-## 权限和安全
-
-MVP 已建立 `external-open` 权限桥。原则：
-
-- 插件请求外部打开必须通过 permission bridge。
-- host 只执行权限桥批准后的 `host.external.open`。
-- 权限拒绝不能导致宿主崩溃。
-- 后续 `network`、`clipboard`、`local-file`、`workspace write` 都要使用时授权。
-
-## 错误隔离
-
-插件失败必须局部化：
-
-- widget 失败：只显示该实例错误卡片。
-- modal / fullscreen / settings panel 失败：只显示局部错误。
-- search 失败：顶部区域显示搜索不可用占位。
-- background 失败：回退到安全页面底色。
-- theme 失败：回退到最小安全 token。
-
-不要让单个插件视图导致整页白屏。
-
-## 布局和卡片规则
-
-- 目标默认布局是左侧轻 rail + 顶部命令搜索 + 主网格工作台。
-- 当前代码仍可能处于顶部搜索 + 主网格实现阶段；修改时以 PRD 和官方插件设计为目标事实源，避免把旧实现当成最终产品方向。
-- 默认首屏只保证命令搜索和 3-4 个核心卡片优先露出。
-- 首屏核心卡片优先为今日重点、快捷入口、便签、待办；天气不强制默认进入首屏。
-- 不要求所有官方卡片都塞进一屏。
-- 卡片过多时，主网格纵向扩展并允许滚动。
-- 不使用横向滚动作为默认工作台溢出方案。
-- 不为了容纳更多卡片把卡片压缩到不可读。
-- 新卡片追加到网格末尾。
-- 用户通过拖拽排序和尺寸调整管理优先级。
-- 移动端可以单列折叠，但保留实例语义 `size` 状态。
-- Rail 只放主页、添加卡片、插件、设置等工作台级入口，不承载具体业务内容。
-
-## 轻量设置中心
-
-MVP 应包含轻量 settings host，但不做完整设置系统。
-
-MVP 面板：
-
-- `official.settings.plugins`：插件名称、ID、版本、启用状态、贡献能力、权限摘要，MVP 可只读。
-- `official.settings.workspace.appearance`：主题和背景切换。
-- `official.settings.workspace.search`：默认搜索源和搜索源启用状态。
-
-延后能力：
-
-- 设置搜索。
-- 多 workspace。
-- 导入 / 导出。
-- 插件安装、卸载、更新。
-- 复杂权限审计。
-- 插件调试信息。
-
-## UI 规则
-
-- 产品气质是安静、清晰、可重复使用的个人工作台，不做营销页。
-- 页面第一屏是可用工作台，不做 landing page。
-- UI 工作以根目录 `DESIGN.md` 为视觉、token、基础组件、交互模式、宿主容器和可访问性单一事实源。
-- 使用主题 token 和 CSS variables。
-- **强制约束：凡是 `@tabora/ui` 已提供的基础组件（按钮、输入、选择器、下拉菜单、开关、对话框、抽屉、气泡、右键菜单、Toast、命令面板等），一律禁止在插件或 shell 中手搓实现。** 需要新控件时，先确认 `@tabora/ui` 是否已有或可扩展；确实缺失时补充到 `@tabora/ui` 再复用，而不是在业务代码里另起一套。手搓已有基础组件的改动视为不合格，评审必须打回。
-- 不要把 Tabora 宿主级容器放入 `@tabora/ui`；widget 卡片壳、modal/fullscreen/settings/toast host、workbench rail/grid、shell 全局命令面板由 shell 提供。`@tabora/ui` 中的 Dialog/Drawer/Toast/ContextMenu/CommandPalette 只作为插件内容区可复用的低层 primitive。
-- 明暗主题都要保证可读。
-- 卡片尺寸稳定，hover / focus / 拖拽不造成布局跳动。
-- 不嵌套卡片。
-- 控件按语义选择：checkbox 表示待办完成，select / combobox 表示搜索源，switch 表示启用状态。
-- 新 UI 图标优先使用 `lucide-solid`。
-- 不使用 emoji 作为新 UI 图标。
-- 移动端不能出现横向滚动。
-- 表单输入要有 label 或 aria label。
-- 可点击元素要有 hover、focus-visible 和 pointer cursor。
-
-## 测试和验证
-
-### 测试准入
-
-- 新增、改写或删除测试时，先说明它保护的用户可观察行为、协议 contract 或已复现缺陷；没有明确目标时不要为了提高数量或覆盖率新增测试。
-- 不要为私有实现细节、仅 mock 调用次数或无业务意义的 snapshot 单独新增测试。协作者调用断言只有在同时证明可观察结果或明确 side effect 时才有价值。
-- 已有测试可能使用 mock 或 snapshot，这不是删除结论。先运行 `pnpm test:inventory` 取得候选清单，再逐项标记保留、重构或删除及理由；脚本不自动删除测试。
-- 测试改动的理由、未覆盖场景和执行结果必须写入 PR 或 final 回归摘要。
-- `node scripts/regression-summary.mjs` 输出了 focused tests 时，应先运行对应定向测试缩短反馈周期；它们不能替代该命令同时要求的全量验证。
-- PR 必须填写交付证据。`.github/workflows/pr-governance.yml` 在基分支上下文中校验摘要、回归输出、测试决策和风险字段，不能通过修改 PR 分支脚本绕过。
-
-交付前必须有新鲜验证证据：
-
-- 文档或配置变更：运行 `pnpm check`。
-- package / app 代码变更：运行 `pnpm test` 和 `pnpm check`。
-- 跨包或发布相关变更：追加 `pnpm build`。
-- 前端视觉/交互变更：启动 playground，并用浏览器检查关键路径。
-
-推荐 E2E/视觉关注：
-
-- 默认工作台首屏渲染。
-- 添加 widget。
-- 调整尺寸。
-- 拖拽排序。
-- 添加多张 widget 后主网格纵向滚动、无横向滚动、卡片仍可读。
-- 切换主题和背景。
-- 打开 modal / fullscreen / settings host。
-- 搜索外部打开权限路径。
-- 插件错误回退状态。
-
-## 文档更新规则
-
-项目文档和技术方案是持续演进的事实源，不是一次写死的静态说明。任何 agent 在修改产品口径、架构边界、运行机制、插件行为、UI 规则、数据模型、验证方式或实现进度时，都必须实时同步相关文档，防止文档过时并偏离项目现状。
-
-产品或架构决策变更时，按影响范围同步更新相关文档：
-
-- 文档地图：`docs/README.md`
-- PRD：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- 设计事实源：`DESIGN.md`
-- 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-
-`docs/README.md` 只登记未来迭代会反复使用、描述当前有效事实且后续会持续维护的长期事实源。计划、设计过程稿、日期审计、阶段记录、实现进度、交付证据和 retrospective 默认不登记；它们可以保留在仓库中，并由相关 PR、final 或长期事实源按需引用。
-
-新增文档前先判断是否具有长期迭代价值；不满足长期事实源条件时，不要为了“有入口”而扩充文档地图。不要引用已经删除或当前分支不存在的文档路径。
-
-如果代码实现和文档不一致，不能默认认为文档正确或代码正确。先查明当前真实状态，再更新事实源，必要时在 final 回复中说明文档与实现的差异和已采取的同步动作。
-
-## Git 和协作
-
-- 开始前查看 `git status --short --untracked-files=all`。
-- 可能存在用户未提交改动；不要回滚不属于你的改动。
+- 保留用户和其他 agent 的改动，不回滚、不覆盖、不改无关格式。
 - 不使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。
-- 不自动 commit，除非用户要求。
-- final 回复要说明改了什么、验证了什么、还有什么风险或未做。
+- 不自动 commit 或 push；只有用户明确要求时才执行。
+- 删除前确认目标和替代覆盖；删除重要内容后说明范围与可恢复性。
+
+PR 或 final 必须说明：
+
+- 改了什么，以及事实源是否同步。
+- 复用了哪些现有实现。
+- 是否新增 public export、dependency、package 或生产文件。
+- 删除或替换了哪些旧实现。
+- 生产 diff 的 `+/-` 规模；命中审查信号时说明为什么仍有必要。
+- 实际运行的验证、结果、未运行项和剩余风险。
+
+PR 描述使用 `.github/pull_request_template.md`；交付前可用 `docs/technical/agent-task-template.md` 自检。
 
 <!-- CODEGRAPH_START -->
 
 ## CodeGraph
 
-In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
+如果仓库根目录存在 `.codegraph/`，且任务需要定位实现、理解调用关系或评估影响，先使用 CodeGraph，再用 `rg` 和源码确认细节。
 
-- **MCP tools** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them. `codegraph_node` returns one symbol's source + callers, or reads a whole file with line numbers. If the tools are listed but deferred, load them by name via tool search.
-- **Shell** (always works): `codegraph explore "<symbol names or question>"` and `codegraph node <symbol-or-file>` print the same output.
+- MCP 可用时优先使用其查询、节点、caller/callee 和 impact 能力。
+- CLI 先运行 `codegraph --help` 确认可用命令；当前常用命令包括 `codegraph query <search>`、`codegraph callers <symbol>`、`codegraph callees <symbol>`、`codegraph impact <symbol>`、`codegraph affected [files...]` 和 `codegraph files`。
+- CodeGraph 索引可能落后于 worktree；修改后需要最新关系时先检查 `codegraph status`，必要时运行 `codegraph sync`。
 
-If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
+没有 `.codegraph/` 时跳过，是否建立索引由用户决定。
 
 <!-- CODEGRAPH_END -->

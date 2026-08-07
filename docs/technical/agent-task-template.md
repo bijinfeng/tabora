@@ -18,12 +18,27 @@
 
 不触碰范围：
 
-需要读取的事实源：
+适用的 AGENTS.md 指令链：
 - AGENTS.md
+-
+
+需要读取的事实源：
 - docs/README.md
 -
 
 真实风险：
+
+复用预检：
+- 搜索过的现有组件 / helper / model / schema / package subpath：
+- 现有调用点和公共导出：
+- 选择：直接复用 / 扩展现有实现 / 私有 helper / 公共抽象
+- 若选择公共抽象，真实消费者或稳定边界：
+
+改动规模预估：
+- 生产代码 additions / deletions：
+- 新增生产文件：
+- 新增 dependency / package / public export：
+- 是否命中根 AGENTS.md 审查信号；若是，为什么不能继续收缩：
 
 测试策略：
 - 需要保护的行为 / contract / 已复现缺陷：
@@ -37,9 +52,15 @@
 ```md
 ## Implementation Notes
 
-已确认的现有模式：
+已复用或扩展的现有实现：
 
 正在修改的边界：
+
+新增文件 / dependency / package / public export 及必要性：
+
+已删除或替换的旧调用路径：
+
+当前生产 diff：
 
 需要同步的事实源：
 
@@ -70,6 +91,13 @@ node scripts/regression-summary.mjs
 - 技术方案：
 - 回归基准：
 - docs/README：
+
+复用与改动规模：
+- 复用的现有实现：
+- 新增 public export / dependency / package / 生产文件：
+- 删除或替换的旧实现：
+- 生产 diff（additions / deletions）：
+- 审查信号与必要性说明：
 
 自动化验证：
 - pnpm test:inventory：
