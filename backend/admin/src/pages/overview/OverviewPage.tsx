@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
 import { EmptyState } from "@tabora/ui/empty-state"
+import { InlineError } from "@tabora/ui/inline-error"
 import { useQuery } from "@tanstack/solid-query"
 import { For, Show } from "solid-js"
 
@@ -13,7 +14,7 @@ import { Legend } from "./charts/Legend"
 import { chartColor } from "./charts/palette"
 import { RecordStateChart } from "./charts/RecordStateChart"
 import { RecordTypesChart } from "./charts/RecordTypesChart"
-import { healthStatuses, recentErrors, type Metric } from "./overviewData"
+import { deriveHealthStatuses, recentErrors, type Metric } from "./overviewData"
 import { styles } from "./overview.styles"
 
 export function OverviewPage() {
@@ -49,13 +50,17 @@ export function OverviewPage() {
   const hasByType = () => Object.keys(stats.data?.byType ?? {}).length > 0
   const statsError = () => (stats.error as Error | null)?.message ?? null
   const systemError = () => (system.error as Error | null)?.message ?? null
+  const healthStatuses = () => deriveHealthStatuses(system.data)
 
   return (
     <div {...stylex.attrs(styles.page)}>
       <section {...stylex.attrs(styles.section)}>
         <h2 {...stylex.attrs(styles.sectionTitle)}>系统健康</h2>
+        <Show when={systemError()}>
+          <InlineError>{systemError()}</InlineError>
+        </Show>
         <div {...stylex.attrs(styles.cardGrid)}>
-          <For each={healthStatuses}>
+          <For each={healthStatuses()}>
             {(item) => (
               <div {...stylex.attrs(styles.card)}>
                 <div {...stylex.attrs(styles.cardHead)}>

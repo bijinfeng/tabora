@@ -1,9 +1,6 @@
 import type { BadgeVariant } from "@tabora/ui/badge"
 
-/**
- * 概览页占位数据。
- * TODO(server): 接入自建服务端管理端点后，替换为 health / 计数聚合 / 错误摘要真实数据。
- */
+import type { SystemInfo } from "../system/systemApi"
 
 export type HealthStatus = {
   label: string
@@ -24,11 +21,60 @@ export type RecentError = {
   at: string
 }
 
-export const healthStatuses: HealthStatus[] = [
-  { label: "服务", value: "运行中", variant: "success" },
-  { label: "数据库", value: "已连接", variant: "success" },
-  { label: "邮件 Provider", value: "sendmail", variant: "neutral" },
-  { label: "上传 Provider", value: "local", variant: "warning" },
-]
+/** 把秒数格式化为 “Xd Xh Xm” 简洁形式。 */
+function formatUptime(sec: number): string {
+  const d = Math.floor(sec / 86400)
+  const h = Math.floor((sec % 86400) / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const parts: string[] = []
+  if (d > 0) parts.push(`${d}d`)
+  if (h > 0) parts.push(`${h}h`)
+  parts.push(`${m}m`)
+  return parts.join(" ")
+}
 
+/** 从 system/info 派生系统健康徽章，未加载时返回占位。 */
+export function deriveHealthStatuses(sys: SystemInfo | undefined): HealthStatus[] {
+  if (!sys) {
+    return [
+      { label: "服务", value: "…", variant: "neutral" },
+      { label: "数据库", value: "…", variant: "neutral" },
+      { label: "邮件", value: "…", variant: "neutral" },
+      { label: "存储", value: "…", variant: "neutral" },
+    ]
+  }
+  return [
+    { label: "服务", value: `运行中 · ${formatUptime(sys.server.uptimeSec)}`, variant: "success" },
+    {
+      label: "数据库",
+      value: sys.database.client === "postgres" ? "PostgreSQL" : "SQLite",
+      variant: "success",
+    },
+    {
+      label: "邮件",
+      value: sys.smtp.configured ? (sys.smtp.host ?? "已配置") : "未配置 SMTP",
+      variant: sys.smtp.configured ? "success" : "warning",
+    },
+    {
+      label: "存储",
+      value: sys.storage.provider,
+      variant: sys.storage.provider === "local" ? "warning" : "success",
+    },
+    {
+      label: "认证密钥",
+      value: sys.auth.secretConfigured ? "已配置" : "未配置",
+      variant: sys.auth.secretConfigured ? "success" : "danger",
+    },
+    {
+      label: "邮件队列",
+      value: sys.emailQueue.failed > 0 ? `${sys.emailQueue.failed} 条失败` : "正常",
+      variant: sys.emailQueue.failed > 0 ? "danger" : "success",
+    },
+  ]
+}
+
+/**
+ * 最近同步错误当前无服务端摘要端点，保持空列表。
+ * TODO(server): 接入错误/冲突摘要端点后填充。
+ */
 export const recentErrors: RecentError[] = []
