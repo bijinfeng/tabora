@@ -9,7 +9,7 @@ async function start() {
   const handle = createDb(env)
   await handle.migrate()
 
-  const app = buildApp({ env, handle })
+  const app = buildApp({ env, handle, startedAt: new Date() })
   const server = serve({ fetch: app.fetch, hostname: env.host, port: env.port })
   console.warn(`Tabora server on ${env.baseUrl} (${env.databaseClient})`)
 

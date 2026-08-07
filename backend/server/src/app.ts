@@ -10,16 +10,18 @@ import { createAdminAttachmentRoutes } from "./routes/adminAttachments"
 import { createSyncedRecordRoutes } from "./routes/adminSyncedRecords"
 import { createAttachmentRoutes } from "./routes/attachments"
 import { createSyncRecordRoutes } from "./routes/syncRecords"
+import { createSystemRoutes } from "./routes/system"
 import { createRequireUser } from "./userGuard"
 
 export type BuildAppOptions = {
   env: AppEnv
   handle: DbHandle
+  startedAt: Date
 }
 
 /** 组装 Hono 应用：CORS(credentials)、better-auth handler、健康检查与管理端点。 */
 export function buildApp(options: BuildAppOptions): Hono {
-  const { env, handle } = options
+  const { env, handle, startedAt } = options
   const auth = createAuth(handle, env)
   const app = new Hono()
 
@@ -58,6 +60,10 @@ export function buildApp(options: BuildAppOptions): Hono {
   app.route("/api/attachments", createAttachmentRoutes({ handle, storage }))
   app.use("/admin-api/attachments/*", requireAdmin)
   app.route("/admin-api/attachments", createAdminAttachmentRoutes({ handle, storage }))
+
+  // 系统监控：运行时信息与统计（管理员专用）
+  app.use("/admin-api/system/*", requireAdmin)
+  app.route("/admin-api/system", createSystemRoutes({ handle, env, startedAt }))
 
   return app
 }

@@ -5,17 +5,11 @@ import { authClient } from "./auth/authClient"
 import { AuthGate } from "./auth/AuthGate"
 import { AdminShell } from "./shell/AdminShell"
 import { OverviewPage } from "./pages/overview/OverviewPage"
-import { PlaceholderPage } from "./pages/PlaceholderPage"
 import { UsersPage } from "./pages/users/UsersPage"
 import { SyncedRecordsPage } from "./pages/synced-records/SyncedRecordsPage"
 import { AttachmentsPage } from "./pages/attachments/AttachmentsPage"
 import { AttachmentPoliciesPage } from "./pages/attachments/AttachmentPoliciesPage"
-
-function SystemPage() {
-  return (
-    <PlaceholderPage title="系统监控" description="运行时信息、Provider 配置与错误日志，待接入。" />
-  )
-}
+import { SystemPage } from "./pages/system/SystemPage"
 
 export function App() {
   const session = authClient.useSession()
