@@ -31,3 +31,16 @@ export async function saveSettings(patch: Partial<SettingsView>): Promise<void> 
   })
   if (!res.ok) throw new Error("保存失败")
 }
+
+export async function testSmtp(to: string): Promise<void> {
+  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/settings/test-smtp`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ to }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error?.message || "测试邮件发送失败")
+  }
+}

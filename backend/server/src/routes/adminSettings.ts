@@ -42,5 +42,39 @@ export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailS
     return c.json({ data: { updated: Object.keys(patch) } })
   })
 
+  app.post("/test-smtp", async (c) => {
+    const body = (await c.req.json().catch(() => null)) as { to?: string } | null
+    const targetEmail = body?.to
+
+    if (!targetEmail) {
+      return c.json({ error: { message: "缺少目标邮箱地址" } }, 400)
+    }
+
+    try {
+      const siteName = await handle.settings.get("siteName")
+      await emailService.sendMail({
+        to: targetEmail,
+        subject: `${siteName} - SMTP 配置测试`,
+        html: `
+          <p>您好，</p>
+          <p>这是一封 SMTP 配置测试邮件。</p>
+          <p>如果您收到此邮件，说明 SMTP 配置正确。</p>
+          <p>当前配置：</p>
+          <ul>
+            <li>SMTP 主机：${await handle.settings.get("smtpHost")}</li>
+            <li>SMTP 端口：${await handle.settings.get("smtpPort")}</li>
+            <li>发件人：${await handle.settings.get("smtpFrom")}</li>
+          </ul>
+          <p>此邮件由 ${siteName} 系统自动发送。</p>
+        `,
+        text: `您好，\n\n这是一封 SMTP 配置测试邮件。\n如果您收到此邮件，说明 SMTP 配置正确。\n\n此邮件由 ${siteName} 系统自动发送。`,
+      })
+      return c.json({ data: { sent: true, to: targetEmail } })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "未知错误"
+      return c.json({ error: { message: `邮件发送失败: ${message}` } }, 500)
+    }
+  })
+
   return app
 }

@@ -7,7 +7,7 @@ import { Select } from "@tabora/ui/select"
 import { Switch } from "@tabora/ui/switch"
 import { createResource, createSignal, Show, type JSX } from "solid-js"
 
-import { fetchSettings, saveSettings, type SettingsView } from "./settingsApi"
+import { fetchSettings, saveSettings, testSmtp, type SettingsView } from "./settingsApi"
 import { styles } from "./settings.styles"
 
 function Section(props: { title: string; desc?: string; children: JSX.Element }) {
@@ -28,6 +28,10 @@ export function SettingsPage() {
   const [error, setError] = createSignal<string | null>(null)
   const [saved, setSaved] = createSignal(false)
   const [saving, setSaving] = createSignal(false)
+  const [testing, setTesting] = createSignal(false)
+  const [testResult, setTestResult] = createSignal<{ success: boolean; message: string } | null>(
+    null,
+  )
 
   // resource 到达后初始化表单一次
   const model = () => {
@@ -58,12 +62,44 @@ export function SettingsPage() {
     }
   }
 
+  async function handleTestSmtp() {
+    if (testing()) return
+    const current = form()
+    if (!current?.contactEmail) {
+      setTestResult({ success: false, message: "请先配置联系邮箱作为测试收件地址" })
+      return
+    }
+    setTesting(true)
+    setTestResult(null)
+    try {
+      await testSmtp(current.contactEmail)
+      setTestResult({ success: true, message: "测试邮件已发送，请检查收件箱" })
+    } catch (err) {
+      setTestResult({ success: false, message: (err as Error).message })
+    } finally {
+      setTesting(false)
+    }
+  }
+
   return (
     <div {...stylex.attrs(styles.page)}>
       <Show when={loaded.error}>
         <InlineError>{(loaded.error as Error)?.message ?? "加载失败"}</InlineError>
       </Show>
-      <Show when={model()}>{(m) => <SettingsForm model={m()} patch={patch} />}</Show>
+      <Show when={model()}>
+        {(m) => (
+          <SettingsForm model={m()} patch={patch} onTestSmtp={handleTestSmtp} testing={testing()} />
+        )}
+      </Show>
+      <Show when={testResult()}>
+        {(result) =>
+          result().success ? (
+            <span {...stylex.attrs(styles.savedHint)}>{result().message}</span>
+          ) : (
+            <InlineError>{result().message}</InlineError>
+          )
+        }
+      </Show>
       <Show when={form()}>
         <div {...stylex.attrs(styles.saveBar)}>
           <Show when={error()}>
@@ -84,6 +120,8 @@ export function SettingsPage() {
 function SettingsForm(props: {
   model: SettingsView
   patch: <K extends keyof SettingsView>(key: K, value: SettingsView[K]) => void
+  onTestSmtp: () => void
+  testing: boolean
 }) {
   const m = props.model
   return (
@@ -177,6 +215,11 @@ function SettingsForm(props: {
             placeholder="留空不修改"
           />
         </Field>
+        <div {...stylex.attrs(styles.row)}>
+          <Button variant="secondary" loading={props.testing} onClick={props.onTestSmtp}>
+            发送测试邮件
+          </Button>
+        </div>
       </Section>
     </>
   )
