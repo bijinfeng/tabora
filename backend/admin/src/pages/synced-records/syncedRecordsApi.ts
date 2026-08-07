@@ -1,4 +1,5 @@
 import { ADMIN_API_BASE_URL } from "../../config"
+import type { PaginatedResponse } from "../../utils/pagination"
 
 export type SyncedRecord = {
   id: string
@@ -42,7 +43,10 @@ export async function listSyncedRecords(
   if (query.search) params.set("search", query.search)
   params.set("limit", String(query.limit))
   params.set("offset", String(query.offset))
-  return get(`/admin-api/synced-records?${params.toString()}`)
+  const res = await get<PaginatedResponse<SyncedRecord>>(
+    `/admin-api/synced-records?${params.toString()}`,
+  )
+  return { records: res.data, total: res.meta.total }
 }
 
 export async function fetchSyncedRecordStats(): Promise<SyncedRecordStats> {

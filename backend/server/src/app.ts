@@ -45,6 +45,14 @@ export function buildApp(options: BuildAppOptions): Hono {
     }),
   )
 
+  // 全局错误兜底：未捕获异常统一返回 {error:{message}}，避免泄漏堆栈
+  app.onError((err, c) => {
+    console.error("Unhandled error:", err)
+    const rawStatus = (err as unknown as { status?: number }).status
+    const status = typeof rawStatus === "number" ? rawStatus : 500
+    return c.json({ error: { message: err.message || "Internal server error" } }, status as never)
+  })
+
   app.get("/api/health", (c) => c.json({ status: "ok" }))
 
   // 是否已存在管理员：决定控制台首屏进注册还是登录

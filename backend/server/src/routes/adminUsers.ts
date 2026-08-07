@@ -3,6 +3,7 @@ import { z } from "zod"
 
 import type { DbHandle } from "../db"
 import type { SyncEnv } from "../userGuard"
+import { paginated } from "./pagination"
 
 /** 系统内合法角色白名单。禁止把 role 设为任意字符串（含越权提权）。 */
 const ROLE_VALUES = ["user", "admin"] as const
@@ -45,7 +46,7 @@ export function createAdminUserRoutes(handle: DbHandle, auth: any) {
     const limit = Number(c.req.query("limit")) || 100
     const offset = Number(c.req.query("offset")) || 0
     const { rows, total } = await handle.users.getAll(limit, offset)
-    return c.json({ data: { rows, total, limit, offset } })
+    return c.json(paginated(rows, total, limit, offset))
   })
 
   // 获取单个用户详情

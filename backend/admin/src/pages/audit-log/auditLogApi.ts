@@ -1,3 +1,5 @@
+import type { PaginatedResponse } from "../../utils/pagination"
+
 export interface AuditLogRecord {
   id: number
   userId: string | null
@@ -20,14 +22,7 @@ export interface AuditLogFilters {
   offset?: number
 }
 
-export interface AuditLogListResponse {
-  data: AuditLogRecord[]
-  meta: {
-    total: number
-    limit: number
-    offset: number
-  }
-}
+export type AuditLogListResponse = PaginatedResponse<AuditLogRecord>
 
 export async function fetchAuditLogs(filters: AuditLogFilters = {}): Promise<AuditLogListResponse> {
   const params = new URLSearchParams()

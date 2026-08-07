@@ -2,6 +2,7 @@ import { Hono } from "hono"
 import type { Context } from "hono"
 
 import type { DbHandle } from "../db"
+import { paginated } from "./pagination"
 
 const RECORD_TYPES = ["workspace", "pluginInstance", "plugin", "pluginData"] as const
 
@@ -26,8 +27,9 @@ export function createSyncedRecordRoutes(handle: DbHandle) {
   const queries = handle.syncedRecords
 
   app.get("/", async (c) => {
-    const { rows, total } = await queries.list(parseListQuery(c))
-    return c.json({ records: rows, total })
+    const query = parseListQuery(c)
+    const { rows, total } = await queries.list(query)
+    return c.json(paginated(rows, total, query.limit, query.offset))
   })
 
   app.get("/stats", async (c) => {

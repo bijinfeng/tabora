@@ -1,8 +1,40 @@
 import { Hono } from "hono"
+import { z } from "zod"
 
 import type { DbHandle } from "../db"
 import { SECRET_KEYS, settingDefaults, type SettingKey, type Settings } from "../db/settings"
 import type { EmailService } from "../email"
+import { parseJsonBody } from "./validate"
+
+const emailField = z.string().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+  message: "邮箱格式无效",
+})
+
+/** 设置局部更新：全部字段可选，字段级校验（端口范围、邮箱格式、默认角色）内置于此。 */
+const updateSettingsSchema = z
+  .object({
+    signupEnabled: z.boolean(),
+    defaultRole: z.literal("user", { message: "默认注册角色只能为 user" }),
+    requireEmailVerification: z.boolean(),
+    attachmentMaxSizeBytes: z.number().int().nonnegative(),
+    attachmentMimeWhitelist: z.array(z.string()),
+    siteName: z.string(),
+    contactEmail: emailField,
+    smtpHost: z.string(),
+    smtpPort: z
+      .number()
+      .int()
+      .min(1, "SMTP 端口必须在 1-65535 范围内")
+      .max(65535, "SMTP 端口必须在 1-65535 范围内"),
+    smtpFrom: emailField,
+    smtpUser: z.string(),
+    smtpPassword: z.string(),
+  })
+  .partial()
+
+const testSmtpSchema = z.object({
+  to: z.string().min(1, "缺少目标邮箱地址"),
+})
 
 /** 管理员系统设置：GET(密钥脱敏)、PUT(局部更新)。经 requireAdmin。 */
 export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailService) {
@@ -21,37 +53,9 @@ export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailS
   })
 
   app.put("/", async (c) => {
-    const body = (await c.req.json().catch(() => null)) as Partial<Settings> | null
-    if (!body || typeof body !== "object") {
-      return c.json({ error: { message: "invalid payload" } }, 400)
-    }
-
-    // 验证 SMTP 配置字段
-    if (body.smtpPort !== undefined) {
-      const port = Number(body.smtpPort)
-      if (!Number.isInteger(port) || port < 1 || port > 65535) {
-        return c.json({ error: { message: "SMTP 端口必须在 1-65535 范围内" } }, 400)
-      }
-    }
-
-    if (body.smtpFrom !== undefined && body.smtpFrom !== "") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(body.smtpFrom)) {
-        return c.json({ error: { message: "发件人邮箱格式无效" } }, 400)
-      }
-    }
-
-    if (body.contactEmail !== undefined && body.contactEmail !== "") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(body.contactEmail)) {
-        return c.json({ error: { message: "联系邮箱格式无效" } }, 400)
-      }
-    }
-
-    // 默认注册角色只允许普通角色，禁止把公开注册默认提权为 admin
-    if (body.defaultRole !== undefined && body.defaultRole !== "user") {
-      return c.json({ error: { message: "默认注册角色只能为 user" } }, 400)
-    }
+    const result = await parseJsonBody(c, updateSettingsSchema)
+    if ("response" in result) return result.response
+    const body = result.data
 
     const patch: Partial<Settings> = {}
     for (const key of Object.keys(settingDefaults) as SettingKey[]) {
@@ -102,12 +106,9 @@ export function createAdminSettingsRoutes(handle: DbHandle, emailService: EmailS
   })
 
   app.post("/test-smtp", async (c) => {
-    const body = (await c.req.json().catch(() => null)) as { to?: string } | null
-    const targetEmail = body?.to
-
-    if (!targetEmail) {
-      return c.json({ error: { message: "缺少目标邮箱地址" } }, 400)
-    }
+    const result = await parseJsonBody(c, testSmtpSchema)
+    if ("response" in result) return result.response
+    const targetEmail = result.data.to
 
     try {
       const siteName = await handle.settings.get("siteName")

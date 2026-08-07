@@ -2,6 +2,7 @@ import { Hono } from "hono"
 
 import type { DbHandle } from "../db"
 import type { SyncEnv } from "../userGuard"
+import { paginated } from "./pagination"
 
 type Options = { handle: DbHandle }
 
@@ -39,10 +40,7 @@ export function createAuditLogRoutes(options: Options) {
       offset,
     )
 
-    return c.json({
-      data: result.rows,
-      meta: { total: result.total, limit, offset },
-    })
+    return c.json(paginated(result.rows, result.total, limit, offset))
   })
 
   // GET /admin-api/audit-log/recent - 获取最近操作

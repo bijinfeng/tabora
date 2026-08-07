@@ -1,4 +1,5 @@
 import { ADMIN_API_BASE_URL } from "../../config"
+import type { PaginatedResponse } from "../../utils/pagination"
 
 export type AttachmentFile = {
   id: number
@@ -27,7 +28,10 @@ export async function listFiles(
   limit: number,
   offset: number,
 ): Promise<{ files: AttachmentFile[]; total: number }> {
-  return get(`/admin-api/attachments/files?limit=${limit}&offset=${offset}`)
+  const res = await get<PaginatedResponse<AttachmentFile>>(
+    `/admin-api/attachments/files?limit=${limit}&offset=${offset}`,
+  )
+  return { files: res.data, total: res.meta.total }
 }
 
 export async function deleteFile(id: number): Promise<void> {
