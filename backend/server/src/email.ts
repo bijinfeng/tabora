@@ -34,9 +34,17 @@ export function createEmailService(handle: DbHandle) {
 
   /** 发送邮件（简单封装，支持 HTML） */
   async function sendMail(options: { to: string; subject: string; text?: string; html?: string }) {
-    const transporter = await getTransporter()
-    const from = await handle.settings.get("smtpFrom")
-    return transporter.sendMail({ from, ...options })
+    try {
+      const transporter = await getTransporter()
+      const from = await handle.settings.get("smtpFrom")
+      const info = await transporter.sendMail({ from, ...options })
+      console.warn(`[EmailService] Email sent successfully: ${info.messageId} to ${options.to}`)
+      return info
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`[EmailService] Failed to send email to ${options.to}: ${message}`)
+      throw new Error(`邮件发送失败: ${message}`)
+    }
   }
 
   /** 重置缓存（设置变更后调用） */

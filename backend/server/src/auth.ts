@@ -21,34 +21,48 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
       enabled: true,
       requireEmailVerification: true,
       async sendResetPassword({ user, url }) {
-        const siteName = await handle.settings.get("siteName")
-        await emailService.sendMail({
-          to: user.email,
-          subject: `${siteName} - 重置密码`,
-          html: `
+        try {
+          const siteName = await handle.settings.get("siteName")
+          await emailService.sendMail({
+            to: user.email,
+            subject: `${siteName} - 重置密码`,
+            html: `
             <p>您好，</p>
             <p>您请求重置密码。请点击下方链接完成重置：</p>
             <p><a href="${url}">${url}</a></p>
             <p>如果您没有请求重置密码，请忽略此邮件。</p>
             <p>此链接将在一段时间后失效。</p>
           `,
-          text: `您好，\n\n您请求重置密码。请访问以下链接完成重置：\n\n${url}\n\n如果您没有请求重置密码，请忽略此邮件。\n此链接将在一段时间后失效。`,
-        })
+            text: `您好，\n\n您请求重置密码。请访问以下链接完成重置：\n\n${url}\n\n如果您没有请求重置密码，请忽略此邮件。\n此链接将在一段时间后失效。`,
+          })
+        } catch (error) {
+          console.error("[Auth] Failed to send password reset email:", error)
+          throw new APIError("BAD_REQUEST", {
+            message: "密码重置邮件发送失败，请检查 SMTP 配置或稍后重试",
+          })
+        }
       },
       async sendVerificationEmail({ user, url }: { user: any; url: string }) {
-        const siteName = await handle.settings.get("siteName")
-        await emailService.sendMail({
-          to: user.email,
-          subject: `${siteName} - 验证邮箱`,
-          html: `
+        try {
+          const siteName = await handle.settings.get("siteName")
+          await emailService.sendMail({
+            to: user.email,
+            subject: `${siteName} - 验证邮箱`,
+            html: `
             <p>您好，</p>
             <p>欢迎注册 ${siteName}！请点击下方链接验证您的邮箱：</p>
             <p><a href="${url}">${url}</a></p>
             <p>如果您没有注册账号，请忽略此邮件。</p>
             <p>此链接将在一段时间后失效。</p>
           `,
-          text: `您好，\n\n欢迎注册 ${siteName}！请访问以下链接验证您的邮箱：\n\n${url}\n\n如果您没有注册账号，请忽略此邮件。\n此链接将在一段时间后失效。`,
-        })
+            text: `您好，\n\n欢迎注册 ${siteName}！请访问以下链接验证您的邮箱：\n\n${url}\n\n如果您没有注册账号，请忽略此邮件。\n此链接将在一段时间后失效。`,
+          })
+        } catch (error) {
+          console.error("[Auth] Failed to send verification email:", error)
+          throw new APIError("BAD_REQUEST", {
+            message: "验证邮件发送失败，请检查 SMTP 配置或稍后重试",
+          })
+        }
       },
     },
     plugins: [admin(), bearer()],
