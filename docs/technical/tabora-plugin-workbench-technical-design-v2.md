@@ -4,7 +4,7 @@
 
 日期：2026-06-08
 
-状态：当前架构与协议事实源；实施阶段见 §17。
+状态：当前架构与协议事实源；当前实现地图见 §17。
 
 关联文档：
 
@@ -92,13 +92,13 @@ packages/
   platform-kernel/      # 插件生命周期、Registry、EventBus、权限、快捷键注册（增强）
   ai-runtime/           # AI Runtime adapter，P0 基于 Vercel AI SDK
   orchestrator/         # 新增：布局切换、区域映射、搜索路由、拖拽、展开、设置导航
-  workbench-app/        # Phase X1 起步：跨 shell 的 workbench composition 承载层
-  host-adapters/        # Phase X1 起步：Web / extension / desktop host capability adapters
+  workbench-app/        # 跨 shell 的 workbench composition 承载层
+  host-adapters/        # Web / extension / desktop host capability adapters
   storage/              # IndexedDB 持久化（当前单版本 schema、quota / 错误处理）
   theme/                # Token 应用（不变）
   brand/                # 品牌图标源文件、品牌组件、静态图标路径导出
   ui/                   # 插件内容区基础组件（按 V2 组件规范扩展，不承接宿主容器）
-  builtin-plugin-registry/ # Phase X1.5：默认 builtin 装配
+  builtin-plugin-registry/ # 默认 builtin 装配
   official-plugins/     # 官方插件集合
   workbench-shell/      # Shell host 样式与通用宿主容器组件
 ```
@@ -113,22 +113,22 @@ packages/
 - 默认工作区 preset 的归属也已与样式装配保持一致：`@tabora/workbench-app` 不再直接依赖 `@tabora/official-plugins` 或内置官方 preset 常量；shell 入口统一从 `@tabora/builtin-plugin-registry` 注入默认 builtin plugin 列表、默认 workspace preset 与 shell 装配配置，再由 runtime bootstrap / session seed / shell initial visual state / host command-layout bridge 显式消费。
 - Package 聚合入口只用于真实 shell、插件 pack 或完整公开 API 的装配。测试和业务代码只消费 preset、workspace/session、import-export、grid、background resolver、plugin manifest 或 UI primitive 等独立能力时，必须优先使用与构建入口一致的稳定 package subpath，避免加载无关插件、UI 或 shell 模块图；新增这类 subpath 时应同步 source/publish exports、构建 entry 和架构 contract。Builtin plugin 发现阶段只加载 manifest、启用状态和样式映射；包含 view 的实现通过 lazy descriptor 在激活前并行 preload，再按插件声明顺序执行 `activate`，单个 loader 失败继续由 kernel 记录为局部插件错误，不阻断后续插件。
 - `@tabora/ui/component-docs` 只同步导出组件文档 metadata 与类型；真实 demo 由 `@tabora/ui/component-docs/renderers` 的显式动态 import registry 按 ID 加载。官网单组件路由可立即挂载对应 demo，“全部组件”目录只在卡片接近可视区时挂载，并对加载中和失败提供局部状态。新增文档组件时必须同时维护 metadata 与 loader ID；catalog contract 测试校验二者一一对应，但不应重复渲染已有独立行为测试覆盖的全部组件。
-- Phase X2 已完成布局协议语义收口：`HostActionId` 已包含 `layout-switch`、`shortcuts`、`plugin-manager` 等稳定动作 ID，布局切换不再伪装为 `theme` action；`RegionSlot` 为泛型渲染结果契约，`plugin-api` 不绑定 Solid JSX，workbench shell 的 `createLayoutEngine` 会按 `region.accepts` 过滤实例，避免 extension point 错配；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖，保持第三方 layout 依赖面隔离；playground / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误 fallback 会记录状态并触发 toast。
-- Phase X3-X8 插件系统可扩展性收尾已完成：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和 safe layout fallback 属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
+- 布局协议语义已收口：`HostActionId` 已包含 `layout-switch`、`shortcuts`、`plugin-manager` 等稳定动作 ID，布局切换不再伪装为 `theme` action；`RegionSlot` 为泛型渲染结果契约，`plugin-api` 不绑定 Solid JSX，workbench shell 的 `createLayoutEngine` 会按 `region.accepts` 过滤实例，避免 extension point 错配；官方与 community layout package 已移除对 `@tabora/workbench-shell` 的依赖，保持第三方 layout 依赖面隔离；playground / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误 fallback 会记录状态并触发 toast。
+- 插件系统可扩展性已收口：layout switcher、drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和 safe layout fallback 属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。
 - `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope/content、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope/content`、workspace canonical contribution ref（含 `activeBackgroundProvider`）、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
 - settings panel 的 `content` 必须显式选择 `{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`。Kernel 为 schema provider 提供受 manifest 声明限制的 registry，停用插件时与 view 一起注销；宿主不再通过 `SettingsPanelViewProps.host` 注入账号或同步业务 API。
-- 2026-07-13 AI Runtime P0 补充：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 `AiRuntimeBridge` 并传入 kernel；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
-- 2026-06-07 发布前兼容性清理补充：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
+- AI Runtime P0：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 `AiRuntimeBridge` 并传入 kernel；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
+- 发布前兼容性边界：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
 - `@tabora/plugin-api` 当前额外导出 `workbenchSearchSettingsSchema`、`pluginInstanceSchema`、`workspaceSchema`、`workspaceExportSchema` 作为当前工作台协议事实源。`WorkbenchSearchSettings` 当前协议为完整显式配置：`defaultProviderId: string`、`enabledProviderIds: string[]`，并要求默认 provider 必须属于启用列表。workspace hydration、import/export 和 preset 链路统一走 schema 校验；缺失字段、旧导出或不满足约束的数据直接拒绝，不再按“首个 provider”或“全量 providers”做 silent backfill。
 - `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
 - `@tabora/storage` 已引入 `StorageAdapter` port；Web 默认 adapter 包装当前 Dexie/IndexedDB repository，`workbench-app` bootstrap 可注入 fake/memory adapter 进行测试或未来跨平台替换。当前上线前 schema 采用单一 Dexie version，直接声明 MVP 所需表，不保留旧版本迁移/backfill 路径。
 - 插件依赖边界已由测试守卫：官方、community、example 插件源码和 package manifest 不得依赖 `@tabora/workbench-shell`、`@tabora/storage` 或 app 源码/package。
-- 2026-06-09 架构优化收口补充：`@tabora/orchestrator` 不再依赖 `@tabora/storage` 或 `solid-js`；playground / extension 生产依赖不再直接声明官方插件、layout package 或 core runtime package；`WidgetSize -> grid span` 映射统一由 `@tabora/plugin-api` 的 `widgetGeometry` 导出，避免 workbench grid、widget shell 和 drag sort model 三套映射漂移。
-- 2026-06-09 架构优化第二轮补充：search provider 在 runtime catalog 中带有 `pluginId/pluginName` owner descriptor，inline search 和 shell `CommandPalette` 的外部打开都使用 provider owner 进行 `external-open` 权限判断；插件禁用会执行 activation disposer 并注销已注册 view，active contribution list 只来自 enabled plugin，plugin summaries 仍保留全部插件用于管理面板；`LayoutHostAPI.getGlobalActions("menu")` 成为第一等全局动作 surface；safe layout fallback 也会用 `data-tabora-plugin-id` 包裹 widget view，保证 plugin scoped styles 生效；runtime context 的 `getConfig/setConfig` 临时 API 已删除，实例数据通过 widget props 的 `data` 与 scoped data host 显式传递；Dexie schema 仅保留当前有 repository/runtime path 的 MVP 表，搜索历史继续作为 plugin-owned workspace data 存于 `pluginData`。
+- 架构边界：`@tabora/orchestrator` 不依赖 `@tabora/storage` 或 `solid-js`；playground / extension 生产依赖不直接声明官方插件、layout package 或 core runtime package；`WidgetSize -> grid span` 映射统一由 `@tabora/plugin-api` 的 `widgetGeometry` 导出，避免 workbench grid、widget shell 和 drag sort model 三套映射漂移。
+- 运行时收口：search provider 在 runtime catalog 中带有 `pluginId/pluginName` owner descriptor，inline search 和 shell `CommandPalette` 的外部打开都使用 provider owner 进行 `external-open` 权限判断；插件禁用会执行 activation disposer 并注销已注册 view，active contribution list 只来自 enabled plugin，plugin summaries 仍保留全部插件用于管理面板；`LayoutHostAPI.getGlobalActions("menu")` 成为第一等全局动作 surface；safe layout fallback 也会用 `data-tabora-plugin-id` 包裹 widget view，保证 plugin scoped styles 生效；runtime context 的 `getConfig/setConfig` 临时 API 已删除，实例数据通过 widget props 的 `data` 与 scoped data host 显式传递；Dexie schema 仅保留当前有 repository/runtime path 的 MVP 表，搜索历史继续作为 plugin-owned workspace data 存于 `pluginData`。
 - 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。bootstrap 可接收不带 Dexie database 的 host storage adapter；此类宿主仍使用统一 repository port，但不提供基于 Dexie 的导入/导出。FNOS 以 HTTP adapter 把 repository 操作交给本地 Fastify + SQLite。账号与同步则由 `official.account-sync` 可选插件装配，避免纯本地宿主初始化认证与同步 runtime。
-- 2026-06-06 治理收口补充：`@tabora/workbench-app` 已新增 `shellController` 纯 helper，统一承接 plugin owner `external-open` 权限判断，以及基于切换前 workspace/instances 生成 layout switch plan 与 snapshot 的纯模型，避免 shell 在实例迁移后再生成失真的 snapshot；同日又承接了 theme/background/grid/workspace session/import-export 等共享 shell helper，extension 不再通过相对路径直接 import playground 源码。
-- 2026-06-07 搜索与主题治理补充：`@tabora/workbench-app` 的 search helper / state、`@tabora/orchestrator` 的搜索模型、以及官方 search/settings 插件已统一删除“首项 provider”隐式兜底。theme resolver 仅在精确命中 theme 时返回对应 token；未命中时应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再回退到 `themes[0]`。同日 `CommandPalette` 与 `SearchCommandBar` 的 provider token、`@` 路由和 suggestions 生成进一步收敛到 `@tabora/orchestrator` 的共享 model，官方插件不再维护独立的 search-model 转导出层；`SearchViewProps` 也已升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，搜索栏只负责渲染和事件转发。
-- 2026-06-07 治理自动化补充：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 目前除 architecture/check/test/build 外，已新增按路径触发的 `browser-smoke` job，执行 `pnpm exec playwright install --with-deps chromium` + `pnpm test:e2e`；nightly workflow 继续保留全量 browser smoke，release/deploy workflow 在打包前输出 regression summary。`check:architecture` 同步新增 workflow contract 守卫，禁止 PR browser smoke job、路径门禁或 Chromium 安装步骤漂移。
+- 组合与治理：`@tabora/workbench-app` 的 `shellController` 纯 helper 统一承接 plugin owner `external-open` 权限判断，以及基于切换前 workspace/instances 生成 layout switch plan 与 snapshot 的纯模型；theme/background/grid/workspace session/import-export 等共享 shell helper 也由该包承接，extension 不再通过相对路径直接 import playground 源码。
+- 搜索与主题治理：`@tabora/workbench-app` 的 search helper / state、`@tabora/orchestrator` 的搜索模型、以及官方 search/settings 插件已统一删除“首项 provider”隐式兜底。theme resolver 仅在精确命中 theme 时返回对应 token；未命中时应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再回退到 `themes[0]`。`CommandPalette` 与 `SearchCommandBar` 的 provider token、`@` 路由和 suggestions 生成进一步收敛到 `@tabora/orchestrator` 的共享 model，官方插件不再维护独立的 search-model 转导出层；`SearchViewProps` 也已升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，搜索栏只负责渲染和事件转发。
+- 治理自动化：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 除 architecture/check/test/build 外，已新增按路径触发的 `browser-smoke` job，执行 `pnpm exec playwright install --with-deps chromium` + `pnpm test:e2e`；nightly workflow 继续保留全量 browser smoke，release/deploy workflow 在打包前输出 regression summary。`check:architecture` 同步新增 workflow contract 守卫，禁止 PR browser smoke job、路径门禁或 Chromium 安装步骤漂移。
 - playground 当前通过 `apps/playground/src/workbenchComposition.ts` 组装 `@tabora/workbench-app`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`；playground / extension 的 `App.tsx` 已收敛为薄 wrapper，共享宿主交互编排统一落在 `@tabora/workbench-app`。`workbench-app/src` 已按垂直切片重组，目录结构如下：
   - `shell/`：组合根与跨切片装配——`WorkbenchShellApp.tsx`（薄 composition root，现含 `WorkbenchShellProvider` 上下文）、`WorkbenchShellContext.tsx`（shell bundle context）、`WorkbenchShellState.ts`（聚合 6 个 domain store）、`WorkbenchShellControllerRuntime.ts`（命令/拖拽/搜索/widget/view 聚合）、`WorkbenchShellViewRuntime.ts`、`WorkbenchShellInstanceRenderer.tsx`。
   - `runtime/`：kernel bootstrap 与宿主运行时——`bootstrap.ts`、`WorkbenchRuntimeStore.ts`（kernelReady / pluginRecords / toasts）、`WorkbenchShellRuntimeState.ts`（discover/boot/kernel 事件接线）、`WorkbenchShellHostRuntime.ts`（host actions/dispose bridge）、`WorkbenchShellHostActions.ts`（rail action / grid 持久化 / 焦点定位）。
@@ -1225,64 +1225,23 @@ plugins/
   examples/
 ```
 
-## 17. 实施路线
+## 17. 当前实现地图
 
-### Phase A: 编排层基础（1-2 周）✅ 已完成
+本节只记录当前职责和可验证入口，不维护已经完成的阶段计划。实现状态以源码、测试和
+`docs/technical/tabora-regression-baseline.md` 为准。
 
-1. 创建 `@tabora/orchestrator` 包。已完成。
-2. 实现 `PluginCatalog`：插件贡献枚举、layout/search/widget 查询、settings panel 收集和插件摘要。已完成。
-3. 实现 `createLayoutEngine`：通用 region → 实例映射 + 卡片壳/搜索表面渲染注入 + LayoutHostAPI 构造。已完成并归入 `@tabora/workbench-app`，取代旧的 `region-renderer.tsx`，避免 `@tabora/orchestrator` 绑定 JSX renderer。
-4. 重构 playground `App.tsx`：renderActiveLayout 从具体官方布局硬编码切换为协议驱动；新增 `renderSafeLayout` 兜底；用 `LayoutBoundary` 隔离布局错误。已完成。
-5. 验证 Dashboard 布局功能不变。已完成。
+| 领域 | 当前所有者 | 主要入口 |
+| --- | --- | --- |
+| 插件协议与校验 | `@tabora/plugin-api` | manifest、contribution、workspace、schema |
+| 生命周期与权限 | `@tabora/platform-kernel` | plugin kernel、registry、runtime context、permission bridge |
+| 跨插件纯模型 | `@tabora/orchestrator` | catalog、search、command、shortcut、context menu、layout switch、workspace preset |
+| 工作台组合与状态 | `@tabora/workbench-app` | runtime bootstrap、workspace/session、layout renderer、surface、shell controller |
+| 宿主视图与错误隔离 | `@tabora/workbench-shell` | widget card shell、settings host、toast host、layout boundary |
+| 持久化与导入导出 | `@tabora/storage` | repository、storage adapter、workspace snapshot |
+| 默认装配 | `@tabora/builtin-plugin-registry` | builtin plugins、workspace preset、shell config |
 
-### Phase A.1: 布局 package 拆分 + 第三方验证 ✅ 已完成
-
-1. `plugin-api` 新增 `LayoutViewProps`/`RegionSlot`/`LayoutHostAPI`/`HostActionItem` 契约类型。
-2. `manifestSchema` 新增最小强制 schema：layout 必须含至少一个 `accepts:["widget"]` 的 region 且 `view` 字段必填。
-3. `workbench-shell` 抽出 `WidgetCardShell`（卡片壳）和 `LayoutBoundary`（错误边界）。
-4. 把官方 dashboard/focus 布局放入同一个官方布局 package（`plugins/official/layout-dashboard`），依赖面只有 plugin-api/platform-kernel/solid-js 等布局所需依赖（隔离硬证据）。
-5. 新增 `plugins/community/layout-diy-masonry`：第三方差异化 DIY 布局，验证只靠公开契约就能实现瀑布流分列、浮动菜单、自定义图标等创新形态。
-6. `official-plugins` 装配层引入布局 package，删除原 `layout-workbench-*.tsx` 内联实现。
-7. `App.tsx` 引入 `WidgetCardShell` 卡片壳，将拖拽/双击/右键/移除等交互通过 `WidgetHostCallbacks` 闭包注入；layout view 负责包裹 10 列主网格并同步单元格行高，`WidgetCardShell` 根据 `@tabora/plugin-api/widgetGeometry` 的 widget size span 写入 grid CSS 变量，避免协议驱动布局丢失当前原型的 `1x1 / 2x1 / 2x2 / 4x2` 卡片排布。
-
-### Phase X1-X8: 插件系统可扩展性收尾 ✅ 已完成
-
-1. Shell 工程边界收口：`workbench-app` / `host-adapters` / `workbench-shell` / builtin registry 边界已建立。
-2. Layout switcher 与 drag sort model 已下沉到 `@tabora/orchestrator`，playground / extension 复用同一纯模型。
-3. Command contribution、keybinding registry、widget context menu contribution 已建立，shell 命令和快捷键通过 catalog/registry 消费。
-4. Settings panel `section/scope` 已成为显式协议；widget instance settings path 已建立。
-5. `workspacePresets` 已成为默认工作区装配协议，官方默认 workspace seed 已迁为 preset contribution。
-6. Host capability、supported platform、required capability、plugin manager compatibility reason 已建立。
-7. `StorageAdapter` port 与 background source contract 已建立。
-8. Plugin loader abstraction、可信本地 package format、API major compatibility check 已建立；缺失 `apiVersion` 的 manifest 被拒绝。
-9. 插件依赖边界测试已覆盖官方、community、example 插件源码和 package manifest。
-
-### Phase B: 布局切换（已由 Phase X3 覆盖）✅ 已完成
-
-1. 实现 `LayoutSwitcher`：workspace snapshot、实例迁移算法、unplaced 状态
-2. 在设置中心添加布局选择器
-3. 实现 `platform.safe-layout` fallback。已完成基础（renderSafeLayout）。
-4. 开发 `official.layout.workbench-focus` 布局。已完成（由 dashboard layout package 同插件贡献）。
-
-### Phase C: 搜索增强（核心能力已完成）
-
-1. `@tabora/orchestrator` 已提供 `search-model`：provider token、`@` 语法路由、默认 provider 和搜索 URL。
-2. Dashboard 内联搜索建议已由官方 `SearchCommandBar` 和 `command-palette-model` 提供。
-3. `CommandPalette` 已支持动态结果、分组显示和 `⌘K` 浮层入口。
-4. 搜索历史已通过 `workbench-app` 的 workspace plugin data 持久化。
-
-### Phase D: 交互增强（部分已由 Phase X4/X5 覆盖）
-
-1. 已于 2026-06-07 实现 `WorkbenchDragController` + `WorkbenchShellDragState`：实时交换算法、5px 阈值、pointer 统一输入与松手持久化
-2. 实现 `ExpandManager`：6 种类型的展开视图渲染器
-3. 实现 `ContextMenuManager`：事件委托、默认 + 插件自定义菜单。已完成模型与 UI 消费路径。
-4. 实现 `ToastManager`：堆叠、自动消失、带 action
-
-### Phase E: 快捷键与设置（已由 Phase X4/X5 覆盖）✅ 已完成
-
-1. 实现 `ShortcutRegistry`：全局 + 插件快捷键、冲突检测
-2. 重构 Settings host：侧栏导航、标签页切换
-3. 实现 `SettingsNavigator`：组织固定 tab，并挂载 `settings-panel` contributions
+关键用户路径由 `pnpm test`、`pnpm check`、`pnpm test:e2e` 和回归基准中的分层检查保护；
+新增协议、storage、shell 或发布能力时，按回归基准同步扩展事实源和验证层级。
 
 ## 18. 风险与应对
 
@@ -1295,4 +1254,3 @@ plugins/
 | 严格 schema 拒绝导致导入可用性摩擦         | 保持协议严格，但宿主必须提供结构化诊断与可读错误，不做静默失败        |
 | 背景远端资源与网络权限语义混淆             | 现阶段仅视为受信任包资产声明；未来运行时拉取背景必须并入 network 权限 |
 | Dexie 细节经 `database?` 反向渗透到 shell  | 约束业务代码只依赖 repositories，把 `database` 视为调试/测试句柄      |
-| orchestrator 引入后 playground 回归风险    | Phase A 先重构再扩展，保证每次 commit 后 Dashboard 布局可正常运行     |

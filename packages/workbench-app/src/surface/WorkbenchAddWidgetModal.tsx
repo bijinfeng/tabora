@@ -13,14 +13,13 @@ import type { ShellTranslation } from "../i18n"
 import type { AvailableWidget } from "./WorkbenchShellChrome.types"
 import { styles } from "./WorkbenchAddWidgetModal.styles"
 
-type Category = "info" | "productivity" | "tools" | "installed"
+const CATEGORIES = [
+  { id: "info", label: "信息" },
+  { id: "productivity", label: "生产力" },
+  { id: "tools", label: "工具" },
+] as const
 
-const CATEGORY_LABELS: Record<Category, string> = {
-  info: "信息",
-  productivity: "生产力",
-  tools: "工具",
-  installed: "已安装",
-}
+type Category = (typeof CATEGORIES)[number]["id"]
 
 const SIZE_OPTIONS: WidgetSize[] = ["S", "M", "L", "XL"]
 
@@ -307,12 +306,12 @@ function LeftColumn(props: {
           active={props.activeCategory === "all"}
           onClick={() => props.onCategoryChange("all")}
         />
-        <For each={["info", "productivity", "tools", "installed"] as const}>
-          {(cat) => (
+        <For each={CATEGORIES}>
+          {(category) => (
             <CategoryTab
-              label={props.t(`chrome.addWidget.tab.${cat}`, CATEGORY_LABELS[cat])}
-              active={props.activeCategory === cat}
-              onClick={() => props.onCategoryChange(cat)}
+              label={props.t(`chrome.addWidget.tab.${category.id}`, category.label)}
+              active={props.activeCategory === category.id}
+              onClick={() => props.onCategoryChange(category.id)}
             />
           )}
         </For>

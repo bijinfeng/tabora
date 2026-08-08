@@ -48,146 +48,71 @@ export function createChangeDetector(config: ChangeDetectorConfig) {
     })
   }
 
+  function createCoreChange(
+    entityType: string,
+    payload: Record<string, unknown>,
+    timestampSource: Record<string, unknown>,
+    timestampField?: string,
+    deleted = false,
+  ): LocalChange {
+    const timestamp = timestampField ? timestampSource[timestampField] : undefined
+    return {
+      scope: "core",
+      entityType,
+      recordKey: payload.id as string,
+      payload,
+      clientUpdatedAt: typeof timestamp === "string" ? timestamp : new Date().toISOString(),
+      deleted,
+    }
+  }
+
+  function registerCoreHooks(options: {
+    table: any
+    entityType: string
+    createTimestampField: string
+    updateTimestampField?: string
+  }) {
+    const { table, entityType, createTimestampField, updateTimestampField } = options
+
+    registerHook(table, "creating", (_primKey: any, obj: any, transaction: SourceTransaction) => {
+      enqueueAfterCommit(transaction, createCoreChange(entityType, obj, obj, createTimestampField))
+    })
+
+    registerHook(
+      table,
+      "updating",
+      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
+        enqueueAfterCommit(
+          transaction,
+          createCoreChange(entityType, { ...obj, ...mods }, mods, updateTimestampField),
+        )
+      },
+    )
+
+    registerHook(table, "deleting", (_primKey: any, obj: any, transaction: SourceTransaction) => {
+      enqueueAfterCommit(transaction, createCoreChange(entityType, obj, obj, undefined, true))
+    })
+  }
+
   function start() {
     if (running) return
     running = true
-    // Monitor workspaces table
-    registerHook(
-      database.workspaces,
-      "creating",
-      (_primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "workspace",
-          recordKey: obj.id,
-          payload: obj,
-          clientUpdatedAt: obj.updatedAt ?? new Date().toISOString(),
-          deleted: false,
-        })
-      },
-    )
-
-    registerHook(
-      database.workspaces,
-      "updating",
-      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "workspace",
-          recordKey: obj.id,
-          payload: { ...obj, ...mods },
-          clientUpdatedAt: mods.updatedAt ?? new Date().toISOString(),
-          deleted: false,
-        })
-      },
-    )
-
-    registerHook(
-      database.workspaces,
-      "deleting",
-      (_primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "workspace",
-          recordKey: obj.id,
-          payload: obj,
-          clientUpdatedAt: new Date().toISOString(),
-          deleted: true,
-        })
-      },
-    )
-
-    // Monitor pluginInstances table
-    registerHook(
-      database.pluginInstances,
-      "creating",
-      (_primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "pluginInstance",
-          recordKey: obj.id,
-          payload: obj,
-          clientUpdatedAt: obj.createdAt ?? new Date().toISOString(),
-          deleted: false,
-        })
-      },
-    )
-
-    registerHook(
-      database.pluginInstances,
-      "updating",
-      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "pluginInstance",
-          recordKey: obj.id,
-          payload: { ...obj, ...mods },
-          clientUpdatedAt: new Date().toISOString(),
-          deleted: false,
-        })
-      },
-    )
-
-    registerHook(
-      database.pluginInstances,
-      "deleting",
-      (_primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "pluginInstance",
-          recordKey: obj.id,
-          payload: obj,
-          clientUpdatedAt: new Date().toISOString(),
-          deleted: true,
-        })
-      },
-    )
-
-    // Monitor plugins table
-    registerHook(
-      database.plugins,
-      "creating",
-      (_primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "plugin",
-          recordKey: obj.id,
-          payload: obj,
-          clientUpdatedAt: obj.installedAt ?? new Date().toISOString(),
-          deleted: false,
-        })
-      },
-    )
-
-    registerHook(
-      database.plugins,
-      "updating",
-      (mods: any, _primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "plugin",
-          recordKey: obj.id,
-          payload: { ...obj, ...mods },
-          clientUpdatedAt: new Date().toISOString(),
-          deleted: false,
-        })
-      },
-    )
-
-    registerHook(
-      database.plugins,
-      "deleting",
-      (_primKey: any, obj: any, transaction: SourceTransaction) => {
-        enqueueAfterCommit(transaction, {
-          scope: "core",
-          entityType: "plugin",
-          recordKey: obj.id,
-          payload: obj,
-          clientUpdatedAt: new Date().toISOString(),
-          deleted: true,
-        })
-      },
-    )
+    registerCoreHooks({
+      table: database.workspaces,
+      entityType: "workspace",
+      createTimestampField: "updatedAt",
+      updateTimestampField: "updatedAt",
+    })
+    registerCoreHooks({
+      table: database.pluginInstances,
+      entityType: "pluginInstance",
+      createTimestampField: "createdAt",
+    })
+    registerCoreHooks({
+      table: database.plugins,
+      entityType: "plugin",
+      createTimestampField: "installedAt",
+    })
 
     function syncCollectionFor(value: {
       pluginId?: unknown

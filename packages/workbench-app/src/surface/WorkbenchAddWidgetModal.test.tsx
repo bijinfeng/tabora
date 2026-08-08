@@ -106,11 +106,11 @@ describe("WorkbenchAddWidgetModal", () => {
     trigger.remove()
   })
 
-  it("首个筛选 tab 是「全部」且默认选中", () => {
+  it("筛选 tab 只展示有实际分类的选项，且默认选中「全部」", () => {
     const { overlay, dispose } = mount()
 
     const tabs = [...overlay.querySelectorAll("[role='tab']")] as HTMLElement[]
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["全部", "信息", "生产力", "工具", "已安装"])
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["全部", "信息", "生产力", "工具"])
     expect(tabs[0]?.getAttribute("aria-selected")).toBe("true")
     dispose()
   })
