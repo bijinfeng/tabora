@@ -19,7 +19,6 @@ import type { ShellTranslation } from "../i18n"
 import { persistWorkbenchGridOrder } from "../runtime/WorkbenchShellHostActions"
 import {
   buildWorkbenchContextMenuModel,
-  buildWorkbenchSearchableWidgets,
   findWorkbenchWidgetInstance,
 } from "./WorkbenchShellWidgets"
 import {
@@ -28,7 +27,7 @@ import {
   resizeWorkbenchWidget,
 } from "./WorkbenchShellWidgetState"
 import { requireWorkspace } from "../shared/WorkbenchShellUtils"
-import type { WidgetRenderModel } from "../shared/shellHelpers"
+import { buildSearchableWidgetEntries, type WidgetRenderModel } from "../shared/shellHelpers"
 
 type WidgetIdentity = Pick<PluginInstance, "contribution">
 type WidgetContextMenuState = { x: number; y: number; instanceId: string } | null
@@ -239,7 +238,7 @@ export function createWorkbenchWidgetController(options: {
   }
 
   function buildSearchableWidgets() {
-    return buildWorkbenchSearchableWidgets({
+    return buildSearchableWidgetEntries({
       instances: options.getInstances(),
       resolveWidgetContribution: options.resolveWidgetContribution,
       buildFocusAction: (instanceId) => () => {

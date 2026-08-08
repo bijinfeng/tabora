@@ -1,34 +1,19 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
+import { makeWidgetViewProps } from "../../test-support/widgetViewProps"
 import { QuickLinksCard } from "./quick-links-card"
 
-function makeProps(overrides?: Partial<WidgetViewProps>): WidgetViewProps {
-  return {
+function makeProps(overrides: Partial<WidgetViewProps> = {}): WidgetViewProps {
+  return makeWidgetViewProps({
     instanceId: "quick-links-1",
     pluginId: "official.widgets.quick-links",
     contributionId: "quick-links",
     size: "M",
     supportedSizes: ["S", "M", "L"],
-    config: {
-      links: [],
-    },
-    data: {
-      get: vi.fn().mockResolvedValue(undefined),
-      save: vi.fn().mockResolvedValue(undefined),
-    },
-    host: {
-      updateConfig: vi.fn().mockResolvedValue(undefined),
-      removeInstance: vi.fn().mockResolvedValue(undefined),
-      requestResize: vi.fn().mockResolvedValue(undefined),
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
-      openExpand: vi.fn(),
-      showToast: vi.fn(),
-      openExternal: vi.fn().mockResolvedValue(true),
-    },
+    config: { links: [] },
     ...overrides,
-  }
+  })
 }
 
 async function flushMount() {

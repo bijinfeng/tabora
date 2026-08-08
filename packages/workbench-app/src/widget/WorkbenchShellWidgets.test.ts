@@ -1,14 +1,8 @@
-import type {
-  PluginInstance,
-  WidgetContextMenuContribution,
-  WidgetContribution,
-  WidgetSize,
-} from "@tabora/plugin-api"
+import type { PluginInstance, WidgetContextMenuContribution, WidgetSize } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 
 import {
   buildWorkbenchContextMenuModel,
-  buildWorkbenchSearchableWidgets,
   findWorkbenchWidgetInstance,
   mergeWorkbenchGridOrder,
   resolveWorkbenchContextMenuInstance,
@@ -37,18 +31,6 @@ function renderModel(size: WidgetSize = "M"): WidgetRenderModel {
     icon: "pencil",
     currentSize: size,
     supportedSizes: ["S", "M", "L"],
-  }
-}
-
-function widget(id: string, title: string, icon?: string): WidgetContribution {
-  return {
-    id,
-    title,
-    ...(icon ? { icon } : {}),
-    supportedSizes: ["S", "M"],
-    defaultSize: "M",
-    allowMultipleInstances: true,
-    views: { card: `${id}.card` },
   }
 }
 
@@ -102,29 +84,6 @@ describe("workbench widget helpers", () => {
       "settings",
       "remove",
     ])
-  })
-
-  it("builds searchable widget entries from instances and contribution resolver", () => {
-    const focus = vi.fn()
-    const entries = buildWorkbenchSearchableWidgets({
-      instances: [
-        instance(),
-        instance({
-          id: "search-1",
-          contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
-        }),
-      ],
-      resolveWidgetContribution: (_pluginId, contributionId) =>
-        contributionId === "widget.notes" ? widget("notes", "便签", "pencil") : undefined,
-      buildFocusAction: (instanceId) => () => focus(instanceId),
-    })
-
-    expect(entries).toHaveLength(1)
-    expect(entries[0]).toMatchObject({
-      instanceId: "widget-1",
-      name: "便签",
-      icon: "pencil",
-    })
   })
 
   it("merges persisted grid order back into the current instances", () => {

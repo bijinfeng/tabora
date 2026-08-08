@@ -27,10 +27,6 @@ type WorkspaceSearchDataSaver = (
   value: SearchHistoryEntry[],
 ) => Promise<void>
 
-export function resolveWorkbenchEnabledProviderIds(settings: WorkbenchSearchSettings): string[] {
-  return settings.enabledProviders.map((provider) => provider.id)
-}
-
 export async function setWorkbenchDefaultSearchProvider(options: {
   provider: SearchProviderContributionRef
   providers: SearchProviderSummary[]

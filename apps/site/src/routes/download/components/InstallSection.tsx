@@ -2,50 +2,9 @@ import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
 
 import type { DownloadPageContent } from "../downloadPrototypeContent"
+import { SiteSection, SiteSectionHeader, siteSectionStyles } from "../../../shared/SiteSection"
 
 const styles = stylex.create({
-  section: {
-    borderTop: "1px solid rgb(var(--tbr-color-line))",
-    paddingBlock: 72,
-    "@media (max-width: 560px)": {
-      paddingBlock: 48,
-    },
-  },
-  container: {
-    marginInline: "auto",
-    width: "min(calc(100% - 64px), 1180px)",
-    "@media (max-width: 560px)": {
-      width: "min(calc(100% - 32px), 1180px)",
-    },
-  },
-  head: {
-    alignItems: "end",
-    display: "grid",
-    gap: 48,
-    gridTemplateColumns: "minmax(0, 0.7fr) minmax(260px, 0.3fr)",
-    marginBottom: 36,
-    "@media (max-width: 920px)": {
-      gap: 16,
-      gridTemplateColumns: "1fr",
-    },
-  },
-  eyebrow: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontFamily: "var(--tbr-font-mono)",
-    fontSize: 11,
-    fontWeight: 650,
-    margin: 0,
-  },
-  title: {
-    fontSize: 24,
-    margin: "6px 0 0",
-  },
-  body: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontSize: 14,
-    lineHeight: 1.6,
-    margin: 0,
-  },
   grid: {
     display: "grid",
     gap: 14,
@@ -141,87 +100,84 @@ export function InstallSection(props: {
 }) {
   return (
     <>
-      <section
-        {...stylex.attrs(styles.section)}
-        data-od-id="install"
-        data-component="SiteInstallSteps"
+      <SiteSection
+        sectionAttrs={{
+          "data-od-id": "install",
+          "data-component": "SiteInstallSteps",
+        }}
       >
-        <div {...stylex.attrs(styles.container)}>
-          <div {...stylex.attrs(styles.head)}>
-            <div>
-              <p {...stylex.attrs(styles.eyebrow)}>INSTALL</p>
-              <h2 {...stylex.attrs(styles.title)}>{props.content.install.title}</h2>
-            </div>
-            <p {...stylex.attrs(styles.body)}>{props.content.install.body}</p>
-          </div>
+        <SiteSectionHeader
+          eyebrow="INSTALL"
+          title={props.content.install.title}
+          body={props.content.install.body}
+        />
 
-          <div {...stylex.attrs(styles.grid)}>
-            {props.content.install.steps.map((step: [string, string, string]) => (
-              <article {...stylex.attrs(styles.card)}>
-                <span {...stylex.attrs(styles.meta)}>{step[0]}</span>
-                <h3 {...stylex.attrs(styles.cardTitle)}>{step[1]}</h3>
-                <p {...stylex.attrs(styles.body)}>{step[2]}</p>
-              </article>
-            ))}
-          </div>
+        <div {...stylex.attrs(styles.grid)}>
+          {props.content.install.steps.map((step: [string, string, string]) => (
+            <article {...stylex.attrs(styles.card)}>
+              <span {...stylex.attrs(styles.meta)}>{step[0]}</span>
+              <h3 {...stylex.attrs(styles.cardTitle)}>{step[1]}</h3>
+              <p {...stylex.attrs(siteSectionStyles.body)}>{step[2]}</p>
+            </article>
+          ))}
         </div>
-      </section>
+      </SiteSection>
 
-      <section
-        {...stylex.attrs(styles.section)}
-        data-od-id="developer-install"
-        data-component="DocsCodeBlock"
+      <SiteSection
+        containerXstyle={styles.split}
+        sectionAttrs={{
+          "data-od-id": "developer-install",
+          "data-component": "DocsCodeBlock",
+        }}
       >
-        <div {...stylex.attrs(styles.container, styles.split)}>
-          <div {...stylex.attrs(styles.principles)}>
-            <p {...stylex.attrs(styles.eyebrow)}>DEVELOPER PREVIEW</p>
-            <h2 {...stylex.attrs(styles.title)}>{props.content.dev.title}</h2>
-            {props.content.dev.principles.map((item: [string, string]) => (
-              <div {...stylex.attrs(styles.principle)}>
-                <strong {...stylex.attrs(styles.principleTitle)}>{item[0]}</strong>
-                <span {...stylex.attrs(styles.body)}>{item[1]}</span>
-              </div>
-            ))}
-          </div>
-
-          <div {...stylex.attrs(styles.code)} data-docs-code>
-            <div {...stylex.attrs(styles.codeHead)}>
-              <span>local preview</span>
-              <Button
-                size="sm"
-                variant="secondary"
-                xstyle={styles.copyButton}
-                data-copy-button
-                data-copy-target="#download-install-code"
-                onClick={async () => {
-                  const code = document
-                    .querySelector<HTMLElement>("#download-install-code")
-                    ?.textContent?.trim()
-                  if (!code) return
-                  try {
-                    await navigator.clipboard?.writeText(code)
-                    props.showToast(props.content.dev.copied)
-                  } catch {
-                    props.showToast(props.content.dev.copyFailed)
-                  }
-                }}
-              >
-                {props.content.dev.copyLabel}
-              </Button>
+        <div {...stylex.attrs(styles.principles)}>
+          <p {...stylex.attrs(siteSectionStyles.eyebrow)}>DEVELOPER PREVIEW</p>
+          <h2 {...stylex.attrs(siteSectionStyles.title)}>{props.content.dev.title}</h2>
+          {props.content.dev.principles.map((item: [string, string]) => (
+            <div {...stylex.attrs(styles.principle)}>
+              <strong {...stylex.attrs(styles.principleTitle)}>{item[0]}</strong>
+              <span {...stylex.attrs(siteSectionStyles.body)}>{item[1]}</span>
             </div>
-            <div {...stylex.attrs(styles.codeWindow)}>
-              <pre {...stylex.attrs(styles.pre)}>
-                <code id="download-install-code">{`pnpm install
+          ))}
+        </div>
+
+        <div {...stylex.attrs(styles.code)} data-docs-code>
+          <div {...stylex.attrs(styles.codeHead)}>
+            <span>local preview</span>
+            <Button
+              size="sm"
+              variant="secondary"
+              xstyle={styles.copyButton}
+              data-copy-button
+              data-copy-target="#download-install-code"
+              onClick={async () => {
+                const code = document
+                  .querySelector<HTMLElement>("#download-install-code")
+                  ?.textContent?.trim()
+                if (!code) return
+                try {
+                  await navigator.clipboard?.writeText(code)
+                  props.showToast(props.content.dev.copied)
+                } catch {
+                  props.showToast(props.content.dev.copyFailed)
+                }
+              }}
+            >
+              {props.content.dev.copyLabel}
+            </Button>
+          </div>
+          <div {...stylex.attrs(styles.codeWindow)}>
+            <pre {...stylex.attrs(styles.pre)}>
+              <code id="download-install-code">{`pnpm install
 pnpm dev
 
 # 打开浏览器扩展开发者模式
 # 加载 dist/extension 作为未打包扩展
 # 新建标签页后进入 Tabora 工作台`}</code>
-              </pre>
-            </div>
+            </pre>
           </div>
         </div>
-      </section>
+      </SiteSection>
     </>
   )
 }

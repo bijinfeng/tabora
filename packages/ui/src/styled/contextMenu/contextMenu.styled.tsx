@@ -1,10 +1,11 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
-import { color, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
+import { color } from "@tabora/theme/tokens.stylex"
 import { ContextMenu as Primitive } from "../../primitives/contextMenu/contextMenu"
 import type { ContextMenuItem, ContextMenuProps } from "../../primitives/contextMenu/contextMenu"
 import { joinClassNames } from "../../stylex"
+import { sharedStyles } from "../sharedStyles.stylex"
 
 const styles = stylex.create({
   trigger: {
@@ -12,58 +13,11 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: 6,
   },
-  content: {
-    backgroundColor: color.surface,
-    borderColor: color.line,
-    borderRadius: radius.control,
-    borderStyle: "solid",
-    borderWidth: 1,
-    boxShadow: shadow.floating,
-    maxWidth: 260,
-    minWidth: 180,
-    overflow: "hidden",
-    padding: 0,
-  },
+  content: {},
   item: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    borderStyle: "none",
-    borderWidth: 0,
-    borderRadius: 0,
-    color: color.text,
-    cursor: "pointer",
-    display: "flex",
-    fontFamily: "inherit",
-    fontSize: 12,
-    gap: 7,
-    paddingBlock: 6,
-    paddingInline: 10,
     textAlign: "left",
-    transitionDuration: motion.fast,
-    transitionProperty: "background-color",
-    transitionTimingFunction: motion.ease,
-    width: "100%",
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-    },
-    "[data-highlighted]": {
-      backgroundColor: color.surfaceHover,
-    },
-    "[data-disabled]": {
-      backgroundColor: "transparent",
-      cursor: "not-allowed",
-      opacity: 0.5,
-    },
   },
-  danger: {
-    color: color.danger,
-    ":hover": {
-      backgroundColor: color.dangerSoft,
-    },
-    "[data-highlighted]": {
-      backgroundColor: color.dangerSoft,
-    },
-  },
+  danger: {},
   icon: {
     alignItems: "center",
     color: color.textMuted,
@@ -71,10 +25,7 @@ const styles = stylex.create({
     justifyContent: "center",
     width: 16,
   },
-  label: {
-    flex: 1,
-    minWidth: 0,
-  },
+  label: {},
   trailing: {
     color: color.textMuted,
     fontSize: 11,
@@ -87,15 +38,7 @@ const styles = stylex.create({
     fontSize: 10,
     marginLeft: "auto",
   },
-  separator: {
-    backgroundColor: color.line,
-    borderStyle: "none",
-    borderWidth: 0,
-    color: "inherit",
-    height: 1,
-    marginBlock: 2,
-    marginInline: 0,
-  },
+  separator: {},
 })
 
 export type StyledContextMenuProps = ContextMenuProps & {
@@ -104,14 +47,14 @@ export type StyledContextMenuProps = ContextMenuProps & {
 
 export function ContextMenu(props: StyledContextMenuProps) {
   const triggerCompiled = () => stylex.attrs(styles.trigger, props.xstyle)
-  const contentCompiled = () => stylex.attrs(styles.content)
-  const itemCompiled = () => stylex.attrs(styles.item)
-  const dangerCompiled = () => stylex.attrs(styles.danger)
+  const contentCompiled = () => stylex.attrs(sharedStyles.menuContent, styles.content)
+  const itemCompiled = () => stylex.attrs(sharedStyles.menuItem, styles.item)
+  const dangerCompiled = () => stylex.attrs(sharedStyles.menuDanger, styles.danger)
   const iconCompiled = () => stylex.attrs(styles.icon)
-  const labelCompiled = () => stylex.attrs(styles.label)
+  const labelCompiled = () => stylex.attrs(sharedStyles.menuLabel, styles.label)
   const trailingCompiled = () => stylex.attrs(styles.trailing)
   const kbdCompiled = () => stylex.attrs(styles.kbd)
-  const separatorCompiled = () => stylex.attrs(styles.separator)
+  const separatorCompiled = () => stylex.attrs(sharedStyles.menuSeparator, styles.separator)
 
   return (
     <Primitive

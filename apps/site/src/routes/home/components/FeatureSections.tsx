@@ -4,34 +4,10 @@ import { Input } from "@tabora/ui/input"
 import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 import { getSiteHref, type SiteI18nApi } from "../../../app/AppShell"
+import { SiteSection, SiteSectionHeader } from "../../../shared/SiteSection"
 import type { HomePageContent } from "../homePrototypeContent"
 
 const styles = stylex.create({
-  section: {
-    borderTop: "1px solid rgb(var(--tbr-color-line))",
-    paddingBlock: 72,
-    "@media (max-width: 560px)": {
-      paddingBlock: 48,
-    },
-  },
-  container: {
-    marginInline: "auto",
-    width: "min(calc(100% - 64px), 1180px)",
-    "@media (max-width: 560px)": {
-      width: "min(calc(100% - 32px), 1180px)",
-    },
-  },
-  sectionHead: {
-    alignItems: "end",
-    display: "grid",
-    gap: 48,
-    gridTemplateColumns: "minmax(0, 0.7fr) minmax(260px, 0.3fr)",
-    marginBottom: 36,
-    "@media (max-width: 920px)": {
-      gap: 16,
-      gridTemplateColumns: "1fr",
-    },
-  },
   eyebrow: {
     color: "rgb(var(--tbr-color-text-muted))",
     fontFamily: "var(--tbr-font-mono)",
@@ -271,211 +247,198 @@ export function FeatureSections(props: {
 
   return (
     <>
-      <section {...stylex.attrs(styles.section)} data-od-id="stats" data-component="SiteStatStrip">
-        <div {...stylex.attrs(styles.container)}>
-          <div {...stylex.attrs(styles.stats)} aria-label="产品数据">
-            {props.content.stats.map((item: [string, string]) => (
-              <div {...stylex.attrs(styles.stat)}>
-                <strong {...stylex.attrs(styles.statValue)}>{item[0]}</strong>
-                <span {...stylex.attrs(styles.statLabel)}>{item[1]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        {...stylex.attrs(styles.section)}
-        data-od-id="features"
-        data-component="SiteFeatureGrid"
-      >
-        <div {...stylex.attrs(styles.container)}>
-          <div {...stylex.attrs(styles.sectionHead)}>
-            <div>
-              <p {...stylex.attrs(styles.eyebrow)}>WHAT CHANGES</p>
-              <h2 {...stylex.attrs(styles.heading)}>{props.content.featureHead.title}</h2>
+      <SiteSection sectionAttrs={{ "data-od-id": "stats", "data-component": "SiteStatStrip" }}>
+        <div {...stylex.attrs(styles.stats)} aria-label="产品数据">
+          {props.content.stats.map((item: [string, string]) => (
+            <div {...stylex.attrs(styles.stat)}>
+              <strong {...stylex.attrs(styles.statValue)}>{item[0]}</strong>
+              <span {...stylex.attrs(styles.statLabel)}>{item[1]}</span>
             </div>
-            <p {...stylex.attrs(styles.body)}>{props.content.featureHead.body}</p>
-          </div>
-          <div {...stylex.attrs(styles.featureGrid)}>
-            {props.content.features.map((feature: [string, string], index: number) => (
-              <article {...stylex.attrs(styles.feature)}>
-                <div {...stylex.attrs(styles.featureMark)}>
-                  <FeatureIcon index={index} />
-                </div>
-                <h3 {...stylex.attrs(styles.featureTitle)}>{feature[0]}</h3>
-                <p {...stylex.attrs(styles.body)}>{feature[1]}</p>
-              </article>
-            ))}
-          </div>
+          ))}
         </div>
-      </section>
+      </SiteSection>
 
-      <section
-        {...stylex.attrs(styles.section)}
-        id="architecture"
-        data-od-id="architecture"
-        data-component="SiteProof"
+      <SiteSection sectionAttrs={{ "data-od-id": "features", "data-component": "SiteFeatureGrid" }}>
+        <SiteSectionHeader
+          eyebrow="WHAT CHANGES"
+          title={props.content.featureHead.title}
+          body={props.content.featureHead.body}
+          eyebrowXstyle={styles.eyebrow}
+          titleXstyle={styles.heading}
+        />
+        <div {...stylex.attrs(styles.featureGrid)}>
+          {props.content.features.map((feature: [string, string], index: number) => (
+            <article {...stylex.attrs(styles.feature)}>
+              <div {...stylex.attrs(styles.featureMark)}>
+                <FeatureIcon index={index} />
+              </div>
+              <h3 {...stylex.attrs(styles.featureTitle)}>{feature[0]}</h3>
+              <p {...stylex.attrs(styles.body)}>{feature[1]}</p>
+            </article>
+          ))}
+        </div>
+      </SiteSection>
+
+      <SiteSection
+        sectionAttrs={{
+          id: "architecture",
+          "data-od-id": "architecture",
+          "data-component": "SiteProof",
+        }}
+        containerXstyle={styles.split}
       >
-        <div {...stylex.attrs(styles.container, styles.split)}>
-          <div {...stylex.attrs(styles.principles)}>
-            <p {...stylex.attrs(styles.eyebrow)}>ARCHITECTURE POSTURE</p>
-            <h2 {...stylex.attrs(styles.heading)}>{props.content.architecture.title}</h2>
-            {props.content.architecture.principles.map((item: [string, string]) => (
-              <div {...stylex.attrs(styles.principle)}>
-                <strong {...stylex.attrs(styles.principleTitle)}>{item[0]}</strong>
-                <span {...stylex.attrs(styles.body)}>{item[1]}</span>
-              </div>
-            ))}
-          </div>
-
-          <div {...stylex.attrs(styles.matrix)} role="table" aria-label="插件类型自由度与约束">
-            <div
-              {...stylex.attrs(styles.matrixRow, styles.matrixFirstRow, styles.matrixHead)}
-              role="row"
-            >
-              <div {...stylex.attrs(styles.matrixCell)} role="columnheader">
-                类型
-              </div>
-              <div {...stylex.attrs(styles.matrixCell)} role="columnheader">
-                自由度
-              </div>
-              <div {...stylex.attrs(styles.matrixCell, styles.matrixLastCell)} role="columnheader">
-                硬约束
-              </div>
+        <div {...stylex.attrs(styles.principles)}>
+          <p {...stylex.attrs(styles.eyebrow)}>ARCHITECTURE POSTURE</p>
+          <h2 {...stylex.attrs(styles.heading)}>{props.content.architecture.title}</h2>
+          {props.content.architecture.principles.map((item: [string, string]) => (
+            <div {...stylex.attrs(styles.principle)}>
+              <strong {...stylex.attrs(styles.principleTitle)}>{item[0]}</strong>
+              <span {...stylex.attrs(styles.body)}>{item[1]}</span>
             </div>
-            {props.content.architecture.matrix.map((row: [string, string, string, string]) => (
-              <div {...stylex.attrs(styles.matrixRow)} role="row">
-                <div {...stylex.attrs(styles.matrixCell)} role="cell">
-                  <strong {...stylex.attrs(styles.matrixTitle)}>{row[0]}</strong>
-                  <span {...stylex.attrs(styles.body)}>{row[1]}</span>
-                </div>
-                <div {...stylex.attrs(styles.matrixCell)} role="cell">
-                  <span {...stylex.attrs(styles.body)}>{row[2]}</span>
-                </div>
-                <div {...stylex.attrs(styles.matrixCell, styles.matrixLastCell)} role="cell">
-                  <span {...stylex.attrs(styles.body)}>{row[3]}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
-      </section>
 
-      <section
-        {...stylex.attrs(styles.section)}
-        id="plugins"
-        data-od-id="plugins"
-        data-component="SiteProof"
-      >
-        <div {...stylex.attrs(styles.container)}>
-          <div {...stylex.attrs(styles.sectionHead)}>
-            <div>
-              <p {...stylex.attrs(styles.eyebrow)}>OFFICIAL PLUGINS</p>
-              <h2 {...stylex.attrs(styles.heading)}>{props.content.plugins.title}</h2>
-            </div>
-            <p {...stylex.attrs(styles.body)}>{props.content.plugins.body}</p>
-          </div>
-          <div {...stylex.attrs(styles.logList)}>
-            {props.content.plugins.rows.map((row: [string, string, string, string]) => (
-              <article {...stylex.attrs(styles.logRow)}>
-                <span {...stylex.attrs(styles.meta)}>{row[0]}</span>
-                <div>
-                  <h3 {...stylex.attrs(styles.logTitle)}>{row[1]}</h3>
-                  <p {...stylex.attrs(styles.body)}>{row[2]}</p>
-                </div>
-                <span {...stylex.attrs(styles.meta)}>{row[3]}</span>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        {...stylex.attrs(styles.section)}
-        id="resources"
-        data-od-id="resources"
-        data-component="SiteFeatureGrid"
-      >
-        <div {...stylex.attrs(styles.container)}>
-          <div {...stylex.attrs(styles.sectionHead)}>
-            <div>
-              <p {...stylex.attrs(styles.eyebrow)}>GET STARTED</p>
-              <h2 {...stylex.attrs(styles.heading)}>{props.content.resources.title}</h2>
-            </div>
-            <p {...stylex.attrs(styles.body)}>{props.content.resources.body}</p>
-          </div>
-          <div {...stylex.attrs(styles.featureGrid)}>
-            <ResourceCard
-              href="/download"
-              card={props.content.resources.cards[0]}
-              icon="download"
-            />
-            <ResourceCard href="/docs" card={props.content.resources.cards[1]} icon="docs" />
-            <ResourceCard
-              href="/docs/components"
-              card={props.content.resources.cards[2]}
-              icon="components"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section
-        {...stylex.attrs(styles.section, styles.cta)}
-        id="waitlist"
-        data-od-id="cta-strip"
-        data-component="SiteCTA SiteWaitlist"
-      >
-        <div {...stylex.attrs(styles.container, styles.ctaPanel)}>
-          <p {...stylex.attrs(styles.eyebrow)}>NEXT REVIEW</p>
-          <h2 {...stylex.attrs(styles.heading)}>{props.content.cta.title}</h2>
-          <p {...stylex.attrs(styles.centeredLead)}>{props.content.cta.body}</p>
-          <div {...stylex.attrs(styles.actionRow)}>
-            <Button
-              href={getSiteHref("/download")}
-              size="md"
-              variant="primary"
-              xstyle={styles.actionButton}
-            >
-              {props.content.cta.primary}
-            </Button>
-            <Button
-              href={getSiteHref("/docs")}
-              size="md"
-              variant="secondary"
-              xstyle={styles.actionButton}
-            >
-              {props.content.cta.secondary}
-            </Button>
-          </div>
-          <form
-            {...stylex.attrs(styles.waitlist)}
-            data-waitlist
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (!email().includes("@")) {
-                props.showToast(props.i18n.t("waitlist.invalidEmail"))
-                return
-              }
-              setEmail("")
-              props.showToast(props.i18n.t("waitlist.success"))
-            }}
+        <div {...stylex.attrs(styles.matrix)} role="table" aria-label="插件类型自由度与约束">
+          <div
+            {...stylex.attrs(styles.matrixRow, styles.matrixFirstRow, styles.matrixHead)}
+            role="row"
           >
-            <Input
-              value={email()}
-              onInput={setEmail}
-              xstyle={styles.input}
-              type="email"
-              placeholder="name@example.com"
-              aria-label="邮箱"
-            />
-            <Button size="md" variant="secondary" xstyle={styles.actionButton} type="submit">
-              {props.i18n.t("waitlist.submit")}
-            </Button>
-          </form>
+            <div {...stylex.attrs(styles.matrixCell)} role="columnheader">
+              类型
+            </div>
+            <div {...stylex.attrs(styles.matrixCell)} role="columnheader">
+              自由度
+            </div>
+            <div {...stylex.attrs(styles.matrixCell, styles.matrixLastCell)} role="columnheader">
+              硬约束
+            </div>
+          </div>
+          {props.content.architecture.matrix.map((row: [string, string, string, string]) => (
+            <div {...stylex.attrs(styles.matrixRow)} role="row">
+              <div {...stylex.attrs(styles.matrixCell)} role="cell">
+                <strong {...stylex.attrs(styles.matrixTitle)}>{row[0]}</strong>
+                <span {...stylex.attrs(styles.body)}>{row[1]}</span>
+              </div>
+              <div {...stylex.attrs(styles.matrixCell)} role="cell">
+                <span {...stylex.attrs(styles.body)}>{row[2]}</span>
+              </div>
+              <div {...stylex.attrs(styles.matrixCell, styles.matrixLastCell)} role="cell">
+                <span {...stylex.attrs(styles.body)}>{row[3]}</span>
+              </div>
+            </div>
+          ))}
         </div>
-      </section>
+      </SiteSection>
+
+      <SiteSection
+        sectionAttrs={{
+          id: "plugins",
+          "data-od-id": "plugins",
+          "data-component": "SiteProof",
+        }}
+      >
+        <SiteSectionHeader
+          eyebrow="OFFICIAL PLUGINS"
+          title={props.content.plugins.title}
+          body={props.content.plugins.body}
+          eyebrowXstyle={styles.eyebrow}
+          titleXstyle={styles.heading}
+        />
+        <div {...stylex.attrs(styles.logList)}>
+          {props.content.plugins.rows.map((row: [string, string, string, string]) => (
+            <article {...stylex.attrs(styles.logRow)}>
+              <span {...stylex.attrs(styles.meta)}>{row[0]}</span>
+              <div>
+                <h3 {...stylex.attrs(styles.logTitle)}>{row[1]}</h3>
+                <p {...stylex.attrs(styles.body)}>{row[2]}</p>
+              </div>
+              <span {...stylex.attrs(styles.meta)}>{row[3]}</span>
+            </article>
+          ))}
+        </div>
+      </SiteSection>
+
+      <SiteSection
+        sectionAttrs={{
+          id: "resources",
+          "data-od-id": "resources",
+          "data-component": "SiteFeatureGrid",
+        }}
+      >
+        <SiteSectionHeader
+          eyebrow="GET STARTED"
+          title={props.content.resources.title}
+          body={props.content.resources.body}
+          eyebrowXstyle={styles.eyebrow}
+          titleXstyle={styles.heading}
+        />
+        <div {...stylex.attrs(styles.featureGrid)}>
+          <ResourceCard href="/download" card={props.content.resources.cards[0]} icon="download" />
+          <ResourceCard href="/docs" card={props.content.resources.cards[1]} icon="docs" />
+          <ResourceCard
+            href="/docs/components"
+            card={props.content.resources.cards[2]}
+            icon="components"
+          />
+        </div>
+      </SiteSection>
+
+      <SiteSection
+        sectionAttrs={{
+          id: "waitlist",
+          "data-od-id": "cta-strip",
+          "data-component": "SiteCTA SiteWaitlist",
+        }}
+        sectionXstyle={styles.cta}
+        containerXstyle={styles.ctaPanel}
+      >
+        <p {...stylex.attrs(styles.eyebrow)}>NEXT REVIEW</p>
+        <h2 {...stylex.attrs(styles.heading)}>{props.content.cta.title}</h2>
+        <p {...stylex.attrs(styles.centeredLead)}>{props.content.cta.body}</p>
+        <div {...stylex.attrs(styles.actionRow)}>
+          <Button
+            href={getSiteHref("/download")}
+            size="md"
+            variant="primary"
+            xstyle={styles.actionButton}
+          >
+            {props.content.cta.primary}
+          </Button>
+          <Button
+            href={getSiteHref("/docs")}
+            size="md"
+            variant="secondary"
+            xstyle={styles.actionButton}
+          >
+            {props.content.cta.secondary}
+          </Button>
+        </div>
+        <form
+          {...stylex.attrs(styles.waitlist)}
+          data-waitlist
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!email().includes("@")) {
+              props.showToast(props.i18n.t("waitlist.invalidEmail"))
+              return
+            }
+            setEmail("")
+            props.showToast(props.i18n.t("waitlist.success"))
+          }}
+        >
+          <Input
+            value={email()}
+            onInput={setEmail}
+            xstyle={styles.input}
+            type="email"
+            placeholder="name@example.com"
+            aria-label="邮箱"
+          />
+          <Button size="md" variant="secondary" xstyle={styles.actionButton} type="submit">
+            {props.i18n.t("waitlist.submit")}
+          </Button>
+        </form>
+      </SiteSection>
     </>
   )
 }

@@ -4,30 +4,12 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 import { color, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
 import { Switch as Primitive } from "../../primitives/switch/switch"
 import type { SwitchProps } from "../../primitives/switch/switch"
+import { sharedStyles } from "../sharedStyles.stylex"
 
 const styles = stylex.create({
-  root: {
-    alignItems: "center",
-    cursor: "pointer",
-    display: "inline-flex",
-    fontSize: 13,
-    gap: 8,
-    ":focus-within": {
-      outline: `2px solid ${color.focus}`,
-      outlineOffset: 2,
-    },
-  },
-  rootDisabled: {
-    cursor: "not-allowed",
-    opacity: 0.45,
-  },
-  input: {
-    clip: "rect(0, 0, 0, 0)",
-    height: 1,
-    overflow: "hidden",
-    position: "absolute",
-    width: 1,
-  },
+  root: {},
+  rootDisabled: {},
+  input: {},
   control: {
     backgroundColor: color.lineStrong,
     borderRadius: radius.pill,
@@ -76,9 +58,7 @@ const styles = stylex.create({
   thumbLoading: {
     opacity: 0.3,
   },
-  label: {
-    fontSize: 13,
-  },
+  label: {},
 })
 
 type SwitchStyleProp =
@@ -100,11 +80,12 @@ export type StyledSwitchProps = Omit<SwitchProps, SwitchStyleProp> & {
 export function Switch(props: StyledSwitchProps) {
   const rootCompiled = () =>
     stylex.attrs(
+      sharedStyles.choiceRoot,
       styles.root,
-      (props.disabled || props.loading) && styles.rootDisabled,
+      (props.disabled || props.loading) && sharedStyles.choiceRootDisabled,
       props.xstyle,
     )
-  const inputCompiled = () => stylex.attrs(styles.input)
+  const inputCompiled = () => stylex.attrs(sharedStyles.choiceInput, styles.input)
   const controlCompiled = () =>
     stylex.attrs(
       styles.control,
@@ -121,7 +102,7 @@ export function Switch(props: StyledSwitchProps) {
       props.checked && (!props.size || props.size === "md") && styles.thumbCheckedMd,
       props.loading && styles.thumbLoading,
     )
-  const labelCompiled = () => stylex.attrs(styles.label)
+  const labelCompiled = () => stylex.attrs(sharedStyles.choiceLabel, styles.label)
 
   return (
     <Primitive

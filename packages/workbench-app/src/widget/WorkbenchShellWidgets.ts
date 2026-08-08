@@ -1,16 +1,7 @@
-import type {
-  PluginInstance,
-  SearchWidgetEntry,
-  WidgetContextMenuContribution,
-  WidgetSize,
-} from "@tabora/plugin-api"
+import type { PluginInstance, WidgetContextMenuContribution, WidgetSize } from "@tabora/plugin-api"
 import { createWidgetContextMenuModel } from "@tabora/orchestrator"
 
-import {
-  buildSearchableWidgetEntries,
-  type BuildSearchableWidgetEntriesOptions,
-  type WidgetRenderModel,
-} from "../shared/shellHelpers"
+import { type WidgetRenderModel } from "../shared/shellHelpers"
 
 type WorkbenchContextMenuPosition = {
   instanceId: string
@@ -72,12 +63,6 @@ export function buildWorkbenchContextMenuModel(options: {
     onOpenSettings: options.onOpenSettings,
     onRemove: options.onRemove,
   })
-}
-
-export function buildWorkbenchSearchableWidgets(
-  options: BuildSearchableWidgetEntriesOptions,
-): SearchWidgetEntry[] {
-  return buildSearchableWidgetEntries(options)
 }
 
 export function mergeWorkbenchGridOrder(

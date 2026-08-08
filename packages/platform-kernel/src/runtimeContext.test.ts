@@ -116,6 +116,26 @@ describe("createPluginRuntimeContext permissions", () => {
     expect(context.permissions.canOpenExternal("https://www.google.com/search?q=tabora")).toBe(true)
   })
 
+  it("rejects malformed external and network URLs", () => {
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [
+        { type: "external-open", hosts: ["github.com"] },
+        { type: "network", hosts: ["api.example.com"] },
+      ],
+      grantedPermissions: [
+        { type: "external-open", hosts: ["github.com"] },
+        { type: "network", hosts: ["api.example.com"] },
+      ],
+      network: { fetch: async () => new Response("ok") },
+    })
+
+    expect(context.permissions.canOpenExternal("not a URL")).toBe(false)
+    expect(context.network.canFetch("not a URL")).toBe(false)
+  })
+
   it("routes authorized network requests through the host bridge only", async () => {
     const hostFetch = vi.fn(async () => new Response("ok"))
     const context = createPluginRuntimeContext({

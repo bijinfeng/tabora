@@ -1,50 +1,9 @@
 import { A } from "@solidjs/router"
 import * as stylex from "@stylexjs/stylex"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
+import { SiteSection, SiteSectionHeader, siteSectionStyles } from "../../../shared/SiteSection"
 
 const styles = stylex.create({
-  section: {
-    borderTop: "1px solid rgb(var(--tbr-color-line))",
-    paddingBlock: 72,
-    "@media (max-width: 560px)": {
-      paddingBlock: 48,
-    },
-  },
-  container: {
-    marginInline: "auto",
-    width: "min(calc(100% - 64px), 1180px)",
-    "@media (max-width: 560px)": {
-      width: "min(calc(100% - 32px), 1180px)",
-    },
-  },
-  head: {
-    alignItems: "end",
-    display: "grid",
-    gap: 48,
-    gridTemplateColumns: "minmax(0, 0.7fr) minmax(260px, 0.3fr)",
-    marginBottom: 36,
-    "@media (max-width: 920px)": {
-      gap: 16,
-      gridTemplateColumns: "1fr",
-    },
-  },
-  eyebrow: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontFamily: "var(--tbr-font-mono)",
-    fontSize: 11,
-    fontWeight: 650,
-    margin: 0,
-  },
-  title: {
-    fontSize: 24,
-    margin: "6px 0 0",
-  },
-  body: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontSize: 14,
-    lineHeight: 1.6,
-    margin: 0,
-  },
   stats: {
     backgroundColor: "rgb(var(--tbr-color-line))",
     border: "1px solid rgb(var(--tbr-color-line))",
@@ -151,57 +110,54 @@ const styles = stylex.create({
 
 export function PlatformSection(props: { content: DownloadPageContent }) {
   return (
-    <section
-      {...stylex.attrs(styles.section)}
-      id="platforms"
-      data-od-id="platforms"
-      data-component="SiteDownloadCard"
+    <SiteSection
+      sectionAttrs={{
+        id: "platforms",
+        "data-od-id": "platforms",
+        "data-component": "SiteDownloadCard",
+      }}
     >
-      <div {...stylex.attrs(styles.container)}>
-        <div {...stylex.attrs(styles.head)}>
-          <div>
-            <p {...stylex.attrs(styles.eyebrow)}>PLATFORMS</p>
-            <h2 {...stylex.attrs(styles.title)}>{props.content.platforms.title}</h2>
+      <SiteSectionHeader
+        eyebrow="PLATFORMS"
+        title={props.content.platforms.title}
+        body={props.content.platforms.body}
+      />
+
+      <div {...stylex.attrs(styles.stats)} aria-label="平台信息">
+        {props.content.platforms.stats.map((item: [string, string]) => (
+          <div {...stylex.attrs(styles.stat)}>
+            <strong {...stylex.attrs(styles.statValue)}>{item[0]}</strong>
+            <span {...stylex.attrs(styles.statLabel)}>{item[1]}</span>
           </div>
-          <p {...stylex.attrs(styles.body)}>{props.content.platforms.body}</p>
-        </div>
-
-        <div {...stylex.attrs(styles.stats)} aria-label="平台信息">
-          {props.content.platforms.stats.map((item: [string, string]) => (
-            <div {...stylex.attrs(styles.stat)}>
-              <strong {...stylex.attrs(styles.statValue)}>{item[0]}</strong>
-              <span {...stylex.attrs(styles.statLabel)}>{item[1]}</span>
-            </div>
-          ))}
-        </div>
-
-        <div {...stylex.attrs(styles.grid)}>
-          {props.content.platforms.cards.map(
-            (card: [string, string, string, [string, string]], index: number) => (
-              <article {...stylex.attrs(styles.card, index === 0 && styles.featured)}>
-                <span {...stylex.attrs(styles.mark)}>{card[0]}</span>
-                <h3 {...stylex.attrs(styles.cardTitle)}>{card[1]}</h3>
-                <p {...stylex.attrs(styles.body)}>{card[2]}</p>
-                <div {...stylex.attrs(styles.actions)}>
-                  {index === 2 ? (
-                    <>
-                      <A {...stylex.attrs(styles.button)} href="/docs/quickstart">
-                        {card[3][0]}
-                      </A>
-                      <span {...stylex.attrs(styles.badge)}>{card[3][1]}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span {...stylex.attrs(styles.badge)}>{card[3][0]}</span>
-                      <span {...stylex.attrs(styles.badge)}>{card[3][1]}</span>
-                    </>
-                  )}
-                </div>
-              </article>
-            ),
-          )}
-        </div>
+        ))}
       </div>
-    </section>
+
+      <div {...stylex.attrs(styles.grid)}>
+        {props.content.platforms.cards.map(
+          (card: [string, string, string, [string, string]], index: number) => (
+            <article {...stylex.attrs(styles.card, index === 0 && styles.featured)}>
+              <span {...stylex.attrs(styles.mark)}>{card[0]}</span>
+              <h3 {...stylex.attrs(styles.cardTitle)}>{card[1]}</h3>
+              <p {...stylex.attrs(siteSectionStyles.body)}>{card[2]}</p>
+              <div {...stylex.attrs(styles.actions)}>
+                {index === 2 ? (
+                  <>
+                    <A {...stylex.attrs(styles.button)} href="/docs/quickstart">
+                      {card[3][0]}
+                    </A>
+                    <span {...stylex.attrs(styles.badge)}>{card[3][1]}</span>
+                  </>
+                ) : (
+                  <>
+                    <span {...stylex.attrs(styles.badge)}>{card[3][0]}</span>
+                    <span {...stylex.attrs(styles.badge)}>{card[3][1]}</span>
+                  </>
+                )}
+              </div>
+            </article>
+          ),
+        )}
+      </div>
+    </SiteSection>
   )
 }

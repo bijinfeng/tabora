@@ -9,6 +9,7 @@ import { createSignal, Show } from "solid-js"
 
 import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { Pagination } from "../../components/Pagination"
+import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { deleteFile, listFiles, type AttachmentFile } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
@@ -103,22 +104,19 @@ export function AttachmentsPage() {
       <Show when={error()}>
         <InlineError>{error()}</InlineError>
       </Show>
-      <Show
-        when={!data.error}
-        fallback={<InlineError>{(data.error as Error)?.message ?? "加载失败"}</InlineError>}
+      <QueryState
+        error={data.error as Error | null}
+        loading={data.isPending}
+        hasRows={(data.data?.files.length ?? 0) > 0}
+        empty={<EmptyState title="暂无附件" description="用户通过插件上传附件后在此巡检。" />}
       >
-        <Show
-          when={data.isPending || (data.data && data.data.files.length > 0)}
-          fallback={<EmptyState title="暂无附件" description="用户通过插件上传附件后在此巡检。" />}
-        >
-          <Table
-            columns={columns}
-            rows={data.data?.files ?? []}
-            rowKey={(f) => String(f.id)}
-            aria-label="附件文件列表"
-          />
-        </Show>
-      </Show>
+        <Table
+          columns={columns}
+          rows={data.data?.files ?? []}
+          rowKey={(f) => String(f.id)}
+          aria-label="附件文件列表"
+        />
+      </QueryState>
 
       <Show when={data.data}>
         {(d) => (

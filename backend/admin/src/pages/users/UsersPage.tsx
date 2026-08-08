@@ -13,6 +13,7 @@ import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 
 import { Pagination } from "../../components/Pagination"
+import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { createDebounced } from "../../utils/createDebounced"
 import { CreateUserDialog } from "./CreateUserDialog"
@@ -204,23 +205,19 @@ function UsersTable(props: {
   columns: TableColumn<AdminUser>[]
 }) {
   return (
-    <Show
-      when={!props.error}
-      fallback={<InlineError>{props.error?.message ?? "加载用户失败"}</InlineError>}
+    <QueryState
+      error={props.error}
+      errorMessage="加载用户失败"
+      loading={props.loading}
+      hasRows={(props.data?.users.length ?? 0) > 0}
+      empty={<EmptyState title="暂无用户" description="点击右上角新建用户，或调整搜索条件。" />}
     >
-      <Show
-        when={props.loading || (props.data && props.data.users.length > 0)}
-        fallback={
-          <EmptyState title="暂无用户" description="点击右上角新建用户，或调整搜索条件。" />
-        }
-      >
-        <Table
-          columns={props.columns}
-          rows={props.data?.users ?? []}
-          rowKey={(u) => u.id}
-          aria-label="用户列表"
-        />
-      </Show>
-    </Show>
+      <Table
+        columns={props.columns}
+        rows={props.data?.users ?? []}
+        rowKey={(u) => u.id}
+        aria-label="用户列表"
+      />
+    </QueryState>
   )
 }

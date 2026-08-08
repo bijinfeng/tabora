@@ -138,37 +138,29 @@ export function createPluginRuntimeContext(options: {
     },
   }
 
-  function canOpenExternal(url: string): boolean {
+  function hasGrantedHostPermission(type: "external-open" | "network", url: string): boolean {
     let hostname: string
     try {
       hostname = new URL(url).hostname
     } catch {
       return false
     }
+
     return [requestedPermissions, grantedPermissions].every((permissions) =>
-      permissions.some((permission) => {
-        if (permission.type !== "external-open") return false
-        return permission.hosts.some((host) => host === "*" || host === hostname)
-      }),
+      permissions.some(
+        (permission) =>
+          permission.type === type &&
+          permission.hosts.some((host) => host === "*" || host === hostname),
+      ),
     )
   }
 
+  function canOpenExternal(url: string): boolean {
+    return hasGrantedHostPermission("external-open", url)
+  }
+
   function canFetch(url: string): boolean {
-    let hostname: string
-    try {
-      hostname = new URL(url).hostname
-    } catch {
-      return false
-    }
-    return (
-      options.network !== undefined &&
-      [requestedPermissions, grantedPermissions].every((permissions) =>
-        permissions.some((permission) => {
-          if (permission.type !== "network") return false
-          return permission.hosts.some((host) => host === "*" || host === hostname)
-        }),
-      )
-    )
+    return options.network !== undefined && hasGrantedHostPermission("network", url)
   }
 
   function hasAiAccess(access: AiPermissionAccess): boolean {

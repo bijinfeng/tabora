@@ -1,27 +1,14 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
-import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
+import { color, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { Popover as P } from "../../primitives/popover/popover"
 import type { PopoverProps } from "../../primitives/popover/popover"
 import { joinClassNames } from "../../stylex"
-
-const scaleIn = stylex.keyframes({
-  from: {
-    opacity: 0,
-    transform: "scale(0.98)",
-  },
-  to: {
-    opacity: 1,
-    transform: "scale(1)",
-  },
-})
+import { sharedStyles } from "../sharedStyles.stylex"
 
 const styles = stylex.create({
   content: {
-    animationDuration: motion.fast,
-    animationName: scaleIn,
-    animationTimingFunction: motion.ease,
     backgroundColor: color.surface,
     borderColor: color.line,
     borderRadius: radius.panel,
@@ -53,7 +40,7 @@ export type StyledPopoverProps = PopoverProps & {
 }
 
 export function Popover(props: StyledPopoverProps) {
-  const contentCompiled = () => stylex.attrs(styles.content, props.xstyle)
+  const contentCompiled = () => stylex.attrs(styles.content, sharedStyles.scaleIn, props.xstyle)
   const arrowCompiled = () => stylex.attrs(styles.arrow)
   const titleCompiled = () => stylex.attrs(styles.title)
   const bodyCompiled = () => stylex.attrs(styles.body)

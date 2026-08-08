@@ -4,30 +4,12 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { Checkbox as Primitive } from "../../primitives/checkbox/checkbox"
 import type { CheckboxProps } from "../../primitives/checkbox/checkbox"
+import { sharedStyles } from "../sharedStyles.stylex"
 
 const styles = stylex.create({
-  root: {
-    alignItems: "center",
-    cursor: "pointer",
-    display: "inline-flex",
-    fontSize: 13,
-    gap: 8,
-    ":focus-within": {
-      outline: `2px solid ${color.focus}`,
-      outlineOffset: 2,
-    },
-  },
-  rootDisabled: {
-    cursor: "not-allowed",
-    opacity: 0.45,
-  },
-  input: {
-    clip: "rect(0, 0, 0, 0)",
-    height: 1,
-    overflow: "hidden",
-    position: "absolute",
-    width: 1,
-  },
+  root: {},
+  rootDisabled: {},
+  input: {},
   control: {
     alignItems: "center",
     borderColor: color.lineStrong,
@@ -51,9 +33,7 @@ const styles = stylex.create({
     borderColor: color.accent,
     color: color.inverse,
   },
-  label: {
-    fontSize: 13,
-  },
+  label: {},
 })
 
 type CheckboxStyleProp =
@@ -72,14 +52,19 @@ export type StyledCheckboxProps = Omit<CheckboxProps, CheckboxStyleProp> & {
 
 export function Checkbox(props: StyledCheckboxProps) {
   const rootCompiled = () =>
-    stylex.attrs(styles.root, props.disabled && styles.rootDisabled, props.xstyle)
-  const inputCompiled = () => stylex.attrs(styles.input)
+    stylex.attrs(
+      sharedStyles.choiceRoot,
+      styles.root,
+      props.disabled && sharedStyles.choiceRootDisabled,
+      props.xstyle,
+    )
+  const inputCompiled = () => stylex.attrs(sharedStyles.choiceInput, styles.input)
   const controlCompiled = () =>
     stylex.attrs(
       styles.control,
       (props.checked === true || props.checked === "indeterminate") && styles.controlChecked,
     )
-  const labelCompiled = () => stylex.attrs(styles.label)
+  const labelCompiled = () => stylex.attrs(sharedStyles.choiceLabel, styles.label)
 
   return (
     <Primitive

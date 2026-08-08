@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest"
 
 import {
   clearWorkbenchSearchHistory,
-  resolveWorkbenchEnabledProviderIds,
   saveWorkbenchSearchHistory,
   setWorkbenchDefaultSearchProvider,
   setWorkbenchSearchProviderEnabled,
@@ -40,17 +39,6 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
     ...overrides,
   }
 }
-
-describe("resolveWorkbenchEnabledProviderIds", () => {
-  it("returns the explicit enabled provider ids", () => {
-    expect(
-      resolveWorkbenchEnabledProviderIds({
-        defaultProvider: provider("official.google"),
-        enabledProviders: [provider("official.google"), provider("official.duckduckgo")],
-      }),
-    ).toEqual(["official.google", "official.duckduckgo"])
-  })
-})
 
 describe("setWorkbenchDefaultSearchProvider", () => {
   it("persists the default provider into workspace config and local search settings", async () => {

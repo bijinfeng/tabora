@@ -2,50 +2,9 @@ import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
 import { Collapsible } from "@tabora/ui/collapsible"
 import type { DownloadPageContent } from "../downloadPrototypeContent"
+import { SiteSection, SiteSectionHeader, siteSectionStyles } from "../../../shared/SiteSection"
 
 const styles = stylex.create({
-  section: {
-    borderTop: "1px solid rgb(var(--tbr-color-line))",
-    paddingBlock: 72,
-    "@media (max-width: 560px)": {
-      paddingBlock: 48,
-    },
-  },
-  container: {
-    marginInline: "auto",
-    width: "min(calc(100% - 64px), 1180px)",
-    "@media (max-width: 560px)": {
-      width: "min(calc(100% - 32px), 1180px)",
-    },
-  },
-  head: {
-    alignItems: "end",
-    display: "grid",
-    gap: 48,
-    gridTemplateColumns: "minmax(0, 0.7fr) minmax(260px, 0.3fr)",
-    marginBottom: 36,
-    "@media (max-width: 920px)": {
-      gap: 16,
-      gridTemplateColumns: "1fr",
-    },
-  },
-  eyebrow: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontFamily: "var(--tbr-font-mono)",
-    fontSize: 11,
-    fontWeight: 650,
-    margin: 0,
-  },
-  title: {
-    fontSize: 24,
-    margin: "6px 0 0",
-  },
-  body: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontSize: 14,
-    lineHeight: 1.65,
-    margin: 0,
-  },
   supportTable: {
     backgroundColor: "rgb(var(--tbr-color-surface))",
     border: "1px solid rgb(var(--tbr-color-line))",
@@ -193,92 +152,88 @@ export function DownloadSupport(props: {
 }) {
   return (
     <>
-      <section
-        {...stylex.attrs(styles.section)}
-        data-od-id="support"
-        data-component="SiteSupportTable"
+      <SiteSection
+        sectionAttrs={{
+          "data-od-id": "support",
+          "data-component": "SiteSupportTable",
+        }}
       >
-        <div {...stylex.attrs(styles.container)}>
-          <div {...stylex.attrs(styles.head)}>
-            <div>
-              <p {...stylex.attrs(styles.eyebrow)}>SUPPORT</p>
-              <h2 {...stylex.attrs(styles.title)}>{props.content.support.title}</h2>
+        <SiteSectionHeader
+          eyebrow="SUPPORT"
+          title={props.content.support.title}
+          body={props.content.support.body}
+        />
+
+        <div {...stylex.attrs(styles.supportTable)} aria-label="平台支持范围">
+          {props.content.support.rows.map((row: [string, string, string], index: number) => (
+            <div {...stylex.attrs(styles.supportRow, index === 0 && styles.firstRow)}>
+              <strong>{row[0]}</strong>
+              <span {...stylex.attrs(siteSectionStyles.body)}>{row[1]}</span>
+              <span {...stylex.attrs(styles.badge)}>{row[2]}</span>
             </div>
-            <p {...stylex.attrs(styles.body)}>{props.content.support.body}</p>
-          </div>
-
-          <div {...stylex.attrs(styles.supportTable)} aria-label="平台支持范围">
-            {props.content.support.rows.map((row: [string, string, string], index: number) => (
-              <div {...stylex.attrs(styles.supportRow, index === 0 && styles.firstRow)}>
-                <strong>{row[0]}</strong>
-                <span {...stylex.attrs(styles.body)}>{row[1]}</span>
-                <span {...stylex.attrs(styles.badge)}>{row[2]}</span>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
-      </section>
+      </SiteSection>
 
-      <section {...stylex.attrs(styles.section)} data-od-id="faq" data-component="SiteFAQ">
-        <div {...stylex.attrs(styles.container)}>
-          <div {...stylex.attrs(styles.head)}>
-            <div>
-              <p {...stylex.attrs(styles.eyebrow)}>FAQ</p>
-              <h2 {...stylex.attrs(styles.title)}>{props.content.faq.title}</h2>
-            </div>
-            <p {...stylex.attrs(styles.body)}>{props.content.faq.body}</p>
-          </div>
-
-          <div {...stylex.attrs(styles.faqList)} aria-label="常见问题">
-            {props.content.faq.items.map((item: [string, string], index: number) => (
-              <Collapsible
-                unstyled
-                xstyle={[styles.faqItem, styles.faqRoot]}
-                open={props.openFaq.has(index)}
-                onOpenChange={() => props.toggleFaq(index)}
-                title={item[0]}
-                indicator={
-                  <span
-                    {...stylex.attrs(
-                      styles.faqIcon,
-                      props.openFaq.has(index) && styles.faqIconOpen,
-                    )}
-                  >
-                    +
-                  </span>
-                }
-                triggerClass={stylex.attrs(styles.faqTrigger).class}
-                contentClass={stylex.attrs(styles.faqBody).class}
-                rootAttrs={{ "data-faq-item": "", "data-site-faq-item": "" }}
-                triggerAttrs={{ "data-faq-trigger": "" }}
-                contentAttrs={{ "data-faq-body": "" }}
-              >
-                <p {...stylex.attrs(styles.body)}>{item[1]}</p>
-              </Collapsible>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        {...stylex.attrs(styles.section, styles.cta)}
-        data-od-id="download-cta"
-        data-component="SiteCTA"
+      <SiteSection
+        sectionAttrs={{
+          "data-od-id": "faq",
+          "data-component": "SiteFAQ",
+        }}
       >
-        <div {...stylex.attrs(styles.container, styles.ctaPanel)}>
-          <p {...stylex.attrs(styles.eyebrow)}>NEXT STEP</p>
-          <h2 {...stylex.attrs(styles.title)}>{props.content.cta.title}</h2>
-          <p {...stylex.attrs(styles.lead)}>{props.content.cta.body}</p>
-          <div {...stylex.attrs(styles.actions)}>
-            <Button href="/docs" xstyle={[styles.button, styles.primary]}>
-              {props.content.cta.primary}
-            </Button>
-            <Button href="/" xstyle={[styles.button, styles.secondary]}>
-              {props.content.cta.secondary}
-            </Button>
-          </div>
+        <SiteSectionHeader
+          eyebrow="FAQ"
+          title={props.content.faq.title}
+          body={props.content.faq.body}
+        />
+
+        <div {...stylex.attrs(styles.faqList)} aria-label="常见问题">
+          {props.content.faq.items.map((item: [string, string], index: number) => (
+            <Collapsible
+              unstyled
+              xstyle={[styles.faqItem, styles.faqRoot]}
+              open={props.openFaq.has(index)}
+              onOpenChange={() => props.toggleFaq(index)}
+              title={item[0]}
+              indicator={
+                <span
+                  {...stylex.attrs(styles.faqIcon, props.openFaq.has(index) && styles.faqIconOpen)}
+                >
+                  +
+                </span>
+              }
+              triggerClass={stylex.attrs(styles.faqTrigger).class}
+              contentClass={stylex.attrs(styles.faqBody).class}
+              rootAttrs={{ "data-faq-item": "", "data-site-faq-item": "" }}
+              triggerAttrs={{ "data-faq-trigger": "" }}
+              contentAttrs={{ "data-faq-body": "" }}
+            >
+              <p {...stylex.attrs(siteSectionStyles.body)}>{item[1]}</p>
+            </Collapsible>
+          ))}
         </div>
-      </section>
+      </SiteSection>
+
+      <SiteSection
+        sectionXstyle={styles.cta}
+        containerXstyle={styles.ctaPanel}
+        sectionAttrs={{
+          "data-od-id": "download-cta",
+          "data-component": "SiteCTA",
+        }}
+      >
+        <p {...stylex.attrs(siteSectionStyles.eyebrow)}>NEXT STEP</p>
+        <h2 {...stylex.attrs(siteSectionStyles.title)}>{props.content.cta.title}</h2>
+        <p {...stylex.attrs(styles.lead)}>{props.content.cta.body}</p>
+        <div {...stylex.attrs(styles.actions)}>
+          <Button href="/docs" xstyle={[styles.button, styles.primary]}>
+            {props.content.cta.primary}
+          </Button>
+          <Button href="/" xstyle={[styles.button, styles.secondary]}>
+            {props.content.cta.secondary}
+          </Button>
+        </div>
+      </SiteSection>
     </>
   )
 }

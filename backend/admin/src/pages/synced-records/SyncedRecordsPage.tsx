@@ -1,7 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
 import { EmptyState } from "@tabora/ui/empty-state"
-import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
 import { Table, type TableColumn } from "@tabora/ui/table"
@@ -11,6 +10,7 @@ import Search from "lucide-solid/icons/search"
 
 import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { Pagination } from "../../components/Pagination"
+import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { createDebounced } from "../../utils/createDebounced"
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
@@ -116,25 +116,22 @@ export function SyncedRecordsPage() {
         />
       </div>
 
-      <Show
-        when={!data.error}
-        fallback={<InlineError>{(data.error as Error)?.message ?? "加载失败"}</InlineError>}
+      <QueryState
+        error={data.error as Error | null}
+        loading={data.isPending}
+        hasRows={(data.data?.records.length ?? 0) > 0}
+        empty={
+          <EmptyState title="暂无同步记录" description="调整筛选条件，或等待客户端上传数据。" />
+        }
       >
-        <Show
-          when={data.isPending || (data.data && data.data.records.length > 0)}
-          fallback={
-            <EmptyState title="暂无同步记录" description="调整筛选条件，或等待客户端上传数据。" />
-          }
-        >
-          <Table
-            columns={columns}
-            rows={data.data?.records ?? []}
-            rowKey={(r) => r.id}
-            onRowClick={(r) => setDetail(r)}
-            aria-label="同步记录列表"
-          />
-        </Show>
-      </Show>
+        <Table
+          columns={columns}
+          rows={data.data?.records ?? []}
+          rowKey={(r) => r.id}
+          onRowClick={(r) => setDetail(r)}
+          aria-label="同步记录列表"
+        />
+      </QueryState>
 
       <Show when={data.data}>
         {(d) => (

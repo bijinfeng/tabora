@@ -4,13 +4,8 @@ import { dirname } from "node:path"
 import Database from "better-sqlite3"
 import { drizzle } from "drizzle-orm/better-sqlite3"
 
-import { createAttachmentQueries } from "./attachments"
-import { createAuditLogQueries } from "./auditLog"
-import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
-import { createSettingsQueries } from "./settings"
-import { createSyncedRecordQueries } from "./syncedRecords"
-import { createUserQueries } from "./users"
+import { createDbQueries } from "./queryWiring"
 
 export function createSqliteDb(file: string) {
   if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true })
@@ -28,36 +23,14 @@ export function createSqliteDb(file: string) {
     return Number(row.value)
   }
 
-  const syncedRecords = createSyncedRecordQueries(db, {
-    syncedRecord: schema.syncedRecord,
-    user: schema.user,
-  })
-
-  const attachments = createAttachmentQueries(db, {
-    attachmentPolicy: schema.attachmentPolicy,
-    attachmentFile: schema.attachmentFile,
-    attachmentRef: schema.attachmentRef,
-  })
-
-  const settings = createSettingsQueries(db, schema.setting)
-
-  const emailQueue = createEmailQueueQueries(db, { emailQueue: schema.emailQueue })
-
-  const users = createUserQueries(db, { user: schema.user, account: schema.account })
-
-  const auditLog = createAuditLogQueries(db, { auditLog: schema.auditLog })
+  const queries = createDbQueries(db, schema)
 
   return {
     db,
     provider: "sqlite" as const,
     migrate,
     countUsers,
-    syncedRecords,
-    attachments,
-    settings,
-    emailQueue,
-    users,
-    auditLog,
+    ...queries,
     close: () => sqlite.close(),
   }
 }

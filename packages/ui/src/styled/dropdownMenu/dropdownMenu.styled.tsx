@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
-import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
+import { color, radius, zIndex } from "@tabora/theme/tokens.stylex"
 import { DropdownMenu as P } from "../../primitives/dropdownMenu/dropdownMenu"
 import type {
   DropdownMenuAlign,
@@ -10,33 +10,10 @@ import type {
   DropdownMenuSide,
 } from "../../primitives/dropdownMenu/dropdownMenu"
 import { joinClassNames } from "../../stylex"
-
-const scaleIn = stylex.keyframes({
-  from: {
-    opacity: 0,
-    transform: "scale(0.98)",
-  },
-  to: {
-    opacity: 1,
-    transform: "scale(1)",
-  },
-})
+import { sharedStyles } from "../sharedStyles.stylex"
 
 const styles = stylex.create({
   content: {
-    animationDuration: motion.fast,
-    animationName: scaleIn,
-    animationTimingFunction: motion.ease,
-    backgroundColor: color.surface,
-    borderColor: color.line,
-    borderRadius: radius.control,
-    borderStyle: "solid",
-    borderWidth: 1,
-    boxShadow: shadow.floating,
-    maxWidth: 260,
-    minWidth: 180,
-    overflow: "hidden",
-    padding: 0,
     zIndex: zIndex.dropdown,
   },
   title: {
@@ -51,54 +28,9 @@ const styles = stylex.create({
   arrow: {
     zIndex: 1,
   },
-  item: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    borderStyle: "none",
-    borderWidth: 0,
-    borderRadius: 0,
-    color: color.text,
-    cursor: "pointer",
-    display: "flex",
-    fontFamily: "inherit",
-    fontSize: 12,
-    gap: 7,
-    paddingBlock: 6,
-    paddingInline: 10,
-    transitionDuration: motion.fast,
-    transitionProperty: "background-color",
-    transitionTimingFunction: motion.ease,
-    width: "100%",
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-    },
-    "[data-highlighted]": {
-      backgroundColor: color.surfaceHover,
-    },
-    "[data-disabled]": {
-      backgroundColor: "transparent",
-      cursor: "not-allowed",
-      opacity: 0.5,
-    },
-  },
-  danger: {
-    color: color.danger,
-    ":hover": {
-      backgroundColor: color.dangerSoft,
-    },
-    "[data-highlighted]": {
-      backgroundColor: color.dangerSoft,
-    },
-  },
-  separator: {
-    backgroundColor: color.line,
-    borderStyle: "none",
-    borderWidth: 0,
-    color: "inherit",
-    height: 1,
-    marginBlock: 2,
-    marginInline: 0,
-  },
+  item: {},
+  danger: {},
+  separator: {},
   icon: {
     alignItems: "center",
     borderRadius: radius.r2,
@@ -126,10 +58,7 @@ const styles = stylex.create({
       width: 6,
     },
   },
-  label: {
-    flex: 1,
-    minWidth: 0,
-  },
+  label: {},
   kbd: {
     color: color.textSubtle,
     fontFamily: '"SFMono-Regular", Consolas, monospace',
@@ -142,15 +71,16 @@ export type StyledDropdownMenuProps = DropdownMenuProps & {
 }
 
 export function DropdownMenu(props: StyledDropdownMenuProps) {
-  const contentCompiled = () => stylex.attrs(styles.content, props.xstyle)
+  const contentCompiled = () =>
+    stylex.attrs(sharedStyles.menuContent, sharedStyles.scaleIn, styles.content, props.xstyle)
   const titleCompiled = () => stylex.attrs(styles.title)
   const arrowCompiled = () => stylex.attrs(styles.arrow)
-  const itemCompiled = () => stylex.attrs(styles.item)
-  const dangerCompiled = () => stylex.attrs(styles.danger)
-  const separatorCompiled = () => stylex.attrs(styles.separator)
+  const itemCompiled = () => stylex.attrs(sharedStyles.menuItem, styles.item)
+  const dangerCompiled = () => stylex.attrs(sharedStyles.menuDanger, styles.danger)
+  const separatorCompiled = () => stylex.attrs(sharedStyles.menuSeparator, styles.separator)
   const iconCompiled = () => stylex.attrs(styles.icon)
   const checkCompiled = () => stylex.attrs(styles.check)
-  const labelCompiled = () => stylex.attrs(styles.label)
+  const labelCompiled = () => stylex.attrs(sharedStyles.menuLabel, styles.label)
   const kbdCompiled = () => stylex.attrs(styles.kbd)
 
   return (

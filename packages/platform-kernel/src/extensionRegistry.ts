@@ -34,76 +34,53 @@ export type ExtensionRegistry = {
   commands: CommandHandlerRegistry
 }
 
-export function createExtensionRegistry(): ExtensionRegistry {
-  const views = new Map<string, ViewComponent>()
-  const settingsProviders = new Map<string, SettingsPanelProvider>()
-  const commandHandlers = new Map<string, PluginCommandHandler>()
+type RegistrationStore<T> = {
+  register(id: string, value: T): ExtensionRegistrationDisposer
+  get(id: string): T
+  has(id: string): boolean
+}
 
-  function rejectDuplicate(kind: string, id: string): void {
-    throw new Error(`${kind} already registered: ${id}`)
-  }
+function createRegistrationStore<T>(kind: string): RegistrationStore<T> {
+  const registrations = new Map<string, T>()
 
   return {
-    views: {
-      register(viewId, view) {
-        if (views.has(viewId)) rejectDuplicate("View", viewId)
-        views.set(viewId, view)
-        return () => {
-          if (views.get(viewId) === view) {
-            views.delete(viewId)
-          }
+    register(id, value) {
+      if (registrations.has(id)) {
+        throw new Error(`${kind} already registered: ${id}`)
+      }
+      registrations.set(id, value)
+      return () => {
+        if (registrations.get(id) === value) {
+          registrations.delete(id)
         }
-      },
-      get(viewId) {
-        const view = views.get(viewId)
-        if (!view) throw new Error(`View not registered: ${viewId}`)
-        return view
-      },
-      has(viewId) {
-        return views.has(viewId)
-      },
+      }
     },
-    settings: {
-      register(providerId, provider) {
-        if (settingsProviders.has(providerId)) rejectDuplicate("Settings provider", providerId)
-        settingsProviders.set(providerId, provider)
-        return () => {
-          if (settingsProviders.get(providerId) === provider) {
-            settingsProviders.delete(providerId)
-          }
-        }
-      },
-      get(providerId) {
-        const provider = settingsProviders.get(providerId)
-        if (!provider) throw new Error(`Settings provider not registered: ${providerId}`)
-        return provider
-      },
-      has(providerId) {
-        return settingsProviders.has(providerId)
-      },
+    get(id) {
+      const value = registrations.get(id)
+      if (!value) {
+        throw new Error(`${kind} not registered: ${id}`)
+      }
+      return value
     },
+    has(id) {
+      return registrations.has(id)
+    },
+  }
+}
+
+export function createExtensionRegistry(): ExtensionRegistry {
+  const views = createRegistrationStore<ViewComponent>("View")
+  const settings = createRegistrationStore<SettingsPanelProvider>("Settings provider")
+  const commands = createRegistrationStore<PluginCommandHandler>("Command handler")
+
+  return {
+    views,
+    settings,
     commands: {
-      register(commandId, handler) {
-        if (commandHandlers.has(commandId)) rejectDuplicate("Command handler", commandId)
-        commandHandlers.set(commandId, handler)
-        return () => {
-          if (commandHandlers.get(commandId) === handler) {
-            commandHandlers.delete(commandId)
-          }
-        }
-      },
-      get(commandId) {
-        const handler = commandHandlers.get(commandId)
-        if (!handler) throw new Error(`Command handler not registered: ${commandId}`)
-        return handler
-      },
-      has(commandId) {
-        return commandHandlers.has(commandId)
-      },
+      ...commands,
       async execute(commandId, invocation) {
-        const handler = commandHandlers.get(commandId)
-        if (!handler) return false
-        await handler(invocation)
+        if (!commands.has(commandId)) return false
+        await commands.get(commandId)(invocation)
         return true
       },
     },

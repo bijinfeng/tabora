@@ -1,7 +1,7 @@
 import type { PluginInstance, WidgetContribution, WidgetViewProps } from "@tabora/plugin-api"
 
-import type { WidgetRenderModel } from "../shared/shellHelpers"
 import type { ShellTranslation } from "../i18n"
+import type { WidgetRenderModel } from "../shared/shellHelpers"
 
 export type WorkbenchExpandState = {
   instanceId: string
@@ -26,6 +26,37 @@ type WorkbenchExpandBuildOptions = {
 type WorkbenchExpandResult = {
   expandState: WorkbenchExpandState | null
   errorMessage: string | null
+}
+
+type WorkbenchExpandTarget = Omit<WorkbenchExpandState, "instanceId" | "props">
+
+function buildWorkbenchWidgetOverlayState(
+  options: WorkbenchExpandBuildOptions,
+  resolveTarget: (model: WidgetRenderModel) => WorkbenchExpandTarget | null,
+  getUnsupportedMessage: (model: WidgetRenderModel) => string,
+): WorkbenchExpandResult {
+  if (!options.model) {
+    return {
+      expandState: null,
+      errorMessage: options.tShell
+        ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: options.instance.id })
+        : `卡片实例无效：${options.instance.id}`,
+    }
+  }
+
+  const target = resolveTarget(options.model)
+  if (!target) {
+    return { expandState: null, errorMessage: getUnsupportedMessage(options.model) }
+  }
+
+  return {
+    expandState: {
+      instanceId: options.instance.id,
+      ...target,
+      props: options.buildWidgetViewProps(options.instance, options.model),
+    },
+    errorMessage: null,
+  }
 }
 
 export function isWorkbenchInteractiveElement(target: EventTarget | null): boolean {
@@ -83,72 +114,45 @@ export function resolveWorkbenchInstanceSettingsView(
 export function buildWorkbenchWidgetExpandState(
   options: WorkbenchExpandBuildOptions,
 ): WorkbenchExpandResult {
-  if (!options.model) {
-    return {
-      expandState: null,
-      errorMessage: options.tShell
-        ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: options.instance.id })
-        : `卡片实例无效：${options.instance.id}`,
-    }
-  }
-
-  const target = resolveWorkbenchExpandView(options.widget, options.hasView)
-  if (!target) {
-    return {
-      expandState: null,
-      errorMessage: options.tShell
-        ? options.tShell("widget.expandNotSupported", { title: options.model.title })
-        : `当前卡片暂不支持展开：${options.model.title}`,
-    }
-  }
-
-  const footerViewId = resolveWorkbenchExpandFooterView(options.widget, options.hasView)
-
-  return {
-    expandState: {
-      instanceId: options.instance.id,
-      title: options.model.title,
-      viewId: target.viewId,
-      ...(footerViewId ? { footerViewId } : {}),
-      mode: target.mode,
-      props: options.buildWidgetViewProps(options.instance, options.model),
+  return buildWorkbenchWidgetOverlayState(
+    options,
+    (model) => {
+      const target = resolveWorkbenchExpandView(options.widget, options.hasView)
+      if (!target) return null
+      const footerViewId = resolveWorkbenchExpandFooterView(options.widget, options.hasView)
+      return {
+        title: model.title,
+        viewId: target.viewId,
+        ...(footerViewId ? { footerViewId } : {}),
+        mode: target.mode,
+      }
     },
-    errorMessage: null,
-  }
+    (model) =>
+      options.tShell
+        ? options.tShell("widget.expandNotSupported", { title: model.title })
+        : `当前卡片暂不支持展开：${model.title}`,
+  )
 }
 
 export function buildWorkbenchWidgetInstanceSettingsState(
   options: WorkbenchExpandBuildOptions,
 ): WorkbenchExpandResult {
-  if (!options.model) {
-    return {
-      expandState: null,
-      errorMessage: options.tShell
-        ? options.tShell("placeholders.widgetInstanceInvalid", { instanceId: options.instance.id })
-        : `卡片实例无效：${options.instance.id}`,
-    }
-  }
-
-  const viewId = resolveWorkbenchInstanceSettingsView(options.widget, options.hasView)
-  if (!viewId) {
-    return {
-      expandState: null,
-      errorMessage: options.tShell
-        ? options.tShell("widget.instanceSettingsNotSupported", { title: options.model.title })
-        : `当前卡片暂不支持实例设置：${options.model.title}`,
-    }
-  }
-
-  return {
-    expandState: {
-      instanceId: options.instance.id,
-      title: options.tShell
-        ? options.tShell("widget.instanceSettings.title", { title: options.model.title })
-        : `${options.model.title} 设置`,
-      viewId,
-      mode: "settings",
-      props: options.buildWidgetViewProps(options.instance, options.model),
+  return buildWorkbenchWidgetOverlayState(
+    options,
+    (model) => {
+      const viewId = resolveWorkbenchInstanceSettingsView(options.widget, options.hasView)
+      if (!viewId) return null
+      return {
+        title: options.tShell
+          ? options.tShell("widget.instanceSettings.title", { title: model.title })
+          : `${model.title} 设置`,
+        viewId,
+        mode: "settings",
+      }
     },
-    errorMessage: null,
-  }
+    (model) =>
+      options.tShell
+        ? options.tShell("widget.instanceSettingsNotSupported", { title: model.title })
+        : `当前卡片暂不支持实例设置：${model.title}`,
+  )
 }

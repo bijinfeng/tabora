@@ -4,6 +4,7 @@ import { useSiteI18n, useSiteTheme } from "../../app/AppShell"
 import { PrototypeTopnav } from "../../shared/PrototypeTopnav"
 import { SiteFooter } from "../../shared/SiteFooter"
 import { SiteToast } from "../../shared/SiteToast"
+import { createSiteToastState } from "../../shared/siteToastState"
 import { CommandDialog } from "./components/CommandDialog"
 import { FeatureSections } from "./components/FeatureSections"
 import { HeroSection } from "./components/HeroSection"
@@ -14,18 +15,11 @@ export function HomePage() {
   const i18n = useSiteI18n()
   const content = createMemo(() => homePrototypeContent[i18n.locale()])
   const [commandOpen, setCommandOpen] = createSignal(false)
-  const [toastMessage, setToastMessage] = createSignal("")
-  const [toastVisible, setToastVisible] = createSignal(false)
-  let toastTimer = 0
+  const toast = createSiteToastState()
   let commandTrigger: HTMLElement | null = null
   let commandInputRef: HTMLInputElement | null = null
 
-  const showToast = (message: string) => {
-    window.clearTimeout(toastTimer)
-    setToastMessage(message)
-    setToastVisible(true)
-    toastTimer = window.setTimeout(() => setToastVisible(false), 2600)
-  }
+  const showToast = toast.showToast
 
   const openCommand = (trigger?: HTMLElement) => {
     commandTrigger = trigger ?? (document.activeElement as HTMLElement | null) ?? null
@@ -67,7 +61,6 @@ export function HomePage() {
 
     onCleanup(() => {
       window.removeEventListener("keydown", onKeydown)
-      window.clearTimeout(toastTimer)
     })
   })
 
@@ -94,7 +87,7 @@ export function HomePage() {
         close={closeCommand}
         setInputRef={(element) => (commandInputRef = element)}
       />
-      <SiteToast visible={toastVisible()} message={toastMessage()} />
+      <SiteToast visible={toast.visible()} message={toast.message()} />
     </>
   )
 }

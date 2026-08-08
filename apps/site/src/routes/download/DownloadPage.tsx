@@ -4,6 +4,7 @@ import { useSiteI18n } from "../../app/AppShell"
 import { PrototypeTopnav } from "../../shared/PrototypeTopnav"
 import { SiteFooter } from "../../shared/SiteFooter"
 import { SiteToast } from "../../shared/SiteToast"
+import { createSiteToastState } from "../../shared/siteToastState"
 import { highlightCode } from "../../shared/codeHighlight"
 import { DownloadHero } from "./components/DownloadHero"
 import { DownloadSupport } from "./components/DownloadSupport"
@@ -14,17 +15,9 @@ import { downloadPrototypeContent } from "./downloadPrototypeContent"
 export function DownloadPage() {
   const i18n = useSiteI18n()
   const content = createMemo(() => downloadPrototypeContent[i18n.locale()])
-  const [toastMessage, setToastMessage] = createSignal("")
-  const [toastVisible, setToastVisible] = createSignal(false)
-  let toastTimer = 0
+  const toast = createSiteToastState()
+  const showToast = toast.showToast
   const [openFaq, setOpenFaq] = createSignal<ReadonlySet<number>>(new Set())
-
-  const showToast = (message: string) => {
-    window.clearTimeout(toastTimer)
-    setToastMessage(message)
-    setToastVisible(true)
-    toastTimer = window.setTimeout(() => setToastVisible(false), 2600)
-  }
 
   const toggleFaq = (index: number) => {
     setOpenFaq((value) => {
@@ -47,7 +40,6 @@ export function DownloadPage() {
 
     onCleanup(() => {
       window.clearTimeout(timer)
-      window.clearTimeout(toastTimer)
     })
   })
 
@@ -69,7 +61,7 @@ export function DownloadPage() {
       </main>
 
       <SiteFooter i18n={i18n} />
-      <SiteToast visible={toastVisible()} message={toastMessage()} />
+      <SiteToast visible={toast.visible()} message={toast.message()} />
     </>
   )
 }

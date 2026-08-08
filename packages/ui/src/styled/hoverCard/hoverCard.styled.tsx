@@ -1,21 +1,11 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
-import { color, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
+import { color, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { HoverCard as Primitive } from "../../primitives/hoverCard/hoverCard"
 import type { HoverCardProps } from "../../primitives/hoverCard/hoverCard"
 import { joinClassNames } from "../../stylex"
-
-const scaleIn = stylex.keyframes({
-  from: {
-    opacity: 0,
-    transform: "scale(0.98)",
-  },
-  to: {
-    opacity: 1,
-    transform: "scale(1)",
-  },
-})
+import { sharedStyles } from "../sharedStyles.stylex"
 
 const styles = stylex.create({
   root: {
@@ -34,9 +24,6 @@ const styles = stylex.create({
     paddingInline: 8,
   },
   content: {
-    animationDuration: motion.fast,
-    animationName: scaleIn,
-    animationTimingFunction: motion.ease,
     backgroundColor: color.surface,
     borderColor: color.line,
     borderRadius: radius.panel,
@@ -80,7 +67,7 @@ export type StyledHoverCardProps = HoverCardProps & {
 export function HoverCard(props: StyledHoverCardProps) {
   const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
   const triggerCompiled = () => stylex.attrs(styles.trigger)
-  const contentCompiled = () => stylex.attrs(styles.content)
+  const contentCompiled = () => stylex.attrs(styles.content, sharedStyles.scaleIn)
   const mediaCompiled = () => stylex.attrs(styles.media)
   const titleCompiled = () => stylex.attrs(styles.title)
   const descriptionCompiled = () => stylex.attrs(styles.description)

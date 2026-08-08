@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 import { WeatherCard } from "./weather-card"
 import type { PluginNetworkAccess, WidgetViewProps } from "@tabora/plugin-api/sdk"
+import { makeWidgetViewProps } from "../../test-support/widgetViewProps"
 import type { WeatherSnapshot } from "./weather-data"
 
 function snapshot(overrides?: Partial<WeatherSnapshot>): WeatherSnapshot {
@@ -38,26 +39,14 @@ type WeatherViewProps = WidgetViewProps & { network: PluginNetworkAccess }
 
 function makeProps(overrides?: Partial<WeatherViewProps>): WeatherViewProps {
   return {
-    instanceId: "weather-1",
-    pluginId: "official.widgets.weather",
-    contributionId: "weather",
-    size: "M",
-    supportedSizes: ["S", "M", "L", "XL"],
-    config: { city: "北京", unit: "celsius" },
-    data: {
-      get: vi.fn().mockResolvedValue(undefined),
-      save: vi.fn().mockResolvedValue(undefined),
-    },
-    host: {
-      updateConfig: vi.fn().mockResolvedValue(undefined),
-      removeInstance: vi.fn().mockResolvedValue(undefined),
-      requestResize: vi.fn().mockResolvedValue(undefined),
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
-      openExpand: vi.fn(),
-      showToast: vi.fn(),
-      openExternal: vi.fn().mockResolvedValue(true),
-    },
+    ...makeWidgetViewProps({
+      instanceId: "weather-1",
+      pluginId: "official.widgets.weather",
+      contributionId: "weather",
+      size: "M",
+      supportedSizes: ["S", "M", "L", "XL"],
+      config: { city: "北京", unit: "celsius" },
+    }),
     network: {
       canFetch: () => true,
       fetch: (url, init) => fetch(url, init),

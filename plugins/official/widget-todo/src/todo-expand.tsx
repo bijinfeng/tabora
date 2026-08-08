@@ -12,6 +12,7 @@ import {
   DEFAULT_GROUP_ID,
   TODO_GROUPS_KEY,
   TODO_ITEMS_KEY,
+  createDefaultTodoItems,
   type Priority,
   type TodoGroup,
   type TodoItem,
@@ -56,32 +57,7 @@ export function TodoExpand(props: WidgetViewProps) {
     if (savedItems !== null && savedItems !== undefined && savedItems.length > 0) {
       setItems(savedItems)
     } else {
-      setItems([
-        {
-          id: "seed-1",
-          text: "复核 Dashboard 布局协议",
-          done: true,
-          priority: "high",
-          groupId: DEFAULT_GROUP_ID,
-        },
-        {
-          id: "seed-2",
-          text: "补齐 widget 尺寸菜单",
-          done: false,
-          priority: "medium",
-          dueDate: "2025-12-31",
-          groupId: DEFAULT_GROUP_ID,
-          assignee: "毕金风",
-        },
-        {
-          id: "seed-3",
-          text: "清理插件设置中的导入导出项",
-          done: false,
-          priority: "low",
-          groupId: DEFAULT_GROUP_ID,
-          assignee: "毕金风",
-        },
-      ])
+      setItems(createDefaultTodoItems({ includeAssignees: true }))
     }
   })
 

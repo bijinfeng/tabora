@@ -52,4 +52,37 @@ describe("createExtensionRegistry", () => {
     )
     expect(registry.settings.get("official.account.provider")).toBe(first)
   })
+  it("keeps later registrations when a stale disposer runs", () => {
+    const registry = createExtensionRegistry()
+    const firstView = () => null
+    const replacementView = () => null
+
+    const disposeFirst = registry.views.register("official.notes.card", firstView)
+    disposeFirst()
+    registry.views.register("official.notes.card", replacementView)
+    disposeFirst()
+
+    expect(registry.views.get("official.notes.card")).toBe(replacementView)
+  })
+
+  it("retrieves settings providers and executes registered commands", async () => {
+    const registry = createExtensionRegistry()
+    const provider = { getModel: () => ({ version: 1 as const, nodes: [] }), dispatch: () => {} }
+    const command = async () => {}
+
+    const invocation = { commandId: "official.account.refresh", source: "programmatic" as const }
+
+    registry.settings.register("official.account.provider", provider)
+    registry.commands.register("official.account.refresh", command)
+
+    expect(registry.settings.get("official.account.provider")).toBe(provider)
+    expect(registry.settings.has("official.account.provider")).toBe(true)
+    await expect(registry.commands.execute("official.account.refresh", invocation)).resolves.toBe(
+      true,
+    )
+    await expect(registry.commands.execute("missing.command", invocation)).resolves.toBe(false)
+    expect(() => registry.commands.get("missing.command")).toThrow(
+      "Command handler not registered: missing.command",
+    )
+  })
 })

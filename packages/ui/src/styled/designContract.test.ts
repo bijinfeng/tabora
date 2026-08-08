@@ -42,6 +42,7 @@ import skeletonSource from "./skeleton/skeleton.styled.tsx?raw"
 import sliderSource from "./slider/slider.styled.tsx?raw"
 import spinnerSource from "./spinner/spinner.styled.tsx?raw"
 import stepsSource from "./steps/steps.styled.tsx?raw"
+import sharedStylesSource from "./sharedStyles.stylex.ts?raw"
 import switchSource from "./switch/switch.styled.tsx?raw"
 import tabsSource from "./tabs/tabs.styled.tsx?raw"
 import tagInputSource from "./tagInput/tagInput.styled.tsx?raw"
@@ -164,11 +165,13 @@ describe("styled component design contract", () => {
     }
 
     for (const source of [dropdownMenuSource, contextMenuSource, menubarSource]) {
-      expect(source).toContain("color.surface")
-      expect(source).toContain("color.line")
+      expect(source).toContain("@tabora/theme/tokens.stylex")
     }
-    expect(dropdownMenuSource).toContain("color.danger")
-    expect(contextMenuSource).toContain("color.danger")
+    expect(sharedStylesSource).toContain("color.surface")
+    expect(sharedStylesSource).toContain("color.line")
+    expect(sharedStylesSource).toContain("color.danger")
+    expect(dropdownMenuSource).toContain("sharedStyles.menuDanger")
+    expect(contextMenuSource).toContain("sharedStyles.menuDanger")
 
     for (const source of [dialogSource, drawerSource, commandPaletteSource]) {
       expect(source).toContain("radius.panel")

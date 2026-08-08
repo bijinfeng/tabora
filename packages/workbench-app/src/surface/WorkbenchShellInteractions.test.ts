@@ -1,5 +1,5 @@
 import type { PluginInstance, WidgetContribution, WidgetViewProps } from "@tabora/plugin-api"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import {
   buildWorkbenchWidgetExpandState,
@@ -82,6 +82,24 @@ describe("isWorkbenchInteractiveElement", () => {
 })
 
 describe("buildWorkbenchWidgetExpandState", () => {
+  it("returns the invalid-instance error without building widget props", () => {
+    const buildWidgetViewProps = vi.fn(props)
+
+    const result = buildWorkbenchWidgetExpandState({
+      instance: instance(),
+      model: null,
+      widget: widget({ card: "widget.notes.card" }),
+      hasView: () => true,
+      buildWidgetViewProps,
+    })
+
+    expect(result).toEqual({
+      expandState: null,
+      errorMessage: "卡片实例无效：widget-1",
+    })
+    expect(buildWidgetViewProps).not.toHaveBeenCalled()
+  })
+
   it("uses the explicit expand view contract", () => {
     const viewProps = props()
     const result = buildWorkbenchWidgetExpandState({

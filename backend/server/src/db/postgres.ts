@@ -1,13 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
-import { createAttachmentQueries } from "./attachments"
-import { createAuditLogQueries } from "./auditLog"
-import { createEmailQueueQueries } from "./emailQueue"
 import { buildDdl, buildTables } from "./schemaFactory"
-import { createSettingsQueries } from "./settings"
-import { createSyncedRecordQueries } from "./syncedRecords"
-import { createUserQueries } from "./users"
+import { createDbQueries } from "./queryWiring"
 
 export function createPostgresDb(connectionString: string) {
   const pool = new Pool({ connectionString })
@@ -23,36 +18,14 @@ export function createPostgresDb(connectionString: string) {
     return Number(result.rows[0]?.value ?? 0)
   }
 
-  const syncedRecords = createSyncedRecordQueries(db, {
-    syncedRecord: schema.syncedRecord,
-    user: schema.user,
-  })
-
-  const attachments = createAttachmentQueries(db, {
-    attachmentPolicy: schema.attachmentPolicy,
-    attachmentFile: schema.attachmentFile,
-    attachmentRef: schema.attachmentRef,
-  })
-
-  const settings = createSettingsQueries(db, schema.setting)
-
-  const emailQueue = createEmailQueueQueries(db, { emailQueue: schema.emailQueue })
-
-  const users = createUserQueries(db, { user: schema.user, account: schema.account })
-
-  const auditLog = createAuditLogQueries(db, { auditLog: schema.auditLog })
+  const queries = createDbQueries(db, schema)
 
   return {
     db,
     provider: "pg" as const,
     migrate,
     countUsers,
-    syncedRecords,
-    attachments,
-    settings,
-    emailQueue,
-    users,
-    auditLog,
+    ...queries,
     close: () => pool.end(),
   }
 }
