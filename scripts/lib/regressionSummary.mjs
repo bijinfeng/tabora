@@ -40,8 +40,7 @@ const FOCUSED_TEST_RULES = [
   "packages/workbench-shell",
   "apps/playground",
   "apps/site",
-  "backend/admin",
-  "backend/server",
+  "backend/app",
   "tooling/stylex",
   "tooling/vitest",
   "plugins/community/layout-diy-masonry",
@@ -83,8 +82,7 @@ const CHANGE_TYPE_RULES = [
   },
   {
     type: "backend",
-    matches: (filePath) =>
-      filePath.startsWith("backend/admin/") || filePath.startsWith("backend/server/"),
+    matches: (filePath) => filePath.startsWith("backend/app/"),
   },
   {
     type: "orchestrator",

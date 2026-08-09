@@ -131,7 +131,7 @@ Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
 | `protocol`     | `plugin-api` 类型、schema、manifest 字段                     | L1 + L2 + L3 + L6 + L7           |
 | `kernel`       | plugin kernel、runtime context、event bus、permission bridge | L1 + L2 + L3 + L6 + L7           |
 | `storage`      | Dexie schema、repository、import/export、workspace preset    | L1 + L2 + L3 + L6 + L7           |
-| `backend`      | `backend/server` 服务与 `backend/admin` 管理台               | L1 + L2 + L3 + L7                |
+| `backend`      | `backend/app` 后端服务与管理台                                | L1 + L2 + L3 + L7                |
 | `orchestrator` | layout switcher、drag sort、command、settings、toast model   | L1 + L2 + L3 + L4 + L7           |
 | `shell`        | playground / extension App、host adapters、workbench-shell   | L1 + L2 + L3 + L4 + L5 + L6 + L7 |
 | `plugin`       | official/community widget、layout、search、settings panel    | L1 + L2 + L3 + L4 + L5 + L7      |

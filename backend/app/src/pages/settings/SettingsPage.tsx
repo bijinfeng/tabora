@@ -1,0 +1,227 @@
+import * as stylex from "@stylexjs/stylex"
+import { Button } from "@tabora/ui/button"
+import { Field } from "@tabora/ui/field"
+import { InlineError } from "@tabora/ui/inline-error"
+import { Input } from "@tabora/ui/input"
+import { Select } from "@tabora/ui/select"
+import { Switch } from "@tabora/ui/switch"
+import { useMutation, useQuery } from "@tanstack/solid-query"
+import { createSignal, Show, type JSX } from "solid-js"
+
+import {
+  fetchSettings,
+  saveSettings,
+  testSmtp,
+  type SettingsView,
+} from "../../server/admin/settings"
+import { styles } from "./settings.styles"
+
+function Section(props: { title: string; desc?: string; children: JSX.Element }) {
+  return (
+    <section {...stylex.attrs(styles.section)}>
+      <h2 {...stylex.attrs(styles.sectionTitle)}>{props.title}</h2>
+      <Show when={props.desc}>
+        <p {...stylex.attrs(styles.sectionDesc)}>{props.desc}</p>
+      </Show>
+      {props.children}
+    </section>
+  )
+}
+
+export function SettingsPage() {
+  const loaded = useQuery(() => ({ queryKey: ["settings"], queryFn: () => fetchSettings() }))
+  const [form, setForm] = createSignal<SettingsView | null>(null)
+  const [saved, setSaved] = createSignal(false)
+  const [testResult, setTestResult] = createSignal<{ success: boolean; message: string } | null>(
+    null,
+  )
+
+  const saveMutation = useMutation(() => ({
+    mutationFn: (next: SettingsView) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      saveSettings({ data: next as any }),
+    onSuccess: () => setSaved(true),
+  }))
+
+  const testMutation = useMutation(() => ({
+    mutationFn: (to: string) => testSmtp({ data: { to } }),
+    onSuccess: () => setTestResult({ success: true, message: "测试邮件已发送，请检查收件箱" }),
+    onError: (err: Error) => setTestResult({ success: false, message: err.message }),
+  }))
+
+  const model = () => {
+    const data = loaded.data
+    if (data && !form()) setForm(data)
+    return form()
+  }
+
+  function patch<K extends keyof SettingsView>(key: K, value: SettingsView[K]) {
+    const current = form()
+    if (!current) return
+    setForm({ ...current, [key]: value })
+    setSaved(false)
+  }
+
+  function handleSave() {
+    const current = form()
+    if (!current || saveMutation.isPending) return
+    setSaved(false)
+    saveMutation.mutate(current)
+  }
+
+  function handleTestSmtp() {
+    if (testMutation.isPending) return
+    const current = form()
+    if (!current?.contactEmail) {
+      setTestResult({ success: false, message: "请先配置联系邮箱作为测试收件地址" })
+      return
+    }
+    setTestResult(null)
+    testMutation.mutate(current.contactEmail)
+  }
+
+  return (
+    <div {...stylex.attrs(styles.page)}>
+      <Show when={loaded.error}>
+        <InlineError>{(loaded.error as Error)?.message ?? "加载失败"}</InlineError>
+      </Show>
+      <Show when={model()}>
+        {(m) => (
+          <SettingsForm
+            model={m()}
+            patch={patch}
+            onTestSmtp={handleTestSmtp}
+            testing={testMutation.isPending}
+          />
+        )}
+      </Show>
+      <Show when={testResult()}>
+        {(result) =>
+          result().success ? (
+            <span {...stylex.attrs(styles.savedHint)}>{result().message}</span>
+          ) : (
+            <InlineError>{result().message}</InlineError>
+          )
+        }
+      </Show>
+      <Show when={form()}>
+        <div {...stylex.attrs(styles.saveBar)}>
+          <Show when={saveMutation.error}>
+            <InlineError>{(saveMutation.error as Error)?.message}</InlineError>
+          </Show>
+          <Show when={saved()}>
+            <span {...stylex.attrs(styles.savedHint)}>已保存</span>
+          </Show>
+          <Button variant="primary" loading={saveMutation.isPending} onClick={handleSave}>
+            保存设置
+          </Button>
+        </div>
+      </Show>
+    </div>
+  )
+}
+
+function SettingsForm(props: {
+  model: SettingsView
+  patch: <K extends keyof SettingsView>(key: K, value: SettingsView[K]) => void
+  onTestSmtp: () => void
+  testing: boolean
+}) {
+  const m = props.model
+  return (
+    <>
+      <Section title="注册与账号策略" desc="控制公开注册与新用户默认角色。">
+        <div {...stylex.attrs(styles.row)}>
+          <div>
+            <div {...stylex.attrs(styles.rowLabel)}>开放公开注册</div>
+            <div {...stylex.attrs(styles.rowHelp)}>关闭后仅管理员可创建账号</div>
+          </div>
+          <Switch
+            checked={m.signupEnabled}
+            onChange={(v) => props.patch("signupEnabled", v)}
+            aria-label="开放公开注册"
+          />
+        </div>
+        <Field label="默认角色" htmlFor="set-role" helper="新注册用户仅可为普通用户">
+          <Select
+            value={m.defaultRole}
+            onChange={(v) => props.patch("defaultRole", v)}
+            options={[{ value: "user", label: "普通用户" }]}
+            aria-label="默认角色"
+          />
+        </Field>
+        <div {...stylex.attrs(styles.row)}>
+          <div {...stylex.attrs(styles.rowLabel)}>要求邮箱验证</div>
+          <Switch
+            checked={m.requireEmailVerification}
+            onChange={(v) => props.patch("requireEmailVerification", v)}
+            aria-label="要求邮箱验证"
+          />
+        </div>
+      </Section>
+
+      <Section title="附件全局默认" desc="未配置专属策略的实体沿用此默认。">
+        <Field label="最大上传字节数" htmlFor="set-maxsize" helper="0 表示不限制">
+          <Input
+            id="set-maxsize"
+            value={String(m.attachmentMaxSizeBytes)}
+            onInput={(v) => props.patch("attachmentMaxSizeBytes", Number(v) || 0)}
+            placeholder="例如 5242880"
+          />
+        </Field>
+      </Section>
+
+      <Section title="站点品牌信息">
+        <Field label="站点名称" htmlFor="set-sitename">
+          <Input id="set-sitename" value={m.siteName} onInput={(v) => props.patch("siteName", v)} />
+        </Field>
+        <Field label="联系邮箱" htmlFor="set-contact">
+          <Input
+            id="set-contact"
+            type="email"
+            value={m.contactEmail}
+            onInput={(v) => props.patch("contactEmail", v)}
+            placeholder="support@example.com"
+          />
+        </Field>
+      </Section>
+
+      <Section title="邮件 Provider" desc="用于密码重置邮件；密码字段留空表示不修改。">
+        <Field label="SMTP 主机" htmlFor="set-smtphost">
+          <Input id="set-smtphost" value={m.smtpHost} onInput={(v) => props.patch("smtpHost", v)} />
+        </Field>
+        <Field label="SMTP 端口" htmlFor="set-smtpport">
+          <Input
+            id="set-smtpport"
+            value={String(m.smtpPort)}
+            onInput={(v) => props.patch("smtpPort", Number(v) || 0)}
+          />
+        </Field>
+        <Field label="发件人" htmlFor="set-smtpfrom">
+          <Input id="set-smtpfrom" value={m.smtpFrom} onInput={(v) => props.patch("smtpFrom", v)} />
+        </Field>
+        <Field label="SMTP 用户名" htmlFor="set-smtpuser">
+          <Input id="set-smtpuser" value={m.smtpUser} onInput={(v) => props.patch("smtpUser", v)} />
+        </Field>
+        <Field
+          label="SMTP 密码"
+          htmlFor="set-smtppass"
+          helper={m.smtpPasswordConfigured ? "已配置，留空则不修改" : "尚未配置"}
+        >
+          <Input
+            id="set-smtppass"
+            type="password"
+            value={m.smtpPassword}
+            onInput={(v) => props.patch("smtpPassword", v)}
+            placeholder="留空不修改"
+          />
+        </Field>
+        <div {...stylex.attrs(styles.row)}>
+          <Button variant="secondary" loading={props.testing} onClick={props.onTestSmtp}>
+            发送测试邮件
+          </Button>
+        </div>
+      </Section>
+    </>
+  )
+}

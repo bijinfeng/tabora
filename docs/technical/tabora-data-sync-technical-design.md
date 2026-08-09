@@ -11,13 +11,13 @@
 - 需求与产品决策：`docs/technical/tabora-data-sync-prd.md`
 - 平台架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 回归治理：`docs/technical/tabora-regression-baseline.md`
-- 后端服务：`backend/server`
+- 后端服务：`backend/app`
 
 ## 1. 文档定位
 
 本文档描述当前账号与同步链路的实现边界、HTTP 契约和运行时接线。产品范围与验收以同步 PRD 为准，代码是字段和错误细节的最终依据。
 
-当前后端是仓库内的 `backend/server`，基于 Hono、`@hono/node-server`、better-auth 和 Drizzle ORM。开发使用 SQLite，生产可使用 PostgreSQL。本文档不把设备管理、快照、冲突收件箱或 E2EE 描述成已交付能力。
+当前后端是仓库内的 `backend/app`（TanStack Start 全栈应用），服务端基于 better-auth 和 Drizzle ORM。开发使用 SQLite，生产可使用 PostgreSQL。本文档不把设备管理、快照、冲突收件箱或 E2EE 描述成已交付能力。
 
 ## 2. 当前架构
 
@@ -28,11 +28,11 @@ playground / extension
   | @tabora/auth: better-auth client
   | @tabora/sync: queue、push、pull、LWW、tombstone
   v
-backend/server
+backend/app
   |- /api/auth/*       better-auth 邮箱密码、会话和密码重置
   |- /api/sync/*       登录用户的同步记录 API
   |- /api/attachments  登录用户的附件 API
-  `- /admin-api/*      管理员用户、记录、附件、设置和审计 API
+  `- admin server fn   管理员用户、记录、附件、设置和审计（同应用内 server function）
 ```
 
 `official.account-sync` 是可选 builtin 插件。组合根只在配置云端 API 时创建 `AccountSyncService` 并装配该插件；服务内部持有认证客户端、同步 manager 和同步元数据仓库，插件只获得设置 provider 所需的最小操作面。未装配账号插件的宿主不创建认证存储、同步队列或同步调度。
@@ -46,15 +46,15 @@ backend/server
 | `POST /api/sync/records` | 登录用户 | 批量推送当前态记录 |
 | `GET /api/sync/records` | 登录用户 | 按 `since` 增量拉取记录 |
 | `/api/attachments/*` | 登录用户 | 文件上传、绑定和访问 |
-| `/admin-api/*` | 管理员 | 用户、同步记录、附件、系统、设置、邮件队列和审计 |
+| 管理员操作（server function） | 管理员 | 用户、同步记录、附件、系统、设置和审计 |
 
-`buildApp` 在 `/api/sync/*` 和 `/api/attachments/*` 前挂载 `createRequireUser`，从 cookie 或 bearer token 解析会话并写入 `userId`。管理端路由统一经过 `requireAdmin` 和审计中间件。所有用户记录查询都带 owner 条件。
+`/api/sync/*` 和 `/api/attachments/*` 从 cookie 或 bearer token 解析会话并写入 `userId`，未登录返回 401。管理端操作是应用内的 admin server function，统一经过授权（未登录 401、非管理员 403）和审计中间件。所有用户记录查询都带 owner 条件。
 
 ## 4. 认证与会话
 
 ### 4.1 服务端
 
-`backend/server/src/auth.ts` 使用 better-auth 的邮箱密码、admin 和 bearer 插件：
+`backend/app/src/server/auth.ts` 使用 better-auth 的邮箱密码、admin 和 bearer 插件：
 
 - 首个用户可作为管理员完成初始化；后续公开注册由系统设置控制。
 - 密码重置和邮箱验证通过服务端邮件队列发送，不把邮件凭据或重置值写入工作台数据。
@@ -158,7 +158,7 @@ workspace | pluginInstance | plugin | pluginData
 
 | 验证项 | 命令 |
 | --- | --- |
-| 后端服务 | `pnpm --dir backend/server test` |
+| 后端服务 | `pnpm --dir backend/app test` |
 | 认证与同步客户端 | `pnpm --dir packages/auth exec vitest run --config vitest.config.ts`；`pnpm --dir packages/sync exec vitest run --config vitest.config.ts` |
 | 全量单元测试 | `pnpm test` |
 | 格式、lint、类型和架构检查 | `pnpm check` |

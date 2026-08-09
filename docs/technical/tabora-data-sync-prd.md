@@ -27,7 +27,7 @@
 | 本地模式 | 未登录或同步不可用时继续使用本地工作台                    |
 | 产品入口 | 设置中心的账号与数据同步入口，不在工作台放同步卡片        |
 | 装配方式 | `official.account-sync` 按需加载；playground 配置云端 API 时装配，FNOS 不装配 |
-| 后端     | `backend/server`（better-auth + Hono + Drizzle），提供认证、同步和附件 API |
+| 后端     | `backend/app`（better-auth + Drizzle），提供认证、同步和附件 API |
 | 同步模型 | state-based 当前态；每条云端记录有更新时间和 tombstone    |
 | 访问边界 | 客户端仅通过同步 API，不直连云端数据表                    |
 | 合并     | 记录级 last-write-wins；无法自动处理的冲突保留为后续能力  |

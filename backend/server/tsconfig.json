@@ -1,9 +1,0 @@
-{
-  "extends": "@tabora/tsconfig/base.json",
-  "compilerOptions": {
-    "types": ["node"],
-    "jsx": "preserve",
-    "outDir": "dist"
-  },
-  "include": ["src", "tsdown.config.ts", "vitest.config.ts"]
-}

@@ -31,7 +31,7 @@ describe("regression summary helpers", () => {
         ".github/copilot-instructions.md",
         ".github/pull_request_template.md",
         "apps/site/AGENTS.md",
-        "backend/admin/AGENTS.md",
+        "backend/app/AGENTS.md",
         "GEMINI.md",
         "packages/ui/AGENTS.md",
         "plugins/AGENTS.md",
@@ -77,15 +77,14 @@ describe("regression summary helpers", () => {
         "packages/plugin-api/src/manifestSchema.ts",
         "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
         "tooling/vitest/prGovernance.test.ts",
-        "backend/admin/src/auth/errors.ts",
-        "backend/server/src/app.ts",
+        "backend/app/src/auth/errors.ts",
+        "backend/app/src/server/app.ts",
         "plugins/official/widget-notes/src/notes-card.tsx",
       ]),
     ).toEqual([
       "pnpm --dir packages/plugin-api exec vitest run --config vitest.config.ts",
       "pnpm --dir packages/workbench-app exec vitest run --config vitest.config.ts",
-      "pnpm --dir backend/admin exec vitest run --config vitest.config.ts",
-      "pnpm --dir backend/server exec vitest run --config vitest.config.ts",
+      "pnpm --dir backend/app exec vitest run --config vitest.config.ts",
       "pnpm exec vitest run --config tooling/vitest/vitest.config.ts",
       "pnpm --dir plugins/official/widget-notes exec vitest run --config vitest.config.ts",
     ])
@@ -93,12 +92,12 @@ describe("regression summary helpers", () => {
 
   it("classifies backend changes and requires test/check/build evidence", () => {
     expect(
-      collectChangeTypes(["backend/admin/src/auth/errors.ts", "backend/server/src/app.ts"]),
+      collectChangeTypes(["backend/app/src/auth/errors.ts", "backend/app/src/server/app.ts"]),
     ).toEqual(["backend"])
     expect(collectRequiredLevels(["backend"])).toEqual(["L1", "L2", "L3", "L7"])
     expect(
       collectSuggestedCommands({
-        changedFiles: ["backend/admin/src/auth/errors.ts"],
+        changedFiles: ["backend/app/src/auth/errors.ts"],
         changeTypes: ["backend"],
       }),
     ).toEqual(["pnpm quality", "pnpm test", "pnpm check", "pnpm build"])

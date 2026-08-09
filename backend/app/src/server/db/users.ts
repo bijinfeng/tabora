@@ -1,0 +1,78 @@
+import { count, eq } from "drizzle-orm"
+
+/**
+ * 用户管理查询层
+ */
+export function createUserQueries(db: any, schema: { user: any; account: any }) {
+  const { user, account } = schema
+
+  async function getAll(limit = 100, offset = 0) {
+    const rows = await db.select().from(user).orderBy(user.createdAt).limit(limit).offset(offset)
+
+    const totalRows = await db.select({ value: count() }).from(user)
+
+    return { rows, total: Number(totalRows[0]?.value ?? 0) }
+  }
+
+  async function getById(id: string) {
+    const rows = await db.select().from(user).where(eq(user.id, id)).limit(1)
+    return rows[0] || null
+  }
+
+  async function getByEmail(email: string) {
+    const rows = await db.select().from(user).where(eq(user.email, email)).limit(1)
+    return rows[0] || null
+  }
+
+  /** 统计具备 admin 角色的用户数（role 为逗号分隔，含 "admin" 视为管理员）。 */
+  async function countAdmins() {
+    const rows = (await db.select({ role: user.role }).from(user)) as Array<{
+      role: string | null
+    }>
+    return rows.filter((r) => (r.role ?? "").split(",").includes("admin")).length
+  }
+
+  async function updateUser(id: string, data: { name?: string; email?: string; role?: string }) {
+    await db.update(user).set(data).where(eq(user.id, id))
+  }
+
+  async function banUser(id: string, reason?: string, expiresAt?: Date) {
+    await db
+      .update(user)
+      .set({
+        banned: true,
+        banReason: reason || null,
+        banExpires: expiresAt || null,
+      })
+      .where(eq(user.id, id))
+  }
+
+  async function unbanUser(id: string) {
+    await db
+      .update(user)
+      .set({
+        banned: false,
+        banReason: null,
+        banExpires: null,
+      })
+      .where(eq(user.id, id))
+  }
+
+  async function deleteUser(id: string) {
+    // 删除用户的所有 account 记录
+    await db.delete(account).where(eq(account.userId, id))
+    // 删除用户
+    await db.delete(user).where(eq(user.id, id))
+  }
+
+  return {
+    getAll,
+    getById,
+    getByEmail,
+    countAdmins,
+    updateUser,
+    banUser,
+    unbanUser,
+    deleteUser,
+  }
+}

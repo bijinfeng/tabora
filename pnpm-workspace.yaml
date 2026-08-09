@@ -4,8 +4,7 @@ packages:
   - plugins/*
   - plugins/*/*
   - tooling/*
-  - backend/admin
-  - backend/server
+  - backend/app
 
 overrides:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.6
