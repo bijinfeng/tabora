@@ -1,4 +1,5 @@
 import { ADMIN_API_BASE_URL } from "../../config"
+import { fetchAdminJson } from "../../utils/fetchAdminJson"
 import type { PaginatedResponse } from "../../utils/pagination"
 
 export type AttachmentFile = {
@@ -18,17 +19,11 @@ export type AttachmentPolicy = {
   maxSizeBytes: number | null
 }
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${ADMIN_API_BASE_URL}${path}`, { credentials: "include" })
-  if (!res.ok) throw new Error(res.status === 403 ? "需要管理员权限" : "加载失败")
-  return (await res.json()) as T
-}
-
 export async function listFiles(
   limit: number,
   offset: number,
 ): Promise<{ files: AttachmentFile[]; total: number }> {
-  const res = await get<PaginatedResponse<AttachmentFile>>(
+  const res = await fetchAdminJson<PaginatedResponse<AttachmentFile>>(
     `/admin-api/attachments/files?limit=${limit}&offset=${offset}`,
   )
   return { files: res.data, total: res.meta.total }
@@ -43,7 +38,7 @@ export async function deleteFile(id: number): Promise<void> {
 }
 
 export async function listPolicies(): Promise<AttachmentPolicy[]> {
-  const data = await get<{ data: AttachmentPolicy[] }>("/admin-api/attachment-policies")
+  const data = await fetchAdminJson<{ data: AttachmentPolicy[] }>("/admin-api/attachment-policies")
   return data.data
 }
 

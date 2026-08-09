@@ -35,10 +35,6 @@ export function createAttachmentQueries(
       return rows[0] ?? null
     },
 
-    async getAllPolicies(): Promise<PolicyRow[]> {
-      return (await db.select().from(p).orderBy(p.entityType)) as PolicyRow[]
-    },
-
     async listPolicies(): Promise<PolicyRow[]> {
       return (await db.select().from(p).orderBy(p.entityType)) as PolicyRow[]
     },

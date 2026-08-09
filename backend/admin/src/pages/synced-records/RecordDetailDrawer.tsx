@@ -5,6 +5,7 @@ import { Button } from "@tabora/ui/button"
 import { For, Show } from "solid-js"
 
 import { styles } from "./syncedRecords.styles"
+import { formatAdminTimestamp } from "../../utils/formatTimestamp"
 import type { SyncedRecord } from "./syncedRecordsApi"
 
 const SENSITIVE_KEY = /token|secret|password|apikey|api_key|privatekey|credential/i
@@ -20,11 +21,6 @@ function redact(value: unknown): unknown {
     )
   }
   return value
-}
-
-function formatTime(value: string | number): string {
-  const ms = typeof value === "number" ? value * 1000 : Date.parse(value)
-  return Number.isNaN(ms) ? String(value) : new Date(ms).toLocaleString()
 }
 
 type Props = {
@@ -43,7 +39,7 @@ export function RecordDetailDrawer(props: Props) {
       ["Owner", r.ownerEmail ?? r.ownerId],
       ["版本", String(r.version)],
       ["设备", r.deviceId],
-      ["更新时间", formatTime(r.recordUpdatedAt)],
+      ["更新时间", formatAdminTimestamp(r.recordUpdatedAt)],
     ] as const
   }
 

@@ -23,7 +23,7 @@ export function createAdminAttachmentPolicyRoutes(handle: DbHandle) {
 
   // 获取所有策略
   app.get("/", async (c) => {
-    const policies = await handle.attachments.getAllPolicies()
+    const policies = await handle.attachments.listPolicies()
     return c.json({ data: policies })
   })
 

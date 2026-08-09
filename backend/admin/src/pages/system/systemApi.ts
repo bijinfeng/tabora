@@ -1,4 +1,4 @@
-import { ADMIN_API_BASE_URL } from "../../config"
+import { fetchAdminJson } from "../../utils/fetchAdminJson"
 
 export type SystemInfo = {
   server: {
@@ -48,9 +48,5 @@ export type SystemInfo = {
 }
 
 export async function fetchSystemInfo(): Promise<SystemInfo> {
-  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/system/info`, {
-    credentials: "include",
-  })
-  if (!res.ok) throw new Error(res.status === 403 ? "需要管理员权限" : "加载失败")
-  return (await res.json()) as SystemInfo
+  return fetchAdminJson("/admin-api/system/info")
 }

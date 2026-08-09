@@ -1,4 +1,5 @@
 import { ADMIN_API_BASE_URL } from "../../config"
+import { fetchAdminJson } from "../../utils/fetchAdminJson"
 
 export type SettingsView = {
   signupEnabled: boolean
@@ -17,9 +18,8 @@ export type SettingsView = {
 }
 
 export async function fetchSettings(): Promise<SettingsView> {
-  const res = await fetch(`${ADMIN_API_BASE_URL}/admin-api/settings`, { credentials: "include" })
-  if (!res.ok) throw new Error(res.status === 403 ? "需要管理员权限" : "加载失败")
-  return (await res.json()).settings as SettingsView
+  const data = await fetchAdminJson<{ settings: SettingsView }>("/admin-api/settings")
+  return data.settings
 }
 
 export async function saveSettings(patch: Partial<SettingsView>): Promise<void> {

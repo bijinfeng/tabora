@@ -13,6 +13,7 @@ import { Pagination } from "../../components/Pagination"
 import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { createDebounced } from "../../utils/createDebounced"
+import { formatAdminTimestamp } from "../../utils/formatTimestamp"
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
 import { styles } from "./syncedRecords.styles"
 import { deleteSyncedRecord, listSyncedRecords, type SyncedRecord } from "./syncedRecordsApi"
@@ -167,11 +168,6 @@ export function SyncedRecordsPage() {
   )
 }
 
-function formatTime(value: string | number): string {
-  const ms = typeof value === "number" ? value * 1000 : Date.parse(value)
-  return Number.isNaN(ms) ? String(value) : new Date(ms).toLocaleString()
-}
-
 function buildColumns(): TableColumn<SyncedRecord>[] {
   return [
     {
@@ -210,7 +206,9 @@ function buildColumns(): TableColumn<SyncedRecord>[] {
     {
       key: "updatedAt",
       header: "更新时间",
-      cell: (r) => <span {...stylex.attrs(styles.ownerText)}>{formatTime(r.recordUpdatedAt)}</span>,
+      cell: (r) => (
+        <span {...stylex.attrs(styles.ownerText)}>{formatAdminTimestamp(r.recordUpdatedAt)}</span>
+      ),
     },
   ]
 }

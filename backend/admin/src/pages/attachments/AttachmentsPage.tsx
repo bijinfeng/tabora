@@ -11,6 +11,7 @@ import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { Pagination } from "../../components/Pagination"
 import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
+import { formatAdminTimestamp } from "../../utils/formatTimestamp"
 import { deleteFile, listFiles, type AttachmentFile } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
 
@@ -20,11 +21,6 @@ function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-}
-
-function formatTime(value: string | number): string {
-  const ms = typeof value === "number" ? value * 1000 : Date.parse(value)
-  return Number.isNaN(ms) ? String(value) : new Date(ms).toLocaleString()
 }
 
 export function AttachmentsPage() {
@@ -83,7 +79,7 @@ export function AttachmentsPage() {
     {
       key: "created",
       header: "上传时间",
-      cell: (f) => <span {...stylex.attrs(styles.muted)}>{formatTime(f.createdAt)}</span>,
+      cell: (f) => <span {...stylex.attrs(styles.muted)}>{formatAdminTimestamp(f.createdAt)}</span>,
     },
     {
       key: "actions",

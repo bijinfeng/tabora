@@ -1,4 +1,5 @@
 import { ADMIN_API_BASE_URL } from "../../config"
+import { fetchAdminJson } from "../../utils/fetchAdminJson"
 import type { PaginatedResponse } from "../../utils/pagination"
 
 export type SyncedRecord = {
@@ -28,12 +29,6 @@ export type ListQuery = {
   offset: number
 }
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${ADMIN_API_BASE_URL}${path}`, { credentials: "include" })
-  if (!res.ok) throw new Error(res.status === 403 ? "需要管理员权限" : "加载失败")
-  return (await res.json()) as T
-}
-
 export async function listSyncedRecords(
   query: ListQuery,
 ): Promise<{ records: SyncedRecord[]; total: number }> {
@@ -43,18 +38,18 @@ export async function listSyncedRecords(
   if (query.search) params.set("search", query.search)
   params.set("limit", String(query.limit))
   params.set("offset", String(query.offset))
-  const res = await get<PaginatedResponse<SyncedRecord>>(
+  const res = await fetchAdminJson<PaginatedResponse<SyncedRecord>>(
     `/admin-api/synced-records?${params.toString()}`,
   )
   return { records: res.data, total: res.meta.total }
 }
 
 export async function fetchSyncedRecordStats(): Promise<SyncedRecordStats> {
-  return get("/admin-api/synced-records/stats")
+  return fetchAdminJson("/admin-api/synced-records/stats")
 }
 
 export async function fetchSyncedRecordById(id: string): Promise<SyncedRecord> {
-  return get(`/admin-api/synced-records/${id}`)
+  return fetchAdminJson(`/admin-api/synced-records/${id}`)
 }
 
 export async function deleteSyncedRecord(id: string): Promise<void> {
