@@ -3,13 +3,6 @@ import * as stylex from "@stylexjs/stylex"
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
-  page: {
-    display: "flex",
-    flexDirection: "column",
-    gap: space.s6,
-    margin: "0 auto",
-    maxWidth: 1120,
-  },
   toolbar: {
     alignItems: "center",
     display: "flex",
@@ -36,21 +29,6 @@ export const styles = stylex.create({
     color: color.textSubtle,
     fontFamily: font.mono,
     fontSize: 11,
-  },
-  formGrid: {
-    display: "flex",
-    flexDirection: "column",
-    gap: space.s4,
-  },
-  footerRow: {
-    alignItems: "center",
-    display: "flex",
-    gap: space.s3,
-    justifyContent: "flex-end",
-  },
-  actionCell: {
-    display: "flex",
-    justifyContent: "flex-end",
   },
   banBanner: {
     backgroundColor: color.dangerSoft,

@@ -13,6 +13,7 @@ import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { formatAdminTimestamp } from "../../utils/formatTimestamp"
+import { shared } from "../shared.styles"
 import { deleteFile, listFiles, type AttachmentFile } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
 
@@ -61,7 +62,7 @@ export function AttachmentsPage() {
     {
       key: "mime",
       header: "类型",
-      cell: (f) => <span {...stylex.attrs(styles.mono)}>{f.mime}</span>,
+      cell: (f) => <span {...stylex.attrs(shared.mono)}>{f.mime}</span>,
     },
     {
       key: "size",
@@ -87,7 +88,7 @@ export function AttachmentsPage() {
       header: "",
       align: "end",
       cell: (f) => (
-        <div {...stylex.attrs(styles.actionCell)}>
+        <div {...stylex.attrs(shared.actionCell)}>
           <Button size="sm" variant="danger-subtle" onClick={() => setDeleteTarget(f)}>
             删除
           </Button>
@@ -97,7 +98,7 @@ export function AttachmentsPage() {
   ]
 
   return (
-    <div {...stylex.attrs(styles.page)}>
+    <div {...stylex.attrs(shared.page)}>
       <Show when={error()}>
         <InlineError>{error()}</InlineError>
       </Show>

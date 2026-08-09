@@ -7,8 +7,8 @@ import { Input } from "@tabora/ui/input"
 import { useMutation } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 
+import { shared } from "../shared.styles"
 import { upsertPolicy, type AttachmentPolicy } from "./attachmentsApi"
-import { styles } from "./attachments.styles"
 
 type Props = {
   open: boolean
@@ -71,7 +71,7 @@ export function PolicyEditorDialog(props: Props) {
         title={props.editing ? "编辑附件策略" : "新建附件策略"}
         description="按 entity_type 限制可上传的 MIME 类型与文件大小。"
         footer={
-          <div {...stylex.attrs(styles.footerRow)}>
+          <div {...stylex.attrs(shared.footerRow)}>
             <Button variant="secondary" onClick={props.onClose}>
               取消
             </Button>
@@ -81,7 +81,7 @@ export function PolicyEditorDialog(props: Props) {
           </div>
         }
       >
-        <div {...stylex.attrs(styles.formGrid)}>
+        <div {...stylex.attrs(shared.formGrid)}>
           <Field label="entity_type" htmlFor="policy-entity">
             <Input
               id="policy-entity"

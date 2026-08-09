@@ -15,6 +15,7 @@ import { useToast } from "../../contexts/ToastContext"
 import { createDebounced } from "../../utils/createDebounced"
 import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { formatAdminTimestamp } from "../../utils/formatTimestamp"
+import { shared } from "../shared.styles"
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
 import { styles } from "./syncedRecords.styles"
 import { deleteSyncedRecord, listSyncedRecords, type SyncedRecord } from "./syncedRecordsApi"
@@ -83,7 +84,7 @@ export function SyncedRecordsPage() {
   const columns = buildColumns()
 
   return (
-    <div {...stylex.attrs(styles.page)}>
+    <div {...stylex.attrs(shared.page)}>
       <div {...stylex.attrs(styles.toolbar)}>
         <div {...stylex.attrs(styles.searchBox)}>
           <Input
@@ -183,7 +184,7 @@ function buildColumns(): TableColumn<SyncedRecord>[] {
     {
       key: "recordId",
       header: "记录 ID",
-      cell: (r) => <span {...stylex.attrs(styles.mono)}>{r.recordId}</span>,
+      cell: (r) => <span {...stylex.attrs(shared.mono)}>{r.recordId}</span>,
     },
     {
       key: "owner",
@@ -193,7 +194,7 @@ function buildColumns(): TableColumn<SyncedRecord>[] {
     {
       key: "version",
       header: "版本",
-      cell: (r) => <span {...stylex.attrs(styles.mono)}>v{r.version}</span>,
+      cell: (r) => <span {...stylex.attrs(shared.mono)}>v{r.version}</span>,
     },
     {
       key: "status",

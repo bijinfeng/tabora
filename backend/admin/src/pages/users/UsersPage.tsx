@@ -18,6 +18,7 @@ import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { createDebounced } from "../../utils/createDebounced"
 import { createOffsetPagination } from "../../utils/createOffsetPagination"
+import { shared } from "../shared.styles"
 import { CreateUserDialog } from "./CreateUserDialog"
 import { styles } from "./users.styles"
 import { banUser, listUsers, removeUser, setRole, unbanUser, type AdminUser } from "./usersApi"
@@ -75,7 +76,7 @@ export function UsersPage() {
   })
 
   return (
-    <div {...stylex.attrs(styles.page)}>
+    <div {...stylex.attrs(shared.page)}>
       <div {...stylex.attrs(styles.toolbar)}>
         <div {...stylex.attrs(styles.toolbarLeft)}>
           <Input
@@ -166,7 +167,7 @@ function RowActions(props: { user: AdminUser; handlers: ColumnHandlers }) {
     { id: "delete", label: "删除用户", danger: true, onClick: () => h.onDelete(u) },
   ]
   return (
-    <div {...stylex.attrs(styles.actionCell)}>
+    <div {...stylex.attrs(shared.actionCell)}>
       <DropdownMenu items={items} align="end" triggerAriaLabel="用户操作">
         <MoreHorizontal size={16} />
       </DropdownMenu>

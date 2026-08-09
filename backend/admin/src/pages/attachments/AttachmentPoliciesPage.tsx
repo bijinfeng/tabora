@@ -10,6 +10,7 @@ import Plus from "lucide-solid/icons/plus"
 
 import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { useToast } from "../../contexts/ToastContext"
+import { shared } from "../shared.styles"
 import { PolicyEditorDialog } from "./PolicyEditorDialog"
 import { deletePolicy, listPolicies, type AttachmentPolicy } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
@@ -63,7 +64,7 @@ export function AttachmentPoliciesPage() {
     {
       key: "entity",
       header: "entity_type",
-      cell: (p) => <span {...stylex.attrs(styles.mono)}>{p.entityType}</span>,
+      cell: (p) => <span {...stylex.attrs(shared.mono)}>{p.entityType}</span>,
     },
     {
       key: "mime",
@@ -87,7 +88,7 @@ export function AttachmentPoliciesPage() {
       header: "",
       align: "end",
       cell: (p) => (
-        <div {...stylex.attrs(styles.actionCell)}>
+        <div {...stylex.attrs(shared.actionCell)}>
           <Button size="sm" variant="secondary" onClick={() => openEdit(p)}>
             编辑
           </Button>
@@ -100,7 +101,7 @@ export function AttachmentPoliciesPage() {
   ]
 
   return (
-    <div {...stylex.attrs(styles.page)}>
+    <div {...stylex.attrs(shared.page)}>
       <div {...stylex.attrs(styles.toolbar)}>
         <span {...stylex.attrs(styles.muted)}>按 entity_type 限制上传 MIME 与大小</span>
         <Button variant="primary" onClick={openNew}>

@@ -8,8 +8,8 @@ import { Select } from "@tabora/ui/select"
 import { useMutation } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 
+import { shared } from "../shared.styles"
 import { createUser } from "./usersApi"
-import { styles } from "./users.styles"
 
 type CreateUserDialogProps = {
   open: boolean
@@ -67,7 +67,7 @@ export function CreateUserDialog(props: CreateUserDialogProps) {
       title="创建用户"
       description="新用户可用邮箱密码登录；设为管理员将获得后台管理权限。"
       footer={
-        <div {...stylex.attrs(styles.footerRow)}>
+        <div {...stylex.attrs(shared.footerRow)}>
           <Button variant="secondary" onClick={props.onClose}>
             取消
           </Button>
@@ -77,7 +77,7 @@ export function CreateUserDialog(props: CreateUserDialogProps) {
         </div>
       }
     >
-      <div {...stylex.attrs(styles.formGrid)}>
+      <div {...stylex.attrs(shared.formGrid)}>
         <Field label="邮箱" htmlFor="new-user-email">
           <Input
             id="new-user-email"
