@@ -11,6 +11,7 @@ import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { Pagination } from "../../components/Pagination"
 import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
+import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { formatAdminTimestamp } from "../../utils/formatTimestamp"
 import { deleteFile, listFiles, type AttachmentFile } from "./attachmentsApi"
 import { styles } from "./attachments.styles"
@@ -25,7 +26,7 @@ function formatSize(bytes: number): string {
 
 export function AttachmentsPage() {
   const [error, setError] = createSignal<string | null>(null)
-  const [offset, setOffset] = createSignal(0)
+  const { offset, onPrev, onNext } = createOffsetPagination(PAGE_SIZE)
   const [deleteTarget, setDeleteTarget] = createSignal<AttachmentFile | null>(null)
   const queryClient = useQueryClient()
   const { showToast } = useToast()
@@ -120,8 +121,8 @@ export function AttachmentsPage() {
             offset={offset()}
             pageSize={PAGE_SIZE}
             total={d().total}
-            onPrev={() => setOffset(Math.max(0, offset() - PAGE_SIZE))}
-            onNext={() => setOffset(offset() + PAGE_SIZE)}
+            onPrev={onPrev}
+            onNext={onNext}
           />
         )}
       </Show>

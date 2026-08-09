@@ -6,6 +6,8 @@ import { Select } from "@tabora/ui/select"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+
+import { SettingsGroup } from "./settings-workspace.shared"
 import { className, styles } from "./styles"
 
 const TEXT_MODEL_OPTIONS = ["GPT-4.1 Mini", "Claude 3.5 Sonnet", "Gemini 1.5 Pro"]
@@ -60,10 +62,7 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
 
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="ai">
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          AI 网关状态<span>{gatewayStatus()}</span>
-        </div>
+      <SettingsGroup title="AI 网关状态" meta={gatewayStatus()}>
         <div {...stylex.attrs(styles.statusGrid)} aria-label="AI 网关状态">
           <div {...stylex.attrs(styles.statusCard)}>
             <span>默认文本模型</span>
@@ -88,12 +87,9 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
             </Button>
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          模型提供商<span>2 个启用</span>
-        </div>
+      <SettingsGroup title="模型提供商" meta="2 个启用">
         <FieldRow
           class={className(styles.fieldRow)}
           label="提供商类型"
@@ -142,12 +138,9 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
             </div>
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          模型配置<span>默认槽位</span>
-        </div>
+      <SettingsGroup title="模型配置" meta="默认槽位">
         <FieldRow
           class={className(styles.fieldRow)}
           label="默认文本模型"
@@ -204,12 +197,9 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
             </div>
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          插件 AI 使用<span>首次授权</span>
-        </div>
+      <SettingsGroup title="插件 AI 使用" meta="首次授权">
         <For each={grantRows()}>
           {(grant) => (
             <FieldRow
@@ -233,7 +223,7 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           description="图片或文本只在用户触发 AI 功能时发送给当前模型提供商"
           trailing={<span {...stylex.attrs(styles.fieldNote)}>插件不会获得 API Key</span>}
         />
-      </section>
+      </SettingsGroup>
     </div>
   )
 }

@@ -13,6 +13,7 @@ import { Pagination } from "../../components/Pagination"
 import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { createDebounced } from "../../utils/createDebounced"
+import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { formatAdminTimestamp } from "../../utils/formatTimestamp"
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
 import { styles } from "./syncedRecords.styles"
@@ -39,7 +40,7 @@ export function SyncedRecordsPage() {
   const [deleted, setDeleted] = createSignal("")
   const [search, setSearch] = createSignal("")
   const debouncedSearch = createDebounced(search, 300)
-  const [offset, setOffset] = createSignal(0)
+  const { offset, onPrev, onNext, reset: resetOffset } = createOffsetPagination(PAGE_SIZE)
   const [detail, setDetail] = createSignal<SyncedRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = createSignal<SyncedRecord | null>(null)
   const queryClient = useQueryClient()
@@ -89,7 +90,7 @@ export function SyncedRecordsPage() {
             value={search()}
             onInput={(v) => {
               setSearch(v)
-              setOffset(0)
+              resetOffset()
             }}
             placeholder="按记录 ID 搜索"
             leadingIcon={<Search size={16} />}
@@ -101,7 +102,7 @@ export function SyncedRecordsPage() {
           value={type()}
           onChange={(v) => {
             setType(v)
-            setOffset(0)
+            resetOffset()
           }}
           options={TYPE_OPTIONS}
           aria-label="按类型筛选"
@@ -110,7 +111,7 @@ export function SyncedRecordsPage() {
           value={deleted()}
           onChange={(v) => {
             setDeleted(v)
-            setOffset(0)
+            resetOffset()
           }}
           options={DELETED_OPTIONS}
           aria-label="按状态筛选"
@@ -140,8 +141,8 @@ export function SyncedRecordsPage() {
             offset={offset()}
             pageSize={PAGE_SIZE}
             total={d().total}
-            onPrev={() => setOffset(Math.max(0, offset() - PAGE_SIZE))}
-            onNext={() => setOffset(offset() + PAGE_SIZE)}
+            onPrev={onPrev}
+            onNext={onNext}
           />
         )}
       </Show>

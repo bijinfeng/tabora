@@ -1,13 +1,13 @@
 import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
-import { Checkbox } from "@tabora/ui/checkbox"
 import { FieldRow } from "@tabora/ui/field-row"
 import { SegmentedControl } from "@tabora/ui/segmented-control"
 import { Select } from "@tabora/ui/select"
-import { Slider } from "@tabora/ui/slider"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+
+import { CheckChipList, RangeField, SettingsGroup } from "./settings-workspace.shared"
 import { className, styles } from "./styles"
 
 const PLUGIN_INSTANCES = [
@@ -47,11 +47,7 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
 
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="plugins">
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          运行插件配置
-          <span {...stylex.attrs(styles.groupTitleMeta)}>{`${activePluginName()} · 当前实例`}</span>
-        </div>
+      <SettingsGroup title="运行插件配置" meta={`${activePluginName()} · 当前实例`}>
         <div {...stylex.attrs(styles.configList)} aria-label="选择插件配置">
           <For each={PLUGIN_INSTANCES}>
             {(instance) => (
@@ -89,17 +85,15 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
           label="刷新间隔"
           description="字段 type=range，宿主负责保存和实时校验"
           trailing={
-            <div {...stylex.attrs(styles.rangeControl)}>
-              <Slider
-                value={refreshInterval()}
-                min={5}
-                max={60}
-                step={5}
-                onChange={setRefreshInterval}
-                aria-label="刷新间隔"
-              />
-              <span>{refreshInterval()}min</span>
-            </div>
+            <RangeField
+              ariaLabel="刷新间隔"
+              value={refreshInterval()}
+              min={5}
+              max={60}
+              step={5}
+              format={(value) => `${value}min`}
+              onChange={setRefreshInterval}
+            />
           }
         />
         <FieldRow
@@ -107,17 +101,14 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
           label="卡片显示项"
           description="字段 type=checkbox-group，决定卡片紧凑态展示内容"
           trailing={
-            <div {...stylex.attrs(styles.checkList)} aria-label="天气卡片显示项">
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={showTemperature()} onChange={setShowTemperature} label="温度" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={showAir()} onChange={setShowAir} label="空气" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={showWind()} onChange={setShowWind} label="风力" />
-              </span>
-            </div>
+            <CheckChipList
+              ariaLabel="天气卡片显示项"
+              items={() => [
+                { label: "温度", checked: showTemperature(), onChange: setShowTemperature },
+                { label: "空气", checked: showAir(), onChange: setShowAir },
+                { label: "风力", checked: showWind(), onChange: setShowWind },
+              ]}
+            />
           }
         />
         <FieldRow
@@ -133,12 +124,9 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
             />
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          插件安全<span {...stylex.attrs(styles.groupTitleMeta)}>本地权限</span>
-        </div>
+      <SettingsGroup title="插件安全" meta="本地权限">
         <FieldRow
           class={className(styles.fieldRow)}
           label="插件隔离运行"
@@ -157,24 +145,15 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
           label="允许的权限"
           description="插件默认只能请求勾选范围内的本地能力"
           trailing={
-            <div {...stylex.attrs(styles.checkList)} aria-label="允许的权限">
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={allowStorage()} onChange={setAllowStorage} label="存储" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={allowNetwork()} onChange={setAllowNetwork} label="网络" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox
-                  checked={allowNotification()}
-                  onChange={setAllowNotification}
-                  label="通知"
-                />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={allowClipboard()} onChange={setAllowClipboard} label="剪贴板" />
-              </span>
-            </div>
+            <CheckChipList
+              ariaLabel="允许的权限"
+              items={() => [
+                { label: "存储", checked: allowStorage(), onChange: setAllowStorage },
+                { label: "网络", checked: allowNetwork(), onChange: setAllowNetwork },
+                { label: "通知", checked: allowNotification(), onChange: setAllowNotification },
+                { label: "剪贴板", checked: allowClipboard(), onChange: setAllowClipboard },
+              ]}
+            />
           }
         />
         <FieldRow
@@ -190,12 +169,9 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
             </div>
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          开发者协议<span {...stylex.attrs(styles.groupTitleMeta)}>plugin.settings</span>
-        </div>
+      <SettingsGroup title="开发者协议" meta="plugin.settings">
         <FieldRow
           class={className(styles.fieldRow)}
           label="插件声明设置项"
@@ -230,7 +206,7 @@ export function PluginRuntimeSettingsPanel(_props: SettingsPanelViewProps) {
             />
           }
         />
-      </section>
+      </SettingsGroup>
     </div>
   )
 }

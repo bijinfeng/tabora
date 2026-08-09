@@ -8,7 +8,7 @@ import { createSignal } from "solid-js"
 import { AuthCard } from "./AuthCard"
 import { styles } from "./auth.styles"
 import { authClient } from "./authClient"
-import { toAuthMessage } from "./errors"
+import { createAuthSubmit } from "./createAuthSubmit"
 
 const MIN_PASSWORD = 8
 
@@ -16,38 +16,20 @@ export function RegisterPage(props: { onSuccess: () => void }) {
   const [email, setEmail] = createSignal("")
   const [password, setPassword] = createSignal("")
   const [confirm, setConfirm] = createSignal("")
-  const [error, setError] = createSignal<string | null>(null)
-  const [submitting, setSubmitting] = createSignal(false)
-
-  function validate(): string | null {
-    if (password().length < MIN_PASSWORD) return `密码至少 ${MIN_PASSWORD} 位`
-    if (password() !== confirm()) return "两次输入的密码不一致"
-    return null
-  }
-
-  async function handleSubmit(event: SubmitEvent) {
-    event.preventDefault()
-    if (submitting()) return
-    const localError = validate()
-    if (localError) {
-      setError(localError)
-      return
-    }
-    setError(null)
-    setSubmitting(true)
-    try {
-      await authClient.signUp.email({
+  const { error, submitting, handleSubmit } = createAuthSubmit({
+    validate: () => {
+      if (password().length < MIN_PASSWORD) return `密码至少 ${MIN_PASSWORD} 位`
+      if (password() !== confirm()) return "两次输入的密码不一致"
+      return null
+    },
+    action: () =>
+      authClient.signUp.email({
         email: email().trim(),
         password: password(),
         name: email().split("@")[0] || "Admin",
-      })
-      props.onSuccess()
-    } catch (err) {
-      setError(toAuthMessage(err))
-    } finally {
-      setSubmitting(false)
-    }
-  }
+      }),
+    onSuccess: () => props.onSuccess(),
+  })
 
   return (
     <AuthCard title="初始化管理员" subtitle="首次部署尚无管理员，创建第一个管理员账号以进入后台。">

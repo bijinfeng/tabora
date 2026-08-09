@@ -1,16 +1,16 @@
 import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
-import { Checkbox } from "@tabora/ui/checkbox"
 import { FieldRow } from "@tabora/ui/field-row"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Kbd } from "@tabora/ui/kbd"
-import { SegmentedControl } from "@tabora/ui/segmented-control"
 import { Select } from "@tabora/ui/select"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 import { contributionRefKey } from "@tabora/plugin-api/sdk"
+
+import { CheckChipList, ContributionSegmented, SettingsGroup } from "./settings-workspace.shared"
 import { className, styles } from "./styles"
 
 export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
@@ -105,10 +105,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
 
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="workbench">
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          工作区<span {...stylex.attrs(styles.groupTitleMeta)}>本地保存</span>
-        </div>
+      <SettingsGroup title="工作区" meta="本地保存">
         <FieldRow
           class={className(styles.fieldRow)}
           label="当前工作区"
@@ -129,25 +126,14 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           label="默认布局"
           description="切换新标签页打开时使用的布局插件"
           trailing={
-            <Show
-              when={layoutOptions().length > 0}
-              fallback={
-                <span {...stylex.attrs(styles.rowMeta)}>{workspace().activeLayout.id}</span>
-              }
-            >
-              <SegmentedControl<string>
-                size="sm"
-                value={contributionRefKey(workspace().activeLayout)}
-                options={layoutOptions()}
-                onChange={(key) => {
-                  const layout = layouts().find(
-                    (candidate) => contributionRefKey(candidate.ref) === key,
-                  )
-                  if (layout) void props.host.switchLayout?.(layout.ref)
-                }}
-                aria-label="默认布局"
-              />
-            </Show>
+            <ContributionSegmented
+              ariaLabel="默认布局"
+              activeKey={contributionRefKey(workspace().activeLayout)}
+              fallback={workspace().activeLayout.id}
+              items={layouts}
+              options={layoutOptions}
+              onPick={(layout) => void props.host.switchLayout?.(layout.ref)}
+            />
           }
         />
         <FieldRow
@@ -176,12 +162,9 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
             </div>
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          启动行为<span {...stylex.attrs(styles.groupTitleMeta)}>快捷入口</span>
-        </div>
+      <SettingsGroup title="启动行为" meta="快捷入口">
         <FieldRow
           class={className(styles.fieldRow)}
           label="打开时聚焦搜索"
@@ -224,25 +207,19 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           label="启动后恢复"
           description="选择刷新后要自动恢复的个人状态"
           trailing={
-            <div {...stylex.attrs(styles.checkList)} aria-label="启动后恢复">
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={restoreLayout()} onChange={setRestoreLayout} label="布局" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={restoreSize()} onChange={setRestoreSize} label="尺寸" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={restoreFilter()} onChange={setRestoreFilter} label="筛选" />
-              </span>
-            </div>
+            <CheckChipList
+              ariaLabel="启动后恢复"
+              items={() => [
+                { label: "布局", checked: restoreLayout(), onChange: setRestoreLayout },
+                { label: "尺寸", checked: restoreSize(), onChange: setRestoreSize },
+                { label: "筛选", checked: restoreFilter(), onChange: setRestoreFilter },
+              ]}
+            />
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          工作区管理<span {...stylex.attrs(styles.groupTitleMeta)}>导入导出</span>
-        </div>
+      <SettingsGroup title="工作区管理" meta="导入导出">
         <FieldRow
           class={className(styles.fieldRow)}
           label="新建工作区"
@@ -340,7 +317,7 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
             <For each={importWarnings()}>{(warning) => <li>{warning}</li>}</For>
           </ul>
         </Show>
-      </section>
+      </SettingsGroup>
     </div>
   )
 }

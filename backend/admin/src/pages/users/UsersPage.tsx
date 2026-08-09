@@ -12,21 +12,22 @@ import MoreHorizontal from "lucide-solid/icons/ellipsis"
 import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 
+import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { Pagination } from "../../components/Pagination"
 import { QueryState } from "../../components/QueryState"
 import { useToast } from "../../contexts/ToastContext"
 import { createDebounced } from "../../utils/createDebounced"
+import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { CreateUserDialog } from "./CreateUserDialog"
-import { DeleteUserDialog } from "./DeleteUserDialog"
 import { styles } from "./users.styles"
-import { banUser, listUsers, setRole, unbanUser, type AdminUser } from "./usersApi"
+import { banUser, listUsers, removeUser, setRole, unbanUser, type AdminUser } from "./usersApi"
 
 const PAGE_SIZE = 20
 
 export function UsersPage() {
   const [search, setSearch] = createSignal("")
   const debouncedSearch = createDebounced(search, 300)
-  const [offset, setOffset] = createSignal(0)
+  const { offset, onPrev, onNext, reset: resetOffset } = createOffsetPagination(PAGE_SIZE)
   const [createOpen, setCreateOpen] = createSignal(false)
   const [deleteTarget, setDeleteTarget] = createSignal<AdminUser | null>(null)
   const [actionError, setActionError] = createSignal<string | null>(null)
@@ -57,6 +58,15 @@ export function UsersPage() {
     },
   }))
 
+  const deleteMutation = useMutation(() => ({
+    mutationFn: (id: string) => removeUser(id),
+    onSuccess: () => {
+      setDeleteTarget(null)
+      showToast({ variant: "success", title: "用户已删除" })
+      return queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+  }))
+
   const columns = buildColumns({
     onSetRole: (u, role) => actionMutation.mutate(() => setRole(u.id, role)),
     onBan: (u) => actionMutation.mutate(() => banUser(u.id, "管理员封禁")),
@@ -72,7 +82,7 @@ export function UsersPage() {
             value={search()}
             onInput={(v) => {
               setSearch(v)
-              setOffset(0)
+              resetOffset()
             }}
             placeholder="按邮箱搜索"
             leadingIcon={<Search size={16} />}
@@ -103,8 +113,8 @@ export function UsersPage() {
             offset={offset()}
             pageSize={PAGE_SIZE}
             total={d().total}
-            onPrev={() => setOffset(Math.max(0, offset() - PAGE_SIZE))}
-            onNext={() => setOffset(offset() + PAGE_SIZE)}
+            onPrev={onPrev}
+            onNext={onNext}
           />
         )}
       </Show>
@@ -114,13 +124,18 @@ export function UsersPage() {
         onClose={() => setCreateOpen(false)}
         onCreated={() => void queryClient.invalidateQueries({ queryKey: ["users"] })}
       />
-      <DeleteUserDialog
-        user={deleteTarget()}
-        onClose={() => setDeleteTarget(null)}
-        onDeleted={() => {
-          showToast({ variant: "success", title: "用户已删除" })
-          void queryClient.invalidateQueries({ queryKey: ["users"] })
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        title="删除用户"
+        description={`确认删除 ${deleteTarget()?.email ?? ""}？该操作不可撤销，用户数据与会话将一并移除。`}
+        confirmLabel="删除"
+        loading={deleteMutation.isPending}
+        error={(deleteMutation.error as Error | null)?.message ?? null}
+        onConfirm={() => {
+          const target = deleteTarget()
+          if (target && !deleteMutation.isPending) deleteMutation.mutate(target.id)
         }}
+        onClose={() => setDeleteTarget(null)}
       />
     </div>
   )

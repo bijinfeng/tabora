@@ -98,6 +98,79 @@ function formatUptime(sec: number): string {
 
 type RowItem = { label: string; value: string; badge?: "success" | "warning" }
 
+type SystemInfo = NonNullable<Awaited<ReturnType<typeof fetchSystemInfo>>>
+
+function infoSections(d: SystemInfo): { title: string; rows: RowItem[] }[] {
+  return [
+    {
+      title: "服务运行时",
+      rows: [
+        { label: "版本", value: d.server.version },
+        { label: "Node.js", value: d.server.node },
+        { label: "启动时间", value: new Date(d.server.startedAt).toLocaleString() },
+        { label: "运行时长", value: formatUptime(d.server.uptimeSec) },
+        {
+          label: "认证密钥",
+          value: d.auth.secretConfigured ? "已配置（强密钥）" : "⚠ 密钥过短",
+          badge: d.auth.secretConfigured ? "success" : "warning",
+        },
+        { label: "认证基址", value: d.auth.baseUrl },
+      ],
+    },
+    {
+      title: "数据库",
+      rows: [
+        { label: "驱动", value: d.database.client },
+        d.database.client === "sqlite"
+          ? { label: "文件路径", value: d.database.file ?? "—" }
+          : { label: "连接串", value: d.database.url ?? "—" },
+      ],
+    },
+    {
+      title: "存储",
+      rows: [
+        { label: "Provider", value: d.storage.provider },
+        { label: "上传目录", value: d.storage.uploadsDir },
+      ],
+    },
+    {
+      title: "SMTP 邮件",
+      rows: [
+        {
+          label: "配置状态",
+          value: d.smtp.configured ? "已配置" : "未配置",
+          badge: d.smtp.configured ? "success" : "warning",
+        },
+        ...(d.smtp.configured
+          ? [
+              { label: "SMTP 主机", value: d.smtp.host ?? "—" },
+              { label: "SMTP 端口", value: String(d.smtp.port ?? "—") },
+              { label: "发件人地址", value: d.smtp.from ?? "—" },
+            ]
+          : []),
+      ],
+    },
+    {
+      title: "邮件队列",
+      rows: [
+        { label: "待发送", value: String(d.emailQueue.pending) },
+        { label: "发送中", value: String(d.emailQueue.active) },
+        { label: "已完成", value: String(d.emailQueue.completed) },
+        { label: "失败", value: String(d.emailQueue.failed) },
+      ],
+    },
+    {
+      title: "内存使用",
+      rows: [
+        { label: "RSS", value: `${d.memory.rss} MB` },
+        { label: "Heap Used", value: `${d.memory.heapUsed} MB` },
+        { label: "Heap Total", value: `${d.memory.heapTotal} MB` },
+        { label: "External", value: `${d.memory.external} MB` },
+      ],
+    },
+  ]
+}
+
 function InfoCard(props: { rows: RowItem[] }) {
   return (
     <div {...stylex.attrs(styles.card)}>
@@ -153,89 +226,14 @@ export function SystemPage() {
               </div>
             </section>
 
-            <section {...stylex.attrs(styles.section)}>
-              <h2 {...stylex.attrs(styles.sectionTitle)}>服务运行时</h2>
-              <InfoCard
-                rows={[
-                  { label: "版本", value: d().server.version },
-                  { label: "Node.js", value: d().server.node },
-                  { label: "启动时间", value: new Date(d().server.startedAt).toLocaleString() },
-                  { label: "运行时长", value: formatUptime(d().server.uptimeSec) },
-                  {
-                    label: "认证密钥",
-                    value: d().auth.secretConfigured ? "已配置（强密钥）" : "⚠ 密钥过短",
-                    badge: d().auth.secretConfigured ? "success" : "warning",
-                  },
-                  { label: "认证基址", value: d().auth.baseUrl },
-                ]}
-              />
-            </section>
-
-            <section {...stylex.attrs(styles.section)}>
-              <h2 {...stylex.attrs(styles.sectionTitle)}>数据库</h2>
-              <InfoCard
-                rows={[
-                  { label: "驱动", value: d().database.client },
-                  ...(d().database.client === "sqlite"
-                    ? [{ label: "文件路径", value: d().database.file ?? "—" }]
-                    : [{ label: "连接串", value: d().database.url ?? "—" }]),
-                ]}
-              />
-            </section>
-
-            <section {...stylex.attrs(styles.section)}>
-              <h2 {...stylex.attrs(styles.sectionTitle)}>存储</h2>
-              <InfoCard
-                rows={[
-                  { label: "Provider", value: d().storage.provider },
-                  { label: "上传目录", value: d().storage.uploadsDir },
-                ]}
-              />
-            </section>
-
-            <section {...stylex.attrs(styles.section)}>
-              <h2 {...stylex.attrs(styles.sectionTitle)}>SMTP 邮件</h2>
-              <InfoCard
-                rows={[
-                  {
-                    label: "配置状态",
-                    value: d().smtp.configured ? "已配置" : "未配置",
-                    badge: d().smtp.configured ? "success" : "warning",
-                  },
-                  ...(d().smtp.configured
-                    ? [
-                        { label: "SMTP 主机", value: d().smtp.host ?? "—" },
-                        { label: "SMTP 端口", value: String(d().smtp.port ?? "—") },
-                        { label: "发件人地址", value: d().smtp.from ?? "—" },
-                      ]
-                    : []),
-                ]}
-              />
-            </section>
-
-            <section {...stylex.attrs(styles.section)}>
-              <h2 {...stylex.attrs(styles.sectionTitle)}>邮件队列</h2>
-              <InfoCard
-                rows={[
-                  { label: "待发送", value: String(d().emailQueue.pending) },
-                  { label: "发送中", value: String(d().emailQueue.active) },
-                  { label: "已完成", value: String(d().emailQueue.completed) },
-                  { label: "失败", value: String(d().emailQueue.failed) },
-                ]}
-              />
-            </section>
-
-            <section {...stylex.attrs(styles.section)}>
-              <h2 {...stylex.attrs(styles.sectionTitle)}>内存使用</h2>
-              <InfoCard
-                rows={[
-                  { label: "RSS", value: `${d().memory.rss} MB` },
-                  { label: "Heap Used", value: `${d().memory.heapUsed} MB` },
-                  { label: "Heap Total", value: `${d().memory.heapTotal} MB` },
-                  { label: "External", value: `${d().memory.external} MB` },
-                ]}
-              />
-            </section>
+            <For each={infoSections(d())}>
+              {(section) => (
+                <section {...stylex.attrs(styles.section)}>
+                  <h2 {...stylex.attrs(styles.sectionTitle)}>{section.title}</h2>
+                  <InfoCard rows={section.rows} />
+                </section>
+              )}
+            </For>
           </>
         )}
       </Show>

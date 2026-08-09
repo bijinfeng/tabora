@@ -9,33 +9,21 @@ import { createSignal } from "solid-js"
 import { AuthCard } from "./AuthCard"
 import { styles } from "./auth.styles"
 import { authClient } from "./authClient"
-import { toAuthMessage } from "./errors"
+import { createAuthSubmit } from "./createAuthSubmit"
 
 export function LoginPage(props: { onSuccess: () => void }) {
   const [email, setEmail] = createSignal("")
   const [password, setPassword] = createSignal("")
   const [remember, setRemember] = createSignal(true)
-  const [error, setError] = createSignal<string | null>(null)
-  const [submitting, setSubmitting] = createSignal(false)
-
-  async function handleSubmit(event: SubmitEvent) {
-    event.preventDefault()
-    if (submitting()) return
-    setError(null)
-    setSubmitting(true)
-    try {
-      await authClient.signIn.email({
+  const { error, submitting, handleSubmit } = createAuthSubmit({
+    action: () =>
+      authClient.signIn.email({
         email: email().trim(),
         password: password(),
         rememberMe: remember(),
-      })
-      props.onSuccess()
-    } catch (err) {
-      setError(toAuthMessage(err))
-    } finally {
-      setSubmitting(false)
-    }
-  }
+      }),
+    onSuccess: () => props.onSuccess(),
+  })
 
   return (
     <AuthCard title="登录管理后台" subtitle="使用管理员账号登录，管理用户、同步记录与附件。">

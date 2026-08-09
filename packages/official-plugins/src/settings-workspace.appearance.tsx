@@ -3,10 +3,11 @@ import { IconButton } from "@tabora/ui/button"
 import { FieldRow } from "@tabora/ui/field-row"
 import { SegmentedControl } from "@tabora/ui/segmented-control"
 import { Select } from "@tabora/ui/select"
-import { Slider } from "@tabora/ui/slider"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 import { contributionRefKey, sameContributionRef } from "@tabora/plugin-api/sdk"
+
+import { ContributionSegmented, RangeField, SettingsGroup } from "./settings-workspace.shared"
 import { className, styles } from "./styles"
 
 export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
@@ -49,32 +50,20 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
 
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="appearance">
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          主题<span {...stylex.attrs(styles.groupTitleMeta)}>{activeThemeTitle()}</span>
-        </div>
+      <SettingsGroup title="主题" meta={activeThemeTitle()}>
         <FieldRow
           class={className(styles.fieldRow)}
           label="界面模式"
           description="明亮、暗色或跟随系统"
           trailing={
-            <Show
-              when={themeOptions().length > 0}
-              fallback={<span {...stylex.attrs(styles.rowMeta)}>{activeTheme().id}</span>}
-            >
-              <SegmentedControl<string>
-                size="sm"
-                value={contributionRefKey(activeTheme())}
-                options={themeOptions()}
-                onChange={(key) => {
-                  const theme = themes().find(
-                    (candidate) => contributionRefKey(candidate.ref) === key,
-                  )
-                  if (theme) void props.host.switchTheme?.(theme.ref)
-                }}
-                aria-label="界面模式"
-              />
-            </Show>
+            <ContributionSegmented
+              ariaLabel="界面模式"
+              activeKey={contributionRefKey(activeTheme())}
+              fallback={activeTheme().id}
+              items={themes}
+              options={themeOptions}
+              onPick={(theme) => void props.host.switchTheme?.(theme.ref)}
+            />
           }
         />
         <FieldRow
@@ -100,12 +89,9 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
             </div>
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          背景<span {...stylex.attrs(styles.groupTitleMeta)}>{activeBackgroundTitle()}</span>
-        </div>
+      <SettingsGroup title="背景" meta={activeBackgroundTitle()}>
         <FieldRow
           class={className(styles.fieldRow)}
           label="页面背景"
@@ -155,16 +141,14 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           label="圆角半径"
           description="控制卡片、输入框和浮层的圆角基准"
           trailing={
-            <div {...stylex.attrs(styles.rangeControl)}>
-              <Slider
-                value={radius()}
-                min={4}
-                max={14}
-                onChange={setRadius}
-                aria-label="圆角半径"
-              />
-              <span>{radius()}px</span>
-            </div>
+            <RangeField
+              ariaLabel="圆角半径"
+              value={radius()}
+              min={4}
+              max={14}
+              format={(value) => `${value}px`}
+              onChange={setRadius}
+            />
           }
         />
         <FieldRow
@@ -172,25 +156,20 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           label="正文大小"
           description="仅调整工作台正文和卡片说明文字"
           trailing={
-            <div {...stylex.attrs(styles.rangeControl)}>
-              <Slider
-                value={fontSize()}
-                min={11}
-                max={15}
-                onChange={setFontSize}
-                aria-label="正文大小"
-              />
-              <span>{fontSize()}px</span>
-            </div>
+            <RangeField
+              ariaLabel="正文大小"
+              value={fontSize()}
+              min={11}
+              max={15}
+              format={(value) => `${value}px`}
+              onChange={setFontSize}
+            />
           }
         />
-      </section>
+      </SettingsGroup>
 
       <Show when={canSwitchLocale()}>
-        <section {...stylex.attrs(styles.group)}>
-          <div {...stylex.attrs(styles.groupTitle)}>
-            语言<span {...stylex.attrs(styles.groupTitleMeta)}>{localeValue()}</span>
-          </div>
+        <SettingsGroup title="语言" meta={localeValue()}>
           <FieldRow
             class={className(styles.fieldRow)}
             label="当前语言"
@@ -206,7 +185,7 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
               />
             }
           />
-        </section>
+        </SettingsGroup>
       </Show>
     </div>
   )

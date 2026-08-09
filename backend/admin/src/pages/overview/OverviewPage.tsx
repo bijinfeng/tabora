@@ -6,13 +6,12 @@ import { For, Show } from "solid-js"
 
 import { fetchSystemInfo } from "../system/systemApi"
 import { fetchSyncedRecordStats } from "../synced-records/syncedRecordsApi"
+import { BarChart, type BarDatum } from "./charts/BarChart"
 import { ChartCard } from "./charts/ChartCard"
 import { chartStyles } from "./charts/charts.styles"
-import { EmailQueueChart } from "./charts/EmailQueueChart"
 import { Legend } from "./charts/Legend"
 import { chartColor } from "./charts/palette"
 import { RecordStateChart } from "./charts/RecordStateChart"
-import { RecordTypesChart } from "./charts/RecordTypesChart"
 import { deriveHealthStatuses, type Metric } from "./overviewData"
 import { styles } from "./overview.styles"
 
@@ -50,6 +49,21 @@ export function OverviewPage() {
   const statsError = () => (stats.error as Error | null)?.message ?? null
   const systemError = () => (system.error as Error | null)?.message ?? null
   const healthStatuses = () => deriveHealthStatuses(system.data)
+
+  const typeRows = (): BarDatum[] =>
+    Object.entries(stats.data?.byType ?? {})
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+
+  const queueRows = (): BarDatum[] => {
+    const q = system.data?.emailQueue ?? { pending: 0, active: 0, completed: 0, failed: 0 }
+    return [
+      { label: "待发", value: q.pending, color: chartColor.warning },
+      { label: "发送中", value: q.active, color: chartColor.info },
+      { label: "已完成", value: q.completed, color: chartColor.success },
+      { label: "失败", value: q.failed, color: chartColor.danger },
+    ]
+  }
 
   return (
     <div {...stylex.attrs(styles.page)}>
@@ -102,7 +116,11 @@ export function OverviewPage() {
             emptyTitle="暂无同步记录"
             emptyDescription="客户端上传数据后，将按类型展示分布。"
           >
-            <RecordTypesChart byType={stats.data?.byType ?? {}} />
+            <BarChart
+              rows={typeRows()}
+              fill={chartColor.accent}
+              ariaLabel="同步记录类型分布柱状图"
+            />
           </ChartCard>
 
           <ChartCard
@@ -135,8 +153,10 @@ export function OverviewPage() {
             emptyTitle="暂无队列数据"
             emptyDescription="接入邮件队列后展示各状态计数。"
           >
-            <EmailQueueChart
-              queue={system.data?.emailQueue ?? { pending: 0, active: 0, completed: 0, failed: 0 }}
+            <BarChart
+              rows={queueRows()}
+              fill={(row) => row.color ?? chartColor.accent}
+              ariaLabel="邮件队列状态柱状图"
             />
           </ChartCard>
         </div>

@@ -1,11 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
-import { Checkbox } from "@tabora/ui/checkbox"
 import { FieldRow } from "@tabora/ui/field-row"
 import { Input } from "@tabora/ui/input"
 import { ListRow } from "@tabora/ui/list-row"
-import { SegmentedControl } from "@tabora/ui/segmented-control"
-import { Slider } from "@tabora/ui/slider"
 import { Switch } from "@tabora/ui/switch"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
@@ -13,8 +10,12 @@ import { contributionRefKey, sameContributionRef } from "@tabora/plugin-api/sdk"
 import Check from "lucide-solid/icons/check"
 
 import {
+  CheckChipList,
+  ContributionSegmented,
   providerAlias,
   providerKindLabel,
+  RangeField,
+  SettingsGroup,
   SettingsInlineError,
   SettingsSwitch,
 } from "./settings-workspace.shared"
@@ -79,13 +80,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
 
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="search">
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          默认搜索源
-          <span {...stylex.attrs(styles.groupTitleMeta)}>
-            {enabledProviderEntries()[0]?.title ?? "未配置"}
-          </span>
-        </div>
+      <SettingsGroup title="默认搜索源" meta={enabledProviderEntries()[0]?.title ?? "未配置"}>
         <FieldRow
           class={className(styles.fieldRow)}
           label="搜索框占位"
@@ -104,27 +99,14 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           label="默认引擎"
           description="也可以在搜索框里输入 @github 临时切换"
           trailing={
-            <Show
-              when={providerOptions().length > 0}
-              fallback={
-                <span {...stylex.attrs(styles.rowMeta)}>
-                  {searchSettings()?.defaultProvider.id ?? "未配置"}
-                </span>
-              }
-            >
-              <SegmentedControl<string>
-                size="sm"
-                value={defaultKey()}
-                options={providerOptions()}
-                onChange={(key) => {
-                  const provider = searchProviders().find(
-                    (candidate) => contributionRefKey(candidate.ref) === key,
-                  )
-                  if (provider) void props.host.setDefaultSearchProvider?.(provider.ref)
-                }}
-                aria-label="默认搜索引擎"
-              />
-            </Show>
+            <ContributionSegmented
+              ariaLabel="默认搜索引擎"
+              activeKey={defaultKey()}
+              fallback={searchSettings()?.defaultProvider.id ?? "未配置"}
+              items={searchProviders}
+              options={providerOptions}
+              onPick={(provider) => void props.host.setDefaultSearchProvider?.(provider.ref)}
+            />
           }
         />
         <FieldRow
@@ -138,12 +120,9 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
         <Show when={configurationError()}>
           <SettingsInlineError>{configurationError()!}</SettingsInlineError>
         </Show>
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          搜索范围<span {...stylex.attrs(styles.groupTitleMeta)}>4 项</span>
-        </div>
+      <SettingsGroup title="搜索范围" meta="4 项">
         <FieldRow
           class={className(styles.fieldRow)}
           label="包含卡片动作"
@@ -162,20 +141,15 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           label="默认搜索范围"
           description="选择输入框默认纳入的内容来源"
           trailing={
-            <div {...stylex.attrs(styles.checkList)} aria-label="默认搜索范围">
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={includeWeb()} onChange={setIncludeWeb} label="网页" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={includeCards()} onChange={setIncludeCards} label="卡片" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={includeCommands()} onChange={setIncludeCommands} label="命令" />
-              </span>
-              <span {...stylex.attrs(styles.checkChip)}>
-                <Checkbox checked={includeHistory()} onChange={setIncludeHistory} label="历史" />
-              </span>
-            </div>
+            <CheckChipList
+              ariaLabel="默认搜索范围"
+              items={() => [
+                { label: "网页", checked: includeWeb(), onChange: setIncludeWeb },
+                { label: "卡片", checked: includeCards(), onChange: setIncludeCards },
+                { label: "命令", checked: includeCommands(), onChange: setIncludeCommands },
+                { label: "历史", checked: includeHistory(), onChange: setIncludeHistory },
+              ]}
+            />
           }
         />
         <FieldRow
@@ -183,28 +157,20 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           label="输入防抖"
           description="减少输入时过于频繁的搜索刷新"
           trailing={
-            <div {...stylex.attrs(styles.rangeControl)}>
-              <Slider
-                value={debounceMs()}
-                min={80}
-                max={420}
-                step={20}
-                onChange={setDebounceMs}
-                aria-label="输入防抖"
-              />
-              <span>{debounceMs()}ms</span>
-            </div>
+            <RangeField
+              ariaLabel="输入防抖"
+              value={debounceMs()}
+              min={80}
+              max={420}
+              step={20}
+              format={(value) => `${value}ms`}
+              onChange={setDebounceMs}
+            />
           }
         />
-      </section>
+      </SettingsGroup>
 
-      <section {...stylex.attrs(styles.group)}>
-        <div {...stylex.attrs(styles.groupTitle)}>
-          搜索源管理
-          <span {...stylex.attrs(styles.groupTitleMeta)}>
-            {enabledProviderEntries().length} 个启用
-          </span>
-        </div>
+      <SettingsGroup title="搜索源管理" meta={`${enabledProviderEntries().length} 个启用`}>
         <div {...stylex.attrs(styles.providerList)} id="settings-search-provider-select">
           <For each={searchProviders()}>
             {(provider) => {
@@ -261,7 +227,7 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
             }}
           </For>
         </div>
-      </section>
+      </SettingsGroup>
     </div>
   )
 }
