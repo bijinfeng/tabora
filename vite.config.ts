@@ -109,7 +109,12 @@ export default defineConfig({
     ],
   },
   fmt: {
-    ignorePatterns: ["docs/**"],
+    ignorePatterns: [
+      "docs/**",
+      // TypeScript 7 (tsgo) dts 构建产物，生成格式与仓库风格不一致且已 gitignore
+      "packages/plugin-api/src/sdk.d.ts",
+      "plugins/official/test-support/widgetViewProps.d.ts",
+    ],
     singleQuote: false,
     semi: false,
   },

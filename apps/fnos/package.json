@@ -28,8 +28,8 @@
     "@tabora/ui": "workspace:*",
     "@tabora/workbench-app": "workspace:*",
     "@tabora/workbench-shell": "workspace:*",
-    "better-sqlite3": "^13.0.2",
-    "hono": "^4.13.0",
+    "better-sqlite3": "^13.0.3",
+    "hono": "^4.13.1",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {
@@ -37,10 +37,10 @@
     "@tabora/stylex-config": "workspace:*",
     "@tabora/tsconfig": "workspace:*",
     "@types/better-sqlite3": "^9.6.0",
-    "cross-env": "^7.0.3",
-    "sharp": "^0.34.5",
+    "cross-env": "^10.1.0",
+    "sharp": "^0.35.3",
     "tsdown": "catalog:build",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.11",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build"
   }

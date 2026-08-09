@@ -8,6 +8,10 @@ dist/
 .wxt/
 *.tsbuildinfo
 
+# TypeScript 7 (tsgo) dts 构建产物：跨包相对导入会触发 tsgo 在源码旁生成声明
+packages/plugin-api/src/sdk.d.ts
+plugins/official/test-support/widgetViewProps.d.ts
+
 # IDE
 .vscode/
 .idea/

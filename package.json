@@ -29,7 +29,7 @@
   "devDependencies": {
     "@stylexjs/unplugin": "catalog:build",
     "@tabora/stylex-config": "workspace:*",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "@tsdown/css": "0.22.14",
     "@types/node": "catalog:node",
     "@vitest/browser-playwright": "catalog:test",
@@ -37,7 +37,7 @@
     "happy-dom": "catalog:test",
     "playwright": "catalog:test",
     "tsdown": "catalog:build",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.11",
     "typescript": "catalog:build",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build",
