@@ -33,6 +33,7 @@
     "@dnd-kit/solid": "^0.5.0",
     "@solid-primitives/media": "catalog:ui",
     "@solid-primitives/timer": "catalog:ui",
+    "@solidjs/router": "catalog:ui",
     "@stylexjs/stylex": "catalog:style",
     "@tabora/brand": "workspace:*",
     "@tabora/host-adapters": "workspace:*",

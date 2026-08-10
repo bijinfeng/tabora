@@ -1,9 +1,9 @@
 import type { JSX } from "solid-js"
 import type { LayoutViewProps, PluginModule } from "@tabora/plugin-api/sdk"
-import { MobileLayout } from "./mobile-layout"
+import { MobileLayoutWithRouter } from "./mobile-layout-with-router"
 import { layoutMobileManifest } from "./manifest"
 
-export { MobileLayout }
+export { MobileLayoutWithRouter as MobileLayout }
 
 export const layoutMobile: PluginModule = {
   manifest: layoutMobileManifest,
@@ -36,7 +36,7 @@ export const layoutMobile: PluginModule = {
     context.views.register(
       "official.layout.workbench-mobile.view",
       (props: LayoutViewProps<JSX.Element>) =>
-        MobileLayout({ ...props, ...(context.i18n ? { i18n: context.i18n } : {}) }),
+        MobileLayoutWithRouter({ ...props, ...(context.i18n ? { i18n: context.i18n } : {}) }),
     )
   },
 }

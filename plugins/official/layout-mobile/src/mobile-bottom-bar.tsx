@@ -13,6 +13,7 @@ export function MobileBottomBar(props: {
   host: LayoutHostAPI
   setGroups: RailGroupSetter
   onGroupCreated: (groupId: string) => void
+  onNavigateToSettings?: () => void
 }) {
   const railActions = () => props.host.getGlobalActions("rail")
   const utilityActions = () =>
@@ -52,6 +53,16 @@ export function MobileBottomBar(props: {
     props.onGroupCreated(id)
     cancelGroupCreate()
     props.host.showToast(`已创建分组「${name}」`, { type: "success" })
+  }
+
+  const handleActionClick = (action: ReturnType<typeof utilityActions>[number]) => {
+    if (action.id === "settings" && props.onNavigateToSettings) {
+      // 使用传入的导航回调
+      props.onNavigateToSettings()
+    } else {
+      // 其他操作直接运行
+      action.run()
+    }
   }
 
   onMount(() => {
@@ -125,7 +136,7 @@ export function MobileBottomBar(props: {
             xstyle={[styles.barButton, action.isActive && styles.barButtonActive]}
             aria-label={action.label}
             title={action.label}
-            onClick={() => action.run()}
+            onClick={() => handleActionClick(action)}
           >
             <HostActionIcon id={action.id} icon={action.icon} />
           </IconButton>

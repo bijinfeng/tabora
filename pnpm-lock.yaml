@@ -712,6 +712,9 @@ importers:
       '@solid-primitives/timer':
         specifier: catalog:ui
         version: 1.4.4(solid-js@1.9.14)
+      '@solidjs/router':
+        specifier: catalog:ui
+        version: 1.0.0(solid-js@1.9.14)
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
@@ -839,6 +842,9 @@ importers:
 
   plugins/official/layout-mobile:
     dependencies:
+      '@solidjs/router':
+        specifier: catalog:ui
+        version: 1.0.0(solid-js@1.9.14)
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
@@ -6922,7 +6928,7 @@ snapshots:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.3(@testing-library/dom@10.4.1)
       '@vitest/browser': 4.1.10(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(vitest@4.1.10)
-      vitest: 4.1.10(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
+      vitest: 4.1.10(@types/node@26.1.1)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
     transitivePeerDependencies:
       - bufferutil
       - msw
