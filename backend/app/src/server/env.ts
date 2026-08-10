@@ -1,5 +1,12 @@
 export type DatabaseClient = "sqlite" | "postgres"
 
+/**
+ * 开发环境占位 secret(≥32 字符、高熵,消除 better-auth 警告)。
+ * 生产部署必须通过 BETTER_AUTH_SECRET 环境变量设置真实密钥。
+ * System API 会检测此占位值,报告为"未配置"。
+ */
+export const DEV_PLACEHOLDER_SECRET = "X4TjuP0xJiy3yX8CUbT9OzgITqkGnucA"
+
 export type AppEnv = {
   host: string
   port: number
@@ -41,7 +48,7 @@ export function loadEnv(): AppEnv {
     databaseFile: process.env.DATABASE_FILE ?? "./data/tabora.db",
     databaseUrl: process.env.DATABASE_URL ?? "postgres://tabora:tabora@localhost:5432/tabora",
     authSecret:
-      process.env.BETTER_AUTH_SECRET ?? process.env.ADMIN_JWT_SECRET ?? "dev-insecure-secret",
+      process.env.BETTER_AUTH_SECRET ?? process.env.ADMIN_JWT_SECRET ?? DEV_PLACEHOLDER_SECRET,
     baseUrl: process.env.BETTER_AUTH_URL ?? `http://${host}:${port}`,
     uploadsDir: process.env.UPLOADS_DIR ?? "./data/uploads",
   }

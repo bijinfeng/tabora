@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
 import type { JSX } from "solid-js"
-import LayoutGrid from "lucide-solid/icons/layout-grid"
+
+import { TaboraMark } from "@tabora/brand"
 
 import { styles } from "./auth.styles"
 
@@ -17,9 +18,7 @@ export function AuthCard(props: AuthCardProps) {
       <div {...stylex.attrs(styles.card)}>
         <div {...stylex.attrs(styles.header)}>
           <div {...stylex.attrs(styles.brandRow)}>
-            <span {...stylex.attrs(styles.brandMark)}>
-              <LayoutGrid size={16} />
-            </span>
+            <TaboraMark {...stylex.attrs(styles.brandMark)} />
             <span {...stylex.attrs(styles.brandName)}>Tabora Admin</span>
           </div>
           <h1 {...stylex.attrs(styles.title)}>{props.title}</h1>

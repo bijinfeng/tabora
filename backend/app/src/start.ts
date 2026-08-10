@@ -1,6 +1,7 @@
 import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/solid-start"
 
 import { getEnv } from "./server/env"
+import { resolveTrustedOrigins } from "./server/trustedOrigins"
 
 const ALLOW_METHODS = "GET, POST, PUT, DELETE, OPTIONS"
 const ALLOW_HEADERS = "Content-Type, Authorization"
@@ -8,7 +9,8 @@ const ALLOW_HEADERS = "Content-Type, Authorization"
 /** 仅反射白名单内的源；配合 credentials:true 不能回退到 "*"（浏览器会拒绝，且不安全）。 */
 function applyCors(request: Request, headers: Headers): void {
   const origin = request.headers.get("origin")
-  if (origin && getEnv().corsOrigins.includes(origin)) {
+  // 与 better-auth 的 trustedOrigins 用同一套判定，避免同源 dev 端口顺延后 CORS 与 auth 结论不一致。
+  if (origin && resolveTrustedOrigins(getEnv(), request).includes(origin)) {
     headers.set("Access-Control-Allow-Origin", origin)
     headers.set("Access-Control-Allow-Credentials", "true")
     const vary = headers.get("Vary")

@@ -6,6 +6,7 @@ import { admin, bearer } from "better-auth/plugins"
 import type { DbHandle } from "./db"
 import type { AppEnv } from "./env"
 import type { EmailService } from "./email"
+import { resolveTrustedOrigins } from "./trustedOrigins"
 
 /**
  * 组装 better-auth 实例。
@@ -15,7 +16,7 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
   return betterAuth({
     baseURL: env.baseUrl,
     secret: env.authSecret,
-    trustedOrigins: env.corsOrigins,
+    trustedOrigins: (request) => resolveTrustedOrigins(env, request),
     database: drizzleAdapter(handle.db, { provider: handle.provider }),
     emailAndPassword: {
       enabled: true,
@@ -34,7 +35,10 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
           })
         }
       },
-      async sendVerificationEmail({ user, url }: { user: any; url: string }) {
+    },
+    // sendVerificationEmail 必须挂在 emailVerification 上，放进 emailAndPassword 不会被读取。
+    emailVerification: {
+      async sendVerificationEmail({ user, url }) {
         try {
           await emailService.enqueueTemplatedEmail(user.email, "emailVerification", {
             userName: user.name,
@@ -48,6 +52,7 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
           })
         }
       },
+      autoSignInAfterVerification: true,
     },
     plugins: [admin(), bearer()],
     databaseHooks: {
@@ -55,9 +60,14 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
         create: {
           async before(user, ctx) {
             const count = await handle.countUsers()
-            // 首个用户始终提权为超级管理员（首运行初始化）
+            // 首个用户始终提权为超级管理员（首运行初始化）。
+            //
+            // 同时标记邮箱已验证：requireEmailVerification 开启时，未验证账号无法登录，
+            // 而验证邮件依赖 SMTP 设置，SMTP 设置又只能登录后台后才能填写 —— 首个管理员
+            // 会被锁在死循环外。首运行时能访问空实例的人即部署者，本就被信任提权为超管，
+            // 因此这里直接放行；后续用户仍需走正常邮箱验证。
             if (count === 0) {
-              return { data: { ...user, role: "admin" } }
+              return { data: { ...user, role: "admin", emailVerified: true } }
             }
             // admin 插件创建（/admin/create-user）始终放行
             const path = ctx?.path ?? ""

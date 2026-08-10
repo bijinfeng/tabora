@@ -363,6 +363,9 @@ importers:
       '@stylexjs/stylex':
         specifier: catalog:style
         version: 0.19.0
+      '@tabora/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@tabora/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -412,9 +415,6 @@ importers:
         specifier: catalog:data
         version: 4.4.3
     devDependencies:
-      '@tabora/brand':
-        specifier: workspace:*
-        version: link:../../packages/brand
       '@tabora/stylex-config':
         specifier: workspace:*
         version: link:../../tooling/stylex
@@ -678,6 +678,9 @@ importers:
       '@tabora/theme':
         specifier: workspace:*
         version: link:../theme
+      '@tanstack/solid-form':
+        specifier: ^1.33.4
+        version: 1.33.4(solid-js@1.9.14)
       lucide-solid:
         specifier: catalog:ui
         version: 1.31.0(solid-js@1.9.14)
@@ -2621,9 +2624,21 @@ packages:
   '@tanstack/charts@0.8.0':
     resolution: {integrity: sha512-sssLu6xyrK01F1EBPr3fxFEdV4IlvLXpG1JJlrW0SlEL2XaBrquVBnZJtuBsOI0IAPTAVRZKBK90nIC9Z+i5Fg==}
 
+  '@tanstack/devtools-event-client@0.4.4':
+    resolution: {integrity: sha512-6T5Yop/793YI+H+5J8Hsyj4kCih9sl4t3ElLgKioW5hk3ocn+ZdSJ94tT7vL7uabxSugWYBZlOTMPzEw2puvQw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  '@tanstack/form-core@1.33.4':
+    resolution: {integrity: sha512-nqNaVAS+FfdWq6pfVqLC7SkgvRFyQEM9UEruIMTQULQ5SGF2X6+7RduFgr5ofpHftAHw/2yVs2vvIafx4WCVGQ==}
+
   '@tanstack/history@1.162.1':
     resolution: {integrity: sha512-DR9t6lfLVdrjgCwpglrR9DR7Ok8/HlXjcOE+goWXF3zyuLUO/ug7vMbSFxTqrQTtbRghJfyhmIZ0S6LhPIy44w==}
     engines: {node: '>=20.19'}
+
+  '@tanstack/pacer-lite@0.1.1':
+    resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
+    engines: {node: '>=18'}
 
   '@tanstack/query-core@5.101.4':
     resolution: {integrity: sha512-gNwcvOJcRbLWPOLG/2OBm+zM+Yv+MKsXKEOWC57USuZDEsI71hEErQsiEGx5wX9rzWWkfwM0fVSPoiIFSsxfiw==}
@@ -2666,6 +2681,11 @@ packages:
     peerDependencies:
       solid-js: '>=1.8'
 
+  '@tanstack/solid-form@1.33.4':
+    resolution: {integrity: sha512-kao8OvmtWjQr4bcBsRqoLKhGkDCLe0Trp3YN+s0Ot73L8h3h6n/tfSeyDSm2B7MDxzMiRQioW5Izr6zhZ/p82Q==}
+    peerDependencies:
+      solid-js: '>=1.9.9'
+
   '@tanstack/solid-query@5.101.4':
     resolution: {integrity: sha512-w+QNX4al4zkfOfO6FYILouPX3yAxLANvBNz0cZqaBrSRKfBP3qNC179wu/eS2w1asH+QqEeI0rR2/s7gRGxnFA==}
     peerDependencies:
@@ -2702,6 +2722,11 @@ packages:
       vite:
         optional: true
 
+  '@tanstack/solid-store@0.11.1':
+    resolution: {integrity: sha512-wzJsiqqLHyQacqbYPT8dKNfhR00NNu743vGeWz2lEpOyE/R+6AYIfFLhXsCIT/Kb+KKiT1KDkB2/35DhLEGx8g==}
+    peerDependencies:
+      solid-js: ^1.6.0
+
   '@tanstack/start-client-core@1.170.20':
     resolution: {integrity: sha512-DlKOI7CizUo8kN4sHZoyKISbzFV2CqDta6HT76pjC2hpwDeRZQAmhiReFnFE9wkEIkzUgb704ZQyNBZxx1XQJA==}
     engines: {node: '>=22.12.0'}
@@ -2729,6 +2754,9 @@ packages:
   '@tanstack/start-storage-context@1.167.22':
     resolution: {integrity: sha512-5B1kCitt2UdRaKItYbbdbEa2kFOSYgcMBimffPfzcQO7c1xLDf1HJ11ChRyisokgUzOwgie2u3jbN7bba0K5OA==}
     engines: {node: '>=22.12.0'}
+
+  '@tanstack/store@0.11.1':
+    resolution: {integrity: sha512-mzTOBhypOuDJAy/D8n2MfUZ1HFkXnmSETviRyhqEC8LUE7/IZQExOTxMANj3KjTofYTkFNpBY67qaVrT41YccA==}
 
   '@tanstack/virtual-file-routes@1.162.0':
     resolution: {integrity: sha512-uhOeFyxLcU41HzvrxsGpiWdcMbScY1EDgbZ5K7DVRMYInbLYWAC0EA/kx9wXAoSM8q82bUG2hRl8+EAjE6XAbA==}
@@ -4931,11 +4959,6 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  tsx@4.23.1:
-    resolution: {integrity: sha512-GQHnkIfxyx1wYCOS/wonik5MVRZU9hi1TEZmzGZSCJB1y9YgoZ8H6itNE/u4suE+yLmOzuE4E5S4TZ/ZX2wcWQ==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-
   tsx@4.23.11:
     resolution: {integrity: sha512-Ry2oTEUnhBdeEdWIztY8kf3/nBGnPnjMLVGL0YfdRXMORuPER5NlKmayqxtxRxwB1xBN+RivRaJfe7PM1rtiyw==}
     engines: {node: '>=18.0.0'}
@@ -6397,7 +6420,17 @@ snapshots:
       d3-shape: 3.2.0
       d3-zoom: 3.0.0
 
+  '@tanstack/devtools-event-client@0.4.4': {}
+
+  '@tanstack/form-core@1.33.4':
+    dependencies:
+      '@tanstack/devtools-event-client': 0.4.4
+      '@tanstack/pacer-lite': 0.1.1
+      '@tanstack/store': 0.11.1
+
   '@tanstack/history@1.162.1': {}
+
+  '@tanstack/pacer-lite@0.1.1': {}
 
   '@tanstack/query-core@5.101.4': {}
 
@@ -6463,6 +6496,12 @@ snapshots:
       '@tanstack/charts': 0.8.0
       solid-js: 1.9.14
 
+  '@tanstack/solid-form@1.33.4(solid-js@1.9.14)':
+    dependencies:
+      '@tanstack/form-core': 1.33.4
+      '@tanstack/solid-store': 0.11.1(solid-js@1.9.14)
+      solid-js: 1.9.14
+
   '@tanstack/solid-query@5.101.4(solid-js@1.9.14)':
     dependencies:
       '@tanstack/query-core': 5.101.4
@@ -6518,6 +6557,11 @@ snapshots:
       - unloader
       - vite-plugin-solid
       - webpack
+
+  '@tanstack/solid-store@0.11.1(solid-js@1.9.14)':
+    dependencies:
+      '@tanstack/store': 0.11.1
+      solid-js: 1.9.14
 
   '@tanstack/start-client-core@1.170.20':
     dependencies:
@@ -6581,6 +6625,8 @@ snapshots:
   '@tanstack/start-storage-context@1.167.22':
     dependencies:
       '@tanstack/router-core': 1.171.20
+
+  '@tanstack/store@0.11.1': {}
 
   '@tanstack/virtual-file-routes@1.162.0': {}
 
@@ -6842,7 +6888,7 @@ snapshots:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.3(@testing-library/dom@10.4.1)
       '@vitest/browser': 4.1.10(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(vitest@4.1.10)
-      vitest: 4.1.10(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
+      vitest: 4.1.10(@types/node@26.1.1)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -7592,7 +7638,7 @@ snapshots:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
       esbuild: 0.25.4
-      tsx: 4.23.1
+      tsx: 4.23.11
     optional: true
 
   drizzle-orm@0.45.2(@prisma/client@5.22.0)(@types/better-sqlite3@9.6.0)(@types/pg@8.21.0)(better-sqlite3@13.0.3)(kysely@0.29.4)(pg@8.23.0):
@@ -8524,13 +8570,6 @@ snapshots:
       - vue-tsc
 
   tslib@2.8.1: {}
-
-  tsx@4.23.1:
-    dependencies:
-      esbuild: 0.28.1
-    optionalDependencies:
-      fsevents: 2.3.3
-    optional: true
 
   tsx@4.23.11:
     dependencies:

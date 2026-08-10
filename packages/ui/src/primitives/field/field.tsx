@@ -3,10 +3,10 @@ import { Show } from "solid-js"
 
 export type FieldProps = {
   label: JSX.Element
-  helper?: JSX.Element
-  error?: JSX.Element
-  required?: boolean
-  htmlFor?: string
+  helper?: JSX.Element | undefined
+  error?: JSX.Element | undefined
+  required?: boolean | undefined
+  htmlFor?: string | undefined
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
   labelClass?: string | undefined

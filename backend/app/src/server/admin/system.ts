@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/solid-start"
 
+import { DEV_PLACEHOLDER_SECRET } from "../env"
 import { getRuntime } from "../runtime"
 import { adminAuthMiddleware } from "./middleware"
 
@@ -101,7 +102,7 @@ export const fetchSystemInfo = createServerFn({ method: "GET" })
       counts: { users: userCount, syncRecords: syncCount, attachmentFiles: fileResult.total },
       auth: {
         baseUrl: env.baseUrl,
-        secretConfigured: env.authSecret.length >= 32,
+        secretConfigured: env.authSecret.length >= 32 && env.authSecret !== DEV_PLACEHOLDER_SECRET,
       },
       smtp: {
         configured: smtpConfigured,

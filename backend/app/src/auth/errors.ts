@@ -16,6 +16,7 @@ export function toAuthMessage(error: unknown): string {
   const raw = error.message ?? ""
 
   if (status === 0 || /fetch|network/i.test(raw)) return "无法连接管理服务，请稍后重试"
+  if (error.code === "EMAIL_NOT_VERIFIED") return "邮箱尚未验证，请先完成邮箱验证后再登录"
   if (status === 401 || status === 400) return "邮箱或密码错误"
   if (status === 403) return raw || "注册已关闭，请联系管理员"
   if (/already|exist|taken/i.test(raw)) return "该邮箱已被占用"

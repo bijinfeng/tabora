@@ -41,13 +41,9 @@ export const styles = stylex.create({
     marginBottom: space.s2,
   },
   brandMark: {
-    alignItems: "center",
-    backgroundColor: color.accent,
-    borderRadius: radius.control,
-    color: color.inverse,
-    display: "flex",
+    display: "block",
+    flexShrink: 0,
     height: 28,
-    justifyContent: "center",
     width: 28,
   },
   brandName: {

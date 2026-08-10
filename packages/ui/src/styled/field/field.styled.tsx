@@ -36,7 +36,7 @@ const styles = stylex.create({
 })
 
 export type StyledFieldProps = FieldProps & {
-  xstyle?: StyleXStyles
+  xstyle?: StyleXStyles | undefined
 }
 
 export function Field(props: StyledFieldProps) {
