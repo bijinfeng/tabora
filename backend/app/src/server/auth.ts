@@ -69,9 +69,12 @@ export function createAuth(handle: DbHandle, env: AppEnv, emailService: EmailSer
             if (count === 0) {
               return { data: { ...user, role: "admin", emailVerified: true } }
             }
-            // admin 插件创建（/admin/create-user）始终放行
+            // admin 插件创建（/admin/create-user）已过人工审核，直接放行且标记已验证。
+            // 管理员是手动创建的，不是公开注册，无需等待邮箱验证即可使用。
             const path = ctx?.path ?? ""
-            if (!path.startsWith("/sign-up")) return undefined
+            if (!path.startsWith("/sign-up")) {
+              return { data: { ...user, emailVerified: true } }
+            }
             // 公开注册按系统设置开关；开启时套用默认角色
             const signupEnabled = await handle.settings.get("signupEnabled")
             if (!signupEnabled) {
