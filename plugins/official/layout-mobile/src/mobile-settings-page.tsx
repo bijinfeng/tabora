@@ -1,35 +1,77 @@
 import * as stylex from "@stylexjs/stylex"
-import { createMemo, For, Show } from "solid-js"
+import { createComponent, createMemo, For, Show } from "solid-js"
+import type { JSX } from "solid-js"
 import type { LayoutHostAPI } from "@tabora/plugin-api/sdk"
 import { IconButton } from "@tabora/ui/button"
 import ArrowLeft from "lucide-solid/icons/arrow-left"
 
 import { styles } from "./styles"
 
+export type SettingsPanelDescriptor = {
+  id: string
+  pluginId: string
+  label: string
+  title: string
+  scope: "global" | "instance"
+  sectionId: string
+  content:
+    | {
+        kind: "schema"
+        provider: string
+      }
+    | {
+        kind: "view"
+        view: string
+      }
+}
+
 export type MobileSettingsPageProps = {
   host: LayoutHostAPI
+  panels: SettingsPanelDescriptor[]
   activeSectionId: string | null
   onBack: () => void
   onSectionChange: (sectionId: string) => void
+  getView?: (viewId: string) => ((props: any) => JSX.Element) | undefined
+  getSettingsProvider?: (providerId: string) => any
+  providerContext?: (panel: SettingsPanelDescriptor) => any
+  panelProps?: (panel: SettingsPanelDescriptor) => any
 }
 
 export function MobileSettingsPage(props: MobileSettingsPageProps) {
-  // TODO: 获取设置面板列表
-  const panels = createMemo(() => [
-    { id: "general", label: "通用" },
-    { id: "appearance", label: "外观" },
-    { id: "search", label: "搜索" },
-    { id: "plugins", label: "插件" },
-    { id: "about", label: "关于" },
-  ])
-
   const currentPanel = createMemo(() => {
     const sectionId = props.activeSectionId
-    return panels().find((p) => p.id === sectionId)
+    return props.panels.find((p) => p.id === sectionId)
   })
 
   const handleNavToSection = (sectionId: string) => {
     props.onSectionChange(sectionId)
+  }
+
+  const renderPanelContent = (panel: SettingsPanelDescriptor) => {
+    if (panel.content.kind === "view") {
+      const View = props.getView?.(panel.content.view)
+      if (!View) {
+        return <p>设置面板不可用：{panel.id}</p>
+      }
+      try {
+        const viewProps = props.panelProps?.(panel) ?? {}
+        return createComponent(View, viewProps)
+      } catch (error) {
+        return <p>设置面板加载失败：{String(error)}</p>
+      }
+    }
+
+    // Schema-based panels
+    if (panel.content.kind === "schema") {
+      const provider = props.getSettingsProvider?.(panel.content.provider)
+      if (!provider) {
+        return <p>设置提供者不可用：{panel.content.provider}</p>
+      }
+      // TODO: Render SettingsSchemaRenderer for mobile
+      return <p>Schema 面板: {panel.label}</p>
+    }
+
+    return <p>未知面板类型</p>
   }
 
   return (
@@ -47,12 +89,12 @@ export function MobileSettingsPage(props: MobileSettingsPageProps) {
           when={currentPanel()}
           fallback={
             <div {...stylex.attrs(styles.settingsNavList)}>
-              <For each={panels()}>
+              <For each={props.panels}>
                 {(panel, index) => (
                   <button
                     {...stylex.attrs(
                       styles.settingsNavItem,
-                      index() < panels().length - 1 && styles.settingsNavItemBorder,
+                      index() < props.panels.length - 1 && styles.settingsNavItemBorder,
                     )}
                     onClick={() => handleNavToSection(panel.id)}
                   >
@@ -65,8 +107,7 @@ export function MobileSettingsPage(props: MobileSettingsPageProps) {
           }
         >
           <div {...stylex.attrs(styles.settingsPanelContent)}>
-            {/* TODO: 渲染实际的设置面板内容 */}
-            <p>设置面板内容: {currentPanel()!.label}</p>
+            {renderPanelContent(currentPanel()!)}
           </div>
         </Show>
       </div>

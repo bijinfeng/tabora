@@ -303,6 +303,7 @@ export const styles = stylex.create({
     flexDirection: "column",
     minHeight: "100vh",
     width: "100%",
+    animation: "slideInRight 0.3s ease-out",
   },
   settingsHeader: {
     alignItems: "center",
