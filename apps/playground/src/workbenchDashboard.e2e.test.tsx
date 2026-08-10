@@ -151,9 +151,10 @@ describe("workbench dashboard layout", () => {
       ...dragOrder.before.slice(2),
     ])
 
+    // 仪表盘布局只服务桌面端，移动端由专用布局接管，所以这里只在桌面宽度下校验无横向滚动。
     await expectNoHorizontalOverflow({ width: 1280, height: 900 })
-    await expectNoHorizontalOverflow({ width: 768, height: 900 })
-    await expectNoHorizontalOverflow({ width: 390, height: 844 })
+    await expectNoHorizontalOverflow({ width: 1024, height: 900 })
+    await page.viewport(1280, 900)
 
     clickRequired('[data-workbench-rail] button[aria-label="设置"]')
     await waitFor(() =>
@@ -218,6 +219,36 @@ describe("workbench dashboard layout", () => {
     // 排序落库走 setTimeout(…, 0) + 异步持久化，给它足够时间暴露问题。
     await new Promise((resolve) => setTimeout(resolve, 300))
     expect(readGridOrder()).toEqual(before)
+  }, 45_000)
+
+  // 移动端切换到专用布局：仪表盘 rail 消失，底部导航接管，且不改动已存的桌面布局选择。
+  it("swaps to the dedicated mobile layout at mobile width without touching the stored choice", async () => {
+    await mountFreshWorkbench()
+    expect(document.querySelector('[data-layout="dashboard"]')).toBeTruthy()
+
+    await page.viewport(390, 844)
+    await waitFor(() => expect(document.querySelector('[data-layout="mobile"]')).toBeTruthy())
+    expect(document.querySelector("[data-workbench-rail]")).toBeFalsy()
+    expect(document.querySelector("[data-workbench-mobile-bar]")).toBeTruthy()
+    // 桌面端的卡片经 mainGrid + focus 合流后仍在移动端网格中渲染。
+    await waitFor(() => expect(countGridItems()).toBeGreaterThan(0))
+    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
+
+    // 底部导航暴露设置入口，点击可打开设置浮层。
+    clickRequired('[data-workbench-mobile-bar] button[aria-label="设置"]')
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
+    )
+    clickRequired("[data-settings-close]")
+    await waitFor(() =>
+      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
+    )
+
+    // 回到桌面宽度应恢复仪表盘布局，说明持久化的布局选择未被移动端覆盖。
+    await page.viewport(1280, 900)
+    await waitFor(() => expect(document.querySelector('[data-layout="dashboard"]')).toBeTruthy())
+    expect(document.querySelector("[data-workbench-rail]")).toBeTruthy()
+    expect(document.querySelector('[data-layout="mobile"]')).toBeFalsy()
   }, 45_000)
 })
 

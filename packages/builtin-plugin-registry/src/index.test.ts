@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { officialPlugins } from "@tabora/official-plugins"
 import officialPluginsManifest from "../../official-plugins/package.json"
 import layoutDashboardManifest from "../../../plugins/official/layout-dashboard/package.json"
+import layoutMobileManifest from "../../../plugins/official/layout-mobile/package.json"
 import widgetNotesManifest from "../../../plugins/official/widget-notes/package.json"
 import widgetQuickLinksManifest from "../../../plugins/official/widget-quick-links/package.json"
 import widgetTodoManifest from "../../../plugins/official/widget-todo/package.json"
@@ -15,6 +16,10 @@ const stylePackages = [
   },
   {
     manifest: layoutDashboardManifest,
+    buildEntry: "src/index.tsx src/manifest.ts src/dashboard-layout-state.ts",
+  },
+  {
+    manifest: layoutMobileManifest,
     buildEntry: "src/index.tsx src/manifest.ts",
   },
   {

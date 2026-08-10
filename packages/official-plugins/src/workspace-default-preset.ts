@@ -7,6 +7,7 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
     "official.theme.default-pack",
     "official.background.basic",
     "official.layout.workbench-dashboard",
+    "official.layout.workbench-mobile",
     "official.search.command-bar",
     "official.search-providers.basic",
     "official.widgets.quick-links",

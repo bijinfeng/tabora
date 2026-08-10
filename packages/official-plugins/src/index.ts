@@ -1,4 +1,5 @@
 import { layoutDashboardManifest } from "@tabora/layout-dashboard/manifest"
+import { layoutMobileManifest } from "@tabora/layout-mobile/manifest"
 import { createBuiltinPluginPackage, createLazyBuiltinPlugin } from "@tabora/platform-kernel"
 import { officialPluginNotesManifest } from "@tabora/plugin-notes/manifest"
 import { officialPluginQuickLinksManifest } from "@tabora/plugin-quick-links/manifest"
@@ -23,6 +24,13 @@ export const layoutDashboard = createLazyBuiltinPlugin({
   manifest: layoutDashboardManifest,
   async load() {
     return (await import("@tabora/layout-dashboard")).layoutDashboard
+  },
+})
+
+export const layoutMobile = createLazyBuiltinPlugin({
+  manifest: layoutMobileManifest,
+  async load() {
+    return (await import("@tabora/layout-mobile")).layoutMobile
   },
 })
 
@@ -88,6 +96,7 @@ export const officialPlugins = [
   createBuiltinPluginPackage(officialThemeDefaultPack),
   createBuiltinPluginPackage(officialBackgroundBasic),
   layoutDashboard,
+  layoutMobile,
   officialSearchCommandBar,
   createBuiltinPluginPackage(officialSearchProvidersBasic),
   officialPluginWeather,

@@ -8,6 +8,7 @@ import { officialPlugins } from "@tabora/official-plugins"
 import { createBuiltinPluginPackage, createLazyBuiltinPlugin } from "@tabora/platform-kernel"
 import officialPluginsStylesHref from "@tabora/official-plugins/styles.css?url"
 import layoutDashboardStylesHref from "@tabora/layout-dashboard/styles.css?url"
+import layoutMobileStylesHref from "@tabora/layout-mobile/styles.css?url"
 import layoutDiyMasonryStylesHref from "@tabora/layout-diy-masonry/styles.css?url"
 import notesStylesHref from "@tabora/plugin-notes/styles.css?url"
 import quickLinksStylesHref from "@tabora/plugin-quick-links/styles.css?url"
@@ -19,6 +20,7 @@ export { builtinDefaultWorkspacePreset, builtinWorkbenchShellConfig } from "./wo
 
 const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "official.layout.workbench-dashboard": { "./styles.css": layoutDashboardStylesHref },
+  "official.layout.workbench-mobile": { "./styles.css": layoutMobileStylesHref },
   "official.search.command-bar": { "./styles.css": officialPluginsStylesHref },
   "official.widgets.notes": { "./styles.css": notesStylesHref },
   "official.widgets.quick-links": { "./styles.css": quickLinksStylesHref },

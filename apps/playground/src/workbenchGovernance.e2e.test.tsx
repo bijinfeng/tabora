@@ -124,7 +124,8 @@ describe("workbench governance smoke", () => {
       expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
     )
 
-    await page.viewport(390, 844)
+    // 安全布局是桌面仪表盘的降级形态，移动端由专用布局接管，因此这里在较窄的桌面宽度下校验无横向滚动。
+    await page.viewport(1024, 900)
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
 
     findButtonByText("[data-safe-workbench-layout] button", "设置")?.click()

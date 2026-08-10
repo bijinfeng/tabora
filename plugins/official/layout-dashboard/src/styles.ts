@@ -5,16 +5,11 @@ type XStyle = StyleXArray<
   (null | undefined | CompiledStyles) | boolean | Readonly<[CompiledStyles, InlineStyles]>
 >
 
-const mobile = "@media (max-width: 768px)"
-
 export const styles = stylex.create({
   layout: {
     backgroundColor: "rgb(var(--tbr-color-page))",
     color: "rgb(var(--tbr-color-text))",
-    display: {
-      default: "grid",
-      [mobile]: "block",
-    },
+    display: "grid",
     gridTemplateColumns: "56px minmax(0, 1fr)",
     minHeight: "100vh",
     overflowX: "hidden",
@@ -22,75 +17,24 @@ export const styles = stylex.create({
   rail: {
     alignItems: "center",
     backgroundColor: "rgb(var(--tbr-color-surface))",
-    borderRightColor: {
-      default: "rgb(var(--tbr-color-line))",
-      [mobile]: "transparent",
-    },
+    borderRightColor: "rgb(var(--tbr-color-line))",
     borderRightStyle: "solid",
-    borderRightWidth: {
-      default: 1,
-      [mobile]: 0,
-    },
-    borderTopColor: {
-      default: "transparent",
-      [mobile]: "rgb(var(--tbr-color-line))",
-    },
-    borderTopStyle: "solid",
-    borderTopWidth: {
-      default: 0,
-      [mobile]: 1,
-    },
-    bottom: {
-      default: "auto",
-      [mobile]: 0,
-    },
+    borderRightWidth: 1,
     boxShadow: "1px 0 0 rgb(var(--tbr-color-shadow) / 0.02)",
     display: "flex",
-    flexDirection: {
-      default: "column",
-      [mobile]: "row",
-    },
+    flexDirection: "column",
     gap: 6,
-    height: {
-      default: "100vh",
-      [mobile]: 50,
-    },
-    justifyContent: {
-      default: "flex-start",
-      [mobile]: "space-around",
-    },
-    left: {
-      default: "auto",
-      [mobile]: 0,
-    },
-    paddingBlock: {
-      default: 14,
-      [mobile]: 6,
-    },
-    paddingInline: {
-      default: 8,
-      [mobile]: 12,
-    },
-    position: {
-      default: "sticky",
-      [mobile]: "fixed",
-    },
-    right: {
-      default: "auto",
-      [mobile]: 0,
-    },
-    top: {
-      default: 0,
-      [mobile]: "auto",
-    },
+    height: "100vh",
+    justifyContent: "flex-start",
+    paddingBlock: 14,
+    paddingInline: 8,
+    position: "sticky",
+    top: 0,
     zIndex: "var(--tbr-z-sticky, 100)",
   },
   railLogo: {
     color: "rgb(var(--tbr-color-accent))",
-    display: {
-      default: "block",
-      [mobile]: "none",
-    },
+    display: "block",
     height: 28,
     marginBottom: 8,
     width: 28,
@@ -98,10 +42,7 @@ export const styles = stylex.create({
   railGroups: {
     alignItems: "center",
     display: "flex",
-    flexDirection: {
-      default: "column",
-      [mobile]: "row",
-    },
+    flexDirection: "column",
     gap: 6,
   },
   railGroup: {
@@ -153,10 +94,7 @@ export const styles = stylex.create({
     borderStyle: "solid",
     borderWidth: 1,
     color: "rgb(var(--tbr-color-text-muted))",
-    display: {
-      default: "block",
-      [mobile]: "none",
-    },
+    display: "block",
     fontFamily: "var(--tbr-font-mono)",
     fontSize: 9,
     height: 14,
@@ -172,10 +110,7 @@ export const styles = stylex.create({
     backgroundColor: "rgb(var(--tbr-color-text))",
     borderRadius: 5,
     color: "rgb(var(--tbr-color-page))",
-    display: {
-      default: "block",
-      [mobile]: "none",
-    },
+    display: "block",
     fontSize: 11,
     left: 46,
     opacity: 0,
@@ -203,42 +138,16 @@ export const styles = stylex.create({
     borderRadius: "var(--tbr-radius-panel)",
     borderStyle: "solid",
     borderWidth: 1,
-    bottom: {
-      default: "auto",
-      [mobile]: 58,
-    },
     boxShadow: "0 8px 24px rgb(var(--tbr-color-shadow) / 0.22)",
     display: "flex",
     gap: 8,
-    justifyContent: {
-      default: "flex-start",
-      [mobile]: "center",
-    },
-    left: {
-      default: 46,
-      [mobile]: 12,
-    },
+    justifyContent: "flex-start",
+    left: 46,
     padding: 10,
-    position: {
-      default: "absolute",
-      [mobile]: "fixed",
-    },
-    right: {
-      default: "auto",
-      [mobile]: 12,
-    },
-    top: {
-      default: "50%",
-      [mobile]: "auto",
-    },
-    transform: {
-      default: "translateY(-50%)",
-      [mobile]: "none",
-    },
-    width: {
-      default: "max-content",
-      [mobile]: "auto",
-    },
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: "max-content",
     zIndex: 80,
   },
   inlineInput: {
@@ -282,28 +191,13 @@ export const styles = stylex.create({
   },
   divider: {
     backgroundColor: "rgb(var(--tbr-color-line))",
-    height: {
-      default: 1,
-      [mobile]: 24,
-    },
-    marginBlock: {
-      default: 4,
-      [mobile]: 0,
-    },
-    marginInline: {
-      default: 0,
-      [mobile]: 4,
-    },
-    width: {
-      default: 24,
-      [mobile]: 1,
-    },
+    height: 1,
+    marginBlock: 4,
+    marginInline: 0,
+    width: 24,
   },
   spacer: {
-    display: {
-      default: "block",
-      [mobile]: "none",
-    },
+    display: "block",
     flex: 1,
   },
   layoutLabel: {
@@ -432,30 +326,15 @@ export const styles = stylex.create({
     marginInline: "auto",
     maxWidth: 1440,
     minWidth: 0,
-    paddingBlockEnd: {
-      default: 24,
-      [mobile]: 66,
-    },
-    paddingBlockStart: {
-      default: 24,
-      [mobile]: 16,
-    },
-    paddingInline: {
-      default: 32,
-      [mobile]: 16,
-    },
+    paddingBlockEnd: 24,
+    paddingBlockStart: 24,
+    paddingInline: 32,
     width: "100%",
   },
   greeting: {
-    alignItems: {
-      default: "center",
-      [mobile]: "flex-start",
-    },
+    alignItems: "center",
     display: "flex",
-    flexWrap: {
-      default: "nowrap",
-      [mobile]: "wrap",
-    },
+    flexWrap: "nowrap",
     fontSize: 13,
     fontWeight: 600,
     gap: 12,
@@ -472,15 +351,9 @@ export const styles = stylex.create({
   greetingActions: {
     alignItems: "center",
     display: "flex",
-    flexWrap: {
-      default: "nowrap",
-      [mobile]: "wrap",
-    },
+    flexWrap: "nowrap",
     gap: 6,
-    justifyContent: {
-      default: "flex-end",
-      [mobile]: "flex-start",
-    },
+    justifyContent: "flex-end",
     opacity: 0.74,
     transitionDuration: "var(--tbr-dur-fast)",
     transitionProperty: "opacity",
@@ -538,14 +411,8 @@ export const styles = stylex.create({
     display: "grid",
     gap: 12,
     gridAutoFlow: "dense",
-    gridAutoRows: {
-      default: "var(--dashboard-grid-cell, 96px)",
-      [mobile]: "auto",
-    },
-    gridTemplateColumns: {
-      default: "repeat(10, minmax(0, 1fr))",
-      [mobile]: "minmax(0, 1fr)",
-    },
+    gridAutoRows: "var(--dashboard-grid-cell, 96px)",
+    gridTemplateColumns: "repeat(10, minmax(0, 1fr))",
   },
   emptyGroup: {
     alignItems: "center",
@@ -592,32 +459,17 @@ export const styles = stylex.create({
     flexDirection: "column",
     justifyContent: "center",
     minHeight: "100vh",
-    paddingBlockEnd: {
-      default: 0,
-      [mobile]: 66,
-    },
+    paddingBlockEnd: 0,
     paddingBlockStart: 0,
-    paddingInline: {
-      default: 0,
-      [mobile]: 16,
-    },
+    paddingInline: 0,
   },
   focusContent: {
     display: "flex",
     flexDirection: "column",
-    gap: {
-      default: 16,
-      [mobile]: 14,
-    },
+    gap: 16,
     maxWidth: 800,
-    paddingBlock: {
-      default: 24,
-      [mobile]: 0,
-    },
-    paddingInline: {
-      default: 32,
-      [mobile]: 0,
-    },
+    paddingBlock: 24,
+    paddingInline: 32,
     width: "100%",
   },
   focusTopbar: {
@@ -625,20 +477,14 @@ export const styles = stylex.create({
     color: "rgb(var(--tbr-color-text-subtle))",
     display: "flex",
     fontSize: 11,
-    gap: {
-      default: 16,
-      [mobile]: 12,
-    },
+    gap: 16,
     justifyContent: "space-between",
   },
   focusGreeting: {
     alignItems: "center",
     color: "rgb(var(--tbr-color-text-muted))",
     display: "flex",
-    flexWrap: {
-      default: "nowrap",
-      [mobile]: "wrap",
-    },
+    flexWrap: "nowrap",
     fontSize: 13,
     fontWeight: 600,
     gap: 10,
@@ -691,10 +537,7 @@ export const styles = stylex.create({
     gap: 7,
     height: 28,
     justifyContent: "center",
-    minWidth: {
-      default: "auto",
-      [mobile]: 136,
-    },
+    minWidth: "auto",
     paddingBlock: 4,
     paddingInline: 10,
     ":hover": {
@@ -726,10 +569,7 @@ export const styles = stylex.create({
     boxShadow: "0 8px 28px rgb(var(--tbr-color-accent) / 0.12)",
     display: "flex",
     flexDirection: "column",
-    minHeight: {
-      default: 320,
-      [mobile]: 260,
-    },
+    minHeight: 320,
     overflow: "hidden",
   },
   focusCardHead: {
@@ -835,14 +675,8 @@ export const styles = stylex.create({
   },
   satellites: {
     display: "grid",
-    gap: {
-      default: 10,
-      [mobile]: 10,
-    },
-    gridTemplateColumns: {
-      default: "repeat(4, minmax(0, 1fr))",
-      [mobile]: "1fr",
-    },
+    gap: 10,
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
   },
   satellite: {
     backgroundColor: "rgb(var(--tbr-color-surface))",

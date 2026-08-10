@@ -164,6 +164,137 @@ describe("createWorkbenchShellLayoutRuntime", () => {
     expect(buildHostAPI).toHaveBeenCalledTimes(1)
   })
 
+  it("renders the mobile layout on mobile without mutating the stored desktop choice", () => {
+    const catalog = {
+      findLayoutContribution: vi.fn((layoutId: string) =>
+        layoutId === "layout.mobile.custom" ? { id: layoutId } : undefined,
+      ),
+    }
+
+    createWorkbenchShellLayoutRuntime({
+      activeLayoutId: () => "layout.dashboard.custom",
+      isDark: () => false,
+      setCommandPaletteOpen: vi.fn(),
+      setAddWidgetOpen: vi.fn(),
+      openSettings: vi.fn(),
+      readLayoutState: vi.fn(),
+      writeLayoutState: vi.fn(),
+      showToast: vi.fn(),
+      switchLayout: vi.fn(),
+      switchTheme: vi.fn(),
+      runRailAction: vi.fn(),
+      shellConfig: {
+        themeIds: { light: "theme.light.custom", dark: "theme.dark.custom" },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          focus: "layout.focus.custom",
+          mobile: "layout.mobile.custom",
+        },
+        settingsPanelIds: { appearance: "settings.appearance.custom" },
+        searchHistory: { pluginId: "search.plugin.custom", key: "search-history-custom" },
+      },
+      catalog: catalog as unknown as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["catalog"],
+      instanceRenderer: vi.fn() as unknown as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["instanceRenderer"],
+      displayedInstances: () => [instance()],
+      resolveLayoutView: vi.fn() as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["resolveLayoutView"],
+      isMobile: () => true,
+      clearLayoutError: vi.fn(),
+      recordLayoutError: vi.fn(),
+      setContextMenu: vi.fn(),
+      widgetContribution: vi.fn(),
+      resolveWidgetModel: vi.fn(),
+      getWidgetView: vi.fn(),
+      renderWidgetIcon: vi.fn(),
+      buildWidgetViewProps: vi.fn(),
+      openWidgetExpand: vi.fn(),
+      changeWidgetSize: vi.fn(async () => {}),
+      removeWidget: vi.fn(async () => {}),
+      isDragging: vi.fn(() => false),
+    })
+
+    const rendererOptions = (
+      mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
+        [{ activeLayoutId: () => string }]
+      >
+    )[0]?.[0]
+    const hostOptions = (
+      mocks.createWorkbenchLayoutHostAPI.mock.calls as unknown as Array<
+        [{ activeLayoutId: () => string }]
+      >
+    )[0]?.[0]
+
+    expect(rendererOptions?.activeLayoutId()).toBe("layout.mobile.custom")
+    expect(hostOptions?.activeLayoutId()).toBe("layout.dashboard.custom")
+    expect(catalog.findLayoutContribution).toHaveBeenCalledWith("layout.mobile.custom")
+  })
+
+  it("keeps the desktop layout on mobile when the mobile layout is not registered", () => {
+    const catalog = {
+      findLayoutContribution: vi.fn(() => undefined),
+    }
+
+    createWorkbenchShellLayoutRuntime({
+      activeLayoutId: () => "layout.dashboard.custom",
+      isDark: () => false,
+      setCommandPaletteOpen: vi.fn(),
+      setAddWidgetOpen: vi.fn(),
+      openSettings: vi.fn(),
+      readLayoutState: vi.fn(),
+      writeLayoutState: vi.fn(),
+      showToast: vi.fn(),
+      switchLayout: vi.fn(),
+      switchTheme: vi.fn(),
+      runRailAction: vi.fn(),
+      shellConfig: {
+        themeIds: { light: "theme.light.custom", dark: "theme.dark.custom" },
+        layoutIds: {
+          dashboard: "layout.dashboard.custom",
+          focus: "layout.focus.custom",
+          mobile: "layout.mobile.custom",
+        },
+        settingsPanelIds: { appearance: "settings.appearance.custom" },
+        searchHistory: { pluginId: "search.plugin.custom", key: "search-history-custom" },
+      },
+      catalog: catalog as unknown as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["catalog"],
+      instanceRenderer: vi.fn() as unknown as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["instanceRenderer"],
+      displayedInstances: () => [instance()],
+      resolveLayoutView: vi.fn() as Parameters<
+        typeof createWorkbenchShellLayoutRuntime
+      >[0]["resolveLayoutView"],
+      isMobile: () => true,
+      clearLayoutError: vi.fn(),
+      recordLayoutError: vi.fn(),
+      setContextMenu: vi.fn(),
+      widgetContribution: vi.fn(),
+      resolveWidgetModel: vi.fn(),
+      getWidgetView: vi.fn(),
+      renderWidgetIcon: vi.fn(),
+      buildWidgetViewProps: vi.fn(),
+      openWidgetExpand: vi.fn(),
+      changeWidgetSize: vi.fn(async () => {}),
+      removeWidget: vi.fn(async () => {}),
+      isDragging: vi.fn(() => false),
+    })
+
+    const rendererOptions = (
+      mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
+        [{ activeLayoutId: () => string }]
+      >
+    )[0]?.[0]
+
+    expect(rendererOptions?.activeLayoutId()).toBe("layout.dashboard.custom")
+  })
+
   it("forwards failed layout state and safe layout rendering through the runtime", () => {
     const runtime = createWorkbenchShellLayoutRuntime({
       activeLayoutId: () => "layout.dashboard.custom",

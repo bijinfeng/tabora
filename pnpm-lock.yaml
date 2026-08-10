@@ -480,6 +480,9 @@ importers:
       '@tabora/layout-diy-masonry':
         specifier: workspace:*
         version: link:../../plugins/community/layout-diy-masonry
+      '@tabora/layout-mobile':
+        specifier: workspace:*
+        version: link:../../plugins/official/layout-mobile
       '@tabora/official-plugins':
         specifier: workspace:*
         version: link:../official-plugins
@@ -539,6 +542,9 @@ importers:
       '@tabora/layout-dashboard':
         specifier: workspace:*
         version: link:../../plugins/official/layout-dashboard
+      '@tabora/layout-mobile':
+        specifier: workspace:*
+        version: link:../../plugins/official/layout-mobile
       '@tabora/orchestrator':
         specifier: workspace:*
         version: link:../orchestrator
@@ -814,6 +820,34 @@ importers:
       '@tabora/brand':
         specifier: workspace:*
         version: link:../../../packages/brand
+      '@tabora/plugin-api':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-api
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../../../packages/ui
+      lucide-solid:
+        specifier: catalog:ui
+        version: 1.31.0(solid-js@1.9.14)
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.14
+    devDependencies:
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../../tooling/tsconfig
+
+  plugins/official/layout-mobile:
+    dependencies:
+      '@stylexjs/stylex':
+        specifier: catalog:style
+        version: 0.19.0
+      '@tabora/brand':
+        specifier: workspace:*
+        version: link:../../../packages/brand
+      '@tabora/layout-dashboard':
+        specifier: workspace:*
+        version: link:../layout-dashboard
       '@tabora/plugin-api':
         specifier: workspace:*
         version: link:../../../packages/plugin-api
@@ -6888,7 +6922,7 @@ snapshots:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.3(@testing-library/dom@10.4.1)
       '@vitest/browser': 4.1.10(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(vitest@4.1.10)
-      vitest: 4.1.10(@types/node@26.1.1)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
+      vitest: 4.1.10(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
     transitivePeerDependencies:
       - bufferutil
       - msw

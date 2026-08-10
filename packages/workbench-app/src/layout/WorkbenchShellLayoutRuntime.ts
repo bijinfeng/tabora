@@ -73,8 +73,22 @@ export function createWorkbenchShellLayoutRuntime(
     hostActions: layoutHostAPI,
   })
 
+  // Desktop keeps the persisted dashboard/focus choice; mobile always renders the
+  // dedicated mobile layout when it is registered, without mutating the stored layout.
+  const effectiveLayoutId = () => {
+    const mobileLayoutId = options.shellConfig.layoutIds.mobile
+    if (
+      options.isMobile() &&
+      mobileLayoutId &&
+      options.catalog.findLayoutContribution(mobileLayoutId)
+    ) {
+      return mobileLayoutId
+    }
+    return options.activeLayoutId()
+  }
+
   const layoutRendererOptions: Omit<LayoutRendererOptions, "failedLayoutId"> = {
-    activeLayoutId: options.activeLayoutId,
+    activeLayoutId: effectiveLayoutId,
     displayedInstances: options.displayedInstances,
     findLayoutContribution: (layoutId) => options.catalog.findLayoutContribution(layoutId),
     resolveLayoutView: options.resolveLayoutView,

@@ -1,5 +1,9 @@
 import type { DashboardLayoutState, RailGroup } from "./types"
 
+export type { ActiveGroupSetter, DashboardLayoutState, RailGroup, RailGroupSetter } from "./types"
+
+export const dashboardLayoutStateKey = "official.layout.workbench-dashboard.groups"
+
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string")
 }

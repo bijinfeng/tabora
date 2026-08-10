@@ -1,8 +1,8 @@
 import type { PluginManifest } from "@tabora/plugin-api/sdk"
 
-export const layoutDashboardManifest: PluginManifest = {
-  id: "official.layout.workbench-dashboard",
-  name: "Workbench Dashboard Layout",
+export const layoutMobileManifest: PluginManifest = {
+  id: "official.layout.workbench-mobile",
+  name: "Workbench Mobile Layout",
   version: "1.0.0",
   apiVersion: "1.0.0",
   entry: "./index",
@@ -11,9 +11,9 @@ export const layoutDashboardManifest: PluginManifest = {
   contributes: {
     layouts: [
       {
-        id: "official.layout.workbench-dashboard",
-        title: "工作台仪表盘布局",
-        view: "official.layout.workbench-dashboard.view",
+        id: "official.layout.workbench-mobile",
+        title: "工作台移动布局",
+        view: "official.layout.workbench-mobile.view",
         regions: [
           {
             id: "topbar",
@@ -23,25 +23,11 @@ export const layoutDashboardManifest: PluginManifest = {
             maxInstances: 1,
           },
           { id: "mainGrid", title: "主网格", accepts: ["widget"], required: true },
+          { id: "focus", title: "专注卡片", accepts: ["widget"], required: false },
         ],
         defaultRegions: {
           topbar: [{ instanceId: "search-main" }],
           mainGrid: [
-            { instanceId: "quick-links-1" },
-            { instanceId: "todo-1" },
-            { instanceId: "notes-1" },
-            { instanceId: "weather-1" },
-          ],
-        },
-        supportsResponsive: false,
-      },
-      {
-        id: "official.layout.workbench-focus",
-        title: "工作台专注布局",
-        view: "official.layout.workbench-dashboard.focus.view",
-        regions: [{ id: "focus", title: "专注卡片", accepts: ["widget"], required: true }],
-        defaultRegions: {
-          focus: [
             { instanceId: "quick-links-1" },
             { instanceId: "todo-1" },
             { instanceId: "notes-1" },

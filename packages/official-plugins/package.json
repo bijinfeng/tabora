@@ -25,6 +25,7 @@
     "@tabora/auth": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
     "@tabora/layout-dashboard": "workspace:*",
+    "@tabora/layout-mobile": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",

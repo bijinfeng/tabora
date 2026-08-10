@@ -7,7 +7,11 @@ import { Button } from "@tabora/ui/button"
 
 import { dateLabel, fallbackText, greeting } from "./i18n"
 import { WorkbenchRail } from "./workbench-rail"
-import { normalizeDashboardLayoutState, resolveSetterValue } from "./dashboard-layout-state"
+import {
+  dashboardLayoutStateKey,
+  normalizeDashboardLayoutState,
+  resolveSetterValue,
+} from "./dashboard-layout-state"
 import { styles } from "./styles"
 import type {
   ActiveGroupSetter,
@@ -17,7 +21,6 @@ import type {
   RailGroupSetter,
 } from "./types"
 
-const dashboardLayoutStateKey = "official.layout.workbench-dashboard.groups"
 const dashboardGridCellVar = "--dashboard-grid-cell"
 
 function countGridColumns(template: string): number {

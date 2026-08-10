@@ -6,6 +6,7 @@ export type WorkbenchShellConfig = {
   layoutIds: {
     dashboard: string
     focus: string
+    mobile?: string
   }
   settingsPanelIds: {
     appearance: string

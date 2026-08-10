@@ -1,12 +1,11 @@
 {
-  "name": "@tabora/layout-dashboard",
+  "name": "@tabora/layout-mobile",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.tsx",
     "./manifest": "./src/manifest.ts",
-    "./state": "./src/dashboard-layout-state.ts",
     "./styles.css": "./src/styles.css",
     "./package.json": "./package.json"
   },
@@ -14,18 +13,18 @@
     "exports": {
       ".": "./dist/index.js",
       "./manifest": "./dist/manifest.js",
-      "./state": "./dist/dashboard-layout-state.js",
       "./styles.css": "./dist/styles.css",
       "./package.json": "./package.json"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.tsx src/manifest.ts src/dashboard-layout-state.ts",
+    "build": "vp pack src/index.tsx src/manifest.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@stylexjs/stylex": "catalog:style",
     "@tabora/brand": "workspace:*",
+    "@tabora/layout-dashboard": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/ui": "workspace:*",
     "lucide-solid": "catalog:ui",
