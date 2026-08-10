@@ -96,7 +96,7 @@ export const styles = stylex.create({
     gap: 12,
     gridAutoFlow: "dense",
     gridAutoRows: "auto",
-    gridTemplateColumns: "minmax(0, 1fr)",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
   },
   emptyGroup: {
     alignItems: "center",
