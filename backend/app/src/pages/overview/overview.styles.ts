@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
+import { color, font, radius, shadow, space, motion } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
   page: {
@@ -34,6 +34,13 @@ export const styles = stylex.create({
     flexDirection: "column",
     gap: space.s3,
     padding: space.s5,
+    transitionProperty: "all",
+    transitionDuration: motion.normal,
+    cursor: "default",
+    ":hover": {
+      boxShadow: shadow.lg,
+      borderColor: color.accentSoft,
+    },
   },
   cardHead: {
     alignItems: "center",

@@ -1,8 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
+import { TaboraMark } from "@tabora/brand"
 import { Link, useLocation } from "@tanstack/solid-router"
 import { IconButton } from "@tabora/ui/button"
 import { For, Show } from "solid-js"
-import LayoutGrid from "lucide-solid/icons/layout-grid"
 import LogOut from "lucide-solid/icons/log-out"
 
 import { navItems } from "./navigation"
@@ -25,9 +25,7 @@ export function AdminSidebar(props: AdminSidebarProps) {
   return (
     <aside {...stylex.attrs(styles.sidebar)}>
       <div {...stylex.attrs(styles.brand, props.collapsed && styles.brandCollapsed)}>
-        <span {...stylex.attrs(styles.brandMark)}>
-          <LayoutGrid size={16} />
-        </span>
+        <TaboraMark {...stylex.attrs(styles.brandMark)} />
         <Show when={!props.collapsed}>
           <span {...stylex.attrs(styles.brandName)}>Tabora Admin</span>
         </Show>

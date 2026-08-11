@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
+import { color, font, radius, shadow, space, motion } from "@tabora/theme/tokens.stylex"
 
 export const chartStyles = stylex.create({
   grid: {
@@ -18,6 +18,11 @@ export const chartStyles = stylex.create({
     flexDirection: "column",
     gap: space.s4,
     padding: space.s5,
+    transitionProperty: "box-shadow, border-color",
+    transitionDuration: motion.normal,
+    ":hover": {
+      boxShadow: shadow.lg,
+    },
   },
   cardHead: {
     alignItems: "center",

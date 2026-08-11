@@ -39,14 +39,9 @@ export const styles = stylex.create({
     paddingInline: space.s5,
   },
   brandMark: {
-    alignItems: "center",
-    backgroundColor: color.accent,
-    borderRadius: radius.control,
-    color: color.inverse,
-    display: "flex",
-    height: 26,
-    justifyContent: "center",
-    width: 26,
+    width: 28,
+    height: 28,
+    flexShrink: 0,
   },
   brandName: {
     fontSize: 14,

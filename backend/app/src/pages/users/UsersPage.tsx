@@ -90,48 +90,54 @@ export function UsersPage() {
 
   return (
     <div {...stylex.attrs(shared.page)}>
-      <div {...stylex.attrs(styles.toolbar)}>
-        <div {...stylex.attrs(styles.toolbarLeft)}>
-          <Input
-            value={search()}
-            onInput={(v) => {
-              setSearch(v)
-              resetOffset()
-            }}
-            placeholder="按邮箱搜索"
-            leadingIcon={<Search size={16} />}
-            clearable
-            aria-label="搜索用户"
-          />
+      <div {...stylex.attrs(styles.panel)}>
+        <div {...stylex.attrs(styles.toolbar)}>
+          <div {...stylex.attrs(styles.toolbarLeft)}>
+            <Input
+              value={search()}
+              onInput={(v) => {
+                setSearch(v)
+                resetOffset()
+              }}
+              placeholder="按邮箱搜索"
+              leadingIcon={<Search size={16} />}
+              clearable
+              aria-label="搜索用户"
+            />
+          </div>
+          <Button variant="primary" onClick={() => setCreateOpen(true)}>
+            <Plus size={16} />
+            新建用户
+          </Button>
         </div>
-        <Button variant="primary" onClick={() => setCreateOpen(true)}>
-          <Plus size={16} />
-          新建用户
-        </Button>
+
+        <Show when={actionError()}>
+          <div {...stylex.attrs(styles.panelNotice)}>
+            <InlineError>{actionError()}</InlineError>
+          </div>
+        </Show>
+
+        <UsersTable
+          data={data.data}
+          loading={data.isPending}
+          error={data.error ?? undefined}
+          columns={columns}
+        />
+
+        <Show when={data.data}>
+          {(d) => (
+            <div {...stylex.attrs(styles.panelFooter)}>
+              <Pagination
+                offset={offset()}
+                pageSize={PAGE_SIZE}
+                total={d().total}
+                onPrev={onPrev}
+                onNext={onNext}
+              />
+            </div>
+          )}
+        </Show>
       </div>
-
-      <Show when={actionError()}>
-        <InlineError>{actionError()}</InlineError>
-      </Show>
-
-      <UsersTable
-        data={data.data}
-        loading={data.isPending}
-        error={data.error ?? undefined}
-        columns={columns}
-      />
-
-      <Show when={data.data}>
-        {(d) => (
-          <Pagination
-            offset={offset()}
-            pageSize={PAGE_SIZE}
-            total={d().total}
-            onPrev={onPrev}
-            onNext={onNext}
-          />
-        )}
-      </Show>
 
       <CreateUserDialog
         open={createOpen()}
@@ -246,6 +252,7 @@ function UsersTable(props: {
         rows={props.data?.users ?? []}
         rowKey={(u) => u.id}
         aria-label="用户列表"
+        xstyle={styles.table}
       />
     </QueryState>
   )
