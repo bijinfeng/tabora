@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">天气</title>
+  <rect width="512" height="512" rx="120" fill="#dcece5"/>
+  <circle cx="248" cy="262" r="132" fill="none" stroke="#1a9070" stroke-opacity="0.34" stroke-width="8"/>
+  <circle cx="248" cy="262" r="82" fill="#ffffff"/>
+  <circle cx="248" cy="262" r="82" fill="none" stroke="#1a9070" stroke-opacity="0.14" stroke-width="8"/>
+  <circle cx="357" cy="187" r="26" fill="#1a9070"/>
+  <circle cx="357" cy="187" r="26" fill="none" stroke="#dcece5" stroke-width="12"/>
+</svg>

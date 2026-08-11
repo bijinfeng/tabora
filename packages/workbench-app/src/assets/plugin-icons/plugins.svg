@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">插件状态</title>
+  <rect width="512" height="512" rx="120" fill="#1c1e1c"/>
+  <g>
+    <rect x="136" y="136" width="70" height="70" rx="18" fill="#1a9070"/>
+    <rect x="221" y="136" width="70" height="70" rx="18" fill="#ffffff" fill-opacity="0.16"/>
+    <rect x="306" y="136" width="70" height="70" rx="18" fill="#ffffff" fill-opacity="0.16"/>
+    <rect x="136" y="221" width="70" height="70" rx="18" fill="#ffffff" fill-opacity="0.16"/>
+    <rect x="221" y="221" width="70" height="70" rx="18" fill="#1a9070"/>
+    <rect x="306" y="221" width="70" height="70" rx="18" fill="#ffffff" fill-opacity="0.16"/>
+    <rect x="136" y="306" width="70" height="70" rx="18" fill="#ffffff" fill-opacity="0.16"/>
+    <rect x="221" y="306" width="70" height="70" rx="18" fill="#ffffff" fill-opacity="0.16"/>
+    <rect x="306" y="306" width="70" height="70" rx="18" fill="#1a9070"/>
+  </g>
+</svg>

@@ -14,7 +14,7 @@ export const officialPluginQuickLinksManifest: PluginManifest = {
       {
         id: "quick-links",
         title: "快捷入口",
-        icon: "link",
+        icon: "links",
         description: "快速访问常用网站",
         supportedSizes: ["S", "M", "L", "XL"],
         defaultSize: "M",

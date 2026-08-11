@@ -210,11 +210,6 @@ export const styles = stylex.create({
   },
   itemIcon: {
     alignItems: "center",
-    backgroundColor: color.surfaceSoft,
-    borderColor: color.line,
-    borderRadius: radius.r2,
-    borderStyle: "solid",
-    borderWidth: 1,
     color: color.textMuted,
     display: "flex",
     fontSize: 10,

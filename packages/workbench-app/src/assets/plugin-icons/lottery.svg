@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">中奖查询</title>
+  <rect width="512" height="512" rx="120" fill="#1a9070"/>
+  <path d="M136 132 h240 a24 24 0 0 1 24 24 v90 a30 30 0 0 0 0 60 v90 a24 24 0 0 1 -24 24 h-240 a24 24 0 0 1 -24 -24 v-90 a30 30 0 0 0 0 -60 v-90 a24 24 0 0 1 24 -24 z" fill="#ffffff"/>
+  <line x1="112" y1="276" x2="400" y2="276" stroke="#1a9070" stroke-opacity="0.28" stroke-width="6" stroke-dasharray="14 12"/>
+  <g>
+    <circle cx="169" cy="330" r="26" fill="#1c1e1c"/>
+    <circle cx="229" cy="330" r="26" fill="#1c1e1c"/>
+    <circle cx="289" cy="330" r="26" fill="#1c1e1c"/>
+    <circle cx="349" cy="330" r="26" fill="#1a9070"/>
+  </g>
+  <rect x="146" y="182" width="128" height="20" rx="10" fill="#1c1e1c"/>
+  <rect x="146" y="216" width="76" height="16" rx="8" fill="#c9cdc4"/>
+</svg>

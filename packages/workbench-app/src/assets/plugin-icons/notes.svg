@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">便签</title>
+  <rect width="512" height="512" rx="120" fill="#eef1ec"/>
+  <path d="M144 128 h176 l48 48 v208 a24 24 0 0 1 -24 24 h-176 a24 24 0 0 1 -24 -24 v-232 a24 24 0 0 1 24 -24 z" fill="#ffffff"/>
+  <path d="M320 128 v48 h48 z" fill="#d7dbd2"/>
+  <circle cx="184" cy="212" r="20" fill="#1a9070"/>
+  <rect x="220" y="200" width="120" height="16" rx="8" fill="#1c1e1c"/>
+  <rect x="152" y="264" width="208" height="14" rx="7" fill="#c9cdc4"/>
+  <rect x="152" y="298" width="176" height="14" rx="7" fill="#c9cdc4"/>
+  <rect x="152" y="344" width="96" height="26" rx="13" fill="#1a9070" fill-opacity="0.16"/>
+</svg>

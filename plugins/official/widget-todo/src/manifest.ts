@@ -13,7 +13,7 @@ export const officialPluginTodoManifest: PluginManifest = {
       {
         id: "todo",
         title: "待办",
-        icon: "check-square",
+        icon: "focus",
         description: "管理待办事项列表",
         supportedSizes: ["S", "M", "L", "XL"],
         defaultSize: "S",

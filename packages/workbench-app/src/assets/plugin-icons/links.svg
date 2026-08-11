@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">快捷入口</title>
+  <rect width="512" height="512" rx="120" fill="#f2f4f0"/>
+  <g stroke="#1c1e1c" stroke-opacity="0.18" stroke-width="6">
+    <line x1="256" y1="256" x2="152" y2="168"/>
+    <line x1="256" y1="256" x2="368" y2="176"/>
+    <line x1="256" y1="256" x2="180" y2="360"/>
+    <line x1="256" y1="256" x2="356" y2="344"/>
+  </g>
+  <circle cx="256" cy="256" r="52" fill="#1c1e1c"/>
+  <circle cx="152" cy="168" r="30" fill="#ffffff" stroke="#d7dbd2" stroke-width="4"/>
+  <circle cx="368" cy="176" r="26" fill="#ffffff" stroke="#d7dbd2" stroke-width="4"/>
+  <circle cx="180" cy="360" r="28" fill="#ffffff" stroke="#d7dbd2" stroke-width="4"/>
+  <circle cx="356" cy="344" r="24" fill="#1a9070"/>
+</svg>

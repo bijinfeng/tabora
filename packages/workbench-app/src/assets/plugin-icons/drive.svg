@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">网盘</title>
+  <rect width="512" height="512" rx="120" fill="#dcece5"/>
+  <path d="M182 300 a68 68 0 0 1 6 -135 a84 84 0 0 1 154 -14 a56 56 0 0 1 8 149 z" fill="#1a9070"/>
+  <circle cx="228" cy="236" r="9" fill="#ffffff" fill-opacity="0.55"/>
+  <circle cx="286" cy="222" r="9" fill="#ffffff" fill-opacity="0.55"/>
+  <rect x="150" y="352" width="212" height="28" rx="14" fill="#ffffff"/>
+  <rect x="150" y="352" width="144" height="28" rx="14" fill="#1a9070"/>
+</svg>

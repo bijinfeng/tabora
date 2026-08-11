@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">图片压缩</title>
+  <defs><clipPath id="r"><rect width="512" height="512" rx="120"/></clipPath></defs>
+  <g clip-path="url(#r)">
+    <rect width="256" height="512" fill="#eceee9"/>
+    <rect x="256" width="256" height="512" fill="#1a9070"/>
+    <rect x="72" y="150" width="112" height="212" rx="16" fill="#c9cdc4"/>
+    <rect x="336" y="206" width="104" height="100" rx="14" fill="#ffffff" fill-opacity="0.9"/>
+  </g>
+  <circle cx="256" cy="256" r="66" fill="#ffffff"/>
+  <circle cx="256" cy="256" r="66" fill="none" stroke="#1a9070" stroke-opacity="0.16" stroke-width="6"/>
+  <path d="M256 222 V286 M232 264 L256 290 L280 264" fill="none" stroke="#1c1e1c" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

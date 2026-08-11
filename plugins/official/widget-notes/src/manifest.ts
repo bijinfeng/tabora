@@ -13,7 +13,7 @@ export const officialPluginNotesManifest: PluginManifest = {
       {
         id: "notes",
         title: "便签",
-        icon: "pencil",
+        icon: "notes",
         description: "随手记下想法和灵感",
         supportedSizes: ["S", "M", "L", "XL"],
         defaultSize: "L",
