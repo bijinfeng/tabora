@@ -18,6 +18,7 @@ function panel(
     content: { kind: "custom-view", view: `${id}.view` },
     section: "general",
     scope: "workspace",
+    surfaces: ["desktop", "mobile"],
     ...(order !== undefined ? { order } : {}),
     ...overrides,
   }
@@ -106,6 +107,31 @@ describe("settings navigator", () => {
       "official.settings.workspace.search",
     ])
     expect(navigator.sections.search.panels).toEqual([])
+  })
+
+  it("filters settings panels by the requested surface", () => {
+    const panels: SettingsPanelDescriptor[] = [
+      {
+        ...panel("desktop-only", 10, { surfaces: ["desktop"], section: "general" }),
+        pluginId: "plugin-desktop",
+      },
+      {
+        ...panel("mobile-only", 20, { surfaces: ["mobile"], section: "appearance" }),
+        pluginId: "plugin-mobile",
+      },
+    ]
+
+    const desktopNavigator = createSettingsNavigator(panels, "desktop")
+    const mobileNavigator = createSettingsNavigator(panels, "mobile")
+
+    expect(desktopNavigator.sections.general.panels.map((item) => item.id)).toEqual([
+      "desktop-only",
+    ])
+    expect(desktopNavigator.sections.appearance.panels).toEqual([])
+    expect(mobileNavigator.sections.appearance.panels.map((item) => item.id)).toEqual([
+      "mobile-only",
+    ])
+    expect(mobileNavigator.initialSectionId("general")).toBe("appearance")
   })
 
   it("preserves declared plugin and instance scopes", () => {

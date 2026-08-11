@@ -1,5 +1,5 @@
 import type { AiPermissionAccess } from "./ai"
-import type { SettingsPanelScope, SettingsSectionId } from "./settings"
+import type { SettingsPanelScope, SettingsSectionId, SettingsSurface } from "./settings"
 
 /** Every manifest contribution has one of these kinds. */
 export type ContributionKind =
@@ -378,6 +378,7 @@ export type SettingsPanelViewProps = {
   panelId: string
   pluginId: string
   scope: SettingsPanelScope
+  surface: SettingsSurface
   /** Present only when an instance-scoped panel was opened for a concrete plugin instance. */
   instanceId?: string
   locale?: "zh-CN" | "en-US"
@@ -421,6 +422,7 @@ export type SettingsPanelContribution = {
   title: string
   section: SettingsSectionId
   scope: SettingsPanelScope
+  surfaces: SettingsSurface[]
   order?: number
   /** Requested host actions. The host grants a subset based on its capabilities and policy. */
   hostActions?: SettingsHostActionId[]

@@ -33,6 +33,7 @@ export type WorkbenchShellSurfaceStubOverrides = {
   runCommand?: (commandId: string, context: unknown) => boolean | void
   buildCommandPaletteProps?: () => unknown
   pluginViewBoundaryCopy?: { loadFailed: string; retry: string }
+  mobile?: boolean
 }
 
 export function createWorkbenchShellSurfaceStub(
@@ -112,7 +113,14 @@ export function createWorkbenchShellSurfaceStub(
     catalog,
     views,
     settingsProviders,
-    settingsProviderContext: () => ({}),
+    settingsProviderContext: (surface) => ({ surface }),
+    settingsRoute: {
+      navigate: state.overlays.setActiveSettingsSectionId,
+      home: () => state.overlays.setSettingsOpen(true),
+      isHome: () => false,
+      close: () => state.overlays.setSettingsOpen(false),
+    },
+    responsive: { isMobile: () => overrides.mobile ?? false },
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent: overrides.layoutContent ?? (() => null),

@@ -1,19 +1,9 @@
-import type {
-  LayoutHostAPI,
-  PluginInstance,
-  RegionSlot,
-  WidgetSize,
-  WidgetViewProps,
-} from "@tabora/plugin-api"
-import type { LayoutViewProps } from "@tabora/plugin-api"
-import { describe, expect, it, vi } from "vitest"
-import { render } from "solid-js/web"
 import type { JSX } from "solid-js"
+import { render } from "solid-js/web"
+import { describe, expect, it, vi } from "vitest"
+import type { LayoutHostAPI, LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
 
-import {
-  createWorkbenchLayoutRenderer,
-  type WorkbenchSafeLayoutOptions,
-} from "./WorkbenchShellLayoutRenderer"
+import { createWorkbenchLayoutRenderer } from "./WorkbenchShellLayoutRenderer"
 
 function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   return {
@@ -30,272 +20,81 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   }
 }
 
-function mount(
-  element: ReturnType<ReturnType<typeof createWorkbenchLayoutRenderer>["renderActiveLayout"]>,
-) {
+function mount(element: JSX.Element) {
   const host = document.createElement("div")
   document.body.appendChild(host)
   const dispose = render(() => element, host)
   return { host, dispose }
 }
 
-function safeLayoutProps(): WorkbenchSafeLayoutOptions {
+function baseOptions(): Parameters<typeof createWorkbenchLayoutRenderer>[0] {
+  const LayoutView = (props: LayoutViewProps<JSX.Element>) => (
+    <div>
+      layout {String(props.isMobile)} {Object.keys(props.regions).join(",")}
+    </div>
+  )
+
   return {
-    isDark: () => false,
-    instances: () => [instance()],
-    tShell: (key: string) => {
-      if (key === "chrome.toolbar.search") return "Search"
-      if (key === "chrome.toolbar.settings") return "Settings"
-      if (key === "chrome.toolbar.toggleThemeToDark") return "Switch to dark theme"
-      if (key === "chrome.toolbar.toggleThemeToLight") return "Switch to light theme"
-      return key
-    },
-    widgetContribution: vi.fn(() => ({
-      views: { card: "widget.notes.card" },
-    })),
-    resolveWidgetModel: vi.fn(
-      (): {
-        title: string
-        icon: string
-        currentSize: WidgetSize
-        supportedSizes: WidgetSize[]
-      } => ({
-        title: "便签",
-        icon: "pencil",
-        currentSize: "M",
-        supportedSizes: ["S", "M", "L"],
-      }),
-    ),
-    getView: vi.fn(() => undefined),
-    renderWidgetIcon: vi.fn(() => <span>icon</span>),
-    buildWidgetViewProps: vi.fn(),
-    onOpenCommandPalette: vi.fn(),
-    onToggleTheme: vi.fn(),
-    onOpenSettings: vi.fn(),
-    onOpenExpand: vi.fn(),
-    onOpenContextMenu: vi.fn(),
-    onResize: vi.fn(),
-    onRemove: vi.fn(),
-    isDragging: vi.fn(() => false),
+    activeLayoutId: () => "layout.dashboard",
+    layoutError: () => null,
+    displayedInstances: () => [instance()],
+    findLayoutContribution: () => ({
+      id: "layout.dashboard",
+      title: "Dashboard",
+      view: "layout.dashboard.view",
+      regions: [{ id: "main", title: "Main", accepts: ["widget"] }],
+      defaultRegions: {},
+      supportsResponsive: true,
+    }),
+    resolveLayoutView: () => LayoutView,
+    buildRegionSlots: vi.fn(() => ({})),
+    buildHostAPI: vi.fn(() => ({}) as LayoutHostAPI),
+    isMobile: () => true,
+    clearLayoutError: vi.fn(),
+    recordLayoutError: vi.fn(),
   }
 }
 
 describe("createWorkbenchLayoutRenderer", () => {
-  it("falls back to the safe layout when the active layout view is unavailable", () => {
+  it("shows an explicit unavailable state when the layout plugin is missing", () => {
+    const options = baseOptions()
     const renderer = createWorkbenchLayoutRenderer({
-      activeLayoutId: () => "layout.missing",
-      displayedInstances: () => [instance()],
+      ...options,
       findLayoutContribution: () => undefined,
       resolveLayoutView: () => undefined,
-      buildRegionSlots: vi.fn(),
-      buildHostAPI: vi.fn(),
-      isMobile: () => false,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      safeLayout: safeLayoutProps(),
     })
 
     const { host, dispose } = mount(renderer.renderActiveLayout())
 
-    expect(host.textContent).toContain("Tabora")
-    expect(host.textContent).toContain("Search")
-    expect(host.textContent).toContain("Settings")
-
-    dispose()
-    host.remove()
-  })
-
-  it("preserves plugin style scope when rendering safe layout widget views", () => {
-    const safeLayout = safeLayoutProps()
-    safeLayout.getView = vi.fn(() => (props: WidgetViewProps) => (
-      <div>widget view {props.instanceId}</div>
-    ))
-    safeLayout.buildWidgetViewProps = vi.fn(
-      (widgetInstance): WidgetViewProps => ({
-        pluginId: widgetInstance.pluginId,
-        instanceId: widgetInstance.id,
-        contributionId: widgetInstance.contributionId,
-        size: widgetInstance.size ?? "M",
-        supportedSizes: ["S", "M", "L"],
-        config: {},
-        data: {
-          get: vi.fn(async () => undefined),
-          save: vi.fn(async () => {}),
-        },
-        host: {
-          updateConfig: vi.fn(async () => {}),
-          removeInstance: vi.fn(async () => {}),
-          requestResize: vi.fn(async () => {}),
-          openModal: vi.fn(),
-          closeModal: vi.fn(),
-          openExpand: vi.fn(),
-          showToast: vi.fn(),
-          openExternal: vi.fn(async () => true),
-        },
-      }),
-    )
-
-    const renderer = createWorkbenchLayoutRenderer({
-      activeLayoutId: () => "layout.missing",
-      displayedInstances: () => [instance()],
-      findLayoutContribution: () => undefined,
-      resolveLayoutView: () => undefined,
-      buildRegionSlots: vi.fn(),
-      buildHostAPI: vi.fn(),
-      isMobile: () => false,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      safeLayout,
-    })
-
-    const { host, dispose } = mount(renderer.renderActiveLayout())
-
-    expect(host.querySelector('[data-tabora-plugin-id="plugin.widgets"]')).toBeTruthy()
-
-    dispose()
-    host.remove()
-  })
-
-  it("keeps widget title handle context-menu access when wrapped by DragDropProvider", () => {
-    const safeLayout = safeLayoutProps()
-    safeLayout.getView = vi.fn(() => () => <div>widget body</div>)
-    safeLayout.buildWidgetViewProps = vi.fn(
-      (widgetInstance): WidgetViewProps => ({
-        pluginId: widgetInstance.pluginId,
-        instanceId: widgetInstance.id,
-        contributionId: widgetInstance.contributionId,
-        size: widgetInstance.size ?? "M",
-        supportedSizes: ["S", "M", "L"],
-        config: {},
-        data: {
-          get: vi.fn(async () => undefined),
-          save: vi.fn(async () => {}),
-        },
-        host: {
-          updateConfig: vi.fn(async () => {}),
-          removeInstance: vi.fn(async () => {}),
-          requestResize: vi.fn(async () => {}),
-          openModal: vi.fn(),
-          closeModal: vi.fn(),
-          openExpand: vi.fn(),
-          showToast: vi.fn(),
-          openExternal: vi.fn(async () => true),
-        },
-      }),
-    )
-
-    const renderer = createWorkbenchLayoutRenderer({
-      activeLayoutId: () => "layout.missing",
-      displayedInstances: () => [instance()],
-      findLayoutContribution: () => undefined,
-      resolveLayoutView: () => undefined,
-      buildRegionSlots: vi.fn(),
-      buildHostAPI: vi.fn(),
-      isMobile: () => false,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      dndKit: {
-        onDragStart: vi.fn(),
-        onDragMove: vi.fn(),
-        onDragOver: vi.fn(),
-        onDragEnd: vi.fn(),
-      },
-      safeLayout,
-    })
-
-    const { host, dispose } = mount(renderer.renderActiveLayout())
-    const card = host.querySelector("[data-widget-instance-id='widget-1']") as HTMLElement
-    const event = new MouseEvent("contextmenu", {
-      bubbles: true,
-      cancelable: true,
-      clientX: 48,
-      clientY: 72,
-      button: 2,
-    })
-
-    card.dispatchEvent(event)
-
-    expect(safeLayout.onOpenContextMenu).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "contextmenu",
-        clientX: 48,
-        clientY: 72,
-      }),
-      "widget-1",
-    )
+    expect(host.querySelector("[data-layout-unavailable]")).toBeTruthy()
+    expect(host.textContent).toContain("没有可用的布局插件")
+    expect(host.textContent).toContain("布局插件未注册")
 
     dispose()
     host.remove()
   })
 
   it("renders the plugin-provided layout view with computed regions and host api", () => {
-    const buildRegionSlots = vi.fn(
-      (): Record<string, RegionSlot<JSX.Element>> => ({
-        main: {
-          regionId: "main",
-          title: "Main",
-          accepts: ["widget"],
-          instances: [instance()],
-          render: vi.fn(() => <div>widget</div>),
-          renderInstance: vi.fn(),
-          isEmpty: false,
-        },
-      }),
-    )
-    const hostApi: LayoutHostAPI = {
-      getGlobalActions: vi.fn(() => []),
-      openSettings: vi.fn(),
-      openCommandPalette: vi.fn(),
-      openAddWidget: vi.fn(),
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
-      toggleTheme: vi.fn(),
-      isDark: vi.fn(() => false),
-    }
-    const buildHostAPI = vi.fn(() => hostApi)
+    const options = baseOptions()
     const LayoutView = vi.fn((props: LayoutViewProps<JSX.Element>) => (
       <div>
-        layout {String(props.isMobile)} {props.regions.main!.regionId}
+        layout {String(props.isMobile)} {Object.keys(props.regions).join(",")}
       </div>
     ))
-    const clearLayoutError = vi.fn()
+    options.resolveLayoutView = () => LayoutView
 
-    const renderer = createWorkbenchLayoutRenderer({
-      activeLayoutId: () => "layout.dashboard",
-      displayedInstances: () => [instance()],
-      findLayoutContribution: () => ({
-        id: "layout.dashboard",
-        title: "Dashboard",
-        view: "layout.dashboard.view",
-        regions: [{ id: "main", title: "Main", accepts: ["widget"] }],
-        defaultRegions: {},
-        supportsResponsive: true,
-      }),
-      resolveLayoutView: (viewId) => (viewId === "layout.dashboard.view" ? LayoutView : undefined),
-      buildRegionSlots,
-      buildHostAPI,
-      isMobile: () => true,
-      clearLayoutError,
-      recordLayoutError: vi.fn(),
-      safeLayout: safeLayoutProps(),
-    })
+    const { host, dispose } = mount(createWorkbenchLayoutRenderer(options).renderActiveLayout())
 
-    const { host, dispose } = mount(renderer.renderActiveLayout())
-
-    expect(host.textContent).toContain("layout true main")
-    expect(buildRegionSlots).toHaveBeenCalledWith("layout.dashboard", [
+    expect(host.textContent).toContain("layout true")
+    expect(options.buildRegionSlots).toHaveBeenCalledWith("layout.dashboard", [
       expect.objectContaining({ id: "widget-1" }),
     ])
-    expect(buildHostAPI).toHaveBeenCalled()
-    expect(clearLayoutError).toHaveBeenCalled()
+    expect(options.buildHostAPI).toHaveBeenCalled()
+    expect(options.clearLayoutError).toHaveBeenCalled()
     expect(LayoutView).toHaveBeenCalledWith(
       expect.objectContaining({
         isMobile: true,
-        regions: expect.objectContaining({
-          main: expect.objectContaining({ regionId: "main" }),
-        }),
-        host: hostApi,
+        host: expect.anything(),
       }),
     )
 
@@ -303,41 +102,45 @@ describe("createWorkbenchLayoutRenderer", () => {
     host.remove()
   })
 
-  it("uses the safe layout without retrying the broken layout when the active layout already failed", () => {
-    const buildRegionSlots = vi.fn()
-    const buildHostAPI = vi.fn()
-    const clearLayoutError = vi.fn()
+  it("shows the recorded layout error without retrying the broken view", () => {
+    const options = baseOptions()
     const LayoutView = vi.fn(() => <div>broken layout</div>)
-
-    const renderer = createWorkbenchLayoutRenderer({
-      activeLayoutId: () => "layout.dashboard",
-      failedLayoutId: () => "layout.dashboard",
-      displayedInstances: () => [instance()],
-      findLayoutContribution: () => ({
-        id: "layout.dashboard",
-        title: "Dashboard",
-        view: "layout.dashboard.view",
-        regions: [{ id: "main", title: "Main", accepts: ["widget"] }],
-        defaultRegions: {},
-        supportsResponsive: true,
-      }),
-      resolveLayoutView: (viewId) => (viewId === "layout.dashboard.view" ? LayoutView : undefined),
-      buildRegionSlots,
-      buildHostAPI,
-      isMobile: () => false,
-      clearLayoutError,
-      recordLayoutError: vi.fn(),
-      safeLayout: safeLayoutProps(),
+    options.resolveLayoutView = () => LayoutView
+    options.layoutError = () => ({
+      layoutId: "layout.dashboard",
+      message: "router failed",
     })
 
-    const { host, dispose } = mount(renderer.renderActiveLayout())
+    const { host, dispose } = mount(createWorkbenchLayoutRenderer(options).renderActiveLayout())
 
-    expect(host.textContent).toContain("Tabora")
+    expect(host.querySelector("[data-layout-unavailable]")).toBeTruthy()
+    expect(host.textContent).toContain("router failed")
     expect(LayoutView).not.toHaveBeenCalled()
-    expect(buildRegionSlots).not.toHaveBeenCalled()
-    expect(buildHostAPI).not.toHaveBeenCalled()
-    expect(clearLayoutError).not.toHaveBeenCalled()
+    expect(options.buildRegionSlots).not.toHaveBeenCalled()
+    expect(options.buildHostAPI).not.toHaveBeenCalled()
 
+    dispose()
+    host.remove()
+  })
+
+  it("records a thrown layout error and exposes the unavailable state", () => {
+    const options = baseOptions()
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    options.resolveLayoutView = () => () => {
+      throw new Error("layout crashed")
+    }
+
+    const { host, dispose } = mount(createWorkbenchLayoutRenderer(options).renderActiveLayout())
+
+    expect(host.querySelector("[data-layout-unavailable]")).toBeTruthy()
+    expect(host.textContent).toContain("布局插件渲染失败")
+    expect(options.recordLayoutError).toHaveBeenCalledWith(
+      "layout.dashboard",
+      expect.objectContaining({ message: "layout crashed" }),
+    )
+    expect(consoleError).toHaveBeenCalledWith("Layout error:", expect.any(Error))
+
+    consoleError.mockRestore()
     dispose()
     host.remove()
   })

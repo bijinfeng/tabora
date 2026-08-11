@@ -1,51 +1,29 @@
-import type { WidgetSize } from "@tabora/plugin-api"
-
 import { createLayoutEngine } from "./layoutEngine"
-import { resolveWorkbenchThemeToggleTarget, type WorkbenchShellConfig } from "../shared/shellConfig"
+import type { WorkbenchShellConfig } from "../shared/shellConfig"
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
-import {
-  createWorkbenchLayoutRenderer,
-  type WorkbenchSafeLayoutOptions,
-} from "./WorkbenchShellLayoutRenderer"
-import type { WorkbenchContextMenuState } from "../shell/WorkbenchShellState"
+import { createWorkbenchLayoutRenderer } from "./WorkbenchShellLayoutRenderer"
 
 type LayoutHostOptions = Parameters<typeof createWorkbenchLayoutHostAPI>[0]
 type LayoutEngineOptions = Parameters<typeof createLayoutEngine>[0]
 type LayoutRendererOptions = Parameters<typeof createWorkbenchLayoutRenderer>[0]
 
-type SafeLayoutBridges = {
-  setContextMenu: (menu: WorkbenchContextMenuState | null) => void
-  dndKit?: LayoutRendererOptions["dndKit"]
-  tShell?: WorkbenchSafeLayoutOptions["tShell"]
-  widgetContribution: WorkbenchSafeLayoutOptions["widgetContribution"]
-  resolveWidgetModel: WorkbenchSafeLayoutOptions["resolveWidgetModel"]
-  getWidgetView: WorkbenchSafeLayoutOptions["getView"]
-  renderWidgetIcon: WorkbenchSafeLayoutOptions["renderWidgetIcon"]
-  buildWidgetViewProps: WorkbenchSafeLayoutOptions["buildWidgetViewProps"]
-  openWidgetExpand: WorkbenchSafeLayoutOptions["onOpenExpand"]
-  changeWidgetSize: (instanceId: string, size: WidgetSize) => Promise<void> | void
-  removeWidget: (instanceId: string) => Promise<void> | void
-  isDragging: WorkbenchSafeLayoutOptions["isDragging"]
-}
-
 type LayoutRendererBridges = Pick<
   LayoutRendererOptions,
   | "activeLayoutId"
-  | "failedLayoutId"
+  | "layoutError"
   | "displayedInstances"
   | "resolveLayoutView"
   | "isMobile"
   | "clearLayoutError"
   | "recordLayoutError"
->
+> & { dndKit?: LayoutRendererOptions["dndKit"] }
 
 export function createWorkbenchShellLayoutRuntime(
   options: {
     shellConfig: WorkbenchShellConfig
   } & LayoutHostOptions &
     Pick<LayoutEngineOptions, "catalog" | "instanceRenderer"> &
-    LayoutRendererBridges &
-    SafeLayoutBridges,
+    LayoutRendererBridges,
 ) {
   const layoutHostAPI = createWorkbenchLayoutHostAPI({
     activeLayoutId: options.activeLayoutId,
@@ -87,7 +65,7 @@ export function createWorkbenchShellLayoutRuntime(
     return options.activeLayoutId()
   }
 
-  const layoutRendererOptions: Omit<LayoutRendererOptions, "failedLayoutId"> = {
+  const layoutRendererOptions: LayoutRendererOptions = {
     activeLayoutId: effectiveLayoutId,
     displayedInstances: options.displayedInstances,
     findLayoutContribution: (layoutId) => options.catalog.findLayoutContribution(layoutId),
@@ -95,48 +73,15 @@ export function createWorkbenchShellLayoutRuntime(
     buildRegionSlots: (layoutId, instances) => layoutEngine.buildRegionSlots(layoutId, instances),
     buildHostAPI: () => layoutEngine.buildHostAPI(),
     isMobile: options.isMobile,
+    layoutError: options.layoutError,
     clearLayoutError: options.clearLayoutError,
     recordLayoutError: options.recordLayoutError,
-    safeLayout: {
-      isDark: options.isDark,
-      instances: options.displayedInstances,
-      ...(options.tShell ? { tShell: options.tShell } : {}),
-      widgetContribution: options.widgetContribution,
-      resolveWidgetModel: options.resolveWidgetModel,
-      getView: options.getWidgetView,
-      renderWidgetIcon: options.renderWidgetIcon,
-      buildWidgetViewProps: options.buildWidgetViewProps,
-      onOpenCommandPalette: () => options.setCommandPaletteOpen(true),
-      onToggleTheme: () => {
-        options.switchTheme(
-          resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
-        )
-      },
-      onOpenSettings: () => options.openSettings(),
-      onOpenExpand: options.openWidgetExpand,
-      onOpenContextMenu: (event, instanceId) => {
-        event.preventDefault()
-        options.setContextMenu({ x: event.clientX, y: event.clientY, instanceId })
-      },
-      onResize: (instanceId, size) => {
-        void options.changeWidgetSize(instanceId, size)
-      },
-      onRemove: (instanceId) => {
-        void options.removeWidget(instanceId)
-      },
-      isDragging: options.isDragging,
-    },
     ...(options.dndKit ? { dndKit: options.dndKit } : {}),
   }
 
-  const layoutRenderer = createWorkbenchLayoutRenderer(
-    options.failedLayoutId
-      ? { ...layoutRendererOptions, failedLayoutId: options.failedLayoutId }
-      : layoutRendererOptions,
-  )
+  const layoutRenderer = createWorkbenchLayoutRenderer(layoutRendererOptions)
 
   return {
-    renderSafeLayout: layoutRenderer.renderSafeLayout,
     renderActiveLayout: layoutRenderer.renderActiveLayout,
   }
 }

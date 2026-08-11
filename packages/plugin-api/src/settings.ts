@@ -9,6 +9,7 @@ export type SettingsSectionId =
   | "about"
 
 export type SettingsPanelScope = "global" | "workspace" | "plugin" | "instance"
+export type SettingsSurface = "desktop" | "mobile"
 
 export type SettingsTextTone = "default" | "muted" | "danger"
 export type SettingsStatusTone = "neutral" | "accent" | "success" | "warning" | "danger"
@@ -79,6 +80,7 @@ export type SettingsPanelAction = {
 }
 
 export type SettingsPanelProviderContext = {
+  surface: SettingsSurface
   locale?: "zh-CN" | "en-US"
   panel?: {
     id: string

@@ -44,7 +44,7 @@ export const homePrototypeContent: Record<SiteLocale, any> = {
         notes: {
           title: "便签",
           sub: "notes · autosave",
-          body: "MVP 重点：布局本身也是插件。平台只提供运行时、权限桥、持久化与安全回退。",
+          body: "MVP 重点：布局本身也是插件。平台只提供运行时、权限桥、持久化与故障诊断。",
         },
         pluginStatus: {
           title: "插件状态",
@@ -77,7 +77,7 @@ export const homePrototypeContent: Record<SiteLocale, any> = {
       ],
       [
         "失败被限制在局部",
-        "Widget、设置面板、搜索插件或布局插件失败时，都有独立回退；用户不会因为一个贡献点报错面对整页白屏。",
+        "Widget、设置面板和搜索插件失败时保持局部可用；布局插件失败时直接显示布局不可用提示和具体错误，不用替代布局掩盖故障。",
       ],
     ],
     architecture: {
@@ -155,7 +155,7 @@ export const homePrototypeContent: Record<SiteLocale, any> = {
     },
     cta: {
       title: "先下载体验工作台，再用文档接入插件协议。",
-      body: "下一步适合进入真实 MVP 走查：默认工作台、布局切换、添加卡片、命令搜索、设置中心、插件错误回退和基础组件约束。",
+      body: "下一步适合进入真实 MVP 走查：默认工作台、布局切换、添加卡片、命令搜索、设置中心、插件故障处理和基础组件约束。",
       primary: "下载 Tabora",
       secondary: "查看文档",
     },

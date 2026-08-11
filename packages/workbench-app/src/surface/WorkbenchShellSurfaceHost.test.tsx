@@ -7,6 +7,31 @@ import { WorkbenchShellSurfaceHost } from "./WorkbenchShellSurfaceHost"
 import { createWorkbenchShellSurfaceStub } from "../shell/WorkbenchShellSurfaceStub"
 
 describe("WorkbenchShellSurfaceHost", () => {
+  it("renders mobile settings as a route page instead of the workbench overlay", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const shell = createWorkbenchShellSurfaceStub({
+      mobile: true,
+      layoutContent: () => <div data-layout-content>layout-content</div>,
+    })
+    shell.state.overlays.setSettingsOpen(true)
+
+    render(
+      () => (
+        <WorkbenchShellProvider shell={shell}>
+          <WorkbenchShellSurfaceHost />
+        </WorkbenchShellProvider>
+      ),
+      root,
+    )
+
+    expect(root.querySelector("[data-settings-page]")).toBeTruthy()
+    expect(root.querySelector("[data-layout-content]")).toBeNull()
+    expect(root.querySelector('[data-workbench-overlay="settings"]')).toBeNull()
+
+    root.remove()
+  })
+
   it("renders layout content together with composed overlay surfaces", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

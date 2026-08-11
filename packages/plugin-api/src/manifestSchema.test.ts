@@ -141,6 +141,7 @@ describe("pluginManifestSchema", () => {
             content: { kind: "custom-view", view: "official.settings.ai.view" },
             section: "ai",
             scope: "global",
+            surfaces: ["desktop", "mobile"],
           },
         ],
       },
@@ -399,6 +400,7 @@ describe("pluginManifestSchema", () => {
             },
             section: "appearance",
             scope: "workspace",
+            surfaces: ["desktop", "mobile"],
             order: 20,
           },
           {
@@ -410,6 +412,7 @@ describe("pluginManifestSchema", () => {
             },
             section: "general",
             scope: "instance",
+            surfaces: ["desktop", "mobile"],
           },
         ],
       },
@@ -439,6 +442,7 @@ describe("pluginManifestSchema", () => {
             title: "账号",
             section: "account",
             scope: "global",
+            surfaces: ["desktop", "mobile"],
             content: {
               kind: "schema",
               provider: "official.account-sync.account.provider",

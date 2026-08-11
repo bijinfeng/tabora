@@ -47,6 +47,7 @@ export {
 } from "./context-menu-model"
 export {
   createSettingsNavigator,
+  filterSettingsPanelsBySurface,
   normalizeSettingsPanelDescriptor,
   resolveInitialSettingsPanelId,
   resolveSettingsSectionId,
@@ -54,6 +55,7 @@ export {
   type SettingsNavigatorSection,
   type SettingsPanelScope,
   type SettingsSectionId,
+  type SettingsSurface,
 } from "./settings-navigator"
 export {
   createLayoutSwitchPlan,

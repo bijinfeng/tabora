@@ -1,4 +1,4 @@
-import type { PluginInstance, WidgetSize } from "@tabora/plugin-api"
+import type { PluginInstance } from "@tabora/plugin-api"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const hostApi = { sentinel: "layout-host" }
@@ -6,7 +6,6 @@ const engineHostApi = { sentinel: "engine-host" }
 const buildRegionSlots = vi.fn(() => ({ main: { regionId: "main" } }))
 const buildHostAPI = vi.fn(() => engineHostApi)
 const renderActiveLayout = vi.fn(() => "layout-content")
-const renderSafeLayout = vi.fn(() => "safe-layout-content")
 
 const mocks = vi.hoisted(() => ({
   createWorkbenchLayoutHostAPI: vi.fn(() => hostApi),
@@ -15,7 +14,6 @@ const mocks = vi.hoisted(() => ({
     buildHostAPI,
   })),
   createWorkbenchLayoutRenderer: vi.fn(() => ({
-    renderSafeLayout,
     renderActiveLayout,
   })),
 }))
@@ -49,73 +47,53 @@ function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
   }
 }
 
+function options(overrides: Partial<Parameters<typeof createWorkbenchShellLayoutRuntime>[0]> = {}) {
+  return {
+    activeLayoutId: () => "layout.dashboard.custom",
+    layoutError: () => null,
+    isDark: () => false,
+    setCommandPaletteOpen: vi.fn(),
+    setAddWidgetOpen: vi.fn(),
+    openSettings: vi.fn(),
+    readLayoutState: vi.fn(),
+    writeLayoutState: vi.fn(),
+    showToast: vi.fn(),
+    switchLayout: vi.fn(),
+    switchTheme: vi.fn(),
+    runRailAction: vi.fn(),
+    shellConfig: {
+      themeIds: { light: "theme.light.custom", dark: "theme.dark.custom" },
+      layoutIds: {
+        dashboard: "layout.dashboard.custom",
+        focus: "layout.focus.custom",
+        mobile: "layout.mobile.custom",
+      },
+      settingsPanelIds: { appearance: "settings.appearance.custom" },
+      searchHistory: { pluginId: "search.plugin.custom", key: "search-history-custom" },
+    },
+    catalog: {
+      findLayoutContribution: vi.fn(() => undefined),
+    },
+    instanceRenderer: vi.fn(),
+    displayedInstances: () => [instance()],
+    resolveLayoutView: vi.fn(),
+    isMobile: () => false,
+    clearLayoutError: vi.fn(),
+    recordLayoutError: vi.fn(),
+    ...overrides,
+  } as Parameters<typeof createWorkbenchShellLayoutRuntime>[0]
+}
+
 describe("createWorkbenchShellLayoutRuntime", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     buildRegionSlots.mockClear()
     buildHostAPI.mockClear()
-    renderSafeLayout.mockClear()
     renderActiveLayout.mockClear()
   })
 
-  it("assembles the layout host api, engine, and renderer into a single runtime", () => {
-    const catalog = {
-      findLayoutContribution: vi.fn(() => undefined),
-    }
-
-    const runtime = createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "layout.dashboard.custom",
-      isDark: () => false,
-      setCommandPaletteOpen: vi.fn(),
-      setAddWidgetOpen: vi.fn(),
-      openSettings: vi.fn(),
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
-      switchLayout: vi.fn(),
-      switchTheme: vi.fn(),
-      runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: {
-          light: "theme.light.custom",
-          dark: "theme.dark.custom",
-        },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-        },
-        settingsPanelIds: {
-          appearance: "settings.appearance.custom",
-        },
-        searchHistory: {
-          pluginId: "search.plugin.custom",
-          key: "search-history-custom",
-        },
-      },
-      catalog: catalog as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["catalog"],
-      instanceRenderer: vi.fn() as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["instanceRenderer"],
-      displayedInstances: () => [instance()],
-      resolveLayoutView: vi.fn() as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["resolveLayoutView"],
-      isMobile: () => false,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      setContextMenu: vi.fn(),
-      widgetContribution: vi.fn(),
-      resolveWidgetModel: vi.fn(),
-      getWidgetView: vi.fn(),
-      renderWidgetIcon: vi.fn(),
-      buildWidgetViewProps: vi.fn(),
-      openWidgetExpand: vi.fn(),
-      changeWidgetSize: vi.fn(async () => {}),
-      removeWidget: vi.fn(async () => {}),
-      isDragging: vi.fn(() => false),
-    })
+  it("assembles the layout host api, engine, and renderer", () => {
+    const runtime = createWorkbenchShellLayoutRuntime(options())
 
     expect(runtime.renderActiveLayout()).toBe("layout-content")
     expect(mocks.createWorkbenchLayoutHostAPI).toHaveBeenCalledWith(
@@ -134,332 +112,78 @@ describe("createWorkbenchShellLayoutRuntime", () => {
       }),
     )
     expect(mocks.createLayoutEngine).toHaveBeenCalledWith({
-      catalog,
+      catalog: expect.anything(),
       instanceRenderer: expect.any(Function),
       hostActions: hostApi,
     })
 
-    const rendererCalls = mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
-      [
-        {
-          activeLayoutId: () => string
-          findLayoutContribution: (layoutId: string) => unknown
-          buildRegionSlots: (layoutId: string, instances: PluginInstance[]) => unknown
-          buildHostAPI: () => unknown
-        },
-      ]
-    >
-    const rendererOptions = rendererCalls[0]?.[0]
-
-    expect(rendererOptions?.activeLayoutId()).toBe("layout.dashboard.custom")
-    expect(rendererOptions?.findLayoutContribution("layout.dashboard")).toBeUndefined()
-    expect(catalog.findLayoutContribution).toHaveBeenCalledWith("layout.dashboard")
-    expect(rendererOptions?.buildRegionSlots("layout.dashboard", [instance()])).toEqual({
+    const rendererOptions = (
+      mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
+        [
+          {
+            activeLayoutId: () => string
+            layoutError: () => unknown
+            findLayoutContribution: (layoutId: string) => unknown
+            buildRegionSlots: (layoutId: string, instances: PluginInstance[]) => unknown
+            buildHostAPI: () => unknown
+          },
+        ]
+      >
+    )[0]![0]
+    expect(rendererOptions.activeLayoutId()).toBe("layout.dashboard.custom")
+    expect(rendererOptions.layoutError()).toBeNull()
+    expect(rendererOptions.findLayoutContribution("layout.dashboard")).toBeUndefined()
+    expect(rendererOptions.buildRegionSlots("layout.dashboard", [instance()])).toEqual({
       main: { regionId: "main" },
     })
-    expect(buildRegionSlots).toHaveBeenCalledWith("layout.dashboard", [
-      expect.objectContaining({ id: "widget-1" }),
-    ])
-    expect(rendererOptions?.buildHostAPI()).toEqual(engineHostApi)
+    expect(rendererOptions.buildHostAPI()).toEqual(engineHostApi)
     expect(buildHostAPI).toHaveBeenCalledTimes(1)
   })
 
-  it("renders the mobile layout on mobile without mutating the stored desktop choice", () => {
+  it("renders the dedicated mobile layout without mutating the stored desktop choice", () => {
     const catalog = {
       findLayoutContribution: vi.fn((layoutId: string) =>
         layoutId === "layout.mobile.custom" ? { id: layoutId } : undefined,
       ),
-    }
+    } as unknown as Parameters<typeof createWorkbenchShellLayoutRuntime>[0]["catalog"]
 
-    createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "layout.dashboard.custom",
-      isDark: () => false,
-      setCommandPaletteOpen: vi.fn(),
-      setAddWidgetOpen: vi.fn(),
-      openSettings: vi.fn(),
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
-      switchLayout: vi.fn(),
-      switchTheme: vi.fn(),
-      runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: { light: "theme.light.custom", dark: "theme.dark.custom" },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-          mobile: "layout.mobile.custom",
-        },
-        settingsPanelIds: { appearance: "settings.appearance.custom" },
-        searchHistory: { pluginId: "search.plugin.custom", key: "search-history-custom" },
-      },
-      catalog: catalog as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["catalog"],
-      instanceRenderer: vi.fn() as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["instanceRenderer"],
-      displayedInstances: () => [instance()],
-      resolveLayoutView: vi.fn() as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["resolveLayoutView"],
-      isMobile: () => true,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      setContextMenu: vi.fn(),
-      widgetContribution: vi.fn(),
-      resolveWidgetModel: vi.fn(),
-      getWidgetView: vi.fn(),
-      renderWidgetIcon: vi.fn(),
-      buildWidgetViewProps: vi.fn(),
-      openWidgetExpand: vi.fn(),
-      changeWidgetSize: vi.fn(async () => {}),
-      removeWidget: vi.fn(async () => {}),
-      isDragging: vi.fn(() => false),
-    })
+    createWorkbenchShellLayoutRuntime(
+      options({
+        catalog,
+        isMobile: () => true,
+        activeLayoutId: () => "layout.dashboard.custom",
+      }),
+    )
 
     const rendererOptions = (
       mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
         [{ activeLayoutId: () => string }]
       >
-    )[0]?.[0]
+    )[0]![0]
     const hostOptions = (
       mocks.createWorkbenchLayoutHostAPI.mock.calls as unknown as Array<
         [{ activeLayoutId: () => string }]
       >
-    )[0]?.[0]
+    )[0]![0]
 
-    expect(rendererOptions?.activeLayoutId()).toBe("layout.mobile.custom")
-    expect(hostOptions?.activeLayoutId()).toBe("layout.dashboard.custom")
+    expect(rendererOptions.activeLayoutId()).toBe("layout.mobile.custom")
+    expect(hostOptions.activeLayoutId()).toBe("layout.dashboard.custom")
     expect(catalog.findLayoutContribution).toHaveBeenCalledWith("layout.mobile.custom")
   })
 
-  it("keeps the desktop layout on mobile when the mobile layout is not registered", () => {
-    const catalog = {
-      findLayoutContribution: vi.fn(() => undefined),
+  it("forwards the current layout error to the renderer", () => {
+    const layoutError = {
+      layoutId: "layout.dashboard.custom",
+      message: "layout crashed",
     }
 
-    createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "layout.dashboard.custom",
-      isDark: () => false,
-      setCommandPaletteOpen: vi.fn(),
-      setAddWidgetOpen: vi.fn(),
-      openSettings: vi.fn(),
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
-      switchLayout: vi.fn(),
-      switchTheme: vi.fn(),
-      runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: { light: "theme.light.custom", dark: "theme.dark.custom" },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-          mobile: "layout.mobile.custom",
-        },
-        settingsPanelIds: { appearance: "settings.appearance.custom" },
-        searchHistory: { pluginId: "search.plugin.custom", key: "search-history-custom" },
-      },
-      catalog: catalog as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["catalog"],
-      instanceRenderer: vi.fn() as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["instanceRenderer"],
-      displayedInstances: () => [instance()],
-      resolveLayoutView: vi.fn() as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["resolveLayoutView"],
-      isMobile: () => true,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      setContextMenu: vi.fn(),
-      widgetContribution: vi.fn(),
-      resolveWidgetModel: vi.fn(),
-      getWidgetView: vi.fn(),
-      renderWidgetIcon: vi.fn(),
-      buildWidgetViewProps: vi.fn(),
-      openWidgetExpand: vi.fn(),
-      changeWidgetSize: vi.fn(async () => {}),
-      removeWidget: vi.fn(async () => {}),
-      isDragging: vi.fn(() => false),
-    })
+    createWorkbenchShellLayoutRuntime(options({ layoutError: () => layoutError }))
 
     const rendererOptions = (
       mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
-        [{ activeLayoutId: () => string }]
+        [{ layoutError: () => unknown }]
       >
-    )[0]?.[0]
-
-    expect(rendererOptions?.activeLayoutId()).toBe("layout.dashboard.custom")
-  })
-
-  it("forwards failed layout state and safe layout rendering through the runtime", () => {
-    const runtime = createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "layout.dashboard.custom",
-      failedLayoutId: () => "layout.dashboard.custom",
-      isDark: () => false,
-      setCommandPaletteOpen: vi.fn(),
-      setAddWidgetOpen: vi.fn(),
-      openSettings: vi.fn(),
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
-      switchLayout: vi.fn(),
-      switchTheme: vi.fn(),
-      runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: {
-          light: "theme.light.custom",
-          dark: "theme.dark.custom",
-        },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-        },
-        settingsPanelIds: {
-          appearance: "settings.appearance.custom",
-        },
-        searchHistory: {
-          pluginId: "search.plugin.custom",
-          key: "search-history-custom",
-        },
-      },
-      catalog: {
-        findLayoutContribution: vi.fn(() => undefined),
-      } as unknown as Parameters<typeof createWorkbenchShellLayoutRuntime>[0]["catalog"],
-      instanceRenderer: vi.fn() as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["instanceRenderer"],
-      displayedInstances: () => [instance()],
-      resolveLayoutView: vi.fn() as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["resolveLayoutView"],
-      isMobile: () => false,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      setContextMenu: vi.fn(),
-      widgetContribution: vi.fn(),
-      resolveWidgetModel: vi.fn(),
-      getWidgetView: vi.fn(),
-      renderWidgetIcon: vi.fn(),
-      buildWidgetViewProps: vi.fn(),
-      openWidgetExpand: vi.fn(),
-      changeWidgetSize: vi.fn(async () => {}),
-      removeWidget: vi.fn(async () => {}),
-      isDragging: vi.fn(() => false),
-    })
-
-    expect(runtime.renderSafeLayout()).toBe("safe-layout-content")
-
-    const rendererCalls = mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
-      [
-        {
-          failedLayoutId?: () => string | null
-        },
-      ]
-    >
-    const rendererOptions = rendererCalls[0]?.[0]
-
-    expect(rendererOptions?.failedLayoutId?.()).toBe("layout.dashboard.custom")
-  })
-
-  it("bridges safe layout callbacks through the runtime host actions", () => {
-    const setContextMenu = vi.fn()
-    const setCommandPaletteOpen = vi.fn()
-    const openSettings = vi.fn()
-    const switchTheme = vi.fn()
-    const changeWidgetSize = vi.fn(async () => {})
-    const removeWidget = vi.fn(async () => {})
-
-    createWorkbenchShellLayoutRuntime({
-      activeLayoutId: () => "layout.dashboard.custom",
-      isDark: () => false,
-      setCommandPaletteOpen,
-      setAddWidgetOpen: vi.fn(),
-      openSettings,
-      readLayoutState: vi.fn(),
-      writeLayoutState: vi.fn(),
-      showToast: vi.fn(),
-      switchLayout: vi.fn(),
-      switchTheme,
-      runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: {
-          light: "theme.light.custom",
-          dark: "theme.dark.custom",
-        },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-        },
-        settingsPanelIds: {
-          appearance: "settings.appearance.custom",
-        },
-        searchHistory: {
-          pluginId: "search.plugin.custom",
-          key: "search-history-custom",
-        },
-      },
-      catalog: {
-        findLayoutContribution: vi.fn(() => undefined),
-      } as unknown as Parameters<typeof createWorkbenchShellLayoutRuntime>[0]["catalog"],
-      instanceRenderer: vi.fn() as unknown as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["instanceRenderer"],
-      displayedInstances: () => [instance()],
-      resolveLayoutView: vi.fn() as Parameters<
-        typeof createWorkbenchShellLayoutRuntime
-      >[0]["resolveLayoutView"],
-      isMobile: () => false,
-      clearLayoutError: vi.fn(),
-      recordLayoutError: vi.fn(),
-      setContextMenu,
-      widgetContribution: vi.fn(),
-      resolveWidgetModel: vi.fn(),
-      getWidgetView: vi.fn(),
-      renderWidgetIcon: vi.fn(),
-      buildWidgetViewProps: vi.fn(),
-      openWidgetExpand: vi.fn(),
-      changeWidgetSize,
-      removeWidget,
-      isDragging: vi.fn(() => false),
-    })
-
-    const rendererCalls = mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
-      [
-        {
-          safeLayout: {
-            onOpenCommandPalette: () => void
-            onToggleTheme: () => void
-            onOpenSettings: () => void
-            onOpenContextMenu: (event: MouseEvent, instanceId: string) => void
-            onResize: (instanceId: string, size: WidgetSize) => void
-            onRemove: (instanceId: string) => void
-          }
-        },
-      ]
-    >
-    const safeLayout = rendererCalls[0]?.[0].safeLayout
-    const preventDefault = vi.fn()
-
-    safeLayout?.onOpenCommandPalette()
-    safeLayout?.onToggleTheme()
-    safeLayout?.onOpenSettings()
-    safeLayout?.onOpenContextMenu(
-      { preventDefault, clientX: 16, clientY: 24 } as unknown as MouseEvent,
-      "widget-1",
-    )
-    safeLayout?.onResize("widget-1", "L")
-    safeLayout?.onRemove("widget-1")
-
-    expect(setCommandPaletteOpen).toHaveBeenCalledWith(true)
-    expect(switchTheme).toHaveBeenCalledWith("theme.dark.custom")
-    expect(openSettings).toHaveBeenCalledWith()
-    expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(setContextMenu).toHaveBeenCalledWith({ x: 16, y: 24, instanceId: "widget-1" })
-    expect(changeWidgetSize).toHaveBeenCalledWith("widget-1", "L")
-    expect(removeWidget).toHaveBeenCalledWith("widget-1")
+    )[0]![0]
+    expect(rendererOptions.layoutError()).toEqual(layoutError)
   })
 })

@@ -10,14 +10,10 @@ import type {
 } from "@tabora/plugin-api"
 import { LayoutBoundary } from "@tabora/workbench-shell"
 
-import { SafeWorkbenchLayout } from "../surface/WorkbenchShellChrome"
+import { LayoutUnavailableState } from "../surface/WorkbenchShellChrome"
+import type { LayoutErrorStatus } from "./layoutError"
 
 type LayoutViewComponent = (props: LayoutViewProps<JSX.Element>) => JSX.Element
-type SafeLayoutProps = Parameters<typeof SafeWorkbenchLayout>[0]
-export type WorkbenchSafeLayoutOptions = Omit<SafeLayoutProps, "instances" | "isDark"> & {
-  isDark: () => boolean
-  instances: () => PluginInstance[]
-}
 type WorkbenchDndKitOptions = Required<
   Pick<DragDropProviderProps, "onDragStart" | "onDragMove" | "onDragOver" | "onDragEnd">
 >
@@ -44,7 +40,7 @@ function WorkbenchDndProvider(props: {
 
 export function createWorkbenchLayoutRenderer(options: {
   activeLayoutId: () => string
-  failedLayoutId?: () => string | null
+  layoutError: () => LayoutErrorStatus | null
   displayedInstances: () => PluginInstance[]
   findLayoutContribution: (layoutId: string) => LayoutContribution | undefined
   resolveLayoutView: (viewId: string) => LayoutViewComponent | undefined
@@ -57,41 +53,45 @@ export function createWorkbenchLayoutRenderer(options: {
   clearLayoutError: () => void
   recordLayoutError: (layoutId: string, error: unknown) => void
   dndKit?: WorkbenchDndKitOptions
-  safeLayout: WorkbenchSafeLayoutOptions
 }) {
-  function renderSafeLayout() {
-    const { isDark, instances, ...rest } = options.safeLayout
-    return (
-      <WorkbenchDndProvider dndKit={options.dndKit}>
-        <SafeWorkbenchLayout {...rest} isDark={isDark()} instances={instances()} />
-      </WorkbenchDndProvider>
-    )
+  function renderUnavailable(status: LayoutErrorStatus) {
+    return <LayoutUnavailableState layoutId={status.layoutId} message={status.message} />
   }
 
   function renderActiveLayout() {
-    if (options.failedLayoutId?.() === options.activeLayoutId()) {
-      return renderSafeLayout()
+    const layoutId = options.activeLayoutId()
+    const layoutError = options.layoutError()
+    if (layoutError?.layoutId === layoutId) {
+      return renderUnavailable(layoutError)
     }
 
-    const layout = options.findLayoutContribution(options.activeLayoutId())
+    const layout = options.findLayoutContribution(layoutId)
     const LayoutView = layout?.view ? options.resolveLayoutView(layout.view) : undefined
 
     if (!LayoutView) {
-      return renderSafeLayout()
+      return renderUnavailable({
+        layoutId,
+        message: layout ? "布局插件未注册可渲染的 view" : "布局插件未注册",
+      })
     }
 
     options.clearLayoutError()
 
-    const regions = options.buildRegionSlots(options.activeLayoutId(), options.displayedInstances())
+    const regions = options.buildRegionSlots(layoutId, options.displayedInstances())
     const host = options.buildHostAPI()
 
     return (
       <WorkbenchDndProvider dndKit={options.dndKit}>
         <LayoutBoundary
-          fallback={renderSafeLayout()}
+          fallback={
+            <LayoutUnavailableState
+              layoutId={layoutId}
+              message="布局插件渲染失败，正在记录具体错误。"
+            />
+          }
           onError={(error) => {
             console.error("Layout error:", error)
-            options.recordLayoutError(options.activeLayoutId(), error)
+            options.recordLayoutError(layoutId, error)
           }}
         >
           {LayoutView({
@@ -105,7 +105,6 @@ export function createWorkbenchLayoutRenderer(options: {
   }
 
   return {
-    renderSafeLayout,
     renderActiveLayout,
   }
 }

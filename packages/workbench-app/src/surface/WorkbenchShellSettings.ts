@@ -3,6 +3,7 @@ import type {
   SettingsHostReadId,
   SettingsPanelData,
   SettingsPanelViewProps,
+  SettingsSurface,
   SettingsWorkspaceSummary,
   Workspace,
 } from "@tabora/plugin-api"
@@ -31,13 +32,16 @@ function workspaceSummary(workspace: Workspace): SettingsWorkspaceSummary {
 export function openWorkbenchSettings(
   options: {
     panels: SettingsPanelDescriptor[]
+    surface: SettingsSurface
     setActiveSettingsSectionId: (sectionId: SettingsSectionId) => void
     setSettingsOpen: (open: boolean) => void
   },
   panelId?: string,
 ) {
-  options.setActiveSettingsSectionId(resolveInitialSettingsSectionId(options.panels, panelId))
+  const sectionId = resolveInitialSettingsSectionId(options.panels, panelId, options.surface)
+  options.setActiveSettingsSectionId(sectionId)
   options.setSettingsOpen(true)
+  return sectionId
 }
 
 export function buildWorkbenchSettingsPanelProps(
@@ -55,6 +59,7 @@ export function buildWorkbenchSettingsPanelProps(
     availableLocales: SettingsPanelViewProps["availableLocales"]
     host: SettingsPanelViewProps["host"]
     instanceId?: string
+    surface: SettingsSurface
   },
 ): SettingsPanelViewProps {
   const host: SettingsPanelViewProps["host"] = {
@@ -123,6 +128,7 @@ export function buildWorkbenchSettingsPanelProps(
     pluginId: panel.pluginId,
     scope: panel.scope,
     ...(panel.scope === "instance" && options.instanceId ? { instanceId: options.instanceId } : {}),
+    surface: options.surface,
     ...(options.locale ? { locale: options.locale } : {}),
     ...(options.availableLocales ? { availableLocales: options.availableLocales } : {}),
     host,
@@ -143,7 +149,11 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
   getAvailableLocales: () => SettingsPanelViewProps["availableLocales"]
   host: SettingsPanelViewProps["host"]
 }) {
-  return (panel: SettingsPanelDescriptor, instanceId?: string): SettingsPanelViewProps =>
+  return (
+    panel: SettingsPanelDescriptor,
+    instanceId: string | undefined,
+    surface: SettingsSurface,
+  ): SettingsPanelViewProps =>
     buildWorkbenchSettingsPanelProps(panel, {
       workspace: options.getWorkspace(),
       workspaces: options.getWorkspaces(),
@@ -157,5 +167,6 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
       availableLocales: options.getAvailableLocales(),
       host: options.host,
       ...(instanceId ? { instanceId } : {}),
+      surface,
     })
 }

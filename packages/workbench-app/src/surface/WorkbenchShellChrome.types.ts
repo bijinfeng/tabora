@@ -24,10 +24,3 @@ export type WidgetContextSection = {
     run: () => void
   }>
 }
-
-export type SafeLayoutModel = {
-  title: string
-  icon?: string
-  currentSize: WidgetSize
-  supportedSizes: WidgetSize[]
-}

@@ -267,6 +267,7 @@ pnpm build
 - 搜索栏和 `⌘K` 命令面板可用。
 - `@provider query` 能路由到目标搜索源。
 - 设置中心可打开，通用、外观、搜索、插件、关于五类可切换。
+- 设置入口导航到 `/settings/<section>`；直接访问设置二级路由、分类切换、关闭/移动端返回和浏览器前进/后退都恢复正确面板。
 - 主题和背景切换可持久化。
 - 导入 / 导出当前 schema 可用，旧 schema 明确拒绝。
 - 插件 view 抛错只显示局部错误，不白屏。
@@ -282,7 +283,7 @@ pnpm test:e2e
 - 默认工作台首屏、添加 widget、尺寸菜单、展开视图、设置抽屉、拖拽排序。
 - 搜索 external-open 允许/拒绝路径。
 - Quick Links 通过 host callback 打开外链，而非裸 `<a target="_blank">`。
-- safe layout fallback、搜索入口和设置入口可达。
+- 布局插件失败时显示布局不可用状态和具体错误。
 - `1280x900`、`768x900`、`390x844` 三档无横向滚动断言。
 
 如果 E2E 未覆盖本轮风险，需手动启动 playground 检查：
@@ -551,9 +552,10 @@ Nightly CI 已覆盖：
 
 - 默认 dashboard 工作台关键操作。
 - 搜索/Quick Links 外部打开权限路径。
-- safe layout fallback 可达性。
+- 布局插件失败状态可达性和错误信息展示。
 - settings host 打开、关闭与搜索/插件/关于面板切换。
-- fallback 后搜索入口、设置入口和 overlay 关闭路径可达。
+- settings route 的 deep link、二级路由切换和 browser history 恢复。
+- 布局不可用状态显示具体错误，且不渲染替代布局。
 - `1280x900`、`768x900`、`390x844` 下 settings / layout 切换后的无横向滚动。
 - `1280x900`、`768x900`、`390x844` 无横向滚动。
 
@@ -802,7 +804,7 @@ Agent 必须：
 
 1. 继续扩大 L2 架构边界检查覆盖面，减少人工判断。
 2. 给 product critical path 建立 browser-mode smoke tests。
-3. 为 mobile no-horizontal-scroll、settings host、layout fallback 加可重复截图或 DOM 断言。
+3. 为 mobile no-horizontal-scroll、settings host、layout unavailable state 加可重复截图或 DOM 断言。
 4. 继续收紧 CSS token 使用的自动化守卫。
 
 长期：

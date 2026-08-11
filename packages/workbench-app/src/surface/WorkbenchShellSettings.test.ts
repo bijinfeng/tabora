@@ -51,6 +51,7 @@ function panel(overrides: Partial<SettingsPanelDescriptor> = {}): SettingsPanelD
     grantedHostActions: ["workspace.theme.write"],
     hostReads: ["workspace.current.read"],
     grantedHostReads: ["workspace.current.read"],
+    surfaces: ["desktop", "mobile"],
     ...overrides,
   }
 }
@@ -84,6 +85,7 @@ describe("openWorkbenchSettings", () => {
           panel({ id: "official.settings.workspace.general", section: "general" }),
           panel({ id: "official.settings.workspace.search", section: "search" }),
         ],
+        surface: "desktop",
         setActiveSettingsSectionId,
         setSettingsOpen,
       },
@@ -112,6 +114,7 @@ describe("buildWorkbenchSettingsPanelProps", () => {
       locale: "zh-CN" as const,
       availableLocales: [],
       host: settingsHost(),
+      surface: "desktop" as const,
     }
     const instancePanel = panel({ scope: "instance" })
 
@@ -139,6 +142,7 @@ describe("buildWorkbenchSettingsPanelProps", () => {
         locale: "zh-CN",
         availableLocales: [],
         host: settingsHost(),
+        surface: "desktop",
       }),
     ).toThrow("Workspace is not ready")
   })
@@ -175,6 +179,7 @@ describe("buildWorkbenchSettingsPanelProps", () => {
       locale: "zh-CN",
       availableLocales: [],
       host,
+      surface: "desktop",
     })
 
     expect(result).toMatchObject({
@@ -191,7 +196,24 @@ describe("buildWorkbenchSettingsPanelProps", () => {
           regionCount: 0,
         },
       },
+      surface: "desktop",
     })
+    expect(
+      buildWorkbenchSettingsPanelProps(panel(), {
+        workspace: currentWorkspace,
+        workspaces,
+        layouts: [],
+        themes: [],
+        backgrounds: [],
+        searchProviders: [],
+        searchSettings,
+        plugins,
+        locale: "zh-CN",
+        availableLocales: [],
+        host,
+        surface: "mobile",
+      }).surface,
+    ).toBe("mobile")
     expect(result.host).not.toBe(host)
     await result.host.switchTheme?.(refs.theme("official.theme.dark"))
     expect(switchTheme).toHaveBeenCalledWith(refs.theme("official.theme.dark"))
@@ -224,6 +246,7 @@ describe("buildWorkbenchSettingsPanelProps", () => {
         locale: "zh-CN",
         availableLocales: [],
         host,
+        surface: "desktop",
       },
     )
 

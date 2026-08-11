@@ -35,6 +35,7 @@ describe("workbench governance smoke", () => {
     document.body.innerHTML = ""
     document.documentElement.removeAttribute("style")
     document.body.removeAttribute("style")
+    window.history.replaceState({}, "", "/")
     localStorage.clear()
     await deleteDatabase("tabora")
   })
@@ -81,58 +82,49 @@ describe("workbench governance smoke", () => {
     expect(openSpy).not.toHaveBeenCalled()
   })
 
-  it("falls back to the safe layout when the active layout view throws", async () => {
+  it("shows an explicit layout error when the active layout view throws", async () => {
     patchLayoutToThrow(
       "official.layout.workbench-dashboard",
       "official.layout.workbench-dashboard.view",
     )
 
-    await mountFreshWorkbench({ readySelector: "[data-safe-workbench-layout]" })
+    await mountFreshWorkbench({ readySelector: "[data-layout-unavailable]" })
 
-    await waitFor(() => expect(document.querySelector("[data-safe-workbench-layout]")).toBeTruthy())
+    await waitFor(() => expect(document.querySelector("[data-layout-unavailable]")).toBeTruthy())
     await waitFor(() =>
-      expect(document.querySelector("[data-toast-item]")?.textContent).toContain(
-        "布局加载失败，已切换到安全布局",
+      expect(document.querySelector("[data-layout-unavailable]")?.textContent).toContain(
+        "E2E layout failure",
       ),
     )
-    expect(
-      document.querySelectorAll("[data-safe-workbench-layout] [data-workbench-grid-item]").length,
-    ).toBeGreaterThan(0)
+    expect(document.querySelector("[data-layout-grid]")).toBeFalsy()
+  })
 
-    findButtonByText("[data-safe-workbench-layout] button", "搜索")?.click()
-    await waitFor(() => expect(document.querySelector("[data-command-palette-panel]")).toBeTruthy())
-    clickRequired("[data-command-palette-overlay]")
-    await waitFor(() => expect(document.querySelector("[data-command-palette-panel]")).toBeFalsy())
+  it("keeps settings categories in secondary routes and browser history", async () => {
+    await mountFreshWorkbench()
 
-    findButtonByText("[data-safe-workbench-layout] button", "设置")?.click()
-    await waitFor(() =>
-      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
-    )
-    const searchNavBtn = findButtonByText("[data-settings-nav] button", "搜索")
-    expect(searchNavBtn).toBeTruthy()
-    ;(searchNavBtn as HTMLElement).click()
-    await waitFor(() =>
-      expect(
-        document.querySelector('[data-settings-section][aria-current="page"]')?.textContent,
-      ).toContain("搜索"),
-    )
-    await waitFor(() =>
-      expect(document.querySelector("#settings-search-provider-select")).toBeTruthy(),
-    )
-    clickRequired("[data-settings-close]")
-    await waitFor(() =>
-      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
-    )
+    const settingsButton = document.querySelector<HTMLButtonElement>('button[aria-label="设置"]')
+    expect(settingsButton).toBeTruthy()
+    await userEvent.click(settingsButton!)
+    await waitFor(() => expect(window.location.pathname).toBe("/settings/general"))
+    expect(document.querySelector('[data-active-view="general"]')).toBeTruthy()
 
-    // 安全布局是桌面仪表盘的降级形态，移动端由专用布局接管，因此这里在较窄的桌面宽度下校验无横向滚动。
-    await page.viewport(1024, 900)
-    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
-
-    findButtonByText("[data-safe-workbench-layout] button", "设置")?.click()
-    await waitFor(() =>
-      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
+    const appearanceButton = document.querySelector<HTMLButtonElement>(
+      '[data-settings-section="appearance"]',
     )
-    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
+    expect(appearanceButton).toBeTruthy()
+    await userEvent.click(appearanceButton!)
+    await waitFor(() => expect(window.location.pathname).toBe("/settings/appearance"))
+    expect(document.querySelector('[data-active-view="appearance"]')).toBeTruthy()
+
+    window.history.back()
+    await waitFor(() => expect(window.location.pathname).toBe("/settings/general"))
+    expect(document.querySelector('[data-active-view="general"]')).toBeTruthy()
+
+    const closeButton = document.querySelector<HTMLButtonElement>("[data-settings-close]")
+    expect(closeButton).toBeTruthy()
+    await userEvent.click(closeButton!)
+    await waitFor(() => expect(window.location.pathname).toBe("/"))
+    expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy()
   })
 })
 
@@ -245,18 +237,6 @@ function findButtonByText(selector: string, text: string): HTMLElement | null {
       node.textContent?.includes(text),
     ) ?? null
   )
-}
-
-function clickRequired(selector: string): void {
-  const node = document.querySelector<HTMLElement>(selector)
-  if (!node) {
-    throw new Error(`Clickable element was not found: ${selector}`)
-  }
-  node.click()
-}
-
-function hasHorizontalOverflow(): boolean {
-  return document.documentElement.scrollWidth > document.documentElement.clientWidth
 }
 
 function deleteDatabase(name: string): Promise<void> {

@@ -54,6 +54,8 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     pluginInstalledNav: t("settingsHost.plugins.installed"),
     pluginsActiveTitle: t("settingsHost.title.plugins"),
     closeAriaLabel: t("settingsHost.closeAriaLabel"),
+    backAriaLabel: t("settingsHost.backAriaLabel"),
+    searchPlaceholder: t("settingsHost.searchPlaceholder"),
     aboutUnavailable: t("settingsHost.aboutUnavailable"),
     emptySection: t("settingsHost.emptySection"),
     panelMissing: (panelId: string) => t("settingsHost.panelMissing", { panelId }),

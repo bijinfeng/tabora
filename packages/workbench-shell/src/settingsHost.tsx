@@ -8,9 +8,11 @@ import type {
   SettingsPanelProvider,
   SettingsPanelProviderContext,
   SettingsPanelViewProps,
+  SettingsSurface,
 } from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
+  filterSettingsPanelsBySurface,
   normalizeSettingsPanelDescriptor,
   SETTINGS_SECTIONS,
   type SettingsPanelDescriptor as NavigatorSettingsPanelDescriptor,
@@ -22,6 +24,8 @@ import { InlineError } from "@tabora/ui/inline-error"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 import { SettingsSchemaRenderer } from "./SettingsSchemaRenderer"
 import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
+import ArrowLeft from "lucide-solid/icons/arrow-left"
+import { MobileSettingsIndex } from "./mobileSettingsIndex"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
 
@@ -32,13 +36,25 @@ export { resolveInitialSettingsPanelId, resolveSettingsSectionId } from "@tabora
 export type SettingsHostProps = {
   open: boolean
   panels: SettingsPanelDescriptor[]
+  surface: SettingsSurface
+  /** Renders the mobile settings landing page instead of a section detail view. */
+  showIndex?: boolean
   activeSectionId: SettingsSectionId | null
   onSectionChange: (sectionId: SettingsSectionId) => void
   onClose: () => void
+  /** Returns from a mobile section detail page to the settings landing page. */
+  onBack?: () => void
   getView: (viewId: string) => ((props: SettingsPanelViewProps) => JSX.Element) | undefined
   getSettingsProvider: (providerId: string) => SettingsPanelProvider | undefined
-  providerContext?: (panel: SettingsPanelDescriptor) => SettingsPanelProviderContext
-  panelProps: (panel: SettingsPanelDescriptor, instanceId?: string) => SettingsPanelViewProps
+  providerContext?: (
+    panel: SettingsPanelDescriptor,
+    surface: SettingsSurface,
+  ) => SettingsPanelProviderContext
+  panelProps: (
+    panel: SettingsPanelDescriptor,
+    instanceId: string | undefined,
+    surface: SettingsSurface,
+  ) => SettingsPanelViewProps
   /** Instance-scoped panels are hidden unless the host explicitly supplies this target. */
   instanceId?: string
   aboutContent?: JSX.Element
@@ -51,6 +67,8 @@ export type SettingsHostCopy = {
   pluginInstalledNav: string
   pluginsActiveTitle: string
   closeAriaLabel: string
+  backAriaLabel?: string
+  searchPlaceholder?: string
   aboutUnavailable: string
   emptySection: string
   panelMissing: (panelId: string) => string
@@ -100,6 +118,15 @@ const styles = stylex.create({
   entering: {
     opacity: 1,
   },
+  mobilePage: {
+    backgroundColor: color.page,
+    color: color.text,
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "100dvh",
+    overflow: "hidden",
+    width: "100%",
+  },
   window: {
     backgroundColor: color.surface,
     borderColor: color.lineStrong,
@@ -130,6 +157,14 @@ const styles = stylex.create({
   windowEntering: {
     transform: "scale(1) translateY(0)",
   },
+  mobilePageWindow: {
+    backgroundColor: color.surface,
+    display: "flex",
+    flex: 1,
+    flexDirection: "column",
+    minHeight: 0,
+    width: "100%",
+  },
   header: {
     alignItems: "center",
     backgroundColor: color.surfaceSoft,
@@ -142,6 +177,13 @@ const styles = stylex.create({
     justifyContent: "space-between",
     paddingBlock: 10,
     paddingInline: 12,
+  },
+  headerMobile: {
+    backgroundColor: color.surface,
+    paddingBottom: 8,
+    paddingLeft: 12,
+    paddingRight: 12,
+    paddingTop: "calc(6px + env(safe-area-inset-top))",
   },
   title: {
     alignItems: "center",
@@ -208,6 +250,11 @@ const styles = stylex.create({
       outlineWidth: 2,
     },
   },
+  mobileBack: {
+    flexShrink: 0,
+    height: 44,
+    width: 44,
+  },
   body: {
     backgroundColor: color.surface,
     display: "grid",
@@ -218,6 +265,10 @@ const styles = stylex.create({
       gridTemplateColumns: "1fr",
       gridTemplateRows: "auto minmax(0, 1fr)",
     },
+  },
+  bodyMobile: {
+    display: "flex",
+    flexDirection: "column",
   },
   nav: {
     backgroundColor: color.surfaceSoft,
@@ -321,6 +372,12 @@ const styles = stylex.create({
     paddingRight: 14,
     paddingTop: 12,
   },
+  mainMobile: {
+    gap: 16,
+    overflow: "auto",
+    padding: 16,
+    paddingBottom: 20,
+  },
   panelHeader: {
     alignItems: "center",
     display: "flex",
@@ -329,6 +386,10 @@ const styles = stylex.create({
     justifyContent: "space-between",
     minHeight: 38,
     paddingBottom: 2,
+  },
+  panelHeaderMobile: {
+    alignItems: "flex-start",
+    minHeight: 44,
   },
   panelHeaderTitle: {
     display: "block",
@@ -417,16 +478,19 @@ export function collectSettingsPanels(plugins: PluginLike[]): SettingsPanelDescr
 export function resolveInitialSettingsSectionId(
   panels: SettingsPanelDescriptor[],
   requested?: string | null,
+  surface: SettingsSurface = "desktop",
 ): SettingsSectionId {
-  return createSettingsNavigator(panels).initialSectionId(requested)
+  return createSettingsNavigator(panels, surface).initialSectionId(requested)
 }
 
 export function SettingsHost(props: SettingsHostProps) {
   let closeButtonRef: HTMLButtonElement | undefined
   let previousFocusedElement: HTMLElement | null = null
   const navigablePanels = () =>
-    props.panels.filter((panel) => panel.scope !== "instance" || Boolean(props.instanceId))
-  const navigator = () => createSettingsNavigator(navigablePanels())
+    filterSettingsPanelsBySurface(props.panels, props.surface).filter(
+      (panel) => panel.scope !== "instance" || Boolean(props.instanceId),
+    )
+  const navigator = () => createSettingsNavigator(navigablePanels(), props.surface)
 
   const [isEntering, setIsEntering] = createSignal(false)
   const [isClosing, setIsClosing] = createSignal(false)
@@ -434,6 +498,10 @@ export function SettingsHost(props: SettingsHostProps) {
 
   const handleClose = () => {
     if (isClosing()) return
+    if (props.surface === "mobile") {
+      props.onClose()
+      return
+    }
     setIsClosing(true)
     setIsEntering(false)
     setTimeout(() => {
@@ -450,16 +518,24 @@ export function SettingsHost(props: SettingsHostProps) {
     }
   }
 
-  const activeSection = () => props.activeSectionId ?? "general"
+  const activeSection = (): SettingsSectionId => {
+    const requested = props.activeSectionId
+    if (requested === "about") return requested
+    if (requested && navigator().sections[requested].panels.length > 0) return requested
+    return (
+      SETTINGS_SECTIONS.find((section) => navigator().sections[section.id].panels.length > 0)?.id ??
+      "about"
+    )
+  }
   const activePanels = () => navigator().sections[activeSection()].panels
   const sectionTitle = (sectionId: SettingsSectionId) =>
     props.copy?.sectionTitle(sectionId) ??
     SETTINGS_SECTIONS.find((section) => section.id === sectionId)?.title ??
     "设置"
+  const sectionDescription = (sectionId: SettingsSectionId) =>
+    props.copy?.sectionDescription?.(sectionId) ?? SECTION_FALLBACK_DESCRIPTIONS[sectionId]
   const activeSectionTitle = () => sectionTitle(activeSection())
-  const activeSectionDescription = () =>
-    props.copy?.sectionDescription?.(activeSection()) ??
-    SECTION_FALLBACK_DESCRIPTIONS[activeSection()]
+  const activeSectionDescription = () => sectionDescription(activeSection())
   const sectionNavMeta = (sectionId: SettingsSectionId) => {
     const panelCount = navigator().sections[sectionId].panels.length
     if (sectionId === "about") return props.copy?.sectionMeta?.(sectionId) ?? "V2"
@@ -486,6 +562,20 @@ export function SettingsHost(props: SettingsHostProps) {
     )
   }
 
+  const handleBack = () => {
+    if (props.onBack) {
+      props.onBack()
+      return
+    }
+    handleClose()
+  }
+
+  createEffect(() => {
+    if (props.open && !props.showIndex && props.activeSectionId !== activeSection()) {
+      props.onSectionChange(activeSection())
+    }
+  })
+
   createEffect(() => {
     if (props.open) {
       previousFocusedElement =
@@ -508,217 +598,300 @@ export function SettingsHost(props: SettingsHostProps) {
     }
   })
 
-  return (
-    <Show when={props.open}>
-      <div
-        {...stylex.attrs(styles.overlay, isEntering() ? styles.entering : null)}
-        data-workbench-overlay="settings"
-        onClick={handleClose}
-        onKeyDown={handleKeyDown}
-        role="dialog"
-        aria-modal="true"
-        aria-label={props.copy?.sidebarTitle ?? "设置"}
+  const renderSettingsWindow = () => (
+    <div
+      {...stylex.attrs(
+        props.surface === "mobile" ? styles.mobilePageWindow : styles.window,
+        props.surface === "desktop" && isEntering() ? styles.windowEntering : null,
+      )}
+      data-settings-window
+      onClick={(e) => e.stopPropagation()}
+    >
+      <header
+        {...stylex.attrs(styles.header, props.surface === "mobile" ? styles.headerMobile : null)}
       >
-        <div
-          {...stylex.attrs(styles.window, isEntering() ? styles.windowEntering : null)}
-          data-settings-window
-          onClick={(e) => e.stopPropagation()}
-        >
-          <header {...stylex.attrs(styles.header)}>
-            <div {...stylex.attrs(styles.title)}>
-              <div {...stylex.attrs(styles.titleIcon)}>
-                <Settings size={14} />
-              </div>
-              <div {...stylex.attrs(styles.titleCopy)}>
-                <strong {...stylex.attrs(styles.titleStrong)}>
-                  {props.copy?.sidebarTitle ?? "设置"}
-                </strong>
-                <span {...stylex.attrs(styles.titleMeta)}>
-                  {props.copy?.windowSubtitle ??
-                    "个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件"}
-                </span>
-              </div>
+        <Show when={props.surface === "mobile"}>
+          <IconButton
+            size="md"
+            xstyle={styles.mobileBack}
+            data-settings-back
+            onClick={handleBack}
+            ref={(el) => (closeButtonRef = el)}
+            aria-label={props.copy?.backAriaLabel ?? "返回工作台"}
+          >
+            <ArrowLeft size={20} />
+          </IconButton>
+        </Show>
+        <div {...stylex.attrs(styles.title)}>
+          <Show when={props.surface === "desktop"}>
+            <div {...stylex.attrs(styles.titleIcon)}>
+              <Settings size={14} />
             </div>
-            <IconButton
-              size="sm"
-              xstyle={styles.close}
-              data-settings-close
-              onClick={handleClose}
-              ref={(el) => (closeButtonRef = el)}
-              aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
-            >
-              <X size={16} />
-            </IconButton>
-          </header>
-          <div {...stylex.attrs(styles.body)}>
-            <nav
-              {...stylex.attrs(styles.nav)}
-              data-settings-nav
-              aria-label={props.copy?.sidebarTitle ?? "设置导航"}
-            >
-              <div {...stylex.attrs(styles.kicker)}>
-                {props.copy?.workspaceGroupTitle ?? "工作台"}
-              </div>
-              <For each={workspaceSections()}>
-                {(section) => (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    xstyle={[
-                      styles.navButton,
-                      section.id === activeSection() ? styles.navButtonActive : null,
-                    ]}
-                    data-settings-section={section.id}
-                    aria-current={section.id === activeSection() ? "page" : undefined}
-                    onClick={() => handleSectionChange(section.id)}
-                  >
-                    <span>{sectionTitle(section.id)}</span>
-                    <Show when={sectionNavMeta(section.id)}>
-                      <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
-                    </Show>
-                  </Button>
-                )}
-              </For>
-              <div {...stylex.attrs(styles.kicker)}>
-                {props.copy?.extensionGroupTitle ?? "扩展"}
-              </div>
-              <For each={extensionSections()}>
-                {(section) => (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    xstyle={[
-                      styles.navButton,
-                      section.id === activeSection() ? styles.navButtonActive : null,
-                    ]}
-                    data-settings-section={section.id}
-                    aria-current={section.id === activeSection() ? "page" : undefined}
-                    onClick={() => handleSectionChange(section.id)}
-                  >
-                    <span>{sectionTitle(section.id)}</span>
-                    <Show when={sectionNavMeta(section.id)}>
-                      <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
-                    </Show>
-                  </Button>
-                )}
-              </For>
-            </nav>
-            <div {...stylex.attrs(styles.main)} data-active-view={activeSection()}>
-              <div {...stylex.attrs(styles.panelHeader)} data-settings-panel-header>
-                <div>
-                  <strong {...stylex.attrs(styles.panelHeaderTitle)}>{activeSectionTitle()}</strong>
-                  <span {...stylex.attrs(styles.panelHeaderDescription)}>
-                    {activeSectionDescription()}
-                  </span>
-                </div>
-              </div>
-              <div {...stylex.attrs(styles.panelView)} data-view={activeSection()}>
-                <Show
-                  when={activeSection() !== "about"}
-                  fallback={
-                    props.aboutContent ?? (
-                      <EmptyState
-                        xstyle={styles.empty}
-                        compact
-                        title={props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
-                      />
-                    )
-                  }
+          </Show>
+          <div {...stylex.attrs(styles.titleCopy)}>
+            <strong {...stylex.attrs(styles.titleStrong)}>
+              {props.surface === "mobile"
+                ? activeSectionTitle()
+                : (props.copy?.sidebarTitle ?? "设置")}
+            </strong>
+            <span {...stylex.attrs(styles.titleMeta)}>
+              {props.surface === "mobile"
+                ? (props.copy?.sidebarTitle ?? "设置")
+                : (props.copy?.windowSubtitle ??
+                  "个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件")}
+            </span>
+          </div>
+        </div>
+        <Show when={props.surface === "desktop"}>
+          <IconButton
+            size="sm"
+            xstyle={styles.close}
+            data-settings-close
+            onClick={handleClose}
+            ref={(el) => (closeButtonRef = el)}
+            aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
+          >
+            <X size={16} />
+          </IconButton>
+        </Show>
+      </header>
+      <div {...stylex.attrs(styles.body, props.surface === "mobile" ? styles.bodyMobile : null)}>
+        <Show when={props.surface === "desktop"}>
+          <nav
+            {...stylex.attrs(styles.nav)}
+            data-settings-nav
+            aria-label={props.copy?.sidebarTitle ?? "设置导航"}
+          >
+            <div {...stylex.attrs(styles.kicker)}>
+              {props.copy?.workspaceGroupTitle ?? "工作台"}
+            </div>
+            <For each={workspaceSections()}>
+              {(section) => (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  xstyle={[
+                    styles.navButton,
+                    section.id === activeSection() ? styles.navButtonActive : null,
+                  ]}
+                  data-settings-section={section.id}
+                  aria-current={section.id === activeSection() ? "page" : undefined}
+                  onClick={() => handleSectionChange(section.id)}
                 >
-                  <Show
-                    when={activePanels().length > 0}
-                    fallback={
-                      <EmptyState
-                        xstyle={styles.empty}
-                        compact
-                        title={props.copy?.emptySection ?? "该分类下暂无设置内容"}
-                      />
-                    }
-                  >
-                    <div {...stylex.attrs(styles.stack)} data-settings-panel-stack>
-                      <For each={activePanels()}>
-                        {(panel) => {
-                          if (panel.content.kind === "schema") {
-                            const provider = props.getSettingsProvider(panel.content.provider)
-                            if (!provider)
-                              return (
-                                <InlineError xstyle={styles.missing}>
-                                  {props.copy?.panelMissing(panel.id) ??
-                                    `设置面板不可用：${panel.id}`}
-                                </InlineError>
-                              )
-                            return (
-                              <PluginViewBoundary instanceId={panel.id} title={panel.title}>
-                                <div data-tabora-plugin-id={panel.pluginId}>
-                                  <SettingsSchemaRenderer
-                                    provider={provider}
-                                    context={{
-                                      ...(props.providerContext?.(panel) ?? {
-                                        panel: {
-                                          id: panel.id,
-                                          pluginId: panel.pluginId,
-                                          scope: panel.scope,
-                                        },
-                                      }),
-                                      panel: {
-                                        id: panel.id,
-                                        pluginId: panel.pluginId,
-                                        scope: panel.scope,
-                                        ...(panel.scope === "instance" && props.instanceId
-                                          ? { instanceId: props.instanceId }
-                                          : {}),
-                                      },
-                                    }}
-                                  />
-                                </div>
-                              </PluginViewBoundary>
-                            )
-                          }
-
-                          const View = props.getView(panel.content.view)
-                          if (!View)
-                            return (
-                              <InlineError xstyle={styles.missing}>
-                                {props.copy?.panelMissing(panel.id) ??
-                                  `设置面板不可用：${panel.id}`}
-                              </InlineError>
-                            )
-                          let content: JSX.Element
-                          try {
-                            const panelProps = props.panelProps(
-                              panel,
-                              panel.scope === "instance" ? props.instanceId : undefined,
-                            )
-                            content = createComponent(View, panelProps)
-                          } catch (error) {
-                            return createPluginErrorFallback(error, panel.id, panel.title)
-                          }
-                          return (
-                            <PluginViewBoundary instanceId={panel.id} title={panel.title}>
-                              <div data-tabora-plugin-id={panel.pluginId}>{content}</div>
-                            </PluginViewBoundary>
-                          )
-                        }}
-                      </For>
-                    </div>
+                  <span>{sectionTitle(section.id)}</span>
+                  <Show when={sectionNavMeta(section.id)}>
+                    <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
                   </Show>
-                </Show>
-              </div>
+                </Button>
+              )}
+            </For>
+            <div {...stylex.attrs(styles.kicker)}>{props.copy?.extensionGroupTitle ?? "扩展"}</div>
+            <For each={extensionSections()}>
+              {(section) => (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  xstyle={[
+                    styles.navButton,
+                    section.id === activeSection() ? styles.navButtonActive : null,
+                  ]}
+                  data-settings-section={section.id}
+                  aria-current={section.id === activeSection() ? "page" : undefined}
+                  onClick={() => handleSectionChange(section.id)}
+                >
+                  <span>{sectionTitle(section.id)}</span>
+                  <Show when={sectionNavMeta(section.id)}>
+                    <span {...stylex.attrs(styles.navCount)}>{sectionNavMeta(section.id)}</span>
+                  </Show>
+                </Button>
+              )}
+            </For>
+          </nav>
+        </Show>
+        <div
+          {...stylex.attrs(styles.main, props.surface === "mobile" ? styles.mainMobile : null)}
+          data-active-view={activeSection()}
+        >
+          <div
+            {...stylex.attrs(
+              styles.panelHeader,
+              props.surface === "mobile" ? styles.panelHeaderMobile : null,
+            )}
+            data-settings-panel-header
+          >
+            <div>
+              <strong {...stylex.attrs(styles.panelHeaderTitle)}>{activeSectionTitle()}</strong>
+              <span {...stylex.attrs(styles.panelHeaderDescription)}>
+                {activeSectionDescription()}
+              </span>
             </div>
           </div>
-          <footer {...stylex.attrs(styles.footer)} data-workbench-overlay-footer>
-            <span {...stylex.attrs(styles.status)}>
-              <span {...stylex.attrs(styles.statusDot)} aria-hidden="true" />
-              {statusText() ?? props.copy?.statusReady ?? "设置已就绪"}
-            </span>
-            <div {...stylex.attrs(styles.footerActions)}>
-              <Button size="sm" variant="primary" onClick={handleClose}>
-                {props.copy?.cancelLabel ?? "取消"}
-              </Button>
-            </div>
-          </footer>
+          <div {...stylex.attrs(styles.panelView)} data-view={activeSection()}>
+            <Show
+              when={activeSection() !== "about"}
+              fallback={
+                props.aboutContent ?? (
+                  <EmptyState
+                    xstyle={styles.empty}
+                    compact
+                    title={props.copy?.aboutUnavailable ?? "关于信息暂不可用"}
+                  />
+                )
+              }
+            >
+              <Show
+                when={activePanels().length > 0}
+                fallback={
+                  <EmptyState
+                    xstyle={styles.empty}
+                    compact
+                    title={props.copy?.emptySection ?? "该分类下暂无设置内容"}
+                  />
+                }
+              >
+                <div {...stylex.attrs(styles.stack)} data-settings-panel-stack>
+                  <For each={activePanels()}>
+                    {(panel) => {
+                      if (panel.content.kind === "schema") {
+                        const provider = props.getSettingsProvider(panel.content.provider)
+                        if (!provider)
+                          return (
+                            <InlineError xstyle={styles.missing}>
+                              {props.copy?.panelMissing(panel.id) ?? `设置面板不可用：${panel.id}`}
+                            </InlineError>
+                          )
+                        return (
+                          <PluginViewBoundary instanceId={panel.id} title={panel.title}>
+                            <div
+                              data-tabora-plugin-id={panel.pluginId}
+                              data-settings-surface={props.surface}
+                            >
+                              <SettingsSchemaRenderer
+                                provider={provider}
+                                context={{
+                                  ...(props.providerContext?.(panel, props.surface) ?? {
+                                    panel: {
+                                      id: panel.id,
+                                      pluginId: panel.pluginId,
+                                      scope: panel.scope,
+                                    },
+                                  }),
+                                  surface: props.surface,
+                                  panel: {
+                                    id: panel.id,
+                                    pluginId: panel.pluginId,
+                                    scope: panel.scope,
+                                    ...(panel.scope === "instance" && props.instanceId
+                                      ? { instanceId: props.instanceId }
+                                      : {}),
+                                  },
+                                }}
+                              />
+                            </div>
+                          </PluginViewBoundary>
+                        )
+                      }
+
+                      const View = props.getView(panel.content.view)
+                      if (!View)
+                        return (
+                          <InlineError xstyle={styles.missing}>
+                            {props.copy?.panelMissing(panel.id) ?? `设置面板不可用：${panel.id}`}
+                          </InlineError>
+                        )
+                      let content: JSX.Element
+                      try {
+                        const panelProps = props.panelProps(
+                          panel,
+                          panel.scope === "instance" ? props.instanceId : undefined,
+                          props.surface,
+                        )
+                        content = createComponent(View, panelProps)
+                      } catch (error) {
+                        return createPluginErrorFallback(error, panel.id, panel.title)
+                      }
+                      return (
+                        <PluginViewBoundary instanceId={panel.id} title={panel.title}>
+                          <div
+                            data-tabora-plugin-id={panel.pluginId}
+                            data-settings-surface={props.surface}
+                          >
+                            {content}
+                          </div>
+                        </PluginViewBoundary>
+                      )
+                    }}
+                  </For>
+                </div>
+              </Show>
+            </Show>
+          </div>
         </div>
       </div>
+      <Show when={props.surface === "desktop"}>
+        <footer {...stylex.attrs(styles.footer)} data-workbench-overlay-footer>
+          <span {...stylex.attrs(styles.status)}>
+            <span {...stylex.attrs(styles.statusDot)} aria-hidden="true" />
+            {statusText() ?? props.copy?.statusReady ?? "设置已就绪"}
+          </span>
+          <div {...stylex.attrs(styles.footerActions)}>
+            <Button size="sm" variant="primary" onClick={handleClose}>
+              {props.copy?.cancelLabel ?? "取消"}
+            </Button>
+          </div>
+        </footer>
+      </Show>
+    </div>
+  )
+
+  const renderMobileSettingsIndex = () => (
+    <MobileSettingsIndex
+      title={props.copy?.sidebarTitle ?? "设置"}
+      searchPlaceholder={props.copy?.searchPlaceholder ?? "搜索设置项"}
+      sectionTitle={sectionTitle}
+      sectionDescription={sectionDescription}
+      {...(props.copy?.sectionMeta ? { sectionMeta: props.copy.sectionMeta } : {})}
+      onSectionChange={handleSectionChange}
+      onKeyDown={handleKeyDown}
+    />
+  )
+
+  return (
+    <Show when={props.open}>
+      <Show
+        when={props.surface === "mobile"}
+        fallback={
+          <div
+            {...stylex.attrs(styles.overlay, isEntering() ? styles.entering : null)}
+            data-workbench-overlay="settings"
+            data-settings-surface="desktop"
+            onClick={handleClose}
+            onKeyDown={handleKeyDown}
+            role="dialog"
+            aria-modal="true"
+            aria-label={props.copy?.sidebarTitle ?? "设置"}
+          >
+            {renderSettingsWindow()}
+          </div>
+        }
+      >
+        <Show
+          when={props.showIndex}
+          fallback={
+            <main
+              {...stylex.attrs(styles.mobilePage)}
+              data-settings-page
+              data-settings-surface="mobile"
+              onKeyDown={handleKeyDown}
+              aria-label={props.copy?.sidebarTitle ?? "设置"}
+            >
+              {renderSettingsWindow()}
+            </main>
+          }
+        >
+          {renderMobileSettingsIndex()}
+        </Show>
+      </Show>
     </Show>
   )
 }

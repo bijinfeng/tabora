@@ -1,5 +1,5 @@
 export { WorkbenchAddWidgetModal } from "./WorkbenchAddWidgetModal"
 export { WorkbenchSettingsAboutContent } from "./WorkbenchSettingsAboutContent"
-export { SafeWorkbenchLayout } from "./SafeWorkbenchLayout"
+export { LayoutUnavailableState } from "./LayoutUnavailableState"
 export { WorkbenchExpandOverlay } from "./WorkbenchExpandOverlay"
 export { WorkbenchContextMenuOverlay } from "./WorkbenchContextMenuOverlay"

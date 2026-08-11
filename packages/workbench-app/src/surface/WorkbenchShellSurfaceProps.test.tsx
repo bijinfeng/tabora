@@ -72,6 +72,7 @@ describe("createWorkbenchShellSurfaceProps", () => {
         content: { kind: "custom-view", view: "visible.settings" },
         section: "general",
         scope: "workspace",
+        surfaces: ["desktop", "mobile"],
         order: 10,
       },
     ]
@@ -104,6 +105,7 @@ describe("createWorkbenchShellSurfaceProps", () => {
               content: { kind: "custom-view", view: "hidden.settings" },
               section: "general",
               scope: "workspace",
+              surfaces: ["desktop", "mobile"],
             },
           ],
         },

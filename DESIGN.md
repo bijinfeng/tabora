@@ -255,11 +255,15 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 
 Widget 支持多实例、多尺寸、拖拽排序、右键尺寸菜单、双击展开和状态持久化。Widget 内容过长时在内部滚动或截断，不撑破卡片。hover、focus、拖拽、loading 不得改变外部尺寸。
 
-设置中心是轻量 settings host：左侧分类导航，右侧内容区。MVP 面板包含插件只读信息、外观主题与背景、默认搜索源和搜索源启用状态。
+设置中心是轻量 settings host：桌面端使用左侧分类导航 + 右侧内容区；移动端使用独立的全屏单列容器，设置首页采用大标题、搜索框和分组列表，点击设置项进入带顶部返回的二级详情页。MVP 面板包含插件只读信息、外观主题与背景、默认搜索源和搜索源启用状态。
+
+设置中心由 `@tabora/workbench-app` 的路由承载：`/settings/<section>` 是设置页，`general`、`appearance`、`search`、`plugins`、`about` 等分类是二级路由。打开、分类切换、关闭、移动端返回以及浏览器前进/后退都必须与 URL 同步；`SettingsHost` 只负责容器、导航渲染和错误边界。
 
 设置页面采用“安全容器 + 声明式模型 + 统一 renderer”的默认路径：
 
 - `SettingsHost` 只拥有弹窗、分类导航、焦点、滚动和错误边界，不包含账号、同步或其他业务特例。
+- 每个 settings panel 必须在 manifest 中显式声明 `surfaces: ["desktop", "mobile"]` 的一个或多个目标端；宿主只渲染当前端声明支持的面板，不为缺失声明静默补默认值。
+- 移动端设置使用 safe-area 适配，首页分组列表和详情页内容单列滚动，设置项和返回/关闭控件保持至少 44px 触摸目标，页面不产生横向滚动；provider context 与 custom-view props 均收到当前 `surface`。
 - 插件的 settings provider 拥有页面状态机、校验、actions 和领域副作用；它返回语义 schema，不返回 CSS、className、StyleX 样式或原始 token。
 - 官方默认 `SettingsSchemaRenderer` 只用 `@tabora/ui` 控件渲染 schema，保证明暗主题、密度、焦点和可访问性一致。密码字段必须标记为 `ephemeral`，renderer 不得将其写入 storage、日志或快照。
 - 表达能力超出官方 schema 的复杂页面可显式声明 `custom-view`，但仍渲染在同一 `SettingsHost` 和插件错误边界内。

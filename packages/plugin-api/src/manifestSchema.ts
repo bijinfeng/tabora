@@ -22,6 +22,7 @@ const settingsPanelSectionSchema = z.enum([
 ])
 
 const settingsPanelScopeSchema = z.enum(["global", "workspace", "plugin", "instance"])
+const settingsPanelSurfaceSchema = z.enum(["desktop", "mobile"])
 
 const settingsHostActionSchema = z.enum([
   "workspace.layout.write",
@@ -365,6 +366,7 @@ export const pluginManifestSchema = z
               title: z.string().min(1),
               section: settingsPanelSectionSchema,
               scope: settingsPanelScopeSchema,
+              surfaces: z.array(settingsPanelSurfaceSchema).min(1),
               order: z.number().int().optional(),
               hostActions: z.array(settingsHostActionSchema).min(1).optional(),
               hostReads: z.array(settingsHostReadSchema).min(1).optional(),

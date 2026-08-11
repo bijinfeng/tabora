@@ -1,6 +1,3 @@
-import type { WidgetViewProps } from "@tabora/plugin-api"
-
-import { renderWorkbenchWidgetIcon } from "../shared/WorkbenchShellIcons"
 import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import { focusWorkbenchWidgetInstance } from "../runtime/WorkbenchShellHostActions"
 import { createWorkbenchShellControllerRuntime } from "./WorkbenchShellControllerRuntime"
@@ -10,7 +7,7 @@ import type { WorkbenchShellStateBundle } from "./WorkbenchShellState"
 import type { WorkbenchRuntimeBootstrap } from "../runtime/bootstrap"
 import type { createWorkbenchWorkspaceController } from "../workspace/WorkbenchShellWorkspaceController"
 import type { createWorkbenchShellHostRuntime } from "../runtime/WorkbenchShellHostRuntime"
-import type { createLayoutFallbackTracker } from "../layout/layoutFallback"
+import type { createLayoutErrorTracker } from "../layout/layoutError"
 import type { WorkbenchResponsiveState } from "../shared/responsive"
 import {
   createWorkbenchShellCommandPaletteCopy,
@@ -27,7 +24,7 @@ export function createWorkbenchShellRuntimes(options: {
   runtime: WorkbenchRuntimeBootstrap
   workspaceController: ReturnType<typeof createWorkbenchWorkspaceController>
   hostRuntime: ReturnType<typeof createWorkbenchShellHostRuntime>
-  layoutFallback: ReturnType<typeof createLayoutFallbackTracker>
+  layoutError: ReturnType<typeof createLayoutErrorTracker>
   responsive: WorkbenchResponsiveState
   openSettings: (panelId?: string) => void
   showToast: WorkbenchShellStateBundle["runtime"]["showToast"]
@@ -37,7 +34,7 @@ export function createWorkbenchShellRuntimes(options: {
     runtime,
     workspaceController,
     hostRuntime,
-    layoutFallback,
+    layoutError,
     responsive,
     openSettings,
     showToast,
@@ -168,7 +165,7 @@ export function createWorkbenchShellRuntimes(options: {
 
   const layoutRuntime = createWorkbenchShellLayoutRuntime({
     activeLayoutId,
-    failedLayoutId: () => layoutFallback.status()?.layoutId ?? null,
+    layoutError: layoutError.status,
     isDark,
     tShell: t,
     shellConfig: runtime.shellConfig,
@@ -186,25 +183,14 @@ export function createWorkbenchShellRuntimes(options: {
     displayedInstances: controllerRuntime.dragHandlers.displayedInstances,
     resolveLayoutView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
     isMobile: responsive.isMobile,
-    clearLayoutError: () => layoutFallback.clearLayoutError(),
-    recordLayoutError: (layoutId, error) => layoutFallback.recordLayoutError(layoutId, error),
+    clearLayoutError: layoutError.clearLayoutError,
+    recordLayoutError: layoutError.recordLayoutError,
     dndKit: {
       onDragStart: controllerRuntime.dragHandlers.onDndDragStart,
       onDragMove: controllerRuntime.dragHandlers.onDndDragMove,
       onDragOver: controllerRuntime.dragHandlers.onDndDragOver,
       onDragEnd: controllerRuntime.dragHandlers.onDndDragEnd,
     },
-    setContextMenu: setCtxMenu,
-    widgetContribution: controllerRuntime.widgetController.widgetContribution,
-    resolveWidgetModel: controllerRuntime.widgetController.widgetRenderModel,
-    getWidgetView: (viewId) => resolveWorkbenchView<WidgetViewProps>(kernel.registry.views, viewId),
-    renderWidgetIcon: renderWorkbenchWidgetIcon,
-    buildWidgetViewProps: (instance, model) =>
-      controllerRuntime.viewRuntime.buildWidgetViewProps(instance, model),
-    openWidgetExpand: controllerRuntime.widgetController.openWidgetExpand,
-    changeWidgetSize: controllerRuntime.widgetController.changeWidgetSize,
-    removeWidget: controllerRuntime.widgetController.removeWidget,
-    isDragging: (instanceId) => controllerRuntime.dragHandlers.isDragging(instanceId),
   })
 
   return { controllerRuntime, layoutRuntime }

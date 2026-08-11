@@ -345,7 +345,6 @@ const SOURCE_INVARIANT_FILES = [
   "packages/workbench-shell/src/CommandPalette.tsx",
   "packages/workbench-app/src/layout/WorkbenchShellLayoutHost.ts",
   "packages/platform-kernel/src/runtimeContext.ts",
-  "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx",
 ]
 
 export function resolveRepositoryRoot(startDir) {
@@ -523,19 +522,6 @@ export function findSourceInvariantViolations(options) {
       match: match[0],
       reason: "runtime context must not expose stale getConfig/setConfig APIs",
     }))
-  }
-
-  if (
-    options.filePath === "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx" &&
-    !/data-tabora-plugin-id=\{instance\.contribution\.pluginId\}/.test(options.source)
-  ) {
-    return [
-      {
-        filePath: options.filePath,
-        match: "data-tabora-plugin-id",
-        reason: "safe layout fallback must preserve plugin style scope around widget views",
-      },
-    ]
   }
 
   return []

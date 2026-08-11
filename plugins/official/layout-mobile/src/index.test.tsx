@@ -16,14 +16,19 @@ function instance(overrides: Partial<LayoutInstance>): LayoutInstance {
   }
 }
 
-function makeHost(overrides?: { layoutState?: unknown }): LayoutHostAPI {
+function makeHost(overrides?: { layoutState?: unknown; onSettings?: () => void }): LayoutHostAPI {
   return {
     getGlobalActions: (surface) =>
       surface === "rail"
         ? [
             { id: "home", label: "分组 我的工作台", icon: "home", run: vi.fn() },
             { id: "theme", label: "切换主题", icon: "moon", run: vi.fn() },
-            { id: "settings", label: "设置", icon: "settings", run: vi.fn() },
+            {
+              id: "settings",
+              label: "设置",
+              icon: "settings",
+              run: overrides?.onSettings ?? vi.fn(),
+            },
           ]
         : surface === "menu"
           ? [{ id: "add-widget", label: "添加卡片", icon: "plus", run: vi.fn() }]
@@ -117,6 +122,31 @@ describe("MobileLayout", () => {
     )
 
     expect(host.textContent).toContain("暂无卡片")
+    dispose()
+    host.remove()
+  })
+
+  it("runs the host settings action from the mobile bottom bar", () => {
+    const host = document.createElement("div")
+    const onSettings = vi.fn()
+    document.body.appendChild(host)
+    const dispose = render(
+      () => (
+        <MobileLayout
+          isMobile={true}
+          host={makeHost({ onSettings })}
+          regions={{
+            mainGrid: makeSlot("mainGrid", []),
+          }}
+        />
+      ),
+      host,
+    )
+
+    const settingsButton = host.querySelector<HTMLButtonElement>('[aria-label="设置"]')
+    expect(settingsButton).toBeTruthy()
+    settingsButton?.click()
+    expect(onSettings).toHaveBeenCalledOnce()
     dispose()
     host.remove()
   })

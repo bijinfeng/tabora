@@ -129,7 +129,7 @@ focus
 - 主区域允许纵向延展；卡片过多时通过页面滚动访问，不为了塞进首屏牺牲可读性。
 - 添加卡片、插件管理、设置、布局切换和主题切换入口要么在 rail / 工具条中可见，要么通过命令面板和快捷键始终可达。
 - 弹窗、展开视图、Toast、快捷键面板和设置中心都由宿主统一提供容器，插件只渲染内容。
-- 设置中心遵循原型中的左侧分类导航 + 右侧内容区结构，不作为常驻右侧栏。
+- 设置中心桌面端遵循原型中的左侧分类导航 + 右侧内容区结构，不作为常驻右侧栏；移动端使用独立全屏单列布局、顶部返回和横向分类导航。
 
 ### 3.3 色彩与主题
 
@@ -428,9 +428,9 @@ workbench-shell
 布局失败：
 
 1. 宿主发现布局 view 未注册或渲染失败。
-2. 回退到官方默认布局。
+2. 显示“没有可用的布局插件”和失败原因。
 3. 记录失败 layout id。
-4. 用户仍可操作主工作台。
+4. 不渲染其他布局冒充当前布局。
 
 卡片过多：
 
@@ -475,7 +475,7 @@ workbench-shell
 - Dashboard 尺寸跨度固定为 `S=1x1`、`M=2x1`、`L=2x2`、`XL=4x2`。
 - 移动端布局不产生横向滚动。
 - 卡片超过首屏时，主网格可纵向滚动且不压缩卡片到不可读。
-- layout 失败时有安全回退。
+- layout 失败时有明确的布局不可用提示和失败原因。
 
 ## 6b. `official.layout.workbench-focus`（专注布局）
 
@@ -1626,6 +1626,8 @@ V2：
 
 工作区设置插件用于提供外观、搜索和工作区等通用面板。宿主提供 settings host 与官方 schema renderer，orchestrator 按已启用插件的 contributions 组织导航；布局插件不负责设置弹窗。
 
+当前官方设置面板均声明支持 `desktop` 和 `mobile`。第三方设置插件必须通过 manifest 的非空 `surfaces` 显式声明目标端；宿主按当前端过滤，不为未声明的端静默兜底。设置中心使用 `/settings/<section>` 路由，每个可用分类是一个二级路由；provider context 和 custom-view props 会收到当前 `surface`，移动端由宿主提供全屏单列设置容器。
+
 设置中心不是完整偏好设置产品。MVP 目标是验证 `settings-panel` 扩展点、统一设置入口、设置面板错误隔离和关键全局配置持久化，复杂能力延后。
 
 ### 13.2 建议 Contribution
@@ -1655,10 +1657,10 @@ MVP settings panels：
 打开设置：
 
 1. 用户点击工具栏设置按钮。
-2. 宿主打开 settings host。
+2. 宿主导航到 `/settings/<section>` 并打开 settings host。
 3. settings host 读取已启用插件贡献的 `settings-panel`。
-4. orchestrator 按 panel 的 `section/order` 组织左侧导航，没有 contribution 的业务分类不显示。
-5. 默认打开“插件”面板。
+4. orchestrator 按当前 `surface` 过滤 panel，再按 `section/order` 组织导航，没有 contribution 的业务分类不显示。
+5. 默认打开“插件”面板；用户切换分类时同步对应二级路由。
 6. `schema` panel 通过 provider registry + 官方 renderer 渲染；`custom-view` panel 通过 view registry 渲染。
 
 切换主题：

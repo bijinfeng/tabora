@@ -15,7 +15,7 @@ afterEach(() => {
 
 function mount(
   provider: SettingsPanelProvider,
-  context: SettingsPanelProviderContext = {},
+  context: SettingsPanelProviderContext = { surface: "desktop" },
 ): HTMLElement {
   const root = document.createElement("div")
   document.body.append(root)

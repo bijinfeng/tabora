@@ -1,13 +1,19 @@
 import * as stylex from "@stylexjs/stylex"
+import { Route, Router, useLocation, useNavigate } from "@solidjs/router"
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createEffect, createMemo, onCleanup, Show } from "solid-js"
-import type { PluginInstance, WorkbenchSearchSettings, Workspace } from "@tabora/plugin-api"
+import type {
+  PluginInstance,
+  SettingsSectionId,
+  WorkbenchSearchSettings,
+  Workspace,
+} from "@tabora/plugin-api"
 import { applyThemeTokens } from "@tabora/theme"
 import { color, font } from "@tabora/theme/tokens.stylex"
 
 import type { WorkbenchRuntimeBootstrap } from "../runtime/bootstrap"
 import { applyBackgroundStyle } from "../appearance/backgroundResolver"
-import { createLayoutFallbackTracker } from "../layout/layoutFallback"
+import { createLayoutErrorTracker } from "../layout/layoutError"
 import { createWorkbenchResponsiveState } from "../shared/responsive"
 import { createWorkbenchShellHostRuntime } from "../runtime/WorkbenchShellHostRuntime"
 import { activePluginStyles, createPluginStyleManager } from "../shared/pluginStyleManager"
@@ -22,6 +28,11 @@ import { createWorkbenchWorkspaceController } from "../workspace/WorkbenchShellW
 import { assignGridOrder } from "../shared/workbenchGrid"
 import { createWorkbenchShellRuntimes } from "./createWorkbenchShellRuntimes"
 import { createWorkbenchShellPluginViewBoundaryCopy } from "../i18n"
+import {
+  parseWorkbenchSettingsRoute,
+  settingsHomePath,
+  settingsRoutePath,
+} from "../routing/workbenchSettingsRoute"
 
 export type WorkbenchShellAppProps = {
   composition: {
@@ -54,6 +65,16 @@ const styles = stylex.create({
 })
 
 export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
+  return (
+    <Router root={() => <WorkbenchShellAppRouteRoot {...props} />}>
+      <Route path="*path" component={() => null} />
+    </Router>
+  )
+}
+
+function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
+  const location = useLocation()
+  const navigate = useNavigate()
   const composition = props.composition
   const runtime = props.runtime
   const state = createWorkbenchShellState({
@@ -113,9 +134,35 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     setInlineSearchActiveResultIndex: _setInlineSearchActiveResultIndex,
   } = state.search
   const responsive = createWorkbenchResponsiveState()
-  const layoutFallback = createLayoutFallbackTracker({ notify: showToast })
+  const layoutError = createLayoutErrorTracker()
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
+  const currentRoute = createMemo(() => parseWorkbenchSettingsRoute(location.pathname))
+  const navigateToSettings = (sectionId: SettingsSectionId) => {
+    setActiveSettingsSectionId(sectionId)
+    setSettingsOpen(true)
+    const nextPath = settingsRoutePath(sectionId)
+    if (location.pathname !== nextPath) navigate(nextPath)
+  }
+  const navigateToSettingsHome = () => {
+    setSettingsOpen(true)
+    const nextPath = settingsHomePath()
+    if (location.pathname !== nextPath) navigate(nextPath)
+  }
+  const closeSettings = () => {
+    setSettingsOpen(false)
+    if (currentRoute().kind === "settings") navigate("/", { replace: true })
+  }
+  createEffect(() => {
+    const route = currentRoute()
+    if (route.kind !== "settings") {
+      if (state.overlays.settingsOpen()) setSettingsOpen(false)
+      return
+    }
+
+    if (route.section !== null) setActiveSettingsSectionId(route.section)
+    setSettingsOpen(true)
+  })
   const pluginStyleManager = createPluginStyleManager(document)
   const refreshPluginRecords = async () => {
     setPluginRecords(await repositories.pluginRecordRepo.getAll())
@@ -137,15 +184,22 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       _setInlineSearchOpen(false)
     }
   })
-  const openSettings = (panelId?: string) =>
-    openWorkbenchSettings(
+  const openSettings = (panelId?: string) => {
+    if (responsive.isMobile() && !panelId) {
+      navigateToSettingsHome()
+      return
+    }
+    const sectionId = openWorkbenchSettings(
       {
         panels: pluginCatalog.listSettingsPanels(),
+        surface: responsive.isMobile() ? "mobile" : "desktop",
         setActiveSettingsSectionId,
         setSettingsOpen,
       },
       panelId,
     )
+    navigateToSettings(sectionId)
+  }
   const workspaceController = createWorkbenchWorkspaceController({
     workspaceRepo,
     instanceRepo,
@@ -224,7 +278,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
       { value: "en-US", label: "English (US)" },
     ],
     host: {
-      close: () => setSettingsOpen(false),
+      close: closeSettings,
       setDirty: () => {},
       switchLayout: async (layout) => workspaceController.switchLayout(layout.id),
       switchTheme: workspaceController.switchTheme,
@@ -253,7 +307,7 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     runtime,
     workspaceController,
     hostRuntime,
-    layoutFallback,
+    layoutError,
     responsive,
     openSettings,
     showToast,
@@ -271,7 +325,17 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
     catalog: pluginCatalog,
     views: kernel.registry.views,
     settingsProviders: kernel.registry.settings,
-    settingsProviderContext: () => ({ locale: runtime.i18n.locale() }),
+    settingsProviderContext: (surface) => ({ locale: runtime.i18n.locale(), surface }),
+    settingsRoute: {
+      navigate: navigateToSettings,
+      home: navigateToSettingsHome,
+      isHome: () => {
+        const route = currentRoute()
+        return route.kind === "settings" && route.section === null
+      },
+      close: closeSettings,
+    },
+    responsive,
     controllerRuntime,
     buildSettingsPanelProps,
     layoutContent,

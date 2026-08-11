@@ -511,7 +511,7 @@ describe("governance rules", () => {
     ])
   })
 
-  it("detects source invariant regressions for owner open, layout menu, runtime config, and safe layout scope", async () => {
+  it("detects source invariant regressions for owner open, layout menu, and runtime config", async () => {
     expect(
       findSourceInvariantViolations({
         filePath: "packages/workbench-shell/src/CommandPalette.tsx",
@@ -560,23 +560,6 @@ describe("governance rules", () => {
         filePath: "packages/platform-kernel/src/runtimeContext.ts",
         match: "setConfig",
         reason: "runtime context must not expose stale getConfig/setConfig APIs",
-      },
-    ])
-
-    expect(
-      findSourceInvariantViolations({
-        filePath: "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx",
-        source: `
-          export function SafeWorkbenchLayout() {
-            return <PluginViewBoundary>{View(props)}</PluginViewBoundary>
-          }
-        `,
-      }),
-    ).toEqual([
-      {
-        filePath: "packages/workbench-app/src/surface/SafeWorkbenchLayout.tsx",
-        match: "data-tabora-plugin-id",
-        reason: "safe layout fallback must preserve plugin style scope around widget views",
       },
     ])
 

@@ -28,7 +28,7 @@ export type LayoutI18n = {
 
 export type MobileLayoutProps = LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }
 
-export function MobileLayout(props: MobileLayoutProps & { onNavigateToSettings?: () => void }) {
+export function MobileLayout(props: MobileLayoutProps) {
   const i18n = () => props.i18n
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
   const locale = () => i18n()?.locale() ?? "zh-CN"
@@ -232,9 +232,6 @@ export function MobileLayout(props: MobileLayoutProps & { onNavigateToSettings?:
         host={props.host}
         setGroups={setPersistedGroups}
         onGroupCreated={setPersistedActiveGroupId}
-        {...(props.onNavigateToSettings
-          ? { onNavigateToSettings: props.onNavigateToSettings }
-          : {})}
       />
     </main>
   )

@@ -40,6 +40,7 @@ function panel(
     content: { kind: "custom-view", view: `${id}.view` },
     section: "general",
     scope: "workspace",
+    surfaces: ["desktop", "mobile"],
     ...(order !== undefined ? { order } : {}),
     ...overrides,
   }
@@ -128,11 +129,13 @@ describe("settings host composition", () => {
         ...panel("official.settings.workspace.workbench", 10, { section: "general" }),
         pluginId: "plugin-a",
         scope: "workspace",
+        surfaces: ["desktop", "mobile"],
       },
       {
         ...panel("official.settings.workspace.search", 20, { section: "search" }),
         pluginId: "plugin-b",
         scope: "workspace",
+        surfaces: ["desktop", "mobile"],
       },
     ]
 
@@ -152,6 +155,7 @@ describe("settings host composition", () => {
         order: 10,
         pluginId: "plugin-a",
         scope: "workspace",
+        surfaces: ["desktop", "mobile"],
       },
     ]
     const views = new Map<string, any>([["test.view", () => document.createElement("div")]])
@@ -159,6 +163,7 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels,
         activeSectionId: "general",
         onSectionChange: vi.fn(),
@@ -232,6 +237,7 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels: [
           {
             ...panel("plugins", 10, { section: "plugins" }),
@@ -255,10 +261,123 @@ describe("settings host composition", () => {
     expect(document.activeElement).toBe(closeButton)
   })
 
+  it("renders mobile settings detail as a full-screen surface", () => {
+    const onSectionChange = vi.fn()
+    const onBack = vi.fn()
+    const panelProps = vi.fn(
+      (
+        _panel: SettingsPanelDescriptor,
+        _instanceId: string | undefined,
+        surface: "desktop" | "mobile",
+      ) =>
+        ({
+          panelId: "mobile.settings.panel",
+          pluginId: "plugin-mobile",
+          scope: "workspace" as const,
+          surface,
+          host: { close: vi.fn(), setDirty: vi.fn() },
+          data: {},
+        }) as SettingsPanelViewProps,
+    )
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        surface: "mobile",
+        panels: [
+          {
+            ...panel("desktop.settings.panel", 10, {
+              surfaces: ["desktop"],
+              section: "general",
+            }),
+            pluginId: "plugin-desktop",
+          },
+          {
+            ...panel("mobile.settings.panel", 20, {
+              surfaces: ["mobile"],
+              section: "appearance",
+            }),
+            pluginId: "plugin-mobile",
+          },
+        ],
+        activeSectionId: "general",
+        onSectionChange,
+        onClose: vi.fn(),
+        onBack,
+        getView: () => (props) => <div data-mobile-panel-surface={props.surface} />,
+        getSettingsProvider: () => undefined,
+        panelProps,
+      }),
+    )
+
+    expect(root.querySelector('[data-settings-surface="mobile"]')).toBeTruthy()
+    expect(root.querySelector("[data-settings-page]")).toBeTruthy()
+    expect(root.querySelector('[data-settings-page][role="dialog"]')).toBeNull()
+    expect(root.querySelector('[data-settings-page][aria-modal="true"]')).toBeNull()
+    expect(root.querySelector("[data-settings-window]")).toBeTruthy()
+    expect(root.querySelector("[data-settings-nav]")).toBeNull()
+    expect(root.querySelector('[data-active-view="appearance"]')).toBeTruthy()
+    expect(root.querySelector("[data-settings-back]")?.getAttribute("aria-label")).toBe(
+      "返回工作台",
+    )
+    expect(root.querySelector("[data-settings-close]")).toBeNull()
+    expect(root.querySelector("[data-workbench-overlay-footer]")).toBeNull()
+    expect(
+      root.querySelector("[data-mobile-panel-surface]")?.getAttribute("data-mobile-panel-surface"),
+    ).toBe("mobile")
+    expect(onSectionChange).toHaveBeenCalledWith("appearance")
+    root.querySelector<HTMLButtonElement>("[data-settings-back]")?.click()
+    expect(onBack).toHaveBeenCalledOnce()
+    expect(panelProps).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "mobile.settings.panel" }),
+      undefined,
+      "mobile",
+    )
+  })
+
+  it("renders the mobile settings index as grouped menu cards", () => {
+    const onSectionChange = vi.fn()
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        surface: "mobile",
+        showIndex: true,
+        panels: [
+          {
+            ...panel("general", 10, { section: "general" }),
+            pluginId: "plugin-a",
+          },
+          {
+            ...panel("appearance", 20, { section: "appearance" }),
+            pluginId: "plugin-a",
+          },
+        ],
+        activeSectionId: "general",
+        onSectionChange,
+        onClose: vi.fn(),
+        getView: () => undefined,
+        getSettingsProvider: () => undefined,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    expect(root.querySelector("[data-settings-index]")).toBeTruthy()
+    expect(root.querySelector("[data-settings-index] h1")?.textContent).toBe("设置")
+    expect(root.querySelector("[data-settings-index-search]")).toBeTruthy()
+    expect(root.querySelector("[data-settings-window]")).toBeNull()
+    expect(root.querySelector("[data-settings-nav]")).toBeNull()
+    expect(root.querySelector('[data-settings-index-group="workspace"]')).toBeTruthy()
+    expect(root.querySelector('[data-settings-index-item="general"]')).toBeTruthy()
+    expect(root.querySelector('[data-settings-index-item="about"]')).toBeTruthy()
+
+    root.querySelector<HTMLButtonElement>('[data-settings-index-item="appearance"]')?.click()
+    expect(onSectionChange).toHaveBeenCalledWith("appearance")
+  })
+
   it("renders prototype grouped settings navigation", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels: [
           {
             ...panel("plugins", 10, { section: "plugins" }),
@@ -291,6 +410,7 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels: [
           {
             ...panel("plugins", 10, { section: "plugins" }),
@@ -355,6 +475,7 @@ describe("settings host composition", () => {
         section: "account",
         pluginId: "official.settings.workspace",
         scope: "workspace",
+        surfaces: ["desktop", "mobile"],
       },
     ]
     const panelProps = vi.fn(
@@ -369,6 +490,7 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels,
         activeSectionId: "account",
         onSectionChange: vi.fn(),
@@ -398,15 +520,20 @@ describe("settings host composition", () => {
         section: "account",
         pluginId: "plugin.account",
         scope: "plugin",
+        surfaces: ["desktop", "mobile"],
       },
     ]
-    const providerContext = vi.fn((panel: SettingsPanelDescriptor) => ({
-      panel: { id: panel.id, pluginId: panel.pluginId, scope: panel.scope },
-    }))
+    const providerContext = vi.fn(
+      (panel: SettingsPanelDescriptor, surface: "desktop" | "mobile") => ({
+        surface,
+        panel: { id: panel.id, pluginId: panel.pluginId, scope: panel.scope },
+      }),
+    )
 
     mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels,
         activeSectionId: "account",
         onSectionChange: vi.fn(),
@@ -421,7 +548,7 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(providerContext).toHaveBeenCalledWith(panels[0])
+    expect(providerContext).toHaveBeenCalledWith(panels[0], "desktop")
   })
 
   it("does not expose an instance-scoped panel without a concrete instance target", () => {
@@ -435,6 +562,7 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels,
         activeSectionId: "general",
         onSectionChange: vi.fn(),
@@ -456,17 +584,25 @@ describe("settings host composition", () => {
         pluginId: "plugin.example",
       },
     ]
-    const panelProps = vi.fn((_panel: SettingsPanelDescriptor, instanceId?: string) => ({
-      panelId: "plugin.settings.instance",
-      pluginId: "plugin.example",
-      scope: "instance" as const,
-      ...(instanceId ? { instanceId } : {}),
-      host: { close: vi.fn(), setDirty: vi.fn() },
-      data: {},
-    }))
+    const panelProps = vi.fn(
+      (
+        _panel: SettingsPanelDescriptor,
+        instanceId: string | undefined,
+        surface: "desktop" | "mobile",
+      ) => ({
+        panelId: "plugin.settings.instance",
+        pluginId: "plugin.example",
+        scope: "instance" as const,
+        surface,
+        ...(instanceId ? { instanceId } : {}),
+        host: { close: vi.fn(), setDirty: vi.fn() },
+        data: {},
+      }),
+    )
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels,
         activeSectionId: "general",
         onSectionChange: vi.fn(),
@@ -479,7 +615,7 @@ describe("settings host composition", () => {
     )
 
     expect(root.textContent).toContain("weather-1")
-    expect(panelProps).toHaveBeenCalledWith(panels[0], "weather-1")
+    expect(panelProps).toHaveBeenCalledWith(panels[0], "weather-1", "desktop")
   })
 
   it("keeps the settings container open when a panel view fails", () => {
@@ -492,6 +628,7 @@ describe("settings host composition", () => {
         order: 10,
         pluginId: "plugin-a",
         scope: "workspace",
+        surfaces: ["desktop", "mobile"],
       },
     ]
     const views = new Map<string, any>([
@@ -506,6 +643,7 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels,
         activeSectionId: "general",
         onSectionChange: vi.fn(),
@@ -580,6 +718,7 @@ describe("settings host composition", () => {
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
+        surface: "desktop",
         panels: [
           {
             id: "missing.panel",
@@ -588,6 +727,7 @@ describe("settings host composition", () => {
             content: { kind: "custom-view", view: "missing.view" },
             section: "general",
             scope: "workspace",
+            surfaces: ["desktop", "mobile"],
           },
         ],
         activeSectionId: "general",

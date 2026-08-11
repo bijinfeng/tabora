@@ -263,6 +263,7 @@ describe("createPluginRuntimeContext permissions", () => {
             },
             section: "appearance",
             scope: "workspace",
+            surfaces: ["desktop", "mobile"],
           },
         ],
       },
@@ -395,6 +396,7 @@ describe("createPluginRuntimeContext permissions", () => {
             title: "Settings",
             section: "general",
             scope: "workspace",
+            surfaces: ["desktop", "mobile"],
             content: {
               kind: "schema",
               provider: "plugin.example.settings.provider",

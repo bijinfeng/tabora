@@ -30,8 +30,8 @@ vi.mock("../shared/pluginStyleManager", () => ({
   })),
 }))
 
-vi.mock("../layout/layoutFallback", () => ({
-  createLayoutFallbackTracker: vi.fn(() => ({})),
+vi.mock("../layout/layoutError", () => ({
+  createLayoutErrorTracker: vi.fn(() => ({})),
 }))
 
 vi.mock("../workspace/WorkbenchShellWorkspaceController", () => ({
@@ -97,6 +97,7 @@ vi.mock("./WorkbenchShellState", () => ({
       setInstances: vi.fn(),
     },
     overlays: {
+      settingsOpen: () => false,
       setSettingsOpen: vi.fn(),
       setActiveSettingsSectionId: vi.fn(),
       setModalViewId: vi.fn(),
