@@ -79,6 +79,7 @@ export function createWorkbenchInstanceRenderer(options: {
   onRemoveWidget: (instanceId: string) => void
   isDragging: (instanceId: string) => boolean
   sortableIndex: (instanceId: string) => number
+  isMobile?: () => boolean
   widgetShellCopy?: WorkbenchShellWidgetCopy
   pluginViewBoundaryCopy?: WorkbenchShellPluginViewBoundaryCopy
 }): InstanceRenderer {
@@ -107,6 +108,7 @@ export function createWorkbenchInstanceRenderer(options: {
           supportedSizes={model.supportedSizes}
           currentSize={model.currentSize}
           sortableIndex={() => options.sortableIndex(instance.id)}
+          mobileGrid={options.isMobile?.() ?? false}
           {...(options.widgetShellCopy ? { copy: options.widgetShellCopy } : {})}
           {...(menu ? { contextMenuItems: menu.items, onContextMenuSelect: menu.onSelect } : {})}
           callbacks={{
@@ -183,6 +185,7 @@ function SortableWidgetCard(props: {
   supportedSizes: WidgetSize[]
   currentSize: WidgetSize
   sortableIndex: () => number
+  mobileGrid?: boolean
   callbacks: WidgetHostCallbacks
   copy?: WorkbenchShellWidgetCopy
   contextMenuItems?: ContextMenuItem[]
@@ -206,6 +209,7 @@ function SortableWidgetCard(props: {
       icon={props.icon}
       supportedSizes={props.supportedSizes}
       currentSize={props.currentSize}
+      mobileGrid={props.mobileGrid ?? false}
       {...(props.copy ? { copy: props.copy } : {})}
       {...(props.contextMenuItems ? { contextMenuItems: props.contextMenuItems } : {})}
       {...(props.onContextMenuSelect ? { onContextMenuSelect: props.onContextMenuSelect } : {})}

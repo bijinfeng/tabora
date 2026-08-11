@@ -30,6 +30,8 @@ export type WidgetCardShellProps = {
   callbacks: WidgetHostCallbacks
   /** 预览模式：只展示卡片外观与内容，不渲染移除等操作按钮。 */
   preview?: boolean
+  /** 移动端多列网格模式：跳过窄屏 media query 覆盖，保留卡片实际跨度。 */
+  mobileGrid?: boolean
   /** 右键菜单项；提供时卡片用 @tabora/ui ContextMenu 渲染原生右键菜单 */
   contextMenuItems?: ContextMenuItem[]
   onContextMenuSelect?: (key: string) => void
@@ -67,10 +69,12 @@ const styles = stylex.create({
       [widgetCardStyleVars.actionsOpacity]: 1,
       [widgetCardStyleVars.actionsPointerEvents]: "auto",
     },
+    // 窄屏默认强制单列（桌面端窗口缩窄）。移动端多列网格通过设置下面的 override 变量
+    // 恢复卡片真实跨度，避免破坏 StyleXStyles 类型而无需额外样式对象。
     "@media (max-width: 768px)": {
-      gridColumn: "span 1",
-      gridRow: "auto",
-      minHeight: 150,
+      gridColumn: "var(--widget-narrow-col, span 1)",
+      gridRow: "var(--widget-narrow-row, auto)",
+      minHeight: "var(--widget-narrow-min-height, 150px)",
     },
   },
   dragging: {
@@ -242,6 +246,14 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
     style: {
       "--widget-col-span": `${gridColumnSpan(props.currentSize)}`,
       "--widget-row-span": `${gridRowSpan(props.currentSize)}`,
+      // 移动端多列网格：覆盖窄屏单列默认值，恢复卡片真实跨度与高度。
+      ...(props.mobileGrid
+        ? {
+            "--widget-narrow-col": `span ${gridColumnSpan(props.currentSize)}`,
+            "--widget-narrow-row": `span ${gridRowSpan(props.currentSize)}`,
+            "--widget-narrow-min-height": "0px",
+          }
+        : {}),
     },
     "data-workbench-grid-item": "",
     "data-widget-size": props.currentSize,

@@ -123,6 +123,7 @@ export function createWorkbenchShellControllerRuntime(options: {
       openExternalForPlugin: (pluginId: string, url: string) => boolean
     }
   }
+  isMobile?: () => boolean
 }) {
   const pluginCommands = options.services.plugins.flatMap(
     (plugin) => plugin.manifest.contributes.commands ?? [],
@@ -250,6 +251,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     removeWidget: widgetController.removeWidget,
     isDragging: (instanceId) => dragHandlers.isDragging(instanceId),
     sortableIndex: (instanceId) => dragHandlers.sortableIndex(instanceId),
+    ...(options.isMobile ? { isMobile: options.isMobile } : {}),
     pluginDataRepo: options.services.pluginDataRepo,
     saveInstance: (updated) => options.services.instanceRepo.save(updated),
     setInstances: options.setters.setInstances,

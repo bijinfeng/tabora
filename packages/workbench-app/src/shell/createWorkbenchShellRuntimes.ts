@@ -161,6 +161,7 @@ export function createWorkbenchShellRuntimes(options: {
       workspaceController: controllerWorkspaceActions,
       hostRuntime,
     },
+    isMobile: responsive.isMobile,
   })
 
   const layoutRuntime = createWorkbenchShellLayoutRuntime({

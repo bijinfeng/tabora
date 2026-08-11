@@ -73,6 +73,7 @@ export function createWorkbenchShellViewRuntime(
     },
     isDragging: options.isDragging,
     sortableIndex: options.sortableIndex,
+    ...(options.isMobile ? { isMobile: options.isMobile } : {}),
     ...(options.widgetShellCopy ? { widgetShellCopy: options.widgetShellCopy } : {}),
     ...(options.pluginViewBoundaryCopy
       ? { pluginViewBoundaryCopy: options.pluginViewBoundaryCopy }

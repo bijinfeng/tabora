@@ -38,13 +38,11 @@ export const styles = stylex.create({
     width: "100%",
   },
   greeting: {
-    alignItems: "flex-start",
     display: "flex",
-    flexWrap: "wrap",
+    flexDirection: "column",
     fontSize: 13,
     fontWeight: 600,
-    gap: 12,
-    justifyContent: "space-between",
+    gap: 6,
   },
   greetingTitle: {
     color: "rgb(var(--tbr-color-text))",
