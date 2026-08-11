@@ -3,6 +3,8 @@ import { IconButton } from "@tabora/ui/button"
 import { useLocation } from "@tanstack/solid-router"
 import { createMemo, Show } from "solid-js"
 import Moon from "lucide-solid/icons/moon"
+import PanelLeftClose from "lucide-solid/icons/panel-left-close"
+import PanelLeftOpen from "lucide-solid/icons/panel-left-open"
 import Sun from "lucide-solid/icons/sun"
 
 import type { ColorScheme } from "../theme/useTheme"
@@ -11,7 +13,9 @@ import { styles } from "./shell.styles"
 
 type AdminTopbarProps = {
   scheme: ColorScheme
+  sidebarCollapsed: boolean
   onToggleScheme: () => void
+  onToggleSidebar: () => void
 }
 
 function currentTitle(pathname: string): string {
@@ -27,7 +31,18 @@ export function AdminTopbar(props: AdminTopbarProps) {
 
   return (
     <header {...stylex.attrs(styles.topbar)}>
-      <span {...stylex.attrs(styles.topbarTitle)}>{title()}</span>
+      <div {...stylex.attrs(styles.topbarTitleGroup)}>
+        <IconButton
+          variant="ghost"
+          aria-label={props.sidebarCollapsed ? "展开侧边栏" : "收起侧边栏"}
+          onClick={props.onToggleSidebar}
+        >
+          <Show when={props.sidebarCollapsed} fallback={<PanelLeftClose size={18} />}>
+            <PanelLeftOpen size={18} />
+          </Show>
+        </IconButton>
+        <span {...stylex.attrs(styles.topbarTitle)}>{title()}</span>
+      </div>
       <div {...stylex.attrs(styles.topbarActions)}>
         <span {...stylex.attrs(styles.envBadge)}>self-hosted · 开发环境</span>
         <IconButton

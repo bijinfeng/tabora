@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import type { JSX } from "solid-js"
+import { createSignal, type JSX } from "solid-js"
 
 import { createThemeController } from "../theme/useTheme"
 import { AdminSidebar } from "./AdminSidebar"
@@ -18,12 +18,22 @@ type AdminShellProps = {
  */
 export function AdminShell(props: AdminShellProps) {
   const theme = createThemeController()
+  const [sidebarCollapsed, setSidebarCollapsed] = createSignal(false)
 
   return (
-    <div {...stylex.attrs(styles.root)}>
-      <AdminSidebar adminEmail={props.adminEmail} onSignOut={props.onSignOut} />
+    <div {...stylex.attrs(styles.root, sidebarCollapsed() && styles.rootCollapsed)}>
+      <AdminSidebar
+        adminEmail={props.adminEmail}
+        collapsed={sidebarCollapsed()}
+        onSignOut={props.onSignOut}
+      />
       <div {...stylex.attrs(styles.main)}>
-        <AdminTopbar scheme={theme.scheme()} onToggleScheme={theme.toggle} />
+        <AdminTopbar
+          scheme={theme.scheme()}
+          sidebarCollapsed={sidebarCollapsed()}
+          onToggleScheme={theme.toggle}
+          onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
+        />
         <main {...stylex.attrs(styles.content)}>{props.children}</main>
       </div>
     </div>

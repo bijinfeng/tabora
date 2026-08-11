@@ -10,6 +10,7 @@ import { styles } from "./shell.styles"
 
 type AdminSidebarProps = {
   adminEmail: string
+  collapsed: boolean
   onSignOut: () => void
 }
 
@@ -23,38 +24,48 @@ export function AdminSidebar(props: AdminSidebarProps) {
 
   return (
     <aside {...stylex.attrs(styles.sidebar)}>
-      <div {...stylex.attrs(styles.brand)}>
+      <div {...stylex.attrs(styles.brand, props.collapsed && styles.brandCollapsed)}>
         <span {...stylex.attrs(styles.brandMark)}>
           <LayoutGrid size={16} />
         </span>
-        <span {...stylex.attrs(styles.brandName)}>Tabora Admin</span>
+        <Show when={!props.collapsed}>
+          <span {...stylex.attrs(styles.brandName)}>Tabora Admin</span>
+        </Show>
       </div>
       <nav {...stylex.attrs(styles.nav)} aria-label="主导航">
         <For each={navItems}>
           {(item) => (
             <Link
               to={item.path as never}
+              aria-label={props.collapsed ? item.label : undefined}
               {...stylex.attrs(
                 styles.navItem,
+                props.collapsed && styles.navItemCollapsed,
                 isActive(location().pathname, item.path) && styles.navItemActive,
               )}
             >
               <item.icon size={18} />
-              <span>{item.label}</span>
+              <Show when={!props.collapsed}>
+                <span>{item.label}</span>
+              </Show>
             </Link>
           )}
         </For>
       </nav>
-      <div {...stylex.attrs(styles.sidebarFooter)}>
-        <div {...stylex.attrs(styles.footerIdentity)}>
-          <span {...stylex.attrs(styles.footerRole)}>运维者</span>
-          <Show
-            when={props.adminEmail}
-            fallback={<span {...stylex.attrs(styles.footerEmail)}>本地会话</span>}
-          >
-            <span {...stylex.attrs(styles.footerEmail)}>{props.adminEmail}</span>
-          </Show>
-        </div>
+      <div
+        {...stylex.attrs(styles.sidebarFooter, props.collapsed && styles.sidebarFooterCollapsed)}
+      >
+        <Show when={!props.collapsed}>
+          <div {...stylex.attrs(styles.footerIdentity)}>
+            <span {...stylex.attrs(styles.footerRole)}>运维者</span>
+            <Show
+              when={props.adminEmail}
+              fallback={<span {...stylex.attrs(styles.footerEmail)}>本地会话</span>}
+            >
+              <span {...stylex.attrs(styles.footerEmail)}>{props.adminEmail}</span>
+            </Show>
+          </div>
+        </Show>
         <IconButton variant="ghost" size="sm" aria-label="退出登录" onClick={props.onSignOut}>
           <LogOut size={16} />
         </IconButton>

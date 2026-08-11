@@ -10,7 +10,13 @@ export const styles = stylex.create({
     fontFamily: font.sans,
     gridTemplateColumns: "232px 1fr",
     height: "100vh",
+    transitionDuration: "var(--tbr-dur-normal)",
+    transitionProperty: "grid-template-columns",
+    transitionTimingFunction: "var(--tbr-ease)",
     width: "100%",
+  },
+  rootCollapsed: {
+    gridTemplateColumns: "64px 1fr",
   },
   sidebar: {
     backgroundColor: color.surface,
@@ -46,6 +52,10 @@ export const styles = stylex.create({
     fontSize: 14,
     fontWeight: font.semibold,
   },
+  brandCollapsed: {
+    justifyContent: "center",
+    paddingInline: space.s3,
+  },
   nav: {
     display: "flex",
     flex: 1,
@@ -80,6 +90,11 @@ export const styles = stylex.create({
     color: color.accent,
     fontWeight: font.semibold,
   },
+  navItemCollapsed: {
+    gap: 0,
+    justifyContent: "center",
+    paddingInline: 0,
+  },
   sidebarFooter: {
     alignItems: "center",
     borderTopColor: color.line,
@@ -108,6 +123,10 @@ export const styles = stylex.create({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
+  sidebarFooterCollapsed: {
+    justifyContent: "center",
+    paddingInline: space.s3,
+  },
   main: {
     display: "flex",
     flexDirection: "column",
@@ -130,6 +149,11 @@ export const styles = stylex.create({
   topbarTitle: {
     fontSize: 15,
     fontWeight: font.semibold,
+  },
+  topbarTitleGroup: {
+    alignItems: "center",
+    display: "flex",
+    gap: space.s2,
   },
   topbarActions: {
     alignItems: "center",

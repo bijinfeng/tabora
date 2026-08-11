@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/solid-query"
 import { QueryClientProvider } from "@tanstack/solid-query"
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/solid-router"
 import { HydrationScript } from "solid-js/web"
+import type { JSX } from "solid-js"
 
 import "@tabora/theme/global.css"
 import "@tabora/ui/styles.css"
@@ -23,25 +24,28 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     links: import.meta.env.DEV ? [{ rel: "stylesheet", href: "/virtual:stylex.css" }] : [],
     scripts: import.meta.env.DEV ? [{ type: "module", src: "/@id/virtual:stylex:runtime" }] : [],
   }),
+  shellComponent: RootDocument,
   component: RootComponent,
 })
 
-function RootComponent() {
+function RootDocument(props: { children: JSX.Element }) {
   return (
     <html lang="zh-CN">
       <head>
+        {/* Solid 1.9 的 hydration 引导脚本会直接写入 _$HY；先创建同名全局绑定以兼容严格执行上下文。 */}
+        <script>var _$HY = window._$HY;</script>
         <HydrationScript />
-        <HeadContent />
       </head>
       <body>
-        <RootDocument />
+        <HeadContent />
+        {props.children}
         <Scripts />
       </body>
     </html>
   )
 }
 
-function RootDocument() {
+function RootComponent() {
   const { queryClient } = Route.useRouteContext()()
   return (
     <QueryClientProvider client={queryClient}>
