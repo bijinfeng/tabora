@@ -853,6 +853,8 @@ export function SettingsHost(props: SettingsHostProps) {
       {...(props.copy?.sectionMeta ? { sectionMeta: props.copy.sectionMeta } : {})}
       onSectionChange={handleSectionChange}
       onKeyDown={handleKeyDown}
+      {...(props.onBack ? { onBack: props.onBack } : {})}
+      {...(props.copy?.backAriaLabel ? { backAriaLabel: props.copy.backAriaLabel } : {})}
     />
   )
 

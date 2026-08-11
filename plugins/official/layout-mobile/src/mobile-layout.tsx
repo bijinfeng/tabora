@@ -1,18 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
+import { createMemo, For, onCleanup, onMount, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { LayoutInstance, LayoutViewProps } from "@tabora/plugin-api/sdk"
-import {
-  dashboardLayoutStateKey,
-  normalizeDashboardLayoutState,
-  resolveSetterValue,
-} from "@tabora/layout-dashboard/state"
-import type {
-  ActiveGroupSetter,
-  DashboardLayoutState,
-  RailGroup,
-  RailGroupSetter,
-} from "@tabora/layout-dashboard/state"
+import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api/sdk"
 import { Button } from "@tabora/ui/button"
 import LayoutGrid from "lucide-solid/icons/layout-grid"
 import Plus from "lucide-solid/icons/plus"
@@ -28,59 +18,113 @@ export type LayoutI18n = {
 
 export type MobileLayoutProps = LayoutViewProps<JSX.Element> & { i18n?: LayoutI18n }
 
+const mobileGridCellVar = "--mobile-grid-cell"
+
+function countGridColumns(template: string): number {
+  const repeatMatch = template.match(/repeat\(\s*(\d+)\s*,/i)
+  if (repeatMatch?.[1]) return Number.parseInt(repeatMatch[1], 10)
+  return template.split(" ").filter(Boolean).length
+}
+
+export function syncMobileGridCellSize(grid: HTMLElement): void {
+  const computed = getComputedStyle(grid)
+  const columns = countGridColumns(computed.gridTemplateColumns)
+  if (columns < 2) {
+    grid.style.removeProperty(mobileGridCellVar)
+    return
+  }
+
+  const gap = Number.parseFloat(computed.columnGap) || 0
+  const inner =
+    grid.clientWidth -
+    (Number.parseFloat(computed.paddingLeft) || 0) -
+    (Number.parseFloat(computed.paddingRight) || 0)
+  const cell = (inner - gap * (columns - 1)) / columns
+
+  if (cell > 0) {
+    grid.style.setProperty(mobileGridCellVar, `${cell}px`)
+  }
+}
+
+// 计算每页可以容纳的网格单元数
+function calculatePageCapacity(containerHeight: number, cellSize: number, gap: number): number {
+  // 每页最多显示的行数
+  const maxRows = Math.floor((containerHeight + gap) / (cellSize + gap))
+  // 4列网格，每页容纳 4 * maxRows 个单元格
+  return 4 * maxRows
+}
+
+// 将 widget 实例按页分组
+function groupInstancesByPage(
+  instances: LayoutInstance[],
+  pageCapacity: number,
+): LayoutInstance[][] {
+  if (pageCapacity <= 0 || instances.length === 0) return [instances]
+
+  const pages: LayoutInstance[][] = []
+  let currentPage: LayoutInstance[] = []
+  let currentPageCells = 0
+
+  for (const instance of instances) {
+    // 跳过没有 size 的实例
+    if (!instance.size) continue
+
+    const colSpan = widgetGridColumnSpan(instance.size)
+    const rowSpan = widgetGridRowSpan(instance.size)
+    const cells = colSpan * rowSpan
+
+    // 如果当前页放不下，且当前页不为空，则开始新页
+    if (currentPageCells + cells > pageCapacity && currentPage.length > 0) {
+      pages.push(currentPage)
+      currentPage = []
+      currentPageCells = 0
+    }
+
+    currentPage.push(instance)
+    currentPageCells += cells
+  }
+
+  // 添加最后一页
+  if (currentPage.length > 0) {
+    pages.push(currentPage)
+  }
+
+  return pages.length > 0 ? pages : [[]]
+}
+
 export function MobileLayout(props: MobileLayoutProps) {
+  let gridRef: HTMLDivElement | undefined
   const i18n = () => props.i18n
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
   const locale = () => i18n()?.locale() ?? "zh-CN"
 
   const addWidgetAction = () =>
     props.host.getGlobalActions("menu").find((action) => action.id === "add-widget")
-  const homeAction = () =>
-    props.host.getGlobalActions("rail").find((action) => action.id === "home")
-  const defaultGroup = (): RailGroup => ({
-    id: "default",
-    name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
-    icon: "circle-dot",
-    isDefault: true,
-    widgets: [],
-  })
-  const initialState = normalizeDashboardLayoutState(
-    props.host.readLayoutState<DashboardLayoutState>(dashboardLayoutStateKey),
-    defaultGroup(),
-  )
-  const [groups, setGroups] = createSignal<RailGroup[]>(initialState.groups)
-  const [activeGroupId, setActiveGroupId] = createSignal(initialState.activeGroupId)
-  const persistState = (nextGroups: RailGroup[], nextActiveGroupId: string) => {
-    props.host.writeLayoutState(dashboardLayoutStateKey, {
-      groups: nextGroups,
-      activeGroupId: nextActiveGroupId,
-    } satisfies DashboardLayoutState)
-  }
-  const setPersistedGroups: RailGroupSetter = (value) => {
-    const next = resolveSetterValue(groups(), value)
-    setGroups(next)
-    persistState(next, activeGroupId())
-    return next
-  }
-  const setPersistedActiveGroupId: ActiveGroupSetter = (value) => {
-    const next = resolveSetterValue(activeGroupId(), value)
-    setActiveGroupId(next)
-    persistState(groups(), next)
-    return next
-  }
 
-  const activeGroup = createMemo(
-    () => groups().find((group) => group.id === activeGroupId()) ?? groups()[0] ?? defaultGroup(),
-  )
-
-  const widgetInstances = createMemo<LayoutInstance[]>(() => {
+  // 获取所有 widget 实例（不再按分组过滤）
+  const widgetInstances = (): LayoutInstance[] => {
     const mainGrid = props.regions["mainGrid"]?.instances ?? []
     const focus = props.regions["focus"]?.instances ?? []
-    const combined = [...mainGrid, ...focus]
-    const group = activeGroup()
-    if (group.isDefault) return combined
-    const allowed = new Set(group.widgets)
-    return combined.filter((instance) => allowed.has(instance.id))
+    return [...mainGrid, ...focus]
+  }
+
+  // 计算分页
+  const pages = createMemo(() => {
+    const instances = widgetInstances()
+    if (instances.length === 0) return [[]]
+
+    // 如果 gridRef 还没有初始化，暂时返回所有实例在一页
+    if (!gridRef) return [instances]
+
+    const cellSize = Number.parseFloat(gridRef.style.getPropertyValue(mobileGridCellVar) || "80")
+    // 容器高度减去 header、搜索栏、padding 和底部栏
+    const containerHeight = window.innerHeight - 180
+    const pageCapacity = calculatePageCapacity(containerHeight, cellSize, 12)
+
+    // 如果计算的容量无效，返回所有实例在一页
+    if (pageCapacity <= 0) return [instances]
+
+    return groupInstancesByPage(instances, pageCapacity)
   })
 
   const renderWidget = (instance: LayoutInstance) => {
@@ -88,151 +132,109 @@ export function MobileLayout(props: MobileLayoutProps) {
     return region?.renderInstance(instance) ?? null
   }
 
-  const openAddWidgetForActiveGroup = () => {
-    const group = activeGroup()
-    props.host.openAddWidget({
-      activeGroupLabel: group.name,
-      onAdded: (instance) => {
-        if (group.isDefault) return
-        setPersistedGroups((items) =>
-          items.map((item) =>
-            item.id === group.id && !item.widgets.includes(instance.id)
-              ? { ...item, widgets: [...item.widgets, instance.id] }
-              : item,
-          ),
-        )
-      },
-    })
-  }
-
-  // 水平滑动切换分组
-  let contentRef: HTMLElement | undefined
-  let swipeStartX = 0
-  let swipeStartY = 0
-  let swipeStartTime = 0
-
-  const handlePointerDown = (event: PointerEvent) => {
-    swipeStartX = event.clientX
-    swipeStartY = event.clientY
-    swipeStartTime = Date.now()
-  }
-
-  const handlePointerUp = (event: PointerEvent) => {
-    const deltaX = event.clientX - swipeStartX
-    const deltaY = event.clientY - swipeStartY
-    const deltaTime = Date.now() - swipeStartTime
-
-    // 水平滑动距离大于垂直、时间不超过 500ms、水平距离超过 80px 才触发
-    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 500 && Math.abs(deltaX) > 80) {
-      const currentGroups = groups()
-      const currentIndex = currentGroups.findIndex((g) => g.id === activeGroupId())
-      if (currentIndex === -1) return
-
-      let nextIndex: number
-      if (deltaX > 0) {
-        // 向右滑动，切换到上一个分组
-        nextIndex = currentIndex === 0 ? currentGroups.length - 1 : currentIndex - 1
-      } else {
-        // 向左滑动，切换到下一个分组
-        nextIndex = currentIndex === currentGroups.length - 1 ? 0 : currentIndex + 1
-      }
-
-      const nextGroup = currentGroups[nextIndex]
-      if (nextGroup) {
-        setPersistedActiveGroupId(nextGroup.id)
-        if (nextGroup.id === "default") homeAction()?.run()
-        props.host.showToast(`已切换到「${nextGroup.name}」`, { type: "success" })
-      }
-    }
+  const openAddWidget = () => {
+    props.host.openAddWidget()
   }
 
   onMount(() => {
-    if (contentRef) {
-      contentRef.addEventListener("pointerdown", handlePointerDown)
-      contentRef.addEventListener("pointerup", handlePointerUp)
-      onCleanup(() => {
-        contentRef?.removeEventListener("pointerdown", handlePointerDown)
-        contentRef?.removeEventListener("pointerup", handlePointerUp)
-      })
+    // 同步网格单元格尺寸
+    const sync = () => {
+      if (gridRef) syncMobileGridCellSize(gridRef)
     }
+    sync()
+
+    const ResizeObserverConstructor = window.ResizeObserver
+    const observer = ResizeObserverConstructor ? new ResizeObserverConstructor(sync) : undefined
+    if (gridRef) observer?.observe(gridRef)
+    window.addEventListener("resize", sync)
+
+    onCleanup(() => {
+      observer?.disconnect()
+      window.removeEventListener("resize", sync)
+    })
   })
 
   return (
     <main {...stylex.attrs(styles.layout)} data-layout="mobile">
-      <section
-        {...stylex.attrs(styles.content)}
-        ref={(el) => {
-          contentRef = el
-        }}
-      >
-        <header {...stylex.attrs(styles.greeting)} data-mobile-greeting>
-          <div {...stylex.attrs(styles.greetingTitle)}>
-            {greeting(t)} <span {...stylex.attrs(styles.muted)}>· {dateLabel(locale())}</span>
-          </div>
-          <div {...stylex.attrs(styles.greetingActions)}>
-            <Show when={addWidgetAction()}>
-              <Button
-                size="sm"
-                variant="secondary"
-                xstyle={styles.toolbarButton}
-                onClick={openAddWidgetForActiveGroup}
-              >
-                <Plus size={12} aria-hidden="true" />
-                <span>{t("actions.addWidget")}</span>
-              </Button>
-            </Show>
-          </div>
-        </header>
-        <div {...stylex.attrs(styles.searchStage)}>
-          <Show when={props.regions["topbar"]}>
-            <div {...stylex.attrs(styles.searchInner)}>{props.regions["topbar"]!.render()}</div>
-          </Show>
-        </div>
-        <section {...stylex.attrs(styles.grid)}>
-          <div {...stylex.attrs(styles.gridContainer)} data-layout-grid>
-            <Show
-              when={widgetInstances().length > 0}
-              fallback={
-                <Button
-                  size="md"
-                  variant="ghost"
-                  xstyle={styles.emptyGroup}
-                  onClick={openAddWidgetForActiveGroup}
-                >
-                  <div {...stylex.attrs(styles.emptyIcon)}>
-                    <LayoutGrid size={32} />
+      <div {...stylex.attrs(styles.scrollContainer)}>
+        <For each={pages()}>
+          {(pageInstances, pageIndex) => (
+            <div {...stylex.attrs(styles.page)}>
+              <section {...stylex.attrs(styles.content)}>
+                <Show when={pageIndex() === 0}>
+                  <header {...stylex.attrs(styles.greeting)} data-mobile-greeting>
+                    <div {...stylex.attrs(styles.greetingTitle)}>
+                      {greeting(t)}{" "}
+                      <span {...stylex.attrs(styles.muted)}>· {dateLabel(locale())}</span>
+                    </div>
+                    <div {...stylex.attrs(styles.greetingActions)}>
+                      <Show when={addWidgetAction()}>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          xstyle={styles.toolbarButton}
+                          onClick={openAddWidget}
+                        >
+                          <Plus size={12} aria-hidden="true" />
+                          <span>{t("actions.addWidget")}</span>
+                        </Button>
+                      </Show>
+                    </div>
+                  </header>
+                  <div {...stylex.attrs(styles.searchStage)}>
+                    <Show when={props.regions["topbar"]}>
+                      <div {...stylex.attrs(styles.searchInner)}>
+                        {props.regions["topbar"]!.render()}
+                      </div>
+                    </Show>
                   </div>
-                  <div {...stylex.attrs(styles.emptyText)}>暂无卡片</div>
-                  <div {...stylex.attrs(styles.emptyHint)}>{t("grid.empty")}</div>
-                </Button>
-              }
-            >
-              <For each={widgetInstances()}>{(instance) => renderWidget(instance)}</For>
-            </Show>
-          </div>
-        </section>
-      </section>
-      <Show when={groups().length > 1}>
-        <div {...stylex.attrs(styles.pageIndicator)} aria-label="分组指示器">
-          <For each={groups()}>
-            {(group) => (
-              <div
-                {...stylex.attrs(
-                  styles.pageIndicatorDot,
-                  group.id === activeGroupId() && styles.pageIndicatorDotActive,
-                )}
-                aria-label={group.name}
-                aria-current={group.id === activeGroupId() ? "true" : undefined}
-              />
+                </Show>
+                <section {...stylex.attrs(styles.grid)}>
+                  <div
+                    {...stylex.attrs(styles.gridContainer)}
+                    data-layout-grid
+                    ref={(el) => {
+                      if (pageIndex() === 0) gridRef = el
+                    }}
+                  >
+                    <Show
+                      when={pageInstances.length > 0}
+                      fallback={
+                        <Show when={pageIndex() === 0}>
+                          <Button
+                            size="md"
+                            variant="ghost"
+                            xstyle={styles.emptyGroup}
+                            onClick={openAddWidget}
+                          >
+                            <div {...stylex.attrs(styles.emptyIcon)}>
+                              <LayoutGrid size={32} />
+                            </div>
+                            <div {...stylex.attrs(styles.emptyText)}>暂无卡片</div>
+                            <div {...stylex.attrs(styles.emptyHint)}>{t("grid.empty")}</div>
+                          </Button>
+                        </Show>
+                      }
+                    >
+                      <For each={pageInstances}>{(instance) => renderWidget(instance)}</For>
+                    </Show>
+                  </div>
+                </section>
+              </section>
+            </div>
+          )}
+        </For>
+      </div>
+      <Show when={pages().length > 1}>
+        <div {...stylex.attrs(styles.pageIndicator)} aria-label="页面指示器">
+          <For each={pages()}>
+            {(_, index) => (
+              <div {...stylex.attrs(styles.pageIndicatorDot)} aria-label={`第 ${index() + 1} 页`} />
             )}
           </For>
         </div>
       </Show>
-      <MobileBottomBar
-        host={props.host}
-        setGroups={setPersistedGroups}
-        onGroupCreated={setPersistedActiveGroupId}
-      />
+      <MobileBottomBar host={props.host} />
     </main>
   )
 }
