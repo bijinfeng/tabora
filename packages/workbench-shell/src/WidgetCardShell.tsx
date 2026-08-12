@@ -103,7 +103,7 @@ const styles = stylex.create({
       borderColor: color.lineStrong,
     },
     "@media (max-width: 768px)": {
-      height: "auto",
+      height: "var(--widget-narrow-card-height, auto)",
       minHeight: 0,
     },
   },
@@ -251,6 +251,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
         ? {
             "--widget-narrow-col": `span ${gridColumnSpan(props.currentSize)}`,
             "--widget-narrow-row": `span ${gridRowSpan(props.currentSize)}`,
+            "--widget-narrow-card-height": "100%",
             "--widget-narrow-min-height": "0px",
           }
         : {}),

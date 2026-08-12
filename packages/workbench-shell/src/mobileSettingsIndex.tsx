@@ -3,9 +3,7 @@ import { createMemo, createSignal, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import type { SettingsSectionId } from "@tabora/plugin-api"
 import { Input } from "@tabora/ui/input"
-import { IconButton } from "@tabora/ui/button"
 import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
-import ArrowLeft from "lucide-solid/icons/arrow-left"
 import ChevronRight from "lucide-solid/icons/chevron-right"
 import Info from "lucide-solid/icons/info"
 import Mic from "lucide-solid/icons/mic"
@@ -16,6 +14,7 @@ import Search from "lucide-solid/icons/search"
 import Settings from "lucide-solid/icons/settings"
 import Sparkles from "lucide-solid/icons/sparkles"
 import UserRound from "lucide-solid/icons/user-round"
+import { MobileSettingsHeader } from "./MobileSettingsHeader"
 
 export type MobileSettingsIndexProps = {
   title: string
@@ -25,7 +24,7 @@ export type MobileSettingsIndexProps = {
   sectionMeta?: (sectionId: SettingsSectionId) => string
   onSectionChange: (sectionId: SettingsSectionId) => void
   onKeyDown: (event: KeyboardEvent) => void
-  onBack?: () => void
+  onClose: () => void
   backAriaLabel?: string
 }
 
@@ -59,21 +58,6 @@ const styles = stylex.create({
     overflow: "hidden",
     width: "100%",
   },
-  header: {
-    alignItems: "center",
-    display: "flex",
-    flex: "0 0 auto",
-    gap: 12,
-    paddingBottom: 8,
-    paddingLeft: 12,
-    paddingRight: 16,
-    paddingTop: "calc(6px + env(safe-area-inset-top))",
-  },
-  backButton: {
-    flexShrink: 0,
-    height: 44,
-    width: 44,
-  },
   scroll: {
     boxSizing: "border-box",
     display: "flex",
@@ -87,15 +71,6 @@ const styles = stylex.create({
     paddingLeft: 16,
     paddingRight: 16,
     paddingTop: 16,
-  },
-  title: {
-    color: color.text,
-    fontSize: 32,
-    fontWeight: font.bold,
-    letterSpacing: "-0.03em",
-    lineHeight: 1.2,
-    margin: 0,
-    paddingLeft: 4,
   },
   search: {
     width: "100%",
@@ -282,21 +257,12 @@ export function MobileSettingsIndex(props: MobileSettingsIndexProps) {
       onKeyDown={props.onKeyDown}
       aria-label={props.title}
     >
-      <Show when={props.onBack}>
-        <header {...stylex.attrs(styles.header)}>
-          <IconButton
-            size="md"
-            xstyle={styles.backButton}
-            data-settings-index-back
-            onClick={() => props.onBack?.()}
-            aria-label={props.backAriaLabel ?? "返回"}
-          >
-            <ArrowLeft size={20} />
-          </IconButton>
-        </header>
-      </Show>
+      <MobileSettingsHeader
+        title={props.title}
+        onBack={props.onClose}
+        backAriaLabel={props.backAriaLabel ?? "返回"}
+      />
       <div {...stylex.attrs(styles.scroll)}>
-        <h1 {...stylex.attrs(styles.title)}>{props.title}</h1>
         <Input
           value={query()}
           onInput={setQuery}

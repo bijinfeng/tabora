@@ -24,7 +24,7 @@ import { InlineError } from "@tabora/ui/inline-error"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 import { SettingsSchemaRenderer } from "./SettingsSchemaRenderer"
 import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
-import ArrowLeft from "lucide-solid/icons/arrow-left"
+import { MobileSettingsHeader } from "./MobileSettingsHeader"
 import { MobileSettingsIndex } from "./mobileSettingsIndex"
 
 type PluginLike = { manifest: Pick<PluginManifest, "id" | "contributes"> }
@@ -178,13 +178,6 @@ const styles = stylex.create({
     paddingBlock: 10,
     paddingInline: 12,
   },
-  headerMobile: {
-    backgroundColor: color.surface,
-    paddingBottom: 8,
-    paddingLeft: 12,
-    paddingRight: 12,
-    paddingTop: "calc(6px + env(safe-area-inset-top))",
-  },
   title: {
     alignItems: "center",
     display: "flex",
@@ -249,11 +242,6 @@ const styles = stylex.create({
       outlineStyle: "solid",
       outlineWidth: 2,
     },
-  },
-  mobileBack: {
-    flexShrink: 0,
-    height: 44,
-    width: 44,
   },
   body: {
     backgroundColor: color.surface,
@@ -607,54 +595,44 @@ export function SettingsHost(props: SettingsHostProps) {
       data-settings-window
       onClick={(e) => e.stopPropagation()}
     >
-      <header
-        {...stylex.attrs(styles.header, props.surface === "mobile" ? styles.headerMobile : null)}
-      >
-        <Show when={props.surface === "mobile"}>
-          <IconButton
-            size="md"
-            xstyle={styles.mobileBack}
-            data-settings-back
-            onClick={handleBack}
-            ref={(el) => (closeButtonRef = el)}
-            aria-label={props.copy?.backAriaLabel ?? "返回工作台"}
-          >
-            <ArrowLeft size={20} />
-          </IconButton>
-        </Show>
-        <div {...stylex.attrs(styles.title)}>
-          <Show when={props.surface === "desktop"}>
-            <div {...stylex.attrs(styles.titleIcon)}>
-              <Settings size={14} />
+      <Show
+        when={props.surface === "mobile"}
+        fallback={
+          <header {...stylex.attrs(styles.header)}>
+            <div {...stylex.attrs(styles.title)}>
+              <div {...stylex.attrs(styles.titleIcon)}>
+                <Settings size={14} />
+              </div>
+              <div {...stylex.attrs(styles.titleCopy)}>
+                <strong {...stylex.attrs(styles.titleStrong)}>
+                  {props.copy?.sidebarTitle ?? "设置"}
+                </strong>
+                <span {...stylex.attrs(styles.titleMeta)}>
+                  {props.copy?.windowSubtitle ??
+                    "个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件"}
+                </span>
+              </div>
             </div>
-          </Show>
-          <div {...stylex.attrs(styles.titleCopy)}>
-            <strong {...stylex.attrs(styles.titleStrong)}>
-              {props.surface === "mobile"
-                ? activeSectionTitle()
-                : (props.copy?.sidebarTitle ?? "设置")}
-            </strong>
-            <span {...stylex.attrs(styles.titleMeta)}>
-              {props.surface === "mobile"
-                ? (props.copy?.sidebarTitle ?? "设置")
-                : (props.copy?.windowSubtitle ??
-                  "个人工作台配置 · 账号、布局、外观、搜索、AI、同步与插件")}
-            </span>
-          </div>
-        </div>
-        <Show when={props.surface === "desktop"}>
-          <IconButton
-            size="sm"
-            xstyle={styles.close}
-            data-settings-close
-            onClick={handleClose}
-            ref={(el) => (closeButtonRef = el)}
-            aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
-          >
-            <X size={16} />
-          </IconButton>
-        </Show>
-      </header>
+            <IconButton
+              size="sm"
+              xstyle={styles.close}
+              data-settings-close
+              onClick={handleClose}
+              ref={(el) => (closeButtonRef = el)}
+              aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
+            >
+              <X size={16} />
+            </IconButton>
+          </header>
+        }
+      >
+        <MobileSettingsHeader
+          title={activeSectionTitle()}
+          onBack={handleBack}
+          backButtonRef={(el) => (closeButtonRef = el)}
+          backAriaLabel={props.copy?.backAriaLabel ?? "返回工作台"}
+        />
+      </Show>
       <div {...stylex.attrs(styles.body, props.surface === "mobile" ? styles.bodyMobile : null)}>
         <Show when={props.surface === "desktop"}>
           <nav
@@ -853,7 +831,7 @@ export function SettingsHost(props: SettingsHostProps) {
       {...(props.copy?.sectionMeta ? { sectionMeta: props.copy.sectionMeta } : {})}
       onSectionChange={handleSectionChange}
       onKeyDown={handleKeyDown}
-      {...(props.onBack ? { onBack: props.onBack } : {})}
+      onClose={handleClose}
       {...(props.copy?.backAriaLabel ? { backAriaLabel: props.copy.backAriaLabel } : {})}
     />
   )

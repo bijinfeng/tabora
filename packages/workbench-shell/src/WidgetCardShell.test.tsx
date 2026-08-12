@@ -88,6 +88,17 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
+  it("移动端网格保留卡片真实跨度并填满网格单元", () => {
+    const { host, dispose } = mount(makeCallbacks(), { mobileGrid: true })
+    const card = host.querySelector("[data-widget-instance-id='w1']") as HTMLElement
+
+    expect(card.style.getPropertyValue("--widget-narrow-col")).toBe("span 2")
+    expect(card.style.getPropertyValue("--widget-narrow-row")).toBe("span 1")
+    expect(card.style.getPropertyValue("--widget-narrow-card-height")).toBe("100%")
+    expect(card.style.getPropertyValue("--widget-narrow-min-height")).toBe("0px")
+    dispose()
+  })
+
   it("标题栏不渲染尺寸切换按钮", () => {
     const { host, dispose } = mount(makeCallbacks())
     expect(host.querySelector("button.widget-size-btn")).toBeFalsy()

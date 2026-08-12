@@ -316,6 +316,9 @@ describe("settings host composition", () => {
     expect(root.querySelector("[data-settings-window]")).toBeTruthy()
     expect(root.querySelector("[data-settings-nav]")).toBeNull()
     expect(root.querySelector('[data-active-view="appearance"]')).toBeTruthy()
+    expect(root.querySelector("[data-settings-mobile-header] [data-settings-back]")).toBeTruthy()
+    expect(root.querySelector("[data-settings-mobile-title]")?.tagName).toBe("H1")
+    expect(root.querySelector("[data-settings-mobile-title]")?.textContent).toBe("外观")
     expect(root.querySelector("[data-settings-back]")?.getAttribute("aria-label")).toBe(
       "返回工作台",
     )
@@ -336,6 +339,7 @@ describe("settings host composition", () => {
 
   it("renders the mobile settings index as grouped menu cards", () => {
     const onSectionChange = vi.fn()
+    const onClose = vi.fn()
     const root = mount(() =>
       createComponent(SettingsHost, {
         open: true,
@@ -353,7 +357,7 @@ describe("settings host composition", () => {
         ],
         activeSectionId: "general",
         onSectionChange,
-        onClose: vi.fn(),
+        onClose,
         getView: () => undefined,
         getSettingsProvider: () => undefined,
         panelProps: () => ({}) as never,
@@ -361,7 +365,8 @@ describe("settings host composition", () => {
     )
 
     expect(root.querySelector("[data-settings-index]")).toBeTruthy()
-    expect(root.querySelector("[data-settings-index] h1")?.textContent).toBe("设置")
+    expect(root.querySelector("[data-settings-mobile-header] [data-settings-back]")).toBeTruthy()
+    expect(root.querySelector("[data-settings-mobile-title]")?.textContent).toBe("设置")
     expect(root.querySelector("[data-settings-index-search]")).toBeTruthy()
     expect(root.querySelector("[data-settings-window]")).toBeNull()
     expect(root.querySelector("[data-settings-nav]")).toBeNull()
@@ -371,6 +376,9 @@ describe("settings host composition", () => {
 
     root.querySelector<HTMLButtonElement>('[data-settings-index-item="appearance"]')?.click()
     expect(onSectionChange).toHaveBeenCalledWith("appearance")
+
+    root.querySelector<HTMLButtonElement>("[data-settings-back]")?.click()
+    expect(onClose).toHaveBeenCalledOnce()
   })
 
   it("renders prototype grouped settings navigation", () => {
