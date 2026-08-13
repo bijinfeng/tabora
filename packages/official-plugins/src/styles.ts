@@ -342,13 +342,6 @@ export const styles = stylex.create({
       outlineOffset: 2,
     },
   },
-  stepper: {
-    ...interactiveSurface,
-    alignItems: "center",
-    display: "inline-flex",
-    height: 30,
-    overflow: "hidden",
-  },
   keybind: {
     ...interactiveSurface,
     alignItems: "center",
@@ -372,6 +365,11 @@ export const styles = stylex.create({
     },
   },
   wideInlineActions: {
+    alignItems: "center",
+    display: "inline-grid",
+    gap: 7,
+    gridTemplateColumns: "minmax(0, 1fr) auto",
+    minWidth: 0,
     width: {
       default: 244,
       [mobile]: "100%",

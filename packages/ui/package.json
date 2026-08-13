@@ -32,6 +32,7 @@
     "./select": "./src/select.ts",
     "./skeleton": "./src/skeleton.ts",
     "./slider": "./src/slider.ts",
+    "./stepper": "./src/stepper.ts",
     "./steps": "./src/steps.ts",
     "./styles.css": "./src/styles.css",
     "./switch": "./src/switch.ts",
@@ -72,6 +73,7 @@
       "./select": "./dist/select.js",
       "./skeleton": "./dist/skeleton.js",
       "./slider": "./dist/slider.js",
+      "./stepper": "./dist/stepper.js",
       "./steps": "./dist/steps.js",
       "./styles.css": "./dist/styles.css",
       "./switch": "./dist/switch.js",
@@ -83,7 +85,7 @@
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts src/component-docs/index.ts src/component-docs/renderers.tsx src/badge.ts src/button.ts src/checkbox.ts src/collapsible.ts src/command-palette.ts src/command-result-list.ts src/context-menu.ts src/date-picker.ts src/dropdown-menu.ts src/empty-state.ts src/field.ts src/field-row.ts src/form.ts src/hover-card.ts src/inline-error.ts src/input.ts src/kbd.ts src/list-row.ts src/menubar.ts src/pagination.ts src/scroll-area.ts src/segmented-control.ts src/select.ts src/skeleton.ts src/slider.ts src/steps.ts src/switch.ts src/table.ts src/tabs.ts src/textarea.ts src/toast.ts src/tree-view.ts",
+    "build": "vp pack src/index.ts src/component-docs/index.ts src/component-docs/renderers.tsx src/badge.ts src/button.ts src/checkbox.ts src/collapsible.ts src/command-palette.ts src/command-result-list.ts src/context-menu.ts src/date-picker.ts src/dropdown-menu.ts src/empty-state.ts src/field.ts src/field-row.ts src/form.ts src/hover-card.ts src/inline-error.ts src/input.ts src/kbd.ts src/list-row.ts src/menubar.ts src/pagination.ts src/scroll-area.ts src/segmented-control.ts src/select.ts src/skeleton.ts src/slider.ts src/stepper.ts src/steps.ts src/switch.ts src/table.ts src/tabs.ts src/textarea.ts src/toast.ts src/tree-view.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

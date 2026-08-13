@@ -5,6 +5,9 @@ export type { XStyle } from "./stylex"
 export { Button, IconButton } from "./styled/button"
 export type { ButtonProps, IconButtonProps, ButtonVariant, ButtonSize } from "./styled/button"
 
+export { Stepper } from "./styled/stepper"
+export type { StepperProps } from "./styled/stepper"
+
 export { Input } from "./styled/input"
 export type { InputAppearance, InputProps, InputSize, InputType } from "./styled/input"
 

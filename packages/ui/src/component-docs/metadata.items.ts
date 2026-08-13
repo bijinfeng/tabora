@@ -22,6 +22,14 @@ export const componentDocItems: ComponentDocItem[] = [
     code: `<IconButton aria-label="添加"><Plus size={16} strokeWidth={2} /></IconButton>`,
   },
   {
+    id: "stepper",
+    name: "Stepper",
+    title: "Stepper 数值步进器",
+    purpose: "在明确范围内递增或递减一个数值。",
+    usage: "列数、数量、密度等离散数值设置；边界值自动禁用对应操作。",
+    code: `<Stepper value={columns()} min={3} max={6} onChange={setColumns} aria-label="卡片列数" />`,
+  },
+  {
     id: "input",
     name: "Input",
     title: "Input 输入框",

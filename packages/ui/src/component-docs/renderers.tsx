@@ -77,6 +77,8 @@ export const componentDocDemoLoaders: Record<string, ComponentDocDemoLoader> = {
     })),
   iconbutton: () =>
     import("../styled/button/button.demo").then((module) => ({ default: module.IconButtonDemo })),
+  stepper: () =>
+    import("../styled/stepper/stepper.demo").then((module) => ({ default: module.StepperDemo })),
   inlineerror: () =>
     import("../styled/inlineError/inlineError.demo").then((module) => ({
       default: module.InlineErrorDemo,

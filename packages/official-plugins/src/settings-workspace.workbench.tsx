@@ -5,6 +5,7 @@ import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Kbd } from "@tabora/ui/kbd"
 import { Select } from "@tabora/ui/select"
+import { Stepper } from "@tabora/ui/stepper"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For, Show } from "solid-js"
 import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
@@ -100,9 +101,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
       label: layoutShortLabel(layout),
     }))
   const widgetInstanceCount = () => workspace().regionCount
-  const stepColumns = (delta: number) =>
-    setDefaultColumns((value) => Math.min(6, Math.max(3, value + delta)))
-
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="workbench">
       <SettingsGroup title="工作区" meta="本地保存">
@@ -138,25 +136,15 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           label="默认卡片列数"
           description="Dashboard 首次打开时使用的网格密度"
           trailing={
-            <div {...stylex.attrs(styles.stepper)} aria-label="默认卡片列数">
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label="减少默认卡片列数"
-                onClick={() => stepColumns(-1)}
-              >
-                -
-              </Button>
-              <strong>{defaultColumns()}</strong>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label="增加默认卡片列数"
-                onClick={() => stepColumns(1)}
-              >
-                +
-              </Button>
-            </div>
+            <Stepper
+              value={defaultColumns()}
+              min={3}
+              max={6}
+              onChange={setDefaultColumns}
+              aria-label="默认卡片列数"
+              decrementAriaLabel="减少默认卡片列数"
+              incrementAriaLabel="增加默认卡片列数"
+            />
           }
         />
       </SettingsGroup>

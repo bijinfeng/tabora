@@ -495,6 +495,7 @@ describe("WorkbenchSettingsPanel", () => {
     expect(deleteWorkspace).toHaveBeenCalledWith("workspace-2")
 
     const input = root.querySelector("#ws-new-name") as HTMLInputElement
+    expect(input.nextElementSibling?.textContent).toContain("创建")
     input.value = "  New Space  "
     input.dispatchEvent(new InputEvent("input", { bubbles: true, data: "New Space" }))
     buttonByText(root, "创建").click()
