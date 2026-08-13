@@ -11,7 +11,7 @@ import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-a
 import { contributionRefKey } from "@tabora/plugin-api/sdk"
 
 import { CheckChipList, ContributionSegmented, SettingsGroup } from "./settings-workspace.shared"
-import { className, styles } from "./styles"
+import { styles } from "./styles"
 
 export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
   const [importError, setImportError] = createSignal<string | null>(null)
@@ -107,7 +107,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="workbench">
       <SettingsGroup title="工作区" meta="本地保存">
         <FieldRow
-          class={className(styles.fieldRow)}
           label="当前工作区"
           description={`${workspace().name} · 保存布局、卡片和背景配置`}
           trailing={
@@ -122,7 +121,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="默认布局"
           description="切换新标签页打开时使用的布局插件"
           trailing={
@@ -137,7 +135,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="默认卡片列数"
           description="Dashboard 首次打开时使用的网格密度"
           trailing={
@@ -166,7 +163,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
 
       <SettingsGroup title="启动行为" meta="快捷入口">
         <FieldRow
-          class={className(styles.fieldRow)}
           label="打开时聚焦搜索"
           description="新标签页加载后自动把焦点放到命令搜索框"
           trailing={
@@ -179,7 +175,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="保留上次卡片尺寸"
           description="刷新后恢复每张卡片的 S / M / L 状态"
           trailing={
@@ -192,7 +187,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="全局命令快捷键"
           description="从任意输入状态唤起命令搜索"
           trailing={
@@ -203,7 +197,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="启动后恢复"
           description="选择刷新后要自动恢复的个人状态"
           trailing={
@@ -221,7 +214,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
 
       <SettingsGroup title="工作区管理" meta="导入导出">
         <FieldRow
-          class={className(styles.fieldRow)}
           label="新建工作区"
           description="创建独立的布局、主题和卡片配置"
           trailing={
@@ -247,13 +239,11 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="卡片状态"
           description="按实例保存卡片排序、尺寸和所在区域"
           trailing={<span {...stylex.attrs(styles.rowMeta)}>{widgetInstanceCount()} 个实例</span>}
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="备份与恢复"
           description="导出当前工作区 JSON，或从本地文件导入"
           trailing={

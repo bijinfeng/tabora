@@ -33,4 +33,20 @@ describe("Field", () => {
     const err = root.querySelector("[role='alert']")!
     expect(err.textContent).toBe("必填")
   })
+
+  it("supports an inline layout while preserving field semantics", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Field label="邮箱" layout="inline" htmlFor="inline-email">
+          <input id="inline-email" />
+        </Field>
+      ),
+      root,
+    )
+
+    expect(root.firstElementChild?.getAttribute("data-layout")).toBe("inline")
+    expect(root.querySelector("label")?.htmlFor).toBe("inline-email")
+  })
 })

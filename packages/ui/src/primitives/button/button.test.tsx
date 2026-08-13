@@ -79,6 +79,26 @@ describe("Button", () => {
     expect(btn.getAttribute("data-size")).toBe("sm")
   })
 
+  it("supports link actions without changing button semantics", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const onClick = vi.fn()
+    render(
+      () => (
+        <Button variant="link" size="sm" onClick={onClick}>
+          忘记密码？
+        </Button>
+      ),
+      root,
+    )
+
+    const button = root.querySelector("button")!
+    expect(button.getAttribute("data-variant")).toBe("link")
+    expect(button.textContent).toBe("忘记密码？")
+    button.click()
+    expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
   it("composes caller-provided xstyle", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

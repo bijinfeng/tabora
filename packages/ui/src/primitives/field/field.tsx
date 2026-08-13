@@ -6,6 +6,7 @@ export type FieldProps = {
   helper?: JSX.Element | undefined
   error?: JSX.Element | undefined
   required?: boolean | undefined
+  layout?: "stack" | "inline"
   htmlFor?: string | undefined
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
@@ -22,7 +23,7 @@ export type FieldProps = {
 
 export function Field(props: FieldProps) {
   return (
-    <div class={props.class} style={props.style}>
+    <div class={props.class} style={props.style} data-layout={props.layout ?? "stack"}>
       <label class={props.labelClass} style={props.labelStyle} for={props.htmlFor}>
         {props.label}
         <Show when={props.required}>

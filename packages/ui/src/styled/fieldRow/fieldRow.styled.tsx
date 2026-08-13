@@ -1,18 +1,29 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 
-import { color, font } from "@tabora/theme/tokens.stylex"
+import { color, font, radius } from "@tabora/theme/tokens.stylex"
 import { FieldRow as Primitive } from "../../primitives/fieldRow/fieldRow"
 import type { FieldRowProps } from "../../primitives/fieldRow/fieldRow"
 import { joinClassNames } from "../../stylex"
 
 const styles = stylex.create({
   root: {
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
     display: "flex",
     flexDirection: "column",
     gap: 6,
-    paddingBlock: 8,
-    paddingInline: 0,
+    minHeight: 42,
+    minWidth: 0,
+    paddingBlock: 9,
+    paddingInline: 10,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
+    },
   },
   main: {
     alignItems: "center",

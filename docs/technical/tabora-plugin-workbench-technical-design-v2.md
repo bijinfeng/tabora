@@ -820,7 +820,7 @@ SettingsSurfaceHost (shell 提供，不可替换)
 `settings-panel` contribution 将容器所有权、视觉所有权和业务所有权明确分开：
 
 - `SettingsSurfaceHost` 只负责 modal、导航、焦点、滚动和错误边界；它不知道账号、同步、AI 或其他具体设置。
-- `schema` 是默认路径。插件 provider 返回 `stack/group/text/field/status/actions` 语义节点，并处理 `dispatch(action, values)`；默认 renderer 用 `@tabora/ui` 统一渲染。
+- `schema` 是默认路径。插件 provider 返回 `stack/group/text/field/status/row/actions` 语义节点，并处理 `dispatch(action, values)`；group 可提供右侧 meta，row 可提供说明、状态 meta 和行内 action；默认 renderer 用 `@tabora/ui` 统一渲染。账号类面板可声明 `layout: "account"` 与 `navigation` 摘要，actions 可声明 `segmented` 或 `form` 布局及 `pressed` 状态；这些字段只表达账号表单的交互语义，视觉仍由 shell renderer 和 Tabora token 统一提供。
 - schema 不得携带 CSS、className、StyleX 样式、原始 token 或可执行 UI 代码。运行时使用严格 Zod schema 拒绝未知字段；password 字段必须为 `persistence: "ephemeral"` 且不允许 provider 给出默认值。
 - provider 只能注册 manifest 已声明的 ID；停用或激活失败时由 kernel 统一回收。renderer 失败只影响当前 panel。
 - `custom-view` 仅用于 schema 无法表达的复杂交互，仍必须使用宿主容器、`PluginViewBoundary` 和 `@tabora/ui`。

@@ -5,10 +5,12 @@ export const componentDocItems: ComponentDocItem[] = [
     id: "button",
     name: "Button",
     title: "Button 按钮",
-    purpose: "用于明确操作触发。每个可视区域最多一个 primary，危险低强度操作使用 danger-subtle。",
+    purpose:
+      "用于明确操作触发。每个可视区域最多一个 primary，轻量动作使用 link，危险低强度操作使用 danger-subtle。",
     usage:
       "设置保存、表单提交、普通次级操作、危险动作确认。支持尺寸、变体、loading/disabled 和全宽。",
     code: `<Button variant="primary">保存</Button>
+<Button variant="link">忘记密码？</Button>
 <Button variant="danger-subtle">移除</Button>`,
   },
   {
@@ -24,7 +26,8 @@ export const componentDocItems: ComponentDocItem[] = [
     name: "Input",
     title: "Input 输入框",
     purpose: "单行文本输入。必须有 label 或 aria-label，placeholder 不替代 label。",
-    usage: "搜索、URL、邮箱、标题等短文本场景。invalid 状态配合 Field 或 InlineError。",
+    usage:
+      '搜索、URL、邮箱、标题等短文本场景。invalid 状态配合 Field 或 InlineError；嵌入 Field 外壳时使用 appearance="embedded"。',
     code: `<Input value={value()} onInput={setValue} aria-label="工作区名称" />`,
   },
   {
@@ -118,7 +121,7 @@ export const componentDocItems: ComponentDocItem[] = [
     name: "SegmentedControl 分段",
     title: "SegmentedControl 分段",
     purpose: "2-4 个纯文本短选项互斥切换。",
-    usage: "卡片尺寸、密度、简单模式切换。",
+    usage: "卡片尺寸、密度、简单模式切换；需要均分容器宽度时使用 fullWidth。",
     code: `<SegmentedControl value={size()} options={sizes} onChange={setSize} aria-label="尺寸" />`,
   },
   {
@@ -235,7 +238,7 @@ export const componentDocItems: ComponentDocItem[] = [
     name: "Field",
     title: "Field 表单字段",
     purpose: "label + description + input + error 的组合单元。",
-    usage: "保证表单控件有真实 label，并集中展示说明和错误。",
+    usage: '保证表单控件有真实 label，并集中展示说明和错误；紧凑双列字段使用 layout="inline"。',
     code: `<Field label="显示名称"><Input id="name" ... /></Field>`,
   },
   {

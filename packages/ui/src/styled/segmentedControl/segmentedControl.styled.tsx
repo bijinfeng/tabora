@@ -19,6 +19,12 @@ const styles = stylex.create({
     gap: 0,
     padding: 2,
   },
+  fullWidth: {
+    display: "grid",
+    gridAutoColumns: "minmax(0, 1fr)",
+    gridAutoFlow: "column",
+    width: "100%",
+  },
   item: {
     backgroundColor: "transparent",
     borderStyle: "none",
@@ -49,6 +55,10 @@ const styles = stylex.create({
       opacity: 0.4,
     },
   },
+  fullWidthItem: {
+    minWidth: 0,
+    width: "100%",
+  },
   itemSm: {
     fontSize: 11,
     height: 24,
@@ -78,12 +88,14 @@ export type StyledSegmentedControlProps<V extends string> = Omit<
 }
 
 export function SegmentedControl<V extends string>(props: StyledSegmentedControlProps<V>) {
-  const rootCompiled = () => stylex.attrs(styles.root, props.xstyle)
+  const rootCompiled = () =>
+    stylex.attrs(styles.root, props.fullWidth && styles.fullWidth, props.xstyle)
   const itemCompiled = () =>
     stylex.attrs(
       styles.item,
       props.size === "sm" && styles.itemSm,
       (!props.size || props.size === "md") && styles.itemMd,
+      props.fullWidth && styles.fullWidthItem,
     )
   return (
     <Primitive

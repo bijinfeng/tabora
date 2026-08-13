@@ -28,6 +28,7 @@ export function createWorkbenchShellSurfaceSettingsProps(shell: WorkbenchShell) 
     panels: catalog.listSettingsPanels(),
     surface: surface(),
     showIndex: surface() === "mobile" && settingsRoute.isHome(),
+    preserveActiveSection: !settingsRoute.isHome(),
     activeSectionId: overlays.activeSettingsSectionId(),
     onSectionChange: (sectionId) => settingsRoute.navigate(sectionId),
     onClose: () => settingsRoute.close(),

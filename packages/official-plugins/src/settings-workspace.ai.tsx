@@ -8,7 +8,7 @@ import { createSignal, For } from "solid-js"
 import type { SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 
 import { SettingsGroup } from "./settings-workspace.shared"
-import { className, styles } from "./styles"
+import { styles } from "./styles"
 
 const TEXT_MODEL_OPTIONS = ["GPT-4.1 Mini", "Claude 3.5 Sonnet", "Gemini 1.5 Pro"]
 const VISION_MODEL_OPTIONS = ["Gemini 1.5 Pro", "GPT-4.1 Mini", "Claude 3.5 Sonnet"]
@@ -78,7 +78,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           </div>
         </div>
         <FieldRow
-          class={className(styles.fieldRow)}
           label="连接测试"
           description="验证默认模型是否可调用；密钥保存在 core 安全存储，插件不可读取"
           trailing={
@@ -91,7 +90,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
 
       <SettingsGroup title="模型提供商" meta="2 个启用">
         <FieldRow
-          class={className(styles.fieldRow)}
           label="提供商类型"
           description="OpenAI 兼容、Anthropic、Gemini 或自定义网关"
           trailing={
@@ -105,7 +103,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="显示名称"
           description="用户可识别的账号或网关名称"
           trailing={
@@ -118,7 +115,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="Base URL"
           description="兼容网关或自定义服务地址"
           trailing={
@@ -126,7 +122,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="API Key"
           description="保存后只显示掩码，写入 core 安全存储"
           trailing={
@@ -142,7 +137,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
 
       <SettingsGroup title="模型配置" meta="默认槽位">
         <FieldRow
-          class={className(styles.fieldRow)}
           label="默认文本模型"
           description="供摘要、改写、问答和结构化抽取调用"
           trailing={
@@ -159,7 +153,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="默认图片理解模型"
           description="供图片识别、票面识别和截图分析调用"
           trailing={
@@ -176,13 +169,11 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="gpt-4.1-mini"
           description="OpenAI 主账号 · 文本、图片理解 · 最近测试可用"
           trailing={<span {...stylex.attrs(styles.fieldNote)}>文本 / 图片</span>}
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="gemini-1.5-pro"
           description="Gemini 个人账号 · 图片理解 · 彩票票面识别默认"
           trailing={
@@ -203,7 +194,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
         <For each={grantRows()}>
           {(grant) => (
             <FieldRow
-              class={className(styles.fieldRow)}
               label={grant.name}
               description={grant.description}
               trailing={
@@ -218,7 +208,6 @@ export function AiSettingsPanel(_props: SettingsPanelViewProps) {
           )}
         </For>
         <FieldRow
-          class={className(styles.fieldRow)}
           label="隐私提示"
           description="图片或文本只在用户触发 AI 功能时发送给当前模型提供商"
           trailing={<span {...stylex.attrs(styles.fieldNote)}>插件不会获得 API Key</span>}

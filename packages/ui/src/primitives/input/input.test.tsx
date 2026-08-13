@@ -98,4 +98,23 @@ describe("Input", () => {
     expect(root.querySelector<HTMLInputElement>("input")?.type).toBe("password")
     expect(root.querySelector("button")).toBeNull()
   })
+
+  it("exposes the embedded appearance for inputs placed inside a field shell", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <Input
+          value="name@example.com"
+          onInput={() => {}}
+          appearance="embedded"
+          aria-label="邮箱"
+        />
+      ),
+      root,
+    )
+
+    expect(root.querySelector("input")?.getAttribute("data-appearance")).toBe("embedded")
+  })
 })

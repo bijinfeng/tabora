@@ -22,10 +22,65 @@ describe("settingsPanelModelSchema", () => {
             },
             { type: "status", label: "State", value: "Ready", tone: "success" },
             {
+              type: "row",
+              label: "Sync scope",
+              description: "Workspace and plugin data",
+              meta: "V1",
+              metaVariant: "badge",
+            },
+            {
               type: "actions",
-              actions: [{ id: "submit", label: "Submit", variant: "primary" }],
+              actions: [
+                { id: "submit", label: "Submit", variant: "primary" },
+                { id: "help", label: "Help", variant: "link" },
+              ],
             },
           ],
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts group metadata and row actions", () => {
+    const result = settingsPanelModelSchema.safeParse({
+      version: 1,
+      nodes: [
+        {
+          type: "group",
+          title: "Sync status",
+          meta: "Ready",
+          children: [
+            {
+              type: "row",
+              label: "Sync now",
+              action: { id: "sync.now", label: "Sync now", variant: "primary" },
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts the account layout and navigation/action semantics", () => {
+    const result = settingsPanelModelSchema.safeParse({
+      version: 1,
+      layout: "account",
+      navigation: { title: "Signed out", meta: "Local mode", avatar: "S" },
+      nodes: [
+        {
+          type: "actions",
+          layout: "segmented",
+          actions: [{ id: "account.mode.login", label: "Login", pressed: true }],
+        },
+        {
+          type: "actions",
+          layout: "form",
+          description: "Sign in to register this device.",
+          actions: [{ id: "account.login", label: "Login", variant: "primary" }],
         },
       ],
     })

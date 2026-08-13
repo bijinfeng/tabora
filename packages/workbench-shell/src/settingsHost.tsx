@@ -7,6 +7,7 @@ import type {
   PluginManifest,
   SettingsPanelProvider,
   SettingsPanelProviderContext,
+  SettingsPanelNavigation,
   SettingsPanelViewProps,
   SettingsSurface,
 } from "@tabora/plugin-api"
@@ -21,6 +22,7 @@ import {
 import { Button, IconButton } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
+import { AccountSettingsNavigation } from "./AccountSettingsNavigation"
 import { createPluginErrorFallback, PluginViewBoundary } from "./PluginViewBoundary"
 import { SettingsSchemaRenderer } from "./SettingsSchemaRenderer"
 import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
@@ -39,6 +41,8 @@ export type SettingsHostProps = {
   surface: SettingsSurface
   /** Renders the mobile settings landing page instead of a section detail view. */
   showIndex?: boolean
+  /** Keeps an explicit settings route visible when its section has no available panel. */
+  preserveActiveSection?: boolean
   activeSectionId: SettingsSectionId | null
   onSectionChange: (sectionId: SettingsSectionId) => void
   onClose: () => void
@@ -77,6 +81,9 @@ export type SettingsHostCopy = {
   sectionMeta?: (sectionId: SettingsSectionId) => string
   workspaceGroupTitle?: string
   extensionGroupTitle?: string
+  accountNavName?: string
+  accountNavMeta?: string
+  accountNavAvatar?: string
   windowSubtitle?: string
   statusReady?: string
   statusSectionChanged?: (sectionTitle: string) => string
@@ -95,7 +102,7 @@ const SECTION_FALLBACK_DESCRIPTIONS: Record<SettingsSectionId, string> = {
 }
 
 const WORKSPACE_SECTION_IDS: SettingsSectionId[] = ["general", "appearance", "search"]
-const EXTENSION_SECTION_IDS: SettingsSectionId[] = ["account", "ai", "sync", "plugins", "about"]
+const EXTENSION_SECTION_IDS: SettingsSectionId[] = ["ai", "sync", "plugins", "about"]
 
 const styles = stylex.create({
   overlay: {
@@ -247,8 +254,10 @@ const styles = stylex.create({
     backgroundColor: color.surface,
     display: "grid",
     flex: 1,
+    gap: 10,
     gridTemplateColumns: "154px minmax(0, 1fr)",
     minHeight: 0,
+    padding: 10,
     "@media (max-width: 480px)": {
       gridTemplateColumns: "1fr",
       gridTemplateRows: "auto minmax(0, 1fr)",
@@ -257,6 +266,8 @@ const styles = stylex.create({
   bodyMobile: {
     display: "flex",
     flexDirection: "column",
+    gap: 0,
+    padding: 0,
   },
   nav: {
     backgroundColor: color.surfaceSoft,
@@ -267,9 +278,7 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: 3,
-    marginBottom: 10,
-    marginLeft: 10,
-    marginTop: 10,
+    margin: 0,
     minHeight: 0,
     overflow: "auto",
     padding: 8,
@@ -352,7 +361,7 @@ const styles = stylex.create({
     backgroundColor: color.surface,
     display: "flex",
     flexDirection: "column",
-    gap: 12,
+    gap: 10,
     minHeight: 0,
     overflow: "auto",
     paddingBottom: 12,
@@ -360,7 +369,13 @@ const styles = stylex.create({
     paddingRight: 14,
     paddingTop: 12,
   },
+  mainAccount: {
+    justifyContent: "center",
+  },
   mainMobile: {
+    borderRadius: 0,
+    borderStyle: "none",
+    borderWidth: 0,
     gap: 16,
     overflow: "auto",
     padding: 16,
@@ -395,13 +410,13 @@ const styles = stylex.create({
   panelView: {
     display: "flex",
     flexDirection: "column",
-    gap: 14,
+    gap: 8,
     minHeight: 0,
   },
   stack: {
     display: "flex",
     flexDirection: "column",
-    gap: 14,
+    gap: 8,
     minHeight: 0,
   },
   empty: {
@@ -483,6 +498,9 @@ export function SettingsHost(props: SettingsHostProps) {
   const [isEntering, setIsEntering] = createSignal(false)
   const [isClosing, setIsClosing] = createSignal(false)
   const [statusText, setStatusText] = createSignal<string | null>(null)
+  const [accountNavigation, setAccountNavigation] = createSignal<SettingsPanelNavigation | null>(
+    null,
+  )
 
   const handleClose = () => {
     if (isClosing()) return
@@ -508,8 +526,12 @@ export function SettingsHost(props: SettingsHostProps) {
 
   const activeSection = (): SettingsSectionId => {
     const requested = props.activeSectionId
-    if (requested === "about") return requested
-    if (requested && navigator().sections[requested].panels.length > 0) return requested
+    if (
+      requested &&
+      (props.preserveActiveSection || navigator().sections[requested].panels.length > 0)
+    ) {
+      return requested
+    }
     return (
       SETTINGS_SECTIONS.find((section) => navigator().sections[section.id].panels.length > 0)?.id ??
       "about"
@@ -524,6 +546,7 @@ export function SettingsHost(props: SettingsHostProps) {
     props.copy?.sectionDescription?.(sectionId) ?? SECTION_FALLBACK_DESCRIPTIONS[sectionId]
   const activeSectionTitle = () => sectionTitle(activeSection())
   const activeSectionDescription = () => sectionDescription(activeSection())
+  const accountSectionAvailable = () => navigator().sections.account.panels.length > 0
   const sectionNavMeta = (sectionId: SettingsSectionId) => {
     const panelCount = navigator().sections[sectionId].panels.length
     if (sectionId === "about") return props.copy?.sectionMeta?.(sectionId) ?? "V2"
@@ -640,6 +663,17 @@ export function SettingsHost(props: SettingsHostProps) {
             data-settings-nav
             aria-label={props.copy?.sidebarTitle ?? "设置导航"}
           >
+            <Show when={accountSectionAvailable()}>
+              <AccountSettingsNavigation
+                navigation={accountNavigation()}
+                fallbackName={props.copy?.accountNavName ?? "未登录"}
+                fallbackMeta={props.copy?.accountNavMeta ?? "本地模式"}
+                fallbackAvatar={props.copy?.accountNavAvatar ?? "未"}
+                active={activeSection() === "account"}
+                ariaLabel={sectionTitle("account")}
+                onSelect={() => handleSectionChange("account")}
+              />
+            </Show>
             <div {...stylex.attrs(styles.kicker)}>
               {props.copy?.workspaceGroupTitle ?? "工作台"}
             </div>
@@ -687,23 +721,31 @@ export function SettingsHost(props: SettingsHostProps) {
           </nav>
         </Show>
         <div
-          {...stylex.attrs(styles.main, props.surface === "mobile" ? styles.mainMobile : null)}
+          {...stylex.attrs(
+            styles.main,
+            props.surface === "desktop" && activeSection() === "account"
+              ? styles.mainAccount
+              : null,
+            props.surface === "mobile" ? styles.mainMobile : null,
+          )}
           data-active-view={activeSection()}
         >
-          <div
-            {...stylex.attrs(
-              styles.panelHeader,
-              props.surface === "mobile" ? styles.panelHeaderMobile : null,
-            )}
-            data-settings-panel-header
-          >
-            <div>
-              <strong {...stylex.attrs(styles.panelHeaderTitle)}>{activeSectionTitle()}</strong>
-              <span {...stylex.attrs(styles.panelHeaderDescription)}>
-                {activeSectionDescription()}
-              </span>
+          <Show when={activeSection() !== "account" || props.surface === "mobile"}>
+            <div
+              {...stylex.attrs(
+                styles.panelHeader,
+                props.surface === "mobile" ? styles.panelHeaderMobile : null,
+              )}
+              data-settings-panel-header
+            >
+              <div>
+                <strong {...stylex.attrs(styles.panelHeaderTitle)}>{activeSectionTitle()}</strong>
+                <span {...stylex.attrs(styles.panelHeaderDescription)}>
+                  {activeSectionDescription()}
+                </span>
+              </div>
             </div>
-          </div>
+          </Show>
           <div {...stylex.attrs(styles.panelView)} data-view={activeSection()}>
             <Show
               when={activeSection() !== "about"}
@@ -746,6 +788,9 @@ export function SettingsHost(props: SettingsHostProps) {
                             >
                               <SettingsSchemaRenderer
                                 provider={provider}
+                                {...(panel.section === "account"
+                                  ? { onNavigationChange: setAccountNavigation }
+                                  : {})}
                                 context={{
                                   ...(props.providerContext?.(panel, props.surface) ?? {
                                     panel: {
@@ -825,6 +870,9 @@ export function SettingsHost(props: SettingsHostProps) {
   const renderMobileSettingsIndex = () => (
     <MobileSettingsIndex
       title={props.copy?.sidebarTitle ?? "设置"}
+      visibleSections={SETTINGS_SECTIONS.filter(
+        (section) => section.id === "about" || navigator().sections[section.id].panels.length > 0,
+      ).map((section) => section.id)}
       searchPlaceholder={props.copy?.searchPlaceholder ?? "搜索设置项"}
       sectionTitle={sectionTitle}
       sectionDescription={sectionDescription}

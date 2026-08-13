@@ -50,8 +50,9 @@ const settingsActionNodeSchema = z
   .object({
     id: z.string().min(1),
     label: z.string().min(1),
-    variant: z.enum(["primary", "secondary", "ghost", "danger"]).optional(),
+    variant: z.enum(["primary", "secondary", "ghost", "link", "danger"]).optional(),
     disabled: z.boolean().optional(),
+    pressed: z.boolean().optional(),
   })
   .strict()
 
@@ -68,6 +69,7 @@ export const settingsNodeSchema: z.ZodType<unknown> = z.lazy(() =>
         type: z.literal("group"),
         title: z.string().optional(),
         description: z.string().optional(),
+        meta: z.string().optional(),
         children: z.array(settingsNodeSchema),
       })
       .strict(),
@@ -91,8 +93,21 @@ export const settingsNodeSchema: z.ZodType<unknown> = z.lazy(() =>
       .strict(),
     z
       .object({
+        type: z.literal("row"),
+        label: z.string().min(1),
+        description: z.string().optional(),
+        meta: z.string().optional(),
+        metaTone: z.enum(["neutral", "accent", "success", "warning", "danger"]).optional(),
+        metaVariant: z.enum(["text", "badge"]).optional(),
+        action: settingsActionNodeSchema.optional(),
+      })
+      .strict(),
+    z
+      .object({
         type: z.literal("actions"),
         actions: z.array(settingsActionNodeSchema).min(1),
+        layout: z.enum(["inline", "stack", "segmented", "form"]).optional(),
+        description: z.string().optional(),
       })
       .strict(),
   ]),
@@ -102,6 +117,15 @@ export const settingsPanelModelSchema = z
   .object({
     version: z.literal(1),
     ariaLabel: z.string().min(1).optional(),
+    layout: z.enum(["default", "account"]).optional(),
+    navigation: z
+      .object({
+        title: z.string().min(1),
+        meta: z.string().min(1),
+        avatar: z.string().min(1).optional(),
+      })
+      .strict()
+      .optional(),
     nodes: z.array(settingsNodeSchema),
   })
   .strict()

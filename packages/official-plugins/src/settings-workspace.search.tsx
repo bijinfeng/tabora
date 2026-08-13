@@ -19,7 +19,7 @@ import {
   SettingsInlineError,
   SettingsSwitch,
 } from "./settings-workspace.shared"
-import { className, styles } from "./styles"
+import { styles } from "./styles"
 
 export function SearchSettingsPanel(props: SettingsPanelViewProps) {
   const searchSettings = () => props.data.searchSettings
@@ -82,7 +82,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="search">
       <SettingsGroup title="默认搜索源" meta={enabledProviderEntries()[0]?.title ?? "未配置"}>
         <FieldRow
-          class={className(styles.fieldRow)}
           label="搜索框占位"
           description="输入命令、网页或卡片名称时显示的提示"
           trailing={
@@ -95,7 +94,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="默认引擎"
           description="也可以在搜索框里输入 @github 临时切换"
           trailing={
@@ -110,7 +108,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="命令前缀"
           description="用短前缀区分网页、卡片和插件命令"
           trailing={
@@ -124,7 +121,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
 
       <SettingsGroup title="搜索范围" meta="4 项">
         <FieldRow
-          class={className(styles.fieldRow)}
           label="包含卡片动作"
           description="搜索结果显示添加卡片、打开详情等动作"
           trailing={
@@ -137,7 +133,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="默认搜索范围"
           description="选择输入框默认纳入的内容来源"
           trailing={
@@ -153,7 +148,6 @@ export function SearchSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="输入防抖"
           description="减少输入时过于频繁的搜索刷新"
           trailing={

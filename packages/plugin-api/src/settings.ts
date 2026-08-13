@@ -13,6 +13,13 @@ export type SettingsSurface = "desktop" | "mobile"
 
 export type SettingsTextTone = "default" | "muted" | "danger"
 export type SettingsStatusTone = "neutral" | "accent" | "success" | "warning" | "danger"
+export type SettingsPanelLayout = "default" | "account"
+
+export type SettingsPanelNavigation = {
+  title: string
+  meta: string
+  avatar?: string
+}
 
 type SettingsFieldBase = {
   type: "field"
@@ -56,21 +63,48 @@ export type SettingsFieldNode =
 export type SettingsActionNode = {
   id: string
   label: string
-  variant?: "primary" | "secondary" | "ghost" | "danger"
+  variant?: "primary" | "secondary" | "ghost" | "link" | "danger"
   disabled?: boolean
+  pressed?: boolean
+}
+
+export type SettingsActionsLayout = "inline" | "stack" | "segmented" | "form"
+
+export type SettingsRowNode = {
+  type: "row"
+  label: string
+  description?: string
+  meta?: string
+  metaTone?: SettingsStatusTone
+  metaVariant?: "text" | "badge"
+  action?: SettingsActionNode
 }
 
 export type SettingsNode =
   | { type: "stack"; children: SettingsNode[] }
-  | { type: "group"; title?: string; description?: string; children: SettingsNode[] }
+  | {
+      type: "group"
+      title?: string
+      description?: string
+      meta?: string
+      children: SettingsNode[]
+    }
   | { type: "text"; text: string; tone?: SettingsTextTone }
   | SettingsFieldNode
   | { type: "status"; label: string; value: string; tone?: SettingsStatusTone }
-  | { type: "actions"; actions: SettingsActionNode[] }
+  | SettingsRowNode
+  | {
+      type: "actions"
+      actions: SettingsActionNode[]
+      layout?: SettingsActionsLayout
+      description?: string
+    }
 
 export type SettingsPanelModel = {
   version: 1
   ariaLabel?: string
+  layout?: SettingsPanelLayout
+  navigation?: SettingsPanelNavigation
   nodes: SettingsNode[]
 }
 

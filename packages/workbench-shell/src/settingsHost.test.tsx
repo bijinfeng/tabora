@@ -373,12 +373,42 @@ describe("settings host composition", () => {
     expect(root.querySelector('[data-settings-index-group="workspace"]')).toBeTruthy()
     expect(root.querySelector('[data-settings-index-item="general"]')).toBeTruthy()
     expect(root.querySelector('[data-settings-index-item="about"]')).toBeTruthy()
+    expect(root.querySelector('[data-settings-index-item="account"]')).toBeNull()
+    expect(root.querySelector('[data-settings-index-item="sync"]')).toBeNull()
 
     root.querySelector<HTMLButtonElement>('[data-settings-index-item="appearance"]')?.click()
     expect(onSectionChange).toHaveBeenCalledWith("appearance")
 
     root.querySelector<HTMLButtonElement>("[data-settings-back]")?.click()
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it("keeps an unavailable direct section explicit instead of showing another section", () => {
+    const onSectionChange = vi.fn()
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        surface: "mobile",
+        preserveActiveSection: true,
+        panels: [
+          {
+            ...panel("general", 10, { section: "general" }),
+            pluginId: "plugin-a",
+          },
+        ],
+        activeSectionId: "account",
+        onSectionChange,
+        onClose: vi.fn(),
+        getView: () => undefined,
+        getSettingsProvider: () => undefined,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    expect(root.querySelector('[data-active-view="account"]')).toBeTruthy()
+    expect(root.querySelector("[data-settings-mobile-title]")?.textContent).toBe("账号")
+    expect(root.textContent).toContain("该分类下暂无设置内容")
+    expect(onSectionChange).not.toHaveBeenCalled()
   })
 
   it("renders prototype grouped settings navigation", () => {
@@ -512,7 +542,9 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain("账号")
+    expect(
+      root.querySelector('[data-settings-section="account"]')?.getAttribute("aria-label"),
+    ).toBe("账号")
     expect(
       root.querySelector('[data-settings-section="account"]')?.getAttribute("aria-current"),
     ).toBe("page")

@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 
 import { color, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessInput } from "../../primitives/input/input"
-import type { HeadlessInputProps } from "../../primitives/input/input"
+import type { HeadlessInputProps, InputAppearance } from "../../primitives/input/input"
 import type { XStyle } from "../../stylex"
 
 const styles = stylex.create({
@@ -52,6 +52,21 @@ const styles = stylex.create({
     height: 36,
     paddingBlock: 0,
     paddingInline: 12,
+  },
+  embedded: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    borderRadius: 0,
+    boxShadow: "none",
+    height: 32,
+    paddingInline: 0,
+    ":hover": {
+      borderColor: "transparent",
+    },
+    ":focus": {
+      borderColor: "transparent",
+      boxShadow: "none",
+    },
   },
   hasLeading: {
     paddingLeft: 34,
@@ -173,12 +188,17 @@ export function Input(props: InputProps) {
       styles.control,
       props.size === "sm" && styles.sm,
       (!props.size || props.size === "md") && styles.md,
+      props.appearance === "embedded" && styles.embedded,
       Boolean(props.leadingIcon) && props.size === "sm" && styles.hasLeadingSm,
       Boolean(props.leadingIcon) && props.size !== "sm" && styles.hasLeading,
-      (Boolean(props.trailingIcon) || Boolean(props.clearable) || props.type === "password") &&
+      (Boolean(props.trailingIcon) ||
+        Boolean(props.clearable) ||
+        (props.type === "password" && props.passwordVisibilityToggle !== false)) &&
         props.size === "sm" &&
         styles.hasTrailingSm,
-      (Boolean(props.trailingIcon) || Boolean(props.clearable) || props.type === "password") &&
+      (Boolean(props.trailingIcon) ||
+        Boolean(props.clearable) ||
+        (props.type === "password" && props.passwordVisibilityToggle !== false)) &&
         props.size !== "sm" &&
         styles.hasTrailing,
       props.invalid && styles.invalid,
@@ -231,3 +251,4 @@ export function Input(props: InputProps) {
 
 export type InputSize = HeadlessInputProps["size"]
 export type InputType = HeadlessInputProps["type"]
+export type { InputAppearance }

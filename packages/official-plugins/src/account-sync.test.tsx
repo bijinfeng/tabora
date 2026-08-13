@@ -195,12 +195,135 @@ describe("official.account-sync", () => {
       getAll: vi.fn(),
     }
     const syncManager = { triggerSync: vi.fn().mockResolvedValue(undefined) }
-    const provider = createSyncSettingsProvider(syncManager, syncMetaRepo as never)
+    const provider = createSyncSettingsProvider(
+      syncManager,
+      syncMetaRepo as never,
+      authClient({ getSession: vi.fn().mockResolvedValue({ jwt: "jwt" }) }),
+    )
 
     await provider.dispatch({ id: "sync.now", values: {} }, { surface: "desktop" })
 
     expect(syncManager.triggerSync).toHaveBeenCalledOnce()
     expect(syncMetaRepo.set).toHaveBeenCalledWith("lastSyncAt", expect.any(String))
     expect(modelText(await provider.getModel({ surface: "desktop" }))).toContain("已同步")
+  })
+
+  it("exposes the design-specified sync status, scope, and unavailable follow-up actions", async () => {
+    const syncMetaRepo = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+      getAll: vi.fn(),
+    }
+    const provider = createSyncSettingsProvider(
+      { triggerSync: vi.fn().mockResolvedValue(undefined) },
+      syncMetaRepo as never,
+      authClient(),
+    )
+
+    const model = await provider.getModel({ surface: "mobile" })
+    const groups = model.nodes.filter(
+      (node): node is Extract<typeof node, { type: "group" }> => node.type === "group",
+    )
+
+    expect(groups.map((group) => group.title)).toEqual(["同步状态", "同步范围", "处理"])
+    expect(groups[0]?.meta).toBe("未开启")
+    expect(groups[0]?.children).toHaveLength(3)
+    expect(groups[0]?.children).toEqual([
+      expect.objectContaining({
+        type: "row",
+        label: "本地模式",
+        description: "未同步",
+        meta: "未开启",
+        metaVariant: "badge",
+      }),
+      expect.objectContaining({
+        type: "field",
+        id: "sync.auto",
+        label: "后台自动同步",
+        control: "switch",
+        value: false,
+        disabled: true,
+      }),
+      expect.objectContaining({
+        type: "row",
+        label: "立即同步",
+        action: expect.objectContaining({
+          id: "sync.now",
+          label: "登录后可用",
+          disabled: true,
+        }),
+      }),
+    ])
+    expect(groups[1]?.meta).toBe("V1")
+    expect(groups[1]?.children).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "row", label: "会同步" }),
+        expect.objectContaining({ type: "row", label: "不会同步" }),
+      ]),
+    )
+    expect(groups[2]?.children).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "row",
+          label: "冲突",
+          action: expect.objectContaining({ disabled: true }),
+        }),
+        expect.objectContaining({
+          type: "row",
+          label: "恢复",
+          action: expect.objectContaining({ disabled: true }),
+        }),
+      ]),
+    )
+  })
+
+  it("matches the prototype before the signed-in user starts syncing", async () => {
+    const syncMetaRepo = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+      getAll: vi.fn(),
+    }
+    const provider = createSyncSettingsProvider(
+      { triggerSync: vi.fn().mockResolvedValue(undefined) },
+      syncMetaRepo as never,
+      authClient({ getSession: vi.fn().mockResolvedValue({ jwt: "jwt" }) }),
+    )
+
+    const model = await provider.getModel({ surface: "desktop" })
+    const syncGroup = model.nodes.find(
+      (node): node is Extract<typeof node, { type: "group" }> =>
+        node.type === "group" && node.title === "同步状态",
+    )
+
+    expect(syncGroup).toMatchObject({
+      meta: "待开启",
+      children: [
+        {
+          type: "row",
+          label: "待开启",
+          description: "登录后尚未开启同步",
+          meta: "等待开启",
+          metaTone: "accent",
+          metaVariant: "badge",
+        },
+        {
+          type: "field",
+          id: "sync.auto",
+          label: "后台自动同步",
+          control: "switch",
+          value: false,
+          disabled: true,
+        },
+        {
+          type: "row",
+          label: "立即同步",
+          action: { id: "sync.now", label: "开启同步", variant: "primary", disabled: false },
+        },
+      ],
+    })
   })
 })

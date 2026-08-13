@@ -7,12 +7,14 @@ import type { SolidAttrs } from "../../stylex"
 
 export type InputSize = "sm" | "md"
 export type InputType = "text" | "search" | "url" | "email" | "password"
+export type InputAppearance = "default" | "embedded"
 
 export type HeadlessInputProps = {
   value: string
   onInput: (value: string) => void
   placeholder?: string
   size?: InputSize
+  appearance?: InputAppearance
   disabled?: boolean
   invalid?: boolean
   type?: InputType
@@ -100,6 +102,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
       <input
         {...controlAttrs()}
         data-size={props.size ?? "md"}
+        data-appearance={props.appearance === "embedded" ? "embedded" : undefined}
         data-invalid={props.invalid ? "" : undefined}
         type={props.type ?? "text"}
         id={props.id}
@@ -133,6 +136,7 @@ export function HeadlessInput(props: HeadlessInputProps) {
       <input
         {...controlAttrs()}
         data-size={props.size ?? "md"}
+        data-appearance={props.appearance === "embedded" ? "embedded" : undefined}
         data-invalid={props.invalid ? "" : undefined}
         data-has-leading={hasLeading() ? "" : undefined}
         data-has-trailing={hasTrailing() ? "" : undefined}

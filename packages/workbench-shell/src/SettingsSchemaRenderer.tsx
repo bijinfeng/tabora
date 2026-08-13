@@ -4,6 +4,7 @@ import type {
   SettingsFieldNode,
   SettingsNode,
   SettingsPanelModel,
+  SettingsPanelNavigation,
   SettingsPanelProvider,
   SettingsPanelProviderContext,
   SettingsStatusTone,
@@ -12,38 +13,108 @@ import { settingsPanelModelSchema } from "@tabora/plugin-api"
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 import { Badge } from "@tabora/ui/badge"
 import { Button } from "@tabora/ui/button"
+import { Field } from "@tabora/ui/field"
 import { FieldRow } from "@tabora/ui/field-row"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { SkeletonText } from "@tabora/ui/skeleton"
+import { SegmentedControl } from "@tabora/ui/segmented-control"
 import { Switch } from "@tabora/ui/switch"
 
 export type SettingsSchemaRendererProps = {
   provider: SettingsPanelProvider
   context: SettingsPanelProviderContext
+  onNavigationChange?: (navigation: SettingsPanelNavigation | null) => void
 }
 
 const styles = stylex.create({
   root: {
     display: "flex",
     flexDirection: "column",
-    gap: space.s3,
+    gap: 14,
     minWidth: 0,
+  },
+  accountRoot: {
+    alignContent: "center",
+    display: "grid",
+    gap: 10,
+    marginInline: "auto",
+    minHeight: 248,
+    width: "min(100%, 322px)",
   },
   stack: {
     display: "flex",
     flexDirection: "column",
-    gap: space.s3,
+    gap: 14,
     minWidth: 0,
   },
-  group: {
-    borderBottomColor: color.line,
-    borderBottomStyle: "solid",
-    borderBottomWidth: 1,
+  accountGroup: {
+    backgroundColor: "transparent",
+    borderRadius: 0,
+    borderStyle: "none",
+    borderWidth: 0,
+    gap: 10,
+    padding: 0,
+  },
+  accountActions: {
+    display: "grid",
+    gap: 7,
+  },
+  accountActionsInline: {
+    alignItems: "center",
+    display: "grid",
+    gap: 8,
+    gridTemplateColumns: "minmax(0, 1fr) auto",
+  },
+  accountActionNote: {
+    color: color.textSubtle,
+    fontSize: 10,
+    lineHeight: 1.35,
+    margin: 0,
+  },
+  accountStatus: {
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    minHeight: 42,
+  },
+  accountStatusValue: {
+    color: color.text,
+    fontSize: 11,
+    fontWeight: font.semibold,
+    overflowWrap: "anywhere",
+  },
+  groupTitleRow: {
+    alignItems: "center",
+    color: color.text,
     display: "flex",
-    flexDirection: "column",
-    gap: space.s2,
-    paddingBottom: space.s3,
+    fontSize: 11,
+    fontWeight: font.bold,
+    gap: 8,
+    justifyContent: "space-between",
+    lineHeight: 1.25,
+    minHeight: 22,
+    minWidth: 0,
+    paddingInline: 2,
+  },
+  groupMeta: {
+    color: color.textSubtle,
+    flexShrink: 0,
+    fontSize: 10,
+    fontWeight: font.semibold,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  group: {
+    backgroundColor: "transparent",
+    borderStyle: "none",
+    borderWidth: 0,
+    display: "grid",
+    gap: 8,
+    padding: 0,
   },
   groupHeading: {
     display: "grid",
@@ -51,9 +122,9 @@ const styles = stylex.create({
   },
   groupTitle: {
     color: color.text,
-    fontSize: 13,
-    fontWeight: font.semibold,
-    lineHeight: 1.3,
+    fontSize: 11,
+    fontWeight: font.bold,
+    lineHeight: 1.25,
   },
   groupDescription: {
     color: color.textSubtle,
@@ -125,6 +196,12 @@ const styles = stylex.create({
   statusAccent: {
     color: color.accent,
   },
+  rowMeta: {
+    color: color.textMuted,
+    fontSize: 11,
+    fontWeight: font.semibold,
+    whiteSpace: "nowrap",
+  },
   actions: {
     alignItems: "center",
     display: "flex",
@@ -173,6 +250,38 @@ function statusBadgeVariant(tone: SettingsStatusTone | undefined) {
   return "neutral"
 }
 
+function rowMetaStyle(tone: SettingsStatusTone | undefined) {
+  if (tone === "success") return styles.statusSuccess
+  if (tone === "warning") return styles.statusWarning
+  if (tone === "danger") return styles.statusDanger
+  if (tone === "accent") return styles.statusAccent
+  return null
+}
+
+function actionButton(
+  action: Extract<SettingsNode, { type: "actions" }>["actions"][number],
+  options: {
+    busyActionId: () => string | null
+    dispatch: (actionId: string) => void
+    fullWidth?: boolean
+  },
+) {
+  return (
+    <Button
+      size="sm"
+      variant={action.variant ?? "secondary"}
+      disabled={action.disabled || options.busyActionId() !== null}
+      loading={options.busyActionId() === action.id}
+      data-settings-schema-action={action.id}
+      onClick={() => options.dispatch(action.id)}
+      {...(options.fullWidth !== undefined ? { fullWidth: options.fullWidth } : {})}
+      {...(action.pressed !== undefined ? { "aria-pressed": action.pressed } : {})}
+    >
+      {action.label}
+    </Button>
+  )
+}
+
 export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
   const [model, setModel] = createSignal<SettingsPanelModel | null>(null)
   const [values, setValues] = createSignal<Record<string, unknown>>({})
@@ -217,6 +326,7 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
       const nextModel = parsed.data as SettingsPanelModel
       setModel(nextModel)
       setValues(initialValues(nextModel.nodes))
+      props.onNavigationChange?.(nextModel.navigation ?? null)
     } catch (cause) {
       if (abortController.signal.aborted || requestVersion !== modelRequestVersion) return
       setModel(null)
@@ -253,19 +363,21 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
   function renderField(field: SettingsFieldNode) {
     if (field.control === "switch") {
       return (
-        <FieldRow
-          label={field.label}
-          description={field.description}
-          trailing={
-            <Switch
-              size="sm"
-              checked={Boolean(values()[field.id])}
-              {...(field.disabled !== undefined ? { disabled: field.disabled } : {})}
-              aria-label={field.label}
-              onChange={(checked) => setFieldValue(field, checked)}
-            />
-          }
-        />
+        <div data-settings-schema-field-row={field.id}>
+          <FieldRow
+            label={field.label}
+            description={field.description}
+            trailing={
+              <Switch
+                size="sm"
+                checked={Boolean(values()[field.id])}
+                {...(field.disabled !== undefined ? { disabled: field.disabled } : {})}
+                aria-label={field.label}
+                onChange={(checked) => setFieldValue(field, checked)}
+              />
+            }
+          />
+        </div>
       )
     }
 
@@ -274,16 +386,25 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
       return typeof value === "string" ? value : ""
     }
 
+    const accountLayout = model()?.layout === "account"
+    const inputId = `settings-schema-${field.id}`
+
     return (
-      <label {...stylex.attrs(styles.field)} for={`settings-schema-${field.id}`}>
-        <span {...stylex.attrs(styles.fieldLabel)}>{field.label}</span>
-        <Show when={field.description}>
-          <p {...stylex.attrs(styles.fieldDescription)}>{field.description}</p>
-        </Show>
+      <Field
+        label={field.label}
+        {...(field.description !== undefined ? { helper: field.description } : {})}
+        {...(field.required !== undefined && !accountLayout ? { required: field.required } : {})}
+        htmlFor={inputId}
+        {...(accountLayout ? { layout: "inline" as const } : {})}
+        xstyle={!accountLayout ? styles.field : undefined}
+        labelClass={!accountLayout ? stylex.attrs(styles.fieldLabel).class : undefined}
+        helperClass={!accountLayout ? stylex.attrs(styles.fieldDescription).class : undefined}
+      >
         <Input
-          id={`settings-schema-${field.id}`}
+          id={inputId}
           size="sm"
           type={field.control}
+          {...(accountLayout ? { appearance: "embedded" as const } : {})}
           value={currentValue()}
           onInput={(value) => setFieldValue(field, value)}
           {...(field.placeholder !== undefined ? { placeholder: field.placeholder } : {})}
@@ -295,7 +416,7 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
           aria-label={field.label}
           inputAttrs={{ "data-settings-schema-field": field.id }}
         />
-      </label>
+      </Field>
     )
   }
 
@@ -309,12 +430,19 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
     }
     if (node.type === "group") {
       return (
-        <section {...stylex.attrs(styles.group)}>
-          <Show when={node.title || node.description}>
+        <section
+          {...stylex.attrs(styles.group, model()?.layout === "account" && styles.accountGroup)}
+        >
+          <Show when={node.title || node.description || node.meta}>
             <div {...stylex.attrs(styles.groupHeading)}>
-              <Show when={node.title}>
-                <strong {...stylex.attrs(styles.groupTitle)}>{node.title}</strong>
-              </Show>
+              <div {...stylex.attrs(styles.groupTitleRow)}>
+                <Show when={node.title}>
+                  <strong {...stylex.attrs(styles.groupTitle)}>{node.title}</strong>
+                </Show>
+                <Show when={node.meta}>
+                  <span {...stylex.attrs(styles.groupMeta)}>{node.meta}</span>
+                </Show>
+              </div>
               <Show when={node.description}>
                 <p {...stylex.attrs(styles.groupDescription)}>{node.description}</p>
               </Show>
@@ -338,45 +466,128 @@ export function SettingsSchemaRenderer(props: SettingsSchemaRendererProps) {
       )
     }
     if (node.type === "field") return renderField(node)
+    const dispatchAction = (actionId: string) => void dispatch(actionId)
+    if (node.type === "row") {
+      const trailing =
+        node.meta || node.action ? (
+          <>
+            <Show when={node.meta}>
+              {(meta) =>
+                node.metaVariant === "badge" ? (
+                  <Badge size="sm" variant={statusBadgeVariant(node.metaTone)}>
+                    {meta()}
+                  </Badge>
+                ) : (
+                  <span {...stylex.attrs(styles.rowMeta, rowMetaStyle(node.metaTone))}>
+                    {meta()}
+                  </span>
+                )
+              }
+            </Show>
+            <Show when={node.action}>
+              {(action) => actionButton(action(), { busyActionId, dispatch: dispatchAction })}
+            </Show>
+          </>
+        ) : undefined
+      return (
+        <div data-settings-schema-row={node.label}>
+          <FieldRow
+            label={node.label}
+            {...(node.description !== undefined ? { description: node.description } : {})}
+            trailing={trailing}
+          />
+        </div>
+      )
+    }
     if (node.type === "status") {
       return (
-        <div {...stylex.attrs(styles.status)} data-settings-schema-status={node.tone ?? "neutral"}>
+        <div
+          {...stylex.attrs(styles.status, model()?.layout === "account" && styles.accountStatus)}
+          data-settings-schema-status={node.tone ?? "neutral"}
+        >
           <span {...stylex.attrs(styles.statusLabel)}>{node.label}</span>
-          <span {...stylex.attrs(styles.statusValue, statusValueStyle(node.tone))}>
+          <span
+            {...stylex.attrs(
+              styles.statusValue,
+              statusValueStyle(node.tone),
+              model()?.layout === "account" && styles.accountStatusValue,
+            )}
+          >
             {node.value}
           </span>
-          <Badge size="sm" variant={statusBadgeVariant(node.tone)}>
-            {node.tone === "success" ? "正常" : node.tone === "danger" ? "异常" : "状态"}
-          </Badge>
+          <Show when={model()?.layout !== "account"}>
+            <Badge size="sm" variant={statusBadgeVariant(node.tone)}>
+              {node.tone === "success" ? "正常" : node.tone === "danger" ? "异常" : "状态"}
+            </Badge>
+          </Show>
+        </div>
+      )
+    }
+    if (node.layout === "segmented") {
+      const options = node.actions.map((action) => ({
+        value: action.id,
+        label: action.label,
+        ...(action.disabled !== undefined ? { disabled: action.disabled } : {}),
+      }))
+      return (
+        <div data-settings-schema-actions="segmented">
+          <SegmentedControl
+            value={node.actions.find((action) => action.pressed)?.id ?? node.actions[0]?.id ?? ""}
+            options={options}
+            onChange={dispatchAction}
+            size="sm"
+            fullWidth
+            aria-label="账号操作"
+          />
+        </div>
+      )
+    }
+    if (node.layout === "form") {
+      const primary = node.actions[0]
+      const secondary = node.actions.slice(1)
+      if (!primary) return null
+      return (
+        <div {...stylex.attrs(styles.accountActions)} data-settings-schema-actions="form">
+          <Show when={node.description || secondary.length > 0}>
+            <div {...stylex.attrs(styles.accountActionsInline)}>
+              <Show when={node.description}>
+                <p {...stylex.attrs(styles.accountActionNote)}>{node.description}</p>
+              </Show>
+              <For each={secondary}>
+                {(action) =>
+                  actionButton(action, {
+                    busyActionId,
+                    dispatch: dispatchAction,
+                  })
+                }
+              </For>
+            </div>
+          </Show>
+          {actionButton(primary, {
+            busyActionId,
+            dispatch: dispatchAction,
+            fullWidth: true,
+          })}
         </div>
       )
     }
     return (
       <div {...stylex.attrs(styles.actions)}>
         <For each={node.actions}>
-          {(action) => (
-            <Button
-              size="sm"
-              variant={action.variant ?? "secondary"}
-              disabled={action.disabled || busyActionId() !== null}
-              loading={busyActionId() === action.id}
-              data-settings-schema-action={action.id}
-              onClick={() => void dispatch(action.id)}
-            >
-              {action.label}
-            </Button>
-          )}
+          {(action) => actionButton(action, { busyActionId, dispatch: dispatchAction })}
         </For>
       </div>
     )
   }
 
   onMount(() => void loadModel())
+  onCleanup(() => props.onNavigationChange?.(null))
 
   return (
     <div
-      {...stylex.attrs(styles.root)}
+      {...stylex.attrs(styles.root, model()?.layout === "account" && styles.accountRoot)}
       data-settings-schema-renderer
+      data-settings-schema-layout={model()?.layout ?? "default"}
       aria-label={model()?.ariaLabel}
     >
       <Show when={loading()}>

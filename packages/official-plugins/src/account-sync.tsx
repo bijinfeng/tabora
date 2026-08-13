@@ -48,21 +48,29 @@ function accountModel(options: {
 }): SettingsPanelModel {
   const { phase, email, accountEmail, status } = options
 
+  const navigation = {
+    title: accountEmail || "未登录",
+    meta: accountEmail ? "已登录" : "本地模式",
+    avatar: accountEmail ? accountEmail.trim().slice(0, 1).toUpperCase() : "未",
+  }
+
   if (phase === "signed-in") {
     return {
       version: 1,
+      layout: "account",
+      navigation,
       ariaLabel: "Tabora 账号",
       nodes: [
         {
           type: "group",
-          title: "当前账号",
-          description: "账号会话已保存到当前设备，同步前会先校验登录状态。",
           children: [
             { type: "status", label: "邮箱", value: accountEmail || "已登录", tone: "accent" },
             { type: "status", label: "状态", value: "已登录", tone: "success" },
             ...statusNode(status),
             {
               type: "actions",
+              layout: "form",
+              description: "账号会话已保存到当前设备，可在数据同步中管理同步状态。",
               actions: [
                 {
                   id: "account.logout",
@@ -80,12 +88,12 @@ function accountModel(options: {
   if (phase === "reset-request") {
     return {
       version: 1,
+      layout: "account",
+      navigation,
       ariaLabel: "找回 Tabora 账号密码",
       nodes: [
         {
           type: "group",
-          title: "找回密码",
-          description: "发送重置链接，不登录不上传数据。",
           children: [
             {
               type: "field",
@@ -100,6 +108,8 @@ function accountModel(options: {
             ...statusNode(status),
             {
               type: "actions",
+              layout: "form",
+              description: "发送重置链接，不登录不上传数据",
               actions: [
                 {
                   id: "account.request-reset",
@@ -118,12 +128,12 @@ function accountModel(options: {
   if (phase === "reset-verify") {
     return {
       version: 1,
+      layout: "account",
+      navigation,
       ariaLabel: "设置 Tabora 账号新密码",
       nodes: [
         {
           type: "group",
-          title: "设置新密码",
-          description: "请粘贴重置链接中的 code，并设置新的登录密码。",
           children: [
             {
               type: "field",
@@ -160,6 +170,8 @@ function accountModel(options: {
             ...statusNode(status),
             {
               type: "actions",
+              layout: "form",
+              description: "设置新密码：请粘贴重置链接中的 code，并设置新的登录密码。",
               actions: [
                 {
                   id: "account.reset-password",
@@ -178,31 +190,30 @@ function accountModel(options: {
   const registering = phase === "register"
   return {
     version: 1,
+    layout: "account",
+    navigation,
     ariaLabel: "Tabora 账号登录注册",
     nodes: [
       {
         type: "actions",
+        layout: "segmented",
         actions: [
           {
             id: "account.mode.login",
             label: "登录",
-            variant: registering ? "ghost" : "primary",
-            disabled: !registering,
+            variant: "ghost",
+            pressed: !registering,
           },
           {
             id: "account.mode.register",
             label: "注册",
-            variant: registering ? "primary" : "ghost",
-            disabled: registering,
+            variant: "ghost",
+            pressed: registering,
           },
         ],
       },
       {
         type: "group",
-        title: registering ? "注册官方账号" : "登录官方账号",
-        description: registering
-          ? "注册后登录，并注册当前设备。"
-          : "登录后注册设备，同步前不上传数据。",
         children: [
           {
             type: "field",
@@ -243,13 +254,17 @@ function accountModel(options: {
           ...statusNode(status),
           {
             type: "actions",
+            layout: "form",
+            description: registering
+              ? "注册后登录，并注册当前设备。"
+              : "登录后注册设备，同步前不上传数据",
             actions: [
               {
                 id: registering ? "account.register" : "account.login",
                 label: registering ? "注册并登录" : "登录并注册设备",
                 variant: "primary",
               },
-              { id: "account.mode.reset", label: "忘记密码？", variant: "ghost" },
+              { id: "account.mode.reset", label: "忘记密码？", variant: "link" },
             ],
           },
         ],
@@ -434,12 +449,43 @@ function formatSyncTime(iso: string): string {
 export function createSyncSettingsProvider(
   syncManager: Pick<SyncManager, "triggerSync">,
   syncMetaRepo: AccountSyncService["syncMetaRepo"],
+  authClient: Pick<AuthClient, "getSession">,
 ): SettingsPanelProvider {
   let status: ProviderStatus | null = null
 
   return {
     async getModel() {
       const lastSyncAt = (await syncMetaRepo.get("lastSyncAt")) ?? null
+      let signedIn = false
+      try {
+        signedIn = Boolean(await authClient.getSession())
+      } catch {
+        // 会话读取失败时按本地模式展示，不阻塞设置页面。
+      }
+      const syncFailed = signedIn && status?.tone === "danger"
+      const syncCompleted = signedIn && (status?.tone === "success" || lastSyncAt)
+      const syncOverallStatus = !signedIn
+        ? "未开启"
+        : syncFailed
+          ? "同步失败"
+          : syncCompleted
+            ? "已同步"
+            : "待开启"
+      const syncMode = !signedIn ? "本地模式" : syncCompleted ? "官方云同步" : "待开启"
+      const syncDescription = !signedIn
+        ? "未同步"
+        : syncFailed && status
+          ? status.text
+          : syncCompleted && lastSyncAt
+            ? formatSyncTime(lastSyncAt)
+            : "登录后尚未开启同步"
+      const syncQueueStatus = !signedIn
+        ? "未开启"
+        : syncFailed
+          ? "同步失败"
+          : syncCompleted
+            ? "队列清空"
+            : "等待开启"
       return {
         version: 1,
         ariaLabel: "Tabora 数据同步",
@@ -447,19 +493,75 @@ export function createSyncSettingsProvider(
           {
             type: "group",
             title: "同步状态",
-            description: "登录后才会将本地工作台数据同步到官方服务。",
+            meta: syncOverallStatus,
             children: [
-              { type: "status", label: "模式", value: "官方云同步", tone: "accent" },
               {
-                type: "status",
-                label: "上次同步",
-                value: lastSyncAt ? formatSyncTime(lastSyncAt) : "尚未同步",
-                tone: lastSyncAt ? "success" : "neutral",
+                type: "row",
+                label: syncMode,
+                description: syncDescription,
+                meta: syncQueueStatus,
+                metaVariant: "badge",
+                metaTone: syncFailed
+                  ? "danger"
+                  : syncCompleted
+                    ? "success"
+                    : signedIn
+                      ? "accent"
+                      : "neutral",
               },
-              ...statusNode(status),
               {
-                type: "actions",
-                actions: [{ id: "sync.now", label: "立即同步", variant: "primary" }],
+                type: "field",
+                id: "sync.auto",
+                label: "后台自动同步",
+                control: "switch",
+                value: Boolean(syncCompleted),
+                disabled: true,
+              },
+              {
+                type: "row",
+                label: "立即同步",
+                action: {
+                  id: "sync.now",
+                  label: !signedIn ? "登录后可用" : syncCompleted ? "立即同步" : "开启同步",
+                  variant: "primary",
+                  disabled: !signedIn,
+                },
+              },
+            ],
+          },
+          {
+            type: "group",
+            title: "同步范围",
+            meta: "V1",
+            children: [
+              {
+                type: "row",
+                label: "会同步",
+                description: "工作区 / 插件配置 / 可同步数据",
+              },
+              {
+                type: "row",
+                label: "不会同步",
+                description: "密钥 / 本机路径 / 缓存",
+              },
+            ],
+          },
+          {
+            type: "group",
+            title: "处理",
+            meta: "后续能力",
+            children: [
+              {
+                type: "row",
+                label: "冲突",
+                description: "当前版本由服务端优先处理，不提供冲突收件箱",
+                action: { id: "sync.conflicts", label: "查看冲突", disabled: true },
+              },
+              {
+                type: "row",
+                label: "恢复",
+                description: "自动快照与历史恢复尚未交付",
+                action: { id: "sync.restore", label: "查看快照", disabled: true },
               },
             ],
           },
@@ -484,7 +586,7 @@ export function createSyncSettingsProvider(
 export function createOfficialAccountSyncPlugin(options: AccountSyncPluginOptions): PluginModule {
   const { authClient, syncManager, syncMetaRepo } = options.service
   const accountProvider = createAccountSettingsProvider(authClient)
-  const syncProvider = createSyncSettingsProvider(syncManager, syncMetaRepo)
+  const syncProvider = createSyncSettingsProvider(syncManager, syncMetaRepo, authClient)
 
   return {
     manifest: officialAccountSyncManifest,

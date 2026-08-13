@@ -64,6 +64,9 @@ export function createWorkbenchShellSettingsHostCopy(t: ShellTranslation): Setti
     sectionMeta,
     workspaceGroupTitle: t("settingsHost.group.workspace"),
     extensionGroupTitle: t("settingsHost.group.extensions"),
+    accountNavName: t("settingsHost.account.navName"),
+    accountNavMeta: t("settingsHost.account.navMeta"),
+    accountNavAvatar: t("settingsHost.account.navAvatar"),
     windowSubtitle: t("settingsHost.windowSubtitle"),
     statusReady: t("settingsHost.status.ready"),
     statusSectionChanged: (sectionTitleText: string) =>

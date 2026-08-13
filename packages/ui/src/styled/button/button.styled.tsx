@@ -55,6 +55,17 @@ const styles = stylex.create({
     paddingBlock: 0,
     paddingInline: 18,
   },
+  buttonDisabled: {
+    backgroundColor: color.surfaceSoft,
+    borderColor: color.line,
+    color: color.textSubtle,
+    opacity: 1,
+    ":hover": {
+      backgroundColor: color.surfaceSoft,
+      borderColor: color.line,
+      color: color.textSubtle,
+    },
+  },
   primary: {
     backgroundColor: color.accent,
     borderColor: color.accent,
@@ -103,6 +114,28 @@ const styles = stylex.create({
     ":active": {
       backgroundColor: color.surfaceHover,
     },
+  },
+  link: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    color: color.accent,
+    fontWeight: font.medium,
+    textDecoration: "none",
+    ":hover": {
+      backgroundColor: "transparent",
+      borderColor: "transparent",
+      color: color.accentHover,
+      textDecoration: "underline",
+    },
+    ":active": {
+      backgroundColor: "transparent",
+      color: color.accentHover,
+    },
+  },
+  linkLayout: {
+    height: "auto",
+    minHeight: 28,
+    paddingInline: 0,
   },
   danger: {
     backgroundColor: color.danger,
@@ -201,6 +234,7 @@ const buttonVariantStyles = {
   secondary: styles.secondary,
   subtle: styles.subtle,
   ghost: styles.ghost,
+  link: styles.link,
   danger: styles.danger,
   "danger-subtle": styles.dangerSubtle,
 } as const
@@ -229,6 +263,8 @@ export function Button(props: ButtonProps) {
       styles.buttonBase,
       buttonVariantStyles[props.variant ?? "secondary"],
       buttonSizeStyles[props.size ?? "md"],
+      props.disabled && styles.buttonDisabled,
+      props.variant === "link" && styles.linkLayout,
       props.fullWidth && styles.buttonFullWidth,
       props.xstyle,
     )

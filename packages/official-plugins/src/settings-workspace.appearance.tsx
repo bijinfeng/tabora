@@ -8,7 +8,7 @@ import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-a
 import { contributionRefKey, sameContributionRef } from "@tabora/plugin-api/sdk"
 
 import { ContributionSegmented, RangeField, SettingsGroup } from "./settings-workspace.shared"
-import { className, styles } from "./styles"
+import { styles } from "./styles"
 
 export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
   const [accentTone, setAccentTone] = createSignal("sage")
@@ -52,7 +52,6 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="appearance">
       <SettingsGroup title="主题" meta={activeThemeTitle()}>
         <FieldRow
-          class={className(styles.fieldRow)}
           label="界面模式"
           description="明亮、暗色或跟随系统"
           trailing={
@@ -67,7 +66,6 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="强调色"
           description="用于焦点、选中状态和主操作按钮"
           trailing={
@@ -93,7 +91,6 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
 
       <SettingsGroup title="背景" meta={activeBackgroundTitle()}>
         <FieldRow
-          class={className(styles.fieldRow)}
           label="页面背景"
           description="纯色、轻网格或本地图片；背景由插件渲染"
           trailing={
@@ -113,13 +110,11 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="背景渲染"
           description="由 background-renderer 插件渲染图片、渐变或画布背景"
           trailing={<span {...stylex.attrs(styles.rowMeta)}>跟随背景源</span>}
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="界面密度"
           description="影响设置、弹窗、卡片列表的默认间距"
           trailing={
@@ -137,7 +132,6 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="圆角半径"
           description="控制卡片、输入框和浮层的圆角基准"
           trailing={
@@ -152,7 +146,6 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
           }
         />
         <FieldRow
-          class={className(styles.fieldRow)}
           label="正文大小"
           description="仅调整工作台正文和卡片说明文字"
           trailing={
@@ -171,7 +164,6 @@ export function AppearanceSettingsPanel(props: SettingsPanelViewProps) {
       <Show when={canSwitchLocale()}>
         <SettingsGroup title="语言" meta={localeValue()}>
           <FieldRow
-            class={className(styles.fieldRow)}
             label="当前语言"
             description="影响工作台宿主文案和官方插件面板文案"
             trailing={

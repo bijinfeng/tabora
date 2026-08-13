@@ -175,6 +175,7 @@ describe("createWorkbenchShellSurfaceProps", () => {
     props.settingsHost.onSectionChange("search")
     props.settingsHost.onClose()
 
+    expect(props.settingsHost.preserveActiveSection).toBe(true)
     expect(shell.state.overlays.activeSettingsSectionId()).toBe("search")
     expect(shell.state.overlays.settingsOpen()).toBe(false)
   })

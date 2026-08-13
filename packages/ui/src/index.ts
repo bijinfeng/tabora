@@ -6,7 +6,7 @@ export { Button, IconButton } from "./styled/button"
 export type { ButtonProps, IconButtonProps, ButtonVariant, ButtonSize } from "./styled/button"
 
 export { Input } from "./styled/input"
-export type { InputProps, InputSize, InputType } from "./styled/input"
+export type { InputAppearance, InputProps, InputSize, InputType } from "./styled/input"
 
 export { Textarea } from "./styled/textarea"
 export type { TextareaProps } from "./styled/textarea"

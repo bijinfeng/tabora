@@ -13,6 +13,7 @@ export type SegmentedControlProps<V extends string> = {
   options: SegmentedControlOption<V>[]
   onChange: (value: V) => void
   size?: "sm" | "md"
+  fullWidth?: boolean
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
   itemClass?: string | undefined
@@ -31,6 +32,7 @@ export function SegmentedControl<V extends string>(props: SegmentedControlProps<
       class={props.class}
       style={props.style}
       data-size={props.size ?? "md"}
+      data-fullwidth={props.fullWidth ? "" : undefined}
       value={props.value}
       onChange={(v) => v && props.onChange(v as V)}
       aria-label={props["aria-label"]}

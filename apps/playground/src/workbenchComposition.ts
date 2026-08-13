@@ -17,6 +17,8 @@ import {
   type WorkbenchRuntimeBootstrap,
 } from "@tabora/workbench-app"
 
+const DEFAULT_PLAYGROUND_API_BASE_URL = "http://localhost:4000"
+
 export function createPlaygroundWorkbenchComposition(): WorkbenchComposition {
   return createWorkbenchComposition({
     host: createWebHostAdapter({
@@ -26,31 +28,29 @@ export function createPlaygroundWorkbenchComposition(): WorkbenchComposition {
   })
 }
 
-export function resolvePlaygroundApiBaseUrl(): string | undefined {
+export function resolvePlaygroundApiBaseUrl(): string {
   const configured = import.meta.env.VITE_TABORA_API_BASE?.trim()
-  return configured || undefined
+  return configured || DEFAULT_PLAYGROUND_API_BASE_URL
 }
 
 export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
   const apiBaseUrl = resolvePlaygroundApiBaseUrl()
-  const storageAdapter = createWebStorageAdapter(undefined, { enableSync: Boolean(apiBaseUrl) })
+  const storageAdapter = createWebStorageAdapter(undefined, { enableSync: true })
   const host = createWebHostAdapter({ id: "host.playground" })
-  const accountSyncPlugin = apiBaseUrl
-    ? createBuiltinAccountSyncPlugin({
-        service: createAccountSyncService({
-          host,
-          storageAdapter,
-          apiBaseUrl,
-          syncCollections: createPluginSyncCollections(
-            builtinPlugins.map((plugin) => plugin.module.manifest),
-          ),
-        }),
-      })
-    : null
+  const accountSyncPlugin = createBuiltinAccountSyncPlugin({
+    service: createAccountSyncService({
+      host,
+      storageAdapter,
+      apiBaseUrl,
+      syncCollections: createPluginSyncCollections(
+        builtinPlugins.map((plugin) => plugin.module.manifest),
+      ),
+    }),
+  })
 
   return createWorkbenchRuntimeBootstrap({
     host,
-    plugins: accountSyncPlugin ? [...builtinPlugins, accountSyncPlugin] : builtinPlugins,
+    plugins: [...builtinPlugins, accountSyncPlugin],
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
     shellConfig: builtinWorkbenchShellConfig,
     storageAdapter,

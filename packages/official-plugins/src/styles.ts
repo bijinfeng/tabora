@@ -1,9 +1,4 @@
 import * as stylex from "@stylexjs/stylex"
-import type { CompiledStyles, InlineStyles, StyleXArray } from "@stylexjs/stylex"
-
-type XStyle = StyleXArray<
-  (null | undefined | CompiledStyles) | boolean | Readonly<[CompiledStyles, InlineStyles]>
->
 
 const mobile = "@media (max-width: 560px)"
 
@@ -275,19 +270,6 @@ export const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-  },
-  fieldRow: {
-    ...interactiveSurface,
-    display: "grid",
-    gap: 6,
-    minHeight: 42,
-    minWidth: 0,
-    paddingBlock: 9,
-    paddingInline: 10,
-    ":hover": {
-      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-    },
   },
   rowMeta: {
     color: "rgb(var(--tbr-color-text-muted))",
@@ -864,7 +846,3 @@ export const styles = stylex.create({
     marginInline: 0,
   },
 })
-
-export function className(...values: XStyle[]) {
-  return stylex.attrs(...values).class
-}

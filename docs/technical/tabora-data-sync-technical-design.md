@@ -35,7 +35,7 @@ backend/app
   `- admin server fn   管理员用户、记录、附件、设置和审计（同应用内 server function）
 ```
 
-`official.account-sync` 是可选 builtin 插件。组合根只在配置云端 API 时创建 `AccountSyncService` 并装配该插件；服务内部持有认证客户端、同步 manager 和同步元数据仓库，插件只获得设置 provider 所需的最小操作面。未装配账号插件的宿主不创建认证存储、同步队列或同步调度。
+`official.account-sync` 是按宿主选择的 builtin 插件。Playground 组合根始终创建 `AccountSyncService` 并装配该插件，未配置环境变量时使用本地开发后端地址；环境变量只覆盖 API 地址，不决定设置面板是否存在。服务内部持有认证客户端、同步 manager 和同步元数据仓库，插件只获得设置 provider 所需的最小操作面。未装配账号插件的宿主不创建认证存储、同步队列或同步调度。
 
 ## 3. 后端路由边界
 

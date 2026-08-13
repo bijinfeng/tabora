@@ -58,4 +58,29 @@ describe("SegmentedControl", () => {
     expect(selected.className).not.toContain("tbr-segmented-item")
     expect(selected.className.length).toBeGreaterThan(0)
   })
+
+  it("supports equal-width options for compact form mode controls", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <StyledSegmentedControl<"login" | "register">
+          value="login"
+          onChange={() => {}}
+          size="sm"
+          fullWidth
+          aria-label="账号操作"
+          options={[
+            { value: "login", label: "登录" },
+            { value: "register", label: "注册" },
+          ]}
+        />
+      ),
+      root,
+    )
+
+    expect(root.firstElementChild?.getAttribute("data-fullwidth")).toBe("")
+    expect(root.querySelectorAll("button")).toHaveLength(2)
+  })
 })

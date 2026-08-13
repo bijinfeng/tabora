@@ -18,6 +18,7 @@ import { MobileSettingsHeader } from "./MobileSettingsHeader"
 
 export type MobileSettingsIndexProps = {
   title: string
+  visibleSections: SettingsSectionId[]
   searchPlaceholder: string
   sectionTitle: (sectionId: SettingsSectionId) => string
   sectionDescription: (sectionId: SettingsSectionId) => string
@@ -211,9 +212,12 @@ export function MobileSettingsIndex(props: MobileSettingsIndexProps) {
   const sectionMeta = (sectionId: SettingsSectionId) =>
     props.sectionMeta?.(sectionId) ?? INDEX_SECTION_META_FALLBACK[sectionId]
   const sectionsForGroup = (group: (typeof MOBILE_SETTINGS_GROUPS)[number]) => {
+    const visibleSections = group.sections.filter((sectionId) =>
+      props.visibleSections.includes(sectionId),
+    )
     const normalizedQuery = query().trim().toLocaleLowerCase()
-    if (!normalizedQuery) return group.sections
-    return group.sections.filter((sectionId) =>
+    if (!normalizedQuery) return visibleSections
+    return visibleSections.filter((sectionId) =>
       [
         props.sectionTitle(sectionId),
         props.sectionDescription(sectionId),
