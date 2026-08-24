@@ -1,15 +1,21 @@
-import { describe, expect, it } from "vitest"
 import type {
   BackgroundProviderContribution,
   ExtensionPoint,
   LayoutContribution,
   PluginManifest,
+  SearchContribution,
   SearchProviderContribution,
   SettingsPanelContribution,
   ThemeContribution,
   WidgetContribution,
-  SearchContribution,
 } from "@tabora/plugin-api/sdk"
+import { BUILTIN_THEME_PLUGIN_ID, builtinThemes } from "@tabora/theme"
+import {
+  BUILTIN_BACKGROUND_PROVIDER_PLUGIN_ID,
+  builtinBackgroundProviders,
+} from "./builtinBackgroundProviders"
+import { BUILTIN_SEARCH_PROVIDER_PLUGIN_ID, builtinSearchProviders } from "./builtinSearchProviders"
+import { describe, expect, it } from "vitest"
 
 import { officialDefaultWorkspacePreset, officialPlugins } from "./index"
 
@@ -55,7 +61,6 @@ describe("officialDefaultWorkspacePreset", () => {
   })
 
   it("references current builtin layout, theme, background, and search provider ids", () => {
-    const presetPluginIds = new Set(officialDefaultWorkspacePreset.plugins)
     const layouts = listBuiltinContributions("layouts") as Array<{
       pluginId: string
       contribution: LayoutContribution
@@ -73,45 +78,65 @@ describe("officialDefaultWorkspacePreset", () => {
       contribution: SearchProviderContribution
     }>
 
-    const layout = layouts.find(
-      ({ pluginId, contribution }) =>
-        pluginId === officialDefaultWorkspacePreset.layout.pluginId &&
-        contribution.id === officialDefaultWorkspacePreset.layout.id,
-    )
-    const theme = themes.find(
-      ({ pluginId, contribution }) =>
-        pluginId === officialDefaultWorkspacePreset.theme.pluginId &&
-        contribution.id === officialDefaultWorkspacePreset.theme.id,
-    )
-    const background = backgrounds.find(
-      ({ pluginId, contribution }) =>
-        pluginId === officialDefaultWorkspacePreset.backgroundProvider.pluginId &&
-        contribution.id === officialDefaultWorkspacePreset.backgroundProvider.id,
-    )
-    const defaultSearchProvider = searchProviders.find(
-      ({ pluginId, contribution }) =>
-        pluginId === officialDefaultWorkspacePreset.search.defaultProvider.pluginId &&
-        contribution.id === officialDefaultWorkspacePreset.search.defaultProvider.id,
-    )
+    // Dashboard is now built into the host, not a plugin contribution
+    const isDashboardBuiltin =
+      officialDefaultWorkspacePreset.layout.id === "official.layout.workbench-dashboard"
+
+    const layout = isDashboardBuiltin
+      ? { contribution: { id: officialDefaultWorkspacePreset.layout.id } }
+      : layouts.find(
+          ({ contribution }) => contribution.id === officialDefaultWorkspacePreset.layout.id,
+        )
+    // Theme is now built into the host (@tabora/theme), not a plugin contribution
+    const theme =
+      officialDefaultWorkspacePreset.theme.pluginId === BUILTIN_THEME_PLUGIN_ID
+        ? builtinThemes.find(
+            (candidate) => candidate.id === officialDefaultWorkspacePreset.theme.id,
+          )
+        : themes.find(
+            ({ contribution }) => contribution.id === officialDefaultWorkspacePreset.theme.id,
+          )?.contribution
+    // Background providers are now built into the host, not a plugin contribution
+    const background =
+      officialDefaultWorkspacePreset.backgroundProvider.pluginId ===
+      BUILTIN_BACKGROUND_PROVIDER_PLUGIN_ID
+        ? builtinBackgroundProviders.find(
+            (candidate) => candidate.id === officialDefaultWorkspacePreset.backgroundProvider.id,
+          )
+        : backgrounds.find(
+            ({ contribution }) =>
+              contribution.id === officialDefaultWorkspacePreset.backgroundProvider.id,
+          )?.contribution
+    // Search providers are now built into the host, not a plugin contribution
+    const defaultSearchProvider =
+      officialDefaultWorkspacePreset.search.defaultProvider.pluginId ===
+      BUILTIN_SEARCH_PROVIDER_PLUGIN_ID
+        ? builtinSearchProviders.find(
+            (candidate) =>
+              candidate.id === officialDefaultWorkspacePreset.search.defaultProvider.id,
+          )
+        : searchProviders.find(
+            ({ contribution }) =>
+              contribution.id === officialDefaultWorkspacePreset.search.defaultProvider.id,
+          )?.contribution
     const enabledSearchProviders = officialDefaultWorkspacePreset.search.enabledProviders.map(
-      (provider) =>
-        searchProviders.find(
+      (provider) => {
+        if (provider.pluginId === BUILTIN_SEARCH_PROVIDER_PLUGIN_ID) {
+          return builtinSearchProviders.find((candidate) => candidate.id === provider.id)
+        }
+        return searchProviders.find(
           ({ pluginId, contribution }) =>
             pluginId === provider.pluginId && contribution.id === provider.id,
-        ),
+        )?.contribution
+      },
     )
 
     expect(layout?.contribution.id).toBe(officialDefaultWorkspacePreset.layout.id)
-    expect(theme?.contribution.id).toBe(officialDefaultWorkspacePreset.theme.id)
-    expect(background?.contribution.id).toBe(officialDefaultWorkspacePreset.backgroundProvider.id)
-    expect(defaultSearchProvider?.contribution.id).toBe(
-      officialDefaultWorkspacePreset.search.defaultProvider.id,
-    )
+    expect(theme?.id).toBe(officialDefaultWorkspacePreset.theme.id)
+    expect(background?.id).toBe(officialDefaultWorkspacePreset.backgroundProvider.id)
+    expect(defaultSearchProvider?.id).toBe(officialDefaultWorkspacePreset.search.defaultProvider.id)
     expect(enabledSearchProviders.every(Boolean)).toBe(true)
-    expect(presetPluginIds.has(layout?.pluginId ?? "")).toBe(true)
-    expect(presetPluginIds.has(theme?.pluginId ?? "")).toBe(true)
-    expect(presetPluginIds.has(background?.pluginId ?? "")).toBe(true)
-    expect(presetPluginIds.has(defaultSearchProvider?.pluginId ?? "")).toBe(true)
+    // Dashboard, theme, search providers, and background providers are now built-in, not plugins
   })
 
   it("enables the four search providers shown in the dashboard prototype", () => {
@@ -139,19 +164,25 @@ describe("officialDefaultWorkspacePreset", () => {
   it("references existing contributions for every preset instance", () => {
     const contributionIdsByPoint: Record<ExtensionPoint, Set<string>> = {
       layout: new Set(
-        (listBuiltinContributions("layouts") as Array<{ contribution: LayoutContribution }>).map(
-          ({ contribution }) => contribution.id,
-        ),
+        (
+          listBuiltinContributions("layouts") as Array<{
+            contribution: LayoutContribution
+          }>
+        ).map(({ contribution }) => contribution.id),
       ),
       widget: new Set(
-        (listBuiltinContributions("widgets") as Array<{ contribution: WidgetContribution }>).map(
-          ({ contribution }) => contribution.id,
-        ),
+        (
+          listBuiltinContributions("widgets") as Array<{
+            contribution: WidgetContribution
+          }>
+        ).map(({ contribution }) => contribution.id),
       ),
       search: new Set(
-        (listBuiltinContributions("searches") as Array<{ contribution: SearchContribution }>).map(
-          ({ contribution }) => contribution.id,
-        ),
+        (
+          listBuiltinContributions("searches") as Array<{
+            contribution: SearchContribution
+          }>
+        ).map(({ contribution }) => contribution.id),
       ),
       "search-provider": new Set(
         (
@@ -169,9 +200,11 @@ describe("officialDefaultWorkspacePreset", () => {
       ),
       "background-renderer": new Set(),
       theme: new Set(
-        (listBuiltinContributions("themes") as Array<{ contribution: ThemeContribution }>).map(
-          ({ contribution }) => contribution.id,
-        ),
+        (
+          listBuiltinContributions("themes") as Array<{
+            contribution: ThemeContribution
+          }>
+        ).map(({ contribution }) => contribution.id),
       ),
       "settings-panel": new Set(
         (

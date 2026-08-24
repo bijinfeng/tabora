@@ -49,7 +49,6 @@ export function buildWorkbenchSettingsPanelProps(
   options: {
     workspace: Workspace | null
     workspaces: Workspace[]
-    layouts: NonNullable<SettingsPanelData["layouts"]>
     themes: NonNullable<SettingsPanelData["themes"]>
     backgrounds: NonNullable<SettingsPanelData["backgrounds"]>
     searchProviders: NonNullable<SettingsPanelData["searchProviders"]>
@@ -79,9 +78,6 @@ export function buildWorkbenchSettingsPanelProps(
   if (grants.has("workspace.search.write") && options.host.setDefaultSearchProvider) {
     host.setDefaultSearchProvider = (providerId) =>
       Promise.resolve(options.host.setDefaultSearchProvider?.(providerId))
-  }
-  if (grants.has("workspace.layout.write") && options.host.switchLayout) {
-    host.switchLayout = (layoutId) => options.host.switchLayout!(layoutId)
   }
   if (grants.has("workspace.locale.write") && options.host.switchLocale) {
     host.switchLocale = (locale) => options.host.switchLocale!(locale)
@@ -115,7 +111,6 @@ export function buildWorkbenchSettingsPanelProps(
   if (readGrants.has("workspace.list.read")) {
     data.workspaces = options.workspaces.map(workspaceSummary)
   }
-  if (readGrants.has("catalog.layouts.read")) data.layouts = options.layouts
   if (readGrants.has("catalog.themes.read")) data.themes = options.themes
   if (readGrants.has("catalog.backgrounds.read")) data.backgrounds = options.backgrounds
   if (readGrants.has("catalog.search-providers.read"))
@@ -139,7 +134,6 @@ export function buildWorkbenchSettingsPanelProps(
 export function createWorkbenchSettingsPanelPropsBuilder(options: {
   getWorkspace: () => Workspace | null
   getWorkspaces: () => Workspace[]
-  getLayouts: () => NonNullable<SettingsPanelData["layouts"]>
   getThemes: () => NonNullable<SettingsPanelData["themes"]>
   getBackgrounds: () => NonNullable<SettingsPanelData["backgrounds"]>
   getSearchProviders: () => NonNullable<SettingsPanelData["searchProviders"]>
@@ -157,7 +151,6 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
     buildWorkbenchSettingsPanelProps(panel, {
       workspace: options.getWorkspace(),
       workspaces: options.getWorkspaces(),
-      layouts: options.getLayouts(),
       themes: options.getThemes(),
       backgrounds: options.getBackgrounds(),
       searchProviders: options.getSearchProviders(),

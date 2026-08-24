@@ -157,7 +157,7 @@ Tabora 使用三层 token：原始值、语义 token、组件 token。主题定�
 
 ## Layout
 
-默认工作台是三区结构：左侧轻 rail、内容区、页面背景。内容区在仪表盘式布局中包含常驻命令搜索和主网格；在专注布局中保留 rail，使用居中的问候/命令入口、主卡片和下方 satellite 卡片切换区。
+默认工作台是三区结构：左侧轻 rail、内容区、页面背景。内容区包含常驻命令搜索和主网格。布局是宿主内建的单一 dashboard 壳体，不是可切换的插件类型；移动端在同一 layout view 内以响应式断点（< 768px）折叠 rail 为底部工具栏。
 
 桌面行为：
 
@@ -215,7 +215,7 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 
 ## Components
 
-`@tabora/ui` 承载插件内容区基础组件和低层可访问 primitive，例如 `Dialog`、`Drawer`、`Popover`、`ContextMenu`、`Toast`、通用 `CommandPalette`。Tabora 宿主级容器，例如 `WidgetCardShell`、全局 `ModalHost`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid`、shell 全局命令面板，由 shell 或 layout host 提供，不放入 `@tabora/ui`。
+`@tabora/ui` 承载插件内容区基础组件和低层可访问 primitive，例如 `Dialog`、`Drawer`、`Popover`、`ContextMenu`、`Toast`、通用 `CommandPalette`。Tabora 宿主级容器，例如 `WidgetCardShell`、全局 `ModalHost`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail`、`WorkbenchGrid`、shell 全局命令面板，由 shell 或宿主内建 layout 提供，不放入 `@tabora/ui`。
 
 基础组件规则：
 
@@ -224,7 +224,7 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 - 消费方视觉覆盖只通过明确的根 `xstyle` 或组件已定义的组合 API；多 slot 组件不公开成组的 `*Class` / `*Style` 参数。
 - 不新增 package-local `sx()`、`toSolidStyle()` 或重复的 class/style merge helper；未迁移组件按上述规则渐进收敛。
 - 业务代码优先从稳定组件 subpath 精确导入，例如 `@tabora/ui/button`、`@tabora/ui/input`、`@tabora/ui/select`，避免顶层 `@tabora/ui` barrel 扩大测试与开发时的模块转换图；新增 subpath 时必须同步 source export、publish export 和 package build entry。
-- package 构建由共享 StyleX Vite/Rolldown 配置抽取 CSS。`@tabora/ui`、shell、layout 与每个可独立启停的插件仍各自输出一份 CSS asset，不合并插件加载边界。
+- package 构建由共享 StyleX Vite/Rolldown 配置抽取 CSS。`@tabora/ui`、shell 与每个可独立启停的插件仍各自输出一份 CSS asset，不合并插件加载边界。
 
 - Button：主操作触发器。每个可视区域最多一个 primary。支持变体、尺寸、loading、disabled。
 - IconButton：用于仅图标动作，必须有 `aria-label` 或 tooltip。
@@ -301,7 +301,7 @@ Do:
 
 - 使用 theme token 和 CSS custom properties。
 - 保持第一屏是可用工作台。
-- 让布局、搜索源、背景、主题、widget、设置面板来自插件贡献。
+- 让搜索源、背景、主题、widget、设置面板来自插件贡献；布局是宿主内建的单一 dashboard 壳体。
 - 使用边框和间距表达层级。
 - 保持卡片尺寸稳定，hover/focus/drag 不造成布局跳动。
 - 在移动端折叠为单列并保留实例 `size` 状态。

@@ -1,0 +1,392 @@
+import * as stylex from "@stylexjs/stylex"
+import type { JSX } from "solid-js"
+import { TaboraMark } from "@tabora/brand"
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
+import type { LayoutHostAPI } from "@tabora/plugin-api/sdk"
+import { Button, IconButton } from "@tabora/ui/button"
+import { Input } from "@tabora/ui/input"
+import Circle from "lucide-solid/icons/circle"
+import CircleDot from "lucide-solid/icons/circle-dot"
+import Command from "lucide-solid/icons/command"
+import Diamond from "lucide-solid/icons/diamond"
+import Heart from "lucide-solid/icons/heart"
+import Hexagon from "lucide-solid/icons/hexagon"
+import Sparkles from "lucide-solid/icons/sparkles"
+import Square from "lucide-solid/icons/square"
+import Star from "lucide-solid/icons/star"
+import Triangle from "lucide-solid/icons/triangle"
+import Zap from "lucide-solid/icons/zap"
+import { HostActionIcon } from "./host-action-icon"
+import { className, styles } from "./styles"
+import type { ActiveGroupSetter, RailGroup, RailGroupContextMenu, RailGroupSetter } from "./types"
+
+const groupIcons = [
+  "circle-dot",
+  "circle",
+  "diamond",
+  "star",
+  "hexagon",
+  "command",
+  "zap",
+  "heart",
+  "square",
+  "triangle",
+  "sparkles",
+]
+
+function GroupIcon(props: { icon: string; size?: number }): JSX.Element {
+  const size = props.size ?? 16
+  switch (props.icon) {
+    case "circle-dot":
+      return <CircleDot size={size} />
+    case "diamond":
+      return <Diamond size={size} />
+    case "star":
+      return <Star size={size} />
+    case "hexagon":
+      return <Hexagon size={size} />
+    case "command":
+      return <Command size={size} />
+    case "zap":
+      return <Zap size={size} />
+    case "heart":
+      return <Heart size={size} />
+    case "square":
+      return <Square size={size} />
+    case "triangle":
+      return <Triangle size={size} />
+    case "sparkles":
+      return <Sparkles size={size} />
+    default:
+      return <Circle size={size} />
+  }
+}
+
+export function WorkbenchRail(props: {
+  host: LayoutHostAPI
+  groups?: () => RailGroup[]
+  activeGroupId?: () => string
+  setGroups?: RailGroupSetter
+  setActiveGroupId?: ActiveGroupSetter
+}) {
+  const railActions = () => props.host.getGlobalActions("rail")
+  const utilityActions = () =>
+    railActions().filter((action) => ["theme", "settings"].includes(action.id))
+  const homeAction = () => railActions().find((action) => action.id === "home")
+  const [inlineOpen, setInlineOpen] = createSignal(false)
+  const [inlineName, setInlineName] = createSignal("")
+  const [groupMenu, setGroupMenu] = createSignal<RailGroupContextMenu | null>(null)
+  const fallbackDefaultGroup = (): RailGroup => ({
+    id: "default",
+    name: homeAction()?.label.replace(/^分组\s*/, "") || "我的工作台",
+    icon: "circle-dot",
+    isDefault: true,
+    widgets: [],
+  })
+  const [fallbackGroups, setFallbackGroups] = createSignal<RailGroup[]>([fallbackDefaultGroup()])
+  const [fallbackActiveGroupId, setFallbackActiveGroupId] = createSignal("default")
+  const groups = props.groups ?? fallbackGroups
+  const activeGroupId = props.activeGroupId ?? fallbackActiveGroupId
+  const setGroups = props.setGroups ?? ((value) => setFallbackGroups(value))
+  const setActiveGroupId = props.setActiveGroupId ?? ((value) => setFallbackActiveGroupId(value))
+  let inlineInput: HTMLInputElement | undefined
+  let groupMenuPanel: HTMLDivElement | undefined
+  let groupCounter = 1
+
+  function pickDefaultIcon() {
+    return "circle-dot"
+  }
+
+  function startCreateGroup() {
+    if (inlineOpen()) {
+      inlineInput?.focus()
+      return
+    }
+    setInlineOpen(true)
+    setInlineName("")
+    window.setTimeout(() => inlineInput?.focus(), 80)
+  }
+
+  function cancelGroupCreate() {
+    setInlineOpen(false)
+    setInlineName("")
+  }
+
+  function commitGroupName() {
+    const name = inlineName().trim()
+    if (!name) {
+      cancelGroupCreate()
+      return
+    }
+    groupCounter += 1
+    const id = `group-${groupCounter}`
+    setGroups((items) => [
+      ...items,
+      { id, name, icon: pickDefaultIcon(), isDefault: false, widgets: [] },
+    ])
+    setActiveGroupId(id)
+    setGroupMenu(null)
+    cancelGroupCreate()
+    props.host.showToast(`已创建分组「${name}」 · 右键可改图标和布局`, { type: "success" })
+  }
+
+  function switchGroup(groupId: string) {
+    if (inlineOpen()) return
+    if (groupId === activeGroupId()) return
+    const group = groups().find((item) => item.id === groupId)
+    if (!group) return
+    setGroupMenu(null)
+    setActiveGroupId(groupId)
+    if (groupId === "default") homeAction()?.run()
+    props.host.showToast(`已切换到「${group.name}」`, { type: "success" })
+  }
+
+  function activeGroupMenu() {
+    const menu = groupMenu()
+    if (!menu) return null
+    const group = groups().find((item) => item.id === menu.groupId)
+    return group ? { ...menu, group } : null
+  }
+
+  function openGroupMenu(event: MouseEvent, groupId: string) {
+    event.preventDefault()
+    cancelGroupCreate()
+    setGroupMenu({
+      groupId,
+      x: Math.min(event.clientX, window.innerWidth - 220),
+      y: Math.min(event.clientY, window.innerHeight - 320),
+    })
+  }
+
+  function renameGroup(groupId: string) {
+    const group = groups().find((item) => item.id === groupId)
+    if (!group) return
+    const next = window.prompt("新名称", group.name)
+    if (next == null) return
+    const name = next.trim().slice(0, 20)
+    if (!name) return
+    setGroups((items) => items.map((item) => (item.id === groupId ? { ...item, name } : item)))
+    setGroupMenu(null)
+    props.host.showToast(`已重命名为「${name}」`, { type: "success" })
+  }
+
+  function setGroupIcon(groupId: string, icon: string) {
+    const group = groups().find((item) => item.id === groupId)
+    if (!group) return
+    setGroups((items) => items.map((item) => (item.id === groupId ? { ...item, icon } : item)))
+    props.host.showToast(`已更新「${group.name}」图标`, { type: "success" })
+  }
+
+  function deleteGroup(groupId: string) {
+    const group = groups().find((item) => item.id === groupId)
+    if (!group || group.isDefault) return
+    setGroups((items) => items.filter((item) => item.id !== groupId))
+    if (activeGroupId() === groupId) {
+      setActiveGroupId("default")
+      homeAction()?.run()
+    }
+    setGroupMenu(null)
+    props.host.showToast(`已删除「${group.name}」`, { type: "success" })
+  }
+
+  onMount(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "n") {
+        event.preventDefault()
+        startCreateGroup()
+        return
+      }
+      if ((event.metaKey || event.ctrlKey) && !event.shiftKey && /^[1-9]$/.test(event.key)) {
+        const target = groups()[Number.parseInt(event.key, 10) - 1]
+        if (target) {
+          event.preventDefault()
+          switchGroup(target.id)
+        }
+        return
+      }
+      if (event.key === "Escape" && inlineOpen()) {
+        event.preventDefault()
+        cancelGroupCreate()
+      }
+      if (event.key === "Escape" && groupMenu()) {
+        event.preventDefault()
+        setGroupMenu(null)
+      }
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const path = event.composedPath()
+      if (groupMenu() && !(groupMenuPanel && path.includes(groupMenuPanel))) {
+        setGroupMenu(null)
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    window.addEventListener("pointerdown", onPointerDown)
+    onCleanup(() => {
+      window.removeEventListener("keydown", onKeyDown)
+      window.removeEventListener("pointerdown", onPointerDown)
+    })
+  })
+
+  return (
+    <aside {...stylex.attrs(styles.rail)} data-workbench-rail aria-label="工作台导航">
+      <TaboraMark class={className(styles.railLogo)} />
+      <div {...stylex.attrs(styles.railGroups)}>
+        <For each={groups()}>
+          {(group, index) => {
+            const shortcut = () => (index() < 9 ? `⌘${index() + 1}` : "")
+            return (
+              <div
+                {...stylex.attrs(styles.railGroup)}
+                onContextMenu={(event) => openGroupMenu(event, group.id)}
+              >
+                <IconButton
+                  size="md"
+                  xstyle={[
+                    styles.railButton,
+                    group.id === activeGroupId() && styles.railButtonActive,
+                  ]}
+                  aria-label={`分组 ${group.name}`}
+                  title={`${group.name} · 右键菜单${shortcut() ? ` · ${shortcut()}` : ""}`}
+                  onClick={() => switchGroup(group.id)}
+                >
+                  <span {...stylex.attrs(styles.groupIcon)}>
+                    <GroupIcon icon={group.icon} />
+                  </span>
+                  <Show when={shortcut()}>
+                    {(label) => <span {...stylex.attrs(styles.groupShortcut)}>{label()}</span>}
+                  </Show>
+                </IconButton>
+                <span {...stylex.attrs(styles.groupTip)}>{group.name} · Dashboard</span>
+              </div>
+            )
+          }}
+        </For>
+        <Show when={inlineOpen()}>
+          <div {...stylex.attrs(styles.placeholderWrap)}>
+            <IconButton
+              size="md"
+              xstyle={[styles.railButton, styles.placeholder]}
+              aria-label="正在命名"
+            >
+              <Circle size={16} />
+            </IconButton>
+            <div {...stylex.attrs(styles.inlinePop)} data-rail-inline-pop>
+              <Input
+                xstyle={styles.inlineInput}
+                ref={(element) => {
+                  inlineInput = element
+                }}
+                value={inlineName()}
+                onInput={setInlineName}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    commitGroupName()
+                  } else if (event.key === "Escape") {
+                    event.preventDefault()
+                    cancelGroupCreate()
+                  }
+                }}
+                onBlur={() => {
+                  window.setTimeout(() => {
+                    if (inlineOpen()) cancelGroupCreate()
+                  }, 150)
+                }}
+                placeholder="分组名 · Enter 创建"
+                maxLength={20}
+                aria-label="分组名"
+              />
+              <span {...stylex.attrs(styles.inlineHint)}>
+                <kbd {...stylex.attrs(styles.inlineKbd)}>Enter</kbd>建{" "}
+                <kbd {...stylex.attrs(styles.inlineKbd)}>Esc</kbd>退
+              </span>
+            </div>
+          </div>
+        </Show>
+      </div>
+      <div {...stylex.attrs(styles.divider)} />
+      <IconButton
+        size="md"
+        xstyle={styles.railButton}
+        aria-label="新建分组"
+        title="新建分组（⌘ ⇧ N）"
+        onClick={startCreateGroup}
+      >
+        <HostActionIcon id="add-widget" icon="plus" size={16} />
+      </IconButton>
+      <div {...stylex.attrs(styles.spacer)} />
+      <For each={utilityActions()}>
+        {(action) => (
+          <IconButton
+            size="md"
+            xstyle={[styles.railButton, action.isActive && styles.railButtonActive]}
+            aria-label={action.label}
+            title={action.label}
+            onClick={() => action.run()}
+          >
+            <HostActionIcon id={action.id} icon={action.icon} />
+          </IconButton>
+        )}
+      </For>
+      <Show when={activeGroupMenu()}>
+        {(menu) => (
+          <div
+            {...stylex.attrs(styles.groupMenu)}
+            data-group-menu
+            ref={(element) => {
+              groupMenuPanel = element
+            }}
+            style={{ left: `${Math.max(8, menu().x)}px`, top: `${Math.max(8, menu().y)}px` }}
+            role="menu"
+            aria-label={`分组 ${menu().group.name} 菜单`}
+          >
+            <Button
+              size="sm"
+              variant="ghost"
+              xstyle={styles.menuItem}
+              data-group-menu-item
+              type="button"
+              onClick={() => renameGroup(menu().group.id)}
+            >
+              <span>重命名</span>
+              <kbd {...stylex.attrs(styles.menuKbd)}>F2</kbd>
+            </Button>
+            <div {...stylex.attrs(styles.menuSeparator)} />
+            <div {...stylex.attrs(styles.menuLabel)}>图标</div>
+            <div {...stylex.attrs(styles.menuIcons)}>
+              <For each={groupIcons}>
+                {(icon) => (
+                  <IconButton
+                    size="sm"
+                    xstyle={[styles.menuIcon, icon === menu().group.icon && styles.menuIconActive]}
+                    data-group-menu-icon
+                    aria-label="选择分组图标"
+                    onClick={() => setGroupIcon(menu().group.id, icon)}
+                  >
+                    <GroupIcon icon={icon} />
+                  </IconButton>
+                )}
+              </For>
+            </div>
+            <div {...stylex.attrs(styles.menuSeparator)} />
+            <Button
+              size="sm"
+              variant="danger-subtle"
+              xstyle={[styles.menuItem, styles.menuItemDanger]}
+              data-group-menu-item
+              data-danger
+              type="button"
+              disabled={menu().group.isDefault}
+              onClick={() => deleteGroup(menu().group.id)}
+            >
+              <span>删除分组</span>
+              <Show when={menu().group.isDefault}>
+                <kbd {...stylex.attrs(styles.menuKbd)}>默认</kbd>
+              </Show>
+            </Button>
+          </div>
+        )}
+      </Show>
+    </aside>
+  )
+}

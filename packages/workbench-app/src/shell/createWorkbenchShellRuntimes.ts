@@ -1,4 +1,3 @@
-import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import { focusWorkbenchWidgetInstance } from "../runtime/WorkbenchShellHostActions"
 import { createWorkbenchShellControllerRuntime } from "./WorkbenchShellControllerRuntime"
 import { createWorkbenchShellLayoutRuntime } from "../layout/WorkbenchShellLayoutRuntime"
@@ -95,7 +94,6 @@ export function createWorkbenchShellRuntimes(options: {
   }
 
   const controllerWorkspaceActions = {
-    switchLayout: workspaceController.switchLayout,
     switchTheme: async (themeId: string) => {
       const theme = pluginCatalog.listThemes().find((candidate) => candidate.id === themeId)
       if (theme) await workspaceController.switchTheme(theme.ref)
@@ -176,13 +174,11 @@ export function createWorkbenchShellRuntimes(options: {
     readLayoutState,
     writeLayoutState,
     showToast,
-    switchLayout: workspaceController.switchLayout,
     switchTheme: controllerWorkspaceActions.switchTheme,
     runRailAction: hostRuntime.runRailAction,
     catalog: pluginCatalog,
     instanceRenderer: controllerRuntime.viewRuntime.instanceRenderer,
     displayedInstances: controllerRuntime.dragHandlers.displayedInstances,
-    resolveLayoutView: (viewId) => resolveWorkbenchView(kernel.registry.views, viewId),
     isMobile: responsive.isMobile,
     clearLayoutError: layoutError.clearLayoutError,
     recordLayoutError: layoutError.recordLayoutError,

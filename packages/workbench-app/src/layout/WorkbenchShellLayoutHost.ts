@@ -1,10 +1,6 @@
 import type { AddWidgetContext, LayoutHostAPI } from "@tabora/plugin-api"
 
-import {
-  resolveWorkbenchLayoutToggleTarget,
-  resolveWorkbenchThemeToggleTarget,
-  type WorkbenchShellConfig,
-} from "../shared/shellConfig"
+import { resolveWorkbenchThemeToggleTarget, type WorkbenchShellConfig } from "../shared/shellConfig"
 import type { ShellTranslation } from "../i18n"
 
 export function createWorkbenchLayoutHostAPI(options: {
@@ -18,34 +14,12 @@ export function createWorkbenchLayoutHostAPI(options: {
   readLayoutState: LayoutHostAPI["readLayoutState"]
   writeLayoutState: LayoutHostAPI["writeLayoutState"]
   showToast: LayoutHostAPI["showToast"]
-  switchLayout: (layoutId: string) => void
   switchTheme: (themeId: string) => void
   runRailAction: (actionId: string) => void
 }): LayoutHostAPI {
   const t = options.tShell
   return {
     getGlobalActions: (surface) => {
-      const layoutToggle = {
-        id: "layout-switch" as const,
-        label:
-          options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-            ? (t?.("layoutHost.layoutToggle.toFocus") ?? "切换到专注")
-            : (t?.("layoutHost.layoutToggle.toDashboard") ?? "切换到仪表盘"),
-        icon:
-          options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-            ? "layout-focus"
-            : "layout-dashboard",
-        shortcut: "⌘L",
-        run: () => {
-          options.switchLayout(
-            resolveWorkbenchLayoutToggleTarget(
-              options.activeLayoutId(),
-              options.shellConfig.layoutIds,
-            ),
-          )
-        },
-      }
-
       if (surface === "rail") {
         return [
           {
@@ -61,7 +35,6 @@ export function createWorkbenchLayoutHostAPI(options: {
             icon: "plus",
             run: () => options.runRailAction("add-widget"),
           },
-          layoutToggle,
           {
             id: "theme",
             label: t?.("layoutHost.rail.toggleTheme") ?? "切换主题",
@@ -86,7 +59,6 @@ export function createWorkbenchLayoutHostAPI(options: {
             shortcut: "⌘K",
             run: () => options.setCommandPaletteOpen(true),
           },
-          layoutToggle,
           {
             id: "theme",
             label: options.isDark()
@@ -124,7 +96,6 @@ export function createWorkbenchLayoutHostAPI(options: {
             icon: "plus",
             run: () => options.setAddWidgetOpen(true),
           },
-          layoutToggle,
           {
             id: "theme",
             label: options.isDark()

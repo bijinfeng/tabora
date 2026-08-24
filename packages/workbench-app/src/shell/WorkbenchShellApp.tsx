@@ -136,7 +136,7 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
   const responsive = createWorkbenchResponsiveState()
   const layoutError = createLayoutErrorTracker()
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime
-  const { workspaceRepo, instanceRepo, pluginDataRepo, workspaceSnapshotRepo } = repositories
+  const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
   const currentRoute = createMemo(() => parseWorkbenchSettingsRoute(location.pathname))
   const navigateToSettings = (sectionId: SettingsSectionId) => {
     setActiveSettingsSectionId(sectionId)
@@ -204,7 +204,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     workspaceRepo,
     instanceRepo,
     pluginDataRepo,
-    workspaceSnapshotRepo,
     ...(database ? { database } : {}),
     kernel,
     pluginCatalog,
@@ -255,7 +254,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     setInstances,
     applyThemeSelection: workspaceController.applyThemeSelection,
     applyBackgroundSelection: workspaceController.applyBackgroundSelection,
-    reconcileInstancesForLayout: workspaceController.reconcileInstancesForLayout,
     setModalViewId,
     setModalProps,
     setFullscreenViewId,
@@ -266,7 +264,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
   const buildSettingsPanelProps = createWorkbenchSettingsPanelPropsBuilder({
     getWorkspace: workspaceState,
     getWorkspaces: workspaceList,
-    getLayouts: () => pluginCatalog.listLayouts(),
     getThemes: () => pluginCatalog.listThemes(),
     getBackgrounds: () => pluginCatalog.listBackgroundProviders(),
     getSearchProviders: () => pluginCatalog.listSearchProviders(),
@@ -280,7 +277,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     host: {
       close: closeSettings,
       setDirty: () => {},
-      switchLayout: async (layout) => workspaceController.switchLayout(layout.id),
       switchTheme: workspaceController.switchTheme,
       switchBackground: workspaceController.switchBackground,
       switchLocale: workspaceController.switchLocale,

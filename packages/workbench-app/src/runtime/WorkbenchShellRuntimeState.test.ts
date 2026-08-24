@@ -101,7 +101,6 @@ function createRuntime(records: PluginRecord[] = []) {
     },
     layoutIds: {
       dashboard: "layout.dashboard.custom",
-      focus: "layout.focus.custom",
     },
     settingsPanelIds: {
       appearance: "settings.appearance.custom",
@@ -181,10 +180,6 @@ function createRuntime(records: PluginRecord[] = []) {
         save: vi.fn(async () => {}),
         remove: vi.fn(async () => {}),
       },
-      workspaceSnapshotRepo: {
-        save: vi.fn(async () => {}),
-        getLast: vi.fn(async () => undefined),
-      },
     },
   }
 
@@ -254,7 +249,6 @@ describe("initializeWorkbenchShellRuntime", () => {
     const setInstances = vi.fn()
     const applyThemeSelection = vi.fn()
     const applyBackgroundSelection = vi.fn()
-    const reconcileInstancesForLayout = vi.fn(async () => ({ instances: [] }))
 
     await initializeWorkbenchShellRuntime({
       runtime,
@@ -269,7 +263,6 @@ describe("initializeWorkbenchShellRuntime", () => {
       setInstances,
       applyThemeSelection,
       applyBackgroundSelection,
-      reconcileInstancesForLayout,
     })
 
     expect(discover).toHaveBeenCalledWith(runtime.plugins)
@@ -295,7 +288,6 @@ describe("initializeWorkbenchShellRuntime", () => {
         setInstances,
         applyThemeSelection,
         applyBackgroundSelection,
-        reconcileInstancesForLayout,
       }),
     )
     expect(setWorkspaceList).toHaveBeenCalledWith([workspace()])

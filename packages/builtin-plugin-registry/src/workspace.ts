@@ -7,8 +7,6 @@ export const builtinWorkbenchShellConfig = {
   },
   layoutIds: {
     dashboard: "official.layout.workbench-dashboard",
-    focus: "official.layout.workbench-focus",
-    mobile: "official.layout.workbench-mobile",
   },
   settingsPanelIds: {
     appearance: "official.settings.workspace.appearance",

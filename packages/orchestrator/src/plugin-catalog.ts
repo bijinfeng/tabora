@@ -27,6 +27,10 @@ export type PluginCatalog = ReturnType<typeof createPluginCatalog>
 export type PluginCatalogOptions = {
   fallbackWidgetIcon?: string
   fallbackWidgetDescription?: (widget: WidgetContribution) => string
+  builtinThemes?: { pluginId: string; themes: ThemeContribution[] }
+  builtinSearchProviders?: { pluginId: string; providers: SearchProviderContribution[] }
+  builtinBackgroundProviders?: { pluginId: string; providers: BackgroundProviderContribution[] }
+  builtinLayouts?: { pluginId: string; layouts: LayoutContribution[] }
 }
 
 export type WidgetContributionDescriptor = WidgetContribution & {
@@ -100,16 +104,35 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
   }
 
   function listThemes(): ThemeContributionDescriptor[] {
-    return activePlugins().flatMap((plugin) =>
+    const builtin = (options.builtinThemes?.themes ?? []).map((theme) => ({
+      ...theme,
+      ref: {
+        pluginId: options.builtinThemes!.pluginId,
+        kind: "theme" as const,
+        id: theme.id,
+      },
+    }))
+    const contributed = activePlugins().flatMap((plugin) =>
       (plugin.manifest.contributes.themes ?? []).map((theme) => ({
         ...theme,
-        ref: { pluginId: plugin.manifest.id, kind: "theme", id: theme.id },
+        ref: { pluginId: plugin.manifest.id, kind: "theme" as const, id: theme.id },
       })),
     )
+    return [...builtin, ...contributed]
   }
 
   function listSearchProviders(): SearchProviderContributionDescriptor[] {
-    return activePlugins().flatMap((plugin) =>
+    const builtin = (options.builtinSearchProviders?.providers ?? []).map((provider) => ({
+      ...provider,
+      ref: {
+        pluginId: options.builtinSearchProviders!.pluginId,
+        kind: "search-provider" as const,
+        id: provider.id,
+      },
+      pluginId: options.builtinSearchProviders!.pluginId,
+      pluginName: "Builtin Search Providers",
+    }))
+    const contributed = activePlugins().flatMap((plugin) =>
       (plugin.manifest.contributes.searchProviders ?? []).map((provider) => ({
         ...provider,
         ref: {
@@ -121,24 +144,43 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
         pluginName: plugin.manifest.name,
       })),
     )
+    return [...builtin, ...contributed]
   }
 
   function listBackgroundProviders(): BackgroundProviderContributionDescriptor[] {
-    return activePlugins().flatMap((plugin) =>
+    const builtin = (options.builtinBackgroundProviders?.providers ?? []).map((provider) => ({
+      ...provider,
+      ref: {
+        pluginId: options.builtinBackgroundProviders!.pluginId,
+        kind: "background-provider" as const,
+        id: provider.id,
+      },
+    }))
+    const contributed = activePlugins().flatMap((plugin) =>
       (plugin.manifest.contributes.backgroundProviders ?? []).map((provider) => ({
         ...provider,
-        ref: { pluginId: plugin.manifest.id, kind: "background-provider", id: provider.id },
+        ref: {
+          pluginId: plugin.manifest.id,
+          kind: "background-provider" as const,
+          id: provider.id,
+        },
       })),
     )
+    return [...builtin, ...contributed]
   }
 
   function listLayouts(): LayoutContributionDescriptor[] {
-    return activePlugins().flatMap((plugin) =>
+    const builtin = (options.builtinLayouts?.layouts ?? []).map((layout) => ({
+      ...layout,
+      ref: { pluginId: options.builtinLayouts!.pluginId, kind: "layout" as const, id: layout.id },
+    }))
+    const contributed = activePlugins().flatMap((plugin) =>
       (plugin.manifest.contributes.layouts ?? []).map((layout) => ({
         ...layout,
-        ref: { pluginId: plugin.manifest.id, kind: "layout", id: layout.id },
+        ref: { pluginId: plugin.manifest.id, kind: "layout" as const, id: layout.id },
       })),
     )
+    return [...builtin, ...contributed]
   }
 
   function listWidgetContributions(): WidgetContributionDescriptor[] {
@@ -179,6 +221,19 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
   }
 
   function resolveContribution(ref: ContributionRef): unknown {
+    if (ref.kind === "theme") {
+      return listThemes().find((item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id)
+    }
+    if (ref.kind === "search-provider") {
+      return listSearchProviders().find(
+        (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
+      )
+    }
+    if (ref.kind === "background-provider") {
+      return listBackgroundProviders().find(
+        (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
+      )
+    }
     const plugin = activePlugins().find((item) => item.manifest.id === ref.pluginId)
     if (!plugin) return undefined
     switch (ref.kind) {
@@ -194,18 +249,6 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
         return plugin.manifest.contributes.searches
           ?.map((item) => ({ ...item, ref }))
           .find((item) => item.id === ref.id)
-      case "search-provider":
-        return listSearchProviders().find(
-          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
-        )
-      case "background-provider":
-        return listBackgroundProviders().find(
-          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
-        )
-      case "theme":
-        return listThemes().find(
-          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
-        )
       case "settings-panel":
         return plugin.manifest.contributes.settingsPanels
           ?.map((item) => ({ ...item, ref }))

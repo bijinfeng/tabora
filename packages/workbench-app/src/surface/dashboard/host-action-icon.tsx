@@ -5,7 +5,6 @@ import Boxes from "lucide-solid/icons/boxes"
 import Circle from "lucide-solid/icons/circle"
 import CircleHelp from "lucide-solid/icons/circle-help"
 import House from "lucide-solid/icons/house"
-import Moon from "lucide-solid/icons/moon"
 import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 import Settings from "lucide-solid/icons/settings"
@@ -17,9 +16,6 @@ export function HostActionIcon(props: {
   size?: number
 }): JSX.Element {
   const size = () => props.size ?? 18
-  const isSun = () => {
-    return props.icon === "sun"
-  }
 
   return (
     <Switch fallback={<Circle size={size()} />}>
@@ -39,7 +35,7 @@ export function HostActionIcon(props: {
         <Boxes size={size()} />
       </Match>
       <Match when={props.id === "theme"}>
-        {isSun() ? <Sun size={size()} /> : <Moon size={size()} />}
+        <Sun size={size()} />
       </Match>
       <Match when={props.id === "shortcuts"}>
         <CircleHelp size={size()} />

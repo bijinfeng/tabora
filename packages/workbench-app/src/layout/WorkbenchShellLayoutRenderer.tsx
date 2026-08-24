@@ -1,19 +1,12 @@
-import type { JSX } from "solid-js"
-import { DragDropProvider } from "@dnd-kit/solid"
 import type { DragDropProviderProps } from "@dnd-kit/solid"
-import type {
-  LayoutContribution,
-  LayoutHostAPI,
-  LayoutViewProps,
-  PluginInstance,
-  RegionSlot,
-} from "@tabora/plugin-api"
+import { DragDropProvider } from "@dnd-kit/solid"
+import type { LayoutHostAPI, PluginInstance, RegionSlot } from "@tabora/plugin-api"
 import { LayoutBoundary } from "@tabora/workbench-shell"
-
+import type { JSX } from "solid-js"
+import { DashboardLayout } from "../surface/dashboard/dashboard-layout"
 import { LayoutUnavailableState } from "../surface/WorkbenchShellChrome"
 import type { LayoutErrorStatus } from "./layoutError"
 
-type LayoutViewComponent = (props: LayoutViewProps<JSX.Element>) => JSX.Element
 type WorkbenchDndKitOptions = Required<
   Pick<DragDropProviderProps, "onDragStart" | "onDragMove" | "onDragOver" | "onDragEnd">
 >
@@ -42,8 +35,6 @@ export function createWorkbenchLayoutRenderer(options: {
   activeLayoutId: () => string
   layoutError: () => LayoutErrorStatus | null
   displayedInstances: () => PluginInstance[]
-  findLayoutContribution: (layoutId: string) => LayoutContribution | undefined
-  resolveLayoutView: (viewId: string) => LayoutViewComponent | undefined
   buildRegionSlots: (
     layoutId: string,
     instances: PluginInstance[],
@@ -65,20 +56,14 @@ export function createWorkbenchLayoutRenderer(options: {
       return renderUnavailable(layoutError)
     }
 
-    const layout = options.findLayoutContribution(layoutId)
-    const LayoutView = layout?.view ? options.resolveLayoutView(layout.view) : undefined
-
-    if (!LayoutView) {
-      return renderUnavailable({
-        layoutId,
-        message: layout ? "布局插件未注册可渲染的 view" : "布局插件未注册",
-      })
-    }
-
     options.clearLayoutError()
 
     const regions = options.buildRegionSlots(layoutId, options.displayedInstances())
     const host = options.buildHostAPI()
+    // Read synchronously so this memo tracks the responsive breakpoint and remounts
+    // the dashboard when it flips. Passing the value (not the call) keeps it a static
+    // prop rather than a lazy getter the untracked component body would freeze.
+    const isMobile = options.isMobile()
 
     return (
       <WorkbenchDndProvider dndKit={options.dndKit}>
@@ -86,7 +71,7 @@ export function createWorkbenchLayoutRenderer(options: {
           fallback={
             <LayoutUnavailableState
               layoutId={layoutId}
-              message="布局插件渲染失败，正在记录具体错误。"
+              message="布局渲染失败，正在记录具体错误。"
             />
           }
           onError={(error) => {
@@ -94,11 +79,7 @@ export function createWorkbenchLayoutRenderer(options: {
             options.recordLayoutError(layoutId, error)
           }}
         >
-          {LayoutView({
-            regions,
-            isMobile: options.isMobile(),
-            host,
-          })}
+          <DashboardLayout regions={regions} isMobile={isMobile} host={host} />
         </LayoutBoundary>
       </WorkbenchDndProvider>
     )

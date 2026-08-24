@@ -6,18 +6,13 @@ import {
   type ShortcutRegistry,
 } from "@tabora/orchestrator"
 
-import {
-  resolveWorkbenchLayoutToggleTarget,
-  resolveWorkbenchThemeToggleTarget,
-  type WorkbenchShellConfig,
-} from "../shared/shellConfig"
+import { resolveWorkbenchThemeToggleTarget, type WorkbenchShellConfig } from "../shared/shellConfig"
 import { createCommandExecutor, type CommandExecutionContext } from "../shared/shellHelpers"
 import { currentShortcutPlatform, shortcutDisplay } from "../shared/WorkbenchShellUtils"
 import type { ShellTranslation } from "../i18n"
 
 export type WorkbenchShellCommandModelsOptions = {
   isDark: () => boolean
-  activeLayoutId: () => string
   tShell?: ShellTranslation
   shellConfig: WorkbenchShellConfig
   pluginCommands: CommandContribution[]
@@ -27,7 +22,6 @@ export type WorkbenchShellCommandModelsOptions = {
   openSettings: (sectionId?: string) => void
   showToast: (message: string) => void
   switchTheme: (themeId: string) => void
-  switchLayout: (layoutId: string) => void
   hasPluginCommandHandler?: (commandId: string) => boolean
   runPluginCommand?: (commandId: string, context: CommandExecutionContext) => Promise<boolean>
 }
@@ -54,18 +48,6 @@ function platformCommands(options: WorkbenchShellCommandModelsOptions): CommandC
       keywords: ["theme", "dark", "light", "appearance"],
       category: "workspace",
       defaultShortcut: "⌘T",
-    },
-    {
-      id: "toggle-layout",
-      icon: "layout-dashboard",
-      title: t?.("commands.toggleLayout.title") ?? "切换布局",
-      description:
-        options.activeLayoutId() === options.shellConfig.layoutIds.dashboard
-          ? (t?.("commands.toggleLayout.description.toFocus") ?? "仪表盘 → 专注")
-          : (t?.("commands.toggleLayout.description.toDashboard") ?? "专注 → 仪表盘"),
-      keywords: ["layout", "dashboard", "focus", "仪表盘", "专注"],
-      category: "workspace",
-      defaultShortcut: "⌘L",
     },
     {
       id: "add-widget",
@@ -108,7 +90,6 @@ function platformKeybindings(): KeybindingContribution[] {
   return [
     { id: "keybinding.open-command-palette", commandId: "open-command-palette", key: "mod+k" },
     { id: "keybinding.toggle-theme", commandId: "toggle-theme", key: "mod+t" },
-    { id: "keybinding.toggle-layout", commandId: "toggle-layout", key: "mod+l" },
     { id: "keybinding.add-widget", commandId: "add-widget", key: "mod+n" },
     { id: "keybinding.open-settings", commandId: "open-settings", key: "mod+," },
   ]
@@ -125,10 +106,6 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
     "toggle-theme": () =>
       options.switchTheme(
         resolveWorkbenchThemeToggleTarget(options.isDark(), options.shellConfig.themeIds),
-      ),
-    "toggle-layout": () =>
-      options.switchLayout(
-        resolveWorkbenchLayoutToggleTarget(options.activeLayoutId(), options.shellConfig.layoutIds),
       ),
     "add-widget": () => options.setAddWidgetOpen(true),
     "open-plugin-manager": () =>

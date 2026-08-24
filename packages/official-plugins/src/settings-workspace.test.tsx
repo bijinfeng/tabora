@@ -378,15 +378,6 @@ describe("AppearanceSettingsPanel", () => {
               supportsResponsive: true,
               ref: refs.layout("official.layout.workbench-dashboard"),
             },
-            {
-              id: "official.layout.focus",
-              title: "Focus",
-              view: "official.layout.focus.view",
-              regions: [],
-              defaultRegions: {},
-              supportsResponsive: true,
-              ref: refs.layout("official.layout.focus"),
-            },
           ]}
           themes={[
             {

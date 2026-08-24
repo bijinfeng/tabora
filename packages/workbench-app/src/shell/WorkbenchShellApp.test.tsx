@@ -50,7 +50,6 @@ vi.mock("../workspace/WorkbenchShellWorkspaceController", () => ({
     deleteWorkspace: vi.fn(),
     applyThemeSelection: vi.fn(),
     applyBackgroundSelection: vi.fn(),
-    reconcileInstancesForLayout: vi.fn(),
   })),
 }))
 
@@ -165,7 +164,7 @@ function runtime() {
     },
     shellConfig: {
       themeIds: { light: "theme.light.custom", dark: "theme.dark.custom" },
-      layoutIds: { dashboard: "layout.dashboard.custom", focus: "layout.focus.custom" },
+      layoutIds: { dashboard: "layout.dashboard.custom" },
       settingsPanelIds: { appearance: "settings.appearance.custom" },
       searchHistory: { pluginId: "search.plugin.custom", key: "search-history-custom" },
     },
@@ -173,7 +172,6 @@ function runtime() {
       workspaceRepo: {},
       instanceRepo: {},
       pluginDataRepo: {},
-      workspaceSnapshotRepo: {},
       pluginRecordRepo: { getAll: vi.fn(async () => []) },
     },
     catalog: {

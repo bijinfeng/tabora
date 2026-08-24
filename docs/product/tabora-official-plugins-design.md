@@ -4,7 +4,7 @@
 
 日期：2026-06-02
 
-状态：按 V2 设计规范与交互参考复核更新，确保官方插件规格与双布局工作台原型一致
+状态：按 V2 设计规范与交互参考复核更新，确保官方插件规格与单一宿主内建 dashboard 布局工作台一致
 
 关联文档：
 
@@ -101,11 +101,11 @@ Tabora 的官方体验应是“安静、清晰、可重复使用的个人工作�
 
 ### 3.2 视觉结构
 
-V2 原型确认官方默认体验不是单一页面结构，而是两种并行成立的布局壳体：
+官方默认体验是单一的宿主内建 dashboard 布局壳体，移动端在同一 layout view 内以响应式断点折叠：
 
 ```txt
 dashboard
-  rail
+  rail (移动端 < 768px 折叠为底部导航)
     home / add widget / plugins / settings
   workbench
     search command bar
@@ -113,21 +113,16 @@ dashboard
       widget instances
   modal / fullscreen host
   settings host
-
-focus
-  shared rail
-    settings / layout switch / theme
-  command palette (⌘K)
-  hero widget + satellite switch cards
-  expand / context-menu / toast / settings host
 ```
+
+> **Phase 2 变更**：layout 从插件类型降级为宿主内建，只保留一个 dashboard 布局；已删除 Focus 第二布局和运行时布局切换。移动端不是独立布局插件，而是同一 layout view 的响应式断点。
 
 设计要求：
 
-- 仪表盘式布局使用左侧 rail + 顶部常驻搜索，专注布局复用 rail 并使用居中的命令入口、主卡片和 satellite 卡片切换区；两种布局都必须保持官方插件能力完整可达。
+- 仪表盘式布局使用左侧 rail + 顶部常驻搜索；移动端（< 768px）在同一布局内把 rail 折叠为底部导航，官方插件能力完整可达。
 - 主区域的卡片尺寸稳定，拖拽、hover、focus、双击展开和右键菜单都不能造成布局跳动。
 - 主区域允许纵向延展；卡片过多时通过页面滚动访问，不为了塞进首屏牺牲可读性。
-- 添加卡片、插件管理、设置、布局切换和主题切换入口要么在 rail / 工具条中可见，要么通过命令面板和快捷键始终可达。
+- 添加卡片、插件管理、设置和主题切换入口要么在 rail / 工具条中可见，要么通过命令面板和快捷键始终可达。
 - 弹窗、展开视图、Toast、快捷键面板和设置中心都由宿主统一提供容器，插件只渲染内容。
 - 设置中心桌面端遵循原型中的左侧分类导航 + 右侧内容区结构，不作为常驻右侧栏；移动端使用独立全屏单列布局、顶部返回和横向分类导航。
 
@@ -269,7 +264,7 @@ MVP 组件清单：
 | ------------------------------------- | -------------------------- | -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------- |
 | `official.theme.default-pack`         | Tabora Default Theme Pack  | `theme`                                      | 是       | 已按 V2 原型 Refined Sage token 对齐明亮/暗色主题                                        | 提供明亮、暗色工作台主题                           |
 | `official.background.basic`           | Basic Background           | `background-provider`, `background-renderer` | 是       | 已实现基础 provider 和 renderer view                                                     | 提供基础背景源和 CSS 背景渲染能力                  |
-| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已由独立 layout package 和 layout contribution 驱动                                      | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
+| `official.layout.workbench-dashboard` | Workbench Dashboard Layout | `layout`                                     | 是       | 已改为宿主内建 layout 注入（非独立插件包）                                              | 定义轻 rail + 命令搜索 + 主网格的默认布局          |
 | `official.search.command-bar`         | Tabora Command Search      | `search`                                     | 是       | 已实现基础 UI 和外部打开权限桥；已使用 `@tabora/ui` 控件                                 | 提供命令搜索、搜索源选择和快捷建议                 |
 | `official.search-providers.basic`     | Basic Search Providers     | `search-provider`                            | 是       | 已实现基础搜索源声明                                                                     | 提供 Google、Bing、百度、DuckDuckGo、GitHub 搜索源 |
 | `official.widgets.quick-links`        | Quick Links Widget         | `widget`                                     | 是       | 已由独立 `@tabora/plugin-quick-links` package 提供；已使用 `@tabora/ui` 控件              | 提供快捷入口，验证外部打开和实例配置               |
@@ -296,7 +291,7 @@ MVP 组件清单：
 | `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
-当前实现由 `plugins/official/layout-dashboard` 中的 `official.layout.workbench-dashboard` 贡献整体布局 view。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 10 列主网格容器和单元格行高同步，`WidgetCardShell` 负责按 widget size 设置 grid span、提供无头部卡片外壳和右上角移除按钮。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。
+当前实现由 **host builtin layout** `official.layout.workbench-dashboard` 贡献整体布局 view（Phase 2 后不再是独立插件包，改为宿主内建注入）。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 10 列主网格容器和单元格行高同步，`WidgetCardShell` 负责按 widget size 设置 grid span、提供无头部卡片外壳和右上角移除按钮。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。移动端不是独立布局插件，而是同一 layout view 的响应式断点：窄屏时 rail 折叠为底部导航栏。
 
 默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/workbench-prototype.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、快捷入口、待办、便签和天气摘要。完整插件管理从设置中心进入。
 
@@ -324,7 +319,7 @@ theme -> background -> layout -> search providers -> command search -> widgets -
 1. 平台发现并启用官方插件。
 2. 主题插件提供默认明亮 token。
 3. 背景插件提供默认背景源。
-4. 布局插件提供 rail 宿主入口、`topbar` 搜索 region 和 `mainGrid` 网格 region。
+4. 宿主内建 dashboard layout 提供 rail 宿主入口、`topbar` 搜索 region 和 `mainGrid` 网格 region。
 5. 搜索插件渲染顶部命令搜索栏。
 6. Widget 插件渲染快捷入口、便签和待办。
 7. 用户可以直接搜索、打开快捷链接、记录便签、处理待办。
@@ -340,7 +335,9 @@ theme -> background -> layout -> search providers -> command search -> widgets -
 
 ### 6.1 产品定位
 
-默认布局插件定义 Tabora 的基础页面骨架：左侧轻 rail、顶部命令搜索区和下方主网格。它不拥有任何具体业务内容，只规定区域结构、可接受的扩展点、默认实例引用和响应式能力。
+Dashboard builtin layout 定义 Tabora 的基础页面骨架：左侧轻 rail、顶部命令搜索区和下方主网格。它不拥有任何具体业务内容，只规定区域结构、可接受的扩展点、默认实例引用和响应式能力。移动端（< 768px）在同一 layout view 内折叠 rail 为底部导航栏，不是独立的 layout contribution。
+
+> **Phase 2 变更**：Dashboard 不再是独立插件包（`plugins/official/layout-dashboard`），改为 host builtin layout 注入，与 theme/background/search 对齐。
 
 ### 6.2 Contribution
 
@@ -357,13 +354,13 @@ theme -> background -> layout -> search providers -> command search -> widgets -
 | `topbar.accepts`      | `search`                                                                                 |
 | `topbar.maxInstances` | 1                                                                                        |
 | `mainGrid.accepts`    | `widget`                                                                                 |
-| `supportsResponsive`  | true                                                                                     |
+| `supportsResponsive`  | true（移动端作为响应式断点）                                                             |
 
 ### 6.3 信息架构
 
 ```txt
 workbench-shell
-  rail host actions
+  rail host actions (移动端折叠为 bottom-bar)
     home / add widget / plugins / settings
   content-region
     topbar-region
@@ -373,7 +370,7 @@ workbench-shell
       widget instances
 ```
 
-布局插件只负责区域，不负责：
+Dashboard layout 只负责区域，不负责：
 
 - 搜索框具体样式。
 - 卡片内容。
@@ -409,28 +406,26 @@ workbench-shell
 
 用户打开新标签页：
 
-1. 布局插件被激活。
+1. 宿主注入内建 dashboard layout。
 2. 宿主读取 layout contribution。
 3. 布局 view 渲染 rail 宿主入口，并创建 `topbar` 和 `mainGrid` 渲染区。
 4. 宿主在 `rail` 中渲染主页、添加卡片、插件和设置入口。
 5. 宿主把 `search-main` 放入 `topbar`。
 6. 宿主把 widget 实例放入 `mainGrid`。
 
-用户切换未来另一个布局：
+用户切换到移动端窄屏（< 768px）：
 
-1. 用户进入布局设置。
-2. 选择另一个 layout contribution。
-3. 宿主检查新区能否接收现有实例。
-4. 可迁移实例进入新区域。
-5. 不可迁移实例进入“未放置”队列。
-6. 用户确认后保存工作区。
+1. 同一 layout view 命中移动端断点。
+2. rail 折叠为底部导航栏。
+3. 主网格切换为单列堆叠。
+4. 实例、区域和数据保持不变，不做布局切换或实例迁移。
 
 布局失败：
 
 1. 宿主发现布局 view 未注册或渲染失败。
-2. 显示“没有可用的布局插件”和失败原因。
+2. 显示“布局不可用”和失败原因。
 3. 记录失败 layout id。
-4. 不渲染其他布局冒充当前布局。
+4. 不渲染其他内容冒充当前布局。
 
 卡片过多：
 
@@ -468,7 +463,7 @@ workbench-shell
 
 ### 6.8 验收标准
 
-- 默认布局由 manifest 声明，不由宿主硬编码业务区域。
+- 默认布局由宿主内建 dashboard layout 提供，区域结构在 layout contribution 中声明。
 - `rail` 提供主页、添加卡片、插件和设置等工作台级入口。
 - `topbar` 只接收 search 实例。
 - `mainGrid` 只接收 widget 实例。
@@ -477,44 +472,11 @@ workbench-shell
 - 卡片超过首屏时，主网格可纵向滚动且不压缩卡片到不可读。
 - layout 失败时有明确的布局不可用提示和失败原因。
 
-## 6b. `official.layout.workbench-focus`（专注布局）
+### 6.9 交互模式（V2 原型中验证）
 
-### 6b.1 产品职责
+Dashboard builtin layout 需要支持以下核心交互；⌘K 命令面板由平台注册为全局快捷键，不依赖独立布局：
 
-Focus 是 MVP 第二种官方布局，由 `official.layout.workbench-dashboard` 同一个官方布局插件贡献，用于复用 Dashboard 的 rail、全局动作入口和卡片宿主能力，同时提供更聚焦的首屏节奏。
-
-与 Dashboard 的关键差异：
-
-| 维度     | Dashboard            | Focus                                   |
-| -------- | -------------------- | --------------------------------------- |
-| Rail     | 固定左侧 56px 图标栏 | 复用同一 rail，移动端同样收为底部工具栏 |
-| 搜索     | 常驻搜索栏           | 居中命令入口 + ⌘K 浮层唤起              |
-| 卡片排列 | 10 列逻辑网格        | 一个主卡片 + 下方 satellite 切换卡片    |
-| 首屏     | 搜索 + 网格直接可见  | 问候 / 命令入口 + 主卡片直接可见        |
-| 信息密度 | 高（并行多卡片）     | 中低（当前卡片优先）                    |
-
-### 6b.2 布局结构
-
-```txt
-focus-layout
-  shared rail
-  topbar
-    greeting + date / command trigger / layout switch
-  hero
-    active widget instance
-  satellites
-    secondary widget instance switches
-```
-
-### 6b.3 区域定义
-
-| 区域 ID | 接受扩展点 | 说明                                            |
-| ------- | ---------- | ----------------------------------------------- |
-| `focus` | `widget`   | 可在主卡片与 satellite 切换区之间轮换的卡片集合 |
-
-### 6b.4 交互模式（V2 原型中验证）
-
-- **⌘K 全局搜索**：Focus 下搜索栏不常驻，通过居中命令入口或 ⌘K 浮层唤起。⌘K 由平台注册为全局快捷键。
+- **⌘K 全局搜索**：除常驻搜索栏外，`⌘K` 随时唤起命令面板。⌘K 由平台注册为全局快捷键。
 - **双击卡片展开**：双击卡片弹出展开视图，每种卡片类型有定制化内容布局（便签→全高文本域，待办→可交互列表等）。
 - **拖拽实时换位**：卡片可直接拖拽排序，悬停到目标位时实时交换位置，无需占位符。
 - **右键上下文菜单**：右键卡片弹出尺寸选择 + 展开 + 移除操作。
@@ -556,17 +518,16 @@ dashboard
     suggestions
       grouped results
 
-focus
-  command-palette (⌘K)
-    query input
-    provider hint / token
-    grouped results
+command-palette (⌘K)
+  query input
+  provider hint / token
+  grouped results
 ```
 
 MVP 控件：
 
 - Dashboard 常驻搜索栏。
-- Focus / 全局 `⌘K` 命令面板搜索表面。
+- 全局 `⌘K` 命令面板搜索表面。
 - 搜索源指示器或选择器。
 - 搜索输入框。
 - 分组结果列表。
@@ -614,10 +575,10 @@ Dashboard 内联建议：
 4. 用户按 `Enter`。
 5. 跳转到 GitHub 搜索 URL。
 
-Focus 搜索：
+命令面板搜索：
 
-1. 用户位于专注布局。
-2. 点击居中命令入口或按 `⌘K` 打开命令面板。
+1. 用户按 `⌘K` 或点击命令入口打开命令面板。
+2. 命令面板浮层唤起。
 3. 输入 `theme` 或 `@bing 天气`。
 4. 面板实时显示分组结果，支持键盘导航。
 5. `Enter` 执行高亮命令或搜索。
@@ -1624,7 +1585,7 @@ V2：
 
 ### 13.1 产品定位
 
-工作区设置插件用于提供外观、搜索和工作区等通用面板。宿主提供 settings host 与官方 schema renderer，orchestrator 按已启用插件的 contributions 组织导航；布局插件不负责设置弹窗。
+工作区设置插件用于提供外观、搜索和工作区等通用面板。宿主提供 settings host 与官方 schema renderer，orchestrator 按已启用插件的 contributions 组织导航；宿主内建 layout 不负责设置弹窗。
 
 当前官方设置面板均声明支持 `desktop` 和 `mobile`。第三方设置插件必须通过 manifest 的非空 `surfaces` 显式声明目标端；宿主按当前端过滤，不为未声明的端静默兜底。设置中心使用 `/settings/<section>` 路由，每个可用分类是一个二级路由；provider context 和 custom-view props 会收到当前 `surface`，移动端由宿主提供全屏单列设置容器。
 
@@ -1907,7 +1868,7 @@ plugin view throws
 
 | 领域          | 当前情况                                                                                                                          | 建议                                        |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 默认布局      | 已由独立 `plugins/official/layout-dashboard` 贡献整体布局；rail 走 host actions，topbar/mainGrid 走 region slot，主网格由 layout view 包裹 | 继续补齐更完整响应式与视觉细节              |
+| 默认布局      | 宿主内建 dashboard layout 注入（不再是独立插件包）；rail 走 host actions，topbar/mainGrid 走 region slot，主网格由 layout view 包裹，移动端为同一 view 的响应式断点 | 继续补齐更完整响应式与视觉细节              |
 | UI 基础组件   | `@tabora/ui` 已提供按钮、输入、选择器、菜单、错误提示等基础组件，官方插件已按稳定 subpath 复用                                               | 继续补齐缺失组件并清理局部手搓控件          |
 | 搜索源读取    | 已从 `search-provider` contribution 动态读取                                                                                      | —                                           |
 | 快捷入口      | 入口、分组和最近访问记录通过实例级 plugin data 保存，展开主体和 footer 通过 instanceId 共享临时会话                        | 导入浏览器书签、favicon 等增强能力          |

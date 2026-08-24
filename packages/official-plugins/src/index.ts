@@ -1,5 +1,3 @@
-import { layoutDashboardManifest } from "@tabora/layout-dashboard/manifest"
-import { layoutMobileManifest } from "@tabora/layout-mobile/manifest"
 import { createBuiltinPluginPackage, createLazyBuiltinPlugin } from "@tabora/platform-kernel"
 import { officialPluginNotesManifest } from "@tabora/plugin-notes/manifest"
 import { officialPluginQuickLinksManifest } from "@tabora/plugin-quick-links/manifest"
@@ -8,8 +6,11 @@ import { officialPluginWeatherManifest } from "@tabora/plugin-weather/manifest"
 
 import { officialBackgroundBasic } from "./background-basic"
 export { createOfficialAccountSyncPlugin, type AccountSyncPluginOptions } from "./account-sync"
-import { officialSearchProvidersBasic } from "./search-providers-basic"
-import { officialThemeDefaultPack } from "./theme-default-pack"
+export {
+  BUILTIN_BACKGROUND_PROVIDER_PLUGIN_ID,
+  builtinBackgroundProviders,
+} from "./builtinBackgroundProviders"
+export { BUILTIN_SEARCH_PROVIDER_PLUGIN_ID, builtinSearchProviders } from "./builtinSearchProviders"
 import {
   officialPluginManagerManifest,
   officialSearchCommandBarManifest,
@@ -19,20 +20,6 @@ import {
   officialDefaultWorkspacePreset,
   officialWorkspacePresetPack,
 } from "./workspace-default-preset"
-
-export const layoutDashboard = createLazyBuiltinPlugin({
-  manifest: layoutDashboardManifest,
-  async load() {
-    return (await import("@tabora/layout-dashboard")).layoutDashboard
-  },
-})
-
-export const layoutMobile = createLazyBuiltinPlugin({
-  manifest: layoutMobileManifest,
-  async load() {
-    return (await import("@tabora/layout-mobile")).layoutMobile
-  },
-})
 
 export const officialSearchCommandBar = createLazyBuiltinPlugin({
   manifest: officialSearchCommandBarManifest,
@@ -83,22 +70,12 @@ export const officialSettingsWorkspace = createLazyBuiltinPlugin({
   },
 })
 
-export {
-  officialBackgroundBasic,
-  officialDefaultWorkspacePreset,
-  officialSearchProvidersBasic,
-  officialThemeDefaultPack,
-  officialWorkspacePresetPack,
-}
+export { officialBackgroundBasic, officialDefaultWorkspacePreset, officialWorkspacePresetPack }
 
 export const officialPlugins = [
   createBuiltinPluginPackage(officialWorkspacePresetPack),
-  createBuiltinPluginPackage(officialThemeDefaultPack),
   createBuiltinPluginPackage(officialBackgroundBasic),
-  layoutDashboard,
-  layoutMobile,
   officialSearchCommandBar,
-  createBuiltinPluginPackage(officialSearchProvidersBasic),
   officialPluginWeather,
   officialPluginTodo,
   officialPluginQuickLinks,

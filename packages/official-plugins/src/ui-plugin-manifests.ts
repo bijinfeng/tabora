@@ -1,4 +1,5 @@
 import type { PluginManifest } from "@tabora/plugin-api/sdk"
+import { BUILTIN_SEARCH_PROVIDER_PLUGIN_ID } from "./builtinSearchProviders"
 
 export const officialSearchCommandBarManifest: PluginManifest = {
   id: "official.search.command-bar",
@@ -16,12 +17,12 @@ export const officialSearchCommandBarManifest: PluginManifest = {
         title: "搜索栏",
         defaultProviders: [
           {
-            pluginId: "official.search-providers.basic",
+            pluginId: BUILTIN_SEARCH_PROVIDER_PLUGIN_ID,
             kind: "search-provider",
             id: "official.search.google",
           },
           {
-            pluginId: "official.search-providers.basic",
+            pluginId: BUILTIN_SEARCH_PROVIDER_PLUGIN_ID,
             kind: "search-provider",
             id: "official.search.bing",
           },
@@ -108,8 +109,8 @@ export const officialSettingsWorkspaceManifest: PluginManifest = {
         scope: "workspace",
         surfaces: ["desktop", "mobile"],
         order: 40,
-        hostActions: ["workspace.layout.write", "workspace.transfer", "workspace.manage"],
-        hostReads: ["workspace.current.read", "workspace.list.read", "catalog.layouts.read"],
+        hostActions: ["workspace.transfer", "workspace.manage"],
+        hostReads: ["workspace.current.read", "workspace.list.read"],
       },
       {
         id: "official.settings.workspace.ai",

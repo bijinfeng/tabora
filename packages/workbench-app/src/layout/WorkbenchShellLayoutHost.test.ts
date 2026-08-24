@@ -3,6 +3,23 @@ import type { LayoutHostAPI } from "@tabora/plugin-api"
 
 import { createWorkbenchLayoutHostAPI } from "./WorkbenchShellLayoutHost"
 
+const baseShellConfig = {
+  themeIds: {
+    light: "theme.light.custom",
+    dark: "theme.dark.custom",
+  },
+  layoutIds: {
+    dashboard: "layout.dashboard.custom",
+  },
+  settingsPanelIds: {
+    appearance: "settings.appearance.custom",
+  },
+  searchHistory: {
+    pluginId: "search.plugin.custom",
+    key: "search-history-custom",
+  },
+}
+
 describe("createWorkbenchLayoutHostAPI", () => {
   it("builds stable rail actions and routes them through rail action handlers", () => {
     const runRailAction = vi.fn()
@@ -15,45 +32,27 @@ describe("createWorkbenchLayoutHostAPI", () => {
       readLayoutState: vi.fn() as unknown as LayoutHostAPI["readLayoutState"],
       writeLayoutState: vi.fn() as unknown as LayoutHostAPI["writeLayoutState"],
       showToast: vi.fn() as unknown as LayoutHostAPI["showToast"],
-      switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction,
-      shellConfig: {
-        themeIds: {
-          light: "theme.light.custom",
-          dark: "theme.dark.custom",
-        },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-        },
-        settingsPanelIds: {
-          appearance: "settings.appearance.custom",
-        },
-        searchHistory: {
-          pluginId: "search.plugin.custom",
-          key: "search-history-custom",
-        },
-      },
+      shellConfig: baseShellConfig,
     } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const railActions = host.getGlobalActions("rail")
     expect(railActions.map((action) => action.id)).toEqual([
       "home",
       "add-widget",
-      "layout-switch",
       "theme",
       "settings",
     ])
 
     railActions[1]?.run()
-    railActions[4]?.run()
+    railActions[3]?.run()
 
     expect(runRailAction).toHaveBeenNthCalledWith(1, "add-widget")
     expect(runRailAction).toHaveBeenNthCalledWith(2, "settings")
   })
 
-  it("builds toolbar actions with layout/theme toggles and imperative host helpers", () => {
+  it("builds toolbar actions with theme toggle and imperative host helpers", () => {
     const setCommandPaletteOpen = vi.fn()
     const setAddWidgetOpen = vi.fn()
     const openSettings = vi.fn()
@@ -62,7 +61,6 @@ describe("createWorkbenchLayoutHostAPI", () => {
       (_key: string) => ({ cached: true }) as unknown,
     ) as unknown as LayoutHostAPI["readLayoutState"]
     const writeLayoutState = vi.fn() as unknown as LayoutHostAPI["writeLayoutState"]
-    const switchLayout = vi.fn()
     const switchTheme = vi.fn()
 
     const host = createWorkbenchLayoutHostAPI({
@@ -74,40 +72,16 @@ describe("createWorkbenchLayoutHostAPI", () => {
       readLayoutState,
       writeLayoutState,
       showToast,
-      switchLayout,
       switchTheme,
       runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: {
-          light: "theme.light.custom",
-          dark: "theme.dark.custom",
-        },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-        },
-        settingsPanelIds: {
-          appearance: "settings.appearance.custom",
-        },
-        searchHistory: {
-          pluginId: "search.plugin.custom",
-          key: "search-history-custom",
-        },
-      },
+      shellConfig: baseShellConfig,
     } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const toolbarActions = host.getGlobalActions("toolbar")
-    expect(toolbarActions.map((action) => action.id)).toEqual([
-      "command",
-      "layout-switch",
-      "theme",
-      "settings",
-    ])
-    expect(toolbarActions[1]?.label).toBe("切换到专注")
+    expect(toolbarActions.map((action) => action.id)).toEqual(["command", "theme", "settings"])
 
     toolbarActions[0]?.run()
     toolbarActions[1]?.run()
-    toolbarActions[2]?.run()
 
     host.openSettings("settings.search.custom")
     host.openCommandPalette()
@@ -119,7 +93,6 @@ describe("createWorkbenchLayoutHostAPI", () => {
     host.toggleTheme()
 
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(1, true)
-    expect(switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(switchTheme).toHaveBeenNthCalledWith(1, "theme.light.custom")
     expect(openSettings).toHaveBeenCalledWith("settings.search.custom")
     expect(setCommandPaletteOpen).toHaveBeenNthCalledWith(2, true)
@@ -135,7 +108,6 @@ describe("createWorkbenchLayoutHostAPI", () => {
     const setCommandPaletteOpen = vi.fn()
     const setAddWidgetOpen = vi.fn()
     const openSettings = vi.fn()
-    const switchLayout = vi.fn()
     const switchTheme = vi.fn()
 
     const host = createWorkbenchLayoutHostAPI({
@@ -147,33 +119,15 @@ describe("createWorkbenchLayoutHostAPI", () => {
       readLayoutState: vi.fn() as unknown as LayoutHostAPI["readLayoutState"],
       writeLayoutState: vi.fn() as unknown as LayoutHostAPI["writeLayoutState"],
       showToast: vi.fn() as unknown as LayoutHostAPI["showToast"],
-      switchLayout,
       switchTheme,
       runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: {
-          light: "theme.light.custom",
-          dark: "theme.dark.custom",
-        },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-        },
-        settingsPanelIds: {
-          appearance: "settings.appearance.custom",
-        },
-        searchHistory: {
-          pluginId: "search.plugin.custom",
-          key: "search-history-custom",
-        },
-      },
+      shellConfig: baseShellConfig,
     } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const menuActions = host.getGlobalActions("menu")
     expect(menuActions.map((action) => action.id)).toEqual([
       "command",
       "add-widget",
-      "layout-switch",
       "theme",
       "settings",
     ])
@@ -182,11 +136,9 @@ describe("createWorkbenchLayoutHostAPI", () => {
     menuActions[1]?.run()
     menuActions[2]?.run()
     menuActions[3]?.run()
-    menuActions[4]?.run()
 
     expect(setCommandPaletteOpen).toHaveBeenCalledWith(true)
     expect(setAddWidgetOpen).toHaveBeenCalledWith(true)
-    expect(switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(switchTheme).toHaveBeenCalledWith("theme.dark.custom")
     expect(openSettings).toHaveBeenCalledWith("settings.appearance.custom")
   })
@@ -197,7 +149,6 @@ describe("createWorkbenchLayoutHostAPI", () => {
       isDark: () => true,
       tShell: (key: string) => {
         const messages: Record<string, string> = {
-          "layoutHost.layoutToggle.toFocus": "Switch to focus",
           "layoutHost.rail.home": "Group My workbench",
           "layoutHost.common.command": "Commands",
           "layoutHost.common.settings": "Settings",
@@ -211,26 +162,9 @@ describe("createWorkbenchLayoutHostAPI", () => {
       readLayoutState: vi.fn() as unknown as LayoutHostAPI["readLayoutState"],
       writeLayoutState: vi.fn() as unknown as LayoutHostAPI["writeLayoutState"],
       showToast: vi.fn() as unknown as LayoutHostAPI["showToast"],
-      switchLayout: vi.fn(),
       switchTheme: vi.fn(),
       runRailAction: vi.fn(),
-      shellConfig: {
-        themeIds: {
-          light: "theme.light.custom",
-          dark: "theme.dark.custom",
-        },
-        layoutIds: {
-          dashboard: "layout.dashboard.custom",
-          focus: "layout.focus.custom",
-        },
-        settingsPanelIds: {
-          appearance: "settings.appearance.custom",
-        },
-        searchHistory: {
-          pluginId: "search.plugin.custom",
-          key: "search-history-custom",
-        },
-      },
+      shellConfig: baseShellConfig,
     } satisfies Parameters<typeof createWorkbenchLayoutHostAPI>[0])
 
     const railActions = host.getGlobalActions("rail")
@@ -238,8 +172,7 @@ describe("createWorkbenchLayoutHostAPI", () => {
 
     const toolbarActions = host.getGlobalActions("toolbar")
     expect(toolbarActions[0]?.label).toBe("Commands")
-    expect(toolbarActions[1]?.label).toBe("Switch to focus")
-    expect(toolbarActions[2]?.label).toBe("Light")
-    expect(toolbarActions[3]?.label).toBe("Settings")
+    expect(toolbarActions[1]?.label).toBe("Light")
+    expect(toolbarActions[2]?.label).toBe("Settings")
   })
 })

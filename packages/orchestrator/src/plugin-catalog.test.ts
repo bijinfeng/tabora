@@ -258,4 +258,82 @@ describe("createPluginCatalog", () => {
       ]),
     )
   })
+
+  it("lists injected builtin themes with the host plugin id and resolves them by ref", () => {
+    const catalog = createPluginCatalog(plugins, {
+      builtinThemes: {
+        pluginId: "host.theme",
+        themes: [{ id: "host.theme.light", title: "Light", tokens: { "color-page": "0 0 0" } }],
+      },
+    })
+
+    expect(catalog.listThemes().map((theme) => `${theme.ref.pluginId}:${theme.id}`)).toEqual([
+      "host.theme:host.theme.light",
+      "plugin.alpha:alpha.theme",
+    ])
+    expect(
+      catalog.resolveContribution({
+        pluginId: "host.theme",
+        kind: "theme",
+        id: "host.theme.light",
+      }),
+    ).toMatchObject({ id: "host.theme.light", title: "Light" })
+  })
+
+  it("lists injected builtin search providers with the host plugin id and resolves them by ref", () => {
+    const catalog = createPluginCatalog(plugins, {
+      builtinSearchProviders: {
+        pluginId: "host.search",
+        providers: [
+          {
+            id: "host.search.google",
+            title: "Google",
+            urlTemplate: "https://google.com/search?q={query}",
+            shortcut: "g",
+          },
+        ],
+      },
+    })
+
+    expect(
+      catalog.listSearchProviders().map((provider) => `${provider.ref.pluginId}:${provider.id}`),
+    ).toEqual(["host.search:host.search.google", "plugin.alpha:alpha.search.google"])
+    expect(
+      catalog.resolveContribution({
+        pluginId: "host.search",
+        kind: "search-provider",
+        id: "host.search.google",
+      }),
+    ).toMatchObject({ id: "host.search.google", title: "Google" })
+  })
+
+  it("lists injected builtin background providers with the host plugin id and resolves them by ref", () => {
+    const catalog = createPluginCatalog(plugins, {
+      builtinBackgroundProviders: {
+        pluginId: "host.background",
+        providers: [
+          {
+            id: "host.background.solid",
+            title: "Solid",
+            sourceType: "generated",
+            source: { type: "css", css: { background: "#fff" } },
+            defaultCss: { background: "#fff" },
+          },
+        ],
+      },
+    })
+
+    expect(
+      catalog
+        .listBackgroundProviders()
+        .map((provider) => `${provider.ref.pluginId}:${provider.id}`),
+    ).toEqual(["host.background:host.background.solid", "plugin.alpha:alpha.background"])
+    expect(
+      catalog.resolveContribution({
+        pluginId: "host.background",
+        kind: "background-provider",
+        id: "host.background.solid",
+      }),
+    ).toMatchObject({ id: "host.background.solid", title: "Solid" })
+  })
 })

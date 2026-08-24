@@ -1,26 +1,17 @@
-import { describe, expect, it } from "vitest"
 import { officialPlugins } from "@tabora/official-plugins"
-import officialPluginsManifest from "../../official-plugins/package.json"
-import layoutDashboardManifest from "../../../plugins/official/layout-dashboard/package.json"
-import layoutMobileManifest from "../../../plugins/official/layout-mobile/package.json"
+import { describe, expect, it } from "vitest"
 import widgetNotesManifest from "../../../plugins/official/widget-notes/package.json"
 import widgetQuickLinksManifest from "../../../plugins/official/widget-quick-links/package.json"
 import widgetTodoManifest from "../../../plugins/official/widget-todo/package.json"
 import widgetWeatherManifest from "../../../plugins/official/widget-weather/package.json"
+import officialPluginsManifest from "../../official-plugins/package.json"
 import { builtinPlugins } from "./index"
 
 const stylePackages = [
   {
     manifest: officialPluginsManifest,
-    buildEntry: "src/index.ts src/workspace-default-preset.ts",
-  },
-  {
-    manifest: layoutDashboardManifest,
-    buildEntry: "src/index.tsx src/manifest.ts src/dashboard-layout-state.ts",
-  },
-  {
-    manifest: layoutMobileManifest,
-    buildEntry: "src/index.tsx src/manifest.ts",
+    buildEntry:
+      "src/index.ts src/workspace-default-preset.ts src/builtinSearchProviders.ts src/builtinBackgroundProviders.ts",
   },
   {
     manifest: widgetNotesManifest,
@@ -57,35 +48,15 @@ describe("builtinPlugins", () => {
     }
   })
 
-  it("includes the official plugin pack plus community verification layouts", () => {
-    expect(builtinPlugins.length).toBeGreaterThan(officialPlugins.length)
-    expect(
-      builtinPlugins.some(
-        (plugin) => plugin.module.manifest.id === "official.layout.workbench-dashboard",
-      ),
-    ).toBe(true)
+  it("exposes the official plugin pack as the default builtin list", () => {
+    expect(builtinPlugins.length).toBe(officialPlugins.length)
     expect(
       builtinPlugins.some((plugin) => plugin.module.manifest.id === "community.layout.diy-masonry"),
-    ).toBe(true)
-  })
-
-  it("keeps community verification layouts out of officialPlugins", () => {
-    expect(
-      officialPlugins.some(
-        (plugin) => plugin.module.manifest.id === "community.layout.diy-masonry",
-      ),
     ).toBe(false)
-  })
-
-  it("exposes the current builtin list for shell bootstrap", () => {
-    expect(builtinPlugins.map((plugin) => plugin.module.manifest.id)).toContain(
-      "community.layout.diy-masonry",
-    )
   })
 
   it("keeps view implementation loading out of plugin discovery", () => {
     const lazyPluginIds = [
-      "official.layout.workbench-dashboard",
       "official.search.command-bar",
       "official.widgets.weather",
       "official.widgets.todo",
@@ -93,7 +64,6 @@ describe("builtinPlugins", () => {
       "official.widgets.notes",
       "official.plugin-manager",
       "official.settings.workspace",
-      "community.layout.diy-masonry",
     ]
 
     expect(
@@ -110,16 +80,14 @@ describe("builtinPlugins", () => {
     const missingStyleAssets = styledPlugins.flatMap((plugin) =>
       (plugin.module.manifest.styles ?? [])
         .filter((style) => !Object.hasOwn(plugin.styleAssetUrls ?? {}, style.href))
-        .map((style) => ({ pluginId: plugin.module.manifest.id, href: style.href })),
+        .map((style) => ({
+          pluginId: plugin.module.manifest.id,
+          href: style.href,
+        })),
     )
 
     expect(styledPlugins.map((plugin) => plugin.module.manifest.id)).toEqual(
-      expect.arrayContaining([
-        "official.layout.workbench-dashboard",
-        "official.search.command-bar",
-        "official.widgets.notes",
-        "community.layout.diy-masonry",
-      ]),
+      expect.arrayContaining(["official.search.command-bar", "official.widgets.notes"]),
     )
     expect(missingStyleAssets).toEqual([])
     expect(

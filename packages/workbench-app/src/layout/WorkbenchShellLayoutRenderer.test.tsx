@@ -1,7 +1,19 @@
 import type { JSX } from "solid-js"
 import { render } from "solid-js/web"
-import { describe, expect, it, vi } from "vitest"
-import type { LayoutHostAPI, LayoutViewProps, PluginInstance } from "@tabora/plugin-api"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import type { LayoutHostAPI, PluginInstance } from "@tabora/plugin-api"
+
+const dashboardLayout = vi.hoisted(() =>
+  vi.fn((props: { isMobile: boolean; regions: Record<string, unknown> }) => (
+    <div data-layout="dashboard" {...(props.isMobile ? { "data-mobile": "" } : {})}>
+      regions:{Object.keys(props.regions).join(",")}
+    </div>
+  )),
+)
+
+vi.mock("../surface/dashboard/dashboard-layout", () => ({
+  DashboardLayout: dashboardLayout,
+}))
 
 import { createWorkbenchLayoutRenderer } from "./WorkbenchShellLayoutRenderer"
 
@@ -28,84 +40,60 @@ function mount(element: JSX.Element) {
 }
 
 function baseOptions(): Parameters<typeof createWorkbenchLayoutRenderer>[0] {
-  const LayoutView = (props: LayoutViewProps<JSX.Element>) => (
-    <div>
-      layout {String(props.isMobile)} {Object.keys(props.regions).join(",")}
-    </div>
-  )
-
   return {
     activeLayoutId: () => "layout.dashboard",
     layoutError: () => null,
     displayedInstances: () => [instance()],
-    findLayoutContribution: () => ({
-      id: "layout.dashboard",
-      title: "Dashboard",
-      view: "layout.dashboard.view",
-      regions: [{ id: "main", title: "Main", accepts: ["widget"] }],
-      defaultRegions: {},
-      supportsResponsive: true,
-    }),
-    resolveLayoutView: () => LayoutView,
     buildRegionSlots: vi.fn(() => ({})),
     buildHostAPI: vi.fn(() => ({}) as LayoutHostAPI),
-    isMobile: () => true,
+    isMobile: () => false,
     clearLayoutError: vi.fn(),
     recordLayoutError: vi.fn(),
   }
 }
 
 describe("createWorkbenchLayoutRenderer", () => {
-  it("shows an explicit unavailable state when the layout plugin is missing", () => {
-    const options = baseOptions()
-    const renderer = createWorkbenchLayoutRenderer({
-      ...options,
-      findLayoutContribution: () => undefined,
-      resolveLayoutView: () => undefined,
-    })
-
-    const { host, dispose } = mount(renderer.renderActiveLayout())
-
-    expect(host.querySelector("[data-layout-unavailable]")).toBeTruthy()
-    expect(host.textContent).toContain("没有可用的布局插件")
-    expect(host.textContent).toContain("布局插件未注册")
-
-    dispose()
-    host.remove()
+  beforeEach(() => {
+    dashboardLayout.mockClear()
+    dashboardLayout.mockImplementation(
+      (props: { isMobile: boolean; regions: Record<string, unknown> }) => (
+        <div data-layout="dashboard" {...(props.isMobile ? { "data-mobile": "" } : {})}>
+          regions:{Object.keys(props.regions).join(",")}
+        </div>
+      ),
+    )
   })
 
-  it("renders the plugin-provided layout view with computed regions and host api", () => {
+  it("renders the builtin dashboard layout with computed regions and host api", () => {
     const options = baseOptions()
-    const LayoutView = vi.fn((props: LayoutViewProps<JSX.Element>) => (
-      <div>
-        layout {String(props.isMobile)} {Object.keys(props.regions).join(",")}
-      </div>
-    ))
-    options.resolveLayoutView = () => LayoutView
 
     const { host, dispose } = mount(createWorkbenchLayoutRenderer(options).renderActiveLayout())
 
-    expect(host.textContent).toContain("layout true")
+    expect(host.querySelector("[data-layout='dashboard']")).toBeTruthy()
     expect(options.buildRegionSlots).toHaveBeenCalledWith("layout.dashboard", [
       expect.objectContaining({ id: "widget-1" }),
     ])
     expect(options.buildHostAPI).toHaveBeenCalled()
     expect(options.clearLayoutError).toHaveBeenCalled()
-    expect(LayoutView).toHaveBeenCalledWith(
-      expect.objectContaining({
-        isMobile: true,
-        host: expect.anything(),
-      }),
-    )
 
     dispose()
     host.remove()
   })
 
-  it("shows the recorded layout error without retrying the broken view", () => {
+  it("renders mobile breakpoint when isMobile returns true", () => {
     const options = baseOptions()
-    const LayoutView = vi.fn(() => <div>broken layout</div>)
-    options.resolveLayoutView = () => LayoutView
+    options.isMobile = () => true
+
+    const { host, dispose } = mount(createWorkbenchLayoutRenderer(options).renderActiveLayout())
+
+    expect(host.querySelector("[data-layout='dashboard'][data-mobile]")).toBeTruthy()
+
+    dispose()
+    host.remove()
+  })
+
+  it("shows the recorded layout error without retrying the layout", () => {
+    const options = baseOptions()
     options.layoutError = () => ({
       layoutId: "layout.dashboard",
       message: "router failed",
@@ -115,7 +103,6 @@ describe("createWorkbenchLayoutRenderer", () => {
 
     expect(host.querySelector("[data-layout-unavailable]")).toBeTruthy()
     expect(host.textContent).toContain("router failed")
-    expect(LayoutView).not.toHaveBeenCalled()
     expect(options.buildRegionSlots).not.toHaveBeenCalled()
     expect(options.buildHostAPI).not.toHaveBeenCalled()
 
@@ -123,17 +110,17 @@ describe("createWorkbenchLayoutRenderer", () => {
     host.remove()
   })
 
-  it("records a thrown layout error and exposes the unavailable state", () => {
+  it("catches thrown layout errors and records them", () => {
     const options = baseOptions()
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
-    options.resolveLayoutView = () => () => {
+    dashboardLayout.mockImplementation(() => {
       throw new Error("layout crashed")
-    }
+    })
 
     const { host, dispose } = mount(createWorkbenchLayoutRenderer(options).renderActiveLayout())
 
     expect(host.querySelector("[data-layout-unavailable]")).toBeTruthy()
-    expect(host.textContent).toContain("布局插件渲染失败")
+    expect(host.textContent).toContain("布局渲染失败")
     expect(options.recordLayoutError).toHaveBeenCalledWith(
       "layout.dashboard",
       expect.objectContaining({ message: "layout crashed" }),

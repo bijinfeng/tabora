@@ -9,7 +9,6 @@ type WorkbenchSnapshot = {
   railLabels: string[]
   topbar: boolean
   globalToolbar: boolean
-  layoutSwitch: boolean
   grid: boolean
   cardTitles: string[]
   overflowX: boolean
@@ -35,10 +34,9 @@ describe("workbench dashboard layout", () => {
 
     expect(initial).toMatchObject({
       rail: true,
-      railLabels: ["分组 我的工作台", "新建分组", "切换布局", "切换主题", "设置"],
+      railLabels: ["分组 我的工作台", "新建分组", "切换主题", "设置"],
       topbar: true,
       globalToolbar: false,
-      layoutSwitch: true,
       grid: true,
       overflowX: false,
     })
@@ -151,38 +149,12 @@ describe("workbench dashboard layout", () => {
       ...dragOrder.before.slice(2),
     ])
 
-    // 仪表盘布局只服务桌面端，移动端由专用布局接管，所以这里只在桌面宽度下校验无横向滚动。
+    // 仪表盘是唯一布局，移动端是它的响应式断点，这里在桌面宽度下校验无横向滚动。
     await expectNoHorizontalOverflow({ width: 1280, height: 900 })
     await expectNoHorizontalOverflow({ width: 1024, height: 900 })
     await page.viewport(1280, 900)
 
     clickRequired('[data-workbench-rail] button[aria-label="设置"]')
-    await waitFor(() =>
-      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
-    )
-    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
-    clickRequired("[data-settings-close]")
-    await waitFor(() =>
-      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
-    )
-
-    const layoutSwitchTrigger = document.querySelector<HTMLElement>(
-      '[data-workbench-rail] button[aria-label="切换布局"]',
-    )
-    expect(layoutSwitchTrigger).toBeTruthy()
-    await userEvent.click(layoutSwitchTrigger!)
-    await waitFor(() => expect(document.querySelector('[role="menu"]')).toBeTruthy())
-    const focusLayoutButton = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
-      (node) => node.textContent?.includes("Focus"),
-    )
-    expect(focusLayoutButton).toBeTruthy()
-    await userEvent.click(focusLayoutButton!)
-    await waitFor(() => expect(document.querySelector('[data-layout="focus"]')).toBeTruthy())
-    await waitFor(() => expect(document.querySelector('[aria-label="专注主卡片"]')).toBeTruthy())
-    expect(document.querySelectorAll("[data-focus-satellite]").length).toBeGreaterThan(0)
-    await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
-
-    clickRequired('[data-layout="focus"] [data-workbench-rail] button[aria-label="设置"]')
     await waitFor(() =>
       expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
     )
@@ -221,34 +193,32 @@ describe("workbench dashboard layout", () => {
     expect(readGridOrder()).toEqual(before)
   }, 45_000)
 
-  // 移动端切换到专用布局：仪表盘 rail 消失，底部导航接管，且不改动已存的桌面布局选择。
-  it("swaps to the dedicated mobile layout at mobile width without touching the stored choice", async () => {
+  // 移动端是仪表盘的响应式断点：同一 dashboard 布局收起 rail、由底部导航接管，宽屏恢复。
+  it("renders the dashboard mobile breakpoint at mobile width and restores the rail on desktop", async () => {
     await mountFreshWorkbench()
     expect(document.querySelector('[data-layout="dashboard"]')).toBeTruthy()
 
     await page.viewport(390, 844)
-    await waitFor(() => expect(document.querySelector('[data-layout="mobile"]')).toBeTruthy())
+    await waitFor(() =>
+      expect(document.querySelector('[data-layout="dashboard"][data-mobile]')).toBeTruthy(),
+    )
     expect(document.querySelector("[data-workbench-rail]")).toBeFalsy()
     expect(document.querySelector("[data-workbench-mobile-bar]")).toBeTruthy()
-    // 桌面端的卡片经 mainGrid + focus 合流后仍在移动端网格中渲染。
+    // 桌面端的卡片在移动端断点的网格中仍然渲染。
     await waitFor(() => expect(countGridItems()).toBeGreaterThan(0))
     await waitFor(() => expect(hasHorizontalOverflow()).toBe(false))
 
-    // 底部导航暴露设置入口，点击可打开设置浮层。
+    // 底部导航暴露设置入口，移动端设置以整页路由呈现（非桌面浮层），返回按钮回到工作台。
     clickRequired('[data-workbench-mobile-bar] button[aria-label="设置"]')
-    await waitFor(() =>
-      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeTruthy(),
-    )
-    clickRequired("[data-settings-close]")
-    await waitFor(() =>
-      expect(document.querySelector('[data-workbench-overlay="settings"]')).toBeFalsy(),
-    )
+    await waitFor(() => expect(document.querySelector("[data-settings-page]")).toBeTruthy())
+    clickRequired("[data-settings-back]")
+    await waitFor(() => expect(document.querySelector("[data-settings-page]")).toBeFalsy())
 
-    // 回到桌面宽度应恢复仪表盘布局，说明持久化的布局选择未被移动端覆盖。
+    // 回到桌面宽度应恢复仪表盘 rail，移动断点标记消失。
     await page.viewport(1280, 900)
     await waitFor(() => expect(document.querySelector('[data-layout="dashboard"]')).toBeTruthy())
     expect(document.querySelector("[data-workbench-rail]")).toBeTruthy()
-    expect(document.querySelector('[data-layout="mobile"]')).toBeFalsy()
+    expect(document.querySelector('[data-layout="dashboard"][data-mobile]')).toBeFalsy()
   }, 45_000)
 })
 
@@ -286,7 +256,6 @@ async function readWorkbenchSnapshot(): Promise<WorkbenchSnapshot> {
     ),
     topbar: !!document.querySelector("[data-search-command-bar]"),
     globalToolbar: !!document.querySelector(".toolbar"),
-    layoutSwitch: !!document.querySelector('[data-workbench-rail] button[aria-label="切换布局"]'),
     grid: !!document.querySelector("[data-layout-grid]"),
     cardTitles: [...document.querySelectorAll("[data-workbench-grid-item]")].map(
       (node) => node.getAttribute("aria-label") ?? "",

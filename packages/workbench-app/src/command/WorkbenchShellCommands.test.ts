@@ -8,7 +8,6 @@ function createOptions(
 ): Parameters<typeof createWorkbenchShellCommandModels>[0] {
   const base: Parameters<typeof createWorkbenchShellCommandModels>[0] = {
     isDark: () => false,
-    activeLayoutId: () => "layout.dashboard.custom",
     pluginCommands: [],
     pluginKeybindings: [],
     setCommandPaletteOpen: vi.fn(),
@@ -16,7 +15,6 @@ function createOptions(
     openSettings: vi.fn(),
     showToast: vi.fn(),
     switchTheme: vi.fn(),
-    switchLayout: vi.fn(),
     shellConfig: {
       themeIds: {
         light: "theme.light.custom",
@@ -24,7 +22,6 @@ function createOptions(
       },
       layoutIds: {
         dashboard: "layout.dashboard.custom",
-        focus: "layout.focus.custom",
       },
       settingsPanelIds: {
         appearance: "settings.appearance.custom",
@@ -40,17 +37,15 @@ function createOptions(
 }
 
 describe("createWorkbenchShellCommandModels", () => {
-  it("uses injected shell ids for theme toggle, layout toggle, and settings entry", async () => {
+  it("uses injected shell ids for theme toggle and settings entry", async () => {
     const options = createOptions()
     const models = createWorkbenchShellCommandModels(options)
 
     await models.runCommand("toggle-theme", {})
-    await models.runCommand("toggle-layout", {})
     await models.runCommand("open-settings", {})
     await models.runCommand("open-plugin-manager", {})
 
     expect(options.switchTheme).toHaveBeenCalledWith("theme.dark.custom")
-    expect(options.switchLayout).toHaveBeenCalledWith("layout.focus.custom")
     expect(options.openSettings).toHaveBeenCalledWith("settings.appearance.custom")
     expect(options.openSettings).toHaveBeenCalledWith("official.settings.plugins")
   })
@@ -62,37 +57,19 @@ describe("createWorkbenchShellCommandModels", () => {
     expect(models.commandItems().map((command) => [command.name, command.icon])).toEqual(
       expect.arrayContaining([
         ["切换主题", "theme"],
-        ["切换布局", "layout-dashboard"],
         ["打开插件管理", "puzzle"],
         ["打开设置", "settings"],
       ]),
     )
   })
 
-  it("matches visible English layout labels in command search", () => {
-    const dashboardModels = createWorkbenchShellCommandModels(createOptions())
-    const focusModels = createWorkbenchShellCommandModels(
-      createOptions({
-        activeLayoutId: () => "layout.focus.custom",
-      }),
-    )
+  it("matches visible command labels in command search", () => {
+    const models = createWorkbenchShellCommandModels(createOptions())
 
     expect(
       createCommandPaletteItems({
-        query: "Focus",
-        commands: dashboardModels.commandItems(),
-      }).map((item) => item.id),
-    ).toContain("toggle-layout")
-    expect(
-      createCommandPaletteItems({
-        query: "Dashboard",
-        commands: focusModels.commandItems(),
-      }).map((item) => item.id),
-    ).toContain("toggle-layout")
-    expect(
-      createCommandPaletteItems({
         query: "plugin",
-        commands: dashboardModels.commandItems(),
+        commands: models.commandItems(),
       }).map((item) => item.id),
     ).toContain("open-plugin-manager")
   })
@@ -106,7 +83,6 @@ describe("createWorkbenchShellCommandModels", () => {
           const messages: Record<string, string> = {
             "commands.openPluginManager.title": "Open plugin manager",
             "commands.toggleTheme.title": "Toggle theme",
-            "commands.toggleLayout.title": "Toggle layout",
             "commands.openSettings.title": "Open settings",
             "commands.openShortcuts.separator": ", ",
             "commands.openShortcuts.toast": "Shortcuts: {{shortcuts}}, Esc",
@@ -121,7 +97,6 @@ describe("createWorkbenchShellCommandModels", () => {
     expect(models.commandItems().map((command) => [command.name, command.icon])).toEqual(
       expect.arrayContaining([
         ["Toggle theme", "theme"],
-        ["Toggle layout", "layout-dashboard"],
         ["Open plugin manager", "puzzle"],
         ["Open settings", "settings"],
       ]),

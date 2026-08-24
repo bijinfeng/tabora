@@ -102,7 +102,6 @@ describe("buildWorkbenchSettingsPanelProps", () => {
     const options = {
       workspace: workspace(),
       workspaces: [],
-      layouts: [],
       themes: [],
       backgrounds: [],
       searchProviders: [],
@@ -130,7 +129,6 @@ describe("buildWorkbenchSettingsPanelProps", () => {
       buildWorkbenchSettingsPanelProps(panel(), {
         workspace: null,
         workspaces: [],
-        layouts: [],
         themes: [],
         backgrounds: [],
         searchProviders: [],
@@ -170,7 +168,6 @@ describe("buildWorkbenchSettingsPanelProps", () => {
     const result = buildWorkbenchSettingsPanelProps(panel(), {
       workspace: currentWorkspace,
       workspaces,
-      layouts: [],
       themes: [],
       backgrounds: [],
       searchProviders: [],
@@ -202,7 +199,6 @@ describe("buildWorkbenchSettingsPanelProps", () => {
       buildWorkbenchSettingsPanelProps(panel(), {
         workspace: currentWorkspace,
         workspaces,
-        layouts: [],
         themes: [],
         backgrounds: [],
         searchProviders: [],
@@ -234,7 +230,6 @@ describe("buildWorkbenchSettingsPanelProps", () => {
       {
         workspace: workspace(),
         workspaces: [],
-        layouts: [],
         themes: [],
         backgrounds: [],
         searchProviders: [],

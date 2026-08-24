@@ -148,7 +148,6 @@ describe("SearchCommandBar", () => {
                 items: [
                   { id: "open-command", icon: "⌘K", name: "打开命令", desc: "搜索命令" },
                   { id: "toggle-theme", icon: "T", name: "切换主题", desc: "明亮 → 暗色" },
-                  { id: "toggle-layout", icon: "L", name: "切换布局", desc: "仪表盘 → 专注" },
                   { id: "add-widget", icon: "+", name: "添加卡片", desc: "向工作台添加新卡片" },
                   {
                     id: "open-plugin-manager",

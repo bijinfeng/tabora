@@ -23,7 +23,7 @@ describe("createLayoutErrorTracker", () => {
     createRoot((dispose) => {
       const tracker = createLayoutErrorTracker()
 
-      tracker.recordLayoutError("official.layout.workbench-focus", "broken")
+      tracker.recordLayoutError("official.layout.workbench-dashboard", "broken")
       tracker.clearLayoutError()
 
       expect(tracker.status()).toBeNull()

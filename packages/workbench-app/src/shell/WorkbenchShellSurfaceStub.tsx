@@ -42,13 +42,13 @@ export function createWorkbenchShellSurfaceStub(
   const state = createWorkbenchShellState({
     initialSearchSettings: {
       defaultProvider: {
-        pluginId: "official.search-providers.basic",
+        pluginId: "official.search.command-bar",
         kind: "search-provider",
         id: "official.search.google",
       },
       enabledProviders: [
         {
-          pluginId: "official.search-providers.basic",
+          pluginId: "official.search.command-bar",
           kind: "search-provider",
           id: "official.search.google",
         },

@@ -12,7 +12,6 @@ const localStoreCollections = [
   "plugin-data",
   "plugin-instances",
   "plugin-records",
-  "workspace-snapshots",
   "workspaces",
 ] as const
 

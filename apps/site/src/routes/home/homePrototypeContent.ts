@@ -122,12 +122,6 @@ export const homePrototypeContent: Record<SiteLocale, any> = {
           "默认启用",
         ],
         [
-          "layout",
-          "official.layout.workbench-focus",
-          "无固定 rail，聚焦单一 Hero 卡片与环绕卫星，适合单点深度工作场景。",
-          "可切换",
-        ],
-        [
           "widget",
           "official.widgets.productivity",
           "今日重点、快捷入口、待办、便签、天气等贡献点，每类都可多实例并声明自己的支持尺寸。",
@@ -294,12 +288,6 @@ export const homePrototypeContent: Record<SiteLocale, any> = {
           "official.layout.workbench-dashboard",
           "Left rail, top command search, and a four-column adaptive grid; collapsed into a bottom bar and single-column cards on mobile.",
           "Default on",
-        ],
-        [
-          "layout",
-          "official.layout.workbench-focus",
-          "No fixed rail, a single hero card with surrounding satellites, suited for deep focus workflows.",
-          "Switchable",
         ],
         [
           "widget",

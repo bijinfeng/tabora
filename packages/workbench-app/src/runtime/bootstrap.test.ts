@@ -63,7 +63,6 @@ const shellConfig = {
   },
   layoutIds: {
     dashboard: "layout.dashboard.custom",
-    focus: "layout.focus.custom",
   },
   settingsPanelIds: {
     appearance: "settings.appearance.custom",
@@ -173,12 +172,6 @@ describe("createWorkbenchRuntimeBootstrap", () => {
           async save() {},
           async remove() {},
         },
-        workspaceSnapshotRepo: {
-          async save() {},
-          async getLast() {
-            return undefined
-          },
-        },
       },
     }
 
@@ -250,9 +243,6 @@ describe("createWorkbenchRuntimeBootstrap", () => {
       "This layout cannot add widgets",
     )
     expect(runtime.i18n.t("tabora.shell", "commands.openSettings.title")).toBe("Open settings")
-    expect(runtime.i18n.t("tabora.shell", "commands.toggleLayout.description.toFocus")).toBe(
-      "Dashboard → Focus",
-    )
     expect(
       runtime.i18n.t("tabora.shell", "commands.openShortcuts.toast", { shortcuts: "⌘K" }),
     ).toBe("Shortcuts: ⌘K, Esc")

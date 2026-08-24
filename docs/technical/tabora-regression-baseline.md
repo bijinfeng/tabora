@@ -707,7 +707,7 @@ Agent 必须：
 人工 / 浏览器冒烟：
 
 - 默认工作台:
-- 布局切换:
+- 移动端响应式断点:
 - 添加 / 尺寸 / 拖拽 / 右键 / 展开:
 - 搜索 / 命令面板:
 - 设置中心:
@@ -739,14 +739,14 @@ Agent 必须：
 - L5：明暗主题、移动端、控件语义。
 - L7：组件职责、测试质量、CSS token、性能高频路径。
 
-### 修改 layout package
+### 修改 layout（宿主内建 dashboard）
 
 必做：
 
 - L1：PRD / `DESIGN.md` / 技术方案是否需要同步。
 - L2：layout 只依赖公开 contract。
 - L3：`pnpm test` + `pnpm check` + `pnpm build`。
-- L4：Dashboard / Focus / 第三方 layout 切换。
+- L4：Dashboard 桌面/移动端响应式断点渲染。
 - L5：横向滚动、卡片可读性、全局入口可达。
 - L7：layout 纯协议依赖、region 身份稳定、拖拽/resize 高频路径。
 
@@ -767,7 +767,7 @@ Agent 必须：
 - L1：技术方案同步数据模型。
 - L2：workspace 装配数据、instance 状态、plugin data 分层。
 - L3：`pnpm test` + `pnpm check` + `pnpm build`。
-- L4：跨会话恢复、导入导出、布局切换数据保留。
+- L4：跨会话恢复、导入导出数据保留。
 - L6：缺失当前 schema 字段拒绝，不 silent backfill。
 - L7：schema 类型一致性、事务边界、测试 fixture 完整性。
 

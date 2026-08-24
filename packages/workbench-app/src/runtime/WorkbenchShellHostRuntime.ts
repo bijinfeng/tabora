@@ -82,7 +82,6 @@ export function createWorkbenchShellHostRuntime(
       setInstances: options.setInstances,
       applyThemeSelection: options.applyThemeSelection,
       applyBackgroundSelection: options.applyBackgroundSelection,
-      reconcileInstancesForLayout: options.reconcileInstancesForLayout,
     })
 
   return {

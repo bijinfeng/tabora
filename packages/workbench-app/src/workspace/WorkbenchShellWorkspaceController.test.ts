@@ -1,6 +1,5 @@
 import type {
   BackgroundProviderContribution,
-  LayoutContribution,
   PluginInstance,
   SearchHistoryEntry,
   ThemeContribution,
@@ -167,7 +166,6 @@ function shellConfig() {
     },
     layoutIds: {
       dashboard: "layout.dashboard.custom",
-      focus: "layout.focus.custom",
     },
     settingsPanelIds: {
       appearance: "settings.appearance.custom",
@@ -221,26 +219,6 @@ function controllerSetup() {
       sourceType: "generated",
       defaultCss: { background: "rgb(10 10 10)" },
       ref: refs.background("official.background.dark"),
-    },
-  ]
-  const layouts: Array<LayoutContribution & { ref: ReturnType<typeof refs.layout> }> = [
-    {
-      id: "official.layout.workbench-dashboard",
-      title: "Dashboard",
-      view: "official.layout.workbench-dashboard.view",
-      regions: [{ id: "mainGrid", title: "Grid", accepts: ["widget"] }],
-      defaultRegions: {},
-      supportsResponsive: true,
-      ref: refs.layout("official.layout.workbench-dashboard"),
-    },
-    {
-      id: "layout.next",
-      title: "Next",
-      view: "layout.next.view",
-      regions: [{ id: "grid", title: "Grid", accepts: ["widget"] }],
-      defaultRegions: {},
-      supportsResponsive: true,
-      ref: refs.layout("layout.next"),
     },
   ]
   const providers = [
@@ -326,16 +304,12 @@ function controllerSetup() {
     workspaceRepo,
     instanceRepo,
     pluginDataRepo,
-    workspaceSnapshotRepo: { save: vi.fn(async () => {}) },
     database,
     kernel,
     pluginCatalog: {
       pluginIds: () => ["plugin.widgets"],
       listThemes: () => themes,
       listBackgroundProviders: () => backgrounds,
-      listLayouts: () => layouts,
-      findLayoutContribution: (layoutId: string) =>
-        layouts.find((layout) => layout.id === layoutId),
       listSearchProviders: () => providers,
     },
     getWorkspaceState: () => currentWorkspace,
@@ -404,34 +378,6 @@ describe("createWorkbenchWorkspaceController", () => {
         backgrounds,
       }),
     )
-  })
-
-  it("wires layout switching through the shared layout state helper", async () => {
-    const { controller, clearContextMenu, clearExpandState } = controllerSetup()
-
-    await controller.switchLayout("layout.next")
-
-    expect(mocks.switchWorkbenchLayout).toHaveBeenCalledWith(
-      expect.objectContaining({
-        layoutId: "layout.next",
-        activeWorkspace: expect.objectContaining({ id: "workspace-1" }),
-        currentInstances: [expect.objectContaining({ id: "widget-1" })],
-      }),
-    )
-
-    const switchOptions = (
-      mocks.switchWorkbenchLayout.mock.calls as unknown as Array<[unknown]>
-    )[0]?.[0] as
-      | {
-          clearContextMenu: () => void
-          clearExpandState: () => void
-        }
-      | undefined
-    switchOptions?.clearContextMenu()
-    switchOptions?.clearExpandState()
-
-    expect(clearContextMenu).toHaveBeenCalled()
-    expect(clearExpandState).toHaveBeenCalled()
   })
 
   it("delegates search provider updates to the search state helpers with current catalog data", async () => {

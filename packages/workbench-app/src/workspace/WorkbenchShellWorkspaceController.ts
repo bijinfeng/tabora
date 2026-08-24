@@ -1,8 +1,6 @@
 import type {
   BackgroundProviderContribution,
   BackgroundProviderContributionRef,
-  LayoutContributionRef,
-  LayoutContribution,
   PluginInstance,
   SearchHistoryEntry,
   SearchProviderContribution,
@@ -14,7 +12,6 @@ import type {
   Workspace,
   WorkspacePresetContribution,
 } from "@tabora/plugin-api"
-import type { LayoutSwitchPlan } from "@tabora/orchestrator"
 
 import {
   applyWorkbenchBackgroundSelection,
@@ -23,10 +20,6 @@ import {
   switchWorkbenchTheme,
 } from "../appearance/WorkbenchShellAppearanceState"
 import {
-  reconcileWorkbenchLayoutInstances,
-  switchWorkbenchLayout,
-} from "../layout/WorkbenchShellLayoutState"
-import {
   saveWorkbenchSearchHistory,
   setWorkbenchDefaultSearchProvider,
   setWorkbenchSearchProviderEnabled,
@@ -34,11 +27,9 @@ import {
 import { requireWorkspace } from "../shared/WorkbenchShellUtils"
 import { createWorkbenchWorkspaceState } from "./WorkbenchShellWorkspaceState"
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
-import { createLayoutSwitchExecution } from "../shared/shellController"
 import {
   updateWorkspaceBackground,
   updateWorkspaceLocale,
-  updateWorkspaceRecord,
   updateWorkspaceTheme,
 } from "./workspaceSession"
 import type { WorkbenchLocale } from "../i18n"
@@ -48,10 +39,6 @@ type WorkspaceRepo = WorkspaceStateOptions["workspaceRepo"]
 type InstanceRepo = WorkspaceStateOptions["instanceRepo"]
 type PluginDataRepo = WorkspaceStateOptions["pluginDataRepo"]
 type TaboraDatabase = WorkspaceStateOptions["database"]
-
-type WorkspaceSnapshotRepo = {
-  save: (snapshot: LayoutSwitchPlan["snapshot"]) => Promise<void>
-}
 
 type ThemeApplier = (tokens: ThemeTokenSet) => void
 type BackgroundApplier = (style: Record<string, string>) => void
@@ -65,7 +52,6 @@ export function createWorkbenchWorkspaceController(options: {
   workspaceRepo: WorkspaceRepo
   instanceRepo: InstanceRepo
   pluginDataRepo: PluginDataRepo
-  workspaceSnapshotRepo: WorkspaceSnapshotRepo
   database?: TaboraDatabase
   kernel: { setPluginEnabled: (pluginId: string, enabled: boolean) => Promise<void> }
   pluginCatalog: {
@@ -74,8 +60,6 @@ export function createWorkbenchWorkspaceController(options: {
     listBackgroundProviders: () => Array<
       BackgroundProviderContribution & { ref: BackgroundProviderContributionRef }
     >
-    listLayouts: () => Array<LayoutContribution & { ref: LayoutContributionRef }>
-    findLayoutContribution: (layoutId: string) => LayoutContribution | undefined
     listSearchProviders: () => Array<
       SearchProviderContribution & { ref: SearchProviderContributionRef }
     >
@@ -121,27 +105,6 @@ export function createWorkbenchWorkspaceController(options: {
       applyBackground: options.applyBackground,
     })
 
-  async function reconcileInstancesForLayout(
-    layoutId: string,
-    currentInstances: PluginInstance[],
-  ): Promise<{ instances: PluginInstance[]; plan: LayoutSwitchPlan | null }> {
-    return reconcileWorkbenchLayoutInstances({
-      layoutId,
-      currentInstances,
-      activeWorkspace: requireWorkspace(options.getWorkspaceState()),
-      findLayout: (targetLayoutId) => options.pluginCatalog.findLayoutContribution(targetLayoutId),
-      executeLayoutSwitch: ({ workspace, instances, targetLayout }) =>
-        createLayoutSwitchExecution({
-          workspace,
-          instances,
-          targetLayout,
-          now: new Date().toISOString(),
-        }),
-      assignGridOrder: options.assignGridOrder,
-      saveInstance: (instance) => options.instanceRepo.save(instance),
-    })
-  }
-
   const workspaceStateActions = createWorkbenchWorkspaceState({
     workspaceRepo: options.workspaceRepo,
     instanceRepo: options.instanceRepo,
@@ -158,42 +121,11 @@ export function createWorkbenchWorkspaceController(options: {
     setInstances: options.setInstances,
     applyThemeSelection,
     applyBackgroundSelection,
-    reconcileInstancesForLayout,
     clearContextMenu: options.clearContextMenu,
     clearExpandState: options.clearExpandState,
     defaultWorkspacePreset: options.defaultWorkspacePreset,
     searchHistoryStorage: options.shellConfig.searchHistory,
   })
-
-  async function switchLayout(layoutId: string) {
-    await switchWorkbenchLayout({
-      layoutId,
-      activeWorkspace: requireWorkspace(options.getWorkspaceState()),
-      currentInstances: options.getInstances(),
-      findLayout: (targetLayoutId) => options.pluginCatalog.findLayoutContribution(targetLayoutId),
-      reconcileInstances: reconcileInstancesForLayout,
-      clearContextMenu: options.clearContextMenu,
-      clearExpandState: options.clearExpandState,
-      setInstances: options.setInstances,
-      setActiveLayoutId: options.setActiveLayoutId,
-      saveSnapshot: (snapshot) => options.workspaceSnapshotRepo.save(snapshot),
-      persistWorkspaceLayout: (workspaceId, nextLayoutId, regions) =>
-        updateWorkspaceRecord({
-          workspaceRepo: options.workspaceRepo,
-          workspaceId,
-          mutator(workspace) {
-            const nextLayout = options.pluginCatalog
-              .listLayouts()
-              .find((layout) => layout.id === nextLayoutId)
-            if (!nextLayout?.ref) return workspace
-            workspace.activeLayout = nextLayout.ref as LayoutContributionRef
-            workspace.regions = regions
-            return workspace
-          },
-        }),
-      setWorkspaceState: options.setWorkspaceState,
-    })
-  }
 
   async function updateWorkspace(mutator: (workspace: Workspace) => Workspace) {
     await workspaceStateActions.updateWorkspace(mutator)
@@ -292,8 +224,6 @@ export function createWorkbenchWorkspaceController(options: {
   return {
     applyThemeSelection,
     applyBackgroundSelection,
-    reconcileInstancesForLayout,
-    switchLayout,
     updateWorkspace,
     setDefaultSearchProvider,
     setSearchProviderEnabled,

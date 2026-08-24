@@ -12,10 +12,6 @@ export async function hydrateWorkbenchSessionState(options: {
   setInstances: (instances: PluginInstance[]) => void
   applyThemeSelection: (themeId: string) => void
   applyBackgroundSelection: (backgroundId: string) => void
-  reconcileInstancesForLayout: (
-    layoutId: string,
-    currentInstances: PluginInstance[],
-  ) => Promise<{ instances: PluginInstance[] }>
 }) {
   options.setWorkspaceState(options.session.workspace)
   if (options.session.locale) {
@@ -26,9 +22,5 @@ export async function hydrateWorkbenchSessionState(options: {
   options.applyBackgroundSelection(options.session.activeBackgroundId)
   options.setSearchSettings(options.session.searchSettings)
   options.setSearchHistory(options.session.searchHistory)
-  const { instances } = await options.reconcileInstancesForLayout(
-    options.session.activeLayoutId,
-    options.session.instances,
-  )
-  options.setInstances(instances)
+  options.setInstances(options.session.instances)
 }

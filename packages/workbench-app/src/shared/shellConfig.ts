@@ -5,8 +5,6 @@ export type WorkbenchShellConfig = {
   }
   layoutIds: {
     dashboard: string
-    focus: string
-    mobile?: string
   }
   settingsPanelIds: {
     appearance: string
@@ -26,13 +24,6 @@ export function resolveWorkbenchThemeToggleTarget(
   themeIds: WorkbenchShellConfig["themeIds"],
 ): string {
   return isDark ? themeIds.light : themeIds.dark
-}
-
-export function resolveWorkbenchLayoutToggleTarget(
-  activeLayoutId: string,
-  layoutIds: WorkbenchShellConfig["layoutIds"],
-): string {
-  return activeLayoutId === layoutIds.dashboard ? layoutIds.focus : layoutIds.dashboard
 }
 
 export function isWorkbenchDarkTheme(

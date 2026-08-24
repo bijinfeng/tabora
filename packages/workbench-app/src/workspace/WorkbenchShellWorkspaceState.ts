@@ -32,10 +32,6 @@ export function createWorkbenchWorkspaceState(options: {
   setInstances: (instances: PluginInstance[]) => void
   applyThemeSelection: (themeId: string) => void
   applyBackgroundSelection: (backgroundId: string) => void
-  reconcileInstancesForLayout: (
-    layoutId: string,
-    currentInstances: PluginInstance[],
-  ) => Promise<{ instances: PluginInstance[] }>
   clearContextMenu: () => void
   clearExpandState: () => void
   defaultWorkspacePreset: Parameters<typeof createWorkspaceSession>[0]["defaultWorkspacePreset"]
@@ -84,11 +80,7 @@ export function createWorkbenchWorkspaceState(options: {
     resetTransientShellState()
     options.setWorkspaceState(result.workspace)
 
-    const { instances } = await options.reconcileInstancesForLayout(
-      result.workspace.activeLayout.id,
-      result.instances,
-    )
-    options.setInstances(instances)
+    options.setInstances(result.instances)
     options.setActiveLayoutId(result.workspace.activeLayout.id)
     options.applyThemeSelection(result.workspace.activeTheme.id)
     options.applyBackgroundSelection(result.workspace.activeBackgroundProvider.id)
@@ -134,7 +126,6 @@ export function createWorkbenchWorkspaceState(options: {
       setInstances: options.setInstances,
       applyThemeSelection: options.applyThemeSelection,
       applyBackgroundSelection: options.applyBackgroundSelection,
-      reconcileInstancesForLayout: options.reconcileInstancesForLayout,
     })
   }
 

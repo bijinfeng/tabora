@@ -27,7 +27,6 @@ describe("TaboraDatabase", () => {
       "plugins",
       "syncMeta",
       "syncQueue",
-      "workspaceSnapshots",
       "workspaces",
     ])
 

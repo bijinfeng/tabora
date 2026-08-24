@@ -57,11 +57,6 @@ export {
   type SettingsSectionId,
   type SettingsSurface,
 } from "./settings-navigator"
-export {
-  createLayoutSwitchPlan,
-  type LayoutSwitchPlan,
-  type LayoutSwitchPlanOptions,
-} from "./layout-switcher"
 export { createDragSortPlan, type DragSortPlan, type DragSortPlanOptions } from "./drag-sort-model"
 export {
   createToastManager,

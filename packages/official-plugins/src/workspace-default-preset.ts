@@ -1,15 +1,11 @@
 import type { PluginModule, WorkspacePresetContribution } from "@tabora/plugin-api/sdk"
+import { BUILTIN_SEARCH_PROVIDER_PLUGIN_ID } from "./builtinSearchProviders"
 
 export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   id: "official.workspace.default",
   title: "默认工作区",
   plugins: [
-    "official.theme.default-pack",
-    "official.background.basic",
-    "official.layout.workbench-dashboard",
-    "official.layout.workbench-mobile",
     "official.search.command-bar",
-    "official.search-providers.basic",
     "official.widgets.quick-links",
     "official.widgets.todo",
     "official.widgets.notes",
@@ -34,7 +30,7 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
   },
   search: {
     defaultProvider: {
-      pluginId: "official.search-providers.basic",
+      pluginId: BUILTIN_SEARCH_PROVIDER_PLUGIN_ID,
       kind: "search-provider",
       id: "official.search.google",
     },
@@ -45,7 +41,7 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
       "official.search.duckduckgo",
       "official.search.github",
     ].map((id) => ({
-      pluginId: "official.search-providers.basic",
+      pluginId: BUILTIN_SEARCH_PROVIDER_PLUGIN_ID,
       kind: "search-provider" as const,
       id,
     })),

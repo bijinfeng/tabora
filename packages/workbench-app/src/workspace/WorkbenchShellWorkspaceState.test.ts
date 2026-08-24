@@ -181,9 +181,6 @@ describe("createWorkbenchWorkspaceState", () => {
       },
     })
     const importedInstances = [instance({ workspaceId: importedWorkspace.id })]
-    const reconciledInstances = [
-      instance({ id: "widget-reconciled", workspaceId: importedWorkspace.id }),
-    ]
     const preset = defaultWorkspacePreset()
     const storage = searchHistoryStorage()
     mocks.importWorkspaceData.mockResolvedValue({
@@ -205,7 +202,6 @@ describe("createWorkbenchWorkspaceState", () => {
     const applyBackgroundSelection = vi.fn()
     const clearContextMenu = vi.fn()
     const clearExpandState = vi.fn()
-    const reconcileInstancesForLayout = vi.fn(async () => ({ instances: reconciledInstances }))
 
     const actions = createWorkbenchWorkspaceState({
       workspaceRepo: createWorkspaceRepo({ get: vi.fn(async () => undefined) }),
@@ -223,7 +219,6 @@ describe("createWorkbenchWorkspaceState", () => {
       setInstances,
       applyThemeSelection,
       applyBackgroundSelection,
-      reconcileInstancesForLayout,
       clearContextMenu,
       clearExpandState,
       defaultWorkspacePreset: preset,
@@ -241,11 +236,7 @@ describe("createWorkbenchWorkspaceState", () => {
     expect(clearContextMenu).toHaveBeenCalled()
     expect(clearExpandState).toHaveBeenCalled()
     expect(setWorkspaceState).toHaveBeenCalledWith(importedWorkspace)
-    expect(reconcileInstancesForLayout).toHaveBeenCalledWith(
-      importedWorkspace.activeLayout.id,
-      importedInstances,
-    )
-    expect(setInstances).toHaveBeenCalledWith(reconciledInstances)
+    expect(setInstances).toHaveBeenCalledWith(importedInstances)
     expect(setActiveLayoutId).toHaveBeenCalledWith(importedWorkspace.activeLayout.id)
     expect(applyThemeSelection).toHaveBeenCalledWith(importedWorkspace.activeTheme.id)
     expect(applyBackgroundSelection).toHaveBeenCalledWith(
@@ -276,7 +267,7 @@ describe("createWorkbenchWorkspaceState", () => {
       setInstances: vi.fn(),
       applyThemeSelection: vi.fn(),
       applyBackgroundSelection: vi.fn(),
-      reconcileInstancesForLayout: vi.fn(async () => ({ instances: [] })),
+
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
       defaultWorkspacePreset: preset,
@@ -329,7 +320,7 @@ describe("createWorkbenchWorkspaceState", () => {
       setInstances: vi.fn(),
       applyThemeSelection: vi.fn(),
       applyBackgroundSelection: vi.fn(),
-      reconcileInstancesForLayout: vi.fn(async () => ({ instances: [] })),
+
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
       defaultWorkspacePreset: preset,
@@ -378,7 +369,7 @@ describe("createWorkbenchWorkspaceState", () => {
       setInstances: vi.fn(),
       applyThemeSelection: vi.fn(),
       applyBackgroundSelection: vi.fn(),
-      reconcileInstancesForLayout: vi.fn(async () => ({ instances: [] })),
+
       clearContextMenu: vi.fn(),
       clearExpandState: vi.fn(),
       defaultWorkspacePreset: preset,

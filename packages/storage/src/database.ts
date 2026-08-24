@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie"
-import type { PluginInstance, PluginRecord, Workspace } from "@tabora/plugin-api"
+import type { PluginRecord, Workspace } from "@tabora/plugin-api"
 
 export type PluginDataRow = {
   id: string
@@ -18,15 +18,6 @@ export type PluginDataRow = {
 export type StorageMeta = {
   key: string
   value: string
-}
-
-export type WorkspaceSnapshot = {
-  id: string
-  workspaceId: string
-  layoutId: string
-  regions: Workspace["regions"]
-  instances: PluginInstance[]
-  createdAt: string
 }
 
 export type SyncQueueRow = {
@@ -55,7 +46,6 @@ export class TaboraDatabase extends Dexie {
   pluginInstances!: Table<unknown, string>
   pluginData!: Table<PluginDataRow, string>
   meta!: Table<StorageMeta, string>
-  workspaceSnapshots!: Table<WorkspaceSnapshot, string>
   syncQueue!: Table<SyncQueueRow, string>
   syncMeta!: Table<SyncMetaRow, string>
 
@@ -69,7 +59,6 @@ export class TaboraDatabase extends Dexie {
         "id, workspaceId, [workspaceId+regionId], pluginId, contributionId, regionId, enabled",
       pluginData: "id, pluginId, workspaceId, instanceId, key",
       meta: "key",
-      workspaceSnapshots: "id, workspaceId, layoutId, createdAt",
     })
 
     this.version(2).stores({
@@ -79,7 +68,6 @@ export class TaboraDatabase extends Dexie {
         "id, workspaceId, [workspaceId+regionId], pluginId, contributionId, regionId, enabled",
       pluginData: "id, pluginId, workspaceId, instanceId, key",
       meta: "key",
-      workspaceSnapshots: "id, workspaceId, layoutId, createdAt",
       syncQueue: "id, [scope+entityType+recordKey], status, queuedAt",
       syncMeta: "key",
     })
@@ -90,7 +78,6 @@ export class TaboraDatabase extends Dexie {
       pluginInstances: "id, workspaceId, [workspaceId+regionId], regionId, enabled",
       pluginData: "id, pluginId, workspaceId, instanceId, key",
       meta: "key",
-      workspaceSnapshots: "id, workspaceId, layoutId, createdAt",
       syncQueue: "id, [scope+entityType+recordKey], status, queuedAt",
       syncMeta: "key",
     })
@@ -102,7 +89,6 @@ export class TaboraDatabase extends Dexie {
       pluginData:
         "id, pluginId, workspaceId, instanceId, key, collection, recordId, [pluginId+collection]",
       meta: "key",
-      workspaceSnapshots: "id, workspaceId, layoutId, createdAt",
       syncQueue: "id, [scope+entityType+recordKey], status, queuedAt",
       syncMeta: "key",
     })
@@ -116,7 +102,6 @@ export class TaboraDatabase extends Dexie {
       pluginData:
         "id, pluginId, workspaceId, instanceId, key, collection, recordId, [pluginId+collection]",
       meta: "key",
-      workspaceSnapshots: "id, workspaceId, layoutId, createdAt",
       syncQueue: "id, [scope+entityType+recordKey], status, queuedAt",
       syncMeta: "key",
     })

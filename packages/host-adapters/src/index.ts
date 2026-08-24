@@ -33,10 +33,4 @@ export { createWebStorageAdapter } from "@tabora/storage"
 export { migrateWorkspaceContributionRefs } from "@tabora/storage"
 export { createPluginSyncCollections, createSyncManager } from "@tabora/sync"
 export type { PluginSyncCollections, SyncManager, SyncManagerConfig } from "@tabora/sync"
-export type {
-  PluginDataRow,
-  StorageAdapter,
-  SyncMetaRow,
-  SyncQueueRow,
-  WorkspaceSnapshot,
-} from "@tabora/storage"
+export type { PluginDataRow, StorageAdapter, SyncMetaRow, SyncQueueRow } from "@tabora/storage"

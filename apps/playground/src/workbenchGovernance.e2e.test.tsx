@@ -5,6 +5,29 @@ import { builtinPlugins } from "@tabora/builtin-plugin-registry"
 import type { PluginModule } from "@tabora/plugin-api"
 import type { LoadedPluginPackage } from "@tabora/platform-kernel"
 
+// The dashboard is a host builtin, so the only way to exercise the host LayoutBoundary is to make
+// the real DashboardLayout throw. The flag keeps every other test on the genuine component.
+const forceLayoutThrowKey = "__TABORA_FORCE_LAYOUT_THROW__"
+
+vi.mock(
+  "../../../packages/workbench-app/src/surface/dashboard/dashboard-layout",
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import("../../../packages/workbench-app/src/surface/dashboard/dashboard-layout")
+      >()
+    return {
+      ...actual,
+      DashboardLayout: (props: Parameters<typeof actual.DashboardLayout>[0]) => {
+        if ((globalThis as Record<string, unknown>)[forceLayoutThrowKey]) {
+          throw new Error("E2E layout failure")
+        }
+        return actual.DashboardLayout(props)
+      },
+    }
+  },
+)
+
 import { App } from "./App"
 
 type PluginSnapshot = {
@@ -30,6 +53,7 @@ describe("workbench governance smoke", () => {
   afterEach(async () => {
     disposeApp?.()
     disposeApp = undefined
+    delete (globalThis as Record<string, unknown>)[forceLayoutThrowKey]
     restoreBuiltinPlugins()
     vi.restoreAllMocks()
     document.body.innerHTML = ""
@@ -64,7 +88,7 @@ describe("workbench governance smoke", () => {
   })
 
   it("shows a toast when search external-open permission is denied", async () => {
-    patchPluginPermissions("official.search-providers.basic", [
+    patchPluginPermissions("official.search.command-bar", [
       { type: "external-open", hosts: ["example.com"] },
     ])
 
@@ -83,10 +107,7 @@ describe("workbench governance smoke", () => {
   })
 
   it("shows an explicit layout error when the active layout view throws", async () => {
-    patchLayoutToThrow(
-      "official.layout.workbench-dashboard",
-      "official.layout.workbench-dashboard.view",
-    )
+    ;(globalThis as Record<string, unknown>)[forceLayoutThrowKey] = true
 
     await mountFreshWorkbench({ readySelector: "[data-layout-unavailable]" })
 
@@ -153,15 +174,6 @@ function patchPluginPermissions(
 ): void {
   const plugin = requireBuiltinPlugin(pluginId)
   setPluginPermissions(plugin, clonePermissions(permissions))
-}
-
-function patchLayoutToThrow(pluginId: string, viewId: string): void {
-  const plugin = requireBuiltinPlugin(pluginId)
-  plugin.module.activate = (context) => {
-    context.views.register(viewId, () => {
-      throw new Error("E2E layout failure")
-    })
-  }
 }
 
 function requireBuiltinPlugin(pluginId: string): LoadedPluginPackage {

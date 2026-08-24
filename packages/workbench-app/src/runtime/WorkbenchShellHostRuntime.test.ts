@@ -1,4 +1,4 @@
-import type { PluginInstance, PluginManifest } from "@tabora/plugin-api"
+import type { PluginManifest } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
@@ -43,21 +43,6 @@ function createRuntimeStub(): RuntimeStub {
   }
 }
 
-function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
-  return {
-    id: "widget-1",
-    workspaceId: "workspace-1",
-    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
-    regionId: "mainGrid",
-    enabled: true,
-    size: "M",
-    config: {},
-    createdAt: "2026-06-07T00:00:00.000Z",
-    updatedAt: "2026-06-07T00:00:00.000Z",
-    ...overrides,
-  }
-}
-
 function createOptions(
   overrides: Partial<Parameters<typeof createWorkbenchShellHostRuntime>[0]> = {},
 ): Parameters<typeof createWorkbenchShellHostRuntime>[0] {
@@ -80,7 +65,6 @@ function createOptions(
     setInstances: vi.fn(),
     applyThemeSelection: vi.fn(),
     applyBackgroundSelection: vi.fn(),
-    reconcileInstancesForLayout: vi.fn(async () => ({ instances: [instance()], plan: null })),
     setModalViewId: vi.fn(),
     setModalProps: vi.fn(),
     setFullscreenViewId: vi.fn(),
@@ -94,7 +78,6 @@ function createOptions(
       },
       layoutIds: {
         dashboard: "layout.dashboard.custom",
-        focus: "layout.focus.custom",
       },
       settingsPanelIds: {
         appearance: "settings.appearance.custom",
@@ -140,7 +123,6 @@ describe("createWorkbenchShellHostRuntime", () => {
         setInstances: options.setInstances,
         applyThemeSelection: options.applyThemeSelection,
         applyBackgroundSelection: options.applyBackgroundSelection,
-        reconcileInstancesForLayout: options.reconcileInstancesForLayout,
       }),
     )
 

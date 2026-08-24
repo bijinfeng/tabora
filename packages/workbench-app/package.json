@@ -37,6 +37,7 @@
     "@stylexjs/stylex": "catalog:style",
     "@tabora/brand": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
+    "@tabora/official-plugins": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",

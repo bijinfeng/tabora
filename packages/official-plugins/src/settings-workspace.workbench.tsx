@@ -8,10 +8,9 @@ import { Select } from "@tabora/ui/select"
 import { Stepper } from "@tabora/ui/stepper"
 import { Switch } from "@tabora/ui/switch"
 import { createSignal, For, Show } from "solid-js"
-import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
-import { contributionRefKey } from "@tabora/plugin-api/sdk"
+import type { SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 
-import { CheckChipList, ContributionSegmented, SettingsGroup } from "./settings-workspace.shared"
+import { CheckChipList, SettingsGroup } from "./settings-workspace.shared"
 import { styles } from "./styles"
 
 export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
@@ -39,7 +38,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
       regionCount: 0,
     }
   const workspaces = () => props.data.workspaces ?? []
-  const layouts = () => props.data.layouts ?? []
 
   async function handleExport() {
     try {
@@ -95,11 +93,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
     const list = workspaces().length > 0 ? workspaces() : [workspace()]
     return list.map((workspace) => ({ value: workspace.id, label: workspace.name }))
   }
-  const layoutOptions = () =>
-    layouts().map((layout) => ({
-      value: contributionRefKey(layout.ref),
-      label: layoutShortLabel(layout),
-    }))
   const widgetInstanceCount = () => workspace().regionCount
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="workbench">
@@ -115,20 +108,6 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
               disabled={workspaces().length <= 1 || !props.host.switchWorkspace}
               onChange={(workspaceId) => void props.host.switchWorkspace?.(workspaceId)}
               aria-label="当前工作区"
-            />
-          }
-        />
-        <FieldRow
-          label="默认布局"
-          description="切换新标签页打开时使用的布局插件"
-          trailing={
-            <ContributionSegmented
-              ariaLabel="默认布局"
-              activeKey={contributionRefKey(workspace().activeLayout)}
-              fallback={workspace().activeLayout.id}
-              items={layouts}
-              options={layoutOptions}
-              onPick={(layout) => void props.host.switchLayout?.(layout.ref)}
             />
           }
         />
@@ -298,12 +277,4 @@ export function WorkbenchSettingsPanel(props: SettingsPanelViewProps) {
       </SettingsGroup>
     </div>
   )
-}
-
-function layoutShortLabel(layout: NonNullable<SettingsPanelData["layouts"]>[number]) {
-  const key = `${layout.id} ${layout.title}`.toLowerCase()
-  if (key.includes("dashboard") || key.includes("仪表盘")) return "Dashboard"
-  if (key.includes("stream") || key.includes("focus") || key.includes("专注")) return "Stream"
-  if (key.includes("masonry") || key.includes("diy") || key.includes("瀑布")) return "DIY"
-  return layout.title
 }

@@ -631,8 +631,17 @@ function hasSymbol(
 /**
  * Validate references that intentionally span manifests. Call this after a complete discovery
  * batch has passed the per-manifest schema so no unresolved preset reaches the runtime catalog.
+ *
+ * `hostBuiltinPluginIds` names plugin ids the host resolves itself (dashboard layout, builtin
+ * theme/search/background packs) rather than through discovered manifests. Preset refs to those
+ * ids skip the plugins-list and resolvability checks here; their ids are validated against the
+ * host data in the official preset test.
  */
-export function validatePluginManifestComposition(manifests: PluginManifest[]): void {
+export function validatePluginManifestComposition(
+  manifests: PluginManifest[],
+  options: { hostBuiltinPluginIds?: ReadonlySet<string> } = {},
+): void {
+  const hostBuiltinPluginIds = options.hostBuiltinPluginIds ?? new Set<string>()
   const pluginIds = new Set(manifests.map((manifest) => manifest.id))
   const symbols = manifests.flatMap(contributionSymbols)
   const presetInstances = manifests.flatMap((manifest) =>
@@ -665,6 +674,9 @@ export function validatePluginManifestComposition(manifests: PluginManifest[]): 
           pluginId: string
           kind: ContributionKind
           id: string
+        }
+        if (hostBuiltinPluginIds.has(contributionRef.pluginId)) {
+          return
         }
         if (!selectedPlugins.has(contributionRef.pluginId)) {
           issues.push(

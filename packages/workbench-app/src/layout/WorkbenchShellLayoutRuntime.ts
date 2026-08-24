@@ -12,7 +12,6 @@ type LayoutRendererBridges = Pick<
   | "activeLayoutId"
   | "layoutError"
   | "displayedInstances"
-  | "resolveLayoutView"
   | "isMobile"
   | "clearLayoutError"
   | "recordLayoutError"
@@ -36,9 +35,6 @@ export function createWorkbenchShellLayoutRuntime(
     readLayoutState: options.readLayoutState,
     writeLayoutState: options.writeLayoutState,
     showToast: options.showToast,
-    switchLayout: (layoutId) => {
-      options.switchLayout(layoutId)
-    },
     switchTheme: (themeId) => {
       options.switchTheme(themeId)
     },
@@ -51,25 +47,9 @@ export function createWorkbenchShellLayoutRuntime(
     hostActions: layoutHostAPI,
   })
 
-  // Desktop keeps the persisted dashboard/focus choice; mobile always renders the
-  // dedicated mobile layout when it is registered, without mutating the stored layout.
-  const effectiveLayoutId = () => {
-    const mobileLayoutId = options.shellConfig.layoutIds.mobile
-    if (
-      options.isMobile() &&
-      mobileLayoutId &&
-      options.catalog.findLayoutContribution(mobileLayoutId)
-    ) {
-      return mobileLayoutId
-    }
-    return options.activeLayoutId()
-  }
-
   const layoutRendererOptions: LayoutRendererOptions = {
-    activeLayoutId: effectiveLayoutId,
+    activeLayoutId: options.activeLayoutId,
     displayedInstances: options.displayedInstances,
-    findLayoutContribution: (layoutId) => options.catalog.findLayoutContribution(layoutId),
-    resolveLayoutView: options.resolveLayoutView,
     buildRegionSlots: (layoutId, instances) => layoutEngine.buildRegionSlots(layoutId, instances),
     buildHostAPI: () => layoutEngine.buildHostAPI(),
     isMobile: options.isMobile,

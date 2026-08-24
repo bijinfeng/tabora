@@ -46,7 +46,7 @@ import {
 
 const officialPluginStyleFiles = [
   "packages/official-plugins/src/styles.ts",
-  "plugins/official/layout-dashboard/src/styles.ts",
+  "packages/workbench-app/src/surface/dashboard/styles.ts",
   "plugins/official/widget-notes/src/styles.ts",
   "plugins/official/widget-quick-links/src/styles.ts",
   "plugins/official/widget-todo/src/styles.ts",
@@ -103,8 +103,19 @@ const performanceSubpathPackages = [
         "./src/workspace-default-preset.ts",
         "./dist/workspace-default-preset.js",
       ],
+      [
+        "./builtinSearchProviders",
+        "./src/builtinSearchProviders.ts",
+        "./dist/builtinSearchProviders.js",
+      ],
+      [
+        "./builtinBackgroundProviders",
+        "./src/builtinBackgroundProviders.ts",
+        "./dist/builtinBackgroundProviders.js",
+      ],
     ],
-    build: "vp pack src/index.ts src/workspace-default-preset.ts",
+    build:
+      "vp pack src/index.ts src/workspace-default-preset.ts src/builtinSearchProviders.ts src/builtinBackgroundProviders.ts",
   },
   {
     manifestPath: "packages/builtin-plugin-registry/package.json",
@@ -131,11 +142,6 @@ const performanceSubpathPackages = [
     ],
     build:
       "vp pack src/index.ts src/background-resolver.ts src/default-workspace-seed.ts src/workbench-grid.ts src/workspace-portability.ts src/workspace-session.ts src/workspace-transfer.ts",
-  },
-  {
-    manifestPath: "plugins/official/layout-dashboard/package.json",
-    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
-    build: "vp pack src/index.tsx src/manifest.ts",
   },
   {
     manifestPath: "plugins/official/widget-notes/package.json",
@@ -939,7 +945,6 @@ describe("governance rules", () => {
         "plugins/community/layout-diy-masonry/package.json",
         "vp pack src/index.tsx src/manifest.ts",
       ],
-      ["plugins/official/layout-dashboard/package.json", "vp pack src/index.tsx src/manifest.ts"],
       ["plugins/official/widget-notes/package.json", "vp pack src/index.ts src/manifest.ts"],
       ["plugins/official/widget-quick-links/package.json", "vp pack src/index.ts src/manifest.ts"],
       ["plugins/official/widget-todo/package.json", "vp pack src/index.ts src/manifest.ts"],
@@ -1314,10 +1319,7 @@ describe("governance rules", () => {
     const uiTokenRegistry = await readRepositoryText(".", "packages/ui/src/tokens/tokens.ts")
     expect(uiTokenRegistry).toContain('inverse: "tbr-color-inverse"')
 
-    const themePack = await readRepositoryText(
-      ".",
-      "packages/official-plugins/src/theme-default-pack.ts",
-    )
+    const themePack = await readRepositoryText(".", "packages/theme/src/builtinThemes.ts")
     expect(themePack).toContain('"color-inverse": "255 255 255"')
   })
 
@@ -1358,10 +1360,7 @@ describe("governance rules", () => {
     expect(uiTokenRegistry).toContain('shadowStrong: "tbr-color-shadow-strong"')
     expect(uiTokenRegistry).toContain('scrim: "tbr-color-scrim"')
 
-    const themePack = await readRepositoryText(
-      ".",
-      "packages/official-plugins/src/theme-default-pack.ts",
-    )
+    const themePack = await readRepositoryText(".", "packages/theme/src/builtinThemes.ts")
     expect(themePack).toContain('"color-shadow": "0 0 0"')
     expect(themePack).toContain('"color-shadow-strong": "15 23 18"')
     expect(themePack).toContain('"color-scrim": "8 10 8"')

@@ -115,7 +115,6 @@ export function createWorkbenchShellControllerRuntime(options: {
   controllers: {
     workspaceController: {
       switchTheme: (themeId: string) => void | Promise<void>
-      switchLayout: (layoutId: string) => void | Promise<void>
       setDefaultSearchProvider: (providerId: string) => void | Promise<void>
       saveSearchHistory: (entry: { query: string; providerId: string }) => Promise<void>
     }
@@ -141,7 +140,6 @@ export function createWorkbenchShellControllerRuntime(options: {
 
   const commandRuntime: CommandRuntime = createWorkbenchShellCommandModels({
     isDark: options.state.isDark,
-    activeLayoutId: options.state.activeLayoutId,
     ...(options.tShell ? { tShell: options.tShell } : {}),
     shellConfig: options.shellConfig,
     pluginCommands,
@@ -152,9 +150,6 @@ export function createWorkbenchShellControllerRuntime(options: {
     showToast: (message) => options.actions.showToast(message),
     switchTheme: (themeId) => {
       void options.controllers.workspaceController.switchTheme(themeId)
-    },
-    switchLayout: (layoutId) => {
-      void options.controllers.workspaceController.switchLayout(layoutId)
     },
     hasPluginCommandHandler: options.services.registryCommands.has,
     runPluginCommand,

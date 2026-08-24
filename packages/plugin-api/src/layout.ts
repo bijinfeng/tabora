@@ -35,7 +35,6 @@ export type HostActionId =
   | "settings"
   | "theme"
   | "command"
-  | "layout-switch"
   | "shortcuts"
 
 export type HostActionItem = {

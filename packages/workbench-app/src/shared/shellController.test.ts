@@ -1,56 +1,6 @@
 import { describe, expect, it } from "vitest"
-import type { LayoutContribution, PluginInstance, Workspace } from "@tabora/plugin-api"
 
-import { canPluginOpenExternal, createLayoutSwitchExecution } from "./shellController"
-
-const baseDate = "2026-06-06T00:00:00.000Z"
-
-function workspace(overrides: Partial<Workspace> = {}): Workspace {
-  return {
-    id: "workspace-1",
-    name: "Main",
-    activeLayout: { pluginId: "plugin.layout", kind: "layout", id: "layout.previous" },
-    activeTheme: { pluginId: "plugin.theme", kind: "theme", id: "theme.light" },
-    activeBackgroundProvider: {
-      pluginId: "plugin.background",
-      kind: "background-provider",
-      id: "background.gradient-green",
-    },
-    config: {},
-    regions: {
-      old: { regionId: "old", accepts: ["widget"], instances: [{ instanceId: "widget-1" }] },
-    },
-    createdAt: baseDate,
-    updatedAt: baseDate,
-    ...overrides,
-  }
-}
-
-function instance(overrides: Partial<PluginInstance> = {}): PluginInstance {
-  return {
-    id: "widget-1",
-    workspaceId: "workspace-1",
-    contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
-    regionId: "old",
-    enabled: true,
-    size: "M",
-    config: {},
-    createdAt: baseDate,
-    updatedAt: baseDate,
-    ...overrides,
-  }
-}
-
-function layout(regions: LayoutContribution["regions"]): LayoutContribution {
-  return {
-    id: "layout.next",
-    title: "Next",
-    view: "layout.next.view",
-    regions,
-    defaultRegions: {},
-    supportsResponsive: true,
-  }
-}
+import { canPluginOpenExternal } from "./shellController"
 
 describe("canPluginOpenExternal", () => {
   const plugins = [
@@ -125,67 +75,5 @@ describe("canPluginOpenExternal", () => {
         plugins,
       }),
     ).toBe(true)
-  })
-})
-
-describe("createLayoutSwitchExecution", () => {
-  it("preserves a pre-switch snapshot while migrating instances to the new layout", () => {
-    const currentWorkspace = workspace()
-    const currentInstance = instance()
-
-    const result = createLayoutSwitchExecution({
-      workspace: currentWorkspace,
-      instances: [currentInstance],
-      targetLayout: layout([{ id: "grid", title: "Grid", accepts: ["widget"] }]),
-      now: "2026-06-06T12:00:00.000Z",
-    })
-
-    expect(result.plan.snapshot).toEqual({
-      id: "workspace-1:snapshot:layout.previous:layout.next",
-      workspaceId: "workspace-1",
-      layoutId: "layout.previous",
-      regions: currentWorkspace.regions,
-      instances: [currentInstance],
-      createdAt: baseDate,
-    })
-    expect(result.instances).toEqual([
-      {
-        ...currentInstance,
-        regionId: "grid",
-        updatedAt: "2026-06-06T12:00:00.000Z",
-      },
-    ])
-  })
-
-  it("moves incompatible instances into the unplaced region without mutating the snapshot", () => {
-    const themeInstance = instance({
-      id: "search-1",
-      contribution: { pluginId: "plugin.search", kind: "search", id: "search.command" },
-      regionId: "searchRegion",
-    })
-
-    const result = createLayoutSwitchExecution({
-      workspace: workspace({
-        regions: {
-          searchRegion: {
-            regionId: "searchRegion",
-            accepts: ["widget"],
-            instances: [{ instanceId: "theme-1" }],
-          },
-        },
-      }),
-      instances: [themeInstance],
-      targetLayout: layout([{ id: "grid", title: "Grid", accepts: ["widget"] }]),
-      now: "2026-06-06T12:00:00.000Z",
-    })
-
-    expect(result.plan.snapshot.instances).toEqual([themeInstance])
-    expect(result.instances).toEqual([
-      {
-        ...themeInstance,
-        regionId: "unplaced",
-        updatedAt: "2026-06-06T12:00:00.000Z",
-      },
-    ])
   })
 })

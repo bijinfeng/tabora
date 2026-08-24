@@ -6,26 +6,28 @@
     ".": "./src/index.ts",
     "./package.json": "./package.json",
     "./styles.css": "./src/styles.css",
-    "./workspace-default-preset": "./src/workspace-default-preset.ts"
+    "./workspace-default-preset": "./src/workspace-default-preset.ts",
+    "./builtinSearchProviders": "./src/builtinSearchProviders.ts",
+    "./builtinBackgroundProviders": "./src/builtinBackgroundProviders.ts"
   },
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
       "./package.json": "./package.json",
       "./styles.css": "./dist/styles.css",
-      "./workspace-default-preset": "./dist/workspace-default-preset.js"
+      "./workspace-default-preset": "./dist/workspace-default-preset.js",
+      "./builtinSearchProviders": "./dist/builtinSearchProviders.js",
+      "./builtinBackgroundProviders": "./dist/builtinBackgroundProviders.js"
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts src/workspace-default-preset.ts",
+    "build": "vp pack src/index.ts src/workspace-default-preset.ts src/builtinSearchProviders.ts src/builtinBackgroundProviders.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@stylexjs/stylex": "catalog:style",
     "@tabora/auth": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
-    "@tabora/layout-dashboard": "workspace:*",
-    "@tabora/layout-mobile": "workspace:*",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
@@ -33,6 +35,7 @@
     "@tabora/plugin-quick-links": "workspace:*",
     "@tabora/plugin-todo": "workspace:*",
     "@tabora/plugin-weather": "workspace:*",
+    "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"

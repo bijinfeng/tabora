@@ -3,17 +3,11 @@ import {
   migrateWorkspaceContributionRefs,
   type PluginDataRow,
   type StorageAdapter,
-  type WorkspaceSnapshot,
 } from "@tabora/host-adapters"
 
 type PluginDataRecordScope = { workspaceId?: string; instanceId?: string }
 
-type LocalStoreCollection =
-  | "plugin-data"
-  | "plugin-instances"
-  | "plugin-records"
-  | "workspace-snapshots"
-  | "workspaces"
+type LocalStoreCollection = "plugin-data" | "plugin-instances" | "plugin-records" | "workspaces"
 
 type FetchLike = typeof fetch
 
@@ -321,16 +315,6 @@ export function createFnosStorageAdapter(
         getAll: () => store.getAll<PluginRecord>("plugin-records"),
         save: (record) => store.save("plugin-records", record.id, record),
         remove: (id) => store.remove("plugin-records", id),
-      },
-      workspaceSnapshotRepo: {
-        save: (snapshot) => store.save("workspace-snapshots", snapshot.id, snapshot),
-        async getLast(workspaceId) {
-          const snapshots = await store.getAll<WorkspaceSnapshot>("workspace-snapshots")
-          return snapshots
-            .filter((snapshot) => snapshot.workspaceId === workspaceId)
-            .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
-            .at(-1)
-        },
       },
     },
   }

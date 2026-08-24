@@ -20,9 +20,6 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@tabora/layout-dashboard": "workspace:*",
-    "@tabora/layout-diy-masonry": "workspace:*",
-    "@tabora/layout-mobile": "workspace:*",
     "@tabora/official-plugins": "workspace:*",
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-notes": "workspace:*",

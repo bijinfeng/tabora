@@ -5,10 +5,6 @@ import { createPluginDataRepository, type PluginDataRepository } from "./pluginD
 import { createPluginRecordRepository, type PluginRecordRepository } from "./pluginRecordRepository"
 import { createSyncMetaRepository, type SyncMetaRepository } from "./syncMetaRepository"
 import { createSyncQueueRepository, type SyncQueueRepository } from "./syncQueueRepository"
-import {
-  createWorkspaceSnapshotRepository,
-  type WorkspaceSnapshotRepository,
-} from "./workspaceSnapshotRepository"
 import { createWorkspaceRepository, type WorkspaceRepository } from "./workspaceRepository"
 
 /** Core local persistence available to every host. It deliberately has no sync state. */
@@ -17,7 +13,6 @@ export type StorageRepositories = {
   instanceRepo: InstanceRepository
   pluginDataRepo: PluginDataRepository
   pluginRecordRepo: PluginRecordRepository
-  workspaceSnapshotRepo: WorkspaceSnapshotRepository
 }
 
 /** Optional infrastructure constructed only by a host that enables account sync. */
@@ -44,7 +39,6 @@ export function createWebStorageAdapter(
       instanceRepo: createInstanceRepository(database),
       pluginDataRepo: createPluginDataRepository(database),
       pluginRecordRepo: createPluginRecordRepository(database),
-      workspaceSnapshotRepo: createWorkspaceSnapshotRepository(database),
     },
   }
   if (options.enableSync) {

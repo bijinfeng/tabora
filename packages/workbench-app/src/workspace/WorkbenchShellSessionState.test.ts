@@ -79,10 +79,6 @@ describe("hydrateWorkbenchSessionState", () => {
     const setInstances = vi.fn()
     const applyThemeSelection = vi.fn()
     const applyBackgroundSelection = vi.fn()
-    const reconcileInstancesForLayout = vi.fn(async () => ({
-      instances: [instance({ id: "widget-2" })],
-      plan: null,
-    }))
 
     await hydrateWorkbenchSessionState({
       session,
@@ -94,7 +90,6 @@ describe("hydrateWorkbenchSessionState", () => {
       setInstances,
       applyThemeSelection,
       applyBackgroundSelection,
-      reconcileInstancesForLayout,
     })
 
     expect(setWorkspaceState).toHaveBeenCalledWith(session.workspace)
@@ -103,10 +98,6 @@ describe("hydrateWorkbenchSessionState", () => {
     expect(applyBackgroundSelection).toHaveBeenCalledWith("official.background.dark")
     expect(setSearchSettings).toHaveBeenCalledWith(session.searchSettings)
     expect(setSearchHistory).toHaveBeenCalledWith(session.searchHistory)
-    expect(reconcileInstancesForLayout).toHaveBeenCalledWith(
-      "official.layout.workbench-dashboard",
-      session.instances,
-    )
-    expect(setInstances).toHaveBeenCalledWith([expect.objectContaining({ id: "widget-2" })])
+    expect(setInstances).toHaveBeenCalledWith(session.instances)
   })
 })

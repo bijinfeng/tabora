@@ -175,7 +175,6 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
       },
       layoutIds: {
         dashboard: "layout.dashboard.custom",
-        focus: "layout.focus.custom",
       },
       settingsPanelIds: {
         appearance: "settings.appearance.custom",
@@ -284,7 +283,6 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
     controllers: {
       workspaceController: {
         switchTheme: vi.fn(),
-        switchLayout: vi.fn(),
         setDefaultSearchProvider: vi.fn(),
         saveSearchHistory: vi.fn(async () => {}),
       },

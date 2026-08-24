@@ -1,5 +1,12 @@
 import type { HostAdapter } from "@tabora/host-adapters"
 import { createPluginCatalog, type PluginCatalog } from "@tabora/orchestrator"
+import {
+  BUILTIN_BACKGROUND_PROVIDER_PLUGIN_ID,
+  BUILTIN_SEARCH_PROVIDER_PLUGIN_ID,
+  builtinBackgroundProviders,
+  builtinSearchProviders,
+} from "@tabora/official-plugins"
+import { BUILTIN_THEME_PLUGIN_ID, builtinThemes } from "@tabora/theme"
 import type { AiRuntimeBridge, WorkspacePresetContribution } from "@tabora/plugin-api"
 import {
   createPluginKernel,
@@ -15,25 +22,26 @@ import {
   createPluginRecordRepository,
   createTaboraDatabase,
   createWorkspaceRepository,
-  createWorkspaceSnapshotRepository,
   type InstanceRepository,
   type PluginDataRepository,
   type PluginRecordRepository,
   type StorageAdapter,
   type TaboraDatabase,
   type WorkspaceRepository,
-  type WorkspaceSnapshotRepository,
 } from "@tabora/storage"
 
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
 import { createWorkbenchI18nStore, type WorkbenchI18nStore } from "../i18n"
+import {
+  BUILTIN_DASHBOARD_LAYOUT_PLUGIN_ID,
+  builtinDashboardLayout,
+} from "../surface/dashboard/layout-definition"
 
 export type WorkbenchRuntimeRepositories = {
   workspaceRepo: WorkspaceRepository
   instanceRepo: InstanceRepository
   pluginDataRepo: PluginDataRepository
   pluginRecordRepo: PluginRecordRepository
-  workspaceSnapshotRepo: WorkspaceSnapshotRepository
 }
 
 export type WorkbenchRuntimeBootstrap = {
@@ -78,9 +86,6 @@ export function createWorkbenchRuntimeBootstrap(
         "commands.toggleTheme.title": "切换主题",
         "commands.toggleTheme.description.toDark": "明亮 → 暗色",
         "commands.toggleTheme.description.toLight": "暗色 → 明亮",
-        "commands.toggleLayout.title": "切换布局",
-        "commands.toggleLayout.description.toFocus": "仪表盘 → 专注",
-        "commands.toggleLayout.description.toDashboard": "专注 → 仪表盘",
         "commands.addWidget.title": "添加卡片",
         "commands.addWidget.description": "向工作台添加新卡片",
         "commands.openPluginManager.title": "打开插件管理",
@@ -91,8 +96,6 @@ export function createWorkbenchRuntimeBootstrap(
         "commands.openShortcuts.description": "查看所有快捷键",
         "commands.openShortcuts.separator": "、",
         "commands.openShortcuts.toast": "快捷键：{{shortcuts}}、Esc",
-        "layoutHost.layoutToggle.toFocus": "切换到专注",
-        "layoutHost.layoutToggle.toDashboard": "切换到仪表盘",
         "layoutHost.rail.home": "分组 我的工作台",
         "layoutHost.rail.addWidget": "添加卡片",
         "layoutHost.rail.toggleTheme": "切换主题",
@@ -214,9 +217,6 @@ export function createWorkbenchRuntimeBootstrap(
         "commands.toggleTheme.title": "Toggle theme",
         "commands.toggleTheme.description.toDark": "Light → Dark",
         "commands.toggleTheme.description.toLight": "Dark → Light",
-        "commands.toggleLayout.title": "Toggle layout",
-        "commands.toggleLayout.description.toFocus": "Dashboard → Focus",
-        "commands.toggleLayout.description.toDashboard": "Focus → Dashboard",
         "commands.addWidget.title": "Add widget",
         "commands.addWidget.description": "Add a widget to your workbench",
         "commands.openPluginManager.title": "Open plugin manager",
@@ -227,8 +227,6 @@ export function createWorkbenchRuntimeBootstrap(
         "commands.openShortcuts.description": "View all shortcuts",
         "commands.openShortcuts.separator": ", ",
         "commands.openShortcuts.toast": "Shortcuts: {{shortcuts}}, Esc",
-        "layoutHost.layoutToggle.toFocus": "Switch to focus",
-        "layoutHost.layoutToggle.toDashboard": "Switch to dashboard",
         "layoutHost.rail.home": "Group My workbench",
         "layoutHost.rail.addWidget": "Add widget",
         "layoutHost.rail.toggleTheme": "Toggle theme",
@@ -354,7 +352,6 @@ export function createWorkbenchRuntimeBootstrap(
     instanceRepo: createInstanceRepository(defaultDatabase!),
     pluginDataRepo: createPluginDataRepository(defaultDatabase!),
     pluginRecordRepo: createPluginRecordRepository(defaultDatabase!),
-    workspaceSnapshotRepo: createWorkspaceSnapshotRepository(defaultDatabase!),
   }
   const { pluginRecordRepo } = repositories
   const loadResult = loadBuiltinPlugins(options.plugins)
@@ -389,11 +386,31 @@ export function createWorkbenchRuntimeBootstrap(
     permissionGrants: trustedBuiltinPermissionGrants,
     settingsHostActionGrants: trustedBuiltinSettingsHostActionGrants,
     settingsHostReadGrants: trustedBuiltinSettingsHostReadGrants,
+    hostBuiltinPluginIds: new Set([
+      options.shellConfig.layoutIds.dashboard,
+      BUILTIN_THEME_PLUGIN_ID,
+      BUILTIN_SEARCH_PROVIDER_PLUGIN_ID,
+      BUILTIN_BACKGROUND_PROVIDER_PLUGIN_ID,
+    ]),
     ...(options.ai ? { ai: options.ai } : {}),
     ...(options.host.network ? { network: options.host.network } : {}),
     i18n,
   })
-  const catalog = createPluginCatalog(kernel.plugins)
+  const catalog = createPluginCatalog(kernel.plugins, {
+    builtinThemes: { pluginId: BUILTIN_THEME_PLUGIN_ID, themes: builtinThemes },
+    builtinSearchProviders: {
+      pluginId: BUILTIN_SEARCH_PROVIDER_PLUGIN_ID,
+      providers: builtinSearchProviders,
+    },
+    builtinBackgroundProviders: {
+      pluginId: BUILTIN_BACKGROUND_PROVIDER_PLUGIN_ID,
+      providers: builtinBackgroundProviders,
+    },
+    builtinLayouts: {
+      pluginId: BUILTIN_DASHBOARD_LAYOUT_PLUGIN_ID,
+      layouts: [builtinDashboardLayout],
+    },
+  })
 
   return {
     host: options.host,

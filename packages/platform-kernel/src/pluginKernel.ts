@@ -89,6 +89,8 @@ export type PluginKernelOptions = {
   i18n?: PluginI18nService
   /** Executable code from remote-untrusted packages always requires a sandbox and is refused here. */
   admittedSources?: ReadonlySet<Exclude<PluginPackageSource, "remote-untrusted">>
+  /** Plugin ids the host resolves itself (dashboard layout, builtin theme/search/background packs). */
+  hostBuiltinPluginIds?: ReadonlySet<string>
 }
 
 export type PluginKernel = {
@@ -408,7 +410,11 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         }
         parsedManifests.push(parsed.data as PluginManifest)
       }
-      validatePluginManifestComposition(parsedManifests)
+      validatePluginManifestComposition(parsedManifests, {
+        ...(options.hostBuiltinPluginIds
+          ? { hostBuiltinPluginIds: options.hostBuiltinPluginIds }
+          : {}),
+      })
       const seenPluginIds = new Set<string>()
       for (const pluginPackage of discoveredPackages) {
         const pluginId = pluginPackage.module.manifest.id

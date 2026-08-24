@@ -24,9 +24,6 @@ export async function initializeWorkbenchShellRuntime(options: {
   applyBackgroundSelection: Parameters<
     typeof hydrateWorkbenchSessionState
   >[0]["applyBackgroundSelection"]
-  reconcileInstancesForLayout: Parameters<
-    typeof hydrateWorkbenchSessionState
-  >[0]["reconcileInstancesForLayout"]
 }) {
   const { kernel, plugins, repositories, defaultWorkspacePreset, shellConfig } = options.runtime
 
@@ -52,7 +49,6 @@ export async function initializeWorkbenchShellRuntime(options: {
     setInstances: options.setInstances,
     applyThemeSelection: options.applyThemeSelection,
     applyBackgroundSelection: options.applyBackgroundSelection,
-    reconcileInstancesForLayout: options.reconcileInstancesForLayout,
   })
 
   options.setWorkspaceList(await repositories.workspaceRepo.getAll())
