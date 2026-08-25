@@ -3,7 +3,14 @@ export type { TokenName } from "./tokens/tokens"
 export type { XStyle } from "./stylex"
 
 export { Button, IconButton } from "./styled/button"
-export type { ButtonProps, IconButtonProps, ButtonVariant, ButtonSize } from "./styled/button"
+export type {
+  ButtonProps,
+  IconButtonProps,
+  ButtonVariant,
+  ButtonSize,
+  ButtonShape,
+  IconPlacement,
+} from "./styled/button"
 
 export { Stepper } from "./styled/stepper"
 export type { StepperProps } from "./styled/stepper"

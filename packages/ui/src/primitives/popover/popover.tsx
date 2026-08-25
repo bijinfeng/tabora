@@ -1,6 +1,29 @@
 import { Popover as KPopover } from "@kobalte/core/popover"
-import type { JSX } from "solid-js"
+import type { Component, JSX, ValidComponent } from "solid-js"
 import { Show, splitProps } from "solid-js"
+
+export type PopoverTriggerRenderProps = {
+  id?: string
+  class?: string
+  style?: JSX.CSSProperties
+  ref?: any
+  disabled?: boolean
+  "aria-haspopup"?: boolean
+  "aria-expanded"?: boolean
+  "aria-controls"?: string
+  "aria-label"?: string
+  title?: string
+  role?: string
+  "data-highlighted"?: boolean
+  "data-open"?: ""
+  "data-closed"?: ""
+  onPointerDown?: JSX.EventHandlerUnion<HTMLElement, PointerEvent>
+  onClick?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>
+  onKeyDown?: JSX.EventHandlerUnion<HTMLElement, KeyboardEvent>
+  onMouseOver?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>
+  onFocus?: JSX.EventHandlerUnion<HTMLElement, FocusEvent>
+  [key: string]: any
+}
 
 export type PopoverProps = {
   open?: boolean
@@ -18,7 +41,9 @@ export type PopoverProps = {
   triggerId?: string
   triggerTitle?: string
   triggerAriaLabel?: string
-  trigger: JSX.Element
+  triggerAs?: ValidComponent
+  triggerAsChild?: boolean
+  trigger: JSX.Element | ((props: PopoverTriggerRenderProps) => JSX.Element)
   children: JSX.Element
   arrowClass?: string | undefined
   arrowStyle?: JSX.CSSProperties | undefined
@@ -52,6 +77,8 @@ export function Popover(props: PopoverProps) {
     "triggerId",
     "triggerTitle",
     "triggerAriaLabel",
+    "triggerAs",
+    "triggerAsChild",
     "trigger",
     "children",
     "arrowClass",
@@ -61,6 +88,15 @@ export function Popover(props: PopoverProps) {
     "bodyClass",
     "bodyStyle",
   ])
+
+  const AsChildWrapper: Component<PopoverTriggerRenderProps> = (wrapperProps) => {
+    const content =
+      typeof local.trigger === "function"
+        ? (local.trigger as (p: PopoverTriggerRenderProps) => JSX.Element)(wrapperProps)
+        : local.trigger
+    return content as unknown as JSX.Element
+  }
+
   return (
     <KPopover
       {...(local.open !== undefined ? { open: local.open } : {})}
@@ -72,6 +108,11 @@ export function Popover(props: PopoverProps) {
       {...others}
     >
       <KPopover.Trigger
+        as={
+          (local.triggerAsChild
+            ? (AsChildWrapper as unknown as ValidComponent)
+            : local.triggerAs) as any
+        }
         class={local.triggerClass}
         style={local.triggerStyle}
         classList={local.triggerClassList}
@@ -80,7 +121,7 @@ export function Popover(props: PopoverProps) {
         {...(local.triggerTitle !== undefined ? { title: local.triggerTitle } : {})}
         {...(local.triggerAriaLabel !== undefined ? { "aria-label": local.triggerAriaLabel } : {})}
       >
-        {local.trigger}
+        {local.triggerAsChild ? undefined : (local.trigger as JSX.Element)}
       </KPopover.Trigger>
       <KPopover.Portal>
         <KPopover.Content {...optionalPartProps(local.class, local.style)}>

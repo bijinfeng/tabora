@@ -4,6 +4,7 @@ export {
   StandardTiptapEditor,
   StandardMenuTiptapEditor,
   FocusTiptapEditor,
+  FullTiptapEditor,
   TiptapEditor as default,
 } from "./tiptap-editor.styled"
 export { HeadlessTiptapEditor } from "./tiptap-editor"

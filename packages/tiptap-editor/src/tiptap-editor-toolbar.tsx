@@ -2,16 +2,18 @@ import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 import { type Accessor, createEffect, createSignal, For, type JSX, Show } from "solid-js"
 
-import { color, motion, radius } from "@tabora/theme/tokens.stylex"
+import { color } from "@tabora/theme/tokens.stylex"
 import { Button, IconButton } from "@tabora/ui/button"
 import { DropdownMenu } from "@tabora/ui/dropdown-menu"
-import type { DropdownMenuItem } from "@tabora/ui/dropdown-menu"
+import type { DropdownMenuItem, DropdownMenuTriggerRenderProps } from "@tabora/ui/dropdown-menu"
 import { Input } from "@tabora/ui/input"
 import { Popover } from "@tabora/ui/popover"
+import type { PopoverTriggerRenderProps } from "@tabora/ui/popover"
+import { space } from "@tabora/theme/tokens.stylex"
 
 import type { Editor } from "@tiptap/core"
 
-import { joinClassNames, sx } from "./stylex"
+import { sx } from "./stylex"
 
 import {
   Bold,
@@ -48,15 +50,15 @@ const styles = stylex.create({
     borderBottomWidth: 0,
     display: "flex",
     flexWrap: "wrap",
-    gap: 6,
-    paddingBlock: 8,
-    paddingInline: 12,
+    gap: space.s2,
+    paddingBlock: space.s3,
+    paddingInline: space.s4,
     backgroundColor: "transparent",
   },
   toolbarGroup: {
     alignItems: "center",
     display: "flex",
-    gap: 4,
+    gap: space.s1,
   },
   toolbarDivider: {
     alignSelf: "stretch",
@@ -64,39 +66,9 @@ const styles = stylex.create({
     borderStyle: "none",
     borderWidth: 0,
     height: "auto",
-    marginBlock: 6,
-    marginInline: 6,
+    marginBlock: space.s2,
+    marginInline: space.s2,
     width: 1,
-  },
-  toolbarButtonBase: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    borderColor: "transparent",
-    borderRadius: radius.control,
-    borderStyle: "solid",
-    borderWidth: 1,
-    color: color.textMuted,
-    cursor: "pointer",
-    display: "inline-flex",
-    height: 30,
-    justifyContent: "center",
-    transitionDuration: motion.fast,
-    transitionProperty: "background-color, border-color, color, transform",
-    transitionTimingFunction: motion.ease,
-    width: 30,
-    ":focus-visible": {
-      boxShadow: "0 0 0 4px rgb(var(--tbr-color-accent) / 0.18)",
-      outline: `2px solid ${color.focus}`,
-      outlineOffset: 2,
-    },
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-      color: color.text,
-      transform: "translateY(-0.5px)",
-    },
-    ":active": {
-      transform: "translateY(0)",
-    },
   },
   toolbarButtonActive: {
     backgroundColor: color.accentSoft,
@@ -108,37 +80,16 @@ const styles = stylex.create({
       color: color.accent,
     },
   },
-  toolbarButtonDisabled: {
-    cursor: "not-allowed",
-    opacity: 0.5,
-  },
   linkPopover: {
     display: "flex",
     flexDirection: "column",
-    gap: 8,
+    gap: space.s3,
     minWidth: 260,
   },
   linkPopoverActions: {
     display: "flex",
-    gap: 6,
+    gap: space.s2,
     justifyContent: "flex-end",
-  },
-  headingDropdownTrigger: {
-    alignItems: "center",
-    display: "inline-flex",
-    gap: 4,
-    height: 30,
-    paddingBlock: 0,
-    paddingInline: 10,
-    borderRadius: radius.control,
-    width: "auto",
-    transitionDuration: motion.fast,
-    transitionProperty: "background-color, color",
-    transitionTimingFunction: motion.ease,
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-      color: color.text,
-    },
   },
   headingDropdownIcon: {
     height: 16,
@@ -539,11 +490,7 @@ function ToolbarButton(props: {
           executeCommand(props.editor(), props.command)
         }
       }}
-      xstyle={[
-        styles.toolbarButtonBase,
-        active() ? styles.toolbarButtonActive : undefined,
-        props.extraClass,
-      ]}
+      xstyle={[active() ? styles.toolbarButtonActive : undefined, props.extraClass]}
     >
       {commandIcon(props.command)}
     </IconButton>
@@ -577,28 +524,33 @@ function HeadingsDropdown(props: { editor: Accessor<Editor | null> }) {
   const active = props.editor()?.isActive("heading") ?? false
   const disabled = props.editor()?.isEditable === false
 
-  const triggerCompiled = () =>
-    sx(
-      styles.toolbarButtonBase,
-      styles.headingDropdownTrigger,
-      active ? styles.toolbarButtonActive : undefined,
-      disabled ? styles.toolbarButtonDisabled : undefined,
-    )
-
   return (
     <DropdownMenu
       items={items()}
       side="bottom"
       align="start"
       sideOffset={4}
+      triggerAsChild={true}
       triggerDisabled={disabled}
       triggerAriaLabel="标题"
       triggerTitle="标题"
-      triggerClass={joinClassNames(triggerCompiled().class)}
-      triggerStyle={triggerCompiled().style as JSX.CSSProperties | undefined}
     >
-      <Heading1 height={16} width={16} />
-      <ChevronDown height={14} width={14} />
+      {(t: DropdownMenuTriggerRenderProps) => {
+        const { class: _c, style: _s, ...rest } = t as any
+        return (
+          <Button
+            {...rest}
+            variant={active ? "subtle" : "ghost"}
+            size="sm"
+            disabled={disabled || !!t.disabled}
+            aria-label={t["aria-label"] ?? "标题"}
+            title={t.title ?? "标题"}
+          >
+            <Heading1 {...sx(styles.headingDropdownIcon)} />
+            <ChevronDown height={14} width={14} />
+          </Button>
+        )
+      }}
     </DropdownMenu>
   )
 }
@@ -634,28 +586,33 @@ function ListsDropdown(props: { editor: Accessor<Editor | null> }) {
     (props.editor()?.isActive("taskList") ?? false)
   const disabled = props.editor()?.isEditable === false
 
-  const triggerCompiled = () =>
-    sx(
-      styles.toolbarButtonBase,
-      styles.headingDropdownTrigger,
-      active ? styles.toolbarButtonActive : undefined,
-      disabled ? styles.toolbarButtonDisabled : undefined,
-    )
-
   return (
     <DropdownMenu
       items={items()}
       side="bottom"
       align="start"
       sideOffset={4}
+      triggerAsChild={true}
       triggerDisabled={disabled}
       triggerAriaLabel="列表"
       triggerTitle="列表"
-      triggerClass={joinClassNames(triggerCompiled().class)}
-      triggerStyle={triggerCompiled().style as JSX.CSSProperties | undefined}
     >
-      <List height={16} width={16} />
-      <ChevronDown height={14} width={14} />
+      {(t: DropdownMenuTriggerRenderProps) => {
+        const { class: _c, style: _s, ...rest } = t as any
+        return (
+          <Button
+            {...rest}
+            variant={active ? "subtle" : "ghost"}
+            size="sm"
+            disabled={disabled || !!t.disabled}
+            aria-label={t["aria-label"] ?? "列表"}
+            title={t.title ?? "列表"}
+          >
+            <List {...sx(styles.headingDropdownIcon)} />
+            <ChevronDown height={14} width={14} />
+          </Button>
+        )
+      }}
     </DropdownMenu>
   )
 }
@@ -698,28 +655,43 @@ function AlignDropdown(props: { editor: Accessor<Editor | null> }) {
     (props.editor()?.isActive({ textAlign: "justify" }) ?? false)
   const disabled = props.editor()?.isEditable === false
 
-  const triggerCompiled = () =>
-    sx(
-      styles.toolbarButtonBase,
-      styles.headingDropdownTrigger,
-      active ? styles.toolbarButtonActive : undefined,
-      disabled ? styles.toolbarButtonDisabled : undefined,
-    )
-
   return (
     <DropdownMenu
       items={items()}
       side="bottom"
       align="start"
       sideOffset={4}
+      triggerAsChild={true}
       triggerDisabled={disabled}
       triggerAriaLabel="对齐"
       triggerTitle="对齐"
-      triggerClass={joinClassNames(triggerCompiled().class)}
-      triggerStyle={triggerCompiled().style as JSX.CSSProperties | undefined}
     >
-      <AlignLeft height={16} width={16} />
-      <ChevronDown height={14} width={14} />
+      {(t: DropdownMenuTriggerRenderProps) => {
+        const { class: _c, style: _s, ...rest } = t as any
+        const currentAlign = () => {
+          const ed = props.editor()
+          if (ed?.isActive({ textAlign: "center" }))
+            return <AlignCenter {...sx(styles.headingDropdownIcon)} />
+          if (ed?.isActive({ textAlign: "right" }))
+            return <AlignRight {...sx(styles.headingDropdownIcon)} />
+          if (ed?.isActive({ textAlign: "justify" }))
+            return <AlignJustify {...sx(styles.headingDropdownIcon)} />
+          return <AlignLeft {...sx(styles.headingDropdownIcon)} />
+        }
+        return (
+          <Button
+            {...rest}
+            variant={active ? "subtle" : "ghost"}
+            size="sm"
+            disabled={disabled || !!t.disabled}
+            aria-label={t["aria-label"] ?? "对齐"}
+            title={t.title ?? "对齐"}
+          >
+            {currentAlign()}
+            <ChevronDown height={14} width={14} />
+          </Button>
+        )
+      }}
     </DropdownMenu>
   )
 }
@@ -772,24 +744,32 @@ function LinkPopover(props: {
   const active = () => commandIsActive(props.editor(), "link")
   const disabled = () =>
     !commandCanExecute(props.editor(), "link") || props.editor()?.isEditable === false
-  const triggerCompiled = () =>
-    sx(
-      styles.toolbarButtonBase,
-      active() ? styles.toolbarButtonActive : undefined,
-      disabled() ? styles.toolbarButtonDisabled : undefined,
-    )
 
   return (
     <Popover
       open={props.open}
       onOpenChange={props.onOpenChange}
       title="插入链接"
+      triggerAsChild={true}
       triggerDisabled={disabled()}
       triggerAriaLabel="链接"
       triggerTitle="链接"
-      triggerClass={joinClassNames(triggerCompiled().class)}
-      triggerStyle={triggerCompiled().style as JSX.CSSProperties | undefined}
-      trigger={<LinkIcon height={16} width={16} />}
+      trigger={(t: PopoverTriggerRenderProps) => {
+        const { class: _c, style: _s, ...rest } = t as any
+        return (
+          <IconButton
+            {...rest}
+            variant={active() ? "subtle" : "ghost"}
+            size="sm"
+            disabled={disabled() || !!t.disabled}
+            aria-label={t["aria-label"] ?? "链接"}
+            title={t.title ?? "链接"}
+            xstyle={[active() ? styles.toolbarButtonActive : undefined]}
+          >
+            <LinkIcon height={16} width={16} />
+          </IconButton>
+        )
+      }}
     >
       <div {...sx(styles.linkPopover)}>
         <Input
@@ -863,7 +843,6 @@ function ImageButton(props: {
       title="图片"
       disabled={disabled()}
       onClick={pickFile}
-      xstyle={styles.toolbarButtonBase}
     >
       <ImageIcon height={16} width={16} />
     </IconButton>

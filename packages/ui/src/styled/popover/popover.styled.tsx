@@ -3,7 +3,7 @@ import type { StyleXStyles } from "@stylexjs/stylex"
 
 import { color, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { Popover as P } from "../../primitives/popover/popover"
-import type { PopoverProps } from "../../primitives/popover/popover"
+import type { PopoverProps, PopoverTriggerRenderProps } from "../../primitives/popover/popover"
 import { joinClassNames } from "../../stylex"
 import { sharedStyles } from "../sharedStyles.stylex"
 
@@ -60,4 +60,4 @@ export function Popover(props: StyledPopoverProps) {
   )
 }
 
-export type { StyledPopoverProps as PopoverProps }
+export type { StyledPopoverProps as PopoverProps, PopoverTriggerRenderProps }

@@ -2,7 +2,12 @@ import * as stylex from "@stylexjs/stylex"
 
 import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessButton, HeadlessIconButton } from "../../primitives/button/button"
-import type { HeadlessButtonProps, HeadlessIconButtonProps } from "../../primitives/button/button"
+import type {
+  HeadlessButtonProps,
+  HeadlessIconButtonProps,
+  ButtonShape,
+  IconPlacement,
+} from "../../primitives/button/button"
 import type { XStyle } from "../../stylex"
 
 const styles = stylex.create({
@@ -36,6 +41,12 @@ const styles = stylex.create({
   buttonFullWidth: {
     width: "100%",
   },
+  buttonRound: {
+    borderRadius: radius.pill,
+  },
+  buttonCircle: {
+    borderRadius: "50%",
+  },
   buttonSm: {
     borderRadius: radius.control,
     fontSize: 12,
@@ -43,17 +54,29 @@ const styles = stylex.create({
     paddingBlock: 0,
     paddingInline: 8,
   },
+  buttonSmCircle: {
+    paddingInline: 0,
+    width: 28,
+  },
   buttonMd: {
     fontSize: 13,
     height: 36,
     paddingBlock: 0,
     paddingInline: 12,
   },
+  buttonMdCircle: {
+    paddingInline: 0,
+    width: 36,
+  },
   buttonLg: {
     fontSize: 14,
     height: 44,
     paddingBlock: 0,
     paddingInline: 18,
+  },
+  buttonLgCircle: {
+    paddingInline: 0,
+    width: 44,
   },
   buttonDisabled: {
     backgroundColor: color.surfaceSoft,
@@ -64,6 +87,47 @@ const styles = stylex.create({
       backgroundColor: color.surfaceSoft,
       borderColor: color.line,
       color: color.textSubtle,
+    },
+  },
+  buttonDisabledTransparent: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    color: color.textSubtle,
+    opacity: 1,
+    ":hover": {
+      backgroundColor: "transparent",
+      borderColor: "transparent",
+      color: color.textSubtle,
+    },
+  },
+  buttonDisabledSubtle: {
+    backgroundColor:
+      "color-mix(in srgb, rgb(var(--tbr-color-accent-soft)) 55%, rgb(var(--tbr-color-surface-soft)))",
+    borderColor: "transparent",
+    color:
+      "color-mix(in srgb, rgb(var(--tbr-color-accent)) 60%, rgb(var(--tbr-color-text-subtle)))",
+    opacity: 1,
+    ":hover": {
+      backgroundColor:
+        "color-mix(in srgb, rgb(var(--tbr-color-accent-soft)) 55%, rgb(var(--tbr-color-surface-soft)))",
+      borderColor: "transparent",
+      color:
+        "color-mix(in srgb, rgb(var(--tbr-color-accent)) 60%, rgb(var(--tbr-color-text-subtle)))",
+    },
+  },
+  buttonDisabledDangerSubtle: {
+    backgroundColor:
+      "color-mix(in srgb, rgb(var(--tbr-color-danger-soft)) 55%, rgb(var(--tbr-color-surface-soft)))",
+    borderColor: "transparent",
+    color:
+      "color-mix(in srgb, rgb(var(--tbr-color-danger)) 60%, rgb(var(--tbr-color-text-subtle)))",
+    opacity: 1,
+    ":hover": {
+      backgroundColor:
+        "color-mix(in srgb, rgb(var(--tbr-color-danger-soft)) 55%, rgb(var(--tbr-color-surface-soft)))",
+      borderColor: "transparent",
+      color:
+        "color-mix(in srgb, rgb(var(--tbr-color-danger)) 60%, rgb(var(--tbr-color-text-subtle)))",
     },
   },
   primary: {
@@ -161,63 +225,23 @@ const styles = stylex.create({
         "color-mix(in srgb, rgb(var(--tbr-color-danger-soft)) 84%, rgb(var(--tbr-color-surface-hover)))",
     },
   },
-  iconButtonBase: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    borderColor: "transparent",
-    borderRadius: radius.control,
-    borderStyle: "solid",
-    borderWidth: 1,
-    color: color.textMuted,
-    cursor: "pointer",
-    display: "inline-flex",
-    justifyContent: "center",
-    transitionDuration: motion.fast,
-    transitionProperty: "background-color, border-color, color",
-    transitionTimingFunction: motion.ease,
-    ":focus-visible": {
-      boxShadow: "0 0 0 4px rgb(var(--tbr-color-accent) / 0.18)",
-      outline: `2px solid ${color.focus}`,
-      outlineOffset: 2,
-    },
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-      color: color.text,
-    },
-    ":disabled": {
-      cursor: "not-allowed",
-      opacity: 0.5,
-    },
-  },
-  iconSecondary: {
-    backgroundColor: color.surface,
-    borderColor: color.line,
-    color: color.text,
-    ":hover": {
-      backgroundColor: color.surfaceHover,
-      borderColor: color.lineStrong,
-    },
-  },
-  iconDanger: {
-    color: color.danger,
-    ":hover": {
-      backgroundColor: color.dangerSoft,
-    },
-  },
   iconSm: {
-    borderRadius: radius.control,
-    height: 26,
-    width: 26,
+    height: 28,
+    width: 28,
   },
   iconMd: {
-    borderRadius: radius.panel,
-    height: 32,
-    width: 32,
+    height: 36,
+    width: 36,
   },
   iconLg: {
-    borderRadius: radius.panel,
-    height: 38,
-    width: 38,
+    height: 44,
+    width: 44,
+  },
+  iconRound: {
+    borderRadius: radius.pill,
+  },
+  iconCircle: {
+    borderRadius: "50%",
   },
 })
 
@@ -245,10 +269,15 @@ const buttonSizeStyles = {
   lg: styles.buttonLg,
 } as const
 
-const iconButtonVariantStyles = {
-  ghost: null,
-  secondary: styles.iconSecondary,
-  danger: styles.iconDanger,
+const buttonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styles.buttonRound> = {
+  round: styles.buttonRound,
+  circle: styles.buttonCircle,
+}
+
+const buttonSizeCircleStyles = {
+  sm: styles.buttonSmCircle,
+  md: styles.buttonMdCircle,
+  lg: styles.buttonLgCircle,
 } as const
 
 const iconButtonSizeStyles = {
@@ -257,14 +286,37 @@ const iconButtonSizeStyles = {
   lg: styles.iconLg,
 } as const
 
+const iconButtonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styles.iconRound> = {
+  round: styles.iconRound,
+  circle: styles.iconCircle,
+}
+
 export function Button(props: ButtonProps) {
+  const shape: ButtonShape = props.shape ?? "default"
+  const variant = props.variant ?? "secondary"
+  const disabledStyle = (() => {
+    if (!props.disabled) return undefined
+    switch (variant) {
+      case "ghost":
+      case "link":
+        return styles.buttonDisabledTransparent
+      case "subtle":
+        return styles.buttonDisabledSubtle
+      case "danger-subtle":
+        return styles.buttonDisabledDangerSubtle
+      default:
+        return styles.buttonDisabled
+    }
+  })()
   const attrs = () =>
     stylex.attrs(
       styles.buttonBase,
-      buttonVariantStyles[props.variant ?? "secondary"],
+      buttonVariantStyles[variant],
       buttonSizeStyles[props.size ?? "md"],
-      props.disabled && styles.buttonDisabled,
-      props.variant === "link" && styles.linkLayout,
+      shape !== "default" && buttonShapeStyles[shape],
+      shape === "circle" && buttonSizeCircleStyles[props.size ?? "md"],
+      disabledStyle,
+      variant === "link" && styles.linkLayout,
       props.fullWidth && styles.buttonFullWidth,
       props.xstyle,
     )
@@ -273,11 +325,30 @@ export function Button(props: ButtonProps) {
 }
 
 export function IconButton(props: IconButtonProps) {
+  const variant = props.variant ?? "ghost"
+  const shape: ButtonShape = props.shape ?? "default"
+  const disabledStyle = (() => {
+    if (!props.disabled) return undefined
+    switch (variant) {
+      case "ghost":
+      case "link":
+        return styles.buttonDisabledTransparent
+      case "subtle":
+        return styles.buttonDisabledSubtle
+      case "danger-subtle":
+        return styles.buttonDisabledDangerSubtle
+      default:
+        return styles.buttonDisabled
+    }
+  })()
   const attrs = () =>
     stylex.attrs(
-      styles.iconButtonBase,
-      iconButtonVariantStyles[props.variant ?? "ghost"],
+      styles.buttonBase,
+      buttonVariantStyles[variant],
+      variant === "link" && styles.linkLayout,
       iconButtonSizeStyles[props.size ?? "md"],
+      shape !== "default" && iconButtonShapeStyles[shape],
+      disabledStyle,
       props.xstyle,
     )
 
@@ -286,4 +357,4 @@ export function IconButton(props: IconButtonProps) {
 
 export type ButtonVariant = HeadlessButtonProps["variant"]
 export type ButtonSize = HeadlessButtonProps["size"]
-export type { HeadlessButtonProps, HeadlessIconButtonProps }
+export type { ButtonShape, IconPlacement, HeadlessButtonProps, HeadlessIconButtonProps }

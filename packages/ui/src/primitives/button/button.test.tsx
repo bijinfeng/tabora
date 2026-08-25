@@ -118,6 +118,91 @@ describe("Button", () => {
     expect(btn.className.length).toBeGreaterThan(0)
     expect(btn.getAttribute("style")).toMatch(/144(?:px)?/)
   })
+
+  it("renders icon at start position by default", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button icon={<span data-testid="icon">+</span>}>
+          <span data-testid="text">添加</span>
+        </Button>
+      ),
+      root,
+    )
+
+    const btn = root.querySelector("button")!
+    const firstChild = btn.firstElementChild as HTMLElement
+    const lastChild = btn.lastElementChild as HTMLElement
+    expect(firstChild.getAttribute("data-testid")).toBe("icon")
+    expect(lastChild.getAttribute("data-testid")).toBe("text")
+    expect(btn.getAttribute("data-icon-placement")).toBe("start")
+  })
+
+  it("renders icon at end position when specified", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button icon={<span data-testid="icon">+</span>} iconPlacement="end">
+          <span data-testid="text">下载</span>
+        </Button>
+      ),
+      root,
+    )
+
+    const btn = root.querySelector("button")!
+    const firstChild = btn.firstElementChild as HTMLElement
+    const lastChild = btn.lastElementChild as HTMLElement
+    expect(firstChild.getAttribute("data-testid")).toBe("text")
+    expect(lastChild.getAttribute("data-testid")).toBe("icon")
+    expect(btn.getAttribute("data-icon-placement")).toBe("end")
+  })
+
+  it("supports shape=round with data attribute", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <Button shape="round">圆角</Button>, root)
+
+    const btn = root.querySelector("button")!
+    expect(btn.getAttribute("data-shape")).toBe("round")
+  })
+
+  it("supports shape=circle with data attribute", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button shape="circle" aria-label="add">
+          <span>+</span>
+        </Button>
+      ),
+      root,
+    )
+
+    const btn = root.querySelector("button")!
+    expect(btn.getAttribute("data-shape")).toBe("circle")
+  })
+
+  it("renders href link with icon at start position", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button href="/download" icon={<span data-testid="icon">↓</span>}>
+          <span data-testid="text">下载</span>
+        </Button>
+      ),
+      root,
+    )
+
+    const link = root.querySelector("a")!
+    expect(link).not.toBeNull()
+    const firstChild = link.firstElementChild as HTMLElement
+    const lastChild = link.lastElementChild as HTMLElement
+    expect(firstChild.getAttribute("data-testid")).toBe("icon")
+    expect(lastChild.getAttribute("data-testid")).toBe("text")
+  })
 })
 
 describe("IconButton", () => {
@@ -135,5 +220,68 @@ describe("IconButton", () => {
     const btn = root.querySelector("button")!
     expect(btn.getAttribute("aria-label")).toBe("删除")
     expect(btn.querySelector("[data-testid='icon']")).toBeTruthy()
+  })
+
+  it("supports all variants including primary, subtle and danger-subtle", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <>
+          <IconButton aria-label="btn-primary" variant="primary">
+            <span>primary</span>
+          </IconButton>
+          <IconButton aria-label="btn-secondary" variant="secondary">
+            <span>secondary</span>
+          </IconButton>
+          <IconButton aria-label="btn-subtle" variant="subtle">
+            <span>subtle</span>
+          </IconButton>
+          <IconButton aria-label="btn-ghost" variant="ghost">
+            <span>ghost</span>
+          </IconButton>
+          <IconButton aria-label="btn-link" variant="link">
+            <span>link</span>
+          </IconButton>
+          <IconButton aria-label="btn-danger" variant="danger">
+            <span>danger</span>
+          </IconButton>
+          <IconButton aria-label="btn-danger-subtle" variant="danger-subtle">
+            <span>danger-subtle</span>
+          </IconButton>
+        </>
+      ),
+      root,
+    )
+    const variants = ["primary", "secondary", "subtle", "ghost", "link", "danger", "danger-subtle"]
+    variants.forEach((v) => {
+      const btn = root.querySelector(`button[data-variant="${v}"]`)
+      expect(btn).not.toBeNull()
+    })
+  })
+
+  it("supports shape attribute", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <>
+          <IconButton aria-label="default" shape="default">
+            <span>A</span>
+          </IconButton>
+          <IconButton aria-label="round" shape="round">
+            <span>B</span>
+          </IconButton>
+          <IconButton aria-label="circle" shape="circle">
+            <span>C</span>
+          </IconButton>
+        </>
+      ),
+      root,
+    )
+
+    expect(root.querySelector('button[data-shape="default"]')).not.toBeNull()
+    expect(root.querySelector('button[data-shape="round"]')).not.toBeNull()
+    expect(root.querySelector('button[data-shape="circle"]')).not.toBeNull()
   })
 })

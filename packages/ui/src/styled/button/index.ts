@@ -4,6 +4,8 @@ export type {
   IconButtonProps,
   ButtonVariant,
   ButtonSize,
+  ButtonShape,
+  IconPlacement,
   HeadlessButtonProps,
   HeadlessIconButtonProps,
 } from "./button.styled"

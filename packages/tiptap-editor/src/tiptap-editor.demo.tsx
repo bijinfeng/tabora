@@ -6,6 +6,7 @@ import {
   StandardTiptapEditor,
   StandardMenuTiptapEditor,
   FocusTiptapEditor,
+  FullTiptapEditor,
 } from "./tiptap-editor.styled"
 import type { TiptapEditorProps, TiptapEditorSize } from "./tiptap-editor.styled"
 import { sx } from "./stylex"
@@ -116,11 +117,11 @@ export const TiptapEditorDemo: Component = () => {
     >
       <div {...sx(demo.wrap)}>
         <div {...sx(demo.header)}>
-          <div {...sx(demo.title)}>RichText 富文本编辑器 · 4 种样式变体</div>
+          <div {...sx(demo.title)}>RichText 富文本编辑器 · 5 种样式变体</div>
           <div {...sx(demo.subtitle)}>
             按 shadcn 风格组织：Primitive + Styled 两层、Root / Content / Toolbar / Actions /
             FocusShell 可独立组合。以下示例分别对应 Minimal、Standard、Standard with Insert
-            Menu、Focus。
+            Menu、Focus、Full（全量工具栏无底部栏）。
           </div>
         </div>
 
@@ -194,6 +195,21 @@ export const TiptapEditorDemo: Component = () => {
               onFocusModeChange={(open) => pushLog("focus mode", open ? "open" : "close")}
               onSave={(html, ctx) => {
                 pushLog("Focus save", `${html.length} chars · visibility=${ctx.visibility}`)
+              }}
+            />
+          </div>
+
+          <div {...sx(demo.card)}>
+            <div {...sx(demo.label)}>5 · Full（全量工具栏 · 无底部栏）</div>
+            <div {...sx(demo.hint)}>
+              继承 Standard 的容器样式，使用完整 defaultToolbar，底部不带 actions。
+            </div>
+            <FullTiptapEditor
+              placeholder={PLACEHOLDER}
+              content={BASE_CONTENT}
+              onChange={(html) => {
+                onChange(html)
+                pushLog("Full html changed", `${html.length} chars`)
               }}
             />
           </div>

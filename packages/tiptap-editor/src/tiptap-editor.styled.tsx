@@ -292,6 +292,7 @@ export type TiptapEditorProps = Omit<Partial<ComponentProps<"div">>, "onChange" 
     onVisibilityChange?: ((v: TiptapEditorVisibility) => void) | undefined
     showToolbar?: boolean | undefined
     showActions?: boolean | undefined
+    actions?: JSX.Element | undefined
     showSaveButton?: boolean | undefined
     saveLabel?: JSX.Element | undefined
     saveDisabled?: boolean | undefined
@@ -350,6 +351,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     "onVisibilityChange",
     "showToolbar",
     "showActions",
+    "actions",
     "showSaveButton",
     "saveLabel",
     "saveDisabled",
@@ -517,25 +519,31 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
 
         <Show when={showActions()}>
           <div {...actionsBarStyleCompiled()}>
-            <TiptapEditorActions
-              showInsert={true}
-              showVisibility={true}
-              showSave={local.showSaveButton !== false}
-              saveLabel={local.saveLabel ?? "保存"}
-              saveDisabled={local.saveDisabled}
-              saveLoading={local.saveLoading}
-              onSave={saveHtml}
-              insertItems={insertItemsFromPrimitives()}
-              xstyle={undefined}
-              attrs={{
-                class: undefined,
-                style: { display: "contents" },
-              }}
+            <Show
+              when={local.actions !== undefined && local.actions !== null}
+              fallback={
+                <TiptapEditorActions
+                  showInsert={true}
+                  showSave={local.showSaveButton !== false}
+                  saveLabel={local.saveLabel ?? "保存"}
+                  saveDisabled={local.saveDisabled}
+                  saveLoading={local.saveLoading}
+                  onSave={saveHtml}
+                  insertItems={insertItemsFromPrimitives()}
+                  xstyle={undefined}
+                  attrs={{
+                    class: undefined,
+                    style: { display: "contents" },
+                  }}
+                >
+                  <Show when={isFocusVariant() && !focusOpen()}>
+                    <TiptapEditorFocusEntry onClick={toggleFocusMode} />
+                  </Show>
+                </TiptapEditorActions>
+              }
             >
-              <Show when={isFocusVariant() && !focusOpen()}>
-                <TiptapEditorFocusEntry onClick={toggleFocusMode} />
-              </Show>
-            </TiptapEditorActions>
+              {local.actions}
+            </Show>
           </div>
         </Show>
       </div>
@@ -604,17 +612,23 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
           />
           <TiptapEditorContent onReady={(e) => !editorRef() && setEditorRef(e)} xstyle={contentC} />
           <div {...actionsBarC}>
-            <TiptapEditorActions
-              showInsert={true}
-              showVisibility={true}
-              showSave={local.showSaveButton !== false}
-              saveLabel={local.saveLabel ?? "保存"}
-              saveDisabled={local.saveDisabled}
-              saveLoading={local.saveLoading}
-              onSave={saveHtml}
-              insertItems={insertItemsFromPrimitives()}
-              attrs={{ class: undefined, style: { display: "contents" } }}
-            />
+            <Show
+              when={local.actions !== undefined && local.actions !== null}
+              fallback={
+                <TiptapEditorActions
+                  showInsert={true}
+                  showSave={local.showSaveButton !== false}
+                  saveLabel={local.saveLabel ?? "保存"}
+                  saveDisabled={local.saveDisabled}
+                  saveLoading={local.saveLoading}
+                  onSave={saveHtml}
+                  insertItems={insertItemsFromPrimitives()}
+                  attrs={{ class: undefined, style: { display: "contents" } }}
+                />
+              }
+            >
+              {local.actions}
+            </Show>
           </div>
         </div>
       </TiptapEditorRoot>
@@ -640,6 +654,13 @@ export function StandardMenuTiptapEditor(props: Omit<TiptapEditorProps, "variant
 }
 export function FocusTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
   return <TiptapEditor {...props} variant="focus" />
+}
+export function FullTiptapEditor(
+  props: Omit<TiptapEditorProps, "variant" | "showActions" | "toolbarItems">,
+) {
+  return (
+    <TiptapEditor {...props} variant="standard" showActions={false} toolbarItems={defaultToolbar} />
+  )
 }
 
 export type {

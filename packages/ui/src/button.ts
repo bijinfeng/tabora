@@ -4,6 +4,8 @@ export type {
   ButtonProps,
   ButtonSize,
   ButtonVariant,
+  ButtonShape,
+  IconPlacement,
   IconButtonProps,
   HeadlessButtonProps,
   HeadlessIconButtonProps,

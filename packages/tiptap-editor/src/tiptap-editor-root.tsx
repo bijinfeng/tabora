@@ -42,6 +42,10 @@ export function ensureTiptapContentStyles(targetDocument: Document = document) {
   const style = targetDocument.createElement("style")
   style.setAttribute(CONTENT_STYLE_SCOPE, "")
   style.textContent = `
+  [data-tbr-tiptap-root] .ProseMirror,
+  [data-tbr-tiptap-root] [contenteditable="true"] {
+    outline: none;
+  }
   [data-tbr-tiptap-root] p { margin-block: 8px; }
   [data-tbr-tiptap-root] p.is-editor-empty:first-child::before {
     color: rgb(var(--tbr-color-text-subtle));

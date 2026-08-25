@@ -9,6 +9,8 @@ export type ButtonVariant =
   | "danger"
   | "danger-subtle"
 export type ButtonSize = "sm" | "md" | "lg"
+export type ButtonShape = "default" | "circle" | "round"
+export type IconPlacement = "start" | "end"
 
 type NativeButtonProps = Omit<
   JSX.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -18,6 +20,7 @@ type NativeButtonProps = Omit<
 export type HeadlessButtonProps = {
   variant?: ButtonVariant
   size?: ButtonSize
+  shape?: ButtonShape
   loading?: boolean
   disabled?: boolean
   fullWidth?: boolean
@@ -27,6 +30,8 @@ export type HeadlessButtonProps = {
   style?: JSX.HTMLAttributes<HTMLButtonElement>["style"]
   onClick?: (e: MouseEvent) => void
   "aria-label"?: string
+  icon?: JSX.Element
+  iconPlacement?: IconPlacement
   children: JSX.Element
 } & NativeButtonProps
 
@@ -35,6 +40,7 @@ export function HeadlessButton(props: HeadlessButtonProps) {
   const [local, others] = splitProps(props, [
     "variant",
     "size",
+    "shape",
     "loading",
     "disabled",
     "fullWidth",
@@ -44,8 +50,19 @@ export function HeadlessButton(props: HeadlessButtonProps) {
     "style",
     "onClick",
     "aria-label",
+    "icon",
+    "iconPlacement",
     "children",
   ])
+
+  const placement = local.iconPlacement ?? "start"
+  const content = (
+    <>
+      {local.icon && placement === "start" && local.icon}
+      {local.children}
+      {local.icon && placement === "end" && local.icon}
+    </>
+  )
 
   if (local.href !== undefined) {
     const linkProps = {
@@ -54,8 +71,10 @@ export function HeadlessButton(props: HeadlessButtonProps) {
       style: local.style,
       "data-variant": local.variant ?? "secondary",
       "data-size": local.size,
+      "data-shape": local.shape ?? "default",
       "data-loading": local.loading ? "" : undefined,
       "data-fullwidth": local.fullWidth ? "" : undefined,
+      "data-icon-placement": local.icon ? placement : undefined,
       href: local.href,
       "aria-label": local["aria-label"],
       "aria-busy": local.loading ? true : undefined,
@@ -69,7 +88,7 @@ export function HeadlessButton(props: HeadlessButtonProps) {
       },
     }
 
-    return <a {...(linkProps as JSX.AnchorHTMLAttributes<HTMLAnchorElement>)}>{local.children}</a>
+    return <a {...(linkProps as JSX.AnchorHTMLAttributes<HTMLAnchorElement>)}>{content}</a>
   }
 
   return (
@@ -79,8 +98,10 @@ export function HeadlessButton(props: HeadlessButtonProps) {
       style={local.style}
       data-variant={local.variant}
       data-size={local.size}
+      data-shape={local.shape ?? "default"}
       data-loading={local.loading ? "" : undefined}
       data-fullwidth={local.fullWidth ? "" : undefined}
+      data-icon-placement={local.icon ? placement : undefined}
       type={local.type ?? "button"}
       disabled={local.disabled || local.loading}
       aria-label={local["aria-label"]}
@@ -89,14 +110,15 @@ export function HeadlessButton(props: HeadlessButtonProps) {
         if (!local.loading) local.onClick?.(e)
       }}
     >
-      {local.children}
+      {content}
     </button>
   )
 }
 
 export type HeadlessIconButtonProps = {
-  variant?: "ghost" | "secondary" | "danger"
+  variant?: ButtonVariant
   size?: ButtonSize
+  shape?: ButtonShape
   loading?: boolean
   disabled?: boolean
   class?: string | undefined
@@ -111,6 +133,7 @@ export function HeadlessIconButton(props: HeadlessIconButtonProps) {
   const [local, others] = splitProps(props, [
     "variant",
     "size",
+    "shape",
     "loading",
     "disabled",
     "class",
@@ -127,6 +150,7 @@ export function HeadlessIconButton(props: HeadlessIconButtonProps) {
       style={local.style}
       data-variant={local.variant ?? "ghost"}
       data-size={local.size ?? "md"}
+      data-shape={local.shape ?? "default"}
       data-loading={local.loading ? "" : undefined}
       type="button"
       disabled={local.disabled || local.loading}
