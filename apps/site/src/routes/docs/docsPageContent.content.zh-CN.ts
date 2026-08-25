@@ -19,6 +19,7 @@ export const zhCNDocsPageContent: DocsPageContent = {
         { id: "button", label: "Button 按钮" },
         { id: "input", label: "Input 输入框" },
         { id: "textarea", label: "Textarea 多行输入" },
+        { id: "richtext", label: "RichText 富文本编辑器" },
         { id: "iconbutton", label: "IconButton 图标按钮" },
         { id: "combobox", label: "Combobox 搜索选择" },
         { id: "link", label: "Link 链接" },
@@ -594,6 +595,81 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
         doBody: "设置深层页面和文档章节应提供面包屑导航。",
         dontTitle: "✗ 不应",
         dontBody: "不要在只有一级的页面使用面包屑，也不要用它替代 Tab 或 Menubar。",
+      },
+      {
+        id: "richtext",
+        title: "RichText 富文本编辑器",
+        description:
+          "基于 Tiptap v3 封装的所见即所得富文本编辑器，与 Tabora 主题和基础组件风格一致。支持标题、列表、引用、代码块、链接、图片、对齐、待办等常用格式。",
+        metaTags: ["Tiptap v3", "富文本", "工具栏", "Markdown 快捷键", "图片上传"],
+        anatomyTitle: "解剖结构",
+        anatomyItems: [
+          ".tbr-tiptap-toolbar — 顶部工具栏，按分组聚合 DropdownMenu / Popover / IconButton",
+          ".ProseMirror — Tiptap 渲染容器，所有内容样式通过 @tabora/theme token 生成",
+          "data-editor-initialized / focused / empty — 状态 data-attr，用于辅助视觉",
+        ],
+        demos: [{ title: "示例", exampleId: "richtext" }],
+        table: {
+          columns: ["属性", "默认值", "说明"],
+          rows: [
+            ["size", "sm", "sm (紧凑) / md (标准) 两档尺寸"],
+            ["content", "undefined", "初始内容：HTML 字符串或 ProseMirror JSON"],
+            ["placeholder", "开始输入内容…", "空内容占位提示"],
+            ["editable", "true", "是否可编辑，false 时隐藏工具栏并禁用交互"],
+            ["disabled", "false", "整组禁用（含工具栏+内容区）"],
+            ["invalid", "false", "错误态：边框切换为 danger 色"],
+            ["extensions", "[]", "追加的 Tiptap Extension 列表，合并到默认 StarterKit 组合"],
+            [
+              "toolbarItems",
+              "defaultToolbar",
+              "自定义工具栏分组配置，支持 divider / command / custom render",
+            ],
+            [
+              "uploadImage",
+              "undefined",
+              "自定义图片上传：(File)=>Promise<string>，不传则使用 prompt 输入 URL",
+            ],
+            ["onChange", "undefined", "每次内容变化时同步 HTML 字符串"],
+            [
+              "xstyle / xstyleToolbar / xstyleContent",
+              "undefined",
+              "StyleX 样式注入点，支持细粒度 token 覆盖",
+            ],
+          ],
+        },
+        doTitle: "✓ 应当",
+        doBody:
+          "对需要富文本语义（标题、列表、引用）的插件内容说明和长文本场景使用 RichText。图片必须提供 uploadImage 接入统一 CDN；onChange 建议对高频更新做 debounce。",
+        dontTitle: "✗ 不应",
+        dontBody:
+          "不要在仅需单行输入时使用 RichText（请用 Input），也不要用它替代 JSON 结构编辑（请用 CodeEditor 或表单）。不要直接依赖 tiptap 默认 CSS（@tabora/tiptap-editor 已 injectCSS=false）。",
+        pluginExample: {
+          label: "插件使用示例",
+          copyLabel: "复制",
+          copiedLabel: "已复制",
+          copyId: "richtext-code",
+          code: `import TiptapEditor from "@tabora/tiptap-editor"
+
+export function NotesEditor() {
+  return (
+    <TiptapEditor
+      size="md"
+      placeholder="开始写笔记…"
+      content="<h2>欢迎</h2><p>这里是正文…</p>"
+      onChange={(html) => saveToStorage(html)}
+      uploadImage={async (file) => {
+        const form = new FormData()
+        form.append("file", file)
+        const r = await fetch("/api/attachments", {
+          method: "POST",
+          body: form,
+        })
+        return (await r.json()).url
+      }}
+    />
+  )
+}`,
+        },
       },
     ],
     selectionControls: [

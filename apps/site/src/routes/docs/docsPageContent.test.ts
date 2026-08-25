@@ -19,9 +19,13 @@ describe("getDocsPageContent", () => {
   it("includes componentized input-control specs", () => {
     const content = getDocsPageContent("zh-CN")
 
-    expect(content.componentSpecs.inputControls).toHaveLength(9)
+    expect(content.componentSpecs.inputControls).toHaveLength(10)
     expect(content.componentSpecs.inputControls[0]?.id).toBe("button")
     expect(content.componentSpecs.inputControls[1]?.title).toBe("Input 输入框")
+    expect(content.componentSpecs.inputControls.at(-1)?.id).toBe("richtext")
+    expect(content.componentSpecs.inputControls.at(-1)?.demos[0]).toEqual(
+      expect.objectContaining({ exampleId: "richtext" }),
+    )
   })
 
   it("uses example ids instead of duplicated inline preview html for button demos", () => {

@@ -1,4 +1,4 @@
-import { Suspense, lazy, type Component, type JSX } from "solid-js"
+import { ErrorBoundary, Suspense, lazy, type Component, type JSX } from "solid-js"
 import * as stylex from "@stylexjs/stylex"
 
 import accordionDemoSource from "../../../../../packages/ui/src/styled/accordion/accordion.demo.tsx?raw"
@@ -51,6 +51,7 @@ import tooltipDemoSource from "../../../../../packages/ui/src/styled/tooltip/too
 import treeViewDemoSource from "../../../../../packages/ui/src/styled/treeView/treeView.demo.tsx?raw"
 import truncateDemoSource from "../../../../../packages/ui/src/styled/truncate/truncate.demo.tsx?raw"
 import visuallyHiddenDemoSource from "../../../../../packages/ui/src/styled/visuallyHidden/visuallyHidden.demo.tsx?raw"
+import tiptapEditorDemoSource from "../../../../../packages/tiptap-editor/src/tiptap-editor.demo.tsx?raw"
 
 const AccordionDemo = lazy(() =>
   import("../../../../../packages/ui/src/styled/accordion/accordion.demo").then((module) => ({
@@ -370,6 +371,12 @@ const VisuallyHiddenDemo = lazy(() =>
   ),
 )
 
+const TiptapEditorDemo = lazy(() =>
+  import("../../../../../packages/tiptap-editor/src/tiptap-editor.demo").then((module) => ({
+    default: module.TiptapEditorDemo,
+  })),
+)
+
 export type DocsExampleId =
   | "accordion"
   | "alert"
@@ -423,6 +430,7 @@ export type DocsExampleId =
   | "treeview"
   | "truncate"
   | "visuallyhidden"
+  | "richtext"
 
 export type DocsExample = {
   language: "tsx"
@@ -456,11 +464,46 @@ const componentExample = (source: string, render: () => JSX.Element): DocsExampl
   ),
 })
 
+const ERROR_FALLBACK_STYLE = {
+  border: "1px solid rgb(var(--tbr-color-danger))",
+  "border-radius": "8px",
+  color: "rgb(var(--tbr-color-danger))",
+  "font-family": "var(--tbr-font-mono)",
+  "font-size": "12px",
+  "line-height": 1.5,
+  padding: "12px",
+  "white-space": "pre-wrap",
+} as const
+
+const SUSPENSE_FALLBACK_STYLE = {
+  border: "1px dashed rgb(var(--tbr-color-line))",
+  "border-radius": "8px",
+  color: "rgb(var(--tbr-color-text-muted))",
+  "font-size": "12px",
+  padding: "16px",
+} as const
+
 const renderLazy = (DemoComponent: Component): (() => JSX.Element) => {
   return () => (
-    <Suspense fallback={null}>
-      <DemoComponent />
-    </Suspense>
+    <ErrorBoundary
+      fallback={(err) => (
+        <div role="alert" aria-live="polite" style={ERROR_FALLBACK_STYLE}>
+          <strong>Demo 渲染失败：</strong>
+          <br />
+          {err instanceof Error ? `${err.name}: ${err.message}\n\n${err.stack ?? ""}` : String(err)}
+        </div>
+      )}
+    >
+      <Suspense
+        fallback={
+          <div aria-busy="true" style={SUSPENSE_FALLBACK_STYLE}>
+            正在加载示例…
+          </div>
+        }
+      >
+        <DemoComponent />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
@@ -521,6 +564,7 @@ const docsExamples: Record<DocsExampleId, DocsExample> = {
   treeview: registerExample(treeViewDemoSource, TreeViewDemo),
   truncate: registerExample(truncateDemoSource, TruncateDemo),
   visuallyhidden: registerExample(visuallyHiddenDemoSource, VisuallyHiddenDemo),
+  richtext: registerExample(tiptapEditorDemoSource, TiptapEditorDemo),
 }
 
 export function getDocsExample(id: DocsExampleId) {

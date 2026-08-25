@@ -1,0 +1,41 @@
+{
+  "name": "@tabora/tiptap-editor",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "vp pack src/index.ts",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@kobalte/core": "catalog:ui",
+    "@stylexjs/stylex": "catalog:style",
+    "@tabora/theme": "workspace:*",
+    "@tabora/ui": "workspace:*",
+    "@tiptap/core": "catalog:ui",
+    "@tiptap/extension-image": "catalog:ui",
+    "@tiptap/extension-link": "catalog:ui",
+    "@tiptap/extension-placeholder": "catalog:ui",
+    "@tiptap/extension-task-item": "catalog:ui",
+    "@tiptap/extension-task-list": "catalog:ui",
+    "@tiptap/extension-text-align": "catalog:ui",
+    "@tiptap/extension-underline": "catalog:ui",
+    "@tiptap/pm": "catalog:ui",
+    "@tiptap/starter-kit": "catalog:ui",
+    "lucide-solid": "catalog:ui",
+    "solid-js": "catalog:ui"
+  },
+  "devDependencies": {
+    "@tabora/tsconfig": "workspace:*",
+    "vite-plugin-solid": "catalog:build"
+  }
+}

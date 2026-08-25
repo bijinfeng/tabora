@@ -19,6 +19,7 @@ export const enDocsPageContent: DocsPageContent = {
         { id: "button", label: "Button" },
         { id: "input", label: "Input" },
         { id: "textarea", label: "Textarea" },
+        { id: "richtext", label: "RichText Editor" },
         { id: "iconbutton", label: "IconButton" },
         { id: "combobox", label: "Combobox" },
         { id: "link", label: "Link" },
@@ -662,6 +663,85 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
         dontTitle: "✗ Don't",
         dontBody:
           "Do not use breadcrumbs on single-level pages or as a replacement for Tabs or Menubar.",
+      },
+      {
+        id: "richtext",
+        title: "RichText Editor",
+        description:
+          "A WYSIWYG rich-text editor built on Tiptap v3, styled consistently with Tabora tokens and base components. Supports headings, lists, blockquotes, code blocks, links, images, alignment and task items.",
+        metaTags: ["Tiptap v3", "Rich text", "Toolbar", "Markdown shortcuts", "Image upload"],
+        anatomyTitle: "Anatomy",
+        anatomyItems: [
+          ".tbr-tiptap-toolbar — top toolbar grouping DropdownMenus, Popovers and IconButtons",
+          ".ProseMirror — Tiptap rendering container, all content styles emitted via @tabora/theme tokens",
+          "data-editor-initialized / focused / empty — state data-attributes for auxiliary visuals",
+        ],
+        demos: [{ title: "Example", exampleId: "richtext" }],
+        table: {
+          columns: ["Property", "Default", "Description"],
+          rows: [
+            ["size", "sm", "sm (compact) or md (standard)"],
+            ["content", "undefined", "Initial content: HTML string or ProseMirror JSON"],
+            ["placeholder", "Start typing…", "Empty state placeholder hint"],
+            ["editable", "true", "Editable toggle; toolbar hidden when false"],
+            ["disabled", "false", "Disables the entire editor (toolbar + content)"],
+            ["invalid", "false", "Error state: switches the border to danger color"],
+            [
+              "extensions",
+              "[]",
+              "Extra Tiptap extensions merged on top of the default StarterKit set",
+            ],
+            [
+              "toolbarItems",
+              "defaultToolbar",
+              "Custom toolbar group config: divider / command / custom render(ctx)",
+            ],
+            [
+              "uploadImage",
+              "undefined",
+              "Custom image uploader: (File) => Promise<string>; falls back to prompt(URL)",
+            ],
+            ["onChange", "undefined", "Called on every content update with the current HTML"],
+            [
+              "xstyle / xstyleToolbar / xstyleContent",
+              "undefined",
+              "StyleX injection points for token-level overrides",
+            ],
+          ],
+        },
+        doTitle: "✓ Do",
+        doBody:
+          "Use RichText for plugin content notes and long-form scenarios that need structured semantics (headings, lists, quotes). Always provide an uploadImage adapter to your CDN and debounce onChange on the consumer side.",
+        dontTitle: "✗ Don't",
+        dontBody:
+          "Do not use RichText for single-line inputs (use Input instead) or structured JSON editing (use CodeEditor or forms). Do not rely on Tiptap's default CSS — injectCSS=false is the default in @tabora/tiptap-editor.",
+        pluginExample: {
+          label: "Plugin usage example",
+          copyLabel: "Copy",
+          copiedLabel: "Copied",
+          copyId: "richtext-code",
+          code: `import TiptapEditor from "@tabora/tiptap-editor"
+
+export function NotesEditor() {
+  return (
+    <TiptapEditor
+      size="md"
+      placeholder="Start writing notes…"
+      content="<h2>Welcome</h2><p>Body goes here…</p>"
+      onChange={(html) => saveToStorage(html)}
+      uploadImage={async (file) => {
+        const form = new FormData()
+        form.append("file", file)
+        const r = await fetch("/api/attachments", {
+          method: "POST",
+          body: form,
+        })
+        return (await r.json()).url
+      }}
+    />
+  )
+}`,
+        },
       },
     ],
     selectionControls: [
