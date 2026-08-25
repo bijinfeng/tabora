@@ -353,10 +353,16 @@ export function createWorkbenchRuntimeBootstrap(
   const loadResult = loadBuiltinPlugins(options.plugins)
   const loadedPlugins = loadResult.loaded.map((record) => record.pluginPackage)
   const pluginStyles = loadResult.loaded.flatMap((record) => record.styles)
+  // Builtins are trusted for their declared permissions, except sensitive capabilities
+  // (network) which stay just-in-time: the plugin triggers a user-facing authorization
+  // prompt on first use so outbound access is never granted silently at startup.
   const trustedBuiltinPermissionGrants = Object.fromEntries(
     loadResult.loaded
       .filter((record) => record.source === "builtin")
-      .map((record) => [record.manifest.id, record.manifest.permissions ?? []]),
+      .map((record) => [
+        record.manifest.id,
+        (record.manifest.permissions ?? []).filter((permission) => permission.type !== "network"),
+      ]),
   )
   const trustedBuiltinSettingsHostActionGrants = Object.fromEntries(
     loadResult.loaded

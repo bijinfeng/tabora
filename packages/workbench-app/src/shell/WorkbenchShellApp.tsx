@@ -152,9 +152,10 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     reason?: string
     resolve: (granted: boolean) => void
   }
-  const [permissionRequest, setPermissionRequest] = createSignal<PermissionRequestState | null>(
-    null,
-  )
+  // Queued so concurrent requests (e.g. a plugin fetching several hosts at once) are
+  // resolved one dialog at a time instead of overwriting each other's pending promise.
+  const [permissionQueue, setPermissionQueue] = createSignal<PermissionRequestState[]>([])
+  const permissionRequest = createMemo(() => permissionQueue()[0] ?? null)
 
   const currentRoute = createMemo(() => parseWorkbenchSettingsRoute(location.pathname))
   const navigateToSettings = (sectionId: SettingsSectionId) => {
@@ -208,12 +209,15 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
         reason?: string
         resolve: (granted: boolean) => void
       }
-      setPermissionRequest({
-        pluginId: request.pluginId,
-        permission: request.permission,
-        resolve: request.resolve,
-        ...(request.reason !== undefined ? { reason: request.reason } : {}),
-      })
+      setPermissionQueue((queue) => [
+        ...queue,
+        {
+          pluginId: request.pluginId,
+          permission: request.permission,
+          resolve: request.resolve,
+          ...(request.reason !== undefined ? { reason: request.reason } : {}),
+        },
+      ])
     })
     onCleanup(dispose)
   })
@@ -234,7 +238,7 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     }
 
     request.resolve(granted)
-    setPermissionRequest(null)
+    setPermissionQueue((queue) => queue.slice(1))
   }
 
   createEffect(() => {
@@ -486,7 +490,7 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
                 onResponse: handlePermissionResponse,
                 onClose: () => {
                   request().resolve(false)
-                  setPermissionRequest(null)
+                  setPermissionQueue((queue) => queue.slice(1))
                 },
                 ...(request().reason ? { reason: request().reason } : {}),
               }
