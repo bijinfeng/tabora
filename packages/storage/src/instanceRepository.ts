@@ -4,7 +4,6 @@ import type { TaboraDatabase } from "./database"
 export type InstanceRepository = {
   getAll(): Promise<PluginInstance[]>
   getByWorkspace(workspaceId: string): Promise<PluginInstance[]>
-  getByRegion(workspaceId: string, regionId: string): Promise<PluginInstance[]>
   get(id: string): Promise<PluginInstance | undefined>
   save(instance: PluginInstance): Promise<void>
   removeByWorkspace(workspaceId: string): Promise<void>
@@ -70,31 +69,6 @@ export function createInstanceRepository(database: TaboraDatabase): InstanceRepo
         database,
         await database.pluginInstances.where("workspaceId").equals(workspaceId).toArray(),
       )
-    },
-    async getByRegion(workspaceId, regionId) {
-      const rows = await database.pluginInstances
-        .where("[workspaceId+regionId]")
-        .equals([workspaceId, regionId])
-        .toArray()
-      const instances = await normalizeRows(database, rows)
-      return instances.sort((left, right) => {
-        const leftGrid = left.grid
-        const rightGrid = right.grid
-
-        if (!leftGrid && !rightGrid) {
-          return left.createdAt.localeCompare(right.createdAt)
-        }
-
-        if (!leftGrid) {
-          return 1
-        }
-
-        if (!rightGrid) {
-          return -1
-        }
-
-        return leftGrid.y - rightGrid.y || leftGrid.x - rightGrid.x
-      })
     },
     async get(id) {
       const instance = await database.pluginInstances.get(id)

@@ -1,18 +1,13 @@
-import type {
-  LayoutRegion,
-  PluginInstance,
-  WidgetContribution,
-  WidgetSize,
-} from "@tabora/plugin-api"
+import type { PluginInstance, WidgetContribution, WidgetSize } from "@tabora/plugin-api"
 
 import { gridColumnSpan, gridRowSpan } from "../shared/workbenchGrid"
+import { DASHBOARD_WIDGET_REGION_ID } from "../surface/dashboard/dashboard-constants"
 
 export async function addWorkbenchWidget(options: {
   workspaceId: string
   pluginId: string
   contributionId: string
   currentInstances: PluginInstance[]
-  layoutRegions: LayoutRegion[]
   resolveWidget: (
     pluginId: string,
     contributionId: string,
@@ -29,8 +24,7 @@ export async function addWorkbenchWidget(options: {
 
   const timestamp = options.now?.() ?? new Date().toISOString()
   const instanceId = options.buildInstanceId?.() ?? `${options.contributionId}-${Date.now()}`
-  const regionId = options.layoutRegions.find((region) => region.accepts.includes("widget"))?.id
-  if (!regionId) return null
+  const regionId = DASHBOARD_WIDGET_REGION_ID
 
   const requestedSize = options.size
   const initialSize =

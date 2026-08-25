@@ -14,16 +14,6 @@ const plugins: Array<{ manifest: PluginManifest; enabled: boolean }> = [
       engine: { platform: "^0.1.0" },
       permissions: [],
       contributes: {
-        layouts: [
-          {
-            id: "alpha.layout",
-            title: "Alpha Layout",
-            view: "alpha.layout.view",
-            regions: [],
-            defaultRegions: {},
-            supportsResponsive: true,
-          },
-        ],
         searchProviders: [
           {
             id: "alpha.search.google",
@@ -88,16 +78,6 @@ const plugins: Array<{ manifest: PluginManifest; enabled: boolean }> = [
       entry: "./beta",
       engine: { platform: "^0.1.0" },
       contributes: {
-        layouts: [
-          {
-            id: "beta.layout",
-            title: "Beta Layout",
-            view: "beta.layout.view",
-            regions: [],
-            defaultRegions: {},
-            supportsResponsive: true,
-          },
-        ],
         searchProviders: [
           {
             id: "beta.search.duck",
@@ -238,7 +218,6 @@ describe("createPluginCatalog", () => {
     expect(catalog.listBackgroundProviders().map((provider) => provider.id)).toEqual([
       "alpha.background",
     ])
-    expect(catalog.listLayouts().map((layout) => layout.id)).toEqual(["alpha.layout"])
     expect(widgets.map((widget) => `${widget.pluginId}:${widget.title}`)).toEqual([
       "plugin.alpha:Alpha Widget",
     ])

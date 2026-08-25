@@ -27,10 +27,6 @@ export type PluginI18nService = {
 export function collectPluginManifestViewIds(manifest: PluginManifest): Set<string> {
   const views = new Set<string>()
 
-  for (const layout of manifest.contributes.layouts ?? []) {
-    if (layout.view) views.add(layout.view)
-  }
-
   for (const widget of manifest.contributes.widgets ?? []) {
     views.add(widget.views.card)
     if (widget.views.expand) views.add(widget.views.expand)

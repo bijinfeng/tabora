@@ -1,5 +1,4 @@
 import type {
-  LayoutRegion,
   PluginInstance,
   WidgetContribution,
   WidgetViewProps,
@@ -104,7 +103,6 @@ function viewProps(): WidgetViewProps {
 }
 
 function createController(options: {
-  layoutRegions?: LayoutRegion[]
   instances?: PluginInstance[]
   focusWidgetInstance?: (instanceId: string) => boolean
   tShell?: (key: string, vars?: Record<string, string | number>) => string
@@ -140,7 +138,6 @@ function createController(options: {
     setInstances,
     setExpandState,
     setContextMenu,
-    resolveLayoutRegions: (_layoutId) => options.layoutRegions ?? [],
     resolveWidgetContribution: () => widgetContribution(),
     resolveWidgetRenderModel: () => renderModel(),
     hasView: (_viewId) => true,
@@ -175,37 +172,9 @@ describe("createWorkbenchWidgetController", () => {
     vi.restoreAllMocks()
   })
 
-  it("shows a warning instead of guessing a widget region when the active layout has none", async () => {
-    const { controller, saveInstance, setInstances, showToast } = createController({
-      layoutRegions: [{ id: "toolbar", title: "Toolbar", accepts: ["search"], required: false }],
-    })
-
-    await controller.addWidget("plugin.widgets", "widget.notes")
-
-    expect(saveInstance).not.toHaveBeenCalled()
-    expect(setInstances).not.toHaveBeenCalled()
-    expect(showToast).toHaveBeenCalledWith("当前布局不支持添加卡片", { type: "warning" })
-  })
-
-  it("shows a localized warning when the active layout has no widget region", async () => {
-    const { controller, showToast } = createController({
-      layoutRegions: [{ id: "toolbar", title: "Toolbar", accepts: ["search"], required: false }],
-      tShell: (key: string) => {
-        if (key === "widget.addNotSupported") return "This layout cannot add widgets"
-        return key
-      },
-    })
-
-    await controller.addWidget("plugin.widgets", "widget.notes")
-
-    expect(showToast).toHaveBeenCalledWith("This layout cannot add widgets", { type: "warning" })
-  })
-
   it("opens widget expand state and clears the active context menu", () => {
     const { controller, getExpandState, getContextMenu, setExpandState, setContextMenu } =
-      createController({
-        layoutRegions: [{ id: "mainGrid", title: "Grid", accepts: ["widget"], required: false }],
-      })
+      createController({})
 
     controller.openWidgetExpand(instance())
 

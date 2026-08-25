@@ -1,5 +1,4 @@
 import type {
-  LayoutRegion,
   PluginInstance,
   WidgetContribution,
   WidgetSize,
@@ -45,7 +44,6 @@ export function createWorkbenchWidgetController(options: {
   setInstances: (instances: PluginInstance[]) => void
   setExpandState: (state: WorkbenchExpandState | null) => void
   setContextMenu: (state: WidgetContextMenuState) => void
-  resolveLayoutRegions: (layoutId: string) => LayoutRegion[]
   resolveWidgetContribution: (
     pluginId: string,
     contributionId: string,
@@ -81,7 +79,6 @@ export function createWorkbenchWidgetController(options: {
       pluginId,
       contributionId,
       currentInstances: options.getInstances(),
-      layoutRegions: options.resolveLayoutRegions(options.getActiveLayoutId()),
       resolveWidget: options.resolveWidgetContribution,
       assignGridOrder: options.assignGridOrder,
       saveInstance: options.saveInstance,

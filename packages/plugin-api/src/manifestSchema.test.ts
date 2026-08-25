@@ -305,56 +305,6 @@ describe("pluginManifestSchema", () => {
     expect(result.success).toBe(false)
   })
 
-  it("accepts a dashboard layout contribution with a registered view", () => {
-    const result = pluginManifestSchema.safeParse({
-      id: "official.layout.workbench-dashboard",
-      name: "Workbench Dashboard Layout",
-      version: "0.0.0",
-      apiVersion: "1.0.0",
-      entry: "./layout-workbench-dashboard",
-      engine: { platform: "^0.1.0" },
-      contributes: {
-        layouts: [
-          {
-            id: "official.layout.workbench-dashboard",
-            title: "工作台仪表盘布局",
-            view: "official.layout.workbench-dashboard.view",
-            regions: [
-              {
-                id: "topbar",
-                title: "顶部搜索区",
-                accepts: ["search"],
-                required: true,
-                maxInstances: 1,
-              },
-              {
-                id: "mainGrid",
-                title: "主网格",
-                accepts: ["widget"],
-                required: true,
-              },
-            ],
-            defaultRegions: {
-              topbar: [{ instanceId: "search-main" }],
-              mainGrid: [
-                { instanceId: "today-focus-1" },
-                { instanceId: "quick-links-1" },
-                { instanceId: "notes-1" },
-                { instanceId: "todo-1" },
-              ],
-            },
-            supportsResponsive: true,
-          },
-        ],
-      },
-    })
-
-    expect(result.success).toBe(true)
-    expect(result.success ? result.data.contributes.layouts?.[0]?.view : undefined).toBe(
-      "official.layout.workbench-dashboard.view",
-    )
-  })
-
   it("rejects settings panels without explicit section and scope", () => {
     const result = pluginManifestSchema.safeParse({
       id: "official.settings.workspace",
@@ -752,39 +702,6 @@ describe("pluginManifestSchema", () => {
     }
   })
 
-  it("rejects a layout contribution with an empty view", () => {
-    const result = pluginManifestSchema.safeParse({
-      id: "bad.layout",
-      name: "Bad Layout",
-      version: "0.0.0",
-      apiVersion: "1.0.0",
-      entry: "./layout",
-      engine: { platform: "^0.1.0" },
-      contributes: {
-        layouts: [
-          {
-            id: "bad.layout",
-            title: "Bad Layout",
-            view: "",
-            regions: [
-              {
-                id: "mainGrid",
-                title: "Main Grid",
-                accepts: ["widget"],
-              },
-            ],
-            defaultRegions: {
-              mainGrid: [],
-            },
-            supportsResponsive: true,
-          },
-        ],
-      },
-    })
-
-    expect(result.success).toBe(false)
-  })
-
   it("rejects duplicate local contribution IDs in the same contribution kind", () => {
     const result = pluginManifestSchema.safeParse({
       id: "example.duplicate-contributions",
@@ -839,67 +756,11 @@ describe("pluginManifestSchema", () => {
       entry: "./index",
       engine: { platform: "^0.1.0" },
       contributes: {
-        layouts: [
-          {
-            id: "main",
-            title: "Main",
-            view: "example.main.view",
-            regions: [
-              { id: "main", title: "Main", accepts: ["theme"], required: true },
-              { id: "widgets", title: "Widgets", accepts: ["widget"], required: true },
-            ],
-            defaultRegions: { main: [], widgets: [] },
-            supportsResponsive: true,
-          },
-        ],
+        themes: [{ id: "theme", title: "Theme", tokens: {} }],
       },
     })
 
-    expect(result.success).toBe(false)
-  })
-})
-
-describe("layout 最小强制规则", () => {
-  const baseLayout = {
-    id: "x.layout",
-    title: "X",
-    view: "x.layout.view",
-    regions: [{ id: "grid", title: "网格", accepts: ["widget"], required: true }],
-    defaultRegions: { grid: [] },
-    supportsResponsive: true,
-  }
-
-  function manifestWith(layout: unknown) {
-    return {
-      id: "x",
-      name: "X",
-      version: "1.0.0",
-      apiVersion: "1.0.0",
-      entry: "./x",
-      engine: { platform: "^0.1.0" },
-      contributes: { layouts: [layout] },
-    }
-  }
-
-  it("合格：含 widget region + view", () => {
-    expect(pluginManifestSchema.safeParse(manifestWith(baseLayout)).success).toBe(true)
-  })
-
-  it("不合格：无 widget region", () => {
-    const layout = {
-      ...baseLayout,
-      regions: [{ id: "side", title: "侧栏", accepts: ["search"], required: false }],
-    }
-    expect(pluginManifestSchema.safeParse(manifestWith(layout)).success).toBe(false)
-  })
-
-  it("不合格：缺 view 字段", () => {
-    const { view: _view, ...noView } = baseLayout
-    expect(pluginManifestSchema.safeParse(manifestWith(noView)).success).toBe(false)
-  })
-
-  it("合格：缺 search/settings region 仍通过", () => {
-    expect(pluginManifestSchema.safeParse(manifestWith(baseLayout)).success).toBe(true)
+    expect(result.success).toBe(true)
   })
 })
 
@@ -912,25 +773,9 @@ describe("validatePluginManifestComposition", () => {
     engine: { platform: "^0.1.0" },
   }
 
-  it("rejects unresolved preset plugin, contribution, and layout default instance references", () => {
+  it("rejects unresolved preset plugin and contribution references", () => {
     expect(() =>
       validatePluginManifestComposition([
-        {
-          ...base,
-          id: "example.layout",
-          contributes: {
-            layouts: [
-              {
-                id: "layout",
-                title: "Layout",
-                view: "example.layout.view",
-                regions: [{ id: "grid", title: "Grid", accepts: ["widget"] }],
-                defaultRegions: { grid: [{ instanceId: "missing" }] },
-                supportsResponsive: true,
-              },
-            ],
-          },
-        },
         {
           ...base,
           id: "example.preset",
@@ -939,8 +784,8 @@ describe("validatePluginManifestComposition", () => {
               {
                 id: "preset",
                 title: "Preset",
-                plugins: ["example.layout", "missing.plugin"],
-                layout: { pluginId: "example.layout", kind: "layout", id: "layout" },
+                plugins: ["missing.plugin"],
+                layout: { pluginId: "example.preset", kind: "layout", id: "layout" },
                 theme: { pluginId: "missing.plugin", kind: "theme", id: "missing-theme" },
                 backgroundProvider: {
                   pluginId: "missing.plugin",

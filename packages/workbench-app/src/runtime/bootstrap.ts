@@ -32,10 +32,6 @@ import {
 
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
 import { createWorkbenchI18nStore, type WorkbenchI18nStore } from "../i18n"
-import {
-  BUILTIN_DASHBOARD_LAYOUT_PLUGIN_ID,
-  builtinDashboardLayout,
-} from "../surface/dashboard/layout-definition"
 
 export type WorkbenchRuntimeRepositories = {
   workspaceRepo: WorkspaceRepository
@@ -405,10 +401,6 @@ export function createWorkbenchRuntimeBootstrap(
     builtinBackgroundProviders: {
       pluginId: BUILTIN_BACKGROUND_PROVIDER_PLUGIN_ID,
       providers: builtinBackgroundProviders,
-    },
-    builtinLayouts: {
-      pluginId: BUILTIN_DASHBOARD_LAYOUT_PLUGIN_ID,
-      layouts: [builtinDashboardLayout],
     },
   })
 

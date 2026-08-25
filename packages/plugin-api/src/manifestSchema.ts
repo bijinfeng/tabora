@@ -1,10 +1,5 @@
 import { z } from "zod"
-import type {
-  ContributionKind,
-  PluginManifest,
-  RegionContentKind,
-  WorkbenchSearchSettings,
-} from "./manifest"
+import type { ContributionKind, PluginManifest, WorkbenchSearchSettings } from "./manifest"
 
 import { workbenchSearchSettingsSchema } from "./workspaceSchema"
 
@@ -25,7 +20,6 @@ const settingsPanelScopeSchema = z.enum(["global", "workspace", "plugin", "insta
 const settingsPanelSurfaceSchema = z.enum(["desktop", "mobile"])
 
 const settingsHostActionSchema = z.enum([
-  "workspace.layout.write",
   "workspace.theme.write",
   "workspace.background.write",
   "workspace.locale.write",
@@ -37,7 +31,6 @@ const settingsHostActionSchema = z.enum([
 const settingsHostReadSchema = z.enum([
   "workspace.current.read",
   "workspace.list.read",
-  "catalog.layouts.read",
   "catalog.themes.read",
   "catalog.backgrounds.read",
   "catalog.search-providers.read",
@@ -238,16 +231,6 @@ const backgroundSourceSchema = z.discriminatedUnion("type", [
   }),
 ])
 
-const layoutRegionSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  accepts: z.array(regionContentKindSchema).min(1),
-  required: z.boolean().optional(),
-  maxInstances: z.number().int().positive().optional(),
-})
-
-const instanceRefSchema = z.object({ instanceId: z.string().min(1) })
-
 export const pluginManifestSchema = z
   .object({
     id: z.string().min(1),
@@ -283,27 +266,6 @@ export const pluginManifestSchema = z
       .strict()
       .optional(),
     contributes: z.object({
-      layouts: z
-        .array(
-          z
-            .object({
-              id: z.string().min(1),
-              title: z.string().min(1),
-              preview: z.string().optional(),
-              view: z.string().min(1),
-              regions: z.array(layoutRegionSchema).min(1),
-              defaultRegions: z.record(z.string(), z.array(instanceRefSchema)),
-              supportsResponsive: z.boolean(),
-            })
-            .refine(
-              (layout) => layout.regions.some((region) => region.accepts.includes("widget")),
-              {
-                message: "layout must declare at least one region accepting widget",
-                path: ["regions"],
-              },
-            ),
-        )
-        .optional(),
       widgets: z.array(widgetContributionSchema).optional(),
       searches: z
         .array(
@@ -454,7 +416,6 @@ export const pluginManifestSchema = z
 
     const declaredViewIds = new Set<string>(
       [
-        ...(manifest.contributes.layouts ?? []).map((layout) => layout.view),
         ...(manifest.contributes.widgets ?? []).flatMap((widget) => [
           widget.views.card,
           widget.views.expand,
@@ -487,29 +448,6 @@ export const pluginManifestSchema = z
           message: `background canvas source must reference a declared view: ${provider.source.view}`,
           path: ["contributes", "backgroundProviders", index, "source", "view"],
         })
-      }
-    }
-
-    for (const [layoutIndex, layout] of (manifest.contributes.layouts ?? []).entries()) {
-      const regionIds = new Set<string>()
-      for (const [regionIndex, region] of layout.regions.entries()) {
-        if (regionIds.has(region.id)) {
-          ctx.addIssue({
-            code: "custom",
-            message: `duplicate layout region id: ${region.id}`,
-            path: ["contributes", "layouts", layoutIndex, "regions", regionIndex, "id"],
-          })
-        }
-        regionIds.add(region.id)
-      }
-      for (const regionId of Object.keys(layout.defaultRegions)) {
-        if (!regionIds.has(regionId)) {
-          ctx.addIssue({
-            code: "custom",
-            message: `layout defaultRegions must reference a declared region: ${regionId}`,
-            path: ["contributes", "layouts", layoutIndex, "defaultRegions", regionId],
-          })
-        }
       }
     }
 
@@ -574,11 +512,6 @@ type ManifestSymbol = {
 function contributionSymbols(manifest: PluginManifest): ManifestSymbol[] {
   const contributes = manifest.contributes
   return [
-    ...(contributes.layouts ?? []).map((item) => ({
-      pluginId: manifest.id,
-      kind: "layout" as const,
-      id: item.id,
-    })),
     ...(contributes.widgets ?? []).map((item) => ({
       pluginId: manifest.id,
       kind: "widget" as const,
@@ -644,9 +577,6 @@ export function validatePluginManifestComposition(
   const hostBuiltinPluginIds = options.hostBuiltinPluginIds ?? new Set<string>()
   const pluginIds = new Set(manifests.map((manifest) => manifest.id))
   const symbols = manifests.flatMap(contributionSymbols)
-  const presetInstances = manifests.flatMap((manifest) =>
-    (manifest.contributes.workspacePresets ?? []).map((preset) => ({ manifest, preset })),
-  )
   const issues: string[] = []
 
   for (const manifest of manifests) {
@@ -721,29 +651,6 @@ export function validatePluginManifestComposition(
           issues.push(
             `Workspace preset "${preset.id}" instance "${instance.instanceId}" contribution is not resolvable: ${instance.contribution.pluginId}/${instance.contribution.kind}/${instance.contribution.id}`,
           )
-        }
-      }
-    }
-
-    for (const layout of manifest.contributes.layouts ?? []) {
-      const instancesById = new Map<string, { kind: RegionContentKind }>()
-      for (const { preset } of presetInstances) {
-        for (const instance of preset.instances) {
-          instancesById.set(instance.instanceId, { kind: instance.contribution.kind })
-        }
-      }
-      for (const region of layout.regions) {
-        for (const instanceRef of layout.defaultRegions[region.id] ?? []) {
-          const instance = instancesById.get(instanceRef.instanceId)
-          if (!instance) {
-            issues.push(
-              `Layout "${layout.id}" default region "${region.id}" references unresolved preset instance "${instanceRef.instanceId}"`,
-            )
-          } else if (!region.accepts.includes(instance.kind)) {
-            issues.push(
-              `Layout "${layout.id}" default region "${region.id}" is incompatible with preset instance "${instanceRef.instanceId}"`,
-            )
-          }
         }
       }
     }

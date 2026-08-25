@@ -176,7 +176,6 @@ function runtime() {
     },
     catalog: {
       listSettingsPanels: vi.fn(() => []),
-      listLayouts: vi.fn(() => []),
       listThemes: vi.fn(() => []),
       listBackgroundProviders: vi.fn(() => []),
       listSearchProviders: vi.fn(() => []),

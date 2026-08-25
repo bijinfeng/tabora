@@ -14,7 +14,6 @@ export type EventPayloads = {
     }
   }
   "host.external.open": { url: string }
-  "theme.changed": { themeId: string }
 }
 
 export type EventHandler<P = unknown> = (payload: P) => void

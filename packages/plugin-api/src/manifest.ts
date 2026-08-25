@@ -111,28 +111,6 @@ export type WidgetContribution = {
   contextMenus?: WidgetContextMenuContribution[]
 }
 
-export type LayoutRegion = {
-  id: string
-  title: string
-  accepts: RegionContentKind[]
-  required?: boolean
-  maxInstances?: number
-}
-
-export type PluginInstanceRef = {
-  instanceId: string
-}
-
-export type LayoutContribution = {
-  id: string
-  title: string
-  preview?: string
-  view: string
-  regions: LayoutRegion[]
-  defaultRegions: Record<string, PluginInstanceRef[]>
-  supportsResponsive: boolean
-}
-
 export type SearchContribution = {
   id: string
   title: string
@@ -330,7 +308,6 @@ export type SearchViewProps = {
 export type SettingsHostReadId =
   | "workspace.current.read"
   | "workspace.list.read"
-  | "catalog.layouts.read"
   | "catalog.themes.read"
   | "catalog.backgrounds.read"
   | "catalog.search-providers.read"
@@ -366,7 +343,6 @@ export type SettingsPluginSummary = {
 export type SettingsPanelData = {
   workspace?: SettingsWorkspaceSummary
   workspaces?: SettingsWorkspaceSummary[]
-  layouts?: Array<OwnedContribution<LayoutContribution, "layout">>
   themes?: Array<OwnedContribution<ThemeContribution, "theme">>
   backgrounds?: Array<OwnedContribution<BackgroundProviderContribution, "background-provider">>
   searchProviders?: Array<OwnedContribution<SearchProviderContribution, "search-provider">>
@@ -386,7 +362,6 @@ export type SettingsPanelViewProps = {
   host: {
     close(): void
     setDirty(isDirty: boolean): void
-    switchLayout?(layout: LayoutContributionRef): Promise<void>
     switchTheme?(theme: ThemeContributionRef): Promise<void>
     switchBackground?(background: BackgroundProviderContributionRef): Promise<void>
     switchLocale?(locale: "zh-CN" | "en-US"): Promise<void>
@@ -408,7 +383,6 @@ export type SettingsPanelViewProps = {
 
 /** Explicit host actions a custom settings view may request from its shell. */
 export type SettingsHostActionId =
-  | "workspace.layout.write"
   | "workspace.theme.write"
   | "workspace.background.write"
   | "workspace.locale.write"
@@ -482,7 +456,6 @@ export type PluginManifest = {
     collections: PluginSyncCollection[]
   }
   contributes: {
-    layouts?: LayoutContribution[]
     widgets?: WidgetContribution[]
     searches?: SearchContribution[]
     searchProviders?: SearchProviderContribution[]

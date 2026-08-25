@@ -45,10 +45,7 @@ type DragRuntime = ReturnType<typeof createWorkbenchDndKitDragHandlers>
 type ViewRuntime = ReturnType<typeof createWorkbenchShellViewRuntime>
 type ControllerCatalog = Pick<
   PluginCatalog,
-  | "listSearchProviders"
-  | "findLayoutContribution"
-  | "findWidgetContribution"
-  | "findSearchContribution"
+  "listSearchProviders" | "findWidgetContribution" | "findSearchContribution"
 >
 type ControllerRegistryViews = Pick<ViewRegistry, "has" | "get">
 type ControllerRegistryCommands = Pick<CommandHandlerRegistry, "has" | "execute">
@@ -167,8 +164,6 @@ export function createWorkbenchShellControllerRuntime(options: {
     },
     setExpandState: options.setters.setExpandState,
     setContextMenu: options.setters.setContextMenu,
-    resolveLayoutRegions: (layoutId) =>
-      options.services.pluginCatalog.findLayoutContribution(layoutId)?.regions ?? [],
     resolveWidgetContribution: (pluginId, contributionId) =>
       options.services.pluginCatalog.findWidgetContribution(pluginId, contributionId),
     resolveWidgetRenderModel: (instance) =>

@@ -125,9 +125,6 @@ describe("createWorkbenchRuntimeBootstrap", () => {
           async getByWorkspace() {
             return []
           },
-          async getByRegion() {
-            return []
-          },
           async get() {
             return undefined
           },

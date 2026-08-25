@@ -12,10 +12,6 @@ export type CommandCatalogOptions = {
   onCommandError?: (error: unknown, commandId: string) => void
 }
 
-export type CommandCatalog = {
-  listCommandEntries(): SearchCommandEntry[]
-}
-
 function hasRequiredCapabilities(
   command: CommandContribution,
   supportedCapabilities: Set<string> | undefined,
@@ -87,10 +83,4 @@ export function createCommandPaletteCommands(options: CommandCatalogOptions): Se
     const entry = toCommandEntry(command, actions, options)
     return entry ? [entry] : []
   })
-}
-
-export function createCommandCatalog(options: CommandCatalogOptions): CommandCatalog {
-  return {
-    listCommandEntries: () => createCommandPaletteCommands(options),
-  }
 }
