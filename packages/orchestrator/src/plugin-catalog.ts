@@ -166,6 +166,19 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
     return [...builtin, ...contributed]
   }
 
+  function listBackgroundRenderers(): BackgroundRendererContributionDescriptor[] {
+    return activePlugins().flatMap((plugin) =>
+      (plugin.manifest.contributes.backgroundRenderers ?? []).map((renderer) => ({
+        ...renderer,
+        ref: {
+          pluginId: plugin.manifest.id,
+          kind: "background-renderer" as const,
+          id: renderer.id,
+        },
+      })),
+    )
+  }
+
   function listWidgetContributions(): WidgetContributionDescriptor[] {
     return activePlugins()
       .flatMap((plugin) =>
@@ -325,6 +338,7 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
     listThemes,
     listSearchProviders,
     listBackgroundProviders,
+    listBackgroundRenderers,
     listWidgetContributions,
     listSettingsPanels,
     findWidgetContribution,

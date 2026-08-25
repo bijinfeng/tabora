@@ -1,5 +1,6 @@
 export { createPluginCatalog } from "./plugin-catalog"
 export type {
+  BackgroundRendererContributionDescriptor,
   PluginCatalog,
   PluginCatalogOptions,
   SearchProviderContributionDescriptor,
