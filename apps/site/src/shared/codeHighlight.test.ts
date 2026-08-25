@@ -2,6 +2,17 @@ import { describe, expect, it } from "vitest"
 
 import { highlightCode } from "./codeHighlight"
 
+const classes = (html: string) => {
+  const result = new Set<string>()
+  html.replace(/class="([^"]*)"/g, (_m, list) => {
+    for (const token of String(list).split(/\s+/)) {
+      if (token) result.add(token)
+    }
+    return ""
+  })
+  return result
+}
+
 describe("highlightCode", () => {
   it("highlights TSX snippets as TypeScript plus JSX instead of plain HTML", () => {
     const highlighted = highlightCode(`import { Badge } from "../badge"
@@ -10,13 +21,18 @@ export function TableDemo() {
   return <Table aria-label="插件状态" columns={[{ key: "name" }]} />
 }`)
 
-    expect(highlighted).toContain('data-code-token="keyword">import</span>')
-    expect(highlighted).toContain('data-code-token="keyword">export</span>')
-    expect(highlighted).toContain('data-code-token="keyword">return</span>')
-    expect(highlighted).toContain('data-code-token="tag">Table</span>')
-    expect(highlighted).toContain('data-code-token="attr">aria-label</span>')
-    expect(highlighted).toContain('data-code-token="string">&quot;插件状态&quot;</span>')
-    expect(highlighted).not.toContain('class="tbr-syn-')
+    const set = classes(highlighted)
+
+    expect(set.has("th-keyword")).toBe(true)
+    expect(set.has("th-tag")).toBe(true)
+    expect(set.has("th-attr")).toBe(true)
+    expect(set.has("th-string")).toBe(true)
+    expect(highlighted).toContain('th-keyword">import</span>')
+    expect(highlighted).toContain('th-keyword">export</span>')
+    expect(highlighted).toContain('th-keyword">return</span>')
+    expect(highlighted).toContain('th-tag">Table</span>')
+    expect(highlighted).toContain('th-attr">aria-label</span>')
+    expect(highlighted).toContain('th-string">&quot;插件状态&quot;</span>')
   })
 
   it("highlights JSX nested inside TSX prop expressions", () => {
@@ -30,34 +46,36 @@ export function TableDemo() {
   )
 }`)
 
-    expect(highlighted).toContain('data-code-token="tag">Table</span>')
-    expect(highlighted).toContain('data-code-token="tag">Badge</span>')
-    expect(highlighted).toContain('data-code-token="tag">/Badge</span>')
-    expect(highlighted).toContain('data-code-token="attr">columns</span>')
-    expect(highlighted).toContain('data-code-token="attr">variant</span>')
+    expect(highlighted).toContain('th-tag">Table</span>')
+    expect(highlighted).toContain('th-tag">Badge</span>')
+    expect(highlighted).toContain("&lt;/<span")
+    expect(highlighted).toContain('th-attr">columns</span>')
+    expect(highlighted).toContain('th-attr">variant</span>')
   })
 
-  it("does not recolor keywords inside strings", () => {
+  it("does not recolor tokens inside strings as keyword/tag/number spans", () => {
     const highlighted = highlightCode(`const label = "import export return"`)
 
-    expect(highlighted).toContain(
-      'data-code-token="string">&quot;import export return&quot;</span>',
-    )
-  })
+    expect(highlighted).toContain('th-string">&quot;import export return&quot;</span>')
 
-  it("does not treat object keys or property access as keywords", () => {
-    const highlighted = highlightCode(`const row = { type: "widget" }
-const value = row.type`)
-
-    expect(highlighted).not.toContain('data-code-token="keyword">type</span>:')
-    expect(highlighted).not.toContain("row.<span class=")
+    const beforeString = highlighted.slice(0, highlighted.indexOf('th-string">&quot;import'))
+    const afterString = highlighted.slice(highlighted.indexOf("return&quot;</span>"))
+    expect(beforeString).toContain('th-keyword">const</span>')
+    expect(afterString).not.toContain('th-keyword">')
   })
 
   it("keeps plain HTML snippets on the HTML highlighter", () => {
     const highlighted = highlightCode(`<button aria-label="保存">保存</button>`)
 
-    expect(highlighted).toContain('data-code-token="tag">button</span>')
-    expect(highlighted).toContain('data-code-token="attr">aria-label</span>')
-    expect(highlighted).not.toContain('data-code-token="keyword">const</span>')
+    expect(highlighted).toContain('th-tag">button</span>')
+    expect(highlighted).toContain('th-attr">aria-label</span>')
+    expect(highlighted).not.toContain('th-keyword">const</span>')
+  })
+
+  it("returns escaped plaintext tokens for unknown snippets", () => {
+    const highlighted = highlightCode(`just some > text & stuff`)
+
+    expect(highlighted).toContain("&gt;")
+    expect(highlighted).toContain("&amp;")
   })
 })

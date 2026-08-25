@@ -12,6 +12,8 @@ import {
   type JSX,
 } from "solid-js"
 
+import { CodeHighlightStyle } from "../shared/codeHighlight.styles"
+
 import { Topbar } from "./Topbar"
 import { darkTokens, lightTokens } from "./themeTokens"
 
@@ -244,6 +246,7 @@ export function AppShell(props: { children?: JSX.Element }) {
   return (
     <SiteThemeContext.Provider value={{ dark, toggleDark }}>
       <SiteI18nContext.Provider value={{ locale, setLocale, toggleLocale, t }}>
+        <CodeHighlightStyle />
         {isPrototypePage() ? (
           <div
             {...stylex.attrs(styles.prototypeRoot)}
