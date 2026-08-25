@@ -7,169 +7,42 @@ import {
   onMount,
   Show,
   splitProps,
+  type JSX,
 } from "solid-js"
 
-import { color, motion, radius } from "@tabora/theme/tokens.stylex"
-
-import StarterKit from "@tiptap/starter-kit"
-import Underline from "@tiptap/extension-underline"
-import TextAlign from "@tiptap/extension-text-align"
-import Link from "@tiptap/extension-link"
-import Image from "@tiptap/extension-image"
-import Placeholder from "@tiptap/extension-placeholder"
-import TaskList from "@tiptap/extension-task-list"
-import TaskItem from "@tiptap/extension-task-item"
-import type { Editor } from "@tiptap/core"
+import { color, font, motion, radius, space } from "@tabora/theme/tokens.stylex"
+import { Plus } from "lucide-solid/icons"
 
 import { HeadlessTiptapEditor } from "./tiptap-editor"
 import type { HeadlessTiptapEditorProps } from "./tiptap-editor"
-import { Toolbar, defaultToolbar, type ToolbarGroupConfig } from "./tiptap-editor-toolbar"
-import { joinClassNames } from "./stylex"
+import {
+  Toolbar,
+  defaultToolbar,
+  compactToolbar,
+  minimalToolbar,
+  type ToolbarGroupConfig,
+} from "./tiptap-editor-toolbar"
 
-const CONTENT_STYLE_SCOPE = "data-tbr-tiptap-content"
-let contentStyleInjected = false
-
-function ensureTiptapContentStyles(targetDocument: Document = document) {
-  if (contentStyleInjected) return
-  const existing = targetDocument.querySelector(`style[${CONTENT_STYLE_SCOPE}]`)
-  if (existing) {
-    contentStyleInjected = true
-    return
-  }
-  const style = targetDocument.createElement("style")
-  style.setAttribute(CONTENT_STYLE_SCOPE, "")
-  style.textContent = `
-  [data-tbr-tiptap-root] p { margin-block: 8px; }
-  [data-tbr-tiptap-root] p.is-editor-empty:first-child::before {
-    color: rgb(var(--tbr-color-text-subtle));
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-  [data-tbr-tiptap-root] h1 {
-    font-size: 24px;
-    font-weight: var(--tbr-font-bold);
-    line-height: 1.25;
-    margin-block: 16px;
-  }
-  [data-tbr-tiptap-root] h2 {
-    font-size: 20px;
-    font-weight: var(--tbr-font-semibold);
-    line-height: 1.3;
-    margin-block: 14px;
-  }
-  [data-tbr-tiptap-root] h3 {
-    font-size: 16px;
-    font-weight: var(--tbr-font-semibold);
-    line-height: 1.4;
-    margin-block: 12px;
-  }
-  [data-tbr-tiptap-root] ul,
-  [data-tbr-tiptap-root] ol {
-    padding-left: 24px;
-    margin-block: 8px;
-  }
-  [data-tbr-tiptap-root] li { margin-block: 2px; }
-  [data-tbr-tiptap-root] li p { margin-block: 2px; }
-  [data-tbr-tiptap-root] blockquote {
-    border-left-color: rgb(var(--tbr-color-accent));
-    border-left-style: solid;
-    border-left-width: 3px;
-    color: rgb(var(--tbr-color-text-muted));
-    margin-block: 10px;
-    margin-inline: 0;
-    padding-left: 14px;
-  }
-  [data-tbr-tiptap-root] blockquote p { margin-block: 4px; }
-  [data-tbr-tiptap-root] code {
-    background-color: rgb(var(--tbr-color-surface-soft));
-    border-radius: var(--tbr-radius-r1);
-    color: rgb(var(--tbr-color-accent));
-    font-family: var(--tbr-font-mono);
-    font-size: 12px;
-    padding-block: 1px;
-    padding-inline: 4px;
-  }
-  [data-tbr-tiptap-root] pre {
-    background-color: color-mix(in srgb, rgb(var(--tbr-color-surface-soft)) 80%, black);
-    border-radius: var(--tbr-radius-r2);
-    color: rgb(var(--tbr-color-text));
-    font-family: var(--tbr-font-mono);
-    font-size: 12px;
-    line-height: 1.5;
-    margin-block: 10px;
-    overflow-x: auto;
-    padding: 10px;
-  }
-  [data-tbr-tiptap-root] pre code {
-    background-color: transparent;
-    border-radius: 0;
-    color: inherit;
-    font-family: inherit;
-    font-size: inherit;
-    padding: 0;
-  }
-  [data-tbr-tiptap-root] a {
-    color: rgb(var(--tbr-color-accent));
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  [data-tbr-tiptap-root] a:hover {
-    color: rgb(var(--tbr-color-accent-hover));
-  }
-  [data-tbr-tiptap-root] hr {
-    border-style: none;
-    border-top-color: rgb(var(--tbr-color-line));
-    border-top-style: solid;
-    border-top-width: 1px;
-    margin-block: 16px;
-    margin-inline: 0;
-  }
-  [data-tbr-tiptap-root] img {
-    border-radius: var(--tbr-radius-r2);
-    height: auto;
-    margin-block: 10px;
-    max-width: 100%;
-  }
-  [data-tbr-tiptap-root] [data-type="taskList"] {
-    list-style: none;
-    padding-left: 0;
-  }
-  [data-tbr-tiptap-root] [data-type="taskList"] li {
-    align-items: flex-start;
-    display: flex;
-    gap: 6px;
-  }
-  [data-tbr-tiptap-root] [data-type="taskList"] li p { margin-block: 0; }
-  [data-tbr-tiptap-root] [data-type="taskList"] li > label {
-    align-items: center;
-    display: flex;
-    flex-shrink: 0;
-    height: 18px;
-    margin-top: 2px;
-  }
-  [data-tbr-tiptap-root] [data-type="taskList"] li > label input {
-    height: 14px;
-    width: 14px;
-    accent-color: rgb(var(--tbr-color-accent));
-    cursor: pointer;
-  }
-  [data-tbr-tiptap-root] [data-type="taskList"] li > div {
-    flex: 1;
-    min-width: 0;
-  }
-  [data-tbr-tiptap-root] [data-type="taskList"] li[data-checked="true"] p {
-    color: rgb(var(--tbr-color-text-subtle));
-    text-decoration: line-through;
-  }
-`
-  targetDocument.head.append(style)
-  contentStyleInjected = true
-}
+import {
+  TiptapEditorRoot,
+  type TiptapEditorSize,
+  type TiptapEditorInsertKind,
+  ensureTiptapContentStyles,
+} from "./tiptap-editor-root"
+import type { SolidAttrs, TiptapEditorRootProps } from "./tiptap-editor-root"
+import { useTiptapEditorContext, type TiptapEditorVisibility } from "./tiptap-editor-context"
+import { TiptapEditorContent } from "./tiptap-editor-content"
+import { TiptapEditorActions, type TiptapEditorActionInsertItem } from "./tiptap-editor-actions"
+import {
+  buildInsertMenuItems,
+  defaultInsertMenuItems,
+  type TiptapEditorInsertMenuItem,
+} from "./tiptap-editor-insert-menu"
+import { TiptapEditorFocusShell, TiptapEditorFocusEntry } from "./tiptap-editor-focus-shell"
+import { joinClassNames, sx } from "./stylex"
 
 const styles = stylex.create({
-  root: {
+  rootBase: {
     backgroundColor: color.surface,
     borderColor: color.line,
     borderRadius: radius.control,
@@ -179,19 +52,14 @@ const styles = stylex.create({
     flexDirection: "column",
     overflow: "hidden",
     transitionDuration: motion.fast,
-    transitionProperty: "border-color, box-shadow",
+    transitionProperty: "border-color, box-shadow, width, height, margin, border-radius",
     transitionTimingFunction: motion.ease,
     width: "100%",
+    minWidth: 0,
     ":focus-within": {
       borderColor: color.accent,
       boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.12)",
     },
-  },
-  rootSm: {
-    borderRadius: radius.control,
-  },
-  rootMd: {
-    borderRadius: radius.control,
   },
   rootInvalid: {
     borderColor: color.danger,
@@ -205,38 +73,196 @@ const styles = stylex.create({
     cursor: "not-allowed",
     opacity: 0.5,
   },
-  contentWrapper: {
-    minHeight: 120,
+  rootRoundedCard: {
+    borderRadius: radius.card,
+  },
+  rootPaddingSm: {
+    paddingBlock: space.s2,
+  },
+  contentShell: {
+    display: "flex",
+    flexDirection: "column",
     width: "100%",
+    flex: "1 1 auto",
+    minHeight: 0,
+  },
+  contentWrapper: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    flex: "1 1 auto",
+    minHeight: 0,
   },
   content: {
     color: color.text,
     fontFamily: "inherit",
     fontSize: 13,
     lineHeight: 1.6,
-    minHeight: 120,
     outline: "none",
-    paddingBlock: 12,
-    paddingInline: 14,
+    paddingBlock: space.s4,
+    paddingInline: space.s5,
     width: "100%",
+    minHeight: 120,
+    flex: "1 1 auto",
   },
   contentSm: {
     fontSize: 12,
     minHeight: 80,
-    paddingBlock: 8,
-    paddingInline: 10,
+    paddingBlock: space.s3,
+    paddingInline: space.s4,
   },
   contentMd: {
     fontSize: 13,
     minHeight: 120,
-    paddingBlock: 12,
-    paddingInline: 14,
+    paddingBlock: space.s4,
+    paddingInline: space.s5,
+  },
+  placeholder: {
+    fontSize: 18,
+  },
+  actionsBar: {
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "space-between",
+    paddingBlock: space.s4,
+    paddingInline: space.s4,
+    gap: space.s4,
+    borderTopColor: "transparent",
+    borderTopStyle: "solid",
+    borderTopWidth: 0,
+  },
+  actionsLeft: {
+    alignItems: "center",
+    display: "flex",
+    gap: space.s3,
+  },
+  actionsRight: {
+    alignItems: "center",
+    display: "flex",
+    gap: space.s3,
+  },
+  insertButton: {
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    color: color.text,
+    height: 32,
+    width: 32,
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, border-color, color, transform",
+    transitionTimingFunction: motion.ease,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      borderColor: color.lineStrong,
+      color: color.accent,
+      transform: "translateY(-0.5px)",
+    },
+    ":active": {
+      transform: "translateY(0)",
+    },
+    ":focus-visible": {
+      boxShadow: "0 0 0 4px rgb(var(--tbr-color-accent) / 0.18)",
+      outline: `2px solid ${color.focus}`,
+      outlineOffset: 2,
+    },
+  },
+  visibilityTrigger: {
+    alignItems: "center",
+    backgroundColor: color.accentSoft,
+    borderRadius: radius.control,
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderColor: "transparent",
+    columnGap: 6,
+    display: "inline-flex",
+    fontSize: 13,
+    height: 32,
+    paddingBlock: 0,
+    paddingInline: 12,
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, border-color, color, transform",
+    transitionTimingFunction: motion.ease,
+    ":hover": {
+      backgroundColor:
+        "color-mix(in srgb, rgb(var(--tbr-color-accent-soft)) 78%, rgb(var(--tbr-color-surface-hover)))",
+      transform: "translateY(-0.5px)",
+    },
+    ":active": {
+      transform: "translateY(0)",
+    },
+    ":focus-visible": {
+      boxShadow: "0 0 0 4px rgb(var(--tbr-color-accent) / 0.18)",
+      outline: `2px solid ${color.focus}`,
+      outlineOffset: 2,
+    },
+  },
+  saveButton: {
+    minWidth: 96,
+  },
+  toolbarCompact: {
+    borderBottomWidth: 0,
+    backgroundColor: "transparent",
+    paddingBlock: space.s3,
+    paddingInline: space.s4,
+    borderBottomColor: "transparent",
+    gap: 6,
+  },
+  toolbarStandard: {
+    paddingBlock: space.s3,
+    paddingInline: space.s4,
+    gap: 6,
+    backgroundColor: "transparent",
+    borderBottomColor: color.line,
+    borderBottomWidth: 1,
+  },
+  focusOverlay: {
+    backgroundColor: "color-mix(in srgb, rgb(var(--tbr-color-bg-gray)) 88%, black)",
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    paddingBlock: 40,
+    paddingInline: 20,
+    position: "fixed",
+    inset: 0,
+    zIndex: 120,
+    overflow: "auto",
+  },
+  focusCard: {
+    position: "relative",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.card,
+    borderStyle: "solid",
+    borderWidth: 1,
+    boxShadow: "0 20px 60px -20px rgb(0 0 0 / 0.35), 0 8px 24px -8px rgb(0 0 0 / 0.25)",
+    width: "min(960px, 100%)",
+    maxWidth: "100%",
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "min(80vh, 900px)",
+    overflow: "hidden",
+  },
+  focusExit: {
+    position: "absolute",
+    top: space.s4,
+    right: space.s4,
+    zIndex: 2,
+  },
+  actionsVisibilityText: {
+    color: color.accent,
+    fontSize: 13,
+    fontWeight: font.semibold,
+  },
+  actionsVisibilityChevron: {
+    color: color.accent,
   },
 })
 
-export type TiptapEditorSize = "sm" | "md"
+type TiptapEditorVariant = "minimal" | "standard" | "standard-with-menu" | "focus"
 
-export type TiptapEditorProps = Omit<ComponentProps<"div">, "onChange" | "children"> &
+export type TiptapEditorProps = Omit<Partial<ComponentProps<"div">>, "onChange" | "children"> &
   Pick<
     HeadlessTiptapEditorProps,
     | "content"
@@ -250,19 +276,54 @@ export type TiptapEditorProps = Omit<ComponentProps<"div">, "onChange" | "childr
     | "onCreate"
     | "onDestroy"
   > & {
-    size?: TiptapEditorSize
-    invalid?: boolean
-    disabled?: boolean
+    size?: TiptapEditorSize | undefined
+    invalid?: boolean | undefined
+    disabled?: boolean | undefined
     extensions?: HeadlessTiptapEditorProps["extensions"]
-    xstyle?: StyleXStyles
-    onChange?: (html: string) => void
-    toolbarItems?: ToolbarGroupConfig[]
+    xstyle?: StyleXStyles | undefined
+    onChange?: ((html: string) => void) | undefined
+    toolbarItems?: ToolbarGroupConfig[] | undefined
     uploadImage?: ((file: File) => Promise<string>) | undefined
-    xstyleToolbar?: StyleXStyles
-    xstyleContent?: StyleXStyles
+    xstyleToolbar?: StyleXStyles | undefined
+    xstyleContent?: StyleXStyles | undefined
+    xstyleActions?: StyleXStyles | undefined
+    variant?: TiptapEditorVariant | undefined
+    visibility?: TiptapEditorVisibility | undefined
+    onVisibilityChange?: ((v: TiptapEditorVisibility) => void) | undefined
+    showToolbar?: boolean | undefined
+    showActions?: boolean | undefined
+    showSaveButton?: boolean | undefined
+    saveLabel?: JSX.Element | undefined
+    saveDisabled?: boolean | undefined
+    saveLoading?: boolean | undefined
+    onSave?: ((html: string, ctx: { visibility: TiptapEditorVisibility }) => void) | undefined
+    insertMenuItems?: TiptapEditorActionInsertItem[] | undefined
+    insertMenuPrimitiveItems?: TiptapEditorInsertMenuItem[] | undefined
+    onInsertKind?: ((kind: TiptapEditorInsertKind) => void) | undefined
+    focusMode?: boolean | undefined
+    onFocusModeChange?: ((open: boolean) => void) | undefined
+    contentMinHeight?: number | string | undefined
   }
 
-export function TiptapEditor(props: TiptapEditorProps) {
+const VARIANT_DEFAULT_TOOLBAR: Record<TiptapEditorVariant, ToolbarGroupConfig[]> = {
+  minimal: [],
+  standard: compactToolbar,
+  "standard-with-menu": compactToolbar,
+  focus: defaultToolbar,
+}
+
+function variantDefaultCardStyle(v: TiptapEditorVariant): StyleXStyles | undefined {
+  switch (v) {
+    case "standard":
+    case "standard-with-menu":
+    case "focus":
+      return styles.rootRoundedCard
+    default:
+      return undefined
+  }
+}
+
+export function StyledTiptapEditor(props: TiptapEditorProps) {
   const [local, rest] = splitProps(props, [
     "size",
     "invalid",
@@ -283,11 +344,34 @@ export function TiptapEditor(props: TiptapEditorProps) {
     "xstyle",
     "xstyleToolbar",
     "xstyleContent",
+    "xstyleActions",
+    "variant",
+    "visibility",
+    "onVisibilityChange",
+    "showToolbar",
+    "showActions",
+    "showSaveButton",
+    "saveLabel",
+    "saveDisabled",
+    "saveLoading",
+    "onSave",
+    "insertMenuItems",
+    "insertMenuPrimitiveItems",
+    "onInsertKind",
+    "focusMode",
+    "onFocusModeChange",
+    "contentMinHeight",
     "class",
     "disabled",
   ])
 
-  const [editorRef, setEditorRef] = createSignal<Editor | null>(null)
+  const [editorRef, setEditorRef] = createSignal<
+    Parameters<NonNullable<HeadlessTiptapEditorProps["onReady"]>>[0] | null
+  >(null)
+  const [htmlOut, setHtmlOut] = createSignal<string>(
+    typeof local.content === "string" ? local.content : "",
+  )
+  const [focusOpen, setFocusOpen] = createSignal<boolean>(local.focusMode ?? false)
 
   onMount(() => {
     ensureTiptapContentStyles(document)
@@ -297,46 +381,37 @@ export function TiptapEditor(props: TiptapEditorProps) {
     if (typeof document !== "undefined") ensureTiptapContentStyles(document)
   })
 
-  const extensionsList: HeadlessTiptapEditorProps["extensions"] = [
-    StarterKit,
-    Underline,
-    TextAlign.configure({
-      types: ["heading", "paragraph"],
-    }),
-    Link.configure({
-      openOnClick: false,
-      autolink: true,
-    }),
-    Image.configure({
-      inline: false,
-      allowBase64: true,
-    }),
-    Placeholder.configure({
-      placeholder: local.placeholder ?? "开始输入内容…",
-    }),
-    TaskList,
-    TaskItem.configure({
-      nested: true,
-    }),
-    ...(local.extensions ?? []),
-  ]
+  createEffect(() => {
+    if (local.focusMode !== undefined) setFocusOpen(local.focusMode)
+  })
 
-  const handleUpdate: HeadlessTiptapEditorProps["onUpdate"] = (e) => {
-    local.onUpdate?.(e)
-    local.onChange?.(e.editor.getHTML())
+  const variant = (): TiptapEditorVariant => local.variant ?? "standard"
+  const showToolbar = () => {
+    if (local.showToolbar !== undefined) return local.showToolbar
+    const v = variant()
+    return v === "standard" || v === "standard-with-menu" || v === "focus"
   }
+  const showFormatToolbarToggle = () => variant() === "standard-with-menu"
+  const showActions = () => (local.showActions === undefined ? true : local.showActions)
+  const hasInsertMenu = () =>
+    variant() === "standard-with-menu" ||
+    !!local.insertMenuItems ||
+    !!local.insertMenuPrimitiveItems
+  const isFocusVariant = () => variant() === "focus"
 
   const rootCompiled = () =>
     stylex.attrs(
-      styles.root,
-      (local.size === "sm" || !local.size) && styles.rootSm,
-      local.size === "md" && styles.rootMd,
+      styles.rootBase,
+      variantDefaultCardStyle(variant()),
       local.invalid && styles.rootInvalid,
       (local.disabled || local.editable === false) && styles.rootDisabled,
       local.xstyle,
     )
 
-  const contentCompiled = () =>
+  const toolbarStyleCompiled = () =>
+    stylex.attrs(variant() === "minimal" ? undefined : styles.toolbarStandard, local.xstyleToolbar)
+
+  const contentStyleCompiled = () =>
     stylex.attrs(
       styles.contentWrapper,
       styles.content,
@@ -345,55 +420,260 @@ export function TiptapEditor(props: TiptapEditorProps) {
       local.xstyleContent,
     )
 
-  return (
-    <div
+  const actionsBarStyleCompiled = () => stylex.attrs(styles.actionsBar, local.xstyleActions)
+
+  const toolbarGroups = (): ToolbarGroupConfig[] => {
+    if (local.toolbarItems) return local.toolbarItems
+    return VARIANT_DEFAULT_TOOLBAR[variant()]
+  }
+
+  const insertItemsFromPrimitives = (): TiptapEditorActionInsertItem[] | undefined => {
+    if (local.insertMenuItems) return local.insertMenuItems
+    if (!local.insertMenuPrimitiveItems && !hasInsertMenu()) return undefined
+    const source = local.insertMenuPrimitiveItems ?? defaultInsertMenuItems
+    return source
+      .filter((x): x is Extract<(typeof source)[number], { kind: "item" }> => x.kind === "item")
+      .map((x) => ({
+        id: x.id,
+        label: x.label,
+        icon: x.icon,
+        onClick: () => {
+          const kind = x.onKind
+          if (kind === "toggle-focus") {
+            toggleFocusMode()
+          } else if (kind === "toggle-format-toolbar") {
+            // format toolbar 开关由 primitive 使用 context 管理；styled 层仅在 primitive 组合时消费
+            x.onClick?.()
+          } else {
+            local.onInsertKind?.(kind as TiptapEditorInsertKind)
+            x.onClick?.()
+          }
+        },
+      }))
+  }
+
+  const toggleFocusMode = () => {
+    const next = !focusOpen()
+    setFocusOpen(next)
+    local.onFocusModeChange?.(next)
+  }
+
+  const saveHtml = () => {
+    if (!local.onSave) return
+    const visibility: TiptapEditorVisibility = local.visibility ?? "private"
+    local.onSave(htmlOut(), { visibility })
+  }
+
+  const disabled = () => (local.disabled ?? false) || local.editable === false
+
+  const renderCore = (): JSX.Element => (
+    <TiptapEditorRoot
       {...rest}
-      data-tbr-tiptap-root=""
       class={joinClassNames(rootCompiled().class, local.class)}
       style={undefined}
+      extensions={local.extensions}
+      content={local.content}
+      editable={local.editable}
+      placeholder={local.placeholder}
+      autofocus={local.autofocus}
+      size={local.size}
+      invalid={local.invalid}
+      disabled={disabled()}
+      visibility={(local.visibility ?? focusOpen()) ? local.visibility : undefined}
+      onVisibilityChange={(v) => local.onVisibilityChange?.(v)}
+      onChange={(html) => {
+        setHtmlOut(html)
+        local.onChange?.(html)
+      }}
+      onReady={(e) => {
+        setEditorRef(e)
+        local.onReady?.(e)
+      }}
+      onCreate={local.onCreate}
+      onDestroy={local.onDestroy}
+      onUpdate={(e) => {
+        local.onUpdate?.(e)
+      }}
+      onFocus={local.onFocus}
+      onBlur={local.onBlur}
     >
-      <Show when={local.editable !== false && !local.disabled}>
-        <Toolbar
-          editor={editorRef}
-          groups={local.toolbarItems ?? defaultToolbar}
-          uploadImage={local.uploadImage}
-          xstyle={local.xstyleToolbar}
-        />
-      </Show>
-      <div class={contentCompiled().class}>
-        <HeadlessTiptapEditor
-          extensions={extensionsList}
-          content={local.content}
-          editable={local.editable !== false && !local.disabled}
-          autofocus={local.autofocus}
+      <div {...sx(styles.contentShell)}>
+        <Show when={showToolbar() && toolbarGroups().length > 0}>
+          <Toolbar
+            editor={editorRef}
+            groups={toolbarGroups()}
+            uploadImage={local.uploadImage}
+            xstyle={toolbarStyleCompiled()}
+          />
+        </Show>
+
+        <TiptapEditorContent
           onReady={(e) => {
-            setEditorRef(e)
-            local.onReady?.(e)
+            if (!editorRef()) setEditorRef(e)
           }}
-          onCreate={local.onCreate}
-          onDestroy={local.onDestroy}
-          onUpdate={handleUpdate}
-          onFocus={local.onFocus}
-          onBlur={local.onBlur}
+          minHeight={local.contentMinHeight}
+          xstyle={contentStyleCompiled()}
         />
+
+        <Show when={showActions()}>
+          <div {...actionsBarStyleCompiled()}>
+            <TiptapEditorActions
+              showInsert={true}
+              showVisibility={true}
+              showSave={local.showSaveButton !== false}
+              saveLabel={local.saveLabel ?? "保存"}
+              saveDisabled={local.saveDisabled}
+              saveLoading={local.saveLoading}
+              onSave={saveHtml}
+              insertItems={insertItemsFromPrimitives()}
+              xstyle={undefined}
+              attrs={{
+                class: undefined,
+                style: { display: "contents" },
+              }}
+            >
+              <Show when={isFocusVariant() && !focusOpen()}>
+                <TiptapEditorFocusEntry onClick={toggleFocusMode} />
+              </Show>
+            </TiptapEditorActions>
+          </div>
+        </Show>
       </div>
-    </div>
+    </TiptapEditorRoot>
   )
+
+  const renderWithFocus = (): JSX.Element => (
+    <>
+      {renderCore()}
+      <TiptapEditorFocusShell
+        open={focusOpen()}
+        onOpenChange={(next) => {
+          setFocusOpen(next)
+          local.onFocusModeChange?.(next)
+        }}
+        xstyleOverlay={styles.focusOverlay}
+        xstyleCard={styles.focusCard}
+      >
+        {renderFocusInnerCard()}
+      </TiptapEditorFocusShell>
+    </>
+  )
+
+  const renderFocusInnerCard = (): JSX.Element => {
+    const actionsBarC = stylex.attrs(styles.actionsBar)
+    const toolbarC = stylex.attrs(styles.toolbarStandard, local.xstyleToolbar)
+    const contentC = stylex.attrs(
+      styles.contentWrapper,
+      styles.content,
+      styles.contentMd,
+      local.xstyleContent,
+    )
+    return (
+      <TiptapEditorRoot
+        extensions={local.extensions}
+        content={local.content}
+        editable={local.editable}
+        placeholder={local.placeholder}
+        size="md"
+        invalid={local.invalid}
+        disabled={disabled()}
+        visibility={local.visibility}
+        onVisibilityChange={(v) => local.onVisibilityChange?.(v)}
+        onChange={(html) => {
+          setHtmlOut(html)
+          local.onChange?.(html)
+        }}
+        onReady={(e) => {
+          setEditorRef(e)
+          local.onReady?.(e)
+        }}
+        onCreate={local.onCreate}
+        onDestroy={local.onDestroy}
+        onUpdate={local.onUpdate}
+        onFocus={local.onFocus}
+        onBlur={local.onBlur}
+        rootAttrs={{ class: undefined, style: { display: "contents" } }}
+        contentAttrs={{ class: undefined, style: { display: "contents" } }}
+      >
+        <div {...sx(styles.contentShell)}>
+          <Toolbar
+            editor={editorRef}
+            groups={toolbarGroups().length > 0 ? toolbarGroups() : defaultToolbar}
+            uploadImage={local.uploadImage}
+            xstyle={toolbarC}
+          />
+          <TiptapEditorContent onReady={(e) => !editorRef() && setEditorRef(e)} xstyle={contentC} />
+          <div {...actionsBarC}>
+            <TiptapEditorActions
+              showInsert={true}
+              showVisibility={true}
+              showSave={local.showSaveButton !== false}
+              saveLabel={local.saveLabel ?? "保存"}
+              saveDisabled={local.saveDisabled}
+              saveLoading={local.saveLoading}
+              onSave={saveHtml}
+              insertItems={insertItemsFromPrimitives()}
+              attrs={{ class: undefined, style: { display: "contents" } }}
+            />
+          </div>
+        </div>
+      </TiptapEditorRoot>
+    )
+  }
+
+  if (isFocusVariant()) return renderWithFocus()
+  return renderCore()
 }
 
-export default TiptapEditor
-export type { Editor as TiptapEditorInstance } from "@tiptap/core"
-export type { HeadlessTiptapEditorProps }
+export function TiptapEditor(props: TiptapEditorProps) {
+  return <StyledTiptapEditor {...props} />
+}
+
+export function MinimalTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
+  return <TiptapEditor {...props} variant="minimal" />
+}
+export function StandardTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
+  return <TiptapEditor {...props} variant="standard" />
+}
+export function StandardMenuTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
+  return <TiptapEditor {...props} variant="standard-with-menu" />
+}
+export function FocusTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
+  return <TiptapEditor {...props} variant="focus" />
+}
+
 export type {
   ToolbarGroupConfig,
-  ToolbarItemConfig,
   ToolbarCommand,
   ToolbarContext,
+  ToolbarItemConfig,
 } from "./tiptap-editor-toolbar"
 export {
   Toolbar,
   defaultToolbar,
+  compactToolbar,
+  minimalToolbar,
   commandIsActive,
   commandCanExecute,
   executeCommand,
 } from "./tiptap-editor-toolbar"
+
+export {
+  TiptapEditorRoot,
+  ensureTiptapContentStyles,
+  buildInsertMenuItems as buildTiptapInsertMenuItems,
+}
+export { TiptapEditorContent, TiptapEditorActions, TiptapEditorFocusShell, TiptapEditorFocusEntry }
+export { useTiptapEditorContext }
+
+export default TiptapEditor
+export type { Editor as TiptapEditorInstance } from "@tiptap/core"
+export type { HeadlessTiptapEditorProps } from "./tiptap-editor"
+export type { TiptapEditorSize }
+export type {
+  TiptapEditorActionInsertItem,
+  TiptapEditorInsertMenuItem,
+  TiptapEditorInsertKind,
+  TiptapEditorVariant,
+}
+export type { TiptapEditorVisibility }

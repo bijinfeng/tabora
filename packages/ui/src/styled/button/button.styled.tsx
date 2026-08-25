@@ -41,7 +41,7 @@ const styles = stylex.create({
     fontSize: 12,
     height: 28,
     paddingBlock: 0,
-    paddingInline: 10,
+    paddingInline: 8,
   },
   buttonMd: {
     fontSize: 13,
@@ -286,3 +286,4 @@ export function IconButton(props: IconButtonProps) {
 
 export type ButtonVariant = HeadlessButtonProps["variant"]
 export type ButtonSize = HeadlessButtonProps["size"]
+export type { HeadlessButtonProps, HeadlessIconButtonProps }

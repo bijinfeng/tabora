@@ -43,20 +43,20 @@ import {
 const styles = stylex.create({
   toolbar: {
     alignItems: "center",
-    borderBottomColor: color.line,
+    borderBottomColor: "transparent",
     borderBottomStyle: "solid",
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     display: "flex",
     flexWrap: "wrap",
-    gap: 2,
-    paddingBlock: 4,
-    paddingInline: 6,
-    backgroundColor: color.surfaceSoft,
+    gap: 6,
+    paddingBlock: 8,
+    paddingInline: 12,
+    backgroundColor: "transparent",
   },
   toolbarGroup: {
     alignItems: "center",
     display: "flex",
-    gap: 2,
+    gap: 4,
   },
   toolbarDivider: {
     alignSelf: "stretch",
@@ -65,25 +65,25 @@ const styles = stylex.create({
     borderWidth: 0,
     height: "auto",
     marginBlock: 6,
-    marginInline: 4,
+    marginInline: 6,
     width: 1,
   },
   toolbarButtonBase: {
     alignItems: "center",
     backgroundColor: "transparent",
     borderColor: "transparent",
-    borderRadius: radius.r2,
+    borderRadius: radius.control,
     borderStyle: "solid",
     borderWidth: 1,
     color: color.textMuted,
     cursor: "pointer",
     display: "inline-flex",
-    height: 28,
+    height: 30,
     justifyContent: "center",
     transitionDuration: motion.fast,
-    transitionProperty: "background-color, border-color, color",
+    transitionProperty: "background-color, border-color, color, transform",
     transitionTimingFunction: motion.ease,
-    width: 28,
+    width: 30,
     ":focus-visible": {
       boxShadow: "0 0 0 4px rgb(var(--tbr-color-accent) / 0.18)",
       outline: `2px solid ${color.focus}`,
@@ -92,6 +92,10 @@ const styles = stylex.create({
     ":hover": {
       backgroundColor: color.surfaceHover,
       color: color.text,
+      transform: "translateY(-0.5px)",
+    },
+    ":active": {
+      transform: "translateY(0)",
     },
   },
   toolbarButtonActive: {
@@ -122,11 +126,19 @@ const styles = stylex.create({
   headingDropdownTrigger: {
     alignItems: "center",
     display: "inline-flex",
-    gap: 2,
-    height: 28,
+    gap: 4,
+    height: 30,
     paddingBlock: 0,
-    paddingInline: 6,
+    paddingInline: 10,
+    borderRadius: radius.control,
     width: "auto",
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, color",
+    transitionTimingFunction: motion.ease,
+    ":hover": {
+      backgroundColor: color.surfaceHover,
+      color: color.text,
+    },
   },
   headingDropdownIcon: {
     height: 16,
@@ -217,6 +229,30 @@ export const defaultToolbar: ToolbarGroupConfig[] = [
     ],
   },
 ]
+
+export const compactToolbar: ToolbarGroupConfig[] = [
+  {
+    items: [{ type: "command", command: "headings-dropdown" }],
+  },
+  {
+    items: [
+      { type: "command", command: "bold" },
+      { type: "command", command: "italic" },
+      { type: "command", command: "strike" },
+    ],
+  },
+  {
+    items: [{ type: "command", command: "lists-dropdown" }],
+  },
+  {
+    items: [{ type: "command", command: "align-dropdown" }],
+  },
+  {
+    items: [{ type: "command", command: "code-block" }],
+  },
+]
+
+export const minimalToolbar: ToolbarGroupConfig[] = []
 
 function commandIcon(cmd: ToolbarCommand): JSX.Element {
   const common = { height: 16, width: 16 } as const
@@ -838,7 +874,7 @@ export function Toolbar(props: {
   editor: Accessor<Editor | null>
   groups: ToolbarGroupConfig[]
   uploadImage?: ((file: File) => Promise<string>) | undefined
-  xstyle?: StyleXStyles | undefined
+  xstyle?: StyleXStyles | ReturnType<typeof stylex.attrs> | undefined
 }) {
   const [linkOpen, setLinkOpen] = createSignal(false)
 

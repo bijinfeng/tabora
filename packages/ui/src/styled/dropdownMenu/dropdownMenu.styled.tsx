@@ -8,6 +8,7 @@ import type {
   DropdownMenuItem,
   DropdownMenuProps,
   DropdownMenuSide,
+  DropdownMenuTriggerRenderProps,
 } from "../../primitives/dropdownMenu/dropdownMenu"
 import { joinClassNames } from "../../stylex"
 import { sharedStyles } from "../sharedStyles.stylex"
@@ -115,4 +116,5 @@ export type {
   DropdownMenuItem,
   StyledDropdownMenuProps as DropdownMenuProps,
   DropdownMenuSide,
+  DropdownMenuTriggerRenderProps,
 }

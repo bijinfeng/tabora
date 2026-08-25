@@ -4,4 +4,5 @@ export type {
   DropdownMenuProps,
   DropdownMenuItem,
   DropdownMenuSide,
+  DropdownMenuTriggerRenderProps,
 } from "./dropdownMenu.styled"

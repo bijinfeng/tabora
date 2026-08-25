@@ -1,5 +1,5 @@
 import { DropdownMenu as KDropdownMenu } from "@kobalte/core/dropdown-menu"
-import type { JSX } from "solid-js"
+import type { Component, JSX, ValidComponent } from "solid-js"
 import { For, Show, splitProps } from "solid-js"
 
 type KobalteDropdownMenuPlacement = NonNullable<Parameters<typeof KDropdownMenu>[0]["placement"]>
@@ -20,6 +20,30 @@ export type DropdownMenuSide = "top" | "bottom" | "left" | "right"
 
 export type DropdownMenuAlign = "start" | "end"
 
+export type DropdownMenuTriggerRenderProps = {
+  id?: string
+  class?: string
+  style?: JSX.CSSProperties
+  ref?: any
+  disabled?: boolean
+  "aria-haspopup"?: boolean
+  "aria-expanded"?: boolean
+  "aria-controls"?: string
+  "aria-label"?: string
+  title?: string
+  role?: "menuitem"
+  "data-highlighted"?: boolean
+  "data-open"?: ""
+  "data-closed"?: ""
+  "data-kb-menu-value-trigger"?: string
+  onPointerDown?: JSX.EventHandlerUnion<HTMLElement, PointerEvent>
+  onClick?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>
+  onKeyDown?: JSX.EventHandlerUnion<HTMLElement, KeyboardEvent>
+  onMouseOver?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>
+  onFocus?: JSX.EventHandlerUnion<HTMLElement, FocusEvent>
+  [key: string]: any
+}
+
 export type DropdownMenuProps = {
   open?: boolean
   defaultOpen?: boolean
@@ -39,6 +63,8 @@ export type DropdownMenuProps = {
   triggerId?: string
   triggerTitle?: string
   triggerAriaLabel?: string
+  triggerAs?: ValidComponent
+  triggerAsChild?: boolean
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
   arrowClass?: string | undefined
@@ -59,7 +85,7 @@ export type DropdownMenuProps = {
   labelStyle?: JSX.CSSProperties | undefined
   kbdClass?: string | undefined
   kbdStyle?: JSX.CSSProperties | undefined
-  children: JSX.Element
+  children: JSX.Element | ((props: DropdownMenuTriggerRenderProps) => JSX.Element)
 }
 
 function optionalPartProps(className: string | undefined, style: JSX.CSSProperties | undefined) {
@@ -89,6 +115,8 @@ export function DropdownMenu(props: DropdownMenuProps) {
     "triggerId",
     "triggerTitle",
     "triggerAriaLabel",
+    "triggerAs",
+    "triggerAsChild",
     "class",
     "style",
     "arrowClass",
@@ -124,6 +152,15 @@ export function DropdownMenu(props: DropdownMenuProps) {
     const align = local.align ?? "end"
     return placementMap[side][align]
   }
+
+  const AsChildWrapper: Component<DropdownMenuTriggerRenderProps> = (wrapperProps) => {
+    const content =
+      typeof local.children === "function"
+        ? (local.children as (p: DropdownMenuTriggerRenderProps) => JSX.Element)(wrapperProps)
+        : local.children
+    return content as unknown as JSX.Element
+  }
+
   return (
     <KDropdownMenu
       {...(local.open !== undefined ? { open: local.open } : {})}
@@ -141,6 +178,11 @@ export function DropdownMenu(props: DropdownMenuProps) {
       {...others}
     >
       <KDropdownMenu.Trigger
+        as={
+          (local.triggerAsChild
+            ? (AsChildWrapper as unknown as ValidComponent)
+            : local.triggerAs) as any
+        }
         class={local.triggerClass}
         style={local.triggerStyle}
         classList={local.triggerClassList}
@@ -149,7 +191,7 @@ export function DropdownMenu(props: DropdownMenuProps) {
         {...(local.triggerTitle !== undefined ? { title: local.triggerTitle } : {})}
         {...(local.triggerAriaLabel !== undefined ? { "aria-label": local.triggerAriaLabel } : {})}
       >
-        {local.children}
+        {local.triggerAsChild ? undefined : (local.children as JSX.Element)}
       </KDropdownMenu.Trigger>
       <KDropdownMenu.Portal>
         <KDropdownMenu.Content {...optionalPartProps(local.class, local.style)}>
