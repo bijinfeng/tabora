@@ -1,6 +1,7 @@
 import type {
   BackgroundProviderContribution,
   BackgroundProviderContributionRef,
+  BackgroundRendererContributionRef,
   PluginInstance,
   SearchHistoryEntry,
   SearchProviderContribution,
@@ -29,6 +30,7 @@ import { createWorkbenchWorkspaceState } from "./WorkbenchShellWorkspaceState"
 import type { WorkbenchShellConfig } from "../shared/shellConfig"
 import {
   updateWorkspaceBackground,
+  updateWorkspaceBackgroundRenderer,
   updateWorkspaceLocale,
   updateWorkspaceTheme,
 } from "./workspaceSession"
@@ -208,6 +210,18 @@ export function createWorkbenchWorkspaceController(options: {
     })
   }
 
+  async function switchBackgroundRenderer(renderer: BackgroundRendererContributionRef | null) {
+    const workspace = requireWorkspace(options.getWorkspaceState())
+    const updated = await updateWorkspaceBackgroundRenderer({
+      workspaceRepo: options.workspaceRepo,
+      workspaceId: workspace.id,
+      renderer,
+    })
+    if (updated) {
+      options.setWorkspaceState(updated)
+    }
+  }
+
   async function switchLocale(locale: WorkbenchLocale) {
     options.i18n.setLocale(locale)
     const workspace = requireWorkspace(options.getWorkspaceState())
@@ -236,6 +250,7 @@ export function createWorkbenchWorkspaceController(options: {
     deleteWorkspace: workspaceStateActions.deleteWorkspace,
     switchTheme,
     switchBackground,
+    switchBackgroundRenderer,
     switchLocale,
   }
 }

@@ -1,8 +1,9 @@
 import * as stylex from "@stylexjs/stylex"
 import { Route, Router, useLocation, useNavigate } from "@solidjs/router"
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createEffect, createMemo, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, onCleanup, Show, type JSX } from "solid-js"
 import type {
+  BackgroundRendererViewProps,
   PluginInstance,
   SettingsSectionId,
   WorkbenchSearchSettings,
@@ -12,7 +13,11 @@ import { applyThemeTokens } from "@tabora/theme"
 import { color, font } from "@tabora/theme/tokens.stylex"
 
 import type { WorkbenchRuntimeBootstrap } from "../runtime/bootstrap"
-import { applyBackgroundStyle } from "../appearance/backgroundResolver"
+import {
+  applyBackgroundStyle,
+  resolveBackgroundStyle,
+  resolveBackgroundValue,
+} from "../appearance/backgroundResolver"
 import { createLayoutErrorTracker } from "../layout/layoutError"
 import { createWorkbenchResponsiveState } from "../shared/responsive"
 import { createWorkbenchShellHostRuntime } from "../runtime/WorkbenchShellHostRuntime"
@@ -379,6 +384,44 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
             </div>
           }
         >
+          <Show when={shell.state.workspace.workspaceState()?.activeBackgroundRenderer}>
+            {(rendererRef) => {
+              const workspace = shell.state.workspace.workspaceState()
+              if (!workspace) return null
+
+              const backgrounds = pluginCatalog.listBackgroundProviders()
+              const value = resolveBackgroundValue(
+                workspace.activeBackgroundProvider.id,
+                backgrounds,
+              )
+              const fallbackStyle = resolveBackgroundStyle(
+                workspace.activeBackgroundProvider.id,
+                backgrounds,
+              )
+
+              const viewId = rendererRef().pluginId + "." + rendererRef().id
+              const Component = kernel.registry.views.get(viewId) as unknown as (
+                props: BackgroundRendererViewProps,
+              ) => JSX.Element
+              if (!Component) return null
+
+              return (
+                <Component
+                  providerId={workspace.activeBackgroundProvider.id}
+                  providerTitle={
+                    backgrounds.find((bg) => bg.id === workspace.activeBackgroundProvider.id)
+                      ?.title ?? "Unknown"
+                  }
+                  sourceType={
+                    backgrounds.find((bg) => bg.id === workspace.activeBackgroundProvider.id)
+                      ?.sourceType ?? "generated"
+                  }
+                  resolvedValue={value}
+                  fallbackStyle={fallbackStyle}
+                />
+              )
+            }}
+          </Show>
           <WorkbenchShellSurfaceHost />
         </Show>
       </div>

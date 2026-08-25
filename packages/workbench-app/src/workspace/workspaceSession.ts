@@ -1,5 +1,6 @@
 import type {
   BackgroundProviderContributionRef,
+  BackgroundRendererContributionRef,
   PluginInstance,
   SearchHistoryEntry,
   ThemeContributionRef,
@@ -161,6 +162,25 @@ export async function updateWorkspaceBackground(options: {
     workspaceId: options.workspaceId,
     mutator(workspace) {
       workspace.activeBackgroundProvider = options.background
+      return workspace
+    },
+  })
+}
+
+export async function updateWorkspaceBackgroundRenderer(options: {
+  workspaceRepo: WorkspaceRepository
+  workspaceId: string
+  renderer: BackgroundRendererContributionRef | null
+}): Promise<Workspace | null> {
+  return updateWorkspaceRecord({
+    workspaceRepo: options.workspaceRepo,
+    workspaceId: options.workspaceId,
+    mutator(workspace) {
+      if (options.renderer === null) {
+        delete workspace.activeBackgroundRenderer
+      } else {
+        workspace.activeBackgroundRenderer = options.renderer
+      }
       return workspace
     },
   })
