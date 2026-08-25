@@ -99,9 +99,13 @@ export function buildWorkbenchSettingsPanelProps(
     if (options.host.deleteWorkspace)
       host.deleteWorkspace = (id) => options.host.deleteWorkspace!(id)
   }
-  if (grants.has("plugins.manage") && options.host.togglePluginEnabled) {
-    host.togglePluginEnabled = (pluginId, enabled) =>
-      options.host.togglePluginEnabled!(pluginId, enabled)
+  if (grants.has("plugins.manage")) {
+    if (options.host.togglePluginEnabled)
+      host.togglePluginEnabled = (pluginId, enabled) =>
+        options.host.togglePluginEnabled!(pluginId, enabled)
+    if (options.host.revokePluginPermission)
+      host.revokePluginPermission = (pluginId, permission) =>
+        options.host.revokePluginPermission!(pluginId, permission)
   }
 
   const data: SettingsPanelData = {}

@@ -345,6 +345,7 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
       setDefaultSearchProvider: workspaceController.setDefaultSearchProvider,
       setSearchProviderEnabled: workspaceController.setSearchProviderEnabled,
       togglePluginEnabled: workspaceController.togglePluginEnabled,
+      revokePluginPermission: workspaceController.revokePluginPermission,
       ...(database
         ? {
             exportWorkspace: workspaceController.exportWorkspace,

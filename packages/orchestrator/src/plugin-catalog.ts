@@ -286,7 +286,12 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
   function pluginSummaries(
     records: Array<
       Pick<PluginRecord, "id"> &
-        Partial<Pick<PluginRecord, "enabled" | "status" | "lastError" | "disabledReason">>
+        Partial<
+          Pick<
+            PluginRecord,
+            "enabled" | "status" | "lastError" | "disabledReason" | "grantedPermissions"
+          >
+        >
     > = [],
   ): NonNullable<SettingsPanelData["plugins"]> {
     const recordsById = new Map(records.map((record) => [record.id, record]))
@@ -301,6 +306,7 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
         ...(record?.lastError ? { lastError: record.lastError } : {}),
         ...(record?.disabledReason ? { disabledReason: record.disabledReason } : {}),
         permissions: plugin.manifest.permissions ?? [],
+        grantedPermissions: record?.grantedPermissions ?? [],
         contributionKinds: (
           Object.entries(plugin.manifest.contributes) as Array<
             [keyof PluginManifest["contributes"], unknown]

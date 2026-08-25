@@ -44,6 +44,24 @@ export function assessPermissionRisk(permission: PluginPermission): PermissionRi
   }
 }
 
+/**
+ * Whether `granted` already authorizes everything `requested` asks for. Host lists and AI access
+ * lists are treated as scopes, so a broader grant covers a narrower request.
+ */
+export function permissionCovers(granted: PluginPermission, requested: PluginPermission): boolean {
+  if (granted.type !== requested.type) return false
+  if (granted.type === "ai" && requested.type === "ai") {
+    return requested.access.every((access) => granted.access.includes(access))
+  }
+  if (
+    (granted.type === "external-open" || granted.type === "network") &&
+    (requested.type === "external-open" || requested.type === "network")
+  ) {
+    return requested.hosts.every((host) => granted.hosts.includes(host))
+  }
+  return true
+}
+
 export function computeOverallRisk(assessments: PermissionRiskAssessment[]): PermissionRiskLevel {
   const levels: Record<PermissionRiskLevel, number> = { low: 0, medium: 1, high: 2, critical: 3 }
   return assessments.reduce(

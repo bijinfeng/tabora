@@ -1,11 +1,13 @@
 import * as stylex from "@stylexjs/stylex"
-import { For } from "solid-js"
+import { For, Show } from "solid-js"
 import type {
+  PermissionRiskLevel,
   PluginPermission,
   SettingsPanelData,
   SettingsPanelViewProps,
 } from "@tabora/plugin-api/sdk"
-import { assessPermissionRisk } from "@tabora/plugin-api/sdk"
+import { assessPermissionRisk, computeOverallRisk, permissionCovers } from "@tabora/plugin-api/sdk"
+import { Button } from "@tabora/ui/button"
 import { Switch } from "@tabora/ui/switch"
 import { styles } from "./styles"
 
@@ -33,22 +35,17 @@ function contributionLabels(kinds: PluginSummary["contributionKinds"]): string[]
   return kinds.map((kind) => labels[kind])
 }
 
-function permissionLabel(permission: PluginPermission): string {
-  switch (permission.type) {
-    case "external-open":
-      return `外部打开: ${permission.hosts.join(", ")}`
-    default:
-      return permission.type
-  }
+const PERMISSION_TYPE_LABELS: Record<PluginPermission["type"], string> = {
+  "external-open": "外部打开",
+  network: "网络访问",
+  ai: "AI 能力",
 }
 
-function permissionType(permission: PluginPermission): string {
-  switch (permission.type) {
-    case "external-open":
-      return "外部打开"
-    default:
-      return permission.type
-  }
+const RISK_LABELS: Record<PermissionRiskLevel, string> = {
+  low: "低",
+  medium: "中",
+  high: "高",
+  critical: "严重",
 }
 
 function pluginStatus(plugin: PluginSummary) {
@@ -78,7 +75,9 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
           <For each={plugins()}>
             {(plugin) => {
               const extensions = contributionLabels(plugin.contributionKinds)
-              const permissions = plugin.permissions.map(permissionLabel)
+              const permissions = plugin.permissions.map(
+                (permission) => PERMISSION_TYPE_LABELS[permission.type],
+              )
               const status = pluginStatus(plugin)
               return (
                 <div {...stylex.attrs(styles.pluginCard)}>
@@ -118,38 +117,69 @@ export function PluginManagerCard(props: PluginManagerCardProps = {}) {
 
       <section {...stylex.attrs(styles.group)}>
         <div {...stylex.attrs(styles.groupTitle)}>权限审计</div>
+        <p {...stylex.attrs(styles.pluginHelp)}>
+          声明的权限默认按使用时授权，只有你已授予的才可撤销；撤销后插件下次使用会重新请求。
+        </p>
         <div {...stylex.attrs(styles.list)}>
           <For each={plugins()}>
             {(plugin) => {
-              const risks = plugin.permissions.map(assessPermissionRisk)
-              const riskLevels: Record<string, number> = {
-                low: 0,
-                medium: 1,
-                high: 2,
-                critical: 3,
-              }
-              const maxRisk = risks.reduce(
-                (max: string, r) =>
-                  (riskLevels[r.risk] ?? 0) > (riskLevels[max] ?? 0) ? r.risk : max,
-                "low",
-              )
+              const risks = () => plugin.permissions.map(assessPermissionRisk)
+              const maxRisk = () => computeOverallRisk(risks())
+              const canRevoke = () => typeof props.host?.revokePluginPermission === "function"
               return (
-                <div {...stylex.attrs(styles.pluginCard)}>
-                  <span {...stylex.attrs(styles.pluginName)}>{plugin.name}</span>
-                  <div {...stylex.attrs(styles.pluginControls)}>
-                    <For each={risks}>
-                      {(risk) => (
-                        <span {...stylex.attrs(styles.pill, pillTone(risk.risk))}>
-                          {permissionType(risk.permission)}
-                        </span>
-                      )}
-                    </For>
-                    {plugin.permissions.length === 0 ? (
-                      <span {...stylex.attrs(styles.mutedText)}>无权限请求</span>
-                    ) : (
-                      <span {...stylex.attrs(styles.dangerText)}>风险: {maxRisk}</span>
-                    )}
+                <div {...stylex.attrs(styles.permissionAuditCard)}>
+                  <div {...stylex.attrs(styles.permissionAuditHeader)}>
+                    <span {...stylex.attrs(styles.pluginName)}>{plugin.name}</span>
+                    <Show
+                      when={plugin.permissions.length > 0}
+                      fallback={<span {...stylex.attrs(styles.mutedText)}>无权限请求</span>}
+                    >
+                      <span {...stylex.attrs(styles.pill, pillTone(maxRisk()))}>
+                        风险 {RISK_LABELS[maxRisk()]}
+                      </span>
+                    </Show>
                   </div>
+                  <For each={risks()}>
+                    {(risk) => {
+                      const granted = () =>
+                        plugin.grantedPermissions.some((grant) =>
+                          permissionCovers(grant, risk.permission),
+                        )
+                      return (
+                        <div {...stylex.attrs(styles.permissionRow)}>
+                          <span {...stylex.attrs(styles.permissionDescription)}>
+                            {risk.description}
+                          </span>
+                          <div {...stylex.attrs(styles.pluginControls)}>
+                            <span {...stylex.attrs(styles.pill, pillTone(risk.risk))}>
+                              {PERMISSION_TYPE_LABELS[risk.permission.type]}
+                            </span>
+                            <Show
+                              when={granted()}
+                              fallback={<span {...stylex.attrs(styles.mutedText)}>使用时请求</span>}
+                            >
+                              <span {...stylex.attrs(styles.pill, styles.pillSuccess)}>已授权</span>
+                              <Show when={canRevoke()}>
+                                <Button
+                                  variant="danger-subtle"
+                                  size="sm"
+                                  aria-label={`撤销 ${plugin.name} 的${PERMISSION_TYPE_LABELS[risk.permission.type]}权限`}
+                                  onClick={() => {
+                                    void props.host?.revokePluginPermission?.(
+                                      plugin.id,
+                                      risk.permission,
+                                    )
+                                  }}
+                                >
+                                  撤销
+                                </Button>
+                              </Show>
+                            </Show>
+                          </div>
+                        </div>
+                      )
+                    }}
+                  </For>
                 </div>
               )
             }}

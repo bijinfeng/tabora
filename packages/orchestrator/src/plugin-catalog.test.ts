@@ -176,15 +176,17 @@ describe("createPluginCatalog", () => {
           id: "plugin.beta",
           status: "skipped",
           disabledReason: "Missing host capabilities: network",
+          grantedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
         },
       ]),
     ).toMatchObject([
-      { id: "plugin.alpha", enabled: true },
+      { id: "plugin.alpha", enabled: true, grantedPermissions: [] },
       {
         id: "plugin.beta",
         enabled: false,
         status: "skipped",
         disabledReason: "Missing host capabilities: network",
+        grantedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
       },
     ])
   })

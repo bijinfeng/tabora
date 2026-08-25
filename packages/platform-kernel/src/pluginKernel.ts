@@ -11,7 +11,11 @@ import type {
   SettingsHostActionId,
   SettingsHostReadId,
 } from "@tabora/plugin-api"
-import { pluginManifestSchema, validatePluginManifestComposition } from "@tabora/plugin-api"
+import {
+  permissionCovers,
+  pluginManifestSchema,
+  validatePluginManifestComposition,
+} from "@tabora/plugin-api"
 
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry, type ExtensionRegistrationDisposer } from "./extensionRegistry"
@@ -648,20 +652,9 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         throw new Error(`Plugin "${pluginId}" not found`)
       }
 
-      // Check if permission already granted
-      const alreadyGranted = plugin.installation.grantedPermissions.some((granted) => {
-        if (granted.type !== permission.type) return false
-        if (granted.type === "ai" && permission.type === "ai") {
-          return permission.access.every((access) => granted.access.includes(access))
-        }
-        if (
-          (granted.type === "external-open" || granted.type === "network") &&
-          (permission.type === "external-open" || permission.type === "network")
-        ) {
-          return permission.hosts.every((host) => granted.hosts.includes(host))
-        }
-        return true
-      })
+      const alreadyGranted = plugin.installation.grantedPermissions.some((granted) =>
+        permissionCovers(granted, permission),
+      )
 
       if (alreadyGranted) return
 
@@ -683,29 +676,15 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         throw new Error(`Plugin "${pluginId}" not found`)
       }
 
-      // Remove matching permissions
       plugin.installation.grantedPermissions = plugin.installation.grantedPermissions.filter(
-        (granted) => {
-          if (granted.type !== permission.type) return true
-          if (granted.type === "ai" && permission.type === "ai") {
-            return !permission.access.every((access) => granted.access.includes(access))
-          }
-          if (
-            (granted.type === "external-open" || granted.type === "network") &&
-            (permission.type === "external-open" || permission.type === "network")
-          ) {
-            return !permission.hosts.every((host) => granted.hosts.includes(host))
-          }
-          return false
-        },
+        (granted) => !permissionCovers(granted, permission),
       )
 
-      // Persist to storage
+      // The active runtime context reads grantedPermissions lazily, so the next permission check
+      // sees the withdrawal and re-prompts.
       if (options.lifecycleStore) {
         await options.lifecycleStore.save(buildRecord(plugin))
       }
-
-      // Note: For security, consider deactivating the plugin when permissions are revoked
     },
     getGrantedPermissions(pluginId) {
       const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
