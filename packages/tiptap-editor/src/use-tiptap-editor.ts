@@ -163,7 +163,7 @@ export function useTiptapEditor(
     const content = editorOptions.content
     if (content !== undefined && content !== null) {
       const stringContent = typeof content === "string" ? content : JSON.stringify(content)
-      const currentHtml = html()
+      const currentHtml = currentEditor.getHTML()
       if (stringContent !== currentHtml) {
         currentEditor.commands.setContent(content as SetContentArg, { emitUpdate: false })
       }

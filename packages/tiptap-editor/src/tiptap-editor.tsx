@@ -1,4 +1,4 @@
-import { createSignal, splitProps, type ComponentProps } from "solid-js"
+import { createSignal, splitProps, type ComponentProps, type JSX } from "solid-js"
 import { useTiptapEditor } from "./use-tiptap-editor"
 import type { UseTiptapEditorOptions } from "./use-tiptap-editor"
 import type { Editor } from "@tiptap/core"
@@ -40,6 +40,7 @@ export function HeadlessTiptapEditor(props: HeadlessTiptapEditorProps) {
     "immediate",
     "class",
     "ref",
+    "style",
   ])
 
   const [elementRef, setElementRef] = createSignal<HTMLElement | null>(null)
@@ -91,7 +92,6 @@ export function HeadlessTiptapEditor(props: HeadlessTiptapEditorProps) {
     <div
       {...rest}
       ref={(el) => {
-        setElementRef(el)
         const ref = local.ref
         if (typeof ref === "function") {
           ;(ref as DivRefCallback)(el)
@@ -104,7 +104,16 @@ export function HeadlessTiptapEditor(props: HeadlessTiptapEditorProps) {
       data-editor-empty={isEmpty() ? "true" : "false"}
       data-tiptap-wrapper
       class={local.class}
-    />
+      style={{
+        width: "100%",
+        height: "100%",
+        ...(typeof local.style === "object" && local.style
+          ? (local.style as JSX.CSSProperties)
+          : undefined),
+      }}
+    >
+      <div ref={(el) => setElementRef(el)} style={{ width: "100%", height: "100%" }} />
+    </div>
   )
 }
 
