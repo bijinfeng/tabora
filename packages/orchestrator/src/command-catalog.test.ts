@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
-import { createCommandCatalog, createCommandPaletteCommands } from "./command-catalog"
+import { createCommandPaletteCommands } from "./command-catalog"
 import { createCommandPaletteItems } from "./command-palette-model"
 
-describe("createCommandCatalog", () => {
+describe("createCommandPaletteCommands", () => {
   it("returns platform command entries with registered actions", async () => {
     const action = vi.fn()
-    const catalog = createCommandCatalog({
+    const entries = createCommandPaletteCommands({
       platformCommands: [
         {
           id: "shell.open-settings",
@@ -20,8 +20,6 @@ describe("createCommandCatalog", () => {
         "shell.open-settings": action,
       },
     })
-
-    const entries = catalog.listCommandEntries()
 
     expect(entries).toHaveLength(1)
     expect(entries[0]).toMatchObject({

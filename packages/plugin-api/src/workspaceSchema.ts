@@ -79,16 +79,6 @@ export const pluginInstanceSchema = z
     }
   })
 
-const _regionStateSchema = z.object({
-  regionId: z.string().min(1),
-  accepts: z.array(regionContentKindSchema).min(1),
-  instances: z.array(
-    z.object({
-      instanceId: z.string().min(1),
-    }),
-  ),
-})
-
 const workbenchAppearanceSchema = z
   .object({
     locale: z.enum(["zh-CN", "en-US"]).optional(),

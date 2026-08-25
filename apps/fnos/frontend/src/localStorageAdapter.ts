@@ -121,19 +121,6 @@ export function createFnosStorageAdapter(
           const instances = await store.getAll<PluginInstance>("plugin-instances")
           return instances.filter((instance) => instance.workspaceId === workspaceId)
         },
-        async getByRegion(workspaceId, regionId) {
-          const instances = await store.getAll<PluginInstance>("plugin-instances")
-          return instances
-            .filter(
-              (instance) => instance.workspaceId === workspaceId && instance.regionId === regionId,
-            )
-            .sort((left, right) => {
-              if (!left.grid && !right.grid) return left.createdAt.localeCompare(right.createdAt)
-              if (!left.grid) return 1
-              if (!right.grid) return -1
-              return left.grid.y - right.grid.y || left.grid.x - right.grid.x
-            })
-        },
         get: (id) => store.get<PluginInstance>("plugin-instances", id),
         save: (instance) => store.save("plugin-instances", instance.id, instance),
         async removeByWorkspace(workspaceId) {

@@ -1,7 +1,6 @@
 import type {
   BackgroundProviderContribution,
   ExtensionPoint,
-  LayoutContribution,
   PluginManifest,
   SearchContribution,
   SearchProviderContribution,
@@ -33,7 +32,7 @@ function listBuiltinContributions<K extends keyof ContributionMap>(key: K) {
 function resolveContributionKey(extensionPoint: ExtensionPoint) {
   switch (extensionPoint) {
     case "layout":
-      return "layouts"
+      return undefined
     case "widget":
       return "widgets"
     case "search":
@@ -60,11 +59,7 @@ describe("officialDefaultWorkspacePreset", () => {
     ).toEqual([])
   })
 
-  it("references current builtin layout, theme, background, and search provider ids", () => {
-    const layouts = listBuiltinContributions("layouts") as Array<{
-      pluginId: string
-      contribution: LayoutContribution
-    }>
+  it("references current builtin theme, background, and search provider ids", () => {
     const themes = listBuiltinContributions("themes") as Array<{
       pluginId: string
       contribution: ThemeContribution
@@ -78,15 +73,6 @@ describe("officialDefaultWorkspacePreset", () => {
       contribution: SearchProviderContribution
     }>
 
-    // Dashboard is now built into the host, not a plugin contribution
-    const isDashboardBuiltin =
-      officialDefaultWorkspacePreset.layout.id === "official.layout.workbench-dashboard"
-
-    const layout = isDashboardBuiltin
-      ? { contribution: { id: officialDefaultWorkspacePreset.layout.id } }
-      : layouts.find(
-          ({ contribution }) => contribution.id === officialDefaultWorkspacePreset.layout.id,
-        )
     // Theme is now built into the host (@tabora/theme), not a plugin contribution
     const theme =
       officialDefaultWorkspacePreset.theme.pluginId === BUILTIN_THEME_PLUGIN_ID
@@ -131,7 +117,6 @@ describe("officialDefaultWorkspacePreset", () => {
       },
     )
 
-    expect(layout?.contribution.id).toBe(officialDefaultWorkspacePreset.layout.id)
     expect(theme?.id).toBe(officialDefaultWorkspacePreset.theme.id)
     expect(background?.id).toBe(officialDefaultWorkspacePreset.backgroundProvider.id)
     expect(defaultSearchProvider?.id).toBe(officialDefaultWorkspacePreset.search.defaultProvider.id)
@@ -163,13 +148,7 @@ describe("officialDefaultWorkspacePreset", () => {
 
   it("references existing contributions for every preset instance", () => {
     const contributionIdsByPoint: Record<ExtensionPoint, Set<string>> = {
-      layout: new Set(
-        (
-          listBuiltinContributions("layouts") as Array<{
-            contribution: LayoutContribution
-          }>
-        ).map(({ contribution }) => contribution.id),
-      ),
+      layout: new Set(),
       widget: new Set(
         (
           listBuiltinContributions("widgets") as Array<{
@@ -227,9 +206,11 @@ describe("officialDefaultWorkspacePreset", () => {
         const pluginContributes = pluginContributions.get(instance.contribution.pluginId)
         const key = resolveContributionKey(instance.contribution.kind)
         const contributionIds = contributionIdsByPoint[instance.contribution.kind]
-        const belongsToPlugin = (pluginContributes?.[key] ?? []).some(
-          (contribution) => contribution.id === instance.contribution.id,
-        )
+        const belongsToPlugin = key
+          ? (pluginContributes?.[key] ?? []).some(
+              (contribution: { id: string }) => contribution.id === instance.contribution.id,
+            )
+          : false
 
         if (!contributionIds.has(instance.contribution.id) || !belongsToPlugin) {
           return [

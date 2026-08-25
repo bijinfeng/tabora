@@ -58,7 +58,6 @@ function createInstanceRepo(overrides: Partial<InstanceRepository> = {}): Instan
   return {
     getAll: overrides.getAll ?? vi.fn(async () => []),
     getByWorkspace: overrides.getByWorkspace ?? vi.fn(async () => []),
-    getByRegion: overrides.getByRegion ?? vi.fn(async () => []),
     get: overrides.get ?? vi.fn(async () => undefined),
     save: overrides.save ?? vi.fn(async () => {}),
     removeByWorkspace: overrides.removeByWorkspace ?? vi.fn(async () => {}),

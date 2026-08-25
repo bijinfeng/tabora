@@ -1,9 +1,4 @@
-import {
-  type LayoutRegion,
-  type PluginInstance,
-  type WidgetContribution,
-  widgetGridSpan,
-} from "@tabora/plugin-api"
+import { type PluginInstance, type WidgetContribution, widgetGridSpan } from "@tabora/plugin-api"
 import { describe, expect, it, vi } from "vitest"
 
 import {
@@ -42,17 +37,8 @@ function widget(overrides: Partial<WidgetContribution> = {}): WidgetContribution
 }
 
 describe("addWorkbenchWidget", () => {
-  it("creates a widget instance in the first widget region, persists it, and updates state", async () => {
+  it("creates a widget instance in the dashboard widget region, persists it, and updates state", async () => {
     const currentInstances = [instance({ id: "widget-0" })]
-    const layoutRegions: LayoutRegion[] = [
-      {
-        id: "toolbar",
-        title: "Toolbar",
-        accepts: ["search"],
-        required: false,
-      },
-      { id: "grid", title: "Grid", accepts: ["widget"], required: false },
-    ]
     const assignGridOrder = vi.fn((instances: PluginInstance[]) => instances)
     const saveInstance = vi.fn(async () => {})
     const setInstances = vi.fn()
@@ -62,7 +48,6 @@ describe("addWorkbenchWidget", () => {
       pluginId: "plugin.widgets",
       contributionId: "widget.notes",
       currentInstances,
-      layoutRegions,
       resolveWidget: () => widget(),
       assignGridOrder,
       saveInstance,
@@ -74,7 +59,7 @@ describe("addWorkbenchWidget", () => {
     expect(result).toEqual(
       expect.objectContaining({
         id: "widget.notes-1",
-        regionId: "grid",
+        regionId: "mainGrid",
       }),
     )
     expect(assignGridOrder).toHaveBeenCalledWith([
@@ -83,14 +68,14 @@ describe("addWorkbenchWidget", () => {
         id: "widget.notes-1",
         workspaceId: "workspace-1",
         contribution: { pluginId: "plugin.widgets", kind: "widget", id: "widget.notes" },
-        regionId: "grid",
+        regionId: "mainGrid",
         size: "M",
       }),
     ])
     expect(saveInstance).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "widget.notes-1",
-        regionId: "grid",
+        regionId: "mainGrid",
       }),
     )
     expect(setInstances).toHaveBeenCalledWith(
@@ -98,7 +83,7 @@ describe("addWorkbenchWidget", () => {
     )
   })
 
-  it("does not create or persist a widget instance when the active layout has no widget region", async () => {
+  it("returns null without persisting when the widget contribution cannot be resolved", async () => {
     const assignGridOrder = vi.fn((instances: PluginInstance[]) => instances)
     const saveInstance = vi.fn(async () => {})
     const setInstances = vi.fn()
@@ -108,8 +93,7 @@ describe("addWorkbenchWidget", () => {
       pluginId: "plugin.widgets",
       contributionId: "widget.notes",
       currentInstances: [instance({ id: "widget-0" })],
-      layoutRegions: [{ id: "toolbar", title: "Toolbar", accepts: ["search"], required: false }],
-      resolveWidget: () => widget(),
+      resolveWidget: () => undefined,
       assignGridOrder,
       saveInstance,
       setInstances,

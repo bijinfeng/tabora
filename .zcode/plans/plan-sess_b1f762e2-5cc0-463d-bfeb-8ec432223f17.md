@@ -1,43 +1,318 @@
-## 复杂插件架构治理：收敛「布局即插件」
+# Phase 4A 实施计划：死代码清理 + Layout 协议精简 + Permission Risk 补全
 
-核心诊断（代码实证）：架构分层本身是干净的，真正的复杂度来自 **layout 被做成插件类型** —— 为此背了一整套 region 协议、切换引擎、快照、实例迁移、多 layout contribution，而实际只服务「一个 dashboard + 一个移动变体」。region 协议在实践中退化成「一个 search 槽 + 一个 widget 网格」。这就是让"加个功能要走 manifest+contribution+region 映射+快照"显得繁重的根源。
+## 目标
 
-分两阶段，Phase 1 无论如何都该做，Phase 2 需要你确认接受产品哲学反转。
+- 删除 Phase 3 残留的死代码（getByRegion、theme.changed、createCommandCatalog）
+- 精简 layout 协议：删除"多布局切换"抽象，锁定单一 dashboard（保留 activeLayout ref 标识，避免 storage 大改）
+- 补全 `assessPermissionRisk` 的 network/ai 权限评估分支
 
----
-
-### Phase 1：砍掉 layout 系统里未落地/矛盾的部分（低风险，不反转哲学）
-
-此阶段后 layout 仍是插件，但只剩 dashboard + mobile 两个真实项，切换逻辑大幅变薄。
-
-1. **移除 focus 布局**：删 `plugins/official/layout-dashboard/src/manifest.ts` 的 `official.layout.workbench-focus` 定义及其 view；删 ⌘L 二态切换（`shellConfig.ts:31-36 resolveWorkbenchLayoutToggleTarget`、`WorkbenchShellLayoutHost.ts` 的 `layout-switch` action、`WorkbenchShellCommands.ts` 的 `toggleLayout`）。PRD 本就写"移除 Focus（不在 MVP）"，代码与 PRD 就此对齐。
-2. **移除 community masonry 的默认接线**：`builtin-plugin-registry` 不再追加 `layout-diy-masonry`（保留包作为独立示例，不进默认装配）。
-3. **删快照只写不读链路**：`layout-switcher.ts` 的 `snapshot` 字段、`WorkbenchShellWorkspaceController.ts:179 saveSnapshot`、`WorkbenchShellLayoutState.ts` 的持久化调用；`storage` 的 `workspaceSnapshotRepository` + schema `workspaceSnapshots` 表、`host-adapters` 导出、`bootstrap.ts` 接线、fnos `localStorageAdapter` 的 `getLast`。连带清理 6 个相关测试文件里只测快照的用例。
-4. **删 `unplaced` 死分支**：`layout-switcher.ts:8-9,66-72` 和 `shellController.ts:10,56`。注意：PRD 第 2 节要求"无法匹配区域的实例进入待放置态"，当前实现是写进 regions 但从不渲染=静默丢失。删除会让"切到无兼容区域布局时实例丢失"这个行为更显式；Phase 2 会用单布局根除这个场景。
-
-产出：净删除约 400-600 行 + 对应测试。settings 面板的"默认布局"选择器在此阶段保留（只剩 dashboard 一项时它会退化，Phase 2 移除）。
+**不包含**：动态授权、background renderer（后续 PR）
 
 ---
 
-### Phase 2：把 layout 从插件类型降级为宿主内建（结构性，反转产品哲学）
+## 调查总结
 
-> ⚠️ 这一步删除 PRD 的核心哲学"一切皆插件，包括布局"，并从 `@tabora/plugin-api` 移除 `LayoutContribution` / `RegionContentKind` / `RegionSlot` 公共协议。widget / search / theme / background 仍是插件，只有 layout 不再是。
+### Layout 协议残留用途（唯一实际消费链）
 
-1. **dashboard 成为内建宿主布局**：把 dashboard 的 rail + 网格渲染从 layout 插件迁到 `workbench-shell`/`workbench-app` 的宿主层，直接渲染「search 槽 + widget 网格」，不再经 region 协议动态映射。
-2. **mobile 变体降为响应式断点**：把 `layout-mobile`（921 行）的移动 UI 折叠进同一内建布局的 breakpoint，删除"窄屏自动切 layout 插件"的 `WorkbenchShellLayoutRuntime` 逻辑。
-3. **删除编排/引擎残余**：`orchestrator/src/layout-switcher.ts` 整个删除；`workbench-app/src/layout/` 从 6 个实现文件收缩到「渲染 + 错误边界」，删除 LayoutState 的切换态、LayoutHost 的切换 action。
-4. **收缩 plugin-api**：移除 layout/region 协议类型；`plugin-catalog` 的 `listLayouts/findLayoutContribution` 删除。
-5. **settings**：移除"默认布局"选择器。
-6. **文档同步（产品口径）**：改写 `PRD` 第 1、2 节核心哲学与「布局插件」章节、`技术方案 V2` §1-3 的多布局架构、`官方插件设计`、`DESIGN.md` 中相关表述，改为"layout 是宿主内建，其余能力仍插件化"。
+```
+addWorkbenchWidget()
+  → options.layoutRegions (从 controller runtime 传入)
+    → resolveLayoutRegions(layoutId)
+      → pluginCatalog.findLayoutContribution(layoutId)?.regions
+        → builtinDashboardLayout.regions
+          → [{ id: "mainGrid", accepts: ["widget"] }]
+            → regionId = layoutRegions.find(r => r.accepts.includes("widget"))?.id
+```
 
-产出：净删除约 1500-2500 行（含 mobile 重写为断点），触及 plugin-api 公共协议，反转产品哲学。
+**消费目的**：拿到 `regionId = "mainGrid"` 赋给新 widget instance。
+**精简方案**：硬编码 `regionId = "mainGrid"`，删除整条查找链。
+
+### 保留字段（load-bearing / 存储深度依赖）
+
+1. **`workspace.activeLayout: LayoutContributionRef`**
+   - storage 索引（database.ts 57/66/77/87）、迁移（workspaceIdentityMigration.ts）、schema、AI context 都依赖
+   - 删除会引发跨 storage 层级联改动
+   - **保留为标识字段，永远指向 `"official.layout.workbench-dashboard"`**
+
+2. **`PluginInstance.regionId`**
+   - 拖拽隔离（WorkbenchShellDragState.ts:140/206 按 regionId 过滤）
+   - 网格 auto-layout（workbenchGrid.ts:50/63 按 region 维护计数器）
+   - **必须保留**
+
+3. **`preset.regions` 验证**
+   - workspace-preset.ts:66-78 验证 instance 的 regionId 和 kind 兼容性
+   - 确保 preset 定义一致性（topbar 只接受 search，mainGrid 只接受 widget）
+   - **保留验证逻辑**
+
+### 删除范围
+
+#### 死代码（确定无消费者）
+
+1. `instanceRepository.getByRegion`（Phase 3 残留）
+2. `eventBus.ts:17` `theme.changed` 事件
+3. `command-catalog.ts:92-95` `createCommandCatalog` 包装
+
+#### Layout 多布局抽象
+
+4. `plugin-catalog.ts` 中的 layout 查找：
+   - `listLayouts()` (line 172-178)
+   - `findLayoutContribution()` (line 277-279)
+   - `builtinLayouts` 选项（line 33）+ 相关注入逻辑（line 173-176）
+
+5. `WorkbenchShellControllerRuntime.ts` 中的 region 解析链：
+   - `resolveLayoutRegions` (line 170-171)
+
+6. `workspaceSession.ts` 中的死代码：
+   - `updateWorkspaceLayout()` (line 176-180)
+
+7. Manifest 协议表面：
+   - `LayoutContribution` 类型（富定义，保留 `LayoutContributionRef`）
+   - `LayoutRegion` 类型
+   - `contributes.layouts` 字段（manifestSchema line 286-305）
+   - Host runtime `switchLayout` 方法声明（manifest.ts:389）
+   - Host `builtinLayouts` 选项（manifest.ts:485）
+
+8. Bootstrap 注入：
+   - `bootstrap.ts:409-411` 删除 `builtinLayouts` 传参
+
+9. 定义文件：
+   - `layout-definition.ts` 中的 `builtinDashboardLayout`（视图已不通过 layout.view 查找，Phase 3 后直接实例化 DashboardLayout）
 
 ---
 
-### 验证
+## 实施步骤
 
-每阶段结束按 `regression-baseline`：跨包+协议变更跑 `node scripts/regression-summary.mjs` → `pnpm test`、`pnpm check`、`pnpm build`；前端交互变更启动 playground/extension 用浏览器验证 dashboard 与移动端关键路径；`git diff --check`。失败/未覆盖项分开如实报告。
+### Step 1: 删除三项确定死代码
 
-### 我的建议
+**1.1 删除 getByRegion（Phase 3 残留）**
 
-先做 Phase 1（清掉矛盾与死机制，纯收益、不反转哲学），验证通过后再决定是否推进 Phase 2。Phase 2 才是真正的"去平台化"，它换来简单度、但放弃第三方布局扩展性和"布局即插件"的产品卖点 —— 这个取舍由你拍板。
+- `packages/storage/src/instanceRepository.ts:7,74` 删除 `getByRegion` 方法
+- `apps/fnos/frontend/src/localStorageAdapter.ts` 删除调用点
+
+**1.2 删除 theme.changed 事件**
+
+- `packages/platform-kernel/src/eventBus.ts:17` 删除 `"theme.changed": { themeId: string }` 类型定义
+
+**1.3 删除 createCommandCatalog 包装**
+
+- `packages/orchestrator/src/command-catalog.ts:92-95` 删除 `createCommandCatalog` 函数
+- `packages/orchestrator/src/index.ts` 删除导出
+- `packages/orchestrator/src/command-catalog.ts:13` 删除 `CommandCatalog` 类型
+
+**验证**：`pnpm check` + focused test `packages/orchestrator`
+
+---
+
+### Step 2: 硬编码 widget region，删除 region 解析链
+
+**2.1 addWorkbenchWidget 硬编码 region**
+
+- `packages/workbench-app/src/widget/WorkbenchShellWidgetState.ts:32`
+  - 删除 `options.layoutRegions.find(...)?.id`
+  - 改为常量：`const regionId = "mainGrid"`
+- 函数签名删除 `layoutRegions: LayoutRegion[]` 参数（line 15）
+
+**2.2 删除调用点的 region 解析**
+
+- `packages/workbench-app/src/widget/WorkbenchShellWidgetController.ts:84`
+  - 删除 `layoutRegions: options.resolveLayoutRegions(options.getActiveLayoutId())`
+- 类型定义删除 `resolveLayoutRegions` (line 48)
+- `packages/workbench-app/src/shell/WorkbenchShellControllerRuntime.ts:170-171`
+  - 删除 `resolveLayoutRegions` 实现
+
+**2.3 删除 catalog 的 layout 查找方法**
+
+- `packages/orchestrator/src/plugin-catalog.ts`:
+  - 删除 `listLayouts()` (line 172-178)
+  - 删除 `findLayoutContribution()` (line 277-279)
+  - 删除 `builtinLayouts` 选项（line 33）+ 相关逻辑（line 173-176）
+- `packages/orchestrator/src/index.ts` 删除 `listLayouts`/`findLayoutContribution` 导出
+
+**验证**：`pnpm --dir packages/workbench-app test` + `pnpm --dir packages/orchestrator test`
+
+---
+
+### Step 3: 删除 manifest 协议表面的 layout 支持
+
+**3.1 删除 contributes.layouts 字段**
+
+- `packages/plugin-api/src/manifestSchema.ts`:
+  - 删除 `layoutRegionSchema` (line 241-249)
+  - 删除 `contributes.layouts` 验证（line 286-305）
+  - 删除 view 收集中的 layout views (line 457)
+- `packages/plugin-api/src/manifest.ts`:
+  - 删除 `LayoutRegion` 类型（line 114-120）
+  - 删除 `LayoutContribution` 类型（line 126-134），**保留 `LayoutContributionRef` (line 40)**
+  - 删除 `contributes.layouts?` 字段（line 369）
+  - 删除 `switchLayout?` host 方法声明（line 389）
+  - 删除 host runtime `builtinLayouts` 选项（line 485）
+
+**3.2 删除定义文件**
+
+- 删除 `packages/workbench-app/src/surface/dashboard/layout-definition.ts` 文件（builtinDashboardLayout 不再注入 catalog）
+- 新增常量文件 `packages/workbench-app/src/surface/dashboard/dashboard-constants.ts`:
+  ```typescript
+  /** Dashboard 的唯一 layout ID，用于 workspace.activeLayout 标识 */
+  export const BUILTIN_DASHBOARD_LAYOUT_ID = "official.layout.workbench-dashboard"
+
+  /** Dashboard 的 widget 区域 ID */
+  export const DASHBOARD_WIDGET_REGION_ID = "mainGrid"
+  ```
+- 更新引用：搜索 `BUILTIN_DASHBOARD_LAYOUT_PLUGIN_ID` 导入，改为从新常量文件导入
+
+**3.3 删除 bootstrap 注入**
+
+- `packages/workbench-app/src/runtime/bootstrap.ts:409-411` 删除 `builtinLayouts` 参数
+
+**验证**：`pnpm check` (全局类型检查) + `pnpm --dir packages/plugin-api test`
+
+---
+
+### Step 4: 删除死代码 updateWorkspaceLayout
+
+**4.1 删除函数定义**
+
+- `packages/workbench-app/src/workspace/workspaceSession.ts:176-180` 删除 `updateWorkspaceLayout` 函数
+
+**4.2 确认无调用者**
+
+- 搜索确认：`rg updateWorkspaceLayout --glob '!*.test.*'` 只在定义处
+
+**验证**：`pnpm --dir packages/workbench-app test`
+
+---
+
+### Step 5: 补全 assessPermissionRisk
+
+**5.1 补齐 network/ai 分支**
+
+- `packages/plugin-api/src/security.ts:11-21` 修改 `assessPermissionRisk`:
+  ```typescript
+  export function assessPermissionRisk(permission: PluginPermission): PermissionRiskAssessment {
+    switch (permission.type) {
+      case "external-open":
+        return {
+          permission,
+          risk: "medium",
+          description: `可打开外部链接: ${permission.hosts.join(", ")}`,
+        }
+      case "network":
+        return {
+          permission,
+          risk: "high",
+          description: `可访问网络资源: ${permission.hosts.join(", ")}`,
+        }
+      case "ai":
+        const accessDesc = permission.access
+          .map(
+            (a) =>
+              ({
+                generate: "生成内容",
+                context: "访问上下文",
+                tools: "调用工具",
+              })[a],
+          )
+          .join("、")
+        return {
+          permission,
+          risk: "high",
+          description: `使用 AI 能力: ${accessDesc}`,
+        }
+      default:
+        // 类型收窄后这分支理论上不可达，但保留兜底
+        return { permission, risk: "low", description: `未知权限类型` }
+    }
+  }
+  ```
+
+**验证**：`pnpm --dir packages/plugin-api test`
+
+---
+
+### Step 6: 更新测试
+
+**6.1 删除 layout 相关测试**
+
+- `packages/orchestrator/src/plugin-catalog.test.ts` 删除 `findLayoutContribution`/`listLayouts` 测试
+
+**6.2 更新 widget 相关测试**
+
+- `packages/workbench-app/src/widget/WorkbenchShellWidgetState.test.ts` 调整 `addWorkbenchWidget` 调用（删除 layoutRegions 参数）
+- `packages/workbench-app/src/widget/WorkbenchShellWidgetController.test.ts` 删除 `resolveLayoutRegions` mock
+
+**6.3 补充 assessPermissionRisk 测试**
+
+- `packages/plugin-api/src/security.test.ts` 新增测试用例：
+  - `network` 权限 → risk: "high"
+  - `ai` 权限（各 access 组合）→ risk: "high"
+
+---
+
+### Step 7: 全局验证
+
+```bash
+pnpm check                # 类型检查
+pnpm test                 # 全量测试
+pnpm build                # 编译
+pnpm test:e2e             # E2E
+```
+
+**预期影响**：
+
+- 删除约 350-400 行代码（死代码 55 + layout 查找 120 + manifest 定义 180 + 测试清理 30）
+- 新增约 50 行（常量定义 + assessPermissionRisk 补全 + 测试）
+- 净删除约 300-350 行
+
+---
+
+## 风险控制
+
+### 低风险改动
+
+- 三项死代码删除（getByRegion/theme.changed/createCommandCatalog）：零消费者
+- updateWorkspaceLayout：零调用者
+- assessPermissionRisk 补全：纯扩展
+
+### 中风险改动
+
+- Layout 查找链删除 + 硬编码：逻辑等价（原本就只有一个 region），但需确保测试覆盖 addWorkbenchWidget
+- Manifest 协议删除：会影响第三方 layout 插件声明（但当前只有已 skip 的 masonry）
+
+### 保留缓冲
+
+- `workspace.activeLayout` 保留（避免 storage 层级联）
+- `LayoutContributionRef` 类型保留（存储 ref 标识）
+- `preset.regions` 验证逻辑保留（确保 preset 定义一致性）
+- `PluginInstance.regionId` 保留（拖拽/网格 load-bearing）
+
+### 回滚方案
+
+- 单个 commit，Git revert 即可完全回滚
+- 无 schema migration，无数据丢失风险
+
+---
+
+## 后续 PR（本次不含）
+
+1. **Phase 4B: Background Renderer 挂载**
+   - catalog `listBackgroundRenderers`
+   - WorkbenchShellApp 背景层渲染
+   - CSS renderer 实现（替换空 `return null`）
+   - 切换 API
+
+2. **Phase 4C: 动态授权流程**
+   - EventBus `permission.request` 事件
+   - PluginKernel 运行时 grant API + 热更新
+   - RuntimeContext 异步授权挂起
+   - Workbench shell 授权弹窗组件
+   - Settings AI panel 真实实现
+   - Bootstrap 授予策略调整
+
+---
+
+## 预计工作量
+
+- Step 1-5: 约 2-3 小时（删除 + 硬编码 + risk 补全）
+- Step 6: 约 1 小时（测试调整）
+- Step 7: 约 30 分钟（验证）
+- **总计**: 3.5-4.5 小时

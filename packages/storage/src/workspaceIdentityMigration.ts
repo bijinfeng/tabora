@@ -20,13 +20,18 @@ type LegacyWorkspace = Record<string, unknown> & {
   config?: Record<string, unknown>
 }
 
+/** Dashboard is the only supported layout; legacy layout IDs all migrate to it. */
+const BUILTIN_DASHBOARD_LAYOUT_REF: LayoutContributionRef = {
+  pluginId: "official.layout.workbench-dashboard",
+  kind: "layout",
+  id: "official.layout.workbench-dashboard",
+}
+
 function contributionItems(
   manifest: PluginManifest,
   kind: ContributionKind,
 ): Array<{ id: string }> {
   switch (kind) {
-    case "layout":
-      return manifest.contributes.layouts ?? []
     case "search-provider":
       return manifest.contributes.searchProviders ?? []
     case "background-provider":
@@ -116,12 +121,7 @@ export function migrateWorkspaceContributionRefs(
   }
 
   const workspaceId = legacy.id
-  const activeLayout = resolveLegacyContribution({
-    manifests,
-    kind: "layout",
-    id: legacy.activeLayoutId,
-    workspaceId,
-  }) as LayoutContributionRef
+  const activeLayout = BUILTIN_DASHBOARD_LAYOUT_REF
   const activeTheme = resolveLegacyContribution({
     manifests,
     kind: "theme",

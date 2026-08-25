@@ -277,7 +277,6 @@ function controllerSetup() {
   const instanceRepo: InstanceRepository = {
     getAll: vi.fn(async () => []),
     getByWorkspace: vi.fn(async () => []),
-    getByRegion: vi.fn(async () => []),
     get: vi.fn(async () => undefined),
     save: saveInstance,
     removeByWorkspace: vi.fn(async () => {}),

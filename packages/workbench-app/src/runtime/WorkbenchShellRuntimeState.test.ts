@@ -152,7 +152,6 @@ function createRuntime(records: PluginRecord[] = []) {
       instanceRepo: {
         getAll: vi.fn(async () => []),
         getByWorkspace: vi.fn(async () => []),
-        getByRegion: vi.fn(async () => []),
         get: vi.fn(async () => undefined),
         save: vi.fn(async () => {}),
         removeByWorkspace: vi.fn(async () => {}),

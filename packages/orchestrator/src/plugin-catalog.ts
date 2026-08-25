@@ -4,7 +4,6 @@ import type {
   CommandContribution,
   ContributionRef,
   KeybindingContribution,
-  LayoutContribution,
   PluginManifest,
   PluginRecord,
   SettingsPanelData,
@@ -30,7 +29,6 @@ export type PluginCatalogOptions = {
   builtinThemes?: { pluginId: string; themes: ThemeContribution[] }
   builtinSearchProviders?: { pluginId: string; providers: SearchProviderContribution[] }
   builtinBackgroundProviders?: { pluginId: string; providers: BackgroundProviderContribution[] }
-  builtinLayouts?: { pluginId: string; layouts: LayoutContribution[] }
 }
 
 export type WidgetContributionDescriptor = WidgetContribution & {
@@ -54,7 +52,6 @@ type ContributionDescriptor<T, K extends ContributionRef["kind"]> = T & {
   ref: ContributionRef & { kind: K }
 }
 
-export type LayoutContributionDescriptor = ContributionDescriptor<LayoutContribution, "layout">
 export type SearchContributionDescriptor = ContributionDescriptor<SearchContribution, "search">
 export type ThemeContributionDescriptor = ContributionDescriptor<ThemeContribution, "theme">
 export type BackgroundProviderContributionDescriptor = ContributionDescriptor<
@@ -169,20 +166,6 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
     return [...builtin, ...contributed]
   }
 
-  function listLayouts(): LayoutContributionDescriptor[] {
-    const builtin = (options.builtinLayouts?.layouts ?? []).map((layout) => ({
-      ...layout,
-      ref: { pluginId: options.builtinLayouts!.pluginId, kind: "layout" as const, id: layout.id },
-    }))
-    const contributed = activePlugins().flatMap((plugin) =>
-      (plugin.manifest.contributes.layouts ?? []).map((layout) => ({
-        ...layout,
-        ref: { pluginId: plugin.manifest.id, kind: "layout" as const, id: layout.id },
-      })),
-    )
-    return [...builtin, ...contributed]
-  }
-
   function listWidgetContributions(): WidgetContributionDescriptor[] {
     return activePlugins()
       .flatMap((plugin) =>
@@ -237,10 +220,6 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
     const plugin = activePlugins().find((item) => item.manifest.id === ref.pluginId)
     if (!plugin) return undefined
     switch (ref.kind) {
-      case "layout":
-        return listLayouts().find(
-          (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
-        )
       case "widget":
         return listWidgetContributions().find(
           (item) => item.ref?.pluginId === ref.pluginId && item.id === ref.id,
@@ -272,10 +251,6 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
       default:
         return undefined
     }
-  }
-
-  function findLayoutContribution(layoutId: string): LayoutContribution | undefined {
-    return listLayouts().find((layout) => layout.id === layoutId)
   }
 
   function findWidgetContribution(
@@ -321,7 +296,6 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
           .filter(([, contributions]) => Array.isArray(contributions) && contributions.length > 0)
           .map(([kind]) => {
             const contributionKinds = {
-              layouts: "layout",
               widgets: "widget",
               searches: "search",
               searchProviders: "search-provider",
@@ -351,10 +325,8 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
     listThemes,
     listSearchProviders,
     listBackgroundProviders,
-    listLayouts,
     listWidgetContributions,
     listSettingsPanels,
-    findLayoutContribution,
     findWidgetContribution,
     findSearchContribution,
     resolveContribution,

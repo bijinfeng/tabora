@@ -31,19 +31,6 @@ function widgetInstance(id: string, x: number, workspaceId = "default"): PluginI
 describe("createInstanceRepository", () => {
   beforeEach(() => deleteTestDatabase())
 
-  it("loads region instances by persisted grid order", async () => {
-    const database = createTaboraDatabase("tabora-instance-test")
-    const repository = createInstanceRepository(database)
-
-    await repository.save(widgetInstance("a-later", 1))
-    await repository.save(widgetInstance("b-earlier", 0))
-
-    await expect(repository.getByRegion("default", "mainGrid")).resolves.toMatchObject([
-      { id: "b-earlier" },
-      { id: "a-later" },
-    ])
-  })
-
   it("isolates instances by workspace", async () => {
     const database = createTaboraDatabase("tabora-instance-test")
     const repository = createInstanceRepository(database)
@@ -51,10 +38,10 @@ describe("createInstanceRepository", () => {
     await repository.save(widgetInstance("default-item", 0, "default"))
     await repository.save(widgetInstance("other-item", 0, "workspace-b"))
 
-    await expect(repository.getByRegion("default", "mainGrid")).resolves.toMatchObject([
+    await expect(repository.getByWorkspace("default")).resolves.toMatchObject([
       { id: "default-item" },
     ])
-    await expect(repository.getByRegion("workspace-b", "mainGrid")).resolves.toMatchObject([
+    await expect(repository.getByWorkspace("workspace-b")).resolves.toMatchObject([
       { id: "other-item" },
     ])
   })

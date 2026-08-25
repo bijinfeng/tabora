@@ -1,6 +1,5 @@
 import type {
   BackgroundProviderContributionRef,
-  LayoutContributionRef,
   PluginInstance,
   SearchHistoryEntry,
   ThemeContributionRef,
@@ -162,21 +161,6 @@ export async function updateWorkspaceBackground(options: {
     workspaceId: options.workspaceId,
     mutator(workspace) {
       workspace.activeBackgroundProvider = options.background
-      return workspace
-    },
-  })
-}
-
-export async function updateWorkspaceLayout(options: {
-  workspaceRepo: WorkspaceRepository
-  workspaceId: string
-  layout: LayoutContributionRef
-}): Promise<Workspace | null> {
-  return updateWorkspaceRecord({
-    workspaceRepo: options.workspaceRepo,
-    workspaceId: options.workspaceId,
-    mutator(workspace) {
-      workspace.activeLayout = options.layout
       return workspace
     },
   })

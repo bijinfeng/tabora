@@ -1,5 +1,4 @@
 import type {
-  LayoutContribution,
   PluginInstance,
   SearchCommandEntry,
   SearchContribution,
@@ -153,14 +152,6 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
       },
     },
   ]
-  const layoutContribution: LayoutContribution = {
-    id: "official.layout.workbench-dashboard",
-    title: "Dashboard",
-    view: "official.layout.workbench-dashboard.view",
-    regions: [],
-    defaultRegions: {},
-    supportsResponsive: true,
-  }
   const searchContribution: SearchContribution = {
     id: "official.search.command-bar",
     title: "Command Search",
@@ -203,7 +194,6 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
       ],
       pluginCatalog: {
         listSearchProviders: vi.fn(() => searchProviders),
-        findLayoutContribution: vi.fn(() => layoutContribution),
         findWidgetContribution: vi.fn(() => undefined),
         findSearchContribution: vi.fn(() => searchContribution),
       },

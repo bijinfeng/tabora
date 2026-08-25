@@ -62,7 +62,6 @@ function settingsHost(): SettingsPanelViewProps["host"] {
     switchTheme: vi.fn(async () => {}),
     switchBackground: vi.fn(async () => {}),
     setDefaultSearchProvider: vi.fn(async () => {}),
-    switchLayout: vi.fn(async () => {}),
     setSearchProviderEnabled: vi.fn(async () => {}),
     togglePluginEnabled: vi.fn(async () => {}),
     exportWorkspace: vi.fn(async () => ""),

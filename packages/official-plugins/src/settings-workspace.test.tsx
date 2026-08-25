@@ -13,7 +13,6 @@ import {
 type LegacySettingsPanelProps = Omit<SettingsPanelViewProps, "data"> & {
   workspace: Workspace
   workspaces?: Workspace[]
-  layouts: NonNullable<SettingsPanelData["layouts"]>
   themes: NonNullable<SettingsPanelData["themes"]>
   backgrounds: NonNullable<SettingsPanelData["backgrounds"]>
   searchProviders: NonNullable<SettingsPanelData["searchProviders"]>
@@ -36,7 +35,6 @@ function toSettingsPanelProps(input: LegacySettingsPanelProps): SettingsPanelVie
   const {
     workspace: currentWorkspace,
     workspaces,
-    layouts,
     themes,
     backgrounds,
     searchProviders,
@@ -49,7 +47,6 @@ function toSettingsPanelProps(input: LegacySettingsPanelProps): SettingsPanelVie
     data: {
       workspace: workspaceSummary(currentWorkspace),
       ...(workspaces ? { workspaces: workspaces.map(workspaceSummary) } : {}),
-      layouts,
       themes,
       backgrounds,
       searchProviders,
@@ -110,7 +107,6 @@ function host(): SettingsPanelViewProps["host"] {
     setDirty: vi.fn(),
     switchTheme: vi.fn(async () => {}),
     switchBackground: vi.fn(async () => {}),
-    switchLayout: vi.fn(async () => {}),
     setDefaultSearchProvider: vi.fn(async () => {}),
     setSearchProviderEnabled: vi.fn(async () => {}),
     createWorkspace: vi.fn(async () => undefined),
@@ -151,7 +147,6 @@ describe("SearchSettingsPanel", () => {
           host={panelHost}
           workspace={workspace()}
           workspaces={[workspace()]}
-          layouts={[]}
           themes={[]}
           backgrounds={[]}
           searchProviders={[
@@ -208,7 +203,6 @@ describe("SearchSettingsPanel", () => {
           host={host()}
           workspace={workspace()}
           workspaces={[workspace()]}
-          layouts={[]}
           themes={[]}
           backgrounds={[]}
           searchProviders={[
@@ -246,7 +240,6 @@ describe("SearchSettingsPanel", () => {
       setDirty: vi.fn(),
       switchTheme: vi.fn(async () => {}),
       switchBackground: vi.fn(async () => {}),
-      switchLayout: vi.fn(async () => {}),
       setDefaultSearchProvider,
       setSearchProviderEnabled,
     }
@@ -261,7 +254,6 @@ describe("SearchSettingsPanel", () => {
           host={panelHost}
           workspace={workspace()}
           workspaces={[workspace()]}
-          layouts={[]}
           themes={[]}
           backgrounds={[]}
           searchProviders={[
@@ -316,7 +308,6 @@ describe("SearchSettingsPanel", () => {
           host={host()}
           workspace={workspace()}
           workspaces={[workspace()]}
-          layouts={[]}
           themes={[]}
           backgrounds={[]}
           searchProviders={[
@@ -367,17 +358,6 @@ describe("AppearanceSettingsPanel", () => {
           host={panelHost}
           workspace={workspace()}
           workspaces={[workspace()]}
-          layouts={[
-            {
-              id: "official.layout.workbench-dashboard",
-              title: "Dashboard",
-              view: "official.layout.workbench-dashboard.view",
-              regions: [],
-              defaultRegions: {},
-              supportsResponsive: true,
-              ref: refs.layout("official.layout.workbench-dashboard"),
-            },
-          ]}
           themes={[
             {
               id: "official.theme.light",
@@ -461,7 +441,6 @@ describe("WorkbenchSettingsPanel", () => {
           host={panelHost}
           workspace={currentWorkspace}
           workspaces={[currentWorkspace, workspace({ id: "workspace-2", name: "Focus Space" })]}
-          layouts={[]}
           themes={[]}
           backgrounds={[]}
           searchProviders={[]}
