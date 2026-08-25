@@ -1,11 +1,12 @@
 import type { DragDropProviderProps } from "@dnd-kit/solid"
 import { DragDropProvider } from "@dnd-kit/solid"
-import type { LayoutHostAPI, PluginInstance, RegionSlot } from "@tabora/plugin-api"
+import type { LayoutHostAPI, PluginInstance } from "@tabora/plugin-api"
 import { LayoutBoundary } from "@tabora/workbench-shell"
 import type { JSX } from "solid-js"
 import { DashboardLayout } from "../surface/dashboard/dashboard-layout"
 import { LayoutUnavailableState } from "../surface/WorkbenchShellChrome"
 import type { LayoutErrorStatus } from "./layoutError"
+import type { InstanceRenderer } from "../shell/WorkbenchShellInstanceRenderer"
 
 type WorkbenchDndKitOptions = Required<
   Pick<DragDropProviderProps, "onDragStart" | "onDragMove" | "onDragOver" | "onDragEnd">
@@ -35,11 +36,8 @@ export function createWorkbenchLayoutRenderer(options: {
   activeLayoutId: () => string
   layoutError: () => LayoutErrorStatus | null
   displayedInstances: () => PluginInstance[]
-  buildRegionSlots: (
-    layoutId: string,
-    instances: PluginInstance[],
-  ) => Record<string, RegionSlot<JSX.Element>>
-  buildHostAPI: () => LayoutHostAPI
+  instanceRenderer: InstanceRenderer
+  layoutHostAPI: LayoutHostAPI
   isMobile: () => boolean
   clearLayoutError: () => void
   recordLayoutError: (layoutId: string, error: unknown) => void
@@ -58,8 +56,10 @@ export function createWorkbenchLayoutRenderer(options: {
 
     options.clearLayoutError()
 
-    const regions = options.buildRegionSlots(layoutId, options.displayedInstances())
-    const host = options.buildHostAPI()
+    const instances = options.displayedInstances()
+    const searchInstances = instances.filter((inst) => inst.contribution.kind === "search")
+    const widgetInstances = instances.filter((inst) => inst.contribution.kind === "widget")
+
     // Read synchronously so this memo tracks the responsive breakpoint and remounts
     // the dashboard when it flips. Passing the value (not the call) keeps it a static
     // prop rather than a lazy getter the untracked component body would freeze.
@@ -79,7 +79,14 @@ export function createWorkbenchLayoutRenderer(options: {
             options.recordLayoutError(layoutId, error)
           }}
         >
-          <DashboardLayout regions={regions} isMobile={isMobile} host={host} />
+          <DashboardLayout
+            searchInstances={searchInstances}
+            widgetInstances={widgetInstances}
+            isMobile={isMobile}
+            host={options.layoutHostAPI}
+            renderSearch={options.instanceRenderer.renderSearch}
+            renderWidget={options.instanceRenderer.renderWidget}
+          />
         </LayoutBoundary>
       </WorkbenchDndProvider>
     )

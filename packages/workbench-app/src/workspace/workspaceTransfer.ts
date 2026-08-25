@@ -85,19 +85,6 @@ export async function importWorkspaceData(options: {
     workspaceId: nextWorkspaceId,
   }))
 
-  const nextRegions: Workspace["regions"] = Object.fromEntries(
-    Object.entries(imported.workspace.regions).map(([regionKey, region]) => [
-      regionKey,
-      {
-        ...region,
-        instances: region.instances.flatMap(({ instanceId }) => {
-          const mapped = instanceIdMap.get(instanceId)
-          return mapped ? [{ instanceId: mapped }] : []
-        }),
-      },
-    ]),
-  )
-
   const pluginDataRows = imported.pluginDataRows.flatMap((row) => {
     const mappedInstanceId = row.instanceId ? instanceIdMap.get(row.instanceId) : undefined
     if (row.instanceId && !mappedInstanceId) return []
@@ -132,7 +119,6 @@ export async function importWorkspaceData(options: {
     ...imported.workspace,
     id: nextWorkspaceId,
     name: nextWorkspaceName,
-    regions: nextRegions,
   }
 
   await options.workspaceRepo.save(workspace)

@@ -25,7 +25,7 @@ function workspaceSummary(workspace: Workspace): SettingsWorkspaceSummary {
     ...(workspace.activeBackgroundRenderer
       ? { activeBackgroundRenderer: workspace.activeBackgroundRenderer }
       : {}),
-    regionCount: Object.keys(workspace.regions).length,
+    regionCount: 2, // Dashboard has 2 regions: topbar (search) + mainGrid (widgets)
   }
 }
 

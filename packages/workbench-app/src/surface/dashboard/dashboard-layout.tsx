@@ -3,7 +3,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show }
 import type { JSX } from "solid-js"
 import LayoutGrid from "lucide-solid/icons/layout-grid"
 import Plus from "lucide-solid/icons/plus"
-import type { LayoutInstance } from "@tabora/plugin-api/sdk"
+import type { PluginInstance } from "@tabora/plugin-api"
 import { widgetGridColumnSpan, widgetGridRowSpan } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 
@@ -19,7 +19,7 @@ import { styles } from "./styles"
 import type {
   ActiveGroupSetter,
   DashboardLayoutState,
-  LayoutViewPropsWithI18n,
+  DashboardLayoutPropsWithI18n,
   RailGroup,
   RailGroupSetter,
 } from "./types"
@@ -69,13 +69,13 @@ function calculatePageCapacity(containerHeight: number, cellSize: number, gap: n
 }
 
 function groupInstancesByPage(
-  instances: LayoutInstance[],
+  instances: PluginInstance[],
   pageCapacity: number,
-): LayoutInstance[][] {
+): PluginInstance[][] {
   if (pageCapacity <= 0 || instances.length === 0) return [instances]
 
-  const pages: LayoutInstance[][] = []
-  let currentPage: LayoutInstance[] = []
+  const pages: PluginInstance[][] = []
+  let currentPage: PluginInstance[] = []
   let currentPageCells = 0
 
   for (const instance of instances) {
@@ -100,7 +100,7 @@ function groupInstancesByPage(
   return pages.length > 0 ? pages : [[]]
 }
 
-function MobileBottomBar(props: LayoutViewPropsWithI18n<JSX.Element>) {
+function MobileBottomBar(props: DashboardLayoutPropsWithI18n<JSX.Element>) {
   const utilityActions = () =>
     props.host
       .getGlobalActions("rail")
@@ -125,7 +125,7 @@ function MobileBottomBar(props: LayoutViewPropsWithI18n<JSX.Element>) {
   )
 }
 
-export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
+export function DashboardLayout(props: DashboardLayoutPropsWithI18n<JSX.Element>) {
   let gridRef: HTMLDivElement | undefined
   const i18n = () => props.i18n
   const t = (key: string) => i18n()?.t(key) ?? fallbackText(key)
@@ -182,11 +182,10 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
   )
   const activeMainGridInstances = createMemo(() => {
     const group = activeGroup()
-    const region = props.regions["mainGrid"]
-    if (!region || group.isDefault) return region?.instances ?? []
+    if (group.isDefault) return props.widgetInstances
 
     const allowed = new Set(group.widgets)
-    return region.instances.filter((instance) => allowed.has(instance.id))
+    return props.widgetInstances.filter((instance) => allowed.has(instance.id))
   })
   const openAddWidgetForActiveGroup = () => {
     const group = activeGroup()
@@ -207,7 +206,7 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
 
   // Mobile pages the same widget instances the active group would show, using
   // scroll-snap paging instead of the desktop rail + single grid.
-  const mobilePages = createMemo<LayoutInstance[][]>(() => {
+  const mobilePages = createMemo<PluginInstance[][]>(() => {
     const instances = activeMainGridInstances()
     if (instances.length === 0) return [[]]
     if (!gridRef) return [instances]
@@ -262,8 +261,10 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
 
   const renderSearchStage = () => (
     <div {...stylex.attrs(styles.searchStage)}>
-      <Show when={props.regions["topbar"]}>
-        <div {...stylex.attrs(styles.searchInner)}>{props.regions["topbar"]!.render()}</div>
+      <Show when={props.searchInstances.length > 0}>
+        <div {...stylex.attrs(styles.searchInner)}>
+          <For each={props.searchInstances}>{(instance) => props.renderSearch(instance)}</For>
+        </div>
       </Show>
     </div>
   )
@@ -286,7 +287,6 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
   )
 
   if (props.isMobile) {
-    const region = () => props.regions["mainGrid"]
     return (
       <main {...stylex.attrs(styles.mobileLayout)} data-layout="dashboard" data-mobile>
         <div {...stylex.attrs(styles.mobileScrollContainer)}>
@@ -310,9 +310,7 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
                         when={pageInstances.length > 0}
                         fallback={<Show when={pageIndex() === 0}>{renderEmpty()}</Show>}
                       >
-                        <For each={pageInstances}>
-                          {(instance) => region()?.renderInstance(instance)}
-                        </For>
+                        <For each={pageInstances}>{(instance) => props.renderWidget(instance)}</For>
                       </Show>
                     </div>
                   </section>
@@ -356,16 +354,17 @@ export function DashboardLayout(props: LayoutViewPropsWithI18n<JSX.Element>) {
             ref={(element) => (gridRef = element)}
             data-layout-grid
           >
-            <Show when={props.regions["mainGrid"]}>
-              {(region) => (
-                <Show when={!activeGroup().isDefault} fallback={region().render()}>
-                  <Show when={activeMainGridInstances().length > 0} fallback={renderEmpty()}>
-                    <For each={activeMainGridInstances()}>
-                      {(instance) => region().renderInstance(instance)}
-                    </For>
-                  </Show>
-                </Show>
-              )}
+            <Show
+              when={!activeGroup().isDefault}
+              fallback={
+                <For each={props.widgetInstances}>{(instance) => props.renderWidget(instance)}</For>
+              }
+            >
+              <Show when={activeMainGridInstances().length > 0} fallback={renderEmpty()}>
+                <For each={activeMainGridInstances()}>
+                  {(instance) => props.renderWidget(instance)}
+                </For>
+              </Show>
             </Show>
           </div>
         </section>

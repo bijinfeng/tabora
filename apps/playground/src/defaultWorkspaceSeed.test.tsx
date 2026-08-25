@@ -4,7 +4,7 @@ import { createDefaultWorkspaceFromPreset } from "@tabora/workbench-app/default-
 
 describe("createDefaultWorkspaceFromPreset", () => {
   it("creates workspace and instances from the official preset", () => {
-    const { workspace } = createDefaultWorkspaceFromPreset({
+    const { workspace, instances } = createDefaultWorkspaceFromPreset({
       preset: builtinDefaultWorkspacePreset,
     })
 
@@ -14,20 +14,13 @@ describe("createDefaultWorkspaceFromPreset", () => {
     expect(workspace.activeTheme.id).toBe("official.theme.light")
     expect(workspace.activeBackgroundProvider.id).toBe("background.gradient-green")
 
-    expect(workspace.regions["rail"]).toBeUndefined()
-    expect(Object.values(workspace.regions).flatMap((region) => region.accepts)).not.toContain(
-      "layout",
-    )
+    const searchInstances = instances.filter((i) => i.contribution.kind === "search")
+    expect(searchInstances).toHaveLength(1)
+    expect(searchInstances[0]!.id).toBe("search-main")
 
-    const topbar = workspace.regions["topbar"]
-    expect(topbar).toBeDefined()
-    expect(topbar!.instances).toHaveLength(1)
-    expect(topbar!.instances[0]!.instanceId).toBe("search-main")
-
-    const mainGrid = workspace.regions["mainGrid"]
-    expect(mainGrid).toBeDefined()
-    expect(mainGrid!.instances).toHaveLength(4)
-    expect(mainGrid!.instances.map((instance) => instance.instanceId)).toEqual([
+    const widgetInstances = instances.filter((i) => i.contribution.kind === "widget")
+    expect(widgetInstances).toHaveLength(4)
+    expect(widgetInstances.map((i) => i.id)).toEqual([
       "quick-links-1",
       "todo-1",
       "notes-1",

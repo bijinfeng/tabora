@@ -110,7 +110,6 @@ export const workspaceSchema = z.object({
   activeBackgroundProvider: contributionRefSchema("background-provider"),
   activeBackgroundRenderer: contributionRefSchema("background-renderer").optional(),
   config: workspaceConfigSchema,
-  regions: z.record(z.string(), regionStateSchema),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
 })

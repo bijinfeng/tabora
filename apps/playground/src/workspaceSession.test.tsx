@@ -65,7 +65,6 @@ describe("workspaceSession", () => {
           enabledProviders: [refs.provider("official.search.github")],
         },
       },
-      regions: {},
       createdAt: "2026-06-01T00:00:00.000Z",
       updatedAt: "2026-06-01T00:00:00.000Z",
     }
@@ -88,7 +87,6 @@ describe("workspaceSession", () => {
           defaultProvider: refs.provider("official.search.github"),
         },
       },
-      regions: {},
       createdAt: "2026-06-01T00:00:00.000Z",
       updatedAt: "2026-06-01T00:00:00.000Z",
     }
@@ -137,7 +135,6 @@ describe("workspaceSession", () => {
           ],
         },
       },
-      regions: {},
       createdAt: now,
       updatedAt: now,
     })
@@ -202,10 +199,6 @@ describe("workspaceSession", () => {
             refs.provider("official.search.github"),
           ],
         },
-      },
-      regions: {
-        topbar: { regionId: "topbar", accepts: ["search"], instances: [] },
-        mainGrid: { regionId: "mainGrid", accepts: ["widget"], instances: [] },
       },
       createdAt: now,
       updatedAt: now,

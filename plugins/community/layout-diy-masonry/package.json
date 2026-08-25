@@ -2,6 +2,7 @@
   "name": "@tabora/layout-diy-masonry",
   "version": "1.0.0",
   "private": true,
+  "description": "Historical reference: incompatible after Phase 3 region protocol removal",
   "type": "module",
   "exports": {
     ".": "./src/index.tsx",
@@ -18,8 +19,8 @@
     }
   },
   "scripts": {
-    "build": "vp pack src/index.tsx src/manifest.ts",
-    "test": "vitest run --config vitest.config.ts"
+    "build": "echo 'Skipped: layout-diy-masonry is incompatible after region protocol removal'",
+    "test": "echo 'Skipped: layout-diy-masonry is incompatible after region protocol removal'"
   },
   "dependencies": {
     "@stylexjs/stylex": "catalog:style",

@@ -245,7 +245,6 @@ function options(): Parameters<typeof createWorkbenchShellControllerRuntime>[0] 
           kind: "background-provider" as const,
           id: "official.background.default",
         },
-        regions: {},
         createdAt: "2026-06-07T00:00:00.000Z",
         updatedAt: "2026-06-07T00:00:00.000Z",
       })),

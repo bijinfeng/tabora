@@ -68,8 +68,6 @@ describe("applyWorkspacePreset", () => {
       activeBackgroundProvider: preset.backgroundProvider,
       config: { search: preset.search },
     })
-    expect(result.workspace.regions["topbar"]?.instances).toEqual([{ instanceId: "search-main" }])
-    expect(result.workspace.regions["mainGrid"]?.instances).toEqual([{ instanceId: "notes-1" }])
     expect(result.instances).toHaveLength(2)
     expect(result.instances[0]).not.toHaveProperty("size")
     expect(result.instances[1]).toMatchObject({
@@ -90,12 +88,6 @@ describe("applyWorkspacePreset", () => {
       now: "2026-06-05T00:00:00.000Z",
     })
 
-    expect(result.workspace.regions["topbar"]?.instances).toEqual([
-      { instanceId: "ws-1:search-main" },
-    ])
-    expect(result.workspace.regions["mainGrid"]?.instances).toEqual([
-      { instanceId: "ws-1:notes-1" },
-    ])
     expect(result.instances.map((instance) => instance.id)).toEqual([
       "ws-1:search-main",
       "ws-1:notes-1",
@@ -182,7 +174,6 @@ describe("applyWorkspacePreset", () => {
       now: "2026-06-05T00:00:00.000Z",
     })
 
-    result.workspace.regions["topbar"]!.accepts.push("widget")
     ;(
       result.workspace.config!.search as { enabledProviders: Array<{ id: string }> }
     ).enabledProviders.push({

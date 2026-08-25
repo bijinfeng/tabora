@@ -28,7 +28,7 @@ function workspaceSummary(value: Workspace) {
     activeLayout: value.activeLayout,
     activeTheme: value.activeTheme,
     activeBackgroundProvider: value.activeBackgroundProvider,
-    regionCount: Object.keys(value.regions).length,
+    regionCount: 2, // hardcoded: topbar + mainGrid
   }
 }
 
@@ -98,7 +98,6 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
         ],
       },
     },
-    regions: {},
     createdAt: "2026-06-07T00:00:00.000Z",
     updatedAt: "2026-06-07T00:00:00.000Z",
     ...overrides,

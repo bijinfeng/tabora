@@ -176,7 +176,6 @@ export function createWorkbenchShellRuntimes(options: {
     showToast,
     switchTheme: controllerWorkspaceActions.switchTheme,
     runRailAction: hostRuntime.runRailAction,
-    catalog: pluginCatalog,
     instanceRenderer: controllerRuntime.viewRuntime.instanceRenderer,
     displayedInstances: controllerRuntime.dragHandlers.displayedInstances,
     isMobile: responsive.isMobile,

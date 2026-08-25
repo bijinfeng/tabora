@@ -1,4 +1,4 @@
-import type { LayoutViewProps } from "@tabora/plugin-api/sdk"
+import type { DashboardLayoutProps } from "@tabora/plugin-api/sdk"
 
 export type LayoutI18n = {
   locale(): string
@@ -6,7 +6,7 @@ export type LayoutI18n = {
   registerMessages(bundles: Array<{ locale: string; messages: Record<string, string> }>): void
 }
 
-export type LayoutViewPropsWithI18n<T> = LayoutViewProps<T> & { i18n?: LayoutI18n }
+export type DashboardLayoutPropsWithI18n<T> = DashboardLayoutProps<T> & { i18n?: LayoutI18n }
 
 export type RailGroup = {
   id: string

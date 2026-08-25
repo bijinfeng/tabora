@@ -186,7 +186,6 @@ describe("createSyncManager", () => {
         kind: "background-provider",
         id: "official.background.default",
       },
-      regions: {},
       createdAt: "2026-07-30T02:00:00.000Z",
       updatedAt: "2026-07-30T02:00:00.000Z",
     })
@@ -275,7 +274,6 @@ describe("createSyncManager", () => {
           kind: "background-provider",
           id: "official.background.default",
         },
-        regions: {},
         createdAt: "2026-07-30T02:10:02.000Z",
         updatedAt: "2026-07-30T02:10:02.000Z",
       })

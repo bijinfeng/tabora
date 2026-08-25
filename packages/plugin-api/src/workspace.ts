@@ -5,7 +5,6 @@ import type {
   PluginManifest,
   PluginPermission,
   RegionContributionRef,
-  RegionContentKind,
   SettingsHostActionId,
   SettingsHostReadId,
   ThemeContributionRef,
@@ -20,12 +19,6 @@ export type GridPlacement = {
   locked?: boolean
 }
 
-export type RegionState = {
-  regionId: string
-  accepts: RegionContentKind[]
-  instances: Array<{ instanceId: string }>
-}
-
 export type Workspace = {
   id: string
   name: string
@@ -34,7 +27,6 @@ export type Workspace = {
   activeBackgroundProvider: BackgroundProviderContributionRef
   activeBackgroundRenderer?: BackgroundRendererContributionRef
   config?: Record<string, unknown>
-  regions: Record<string, RegionState>
   createdAt: string
   updatedAt: string
 }

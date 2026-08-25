@@ -2,17 +2,10 @@ import type { PluginInstance } from "@tabora/plugin-api"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const hostApi = { sentinel: "layout-host" }
-const engineHostApi = { sentinel: "engine-host" }
-const buildRegionSlots = vi.fn(() => ({ main: { regionId: "main" } }))
-const buildHostAPI = vi.fn(() => engineHostApi)
 const renderActiveLayout = vi.fn(() => "layout-content")
 
 const mocks = vi.hoisted(() => ({
   createWorkbenchLayoutHostAPI: vi.fn(() => hostApi),
-  createLayoutEngine: vi.fn(() => ({
-    buildRegionSlots,
-    buildHostAPI,
-  })),
   createWorkbenchLayoutRenderer: vi.fn(() => ({
     renderActiveLayout,
   })),
@@ -20,10 +13,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("./WorkbenchShellLayoutHost", () => ({
   createWorkbenchLayoutHostAPI: mocks.createWorkbenchLayoutHostAPI,
-}))
-
-vi.mock("./layoutEngine", () => ({
-  createLayoutEngine: mocks.createLayoutEngine,
 }))
 
 vi.mock("./WorkbenchShellLayoutRenderer", () => ({
@@ -69,10 +58,10 @@ function options(overrides: Partial<Parameters<typeof createWorkbenchShellLayout
       settingsPanelIds: { appearance: "settings.appearance.custom" },
       searchHistory: { pluginId: "search.plugin.custom", key: "search-history-custom" },
     },
-    catalog: {
-      findLayoutContribution: vi.fn(() => undefined),
+    instanceRenderer: {
+      renderSearch: vi.fn(),
+      renderWidget: vi.fn(),
     },
-    instanceRenderer: vi.fn(),
     displayedInstances: () => [instance()],
     isMobile: () => false,
     clearLayoutError: vi.fn(),
@@ -84,12 +73,10 @@ function options(overrides: Partial<Parameters<typeof createWorkbenchShellLayout
 describe("createWorkbenchShellLayoutRuntime", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    buildRegionSlots.mockClear()
-    buildHostAPI.mockClear()
     renderActiveLayout.mockClear()
   })
 
-  it("assembles the layout host api, engine, and renderer", () => {
+  it("assembles the layout host api and renderer", () => {
     const runtime = createWorkbenchShellLayoutRuntime(options())
 
     expect(runtime.renderActiveLayout()).toBe("layout-content")
@@ -107,11 +94,6 @@ describe("createWorkbenchShellLayoutRuntime", () => {
         runRailAction: expect.any(Function),
       }),
     )
-    expect(mocks.createLayoutEngine).toHaveBeenCalledWith({
-      catalog: expect.anything(),
-      instanceRenderer: expect.any(Function),
-      hostActions: hostApi,
-    })
 
     const rendererOptions = (
       mocks.createWorkbenchLayoutRenderer.mock.calls as unknown as Array<
@@ -119,19 +101,21 @@ describe("createWorkbenchShellLayoutRuntime", () => {
           {
             activeLayoutId: () => string
             layoutError: () => unknown
-            buildRegionSlots: (layoutId: string, instances: PluginInstance[]) => unknown
-            buildHostAPI: () => unknown
+            instanceRenderer: { renderSearch: unknown; renderWidget: unknown }
+            layoutHostAPI: unknown
+            displayedInstances: () => PluginInstance[]
+            isMobile: () => boolean
           },
         ]
       >
     )[0]![0]
     expect(rendererOptions.activeLayoutId()).toBe("layout.dashboard.custom")
     expect(rendererOptions.layoutError()).toBeNull()
-    expect(rendererOptions.buildRegionSlots("layout.dashboard", [instance()])).toEqual({
-      main: { regionId: "main" },
+    expect(rendererOptions.layoutHostAPI).toBe(hostApi)
+    expect(rendererOptions.instanceRenderer).toEqual({
+      renderSearch: expect.any(Function),
+      renderWidget: expect.any(Function),
     })
-    expect(rendererOptions.buildHostAPI()).toEqual(engineHostApi)
-    expect(buildHostAPI).toHaveBeenCalledTimes(1)
   })
 
   it("forwards the current layout error to the renderer", () => {

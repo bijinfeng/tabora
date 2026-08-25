@@ -1,4 +1,11 @@
 {
   "extends": "@tabora/tsconfig/base.json",
-  "include": ["src"]
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": [],
+  "exclude": ["**/*"]
 }

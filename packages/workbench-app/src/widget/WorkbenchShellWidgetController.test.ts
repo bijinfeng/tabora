@@ -28,7 +28,6 @@ function workspace(): Workspace {
       kind: "background-provider",
       id: "official.background.default",
     },
-    regions: {},
     createdAt: baseDate,
     updatedAt: baseDate,
   }

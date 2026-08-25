@@ -54,16 +54,6 @@ export function applyWorkspacePreset(
   options: WorkspacePresetApplyOptions,
 ): WorkspacePresetApplyResult {
   const now = options.now ?? new Date().toISOString()
-  const regions: Workspace["regions"] = Object.fromEntries(
-    options.preset.regions.map((region) => [
-      region.regionId,
-      {
-        regionId: region.regionId,
-        accepts: [...region.accepts],
-        instances: [],
-      },
-    ]),
-  )
 
   const instances: PluginInstance[] = []
 
@@ -72,12 +62,14 @@ export function applyWorkspacePreset(
       options.workspaceId,
       presetInstance.instanceId,
     )
-    const region = regions[presetInstance.regionId]
+
+    const region = options.preset.regions.find((r) => r.regionId === presetInstance.regionId)
     if (!region) {
       throw new Error(
         `Workspace preset "${options.preset.id}" instance "${presetInstance.instanceId}" targets unknown region "${presetInstance.regionId}"`,
       )
     }
+
     const contributionKind = presetInstance.contribution.kind
     if (!region.accepts.includes(contributionKind)) {
       throw new Error(
@@ -85,7 +77,6 @@ export function applyWorkspacePreset(
       )
     }
 
-    region.instances.push({ instanceId: resolvedInstanceId })
     instances.push({
       id: resolvedInstanceId,
       workspaceId: options.workspaceId,
@@ -112,7 +103,6 @@ export function applyWorkspacePreset(
           enabledProviders: [...options.preset.search.enabledProviders],
         },
       },
-      regions,
       createdAt: now,
       updatedAt: now,
     },

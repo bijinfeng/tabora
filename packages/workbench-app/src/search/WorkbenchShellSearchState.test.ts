@@ -33,7 +33,6 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
       kind: "background-provider",
       id: "official.background.default",
     },
-    regions: {},
     createdAt: "2026-06-06T00:00:00.000Z",
     updatedAt: "2026-06-06T00:00:00.000Z",
     ...overrides,

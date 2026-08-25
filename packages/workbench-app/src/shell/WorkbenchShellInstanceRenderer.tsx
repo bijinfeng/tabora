@@ -15,7 +15,6 @@ import {
 } from "@tabora/workbench-shell"
 import type { ContextMenuItem } from "@tabora/ui/context-menu"
 
-import type { InstanceRenderer } from "../layout/layoutEngine"
 import { isWorkbenchInteractiveElement } from "../surface/WorkbenchShellInteractions"
 import { resolveWorkbenchView } from "../shared/WorkbenchShellViewBridge"
 import type { WidgetRenderModel } from "../shared/shellHelpers"
@@ -25,6 +24,11 @@ import type {
   WorkbenchShellWidgetCopy,
 } from "../i18n"
 import { color } from "@tabora/theme/tokens.stylex"
+
+export type InstanceRenderer = {
+  renderSearch: (instance: PluginInstance) => JSX.Element
+  renderWidget: (instance: PluginInstance) => JSX.Element
+}
 
 type WorkbenchSortableCollisionDetector = NonNullable<
   Parameters<typeof useSortable>[0]["collisionDetector"]

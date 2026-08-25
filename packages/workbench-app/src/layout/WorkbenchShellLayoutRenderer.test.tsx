@@ -4,11 +4,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { LayoutHostAPI, PluginInstance } from "@tabora/plugin-api"
 
 const dashboardLayout = vi.hoisted(() =>
-  vi.fn((props: { isMobile: boolean; regions: Record<string, unknown> }) => (
-    <div data-layout="dashboard" {...(props.isMobile ? { "data-mobile": "" } : {})}>
-      regions:{Object.keys(props.regions).join(",")}
-    </div>
-  )),
+  vi.fn(
+    (props: {
+      isMobile: boolean
+      searchInstances: PluginInstance[]
+      widgetInstances: PluginInstance[]
+    }) => (
+      <div data-layout="dashboard" {...(props.isMobile ? { "data-mobile": "" } : {})}>
+        search:{props.searchInstances.length},widgets:{props.widgetInstances.length}
+      </div>
+    ),
+  ),
 )
 
 vi.mock("../surface/dashboard/dashboard-layout", () => ({
@@ -44,8 +50,11 @@ function baseOptions(): Parameters<typeof createWorkbenchLayoutRenderer>[0] {
     activeLayoutId: () => "layout.dashboard",
     layoutError: () => null,
     displayedInstances: () => [instance()],
-    buildRegionSlots: vi.fn(() => ({})),
-    buildHostAPI: vi.fn(() => ({}) as LayoutHostAPI),
+    instanceRenderer: {
+      renderWidget: vi.fn(() => <div>widget</div>),
+      renderSearch: vi.fn(() => <div>search</div>),
+    },
+    layoutHostAPI: {} as LayoutHostAPI,
     isMobile: () => false,
     clearLayoutError: vi.fn(),
     recordLayoutError: vi.fn(),
@@ -56,24 +65,31 @@ describe("createWorkbenchLayoutRenderer", () => {
   beforeEach(() => {
     dashboardLayout.mockClear()
     dashboardLayout.mockImplementation(
-      (props: { isMobile: boolean; regions: Record<string, unknown> }) => (
+      (props: {
+        isMobile: boolean
+        searchInstances: PluginInstance[]
+        widgetInstances: PluginInstance[]
+      }) => (
         <div data-layout="dashboard" {...(props.isMobile ? { "data-mobile": "" } : {})}>
-          regions:{Object.keys(props.regions).join(",")}
+          search:{props.searchInstances.length},widgets:{props.widgetInstances.length}
         </div>
       ),
     )
   })
 
-  it("renders the builtin dashboard layout with computed regions and host api", () => {
+  it("renders the builtin dashboard layout with split instance lists", () => {
     const options = baseOptions()
 
     const { host, dispose } = mount(createWorkbenchLayoutRenderer(options).renderActiveLayout())
 
     expect(host.querySelector("[data-layout='dashboard']")).toBeTruthy()
-    expect(options.buildRegionSlots).toHaveBeenCalledWith("layout.dashboard", [
-      expect.objectContaining({ id: "widget-1" }),
-    ])
-    expect(options.buildHostAPI).toHaveBeenCalled()
+    expect(dashboardLayout).toHaveBeenCalledWith(
+      expect.objectContaining({
+        searchInstances: [],
+        widgetInstances: [expect.objectContaining({ id: "widget-1" })],
+        isMobile: false,
+      }),
+    )
     expect(options.clearLayoutError).toHaveBeenCalled()
 
     dispose()
@@ -103,8 +119,7 @@ describe("createWorkbenchLayoutRenderer", () => {
 
     expect(host.querySelector("[data-layout-unavailable]")).toBeTruthy()
     expect(host.textContent).toContain("router failed")
-    expect(options.buildRegionSlots).not.toHaveBeenCalled()
-    expect(options.buildHostAPI).not.toHaveBeenCalled()
+    expect(dashboardLayout).not.toHaveBeenCalled()
 
     dispose()
     host.remove()

@@ -114,7 +114,6 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
     activeTheme: refs.theme("official.theme.light"),
     activeBackgroundProvider: refs.background("official.background.default"),
     config: {},
-    regions: {},
     createdAt: baseDate,
     updatedAt: baseDate,
     ...overrides,
