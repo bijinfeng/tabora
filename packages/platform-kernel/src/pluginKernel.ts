@@ -100,6 +100,9 @@ export type PluginKernel = {
   discover(packages: LoadedPluginPackage[]): Promise<void>
   activateEnabledPlugins(): Promise<void>
   setPluginEnabled(pluginId: string, enabled: boolean): Promise<void>
+  grantPermission(pluginId: string, permission: PluginPermissionGrant): Promise<void>
+  revokePermission(pluginId: string, permission: PluginPermissionGrant): Promise<void>
+  getGrantedPermissions(pluginId: string): PluginPermissionGrant[]
 }
 
 function pluginEnabled(plugin: PluginRuntimePlugin): boolean {
@@ -638,6 +641,77 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
           )
         }
       }
+    },
+    async grantPermission(pluginId, permission) {
+      const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
+      if (!plugin) {
+        throw new Error(`Plugin "${pluginId}" not found`)
+      }
+
+      // Check if permission already granted
+      const alreadyGranted = plugin.installation.grantedPermissions.some((granted) => {
+        if (granted.type !== permission.type) return false
+        if (granted.type === "ai" && permission.type === "ai") {
+          return permission.access.every((access) => granted.access.includes(access))
+        }
+        if (
+          (granted.type === "external-open" || granted.type === "network") &&
+          (permission.type === "external-open" || permission.type === "network")
+        ) {
+          return permission.hosts.every((host) => granted.hosts.includes(host))
+        }
+        return true
+      })
+
+      if (alreadyGranted) return
+
+      // Add permission to granted list
+      plugin.installation.grantedPermissions = [
+        ...plugin.installation.grantedPermissions,
+        permission,
+      ]
+
+      // Persist to storage
+      if (options.lifecycleStore) {
+        await options.lifecycleStore.save(buildRecord(plugin))
+      }
+
+      // Note: RuntimeContext refresh would require recreating the context,
+      // which is complex. For MVP, new permissions take effect on next plugin activation.
+    },
+    async revokePermission(pluginId, permission) {
+      const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
+      if (!plugin) {
+        throw new Error(`Plugin "${pluginId}" not found`)
+      }
+
+      // Remove matching permissions
+      plugin.installation.grantedPermissions = plugin.installation.grantedPermissions.filter(
+        (granted) => {
+          if (granted.type !== permission.type) return true
+          if (granted.type === "ai" && permission.type === "ai") {
+            return !permission.access.every((access) => granted.access.includes(access))
+          }
+          if (
+            (granted.type === "external-open" || granted.type === "network") &&
+            (permission.type === "external-open" || permission.type === "network")
+          ) {
+            return !permission.hosts.every((host) => granted.hosts.includes(host))
+          }
+          return false
+        },
+      )
+
+      // Persist to storage
+      if (options.lifecycleStore) {
+        await options.lifecycleStore.save(buildRecord(plugin))
+      }
+
+      // Note: For security, consider deactivating the plugin when permissions are revoked
+    },
+    getGrantedPermissions(pluginId) {
+      const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
+      return plugin?.installation.grantedPermissions ?? []
     },
   }
 }
