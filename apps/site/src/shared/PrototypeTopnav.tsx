@@ -1,6 +1,7 @@
 import { A } from "@solidjs/router"
 import { Button, IconButton } from "@tabora/ui/button"
 import * as stylex from "@stylexjs/stylex"
+import { TaboraMark } from "@tabora/brand"
 
 import { getSiteHref, useSiteI18n, useSiteTheme } from "../app/AppShell"
 
@@ -39,13 +40,8 @@ const styles = stylex.create({
     textDecoration: "none",
   },
   logoMark: {
-    backgroundColor: "rgb(var(--tbr-color-text))",
-    border: "1px solid rgb(var(--tbr-color-line-strong))",
-    borderRadius: 7,
-    color: "rgb(var(--tbr-color-page))",
-    display: "grid",
+    display: "block",
     height: 28,
-    placeItems: "center",
     width: 28,
   },
   nav: {
@@ -112,9 +108,7 @@ export function PrototypeTopnav(props: {
     >
       <div {...stylex.attrs(styles.inner)}>
         <A {...stylex.attrs(styles.logo)} href="/" aria-label="Tabora 首页" data-site-logo>
-          <span {...stylex.attrs(styles.logoMark)} aria-hidden="true">
-            T
-          </span>
+          <TaboraMark {...stylex.attrs(styles.logoMark)} aria-hidden="true" />
           <span>Tabora</span>
         </A>
         <nav {...stylex.attrs(styles.nav)} aria-label="主导航">

@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { Button, IconButton } from "@tabora/ui/button"
 import { Input } from "@tabora/ui/input"
 import { createSignal } from "solid-js"
+import { TaboraMark } from "@tabora/brand"
 import ChevronDown from "lucide-solid/icons/chevron-down"
 import CircleDot from "lucide-solid/icons/circle-dot"
 import LayoutDashboard from "lucide-solid/icons/layout-dashboard"
@@ -113,17 +114,9 @@ const styles = stylex.create({
     },
   },
   railBrand: {
-    backgroundColor: "rgb(var(--tbr-color-text))",
-    border: "1px solid rgb(var(--tbr-color-line-strong))",
-    borderRadius: 7,
-    color: "rgb(var(--tbr-color-page))",
-    display: "grid",
-    fontFamily: "var(--tbr-font-mono)",
-    fontSize: 13,
-    fontWeight: 760,
+    display: "block",
     height: 32,
     marginBottom: 4,
-    placeItems: "center",
     width: 32,
   },
   railGroups: {
@@ -437,9 +430,7 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
       </div>
       <div {...stylex.attrs(styles.workbench)} data-mock-root>
         <aside {...stylex.attrs(styles.rail)} aria-label="工作台导航">
-          <span {...stylex.attrs(styles.railBrand)} aria-hidden="true">
-            T
-          </span>
+          <TaboraMark {...stylex.attrs(styles.railBrand)} aria-hidden="true" />
           <div {...stylex.attrs(styles.railGroups)} role="tablist" aria-label="分组">
             <IconButton
               variant="ghost"
@@ -447,9 +438,6 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               xstyle={[styles.railButton, styles.railButtonActive]}
               aria-current="true"
             >
-              <CircleDot size={16} />
-            </IconButton>
-            <IconButton variant="ghost" aria-label="设计稿" xstyle={styles.railButton}>
               <CircleDot size={16} />
             </IconButton>
             <IconButton variant="ghost" aria-label="阅读" xstyle={styles.railButton}>
@@ -551,18 +539,7 @@ export function WorkbenchPreview(props: { content: HomePageContent }) {
               </div>
               <div {...stylex.attrs(styles.weather)}>
                 <div {...stylex.attrs(styles.weatherMark)}>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2" />
-                  </svg>
+                  <Sun size={20} aria-hidden="true" />
                 </div>
                 <div>
                   <div {...stylex.attrs(styles.metric)}>

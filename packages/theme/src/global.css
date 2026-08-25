@@ -152,3 +152,22 @@ select {
     transition-duration: 1ms !important;
   }
 }
+
+* {
+  scrollbar-color: rgb(var(--tbr-color-line-strong)) transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--tbr-color-line-strong));
+  border-radius: var(--tbr-radius-pill);
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}

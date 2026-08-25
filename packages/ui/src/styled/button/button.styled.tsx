@@ -24,6 +24,7 @@ const styles = stylex.create({
     gap: 6,
     justifyContent: "center",
     lineHeight: 1,
+    textDecoration: "none",
     transitionDuration: motion.fast,
     transitionProperty: "background-color, border-color, color",
     transitionTimingFunction: motion.ease,

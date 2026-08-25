@@ -1,6 +1,7 @@
 import { A } from "@solidjs/router"
 import { IconButton } from "@tabora/ui/button"
 import * as stylex from "@stylexjs/stylex"
+import { TaboraMark } from "@tabora/brand"
 
 import { useSiteI18n, useSiteTheme } from "../../../app/AppShell"
 
@@ -9,6 +10,7 @@ const styles = stylex.create({
     alignItems: "center",
     backgroundColor: "rgb(var(--tbr-color-surface))",
     borderBottom: "1px solid rgb(var(--tbr-color-line))",
+    boxShadow: "var(--tbr-shadow-sm)",
     display: "flex",
     gap: 24,
     height: 56,
@@ -33,15 +35,8 @@ const styles = stylex.create({
     textDecoration: "none",
   },
   logoMark: {
-    alignItems: "center",
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderRadius: 7,
-    color: "rgb(var(--tbr-color-inverse))",
-    display: "flex",
-    fontSize: 13,
-    fontWeight: 800,
+    display: "block",
     height: 28,
-    justifyContent: "center",
     width: 28,
   },
   links: {
@@ -89,9 +84,7 @@ export function DocsTopnav() {
   return (
     <header {...stylex.attrs(styles.root)} role="banner">
       <A {...stylex.attrs(styles.logo)} href="/" aria-label="Tabora 首页">
-        <span {...stylex.attrs(styles.logoMark)} aria-hidden="true">
-          T
-        </span>
+        <TaboraMark {...stylex.attrs(styles.logoMark)} aria-hidden="true" />
         <span>Tabora</span>
       </A>
       <nav {...stylex.attrs(styles.links)} aria-label="主导航">
