@@ -48,13 +48,17 @@ const styles = stylex.create({
     flexDirection: "column",
     overflow: "hidden",
     transitionDuration: motion.fast,
-    transitionProperty: "border-color, box-shadow, width, height, margin, border-radius",
+    transitionProperty: "width, height, margin, border-radius",
     transitionTimingFunction: motion.ease,
     width: "100%",
     minWidth: 0,
+    isolation: "isolate",
     ":focus-within": {
       borderColor: color.accent,
       boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.12)",
+    },
+    ":focus-visible": {
+      outline: "none",
     },
   },
   rootInvalid: {

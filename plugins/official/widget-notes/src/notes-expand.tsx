@@ -4,11 +4,13 @@ import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import { DatePicker } from "@tabora/ui/date-picker"
 import { Input } from "@tabora/ui/input"
-import { Textarea } from "@tabora/ui/textarea"
-import ChevronDown from "lucide-solid/icons/chevron-down"
-import Eye from "lucide-solid/icons/eye"
+import {
+  StandardMenuTiptapEditor,
+  MinimalTiptapEditor,
+  ensureTiptapContentStyles,
+} from "@tabora/tiptap-editor"
+import type { TiptapEditorVisibility } from "@tabora/tiptap-editor"
 import List from "lucide-solid/icons/list"
-import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 import Star from "lucide-solid/icons/star"
 import Trash from "lucide-solid/icons/trash"
@@ -31,19 +33,18 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleDateString("zh-CN", { month: "long", day: "numeric" })
 }
 
-function extractTags(content: string): string[] {
-  const matches = content.match(/#([\w\u4e00-\u9fff-]+)/g)
-  if (!matches) return []
-  return [...new Set(matches.map((t) => t.toLowerCase().replace(/^#/, "")))]
+function htmlToPlainText(html: string): string {
+  if (typeof document === "undefined") return html.replace(/<[^>]*>/g, "")
+  const tmp = document.createElement("div")
+  tmp.innerHTML = html
+  return tmp.textContent ?? tmp.innerText ?? ""
 }
 
-function highlightText(text: string, query: string): Array<{ text: string; highlighted: boolean }> {
-  if (!query) return [{ text, highlighted: false }]
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  return text
-    .split(new RegExp(`(${escaped})`, "gi"))
-    .filter(Boolean)
-    .map((part) => ({ text: part, highlighted: part.toLowerCase() === query.toLowerCase() }))
+function extractTags(content: string): string[] {
+  const plain = htmlToPlainText(content)
+  const matches = plain.match(/#([\w\u4e00-\u9fff-]+)/g)
+  if (!matches) return []
+  return [...new Set(matches.map((t) => t.toLowerCase().replace(/^#/, "")))]
 }
 
 export function NotesExpand(props: WidgetViewProps) {
@@ -55,9 +56,11 @@ export function NotesExpand(props: WidgetViewProps) {
   const [calMonth, setCalMonth] = createSignal(new Date().getMonth())
   const [searchQuery, setSearchQuery] = createSignal("")
   const [captureValue, setCaptureValue] = createSignal("")
+  const [captureVisibility, setCaptureVisibility] = createSignal<TiptapEditorVisibility>("public")
   let editTimer: ReturnType<typeof setTimeout> | undefined
 
   onMount(async () => {
+    if (typeof document !== "undefined") ensureTiptapContentStyles(document)
     const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
     if (saved) setNotes(saved)
   })
@@ -134,18 +137,14 @@ export function NotesExpand(props: WidgetViewProps) {
       result = result.filter((n) => n.updatedAt.slice(0, 10) === currentCalDate())
     }
     const q = searchQuery().toLowerCase()
-    if (q) result = result.filter((n) => n.content.toLowerCase().includes(q))
+    if (q) result = result.filter((n) => htmlToPlainText(n.content).toLowerCase().includes(q))
     return result
   })
 
-  function handleCaptureKey(e: KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      const content = captureValue()
-      if (content.trim()) {
-        void addNote(content)
-        setCaptureValue("")
-      }
+  function handleCaptureSave(html: string) {
+    if (html.trim() && html !== "<p></p>") {
+      void addNote(html)
+      setCaptureValue("")
     }
   }
 
@@ -156,14 +155,6 @@ export function NotesExpand(props: WidgetViewProps) {
     editTimer = setTimeout(() => {
       void saveEdit(id, content)
     }, 400)
-  }
-
-  function handleEditKey(e: KeyboardEvent, id: string, el: HTMLTextAreaElement) {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      void saveEdit(id, el.value)
-      setEditingId(null)
-    }
   }
 
   return (
@@ -277,30 +268,18 @@ export function NotesExpand(props: WidgetViewProps) {
       </div>
 
       <div {...stylex.attrs(styles.main)} data-notes-main>
-        <div {...stylex.attrs(styles.captureExpand)} data-notes-capture>
-          <div {...stylex.attrs(styles.captureInner)}>
-            <IconButton size="sm" variant="ghost" aria-label="附加文件">
-              <Plus size={15} />
-            </IconButton>
-            <Textarea
-              size="sm"
-              xstyle={styles.textarea}
-              rows={1}
-              value={captureValue()}
-              onInput={setCaptureValue}
-              placeholder="记点什么...（Enter 发送）"
-              aria-label="新建便签内容"
-              onKeyDown={handleCaptureKey}
-            />
-          </div>
-          <div {...stylex.attrs(styles.captureFooter)}>
-            <Button size="sm" variant="secondary">
-              <Eye size={12} />
-              公开
-              <ChevronDown size={10} />
-            </Button>
-            <span {...stylex.attrs(styles.savePill)}>保存</span>
-          </div>
+        <div {...stylex.attrs(styles.captureExpandEditor)} data-notes-capture>
+          <StandardMenuTiptapEditor
+            size="sm"
+            content={captureValue()}
+            onChange={setCaptureValue}
+            placeholder="记点什么..."
+            visibility={captureVisibility()}
+            onVisibilityChange={setCaptureVisibility}
+            onSave={handleCaptureSave}
+            saveLabel="保存"
+            contentMinHeight={60}
+          />
         </div>
 
         <Show
@@ -357,15 +336,11 @@ export function NotesExpand(props: WidgetViewProps) {
                           </Show>
                           {formatTime(note.updatedAt)}
                         </div>
-                        <div {...stylex.attrs(styles.noteContent)}>
-                          <For each={highlightText(note.content, searchQuery())}>
-                            {(part) => (
-                              <span {...stylex.attrs(part.highlighted && styles.highlight)}>
-                                {part.text}
-                              </span>
-                            )}
-                          </For>
-                        </div>
+                        <div
+                          {...stylex.attrs(styles.noteRichContent)}
+                          data-tbr-tiptap-root
+                          innerHTML={note.content}
+                        />
                         <Show when={extractTags(note.content).length > 0}>
                           <div {...stylex.attrs(styles.tags)}>
                             <For each={extractTags(note.content)}>
@@ -374,7 +349,9 @@ export function NotesExpand(props: WidgetViewProps) {
                           </div>
                         </Show>
                         <div {...stylex.attrs(styles.noteFooter)}>
-                          <span {...stylex.attrs(styles.meta)}>{note.content.length} 字</span>
+                          <span {...stylex.attrs(styles.meta)}>
+                            {htmlToPlainText(note.content).length} 字
+                          </span>
                           <div {...stylex.attrs(styles.actions)}>
                             <IconButton
                               size="sm"
@@ -405,17 +382,18 @@ export function NotesExpand(props: WidgetViewProps) {
                   >
                     <div {...stylex.attrs(styles.edit)}>
                       <div {...stylex.attrs(styles.editArea)}>
-                        <Textarea
+                        <MinimalTiptapEditor
                           size="sm"
-                          xstyle={[styles.textarea, styles.editTextarea]}
-                          value={note.content}
-                          onInput={handleEditInput}
-                          aria-label={`编辑 ${note.content.slice(0, 30)}`}
-                          onKeyDown={(e) => handleEditKey(e, note.id, e.currentTarget)}
+                          content={note.content}
+                          onChange={handleEditInput}
+                          contentMinHeight={100}
+                          xstyle={styles.editEditor}
                         />
                       </div>
                       <div {...stylex.attrs(styles.editFooter)}>
-                        <span {...stylex.attrs(styles.meta)}>{note.content.length} 字</span>
+                        <span {...stylex.attrs(styles.meta)}>
+                          {htmlToPlainText(note.content).length} 字
+                        </span>
                         <span {...stylex.attrs(styles.saved)}>
                           <span {...stylex.attrs(styles.savedDot)} />
                           已保存

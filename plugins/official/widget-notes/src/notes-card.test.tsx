@@ -151,11 +151,11 @@ describe("NotesExpand", () => {
     root.remove()
   })
 
-  it("renders capture textarea", () => {
+  it("renders capture editor", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesExpand {...makeProps()} />, root)
-    expect(root.querySelector("[data-notes-capture] textarea")).toBeTruthy()
+    expect(root.querySelector("[data-notes-capture] [data-tbr-tiptap-root]")).toBeTruthy()
     root.remove()
   })
 
@@ -261,7 +261,7 @@ describe("NotesExpand", () => {
       display.dispatchEvent(event)
     }
     await flushMount()
-    expect(root.querySelector("[data-note-card][data-editing] textarea")).toBeTruthy()
+    expect(root.querySelector("[data-note-card][data-editing] [data-tbr-tiptap-root]")).toBeTruthy()
     root.remove()
   })
 })

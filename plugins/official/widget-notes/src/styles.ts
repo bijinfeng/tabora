@@ -459,6 +459,10 @@ export const styles = stylex.create({
       boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.08)",
     },
   },
+  captureExpandEditor: {
+    flexShrink: 0,
+    marginBottom: 10,
+  },
   captureInner: {
     alignItems: "flex-start",
     display: "flex",
@@ -487,6 +491,9 @@ export const styles = stylex.create({
   },
   editTextarea: {
     minHeight: 100,
+  },
+  editEditor: {
+    borderRadius: "var(--tbr-radius-control)",
   },
   captureFooter: {
     alignItems: "center",
@@ -555,7 +562,12 @@ export const styles = stylex.create({
     color: "rgb(var(--tbr-color-text))",
     fontSize: 14,
     lineHeight: 1.45,
-    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+  },
+  noteRichContent: {
+    color: "rgb(var(--tbr-color-text))",
+    fontSize: 14,
+    lineHeight: 1.6,
     wordBreak: "break-word",
   },
   highlight: {

@@ -170,6 +170,14 @@ export function ensureTiptapContentStyles(targetDocument: Document = document) {
     color: rgb(var(--tbr-color-text-subtle));
     text-decoration: line-through;
   }
+  [data-tbr-tiptap-root]:has([aria-expanded="true"]) {
+    border-color: rgb(var(--tbr-color-accent));
+    box-shadow: 0 0 0 3px rgb(var(--tbr-color-accent) / 0.12);
+  }
+  [data-tbr-tiptap-root][data-tiptap-invalid]:has([aria-expanded="true"]) {
+    border-color: rgb(var(--tbr-color-danger));
+    box-shadow: 0 0 0 3px rgb(var(--tbr-color-danger) / 0.12);
+  }
 `
   targetDocument.head.append(style)
   contentStyleInjected = true

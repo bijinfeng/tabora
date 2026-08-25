@@ -73,8 +73,8 @@ export const shadow = stylex.defineVars({
 export const zIndex = stylex.defineVars({
   base: "var(--tbr-z-base)",
   sticky: "var(--tbr-z-sticky)",
-  dropdown: "var(--tbr-z-dropdown)",
   overlay: "var(--tbr-z-overlay)",
   modal: "var(--tbr-z-modal)",
+  dropdown: "var(--tbr-z-dropdown)",
   toast: "var(--tbr-z-toast)",
 })

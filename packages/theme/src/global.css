@@ -95,10 +95,10 @@
 
   --tbr-z-base: 1;
   --tbr-z-sticky: 100;
-  --tbr-z-dropdown: 200;
   --tbr-z-overlay: 300;
   --tbr-z-modal: 400;
-  --tbr-z-toast: 500;
+  --tbr-z-dropdown: 600;
+  --tbr-z-toast: 700;
 
   --tbr-shadow-sm: 0 1px 2px rgb(var(--tbr-color-shadow) / 0.08);
   --tbr-shadow-md: 0 4px 12px rgb(var(--tbr-color-shadow) / 0.12);

@@ -24,6 +24,7 @@
   "dependencies": {
     "@stylexjs/stylex": "catalog:style",
     "@tabora/plugin-api": "workspace:*",
+    "@tabora/tiptap-editor": "workspace:*",
     "@tabora/ui": "workspace:*",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui"
