@@ -153,11 +153,28 @@ describe("createPluginRuntimeContext permissions", () => {
     expect(hostFetch).toHaveBeenCalledWith("https://api.example.com/data", { method: "GET" })
   })
 
-  it("denies network hosts outside the request or grant without calling the host", async () => {
+  it("requests authorization for unauthorized network hosts and rejects when denied", async () => {
+    const events = createEventBus()
     const hostFetch = vi.fn(async () => new Response("ok"))
+    const requests: Array<{ pluginId: string; permission: PluginPermission; reason?: string }> = []
+    events.on("permission.request", (payload) => {
+      const request = payload as {
+        pluginId: string
+        permission: PluginPermission
+        reason?: string
+        resolve: (granted: boolean) => void
+      }
+      requests.push({
+        pluginId: request.pluginId,
+        permission: request.permission,
+        ...(request.reason !== undefined ? { reason: request.reason } : {}),
+      })
+      request.resolve(false)
+    })
+
     const context = createPluginRuntimeContext({
       pluginId: "plugin.example",
-      events: createEventBus(),
+      events,
       registry: createExtensionRegistry(),
       requestedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
       grantedPermissions: [{ type: "network", hosts: ["other.example.com"] }],
@@ -169,6 +186,102 @@ describe("createPluginRuntimeContext permissions", () => {
       "attempted network access without permission",
     )
     expect(hostFetch).not.toHaveBeenCalled()
+    expect(requests).toEqual([
+      {
+        pluginId: "plugin.example",
+        permission: { type: "network", hosts: ["api.example.com"] },
+      },
+    ])
+  })
+
+  it("requests the whole declared network scope so one grant covers every declared host", async () => {
+    const events = createEventBus()
+    const hostFetch = vi.fn(async () => new Response("ok"))
+    const requests: PluginPermission[] = []
+    let granted: PluginPermission[] = []
+    events.on("permission.request", (payload) => {
+      const request = payload as {
+        permission: PluginPermission
+        resolve: (granted: boolean) => void
+      }
+      requests.push(request.permission)
+      granted = [...granted, request.permission]
+      request.resolve(true)
+    })
+
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "network", hosts: ["a.example.com", "b.example.com"] }],
+      grantedPermissions: () => granted,
+      network: { fetch: hostFetch },
+    })
+
+    await context.network.fetch("https://a.example.com/one")
+    // The second host was covered by the single grant, so no further prompt is emitted.
+    await context.network.fetch("https://b.example.com/two")
+
+    expect(requests).toEqual([{ type: "network", hosts: ["a.example.com", "b.example.com"] }])
+    expect(hostFetch).toHaveBeenCalledTimes(2)
+  })
+
+  it("rejects network access to a host the plugin never declared", async () => {
+    const events = createEventBus()
+    const hostFetch = vi.fn(async () => new Response("ok"))
+    const requests: PluginPermission[] = []
+    events.on("permission.request", (payload) => {
+      const request = payload as {
+        permission: PluginPermission
+        resolve: (granted: boolean) => void
+      }
+      requests.push(request.permission)
+      request.resolve(true)
+    })
+
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
+      grantedPermissions: [],
+      network: { fetch: hostFetch },
+    })
+
+    await expect(context.network.fetch("https://evil.example.com/data")).rejects.toThrow(
+      "attempted network access to an undeclared host",
+    )
+    expect(requests).toEqual([])
+    expect(hostFetch).not.toHaveBeenCalled()
+  })
+
+  it("proceeds with the fetch once authorization is granted at runtime", async () => {
+    const events = createEventBus()
+    const hostFetch = vi.fn(async () => new Response("ok"))
+    let granted: PluginPermission[] = []
+    events.on("permission.request", (payload) => {
+      const request = payload as {
+        permission: PluginPermission
+        resolve: (granted: boolean) => void
+      }
+      granted = [...granted, request.permission]
+      request.resolve(true)
+    })
+
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events,
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
+      grantedPermissions: () => granted,
+      network: { fetch: hostFetch },
+    })
+
+    expect(context.network.canFetch("https://api.example.com/data")).toBe(false)
+    await context.network.fetch("https://api.example.com/data", { method: "GET" })
+
+    expect(hostFetch).toHaveBeenCalledWith("https://api.example.com/data", { method: "GET" })
+    expect(context.network.canFetch("https://api.example.com/data")).toBe(true)
   })
 
   it("exposes a runtime toast bridge through typed UI events", () => {

@@ -339,7 +339,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       registry,
       manifest: plugin.manifest,
       requestedPermissions: plugin.manifest.permissions ?? [],
-      grantedPermissions: plugin.installation.grantedPermissions,
+      grantedPermissions: () => plugin.installation.grantedPermissions,
       registrationDisposers,
       ...(options.ai ? { ai: options.ai } : {}),
       ...(options.network ? { network: options.network } : {}),
@@ -671,13 +671,11 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         permission,
       ]
 
-      // Persist to storage
+      // Persist to storage. The active runtime context reads grantedPermissions lazily,
+      // so the grant takes effect on the next permission check without a context rebuild.
       if (options.lifecycleStore) {
         await options.lifecycleStore.save(buildRecord(plugin))
       }
-
-      // Note: RuntimeContext refresh would require recreating the context,
-      // which is complex. For MVP, new permissions take effect on next plugin activation.
     },
     async revokePermission(pluginId, permission) {
       const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)

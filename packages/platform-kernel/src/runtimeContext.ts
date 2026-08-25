@@ -67,13 +67,19 @@ export function createPluginRuntimeContext(options: {
   registry: ExtensionRegistry
   manifest?: PluginManifest
   requestedPermissions?: PluginPermission[]
-  grantedPermissions?: PluginPermission[]
+  /**
+   * Granted permissions, read lazily so runtime grants take effect without recreating the context.
+   * Accepts a snapshot array (kept for callers/tests that pass a fixed set) or a getter.
+   */
+  grantedPermissions?: PluginPermission[] | (() => PluginPermission[])
   registrationDisposers?: ExtensionRegistrationDisposer[]
   ai?: AiRuntimeBridge
   network?: PluginNetworkBridge
   i18n?: PluginI18nService
 }): PluginContext {
-  const grantedPermissions = options.grantedPermissions ?? []
+  const grantedOption = options.grantedPermissions
+  const readGrantedPermissions: () => PluginPermission[] =
+    typeof grantedOption === "function" ? grantedOption : () => grantedOption ?? []
   const requestedPermissions = options.requestedPermissions ?? options.manifest?.permissions ?? []
   const declaredViews = options.manifest ? collectPluginManifestViewIds(options.manifest) : null
   const declaredSettingsProviders = options.manifest
@@ -142,7 +148,7 @@ export function createPluginRuntimeContext(options: {
       return false
     }
 
-    return [requestedPermissions, grantedPermissions].every((permissions) =>
+    return [requestedPermissions, readGrantedPermissions()].every((permissions) =>
       permissions.some(
         (permission) =>
           permission.type === type &&
@@ -160,7 +166,7 @@ export function createPluginRuntimeContext(options: {
   }
 
   function hasAiAccess(access: AiPermissionAccess): boolean {
-    return [requestedPermissions, grantedPermissions].every((permissions) =>
+    return [requestedPermissions, readGrantedPermissions()].every((permissions) =>
       permissions.some(
         (permission) => permission.type === "ai" && permission.access.includes(access),
       ),
@@ -170,7 +176,7 @@ export function createPluginRuntimeContext(options: {
   function hasAnyAiAccess(): boolean {
     return (
       requestedPermissions.some((permission) => permission.type === "ai") &&
-      grantedPermissions.some((permission) => permission.type === "ai")
+      readGrantedPermissions().some((permission) => permission.type === "ai")
     )
   }
 
@@ -180,6 +186,22 @@ export function createPluginRuntimeContext(options: {
         `Plugin "${options.pluginId}" attempted to use AI ${access} without permission`,
       )
     }
+  }
+
+  /**
+   * Ask the host to grant a permission at runtime. Emits `permission.request` and resolves with the
+   * user's decision. A host that grants "always" persists the grant, which the lazy permission
+   * readers above then observe on the next check.
+   */
+  function requestPermission(permission: PluginPermission, reason?: string): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      options.events.emit("permission.request", {
+        pluginId: options.pluginId,
+        permission,
+        resolve,
+        ...(reason !== undefined ? { reason } : {}),
+      })
+    })
   }
 
   const ai: AiRuntimeBridge | undefined =
@@ -271,12 +293,40 @@ export function createPluginRuntimeContext(options: {
     network: {
       canFetch,
       async fetch(url, init) {
-        if (!canFetch(url)) {
+        if (options.network === undefined) {
           throw new Error(
-            `Plugin "${options.pluginId}" attempted network access without permission: ${url}`,
+            `Plugin "${options.pluginId}" attempted network access without a host network bridge: ${url}`,
           )
         }
-        return options.network!.fetch(url, init)
+        if (!canFetch(url)) {
+          let hostname: string
+          try {
+            hostname = new URL(url).hostname
+          } catch {
+            throw new Error(
+              `Plugin "${options.pluginId}" attempted network access to an invalid URL: ${url}`,
+            )
+          }
+          // Prompt for the plugin's whole declared network scope rather than this single host,
+          // so one grant covers every host it declared and concurrent fetches don't re-prompt.
+          const declared = requestedPermissions.find(
+            (permission): permission is Extract<PluginPermission, { type: "network" }> =>
+              permission.type === "network" &&
+              permission.hosts.some((host) => host === "*" || host === hostname),
+          )
+          if (declared === undefined) {
+            throw new Error(
+              `Plugin "${options.pluginId}" attempted network access to an undeclared host: ${url}`,
+            )
+          }
+          const granted = await requestPermission(declared)
+          if (!granted) {
+            throw new Error(
+              `Plugin "${options.pluginId}" attempted network access without permission: ${url}`,
+            )
+          }
+        }
+        return options.network.fetch(url, init)
       },
     },
     ...(ai ? { ai } : {}),

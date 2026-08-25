@@ -218,6 +218,45 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(generatedText).toBe("from-ai:bootstrap")
   })
 
+  it("trusts builtin declared permissions but keeps network just-in-time", async () => {
+    let canFetchAtActivation: boolean | undefined
+    let canOpenAtActivation: boolean | undefined
+    const runtime = createWorkbenchRuntimeBootstrap({
+      host: createWebHostAdapter({ id: "host.test" }),
+      plugins: [
+        createBuiltinPluginPackage({
+          manifest: {
+            id: "test.network-plugin",
+            name: "Test Network Plugin",
+            version: "0.0.1",
+            apiVersion: "1.0.0",
+            entry: "./index.ts",
+            engine: { platform: "^0.1.0" },
+            permissions: [
+              { type: "network", hosts: ["api.example.com"] },
+              { type: "external-open", hosts: ["example.com"] },
+            ],
+            contributes: {},
+          },
+          async activate(context) {
+            canFetchAtActivation = context.network.canFetch("https://api.example.com/data")
+            canOpenAtActivation = context.permissions.canOpenExternal("https://example.com/page")
+          },
+        }),
+      ],
+      defaultWorkspacePreset,
+      shellConfig,
+    })
+
+    await runtime.kernel.discover(runtime.plugins)
+    await runtime.kernel.activateEnabledPlugins()
+
+    // Network stays just-in-time: not pre-granted at startup for a trusted builtin.
+    expect(canFetchAtActivation).toBe(false)
+    // Other declared permissions (external-open) remain trusted for builtins.
+    expect(canOpenAtActivation).toBe(true)
+  })
+
   it("registers shell message bundles for both locales", () => {
     const runtime = createWorkbenchRuntimeBootstrap({
       host: createWebHostAdapter({ id: "host.test" }),
