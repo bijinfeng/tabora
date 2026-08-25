@@ -61,7 +61,13 @@ export function sx(...args: Array<unknown>): {
   let mergedStyle: string | Record<string, unknown> | undefined
   if (mergedStr && mergedObj) {
     mergedStyle = `${mergedStr}; ${Object.entries(mergedObj)
-      .map(([k, v]) => `${k}:${v}`)
+      .map(([k, v]) => {
+        if (typeof v === "object") return `${k}:${JSON.stringify(v)}`
+        if (typeof v === "string") return `${k}:${v}`
+        if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint")
+          return `${k}:${v.toString()}`
+        return `${k}:`
+      })
       .join(";")}`
   } else {
     mergedStyle = mergedStr ?? mergedObj

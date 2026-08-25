@@ -79,7 +79,7 @@ export const pluginInstanceSchema = z
     }
   })
 
-const regionStateSchema = z.object({
+const _regionStateSchema = z.object({
   regionId: z.string().min(1),
   accepts: z.array(regionContentKindSchema).min(1),
   instances: z.array(

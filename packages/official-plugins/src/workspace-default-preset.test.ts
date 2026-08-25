@@ -91,7 +91,7 @@ describe("officialDefaultWorkspacePreset", () => {
     const theme =
       officialDefaultWorkspacePreset.theme.pluginId === BUILTIN_THEME_PLUGIN_ID
         ? builtinThemes.find(
-            (candidate) => candidate.id === officialDefaultWorkspacePreset.theme.id,
+            (candidate: { id: string }) => candidate.id === officialDefaultWorkspacePreset.theme.id,
           )
         : themes.find(
             ({ contribution }) => contribution.id === officialDefaultWorkspacePreset.theme.id,

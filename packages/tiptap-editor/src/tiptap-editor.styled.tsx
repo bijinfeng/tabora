@@ -11,15 +11,12 @@ import {
 } from "solid-js"
 
 import { color, font, motion, radius, space } from "@tabora/theme/tokens.stylex"
-import { Plus } from "lucide-solid/icons"
 
-import { HeadlessTiptapEditor } from "./tiptap-editor"
 import type { HeadlessTiptapEditorProps } from "./tiptap-editor"
 import {
   Toolbar,
   defaultToolbar,
   compactToolbar,
-  minimalToolbar,
   type ToolbarGroupConfig,
 } from "./tiptap-editor-toolbar"
 
@@ -29,7 +26,6 @@ import {
   type TiptapEditorInsertKind,
   ensureTiptapContentStyles,
 } from "./tiptap-editor-root"
-import type { SolidAttrs, TiptapEditorRootProps } from "./tiptap-editor-root"
 import { useTiptapEditorContext, type TiptapEditorVisibility } from "./tiptap-editor-context"
 import { TiptapEditorContent } from "./tiptap-editor-content"
 import { TiptapEditorActions, type TiptapEditorActionInsertItem } from "./tiptap-editor-actions"
@@ -393,7 +389,6 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     const v = variant()
     return v === "standard" || v === "standard-with-menu" || v === "focus"
   }
-  const showFormatToolbarToggle = () => variant() === "standard-with-menu"
   const showActions = () => (local.showActions === undefined ? true : local.showActions)
   const hasInsertMenu = () =>
     variant() === "standard-with-menu" ||

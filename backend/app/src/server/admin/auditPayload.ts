@@ -40,7 +40,9 @@ export type AuditDescriptor = {
 export function idFrom(key: string): (data: Record<string, unknown>) => string | null {
   return (data) => {
     const value = data[key]
-    return value == null ? null : String(value)
+    if (value == null) return null
+    if (typeof value === "string" || typeof value === "number") return String(value)
+    return JSON.stringify(value)
   }
 }
 

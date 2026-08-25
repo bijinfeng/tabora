@@ -79,21 +79,21 @@ const PLACEHOLDER = "此刻的想法…"
 const BASE_CONTENT =
   "<p>在这里开始你的想法。所有示例共享同一份视觉基础，按 <strong>shadcn 风格</strong> 拆分为可组合的 primitive 与 styled 两层。</p>"
 
-type DemoVariantItem = {
-  id: string
-  label: string
-  hint: string
-  render: (
-    onChange: (html: string) => void,
-    log: (kind: string, detail?: unknown) => void,
-  ) => Component["prototype"]["render"]
-}
-
 export const TiptapEditorDemo: Component = () => {
   const [logEntries, setLogEntries] = createSignal<string[]>([])
   const pushLog = (kind: string, detail?: unknown) => {
     const now = new Date().toLocaleTimeString()
-    const line = detail === undefined ? `${now}  ${kind}` : `${now}  ${kind}  ${String(detail)}`
+    let line = `${now}  ${kind}`
+    if (detail !== undefined) {
+      if (typeof detail === "string") line = `${line}  ${detail}`
+      else if (
+        typeof detail === "number" ||
+        typeof detail === "boolean" ||
+        typeof detail === "bigint"
+      )
+        line = `${line}  ${detail.toString()}`
+      else line = `${line}  ${JSON.stringify(detail)}`
+    }
     setLogEntries((prev) => [line, ...prev].slice(0, 30))
   }
   const onChange = (_html: string) => {

@@ -483,7 +483,7 @@ export function TiptapEditorRoot(props: TiptapEditorRootProps) {
 }
 
 export function useTiptapEditorRootContent(
-  props: {
+  _props: {
     contentAttrs?: SolidAttrs<HTMLElement>
   } = {},
 ): {
