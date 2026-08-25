@@ -1,6 +1,7 @@
 import type {
   BackgroundProviderContribution,
   PluginInstance,
+  PluginPermission,
   SearchHistoryEntry,
   ThemeContribution,
   WorkbenchSearchSettings,
@@ -264,7 +265,10 @@ function controllerSetup() {
   const clearExpandState = vi.fn()
   const saveInstance = vi.fn(async () => {})
   const saveForWorkspace = vi.fn(async () => {})
-  const kernel = { setPluginEnabled: vi.fn(async () => {}) }
+  const kernel = {
+    setPluginEnabled: vi.fn(async () => {}),
+    revokePermission: vi.fn(async () => {}),
+  }
   const syncPluginStyles = vi.fn()
   const i18n = { locale: vi.fn(() => "zh-CN" as const), setLocale: vi.fn() }
   const database = {} as unknown as TaboraDatabase
@@ -453,5 +457,15 @@ describe("createWorkbenchWorkspaceController", () => {
     expect(kernel.setPluginEnabled).toHaveBeenNthCalledWith(1, "plugin.widgets", false)
     expect(kernel.setPluginEnabled).toHaveBeenNthCalledWith(2, "plugin.widgets", true)
     expect(syncPluginStyles).toHaveBeenCalledTimes(2)
+  })
+
+  it("revokes a granted permission through the kernel and refreshes the plugin records", async () => {
+    const { controller, kernel, syncPluginStyles } = controllerSetup()
+    const permission: PluginPermission = { type: "network", hosts: ["api.example.com"] }
+
+    await controller.revokePluginPermission("plugin.widgets", permission)
+
+    expect(kernel.revokePermission).toHaveBeenCalledWith("plugin.widgets", permission)
+    expect(syncPluginStyles).toHaveBeenCalledTimes(1)
   })
 })

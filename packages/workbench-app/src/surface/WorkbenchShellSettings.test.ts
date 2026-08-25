@@ -1,4 +1,5 @@
 import type {
+  PluginPermission,
   SettingsPanelData,
   SettingsPanelViewProps,
   WorkbenchSearchSettings,
@@ -64,6 +65,7 @@ function settingsHost(): SettingsPanelViewProps["host"] {
     setDefaultSearchProvider: vi.fn(async () => {}),
     setSearchProviderEnabled: vi.fn(async () => {}),
     togglePluginEnabled: vi.fn(async () => {}),
+    revokePluginPermission: vi.fn(async () => {}),
     exportWorkspace: vi.fn(async () => ""),
     importWorkspace: vi.fn(async () => ({ warnings: [] })),
     createWorkspace: vi.fn(async () => {}),
@@ -155,6 +157,7 @@ describe("buildWorkbenchSettingsPanelProps", () => {
         version: "1.0.0",
         enabled: true,
         permissions: [],
+        grantedPermissions: [],
         contributionKinds: [],
       },
     ]
@@ -247,6 +250,42 @@ describe("buildWorkbenchSettingsPanelProps", () => {
     expect(close).toHaveBeenCalledOnce()
     expect("switchTheme" in result.host).toBe(false)
     expect("togglePluginEnabled" in result.host).toBe(false)
+    expect("revokePluginPermission" in result.host).toBe(false)
     expect(result.data).toEqual({})
+  })
+
+  it("exposes permission revocation only to panels granted plugins.manage", async () => {
+    const revokePluginPermission = vi.fn(async () => {})
+    const host = { ...settingsHost(), revokePluginPermission }
+    const context = {
+      workspace: workspace(),
+      workspaces: [],
+      themes: [],
+      backgrounds: [],
+      searchProviders: [],
+      searchSettings: {
+        defaultProvider: refs.provider("official.search.google"),
+        enabledProviders: [],
+      },
+      plugins: [],
+      locale: "zh-CN" as const,
+      availableLocales: [],
+      host,
+      surface: "desktop" as const,
+    }
+
+    const ungranted = buildWorkbenchSettingsPanelProps(
+      panel({ hostActions: ["plugins.manage"], grantedHostActions: [] }),
+      context,
+    )
+    expect("revokePluginPermission" in ungranted.host).toBe(false)
+
+    const granted = buildWorkbenchSettingsPanelProps(
+      panel({ hostActions: ["plugins.manage"], grantedHostActions: ["plugins.manage"] }),
+      context,
+    )
+    const permission: PluginPermission = { type: "network", hosts: ["api.example.com"] }
+    await granted.host.revokePluginPermission?.("plugin.weather", permission)
+    expect(revokePluginPermission).toHaveBeenCalledWith("plugin.weather", permission)
   })
 })

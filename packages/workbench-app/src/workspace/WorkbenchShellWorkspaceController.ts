@@ -3,6 +3,7 @@ import type {
   BackgroundProviderContributionRef,
   BackgroundRendererContributionRef,
   PluginInstance,
+  PluginPermission,
   SearchHistoryEntry,
   SearchProviderContribution,
   SearchProviderContributionRef,
@@ -55,7 +56,10 @@ export function createWorkbenchWorkspaceController(options: {
   instanceRepo: InstanceRepo
   pluginDataRepo: PluginDataRepo
   database?: TaboraDatabase
-  kernel: { setPluginEnabled: (pluginId: string, enabled: boolean) => Promise<void> }
+  kernel: {
+    setPluginEnabled: (pluginId: string, enabled: boolean) => Promise<void>
+    revokePermission: (pluginId: string, permission: PluginPermission) => Promise<void>
+  }
   pluginCatalog: {
     pluginIds: () => string[]
     listThemes: () => Array<ThemeContribution & { ref: ThemeContributionRef }>
@@ -163,6 +167,11 @@ export function createWorkbenchWorkspaceController(options: {
     await options.syncPluginStyles?.()
   }
 
+  async function revokePluginPermission(pluginId: string, permission: PluginPermission) {
+    await options.kernel.revokePermission(pluginId, permission)
+    await options.syncPluginStyles?.()
+  }
+
   async function saveSearchHistory(entry: { query: string; providerId: string }) {
     const workspace = requireWorkspace(options.getWorkspaceState())
     await saveWorkbenchSearchHistory({
@@ -242,6 +251,7 @@ export function createWorkbenchWorkspaceController(options: {
     setDefaultSearchProvider,
     setSearchProviderEnabled,
     togglePluginEnabled,
+    revokePluginPermission,
     saveSearchHistory,
     exportWorkspace: workspaceStateActions.exportWorkspace,
     importWorkspace: workspaceStateActions.importWorkspace,
