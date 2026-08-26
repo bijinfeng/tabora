@@ -74,11 +74,6 @@ const styles = stylex.create({
     display: "flex",
     gap: 10,
   },
-  actionButton: {
-    fontSize: 14,
-    height: 38,
-    paddingInline: 16,
-  },
 })
 
 export type PrototypeTopnavAction = {
@@ -139,17 +134,11 @@ export function PrototypeTopnav(props: {
         </nav>
         <div {...stylex.attrs(styles.actions)} data-site-nav-actions>
           {props.actions?.map((action) => (
-            <Button
-              href={getSiteHref(action.href)}
-              size="md"
-              variant={action.variant}
-              xstyle={styles.actionButton}
-            >
+            <Button href={getSiteHref(action.href)} variant={action.variant}>
               {action.label}
             </Button>
           ))}
           <IconButton
-            size="lg"
             variant="secondary"
             data-dark-toggle
             aria-label={i18n.t("a11y.toggleTheme")}

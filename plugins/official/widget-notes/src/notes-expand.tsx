@@ -4,11 +4,7 @@ import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import { DatePicker } from "@tabora/ui/date-picker"
 import { Input } from "@tabora/ui/input"
-import {
-  StandardMenuTiptapEditor,
-  MinimalTiptapEditor,
-  ensureTiptapContentStyles,
-} from "@tabora/tiptap-editor"
+import { TiptapEditor, ensureTiptapContentStyles } from "@tabora/tiptap-editor"
 import type { TiptapEditorVisibility } from "@tabora/tiptap-editor"
 import List from "lucide-solid/icons/list"
 import Search from "lucide-solid/icons/search"
@@ -269,7 +265,8 @@ export function NotesExpand(props: WidgetViewProps) {
 
       <div {...stylex.attrs(styles.main)} data-notes-main>
         <div {...stylex.attrs(styles.captureExpandEditor)} data-notes-capture>
-          <StandardMenuTiptapEditor
+          <TiptapEditor
+            variant="standard-with-menu"
             size="sm"
             content={captureValue()}
             onChange={setCaptureValue}
@@ -382,7 +379,8 @@ export function NotesExpand(props: WidgetViewProps) {
                   >
                     <div {...stylex.attrs(styles.edit)}>
                       <div {...stylex.attrs(styles.editArea)}>
-                        <MinimalTiptapEditor
+                        <TiptapEditor
+                          variant="minimal"
                           size="sm"
                           content={note.content}
                           onChange={handleEditInput}

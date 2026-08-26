@@ -895,6 +895,7 @@ export function NotesEditor() {
             ["items", "菜单项列表"],
             ["open", "展开状态"],
             ["onSelect", "选中回调"],
+            ["modal", "是否锁定外部交互和滚动；默认 false，只有确需模态菜单时才设为 true"],
           ],
         },
         doTitle: "✓ 应当",

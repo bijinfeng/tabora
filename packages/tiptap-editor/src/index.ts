@@ -1,12 +1,4 @@
-export {
-  TiptapEditor,
-  MinimalTiptapEditor,
-  StandardTiptapEditor,
-  StandardMenuTiptapEditor,
-  FocusTiptapEditor,
-  FullTiptapEditor,
-  TiptapEditor as default,
-} from "./tiptap-editor.styled"
+export { TiptapEditor, FullTiptapEditor, TiptapEditor as default } from "./tiptap-editor.styled"
 export { HeadlessTiptapEditor } from "./tiptap-editor"
 export { useTiptapEditor } from "./use-tiptap-editor"
 export { TiptapEditorDemo } from "./tiptap-editor.demo"

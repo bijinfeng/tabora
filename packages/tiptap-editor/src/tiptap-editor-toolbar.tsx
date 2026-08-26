@@ -60,6 +60,11 @@ const styles = stylex.create({
     display: "flex",
     gap: space.s1,
   },
+  toolbarEnd: {
+    alignItems: "center",
+    display: "flex",
+    marginInlineStart: "auto",
+  },
   toolbarDivider: {
     alignSelf: "stretch",
     backgroundColor: color.line,
@@ -854,6 +859,7 @@ export function Toolbar(props: {
   groups: ToolbarGroupConfig[]
   uploadImage?: ((file: File) => Promise<string>) | undefined
   xstyle?: StyleXStyles | ReturnType<typeof stylex.attrs> | undefined
+  end?: JSX.Element | undefined
 }) {
   const [linkOpen, setLinkOpen] = createSignal(false)
 
@@ -895,6 +901,9 @@ export function Toolbar(props: {
           </div>
         )}
       </For>
+      <Show when={props.end}>
+        <div {...sx(styles.toolbarEnd)}>{props.end}</div>
+      </Show>
     </div>
   )
 }

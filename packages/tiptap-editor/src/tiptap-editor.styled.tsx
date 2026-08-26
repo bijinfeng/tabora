@@ -11,6 +11,8 @@ import {
 } from "solid-js"
 
 import { color, font, motion, radius, space } from "@tabora/theme/tokens.stylex"
+import { Shrink } from "lucide-solid/icons"
+import { IconButton } from "@tabora/ui/button"
 
 import type { HeadlessTiptapEditorProps } from "./tiptap-editor"
 import {
@@ -244,12 +246,6 @@ const styles = stylex.create({
     minHeight: "min(80vh, 900px)",
     overflow: "hidden",
   },
-  focusExit: {
-    position: "absolute",
-    top: space.s4,
-    right: space.s4,
-    zIndex: 2,
-  },
   actionsVisibilityText: {
     color: color.accent,
     fontSize: 13,
@@ -374,6 +370,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     typeof local.content === "string" ? local.content : "",
   )
   const [focusOpen, setFocusOpen] = createSignal<boolean>(local.focusMode ?? false)
+  const [formatToolbarVisible, setFormatToolbarVisible] = createSignal(true)
 
   onMount(() => {
     ensureTiptapContentStyles(document)
@@ -389,9 +386,10 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
 
   const variant = (): TiptapEditorVariant => local.variant ?? "standard"
   const showToolbar = () => {
-    if (local.showToolbar !== undefined) return local.showToolbar
-    const v = variant()
-    return v === "standard" || v === "standard-with-menu" || v === "focus"
+    const defaultVisible =
+      local.showToolbar ??
+      (variant() === "standard" || variant() === "standard-with-menu" || variant() === "focus")
+    return defaultVisible && formatToolbarVisible()
   }
   const showActions = () => (local.showActions === undefined ? true : local.showActions)
   const hasInsertMenu = () =>
@@ -443,7 +441,8 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
           if (kind === "toggle-focus") {
             toggleFocusMode()
           } else if (kind === "toggle-format-toolbar") {
-            // format toolbar 开关由 primitive 使用 context 管理；styled 层仅在 primitive 组合时消费
+            setFormatToolbarVisible(!formatToolbarVisible())
+            local.onInsertKind?.(kind)
             x.onClick?.()
           } else {
             local.onInsertKind?.(kind as TiptapEditorInsertKind)
@@ -454,7 +453,10 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
   }
 
   const toggleFocusMode = () => {
-    const next = !focusOpen()
+    setFocusMode(!focusOpen())
+  }
+
+  const setFocusMode = (next: boolean) => {
     setFocusOpen(next)
     local.onFocusModeChange?.(next)
   }
@@ -535,7 +537,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
                     style: { display: "contents" },
                   }}
                 >
-                  <Show when={isFocusVariant() && !focusOpen()}>
+                  <Show when={isFocusVariant() && !focusOpen() && !hasInsertMenu()}>
                     <TiptapEditorFocusEntry onClick={toggleFocusMode} />
                   </Show>
                 </TiptapEditorActions>
@@ -554,10 +556,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
       {renderCore()}
       <TiptapEditorFocusShell
         open={focusOpen()}
-        onOpenChange={(next) => {
-          setFocusOpen(next)
-          local.onFocusModeChange?.(next)
-        }}
+        onOpenChange={setFocusMode}
         xstyleOverlay={styles.focusOverlay}
         xstyleCard={styles.focusCard}
       >
@@ -603,12 +602,25 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
         contentAttrs={{ class: undefined, style: { display: "contents" } }}
       >
         <div {...sx(styles.contentShell)}>
-          <Toolbar
-            editor={editorRef}
-            groups={toolbarGroups().length > 0 ? toolbarGroups() : defaultToolbar}
-            uploadImage={local.uploadImage}
-            xstyle={toolbarC}
-          />
+          <Show when={showToolbar()}>
+            <Toolbar
+              editor={editorRef}
+              groups={toolbarGroups().length > 0 ? toolbarGroups() : defaultToolbar}
+              uploadImage={local.uploadImage}
+              xstyle={toolbarC}
+              end={
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  aria-label="退出聚焦模式"
+                  title="退出聚焦模式"
+                  onClick={() => setFocusMode(false)}
+                >
+                  <Shrink height={16} width={16} />
+                </IconButton>
+              }
+            />
+          </Show>
           <TiptapEditorContent onReady={(e) => !editorRef() && setEditorRef(e)} xstyle={contentC} />
           <div {...actionsBarC}>
             <Show
@@ -642,18 +654,6 @@ export function TiptapEditor(props: TiptapEditorProps) {
   return <StyledTiptapEditor {...props} />
 }
 
-export function MinimalTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
-  return <TiptapEditor {...props} variant="minimal" />
-}
-export function StandardTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
-  return <TiptapEditor {...props} variant="standard" />
-}
-export function StandardMenuTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
-  return <TiptapEditor {...props} variant="standard-with-menu" />
-}
-export function FocusTiptapEditor(props: Omit<TiptapEditorProps, "variant">) {
-  return <TiptapEditor {...props} variant="focus" />
-}
 export function FullTiptapEditor(
   props: Omit<TiptapEditorProps, "variant" | "showActions" | "toolbarItems">,
 ) {

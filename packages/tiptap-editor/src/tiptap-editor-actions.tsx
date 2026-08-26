@@ -137,7 +137,7 @@ export function TiptapEditorActions(props: TiptapEditorActionsProps) {
               {(t: DropdownMenuTriggerRenderProps) => {
                 const { class: _c, style: _s, ...rest } = t as any
                 return (
-                  <Button
+                  <IconButton
                     {...rest}
                     variant="ghost"
                     size="sm"
@@ -147,7 +147,7 @@ export function TiptapEditorActions(props: TiptapEditorActionsProps) {
                     style={local.insertTriggerStyle}
                   >
                     <ImagePlus height={16} width={16} />
-                  </Button>
+                  </IconButton>
                 )
               }}
             </DropdownMenu>

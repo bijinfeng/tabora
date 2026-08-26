@@ -1,14 +1,9 @@
 import * as stylex from "@stylexjs/stylex"
 import { Component, createSignal, ErrorBoundary } from "solid-js"
 
-import {
-  MinimalTiptapEditor,
-  StandardTiptapEditor,
-  StandardMenuTiptapEditor,
-  FocusTiptapEditor,
-  FullTiptapEditor,
-} from "./tiptap-editor.styled"
+import { FullTiptapEditor, TiptapEditor, compactToolbar } from "./tiptap-editor.styled"
 import type { TiptapEditorProps, TiptapEditorSize } from "./tiptap-editor.styled"
+import { defaultInsertMenuItems } from "./tiptap-editor-insert-menu"
 import { sx } from "./stylex"
 
 const demo = stylex.create({
@@ -117,90 +112,45 @@ export const TiptapEditorDemo: Component = () => {
     >
       <div {...sx(demo.wrap)}>
         <div {...sx(demo.header)}>
-          <div {...sx(demo.title)}>RichText 富文本编辑器 · 5 种样式变体</div>
+          <div {...sx(demo.title)}>RichText 富文本编辑器 · 2 个示例</div>
           <div {...sx(demo.subtitle)}>
             按 shadcn 风格组织：Primitive + Styled 两层、Root / Content / Toolbar / Actions /
-            FocusShell 可独立组合。以下示例分别对应 Minimal、Standard、Standard with Insert
-            Menu、Focus、Full（全量工具栏无底部栏）。
+            FocusShell 可独立组合。基础编辑器将 Minimal、Standard、Insert Menu 与 Focus 合并：
+            格式工具栏和聚焦模式均在底部插入菜单中按需切换。
           </div>
         </div>
 
         <div {...sx(demo.grid)}>
           <div {...sx(demo.card)}>
-            <div {...sx(demo.label)}>1 · Minimal（无工具栏）</div>
+            <div {...sx(demo.label)}>1 · 可配置编辑器（插入菜单）</div>
             <div {...sx(demo.hint)}>
-              适合发布框或评论输入：仅编辑区 + 底部插入 / 可见性 / 保存。
+              默认使用紧凑格式工具栏；点击底部插入按钮可添加媒体、音频、文件、链接和位置，
+              也可按需显示或隐藏格式工具栏、进入聚焦模式。
             </div>
-            <MinimalTiptapEditor
-              size="sm"
-              placeholder={PLACEHOLDER}
-              contentMinHeight={120}
-              onChange={(html) => {
-                onChange(html)
-                pushLog("Minimal html changed", `${html.length} chars`)
-              }}
-              onSave={(html, ctx) => {
-                pushLog("Minimal save", `${html.length} chars · visibility=${ctx.visibility}`)
-              }}
-            />
-          </div>
-
-          <div {...sx(demo.card)}>
-            <div {...sx(demo.label)}>2 · Standard（紧凑工具栏）</div>
-            <div {...sx(demo.hint)}>适用于普通正文编辑：标题切换、B/I/S、列表、对齐、代码块。</div>
-            <StandardTiptapEditor
+            <TiptapEditor
+              variant="focus"
               placeholder={PLACEHOLDER}
               content={BASE_CONTENT}
+              toolbarItems={compactToolbar}
+              insertMenuPrimitiveItems={defaultInsertMenuItems}
               onChange={(html) => {
                 onChange(html)
-                pushLog("Standard html changed", `${html.length} chars`)
+                pushLog("Configurable html changed", `${html.length} chars`)
+              }}
+              onInsertKind={(kind) => {
+                pushLog("insert-menu click", kind)
+              }}
+              onFocusModeChange={(open) => {
+                pushLog("focus mode", open ? "open" : "close")
               }}
               onSave={(html, ctx) => {
-                pushLog("Standard save", `${html.length} chars · visibility=${ctx.visibility}`)
+                pushLog("Configurable save", `${html.length} chars · visibility=${ctx.visibility}`)
               }}
             />
           </div>
 
           <div {...sx(demo.card)}>
-            <div {...sx(demo.label)}>3 · Standard with Insert Menu（带插入菜单）</div>
-            <div {...sx(demo.hint)}>
-              点击底部 + 展开媒体 / 音频 / 文件 / 链接 / 位置，以及聚焦模式、格式工具栏开关。
-            </div>
-            <StandardMenuTiptapEditor
-              placeholder={PLACEHOLDER}
-              content={BASE_CONTENT}
-              onChange={(html) => {
-                onChange(html)
-                pushLog("Menu html changed", `${html.length} chars`)
-              }}
-              onInsertKind={(kind) => pushLog("insert-menu click", kind)}
-              onSave={(html, ctx) => {
-                pushLog("Menu save", `${html.length} chars · visibility=${ctx.visibility}`)
-              }}
-            />
-          </div>
-
-          <div {...sx(demo.card)}>
-            <div {...sx(demo.label)}>4 · Focus（聚焦模式）</div>
-            <div {...sx(demo.hint)}>
-              下方卡片底部会出现「进入聚焦」入口，点击后弹出屏幕居中的大编辑器。
-            </div>
-            <FocusTiptapEditor
-              placeholder={PLACEHOLDER}
-              content={BASE_CONTENT}
-              onChange={(html) => {
-                onChange(html)
-                pushLog("Focus html changed", `${html.length} chars`)
-              }}
-              onFocusModeChange={(open) => pushLog("focus mode", open ? "open" : "close")}
-              onSave={(html, ctx) => {
-                pushLog("Focus save", `${html.length} chars · visibility=${ctx.visibility}`)
-              }}
-            />
-          </div>
-
-          <div {...sx(demo.card)}>
-            <div {...sx(demo.label)}>5 · Full（全量工具栏 · 无底部栏）</div>
+            <div {...sx(demo.label)}>2 · Full（全量工具栏 · 无底部栏）</div>
             <div {...sx(demo.hint)}>
               继承 Standard 的容器样式，使用完整 defaultToolbar，底部不带 actions。
             </div>
@@ -235,7 +185,7 @@ export const TiptapEditorDemo: Component = () => {
             }}
           >
             {logEntries().length === 0
-              ? "（暂无事件：尝试编辑内容、切换可见性、点击保存、打开 Standard-with-menu 的 + 菜单、或进入 Focus 模式）"
+              ? "（暂无事件：尝试编辑内容、点击保存，或在插入菜单中切换格式工具栏和聚焦模式）"
               : logEntries().join("\n")}
           </div>
         </div>

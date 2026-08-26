@@ -49,6 +49,7 @@ export type DropdownMenuProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
   onClose?: () => void
+  modal?: boolean
   title?: JSX.Element
   items: DropdownMenuItem[]
   side?: DropdownMenuSide
@@ -101,6 +102,7 @@ export function DropdownMenu(props: DropdownMenuProps) {
     "defaultOpen",
     "onOpenChange",
     "onClose",
+    "modal",
     "title",
     "items",
     "side",
@@ -165,6 +167,7 @@ export function DropdownMenu(props: DropdownMenuProps) {
     <KDropdownMenu
       {...(local.open !== undefined ? { open: local.open } : {})}
       {...(local.defaultOpen !== undefined ? { defaultOpen: local.defaultOpen } : {})}
+      modal={local.modal ?? false}
       placement={placement()}
       gutter={local.sideOffset ?? 6}
       shift={local.alignOffset ?? 0}

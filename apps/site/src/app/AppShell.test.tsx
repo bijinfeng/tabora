@@ -93,10 +93,13 @@ describe("AppShell route path handling", () => {
     root.remove()
   })
 
-  it("uses the shared IconButton for the theme toggle", () => {
+  it("uses shared header buttons at their default UI size", () => {
+    expect(prototypeTopnavSource).toContain('<IconButton\n            variant="secondary"')
     expect(prototypeTopnavSource).toContain(
-      '<IconButton\n            size="lg"\n            variant="secondary"',
+      "<Button href={getSiteHref(action.href)} variant={action.variant}>",
     )
+    expect(prototypeTopnavSource).not.toContain('size="lg"')
+    expect(prototypeTopnavSource).not.toContain("xstyle={styles.actionButton}")
   })
 
   it("keeps the landing navigation and workbench rail aligned with the landing prototype", () => {

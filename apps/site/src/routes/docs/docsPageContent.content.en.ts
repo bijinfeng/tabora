@@ -991,6 +991,10 @@ export function NotesEditor() {
             ["items", "Menu item list"],
             ["open", "Open state"],
             ["onSelect", "Selection callback"],
+            [
+              "modal",
+              "Whether to lock outside interaction and scrolling; defaults to false and should only be true for a modal menu",
+            ],
           ],
         },
         doTitle: "✓ Do",

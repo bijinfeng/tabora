@@ -3,7 +3,7 @@ import * as stylex from "@stylexjs/stylex"
 import type { JSX } from "solid-js"
 import { Show, splitProps } from "solid-js"
 
-import { Expand, Shrink } from "lucide-solid/icons"
+import { Expand } from "lucide-solid/icons"
 import { IconButton } from "@tabora/ui/button"
 
 import type { SolidAttrs } from "./tiptap-editor-root"
@@ -20,8 +20,6 @@ export type TiptapEditorFocusShellProps = {
   xstyleCard?: StyleXStyles | ReturnType<typeof stylex.attrs>
   overlayAttrs?: SolidAttrs<HTMLElement>
   cardAttrs?: SolidAttrs<HTMLElement>
-  showExitButton?: boolean
-  exitButtonSlot?: "top-right" | "none"
   children?: JSX.Element
 }
 
@@ -35,8 +33,6 @@ export function TiptapEditorFocusShell(props: TiptapEditorFocusShellProps) {
     "xstyleCard",
     "overlayAttrs",
     "cardAttrs",
-    "showExitButton",
-    "exitButtonSlot",
     "children",
   ])
 
@@ -79,19 +75,6 @@ export function TiptapEditorFocusShell(props: TiptapEditorFocusShellProps) {
           style={ca.style as JSX.CSSProperties | undefined}
           ref={ca.ref as any}
         >
-          <Show when={local.showExitButton !== false && local.exitButtonSlot !== "none"}>
-            <div data-tiptap-focus-exit>
-              <IconButton
-                variant="ghost"
-                size="sm"
-                aria-label="退出聚焦模式"
-                title="退出聚焦模式"
-                onClick={() => toggle(false)}
-              >
-                <Shrink height={16} width={16} />
-              </IconButton>
-            </div>
-          </Show>
           {local.children}
         </div>
       </div>
