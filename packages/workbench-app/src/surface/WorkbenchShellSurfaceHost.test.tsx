@@ -133,7 +133,6 @@ describe("WorkbenchShellSurfaceHost", () => {
         if (key === "chrome.expand.viewMissing") {
           return `Expanded view unavailable: ${String(vars?.viewId)}`
         }
-        if (key === "chrome.expand.footerHint") return "Esc to close"
         if (key === "chrome.modal.close") return "Close"
         if (key === "chrome.fullscreen.close") return "Close fullscreen view"
         return key
@@ -172,7 +171,7 @@ describe("WorkbenchShellSurfaceHost", () => {
     )
 
     expect(root.textContent).toContain("Expanded view unavailable: missing.view")
-    expect(root.textContent).toContain("Esc to close")
+    expect(root.querySelector("[data-workbench-overlay-footer]")).toBeNull()
     expect(root.querySelector("[data-modal-close]")?.getAttribute("aria-label")).toBe("Close")
     expect(root.querySelector("[data-fullscreen-close]")?.getAttribute("aria-label")).toBe(
       "Close fullscreen view",

@@ -175,7 +175,7 @@ export const componentDocItems: ComponentDocItem[] = [
     title: "Dialog 对话框",
     purpose: "模态确认或通知。危险确认使用 destructive 样式。",
     usage: "删除确认、权限说明、不可继续前的必要确认。",
-    code: `<Dialog open={open()} title="确认移除" destructive footer={...} />`,
+    code: `<Dialog open={open()} title="确认移除" onCancel={close} onOk={remove} destructive />`,
   },
   {
     id: "drawer",

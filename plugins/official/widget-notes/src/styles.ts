@@ -318,7 +318,10 @@ export const styles = stylex.create({
       default: "row",
       "@media (max-width: 720px)": "column",
     },
-    minHeight: 0,
+    minHeight: {
+      default: "min(468px, calc(100vh - 116px))",
+      "@media (max-width: 720px)": 0,
+    },
   },
   side: {
     backgroundColor: "rgb(var(--tbr-color-page))",
@@ -391,6 +394,7 @@ export const styles = stylex.create({
     fontFamily: "inherit",
     fontSize: 12,
     gap: 6,
+    lineHeight: 1.35,
     minHeight: 28,
     paddingBlock: 3,
     paddingInline: 8,
@@ -407,9 +411,20 @@ export const styles = stylex.create({
       outlineOffset: 1,
     },
   },
+  sideButtonLabel: {
+    alignItems: "center",
+    display: "inline-flex",
+    flexShrink: 0,
+    gap: 6,
+    lineHeight: 1.35,
+  },
   sideButtonActive: {
     backgroundColor: "rgb(var(--tbr-color-accent-soft))",
     color: "rgb(var(--tbr-color-accent))",
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      color: "rgb(var(--tbr-color-accent))",
+    },
   },
   sideCount: {
     color: "rgb(var(--tbr-color-text-subtle))",
@@ -535,15 +550,12 @@ export const styles = stylex.create({
       borderColor: "rgb(var(--tbr-color-line-strong))",
     },
   },
-  noteEditing: {
-    borderColor: "rgb(var(--tbr-color-accent))",
-    boxShadow: "0 0 0 3px rgb(var(--tbr-color-accent) / 0.08)",
-  },
   noteDisplay: {
     cursor: "pointer",
     paddingBlockEnd: 8,
     paddingBlockStart: 12,
     paddingInline: 16,
+    position: "relative",
   },
   noteTime: {
     alignItems: "center",
@@ -557,6 +569,11 @@ export const styles = stylex.create({
   star: {
     color: "rgb(var(--tbr-color-accent))",
     display: "inline-flex",
+  },
+  noteMenu: {
+    position: "absolute",
+    right: 8,
+    top: 6,
   },
   noteContent: {
     color: "rgb(var(--tbr-color-text))",
@@ -589,55 +606,8 @@ export const styles = stylex.create({
     paddingBlock: 1,
     paddingInline: 8,
   },
-  noteFooter: {
-    alignItems: "center",
-    display: "flex",
-    marginTop: 4,
-  },
-  meta: {
-    color: "rgb(var(--tbr-color-text-subtle))",
-    fontSize: 12,
-  },
-  actions: {
-    display: "flex",
-    gap: 2,
-    marginLeft: "auto",
-  },
   edit: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  editArea: {
-    paddingBlockEnd: 8,
-    paddingBlockStart: 12,
-    paddingInline: 16,
-  },
-  editFooter: {
-    alignItems: "center",
-    borderTopColor: "rgb(var(--tbr-color-line))",
-    borderTopStyle: "solid",
-    borderTopWidth: 1,
-    display: "flex",
-    justifyContent: "space-between",
-    paddingBlock: 7,
-    paddingInline: 14,
-  },
-  saved: {
-    alignItems: "center",
-    color: "rgb(var(--tbr-color-text-subtle))",
-    display: "flex",
-    fontSize: 12,
-    gap: 4,
-  },
-  savedDot: {
-    backgroundColor: "rgb(var(--tbr-color-accent))",
-    borderRadius: "50%",
-    height: 5,
-    width: 5,
-  },
-  editButtons: {
-    display: "flex",
-    gap: 4,
+    marginBottom: 8,
   },
   empty: {
     paddingBlock: 24,

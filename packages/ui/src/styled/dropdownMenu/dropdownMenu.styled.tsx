@@ -46,18 +46,12 @@ const styles = stylex.create({
   },
   check: {
     alignItems: "center",
+    color: color.accent,
     display: "flex",
     flex: "none",
     height: 14,
     justifyContent: "center",
     width: 14,
-    "::before": {
-      backgroundColor: color.accent,
-      borderRadius: "50%",
-      content: '""',
-      height: 6,
-      width: 6,
-    },
   },
   label: {},
   kbd: {

@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 import { Dialog, TagInput } from "@tabora/ui"
-import { Button } from "@tabora/ui/button"
 import { Field } from "@tabora/ui/field"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
@@ -70,19 +69,12 @@ export function PolicyEditorDialog(props: Props) {
       {sync()}
       <Dialog
         open={props.open}
-        onClose={props.onClose}
+        onCancel={props.onClose}
+        onOk={handleSave}
+        okText="保存"
+        confirmLoading={mutation.isPending}
         title={props.editing ? "编辑附件策略" : "新建附件策略"}
         description="按 entity_type 限制可上传的 MIME 类型与文件大小。"
-        footer={
-          <div {...stylex.attrs(shared.footerRow)}>
-            <Button variant="secondary" onClick={props.onClose}>
-              取消
-            </Button>
-            <Button variant="primary" loading={mutation.isPending} onClick={handleSave}>
-              保存
-            </Button>
-          </div>
-        }
       >
         <div {...stylex.attrs(shared.formGrid)}>
           <Field label="entity_type" htmlFor="policy-entity">

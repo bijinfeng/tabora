@@ -1,16 +1,20 @@
 import { Dialog as KDialog } from "@kobalte/core/dialog"
+import X from "lucide-solid/icons/x"
 import type { JSX } from "solid-js"
 import { Show } from "solid-js"
 
 export type DialogProps = {
   open: boolean
-  onClose: () => void
+  onCancel: () => void
   title: JSX.Element
   description?: JSX.Element
   children?: JSX.Element
-  footer?: JSX.Element
+  footer?: JSX.Element | null
+  closable?: boolean
+  keyboard?: boolean
+  maskClosable?: boolean
+  width?: number | string
   destructive?: boolean
-  size?: "sm" | "md" | "lg"
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
   overlayClass?: string | undefined
@@ -19,6 +23,8 @@ export type DialogProps = {
   panelStyle?: JSX.CSSProperties | undefined
   headerClass?: string | undefined
   headerStyle?: JSX.CSSProperties | undefined
+  closeClass?: string | undefined
+  closeStyle?: JSX.CSSProperties | undefined
   bodyClass?: string | undefined
   bodyStyle?: JSX.CSSProperties | undefined
   footerClass?: string | undefined
@@ -33,12 +39,13 @@ function optionalPartProps(className: string | undefined, style: JSX.CSSProperti
 }
 
 export function Dialog(props: DialogProps) {
-  const sizes = { sm: "320px", md: "420px", lg: "560px" }
+  const width = () =>
+    typeof props.width === "number" ? `${props.width}px` : (props.width ?? "420px")
   return (
     <KDialog
       open={props.open}
       onOpenChange={(open) => {
-        if (!open) props.onClose()
+        if (!open) props.onCancel()
       }}
     >
       <KDialog.Portal>
@@ -51,22 +58,47 @@ export function Dialog(props: DialogProps) {
         <KDialog.Content
           class={props.panelClass}
           data-destructive={props.destructive ? "" : undefined}
-          data-size={props.size ?? "md"}
-          style={{ ...props.panelStyle, width: sizes[props.size ?? "md"], "max-width": "90vw" }}
+          style={{ ...props.panelStyle, width: width(), "max-width": "90vw" }}
+          onEscapeKeyDown={(event) => {
+            if (props.keyboard === false) event.preventDefault()
+          }}
+          onPointerDownOutside={(event) => {
+            if (props.maskClosable === false) event.preventDefault()
+          }}
         >
-          <KDialog.Title class={props.headerClass} style={props.headerStyle}>
-            {props.title}
-          </KDialog.Title>
-          <Show when={props.description}>
-            <KDialog.Description class={props.bodyClass} style={props.bodyStyle}>
-              {props.description}
-            </KDialog.Description>
-          </Show>
-          {props.children}
+          <header class={props.headerClass} style={props.headerStyle}>
+            <KDialog.Title
+              style={{
+                margin: 0,
+                "font-family": "inherit",
+                "font-size": "inherit",
+                "font-weight": "inherit",
+                "line-height": "inherit",
+              }}
+            >
+              {props.title}
+            </KDialog.Title>
+            <Show when={props.closable !== false}>
+              <KDialog.CloseButton
+                class={props.closeClass}
+                style={props.closeStyle}
+                type="button"
+                aria-label="关闭"
+              >
+                <X size={16} strokeWidth={2} />
+              </KDialog.CloseButton>
+            </Show>
+          </header>
+          <div class={props.bodyClass} style={props.bodyStyle}>
+            <Show when={props.description}>
+              <KDialog.Description style={{ margin: 0 }}>{props.description}</KDialog.Description>
+            </Show>
+            {props.children}
+          </div>
           <Show when={props.footer}>
-            <div class={props.footerClass} style={props.footerStyle}>
+            <footer class={props.footerClass} style={props.footerStyle}>
               {props.footer}
-            </div>
+            </footer>
           </Show>
         </KDialog.Content>
       </KDialog.Portal>

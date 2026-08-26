@@ -6,6 +6,8 @@ export type TiptapEditorVisibility = "private" | "public" | "friends"
 
 export type TiptapEditorPrimitiveContext = {
   editor: Accessor<Editor | null>
+  registerEditor: (editor: Editor) => void
+  reportEditorUpdate: (event: { editor: Editor }) => void
   editable: Accessor<boolean>
   disabled: Accessor<boolean>
   empty: Accessor<boolean>
@@ -33,6 +35,12 @@ export function TiptapEditorProvider(
       value={{
         get editor() {
           return props.editor
+        },
+        registerEditor(editor) {
+          props.registerEditor(editor)
+        },
+        reportEditorUpdate(event) {
+          props.reportEditorUpdate(event)
         },
         get editable() {
           return props.editable

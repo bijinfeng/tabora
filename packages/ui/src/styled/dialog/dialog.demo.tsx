@@ -1,9 +1,9 @@
 import * as stylex from "@stylexjs/stylex"
 import { createSignal } from "solid-js"
 
-import { demoStyles } from "../demoStyles"
-import { Button } from "../button"
 import { Checkbox } from "../checkbox"
+import { Button } from "../button"
+import { demoStyles } from "../demoStyles"
 import { Dialog } from "./dialog.styled"
 
 export function DialogDemo() {
@@ -42,32 +42,24 @@ export function DialogDemo() {
       </div>
       <Dialog
         open={open()}
-        onClose={closeDialog}
+        onCancel={closeDialog}
         title="移除插件"
         description="该操作会从当前工作区中卸载插件实例，但不会影响其他工作区。"
         destructive
-        children={
-          <div {...stylex.attrs(demoStyles.stackCompact)}>
-            <Checkbox
-              checked={cleanupData()}
-              onChange={setCleanupData}
-              aria-label="同时清理本地数据"
-              label="同时清理本地数据"
-            />
-            <span>建议在排查异常状态时保留本地数据，方便稍后恢复配置。</span>
-          </div>
-        }
-        footer={
-          <>
-            <Button variant="secondary" onClick={closeDialog} disabled={submitting()}>
-              取消
-            </Button>
-            <Button variant="danger" onClick={confirmRemoval} disabled={submitting()}>
-              {submitting() ? "移除中..." : "确认移除"}
-            </Button>
-          </>
-        }
-      />
+        onOk={confirmRemoval}
+        okText="确认移除"
+        confirmLoading={submitting()}
+      >
+        <div {...stylex.attrs(demoStyles.stackCompact)}>
+          <Checkbox
+            checked={cleanupData()}
+            onChange={setCleanupData}
+            aria-label="同时清理本地数据"
+            label="同时清理本地数据"
+          />
+          <span>建议在排查异常状态时保留本地数据，方便稍后恢复配置。</span>
+        </div>
+      </Dialog>
     </div>
   )
 }

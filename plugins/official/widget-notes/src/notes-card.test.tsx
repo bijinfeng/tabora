@@ -151,11 +151,30 @@ describe("NotesExpand", () => {
     root.remove()
   })
 
+  it("uses an icon-only empty state before the first note", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesExpand {...makeProps()} />, root)
+
+    expect(root.querySelector("[data-notes-empty-icon] svg")).toBeTruthy()
+    expect(root.textContent).not.toContain("还没有便签")
+    expect(root.textContent).toContain("在上方输入框开始记录")
+    root.remove()
+  })
+
   it("renders capture editor", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <NotesExpand {...makeProps()} />, root)
     expect(root.querySelector("[data-notes-capture] [data-tbr-tiptap-root]")).toBeTruthy()
+    root.remove()
+  })
+
+  it("starts the capture editor without a format toolbar", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesExpand {...makeProps()} />, root)
+    expect(root.querySelector("[data-notes-capture] [data-tbr-tiptap-toolbar]")).toBeNull()
     root.remove()
   })
 
@@ -215,6 +234,30 @@ describe("NotesExpand", () => {
     root.remove()
   })
 
+  it("moves note actions into the more menu without a card footer", async () => {
+    const props = makeProps()
+    ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "actionable",
+        content: "actionable",
+        starred: false,
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-02",
+      },
+    ])
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesExpand {...props} />, root)
+    await flushMount()
+
+    const note = root.querySelector("[data-note-card]")
+    expect(note?.textContent).not.toContain("10 字")
+    const moreButton = root.querySelector<HTMLButtonElement>('[aria-label="更多操作"]')
+    expect(moreButton).toBeTruthy()
+    expect(moreButton?.getAttribute("aria-haspopup")).toBe("menu")
+    root.remove()
+  })
+
   it("shows tag in sidebar from saved data", async () => {
     const saved = [
       {
@@ -236,7 +279,7 @@ describe("NotesExpand", () => {
     root.remove()
   })
 
-  it("enters edit mode on card click", async () => {
+  it("enters edit mode with cancel and save actions", async () => {
     const saved = [
       {
         id: "e",
@@ -261,7 +304,14 @@ describe("NotesExpand", () => {
       display.dispatchEvent(event)
     }
     await flushMount()
-    expect(root.querySelector("[data-note-card][data-editing] [data-tbr-tiptap-root]")).toBeTruthy()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    const editingNote = root.querySelector("[data-note-card][data-editing]")
+    expect(editingNote?.querySelector("[data-tbr-tiptap-root]")).toBeTruthy()
+    expect(editingNote?.querySelector('button[aria-label="加粗"]')).toBeTruthy()
+    expect(editingNote?.textContent).toContain("取消")
+    expect(editingNote?.textContent).toContain("保存")
+    expect(editingNote?.textContent).not.toContain("已保存")
+    expect(editingNote?.textContent).not.toContain("完成")
     root.remove()
   })
 })

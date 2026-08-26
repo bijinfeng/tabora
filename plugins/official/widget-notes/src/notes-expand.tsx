@@ -3,10 +3,15 @@ import { createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import { DatePicker } from "@tabora/ui/date-picker"
+import { DropdownMenu } from "@tabora/ui/dropdown-menu"
+import type { DropdownMenuTriggerRenderProps } from "@tabora/ui/dropdown-menu"
 import { Input } from "@tabora/ui/input"
 import { TiptapEditor, ensureTiptapContentStyles } from "@tabora/tiptap-editor"
 import type { TiptapEditorVisibility } from "@tabora/tiptap-editor"
+import Ellipsis from "lucide-solid/icons/ellipsis"
 import List from "lucide-solid/icons/list"
+import NotepadTextDashed from "lucide-solid/icons/notepad-text-dashed"
+import Pencil from "lucide-solid/icons/pencil"
 import Search from "lucide-solid/icons/search"
 import Star from "lucide-solid/icons/star"
 import Trash from "lucide-solid/icons/trash"
@@ -53,8 +58,6 @@ export function NotesExpand(props: WidgetViewProps) {
   const [searchQuery, setSearchQuery] = createSignal("")
   const [captureValue, setCaptureValue] = createSignal("")
   const [captureVisibility, setCaptureVisibility] = createSignal<TiptapEditorVisibility>("public")
-  let editTimer: ReturnType<typeof setTimeout> | undefined
-
   onMount(async () => {
     if (typeof document !== "undefined") ensureTiptapContentStyles(document)
     const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
@@ -92,6 +95,10 @@ export function NotesExpand(props: WidgetViewProps) {
       n.id === id ? { ...n, content, updatedAt: new Date().toISOString() } : n,
     )
     await persist(next)
+  }
+
+  function beginEditing(note: Note) {
+    setEditingId(note.id)
   }
 
   function selectCalDate(ds: string) {
@@ -144,15 +151,6 @@ export function NotesExpand(props: WidgetViewProps) {
     }
   }
 
-  function handleEditInput(content: string) {
-    const id = editingId()
-    if (!id) return
-    if (editTimer) clearTimeout(editTimer)
-    editTimer = setTimeout(() => {
-      void saveEdit(id, content)
-    }, 400)
-  }
-
   return (
     <div {...stylex.attrs(styles.expandRoot)} data-widget-expand="notes">
       <div {...stylex.attrs(styles.side)} data-notes-side>
@@ -193,8 +191,10 @@ export function NotesExpand(props: WidgetViewProps) {
             ]}
             onClick={() => selectFilter("all")}
           >
-            <List size={13} />
-            全部
+            <span {...stylex.attrs(styles.sideButtonLabel)}>
+              <List size={14} />
+              <span>全部</span>
+            </span>
             <span
               {...stylex.attrs(
                 styles.sideCount,
@@ -210,8 +210,10 @@ export function NotesExpand(props: WidgetViewProps) {
             xstyle={[styles.sideButton, currentFilter() === "starred" && styles.sideButtonActive]}
             onClick={() => selectFilter("starred")}
           >
-            <Star size={13} fill={currentFilter() === "starred" ? "currentColor" : "none"} />
-            置顶
+            <span {...stylex.attrs(styles.sideButtonLabel)}>
+              <Star size={14} fill={currentFilter() === "starred" ? "currentColor" : "none"} />
+              <span>置顶</span>
+            </span>
             <span
               {...stylex.attrs(
                 styles.sideCount,
@@ -237,15 +239,17 @@ export function NotesExpand(props: WidgetViewProps) {
                 ]}
                 onClick={() => selectFilter(`tag:${tag}`)}
               >
-                <span
-                  {...stylex.attrs(
-                    styles.sideHash,
-                    currentFilter() === `tag:${tag}` && styles.sideHashActive,
-                  )}
-                >
-                  #
+                <span {...stylex.attrs(styles.sideButtonLabel)}>
+                  <span
+                    {...stylex.attrs(
+                      styles.sideHash,
+                      currentFilter() === `tag:${tag}` && styles.sideHashActive,
+                    )}
+                  >
+                    #
+                  </span>
+                  <span>{tag}</span>
                 </span>
-                {tag}
                 <span
                   {...stylex.attrs(
                     styles.sideCount,
@@ -268,6 +272,7 @@ export function NotesExpand(props: WidgetViewProps) {
           <TiptapEditor
             variant="standard-with-menu"
             size="sm"
+            defaultFormatToolbarVisible={false}
             content={captureValue()}
             onChange={setCaptureValue}
             placeholder="记点什么..."
@@ -283,26 +288,14 @@ export function NotesExpand(props: WidgetViewProps) {
           when={filteredNotes().length > 0}
           fallback={
             <div {...stylex.attrs(styles.empty)}>
-              <div {...stylex.attrs(styles.emptyIcon)}>
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
+              <div {...stylex.attrs(styles.emptyIcon)} data-notes-empty-icon>
+                <NotepadTextDashed size={32} aria-hidden="true" />
               </div>
-              <div {...stylex.attrs(styles.emptyText)}>
-                {searchQuery()
-                  ? `没有匹配 "${searchQuery()}" 的便签`
-                  : currentCalDate()
-                    ? "该日期没有便签"
-                    : "还没有便签"}
-              </div>
+              <Show when={searchQuery() || currentCalDate()}>
+                <div {...stylex.attrs(styles.emptyText)}>
+                  {searchQuery() ? `没有匹配 "${searchQuery()}" 的便签` : "该日期没有便签"}
+                </div>
+              </Show>
               <Show when={!searchQuery() && !currentCalDate()}>
                 <div {...stylex.attrs(styles.emptyHint)}>在上方输入框开始记录</div>
               </Show>
@@ -313,7 +306,7 @@ export function NotesExpand(props: WidgetViewProps) {
             <For each={filteredNotes()}>
               {(note) => (
                 <div
-                  {...stylex.attrs(styles.note, editingId() === note.id && styles.noteEditing)}
+                  {...stylex.attrs(editingId() === note.id ? styles.edit : styles.note)}
                   data-note-card
                   data-editing={editingId() === note.id ? "" : undefined}
                 >
@@ -323,7 +316,15 @@ export function NotesExpand(props: WidgetViewProps) {
                       <div
                         {...stylex.attrs(styles.noteDisplay)}
                         data-note-display
-                        onClick={() => setEditingId(note.id)}
+                        onClick={(event) => {
+                          if (
+                            event.target instanceof Element &&
+                            event.target.closest("[data-note-more]")
+                          ) {
+                            return
+                          }
+                          beginEditing(note)
+                        }}
                       >
                         <div {...stylex.attrs(styles.noteTime)}>
                           <Show when={note.starred}>
@@ -332,6 +333,92 @@ export function NotesExpand(props: WidgetViewProps) {
                             </span>
                           </Show>
                           {formatTime(note.updatedAt)}
+                        </div>
+                        <div {...stylex.attrs(styles.noteMenu)}>
+                          <DropdownMenu
+                            items={[
+                              {
+                                id: `note-${note.id}-pin`,
+                                label: note.starred ? "取消置顶" : "置顶",
+                                icon: (
+                                  <Star size={14} fill={note.starred ? "currentColor" : "none"} />
+                                ),
+                                onClick: () => void toggleStar(note.id),
+                              },
+                              {
+                                id: `note-${note.id}-edit`,
+                                label: "编辑",
+                                icon: <Pencil size={14} />,
+                                onClick: () => beginEditing(note),
+                              },
+                              { id: `note-${note.id}-separator`, label: <></>, separator: true },
+                              {
+                                id: `note-${note.id}-delete`,
+                                label: "删除",
+                                icon: <Trash size={14} />,
+                                danger: true,
+                                onClick: () => void deleteNote(note.id),
+                              },
+                            ]}
+                            side="bottom"
+                            align="end"
+                            triggerAsChild={true}
+                            triggerAriaLabel="更多操作"
+                            triggerTitle="更多操作"
+                          >
+                            {(trigger: DropdownMenuTriggerRenderProps) => {
+                              const triggerProps = {
+                                ...(trigger.ref !== undefined ? { ref: trigger.ref } : {}),
+                                ...(trigger.disabled !== undefined
+                                  ? { disabled: trigger.disabled }
+                                  : {}),
+                                ...(trigger["aria-haspopup"] !== undefined
+                                  ? { "aria-haspopup": "menu" as const }
+                                  : {}),
+                                ...(trigger["aria-expanded"] !== undefined
+                                  ? { "aria-expanded": trigger["aria-expanded"] }
+                                  : {}),
+                                ...(trigger["aria-controls"] !== undefined
+                                  ? { "aria-controls": trigger["aria-controls"] }
+                                  : {}),
+                                ...(trigger["data-open"] !== undefined
+                                  ? { "data-open": trigger["data-open"] }
+                                  : {}),
+                                ...(trigger["data-closed"] !== undefined
+                                  ? { "data-closed": trigger["data-closed"] }
+                                  : {}),
+                                ...(trigger["data-kb-menu-value-trigger"] !== undefined
+                                  ? {
+                                      "data-kb-menu-value-trigger":
+                                        trigger["data-kb-menu-value-trigger"],
+                                    }
+                                  : {}),
+                                ...(trigger.onPointerDown !== undefined
+                                  ? { onPointerDown: trigger.onPointerDown }
+                                  : {}),
+                                ...(trigger.onKeyDown !== undefined
+                                  ? { onKeyDown: trigger.onKeyDown }
+                                  : {}),
+                                ...(trigger.onMouseOver !== undefined
+                                  ? { onMouseOver: trigger.onMouseOver }
+                                  : {}),
+                                ...(trigger.onFocus !== undefined
+                                  ? { onFocus: trigger.onFocus }
+                                  : {}),
+                              }
+                              return (
+                                <IconButton
+                                  {...triggerProps}
+                                  size="sm"
+                                  variant="ghost"
+                                  aria-label="更多操作"
+                                  data-note-more
+                                >
+                                  <Ellipsis size={16} />
+                                </IconButton>
+                              )
+                            }}
+                          </DropdownMenu>
                         </div>
                         <div
                           {...stylex.attrs(styles.noteRichContent)}
@@ -345,74 +432,26 @@ export function NotesExpand(props: WidgetViewProps) {
                             </For>
                           </div>
                         </Show>
-                        <div {...stylex.attrs(styles.noteFooter)}>
-                          <span {...stylex.attrs(styles.meta)}>
-                            {htmlToPlainText(note.content).length} 字
-                          </span>
-                          <div {...stylex.attrs(styles.actions)}>
-                            <IconButton
-                              size="sm"
-                              variant="ghost"
-                              aria-label="置顶"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                void toggleStar(note.id)
-                              }}
-                            >
-                              <Star size={14} />
-                            </IconButton>
-                            <IconButton
-                              size="sm"
-                              variant="danger"
-                              aria-label="删除"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                void deleteNote(note.id)
-                              }}
-                            >
-                              <Trash size={14} />
-                            </IconButton>
-                          </div>
-                        </div>
                       </div>
                     }
                   >
-                    <div {...stylex.attrs(styles.edit)}>
-                      <div {...stylex.attrs(styles.editArea)}>
-                        <TiptapEditor
-                          variant="minimal"
-                          size="sm"
-                          content={note.content}
-                          onChange={handleEditInput}
-                          contentMinHeight={100}
-                          xstyle={styles.editEditor}
-                        />
-                      </div>
-                      <div {...stylex.attrs(styles.editFooter)}>
-                        <span {...stylex.attrs(styles.meta)}>
-                          {htmlToPlainText(note.content).length} 字
-                        </span>
-                        <span {...stylex.attrs(styles.saved)}>
-                          <span {...stylex.attrs(styles.savedDot)} />
-                          已保存
-                        </span>
-                        <div {...stylex.attrs(styles.editButtons)}>
-                          <Button
-                            size="sm"
-                            variant="danger-subtle"
-                            onClick={() => {
-                              void deleteNote(note.id)
-                              setEditingId(null)
-                            }}
-                          >
-                            删除
-                          </Button>
-                          <Button size="sm" variant="primary" onClick={() => setEditingId(null)}>
-                            完成
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    <TiptapEditor
+                      variant="standard-with-menu"
+                      size="sm"
+                      defaultFormatToolbarVisible={true}
+                      content={note.content}
+                      contentMinHeight={100}
+                      xstyle={styles.editEditor}
+                      actionsRightExtra={
+                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                          取消
+                        </Button>
+                      }
+                      onSave={(html) => {
+                        void saveEdit(note.id, html)
+                        setEditingId(null)
+                      }}
+                    />
                   </Show>
                 </div>
               )}

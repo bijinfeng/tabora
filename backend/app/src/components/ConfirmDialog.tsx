@@ -1,19 +1,6 @@
-import * as stylex from "@stylexjs/stylex"
 import { Dialog } from "@tabora/ui"
-import { Button } from "@tabora/ui/button"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Show, type JSX } from "solid-js"
-
-import { space } from "@tabora/theme/tokens.stylex"
-
-const styles = stylex.create({
-  footerRow: {
-    alignItems: "center",
-    display: "flex",
-    gap: space.s3,
-    justifyContent: "flex-end",
-  },
-})
 
 type ConfirmDialogProps = {
   open: boolean
@@ -41,24 +28,14 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
   return (
     <Dialog
       open={props.open}
-      onClose={props.onClose}
+      onCancel={props.onClose}
+      onOk={props.onConfirm}
+      okText={props.confirmLabel ?? "确认"}
+      cancelText={props.cancelLabel ?? "取消"}
+      confirmLoading={props.loading ?? false}
       destructive={destructive()}
       title={props.title}
       description={props.description}
-      footer={
-        <div {...stylex.attrs(styles.footerRow)}>
-          <Button variant="secondary" onClick={props.onClose}>
-            {props.cancelLabel ?? "取消"}
-          </Button>
-          <Button
-            variant={destructive() ? "danger" : "primary"}
-            loading={props.loading ?? false}
-            onClick={props.onConfirm}
-          >
-            {props.confirmLabel ?? "确认"}
-          </Button>
-        </div>
-      }
     >
       <Show when={props.error}>
         <InlineError>{props.error}</InlineError>

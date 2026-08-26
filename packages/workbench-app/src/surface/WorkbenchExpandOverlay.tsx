@@ -138,7 +138,9 @@ const styles = stylex.create({
     },
   },
   body: {
+    display: "flex",
     flex: 1,
+    flexDirection: "column",
     minHeight: 0,
     overflow: "auto",
   },
@@ -165,16 +167,9 @@ const styles = stylex.create({
     minWidth: 0,
     width: "100%",
   },
-  footerWithPlugin: {
+  pluginFooterContainer: {
     backgroundColor: color.surface,
     padding: 0,
-  },
-  meta: {
-    fontFamily: font.mono,
-    fontSize: 11,
-  },
-  hint: {
-    whiteSpace: "nowrap",
   },
 })
 
@@ -269,31 +264,16 @@ export function WorkbenchExpandOverlay(props: {
                 )
               })()}
             </div>
-            <div
-              {...stylex.attrs(
-                styles.footer,
-                Boolean(expand().footerViewId) && styles.footerWithPlugin,
-              )}
-              data-workbench-overlay-footer
-            >
-              {(() => {
-                const footerViewId = expand().footerViewId
-                const FooterView = footerViewId ? props.getView(footerViewId) : undefined
-                if (!FooterView) {
-                  return (
-                    <>
-                      <span {...stylex.attrs(styles.meta)} data-workbench-overlay-meta>
-                        {expand().instanceId}
-                      </span>
-                      <span {...stylex.attrs(styles.hint)} data-workbench-overlay-close-hint>
-                        {props.tShell?.("chrome.expand.footerHint") ??
-                          "Esc 关闭 · 双击打开 · 右键菜单"}
-                      </span>
-                    </>
-                  )
-                }
+            {(() => {
+              const footerViewId = expand().footerViewId
+              const FooterView = footerViewId ? props.getView(footerViewId) : undefined
+              if (!FooterView) return null
 
-                return (
+              return (
+                <footer
+                  {...stylex.attrs(styles.footer, styles.pluginFooterContainer)}
+                  data-workbench-overlay-footer
+                >
                   <PluginViewBoundary
                     instanceId={expand().instanceId}
                     title={expand().title}
@@ -309,9 +289,9 @@ export function WorkbenchExpandOverlay(props: {
                       {FooterView(expand().props)}
                     </div>
                   </PluginViewBoundary>
-                )
-              })()}
-            </div>
+                </footer>
+              )
+            })()}
           </div>
         </div>
       )}

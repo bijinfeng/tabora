@@ -60,6 +60,8 @@ catalogs:
     "@tanstack/solid-charts": ^0.8.0
     "@tanstack/solid-query": ^5.101.4
     "@tiptap/core": 3.30.2
+    "@tiptap/extension-audio": 3.30.2
+    "@tiptap/extension-file-handler": 3.30.2
     "@tiptap/extension-image": 3.30.2
     "@tiptap/extension-link": 3.30.2
     "@tiptap/extension-placeholder": 3.30.2

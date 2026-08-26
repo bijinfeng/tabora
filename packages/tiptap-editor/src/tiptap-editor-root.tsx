@@ -7,7 +7,6 @@ import {
   createMemo,
   createSignal,
   onMount,
-  Show,
   splitProps,
   type Accessor,
   type JSX,
@@ -18,14 +17,17 @@ import type { Editor } from "@tiptap/core"
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
-import Link from "@tiptap/extension-link"
-import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
 import TaskList from "@tiptap/extension-task-list"
 import TaskItem from "@tiptap/extension-task-item"
 
 import { TiptapEditorProvider, type TiptapEditorVisibility } from "./tiptap-editor-context"
 import { HeadlessTiptapEditor } from "./tiptap-editor"
+import { attachmentExtension } from "./insert/file-extension"
+import { audioExtension } from "./insert/audio-extension"
+import { createFileHandlerExtension } from "./insert/file-handler-extension"
+import { linkExtension } from "./insert/link-extension"
+import { mediaExtension } from "./insert/media-extension"
 import type { HeadlessTiptapEditorProps } from "./tiptap-editor"
 import { sx } from "./stylex"
 
@@ -190,6 +192,13 @@ const primitiveStyles = stylex.create({
   },
 })
 
+function TiptapEditorRootSlot(props: {
+  getChildren: () => JSX.Element | undefined
+  fallback: JSX.Element
+}) {
+  return props.getChildren() ?? props.fallback
+}
+
 export type TiptapEditorSize = "sm" | "md"
 
 export type TiptapEditorRootProps = Omit<Partial<ComponentProps<"div">>, "onChange" | "children"> &
@@ -215,6 +224,7 @@ export type TiptapEditorRootProps = Omit<Partial<ComponentProps<"div">>, "onChan
     onVisibilityChange?: ((v: TiptapEditorVisibility) => void) | undefined
     onSave?: ((html: string, ctx: { visibility: TiptapEditorVisibility }) => void) | undefined
     onInsert?: ((kind: TiptapEditorInsertKind) => void) | undefined
+    uploadImage?: ((file: File) => Promise<string>) | undefined
     xstyleRoot?: StyleXStyles | undefined
     children?: JSX.Element
     rootAttrs?: SolidAttrs<HTMLElement> | undefined
@@ -270,6 +280,7 @@ export function createTiptapEditorRootState(
     | "placeholder"
     | "visibility"
     | "onChange"
+    | "uploadImage"
   > & {
     onCreateEditor?: (e: Editor) => void
     onUpdateHtml?: (html: string) => void
@@ -302,14 +313,17 @@ export function createTiptapEditorRootState(
   )
 
   const baseExtList = createMemo<HeadlessTiptapEditorProps["extensions"]>(() => [
-    StarterKit,
+    StarterKit.configure({ link: false, underline: false }),
     Underline,
     TextAlign.configure({ types: ["heading", "paragraph"] }),
-    Link.configure({ openOnClick: false, autolink: true }),
-    Image.configure({ inline: false, allowBase64: true }),
+    linkExtension,
+    mediaExtension,
+    audioExtension,
+    createFileHandlerExtension(options.uploadImage),
     Placeholder.configure({
       placeholder: options.placeholder ?? "开始输入内容…",
     }),
+    attachmentExtension,
     TaskList,
     TaskItem.configure({ nested: true }),
   ])
@@ -382,6 +396,7 @@ export function TiptapEditorRoot(props: TiptapEditorRootProps) {
     "onFocus",
     "onBlur",
     "onChange",
+    "uploadImage",
     "disabled",
     "visibility",
     "onVisibilityChange",
@@ -401,6 +416,7 @@ export function TiptapEditorRoot(props: TiptapEditorRootProps) {
     placeholder: local.placeholder,
     visibility: local.visibility,
     onChange: local.onChange,
+    uploadImage: local.uploadImage,
     onCreateEditor: (e) => {
       local.onReady?.(e)
     },
@@ -433,6 +449,8 @@ export function TiptapEditorRoot(props: TiptapEditorRootProps) {
   return (
     <TiptapEditorProvider
       editor={state.editor}
+      registerEditor={state.handleReady}
+      reportEditorUpdate={state.handleUpdate}
       editable={state.editable}
       disabled={state.disabled}
       empty={state.empty}
@@ -460,31 +478,33 @@ export function TiptapEditorRoot(props: TiptapEditorRootProps) {
         style={rootAttrs().style as JSX.CSSProperties | undefined}
         ref={rootAttrs().ref as any}
       >
-        <Show when={!props.children}>
-          <div
-            {...sx(primitiveStyles.contentSlot)}
-            class={contentAttrs().class}
-            style={{
-              ...(sx(primitiveStyles.contentSlot).style as any),
-              ...(contentAttrs().style as any),
-            }}
-            ref={contentAttrs().ref as any}
-          >
-            <HeadlessTiptapEditor
-              extensions={state.extensionsList()}
-              content={local.content}
-              editable={state.editable()}
-              autofocus={local.autofocus}
-              onReady={state.handleReady}
-              onCreate={local.onCreate}
-              onDestroy={local.onDestroy}
-              onUpdate={state.handleUpdate}
-              onFocus={focusTracker}
-              onBlur={blurTracker}
-            />
-          </div>
-        </Show>
-        {props.children}
+        <TiptapEditorRootSlot
+          getChildren={() => props.children}
+          fallback={
+            <div
+              {...sx(primitiveStyles.contentSlot)}
+              class={contentAttrs().class}
+              style={{
+                ...(sx(primitiveStyles.contentSlot).style as any),
+                ...(contentAttrs().style as any),
+              }}
+              ref={contentAttrs().ref as any}
+            >
+              <HeadlessTiptapEditor
+                extensions={state.extensionsList()}
+                content={local.content}
+                editable={state.editable()}
+                autofocus={local.autofocus}
+                onReady={state.handleReady}
+                onCreate={local.onCreate}
+                onDestroy={local.onDestroy}
+                onUpdate={state.handleUpdate}
+                onFocus={focusTracker}
+                onBlur={blurTracker}
+              />
+            </div>
+          }
+        />
       </div>
     </TiptapEditorProvider>
   )

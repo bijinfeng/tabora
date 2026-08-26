@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
 import { Dialog } from "@tabora/ui"
-import { Button } from "@tabora/ui/button"
 import { Field } from "@tabora/ui/field"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
@@ -68,19 +67,12 @@ export function CreateUserDialog(props: CreateUserDialogProps) {
   return (
     <Dialog
       open={props.open}
-      onClose={props.onClose}
+      onCancel={props.onClose}
+      onOk={handleSubmit}
+      okText="创建"
+      confirmLoading={mutation.isPending}
       title="创建用户"
       description="新用户可用邮箱密码登录；设为管理员将获得后台管理权限。"
-      footer={
-        <div {...stylex.attrs(shared.footerRow)}>
-          <Button variant="secondary" onClick={props.onClose}>
-            取消
-          </Button>
-          <Button variant="primary" loading={mutation.isPending} onClick={handleSubmit}>
-            创建
-          </Button>
-        </div>
-      }
     >
       <div {...stylex.attrs(shared.formGrid)}>
         <Field label="邮箱" htmlFor="new-user-email">

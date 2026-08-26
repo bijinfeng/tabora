@@ -22,6 +22,8 @@
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "@tiptap/core": "catalog:ui",
+    "@tiptap/extension-audio": "catalog:ui",
+    "@tiptap/extension-file-handler": "catalog:ui",
     "@tiptap/extension-image": "catalog:ui",
     "@tiptap/extension-link": "catalog:ui",
     "@tiptap/extension-placeholder": "catalog:ui",

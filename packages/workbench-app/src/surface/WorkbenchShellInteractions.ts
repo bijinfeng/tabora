@@ -90,7 +90,7 @@ export function resolveWorkbenchExpandView(
 }
 
 // 仅在声明了 expand 主体视图、且 expandFooter 已注册时返回 footer view id；
-// 否则返回 null，宿主回退默认 footer（实例 ID + Esc 提示）。
+// 否则返回 null，宿主不渲染 footer。
 export function resolveWorkbenchExpandFooterView(
   widget: Pick<WidgetContribution, "views"> | undefined,
   hasView: WidgetViewLookup,

@@ -1,4 +1,5 @@
-import { type JSX, splitProps } from "solid-js"
+import { createSignal, type JSX, splitProps, type Accessor } from "solid-js"
+import type { Editor } from "@tiptap/core"
 import { useTiptapEditorContext } from "./tiptap-editor-context"
 import { HeadlessTiptapEditor } from "./tiptap-editor"
 import type { HeadlessTiptapEditorProps } from "./tiptap-editor"
@@ -16,6 +17,7 @@ export type TiptapEditorContentProps = Omit<
   xstyle?: StyleXStyles | ReturnType<typeof stylex.attrs>
   attrs?: SolidAttrs<HTMLElement>
   minHeight?: number | string | undefined
+  insertDialog?: ((editor: Accessor<Editor | null>) => JSX.Element) | undefined
 }
 
 export function TiptapEditorContent(props: TiptapEditorContentProps) {
@@ -24,6 +26,7 @@ export function TiptapEditorContent(props: TiptapEditorContentProps) {
     "xstyle",
     "attrs",
     "minHeight",
+    "insertDialog",
     "onReady",
     "onCreate",
     "onDestroy",
@@ -50,11 +53,17 @@ export function TiptapEditorContent(props: TiptapEditorContentProps) {
   }
 
   const w = wrapAttrs()
+  const [editor, setEditor] = createSignal<Editor | null>(null)
 
   const handleReady: HeadlessTiptapEditorProps["onReady"] = (e) => {
+    setEditor(e)
+    queueMicrotask(() => {
+      if (!e.isDestroyed && e.view.dom.isConnected) ctx.registerEditor(e)
+    })
     local.onReady?.(e)
   }
   const handleUpdate: HeadlessTiptapEditorProps["onUpdate"] = (e) => {
+    ctx.reportEditorUpdate(e)
     local.onUpdate?.(e)
   }
 
@@ -71,6 +80,7 @@ export function TiptapEditorContent(props: TiptapEditorContentProps) {
         onFocus={local.onFocus}
         onBlur={local.onBlur}
       />
+      {local.insertDialog?.(editor)}
     </div>
   )
 }

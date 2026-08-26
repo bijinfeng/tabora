@@ -46,7 +46,7 @@ const footerView = () => (
 )
 
 describe("WorkbenchExpandOverlay footer", () => {
-  it("renders the default footer (instance id + hint) when no footer view is provided", () => {
+  it("does not render a footer when no footer view is provided", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
 
@@ -66,9 +66,7 @@ describe("WorkbenchExpandOverlay footer", () => {
     const footer = root.querySelector("[data-workbench-overlay-footer]")
     expect(overlay?.getAttribute("role")).toBe("dialog")
     expect(overlay?.getAttribute("aria-modal")).toBe("true")
-    expect(footer?.querySelector("[data-workbench-overlay-meta]")?.textContent).toBe("widget-1")
-    expect(footer?.querySelector("[data-workbench-overlay-close-hint]")).toBeTruthy()
-    expect(footer?.querySelector("[data-workbench-overlay-plugin-footer]")).toBeNull()
+    expect(footer).toBeNull()
     expect(root.querySelector(".expand-overlay")).toBeNull()
     root.remove()
   })
@@ -100,12 +98,10 @@ describe("WorkbenchExpandOverlay footer", () => {
     expect(pluginFooter).toBeTruthy()
     expect(pluginFooter?.getAttribute("data-tabora-plugin-id")).toBe("plugin.widgets")
     expect(footer?.textContent).toContain("自定义操作")
-    // 默认 footer 元信息不再渲染
-    expect(footer?.querySelector("[data-workbench-overlay-meta]")).toBeNull()
     root.remove()
   })
 
-  it("falls back to the default footer when footerViewId is set but cannot be resolved", () => {
+  it("does not render a footer when footerViewId cannot be resolved", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
 
@@ -122,8 +118,7 @@ describe("WorkbenchExpandOverlay footer", () => {
     )
 
     const footer = root.querySelector("[data-workbench-overlay-footer]")
-    expect(footer?.querySelector("[data-workbench-overlay-meta]")?.textContent).toBe("widget-1")
-    expect(footer?.querySelector("[data-workbench-overlay-plugin-footer]")).toBeNull()
+    expect(footer).toBeNull()
     root.remove()
   })
 })

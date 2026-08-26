@@ -609,10 +609,10 @@ views: {
 
 约束：
 
-- `expandFooter` 仅在声明了 `expand` 时有意义。只声明 `expandFooter` 不声明 `expand`，按「无自定义 footer」处理，宿主回退默认 footer，不报错。
+- `expandFooter` 仅在声明了 `expand` 时有意义。只声明 `expandFooter` 不声明 `expand`，按「无自定义 footer」处理，宿主不渲染 footer，不报错。
 - footer 视图与主体视图同为 `WidgetViewProps`，共享 host 能力（`showToast`、`openExternal`、`data` 等）。
 - footer 视图与主体视图是两个独立组件。瞬时 UI 状态（如当前面板、表单校验错误）由插件自行在内部建立「按 instanceId 的会话 store」共享，不进协议层。
-- `mode: "settings"`（实例设置）不注入自定义 footer，维持默认 footer。
+- `mode: "settings"`（实例设置）不注入自定义 footer，也不渲染 footer。
 
 ### 7.2 展开容器动画
 
@@ -630,13 +630,13 @@ views: {
 ExpandModal
   ExpandHeader (图标 + 标题 + 关闭按钮)
   ExpandBody (插件 expand 视图)
-  ExpandFooter (插件 expandFooter 视图；未注入时回退元信息 + esc 提示)
+  ExpandFooter? (仅插件提供 expandFooter 操作视图时渲染)
 ```
 
 footer 区域渲染规则：
 
 - widget 声明并注册了 `views.expandFooter` 时，宿主在 `expand-footer` 内用 `PluginViewBoundary` 隔离渲染该 footer 视图；footer 视图崩溃只局部兜底，不影响 body。
-- 否则回退默认 footer：左侧实例 ID，右侧 `chrome.expand.footerHint`（Esc 提示）。
+- 未声明或未注册 `views.expandFooter` 时，宿主不渲染 footer；关闭能力仍由右上角关闭按钮、`Esc` 和点击遮罩提供。
 
 ## 8. 上下文菜单子系统
 

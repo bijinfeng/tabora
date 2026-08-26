@@ -128,7 +128,7 @@ export const TiptapEditorDemo: Component = () => {
               也可按需显示或隐藏格式工具栏、进入聚焦模式。
             </div>
             <TiptapEditor
-              variant="focus"
+              variant="standard-with-menu"
               placeholder={PLACEHOLDER}
               content={BASE_CONTENT}
               toolbarItems={compactToolbar}

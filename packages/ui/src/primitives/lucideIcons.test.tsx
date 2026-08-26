@@ -73,7 +73,10 @@ describe("built-in component icons", () => {
         ?.querySelector("span[aria-hidden='true']") ?? null,
     )
     expectLucideIcon(el.querySelector("button[aria-label='水果']"), 10)
-    expect(document.body.querySelector("[data-checked] span[aria-hidden='true']")).toBeTruthy()
+    const checkedItem = document.body.querySelector("[role='menuitem'][data-checked]")
+    const checkedIcon = checkedItem?.querySelector("span[aria-hidden='true']") ?? null
+    expectLucideIcon(checkedIcon, 14)
+    expect(checkedIcon?.previousElementSibling?.textContent).toBe("启用")
     expectLucideIcon(
       Array.from(document.body.querySelectorAll("[role='menuitem'], [role='menuitemcheckbox']"))
         .find((item) => item.textContent?.includes("搜索"))

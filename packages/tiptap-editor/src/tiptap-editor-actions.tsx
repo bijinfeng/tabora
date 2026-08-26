@@ -38,6 +38,7 @@ export type TiptapEditorActionInsertItem = {
   id: string
   label: JSX.Element
   icon?: JSX.Element
+  checked?: boolean
   onClick?: () => void
 }
 
@@ -95,6 +96,7 @@ export function TiptapEditorActions(props: TiptapEditorActionsProps) {
       id: item.id,
       label: item.label,
       icon: item.icon ?? <span />,
+      checked: item.checked ?? false,
       onClick: () => item.onClick?.(),
     }))
   }

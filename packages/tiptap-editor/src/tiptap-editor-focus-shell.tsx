@@ -20,6 +20,7 @@ export type TiptapEditorFocusShellProps = {
   xstyleCard?: StyleXStyles | ReturnType<typeof stylex.attrs>
   overlayAttrs?: SolidAttrs<HTMLElement>
   cardAttrs?: SolidAttrs<HTMLElement>
+  renderContent?: (() => JSX.Element) | undefined
   children?: JSX.Element
 }
 
@@ -33,6 +34,7 @@ export function TiptapEditorFocusShell(props: TiptapEditorFocusShellProps) {
     "xstyleCard",
     "overlayAttrs",
     "cardAttrs",
+    "renderContent",
     "children",
   ])
 
@@ -75,7 +77,7 @@ export function TiptapEditorFocusShell(props: TiptapEditorFocusShellProps) {
           style={ca.style as JSX.CSSProperties | undefined}
           ref={ca.ref as any}
         >
-          {local.children}
+          {local.renderContent?.() ?? local.children}
         </div>
       </div>
     </Show>

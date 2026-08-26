@@ -34,6 +34,7 @@ import { TiptapEditorActions, type TiptapEditorActionInsertItem } from "./tiptap
 import {
   buildInsertMenuItems,
   defaultInsertMenuItems,
+  TiptapEditorInsertDialog,
   type TiptapEditorInsertMenuItem,
 } from "./tiptap-editor-insert-menu"
 import { TiptapEditorFocusShell, TiptapEditorFocusEntry } from "./tiptap-editor-focus-shell"
@@ -256,7 +257,7 @@ const styles = stylex.create({
   },
 })
 
-type TiptapEditorVariant = "minimal" | "standard" | "standard-with-menu" | "focus"
+type TiptapEditorVariant = "minimal" | "standard" | "standard-with-menu"
 
 export type TiptapEditorProps = Omit<Partial<ComponentProps<"div">>, "onChange" | "children"> &
   Pick<
@@ -287,8 +288,10 @@ export type TiptapEditorProps = Omit<Partial<ComponentProps<"div">>, "onChange" 
     visibility?: TiptapEditorVisibility | undefined
     onVisibilityChange?: ((v: TiptapEditorVisibility) => void) | undefined
     showToolbar?: boolean | undefined
+    defaultFormatToolbarVisible?: boolean | undefined
     showActions?: boolean | undefined
     actions?: JSX.Element | undefined
+    actionsRightExtra?: JSX.Element | undefined
     showSaveButton?: boolean | undefined
     saveLabel?: JSX.Element | undefined
     saveDisabled?: boolean | undefined
@@ -306,14 +309,12 @@ const VARIANT_DEFAULT_TOOLBAR: Record<TiptapEditorVariant, ToolbarGroupConfig[]>
   minimal: [],
   standard: compactToolbar,
   "standard-with-menu": compactToolbar,
-  focus: defaultToolbar,
 }
 
 function variantDefaultCardStyle(v: TiptapEditorVariant): StyleXStyles | undefined {
   switch (v) {
     case "standard":
     case "standard-with-menu":
-    case "focus":
       return styles.rootRoundedCard
     default:
       return undefined
@@ -346,8 +347,10 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     "visibility",
     "onVisibilityChange",
     "showToolbar",
+    "defaultFormatToolbarVisible",
     "showActions",
     "actions",
+    "actionsRightExtra",
     "showSaveButton",
     "saveLabel",
     "saveDisabled",
@@ -370,7 +373,17 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     typeof local.content === "string" ? local.content : "",
   )
   const [focusOpen, setFocusOpen] = createSignal<boolean>(local.focusMode ?? false)
-  const [formatToolbarVisible, setFormatToolbarVisible] = createSignal(true)
+  const [formatToolbarVisible, setFormatToolbarVisible] = createSignal(
+    local.defaultFormatToolbarVisible ?? true,
+  )
+  const [insertKind, setInsertKind] = createSignal<TiptapEditorInsertKind>()
+
+  const handleEditorReady = (
+    editor: Parameters<NonNullable<HeadlessTiptapEditorProps["onReady"]>>[0],
+  ) => {
+    setEditorRef(editor)
+    local.onReady?.(editor)
+  }
 
   onMount(() => {
     ensureTiptapContentStyles(document)
@@ -387,8 +400,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
   const variant = (): TiptapEditorVariant => local.variant ?? "standard"
   const showToolbar = () => {
     const defaultVisible =
-      local.showToolbar ??
-      (variant() === "standard" || variant() === "standard-with-menu" || variant() === "focus")
+      local.showToolbar ?? (variant() === "standard" || variant() === "standard-with-menu")
     return defaultVisible && formatToolbarVisible()
   }
   const showActions = () => (local.showActions === undefined ? true : local.showActions)
@@ -396,7 +408,6 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     variant() === "standard-with-menu" ||
     !!local.insertMenuItems ||
     !!local.insertMenuPrimitiveItems
-  const isFocusVariant = () => variant() === "focus"
 
   const rootCompiled = () =>
     stylex.attrs(
@@ -436,6 +447,13 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
         id: x.id,
         label: x.label,
         icon: x.icon,
+        checked:
+          x.checked ??
+          (x.onKind === "toggle-focus"
+            ? focusOpen()
+            : x.onKind === "toggle-format-toolbar"
+              ? formatToolbarVisible()
+              : false),
         onClick: () => {
           const kind = x.onKind
           if (kind === "toggle-focus") {
@@ -445,6 +463,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
             local.onInsertKind?.(kind)
             x.onClick?.()
           } else {
+            setInsertKind(kind as TiptapEditorInsertKind)
             local.onInsertKind?.(kind as TiptapEditorInsertKind)
             x.onClick?.()
           }
@@ -488,10 +507,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
         setHtmlOut(html)
         local.onChange?.(html)
       }}
-      onReady={(e) => {
-        setEditorRef(e)
-        local.onReady?.(e)
-      }}
+      uploadImage={local.uploadImage}
       onCreate={local.onCreate}
       onDestroy={local.onDestroy}
       onUpdate={(e) => {
@@ -511,9 +527,17 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
         </Show>
 
         <TiptapEditorContent
-          onReady={(e) => {
-            if (!editorRef()) setEditorRef(e)
-          }}
+          content={local.content}
+          insertDialog={(contentEditor) => (
+            <TiptapEditorInsertDialog
+              editor={contentEditor}
+              kind={insertKind()}
+              onClose={() => setInsertKind()}
+              uploadImage={local.uploadImage}
+            />
+          )}
+          onUpdate={local.onUpdate}
+          onReady={handleEditorReady}
           minHeight={local.contentMinHeight}
           xstyle={contentStyleCompiled()}
         />
@@ -531,13 +555,14 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
                   saveLoading={local.saveLoading}
                   onSave={saveHtml}
                   insertItems={insertItemsFromPrimitives()}
+                  rightExtra={local.actionsRightExtra}
                   xstyle={undefined}
                   attrs={{
                     class: undefined,
                     style: { display: "contents" },
                   }}
                 >
-                  <Show when={isFocusVariant() && !focusOpen() && !hasInsertMenu()}>
+                  <Show when={!focusOpen() && !hasInsertMenu()}>
                     <TiptapEditorFocusEntry onClick={toggleFocusMode} />
                   </Show>
                 </TiptapEditorActions>
@@ -559,9 +584,8 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
         onOpenChange={setFocusMode}
         xstyleOverlay={styles.focusOverlay}
         xstyleCard={styles.focusCard}
-      >
-        {renderFocusInnerCard()}
-      </TiptapEditorFocusShell>
+        renderContent={renderFocusInnerCard}
+      />
     </>
   )
 
@@ -589,10 +613,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
           setHtmlOut(html)
           local.onChange?.(html)
         }}
-        onReady={(e) => {
-          setEditorRef(e)
-          local.onReady?.(e)
-        }}
+        uploadImage={local.uploadImage}
         onCreate={local.onCreate}
         onDestroy={local.onDestroy}
         onUpdate={local.onUpdate}
@@ -602,26 +623,29 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
         contentAttrs={{ class: undefined, style: { display: "contents" } }}
       >
         <div {...sx(styles.contentShell)}>
-          <Show when={showToolbar()}>
-            <Toolbar
-              editor={editorRef}
-              groups={toolbarGroups().length > 0 ? toolbarGroups() : defaultToolbar}
-              uploadImage={local.uploadImage}
-              xstyle={toolbarC}
-              end={
-                <IconButton
-                  variant="ghost"
-                  size="sm"
-                  aria-label="退出聚焦模式"
-                  title="退出聚焦模式"
-                  onClick={() => setFocusMode(false)}
-                >
-                  <Shrink height={16} width={16} />
-                </IconButton>
-              }
-            />
-          </Show>
-          <TiptapEditorContent onReady={(e) => !editorRef() && setEditorRef(e)} xstyle={contentC} />
+          <Toolbar
+            editor={editorRef}
+            groups={toolbarGroups().length > 0 ? toolbarGroups() : defaultToolbar}
+            uploadImage={local.uploadImage}
+            xstyle={toolbarC}
+            end={
+              <IconButton
+                variant="ghost"
+                size="sm"
+                aria-label="退出聚焦模式"
+                title="退出聚焦模式"
+                onClick={() => setFocusMode(false)}
+              >
+                <Shrink height={16} width={16} />
+              </IconButton>
+            }
+          />
+          <TiptapEditorContent
+            content={local.content}
+            onReady={handleEditorReady}
+            onUpdate={local.onUpdate}
+            xstyle={contentC}
+          />
           <div {...actionsBarC}>
             <Show
               when={local.actions !== undefined && local.actions !== null}
@@ -634,6 +658,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
                   saveLoading={local.saveLoading}
                   onSave={saveHtml}
                   insertItems={insertItemsFromPrimitives()}
+                  rightExtra={local.actionsRightExtra}
                   attrs={{ class: undefined, style: { display: "contents" } }}
                 />
               }
@@ -646,8 +671,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     )
   }
 
-  if (isFocusVariant()) return renderWithFocus()
-  return renderCore()
+  return renderWithFocus()
 }
 
 export function TiptapEditor(props: TiptapEditorProps) {
