@@ -39,4 +39,25 @@ describe("defaultInsertMenuItems", () => {
     expect(root.querySelector('[aria-label="退出聚焦模式"]')).toBeTruthy()
     root.remove()
   })
+
+  it("renders left action content without replacing the insert menu or save button", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+
+    render(
+      () => (
+        <TiptapEditor
+          variant="standard-with-menu"
+          content="<p>Draft</p>"
+          actionsLeftExtra={<input aria-label="标签" />}
+        />
+      ),
+      root,
+    )
+
+    expect(root.querySelector('input[aria-label="标签"]')).toBeTruthy()
+    expect(root.querySelector('[aria-label="插入"]')).toBeTruthy()
+    expect(root.textContent).toContain("保存")
+    root.remove()
+  })
 })

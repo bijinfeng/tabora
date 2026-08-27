@@ -42,6 +42,9 @@ export type { ComboboxProps, ComboboxOption } from "./styled/combobox"
 export { TagInput } from "./styled/tagInput"
 export type { TagInputProps } from "./styled/tagInput"
 
+export { CheckableTag, Tag } from "./styled/tag"
+export type { CheckableTagProps, TagProps } from "./styled/tag"
+
 export { Chip } from "./styled/chip"
 export type { ChipProps } from "./styled/chip"
 

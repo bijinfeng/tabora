@@ -22,6 +22,10 @@ export type DatePickerProps = {
 
 type CalendarDay = { day: number; dateStr: string }
 
+function formatDateKey(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+}
+
 function buildDays(year: number, month: number): CalendarDay[] {
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -30,8 +34,7 @@ function buildDays(year: number, month: number): CalendarDay[] {
     days.push({ day: 0, dateStr: "" })
   }
   for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(year, month, d)
-    days.push({ day: d, dateStr: date.toISOString().slice(0, 10) })
+    days.push({ day: d, dateStr: formatDateKey(year, month, d) })
   }
   return days
 }
@@ -80,6 +83,10 @@ const styles = stylex.create({
       backgroundColor: "rgb(var(--tbr-color-surface-hover))",
       color: "rgb(var(--tbr-color-text))",
     },
+    ":active": {
+      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      color: "rgb(var(--tbr-color-text))",
+    },
     ":focus-visible": {
       outline: "2px solid rgb(var(--tbr-color-focus))",
       outlineOffset: 2,
@@ -118,6 +125,11 @@ const styles = stylex.create({
     transitionTimingFunction: "var(--tbr-ease)",
     ":hover": {
       backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      color: "rgb(var(--tbr-color-text))",
+    },
+    ":active": {
+      backgroundColor: "rgb(var(--tbr-color-surface-hover))",
+      color: "rgb(var(--tbr-color-text))",
     },
     ":focus-visible": {
       outline: "2px solid rgb(var(--tbr-color-focus))",
@@ -132,11 +144,25 @@ const styles = stylex.create({
     backgroundColor: "rgb(var(--tbr-color-accent))",
     color: "rgb(var(--tbr-color-inverse))",
     fontWeight: 700,
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-accent-hover))",
+    },
+    ":active": {
+      backgroundColor: "rgb(var(--tbr-color-accent-hover))",
+    },
   },
   active: {
     backgroundColor: "rgb(var(--tbr-color-accent-soft))",
     color: "rgb(var(--tbr-color-accent))",
     fontWeight: 600,
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      color: "rgb(var(--tbr-color-accent))",
+    },
+    ":active": {
+      backgroundColor: "rgb(var(--tbr-color-accent-soft))",
+      color: "rgb(var(--tbr-color-accent))",
+    },
   },
   marked: {
     position: "relative",
@@ -229,21 +255,21 @@ export function DatePicker(props: DatePickerProps) {
               return <span class={emptyDayCompiled().class} style={props.style} />
             }
             const isToday = d.dateStr === todayStr
-            const isActive = d.dateStr === props.value
-            const isMarked = markedSet().has(d.dateStr)
+            const isActive = () => d.dateStr === props.value
+            const isMarked = () => markedSet().has(d.dateStr)
             return (
               <button
                 class={joinClassNames(
                   dayBaseCompiled().class,
-                  isActive && !isToday && activeCompiled().class,
+                  isActive() && !isToday && activeCompiled().class,
                   isToday && todayCompiled().class,
-                  isMarked && markedCompiled().class,
-                  isToday && isMarked && todayMarkedCompiled().class,
+                  isMarked() && markedCompiled().class,
+                  isToday && isMarked() && todayMarkedCompiled().class,
                 )}
                 style={{}}
                 type="button"
                 aria-label={`${props.year}年${props.month + 1}月${d.day}日`}
-                aria-pressed={isActive}
+                aria-pressed={isActive()}
                 onClick={() => selectDay(d.dateStr)}
               >
                 {d.day}

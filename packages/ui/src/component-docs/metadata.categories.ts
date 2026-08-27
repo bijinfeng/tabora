@@ -60,6 +60,7 @@ export const componentDocsCategories: ComponentDocsCategory[] = [
   {
     title: "标签与结构",
     items: [
+      { id: "tag", name: "Tag" },
       { id: "chip", name: "Chip" },
       { id: "avatar", name: "Avatar" },
       { id: "accordion", name: "Accordion" },

@@ -306,6 +306,15 @@ export const componentDocItems: ComponentDocItem[] = [
     code: `<Divider />`,
   },
   {
+    id: "tag",
+    name: "Tag",
+    title: "Tag 标签",
+    purpose: "展示轻量分类，并支持关闭或选择交互。",
+    usage: "内容标签用 closable + onClose；筛选选项用 CheckableTag 的 checked + onChange。",
+    code: `<Tag closable onClose={removeTag}>设计</Tag>
+<CheckableTag checked={selected()} onChange={setSelected}>工作</CheckableTag>`,
+  },
+  {
     id: "chip",
     name: "Chip",
     title: "Chip 标签片",

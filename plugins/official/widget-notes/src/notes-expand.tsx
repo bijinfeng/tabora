@@ -6,12 +6,16 @@ import { DatePicker } from "@tabora/ui/date-picker"
 import { DropdownMenu } from "@tabora/ui/dropdown-menu"
 import type { DropdownMenuTriggerRenderProps } from "@tabora/ui/dropdown-menu"
 import { Input } from "@tabora/ui/input"
+import { Tag } from "@tabora/ui/tag"
 import { TiptapEditor, ensureTiptapContentStyles } from "@tabora/tiptap-editor"
 import type { TiptapEditorVisibility } from "@tabora/tiptap-editor"
+import CalendarDays from "lucide-solid/icons/calendar-days"
 import Ellipsis from "lucide-solid/icons/ellipsis"
+import Hash from "lucide-solid/icons/hash"
 import List from "lucide-solid/icons/list"
 import NotepadTextDashed from "lucide-solid/icons/notepad-text-dashed"
 import Pencil from "lucide-solid/icons/pencil"
+import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 import Star from "lucide-solid/icons/star"
 import Trash from "lucide-solid/icons/trash"
@@ -41,22 +45,79 @@ function htmlToPlainText(html: string): string {
   return tmp.textContent ?? tmp.innerText ?? ""
 }
 
-function extractTags(content: string): string[] {
-  const plain = htmlToPlainText(content)
-  const matches = plain.match(/#([\w\u4e00-\u9fff-]+)/g)
-  if (!matches) return []
-  return [...new Set(matches.map((t) => t.toLowerCase().replace(/^#/, "")))]
+type NoteTagEditorProps = {
+  tags: () => string[]
+  onChange: (tags: string[]) => void
+}
+
+function NoteTagEditor(props: NoteTagEditorProps) {
+  const [adding, setAdding] = createSignal(false)
+  const [draft, setDraft] = createSignal("")
+
+  function addTag() {
+    const tag = draft().trim()
+    if (tag && !props.tags().includes(tag)) props.onChange([...props.tags(), tag])
+    setDraft("")
+    setAdding(false)
+  }
+
+  return (
+    <div {...stylex.attrs(styles.editorTags)} data-note-tag-editor>
+      <For each={props.tags()}>
+        {(tag) => (
+          <Tag
+            closable
+            closeAriaLabel={`移除标签 ${tag}`}
+            onClose={() => props.onChange(props.tags().filter((item) => item !== tag))}
+          >
+            #{tag}
+          </Tag>
+        )}
+      </For>
+      <Show
+        when={adding()}
+        fallback={
+          <Tag bordered={false} onClick={() => setAdding(true)}>
+            <Plus size={12} /> 添加标签
+          </Tag>
+        }
+      >
+        <Input
+          size="sm"
+          value={draft()}
+          placeholder="标签名称"
+          aria-label="添加便签标签"
+          xstyle={styles.editorTagInput}
+          onInput={setDraft}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault()
+              addTag()
+            }
+            if (event.key === "Escape") {
+              setDraft("")
+              setAdding(false)
+            }
+          }}
+          onBlur={addTag}
+        />
+      </Show>
+    </div>
+  )
 }
 
 export function NotesExpand(props: WidgetViewProps) {
   const [notes, setNotes] = createSignal<Note[]>([])
-  const [currentFilter, setCurrentFilter] = createSignal("all")
+  const [starredOnly, setStarredOnly] = createSignal(false)
+  const [selectedTag, setSelectedTag] = createSignal<string | null>(null)
   const [currentCalDate, setCurrentCalDate] = createSignal("")
   const [editingId, setEditingId] = createSignal<string | null>(null)
   const [calYear, setCalYear] = createSignal(new Date().getFullYear())
   const [calMonth, setCalMonth] = createSignal(new Date().getMonth())
   const [searchQuery, setSearchQuery] = createSignal("")
   const [captureValue, setCaptureValue] = createSignal("")
+  const [captureTags, setCaptureTags] = createSignal<string[]>([])
+  const [editTags, setEditTags] = createSignal<string[]>([])
   const [captureVisibility, setCaptureVisibility] = createSignal<TiptapEditorVisibility>("public")
   onMount(async () => {
     if (typeof document !== "undefined") ensureTiptapContentStyles(document)
@@ -69,11 +130,12 @@ export function NotesExpand(props: WidgetViewProps) {
     await props.data.save(NOTES_STORAGE_KEY, updated)
   }
 
-  async function addNote(content: string) {
+  async function addNote(content: string, tags: string[]) {
     if (!content.trim()) return
     const note: Note = {
       id: uid(),
       content: content.trim(),
+      tags: [...tags],
       starred: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -90,38 +152,53 @@ export function NotesExpand(props: WidgetViewProps) {
     await persist(next)
   }
 
-  async function saveEdit(id: string, content: string) {
+  async function saveEdit(id: string, content: string, tags: string[]) {
     const next = notes().map((n) =>
-      n.id === id ? { ...n, content, updatedAt: new Date().toISOString() } : n,
+      n.id === id ? { ...n, content, tags: [...tags], updatedAt: new Date().toISOString() } : n,
     )
     await persist(next)
   }
 
   function beginEditing(note: Note) {
+    setEditTags([...(note.tags ?? [])])
     setEditingId(note.id)
   }
 
   function selectCalDate(ds: string) {
     setCurrentCalDate(ds)
-    setCurrentFilter("all")
     setEditingId(null)
   }
 
-  function selectFilter(filter: string) {
-    setCurrentFilter(filter)
+  function clearFilters() {
     setCurrentCalDate("")
+    setStarredOnly(false)
+    setSelectedTag(null)
+    setEditingId(null)
+  }
+
+  function toggleStarredFilter() {
+    setStarredOnly((value) => !value)
+    setEditingId(null)
+  }
+
+  function toggleTagFilter(tag: string) {
+    setSelectedTag((value) => (value === tag ? null : tag))
     setEditingId(null)
   }
 
   const allTags = createMemo(() => {
     const tags = new Map<string, number>()
     notes().forEach((n) => {
-      extractTags(n.content).forEach((t) => tags.set(t, (tags.get(t) ?? 0) + 1))
+      ;(n.tags ?? []).forEach((tag) => tags.set(tag, (tags.get(tag) ?? 0) + 1))
     })
     return [...tags.entries()].sort((a, b) => b[1] - a[1])
   })
 
   const starCount = createMemo(() => notes().filter((n) => n.starred).length)
+
+  const hasActiveFilters = createMemo(() =>
+    Boolean(currentCalDate() || starredOnly() || selectedTag() || searchQuery()),
+  )
 
   const noteDates = createMemo(() => {
     const set = new Set<string>()
@@ -131,11 +208,8 @@ export function NotesExpand(props: WidgetViewProps) {
 
   const filteredNotes = createMemo(() => {
     let result = notes()
-    if (currentFilter() === "starred") result = result.filter((n) => n.starred)
-    else if (currentFilter().startsWith("tag:")) {
-      const tag = currentFilter().slice(4)
-      result = result.filter((n) => extractTags(n.content).includes(tag))
-    }
+    if (starredOnly()) result = result.filter((n) => n.starred)
+    if (selectedTag()) result = result.filter((n) => n.tags?.includes(selectedTag()!))
     if (currentCalDate()) {
       result = result.filter((n) => n.updatedAt.slice(0, 10) === currentCalDate())
     }
@@ -146,8 +220,9 @@ export function NotesExpand(props: WidgetViewProps) {
 
   function handleCaptureSave(html: string) {
     if (html.trim() && html !== "<p></p>") {
-      void addNote(html)
+      void addNote(html, captureTags())
       setCaptureValue("")
+      setCaptureTags([])
     }
   }
 
@@ -187,9 +262,9 @@ export function NotesExpand(props: WidgetViewProps) {
             variant="ghost"
             xstyle={[
               styles.sideButton,
-              currentFilter() === "all" && !currentCalDate() && styles.sideButtonActive,
+              !starredOnly() && !selectedTag() && !currentCalDate() && styles.sideButtonActive,
             ]}
-            onClick={() => selectFilter("all")}
+            onClick={clearFilters}
           >
             <span {...stylex.attrs(styles.sideButtonLabel)}>
               <List size={14} />
@@ -198,7 +273,7 @@ export function NotesExpand(props: WidgetViewProps) {
             <span
               {...stylex.attrs(
                 styles.sideCount,
-                currentFilter() === "all" && !currentCalDate() && styles.sideCountActive,
+                !starredOnly() && !selectedTag() && !currentCalDate() && styles.sideCountActive,
               )}
             >
               {notes().length}
@@ -207,19 +282,14 @@ export function NotesExpand(props: WidgetViewProps) {
           <Button
             size="sm"
             variant="ghost"
-            xstyle={[styles.sideButton, currentFilter() === "starred" && styles.sideButtonActive]}
-            onClick={() => selectFilter("starred")}
+            xstyle={[styles.sideButton, starredOnly() && styles.sideButtonActive]}
+            onClick={toggleStarredFilter}
           >
             <span {...stylex.attrs(styles.sideButtonLabel)}>
-              <Star size={14} fill={currentFilter() === "starred" ? "currentColor" : "none"} />
+              <Star size={14} fill={starredOnly() ? "currentColor" : "none"} />
               <span>置顶</span>
             </span>
-            <span
-              {...stylex.attrs(
-                styles.sideCount,
-                currentFilter() === "starred" && styles.sideCountActive,
-              )}
-            >
+            <span {...stylex.attrs(styles.sideCount, starredOnly() && styles.sideCountActive)}>
               {starCount()}
             </span>
           </Button>
@@ -233,17 +303,14 @@ export function NotesExpand(props: WidgetViewProps) {
               <Button
                 size="sm"
                 variant="ghost"
-                xstyle={[
-                  styles.sideButton,
-                  currentFilter() === `tag:${tag}` && styles.sideButtonActive,
-                ]}
-                onClick={() => selectFilter(`tag:${tag}`)}
+                xstyle={[styles.sideButton, selectedTag() === tag && styles.sideButtonActive]}
+                onClick={() => toggleTagFilter(tag)}
               >
                 <span {...stylex.attrs(styles.sideButtonLabel)}>
                   <span
                     {...stylex.attrs(
                       styles.sideHash,
-                      currentFilter() === `tag:${tag}` && styles.sideHashActive,
+                      selectedTag() === tag && styles.sideHashActive,
                     )}
                   >
                     #
@@ -253,7 +320,7 @@ export function NotesExpand(props: WidgetViewProps) {
                 <span
                   {...stylex.attrs(
                     styles.sideCount,
-                    currentFilter() === `tag:${tag}` && styles.sideCountActive,
+                    selectedTag() === tag && styles.sideCountActive,
                   )}
                 >
                   {count}
@@ -281,8 +348,62 @@ export function NotesExpand(props: WidgetViewProps) {
             onSave={handleCaptureSave}
             saveLabel="保存"
             contentMinHeight={60}
+            actionsLeftExtra={<NoteTagEditor tags={captureTags} onChange={setCaptureTags} />}
           />
         </div>
+
+        <Show when={hasActiveFilters()}>
+          <div
+            {...stylex.attrs(styles.activeFilters)}
+            data-notes-active-filters
+            aria-label="当前筛选"
+          >
+            <Show when={currentCalDate()}>
+              <Tag
+                closable
+                closeAriaLabel="清除日期筛选"
+                onClose={() => setCurrentCalDate("")}
+                xstyle={styles.activeFilterTag}
+              >
+                <CalendarDays size={13} />
+                {currentCalDate()}
+              </Tag>
+            </Show>
+            <Show when={starredOnly()}>
+              <Tag
+                closable
+                closeAriaLabel="清除置顶筛选"
+                onClose={() => setStarredOnly(false)}
+                xstyle={styles.activeFilterTag}
+              >
+                <Star size={13} />
+                置顶
+              </Tag>
+            </Show>
+            <Show when={selectedTag()}>
+              <Tag
+                closable
+                closeAriaLabel={`清除标签 ${selectedTag()}`}
+                onClose={() => setSelectedTag(null)}
+                xstyle={styles.activeFilterTag}
+              >
+                <Hash size={13} />
+                {selectedTag()}
+              </Tag>
+            </Show>
+            <Show when={searchQuery()}>
+              <Tag
+                closable
+                closeAriaLabel="清除搜索筛选"
+                onClose={() => setSearchQuery("")}
+                xstyle={styles.activeFilterTag}
+              >
+                <Search size={13} />
+                {searchQuery()}
+              </Tag>
+            </Show>
+          </div>
+        </Show>
 
         <Show
           when={filteredNotes().length > 0}
@@ -313,19 +434,7 @@ export function NotesExpand(props: WidgetViewProps) {
                   <Show
                     when={editingId() === note.id}
                     fallback={
-                      <div
-                        {...stylex.attrs(styles.noteDisplay)}
-                        data-note-display
-                        onClick={(event) => {
-                          if (
-                            event.target instanceof Element &&
-                            event.target.closest("[data-note-more]")
-                          ) {
-                            return
-                          }
-                          beginEditing(note)
-                        }}
-                      >
+                      <div {...stylex.attrs(styles.noteDisplay)} data-note-display>
                         <div {...stylex.attrs(styles.noteTime)}>
                           <Show when={note.starred}>
                             <span {...stylex.attrs(styles.star)} data-note-star>
@@ -425,9 +534,9 @@ export function NotesExpand(props: WidgetViewProps) {
                           data-tbr-tiptap-root
                           innerHTML={note.content}
                         />
-                        <Show when={extractTags(note.content).length > 0}>
+                        <Show when={(note.tags?.length ?? 0) > 0}>
                           <div {...stylex.attrs(styles.tags)}>
-                            <For each={extractTags(note.content)}>
+                            <For each={note.tags ?? []}>
                               {(tag) => <span {...stylex.attrs(styles.tag)}>#{tag}</span>}
                             </For>
                           </div>
@@ -442,13 +551,14 @@ export function NotesExpand(props: WidgetViewProps) {
                       content={note.content}
                       contentMinHeight={100}
                       xstyle={styles.editEditor}
+                      actionsLeftExtra={<NoteTagEditor tags={editTags} onChange={setEditTags} />}
                       actionsRightExtra={
-                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                        <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>
                           取消
                         </Button>
                       }
                       onSave={(html) => {
-                        void saveEdit(note.id, html)
+                        void saveEdit(note.id, html, editTags())
                         setEditingId(null)
                       }}
                     />

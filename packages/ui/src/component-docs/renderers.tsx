@@ -127,6 +127,7 @@ export const componentDocDemoLoaders: Record<string, ComponentDocDemoLoader> = {
   table: () =>
     import("../styled/table/table.demo").then((module) => ({ default: module.TableDemo })),
   tabs: () => import("../styled/tabs/tabs.demo").then((module) => ({ default: module.TabsDemo })),
+  tag: () => import("../styled/tag/tag.demo").then((module) => ({ default: module.TagDemo })),
   taginput: () =>
     import("../styled/tagInput/tagInput.demo").then((module) => ({ default: module.TagInputDemo })),
   textarea: () =>

@@ -478,6 +478,21 @@ export const styles = stylex.create({
     flexShrink: 0,
     marginBottom: 10,
   },
+  activeFilters: {
+    alignItems: "center",
+    display: "flex",
+    flexShrink: 0,
+    flexWrap: "wrap",
+    gap: 6,
+    marginBlockEnd: 10,
+  },
+  activeFilterTag: {
+    fontSize: 12,
+    gap: 5,
+    height: 28,
+    lineHeight: 1.35,
+    paddingInline: 8,
+  },
   captureInner: {
     alignItems: "flex-start",
     display: "flex",
@@ -551,7 +566,6 @@ export const styles = stylex.create({
     },
   },
   noteDisplay: {
-    cursor: "pointer",
     paddingBlockEnd: 8,
     paddingBlockStart: 12,
     paddingInline: 16,
@@ -608,6 +622,18 @@ export const styles = stylex.create({
   },
   edit: {
     marginBottom: 8,
+  },
+  editorTags: {
+    alignItems: "center",
+    display: "inline-flex",
+    gap: 4,
+    minWidth: 0,
+  },
+  editorTagInput: {
+    fontSize: 11,
+    height: 24,
+    paddingInline: 7,
+    width: 88,
   },
   empty: {
     paddingBlock: 24,

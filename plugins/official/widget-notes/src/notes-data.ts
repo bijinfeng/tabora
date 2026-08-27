@@ -1,7 +1,7 @@
 export type Note = {
   id: string
   content: string
-  tag?: string
+  tags?: string[]
   starred: boolean
   createdAt: string
   updatedAt: string

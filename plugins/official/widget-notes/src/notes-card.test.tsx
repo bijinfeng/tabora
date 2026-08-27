@@ -170,6 +170,22 @@ describe("NotesExpand", () => {
     root.remove()
   })
 
+  it("shows a compact tag action alongside the capture actions", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesExpand {...makeProps()} />, root)
+
+    expect(root.querySelector("[data-note-tag-editor]")?.textContent).toContain("添加标签")
+    expect(root.querySelector('input[aria-label="添加便签标签"]')).toBeNull()
+
+    const addButton = [...root.querySelectorAll("button")].find((button) =>
+      button.textContent?.includes("添加标签"),
+    )
+    addButton?.click()
+    expect(root.querySelector('input[aria-label="添加便签标签"]')).toBeTruthy()
+    root.remove()
+  })
+
   it("starts the capture editor without a format toolbar", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)
@@ -215,7 +231,8 @@ describe("NotesExpand", () => {
       },
       {
         id: "y",
-        content: "second #tag1 note",
+        content: "second note",
+        tags: ["tag1"],
         starred: true,
         createdAt: "2026-01-01",
         updatedAt: "2026-01-03",
@@ -262,7 +279,8 @@ describe("NotesExpand", () => {
     const saved = [
       {
         id: "z",
-        content: "tagged #test note",
+        content: "tagged note",
+        tags: ["test"],
         starred: false,
         createdAt: "2026-01-01",
         updatedAt: "2026-01-04",
@@ -279,7 +297,41 @@ describe("NotesExpand", () => {
     root.remove()
   })
 
-  it("enters edit mode with cancel and save actions", async () => {
+  it("shows removable active filters between the capture editor and note list", async () => {
+    const props = makeProps()
+    ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "tagged",
+        content: "tagged note",
+        tags: ["工作"],
+        starred: false,
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-04",
+      },
+    ])
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesExpand {...props} />, root)
+    await flushMount()
+
+    const starredFilter = [...root.querySelectorAll("button")].find((button) =>
+      button.textContent?.includes("置顶"),
+    )
+    const tagFilter = [...root.querySelectorAll("button")].find((button) =>
+      button.textContent?.includes("工作"),
+    )
+    starredFilter?.click()
+    tagFilter?.click()
+
+    const activeFilters = root.querySelector("[data-notes-active-filters]")
+    expect(activeFilters?.textContent).toContain("工作")
+    expect(activeFilters?.textContent).toContain("置顶")
+    root.querySelector<HTMLButtonElement>("button[aria-label='清除标签 工作']")?.click()
+    expect(root.querySelector("[data-notes-active-filters]")?.textContent).toContain("置顶")
+    root.remove()
+  })
+
+  it("does not enter edit mode when a note is clicked", async () => {
     const saved = [
       {
         id: "e",
@@ -304,14 +356,8 @@ describe("NotesExpand", () => {
       display.dispatchEvent(event)
     }
     await flushMount()
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    const editingNote = root.querySelector("[data-note-card][data-editing]")
-    expect(editingNote?.querySelector("[data-tbr-tiptap-root]")).toBeTruthy()
-    expect(editingNote?.querySelector('button[aria-label="加粗"]')).toBeTruthy()
-    expect(editingNote?.textContent).toContain("取消")
-    expect(editingNote?.textContent).toContain("保存")
-    expect(editingNote?.textContent).not.toContain("已保存")
-    expect(editingNote?.textContent).not.toContain("完成")
+    expect(root.querySelector("[data-note-card][data-editing]")).toBeNull()
+    expect(root.querySelector('[aria-label="更多操作"]')).toBeTruthy()
     root.remove()
   })
 })

@@ -33,6 +33,11 @@ function firstLine(content: string): string {
   return line ?? ""
 }
 
+function tagLabel(note: Note | undefined): string {
+  const tag = note?.tags?.[0]
+  return tag ? `#${tag}` : "#未分类"
+}
+
 export function NotesCard(props: WidgetViewProps) {
   const [notes, setNotes] = createSignal<Note[]>([])
   const [loading, setLoading] = createSignal(true)
@@ -79,9 +84,7 @@ export function NotesCard(props: WidgetViewProps) {
             {latest() ? latest()!.content : "还没有便签，点击新建第一条想法。"}
           </div>
           <div {...stylex.attrs(styles.smallFoot)}>
-            <span {...stylex.attrs(styles.smallTag)}>
-              {latest()?.tag ? `#${latest()!.tag}` : "#未分类"}
-            </span>
+            <span {...stylex.attrs(styles.smallTag)}>{tagLabel(latest())}</span>
             <span {...stylex.attrs(styles.smallReplies)}>{charCount()} 字</span>
           </div>
         </div>
@@ -114,9 +117,7 @@ export function NotesCard(props: WidgetViewProps) {
             <span {...stylex.attrs(styles.widgetTime)}>
               {latest() ? formatRelativeTime(latest()!.updatedAt) : "仅本机保存"}
             </span>
-            <span {...stylex.attrs(styles.widgetTag)}>
-              {latest()?.tag ? `#${latest()!.tag}` : "#未分类"}
-            </span>
+            <span {...stylex.attrs(styles.widgetTag)}>{tagLabel(latest())}</span>
           </div>
         </div>
       </Show>
@@ -151,9 +152,7 @@ export function NotesCard(props: WidgetViewProps) {
                     <span {...stylex.attrs(styles.previewTime)}>
                       {formatRelativeTime(note.updatedAt)}
                     </span>
-                    <span {...stylex.attrs(styles.widgetTag)}>
-                      {note.tag ? `#${note.tag}` : "#未分类"}
-                    </span>
+                    <span {...stylex.attrs(styles.widgetTag)}>{tagLabel(note)}</span>
                   </div>
                   <div {...stylex.attrs(styles.previewContent)}>{firstLine(note.content)}</div>
                 </div>
@@ -199,9 +198,7 @@ export function NotesCard(props: WidgetViewProps) {
                     <span {...stylex.attrs(styles.previewTime)}>
                       {formatRelativeTime(note.updatedAt)}
                     </span>
-                    <span {...stylex.attrs(styles.widgetTag)}>
-                      {note.tag ? `#${note.tag}` : "#未分类"}
-                    </span>
+                    <span {...stylex.attrs(styles.widgetTag)}>{tagLabel(note)}</span>
                   </div>
                   <div {...stylex.attrs(styles.previewContent)}>{firstLine(note.content)}</div>
                 </div>

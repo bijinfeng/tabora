@@ -291,6 +291,7 @@ export type TiptapEditorProps = Omit<Partial<ComponentProps<"div">>, "onChange" 
     defaultFormatToolbarVisible?: boolean | undefined
     showActions?: boolean | undefined
     actions?: JSX.Element | undefined
+    actionsLeftExtra?: JSX.Element | undefined
     actionsRightExtra?: JSX.Element | undefined
     showSaveButton?: boolean | undefined
     saveLabel?: JSX.Element | undefined
@@ -350,6 +351,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
     "defaultFormatToolbarVisible",
     "showActions",
     "actions",
+    "actionsLeftExtra",
     "actionsRightExtra",
     "showSaveButton",
     "saveLabel",
@@ -555,6 +557,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
                   saveLoading={local.saveLoading}
                   onSave={saveHtml}
                   insertItems={insertItemsFromPrimitives()}
+                  leftExtra={local.actionsLeftExtra}
                   rightExtra={local.actionsRightExtra}
                   xstyle={undefined}
                   attrs={{
@@ -658,6 +661,7 @@ export function StyledTiptapEditor(props: TiptapEditorProps) {
                   saveLoading={local.saveLoading}
                   onSave={saveHtml}
                   insertItems={insertItemsFromPrimitives()}
+                  leftExtra={local.actionsLeftExtra}
                   rightExtra={local.actionsRightExtra}
                   attrs={{ class: undefined, style: { display: "contents" } }}
                 />
