@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import { For, Show } from "solid-js"
+import { createSignal, For, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import { Field } from "@tabora/ui/field"
@@ -17,6 +17,7 @@ import { styles } from "./styles"
 
 export function QuickLinksExpand(props: WidgetViewProps) {
   const session = useQuickLinksExpandSession(props)
+  const [activeLinkId, setActiveLinkId] = createSignal<string>()
   const {
     links,
     groups,
@@ -67,7 +68,17 @@ export function QuickLinksExpand(props: WidgetViewProps) {
               <Show when={loaded()} fallback={<p {...stylex.attrs(styles.empty)}>加载中...</p>}>
                 <For each={filteredLinks()}>
                   {(link) => (
-                    <div {...stylex.attrs(styles.rowWrap)}>
+                    <div
+                      {...stylex.attrs(styles.rowWrap)}
+                      onMouseEnter={() => setActiveLinkId(link.id)}
+                      onMouseLeave={() => setActiveLinkId(undefined)}
+                      onFocusIn={() => setActiveLinkId(link.id)}
+                      onFocusOut={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                          setActiveLinkId(undefined)
+                        }
+                      }}
+                    >
                       <Button
                         size="md"
                         variant="ghost"
@@ -88,7 +99,12 @@ export function QuickLinksExpand(props: WidgetViewProps) {
                           </span>
                         </span>
                       </Button>
-                      <div {...stylex.attrs(styles.rowActions)}>
+                      <div
+                        {...stylex.attrs(
+                          styles.rowActions,
+                          activeLinkId() === link.id && styles.rowActionsVisible,
+                        )}
+                      >
                         <IconButton
                           size="sm"
                           variant="ghost"

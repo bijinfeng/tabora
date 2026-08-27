@@ -74,7 +74,7 @@ export function ButtonDemo() {
             小 28px
           </Button>
           <Button variant="primary" size="md">
-            中 36px
+            中 32px
           </Button>
           <Button variant="primary" size="lg">
             大 44px

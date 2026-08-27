@@ -19,7 +19,7 @@ const styles = stylex.create({
     color: color.text,
     fontFamily: "inherit",
     fontSize: 13,
-    height: 36,
+    height: 32,
     paddingBlock: 0,
     paddingInline: 12,
     transitionDuration: motion.fast,

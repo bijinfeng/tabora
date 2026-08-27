@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 import { splitProps } from "solid-js"
 
-import { color, font, motion, radius, shadow } from "@tabora/theme/tokens.stylex"
+import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { Select as Primitive } from "../../primitives/select/select"
 import type { SelectProps, SelectOption } from "../../primitives/select/select"
 
@@ -46,13 +46,13 @@ const styles = stylex.create({
     paddingInline: 10,
   },
   triggerMd: {
-    height: 36,
+    height: 32,
     paddingBlock: 0,
     paddingInline: 12,
   },
   triggerMultiple: {
     height: "auto",
-    minHeight: 36,
+    minHeight: 32,
     paddingBlock: 4,
     paddingInline: 8,
   },
@@ -159,15 +159,16 @@ const styles = stylex.create({
     minWidth: "var(--kb-select-trigger-width)",
     overflowX: "hidden",
     overflowY: "hidden",
-    paddingBlock: 4,
+    paddingBlock: 0,
     paddingInline: 0,
     width: "var(--kb-select-trigger-width)",
-    zIndex: 50,
+    zIndex: zIndex.dropdown,
   },
   listbox: {
     borderStyle: "none",
     borderWidth: 0,
     boxSizing: "border-box",
+    margin: 0,
     maxWidth: "100%",
     outline: "none",
     overflowX: "hidden",
@@ -189,9 +190,9 @@ const styles = stylex.create({
     fontWeight: font.medium,
     gap: 8,
     maxWidth: "100%",
-    minHeight: 34,
+    minHeight: 30,
     outline: "none",
-    paddingBlock: 8,
+    paddingBlock: 5,
     paddingInline: 12,
     transitionDuration: motion.fast,
     transitionProperty: "background-color, color",

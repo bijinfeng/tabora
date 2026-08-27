@@ -61,13 +61,13 @@ const styles = stylex.create({
   },
   buttonMd: {
     fontSize: 13,
-    height: 36,
+    height: 32,
     paddingBlock: 0,
     paddingInline: 12,
   },
   buttonMdCircle: {
     paddingInline: 0,
-    width: 36,
+    width: 32,
   },
   buttonLg: {
     fontSize: 14,
@@ -231,8 +231,8 @@ const styles = stylex.create({
     width: 28,
   },
   iconMd: {
-    height: 36,
-    width: 36,
+    height: 32,
+    width: 32,
   },
   iconLg: {
     height: 44,

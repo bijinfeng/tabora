@@ -147,12 +147,12 @@ export function Select<V extends string>(props: SelectProps<V>) {
           p.item.rawValue.disabled ? local.itemDisabledClass : undefined,
         )}
       >
+        <KSelect.ItemLabel class={local.itemLabelClass}>{p.item.rawValue.label}</KSelect.ItemLabel>
         <span class={local.itemCheckClass} aria-hidden="true">
           <KSelect.ItemIndicator>
             <Check size={16} strokeWidth={2} />
           </KSelect.ItemIndicator>
         </span>
-        <KSelect.ItemLabel class={local.itemLabelClass}>{p.item.rawValue.label}</KSelect.ItemLabel>
       </KSelect.Item>
     )
   }

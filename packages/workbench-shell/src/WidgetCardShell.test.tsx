@@ -126,15 +126,14 @@ describe("WidgetCardShell", () => {
     dispose()
   })
 
-  // 移除按钮的尺寸必须来自 IconButton size="sm"（26×26），不能用 inline style 压小。
-  // 原先压成 18×18 既覆盖了组件默认样式，也低于 WCAG 2.2 AA 的 24px 触控目标下限。
-  it("移除按钮不用 inline style 覆盖 IconButton 默认尺寸", () => {
+  it("移除按钮使用紧凑、清晰的危险图标按钮", () => {
     const { host, dispose } = mount(makeCallbacks())
     const removeBtn = host.querySelector("[data-widget-card-remove]") as HTMLButtonElement
 
+    expect(removeBtn.getAttribute("data-variant")).toBe("danger-subtle")
+    expect(removeBtn.getAttribute("data-shape")).toBe("circle")
     expect(removeBtn.style.width).toBe("")
     expect(removeBtn.style.height).toBe("")
-    expect(removeBtn.style.borderRadius).toBe("")
     dispose()
   })
 

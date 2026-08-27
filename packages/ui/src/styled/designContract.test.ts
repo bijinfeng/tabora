@@ -137,7 +137,7 @@ describe("styled component design contract", () => {
     expect(source).not.toMatch(/transitionProperty:\s*"[^"]*\btransform\b[^"]*"/)
     expect(source).not.toContain('transform: "translateY(1px)"')
     expect(source).toContain("height: 28")
-    expect(source).toContain("height: 36")
+    expect(source).toContain("height: 32")
     expect(source).toContain("height: 44")
   })
 
@@ -213,10 +213,17 @@ describe("styled component design contract", () => {
     expect(selectSource).toContain("gap: 6")
     expect(selectSource).toContain("minWidth: 180")
     expect(selectSource).toContain("paddingInline: 8")
+    expect(selectSource).toMatch(
+      /content:\s*\{[^}]*paddingBlock:\s*0[\s\S]*listbox:\s*\{[^}]*margin:\s*0/,
+    )
+    expect(selectSource).toMatch(/item:\s*\{[^}]*minHeight:\s*30[^}]*paddingBlock:\s*5/)
     expect(checkboxSource).toContain("height: 16")
     expect(checkboxPrimitiveSource).toContain("<Check size={10} strokeWidth={1.5} />")
     expect(tagInputPrimitiveSource).toContain("<X size={10} strokeWidth={2.5} />")
     expect(selectPrimitiveSource).toContain("<ChevronDown size={10} strokeWidth={2} />")
+    expect(selectPrimitiveSource.indexOf("<KSelect.ItemLabel")).toBeLessThan(
+      selectPrimitiveSource.indexOf("<span class={local.itemCheckClass}"),
+    )
   })
 
   it("centers the Slider thumb on its 4px track without replacing Kobalte positioning", () => {
@@ -278,13 +285,15 @@ describe("styled component design contract", () => {
     expect(source).toContain("itemDisabledClass={itemDisabledCompiled().class}")
   })
 
-  it("uses explicit component-spec dimensions for normal form controls", () => {
+  it("uses a 32px default height for normal form controls", () => {
     expect(inputSource).toContain("height: 28")
-    expect(inputSource).toContain("height: 36")
+    expect(inputSource).toContain("height: 32")
     expect(inputSource).not.toContain("var(--tbr-control-")
-    expect(comboboxSource).toContain("height: 36")
+    expect(selectSource).toContain("height: 32")
+    expect(selectSource).toContain("minHeight: 32")
+    expect(comboboxSource).toContain("height: 32")
     expect(comboboxSource).not.toContain("var(--tbr-control-")
-    expect(tagInputSource).toContain("minHeight: 36")
+    expect(tagInputSource).toContain("minHeight: 32")
     expect(tagInputSource).not.toContain("var(--tbr-control-")
   })
 })

@@ -75,6 +75,23 @@ describe("QuickLinksExpand", () => {
     root.remove()
   })
 
+  it("shows each link's edit actions only while its row is hovered", async () => {
+    const { root, dispose } = renderExpand(makeProps({ instanceId: "ql-row-actions" }))
+    await flushMount()
+
+    const row = root.querySelector("[data-quick-link-row]") as HTMLButtonElement
+    const actions = row.parentElement?.querySelector("[aria-label='编辑']")
+      ?.parentElement as HTMLElement
+    const hiddenClassName = actions.className
+
+    row.parentElement?.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }))
+    await flushMount()
+
+    expect(actions.className).not.toBe(hiddenClassName)
+    dispose()
+    root.remove()
+  })
+
   it("clicking a link opens edit panel with pre-filled data", async () => {
     const openExternal = vi.fn().mockResolvedValue(true)
     const save = vi.fn().mockResolvedValue(undefined)

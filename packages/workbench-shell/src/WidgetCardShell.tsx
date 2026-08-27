@@ -120,25 +120,21 @@ const styles = stylex.create({
     opacity: widgetCardStyleVars.actionsOpacity,
     pointerEvents: "none",
     position: "absolute",
-    // 26px 按钮按原比例外挂在卡片右上角外沿。
-    right: -6,
-    top: -6,
+    // 视觉按钮中心对齐卡片右上角，避免占用紧凑卡片的内容区域。
+    right: -8,
+    top: -8,
     transitionDuration: motion.fast,
     transitionProperty: "opacity",
     transitionTimingFunction: motion.ease,
     zIndex: 1,
   },
   action: {
-    // 只声明 IconButton 给不了的东西：悬浮在卡片上的圆形徽标外观。
-    // 尺寸（26×26）、圆角、hover、focus-visible、transition 全部走 size="sm" 默认值，
-    // 26px 也正好越过 WCAG 2.2 AA 的 24px 触控目标下限。
-    backgroundColor: color.surface,
-    borderRadius: radius.pill,
-    boxShadow: shadow.sm,
+    // 视觉上收紧到 16px；卡片之间保留 12px 网格间距，避免误触相邻操作。
+    borderColor: color.danger,
+    height: 16,
+    padding: 0,
     pointerEvents: "auto",
-    ":hover": {
-      boxShadow: shadow.md,
-    },
+    width: 16,
   },
   body: {
     borderRadius: radius.card,
@@ -224,6 +220,8 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
         <div {...stylex.attrs(styles.actions)} data-widget-card-actions data-prevent-expand="true">
           <IconButton
             size="sm"
+            shape="circle"
+            variant="danger-subtle"
             xstyle={styles.action}
             data-widget-card-remove
             aria-label={props.copy?.removeAriaLabel(props.title) ?? `移除 ${props.title}`}
@@ -232,7 +230,7 @@ export function WidgetCardShell(props: WidgetCardShellProps) {
               props.callbacks.onRemove()
             }}
           >
-            <Minus size={14} />
+            <Minus size={12} strokeWidth={2.25} />
           </IconButton>
         </div>
       </Show>

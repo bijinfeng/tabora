@@ -55,12 +55,12 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     maxHeight: "calc(100vh - 64px)",
-    minHeight: "min(440px, calc(100vh - 64px))",
+    minHeight: "min(520px, calc(100vh - 64px))",
     overflow: "hidden",
     width: "min(920px, calc(100vw - 64px))",
     "@media (max-width: 480px)": {
       maxHeight: "calc(100vh - 24px)",
-      minHeight: "min(440px, calc(100vh - 24px))",
+      minHeight: "min(520px, calc(100vh - 24px))",
       width: "calc(100vw - 24px)",
     },
     "@media (prefers-reduced-motion: reduce)": {

@@ -102,6 +102,29 @@ describe("NotesCard", () => {
     root.remove()
   })
 
+  it("renders saved card content as rich text instead of displaying HTML", async () => {
+    const props = makeProps({ size: "M" })
+    ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "rich",
+        content: "<p><strong>测试标签</strong></p>",
+        starred: false,
+        createdAt: "2026-01-01T08:00:00Z",
+        updatedAt: "2026-01-02T08:00:00Z",
+      },
+    ])
+
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesCard {...props} />, root)
+    await flushMount()
+
+    const content = root.querySelector("[data-tbr-tiptap-root]")
+    expect(content?.querySelector("p strong")?.textContent).toBe("测试标签")
+    expect(content?.textContent).not.toContain("<p>")
+    root.remove()
+  })
+
   it("shows L size limit of 2 preview notes", async () => {
     const saved = [
       {

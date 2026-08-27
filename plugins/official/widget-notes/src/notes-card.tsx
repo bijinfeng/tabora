@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, onMount, Show } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { IconButton } from "@tabora/ui/button"
+import { ensureTiptapContentStyles } from "@tabora/tiptap-editor"
 import ArrowRight from "lucide-solid/icons/arrow-right"
 import Plus from "lucide-solid/icons/plus"
 import { NOTES_STORAGE_KEY, type Note } from "./notes-data"
@@ -28,11 +29,6 @@ function formatRelativeTime(iso: string): string {
   return formatTime(iso)
 }
 
-function firstLine(content: string): string {
-  const line = content.split("\n")[0]
-  return line ?? ""
-}
-
 function tagLabel(note: Note | undefined): string {
   const tag = note?.tags?.[0]
   return tag ? `#${tag}` : "#未分类"
@@ -44,6 +40,7 @@ export function NotesCard(props: WidgetViewProps) {
   const cardSize = () => props.size ?? "L"
 
   onMount(async () => {
+    if (typeof document !== "undefined") ensureTiptapContentStyles(document)
     const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
     if (saved && saved.length > 0) setNotes(saved)
     setLoading(false)
@@ -80,9 +77,11 @@ export function NotesCard(props: WidgetViewProps) {
             </span>
             <span {...stylex.attrs(styles.smallState)}>本机</span>
           </div>
-          <div {...stylex.attrs(styles.smallCopy, isEmpty() && styles.smallCopyEmpty)}>
-            {latest() ? latest()!.content : "还没有便签，点击新建第一条想法。"}
-          </div>
+          <div
+            {...stylex.attrs(styles.smallCopy, isEmpty() && styles.smallCopyEmpty)}
+            data-tbr-tiptap-root
+            innerHTML={latest()?.content ?? "还没有便签，点击新建第一条想法。"}
+          />
           <div {...stylex.attrs(styles.smallFoot)}>
             <span {...stylex.attrs(styles.smallTag)}>{tagLabel(latest())}</span>
             <span {...stylex.attrs(styles.smallReplies)}>{charCount()} 字</span>
@@ -107,12 +106,12 @@ export function NotesCard(props: WidgetViewProps) {
           </div>
           <div
             {...stylex.attrs(styles.latest, isEmpty() && styles.latestEmpty)}
+            data-tbr-tiptap-root
+            innerHTML={latest()?.content ?? "还没有 Memo，记录第一条想法。"}
             role="button"
             tabindex={0}
             onClick={handleOpen}
-          >
-            {latest() ? latest()!.content : "还没有 Memo，记录第一条想法。"}
-          </div>
+          />
           <div {...stylex.attrs(styles.mediumFoot)}>
             <span {...stylex.attrs(styles.widgetTime)}>
               {latest() ? formatRelativeTime(latest()!.updatedAt) : "仅本机保存"}
@@ -154,7 +153,11 @@ export function NotesCard(props: WidgetViewProps) {
                     </span>
                     <span {...stylex.attrs(styles.widgetTag)}>{tagLabel(note)}</span>
                   </div>
-                  <div {...stylex.attrs(styles.previewContent)}>{firstLine(note.content)}</div>
+                  <div
+                    {...stylex.attrs(styles.previewContent)}
+                    data-tbr-tiptap-root
+                    innerHTML={note.content}
+                  />
                 </div>
               ))}
             </Show>
@@ -200,7 +203,11 @@ export function NotesCard(props: WidgetViewProps) {
                     </span>
                     <span {...stylex.attrs(styles.widgetTag)}>{tagLabel(note)}</span>
                   </div>
-                  <div {...stylex.attrs(styles.previewContent)}>{firstLine(note.content)}</div>
+                  <div
+                    {...stylex.attrs(styles.previewContent)}
+                    data-tbr-tiptap-root
+                    innerHTML={note.content}
+                  />
                 </div>
               ))}
             </Show>
