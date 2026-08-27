@@ -103,9 +103,6 @@ export function buildWorkbenchSettingsPanelProps(
     if (options.host.togglePluginEnabled)
       host.togglePluginEnabled = (pluginId, enabled) =>
         options.host.togglePluginEnabled!(pluginId, enabled)
-    if (options.host.revokePluginPermission)
-      host.revokePluginPermission = (pluginId, permission) =>
-        options.host.revokePluginPermission!(pluginId, permission)
   }
 
   const data: SettingsPanelData = {}

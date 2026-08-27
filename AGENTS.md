@@ -72,7 +72,7 @@ Tabora 是插件优先的个人工作台平台。
 - 外部打开必须走 permission bridge，不直接使用 `window.open` 或裸 `_blank` 绕过权限。
 - 不为旧 manifest 或旧数据猜测字段、静默补默认值或添加隐式兼容；显式迁移必须有当前需求和 contract。
 - 插件失败必须局部化；widget、overlay、search、background 或 theme 的单点失败不能造成整页白屏。
-- 新的权限能力采用使用时授权，拒绝路径必须可恢复。
+- 权限强制统一在 core 层，实际能力是 manifest 声明与宿主授予的交集。MVP 只有内置插件，内置 manifest 的声明即授予（bootstrap 预授予），没有运行时申请弹窗，设置中也不展示插件权限。
 
 ## UI 实现
 

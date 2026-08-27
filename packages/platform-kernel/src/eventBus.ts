@@ -1,5 +1,4 @@
 import { createEmitter } from "@solid-primitives/event-bus"
-import type { PluginPermission } from "@tabora/plugin-api"
 
 export type EventPayloads = {
   "ui.modal.open": { viewId: string; props?: Record<string, unknown> }
@@ -15,12 +14,6 @@ export type EventPayloads = {
     }
   }
   "host.external.open": { url: string }
-  "permission.request": {
-    pluginId: string
-    permission: PluginPermission
-    reason?: string
-    resolve: (granted: boolean) => void
-  }
 }
 
 export type EventHandler<P = unknown> = (payload: P) => void

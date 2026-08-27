@@ -180,13 +180,12 @@ describe("createPluginCatalog", () => {
         },
       ]),
     ).toMatchObject([
-      { id: "plugin.alpha", enabled: true, grantedPermissions: [] },
+      { id: "plugin.alpha", enabled: true },
       {
         id: "plugin.beta",
         enabled: false,
         status: "skipped",
         disabledReason: "Missing host capabilities: network",
-        grantedPermissions: [{ type: "network", hosts: ["api.example.com"] }],
       },
     ])
   })

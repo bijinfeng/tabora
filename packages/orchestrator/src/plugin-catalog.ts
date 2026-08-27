@@ -305,8 +305,6 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
         ...(record?.status ? { status: record.status } : {}),
         ...(record?.lastError ? { lastError: record.lastError } : {}),
         ...(record?.disabledReason ? { disabledReason: record.disabledReason } : {}),
-        permissions: plugin.manifest.permissions ?? [],
-        grantedPermissions: record?.grantedPermissions ?? [],
         contributionKinds: (
           Object.entries(plugin.manifest.contributes) as Array<
             [keyof PluginManifest["contributes"], unknown]

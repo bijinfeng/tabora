@@ -620,43 +620,6 @@ export const styles = stylex.create({
     backgroundColor: "rgb(var(--tbr-color-text-muted) / 0.1)",
     color: "rgb(var(--tbr-color-text-muted))",
   },
-  permissionAuditCard: {
-    ...interactiveSurface,
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    minWidth: 0,
-    paddingBlock: 9,
-    paddingInline: 10,
-  },
-  permissionAuditHeader: {
-    alignItems: "center",
-    display: "flex",
-    gap: 8,
-    justifyContent: "space-between",
-    minWidth: 0,
-  },
-  permissionRow: {
-    alignItems: "center",
-    display: "grid",
-    gap: 8,
-    gridTemplateColumns: {
-      default: "minmax(0, 1fr) auto",
-      [mobile]: "minmax(0, 1fr)",
-    },
-    minWidth: 0,
-  },
-  permissionDescription: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontSize: 11,
-    lineHeight: 1.35,
-    minWidth: 0,
-    overflowWrap: "anywhere",
-  },
-  mutedText: {
-    color: "rgb(var(--tbr-color-text-muted))",
-    fontSize: 11,
-  },
   dangerText: {
     color: "rgb(var(--tbr-color-danger))",
     fontSize: 11,

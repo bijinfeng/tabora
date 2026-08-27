@@ -271,7 +271,7 @@ MVP 组件清单：
 | `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 已由独立 `@tabora/plugin-notes` package 提供；已使用 `@tabora/ui` 控件                    | 提供便签和弹窗编辑，验证插件数据和 modal           |
 | `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 已由独立 `@tabora/plugin-todo` package 提供；已使用 `@tabora/ui` 控件                     | 提供待办列表，验证交互型 widget 和持久化           |
 | `official.widgets.weather`            | Weather Widget             | `widget`                                     | 是       | 已接入 Open-Meteo 真实数据；卡片 + 展开弹窗                                              | 提供天气摘要与预报，按 `DESIGN.md` 进入默认工作台  |
-| `official.plugin-manager`             | Plugin Manager             | `settings-panel`                             | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件贡献能力和权限摘要                         |
+| `official.plugin-manager`             | Plugin Manager             | `settings-panel`                             | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件贡献能力                         |
 | `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | 已实现轻量 settings host 面板贡献：外观、搜索；插件面板由 `official.plugin-manager` 贡献 | 聚合插件、外观、搜索等全局设置面板                 |
 | `official.account-sync`                | Tabora Account & Sync      | `settings-panel`                             | 按宿主选择 | Playground 始终装配，API 地址可配置覆盖；FNOS 完全本地时不装配                         | 提供账号与数据同步两个设置面板，并管理同步 lifecycle |
 
@@ -1461,10 +1461,9 @@ V1.5：
 - 插件名称。
 - 插件 ID。
 - 版本。
-- 来源：`builtin`、`local-trusted`、`remote-untrusted`。
+- 来源：当前只有 `builtin`。
 - 启用状态。
 - 贡献能力摘要。
-- 权限摘要。
 - 错误状态。
 - 操作入口。
 
@@ -1599,7 +1598,7 @@ MVP settings panels：
 
 | Panel ID                                 | 标题 | 内容                                             | MVP 目标         |
 | ---------------------------------------- | ---- | ------------------------------------------------ | ---------------- |
-| `official.settings.plugins`              | 插件 | 插件名称、ID、版本、启用状态、贡献能力、权限摘要 | 只读展示         |
+| `official.settings.plugins`              | 插件 | 插件名称、ID、版本、启用状态、贡献能力 | 只读展示         |
 | `official.settings.workspace.appearance` | 外观 | 当前主题、可用主题、当前背景、可用背景           | 可切换并持久化   |
 | `official.settings.workspace.search`     | 搜索 | 默认搜索源、已启用搜索源、搜索源 shortcut        | 可选择默认搜索源 |
 | `official.settings.account-sync.account` | 账号 | 注册、登录、退出和密码重置                       | 仅账号插件装配时显示 |

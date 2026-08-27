@@ -329,7 +329,7 @@ UI / layout / shell / `@tabora/ui` / official plugin 改动必须做 L5。
 - 插件不直接 `window.open`。
 - 插件不直接渲染会绕过权限模型的外部打开入口。
 - 权限拒绝只影响局部，不导致 shell 崩溃。
-- `remote-untrusted` source 不执行代码。
+- plugin loader 只执行 `builtin` source 的包，不执行远程或本地第三方代码。
 - 缺失 `apiVersion` 的 manifest 被拒绝。
 - future major API version 被 skipped/rejected。
 - host platform / capability 不满足时插件 skipped，并在插件管理器展示原因。
@@ -341,7 +341,7 @@ UI / layout / shell / `@tabora/ui` / official plugin 改动必须做 L5。
 建议检查命令：
 
 ```bash
-rg -n "window\\.open|target=\"_blank|openExternal|external-open|remote-untrusted|apiVersion" apps packages plugins
+rg -n "window\\.open|target=\"_blank|openExternal|external-open|apiVersion" apps packages plugins
 ```
 
 ### L7：代码与工程质量

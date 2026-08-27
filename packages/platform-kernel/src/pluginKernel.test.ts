@@ -24,23 +24,6 @@ function withViews(manifest: PluginManifest, ...viewIds: string[]): PluginManife
 }
 
 describe("createPluginKernel", () => {
-  it("refuses remote-untrusted executable modules even when discover is called directly", async () => {
-    const kernel = createPluginKernel()
-    const manifest: PluginManifest = {
-      id: "example.remote",
-      name: "Remote",
-      version: "1.0.0",
-      apiVersion: "1.0.0",
-      entry: "https://example.test/plugin.js",
-      engine: { platform: "^0.1.0" },
-      contributes: {},
-    }
-
-    await expect(
-      kernel.discover([{ module: { manifest, activate() {} }, source: "remote-untrusted" }]),
-    ).rejects.toThrow("Remote untrusted executable plugins require a sandboxed runtime")
-  })
-
   it("rejects unresolved cross-plugin preset references during discovery", async () => {
     const kernel = createPluginKernel()
     const manifest: PluginManifest = {

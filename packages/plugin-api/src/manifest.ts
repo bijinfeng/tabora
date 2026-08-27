@@ -335,12 +335,6 @@ export type SettingsPluginSummary = {
   disabledReason?: string
   requiredCapabilities?: HostCapabilityId[]
   supportedPlatforms?: HostPlatform[]
-  permissions: PluginPermission[]
-  /**
-   * Permissions the user has actually granted, a subset of `permissions`. Declared-but-not-granted
-   * capabilities stay just-in-time and prompt on first use.
-   */
-  grantedPermissions: PluginPermission[]
   /** Contribution counts avoid leaking a plugin's entire executable declaration. */
   contributionKinds: Array<ContributionRefKind>
 }
@@ -376,8 +370,6 @@ export type SettingsPanelViewProps = {
       enabled: boolean,
     ): Promise<void>
     togglePluginEnabled?(pluginId: string, enabled: boolean): Promise<void>
-    /** Withdraw a previously granted permission so the next use prompts again. */
-    revokePluginPermission?(pluginId: string, permission: PluginPermission): Promise<void>
     exportWorkspace?(): Promise<string>
     importWorkspace?(json: string): Promise<{ warnings: string[] }>
     createWorkspace?(name: string): Promise<void>

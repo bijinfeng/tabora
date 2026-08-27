@@ -817,7 +817,7 @@ SettingsSurfaceHost (shell 提供，不可替换)
 - **通用**：布局选择器（列出所有 layout contributions）、工作区信息，以及注册到 `general` 分组的 `settings-panel` 内容。
 - **外观**：主题切换、背景选择，以及相关插件贡献的外观面板内容。
 - **搜索**：默认搜索引擎选择、`@语法` 说明，以及搜索相关插件贡献内容。
-- **插件**：已安装插件列表、贡献能力摘要、权限摘要，以及插件管理相关面板内容。
+- **插件**：已安装插件列表、贡献能力摘要，以及插件管理相关面板内容。
 - **AI**：模型 provider、默认模型、网关状态、插件 AI 授权摘要，以及注册到 `ai` 分组的设置面板内容。
 - **关于**：平台内置说明，可附加只读插件贡献内容。
 
@@ -1013,7 +1013,7 @@ type BackgroundSourceValue =
 
 renderer contribution 的 `accepts` 与 source type 对齐，允许 `css`、`image`、`video`、`gradient`、`canvas`。宿主 resolver 优先读取 `source`，仅在缺失时使用 `defaultCss` 作为安全背景样式。
 
-当前 MVP 只执行 `builtin` 和 `local-trusted` 插件，因此 `image` / `video` URL 当前按“受信任包声明的背景资产”处理，而不是一条独立的 runtime network capability。也就是说：
+当前 MVP 只执行 `builtin` 插件，因此 `image` / `video` URL 当前按“受信任包声明的背景资产”处理，而不是一条独立的 runtime network capability。也就是说：
 
 - 背景 source 的 URL 允许作为 manifest 静态声明存在，但不代表插件获得任意联网能力。
 - 背景渲染器不得把交互式网络请求伪装成背景协议能力；若未来允许运行时下载背景素材、远端背景集合或第三方远程插件，必须把这一路径并入显式 `network` permission / host policy，而不是继续挂在 `BackgroundSourceValue` 的宽松字符串 URL 上。
@@ -1021,7 +1021,7 @@ renderer contribution 的 `accepts` 与 source type 对齐，允许 `css`、`ima
 
 ### 12.6 Loader 与兼容检查
 
-`PluginManifest.apiVersion` 必填。`PluginLoader` 当前支持 `builtin`、`local-trusted`、`remote-untrusted` source 记录；MVP 只执行 builtin 和可信本地包格式，不执行不可信远程代码。loader 按 Tabora plugin API major version 做兼容检查，future major 直接 skipped/rejected；缺失 `apiVersion` 的 manifest 无例外拒绝。
+`PluginManifest.apiVersion` 必填。`PluginLoader` 当前只接受 `builtin` source 记录，不执行远程或本地第三方代码；引入其他来源时需要同时补上 sandbox 与来源准入策略，不能只放宽 source 取值。loader 按 Tabora plugin API major version 做兼容检查，future major 直接 skipped/rejected；缺失 `apiVersion` 的 manifest 无例外拒绝。
 
 ## 13. 持久化增强
 

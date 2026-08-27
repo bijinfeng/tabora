@@ -218,7 +218,7 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     expect(generatedText).toBe("from-ai:bootstrap")
   })
 
-  it("trusts builtin declared permissions but keeps network just-in-time", async () => {
+  it("pre-grants every permission a builtin declares, including network", async () => {
     let canFetchAtActivation: boolean | undefined
     let canOpenAtActivation: boolean | undefined
     const runtime = createWorkbenchRuntimeBootstrap({
@@ -251,9 +251,9 @@ describe("createWorkbenchRuntimeBootstrap", () => {
     await runtime.kernel.discover(runtime.plugins)
     await runtime.kernel.activateEnabledPlugins()
 
-    // Network stays just-in-time: not pre-granted at startup for a trusted builtin.
-    expect(canFetchAtActivation).toBe(false)
-    // Other declared permissions (external-open) remain trusted for builtins.
+    // The MVP ships only builtins, so declaring a capability is the grant: network and
+    // external-open are both available at activation with no runtime prompt.
+    expect(canFetchAtActivation).toBe(true)
     expect(canOpenAtActivation).toBe(true)
   })
 

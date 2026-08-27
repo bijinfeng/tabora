@@ -1,18 +1,16 @@
 import * as stylex from "@stylexjs/stylex"
 import { Route, Router, useLocation, useNavigate } from "@solidjs/router"
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createEffect, createMemo, createSignal, onCleanup, Show, type JSX } from "solid-js"
+import { createEffect, createMemo, onCleanup, Show, type JSX } from "solid-js"
 import type {
   BackgroundRendererViewProps,
   PluginInstance,
-  PluginPermission,
   SettingsSectionId,
   WorkbenchSearchSettings,
   Workspace,
 } from "@tabora/plugin-api"
 import { applyThemeTokens } from "@tabora/theme"
 import { color, font } from "@tabora/theme/tokens.stylex"
-import { PermissionRequestDialog } from "@tabora/workbench-shell"
 
 import type { WorkbenchRuntimeBootstrap } from "../runtime/bootstrap"
 import {
@@ -145,18 +143,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
 
-  // Permission request state
-  type PermissionRequestState = {
-    pluginId: string
-    permission: PluginPermission
-    reason?: string
-    resolve: (granted: boolean) => void
-  }
-  // Queued so concurrent requests (e.g. a plugin fetching several hosts at once) are
-  // resolved one dialog at a time instead of overwriting each other's pending promise.
-  const [permissionQueue, setPermissionQueue] = createSignal<PermissionRequestState[]>([])
-  const permissionRequest = createMemo(() => permissionQueue()[0] ?? null)
-
   const currentRoute = createMemo(() => parseWorkbenchSettingsRoute(location.pathname))
   const navigateToSettings = (sectionId: SettingsSectionId) => {
     setActiveSettingsSectionId(sectionId)
@@ -199,47 +185,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
   onCleanup(() => {
     pluginStyleManager.dispose()
   })
-
-  // Listen for permission requests
-  createEffect(() => {
-    const dispose = kernel.events.on("permission.request", (payload) => {
-      const request = payload as {
-        pluginId: string
-        permission: PluginPermission
-        reason?: string
-        resolve: (granted: boolean) => void
-      }
-      setPermissionQueue((queue) => [
-        ...queue,
-        {
-          pluginId: request.pluginId,
-          permission: request.permission,
-          resolve: request.resolve,
-          ...(request.reason !== undefined ? { reason: request.reason } : {}),
-        },
-      ])
-    })
-    onCleanup(dispose)
-  })
-
-  // Handle permission response
-  const handlePermissionResponse = async (granted: boolean, remember: boolean) => {
-    const request = permissionRequest()
-    if (!request) return
-
-    if (granted && remember) {
-      try {
-        await kernel.grantPermission(request.pluginId, request.permission)
-        await refreshPluginRecords()
-      } catch (error) {
-        console.error("Failed to grant permission:", error)
-        showToast("授予权限失败", { type: "error" })
-      }
-    }
-
-    request.resolve(granted)
-    setPermissionQueue((queue) => queue.slice(1))
-  }
 
   createEffect(() => {
     if (_cmdPaletteOpen()) {
@@ -345,7 +290,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
       setDefaultSearchProvider: workspaceController.setDefaultSearchProvider,
       setSearchProviderEnabled: workspaceController.setSearchProviderEnabled,
       togglePluginEnabled: workspaceController.togglePluginEnabled,
-      revokePluginPermission: workspaceController.revokePluginPermission,
       ...(database
         ? {
             exportWorkspace: workspaceController.exportWorkspace,
@@ -481,23 +425,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
             }}
           </Show>
           <WorkbenchShellSurfaceHost />
-          <Show when={permissionRequest()}>
-            {(request) => {
-              const plugin = kernel.plugins.find((p) => p.manifest.id === request().pluginId)
-              const props = {
-                pluginId: request().pluginId,
-                pluginName: plugin?.manifest.name ?? request().pluginId,
-                permission: request().permission,
-                onResponse: handlePermissionResponse,
-                onClose: () => {
-                  request().resolve(false)
-                  setPermissionQueue((queue) => queue.slice(1))
-                },
-                ...(request().reason ? { reason: request().reason } : {}),
-              }
-              return <PermissionRequestDialog {...props} />
-            }}
-          </Show>
         </Show>
       </div>
     </WorkbenchShellProvider>

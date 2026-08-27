@@ -1,4 +1,9 @@
-import type { PluginInstance, PluginRecord, Workspace } from "@tabora/plugin-api"
+import {
+  workspaceSchema,
+  type PluginInstance,
+  type PluginRecord,
+  type Workspace,
+} from "@tabora/plugin-api"
 import {
   migrateWorkspaceContributionRefs,
   type PluginDataRow,
@@ -92,12 +97,13 @@ export function createFnosStorageAdapter(
     workspace: Workspace | undefined,
   ): Promise<Workspace | undefined> => {
     if (!workspace) return undefined
+    if (workspaceSchema.safeParse(workspace).success) return workspace
     const records = await store.getAll<PluginRecord>("plugin-records")
     const migrated = migrateWorkspaceContributionRefs(
       workspace,
       records.map((record) => record.manifest),
     )
-    if (migrated !== workspace) await store.save("workspaces", migrated.id, migrated)
+    await store.save("workspaces", migrated.id, migrated)
     return migrated
   }
 

@@ -11,11 +11,7 @@ import type {
   SettingsHostActionId,
   SettingsHostReadId,
 } from "@tabora/plugin-api"
-import {
-  permissionCovers,
-  pluginManifestSchema,
-  validatePluginManifestComposition,
-} from "@tabora/plugin-api"
+import { pluginManifestSchema, validatePluginManifestComposition } from "@tabora/plugin-api"
 
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry, type ExtensionRegistrationDisposer } from "./extensionRegistry"
@@ -26,7 +22,7 @@ import {
   type PluginI18nService,
 } from "./runtimeContext"
 
-export type PluginPackageSource = "builtin" | "local-trusted" | "remote-untrusted"
+export type PluginPackageSource = "builtin"
 
 /** Loader output: module code and static assets, without user state. */
 export type LoadedPluginPackage = {
@@ -91,8 +87,6 @@ export type PluginKernelOptions = {
   ai?: AiRuntimeBridge
   network?: PluginNetworkBridge
   i18n?: PluginI18nService
-  /** Executable code from remote-untrusted packages always requires a sandbox and is refused here. */
-  admittedSources?: ReadonlySet<Exclude<PluginPackageSource, "remote-untrusted">>
   /** Plugin ids the host resolves itself (dashboard layout, builtin theme/search/background packs). */
   hostBuiltinPluginIds?: ReadonlySet<string>
 }
@@ -104,9 +98,6 @@ export type PluginKernel = {
   discover(packages: LoadedPluginPackage[]): Promise<void>
   activateEnabledPlugins(): Promise<void>
   setPluginEnabled(pluginId: string, enabled: boolean): Promise<void>
-  grantPermission(pluginId: string, permission: PluginPermissionGrant): Promise<void>
-  revokePermission(pluginId: string, permission: PluginPermissionGrant): Promise<void>
-  getGrantedPermissions(pluginId: string): PluginPermissionGrant[]
 }
 
 function pluginEnabled(plugin: PluginRuntimePlugin): boolean {
@@ -175,22 +166,6 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
       registrationDisposers: ExtensionRegistrationDisposer[]
     }
   >()
-  // Local plugins must be admitted by a host-specific loader that verifies package origin and
-  // style isolation. The generic kernel therefore executes builtin code only by default.
-  const admittedSources =
-    options.admittedSources ??
-    new Set<Exclude<PluginPackageSource, "remote-untrusted">>(["builtin"])
-
-  function sourceAdmissionReason(pluginPackage: LoadedPluginPackage): string | undefined {
-    if (pluginPackage.source === "remote-untrusted") {
-      return "Remote untrusted executable plugins require a sandboxed runtime"
-    }
-    if (!admittedSources.has(pluginPackage.source)) {
-      return `Plugin source is not admitted by this host: ${pluginPackage.source}`
-    }
-    return undefined
-  }
-
   function registrationConflictReason(
     target: PluginRuntimePlugin,
     peers: PluginRuntimePlugin[],
@@ -392,19 +367,6 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
     events,
     plugins,
     async discover(discoveredPackages) {
-      const sourceRejections = discoveredPackages
-        .map((pluginPackage) => ({
-          pluginId: pluginPackage.module.manifest.id,
-          reason: sourceAdmissionReason(pluginPackage),
-        }))
-        .filter((entry): entry is { pluginId: string; reason: string } => Boolean(entry.reason))
-      if (sourceRejections.length > 0) {
-        throw new Error(
-          `Rejected plugin source: ${sourceRejections
-            .map((entry) => `${entry.pluginId}: ${entry.reason}`)
-            .join("; ")}`,
-        )
-      }
       const parsedManifests: PluginManifest[] = []
       for (const pluginPackage of discoveredPackages) {
         const parsed = pluginManifestSchema.safeParse(pluginPackage.module.manifest)
@@ -645,50 +607,6 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
           )
         }
       }
-    },
-    async grantPermission(pluginId, permission) {
-      const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
-      if (!plugin) {
-        throw new Error(`Plugin "${pluginId}" not found`)
-      }
-
-      const alreadyGranted = plugin.installation.grantedPermissions.some((granted) =>
-        permissionCovers(granted, permission),
-      )
-
-      if (alreadyGranted) return
-
-      // Add permission to granted list
-      plugin.installation.grantedPermissions = [
-        ...plugin.installation.grantedPermissions,
-        permission,
-      ]
-
-      // Persist to storage. The active runtime context reads grantedPermissions lazily,
-      // so the grant takes effect on the next permission check without a context rebuild.
-      if (options.lifecycleStore) {
-        await options.lifecycleStore.save(buildRecord(plugin))
-      }
-    },
-    async revokePermission(pluginId, permission) {
-      const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
-      if (!plugin) {
-        throw new Error(`Plugin "${pluginId}" not found`)
-      }
-
-      plugin.installation.grantedPermissions = plugin.installation.grantedPermissions.filter(
-        (granted) => !permissionCovers(granted, permission),
-      )
-
-      // The active runtime context reads grantedPermissions lazily, so the next permission check
-      // sees the withdrawal and re-prompts.
-      if (options.lifecycleStore) {
-        await options.lifecycleStore.save(buildRecord(plugin))
-      }
-    },
-    getGrantedPermissions(pluginId) {
-      const plugin = plugins.find((candidate) => candidate.manifest.id === pluginId)
-      return plugin?.installation.grantedPermissions ?? []
     },
   }
 }

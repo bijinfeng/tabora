@@ -17,7 +17,7 @@ export type ResolvedPluginStyle = {
   sourceHref: string
   scope: PluginStyleScope
   order: number
-  source: Exclude<PluginSource, "remote-untrusted">
+  source: PluginSource
 }
 
 export type PluginLoadRecord = {
@@ -43,61 +43,31 @@ export type PluginLoader = {
   load(): Promise<PluginLoadResult>
 }
 
-export type TrustedLocalPluginPackage = {
-  package: {
-    name: string
-    version: string
-  }
-  tabora: PluginManifest
-  entry: string
-  baseUrl?: string
-}
-
-export type ParsedTrustedLocalPluginPackage = {
-  packageName: string
-  packageVersion: string
-  manifest: PluginManifest
-  entry: string
-  source: "local-trusted"
-  styles: ResolvedPluginStyle[]
-}
-
 function resolveStyleHref(
   style: PluginStyleContribution,
   options: {
-    baseUrl?: string
     styleAssetUrls?: Record<string, string>
   },
 ): string {
   if (options.styleAssetUrls && Object.hasOwn(options.styleAssetUrls, style.href)) {
     return options.styleAssetUrls[style.href] ?? style.href
   }
-  if (options.baseUrl) return new URL(style.href, options.baseUrl).toString()
   return style.href
 }
 
 function resolveManifestStyles(options: {
   manifest: PluginManifest
-  source: Exclude<PluginSource, "remote-untrusted">
-  baseUrl?: string
+  source: PluginSource
   styleAssetUrls?: Record<string, string>
 }): ResolvedPluginStyle[] {
-  return (options.manifest.styles ?? []).map((style) => {
-    const scope = style.scope ?? "plugin"
-    if (scope === "global" && options.source !== "builtin") {
-      throw new Error(
-        `Only builtin plugins may declare global styles: ${options.manifest.id}/${style.href}`,
-      )
-    }
-    return {
-      pluginId: options.manifest.id,
-      href: resolveStyleHref(style, options),
-      sourceHref: style.href,
-      scope,
-      order: style.order ?? 0,
-      source: options.source,
-    }
-  })
+  return (options.manifest.styles ?? []).map((style) => ({
+    pluginId: options.manifest.id,
+    href: resolveStyleHref(style, options),
+    sourceHref: style.href,
+    scope: style.scope ?? "plugin",
+    order: style.order ?? 0,
+    source: options.source,
+  }))
 }
 
 function majorVersion(version: string): number | null {
@@ -124,9 +94,8 @@ function apiCompatibilityRejection(manifest: PluginManifest): string | undefined
 }
 
 /**
- * Validate packages supplied by the trusted builtin composition. This loader deliberately
- * refuses every other source: source admission and permission policy belong to the host,
- * never to a manifest or to a convenient bootstrap conversion.
+ * Validate packages supplied by the trusted builtin composition. Manifest validation and
+ * api-version compatibility are enforced here; permission policy belongs to the host.
  */
 export function loadBuiltinPlugins(plugins: LoadedPluginPackage[]): PluginLoadResult {
   const loaded: PluginLoadRecord[] = []
@@ -134,14 +103,6 @@ export function loadBuiltinPlugins(plugins: LoadedPluginPackage[]): PluginLoadRe
   const seenPluginIds = new Set<string>()
 
   for (const pluginPackage of plugins) {
-    if (pluginPackage.source !== "builtin") {
-      rejected.push({
-        source: pluginPackage.source,
-        reason: 'Builtin loader only accepts packages with source "builtin"',
-        manifest: pluginPackage.module.manifest,
-      })
-      continue
-    }
     const { module } = pluginPackage
     if (seenPluginIds.has(module.manifest.id)) {
       rejected.push({
@@ -213,25 +174,5 @@ export function createBuiltinPluginLoader(plugins: LoadedPluginPackage[]): Plugi
     async load() {
       return loadBuiltinPlugins(plugins)
     },
-  }
-}
-
-export function parseTrustedLocalPluginPackage(
-  value: TrustedLocalPluginPackage,
-): ParsedTrustedLocalPluginPackage {
-  const parsedManifest = pluginManifestSchema.parse(value.tabora) as PluginManifest
-  const apiRejection = apiCompatibilityRejection(parsedManifest)
-  if (apiRejection) throw new Error(apiRejection)
-  return {
-    packageName: value.package.name,
-    packageVersion: value.package.version,
-    manifest: parsedManifest,
-    entry: value.entry,
-    source: "local-trusted",
-    styles: resolveManifestStyles({
-      manifest: parsedManifest,
-      source: "local-trusted",
-      ...(value.baseUrl ? { baseUrl: value.baseUrl } : {}),
-    }),
   }
 }

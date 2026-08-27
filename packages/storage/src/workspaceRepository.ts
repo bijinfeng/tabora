@@ -12,12 +12,13 @@ export type WorkspaceRepository = {
 export function createWorkspaceRepository(database: TaboraDatabase): WorkspaceRepository {
   async function normalize(value: unknown): Promise<Workspace | undefined> {
     if (!value) return undefined
-    const alreadyCanonical = workspaceSchema.safeParse(value).success
+    const canonical = workspaceSchema.safeParse(value)
+    if (canonical.success) return value as Workspace
     const migrated = migrateWorkspaceContributionRefs(
       value,
       (await database.plugins.toArray()).map((record) => record.manifest),
     )
-    if (!alreadyCanonical) await database.workspaces.put(migrated)
+    await database.workspaces.put(migrated)
     return migrated
   }
 

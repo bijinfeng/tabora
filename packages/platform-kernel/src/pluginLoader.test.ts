@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { PluginManifest, PluginModule } from "@tabora/plugin-api"
 import { createBuiltinPluginPackage, type LoadedPluginPackage } from "./pluginKernel"
-import { createBuiltinPluginLoader, parseTrustedLocalPluginPackage } from "./pluginLoader"
+import { createBuiltinPluginLoader } from "./pluginLoader"
 
 const plugin: PluginModule = {
   manifest: {
@@ -33,20 +33,6 @@ describe("createBuiltinPluginLoader", () => {
     expect(result.loaded[0]?.module).toBe(plugin)
     expect(result.loaded[0]?.source).toBe("builtin")
     expect(result.rejected).toEqual([])
-  })
-
-  it("rejects a non-builtin package instead of relabeling it as trusted", async () => {
-    const loader = createBuiltinPluginLoader([{ ...builtin(plugin), source: "local-trusted" }])
-
-    const result = await loader.load()
-
-    expect(result.loaded).toEqual([])
-    expect(result.rejected).toMatchObject([
-      {
-        source: "local-trusted",
-        reason: 'Builtin loader only accepts packages with source "builtin"',
-      },
-    ])
   })
 
   it("resolves builtin plugin stylesheet asset urls", async () => {
@@ -151,41 +137,5 @@ describe("createBuiltinPluginLoader", () => {
         reason: "Plugin manifest must declare apiVersion",
       },
     ])
-  })
-
-  it("parses trusted local plugin package metadata", () => {
-    const parsed = parseTrustedLocalPluginPackage({
-      package: {
-        name: "@local/test-plugin",
-        version: "1.0.0",
-      },
-      tabora: {
-        ...plugin.manifest,
-        styles: [{ href: "./styles.css" }],
-      },
-      entry: "./dist/index.js",
-      baseUrl: "https://plugins.local/@local/test-plugin/",
-    })
-
-    expect(parsed).toEqual({
-      packageName: "@local/test-plugin",
-      packageVersion: "1.0.0",
-      manifest: {
-        ...plugin.manifest,
-        styles: [{ href: "./styles.css" }],
-      },
-      entry: "./dist/index.js",
-      source: "local-trusted",
-      styles: [
-        {
-          pluginId: "test.plugin",
-          href: "https://plugins.local/@local/test-plugin/styles.css",
-          sourceHref: "./styles.css",
-          scope: "plugin",
-          order: 0,
-          source: "local-trusted",
-        },
-      ],
-    })
   })
 })
