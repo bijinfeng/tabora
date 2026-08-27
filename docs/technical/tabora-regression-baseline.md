@@ -539,7 +539,7 @@ pnpm --filter @tabora/extension zip:firefox
 当前 CI 已覆盖：
 
 - `pnpm check:architecture`
-- `pnpm check`
+- `pnpm check`（会先通过 TanStack Start/Vite 配置生成 backend 路由树）
 - `pnpm test`
 - `pnpm build`
 - PR 按路径触发的 `browser-smoke` job（`pnpm test:e2e`）
