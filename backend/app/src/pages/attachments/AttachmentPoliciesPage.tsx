@@ -118,6 +118,7 @@ export function AttachmentPoliciesPage() {
           when={data.isPending || (data.data && data.data.length > 0)}
           fallback={
             <EmptyState
+              compact
               title="暂无附件策略"
               description="新建策略以限制某类实体的上传类型与大小。"
             />

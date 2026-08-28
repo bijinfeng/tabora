@@ -35,7 +35,7 @@ export function AdminSidebar(props: AdminSidebarProps) {
           {(item) => (
             <Link
               to={item.path as never}
-              aria-label={props.collapsed ? item.label : undefined}
+              aria-label={item.label}
               {...stylex.attrs(
                 styles.navItem,
                 props.collapsed && styles.navItemCollapsed,
@@ -44,7 +44,7 @@ export function AdminSidebar(props: AdminSidebarProps) {
             >
               <item.icon size={18} />
               <Show when={!props.collapsed}>
-                <span>{item.label}</span>
+                <span {...stylex.attrs(styles.navLabel)}>{item.label}</span>
               </Show>
             </Link>
           )}

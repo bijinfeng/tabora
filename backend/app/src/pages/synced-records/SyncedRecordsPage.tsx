@@ -112,6 +112,7 @@ export function SyncedRecordsPage() {
             resetOffset()
           }}
           options={TYPE_OPTIONS}
+          placeholder="全部类型"
           aria-label="按类型筛选"
         />
         <Select
@@ -121,6 +122,7 @@ export function SyncedRecordsPage() {
             resetOffset()
           }}
           options={DELETED_OPTIONS}
+          placeholder="全部状态"
           aria-label="按状态筛选"
         />
       </div>
@@ -130,7 +132,11 @@ export function SyncedRecordsPage() {
         loading={data.isPending}
         hasRows={(data.data?.records.length ?? 0) > 0}
         empty={
-          <EmptyState title="暂无同步记录" description="调整筛选条件，或等待客户端上传数据。" />
+          <EmptyState
+            compact
+            title="暂无同步记录"
+            description="调整筛选条件，或等待客户端上传数据。"
+          />
         }
       >
         <Table
@@ -144,13 +150,15 @@ export function SyncedRecordsPage() {
 
       <Show when={data.data}>
         {(d) => (
-          <Pagination
-            offset={offset()}
-            pageSize={PAGE_SIZE}
-            total={d().total}
-            onPrev={onPrev}
-            onNext={onNext}
-          />
+          <Show when={d().total > 0}>
+            <Pagination
+              offset={offset()}
+              pageSize={PAGE_SIZE}
+              total={d().total}
+              onPrev={onPrev}
+              onNext={onNext}
+            />
+          </Show>
         )}
       </Show>
 

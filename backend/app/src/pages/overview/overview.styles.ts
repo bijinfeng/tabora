@@ -1,19 +1,19 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, font, radius, shadow, space, motion } from "@tabora/theme/tokens.stylex"
+import { color, font, radius, space, motion } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
   page: {
     display: "flex",
     flexDirection: "column",
-    gap: space.s8,
+    gap: space.s6,
     margin: "0 auto",
-    maxWidth: 1120,
+    maxWidth: 1040,
   },
   section: {
     display: "flex",
     flexDirection: "column",
-    gap: space.s5,
+    gap: space.s4,
   },
   sectionTitle: {
     fontSize: 16,
@@ -21,8 +21,8 @@ export const styles = stylex.create({
   },
   cardGrid: {
     display: "grid",
-    gap: space.s5,
-    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+    gap: space.s3,
+    gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
   },
   card: {
     backgroundColor: color.surface,
@@ -32,14 +32,13 @@ export const styles = stylex.create({
     borderWidth: 1,
     display: "flex",
     flexDirection: "column",
-    gap: space.s3,
-    padding: space.s5,
-    transitionProperty: "all",
+    gap: space.s2,
+    padding: space.s4,
+    transitionProperty: "border-color, background-color",
     transitionDuration: motion.normal,
     cursor: "default",
     ":hover": {
-      boxShadow: shadow.lg,
-      borderColor: color.accentSoft,
+      borderColor: color.lineStrong,
     },
   },
   cardHead: {

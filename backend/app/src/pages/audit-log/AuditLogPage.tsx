@@ -1,13 +1,16 @@
 import * as stylex from "@stylexjs/stylex"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
 import { createSignal, For, Show } from "solid-js"
-import { Button, Input, Select } from "@tabora/ui"
+import { Button } from "@tabora/ui/button"
+import { Input } from "@tabora/ui/input"
+import { Select } from "@tabora/ui/select"
 
 import {
   fetchAuditLogs,
   deleteOldAuditLogs,
   type AuditLogRecord,
 } from "../../server/admin/auditLog"
+import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { styles } from "./auditLog.styles"
 
 type FilterState = {
@@ -41,6 +44,7 @@ export function AuditLogPage() {
 
   const [cleanupDays, setCleanupDays] = createSignal("90")
   const [cleanupMessage, setCleanupMessage] = createSignal("")
+  const [cleanupConfirmOpen, setCleanupConfirmOpen] = createSignal(false)
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value || undefined, offset: 0 }))
@@ -64,6 +68,7 @@ export function AuditLogPage() {
     mutationFn: (days: number) => deleteOldAuditLogs({ data: { days } }),
     onSuccess: (result) => {
       setCleanupMessage(`已删除 ${result.deletedCount} 条日志`)
+      setCleanupConfirmOpen(false)
       void queryClient.invalidateQueries({ queryKey: ["audit-logs"] })
     },
     onError: (error: Error) => setCleanupMessage(`删除失败: ${error.message}`),
@@ -75,7 +80,14 @@ export function AuditLogPage() {
       setCleanupMessage("请输入有效的天数（大于 0）")
       return
     }
-    cleanupMutation.mutate(days)
+    setCleanupConfirmOpen(true)
+  }
+
+  const confirmCleanup = () => {
+    const days = Number.parseInt(cleanupDays(), 10)
+    if (!Number.isNaN(days) && days > 0 && !cleanupMutation.isPending) {
+      cleanupMutation.mutate(days)
+    }
   }
 
   const formatDate = (dateStr: string) => {
@@ -214,12 +226,25 @@ export function AuditLogPage() {
               onInput={(value) => setCleanupDays(value)}
             />
           </div>
-          <Button onClick={handleCleanup}>删除</Button>
+          <Button variant="danger-subtle" onClick={handleCleanup}>
+            删除旧日志
+          </Button>
         </div>
         <Show when={cleanupMessage()}>
-          <p style={{ "margin-top": "8px", "font-size": "14px" }}>{cleanupMessage()}</p>
+          <p {...stylex.props(styles.cleanupMessage)}>{cleanupMessage()}</p>
         </Show>
       </div>
+
+      <ConfirmDialog
+        open={cleanupConfirmOpen()}
+        title="清理旧审计日志"
+        description={`确认删除早于 ${cleanupDays()} 天的审计日志？该操作不可撤销。`}
+        confirmLabel="删除日志"
+        loading={cleanupMutation.isPending}
+        error={(cleanupMutation.error as Error | null)?.message ?? null}
+        onConfirm={confirmCleanup}
+        onClose={() => setCleanupConfirmOpen(false)}
+      />
     </div>
   )
 }

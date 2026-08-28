@@ -6,9 +6,10 @@ export const styles = stylex.create({
   page: {
     display: "flex",
     flexDirection: "column",
-    gap: space.s8,
+    gap: space.s5,
     margin: "0 auto",
     maxWidth: 720,
+    paddingBottom: 72,
   },
   section: {
     backgroundColor: color.surface,
@@ -18,8 +19,8 @@ export const styles = stylex.create({
     borderWidth: 1,
     display: "flex",
     flexDirection: "column",
-    gap: space.s5,
-    padding: space.s6,
+    gap: space.s4,
+    padding: space.s5,
   },
   sectionTitle: {
     fontSize: 14,
@@ -47,11 +48,17 @@ export const styles = stylex.create({
   },
   saveBar: {
     alignItems: "center",
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderRadius: radius.card,
+    borderStyle: "solid",
+    borderWidth: 1,
     display: "flex",
     gap: space.s4,
     justifyContent: "flex-end",
     position: "sticky",
     bottom: 0,
+    padding: space.s3,
   },
   savedHint: {
     color: color.success,

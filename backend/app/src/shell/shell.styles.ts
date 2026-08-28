@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
+import { color, font, radius, space, zIndex } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
   root: {
@@ -8,15 +8,23 @@ export const styles = stylex.create({
     color: color.text,
     display: "grid",
     fontFamily: font.sans,
-    gridTemplateColumns: "232px 1fr",
-    height: "100vh",
+    gridTemplateColumns: "200px minmax(0, 1fr)",
+    height: "100dvh",
+    minHeight: "100dvh",
     transitionDuration: "var(--tbr-dur-normal)",
     transitionProperty: "grid-template-columns",
     transitionTimingFunction: "var(--tbr-ease)",
     width: "100%",
+    "@media (max-width: 767px)": {
+      gridTemplateColumns: "minmax(0, 1fr)",
+      paddingBottom: 64,
+    },
   },
   rootCollapsed: {
     gridTemplateColumns: "64px 1fr",
+    "@media (max-width: 767px)": {
+      gridTemplateColumns: "minmax(0, 1fr)",
+    },
   },
   sidebar: {
     backgroundColor: color.surface,
@@ -27,6 +35,19 @@ export const styles = stylex.create({
     flexDirection: "column",
     height: "100%",
     minHeight: 0,
+    "@media (max-width: 767px)": {
+      borderRightWidth: 0,
+      borderTopColor: color.line,
+      borderTopStyle: "solid",
+      borderTopWidth: 1,
+      bottom: 0,
+      height: 64,
+      left: 0,
+      position: "fixed",
+      right: 0,
+      width: "100%",
+      zIndex: zIndex.sticky,
+    },
   },
   brand: {
     alignItems: "center",
@@ -35,8 +56,11 @@ export const styles = stylex.create({
     borderBottomWidth: 1,
     display: "flex",
     gap: space.s3,
-    height: 56,
+    height: 52,
     paddingInline: space.s5,
+    "@media (max-width: 767px)": {
+      display: "none",
+    },
   },
   brandMark: {
     width: 28,
@@ -60,6 +84,17 @@ export const styles = stylex.create({
     overflowY: "auto",
     paddingBlock: space.s4,
     paddingInline: space.s3,
+    "@media (max-width: 767px)": {
+      display: "grid",
+      flex: "none",
+      gap: 0,
+      gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
+      height: "100%",
+      overflow: "hidden",
+      paddingBlock: space.s2,
+      paddingInline: space.s2,
+      width: "100%",
+    },
   },
   navItem: {
     alignItems: "center",
@@ -69,7 +104,7 @@ export const styles = stylex.create({
     display: "flex",
     fontSize: 13,
     gap: space.s3,
-    height: 36,
+    height: 34,
     paddingInline: space.s3,
     textDecoration: "none",
     transitionDuration: "var(--tbr-dur-fast)",
@@ -78,6 +113,12 @@ export const styles = stylex.create({
     ":hover": {
       backgroundColor: color.surfaceHover,
       color: color.text,
+    },
+    "@media (max-width: 767px)": {
+      gap: 0,
+      height: 48,
+      justifyContent: "center",
+      paddingInline: 0,
     },
   },
   navItemActive: {
@@ -90,6 +131,11 @@ export const styles = stylex.create({
     justifyContent: "center",
     paddingInline: 0,
   },
+  navLabel: {
+    "@media (max-width: 767px)": {
+      display: "none",
+    },
+  },
   sidebarFooter: {
     alignItems: "center",
     borderTopColor: color.line,
@@ -101,6 +147,9 @@ export const styles = stylex.create({
     minHeight: 52,
     paddingBlock: space.s3,
     paddingInline: space.s4,
+    "@media (max-width: 767px)": {
+      display: "none",
+    },
   },
   footerIdentity: {
     display: "flex",
@@ -137,9 +186,13 @@ export const styles = stylex.create({
     borderBottomWidth: 1,
     display: "flex",
     gap: space.s4,
-    height: 56,
+    height: 48,
     justifyContent: "space-between",
-    paddingInline: space.s8,
+    paddingInline: space.s6,
+    "@media (max-width: 767px)": {
+      height: 44,
+      paddingInline: space.s4,
+    },
   },
   topbarTitle: {
     fontSize: 15,
@@ -158,11 +211,17 @@ export const styles = stylex.create({
   envBadge: {
     color: color.textSubtle,
     fontSize: 12,
+    "@media (max-width: 767px)": {
+      display: "none",
+    },
   },
   content: {
     flex: 1,
     minHeight: 0,
     overflowY: "auto",
-    padding: space.s8,
+    padding: space.s6,
+    "@media (max-width: 767px)": {
+      padding: space.s5,
+    },
   },
 })

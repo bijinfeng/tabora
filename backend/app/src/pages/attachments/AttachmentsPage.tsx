@@ -108,7 +108,9 @@ export function AttachmentsPage() {
         error={data.error as Error | null}
         loading={data.isPending}
         hasRows={(data.data?.files.length ?? 0) > 0}
-        empty={<EmptyState title="暂无附件" description="用户通过插件上传附件后在此巡检。" />}
+        empty={
+          <EmptyState compact title="暂无附件" description="用户通过插件上传附件后在此巡检。" />
+        }
       >
         <Table
           columns={columns}
@@ -120,13 +122,15 @@ export function AttachmentsPage() {
 
       <Show when={data.data}>
         {(d) => (
-          <Pagination
-            offset={offset()}
-            pageSize={PAGE_SIZE}
-            total={d().total}
-            onPrev={onPrev}
-            onNext={onNext}
-          />
+          <Show when={d().total > 0}>
+            <Pagination
+              offset={offset()}
+              pageSize={PAGE_SIZE}
+              total={d().total}
+              onPrev={onPrev}
+              onNext={onNext}
+            />
+          </Show>
         )}
       </Show>
 
