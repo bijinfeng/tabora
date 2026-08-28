@@ -68,7 +68,7 @@
                        │
 ┌──────────────────────┴───────────────────────────────┐
 │  Infrastructure Layer                                 │
-│  - @tabora/ai-runtime (Vercel AI SDK adapter)         │
+│  - @tabora/ai-runtime (TanStack AI server gateway)    │
 │  - @tabora/storage (IndexedDB 持久化)                  │
 │  - @tabora/theme (CSS custom properties)              │
 │  - @tabora/brand (品牌图标源与品牌组件)               │
@@ -102,7 +102,7 @@
 packages/
   plugin-api/           # 类型、Schema、Props Contract（不变）
   platform-kernel/      # 插件生命周期、Registry、EventBus、权限、快捷键注册（增强）
-  ai-runtime/           # AI Runtime adapter，P0 基于 Vercel AI SDK
+  ai-runtime/           # AI Runtime gateway，P0 基于服务端 TanStack AI
   orchestrator/         # 新增：插件目录、搜索路由、拖拽排序、展开、设置导航
   workbench-app/        # 跨 shell 的 workbench composition 承载层
   host-adapters/        # Web / extension / desktop host capability adapters
@@ -129,7 +129,7 @@ packages/
 - 插件系统可扩展性已收口：drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和布局不可用状态属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。**layout switcher 已随 Phase 2 移除，不再属于编排层职责。**
 - `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope/surfaces/content、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope/surfaces/content`、workspace canonical contribution ref（含 `activeBackgroundProvider`）、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
 - settings panel 的 `content` 必须显式选择 `{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`。Kernel 为 schema provider 提供受 manifest 声明限制的 registry，停用插件时与 view 一起注销；宿主不再通过 `SettingsPanelViewProps.host` 注入账号或同步业务 API。
-- AI Runtime P0：`@tabora/plugin-api` 新增 AI 协议类型、manifest `ai` 权限和 settings `ai` section；`@tabora/platform-kernel` 在 `PluginContext` 中按 `{ type: "ai", access: [...] }` 授权暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 `AiRuntimeBridge` 并传入 kernel；`@tabora/ai-runtime` 作为基础设施包，当前基于 Vercel AI SDK 的 `generateText` / `streamText` 提供默认 adapter，并把敏感工具执行收口到宿主审批回调。插件只消费 Tabora 协议，不直接依赖 Vercel AI SDK。
+- AI Runtime P0：`@tabora/plugin-api` 定义文本生成/流式生成与 `ai.generate` 权限；`@tabora/platform-kernel` 仅按权限暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 HTTP bridge 并传入 kernel；`@tabora/ai-runtime` 提供基于 TanStack AI 的服务端文本 gateway 和统一 JSON/SSE transport。云端内置模型只接受已登录用户，云端自定义 OpenAI-compatible provider 在单次请求中临时使用本机密钥，FNOS 只解析设备共享的 custom provider。插件只消费 Tabora 协议，不直接依赖 TanStack AI。
 - 发布前兼容性边界：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
 - `@tabora/plugin-api` 当前额外导出 `workbenchSearchSettingsSchema`、`pluginInstanceSchema`、`workspaceSchema`、`workspaceExportSchema` 作为当前工作台协议事实源。`WorkbenchSearchSettings` 当前协议为完整显式配置：`defaultProviderId: string`、`enabledProviderIds: string[]`，并要求默认 provider 必须属于启用列表。workspace hydration、import/export 和 preset 链路统一走 schema 校验；缺失字段、旧导出或不满足约束的数据直接拒绝，不再按“首个 provider”或“全量 providers”做 silent backfill。
 - `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
@@ -137,7 +137,7 @@ packages/
 - 插件依赖边界已由测试守卫：官方、community、example 插件源码和 package manifest 不得依赖 `@tabora/workbench-shell`、`@tabora/storage` 或 app 源码/package。
 - 架构边界：`@tabora/orchestrator` 不依赖 `@tabora/storage` 或 `solid-js`；playground / extension 生产依赖不直接声明官方插件、layout package 或 core runtime package；`WidgetSize -> grid span` 映射统一由 `@tabora/plugin-api` 的 `widgetGeometry` 导出，避免 workbench grid、widget shell 和 drag sort model 三套映射漂移。
 - 运行时收口：search provider 在 runtime catalog 中带有 `pluginId/pluginName` owner descriptor，inline search 和 shell `CommandPalette` 的外部打开都使用 provider owner 进行 `external-open` 权限判断；插件禁用会执行 activation disposer 并注销已注册 view，active contribution list 只来自 enabled plugin，plugin summaries 仍保留全部插件用于管理面板；`LayoutHostAPI.getGlobalActions("menu")` 成为第一等全局动作 surface；布局 view 失败时由 layout error tracker 记录 layout id 和具体错误，并显示布局不可用状态；runtime context 的 `getConfig/setConfig` 临时 API 已删除，实例数据通过 widget props 的 `data` 与 scoped data host 显式传递；Dexie schema 仅保留当前有 repository/runtime path 的 MVP 表，搜索历史继续作为 plugin-owned workspace data 存于 `pluginData`。
-- 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。bootstrap 可接收不带 Dexie database 的 host storage adapter；此类宿主仍使用统一 repository port，但不提供基于 Dexie 的导入/导出。FNOS 以 HTTP adapter 把 repository 操作交给本地 Fastify + SQLite。账号与同步则由 `official.account-sync` 可选插件装配，避免纯本地宿主初始化认证与同步 runtime。
+- 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。bootstrap 可接收不带 Dexie database 的 host storage adapter；此类宿主仍使用统一 repository port，但不提供基于 Dexie 的导入/导出。FNOS 以 HTTP adapter 把 repository 操作交给本地 Hono + SQLite。账号与同步则由 `official.account-sync` 可选插件装配，避免纯本地宿主初始化认证与同步 runtime。
 - 组合与治理：`@tabora/workbench-app` 的 `shellController` 纯 helper 统一承接 plugin owner `external-open` 权限判断；theme/background/grid/workspace session/import-export 等共享 shell helper 也由该包承接，extension 不再通过相对路径直接 import playground 源码。（Phase 2 后 layout switch plan/snapshot 纯模型已删除。）
 - 搜索与主题治理：`@tabora/workbench-app` 的 search helper / state、`@tabora/orchestrator` 的搜索模型、以及官方 search/settings 插件已统一删除“首项 provider”隐式兜底。theme resolver 仅在精确命中 theme 时返回对应 token；未命中时应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再回退到 `themes[0]`。`CommandPalette` 与 `SearchCommandBar` 的 provider token、`@` 路由和 suggestions 生成进一步收敛到 `@tabora/orchestrator` 的共享 model，官方插件不再维护独立的 search-model 转导出层；`SearchViewProps` 也已升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，搜索栏只负责渲染和事件转发。
 - 治理自动化：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 除 architecture/check/test/build 外，已新增按路径触发的 `browser-smoke` job，执行 `pnpm exec playwright install --with-deps chromium` + `pnpm test:e2e`；nightly workflow 继续保留全量 browser smoke，release/deploy workflow 在打包前输出 regression summary。`check:architecture` 同步新增 workflow contract 守卫，禁止 PR browser smoke job、路径门禁或 Chromium 安装步骤漂移。
@@ -1098,7 +1098,7 @@ Theme token applier 只管理它自己最近一次写入的 CSS custom propertie
 
 Background applier 同样追踪它最近写入的 CSS properties；切换背景时移除上一背景独有属性后再应用新样式，未知 provider 则只应用安全页面底色。
 
-FNOS 的生产包通过飞牛统一网关 `/app/tabora` 接入 NAS 登录态，Fastify 只监听 `${TRIM_APPDEST}/app.sock`，不暴露独立 TCP 端口；本地开发才监听 loopback。CORS 仅允许无 Origin 的同源请求及 `localhost`/`127.0.0.1`/`[::1]` 本机开发 Origin，不能以 `origin: true` 向任意跨站页面开放本地数据。当前设备级 SQLite 数据库尚未按 `X-Trim-Userid` 隔离，因此桌面入口保持管理员可见，不能直接开放给所有 NAS 用户。
+FNOS 的生产包通过飞牛统一网关 `/app/tabora` 接入 NAS 登录态，Hono 只监听 `${TRIM_APPDEST}/app.sock`，不暴露独立 TCP 端口；本地开发才监听 loopback。CORS 仅允许无 Origin 的同源请求及 `localhost`/`127.0.0.1`/`[::1]` 本机开发 Origin，不能以 `origin: true` 向任意跨站页面开放本地数据。当前设备级 SQLite 数据库尚未按 `X-Trim-Userid` 隔离，因此桌面入口保持管理员可见，不能直接开放给所有 NAS 用户。
 
 ## 14. 错误回退体系
 

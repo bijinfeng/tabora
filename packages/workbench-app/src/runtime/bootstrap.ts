@@ -7,7 +7,11 @@ import {
   builtinSearchProviders,
 } from "@tabora/official-plugins"
 import { BUILTIN_THEME_PLUGIN_ID, builtinThemes } from "@tabora/theme"
-import type { AiRuntimeBridge, WorkspacePresetContribution } from "@tabora/plugin-api"
+import type {
+  AiRuntimeBridge,
+  AiSettingsService,
+  WorkspacePresetContribution,
+} from "@tabora/plugin-api"
 import {
   createPluginKernel,
   loadBuiltinPlugins,
@@ -52,6 +56,7 @@ export type WorkbenchRuntimeBootstrap = {
   shellConfig: WorkbenchShellConfig
   pluginStyles: ResolvedPluginStyle[]
   rejectedPlugins: PluginLoadRejectedRecord[]
+  aiSettings?: AiSettingsService
 }
 
 export type CreateWorkbenchRuntimeBootstrapOptions = {
@@ -62,6 +67,8 @@ export type CreateWorkbenchRuntimeBootstrapOptions = {
   databaseName?: string
   storageAdapter?: StorageAdapter
   ai?: AiRuntimeBridge
+  /** Host-owned AI preferences. Never place provider secrets in workspace or plugin storage. */
+  aiSettings?: AiSettingsService
 }
 
 export function createWorkbenchRuntimeBootstrap(
@@ -416,5 +423,6 @@ export function createWorkbenchRuntimeBootstrap(
     shellConfig: options.shellConfig,
     pluginStyles,
     rejectedPlugins: loadResult.rejected,
+    ...(options.aiSettings ? { aiSettings: options.aiSettings } : {}),
   }
 }

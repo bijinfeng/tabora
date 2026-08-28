@@ -276,6 +276,7 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     getSearchProviders: () => pluginCatalog.listSearchProviders(),
     getSearchSettings: searchSettings,
     getPlugins: () => pluginCatalog.pluginSummaries(pluginRecords()),
+    ...(runtime.aiSettings ? { aiSettings: runtime.aiSettings } : {}),
     getLocale: () => runtime.i18n.locale(),
     getAvailableLocales: () => [
       { value: "zh-CN", label: "中文（简体）" },

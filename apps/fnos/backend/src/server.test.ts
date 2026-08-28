@@ -1,3 +1,4 @@
+import { createServer } from "node:http"
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -6,6 +7,32 @@ import type { Workspace } from "@tabora/plugin-api"
 
 import { createFnosStorageAdapter } from "../../frontend/src/localStorageAdapter"
 import { createFnosServer } from "./server"
+
+async function createStreamingOpenAiCompatibleProvider(): Promise<{
+  baseUrl: string
+  close: () => Promise<void>
+}> {
+  const provider = createServer((_request, response) => {
+    response.writeHead(200, { "content-type": "text/event-stream" })
+    response.write(
+      'data: {"id":"chatcmpl-test","object":"chat.completion.chunk","created":0,"model":"local-model","choices":[{"index":0,"delta":{"content":"local summary"},"finish_reason":null}]}\n\n',
+    )
+    response.write(
+      'data: {"id":"chatcmpl-test","object":"chat.completion.chunk","created":0,"model":"local-model","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}\n\n',
+    )
+    response.end("data: [DONE]\n\n")
+  })
+  await new Promise<void>((resolve) => provider.listen(0, "127.0.0.1", resolve))
+  const address = provider.address()
+  if (!address || typeof address === "string") throw new Error("Unable to start local AI provider")
+  return {
+    baseUrl: `http://127.0.0.1:${address.port}/v1`,
+    close: () =>
+      new Promise((resolve, reject) =>
+        provider.close((error) => (error ? reject(error) : resolve())),
+      ),
+  }
+}
 
 describe("FNOS 本地存储服务", () => {
   const servers: Array<ReturnType<typeof createFnosServer>> = []
@@ -94,6 +121,70 @@ describe("FNOS 本地存储服务", () => {
       },
     })
     expect(local.headers["access-control-allow-origin"]).toBe("http://127.0.0.1:5173")
+  })
+
+  it("保存设备共享 AI 配置时不回显密钥，且拒绝内置模型模式", async () => {
+    const server = createFnosServer({ databasePath: ":memory:" })
+    servers.push(server)
+
+    const saved = await server.inject({
+      method: "PUT",
+      url: "/api/ai/config",
+      payload: { baseUrl: "http://127.0.0.1:11434/v1", apiKey: "local-secret", model: "llama" },
+    })
+    expect(saved.statusCode).toBe(200)
+    expect(saved.json()).toEqual({
+      configured: true,
+      baseUrl: "http://127.0.0.1:11434/v1",
+      model: "llama",
+      hasApiKey: true,
+    })
+    expect(saved.body).not.toContain("local-secret")
+
+    const builtIn = await server.inject({
+      method: "POST",
+      url: "/api/ai/generate",
+      payload: { provider: "builtin", prompt: "hello" },
+    })
+    expect(builtIn.statusCode).toBe(400)
+    expect(builtIn.json()).toMatchObject({ error: { code: "ai_model_unavailable" } })
+  })
+
+  it("使用设备共享的 localhost provider 输出标准流，不接受请求中的临时密钥", async () => {
+    const provider = await createStreamingOpenAiCompatibleProvider()
+    const server = createFnosServer({ databasePath: ":memory:" })
+    servers.push(server)
+    try {
+      const saved = await server.inject({
+        method: "PUT",
+        url: "/api/ai/config",
+        payload: { baseUrl: provider.baseUrl, apiKey: "device-secret", model: "local-model" },
+      })
+      expect(saved.statusCode).toBe(200)
+
+      const streamed = await server.inject({
+        method: "POST",
+        url: "/api/ai/stream",
+        payload: {
+          provider: "custom",
+          prompt: "summarize",
+          custom: {
+            baseUrl: "http://example.invalid/v1",
+            apiKey: "request-secret",
+            model: "ignored",
+          },
+        },
+      })
+
+      expect(streamed.statusCode).toBe(200)
+      expect(streamed.headers["content-type"]).toContain("text/event-stream")
+      expect(streamed.body).toContain("TEXT_MESSAGE_CONTENT")
+      expect(streamed.body).toContain("local summary")
+      expect(streamed.body).not.toContain("device-secret")
+      expect(streamed.body).not.toContain("request-secret")
+    } finally {
+      await provider.close()
+    }
   })
 
   it("前端 repository 将工作区与插件数据写入本地服务", async () => {

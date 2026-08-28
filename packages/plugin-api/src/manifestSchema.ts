@@ -27,6 +27,7 @@ const settingsHostActionSchema = z.enum([
   "workspace.transfer",
   "workspace.manage",
   "plugins.manage",
+  "ai.settings.write",
 ])
 const settingsHostReadSchema = z.enum([
   "workspace.current.read",
@@ -36,6 +37,7 @@ const settingsHostReadSchema = z.enum([
   "catalog.search-providers.read",
   "workspace.search.read",
   "plugins.read",
+  "ai.settings.read",
 ])
 
 const settingsPanelContentSchema = z.discriminatedUnion("kind", [

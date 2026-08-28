@@ -17,6 +17,9 @@ export type AppEnv = {
   authSecret: string
   baseUrl: string
   uploadsDir: string
+  aiBuiltinApiKey: string
+  aiBuiltinBaseUrl: string
+  aiBuiltinModels: string[]
 }
 
 function parseClient(value: string | undefined): DatabaseClient {
@@ -51,5 +54,11 @@ export function loadEnv(): AppEnv {
       process.env.BETTER_AUTH_SECRET ?? process.env.ADMIN_JWT_SECRET ?? DEV_PLACEHOLDER_SECRET,
     baseUrl: process.env.BETTER_AUTH_URL ?? `http://${host}:${port}`,
     uploadsDir: process.env.UPLOADS_DIR ?? "./data/uploads",
+    aiBuiltinApiKey: process.env.TABORA_AI_API_KEY ?? "",
+    aiBuiltinBaseUrl: process.env.TABORA_AI_BASE_URL ?? "https://api.openai.com/v1",
+    aiBuiltinModels: (process.env.TABORA_AI_MODELS ?? "")
+      .split(",")
+      .map((model) => model.trim())
+      .filter(Boolean),
   }
 }

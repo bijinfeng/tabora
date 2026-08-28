@@ -9,11 +9,9 @@ export type AiTokenUsage = {
 export type AiGenerateRequest = {
   prompt: string
   system?: string
-  model?: string
   temperature?: number
   maxOutputTokens?: number
   abortSignal?: AbortSignal
-  tools?: AiToolDefinition[]
 }
 
 export type AiGenerateResult = {
@@ -26,48 +24,44 @@ export type AiStreamChunk =
   | { type: "text-delta"; text: string }
   | { type: "finish"; finishReason?: string; usage?: AiTokenUsage }
 
-export type AiJsonValue =
-  | null
-  | boolean
-  | number
-  | string
-  | AiJsonValue[]
-  | { [key: string]: AiJsonValue }
-
-export type AiToolDefinition = {
-  id: string
-  description?: string
-  inputSchema?: unknown
-  requiresConfirmation?: boolean
-  execute?: (input: unknown) => Promise<AiJsonValue> | AiJsonValue
+export type AiChatMessage = {
+  role: "user" | "assistant"
+  text: string
 }
 
-export type AiToolApprovalRequest = {
-  toolId: string
-  input: unknown
-  description?: string
+export type AiChatClientOptions = {
+  onMessagesChange?(messages: AiChatMessage[]): void
+  onLoadingChange?(loading: boolean): void
+  onError?(error: Error): void
 }
 
-export type AiToolApprovalResult = {
-  approved: boolean
-  reason?: string
+/** A host-owned text session. Provider, credentials, and transport remain host private. */
+export type AiChatClient = {
+  send(prompt: string, request?: Omit<AiGenerateRequest, "prompt" | "abortSignal">): Promise<void>
+  stop(): void
+  dispose(): void
+  getMessages(): AiChatMessage[]
 }
 
-export type AiWorkspaceContextSummary = {
-  workspaceId: string
-  workspaceName: string
-  activeLayoutId: string
-  widgets: Array<{
-    instanceId: string
-    pluginId: string
-    contributionId: string
-    title?: string
-  }>
+export type AiRuntimeErrorCode =
+  | "ai_not_configured"
+  | "ai_auth_required"
+  | "ai_model_unavailable"
+  | "ai_request_rejected"
+  | "ai_provider_failed"
+
+export class AiRuntimeError extends Error {
+  readonly code: AiRuntimeErrorCode
+
+  constructor(code: AiRuntimeErrorCode, message: string, options?: { cause?: unknown }) {
+    super(message, options)
+    this.name = "AiRuntimeError"
+    this.code = code
+  }
 }
 
 export type AiRuntimeBridge = {
   generate(request: AiGenerateRequest): Promise<AiGenerateResult>
   stream(request: AiGenerateRequest): AsyncIterable<AiStreamChunk>
-  requestToolApproval?(request: AiToolApprovalRequest): Promise<AiToolApprovalResult>
-  getWorkspaceContext?(): Promise<AiWorkspaceContextSummary>
+  createChatClient?(options?: AiChatClientOptions): AiChatClient
 }

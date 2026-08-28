@@ -8,6 +8,7 @@ export const officialPluginNotesManifest: PluginManifest = {
   entry: "./index",
   styles: [{ href: "./styles.css", scope: "plugin", order: 40 }],
   engine: { platform: "^0.1.0" },
+  permissions: [{ type: "ai", access: ["generate"] }],
   contributes: {
     widgets: [
       {

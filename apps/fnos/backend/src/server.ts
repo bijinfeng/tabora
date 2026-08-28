@@ -7,6 +7,14 @@ import { serveStatic } from "@hono/node-server/serve-static"
 import Database from "better-sqlite3"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
+import {
+  AiRuntimeError,
+  aiErrorResponse,
+  aiStreamResponse,
+  createTanstackAiGateway,
+  parseAiGatewayRequest,
+  type AiCustomProviderConfig,
+} from "@tabora/ai-runtime/server"
 
 const localStoreCollections = [
   "plugin-data",
@@ -67,7 +75,56 @@ function createLocalStore(databasePath: string): Database.Database {
       PRIMARY KEY (collection, id)
     )
   `)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS ai_provider_config (
+      id TEXT PRIMARY KEY,
+      base_url TEXT NOT NULL,
+      api_key TEXT NOT NULL,
+      model TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `)
   return database
+}
+
+function readAiProviderConfig(database: Database.Database): AiCustomProviderConfig | undefined {
+  const row = database
+    .prepare("SELECT base_url, api_key, model FROM ai_provider_config WHERE id = 'device'")
+    .get() as { base_url: string; api_key: string; model: string } | undefined
+  return row ? { baseUrl: row.base_url, apiKey: row.api_key, model: row.model } : undefined
+}
+
+function publicAiProviderConfig(config: AiCustomProviderConfig | undefined) {
+  return config
+    ? { configured: true, baseUrl: config.baseUrl, model: config.model, hasApiKey: true }
+    : { configured: false, baseUrl: "", model: "", hasApiKey: false }
+}
+
+function validateFnosProvider(config: AiCustomProviderConfig): void {
+  let url: URL
+  try {
+    url = new URL(config.baseUrl)
+  } catch {
+    throw new AiRuntimeError("ai_request_rejected", "Invalid custom AI base URL")
+  }
+  if ((url.protocol !== "http:" && url.protocol !== "https:") || url.username || url.password) {
+    throw new AiRuntimeError("ai_request_rejected", "Custom AI base URL is not allowed")
+  }
+}
+
+function fnosAiInput(value: unknown, database: Database.Database) {
+  if (!value || typeof value !== "object") {
+    throw new AiRuntimeError("ai_request_rejected", "Invalid AI request")
+  }
+  const raw = value as Record<string, unknown>
+  if (raw.provider === "builtin") {
+    throw new AiRuntimeError("ai_model_unavailable", "FNOS does not provide built-in AI models")
+  }
+  const provider = readAiProviderConfig(database)
+  if (!provider)
+    throw new AiRuntimeError("ai_not_configured", "Device AI provider is not configured")
+  validateFnosProvider(provider)
+  return parseAiGatewayRequest({ ...raw, provider: "custom", custom: provider })
 }
 function registerLocalStoreRoutes(app: Hono, database: Database.Database, prefix: string) {
   app.get(`${prefix}/api/health`, (c) => c.json({ status: "ok" }))
@@ -117,6 +174,67 @@ function registerLocalStoreRoutes(app: Hono, database: Database.Database, prefix
       .prepare("DELETE FROM local_store WHERE collection = ? AND id = ?")
       .run(collection, c.req.param("id"))
     return c.body(null, 204)
+  })
+
+  app.get(`${prefix}/api/ai/config`, (c) =>
+    c.json(publicAiProviderConfig(readAiProviderConfig(database))),
+  )
+
+  app.put(`${prefix}/api/ai/config`, async (c) => {
+    const body = (await c.req.json().catch(() => null)) as Partial<AiCustomProviderConfig> | null
+    if (
+      !body ||
+      typeof body.baseUrl !== "string" ||
+      typeof body.apiKey !== "string" ||
+      typeof body.model !== "string"
+    ) {
+      return aiErrorResponse(
+        new AiRuntimeError("ai_request_rejected", "Invalid device AI configuration"),
+      )
+    }
+    const config = {
+      baseUrl: body.baseUrl.trim(),
+      apiKey: body.apiKey.trim(),
+      model: body.model.trim(),
+    }
+    if (!config.baseUrl || !config.apiKey || !config.model) {
+      return aiErrorResponse(
+        new AiRuntimeError("ai_not_configured", "Device AI provider is not configured"),
+      )
+    }
+    try {
+      validateFnosProvider(config)
+      database
+        .prepare(
+          `INSERT INTO ai_provider_config (id, base_url, api_key, model, updated_at)
+           VALUES ('device', ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET base_url = excluded.base_url, api_key = excluded.api_key,
+             model = excluded.model, updated_at = excluded.updated_at`,
+        )
+        .run(config.baseUrl, config.apiKey, config.model, new Date().toISOString())
+      return c.json(publicAiProviderConfig(config))
+    } catch (error) {
+      return aiErrorResponse(error)
+    }
+  })
+
+  app.post(`${prefix}/api/ai/generate`, async (c) => {
+    try {
+      const input = fnosAiInput(await c.req.json().catch(() => null), database)
+      const result = await createTanstackAiGateway().generate(input)
+      return c.json(result)
+    } catch (error) {
+      return aiErrorResponse(error)
+    }
+  })
+
+  app.post(`${prefix}/api/ai/stream`, async (c) => {
+    try {
+      const input = fnosAiInput(await c.req.json().catch(() => null), database)
+      return aiStreamResponse(createTanstackAiGateway(), input)
+    } catch (error) {
+      return aiErrorResponse(error)
+    }
   })
 }
 export type FnosApp = { app: Hono; close: () => void }
