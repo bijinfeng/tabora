@@ -1,4 +1,5 @@
-import { createWebHostAdapter } from "@tabora/host-adapters"
+import { createFnosAiSettingsService, createWebHostAdapter } from "@tabora/host-adapters"
+import { createHttpAiRuntime } from "@tabora/ai-runtime"
 import {
   builtinDefaultWorkspacePreset,
   builtinPlugins,
@@ -36,6 +37,7 @@ export function resolveFnosLocalApiBaseUrl(): string {
 }
 
 export function createFnosRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
+  const apiBaseUrl = resolveFnosLocalApiBaseUrl()
   return createWorkbenchRuntimeBootstrap({
     host: createWebHostAdapter({
       id: "host.fnos",
@@ -53,6 +55,15 @@ export function createFnosRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
     plugins: builtinPlugins,
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
     shellConfig: builtinWorkbenchShellConfig,
-    storageAdapter: createFnosStorageAdapter(resolveFnosLocalApiBaseUrl()),
+    storageAdapter: createFnosStorageAdapter(apiBaseUrl),
+    aiSettings: createFnosAiSettingsService({ baseUrl: apiBaseUrl }),
+    ai: createHttpAiRuntime({
+      baseUrl: apiBaseUrl,
+      getRequest: async () => ({
+        provider: "custom",
+        // FNOS always replaces this transient placeholder with its device-admin configuration.
+        custom: { baseUrl: "http://fnos-device", apiKey: "fnos-device", model: "fnos-device" },
+      }),
+    }),
   })
 }

@@ -313,6 +313,50 @@ export type SettingsHostReadId =
   | "catalog.search-providers.read"
   | "workspace.search.read"
   | "plugins.read"
+  | "ai.settings.read"
+
+export type SettingsAiModel = {
+  id: string
+  label: string
+}
+
+/**
+ * Safe AI configuration projection for settings views. API keys are deliberately
+ * represented only as an availability flag and are never part of this contract.
+ */
+export type SettingsAiSettings = {
+  supportedProviders?: Array<"builtin" | "custom">
+  activeProvider: "builtin" | "custom"
+  builtin: {
+    status: "available" | "auth-required" | "unavailable"
+    models: SettingsAiModel[]
+    modelId: string
+  }
+  custom: {
+    baseUrl: string
+    model: string
+    apiKeyConfigured: boolean
+    /** Whether an empty update keeps the existing secret on this host. */
+    preservesApiKeyOnSave?: boolean
+  }
+}
+
+export type SettingsAiSettingsUpdate = {
+  activeProvider: SettingsAiSettings["activeProvider"]
+  builtinModelId: string
+  custom: {
+    baseUrl: string
+    model: string
+    /** A missing key preserves the current local secret; it is never read back. */
+    apiKey?: string
+  }
+}
+
+/** Host-owned persistence boundary for an AI settings surface. */
+export type AiSettingsService = {
+  getSettings(): Promise<SettingsAiSettings>
+  saveSettings(update: SettingsAiSettingsUpdate): Promise<SettingsAiSettings>
+}
 
 /** Read-only projection; intentionally not the host's persisted Workspace entity. */
 export type SettingsWorkspaceSummary = {
@@ -347,6 +391,7 @@ export type SettingsPanelData = {
   searchProviders?: Array<OwnedContribution<SearchProviderContribution, "search-provider">>
   searchSettings?: WorkbenchSearchSettings
   plugins?: SettingsPluginSummary[]
+  ai?: SettingsAiSettings
 }
 
 export type SettingsPanelViewProps = {
@@ -375,6 +420,8 @@ export type SettingsPanelViewProps = {
     createWorkspace?(name: string): Promise<void>
     switchWorkspace?(id: string): Promise<void>
     deleteWorkspace?(id: string): Promise<void>
+    getAiSettings?(): Promise<SettingsAiSettings>
+    saveAiSettings?(update: SettingsAiSettingsUpdate): Promise<SettingsAiSettings>
   }
   /** Only properties explicitly requested by the panel and granted by the host are present. */
   data: Readonly<SettingsPanelData>
@@ -389,6 +436,7 @@ export type SettingsHostActionId =
   | "workspace.transfer"
   | "workspace.manage"
   | "plugins.manage"
+  | "ai.settings.write"
 
 export type SettingsPanelContribution = {
   id: string

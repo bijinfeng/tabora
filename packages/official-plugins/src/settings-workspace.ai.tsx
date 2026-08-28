@@ -1,217 +1,217 @@
 import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
 import { FieldRow } from "@tabora/ui/field-row"
+import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
-import { Switch } from "@tabora/ui/switch"
-import { createSignal, For } from "solid-js"
-import type { SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+import { createSignal, onMount, Show } from "solid-js"
+import type { SettingsAiSettings, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 
 import { SettingsGroup } from "./settings-workspace.shared"
 import { styles } from "./styles"
 
-const TEXT_MODEL_OPTIONS = ["GPT-4.1 Mini", "Claude 3.5 Sonnet", "Gemini 1.5 Pro"]
-const VISION_MODEL_OPTIONS = ["Gemini 1.5 Pro", "GPT-4.1 Mini", "Claude 3.5 Sonnet"]
-const PROVIDER_TYPE_OPTIONS = ["OpenAI 兼容", "Anthropic", "Gemini", "自定义兼容网关"]
+type ProviderMode = SettingsAiSettings["activeProvider"]
 
-type TestState = "tested" | "testing" | "untested"
-
-function testStateLabel(state: TestState) {
-  if (state === "testing") return "测试中"
-  if (state === "untested") return "未测试"
-  return "已测试"
+function fallback(): SettingsAiSettings {
+  return {
+    supportedProviders: ["builtin", "custom"],
+    activeProvider: "builtin",
+    builtin: { status: "unavailable", models: [], modelId: "" },
+    custom: { baseUrl: "", model: "", apiKeyConfigured: false },
+  }
 }
 
-export function AiSettingsPanel(_props: SettingsPanelViewProps) {
-  const [gatewayStatus, setGatewayStatus] = createSignal("可用")
-  const [textModel, setTextModel] = createSignal("GPT-4.1 Mini")
-  const [visionModel, setVisionModel] = createSignal("Gemini 1.5 Pro")
-  const [textModelState, setTextModelState] = createSignal<TestState>("tested")
-  const [visionModelState, setVisionModelState] = createSignal<TestState>("tested")
-  const [providerType, setProviderType] = createSignal("OpenAI 兼容")
-  const [providerName, setProviderName] = createSignal("OpenAI 主账号")
-  const [baseUrl, setBaseUrl] = createSignal("https://api.openai.com/v1")
-  const [apiKey, setApiKey] = createSignal("sk-••••••••••••8Q2m")
-  const [geminiEnabled, setGeminiEnabled] = createSignal(true)
-  const [grants, setGrants] = createSignal<Record<string, boolean>>({
-    彩票中奖查询: true,
-    图片压缩: false,
-    今日重点: true,
-  })
+function builtinStatusCopy(settings: SettingsAiSettings) {
+  if (settings.builtin.status === "available") return "可用"
+  if (settings.builtin.status === "auth-required") return "登录后可用"
+  return "暂不可用"
+}
 
-  function handleTest() {
-    setGatewayStatus("测试中")
-    setTextModelState("testing")
-    setVisionModelState("testing")
-    window.setTimeout(() => {
-      setGatewayStatus("可用")
-      setTextModelState("tested")
-      setVisionModelState("tested")
-    }, 520)
+export function AiSettingsPanel(props: SettingsPanelViewProps) {
+  const [settings, setSettings] = createSignal<SettingsAiSettings | undefined>(props.data.ai)
+  const [provider, setProvider] = createSignal<ProviderMode>("builtin")
+  const [builtinModelId, setBuiltinModelId] = createSignal("")
+  const [baseUrl, setBaseUrl] = createSignal("")
+  const [model, setModel] = createSignal("")
+  const [apiKey, setApiKey] = createSignal("")
+  const [loading, setLoading] = createSignal(!props.data.ai)
+  const [saving, setSaving] = createSignal(false)
+  const [error, setError] = createSignal<string>()
+
+  const supportedProviders = () => settings()?.supportedProviders ?? ["builtin", "custom"]
+
+  function applySettings(next: SettingsAiSettings) {
+    setSettings(next)
+    setProvider(next.activeProvider)
+    setBuiltinModelId(next.builtin.modelId)
+    setBaseUrl(next.custom.baseUrl)
+    setModel(next.custom.model)
   }
 
-  function toggleGrant(name: string) {
-    setGrants((current) => ({ ...current, [name]: !current[name] }))
+  async function load() {
+    if (!props.host.getAiSettings) {
+      setError("当前宿主未提供 AI 设置服务")
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    setError(undefined)
+    try {
+      applySettings(await props.host.getAiSettings())
+    } catch {
+      setError("无法读取 AI 配置，请稍后重试")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const grantRows = () => [
-    { name: "彩票中奖查询", description: "申请 ai.vision · 票面识别与号码结构化" },
-    { name: "图片压缩", description: "申请 ai.vision · 图片描述和优化建议" },
-    { name: "今日重点", description: "申请 ai.text · 摘要、改写和步骤提取" },
-  ]
+  async function save() {
+    if (!props.host.saveAiSettings) {
+      setError("当前宿主不允许修改 AI 配置")
+      return
+    }
+    setSaving(true)
+    setError(undefined)
+    try {
+      const next = await props.host.saveAiSettings({
+        activeProvider: provider(),
+        builtinModelId: builtinModelId(),
+        custom: {
+          baseUrl: baseUrl(),
+          model: model(),
+          ...(apiKey().trim() ? { apiKey: apiKey().trim() } : {}),
+        },
+      })
+      applySettings(next)
+      setApiKey("")
+    } catch {
+      setError("无法保存 AI 配置，请检查地址和模型后重试")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  onMount(load)
 
   return (
     <div {...stylex.attrs(styles.panelStack)} data-settings-panel="ai">
-      <SettingsGroup title="AI 网关状态" meta={gatewayStatus()}>
-        <div {...stylex.attrs(styles.statusGrid)} aria-label="AI 网关状态">
-          <div {...stylex.attrs(styles.statusCard)}>
-            <span>默认文本模型</span>
-            <strong>{textModel()}</strong>
-            <span>摘要、改写、结构化抽取</span>
-            <span {...stylex.attrs(styles.fieldNote)}>{testStateLabel(textModelState())}</span>
-          </div>
-          <div {...stylex.attrs(styles.statusCard)}>
-            <span>默认图片理解模型</span>
-            <strong>{visionModel()}</strong>
-            <span>票面识别、截图分析</span>
-            <span {...stylex.attrs(styles.fieldNote)}>{testStateLabel(visionModelState())}</span>
-          </div>
-        </div>
-        <FieldRow
-          label="连接测试"
-          description="验证默认模型是否可调用；密钥保存在 core 安全存储，插件不可读取"
-          trailing={
-            <Button size="sm" variant="primary" onClick={handleTest}>
-              测试连接
-            </Button>
-          }
-        />
-      </SettingsGroup>
-
-      <SettingsGroup title="模型提供商" meta="2 个启用">
-        <FieldRow
-          label="提供商类型"
-          description="OpenAI 兼容、Anthropic、Gemini 或自定义网关"
-          trailing={
-            <Select<string>
-              size="sm"
-              value={providerType()}
-              options={PROVIDER_TYPE_OPTIONS.map((value) => ({ value, label: value }))}
-              onChange={setProviderType}
-              aria-label="AI 提供商类型"
-            />
-          }
-        />
-        <FieldRow
-          label="显示名称"
-          description="用户可识别的账号或网关名称"
-          trailing={
-            <Input
-              size="sm"
-              value={providerName()}
-              onInput={setProviderName}
-              aria-label="AI 提供商显示名称"
-            />
-          }
-        />
-        <FieldRow
-          label="Base URL"
-          description="兼容网关或自定义服务地址"
-          trailing={
-            <Input size="sm" value={baseUrl()} onInput={setBaseUrl} aria-label="AI Base URL" />
-          }
-        />
-        <FieldRow
-          label="API Key"
-          description="保存后只显示掩码，写入 core 安全存储"
-          trailing={
-            <div {...stylex.attrs(styles.wideInlineActions)}>
-              <Input size="sm" value={apiKey()} onInput={setApiKey} aria-label="AI API Key" />
-              <Button size="sm" variant="secondary" onClick={() => setGatewayStatus("未测试")}>
-                替换
-              </Button>
-            </div>
-          }
-        />
-      </SettingsGroup>
-
-      <SettingsGroup title="模型配置" meta="默认槽位">
-        <FieldRow
-          label="默认文本模型"
-          description="供摘要、改写、问答和结构化抽取调用"
-          trailing={
-            <Select<string>
-              size="sm"
-              value={textModel()}
-              options={TEXT_MODEL_OPTIONS.map((value) => ({ value, label: value }))}
-              onChange={(value) => {
-                setTextModel(value)
-                setTextModelState("untested")
-              }}
-              aria-label="默认文本模型"
-            />
-          }
-        />
-        <FieldRow
-          label="默认图片理解模型"
-          description="供图片识别、票面识别和截图分析调用"
-          trailing={
-            <Select<string>
-              size="sm"
-              value={visionModel()}
-              options={VISION_MODEL_OPTIONS.map((value) => ({ value, label: value }))}
-              onChange={(value) => {
-                setVisionModel(value)
-                setVisionModelState("untested")
-              }}
-              aria-label="默认图片理解模型"
-            />
-          }
-        />
-        <FieldRow
-          label="gpt-4.1-mini"
-          description="OpenAI 主账号 · 文本、图片理解 · 最近测试可用"
-          trailing={<span {...stylex.attrs(styles.fieldNote)}>文本 / 图片</span>}
-        />
-        <FieldRow
-          label="gemini-1.5-pro"
-          description="Gemini 个人账号 · 图片理解 · 彩票票面识别默认"
-          trailing={
-            <div {...stylex.attrs(styles.inlineActions)}>
-              <span {...stylex.attrs(styles.fieldNote)}>图片</span>
-              <Switch
+      <SettingsGroup
+        title="AI 服务"
+        meta={loading() ? "加载中" : builtinStatusCopy(settings() ?? fallback())}
+      >
+        <Show
+          when={!loading()}
+          fallback={<span {...stylex.attrs(styles.fieldNote)}>正在读取当前设备的 AI 配置…</span>}
+        >
+          <FieldRow
+            label="使用模式"
+            description="内置模型使用 Tabora 平台凭据；自定义模型仅保存到当前设备。"
+            trailing={
+              <Select<ProviderMode>
                 size="sm"
-                checked={geminiEnabled()}
-                onChange={setGeminiEnabled}
-                aria-label="启用 Gemini 模型"
+                value={provider()}
+                options={supportedProviders().map((value) => ({
+                  value,
+                  label: value === "builtin" ? "内置模型" : "自定义提供商",
+                }))}
+                onChange={setProvider}
+                aria-label="AI 使用模式"
               />
-            </div>
-          }
-        />
-      </SettingsGroup>
-
-      <SettingsGroup title="插件 AI 使用" meta="首次授权">
-        <For each={grantRows()}>
-          {(grant) => (
+            }
+          />
+          <Show when={provider() === "builtin" && supportedProviders().includes("builtin")}>
             <FieldRow
-              label={grant.name}
-              description={grant.description}
+              label="平台内置模型"
+              description={
+                settings()?.builtin.status === "auth-required"
+                  ? "登录 Tabora 账号后可使用平台统一付费凭据。"
+                  : "平台统一管理模型目录与服务凭据。"
+              }
               trailing={
-                <Switch
+                <Select<string>
                   size="sm"
-                  checked={grants()[grant.name] ?? false}
-                  onChange={() => toggleGrant(grant.name)}
-                  aria-label={`${grant.name} AI 授权`}
+                  value={builtinModelId()}
+                  options={(settings()?.builtin.models ?? []).map((item) => ({
+                    value: item.id,
+                    label: item.label,
+                  }))}
+                  onChange={setBuiltinModelId}
+                  aria-label="平台内置文本模型"
+                  disabled={settings()?.builtin.status !== "available"}
                 />
               }
             />
-          )}
-        </For>
-        <FieldRow
-          label="隐私提示"
-          description="图片或文本只在用户触发 AI 功能时发送给当前模型提供商"
-          trailing={<span {...stylex.attrs(styles.fieldNote)}>插件不会获得 API Key</span>}
-        />
+            <FieldRow
+              label="账号状态"
+              description="模型目录仅在已登录状态下从服务端加载。"
+              trailing={
+                <span {...stylex.attrs(styles.fieldNote)}>
+                  {builtinStatusCopy(settings() ?? fallback())}
+                </span>
+              }
+            />
+          </Show>
+          <Show when={provider() === "custom"}>
+            <FieldRow
+              label="Base URL"
+              description={
+                supportedProviders().length === 1
+                  ? "设备管理员共享此配置；可使用 localhost 或局域网 OpenAI-compatible 服务。"
+                  : "仅支持 OpenAI-compatible API。云端转发会校验公网 HTTPS 地址。"
+              }
+              trailing={
+                <Input size="sm" value={baseUrl()} onInput={setBaseUrl} aria-label="AI Base URL" />
+              }
+            />
+            <FieldRow
+              label="模型名称"
+              description="使用你的提供商登记的模型标识。"
+              trailing={
+                <Input
+                  size="sm"
+                  value={model()}
+                  onInput={setModel}
+                  aria-label="AI 自定义模型名称"
+                />
+              }
+            />
+            <FieldRow
+              label="API Key"
+              description={
+                settings()?.custom.apiKeyConfigured
+                  ? settings()?.custom.preservesApiKeyOnSave === false
+                    ? "FNOS 不会回读密钥；保存设备共享配置时需要重新输入。"
+                    : "密钥已保存在当前设备；留空会保留现有密钥。"
+                  : "密钥仅保存在当前设备，每次请求临时转发且不会同步。"
+              }
+              trailing={
+                <Input
+                  size="sm"
+                  value={apiKey()}
+                  onInput={setApiKey}
+                  type="password"
+                  autocomplete="off"
+                  placeholder={
+                    settings()?.custom.apiKeyConfigured &&
+                    settings()?.custom.preservesApiKeyOnSave !== false
+                      ? "输入以替换"
+                      : "输入 API Key"
+                  }
+                  aria-label="AI API Key"
+                />
+              }
+            />
+          </Show>
+          <div {...stylex.attrs(styles.inlineActions)}>
+            <Button size="sm" variant="primary" disabled={saving()} onClick={save}>
+              {saving() ? "保存中" : "保存 AI 配置"}
+            </Button>
+            <Button size="sm" variant="secondary" disabled={loading()} onClick={load}>
+              刷新状态
+            </Button>
+          </div>
+        </Show>
+        <Show when={error()}>{(message) => <InlineError>{message()}</InlineError>}</Show>
       </SettingsGroup>
     </div>
   )

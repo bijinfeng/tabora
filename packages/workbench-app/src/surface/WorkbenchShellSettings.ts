@@ -1,6 +1,7 @@
 import type {
   SettingsHostActionId,
   SettingsHostReadId,
+  AiSettingsService,
   SettingsPanelData,
   SettingsPanelViewProps,
   SettingsSurface,
@@ -54,6 +55,7 @@ export function buildWorkbenchSettingsPanelProps(
     searchProviders: NonNullable<SettingsPanelData["searchProviders"]>
     searchSettings: NonNullable<SettingsPanelData["searchSettings"]>
     plugins: NonNullable<SettingsPanelData["plugins"]>
+    aiSettings?: AiSettingsService
     locale: SettingsPanelViewProps["locale"]
     availableLocales: SettingsPanelViewProps["availableLocales"]
     host: SettingsPanelViewProps["host"]
@@ -104,6 +106,12 @@ export function buildWorkbenchSettingsPanelProps(
       host.togglePluginEnabled = (pluginId, enabled) =>
         options.host.togglePluginEnabled!(pluginId, enabled)
   }
+  if (readGrants.has("ai.settings.read") && options.aiSettings) {
+    host.getAiSettings = () => options.aiSettings!.getSettings()
+  }
+  if (grants.has("ai.settings.write") && options.aiSettings) {
+    host.saveAiSettings = (update) => options.aiSettings!.saveSettings(update)
+  }
 
   const data: SettingsPanelData = {}
   if (readGrants.has("workspace.current.read")) {
@@ -140,6 +148,7 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
   getSearchProviders: () => NonNullable<SettingsPanelData["searchProviders"]>
   getSearchSettings: () => NonNullable<SettingsPanelData["searchSettings"]>
   getPlugins: () => NonNullable<SettingsPanelData["plugins"]>
+  aiSettings?: AiSettingsService
   getLocale: () => SettingsPanelViewProps["locale"]
   getAvailableLocales: () => SettingsPanelViewProps["availableLocales"]
   host: SettingsPanelViewProps["host"]
@@ -157,6 +166,7 @@ export function createWorkbenchSettingsPanelPropsBuilder(options: {
       searchProviders: options.getSearchProviders(),
       searchSettings: options.getSearchSettings(),
       plugins: options.getPlugins(),
+      ...(options.aiSettings ? { aiSettings: options.aiSettings } : {}),
       locale: options.getLocale(),
       availableLocales: options.getAvailableLocales(),
       host: options.host,

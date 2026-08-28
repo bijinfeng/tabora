@@ -199,19 +199,11 @@ export function createPluginRuntimeContext(options: {
             requireAiAccess("generate")
             return options.ai!.stream(request)
           },
-          ...(options.ai.requestToolApproval
+          ...(options.ai.createChatClient
             ? {
-                requestToolApproval(request) {
-                  requireAiAccess("tools")
-                  return options.ai!.requestToolApproval!(request)
-                },
-              }
-            : {}),
-          ...(options.ai.getWorkspaceContext
-            ? {
-                getWorkspaceContext() {
-                  requireAiAccess("context")
-                  return options.ai!.getWorkspaceContext!()
+                createChatClient(clientOptions) {
+                  requireAiAccess("generate")
+                  return options.ai!.createChatClient!(clientOptions)
                 },
               }
             : {}),

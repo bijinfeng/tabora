@@ -1,1 +1,1 @@
-export * from "./vercelAiRuntime"
+export * from "./httpAiRuntime"

@@ -1,5 +1,8 @@
 import {
   createAccountSyncService,
+  createCloudAiRuntime,
+  createLocalAiSettingsService,
+  createLocalStorageAuthStorage,
   createPluginSyncCollections,
   createWebHostAdapter,
   createWebStorageAdapter,
@@ -37,22 +40,36 @@ export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
   const apiBaseUrl = resolvePlaygroundApiBaseUrl()
   const storageAdapter = createWebStorageAdapter(undefined, { enableSync: true })
   const host = createWebHostAdapter({ id: "host.playground" })
-  const accountSyncPlugin = createBuiltinAccountSyncPlugin({
-    service: createAccountSyncService({
-      host,
-      storageAdapter,
-      apiBaseUrl,
-      syncCollections: createPluginSyncCollections(
-        builtinPlugins.map((plugin) => plugin.module.manifest),
-      ),
-    }),
+  const authStorage = createLocalStorageAuthStorage()
+  const defaultBuiltinModelId = import.meta.env.VITE_TABORA_AI_MODEL ?? "gpt-4.1-mini"
+  const accountService = createAccountSyncService({
+    host,
+    storageAdapter,
+    apiBaseUrl,
+    authStorage,
+    syncCollections: createPluginSyncCollections(
+      builtinPlugins.map((plugin) => plugin.module.manifest),
+    ),
+  })
+  const accountPlugin = createBuiltinAccountSyncPlugin({ service: accountService })
+  const aiSettings = createLocalAiSettingsService({
+    storage: authStorage,
+    defaultBuiltinModelId,
+    apiBaseUrl,
+    authClient: accountService.authClient,
   })
 
   return createWorkbenchRuntimeBootstrap({
     host,
-    plugins: [...builtinPlugins, accountSyncPlugin],
+    plugins: [...builtinPlugins, accountPlugin],
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
     shellConfig: builtinWorkbenchShellConfig,
     storageAdapter,
+    aiSettings,
+    ai: createCloudAiRuntime({
+      baseUrl: apiBaseUrl,
+      settings: aiSettings,
+      authClient: accountService.authClient,
+    }),
   })
 }

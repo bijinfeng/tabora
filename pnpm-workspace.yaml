@@ -42,7 +42,9 @@ catalogs:
     dexie: ^4.4.4
     zod: ^4.4.3
   ai:
-    ai: ^7.0.58
+    "@tanstack/ai": ^0.51.0
+    "@tanstack/ai-client": ^0.29.1
+    "@tanstack/ai-openai": ^0.22.2
   test:
     "@vitest/browser-playwright": ^4.1.10
     fake-indexeddb: ^6.2.5
@@ -96,3 +98,8 @@ minimumReleaseAgeExclude:
   - lucide-solid@1.31.0
   - pg-protocol@1.16.0
   - pg@8.23.0
+  - "@tanstack/ai-event-client@0.11.1"
+  - "@tanstack/ai-openai@0.22.2"
+  - "@tanstack/ai@0.51.0"
+  - "@tanstack/openai-base@0.10.7"
+  - "@tanstack/ai-client@0.29.1"

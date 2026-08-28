@@ -11,6 +11,7 @@
   "dependencies": {
     "@solidjs/router": "catalog:ui",
     "@stylexjs/stylex": "catalog:style",
+    "@tabora/ai-runtime": "workspace:*",
     "@tabora/brand": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",

@@ -29,6 +29,13 @@ export { createExtensionHostAdapter } from "./extension"
 export type { AuthStorage } from "./authStorage"
 export { createLocalStorageAuthStorage, createChromeStorageAuthStorage } from "./authStorage"
 export { createAccountSyncService, type AccountSyncService } from "./accountSyncService"
+export {
+  createLocalAiSettingsService,
+  createCloudAiRuntime,
+  type LocalAiProviderConfig,
+  type LocalAiSettingsService,
+} from "./aiSettingsService"
+export { createFnosAiSettingsService } from "./fnosAiSettingsService"
 export { createWebStorageAdapter } from "@tabora/storage"
 export { migrateWorkspaceContributionRefs } from "@tabora/storage"
 export { createPluginSyncCollections, createSyncManager } from "@tabora/sync"

@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { createMemo, createSignal, For, onMount, Show } from "solid-js"
-import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
+import type { AiChatClient, AiChatMessage, WidgetViewProps } from "@tabora/plugin-api/sdk"
 import { Button, IconButton } from "@tabora/ui/button"
 import { DatePicker } from "@tabora/ui/date-picker"
 import { DropdownMenu } from "@tabora/ui/dropdown-menu"
@@ -20,6 +20,7 @@ import Search from "lucide-solid/icons/search"
 import Star from "lucide-solid/icons/star"
 import Trash from "lucide-solid/icons/trash"
 import { NOTES_STORAGE_KEY, type Note } from "./notes-data"
+import { getNotesAiRuntime } from "./index"
 import { styles } from "./styles"
 
 function uid(): string {
@@ -119,6 +120,10 @@ export function NotesExpand(props: WidgetViewProps) {
   const [captureTags, setCaptureTags] = createSignal<string[]>([])
   const [editTags, setEditTags] = createSignal<string[]>([])
   const [captureVisibility, setCaptureVisibility] = createSignal<TiptapEditorVisibility>("public")
+  const [summaries, setSummaries] = createSignal<Record<string, string>>({})
+  const [summaryError, setSummaryError] = createSignal<Record<string, string>>({})
+  const [summarizingId, setSummarizingId] = createSignal<string | null>(null)
+  let summaryClient: AiChatClient | undefined
   onMount(async () => {
     if (typeof document !== "undefined") ensureTiptapContentStyles(document)
     const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
@@ -223,6 +228,48 @@ export function NotesExpand(props: WidgetViewProps) {
       void addNote(html, captureTags())
       setCaptureValue("")
       setCaptureTags([])
+    }
+  }
+
+  async function summarizeNote(note: Note) {
+    const ai = getNotesAiRuntime()
+    const client = ai?.createChatClient?.({
+      onMessagesChange(messages: AiChatMessage[]) {
+        const summary = [...messages].reverse().find((message) => message.role === "assistant")
+        if (!summary) return
+        setSummaries((current) => ({ ...current, [note.id]: summary.text }))
+      },
+      onError(error) {
+        setSummaryError((current) => ({ ...current, [note.id]: error.message }))
+      },
+      onLoadingChange(loading) {
+        if (!loading) setSummarizingId((current) => (current === note.id ? null : current))
+      },
+    })
+    if (!client) {
+      setSummaryError((current) => ({ ...current, [note.id]: "AI 服务尚未配置" }))
+      return
+    }
+    summaryClient?.stop()
+    summaryClient?.dispose()
+    summaryClient = client
+    setSummarizingId(note.id)
+    setSummaryError((current) => ({ ...current, [note.id]: "" }))
+    setSummaries((current) => ({ ...current, [note.id]: "" }))
+    try {
+      await client.send(
+        `请用简洁的中文总结这条便签，保留待办和关键决定：\n\n${htmlToPlainText(note.content)}`,
+        { system: "你是个人工作台的便签助手。不要编造未提供的信息。" },
+      )
+    } catch (error) {
+      setSummaryError((current) => ({
+        ...current,
+        [note.id]: error instanceof Error ? error.message : "便签总结失败，请重试",
+      }))
+    } finally {
+      if (summaryClient === client) summaryClient = undefined
+      setSummarizingId((current) => (current === note.id ? null : current))
+      client.dispose()
     }
   }
 
@@ -460,6 +507,13 @@ export function NotesExpand(props: WidgetViewProps) {
                                 icon: <Pencil size={14} />,
                                 onClick: () => beginEditing(note),
                               },
+                              {
+                                id: `note-${note.id}-summarize`,
+                                label: summarizingId() === note.id ? "正在总结" : "AI 总结",
+                                icon: <NotepadTextDashed size={14} />,
+                                disabled: summarizingId() === note.id,
+                                onClick: () => void summarizeNote(note),
+                              },
                               { id: `note-${note.id}-separator`, label: <></>, separator: true },
                               {
                                 id: `note-${note.id}-delete`,
@@ -539,6 +593,31 @@ export function NotesExpand(props: WidgetViewProps) {
                             <For each={note.tags ?? []}>
                               {(tag) => <span {...stylex.attrs(styles.tag)}>#{tag}</span>}
                             </For>
+                          </div>
+                        </Show>
+                        <Show when={summaries()[note.id] || summaryError()[note.id]}>
+                          <div aria-live="polite">
+                            <strong>AI 总结</strong>
+                            <div>{summaries()[note.id]}</div>
+                            <Show when={summaryError()[note.id]}>
+                              <div>{summaryError()[note.id]}</div>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => void summarizeNote(note)}
+                              >
+                                重试
+                              </Button>
+                            </Show>
+                            <Show when={summarizingId() === note.id}>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => summaryClient?.stop()}
+                              >
+                                停止
+                              </Button>
+                            </Show>
                           </div>
                         </Show>
                       </div>
