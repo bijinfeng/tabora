@@ -46,7 +46,7 @@ describe("createDefaultWorkspaceFromPreset", () => {
     }
     expect(instances.find((i) => i.id === "weather-1")?.size).toBe("S")
     expect(instances.find((i) => i.id === "todo-1")?.size).toBe("S")
-    expect(instances.find((i) => i.id === "notes-1")?.size).toBe("L")
+    expect(instances.find((i) => i.id === "notes-1")?.size).toBe("M")
   })
 
   it("each instance has createdAt and updatedAt timestamps", () => {

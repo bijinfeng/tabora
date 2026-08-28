@@ -287,7 +287,7 @@ MVP 组件清单：
 | `topbar`   | `search-main`    | `official.search.command-bar`         | 固定顶部区域 | 命令搜索入口                                 |
 | `mainGrid` | `quick-links-1`  | `official.widgets.quick-links`        | M            | 快捷入口，默认首屏第一张核心卡片             |
 | `mainGrid` | `todo-1`         | `official.widgets.todo`               | S            | 待办列表                                     |
-| `mainGrid` | `notes-1`        | `official.widgets.notes`              | L            | 快速记录，按原型占据主编辑区域               |
+| `mainGrid` | `notes-1`        | `official.widgets.notes`              | M            | 快速记录，默认与快捷入口同宽                 |
 | `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 

@@ -76,7 +76,7 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
       contribution: { pluginId: "official.widgets.notes", kind: "widget", id: "notes" },
       instanceId: "notes-1",
       regionId: "mainGrid",
-      size: "L",
+      size: "M",
     },
     {
       contribution: { pluginId: "official.widgets.weather", kind: "widget", id: "weather" },
