@@ -46,7 +46,7 @@ export function LoginPage(props: { onSuccess: () => void }) {
   return (
     <AuthCard title="登录管理后台" subtitle="使用管理员账号登录，管理用户、同步记录与附件。">
       <Form<LoginFormData>
-        defaultValues={{ email: "", password: "", remember: true }}
+        defaultValues={{ email: "", password: "", remember: false }}
         onSubmit={handleSubmit}
       >
         {(form) => {
@@ -112,9 +112,6 @@ export function LoginPage(props: { onSuccess: () => void }) {
                       onChange={(checked) => field().handleChange(checked)}
                       label="记住我"
                     />
-                    <button type="button" {...stylex.attrs(styles.linkButton)}>
-                      忘记密码？
-                    </button>
                   </div>
                 )}
               </Form.Item>

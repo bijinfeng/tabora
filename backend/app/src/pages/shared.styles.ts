@@ -7,9 +7,9 @@ export const shared = stylex.create({
   page: {
     display: "flex",
     flexDirection: "column",
-    gap: space.s6,
+    gap: space.s5,
     margin: "0 auto",
-    maxWidth: 1120,
+    maxWidth: 1040,
   },
   formGrid: {
     display: "flex",

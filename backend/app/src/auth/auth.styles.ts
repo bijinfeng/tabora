@@ -74,16 +74,4 @@ export const styles = stylex.create({
     fontSize: 12,
     textAlign: "center",
   },
-  linkButton: {
-    backgroundColor: "transparent",
-    borderStyle: "none",
-    borderWidth: 0,
-    color: color.accent,
-    cursor: "pointer",
-    fontFamily: "inherit",
-    fontSize: 13,
-    padding: 0,
-    ":hover": { color: color.accentHover },
-    ":focus-visible": { outline: `2px solid ${color.focus}`, outlineOffset: 2 },
-  },
 })

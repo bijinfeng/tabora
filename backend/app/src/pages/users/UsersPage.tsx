@@ -126,15 +126,17 @@ export function UsersPage() {
 
         <Show when={data.data}>
           {(d) => (
-            <div {...stylex.attrs(styles.panelFooter)}>
-              <Pagination
-                offset={offset()}
-                pageSize={PAGE_SIZE}
-                total={d().total}
-                onPrev={onPrev}
-                onNext={onNext}
-              />
-            </div>
+            <Show when={d().total > 0}>
+              <div {...stylex.attrs(styles.panelFooter)}>
+                <Pagination
+                  offset={offset()}
+                  pageSize={PAGE_SIZE}
+                  total={d().total}
+                  onPrev={onPrev}
+                  onNext={onNext}
+                />
+              </div>
+            </Show>
           )}
         </Show>
       </div>
@@ -245,7 +247,9 @@ function UsersTable(props: {
       errorMessage="加载用户失败"
       loading={props.loading}
       hasRows={(props.data?.users.length ?? 0) > 0}
-      empty={<EmptyState title="暂无用户" description="点击右上角新建用户，或调整搜索条件。" />}
+      empty={
+        <EmptyState compact title="暂无用户" description="点击右上角新建用户，或调整搜索条件。" />
+      }
     >
       <Table
         columns={props.columns}
