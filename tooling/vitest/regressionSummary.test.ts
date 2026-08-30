@@ -64,7 +64,6 @@ describe("regression summary helpers", () => {
       "pnpm test",
       "pnpm check",
       "pnpm build",
-      "pnpm test:e2e",
       "pnpm --filter @tabora/extension zip",
       "pnpm --filter @tabora/extension zip:firefox",
     ])

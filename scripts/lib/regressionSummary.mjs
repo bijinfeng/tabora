@@ -117,8 +117,7 @@ const CHANGE_TYPE_RULES = [
       filePath === "pnpm-lock.yaml" ||
       filePath === "pnpm-workspace.yaml" ||
       filePath === "vite.config.ts" ||
-      filePath === "vitest.config.ts" ||
-      filePath === "vitest.e2e.config.ts",
+      filePath === "vitest.config.ts",
   },
   {
     type: "release",
@@ -159,10 +158,7 @@ const KNOWN_DEBT_RULES = [
   },
   {
     label: "拖拽未实现 5px 阈值、实时交换、触屏策略",
-    matches: (filePath) =>
-      filePath.startsWith("packages/orchestrator/src/drag-sort-model") ||
-      filePath.startsWith("apps/playground/src/workbenchDashboard.e2e.test.tsx") ||
-      filePath.startsWith("apps/playground/src/workbenchGovernance.e2e.test.tsx"),
+    matches: (filePath) => filePath.startsWith("packages/orchestrator/src/drag-sort-model"),
   },
   {
     label: "workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id",
@@ -213,9 +209,6 @@ export function collectSuggestedCommands(options) {
   const needsArchitecture = options.changeTypes.some((changeType) =>
     ["protocol", "kernel", "storage", "orchestrator", "shell", "plugin"].includes(changeType),
   )
-  const needsE2e = options.changeTypes.some((changeType) =>
-    ["orchestrator", "shell", "plugin", "ui"].includes(changeType),
-  )
   const needsBuild = options.changeTypes.some((changeType) =>
     [
       "protocol",
@@ -241,9 +234,6 @@ export function collectSuggestedCommands(options) {
   }
   if (needsBuild) {
     commands.push("pnpm build")
-  }
-  if (needsE2e) {
-    commands.push("pnpm test:e2e")
   }
 
   if (options.changedFiles.includes(".github/workflows/release-extension.yml")) {

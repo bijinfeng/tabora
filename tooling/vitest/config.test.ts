@@ -12,8 +12,6 @@ describe("defineUnitTestConfig", () => {
 
     expect(config.test?.environment).toBe("happy-dom")
     expect(config.test?.include).toEqual(["src/**/*.test.ts"])
-    expect(config.test?.exclude).toContain("**/*.e2e.test.ts")
-    expect(config.test?.exclude).toContain("**/*.e2e.test.tsx")
     expect(config.test?.server?.deps?.inline).toEqual(
       expect.arrayContaining([/@kobalte\//, /solid-prevent-scroll/, /@corvu\//, "lucide-solid"]),
     )
@@ -60,7 +58,6 @@ describe("defineUnitTestConfig", () => {
     const config = defineNodeUnitTestConfig()
 
     expect(config.test?.environment).toBe("node")
-    expect(config.test?.exclude).toContain("**/*.e2e.test.ts")
     expect(config.plugins ?? []).toEqual([])
   })
 })

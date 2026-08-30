@@ -180,4 +180,4 @@
 pnpm check
 ```
 
-代码变更按 `AGENTS.md` 和 `docs/technical/tabora-regression-baseline.md` 追加 `pnpm test`、`pnpm build`、E2E 或浏览器检查。
+代码变更按 `AGENTS.md` 和 `docs/technical/tabora-regression-baseline.md` 追加 `pnpm test`、`pnpm build` 或浏览器检查。

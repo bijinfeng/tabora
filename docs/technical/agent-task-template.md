@@ -107,7 +107,6 @@ node scripts/regression-summary.mjs
 - pnpm check：
 - pnpm test：
 - pnpm build：
-- pnpm test:e2e：
 
 人工 / 浏览器冒烟：
 
