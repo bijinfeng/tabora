@@ -1,4 +1,9 @@
-import type { AiGenerateRequest, AiGenerateResult, AiStreamChunk } from "@tabora/plugin-api"
+import type {
+  AiChatMessage,
+  AiGenerateRequest,
+  AiGenerateResult,
+  AiStreamChunk,
+} from "@tabora/plugin-api"
 
 export type AiProviderMode = "builtin" | "custom"
 
@@ -10,11 +15,15 @@ export type AiCustomProviderConfig = {
 
 export type AiGatewayRequest = Pick<
   AiGenerateRequest,
-  "prompt" | "system" | "temperature" | "maxOutputTokens"
+  "system" | "temperature" | "maxOutputTokens"
 > & {
+  /** Single-turn text request. Mutually exclusive with `messages`. */
+  prompt?: string
   provider: AiProviderMode
   modelId?: string
   custom?: AiCustomProviderConfig
+  /** Multi-turn conversation history ending with a user message. Mutually exclusive with `prompt`. */
+  messages?: AiChatMessage[]
 }
 
 export type AiGatewayResponse = AiGenerateResult

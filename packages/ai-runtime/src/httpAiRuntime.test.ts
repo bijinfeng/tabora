@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { createHttpAiChatClient, createHttpAiRuntime } from "./httpAiRuntime"
+import type { ConnectConnectionAdapter, UIMessage } from "@tanstack/ai-client"
+import type { AiGatewayClientConfig } from "./contracts"
+import {
+  createAiChatConnection,
+  createHttpAiChatClient,
+  createHttpAiRuntime,
+} from "./httpAiRuntime"
 
 function requestJson(init: RequestInit | undefined): Record<string, unknown> {
   if (typeof init?.body !== "string") throw new Error("Expected JSON request body")
@@ -159,5 +165,114 @@ describe("createHttpAiRuntime", () => {
     })
     expect(client.getMessages().at(-1)?.parts).toEqual([{ type: "text", content: "done" }])
     client.dispose()
+  })
+})
+
+describe("createAiChatConnection", () => {
+  const SSE_RESPONSE = (delta: string) =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          const encoder = new TextEncoder()
+          controller.enqueue(
+            encoder.encode('data: {"type":"RUN_STARTED","threadId":"t","runId":"r"}\n\n'),
+          )
+          controller.enqueue(
+            encoder.encode(
+              `data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"message-1","delta":"${delta}"}\n\n`,
+            ),
+          )
+          controller.enqueue(
+            encoder.encode('data: {"type":"RUN_FINISHED","threadId":"t","runId":"r"}\n\n'),
+          )
+          controller.close()
+        },
+      }),
+    )
+
+  const WIRE_USER_MESSAGE = {
+    id: "m1",
+    role: "user",
+    parts: [{ type: "text", content: "hi" }],
+  } as UIMessage
+
+  function makeConfig(overrides: Partial<AiGatewayClientConfig> = {}): AiGatewayClientConfig {
+    return {
+      baseUrl: "https://tabora.test",
+      getRequest: async () => ({ provider: "builtin", modelId: "platform-text" }),
+      ...overrides,
+    }
+  }
+
+  it("posts the AG-UI envelope with host provider selection and per-run options", async () => {
+    let url: string | undefined
+    let init: RequestInit | undefined
+    const connection = createAiChatConnection(
+      makeConfig({
+        getAuthorization: async () => "Bearer user-token",
+        fetcher: async (input, next) => {
+          url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
+          init = next
+          return SSE_RESPONSE("done")
+        },
+      }),
+    )
+
+    const chunks = []
+    for await (const chunk of (connection as ConnectConnectionAdapter).connect(
+      [WIRE_USER_MESSAGE],
+      { temperature: 0.4 },
+      undefined,
+      {
+        threadId: "thread-1",
+        runId: "run-1",
+      },
+    )) {
+      chunks.push(chunk)
+    }
+
+    expect(url).toBe("https://tabora.test/api/ai/stream")
+    expect(init?.headers).toMatchObject({ authorization: "Bearer user-token" })
+    const body = requestJson(init) as {
+      messages: Array<{ role: string; content: string }>
+      forwardedProps: Record<string, unknown>
+      threadId?: string
+      runId?: string
+    }
+    expect(body.messages).toEqual([{ id: "m1", role: "user", content: "hi" }])
+    expect(body.forwardedProps).toMatchObject({
+      provider: "builtin",
+      modelId: "platform-text",
+      temperature: 0.4,
+    })
+    expect(body.threadId).toBe("thread-1")
+    expect(body.runId).toBe("run-1")
+    expect(chunks.length).toBeGreaterThan(0)
+  })
+
+  it("normalizes gateway error responses into the AI runtime error contract", async () => {
+    const connection = createAiChatConnection(
+      makeConfig({
+        fetcher: async () =>
+          Response.json(
+            { error: { code: "ai_not_configured", message: "no model" } },
+            { status: 400 },
+          ),
+      }),
+    )
+
+    await expect(async () => {
+      for await (const _chunk of (connection as ConnectConnectionAdapter).connect(
+        [WIRE_USER_MESSAGE],
+        undefined,
+        undefined,
+        undefined,
+      )) {
+        // consume the failing stream
+      }
+    }).rejects.toMatchObject({
+      // TanStack wraps fetch failures; the normalized runtime error rides the cause chain.
+      cause: { code: "ai_not_configured", name: "AiRuntimeError" },
+    })
   })
 })

@@ -121,12 +121,11 @@ export function createWorkbenchShellControllerRuntime(options: {
   }
   isMobile?: () => boolean
 }) {
-  const pluginCommands = options.services.plugins.flatMap(
-    (plugin) => plugin.manifest.contributes.commands ?? [],
-  )
-  const pluginKeybindings = options.services.plugins.flatMap(
-    (plugin) => plugin.manifest.contributes.keybindings ?? [],
-  )
+  // Read lazily: kernel.plugins fills in during discovery after this runtime exists.
+  const pluginCommands = () =>
+    options.services.plugins.flatMap((plugin) => plugin.manifest.contributes.commands ?? [])
+  const pluginKeybindings = () =>
+    options.services.plugins.flatMap((plugin) => plugin.manifest.contributes.keybindings ?? [])
 
   const runPluginCommand = (commandId: string, context: CommandExecutionContext) =>
     options.services.registryCommands.execute(commandId, {

@@ -34,6 +34,7 @@ import { assignGridOrder } from "../shared/workbenchGrid"
 import { createWorkbenchShellRuntimes } from "./createWorkbenchShellRuntimes"
 import { createWorkbenchShellPluginViewBoundaryCopy } from "../i18n"
 import {
+  isSettingsSectionId,
   parseWorkbenchSettingsRoute,
   settingsHomePath,
   settingsRoutePath,
@@ -159,6 +160,13 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     setSettingsOpen(false)
     if (currentRoute().kind === "settings") navigate("/", { replace: true })
   }
+  const disposeSettingsOpenEvent = kernel.events.on("ui.settings.open", (payload) => {
+    const settingsPayload = (payload ?? {}) as { sectionId?: string }
+    const sectionId = settingsPayload.sectionId
+    if (sectionId && isSettingsSectionId(sectionId)) navigateToSettings(sectionId)
+    else navigateToSettingsHome()
+  })
+  onCleanup(disposeSettingsOpenEvent)
   createEffect(() => {
     const route = currentRoute()
     if (route.kind !== "settings") {

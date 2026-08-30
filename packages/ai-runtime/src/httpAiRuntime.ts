@@ -1,14 +1,15 @@
 import type {
   AiChatClient,
   AiChatClientOptions as PublicAiChatClientOptions,
+  AiChatConnection,
   AiChatMessage,
   AiGenerateRequest,
   AiRuntimeBridge,
   AiStreamChunk,
 } from "@tabora/plugin-api"
 import { AiRuntimeError } from "@tabora/plugin-api"
-import { ChatClient } from "@tanstack/ai-client"
-import type { ChatClientOptions, ChatFetcherInput } from "@tanstack/ai-client"
+import { ChatClient, fetchServerSentEvents } from "@tanstack/ai-client"
+import type { ChatClientOptions, ChatFetcherInput, ConnectionAdapter } from "@tanstack/ai-client"
 
 import type {
   AiChatClientConfig,
@@ -133,6 +134,39 @@ export function createHttpAiRuntime(config: AiGatewayClientConfig): AiRuntimeBri
     createChatClient(options = {}) {
       return createPublicAiChatClient(config, options)
     },
+
+    createChatConnection() {
+      // The adapter is a TanStack ConnectionAdapter by construction; the
+      // bridge narrows it to the TanStack-free AiChatConnection protocol, and
+      // consumers bridge it back with a single structural cast.
+      return createAiChatConnection(config) as unknown as AiChatConnection
+    },
+  }
+}
+
+/**
+ * Create the TanStack-compatible connection adapter for the Tabora AI
+ * gateway. The host resolves provider selection and authorization per run;
+ * the conversation itself travels in the AG-UI request envelope.
+ */
+export function createAiChatConnection(config: AiGatewayClientConfig): ConnectionAdapter {
+  return fetchServerSentEvents(apiUrl(config.baseUrl, "/api/ai/stream"), async () => {
+    const providerRequest = await config.getRequest()
+    const authorization = await config.getAuthorization?.()
+    return {
+      headers: authorization ? { authorization } : {},
+      body: providerRequest,
+      fetchClient: gatewayFetchClient(config.fetcher ?? fetch),
+    }
+  })
+}
+
+/** Surface normalized AI runtime errors instead of opaque stream failures. */
+function gatewayFetchClient(fetcher: typeof fetch): typeof fetch {
+  return async (input, init) => {
+    const response = await fetcher(input, init)
+    if (!response.ok) await throwResponseError(response)
+    return response
   }
 }
 
