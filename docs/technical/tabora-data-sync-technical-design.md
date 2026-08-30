@@ -159,7 +159,7 @@ workspace | pluginInstance | plugin | pluginData
 | 验证项 | 命令 |
 | --- | --- |
 | 后端服务 | `pnpm --dir backend/app test` |
-| 认证与同步客户端 | `pnpm --dir packages/auth exec vitest run --config vitest.config.ts`；`pnpm --dir packages/sync exec vitest run --config vitest.config.ts` |
+| 认证与同步客户端 | `pnpm exec vitest run packages/auth packages/sync` |
 | 全量单元测试 | `pnpm test` |
 | 格式、lint、类型和架构检查 | `pnpm check` |
 | 全仓构建 | `pnpm build` |

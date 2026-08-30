@@ -82,11 +82,11 @@ describe("regression summary helpers", () => {
         "plugins/official/widget-notes/src/notes-card.tsx",
       ]),
     ).toEqual([
-      "pnpm --dir packages/plugin-api exec vitest run --config vitest.config.ts",
-      "pnpm --dir packages/workbench-app exec vitest run --config vitest.config.ts",
-      "pnpm --dir backend/app exec vitest run --config vitest.config.ts",
-      "pnpm exec vitest run --config tooling/vitest/vitest.config.ts",
-      "pnpm --dir plugins/official/widget-notes exec vitest run --config vitest.config.ts",
+      "pnpm exec vitest run --passWithNoTests packages/plugin-api",
+      "pnpm exec vitest run --passWithNoTests packages/workbench-app",
+      "pnpm exec vitest run --passWithNoTests backend/app",
+      "pnpm exec vitest run --passWithNoTests tooling/vitest",
+      "pnpm exec vitest run --passWithNoTests plugins/official/widget-notes",
     ])
   })
 
