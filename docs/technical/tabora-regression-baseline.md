@@ -567,7 +567,8 @@ Nightly CI 已覆盖：
 - `pnpm check:architecture` 同时禁止 workbench 生产样式里的零透明度 `rgba(...)` 和宿主题色变量字面量 fallback；前者统一用 `transparent`，后者直接依赖宿主主题 token。
 - `pnpm check:architecture` 守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止废弃 `official.layout.dashboard` 回流到生产源码、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper、禁止 shell app 生产依赖直接声明官方插件 / layout / core runtime package、禁止 `@tabora/orchestrator` 依赖 `@tabora/storage` 或 `solid-js`，并校验 PR browser smoke workflow 的路径门禁、Playwright Chromium 安装与 `pnpm test:e2e` 执行契约。
 - `node scripts/regression-summary.mjs`：按当前 dirty 文件推导改动类型、必需回归层级、建议验证命令和触碰的已知债务。Agent 本地优先使用这个 direct node 入口，避免包管理器 wrapper 在受限环境中生成本地 store 噪声。
-- 上述摘要中的 `focused tests before the full suite` 由受影响 package 的 `vitest.config.ts` 推导。它用于修改中的快速反馈；摘要中的 `commands to run` 仍是交付必须满足的范围，二者不能互相替代。
+- 单元测试统一由根 `vitest.config.ts` 管理：project 按测试环境划分为 `node` / `dom` / `backend` 三个，不再按 package 维护 per-package 配置；`maxWorkers` 上限为 50% 逻辑核，避免全量测试打满 CPU。定向验证用 `pnpm exec vitest run <目录>`，或用 `pnpm test:changed`（vitest `--changed`，基于模块图只跑与 git 变更相关的测试；`vitest.config.ts` / `package.json` 自身变更会强制全量）。
+- 上述摘要中的 `focused tests before the full suite` 按受影响 package 目录推导为根配置下的定向 vitest 命令。它用于修改中的快速反馈；摘要中的 `commands to run` 仍是交付必须满足的范围，二者不能互相替代。
 
 建议后续逐步补齐：
 

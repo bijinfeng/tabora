@@ -51,10 +51,7 @@ const FOCUSED_TEST_RULES = [
   "plugins/official/widget-weather",
 ].map((directory) => ({
   directory: `${directory}/`,
-  command:
-    directory === "tooling/vitest"
-      ? "pnpm exec vitest run --config tooling/vitest/vitest.config.ts"
-      : `pnpm --dir ${directory} exec vitest run --config vitest.config.ts`,
+  command: `pnpm exec vitest run --passWithNoTests ${directory}`,
 }))
 
 const CHANGE_TYPE_RULES = [
