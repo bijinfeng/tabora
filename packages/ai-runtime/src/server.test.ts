@@ -29,6 +29,111 @@ describe("AI gateway request contract", () => {
     )
   })
 
+  it("accepts the AG-UI chat envelope with provider selection from forwardedProps", () => {
+    expect(
+      parseAiGatewayRequest({
+        threadId: "thread-1",
+        runId: "run-1",
+        state: {},
+        messages: [
+          { id: "m1", role: "user", content: "hi" },
+          { id: "m2", role: "assistant", content: "hello" },
+          { id: "m3", role: "user", content: "summarize this" },
+        ],
+        tools: [],
+        context: [],
+        forwardedProps: {
+          provider: "custom",
+          custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+          system: "Be concise.",
+        },
+      }),
+    ).toEqual({
+      provider: "custom",
+      custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+      system: "Be concise.",
+      messages: [
+        { role: "user", text: "hi" },
+        { role: "assistant", text: "hello" },
+        { role: "user", text: "summarize this" },
+      ],
+    })
+  })
+
+  it("rejects chat envelopes that are malformed or out of bounds", () => {
+    const envelope = {
+      messages: [
+        { id: "m1", role: "user", content: "hi" },
+        { id: "m2", role: "assistant", content: "hello" },
+      ],
+      forwardedProps: { provider: "builtin", modelId: "platform-text" },
+    }
+    expect(() => parseAiGatewayRequest({ ...envelope, prompt: "conflicting prompt" })).toThrow(
+      AiRuntimeError,
+    )
+    expect(() =>
+      parseAiGatewayRequest({
+        ...envelope,
+        messages: [{ id: "m1", role: "assistant", content: "no user turn" }],
+      }),
+    ).toThrow(AiRuntimeError)
+    expect(() =>
+      parseAiGatewayRequest({
+        ...envelope,
+        messages: [{ id: "m1", role: "tool", content: "unsupported role" }],
+      }),
+    ).toThrow(AiRuntimeError)
+    expect(() =>
+      parseAiGatewayRequest({
+        ...envelope,
+        messages: [{ id: "m1", role: "user", content: "" }],
+      }),
+    ).toThrow(AiRuntimeError)
+    expect(() =>
+      parseAiGatewayRequest({
+        ...envelope,
+        messages: Array.from({ length: 101 }, (_, index) => ({
+          id: `m${index}`,
+          role: "user",
+          content: "hi",
+        })),
+      }),
+    ).toThrow(AiRuntimeError)
+  })
+
+  it("forwards the full multi-turn history to the provider adapter", async () => {
+    const originalFetch = globalThis.fetch
+    let requestBody: Record<string, unknown> | undefined
+    globalThis.fetch = async (_input, init) => {
+      requestBody = requestJson(init)
+      throw new Error("blocked provider request")
+    }
+    const gateway = createTanstackAiGateway()
+
+    try {
+      await expect(
+        gateway.generate({
+          provider: "custom",
+          custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+          system: "Be concise.",
+          messages: [
+            { role: "user", text: "hi" },
+            { role: "assistant", text: "hello" },
+            { role: "user", text: "summarize this" },
+          ],
+        }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+      expect(requestBody?.messages).toEqual([
+        { role: "system", content: "Be concise." },
+        { role: "user", content: "hi" },
+        { role: "assistant", content: "hello" },
+        { role: "user", content: "summarize this" },
+      ])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
   it("rejects provider redirects before they can bypass URL validation", async () => {
     const originalFetch = globalThis.fetch
     let redirect: RequestRedirect | undefined

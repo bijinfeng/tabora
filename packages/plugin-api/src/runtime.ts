@@ -36,6 +36,8 @@ export type PluginUiBridge = {
   closeModal(): void
   openFullscreen(viewId: string, props?: Record<string, unknown>): void
   closeFullscreen(): void
+  /** Ask the host to open its settings center, optionally on a section id. */
+  openSettings(sectionId?: string): void
   showToast(
     message: string,
     options?: {

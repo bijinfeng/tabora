@@ -43,6 +43,30 @@ export type AiChatClient = {
   getMessages(): AiChatMessage[]
 }
 
+/** Run-scoped metadata a TanStack AI client passes alongside the conversation. */
+export type AiChatConnectionRunContext = {
+  threadId?: string
+  runId?: string
+  parentRunId?: string
+  forwardedProps?: Record<string, unknown>
+}
+
+/**
+ * Host-owned chat transport for TanStack AI clients. `connect` receives the
+ * full conversation and yields the AG-UI protocol events produced by the
+ * Tabora gateway. The shape mirrors TanStack AI's `ConnectionAdapter` but is
+ * declared here without TanStack imports; consumers bridge it into
+ * `@tanstack/ai-solid` / `@tanstack/ai-client` with a single structural cast.
+ */
+export type AiChatConnection = {
+  connect(
+    messages: readonly unknown[],
+    data: Record<string, unknown> | undefined,
+    abortSignal: AbortSignal | undefined,
+    runContext: AiChatConnectionRunContext | undefined,
+  ): AsyncIterable<unknown>
+}
+
 export type AiRuntimeErrorCode =
   | "ai_not_configured"
   | "ai_auth_required"
@@ -64,4 +88,5 @@ export type AiRuntimeBridge = {
   generate(request: AiGenerateRequest): Promise<AiGenerateResult>
   stream(request: AiGenerateRequest): AsyncIterable<AiStreamChunk>
   createChatClient?(options?: AiChatClientOptions): AiChatClient
+  createChatConnection?(): AiChatConnection
 }

@@ -207,6 +207,14 @@ export function createPluginRuntimeContext(options: {
                 },
               }
             : {}),
+          ...(options.ai.createChatConnection
+            ? {
+                createChatConnection() {
+                  requireAiAccess("generate")
+                  return options.ai!.createChatConnection!()
+                },
+              }
+            : {}),
         }
       : undefined
 
@@ -253,6 +261,12 @@ export function createPluginRuntimeContext(options: {
       },
       closeFullscreen() {
         options.events.emit("ui.fullscreen.close", { pluginId: options.pluginId })
+      },
+      openSettings(sectionId) {
+        options.events.emit("ui.settings.open", {
+          pluginId: options.pluginId,
+          ...(sectionId ? { sectionId } : {}),
+        })
       },
       showToast(message, toastOptions) {
         options.events.emit("ui.toast.show", { message, options: toastOptions })
