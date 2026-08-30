@@ -42,6 +42,7 @@
 | 官方插件         | `docs/product/tabora-official-plugins-design.md`                | 修改官方插件、默认装配、插件交互和插件验收                                 |
 | 视觉与交互       | `DESIGN.md`                                                     | 修改 UI、token、布局视觉、组件语义、可访问性                               |
 | AI Agent Runtime | `docs/product/tabora-ai-agent-runtime-design.md`                | 判断 AI 基础设施、agent 协议、插件 AI 授权和 MVP 路线                      |
+| AI 对话插件      | `docs/product/tabora-ai-chat-plugin-prd.md`                     | 新增或修改 AI 对话插件、多轮对话协议和聊天 UI 时                           |
 | 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md` | 修改协议、runtime、storage、shell、包边界                                  |
 | 回归治理         | `docs/technical/tabora-regression-baseline.md`                  | 每轮迭代后选择回归层级、验证命令、报告模板                                 |
 | 测试治理         | `docs/technical/tabora-test-governance.md`                      | 盘点冗余测试、决定测试是否必要、审查测试变更                               |
@@ -64,6 +65,7 @@
 涉及 AI agent、AI runtime、模型配置、插件 AI 授权或 agent 工具协议时，额外读：
 
 - `docs/product/tabora-ai-agent-runtime-design.md`
+- `docs/product/tabora-ai-chat-plugin-prd.md`
 - `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 中的 AI Runtime P0 补充
 
 ### 技术实现

@@ -34,7 +34,7 @@ P0 阶段采用 **Tabora 自有协议 + 服务端 TanStack AI gateway**：
 - `@tabora/plugin-api` 定义插件可见的文本请求、流式响应、标准错误码和 `ai.generate` 权限。
 - `@tabora/platform-kernel` 只负责在 `PluginContext` 中按权限暴露 `context.ai`，不直接依赖第三方 AI SDK。
 - `@tabora/ai-runtime` 作为共享服务端基础设施包，基于 TanStack AI 与 OpenAI-compatible adapter 执行文本生成和流式文本。
-- 插件只依赖 Tabora 的 `context.ai`，不直接依赖 TanStack AI 或 provider SDK，也不保存模型密钥。
+- 插件只依赖 Tabora 的 `context.ai`，不直接依赖 provider SDK，也不保存模型密钥。传输与凭据始终由宿主网关持有；插件 UI 层允许使用 TanStack AI 的客户端绑定与 headless 组件（`@tanstack/ai-solid`、`@tanstack/ai-solid-ui`）构建对话界面，但不得绕过网关直连模型。
 
 云端内置模型由平台服务端统一配置和付费，必须通过 Tabora 登录态调用。Web 与 Extension 也可选择本机保存的自定义 OpenAI-compatible provider；其密钥只随单次请求临时转发到 gateway，不持久化到云端且不参与同步。FNOS 不提供内置模型，只使用设备管理员共享的自定义 provider，允许连接 localhost 或局域网模型。
 
@@ -122,6 +122,11 @@ AI Gateway 统一处理模型选择、服务端凭据、临时自定义凭据、
 
 当前最小协议收敛为 `context.ai.generate` 与 `context.ai.stream`。插件必须声明 `ai.generate` 权限后才会获得 bridge；模型选择、provider 配置与认证由宿主处理。
 
+多轮对话扩展（随 AI 对话插件落地）：
+
+- `context.ai.createChatConnection()` 返回宿主构建的网关连接对象（`plugin-api` 的 `AiChatConnection`，结构与 TanStack `ConnectionAdapter` 兼容，chunk 为网关 AG-UI 事件流）。插件把它传给 TanStack AI 客户端（如 `useChat`）使用；provider 选择、鉴权与密钥仍在宿主侧按请求注入。
+- 网关 `/api/ai/stream` 在原单轮 `prompt` 之外接受 AG-UI `RunAgentInput` 形态的多轮请求：`messages` 走 AG-UI anchor 线格式，provider/参数选择经 `forwardedProps` 传入；校验角色、条数（≤100）、长度（单条 ≤32k、总量 ≤96k）且最后一条必须为 user，错误码与鉴权逻辑不变。单轮 `prompt` 语义完全不变。
+
 ### 6.3 AI Permission Bridge
 
 在现有权限模型上增加 AI 相关能力：
@@ -160,7 +165,7 @@ P0 不引入这些协议；它只要求插件声明 `ai.generate` 并使用文�
 
 ## 9. 官方示范插件
 
-P0 不新增通用助手。便签是首个 consumer：它只总结当前内容，展示流式文本，且不会自动写回便签。
+便签是首个 consumer：它只总结当前内容，展示流式文本，且不会自动写回便签。多轮模型对话以官方插件 `official.widgets.ai-chat`（AI 对话）形态提供，是第一个多轮对话 consumer，产品口径见 `docs/product/tabora-ai-chat-plugin-prd.md`；工具调用、审批与自动执行仍属后续协议范围。
 
 ## 10. 权限与安全
 

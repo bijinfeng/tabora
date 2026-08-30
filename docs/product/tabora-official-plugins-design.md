@@ -271,6 +271,7 @@ MVP 组件清单：
 | `official.widgets.notes`              | Notes Widget               | `widget`                                     | 是       | 已由独立 `@tabora/plugin-notes` package 提供；已使用 `@tabora/ui` 控件                    | 提供便签和弹窗编辑，验证插件数据和 modal           |
 | `official.widgets.todo`               | Todo Widget                | `widget`                                     | 是       | 已由独立 `@tabora/plugin-todo` package 提供；已使用 `@tabora/ui` 控件                     | 提供待办列表，验证交互型 widget 和持久化           |
 | `official.widgets.weather`            | Weather Widget             | `widget`                                     | 是       | 已接入 Open-Meteo 真实数据；卡片 + 展开弹窗                                              | 提供天气摘要与预报，按 `DESIGN.md` 进入默认工作台  |
+| `official.widgets.ai-chat`            | AI Chat Widget             | `widget`                                     | 是       | 已由独立 `@tabora/plugin-ai-chat` package 提供；基于 `@tanstack/ai-solid-ui`（编译 dist）+ `@tabora/ui` 控件；经 `context.ai.createChatConnection` 走平台 AI Gateway；已支持多会话管理（切换/重命名/删除）与实例数据持久化 | 提供多轮模型对话，产品口径见 `tabora-ai-chat-plugin-prd.md` |
 | `official.plugin-manager`             | Plugin Manager             | `settings-panel`                             | 是       | 已实现只读列表；已使用 `@tabora/ui` 控件                                                 | 展示插件贡献能力                         |
 | `official.settings.workspace`         | Workspace Settings         | `settings-panel`                             | 是       | 已实现轻量 settings host 面板贡献：外观、搜索；插件面板由 `official.plugin-manager` 贡献 | 聚合插件、外观、搜索等全局设置面板                 |
 | `official.account-sync`                | Tabora Account & Sync      | `settings-panel`                             | 按宿主选择 | Playground 始终装配，API 地址可配置覆盖；FNOS 完全本地时不装配                         | 提供账号与数据同步两个设置面板，并管理同步 lifecycle |
@@ -289,6 +290,7 @@ MVP 组件清单：
 | `mainGrid` | `todo-1`         | `official.widgets.todo`               | S            | 待办列表                                     |
 | `mainGrid` | `notes-1`        | `official.widgets.notes`              | M            | 快速记录，默认与快捷入口同宽                 |
 | `mainGrid` | `weather-1`      | `official.widgets.weather`            | S            | 天气摘要，按原型进入默认工作台               |
+| `mainGrid` | `ai-chat-1`      | `official.widgets.ai-chat`            | M            | AI 对话入口，用户可移除或调整尺寸            |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
 当前实现由 **host builtin layout** `official.layout.workbench-dashboard` 贡献整体布局 view（Phase 2 后不再是独立插件包，改为宿主内建注入）。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 10 列主网格容器和单元格行高同步，`WidgetCardShell` 负责按 widget size 设置 grid span、提供无头部卡片外壳和右上角移除按钮。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。移动端不是独立布局插件，而是同一 layout view 的响应式断点：窄屏时 rail 折叠为底部导航栏。
