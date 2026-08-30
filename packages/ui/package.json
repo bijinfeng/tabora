@@ -14,7 +14,9 @@
     "./component-docs/renderers": "./src/component-docs/renderers.tsx",
     "./context-menu": "./src/context-menu.ts",
     "./date-picker": "./src/date-picker.ts",
+    "./dialog": "./src/dialog.ts",
     "./divider": "./src/divider.ts",
+    "./drawer": "./src/drawer.ts",
     "./dropdown-menu": "./src/dropdown-menu.ts",
     "./empty-state": "./src/empty-state.ts",
     "./field": "./src/field.ts",
@@ -58,7 +60,9 @@
       "./component-docs/renderers": "./dist/component-docs/renderers.js",
       "./context-menu": "./dist/context-menu.js",
       "./date-picker": "./dist/date-picker.js",
+      "./dialog": "./dist/dialog.js",
       "./divider": "./dist/divider.js",
+      "./drawer": "./dist/drawer.js",
       "./dropdown-menu": "./dist/dropdown-menu.js",
       "./empty-state": "./dist/empty-state.js",
       "./field": "./dist/field.js",
@@ -91,7 +95,7 @@
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts src/component-docs/index.ts src/component-docs/renderers.tsx src/badge.ts src/button.ts src/checkbox.ts src/collapsible.ts src/command-palette.ts src/command-result-list.ts src/context-menu.ts src/date-picker.ts src/divider.ts src/dropdown-menu.ts src/empty-state.ts src/field.ts src/field-row.ts src/form.ts src/hover-card.ts src/inline-error.ts src/input.ts src/kbd.ts src/list-row.ts src/menubar.ts src/pagination.ts src/popover.ts src/scroll-area.ts src/segmented-control.ts src/select.ts src/skeleton.ts src/slider.ts src/stepper.ts src/steps.ts src/switch.ts src/table.ts src/tabs.ts src/tag.ts src/textarea.ts src/toast.ts src/tree-view.ts",
+    "build": "vp pack src/index.ts src/component-docs/index.ts src/component-docs/renderers.tsx src/badge.ts src/dialog.ts src/drawer.ts src/button.ts src/checkbox.ts src/collapsible.ts src/command-palette.ts src/command-result-list.ts src/context-menu.ts src/date-picker.ts src/divider.ts src/dropdown-menu.ts src/empty-state.ts src/field.ts src/field-row.ts src/form.ts src/hover-card.ts src/inline-error.ts src/input.ts src/kbd.ts src/list-row.ts src/menubar.ts src/pagination.ts src/popover.ts src/scroll-area.ts src/segmented-control.ts src/select.ts src/skeleton.ts src/slider.ts src/stepper.ts src/steps.ts src/switch.ts src/table.ts src/tabs.ts src/tag.ts src/textarea.ts src/toast.ts src/tree-view.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
