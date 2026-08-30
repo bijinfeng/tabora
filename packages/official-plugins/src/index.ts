@@ -1,4 +1,5 @@
 import { createBuiltinPluginPackage, createLazyBuiltinPlugin } from "@tabora/platform-kernel"
+import { officialPluginAiChatManifest } from "@tabora/plugin-ai-chat/manifest"
 import { officialPluginNotesManifest } from "@tabora/plugin-notes/manifest"
 import { officialPluginQuickLinksManifest } from "@tabora/plugin-quick-links/manifest"
 import { officialPluginTodoManifest } from "@tabora/plugin-todo/manifest"
@@ -56,6 +57,13 @@ export const officialPluginNotes = createLazyBuiltinPlugin({
   },
 })
 
+export const officialPluginAiChat = createLazyBuiltinPlugin({
+  manifest: officialPluginAiChatManifest,
+  async load() {
+    return (await import("@tabora/plugin-ai-chat")).officialPluginAiChat
+  },
+})
+
 export const officialPluginManager = createLazyBuiltinPlugin({
   manifest: officialPluginManagerManifest,
   async load() {
@@ -80,6 +88,7 @@ export const officialPlugins = [
   officialPluginTodo,
   officialPluginQuickLinks,
   officialPluginNotes,
+  officialPluginAiChat,
   officialPluginManager,
   officialSettingsWorkspace,
 ]
