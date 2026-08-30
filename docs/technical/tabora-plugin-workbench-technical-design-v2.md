@@ -141,7 +141,7 @@ packages/
 - 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。bootstrap 可接收不带 Dexie database 的 host storage adapter；此类宿主仍使用统一 repository port，但不提供基于 Dexie 的导入/导出。FNOS 以 HTTP adapter 把 repository 操作交给本地 Hono + SQLite。账号与同步则由 `official.account-sync` 可选插件装配，避免纯本地宿主初始化认证与同步 runtime。
 - 组合与治理：`@tabora/workbench-app` 的 `shellController` 纯 helper 统一承接 plugin owner `external-open` 权限判断；theme/background/grid/workspace session/import-export 等共享 shell helper 也由该包承接，extension 不再通过相对路径直接 import playground 源码。（Phase 2 后 layout switch plan/snapshot 纯模型已删除。）
 - 搜索与主题治理：`@tabora/workbench-app` 的 search helper / state、`@tabora/orchestrator` 的搜索模型、以及官方 search/settings 插件已统一删除“首项 provider”隐式兜底。theme resolver 仅在精确命中 theme 时返回对应 token；未命中时应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再回退到 `themes[0]`。`CommandPalette` 与 `SearchCommandBar` 的 provider token、`@` 路由和 suggestions 生成进一步收敛到 `@tabora/orchestrator` 的共享 model，官方插件不再维护独立的 search-model 转导出层；`SearchViewProps` 也已升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，搜索栏只负责渲染和事件转发。
-- 治理自动化：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 除 architecture/check/test/build 外，已新增按路径触发的 `browser-smoke` job，执行 `pnpm exec playwright install --with-deps chromium` + `pnpm test:e2e`；nightly workflow 继续保留全量 browser smoke，release/deploy workflow 在打包前输出 regression summary。`check:architecture` 同步新增 workflow contract 守卫，禁止 PR browser smoke job、路径门禁或 Chromium 安装步骤漂移。
+- 治理自动化：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 覆盖 architecture / check / test / build；release/deploy workflow 在打包前输出 regression summary。e2e browser smoke 已于 2026-08 移除，需要时按回归基准重建。
 - playground 当前通过 `apps/playground/src/workbenchComposition.ts` 组装 `@tabora/workbench-app`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`；playground / extension 的 `App.tsx` 已收敛为薄 wrapper，共享宿主交互编排统一落在 `@tabora/workbench-app`。`workbench-app/src` 已按垂直切片重组，目录结构如下：
   - `shell/`：组合根与跨切片装配——`WorkbenchShellApp.tsx`（薄 composition root，现含 `WorkbenchShellProvider` 上下文）、`WorkbenchShellContext.tsx`（shell bundle context）、`WorkbenchShellState.ts`（聚合 6 个 domain store）、`WorkbenchShellControllerRuntime.ts`（命令/拖拽/搜索/widget/view 聚合）、`WorkbenchShellViewRuntime.ts`、`WorkbenchShellInstanceRenderer.tsx`。
   - `runtime/`：kernel bootstrap 与宿主运行时——`bootstrap.ts`、`WorkbenchRuntimeStore.ts`（kernelReady / pluginRecords / toasts）、`WorkbenchShellRuntimeState.ts`（discover/boot/kernel 事件接线）、`WorkbenchShellHostRuntime.ts`（host actions/dispose bridge）、`WorkbenchShellHostActions.ts`（rail action / grid 持久化 / 焦点定位）。
@@ -1225,7 +1225,7 @@ plugins/
 | 持久化与导入导出 | `@tabora/storage` | repository、storage adapter、workspace snapshot |
 | 默认装配 | `@tabora/builtin-plugin-registry` | builtin plugins、workspace preset、shell config |
 
-关键用户路径由 `pnpm test`、`pnpm check`、`pnpm test:e2e` 和回归基准中的分层检查保护；
+关键用户路径由 `pnpm test`、`pnpm check` 和回归基准中的分层检查保护；
 新增协议、storage、shell 或发布能力时，按回归基准同步扩展事实源和验证层级。
 
 ## 18. 风险与应对

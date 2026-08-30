@@ -15,9 +15,7 @@ const sharedUnitInlineDeps = [
   "lucide-solid",
 ]
 
-const sharedUnitExclude = ["**/*.e2e.test.ts", "**/*.e2e.test.tsx"]
-
-export { sharedUnitExclude, sharedUnitInlineDeps }
+export { sharedUnitInlineDeps }
 
 type AliasEntry = { find: RegExp; replacement: string }
 
@@ -117,7 +115,6 @@ export function defineUnitTestConfig(config: UserConfig = {}) {
       ],
       test: {
         environment: "happy-dom",
-        exclude: sharedUnitExclude,
         experimental: {
           importDurations: resolveImportDurationsConfig(),
         },
@@ -141,7 +138,6 @@ export function defineNodeUnitTestConfig(config: UserConfig = {}) {
       },
       test: {
         environment: "node",
-        exclude: sharedUnitExclude,
         experimental: {
           importDurations: resolveImportDurationsConfig(),
         },

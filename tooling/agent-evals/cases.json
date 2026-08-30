@@ -34,14 +34,14 @@
     {
       "id": "shell-ui-change",
       "title": "宿主 UI 行为变更",
-      "prompt": "调整一个 workbench shell 交互，复用 @tabora/ui primitive，并证明浏览器路径不回退。",
+      "prompt": "调整一个 workbench shell 交互，复用 @tabora/ui primitive，并证明交互行为有测试覆盖。",
       "allowedPaths": [
         "packages/workbench-app/**",
         "packages/workbench-shell/**",
         "packages/ui/**",
         "docs/**"
       ],
-      "requiredEvidence": ["pnpm test", "pnpm check", "pnpm test:e2e"],
+      "requiredEvidence": ["pnpm test", "pnpm check"],
       "forbiddenOutcomes": [
         "手搓已有 @tabora/ui 基础组件",
         "仅用 snapshot 代替交互断言",

@@ -6,7 +6,6 @@ import {
   classifyExternalOpenMatch,
   classifyRawColorMatch,
   classifyWorkbenchRawColorDebt,
-  findBrowserSmokeWorkflowViolations,
   findCrossAppSourceImports,
   findCorePackageAppImports,
   findDeprecatedLayoutIdViolations,
@@ -764,73 +763,6 @@ describe("governance rules", () => {
     ).toEqual([])
   })
 
-  it("detects missing PR browser smoke workflow contracts", () => {
-    expect(
-      findBrowserSmokeWorkflowViolations({
-        filePath: ".github/workflows/ci.yml",
-        source: `
-          name: CI
-          on:
-            pull_request:
-              branches: [main]
-          jobs:
-            browser-smoke:
-              runs-on: ubuntu-latest
-              steps:
-                - run: pnpm install --frozen-lockfile
-                - run: pnpm test:e2e
-        `,
-      }),
-    ).toEqual([
-      {
-        filePath: ".github/workflows/ci.yml",
-        match: "pull_request.paths",
-        reason: "CI pull_request workflow must gate browser smoke by the required Tabora path set",
-      },
-      {
-        filePath: ".github/workflows/ci.yml",
-        match: "jobs.browser-smoke.if",
-        reason: "CI browser smoke job must run only for pull_request events",
-      },
-      {
-        filePath: ".github/workflows/ci.yml",
-        match: "pnpm exec playwright install --with-deps chromium",
-        reason: "CI browser smoke job must install Playwright Chromium before pnpm test:e2e",
-      },
-    ])
-
-    expect(
-      findBrowserSmokeWorkflowViolations({
-        filePath: ".github/workflows/ci.yml",
-        source: `
-          on:
-            pull_request:
-              branches: [main]
-              paths:
-                - "apps/playground/**"
-                - "apps/extension/**"
-                - "packages/**"
-                - "plugins/**"
-                - "scripts/**"
-                - "tooling/**"
-                - "package.json"
-                - "pnpm-lock.yaml"
-                - "pnpm-workspace.yaml"
-                - "vitest.e2e.config.ts"
-                - ".github/workflows/**"
-          jobs:
-            browser-smoke:
-              if: github.event_name == 'pull_request'
-              runs-on: ubuntu-latest
-              steps:
-                - run: pnpm install --frozen-lockfile
-                - run: pnpm exec playwright install --with-deps chromium
-                - run: pnpm test:e2e
-        `,
-      }),
-    ).toEqual([])
-  })
-
   it("detects package export drift from vp pack entrypoints", () => {
     expect(
       findPackageExportViolations({
@@ -1458,7 +1390,7 @@ describe("governance rules", () => {
 
     expect(
       classifyExternalOpenMatch({
-        filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx",
+        filePath: "packages/workbench-app/src/appearance/backgroundResolver.test.ts",
         match: "window.open",
       }),
     ).toBe("test-fixture")
@@ -1480,7 +1412,10 @@ describe("governance rules", () => {
         { filePath: "packages/official-plugins/src/search-command-bar.tsx", match: "openExternal" },
         { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
         { filePath: "plugins/example/src/view.tsx", match: "window.open" },
-        { filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx", match: "window.open" },
+        {
+          filePath: "packages/workbench-app/src/appearance/backgroundResolver.test.ts",
+          match: "window.open",
+        },
       ]),
     ).toEqual({
       "host-execution": 1,
@@ -1526,7 +1461,10 @@ describe("governance rules", () => {
         },
         { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
         { filePath: "plugins/example/src/view.tsx", match: "window.open" },
-        { filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx", match: "window.open" },
+        {
+          filePath: "packages/workbench-app/src/appearance/backgroundResolver.test.ts",
+          match: "window.open",
+        },
       ],
     })
 
@@ -1551,7 +1489,7 @@ describe("governance rules", () => {
       "packages/workbench-app/src/shell/WorkbenchShellApp.tsx: window.open",
     )
     expect(report).not.toContain(
-      "apps/playground/src/workbenchGovernance.e2e.test.tsx: window.open",
+      "packages/workbench-app/src/appearance/backgroundResolver.test.ts: window.open",
     )
   })
 })

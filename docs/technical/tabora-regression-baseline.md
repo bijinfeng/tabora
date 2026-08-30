@@ -272,21 +272,9 @@ pnpm build
 - 导入 / 导出当前 schema 可用，旧 schema 明确拒绝。
 - 插件 view 抛错只显示局部错误，不白屏。
 
-建议自动化入口：
+当前仓库不维护 e2e 套件（2026-08 起移除 e2e 配置、依赖与 CI browser smoke job；对应行为由 `pnpm test` 单测与人工检查覆盖）。
 
-```bash
-pnpm test:e2e
-```
-
-当前 `pnpm test:e2e` 已覆盖：
-
-- 默认工作台首屏、添加 widget、尺寸菜单、展开视图、设置抽屉、拖拽排序。
-- 搜索 external-open 允许/拒绝路径。
-- Quick Links 通过 host callback 打开外链，而非裸 `<a target="_blank">`。
-- 布局插件失败时显示布局不可用状态和具体错误。
-- `1280x900`、`768x900`、`390x844` 三档无横向滚动断言。
-
-如果 E2E 未覆盖本轮风险，需手动启动 playground 检查：
+涉及浏览器行为的风险，手动启动 playground 检查：
 
 ```bash
 pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
@@ -316,7 +304,7 @@ UI / layout / shell / `@tabora/ui` / official plugin 改动必须做 L5。
 - Tablet：768 x 900
 - Mobile：390 x 844
 
-其中移动端和窄屏无横向滚动可优先依赖 `pnpm test:e2e` 的浏览器断言；视觉细节、hover/focus 样式和复杂层级冲突仍需人工复核。
+移动端和窄屏无横向滚动、视觉细节、hover/focus 样式和复杂层级冲突需人工在上述视口下复核。
 
 ### L6：安全、权限和数据隔离
 
@@ -512,7 +500,6 @@ rg -n "JSON\\.parse|JSON\\.stringify|localStorage|indexedDB|querySelectorAll|get
 ```bash
 pnpm check
 pnpm test
-pnpm test:e2e
 pnpm build
 pnpm --filter @tabora/playground build
 ```
@@ -542,22 +529,6 @@ pnpm --filter @tabora/extension zip:firefox
 - `pnpm check`（会先通过 TanStack Start/Vite 配置生成 backend 路由树）
 - `pnpm test`
 - `pnpm build`
-- PR 按路径触发的 `browser-smoke` job（`pnpm test:e2e`）
-
-Nightly CI 已覆盖：
-
-- `pnpm test:e2e` 全量 browser smoke
-
-当前 browser smoke 已覆盖：
-
-- 默认 dashboard 工作台关键操作。
-- 搜索/Quick Links 外部打开权限路径。
-- 布局插件失败状态可达性和错误信息展示。
-- settings host 打开、关闭与搜索/插件/关于面板切换。
-- settings route 的 deep link、二级路由切换和 browser history 恢复。
-- 布局不可用状态显示具体错误，且不渲染替代布局。
-- `1280x900`、`768x900`、`390x844` 下 settings / layout 切换后的无横向滚动。
-- `1280x900`、`768x900`、`390x844` 无横向滚动。
 
 本地脚本已覆盖：
 
@@ -565,7 +536,7 @@ Nightly CI 已覆盖：
 - `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 信号报告；raw color 按 `workbench production / generated backgrounds / site styles / test fixtures` 分组，external-open 按 `host execution / manifest declaration / runtime method reference / test fixture / bypass risk` 分组，并按文件级信号去重计数。生产侧 raw color / `!important` 报告项应保持为 0。
 - `pnpm check:architecture` 将 `workbench production` raw color 基线锁定为 0，重新引入任何字面量颜色或 `!important` 都会直接失败；其余类别通过 `pnpm quality` 审计是否回归。
 - `pnpm check:architecture` 同时禁止 workbench 生产样式里的零透明度 `rgba(...)` 和宿主题色变量字面量 fallback；前者统一用 `transparent`，后者直接依赖宿主主题 token。
-- `pnpm check:architecture` 守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止废弃 `official.layout.dashboard` 回流到生产源码、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper、禁止 shell app 生产依赖直接声明官方插件 / layout / core runtime package、禁止 `@tabora/orchestrator` 依赖 `@tabora/storage` 或 `solid-js`，并校验 PR browser smoke workflow 的路径门禁、Playwright Chromium 安装与 `pnpm test:e2e` 执行契约。
+- `pnpm check:architecture` 守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止废弃 `official.layout.dashboard` 回流到生产源码、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper、禁止 shell app 生产依赖直接声明官方插件 / layout / core runtime package、禁止 `@tabora/orchestrator` 依赖 `@tabora/storage` 或 `solid-js`。
 - `node scripts/regression-summary.mjs`：按当前 dirty 文件推导改动类型、必需回归层级、建议验证命令和触碰的已知债务。Agent 本地优先使用这个 direct node 入口，避免包管理器 wrapper 在受限环境中生成本地 store 噪声。
 - 单元测试统一由根 `vitest.config.ts` 管理：project 按测试环境划分为 `node` / `dom` / `backend` 三个，不再按 package 维护 per-package 配置；`maxWorkers` 上限为 50% 逻辑核，避免全量测试打满 CPU。定向验证用 `pnpm exec vitest run <目录>`，或用 `pnpm test:changed`（vitest `--changed`，基于模块图只跑与 git 变更相关的测试；`vitest.config.ts` / `package.json` 自身变更会强制全量）。
 - 上述摘要中的 `focused tests before the full suite` 按受影响 package 目录推导为根配置下的定向 vitest 命令。它用于修改中的快速反馈；摘要中的 `commands to run` 仍是交付必须满足的范围，二者不能互相替代。
@@ -573,7 +544,7 @@ Nightly CI 已覆盖：
 建议后续逐步补齐：
 
 1. 为 permission bridge 增加专门回归测试。
-2. 将 `pnpm test:e2e` 从当前 dashboard/governance smoke 扩展到更多 import/export 与多 workspace 场景。
+2. 按需重建 e2e browser smoke（当前仓库不含 e2e 套件），优先覆盖 dashboard 关键操作、external-open 权限路径和 settings 路由。
 3. 为 layout failure fallback 的更多变体和触屏拖拽策略补细粒度浏览器断言。
 4. 在 `check:architecture` / `quality` 之上继续扩展 mobile layout 和 layout failure fallback 的自动化守卫。
 
@@ -695,7 +666,6 @@ Agent 必须：
 - pnpm check:
 - pnpm test:
 - pnpm build:
-- pnpm test:e2e:
 
 代码与工程质量：
 

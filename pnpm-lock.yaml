@@ -56,18 +56,12 @@ catalogs:
       specifier: ^0.19.0
       version: 0.19.0
   test:
-    '@vitest/browser-playwright':
-      specifier: ^4.1.10
-      version: 4.1.10
     fake-indexeddb:
       specifier: ^6.2.5
       version: 6.2.5
     happy-dom:
       specifier: ^20.11.2
       version: 20.11.2
-    playwright:
-      specifier: ^1.62.1
-      version: 1.62.1
   toolkit:
     es-toolkit:
       specifier: ^1.50.0
@@ -174,18 +168,12 @@ importers:
       '@types/node':
         specifier: catalog:node
         version: 26.2.0
-      '@vitest/browser-playwright':
-        specifier: catalog:test
-        version: 4.1.10(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(playwright@1.62.1)(vitest@4.1.10)
       fake-indexeddb:
         specifier: catalog:test
         version: 6.2.5
       happy-dom:
         specifier: catalog:test
         version: 20.11.2
-      playwright:
-        specifier: catalog:test
-        version: 1.62.1
       tsdown:
         specifier: catalog:build
         version: 0.22.14(@tsdown/css@0.22.14)(tsx@4.23.11)(typescript@7.0.2)
@@ -7834,6 +7822,7 @@ snapshots:
       - msw
       - utf-8-validate
       - vite
+    optional: true
 
   '@vitest/browser-preview@4.1.10(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(vitest@4.1.10)':
     dependencies:
@@ -9568,13 +9557,15 @@ snapshots:
       exsolve: 1.1.0
       pathe: 2.0.3
 
-  playwright-core@1.62.1: {}
+  playwright-core@1.62.1:
+    optional: true
 
   playwright@1.62.1:
     dependencies:
       playwright-core: 1.62.1
     optionalDependencies:
       fsevents: 2.3.2
+    optional: true
 
   pngjs@7.0.0: {}
 
