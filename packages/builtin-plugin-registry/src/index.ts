@@ -5,6 +5,7 @@ import {
 import type { LoadedPluginPackage } from "@tabora/platform-kernel"
 import { officialPlugins } from "@tabora/official-plugins"
 import { createBuiltinPluginPackage } from "@tabora/platform-kernel"
+import aiChatStylesHref from "@tabora/plugin-ai-chat/styles.css?url"
 import officialPluginsStylesHref from "@tabora/official-plugins/styles.css?url"
 import notesStylesHref from "@tabora/plugin-notes/styles.css?url"
 import quickLinksStylesHref from "@tabora/plugin-quick-links/styles.css?url"
@@ -16,6 +17,7 @@ export { builtinDefaultWorkspacePreset, builtinWorkbenchShellConfig } from "./wo
 
 const styleAssetUrlsByPluginId: Record<string, Record<string, string>> = {
   "official.search.command-bar": { "./styles.css": officialPluginsStylesHref },
+  "official.widgets.ai-chat": { "./styles.css": aiChatStylesHref },
   "official.widgets.notes": { "./styles.css": notesStylesHref },
   "official.widgets.quick-links": { "./styles.css": quickLinksStylesHref },
   "official.widgets.todo": { "./styles.css": todoStylesHref },

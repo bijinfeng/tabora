@@ -10,6 +10,7 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
     "official.widgets.todo",
     "official.widgets.notes",
     "official.widgets.weather",
+    "official.widgets.ai-chat",
     "official.plugin-manager",
     "official.settings.workspace",
   ],
@@ -83,6 +84,12 @@ export const officialDefaultWorkspacePreset: WorkspacePresetContribution = {
       instanceId: "weather-1",
       regionId: "mainGrid",
       size: "S",
+    },
+    {
+      contribution: { pluginId: "official.widgets.ai-chat", kind: "widget", id: "ai-chat" },
+      instanceId: "ai-chat-1",
+      regionId: "mainGrid",
+      size: "M",
     },
   ],
 }

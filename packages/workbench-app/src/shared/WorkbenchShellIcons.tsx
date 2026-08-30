@@ -1,5 +1,6 @@
 import CheckSquare from "lucide-solid/icons/check-square"
 import Clock from "lucide-solid/icons/clock"
+import Sparkles from "lucide-solid/icons/sparkles"
 import type { JSX } from "solid-js"
 
 const pluginIconSources: Record<string, string> = {
@@ -22,6 +23,8 @@ export function renderWorkbenchWidgetIcon(icon?: string): JSX.Element {
   switch (icon) {
     case "check-square":
       return <CheckSquare size={14} />
+    case "sparkles":
+      return <Sparkles size={14} />
     default:
       return <Clock size={14} />
   }
