@@ -3,13 +3,6 @@ import * as stylex from "@stylexjs/stylex"
 import { color, font, radius, space, motion } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
-  page: {
-    display: "flex",
-    flexDirection: "column",
-    gap: space.s6,
-    margin: "0 auto",
-    maxWidth: 1040,
-  },
   section: {
     display: "flex",
     flexDirection: "column",
@@ -18,6 +11,7 @@ export const styles = stylex.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: font.semibold,
+    margin: 0,
   },
   cardGrid: {
     display: "grid",

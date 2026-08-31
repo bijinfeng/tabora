@@ -186,7 +186,7 @@ export const styles = stylex.create({
     borderBottomWidth: 1,
     display: "flex",
     gap: space.s4,
-    height: 48,
+    height: 52,
     justifyContent: "space-between",
     paddingInline: space.s6,
     "@media (max-width: 767px)": {

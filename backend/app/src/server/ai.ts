@@ -11,21 +11,8 @@ import {
   type AiTextGateway,
 } from "@tabora/ai-runtime/server"
 
-import type { AppEnv } from "./env"
 import type { ServerRuntime } from "./runtime"
 import { getSessionUserId, json } from "./http"
-
-function configuredBuiltinModels(env: AppEnv) {
-  return env.aiBuiltinProviders.flatMap((provider) =>
-    provider.models.map((model) => ({
-      id: `${provider.id}:${model}`,
-      label: `${provider.id} · ${model}`,
-      model,
-      apiKey: provider.apiKey,
-      baseUrl: provider.baseUrl,
-    })),
-  )
-}
 
 function isPrivateIpv4(value: string): boolean {
   const parts = value.split(".").map(Number)
@@ -63,10 +50,10 @@ function isUnsafeAddress(value: string): boolean {
 }
 
 /** Custom cloud providers are user-supplied but must never turn the gateway into an SSRF proxy. */
-export async function validateCloudCustomProvider(provider: AiCustomProviderConfig): Promise<void> {
+export async function validateCloudProviderUrl(baseUrl: string): Promise<void> {
   let url: URL
   try {
-    url = new URL(provider.baseUrl)
+    url = new URL(baseUrl)
   } catch {
     throw new AiRuntimeError("ai_request_rejected", "Invalid custom AI base URL")
   }
@@ -84,18 +71,23 @@ export async function validateCloudCustomProvider(provider: AiCustomProviderConf
   }
 }
 
-export function createCloudAiGateway(env: AppEnv) {
+/** Custom cloud providers are user-supplied but must never turn the gateway into an SSRF proxy. */
+export async function validateCloudCustomProvider(provider: AiCustomProviderConfig): Promise<void> {
+  return validateCloudProviderUrl(provider.baseUrl)
+}
+
+export function createCloudAiGateway(
+  builtinModels: Awaited<
+    ReturnType<ServerRuntime["handle"]["aiModels"]["listActiveGatewayModels"]>
+  >,
+) {
   return createTanstackAiGateway({
-    builtinModels: configuredBuiltinModels(env),
+    builtinModels,
     validateCustomProvider: validateCloudCustomProvider,
   })
 }
 
-export function cloudBuiltinModels(env: AppEnv): Array<{ id: string; label: string }> {
-  return configuredBuiltinModels(env).map(({ id, label }) => ({ id, label }))
-}
-
-type CloudAiRuntime = Pick<ServerRuntime, "auth" | "env">
+type CloudAiRuntime = Pick<ServerRuntime, "auth" | "handle">
 
 async function authorizeBuiltinAi(
   runtime: CloudAiRuntime,
@@ -115,12 +107,17 @@ async function authorizeBuiltinAi(
 export async function cloudAiGenerateResponse(
   runtime: CloudAiRuntime,
   request: Request,
-  gateway: AiTextGateway = createCloudAiGateway(runtime.env),
+  gateway?: AiTextGateway,
 ): Promise<Response> {
   try {
     const input = parseAiGatewayRequest(await request.json().catch(() => null))
     await authorizeBuiltinAi(runtime, request, input.provider)
-    return Response.json(await gateway.generate(input))
+    const activeGateway =
+      gateway ??
+      createCloudAiGateway(
+        input.provider === "builtin" ? await runtime.handle.aiModels.listActiveGatewayModels() : [],
+      )
+    return Response.json(await activeGateway.generate(input))
   } catch (error) {
     return aiErrorResponse(error)
   }
@@ -130,12 +127,17 @@ export async function cloudAiGenerateResponse(
 export async function cloudAiStreamResponse(
   runtime: CloudAiRuntime,
   request: Request,
-  gateway: AiTextGateway = createCloudAiGateway(runtime.env),
+  gateway?: AiTextGateway,
 ): Promise<Response> {
   try {
     const input = parseAiGatewayRequest(await request.json().catch(() => null))
     await authorizeBuiltinAi(runtime, request, input.provider)
-    return aiStreamResponse(gateway, input)
+    const activeGateway =
+      gateway ??
+      createCloudAiGateway(
+        input.provider === "builtin" ? await runtime.handle.aiModels.listActiveGatewayModels() : [],
+      )
+    return aiStreamResponse(activeGateway, input)
   } catch (error) {
     return aiErrorResponse(error)
   }
@@ -153,5 +155,5 @@ export async function cloudAiModelsResponse(
       401,
     )
   }
-  return json({ models: cloudBuiltinModels(runtime.env) })
+  return json({ models: await runtime.handle.aiModels.listActiveDirectory() })
 }

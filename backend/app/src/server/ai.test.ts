@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
 import type { AiTextGateway } from "@tabora/ai-runtime/server"
-import type { AppEnv } from "./env"
 import {
   cloudAiGenerateResponse,
   cloudAiModelsResponse,
@@ -8,34 +7,32 @@ import {
   createCloudAiGateway,
 } from "./ai"
 
-const env: AppEnv = {
-  host: "127.0.0.1",
-  port: 4000,
-  corsOrigins: [],
-  databaseClient: "sqlite",
-  databaseFile: ":memory:",
-  databaseUrl: "",
-  authSecret: "test-secret",
-  baseUrl: "http://127.0.0.1:4000",
-  uploadsDir: "/tmp/tabora-ai-test",
-  aiBuiltinProviders: [
-    {
-      id: "platform",
-      baseUrl: "https://api.openai.com/v1",
-      apiKey: "platform-secret",
-      models: ["platform-model"],
-    },
-  ],
-}
+const platformModels = [
+  {
+    id: "platform:platform-model",
+    label: "Platform model",
+    model: "platform-model",
+    apiKey: "platform-secret",
+    baseUrl: "https://api.openai.com/v1",
+  },
+]
 
 function runtime(sessionUserId: string | null) {
   const getSession = vi
     .fn()
     .mockResolvedValue(sessionUserId ? { user: { id: sessionUserId } } : null)
   return {
-    runtime: { env, auth: { api: { getSession } } } as unknown as Parameters<
-      typeof cloudAiGenerateResponse
-    >[0],
+    runtime: {
+      auth: { api: { getSession } },
+      handle: {
+        aiModels: {
+          listActiveGatewayModels: vi.fn().mockResolvedValue(platformModels),
+          listActiveDirectory: vi
+            .fn()
+            .mockResolvedValue(platformModels.map(({ id, label }) => ({ id, label }))),
+        },
+      },
+    } as unknown as Parameters<typeof cloudAiGenerateResponse>[0],
     getSession,
   }
 }
@@ -201,7 +198,7 @@ describe("cloud AI HTTP contract", () => {
       new Request("http://tabora.test/api/ai/models"),
     )
     expect(await response.json()).toEqual({
-      models: [{ id: "platform:platform-model", label: "platform · platform-model" }],
+      models: [{ id: "platform:platform-model", label: "Platform model" }],
     })
   })
 
@@ -216,24 +213,22 @@ describe("cloud AI HTTP contract", () => {
       })
       throw new Error("blocked provider request")
     }
-    const multiProviderEnv: AppEnv = {
-      ...env,
-      aiBuiltinProviders: [
-        {
-          id: "openai",
-          baseUrl: "https://198.51.100.10/v1",
-          apiKey: "openai-secret",
-          models: ["gpt-test"],
-        },
-        {
-          id: "deepseek",
-          baseUrl: "https://198.51.100.20/v1",
-          apiKey: "deepseek-secret",
-          models: ["chat-test"],
-        },
-      ],
-    }
-    const gateway = createCloudAiGateway(multiProviderEnv)
+    const gateway = createCloudAiGateway([
+      {
+        id: "openai:gpt-test",
+        label: "OpenAI test",
+        model: "gpt-test",
+        baseUrl: "https://198.51.100.10/v1",
+        apiKey: "openai-secret",
+      },
+      {
+        id: "deepseek:chat-test",
+        label: "DeepSeek test",
+        model: "chat-test",
+        baseUrl: "https://198.51.100.20/v1",
+        apiKey: "deepseek-secret",
+      },
+    ])
 
     try {
       await expect(

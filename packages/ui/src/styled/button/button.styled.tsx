@@ -55,6 +55,17 @@ const styles = stylex.create({
     paddingBlock: 0,
     paddingInline: 8,
   },
+  buttonMini: {
+    borderRadius: radius.control,
+    fontSize: 11,
+    height: 24,
+    paddingBlock: 0,
+    paddingInline: 6,
+  },
+  buttonMiniCircle: {
+    paddingInline: 0,
+    width: 24,
+  },
   buttonSmCircle: {
     paddingInline: 0,
     width: 28,
@@ -230,6 +241,10 @@ const styles = stylex.create({
     height: 28,
     width: 28,
   },
+  iconMini: {
+    height: 24,
+    width: 24,
+  },
   iconMd: {
     height: 32,
     width: 32,
@@ -265,6 +280,7 @@ const buttonVariantStyles = {
 } as const
 
 const buttonSizeStyles = {
+  mini: styles.buttonMini,
   sm: styles.buttonSm,
   md: styles.buttonMd,
   lg: styles.buttonLg,
@@ -276,12 +292,14 @@ const buttonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styles.b
 }
 
 const buttonSizeCircleStyles = {
+  mini: styles.buttonMiniCircle,
   sm: styles.buttonSmCircle,
   md: styles.buttonMdCircle,
   lg: styles.buttonLgCircle,
 } as const
 
 const iconButtonSizeStyles = {
+  mini: styles.iconMini,
   sm: styles.iconSm,
   md: styles.iconMd,
   lg: styles.iconLg,

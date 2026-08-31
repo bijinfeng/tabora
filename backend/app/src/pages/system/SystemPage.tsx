@@ -25,6 +25,7 @@ const styles = stylex.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: font.semibold,
+    margin: 0,
     textTransform: "uppercase",
     letterSpacing: "0.06em",
     color: color.textMuted,

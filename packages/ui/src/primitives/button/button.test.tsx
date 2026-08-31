@@ -79,6 +79,23 @@ describe("Button", () => {
     expect(btn.getAttribute("data-size")).toBe("sm")
   })
 
+  it("supports compact mini actions", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button size="mini" aria-label="删除">
+          删除
+        </Button>
+      ),
+      root,
+    )
+
+    const btn = root.querySelector("button")!
+    expect(btn.getAttribute("data-size")).toBe("mini")
+    expect(btn.className.length).toBeGreaterThan(0)
+  })
+
   it("supports link actions without changing button semantics", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

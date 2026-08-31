@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
+import { color, radius, space } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
   page: {
@@ -10,28 +10,6 @@ export const styles = stylex.create({
     margin: "0 auto",
     maxWidth: 720,
     paddingBottom: 72,
-  },
-  section: {
-    backgroundColor: color.surface,
-    borderColor: color.line,
-    borderRadius: radius.card,
-    borderStyle: "solid",
-    borderWidth: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: space.s4,
-    padding: space.s5,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: font.semibold,
-    margin: 0,
-  },
-  sectionDesc: {
-    color: color.textMuted,
-    fontSize: 12,
-    margin: 0,
-    marginTop: `calc(-1 * ${space.s3})`,
   },
   row: {
     alignItems: "center",

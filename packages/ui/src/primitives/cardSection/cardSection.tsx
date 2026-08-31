@@ -5,6 +5,7 @@ import type { SolidAttrs } from "../../stylex"
 
 export type CardSectionProps = {
   title?: JSX.Element
+  description?: JSX.Element
   trailing?: JSX.Element
   padded?: boolean
   class?: string | undefined
@@ -16,6 +17,9 @@ export type CardSectionProps = {
   titleClass?: string | undefined
   titleStyle?: JSX.CSSProperties | undefined
   titleAttrs?: SolidAttrs<HTMLElement>
+  descriptionClass?: string | undefined
+  descriptionStyle?: JSX.CSSProperties | undefined
+  descriptionAttrs?: SolidAttrs<HTMLParagraphElement>
   trailingClass?: string | undefined
   trailingStyle?: JSX.CSSProperties | undefined
   trailingAttrs?: SolidAttrs<HTMLDivElement>
@@ -32,6 +36,8 @@ export function CardSection(props: CardSectionProps) {
     props.headerAttrs ?? { class: props.headerClass, style: props.headerStyle }
   const titleAttrs = (): SolidAttrs<HTMLElement> =>
     props.titleAttrs ?? { class: props.titleClass, style: props.titleStyle }
+  const descriptionAttrs = (): SolidAttrs<HTMLParagraphElement> =>
+    props.descriptionAttrs ?? { class: props.descriptionClass, style: props.descriptionStyle }
   const trailingAttrs = (): SolidAttrs<HTMLDivElement> =>
     props.trailingAttrs ?? { class: props.trailingClass, style: props.trailingStyle }
   const bodyAttrs = (): SolidAttrs<HTMLDivElement> =>
@@ -41,8 +47,20 @@ export function CardSection(props: CardSectionProps) {
     <section {...attrs()} data-padded={props.padded === false ? undefined : ""}>
       <Show when={props.title || props.trailing}>
         <header {...headerAttrs()}>
-          <Show when={props.title}>
-            <h3 {...titleAttrs()}>{props.title}</h3>
+          <Show
+            when={props.description}
+            fallback={
+              <Show when={props.title}>
+                <h3 {...titleAttrs()}>{props.title}</h3>
+              </Show>
+            }
+          >
+            <div>
+              <Show when={props.title}>
+                <h3 {...titleAttrs()}>{props.title}</h3>
+              </Show>
+              <p {...descriptionAttrs()}>{props.description}</p>
+            </div>
           </Show>
           <Show when={props.trailing}>
             <div {...trailingAttrs()}>{props.trailing}</div>
