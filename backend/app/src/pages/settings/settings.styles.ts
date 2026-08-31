@@ -25,10 +25,12 @@ export const styles = stylex.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: font.semibold,
+    margin: 0,
   },
   sectionDesc: {
     color: color.textMuted,
     fontSize: 12,
+    margin: 0,
     marginTop: `calc(-1 * ${space.s3})`,
   },
   row: {

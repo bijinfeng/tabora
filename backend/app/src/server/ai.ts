@@ -15,6 +15,18 @@ import type { AppEnv } from "./env"
 import type { ServerRuntime } from "./runtime"
 import { getSessionUserId, json } from "./http"
 
+function configuredBuiltinModels(env: AppEnv) {
+  return env.aiBuiltinProviders.flatMap((provider) =>
+    provider.models.map((model) => ({
+      id: `${provider.id}:${model}`,
+      label: `${provider.id} · ${model}`,
+      model,
+      apiKey: provider.apiKey,
+      baseUrl: provider.baseUrl,
+    })),
+  )
+}
+
 function isPrivateIpv4(value: string): boolean {
   const parts = value.split(".").map(Number)
   if (
@@ -74,21 +86,13 @@ export async function validateCloudCustomProvider(provider: AiCustomProviderConf
 
 export function createCloudAiGateway(env: AppEnv) {
   return createTanstackAiGateway({
-    builtinModels: env.aiBuiltinApiKey
-      ? env.aiBuiltinModels.map((id) => ({
-          id,
-          model: id,
-          apiKey: env.aiBuiltinApiKey,
-          baseUrl: env.aiBuiltinBaseUrl,
-        }))
-      : [],
+    builtinModels: configuredBuiltinModels(env),
     validateCustomProvider: validateCloudCustomProvider,
   })
 }
 
 export function cloudBuiltinModels(env: AppEnv): Array<{ id: string; label: string }> {
-  if (!env.aiBuiltinApiKey) return []
-  return env.aiBuiltinModels.map((id) => ({ id, label: id }))
+  return configuredBuiltinModels(env).map(({ id, label }) => ({ id, label }))
 }
 
 type CloudAiRuntime = Pick<ServerRuntime, "auth" | "env">

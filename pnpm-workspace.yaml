@@ -62,6 +62,8 @@ catalogs:
     "@tanstack/charts-scales": ^0.8.0
     "@tanstack/solid-charts": ^0.8.0
     "@tanstack/solid-query": ^5.101.4
+    "@tanstack/solid-router": ^1.170.30
+    "@tanstack/solid-start": ^1.168.47
     "@tiptap/core": 3.30.2
     "@tiptap/extension-audio": 3.30.2
     "@tiptap/extension-file-handler": 3.30.2
@@ -84,18 +86,18 @@ minimumReleaseAgeExclude:
   - fastify@5.11.2
   - "@tanstack/charts-scales@0.8.0"
   - "@tanstack/charts@0.8.0"
-  - "@tanstack/router-core@1.171.20"
-  - "@tanstack/router-generator@1.167.26"
-  - "@tanstack/router-plugin@1.168.28"
+  - "@tanstack/router-core@1.171.27"
+  - "@tanstack/router-generator@1.167.33"
+  - "@tanstack/router-plugin@1.168.35"
   - "@tanstack/solid-charts@0.8.0"
-  - "@tanstack/solid-router@1.170.23"
-  - "@tanstack/solid-start-client@1.168.22"
-  - "@tanstack/solid-start-server@1.167.29"
-  - "@tanstack/solid-start@1.168.40"
-  - "@tanstack/start-client-core@1.170.20"
-  - "@tanstack/start-plugin-core@1.171.32"
-  - "@tanstack/start-server-core@1.169.24"
-  - "@tanstack/start-storage-context@1.167.22"
+  - "@tanstack/solid-router@1.170.30"
+  - "@tanstack/solid-start-client@1.168.29"
+  - "@tanstack/solid-start-server@1.167.36"
+  - "@tanstack/solid-start@1.168.47"
+  - "@tanstack/start-client-core@1.170.27"
+  - "@tanstack/start-plugin-core@1.171.39"
+  - "@tanstack/start-server-core@1.169.31"
+  - "@tanstack/start-storage-context@1.167.29"
   - lucide-solid@1.31.0
   - pg-protocol@1.16.0
   - pg@8.23.0

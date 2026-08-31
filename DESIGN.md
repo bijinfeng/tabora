@@ -235,7 +235,7 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 - Switch：表示二元启用/禁用设置，不用于执行一次性动作。
 - RadioGroup：3-5 个互斥选项。
 - Tabs：切换同一容器内的内容视图。
-- DropdownMenu / ContextMenu：承载尺寸、展开、移除等动作。危险动作要有明确样式。
+- DropdownMenu / ContextMenu：承载尺寸、展开、移除等动作。危险动作要有明确样式。DropdownMenu 宽度默认跟随内容并受视口限制，默认最小宽度为 `120px`，调用方可按场景覆盖，不统一写死固定宽度。
 - Dialog：模态确认或通知。危险确认使用 destructive 变体。
 - Drawer：设置、详情查看等需要保持上下文但需要更多空间的场景。
 - CommandPalette：`@tabora/ui` 可提供通用 primitive；Tabora 全局命令、搜索、卡片和 provider 切换入口由 shell 组合并持有状态。

@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest"
 import type { AiTextGateway } from "@tabora/ai-runtime/server"
 import type { AppEnv } from "./env"
-import { cloudAiGenerateResponse, cloudAiModelsResponse, cloudAiStreamResponse } from "./ai"
+import {
+  cloudAiGenerateResponse,
+  cloudAiModelsResponse,
+  cloudAiStreamResponse,
+  createCloudAiGateway,
+} from "./ai"
 
 const env: AppEnv = {
   host: "127.0.0.1",
@@ -13,9 +18,14 @@ const env: AppEnv = {
   authSecret: "test-secret",
   baseUrl: "http://127.0.0.1:4000",
   uploadsDir: "/tmp/tabora-ai-test",
-  aiBuiltinApiKey: "platform-secret",
-  aiBuiltinBaseUrl: "https://api.openai.com/v1",
-  aiBuiltinModels: ["platform-model"],
+  aiBuiltinProviders: [
+    {
+      id: "platform",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "platform-secret",
+      models: ["platform-model"],
+    },
+  ],
 }
 
 function runtime(sessionUserId: string | null) {
@@ -49,7 +59,7 @@ describe("cloud AI HTTP contract", () => {
 
     const response = await cloudAiGenerateResponse(
       testRuntime,
-      request({ provider: "builtin", modelId: "platform-model", prompt: "summarize" }),
+      request({ provider: "builtin", modelId: "platform:platform-model", prompt: "summarize" }),
       gateway as unknown as AiTextGateway,
     )
 
@@ -191,8 +201,59 @@ describe("cloud AI HTTP contract", () => {
       new Request("http://tabora.test/api/ai/models"),
     )
     expect(await response.json()).toEqual({
-      models: [{ id: "platform-model", label: "platform-model" }],
+      models: [{ id: "platform:platform-model", label: "platform · platform-model" }],
     })
+  })
+
+  it("lists and routes each built-in model through its configured provider", async () => {
+    const originalFetch = globalThis.fetch
+    const requests: Array<{ url: string; authorization: string | null }> = []
+    globalThis.fetch = async (input, init) => {
+      requests.push({
+        url:
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url,
+        authorization: new Headers(init?.headers).get("authorization"),
+      })
+      throw new Error("blocked provider request")
+    }
+    const multiProviderEnv: AppEnv = {
+      ...env,
+      aiBuiltinProviders: [
+        {
+          id: "openai",
+          baseUrl: "https://198.51.100.10/v1",
+          apiKey: "openai-secret",
+          models: ["gpt-test"],
+        },
+        {
+          id: "deepseek",
+          baseUrl: "https://198.51.100.20/v1",
+          apiKey: "deepseek-secret",
+          models: ["chat-test"],
+        },
+      ],
+    }
+    const gateway = createCloudAiGateway(multiProviderEnv)
+
+    try {
+      await expect(
+        gateway.generate({ provider: "builtin", modelId: "openai:gpt-test", prompt: "hello" }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+      await expect(
+        gateway.generate({ provider: "builtin", modelId: "deepseek:chat-test", prompt: "hello" }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+
+      expect(requests).toContainEqual({
+        url: "https://198.51.100.10/v1/chat/completions",
+        authorization: "Bearer openai-secret",
+      })
+      expect(requests).toContainEqual({
+        url: "https://198.51.100.20/v1/chat/completions",
+        authorization: "Bearer deepseek-secret",
+      })
+    } finally {
+      globalThis.fetch = originalFetch
+    }
   })
 
   it("uses the standardized SSE transport after authenticating built-in streams", async () => {
@@ -207,7 +268,7 @@ describe("cloud AI HTTP contract", () => {
 
     const response = await cloudAiStreamResponse(
       testRuntime,
-      request({ provider: "builtin", modelId: "platform-model", prompt: "summarize" }),
+      request({ provider: "builtin", modelId: "platform:platform-model", prompt: "summarize" }),
       gateway as unknown as AiTextGateway,
     )
 

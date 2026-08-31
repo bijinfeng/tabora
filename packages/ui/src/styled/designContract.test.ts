@@ -171,6 +171,9 @@ describe("styled component design contract", () => {
     expect(sharedStylesSource).toContain("color.line")
     expect(sharedStylesSource).toContain("color.danger")
     expect(dropdownMenuSource).toContain("sharedStyles.menuDanger")
+    expect(dropdownMenuSource).toMatch(
+      /content:\s*\{[^}]*maxWidth:\s*"calc\(100vw - 16px\)"[^}]*minWidth:\s*120[^}]*width:\s*"max-content"/,
+    )
     expect(contextMenuSource).toContain("sharedStyles.menuDanger")
 
     for (const source of [dialogSource, drawerSource, commandPaletteSource]) {
@@ -210,9 +213,12 @@ describe("styled component design contract", () => {
     expect(tagInputSource).toContain("padding: 0")
     expect(tagInputSource).toContain("color: color.accent")
     expect(tagInputSource).toContain("opacity: 0.7")
-    expect(selectSource).toContain("gap: 6")
+    expect(selectSource).toMatch(/trigger:\s*\{[^}]*gap:\s*4/)
     expect(selectSource).toContain("minWidth: 180")
-    expect(selectSource).toContain("paddingInline: 8")
+    expect(selectSource).toMatch(
+      /triggerMd:\s*\{[^}]*paddingInlineEnd:\s*8[^}]*paddingInlineStart:\s*12/,
+    )
+    expect(selectSource).toMatch(/icon:\s*\{[^}]*width:\s*12/)
     expect(selectSource).toMatch(
       /content:\s*\{[^}]*paddingBlock:\s*0[\s\S]*listbox:\s*\{[^}]*margin:\s*0/,
     )
