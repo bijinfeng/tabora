@@ -3,25 +3,6 @@ import * as stylex from "@stylexjs/stylex"
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
-  page: {
-    display: "flex",
-    flexDirection: "column",
-    gap: space.s5,
-    margin: "0 auto",
-    maxWidth: 1040,
-    width: "100%",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 0,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: font.semibold,
-    margin: 0,
-  },
   filters: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
@@ -108,19 +89,6 @@ export const styles = stylex.create({
     color: color.textMuted,
     fontSize: 13,
   },
-  cleanupSection: {
-    backgroundColor: color.surfaceSoft,
-    borderColor: color.line,
-    borderRadius: radius.card,
-    borderStyle: "solid",
-    borderWidth: 1,
-    padding: space.s4,
-  },
-  cleanupTitle: {
-    fontSize: 14,
-    fontWeight: font.semibold,
-    marginBottom: space.s3,
-  },
   cleanupForm: {
     display: "flex",
     flexWrap: "wrap",
@@ -130,6 +98,6 @@ export const styles = stylex.create({
   cleanupMessage: {
     color: color.textMuted,
     fontSize: 12,
-    marginTop: space.s2,
+    margin: 0,
   },
 })

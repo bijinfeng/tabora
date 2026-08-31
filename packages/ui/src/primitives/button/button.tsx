@@ -8,7 +8,7 @@ export type ButtonVariant =
   | "link"
   | "danger"
   | "danger-subtle"
-export type ButtonSize = "sm" | "md" | "lg"
+export type ButtonSize = "mini" | "sm" | "md" | "lg"
 export type ButtonShape = "default" | "circle" | "round"
 export type IconPlacement = "start" | "end"
 

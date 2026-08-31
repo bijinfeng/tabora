@@ -173,6 +173,7 @@ const styles = stylex.create({
     borderWidth: 0,
     boxSizing: "border-box",
     margin: 0,
+    maxHeight: 260,
     maxWidth: "100%",
     outline: "none",
     overflowX: "hidden",

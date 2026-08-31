@@ -148,6 +148,46 @@ export const schemaSpec: Record<string, TableSpec> = {
     indexes: [{ columns: ["status"] }, { columns: ["scheduledFor"] }],
   },
 
+  aiProvider: {
+    columns: {
+      id: { kind: "textPk" },
+      label: { kind: "text", notNull: true },
+      baseUrl: { kind: "text", notNull: true },
+      credentialCiphertext: { kind: "text" },
+      credentialNonce: { kind: "text" },
+      credentialKeyVersion: { kind: "int" },
+      credentialConfigured: { kind: "bool", notNull: true, default: false },
+      status: { kind: "text", notNull: true },
+      lastTestStatus: { kind: "text" },
+      lastTestAt: { kind: "timestamp" },
+      lastTestLatencyMs: { kind: "int" },
+      lastTestError: { kind: "text" },
+      createdAt: { kind: "timestamp", notNull: true },
+      updatedAt: { kind: "timestamp", notNull: true },
+    },
+    indexes: [{ columns: ["status"] }],
+  },
+  aiModel: {
+    columns: {
+      id: { kind: "textPk" },
+      providerId: {
+        kind: "text",
+        notNull: true,
+        references: { table: "aiProvider", column: "id" },
+      },
+      upstreamModelId: { kind: "text", notNull: true },
+      label: { kind: "text", notNull: true },
+      status: { kind: "text", notNull: true },
+      lastTestStatus: { kind: "text" },
+      lastTestAt: { kind: "timestamp" },
+      lastTestLatencyMs: { kind: "int" },
+      lastTestError: { kind: "text" },
+      createdAt: { kind: "timestamp", notNull: true },
+      updatedAt: { kind: "timestamp", notNull: true },
+    },
+    indexes: [{ columns: ["providerId"] }, { columns: ["status"] }],
+  },
+
   auditLog: {
     columns: {
       id: { kind: "autoPk" },

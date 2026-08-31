@@ -6,6 +6,7 @@ import { For, Show } from "solid-js"
 
 import { fetchSystemInfo } from "../../server/admin/system"
 import { fetchSyncedRecordStats } from "../../server/admin/syncedRecords"
+import { AdminPageLayout } from "../../components/AdminPageLayout"
 import { BarChart, type BarDatum } from "./charts/BarChart"
 import { ChartCard } from "./charts/ChartCard"
 import { chartStyles } from "./charts/charts.styles"
@@ -66,7 +67,7 @@ export function OverviewPage() {
   }
 
   return (
-    <div {...stylex.attrs(styles.page)}>
+    <AdminPageLayout title="概览" description="查看系统健康、关键指标与数据概览。">
       <section {...stylex.attrs(styles.section)}>
         <h2 {...stylex.attrs(styles.sectionTitle)}>系统健康</h2>
         <Show when={systemError()}>
@@ -161,6 +162,6 @@ export function OverviewPage() {
           </ChartCard>
         </div>
       </section>
-    </div>
+    </AdminPageLayout>
   )
 }

@@ -4,7 +4,10 @@ import { Pool } from "pg"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createDbQueries } from "./queryWiring"
 
-export function createPostgresDb(connectionString: string) {
+export function createPostgresDb(
+  connectionString: string,
+  modelCredentialEncryptionKey = "test-model-credential-encryption-key",
+) {
   const pool = new Pool({ connectionString })
   const schema = buildTables("pg")
   const db = drizzle(pool, { schema })
@@ -18,7 +21,7 @@ export function createPostgresDb(connectionString: string) {
     return Number(result.rows[0]?.value ?? 0)
   }
 
-  const queries = createDbQueries(db, schema)
+  const queries = createDbQueries(db, schema, modelCredentialEncryptionKey)
 
   return {
     db,

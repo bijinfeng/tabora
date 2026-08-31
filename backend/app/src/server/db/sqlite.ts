@@ -7,7 +7,10 @@ import { drizzle } from "drizzle-orm/better-sqlite3"
 import { buildDdl, buildTables } from "./schemaFactory"
 import { createDbQueries } from "./queryWiring"
 
-export function createSqliteDb(file: string) {
+export function createSqliteDb(
+  file: string,
+  modelCredentialEncryptionKey = "test-model-credential-encryption-key",
+) {
   if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true })
   const sqlite = new Database(file)
   sqlite.pragma("journal_mode = WAL")
@@ -23,7 +26,7 @@ export function createSqliteDb(file: string) {
     return Number(row.value)
   }
 
-  const queries = createDbQueries(db, schema)
+  const queries = createDbQueries(db, schema, modelCredentialEncryptionKey)
 
   return {
     db,

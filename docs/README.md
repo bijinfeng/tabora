@@ -43,6 +43,7 @@
 | 视觉与交互       | `DESIGN.md`                                                     | 修改 UI、token、布局视觉、组件语义、可访问性                               |
 | AI Agent Runtime | `docs/product/tabora-ai-agent-runtime-design.md`                | 判断 AI 基础设施、agent 协议、插件 AI 授权和 MVP 路线                      |
 | AI 对话插件      | `docs/product/tabora-ai-chat-plugin-prd.md`                     | 新增或修改 AI 对话插件、多轮对话协议和聊天 UI 时                           |
+| 后台模型管理    | `docs/product/tabora-admin-model-management-prd.md`             | 管理云端内置 AI provider、模型目录、凭据与发布状态时                       |
 | 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md` | 修改协议、runtime、storage、shell、包边界                                  |
 | 回归治理         | `docs/technical/tabora-regression-baseline.md`                  | 每轮迭代后选择回归层级、验证命令、报告模板                                 |
 | 测试治理         | `docs/technical/tabora-test-governance.md`                      | 盘点冗余测试、决定测试是否必要、审查测试变更                               |
@@ -66,6 +67,7 @@
 
 - `docs/product/tabora-ai-agent-runtime-design.md`
 - `docs/product/tabora-ai-chat-plugin-prd.md`
+- `docs/product/tabora-admin-model-management-prd.md`（仅云端内置模型管理）
 - `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 中的 AI Runtime P0 补充
 
 ### 技术实现

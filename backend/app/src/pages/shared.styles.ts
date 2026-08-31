@@ -8,8 +8,24 @@ export const shared = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space.s5,
-    margin: "0 auto",
-    maxWidth: 1040,
+    width: "100%",
+  },
+  pageHeader: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space.s2,
+  },
+  pageTitle: {
+    fontSize: 18,
+    fontWeight: font.semibold,
+    lineHeight: 1.2,
+    margin: 0,
+  },
+  pageDescription: {
+    color: color.textMuted,
+    fontSize: 13,
+    lineHeight: 1.45,
+    margin: 0,
   },
   formGrid: {
     display: "flex",
