@@ -1,8 +1,10 @@
+// @refresh reload
+
 import type { QueryClient } from "@tanstack/solid-query"
 import { QueryClientProvider } from "@tanstack/solid-query"
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/solid-router"
+import { Suspense, type JSX } from "solid-js"
 import { HydrationScript } from "solid-js/web"
-import type { JSX } from "solid-js"
 
 import "@tabora/theme/global.css"
 import "@tabora/ui/styles.css"
@@ -32,13 +34,11 @@ function RootDocument(props: { children: JSX.Element }) {
   return (
     <html lang="zh-CN">
       <head>
-        {/* Solid 1.9 的 hydration 引导脚本会直接写入 _$HY；先创建同名全局绑定以兼容严格执行上下文。 */}
-        <script>var _$HY = window._$HY;</script>
         <HydrationScript />
       </head>
       <body>
         <HeadContent />
-        {props.children}
+        <Suspense>{props.children}</Suspense>
         <Scripts />
       </body>
     </html>

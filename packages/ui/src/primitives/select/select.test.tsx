@@ -24,6 +24,26 @@ describe("Select", () => {
     const trigger = root.querySelector("button[aria-label='水果']")!
     expect(trigger.textContent).toContain("Apple")
   })
+
+  it("renders the label for a selected empty-string option", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Select<"">
+          value=""
+          options={[{ value: "", label: "全部类型" }]}
+          onChange={() => {}}
+          aria-label="按类型筛选"
+        />
+      ),
+      root,
+    )
+
+    const trigger = root.querySelector("button[aria-label='按类型筛选']")!
+    expect(trigger.textContent).toContain("全部类型")
+  })
+
   it("respects disabled", () => {
     const root = document.createElement("div")
     document.body.appendChild(root)

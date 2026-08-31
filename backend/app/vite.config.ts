@@ -16,7 +16,11 @@ export default defineConfig(({ command }) => ({
       dev: command === "serve",
       devMode: command === "serve" ? "full" : "off",
     }),
-    tanstackStart(),
+    tanstackStart({
+      spa: {
+        enabled: true,
+      },
+    }),
     solid({ ssr: true }),
     taboraBrandFavicon(),
   ],

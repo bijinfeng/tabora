@@ -1,15 +1,17 @@
 import { barX, defineChart, stack } from "@tanstack/charts"
 import { scaleBand } from "@tanstack/charts-scales/band"
 import { scaleLinear } from "@tanstack/charts-scales/linear"
-import { Chart } from "@tanstack/solid-charts"
-import { createMemo } from "solid-js"
+import { createMemo, createSignal, onMount, Show } from "solid-js"
+import { Dynamic } from "solid-js/web"
 
 import { chartColor } from "./palette"
 
 type Row = { group: string; state: string; count: number }
+type SolidChart = typeof import("@tanstack/solid-charts").Chart
 
 /** 活跃 vs 已删除（tombstone）占比：单条水平堆叠条。 */
 export function RecordStateChart(props: { total: number; tombstones: number }) {
+  const [Chart, setChart] = createSignal<SolidChart>()
   const rows = createMemo<Row[]>(() => {
     const active = Math.max(0, props.total - props.tombstones)
     return [
@@ -38,5 +40,21 @@ export function RecordStateChart(props: { total: number; tombstones: number }) {
     }),
   )
 
-  return <Chart definition={definition()} height={120} ariaLabel="活跃与已删除记录占比条" />
+  onMount(async () => {
+    const { Chart } = await import("@tanstack/solid-charts")
+    setChart(() => Chart)
+  })
+
+  return (
+    <Show when={Chart()}>
+      {(ChartComponent) => (
+        <Dynamic
+          component={ChartComponent()}
+          definition={definition()}
+          height={120}
+          ariaLabel="活跃与已删除记录占比条"
+        />
+      )}
+    </Show>
+  )
 }

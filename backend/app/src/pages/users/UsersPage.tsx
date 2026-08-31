@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
-import { Button } from "@tabora/ui/button"
+import { Button, IconButton } from "@tabora/ui/button"
 import { DropdownMenu } from "@tabora/ui/dropdown-menu"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
@@ -189,7 +189,7 @@ function RowActions(props: { user: AdminUser; handlers: ColumnHandlers }) {
   ]
   return (
     <div {...stylex.attrs(shared.actionCell)}>
-      <DropdownMenu items={items} align="end" triggerAriaLabel="用户操作">
+      <DropdownMenu items={items} align="end" triggerAs={IconButton} triggerAriaLabel="用户操作">
         <MoreHorizontal size={16} />
       </DropdownMenu>
     </div>

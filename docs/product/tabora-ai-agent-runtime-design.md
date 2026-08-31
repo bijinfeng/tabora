@@ -38,6 +38,8 @@ P0 阶段采用 **Tabora 自有协议 + 服务端 TanStack AI gateway**：
 
 云端内置模型由平台服务端统一配置和付费，必须通过 Tabora 登录态调用。Web 与 Extension 也可选择本机保存的自定义 OpenAI-compatible provider；其密钥只随单次请求临时转发到 gateway，不持久化到云端且不参与同步。FNOS 不提供内置模型，只使用设备管理员共享的自定义 provider，允许连接 localhost 或局域网模型。
 
+云端服务使用 `TABORA_AI_BUILTIN_PROVIDERS` 配置内置 provider：它是一个 JSON 数组，每项都必须包含唯一的 `id`、OpenAI-compatible `baseUrl`、`apiKey` 和非空 `models` 数组。例如 `[{"id":"openai","baseUrl":"https://api.openai.com/v1","apiKey":"…","models":["gpt-4.1-mini"]},{"id":"deepseek","baseUrl":"https://api.deepseek.com/v1","apiKey":"…","models":["deepseek-chat"]}]`。设置和请求中使用的内置模型 ID 为 `providerId:modelId`（例如 `deepseek:deepseek-chat`），因此不同 provider 的同名模型不会发生路由冲突。原 `TABORA_AI_API_KEY`、`TABORA_AI_BASE_URL` 与 `TABORA_AI_MODELS` 已移除；服务检测到它们会在启动时给出迁移错误。
+
 ## 2. 产品原则
 
 ### 2.1 平台提供基础设施

@@ -1,8 +1,10 @@
 import { barY, defineChart } from "@tanstack/charts"
 import { scaleBand } from "@tanstack/charts-scales/band"
 import { scaleLinear } from "@tanstack/charts-scales/linear"
-import { Chart } from "@tanstack/solid-charts"
-import { createMemo } from "solid-js"
+import { createMemo, createSignal, onMount, Show } from "solid-js"
+import { Dynamic } from "solid-js/web"
+
+type SolidChart = typeof import("@tanstack/solid-charts").Chart
 
 export type BarDatum = { label: string; value: number; color?: string }
 
@@ -13,6 +15,7 @@ export function BarChart(props: {
   ariaLabel: string
   height?: number
 }) {
+  const [Chart, setChart] = createSignal<SolidChart>()
   const definition = createMemo(() =>
     defineChart({
       marks: [barY(props.rows, { x: "label", y: "value", fill: props.fill, radius: 4 })],
@@ -21,7 +24,21 @@ export function BarChart(props: {
     }),
   )
 
+  onMount(async () => {
+    const { Chart } = await import("@tanstack/solid-charts")
+    setChart(() => Chart)
+  })
+
   return (
-    <Chart definition={definition()} height={props.height ?? 240} ariaLabel={props.ariaLabel} />
+    <Show when={Chart()}>
+      {(ChartComponent) => (
+        <Dynamic
+          component={ChartComponent()}
+          definition={definition()}
+          height={props.height ?? 240}
+          ariaLabel={props.ariaLabel}
+        />
+      )}
+    </Show>
   )
 }

@@ -241,6 +241,7 @@ export function Select<V extends string>(props: SelectProps<V>) {
       optionValue="value"
       optionTextValue="label"
       optionDisabled="disabled"
+      placeholder={selectedOption()?.label ?? local.placeholder}
       disabled={local.disabled ?? false}
       itemComponent={itemComponent}
     >
