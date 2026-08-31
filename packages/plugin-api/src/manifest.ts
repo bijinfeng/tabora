@@ -241,6 +241,8 @@ export type WidgetViewProps = {
       },
     ): void
     openExternal(url: string): Promise<boolean>
+    /** Read-only snapshot of the workspace AI settings; present only when the host wired it. */
+    getAiSettings?(): Promise<SettingsAiSettings>
   }
 }
 

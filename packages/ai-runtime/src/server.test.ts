@@ -60,6 +60,37 @@ describe("AI gateway request contract", () => {
     })
   })
 
+  it("carries per-conversation run options from forwardedProps", () => {
+    expect(
+      parseAiGatewayRequest({
+        messages: [{ id: "m1", role: "user", content: "summarize this" }],
+        forwardedProps: {
+          provider: "builtin",
+          modelId: "platform-text",
+          temperature: 0.4,
+          maxOutputTokens: 512,
+          reasoningEffort: "high",
+        },
+      }),
+    ).toEqual({
+      provider: "builtin",
+      modelId: "platform-text",
+      temperature: 0.4,
+      maxOutputTokens: 512,
+      reasoningEffort: "high",
+      messages: [{ role: "user", text: "summarize this" }],
+    })
+  })
+
+  it("rejects an invalid reasoning effort", () => {
+    expect(() =>
+      parseAiGatewayRequest({
+        messages: [{ id: "m1", role: "user", content: "hi" }],
+        forwardedProps: { provider: "builtin", reasoningEffort: "extreme" },
+      }),
+    ).toThrow(AiRuntimeError)
+  })
+
   it("rejects chat envelopes that are malformed or out of bounds", () => {
     const envelope = {
       messages: [
@@ -129,6 +160,36 @@ describe("AI gateway request contract", () => {
         { role: "assistant", content: "hello" },
         { role: "user", content: "summarize this" },
       ])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it("forwards per-conversation run options into the provider request body", async () => {
+    const originalFetch = globalThis.fetch
+    let requestBody: Record<string, unknown> | undefined
+    globalThis.fetch = async (_input, init) => {
+      requestBody = requestJson(init)
+      throw new Error("blocked provider request")
+    }
+    const gateway = createTanstackAiGateway()
+
+    try {
+      await expect(
+        gateway.generate({
+          provider: "custom",
+          custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+          messages: [{ role: "user", text: "summarize this" }],
+          temperature: 0.4,
+          maxOutputTokens: 512,
+          reasoningEffort: "high",
+        }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+      expect(requestBody).toMatchObject({
+        temperature: 0.4,
+        max_output_tokens: 512,
+        reasoning_effort: "high",
+      })
     } finally {
       globalThis.fetch = originalFetch
     }

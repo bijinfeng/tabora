@@ -12,6 +12,7 @@ import type { UIMessage } from "@tanstack/ai-client"
 import { officialPluginAiChatManifest } from "./manifest"
 import { officialPluginAiChat } from "./index"
 import { AiChatCard } from "./ai-chat-card"
+import { AiChatExpand } from "./ai-chat-expand"
 import {
   aiChatErrorCopy,
   getAiChatSession,
@@ -286,7 +287,7 @@ describe("getAiChatSession", () => {
     })
   })
 
-  it("sends per-conversation system prompt and temperature", async () => {
+  it("sends per-conversation run options and composed context", async () => {
     const bodies: Array<Record<string, unknown>> = []
     setAiChatRuntime({
       generate: async () => ({ text: "" }),
@@ -313,13 +314,41 @@ describe("getAiChatSession", () => {
     session.updateConversationOptions(session.activeId()!, {
       systemPrompt: "你是一名严谨的编辑",
       temperature: 0.3,
+      modelId: "custom-model",
+      reasoningEffort: "high",
+      maxOutputTokens: 512,
+      contextBlocks: [{ id: "c1", label: "写作规范", text: "使用简体中文" }],
     })
     await session.send("检查这段文字")
 
     expect(bodies[0]).toMatchObject({
-      system: "你是一名严谨的编辑",
       temperature: 0.3,
+      modelId: "custom-model",
+      reasoningEffort: "high",
+      maxOutputTokens: 512,
     })
+    expect(bodies[0]?.system).toContain("你是一名严谨的编辑")
+    expect(bodies[0]?.system).toContain("写作规范")
+    expect(bodies[0]?.system).toContain("使用简体中文")
+  })
+
+  it("clears a per-conversation option when set back to undefined", async () => {
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => echoConnection(),
+    })
+
+    const session = getAiChatSession({ instanceId: "session-clear", data: makeDataStore().data })
+    await waitForLoaded(session)
+    session.createConversation()
+    const id = session.activeId()!
+    session.updateConversationOptions(id, { reasoningEffort: "high", modelId: "custom-model" })
+    session.updateConversationOptions(id, { reasoningEffort: undefined, modelId: "" })
+
+    const conversation = session.conversations().find((entry) => entry.id === id)!
+    expect(conversation.reasoningEffort).toBeUndefined()
+    expect(conversation.modelId).toBeUndefined()
   })
 
   it("edits the last user message and regenerates from it", async () => {
@@ -431,6 +460,63 @@ describe("AiChatCard", () => {
     document.body.appendChild(root)
     render(() => <AiChatCard {...makeProps({ size: "S" })} />, root)
     expect(root.textContent).toContain("点击展开完整对话")
+    root.remove()
+  })
+})
+
+describe("AiChatExpand composer controls", () => {
+  it("renders the run-option chips reflecting the active conversation", async () => {
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => echoConnection(),
+    })
+    const { data } = makeDataStore()
+    const session = getAiChatSession({ instanceId: "expand-chips", data })
+    await waitForLoaded(session)
+    session.createConversation()
+    session.updateConversationOptions(session.activeId()!, {
+      modelId: "model-b",
+      reasoningEffort: "high",
+      maxOutputTokens: 2048,
+      contextBlocks: [{ id: "c1", label: "写作规范", text: "使用简体中文" }],
+    })
+
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <AiChatExpand
+          {...makeWidgetViewProps({
+            instanceId: "expand-chips",
+            pluginId: "official.widgets.ai-chat",
+            contributionId: "ai-chat",
+            size: "L",
+            data,
+            host: {
+              getAiSettings: async () => ({
+                activeProvider: "builtin",
+                builtin: {
+                  status: "available",
+                  modelId: "model-a",
+                  models: [
+                    { id: "model-a", label: "模型 A" },
+                    { id: "model-b", label: "模型 B" },
+                  ],
+                },
+                custom: { baseUrl: "", model: "", apiKeyConfigured: false },
+              }),
+            },
+          })}
+        />
+      ),
+      root,
+    )
+
+    await vi.waitFor(() => expect(root.textContent).toContain("模型 B"))
+    expect(root.textContent).toContain("深度")
+    expect(root.textContent).toContain("2K")
+    expect(root.textContent).toContain("添加上下文 · 1")
     root.remove()
   })
 })

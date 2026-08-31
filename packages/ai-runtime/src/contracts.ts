@@ -7,6 +7,9 @@ import type {
 
 export type AiProviderMode = "builtin" | "custom"
 
+/** Reasoning effort forwarded to providers that support it; unset uses the model default. */
+export type AiReasoningEffort = "low" | "medium" | "high"
+
 export type AiCustomProviderConfig = {
   baseUrl: string
   apiKey: string
@@ -22,6 +25,7 @@ export type AiGatewayRequest = Pick<
   provider: AiProviderMode
   modelId?: string
   custom?: AiCustomProviderConfig
+  reasoningEffort?: AiReasoningEffort
   /** Multi-turn conversation history ending with a user message. Mutually exclusive with `prompt`. */
   messages?: AiChatMessage[]
 }

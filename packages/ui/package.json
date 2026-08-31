@@ -36,6 +36,7 @@
     "./select": "./src/select.ts",
     "./skeleton": "./src/skeleton.ts",
     "./slider": "./src/slider.ts",
+    "./spinner": "./src/spinner.ts",
     "./stepper": "./src/stepper.ts",
     "./steps": "./src/steps.ts",
     "./styles.css": "./src/styles.css",
@@ -82,6 +83,7 @@
       "./select": "./dist/select.js",
       "./skeleton": "./dist/skeleton.js",
       "./slider": "./dist/slider.js",
+      "./spinner": "./dist/spinner.js",
       "./stepper": "./dist/stepper.js",
       "./steps": "./dist/steps.js",
       "./styles.css": "./dist/styles.css",
@@ -95,7 +97,7 @@
     }
   },
   "scripts": {
-    "build": "vp pack src/index.ts src/component-docs/index.ts src/component-docs/renderers.tsx src/badge.ts src/dialog.ts src/drawer.ts src/button.ts src/checkbox.ts src/collapsible.ts src/command-palette.ts src/command-result-list.ts src/context-menu.ts src/date-picker.ts src/divider.ts src/dropdown-menu.ts src/empty-state.ts src/field.ts src/field-row.ts src/form.ts src/hover-card.ts src/inline-error.ts src/input.ts src/kbd.ts src/list-row.ts src/menubar.ts src/pagination.ts src/popover.ts src/scroll-area.ts src/segmented-control.ts src/select.ts src/skeleton.ts src/slider.ts src/stepper.ts src/steps.ts src/switch.ts src/table.ts src/tabs.ts src/tag.ts src/textarea.ts src/toast.ts src/tree-view.ts",
+    "build": "vp pack src/index.ts src/component-docs/index.ts src/component-docs/renderers.tsx src/badge.ts src/dialog.ts src/drawer.ts src/button.ts src/checkbox.ts src/collapsible.ts src/command-palette.ts src/command-result-list.ts src/context-menu.ts src/date-picker.ts src/divider.ts src/dropdown-menu.ts src/empty-state.ts src/field.ts src/field-row.ts src/form.ts src/hover-card.ts src/inline-error.ts src/input.ts src/kbd.ts src/list-row.ts src/menubar.ts src/pagination.ts src/popover.ts src/scroll-area.ts src/segmented-control.ts src/select.ts src/skeleton.ts src/slider.ts src/spinner.ts src/stepper.ts src/steps.ts src/switch.ts src/table.ts src/tabs.ts src/tag.ts src/textarea.ts src/toast.ts src/tree-view.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

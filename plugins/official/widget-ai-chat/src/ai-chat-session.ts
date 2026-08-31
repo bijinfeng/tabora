@@ -40,6 +40,14 @@ export type AiChatStoredMessage = {
   parts: [{ type: "text"; text: string }]
 }
 
+export type AiChatContextBlock = {
+  id: string
+  label: string
+  text: string
+}
+
+export type AiChatReasoningEffort = "low" | "medium" | "high"
+
 export type AiChatStoredConversation = {
   id: string
   title: string
@@ -50,9 +58,26 @@ export type AiChatStoredConversation = {
   systemPrompt?: string
   /** Per-conversation sampling temperature override. */
   temperature?: number
+  /** Per-conversation builtin model id; empty falls back to the workspace default. */
+  modelId?: string
+  /** Per-conversation reasoning strength for capable models. */
+  reasoningEffort?: AiChatReasoningEffort
+  /** Per-conversation output cap; also drives the context-capacity control. */
+  maxOutputTokens?: number
+  /** Extra context blocks appended to the system prompt for this conversation. */
+  contextBlocks?: AiChatContextBlock[]
   createdAt: string
   updatedAt: string
   messages: AiChatStoredMessage[]
+}
+
+export type AiChatConversationOptions = {
+  systemPrompt?: string
+  temperature?: number | undefined
+  modelId?: string | undefined
+  reasoningEffort?: AiChatReasoningEffort | undefined
+  maxOutputTokens?: number | undefined
+  contextBlocks?: AiChatContextBlock[]
 }
 
 export type AiChatConversationMeta = {
@@ -62,6 +87,10 @@ export type AiChatConversationMeta = {
   updatedAt: string
   systemPrompt?: string
   temperature?: number
+  modelId?: string
+  reasoningEffort?: AiChatReasoningEffort
+  maxOutputTokens?: number
+  contextBlocks?: AiChatContextBlock[]
 }
 
 export type AiChatSession = {
@@ -79,10 +108,7 @@ export type AiChatSession = {
   switchConversation(id: string): void
   renameConversation(id: string, title: string): void
   deleteConversation(id: string): void
-  updateConversationOptions(
-    id: string,
-    options: { systemPrompt?: string; temperature?: number | undefined },
-  ): void
+  updateConversationOptions(id: string, options: AiChatConversationOptions): void
   /** Replace the last user message and regenerate the reply from it. */
   editLastUserMessage(text: string): Promise<void>
 }
@@ -171,6 +197,34 @@ export function trimHistory(history: UIMessage[]): UIMessage[] | undefined {
     start += 1
   }
   return start === 0 ? undefined : history.slice(start)
+}
+
+function composeSystemPrompt(conversation: AiChatStoredConversation): string {
+  const base = conversation.systemPrompt?.trim() || CHAT_SYSTEM_PROMPT
+  const contextBlocks = conversation.contextBlocks ?? []
+  if (contextBlocks.length === 0) return base
+  const rendered = contextBlocks
+    .map((block) => `# ${block.label.trim() || "上下文"}\n${block.text.trim()}`)
+    .join("\n\n")
+  return `${base}\n\n以下是本次对话的附加上下文：\n\n${rendered}`
+}
+
+export function buildSendOptions(conversation: AiChatStoredConversation): {
+  system: string
+  temperature?: number
+  maxOutputTokens?: number
+  modelId?: string
+  reasoningEffort?: AiChatReasoningEffort
+} {
+  return {
+    system: composeSystemPrompt(conversation),
+    ...(conversation.temperature === undefined ? {} : { temperature: conversation.temperature }),
+    ...(conversation.maxOutputTokens === undefined
+      ? {}
+      : { maxOutputTokens: conversation.maxOutputTokens }),
+    ...(conversation.modelId ? { modelId: conversation.modelId } : {}),
+    ...(conversation.reasoningEffort ? { reasoningEffort: conversation.reasoningEffort } : {}),
+  }
 }
 
 /**
@@ -330,6 +384,12 @@ export function getAiChatSession(options: {
       updatedAt: conversation.updatedAt,
       ...(conversation.systemPrompt ? { systemPrompt: conversation.systemPrompt } : {}),
       ...(conversation.temperature !== undefined ? { temperature: conversation.temperature } : {}),
+      ...(conversation.modelId ? { modelId: conversation.modelId } : {}),
+      ...(conversation.reasoningEffort ? { reasoningEffort: conversation.reasoningEffort } : {}),
+      ...(conversation.maxOutputTokens !== undefined
+        ? { maxOutputTokens: conversation.maxOutputTokens }
+        : {}),
+      ...(conversation.contextBlocks?.length ? { contextBlocks: conversation.contextBlocks } : {}),
     }
   }
 
@@ -373,12 +433,7 @@ export function getAiChatSession(options: {
       const trimmed = trimHistory(client.getMessages())
       if (trimmed) client.setMessagesManually(trimmed)
       setHistoryTrimmed(Boolean(trimmed))
-      return client.sendMessage(text, {
-        system: conversation.systemPrompt?.trim() || CHAT_SYSTEM_PROMPT,
-        ...(conversation.temperature === undefined
-          ? {}
-          : { temperature: conversation.temperature }),
-      })
+      return client.sendMessage(text, buildSendOptions(conversation))
     },
 
     stop() {
@@ -446,8 +501,6 @@ export function getAiChatSession(options: {
     },
 
     updateConversationOptions(id, conversationOptions) {
-      const systemPrompt = conversationOptions.systemPrompt?.trim() ?? ""
-      const temperature = conversationOptions.temperature
       setStore((list) =>
         list.map((conversation) => {
           if (conversation.id !== id) return conversation
@@ -455,10 +508,33 @@ export function getAiChatSession(options: {
             ...conversation,
             updatedAt: new Date().toISOString(),
           }
-          if (systemPrompt) next.systemPrompt = systemPrompt
-          else delete next.systemPrompt
-          if (temperature === undefined) delete next.temperature
-          else next.temperature = temperature
+          if ("systemPrompt" in conversationOptions) {
+            const prompt = conversationOptions.systemPrompt?.trim() ?? ""
+            if (prompt) next.systemPrompt = prompt
+            else delete next.systemPrompt
+          }
+          if ("temperature" in conversationOptions) {
+            if (conversationOptions.temperature === undefined) delete next.temperature
+            else next.temperature = conversationOptions.temperature
+          }
+          if ("modelId" in conversationOptions) {
+            const modelId = conversationOptions.modelId?.trim() ?? ""
+            if (modelId) next.modelId = modelId
+            else delete next.modelId
+          }
+          if ("reasoningEffort" in conversationOptions) {
+            if (conversationOptions.reasoningEffort === undefined) delete next.reasoningEffort
+            else next.reasoningEffort = conversationOptions.reasoningEffort
+          }
+          if ("maxOutputTokens" in conversationOptions) {
+            if (conversationOptions.maxOutputTokens === undefined) delete next.maxOutputTokens
+            else next.maxOutputTokens = conversationOptions.maxOutputTokens
+          }
+          if ("contextBlocks" in conversationOptions) {
+            const blocks = conversationOptions.contextBlocks ?? []
+            if (blocks.length > 0) next.contextBlocks = blocks
+            else delete next.contextBlocks
+          }
           return next
         }),
       )

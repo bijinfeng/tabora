@@ -1,4 +1,9 @@
-import type { PluginInstance, WidgetSize, WidgetViewProps } from "@tabora/plugin-api"
+import type {
+  PluginInstance,
+  SettingsAiSettings,
+  WidgetSize,
+  WidgetViewProps,
+} from "@tabora/plugin-api"
 import type { ToastOptions } from "@tabora/orchestrator"
 import type { JSX } from "solid-js"
 
@@ -28,6 +33,7 @@ type BuildWorkbenchWidgetViewPropsOptions = {
   openWidgetExpand: (instance: PluginInstance) => void
   showToast: (message: string, options?: ToastOptions) => void
   openExternalForPlugin: (pluginId: string, url: string) => Promise<boolean> | boolean
+  getAiSettings?: () => Promise<SettingsAiSettings>
 }
 
 export function createWorkbenchScopedData(options: {
@@ -111,6 +117,7 @@ export function buildWorkbenchWidgetViewProps(
       async openExternal(url) {
         return options.openExternalForPlugin(options.instance.contribution.pluginId, url)
       },
+      ...(options.getAiSettings ? { getAiSettings: options.getAiSettings } : {}),
     },
   }
 }
