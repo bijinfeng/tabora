@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import { createEffect, createSignal, For, Show } from "solid-js"
+import { createEffect, createResource, createSignal, For, Show } from "solid-js"
 import { onMount } from "solid-js"
 import type { JSX } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
@@ -7,10 +7,18 @@ import { ChatMessage } from "@tanstack/ai-solid-ui"
 import { Button, IconButton } from "@tabora/ui/button"
 import { Dialog } from "@tabora/ui/dialog"
 import { Drawer } from "@tabora/ui/drawer"
+import type { DropdownMenuTriggerRenderProps } from "@tabora/ui/dropdown-menu"
+import { DropdownMenu } from "@tabora/ui/dropdown-menu"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
+import { Spinner } from "@tabora/ui/spinner"
 import { Textarea } from "@tabora/ui/textarea"
+import Brain from "lucide-solid/icons/brain"
+import Cpu from "lucide-solid/icons/cpu"
+import Ellipsis from "lucide-solid/icons/ellipsis"
+import FileText from "lucide-solid/icons/file-text"
+import Gauge from "lucide-solid/icons/gauge"
 import MessageSquare from "lucide-solid/icons/message-square"
 import Pencil from "lucide-solid/icons/pencil"
 import Plus from "lucide-solid/icons/plus"
@@ -18,6 +26,7 @@ import Send from "lucide-solid/icons/send"
 import Settings2 from "lucide-solid/icons/settings-2"
 import Square from "lucide-solid/icons/square"
 import Trash2 from "lucide-solid/icons/trash-2"
+import X from "lucide-solid/icons/x"
 import { onCleanup } from "solid-js"
 import {
   aiChatErrorCopy,
@@ -26,9 +35,35 @@ import {
   messageText,
   registerAiChatView,
 } from "./ai-chat-session"
-import type { AiChatConversationMeta, AiChatSession } from "./ai-chat-session"
+import type {
+  AiChatContextBlock,
+  AiChatConversationMeta,
+  AiChatReasoningEffort,
+  AiChatSession,
+} from "./ai-chat-session"
 import { AssistantMarkdown } from "./ai-chat-markdown"
 import { styles } from "./styles"
+
+const REASONING_LABELS: Record<AiChatReasoningEffort, string> = {
+  low: "轻度",
+  medium: "中度",
+  high: "深度",
+}
+
+const CONTEXT_CAPACITY_PRESETS: Array<{ value: number | undefined; label: string; hint: string }> =
+  [
+    { value: undefined, label: "自动", hint: "由模型默认上限决定" },
+    { value: 1024, label: "1K", hint: "简短问答" },
+    { value: 2048, label: "2K", hint: "常规对话" },
+    { value: 4096, label: "4K", hint: "较长回答" },
+    { value: 8192, label: "8K", hint: "长文分析" },
+  ]
+
+function newContextId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `ctx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -42,14 +77,45 @@ function formatRelativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString()
 }
 
+function ComposerChip(props: {
+  trigger: DropdownMenuTriggerRenderProps
+  label: string
+  icon?: JSX.Element
+}) {
+  const trigger = () => props.trigger
+  return (
+    <button
+      type="button"
+      {...stylex.attrs(styles.composerChip)}
+      ref={trigger().ref}
+      disabled={trigger().disabled}
+      aria-haspopup={trigger()["aria-haspopup"] ? "menu" : undefined}
+      aria-expanded={trigger()["aria-expanded"]}
+      aria-controls={trigger()["aria-controls"]}
+      aria-label={trigger()["aria-label"]}
+      title={trigger().title}
+      data-open={trigger()["data-open"]}
+      data-closed={trigger()["data-closed"]}
+      data-kb-menu-value-trigger={trigger()["data-kb-menu-value-trigger"]}
+      onPointerDown={trigger().onPointerDown}
+      onKeyDown={trigger().onKeyDown}
+      onMouseOver={trigger().onMouseOver}
+      onFocus={trigger().onFocus}
+    >
+      {props.icon}
+      <span>{props.label}</span>
+    </button>
+  )
+}
+
 function ConversationList(props: {
   session: AiChatSession
   onPick?: () => void
   onRename: (conversation: AiChatConversationMeta) => void
   onDelete: (conversation: AiChatConversationMeta) => void
   onOptions: (conversation: AiChatConversationMeta) => void
-  compact?: boolean
 }) {
+  const [hoveredId, setHoveredId] = createSignal<string | null>(null)
   return (
     <>
       <div {...stylex.attrs(styles.sideHead)}>
@@ -78,6 +144,8 @@ function ConversationList(props: {
                   styles.conversationRow,
                   conversation.id === props.session.activeId() && styles.conversationRowActive,
                 )}
+                onMouseEnter={() => setHoveredId(conversation.id)}
+                onMouseLeave={() => setHoveredId(null)}
               >
                 <button
                   type="button"
@@ -89,44 +157,90 @@ function ConversationList(props: {
                   aria-label={`切换到对话 ${conversation.title}`}
                 >
                   <span {...stylex.attrs(styles.conversationTitle)}>{conversation.title}</span>
-                  <Show
-                    when={!props.compact}
-                    fallback={
-                      <span {...stylex.attrs(styles.conversationMeta)}>
-                        {conversation.messageCount} 条
-                      </span>
-                    }
-                  >
-                    <span {...stylex.attrs(styles.conversationMeta)}>
-                      {conversation.messageCount} 条 · {formatRelativeTime(conversation.updatedAt)}
-                    </span>
-                  </Show>
+                  <span {...stylex.attrs(styles.conversationMeta)}>
+                    {formatRelativeTime(conversation.updatedAt)}
+                  </span>
                 </button>
-                <span {...stylex.attrs(styles.conversationActions)}>
-                  <IconButton
-                    size="sm"
-                    variant="ghost"
-                    aria-label={`对话设置 ${conversation.title}`}
-                    onClick={() => props.onOptions(conversation)}
+                <span
+                  {...stylex.attrs(
+                    styles.conversationActions,
+                    hoveredId() === conversation.id && styles.conversationActionsVisible,
+                  )}
+                >
+                  <DropdownMenu
+                    items={[
+                      {
+                        id: `${conversation.id}-options`,
+                        label: "对话设置",
+                        icon: <Settings2 size={14} />,
+                        onClick: () => props.onOptions(conversation),
+                      },
+                      {
+                        id: `${conversation.id}-rename`,
+                        label: "重命名",
+                        icon: <Pencil size={14} />,
+                        onClick: () => props.onRename(conversation),
+                      },
+                      { id: `${conversation.id}-separator`, label: <></>, separator: true },
+                      {
+                        id: `${conversation.id}-delete`,
+                        label: "删除",
+                        icon: <Trash2 size={14} />,
+                        danger: true,
+                        onClick: () => props.onDelete(conversation),
+                      },
+                    ]}
+                    side="bottom"
+                    align="end"
+                    triggerAsChild={true}
+                    triggerAriaLabel={`对话操作 ${conversation.title}`}
+                    triggerTitle="对话操作"
                   >
-                    <Settings2 size={12} />
-                  </IconButton>
-                  <IconButton
-                    size="sm"
-                    variant="ghost"
-                    aria-label={`重命名对话 ${conversation.title}`}
-                    onClick={() => props.onRename(conversation)}
-                  >
-                    <Pencil size={12} />
-                  </IconButton>
-                  <IconButton
-                    size="sm"
-                    variant="ghost"
-                    aria-label={`删除对话 ${conversation.title}`}
-                    onClick={() => props.onDelete(conversation)}
-                  >
-                    <Trash2 size={12} />
-                  </IconButton>
+                    {(trigger: DropdownMenuTriggerRenderProps) => {
+                      const triggerProps = {
+                        ...(trigger.ref !== undefined ? { ref: trigger.ref } : {}),
+                        ...(trigger.disabled !== undefined ? { disabled: trigger.disabled } : {}),
+                        ...(trigger["aria-haspopup"] !== undefined
+                          ? { "aria-haspopup": "menu" as const }
+                          : {}),
+                        ...(trigger["aria-expanded"] !== undefined
+                          ? { "aria-expanded": trigger["aria-expanded"] }
+                          : {}),
+                        ...(trigger["aria-controls"] !== undefined
+                          ? { "aria-controls": trigger["aria-controls"] }
+                          : {}),
+                        ...(trigger["data-open"] !== undefined
+                          ? { "data-open": trigger["data-open"] }
+                          : {}),
+                        ...(trigger["data-closed"] !== undefined
+                          ? { "data-closed": trigger["data-closed"] }
+                          : {}),
+                        ...(trigger["data-kb-menu-value-trigger"] !== undefined
+                          ? { "data-kb-menu-value-trigger": trigger["data-kb-menu-value-trigger"] }
+                          : {}),
+                        ...(trigger.onPointerDown !== undefined
+                          ? { onPointerDown: trigger.onPointerDown }
+                          : {}),
+                        ...(trigger.onKeyDown !== undefined
+                          ? { onKeyDown: trigger.onKeyDown }
+                          : {}),
+                        ...(trigger.onMouseOver !== undefined
+                          ? { onMouseOver: trigger.onMouseOver }
+                          : {}),
+                        ...(trigger.onFocus !== undefined ? { onFocus: trigger.onFocus } : {}),
+                      }
+                      return (
+                        <IconButton
+                          {...triggerProps}
+                          size="sm"
+                          variant="ghost"
+                          aria-label={`对话操作 ${conversation.title}`}
+                        >
+                          <Ellipsis size={14} />
+                        </IconButton>
+                      )
+                    }}
+                  </DropdownMenu>
                 </span>
               </div>
             )}
@@ -149,6 +263,68 @@ export function AiChatExpand(props: WidgetViewProps) {
   const [temperatureDraft, setTemperatureDraft] = createSignal("")
   const [temperatureInvalid, setTemperatureInvalid] = createSignal(false)
   const [editing, setEditing] = createSignal(false)
+  const [elapsed, setElapsed] = createSignal(0)
+  const [contextEditor, setContextEditor] = createSignal(false)
+  const [contextLabel, setContextLabel] = createSignal("")
+  const [contextText, setContextText] = createSignal("")
+
+  const getAiSettings = props.host.getAiSettings?.bind(props.host)
+  const [aiSettings] = createResource(
+    () => (getAiSettings ? "load" : null),
+    () => getAiSettings!(),
+  )
+
+  const activeConversation = () =>
+    session.conversations().find((conversation) => conversation.id === session.activeId())
+
+  const defaultModelId = () => aiSettings()?.builtin.modelId ?? ""
+  const modelChoices = () => aiSettings()?.builtin.models ?? []
+  const activeModelId = () => activeConversation()?.modelId || defaultModelId()
+  const activeModelLabel = () => {
+    const id = activeModelId()
+    return modelChoices().find((model) => model.id === id)?.label ?? id ?? "默认模型"
+  }
+  const activeReasoning = (): AiChatReasoningEffort | undefined =>
+    activeConversation()?.reasoningEffort
+  const activeCapacity = () => activeConversation()?.maxOutputTokens
+  const activeCapacityLabel = () =>
+    CONTEXT_CAPACITY_PRESETS.find((preset) => preset.value === activeCapacity())?.label ?? "自动"
+  const activeContextCount = () => activeConversation()?.contextBlocks?.length ?? 0
+
+  const updateActiveOptions = (
+    partial: Parameters<AiChatSession["updateConversationOptions"]>[1],
+  ) => {
+    const id = session.activeId()
+    if (!id) return
+    session.updateConversationOptions(id, partial)
+  }
+
+  const pickModel = (id: string) => {
+    updateActiveOptions({ modelId: id === defaultModelId() ? undefined : id })
+  }
+  const pickReasoning = (value: AiChatReasoningEffort | undefined) => {
+    updateActiveOptions({ reasoningEffort: value })
+  }
+  const pickCapacity = (value: number | undefined) => {
+    updateActiveOptions({ maxOutputTokens: value })
+  }
+
+  const contextBlocks = (): AiChatContextBlock[] => activeConversation()?.contextBlocks ?? []
+
+  const addContextBlock = () => {
+    const text = contextText().trim()
+    if (!text) return
+    const label = contextLabel().trim() || `上下文 ${contextBlocks().length + 1}`
+    const next = [...contextBlocks(), { id: newContextId(), label, text }]
+    updateActiveOptions({ contextBlocks: next })
+    setContextLabel("")
+    setContextText("")
+  }
+
+  const removeContextBlock = (id: string) => {
+    const next = contextBlocks().filter((block) => block.id !== id)
+    updateActiveOptions({ contextBlocks: next })
+  }
   let threadRef: HTMLDivElement | undefined
   let nearBottom = true
 
@@ -160,6 +336,16 @@ export function AiChatExpand(props: WidgetViewProps) {
       openExpand: () => props.host.openExpand(),
     })
     onCleanup(unregister)
+  })
+
+  createEffect(() => {
+    if (!session.isLoading()) return
+    const startedAt = Date.now()
+    setElapsed(0)
+    const timer = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startedAt) / 1000))
+    }, 1000)
+    onCleanup(() => clearInterval(timer))
   })
 
   createEffect(() => {
@@ -249,16 +435,22 @@ export function AiChatExpand(props: WidgetViewProps) {
           </Button>
         </div>
       </Show>
-      <div {...stylex.attrs(styles.composerRow)}>
+      <div {...stylex.attrs(styles.composerShell)}>
         <Textarea
           xstyle={styles.composerTextarea}
-          rows={2}
+          rows={3}
           value={draft()}
           onInput={setDraft}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+            if (event.isComposing) return
+            if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault()
               send()
+            }
+            if (event.key === "Escape" && editing()) {
+              event.preventDefault()
+              setEditing(false)
+              setDraft("")
             }
           }}
           placeholder={
@@ -268,38 +460,130 @@ export function AiChatExpand(props: WidgetViewProps) {
           }
           aria-label="向 AI 提问"
         />
-        <Show
-          when={session.isLoading()}
-          fallback={
-            <IconButton
-              size="lg"
-              variant="primary"
-              aria-label="发送"
-              disabled={!draft().trim()}
-              onClick={send}
+        <div {...stylex.attrs(styles.composerToolbar)}>
+          <div {...stylex.attrs(styles.composerChips)}>
+            <Show when={modelChoices().length > 0}>
+              <DropdownMenu
+                items={modelChoices().map((model) => ({
+                  id: model.id,
+                  label: model.label,
+                  onClick: () => pickModel(model.id),
+                  ...(model.id === activeModelId() ? { checked: true } : {}),
+                }))}
+                side="top"
+                align="start"
+                triggerAsChild={true}
+                triggerTitle="切换模型"
+                triggerAriaLabel="切换模型"
+              >
+                {(trigger) => (
+                  <ComposerChip
+                    trigger={trigger}
+                    label={activeModelLabel()}
+                    icon={<Cpu size={12} />}
+                  />
+                )}
+              </DropdownMenu>
+            </Show>
+            <DropdownMenu
+              items={[
+                {
+                  id: "reasoning-auto",
+                  label: "默认",
+                  onClick: () => pickReasoning(undefined),
+                  ...(activeReasoning() === undefined ? { checked: true } : {}),
+                },
+                { id: "reasoning-separator", label: <></>, separator: true },
+                ...(["low", "medium", "high"] as AiChatReasoningEffort[]).map((value) => ({
+                  id: `reasoning-${value}`,
+                  label: REASONING_LABELS[value],
+                  onClick: () => pickReasoning(value),
+                  ...(activeReasoning() === value ? { checked: true } : {}),
+                })),
+              ]}
+              side="top"
+              align="start"
+              triggerAsChild={true}
+              triggerTitle="思考强度"
+              triggerAriaLabel="思考强度"
             >
-              <Send size={18} />
-            </IconButton>
-          }
-        >
-          <IconButton
-            size="lg"
-            variant="secondary"
-            aria-label="停止生成"
-            onClick={() => session.stop()}
+              {(trigger) => (
+                <ComposerChip
+                  trigger={trigger}
+                  label={activeReasoning() ? REASONING_LABELS[activeReasoning()!] : "思考默认"}
+                  icon={<Brain size={12} />}
+                />
+              )}
+            </DropdownMenu>
+            <DropdownMenu
+              items={CONTEXT_CAPACITY_PRESETS.map((preset) => ({
+                id: `capacity-${preset.label}`,
+                label: `${preset.label} · ${preset.hint}`,
+                onClick: () => pickCapacity(preset.value),
+                ...(preset.value === activeCapacity() ? { checked: true } : {}),
+              }))}
+              side="top"
+              align="start"
+              triggerAsChild={true}
+              triggerTitle="上下文容量"
+              triggerAriaLabel="上下文容量"
+            >
+              {(trigger) => (
+                <ComposerChip
+                  trigger={trigger}
+                  label={activeCapacityLabel()}
+                  icon={<Gauge size={12} />}
+                />
+              )}
+            </DropdownMenu>
+            <button
+              type="button"
+              {...stylex.attrs(styles.composerChip)}
+              onClick={() => setContextEditor(true)}
+              title="添加上下文"
+              aria-label="添加上下文"
+            >
+              <FileText size={12} />
+              <span>
+                添加上下文
+                <Show when={activeContextCount() > 0}> · {activeContextCount()}</Show>
+              </span>
+            </button>
+          </div>
+          <span {...stylex.attrs(styles.composerHint)}>
+            {editing() ? "Enter 重新生成 · Esc 取消编辑" : "Enter 发送 · Shift+Enter 换行"}
+          </span>
+          <Show
+            when={session.isLoading()}
+            fallback={
+              <IconButton
+                size="sm"
+                variant="primary"
+                aria-label="发送"
+                disabled={!draft().trim()}
+                onClick={send}
+              >
+                <Send size={14} />
+              </IconButton>
+            }
           >
-            <Square size={14} />
-          </IconButton>
-        </Show>
+            <IconButton
+              size="sm"
+              variant="secondary"
+              aria-label="停止生成"
+              onClick={() => session.stop()}
+            >
+              <Square size={12} />
+            </IconButton>
+          </Show>
+        </div>
       </div>
     </div>
   )
 
   const errorCopy = () => aiChatErrorCopy(session.error())
   const openSettings = getAiChatSettingsOpener()
-  const activeTitle = () =>
-    session.conversations().find((conversation) => conversation.id === session.activeId())?.title ??
-    "新对话"
+  const activeTitle = () => activeConversation()?.title ?? "新对话"
 
   return (
     <div {...stylex.attrs(styles.expandRoot)}>
@@ -374,9 +658,6 @@ export function AiChatExpand(props: WidgetViewProps) {
                           message.role === "user" ? styles.turnUser : styles.turnAssistant,
                         )}
                       >
-                        <span {...stylex.attrs(styles.roleLabel)}>
-                          {message.role === "user" ? "我" : "AI"}
-                        </span>
                         <Show
                           when={message.role === "user"}
                           fallback={
@@ -410,7 +691,10 @@ export function AiChatExpand(props: WidgetViewProps) {
                 }}
               </For>
               <Show when={session.isLoading()}>
-                <span {...stylex.attrs(styles.generating)}>正在生成…</span>
+                <div {...stylex.attrs(styles.generatingRow)}>
+                  <Spinner size="sm" aria-label="生成中" />
+                  <span {...stylex.attrs(styles.generating)}>生成中 · {elapsed()} 秒</span>
+                </div>
               </Show>
             </div>
             <Show when={session.error()}>
@@ -452,7 +736,6 @@ export function AiChatExpand(props: WidgetViewProps) {
       >
         <ConversationList
           session={session}
-          compact
           onPick={() => setDrawerOpen(false)}
           onRename={(conversation) => {
             setDrawerOpen(false)
@@ -521,6 +804,71 @@ export function AiChatExpand(props: WidgetViewProps) {
             }
           />
         )}
+      </Show>
+      <Show when={contextEditor()}>
+        <Dialog
+          open
+          title="添加上下文"
+          description="上下文会以片段形式追加到系统提示词末尾，仅作用于当前对话。"
+          onCancel={() => {
+            setContextEditor(false)
+            setContextLabel("")
+            setContextText("")
+          }}
+          onOk={() => {
+            addContextBlock()
+            setContextEditor(false)
+          }}
+          okText="添加"
+        >
+          <div {...stylex.attrs(styles.optionsForm)}>
+            <label {...stylex.attrs(styles.optionsLabel)}>
+              <span {...stylex.attrs(styles.optionsLabelText)}>片段名称（可选）</span>
+              <Input
+                value={contextLabel()}
+                onInput={setContextLabel}
+                placeholder="例如：项目说明"
+                aria-label="片段名称"
+              />
+            </label>
+            <label {...stylex.attrs(styles.optionsLabel)}>
+              <span {...stylex.attrs(styles.optionsLabelText)}>片段内容</span>
+              <Textarea
+                rows={6}
+                value={contextText()}
+                onInput={setContextText}
+                placeholder="粘贴需要 AI 参考的资料、代码或说明"
+                aria-label="片段内容"
+              />
+            </label>
+            <Show when={contextBlocks().length > 0}>
+              <div {...stylex.attrs(styles.contextList)}>
+                <span {...stylex.attrs(styles.optionsLabelText)}>已添加的上下文</span>
+                <For each={contextBlocks()}>
+                  {(block) => (
+                    <div {...stylex.attrs(styles.contextItem)}>
+                      <div {...stylex.attrs(styles.contextItemMain)}>
+                        <span {...stylex.attrs(styles.contextItemLabel)}>{block.label}</span>
+                        <span {...stylex.attrs(styles.contextItemPreview)}>
+                          {block.text.slice(0, 60)}
+                          {block.text.length > 60 ? "…" : ""}
+                        </span>
+                      </div>
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        aria-label={`删除上下文 ${block.label}`}
+                        onClick={() => removeContextBlock(block.id)}
+                      >
+                        <X size={12} />
+                      </IconButton>
+                    </div>
+                  )}
+                </For>
+              </div>
+            </Show>
+          </div>
+        </Dialog>
       </Show>
       <Show when={optionsFor()}>
         {(conversation) => (

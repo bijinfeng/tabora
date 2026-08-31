@@ -40,6 +40,26 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
 
   const supportedProviders = () => settings()?.supportedProviders ?? ["builtin", "custom"]
 
+  const defaultModelValue = () => (provider() === "custom" ? "custom" : builtinModelId())
+
+  const defaultModelOptions = () => [
+    ...(settings()?.builtin.models ?? []).map((item) => ({
+      value: item.id,
+      label: item.label,
+      disabled: settings()?.builtin.status !== "available",
+    })),
+    ...(supportedProviders().includes("custom") ? [{ value: "custom", label: "自定义模型" }] : []),
+  ]
+
+  function pickDefaultModel(value: string) {
+    if (value === "custom") {
+      setProvider("custom")
+      return
+    }
+    setProvider("builtin")
+    setBuiltinModelId(value)
+  }
+
   function applySettings(next: SettingsAiSettings) {
     setSettings(next)
     setProvider(next.activeProvider)
@@ -103,41 +123,21 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
           when={!loading()}
           fallback={<span {...stylex.attrs(styles.fieldNote)}>正在读取当前设备的 AI 配置…</span>}
         >
-          <FieldRow
-            label="使用模式"
-            description="内置模型使用 Tabora 平台凭据；自定义模型仅保存到当前设备。"
-            trailing={
-              <Select<ProviderMode>
-                size="sm"
-                value={provider()}
-                options={supportedProviders().map((value) => ({
-                  value,
-                  label: value === "builtin" ? "内置模型" : "自定义提供商",
-                }))}
-                onChange={setProvider}
-                aria-label="AI 使用模式"
-              />
-            }
-          />
-          <Show when={provider() === "builtin" && supportedProviders().includes("builtin")}>
+          <Show when={supportedProviders().includes("builtin")}>
             <FieldRow
-              label="平台内置模型"
+              label="默认模型"
               description={
                 settings()?.builtin.status === "auth-required"
                   ? "登录 Tabora 账号后可使用平台统一付费凭据。"
-                  : "平台统一管理模型目录与服务凭据。"
+                  : "内置模型使用 Tabora 平台凭据；自定义模型仅保存到当前设备。"
               }
               trailing={
                 <Select<string>
                   size="sm"
-                  value={builtinModelId()}
-                  options={(settings()?.builtin.models ?? []).map((item) => ({
-                    value: item.id,
-                    label: item.label,
-                  }))}
-                  onChange={setBuiltinModelId}
-                  aria-label="平台内置文本模型"
-                  disabled={settings()?.builtin.status !== "available"}
+                  value={defaultModelValue()}
+                  options={defaultModelOptions()}
+                  onChange={pickDefaultModel}
+                  aria-label="默认模型"
                 />
               }
             />
@@ -151,7 +151,7 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
               }
             />
           </Show>
-          <Show when={provider() === "custom"}>
+          <Show when={supportedProviders().includes("custom")}>
             <FieldRow
               label="Base URL"
               description={

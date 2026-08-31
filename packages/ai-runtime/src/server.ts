@@ -50,6 +50,11 @@ function createChatOptions(request: AiGatewayRequest, provider: AiCustomProvider
   const messages = request.messages?.length
     ? request.messages.map((message) => ({ role: message.role, content: message.text }))
     : [{ role: "user" as const, content: request.prompt ?? "" }]
+  const modelOptions: Record<string, unknown> = {}
+  if (request.temperature !== undefined) modelOptions.temperature = request.temperature
+  if (request.maxOutputTokens !== undefined)
+    modelOptions.max_output_tokens = request.maxOutputTokens
+  if (request.reasoningEffort !== undefined) modelOptions.reasoning_effort = request.reasoningEffort
   return {
     adapter: openaiCompatibleText(provider.model, {
       apiKey: provider.apiKey,
@@ -60,16 +65,7 @@ function createChatOptions(request: AiGatewayRequest, provider: AiCustomProvider
     }),
     messages,
     ...(request.system ? { systemPrompts: [request.system] } : {}),
-    ...(request.temperature === undefined && request.maxOutputTokens === undefined
-      ? {}
-      : {
-          modelOptions: {
-            ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
-            ...(request.maxOutputTokens === undefined
-              ? {}
-              : { max_output_tokens: request.maxOutputTokens }),
-          },
-        }),
+    ...(Object.keys(modelOptions).length > 0 ? { modelOptions } : {}),
   }
 }
 
@@ -182,10 +178,19 @@ function parseGenerationOptions(input: Record<string, unknown>) {
   ) {
     rejectRequest("Invalid AI output limit")
   }
+  const rawReasoning = input.reasoningEffort
+  const reasoningEffort: AiGatewayRequest["reasoningEffort"] =
+    rawReasoning === "low" || rawReasoning === "medium" || rawReasoning === "high"
+      ? rawReasoning
+      : undefined
+  if (rawReasoning !== undefined && reasoningEffort === undefined) {
+    rejectRequest("Invalid AI reasoning effort")
+  }
   return {
     ...(typeof input.system === "string" ? { system: input.system } : {}),
     ...(typeof input.temperature === "number" ? { temperature: input.temperature } : {}),
     ...(typeof maxOutputTokens === "number" ? { maxOutputTokens } : {}),
+    ...(reasoningEffort ? { reasoningEffort } : {}),
   }
 }
 

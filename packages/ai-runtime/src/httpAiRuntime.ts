@@ -220,6 +220,12 @@ export function createHttpAiChatClient(
           ...(typeof input.data?.maxOutputTokens === "number"
             ? { maxOutputTokens: input.data.maxOutputTokens }
             : {}),
+          ...(input.data?.reasoningEffort === "low" ||
+          input.data?.reasoningEffort === "medium" ||
+          input.data?.reasoningEffort === "high"
+            ? { reasoningEffort: input.data.reasoningEffort }
+            : {}),
+          ...(typeof input.data?.modelId === "string" ? { modelId: input.data.modelId } : {}),
         } satisfies AiGatewayRequest),
         signal: requestOptions.signal,
       })

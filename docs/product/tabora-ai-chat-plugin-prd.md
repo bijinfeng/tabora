@@ -121,14 +121,15 @@ AI 未配置或未登录时，卡片与展开视图显示 EmptyState：说明当
   - Markdown 渲染：标题、列表、表格、代码块与语法高亮，输出经 sanitize。
 - 会话持久化：会话与消息存入 widget 实例数据（`props.data`），MVP 仅本机，不进入 sync collections。
 - 错误降级：五个网关错误码到中文文案与下一步动作的映射（见 §8）。
-- 内置系统提示词：简短工作台助手 persona（跟随用户语言、简洁、可说明自身是 Tabora 内 AI 助手），经连接请求的 `system` 字段传递；用户不可编辑（MVP）。
+- 内置系统提示词：简短工作台助手 persona（跟随用户语言、简洁、可说明自身是 Tabora 内 AI 助手），经连接请求的 `system` 字段传递；每会话可覆盖。
+- 每会话运行参数：在展开视图的输入栏内联提供「模型切换 / 思考强度 / 上下文容量 / 添加上下文」四个 chip 控件；每会话独立保存并随每次发送透传给网关，缺省时使用工作台默认设置。
 
 ### 4.2 不包含（列为后续候选，见 §10）
 
 - 消息编辑与分支（fork）重发。
 - 思考过程（thinking parts）展示与落盘——存储与渲染路径已按 parts 预留，仅 UI 接入延后（见 §6.3、§10）。
 - 命令面板入口与全局快捷键。
-- 自定义系统提示词、每会话参数（temperature 等）。
+- 系统提示词的自由文本编辑（每会话运行参数已包含，见 §4.1；仅 persona 文本自定义延后）。
 - 对话云同步、导出。
 - 工具调用与审批 UI——`ChatMessage` 工具渲染器与 `ToolApproval` 接入口预留，待平台 P1 agent 工具协议落地后接入。
 
@@ -166,7 +167,8 @@ AI 未配置或未登录时，卡片与展开视图显示 EmptyState：说明当
 当前 `AiGatewayRequest` 只携带单条 `prompt`（≤ 32,000 字符），服务端无法获得历史。扩展：
 
 - `AiGatewayRequest` 增加可选 `messages: AiChatMessage[]`（`role: "user" | "assistant"` + `text`），与既有 `prompt` 字段互斥：带 `messages` 的请求为多轮对话请求，服务端将完整历史交给 TanStack AI `chat()`；仅 `prompt` 的单轮请求语义完全不变（便签等既有 consumer 不受影响）。
-- 服务端校验：角色枚举、最后一条必须为 user、单条长度沿用 32k 上限、条数 ≤ 100、历史总字符 ≤ 96,000（最终数值以技术设计为准）；超限返回 `ai_request_rejected`。
+- `AiGatewayRequest` 另有可选运行参数 `modelId`、`temperature`、`maxOutputTokens` 与 `reasoningEffort`（`"low" | "medium" | "high"`）。多轮请求经 AG-UI `forwardedProps` 透传，服务端在 `createChatOptions` 合入 `modelOptions`：`reasoningEffort` 映射为 OpenAI chat-completions 的 `reasoning_effort`；未带这些字段时使用宿主默认设置。
+- 服务端校验：角色枚举、最后一条必须为 user、单条长度沿用 32k 上限、条数 ≤ 100、历史总字符 ≤ 96,000（最终数值以技术设计为准）；`reasoningEffort` 只接受三档枚举，非法值返回 `ai_request_rejected`；超限返回 `ai_request_rejected`。
 - 改动落点：`packages/plugin-api`（协议类型）、`packages/ai-runtime`（contracts + server 校验与转发）、`backend/app/src/server/ai.ts` 与 `/api/ai/*` 路由、`apps/fnos/backend`（设备后端透传）。错误码与鉴权逻辑不变。
 - 演进预留：多轮请求体是 MVP 子集形态。后续工具调用迭代在同一请求上以「新增可选字段」演进（工具声明、parts 历史、审批往返）；TanStack AI `chat()` 与其 AG-UI 事件流原生承载 thinking / tool 事件，网关侧无破坏性变更，单轮与多轮既有语义保持不变。
 - 历史裁剪：客户端发送前按「系统提示 + 最近 N 条消息」裁剪历史，确保请求保持在服务端校验上限内，并在会话内提示早期消息已省略；N 的具体数值随服务端上限在技术设计确定。
@@ -181,12 +183,15 @@ AI 未配置或未登录时，卡片与展开视图显示 EmptyState：说明当
 ### 6.3 数据模型（实例数据契约）
 
 ```text
-会话:  { id, title, createdAt, updatedAt }
+会话:  { id, title, createdAt, updatedAt,
+         modelId?, reasoningEffort?, temperature?, maxOutputTokens?,
+         contextBlocks?: [{ id, label, text }] }
 消息:  { id, role: "user" | "assistant", createdAt, status: "complete" | "error", errorCode?,
          parts: [{ type: "text", text }] }
 存储:  widget 实例数据 key "ai-chat-conversations"，MVP 仅本机
 ```
 
+- 会话级运行参数（`modelId` / `reasoningEffort` / `temperature` / `maxOutputTokens`）与 `contextBlocks` 均为可选字段：缺省即回退宿主默认设置，随每次发送经 `buildSendOptions` 组装并透传网关；`contextBlocks` 在发送前拼入系统提示。
 - `parts` 数组是长期形态：MVP 只写入 text parts；thinking / tool-call / tool-result parts 由后续迭代追加类型，旧数据无需迁移。
 - MVP 不落盘流式中间态与 thinking / tool parts（后续迭代再扩展落盘范围）。
 - 运行时 `useChat` 的 `UIMessage`（原生 parts 模型）与存储消息按 parts 直接互转；切换会话通过重建/重置 `useChat` 状态实现。
