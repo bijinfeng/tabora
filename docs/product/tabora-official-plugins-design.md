@@ -1,10 +1,6 @@
 # Tabora 官方内置插件设计说明
 
-版本：V2.0
-
-日期：2026-06-02
-
-状态：按 V2 设计规范与交互参考复核更新，确保官方插件规格与单一宿主内建 dashboard 布局工作台一致
+本文档是官方内置插件的产品事实源：把 PRD 中的“官方内置插件”拆解成可设计、可实现、可验收的产品规格。字段级细节（manifest、contribution schema、token 取值、storage 数据形状）以 `@tabora/plugin-api`、各插件 manifest 和 `DESIGN.md` 为准。
 
 关联文档：
 
@@ -16,16 +12,9 @@
 
 ## 1. 文档目标
 
-本文档用于把 PRD 中的“官方内置插件”拆解成可设计、可实现、可验收的产品规格。
+本文档回答四类问题：每个官方插件承担什么产品职责、如何交互展示与处理状态、视觉与体验参考是什么、哪些能力属于 MVP 还是后续版本。
 
-它回答四类问题：
-
-- 官方内置插件分别承担什么产品职责。
-- 每个插件应该如何交互、如何展示、如何处理状态。
-- 官方插件的视觉语言、信息密度和体验参考是什么。
-- 哪些能力属于 MVP，哪些能力只预留协议或进入后续版本。
-
-官方插件不是平台的硬编码功能集合，而是 Tabora 插件体系的第一批标准样板。它们既要组成默认个人工作台体验，也要证明未来第三方插件可以用同一套 manifest、contribution、runtime context、permissions、storage 和 host container 协议接入。
+官方插件不是平台硬编码功能集合，而是 Tabora 插件体系的第一批标准样板：既组成默认工作台体验，也证明第三方插件能用同一套 manifest、contribution、runtime context、permissions、storage 和 host container 协议接入。
 
 ## 2. 官方插件设计原则
 
@@ -33,230 +22,27 @@
 
 Tabora 打开后的第一屏必须来自官方插件装配，而不是平台直接渲染固定功能。用户感知到的左侧轻 rail、命令搜索、布局、背景、主题、快捷入口、便签、待办、天气和插件管理，都应能追溯到明确的插件 manifest 和 contribution。
 
-### 2.2 平台只做通用能力
+### 2.2 平台与插件的共享模型
 
-平台负责：
+平台负责通用机制：插件发现/校验/启用/注册、扩展点协议、工作区与区域和实例状态、宿主容器（弹窗/全屏/错误边界）、权限桥与安全回退、IndexedDB 持久化、主题 token 应用。官方插件负责具体业务能力，即使内置也不能绕过平台协议直接操作宿主私有状态。
 
-- 插件发现、校验、启用和注册。
-- 扩展点协议。
-- 工作区、区域和实例状态。
-- 宿主容器、弹窗、全屏、错误边界。
-- 权限桥和安全回退。
-- IndexedDB 持久化。
-- 主题 token 应用。
-
-官方插件负责具体业务能力。即使是内置插件，也不能绕过平台协议直接操作宿主私有状态。
+这是所有官方插件共享的接入模型，后续各插件章节不再重复：插件只通过 manifest、contribution、runtime context、permissions 和 storage contract 接入；外部打开一律走权限桥（`context.permissions.openExternal` / `host.openExternal`），不裸用 `window.open`。
 
 ### 2.3 工作台优先，逐步增强
 
-首次打开时，用户不需要配置就能使用：
-
-- 左侧轻 rail。
-- 顶部命令搜索。
-- 基础搜索源。
-- 主工作台网格。
-- 快捷入口。
-- 便签。
-- 待办。
-- 基础主题和背景。
-
-天气和插件管理可以作为默认候选卡片，也可以在添加卡片面板或设置中心中出现。默认体验应克制但不空，避免用户打开后只看到“平台框架”的感觉。
+首次打开无需配置即可使用左侧轻 rail、顶部命令搜索、基础搜索源、主网格、快捷入口、便签、待办和基础主题背景。天气和插件管理可作为默认候选卡片，或在添加卡片面板/设置中心出现。默认体验应克制但不空，避免只看到“平台框架”的感觉。
 
 ### 2.4 官方插件也是生态示例
 
-官方插件要给后续开发者示范：
-
-- 如何声明 contribution。
-- 如何按实例保存配置。
-- 如何使用插件私有数据。
-- 如何请求宿主 UI 能力。
-- 如何请求外部打开权限。
-- 如何处理空状态、错误状态和权限不足。
+官方插件要示范：如何声明 contribution、按实例保存配置、使用插件私有数据、请求宿主 UI 能力、请求外部打开权限，以及处理空状态、错误状态和权限不足。
 
 ### 2.5 状态必须局部化
 
-任何一个官方插件失败，都不能拖垮整个工作台：
-
-- widget 失败：只显示该实例错误卡片。
-- search 失败：顶部区域显示搜索不可用占位。
-- background 失败：回退到安全纯色背景。
-- theme 失败：回退到默认 token。
-- plugin manager 失败：不影响其他插件使用。
+任何官方插件失败都不能拖垮整个工作台：widget 失败只显示该实例错误卡片、search 失败顶部显示搜索不可用占位、background 失败回退安全纯色、theme 失败回退默认 token、plugin manager 失败不影响其他插件。此错误局部化是共享约束，各插件章节不再重述。
 
 ## 3. 全局设计语言
 
-Tabora 的视觉与交互事实源以根目录 `DESIGN.md` 为准。`docs/design/workbench-prototype.html` 只作为可交互原型参考。本章保留官方插件层面的摘要，用于说明内置插件如何遵守统一视觉、token、基础组件和宿主容器规范。
-
-### 3.1 产品气质
-
-Tabora 的官方体验应是“安静、清晰、可重复使用的个人工作台”，而不是营销页、内容门户或装饰型仪表盘。
-
-关键词：
-
-- 安静：视觉层次明确，不用夸张渐变和大面积装饰。
-- 工作感：核心控件容易扫描，重复使用不疲劳。
-- 可组合：每个卡片像一个稳定模块，而不是孤立装饰元素。
-- 轻量：默认信息足够有用，不制造复杂配置压力。
-- 可恢复：用户刷新、关闭、重开后，状态尽量原样回来。
-
-### 3.2 视觉结构
-
-官方默认体验是单一的宿主内建 dashboard 布局壳体，移动端在同一 layout view 内以响应式断点折叠：
-
-```txt
-dashboard
-  rail (移动端 < 768px 折叠为底部导航)
-    home / add widget / plugins / settings
-  workbench
-    search command bar
-    mainGrid
-      widget instances
-  modal / fullscreen host
-  settings host
-```
-
-> **Phase 2 变更**：layout 从插件类型降级为宿主内建，只保留一个 dashboard 布局；已删除 Focus 第二布局和运行时布局切换。移动端不是独立布局插件，而是同一 layout view 的响应式断点。
-
-设计要求：
-
-- 仪表盘式布局使用左侧 rail + 顶部常驻搜索；移动端（< 768px）在同一布局内把 rail 折叠为底部导航，官方插件能力完整可达。
-- 主区域的卡片尺寸稳定，拖拽、hover、focus、双击展开和右键菜单都不能造成布局跳动。
-- 主区域允许纵向延展；卡片过多时通过页面滚动访问，不为了塞进首屏牺牲可读性。
-- 添加卡片、插件管理、设置和主题切换入口要么在 rail / 工具条中可见，要么通过命令面板和快捷键始终可达。
-- 弹窗、展开视图、Toast、快捷键面板和设置中心都由宿主统一提供容器，插件只渲染内容。
-- 设置中心桌面端遵循原型中的左侧分类导航 + 右侧内容区结构，不作为常驻右侧栏；移动端使用独立全屏单列布局、顶部返回和横向分类导航。
-
-### 3.3 色彩与主题
-
-当前官方主题包提供：
-
-| 主题                   | 用途           | 核心观感                                       |
-| ---------------------- | -------------- | ---------------------------------------------- |
-| `official.theme.light` | 默认明亮工作台 | 温和浅绿灰页面、白色表面、深色文本、绿色强调色 |
-| `official.theme.dark`  | 暗色工作台     | 深灰页面、深色表面、浅色文本、青绿色强调色     |
-
-设计语言：
-
-- 使用主题 token，不在插件里硬编码大面积品牌色。
-- 强调色只用于可点击状态、当前状态和少量关键数字。
-- 背景可以有轻微层次，但不能影响卡片文字对比度。
-- 卡片、搜索栏、弹窗都应在明亮和暗色主题下保持清晰边界。
-
-建议 token 角色：
-
-| Token           | 角色                     |
-| --------------- | ------------------------ |
-| `color-page`    | 页面底色                 |
-| `color-surface` | 卡片、输入框、弹窗表面   |
-| `color-text`    | 主文本                   |
-| `color-muted`   | 次级文本、说明、辅助信息 |
-| `color-accent`  | 主操作、选中态、链接     |
-| `color-line`    | 边框、分割线             |
-| `radius-card`   | 卡片和宿主容器半径       |
-
-### 3.4 字体与信息密度
-
-字体策略：
-
-- 使用系统无衬线字体，保证中英文混排清晰。
-- 页面不使用随视口宽度变化的字体。
-- 卡片标题保持 14-16px，正文保持 12-14px。
-- 搜索输入可稍大，但不做超大标题式输入。
-
-信息密度：
-
-- 默认卡片应可一眼扫完。
-- S 尺寸只显示核心状态。
-- M 尺寸显示核心状态加一组操作。
-- L/XL 尺寸可显示列表、详情或编辑区。
-- 卡片内部不堆叠第二层卡片。
-
-### 3.5 控件语言与 `@tabora/ui`
-
-`@tabora/ui` 已作为 MVP 基础组件包交付，目标是统一插件内容区控件的视觉、状态、可访问性和 theme token 使用方式。
-
-边界：
-
-- `@tabora/ui` 只提供插件内容区基础组件。
-- `@tabora/ui` 可以依赖 `solid-js` 和 `@tabora/theme`。
-- `@tabora/ui` 不能依赖 `@tabora/platform-kernel`、`@tabora/storage` 或任何官方插件。
-- `@tabora/ui` 不提供 `WidgetCard`、`Modal`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail` 等宿主级容器。
-- 宿主级容器仍由 apps/app workbench / extension shell 统一提供，插件只渲染容器内部内容。
-
-统一控件建议：
-
-| 场景         | 推荐控件                         |
-| ------------ | -------------------------------- |
-| 搜索源选择   | select 或后续 combobox           |
-| 搜索快捷建议 | 小号 tag button                  |
-| 主题切换     | icon button 或 segmented control |
-| 背景切换     | select 或 popover grid           |
-| 卡片尺寸     | select 或 segmented control      |
-| 添加卡片     | icon + text button               |
-| 删除卡片     | icon button，悬停显示危险态      |
-| 展开弹窗     | icon button                      |
-| 待办完成     | checkbox                         |
-| 插件启用状态 | switch                           |
-| 权限状态     | badge + 详情按钮                 |
-
-MVP 组件清单：
-
-| 组件               | 用途                               |
-| ------------------ | ---------------------------------- |
-| `Button`           | 文本或图标+文本操作                |
-| `IconButton`       | 卡片操作、rail 操作、关闭/展开     |
-| `Input`            | 单行输入                           |
-| `Textarea`         | 便签、长文本输入                   |
-| `Select`           | 搜索源、主题、背景等选项           |
-| `Checkbox`         | 待办完成状态                       |
-| `Switch`           | 插件启用状态                       |
-| `SegmentedControl` | 尺寸、视图模式、简单二选一/多选一  |
-| `Tabs`             | 设置面板内部分组                   |
-| `Tooltip`          | 解释纯图标按钮                     |
-| `Field`            | label、说明、错误的表单组合        |
-| `Badge`            | 插件状态、权限状态、demo 标记      |
-| `InlineError`      | 局部错误信息                       |
-| `Spinner`          | 加载状态                           |
-| `EmptyState`       | 卡片内轻量空状态                   |
-| `ListRow`          | 插件列表、待办列表、设置列表项     |
-| `CardSection`      | 插件卡片内部内容分区，不是卡片外壳 |
-
-按钮必须有：
-
-- pointer 光标。
-- hover 状态。
-- focus-visible 状态。
-- 可读的 aria label 或可见文本。
-- 固定尺寸，避免图标、文字或状态变化导致布局跳动。
-
-官方插件新增 UI 时，默认优先使用 `@tabora/ui`。只有当某个插件有明确业务视觉需求时，才在插件内部补充局部样式；补充样式仍必须使用 theme token。
-
-### 3.6 动效与反馈
-
-动效应轻：
-
-- hover 反馈 150-200ms。
-- 弹窗出现可以淡入或轻微位移。
-- 拖拽时只改变透明度、边框或阴影，不改变卡片实际尺寸。
-- 尊重 `prefers-reduced-motion`。
-
-反馈状态：
-
-- 保存中：可使用细小状态文本或禁用态。
-- 保存成功：不需要频繁 toast，保持安静。
-- 保存失败：在对应控件附近显示错误。
-- 权限拒绝：显示明确原因和下一步，而不是静默失败。
-
-### 3.7 可访问性
-
-所有官方插件都应满足：
-
-- 键盘可聚焦。
-- 表单输入有 label 或 aria label。
-- 颜色不是唯一状态表达。
-- 文本和背景对比度足够。
-- 删除、外部打开、权限授权等操作有清晰语义。
-- 弹窗打开后焦点进入弹窗，关闭后回到触发按钮。
+视觉、token、字体密度、控件语言（`@tabora/ui`）、动效与可访问性统一以 `DESIGN.md` 为事实源，`docs/design/workbench-prototype.html` 只作可交互原型参考。官方插件层面的约束：产品气质是“安静、清晰、可重复使用的个人工作台”；默认体验是单一宿主内建 dashboard 壳体（左侧轻 rail + 顶部常驻搜索 + 主网格），移动端在同一 layout view 内以响应式断点折叠 rail 为底部导航；插件内容区复用 `@tabora/ui` 基础组件并使用 theme token，宿主级容器（WidgetCard、Modal、FullscreenHost、SettingsHost、Rail）由宿主提供，插件只渲染内容。后续各插件的“设计语言”仅记录该插件特有约束，通用视觉规则不再重复。
 
 ## 4. 官方插件矩阵
 
@@ -293,9 +79,7 @@ MVP 组件清单：
 | `mainGrid` | `ai-chat-1`      | `official.widgets.ai-chat`            | M            | AI 对话入口，用户可移除或调整尺寸            |
 | `settings` | `plugin-manager` | `official.plugin-manager`             | 设置面板     | 从设置中心进入完整插件管理                   |
 
-当前实现由 **host builtin layout** `official.layout.workbench-dashboard` 贡献整体布局 view（Phase 2 后不再是独立插件包，改为宿主内建注入）。布局 contribution 的实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，而由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作用于对齐原型。Dashboard layout view 负责 10 列主网格容器和单元格行高同步，`WidgetCardShell` 负责按 widget size 设置 grid span、提供无头部卡片外壳和右上角移除按钮。Dashboard 从当前非默认分组打开添加卡片面板时，会通过 `LayoutHostAPI.openAddWidget(context)` 传入目标分组名称和添加成功回调，由 layout view 将新实例追加到该分组。主网格默认按原型样张包含 `quick-links-1`、`todo-1`、`notes-1` 和 `weather-1`。移动端不是独立布局插件，而是同一 layout view 的响应式断点：窄屏时 rail 折叠为底部导航栏。
-
-默认工作台以 `DESIGN.md` 的工作台规则为视觉事实源，并以 `docs/design/workbench-prototype.html` 的仪表盘样张作为参考：首屏优先呈现命令搜索、快捷入口、待办、便签和天气摘要。完整插件管理从设置中心进入。
+当前实现由 host builtin layout `official.layout.workbench-dashboard` 贡献整体布局 view（Phase 2 后改为宿主内建注入，非独立插件包）。实例 region 为 `topbar` 和 `mainGrid`；左侧 rail 不承载插件实例，由 layout view 通过 `LayoutHostAPI.getGlobalActions("rail")` 渲染主页、添加卡片、切换主题、设置等宿主动作。Dashboard layout view 负责 10 列主网格容器和行高同步，`WidgetCardShell` 按 widget size 设置 grid span、提供无头部卡片外壳和移除按钮；从非默认分组打开添加卡片面板时经 `LayoutHostAPI.openAddWidget(context)` 追加新实例到目标分组。移动端是同一 layout view 的响应式断点，窄屏时 rail 折叠为底部导航栏。默认工作台以 `DESIGN.md` 为视觉事实源、原型样张为参考，首屏优先命令搜索、快捷入口、待办、便签和天气摘要；完整插件管理从设置中心进入。
 
 ### 5.2 默认插件加载顺序
 
@@ -305,33 +89,12 @@ MVP 组件清单：
 theme -> background -> layout -> search providers -> command search -> widgets -> plugin manager -> settings -> account-sync（可选）
 ```
 
-原因：
-
-- theme 和 background 先准备好视觉环境。
-- layout 决定区域。
-- search providers 先于 search command bar，方便搜索 UI 读取可用搜索源。
-- widgets 在布局区域准备后渲染。
-- plugin manager 和 settings 属于管理能力，可在默认工作台之后加载，但 MVP 需要提供可打开的轻量设置中心来验证 `settings-panel` 扩展点闭环。
-- `official.account-sync` 由具备网络与本地同步存储能力的宿主装配；Playground 即使未登录或后端暂不可用也显示账号和同步设置，FNOS 等完全本地宿主不加载它，也不显示账号和同步设置。
+原因：theme/background 先准备视觉环境、layout 决定区域、search providers 先于 command bar 以便搜索 UI 读取可用源、widgets 在区域准备后渲染；plugin manager 和 settings 属管理能力可后加载，但 MVP 需提供轻量设置中心验证 `settings-panel` 闭环；`official.account-sync` 由具备网络与本地同步能力的宿主装配（Playground 始终显示账号和同步设置，FNOS 等完全本地宿主不加载也不显示）。
 
 ### 5.3 默认页面交互示例
 
-首次打开：
-
-1. 平台发现并启用官方插件。
-2. 主题插件提供默认明亮 token。
-3. 背景插件提供默认背景源。
-4. 宿主内建 dashboard layout 提供 rail 宿主入口、`topbar` 搜索 region 和 `mainGrid` 网格 region。
-5. 搜索插件渲染顶部命令搜索栏。
-6. Widget 插件渲染快捷入口、便签和待办。
-7. 用户可以直接搜索、打开快捷链接、记录便签、处理待办。
-
-刷新页面：
-
-1. 平台恢复 workspace。
-2. 平台恢复插件实例顺序、尺寸和配置。
-3. 插件业务数据从 plugin storage 或实例存储中恢复。
-4. 失败插件显示局部错误，其余区域继续可用。
+- 首次打开：平台按加载顺序启用官方插件，主题/背景准备视觉环境，dashboard layout 提供 rail 入口与 `topbar`/`mainGrid` region，搜索栏与 widget 渲染后用户即可搜索、打开快捷链接、记录便签、处理待办。
+- 刷新页面：平台恢复 workspace、实例顺序/尺寸/配置，插件业务数据从 plugin storage 恢复；失败插件局部报错，其余区域继续可用。
 
 ## 6. `official.layout.workbench-dashboard`
 
@@ -343,127 +106,23 @@ Dashboard builtin layout 定义 Tabora 的基础页面骨架：左侧轻 rail、
 
 ### 6.2 Contribution
 
-扩展点：`layout`
+扩展点：`layout`。layout id、regions（`topbar` 接 search 且 maxInstances=1、`mainGrid` 接 widget）、rail（由 layout view 消费 `LayoutHostAPI.getGlobalActions("rail")` 渲染，不作为实例 region）与 `supportsResponsive` 等字段以 layout manifest 为准。Dashboard layout 只负责区域结构，不负责搜索框样式、卡片内容、添加卡片逻辑、拖拽排序、设置面板内容和主题背景，这些由宿主或其他插件负责。
 
-当前声明：
+### 6.3 卡片溢出策略
 
-| 字段                  | 值                                                                                       |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| layout id             | `official.layout.workbench-dashboard`                                                    |
-| title                 | `工作台仪表盘布局`                                                                       |
-| regions               | `topbar`, `mainGrid`                                                                     |
-| rail                  | 由 layout view 消费 `LayoutHostAPI.getGlobalActions("rail")` 渲染，不作为插件实例 region |
-| `topbar.accepts`      | `search`                                                                                 |
-| `topbar.maxInstances` | 1                                                                                        |
-| `mainGrid.accepts`    | `widget`                                                                                 |
-| `supportsResponsive`  | true（移动端作为响应式断点）                                                             |
+当 `mainGrid` widget 超过一屏时，MVP 采用纵向工作区策略：主网格自动换行向下扩展、页面纵向滚动、不用横向滚动、不强压一屏、新卡片追加末尾，用户通过拖拽排序和尺寸选择调整优先级，刷新后保留顺序/尺寸/位置。分组、收纳区、未放置卡片列表、多 workspace 等为后续增强。
 
-### 6.3 信息架构
+### 6.4 交互示例
 
-```txt
-workbench-shell
-  rail host actions (移动端折叠为 bottom-bar)
-    home / add widget / plugins / settings
-  content-region
-    topbar-region
-      search instance
-    main-grid-region
-      workbench-grid
-      widget instances
-```
+- 打开新标签页：宿主注入 dashboard layout，渲染 rail 宿主入口并创建 `topbar`/`mainGrid`，把 `search-main` 放入 topbar、widget 实例放入 mainGrid。
+- 切换移动端窄屏（< 768px）：同一 layout view 命中断点，rail 折叠为底部导航、主网格单列堆叠，实例/区域/数据不变。
+- 布局失败：显示“布局不可用”和失败原因并记录 layout id，不用其他内容冒充当前布局。
 
-Dashboard layout 只负责区域，不负责：
+### 6.5 设计语言
 
-- 搜索框具体样式。
-- 卡片内容。
-- 添加卡片逻辑。
-- 卡片拖拽排序。
-- 插件管理和设置面板内容。
-- 主题和背景。
+rail 低干扰固定、命令搜索宽度受限便于聚焦；主网格默认桌面 10 列逻辑网格、高度不固定允许纵向滚动、首屏优先快捷入口/便签/待办；移动端单列堆叠、rail 折叠、无横向滚动。具体尺寸取值见 `DESIGN.md`。
 
-这些能力由宿主或其他插件负责。
-
-### 6.4 卡片溢出策略
-
-当 `mainGrid` 中的 widget 实例超过一屏容量时，MVP 采用纵向工作区策略：
-
-- 主网格继续自动换行并向下扩展。
-- 页面允许纵向滚动。
-- 不使用横向滚动作为默认方案。
-- 不把所有卡片强行压缩到一屏。
-- 新增卡片追加到网格末尾。
-- 用户通过拖拽排序调整优先级，把高频卡片移动到上方。
-- 用户通过尺寸选择把低频卡片调成 S 或 M。
-- 刷新后保留顺序、尺寸和位置。
-
-后续可增强：
-
-- 卡片分组。
-- 折叠区域或收纳区。
-- 未放置卡片列表。
-- 多 workspace。
-- 卡片搜索和快速跳转。
-
-### 6.5 交互示例
-
-用户打开新标签页：
-
-1. 宿主注入内建 dashboard layout。
-2. 宿主读取 layout contribution。
-3. 布局 view 渲染 rail 宿主入口，并创建 `topbar` 和 `mainGrid` 渲染区。
-4. 宿主在 `rail` 中渲染主页、添加卡片、插件和设置入口。
-5. 宿主把 `search-main` 放入 `topbar`。
-6. 宿主把 widget 实例放入 `mainGrid`。
-
-用户切换到移动端窄屏（< 768px）：
-
-1. 同一 layout view 命中移动端断点。
-2. rail 折叠为底部导航栏。
-3. 主网格切换为单列堆叠。
-4. 实例、区域和数据保持不变，不做布局切换或实例迁移。
-
-布局失败：
-
-1. 宿主发现布局 view 未注册或渲染失败。
-2. 显示“布局不可用”和失败原因。
-3. 记录失败 layout id。
-4. 不渲染其他内容冒充当前布局。
-
-卡片过多：
-
-1. 用户持续添加 widget 实例。
-2. 主网格高度超过视口。
-3. 新卡片追加到末尾。
-4. 用户向下滚动访问低优先级卡片。
-5. 用户把常用卡片拖到上方，并把低频卡片调小。
-
-### 6.6 设计语言
-
-布局应保持“工作台”而不是“落地页”：
-
-- 左侧 rail 宽度控制在 56-64px，固定、低干扰。
-- 顶部命令搜索在内容区顶部，宽度受限，方便快速聚焦。
-- 主网格宽度稳定，默认桌面为 10 列逻辑网格。
-- 主网格不固定一屏高度，允许自然纵向滚动。
-- 首屏优先展示快捷入口、便签和待办。
-- 移动端单列，卡片按顺序堆叠。
-- 移动端 rail 折叠为底部工具条或顶部紧凑操作区。
-- 移动端不出现横向滚动。
-- 区域之间保持明确间距，但不使用大段说明文字。
-
-### 6.7 参考对象
-
-参考对象用于交互模式借鉴，不要求视觉复刻：
-
-| 参考对象                     | 借鉴点                     |
-| ---------------------------- | -------------------------- |
-| Vivaldi Start Page Dashboard | 可排列 widget 和仪表盘区域 |
-| Raycast / Spotlight          | 顶部命令入口和键盘优先     |
-| Notion dashboard             | 模块化工作区和轻量信息块   |
-| iOS / macOS Widget Gallery   | 语义尺寸和组件化卡片       |
-| Windows Widgets              | 信息卡片可组合的仪表盘感   |
-
-### 6.8 验收标准
+### 6.6 验收标准
 
 - 默认布局由宿主内建 dashboard layout 提供，区域结构在 layout contribution 中声明。
 - `rail` 提供主页、添加卡片、插件和设置等工作台级入口。
@@ -474,19 +133,9 @@ Dashboard layout 只负责区域，不负责：
 - 卡片超过首屏时，主网格可纵向滚动且不压缩卡片到不可读。
 - layout 失败时有明确的布局不可用提示和失败原因。
 
-### 6.9 交互模式（V2 原型中验证）
+### 6.7 交互模式
 
-Dashboard builtin layout 需要支持以下核心交互；⌘K 命令面板由平台注册为全局快捷键，不依赖独立布局：
-
-- **⌘K 全局搜索**：除常驻搜索栏外，`⌘K` 随时唤起命令面板。⌘K 由平台注册为全局快捷键。
-- **双击卡片展开**：双击卡片弹出展开视图，每种卡片类型有定制化内容布局（便签→全高文本域，待办→可交互列表等）。
-- **拖拽实时换位**：卡片可直接拖拽排序，悬停到目标位时实时交换位置，无需占位符。
-- **右键上下文菜单**：右键卡片弹出尺寸选择 + 展开 + 移除操作。
-- **搜索内联建议**：搜索栏输入实时过滤命令/卡片/搜索，分组显示结果，↑↓ 键盘导航。
-- **设置侧栏导航**：左侧分类导航（通用 · 外观 · 搜索 · 插件 · 关于）+ 右侧内容区。
-- **Toast 堆叠**：多条通知叠加显示，新通知滑入，超过 3 条自动清理。
-
-详细交互规格以 `DESIGN.md` 为准；可交互原型参考见 `docs/design/workbench-prototype.html`。
+核心交互（详细规格以 `DESIGN.md` 为准，原型见 `docs/design/workbench-prototype.html`）：`⌘K` 全局命令面板（由平台注册为全局快捷键，不依赖布局）、双击卡片展开（每类卡片有定制内容布局）、拖拽实时换位、右键上下文菜单（尺寸/展开/移除）、搜索内联建议（分组结果 + ↑↓ 导航）、设置侧栏导航、Toast 堆叠（超过 3 条自动清理）。
 
 ## 7. `official.search.command-bar`
 
@@ -496,104 +145,18 @@ Dashboard builtin layout 需要支持以下核心交互；⌘K 命令面板由�
 
 ### 7.2 Contribution
 
-扩展点：`search`
+扩展点：`search`。search id、title、`defaultProviderIds`、`supportsSuggestions`、view 和 `external-open` permission 等字段以 search manifest 为准。MVP 控件为 Dashboard 常驻搜索栏、全局 `⌘K` 命令面板、搜索源指示器/选择器、输入框、分组结果列表和 `@provider` 状态提示；搜索历史、多源并发预览、更复杂本地命令系统为后续。
 
-当前声明：
+### 7.3 交互示例
 
-| 字段                | 值                                               |
-| ------------------- | ------------------------------------------------ |
-| search id           | `official.search.command-bar`                    |
-| title               | `搜索栏`                                         |
-| defaultProviderIds  | `official.search.google`, `official.search.bing` |
-| supportsSuggestions | true                                             |
-| view                | `official.search.command-bar.view`               |
-| permission          | `external-open`                                  |
+- 基础搜索：输入 query 后 Enter，插件读取当前搜索源、把 encode 后的 query 注入 URL template，经 `context.permissions.openExternal(url)` 由权限桥校验 host 后打开。
+- 空查询：聚焦不输入按 Enter 不触发外部打开，输入框保持聚焦不报错。
+- Dashboard 内联建议：聚焦空输入显示分组建议，`ArrowDown` 进入列表、`Enter` 执行高亮项，外部/内部命令都走宿主统一执行路径。
+- `@provider` 切换：输入 `@github vite-plus` 识别 provider token 并显示当前 provider，剩余 query 跳转对应搜索。
+- 命令面板搜索：`⌘K` 唤起浮层，实时分组结果 + 键盘导航，`Enter` 执行。
+- 权限被拒绝：host 不在允许范围时 `openExternal` 失败，搜索栏提示“无法打开该搜索源，请检查插件权限”。
 
-### 7.3 交互结构
-
-```txt
-dashboard
-  search-wrapper
-    search-bar
-      provider indicator / selector
-      query input
-    suggestions
-      grouped results
-
-command-palette (⌘K)
-  query input
-  provider hint / token
-  grouped results
-```
-
-MVP 控件：
-
-- Dashboard 常驻搜索栏。
-- 全局 `⌘K` 命令面板搜索表面。
-- 搜索源指示器或选择器。
-- 搜索输入框。
-- 分组结果列表。
-- `@provider` 提示与当前搜索源状态。
-
-后续控件：
-
-- 搜索历史。
-- 多搜索源并发预览。
-- 更复杂的本地命令系统。
-
-### 7.4 交互示例
-
-基础搜索：
-
-1. 用户点击搜索输入框。
-2. 输入 `solidjs signal`。
-3. 按 Enter。
-4. 搜索插件读取当前搜索源。
-5. 插件把 query 注入 URL template。
-6. 插件通过 `context.permissions.openExternal(url)` 请求外部打开。
-7. 宿主权限桥校验 host。
-8. 校验通过后宿主打开外部搜索结果。
-
-空查询：
-
-1. 用户聚焦输入框但不输入内容。
-2. 用户按 Enter。
-3. 搜索插件不触发任何外部打开。
-4. 输入框保持聚焦，不显示错误。
-
-Dashboard 内联建议：
-
-1. 用户聚焦空输入框。
-2. 搜索区域显示分组建议，如常用命令、最近搜索、推荐搜索源或核心卡片入口。
-3. 用户按 `ArrowDown` 进入结果列表。
-4. 按 `Enter` 执行当前高亮项。
-5. 外部打开或内部命令都走宿主统一执行路径。
-
-`@provider` 切换搜索源：
-
-1. 用户输入 `@github vite-plus`。
-2. 搜索插件识别 `@github` 为搜索源 token，并在 UI 中显示当前 provider。
-3. 剩余 query 为 `vite-plus`。
-4. 用户按 `Enter`。
-5. 跳转到 GitHub 搜索 URL。
-
-命令面板搜索：
-
-1. 用户按 `⌘K` 或点击命令入口打开命令面板。
-2. 命令面板浮层唤起。
-3. 输入 `theme` 或 `@bing 天气`。
-4. 面板实时显示分组结果，支持键盘导航。
-5. `Enter` 执行高亮命令或搜索。
-
-权限被拒绝：
-
-1. 插件请求打开外部 URL。
-2. 权限桥发现 host 不在允许范围内。
-3. `openExternal` 返回失败。
-4. 搜索栏显示“无法打开该搜索源，请检查插件权限”。
-5. 用户可进入插件管理查看权限。
-
-### 7.5 输入与键盘行为
+### 7.4 输入与键盘行为
 
 | 按键      | 行为                                     |
 | --------- | ---------------------------------------- |
@@ -603,77 +166,17 @@ Dashboard 内联建议：
 | ArrowUp   | 返回输入框或移动到上一条建议             |
 | Tab       | 按正常焦点顺序移动，不劫持浏览器默认行为 |
 
-输入规则：
+输入规则：query 提交前 trim、空 query 不触发搜索、支持 `@provider` 临时切换搜索源（单独输入时进入待补全提示态）、URL query 必须 encode、外部打开走权限桥。
 
-- query 提交前 trim。
-- 空 query 不触发搜索。
-- 支持 `@provider` 语法临时切换搜索源。
-- `@provider` 单独输入时进入待补全 / 待输入 query 的提示状态。
-- URL 中 query 必须 encode。
-- 外部打开必须走权限桥。
+### 7.5 状态设计
 
-### 7.6 状态设计
+产品级状态：聚焦空输入显示分组建议/收藏命令/推荐入口；`@provider` 待补全显示已识别的 provider 提示态；权限拒绝在输入框下方显示小号错误文本或 Toast；provider 不可用时搜索源指示器禁用并显示占位；view 错误时 Dashboard 顶部区域或 ⌘K 面板显示搜索不可用占位。
 
-| 状态               | UI 表达                                        |
-| ------------------ | ---------------------------------------------- |
-| 默认               | 搜索源指示器 + 输入框                          |
-| 聚焦空输入         | 显示分组建议 / 收藏命令 / 推荐入口             |
-| 输入中             | 实时过滤结果并高亮当前项                       |
-| `@provider` 待补全 | 显示 provider token 已识别的提示态             |
-| 提交中             | 可短暂禁用输入或保持无感                       |
-| 权限拒绝           | 输入框下方显示小号错误文本或 Toast             |
-| provider 不可用    | 搜索源指示器禁用并显示占位                     |
-| view 错误          | Dashboard 顶部区域或 ⌘K 面板显示搜索不可用占位 |
+### 7.6 设计语言
 
-### 7.7 设计语言
+搜索栏是首屏主控件：清晰边框和轻阴影、搜索源指示器与输入框之间用细分割线弱分组、建议列表用清晰分组标题与紧凑可扫描的结果行、不使用大面积品牌渐变；`⌘K` 面板沿用原型的 CommandPalette / Dialog 视觉语言。具体宽高取值见 `DESIGN.md`。
 
-搜索栏是首屏主控件：
-
-- 宽度桌面建议 720-840px。
-- 高度建议 52-60px。
-- 使用清晰边框和轻阴影。
-- 搜索源指示器和输入框之间用细分割线或弱分组。
-- 建议列表使用清晰分组标题、紧凑但可扫描的结果行。
-- 搜索栏不使用大面积品牌渐变。
-- `⌘K` 面板沿用 V2 原型中的 CommandPalette / Dialog 视觉语言，不把它做成第二套风格。
-
-### 7.8 参考对象
-
-| 参考对象            | 借鉴点                    |
-| ------------------- | ------------------------- |
-| Raycast             | 搜索和命令入口合一的心智  |
-| macOS Spotlight     | 快速聚焦、键盘优先        |
-| Chrome 新标签页搜索 | 新标签页第一入口          |
-| Arc Command Bar     | 浏览器内命令式入口        |
-| GitHub 搜索         | provider 作为具体搜索目标 |
-
-### 7.9 MVP 与后续
-
-MVP：
-
-- 搜索输入。
-- Dashboard 内联建议。
-- Focus 通过居中命令入口或 `⌘K` 唤起搜索。
-- 搜索源选择与状态指示。
-- 搜索 provider 从 registry 动态读取。
-- 默认搜索源设置和持久化。
-- `@provider` 临时切换。
-- 分组结果与键盘导航。
-- 外部打开权限桥。
-- 空查询保护。
-
-V1.1：
-
-- 搜索历史。
-- 更复杂的本地命令系统。
-
-V1.5：
-
-- 多搜索源并发预览。
-- 搜索建议接口增强。
-- 搜索历史权重与个性化排序。
-
-### 7.10 验收标准
+### 7.7 验收标准
 
 - 搜索 UI 来自 `search` contribution。
 - 搜索源来自 `search-provider` contribution。
@@ -693,82 +196,20 @@ V1.5：
 
 ### 8.2 Contribution
 
-扩展点：`search-provider`
-
-当前搜索源：
-
-| Provider ID                  | 名称       | Shortcut | URL Template                              |
-| ---------------------------- | ---------- | -------- | ----------------------------------------- |
-| `official.search.google`     | Google     | `g`      | `https://www.google.com/search?q={query}` |
-| `official.search.bing`       | Bing       | `b`      | `https://www.bing.com/search?q={query}`   |
-| `official.search.baidu`      | 百度       | `d`      | `https://www.baidu.com/s?wd={query}`      |
-| `official.search.duckduckgo` | DuckDuckGo | `dd`     | `https://duckduckgo.com/?q={query}`       |
-| `official.search.github`     | GitHub     | `gh`     | `https://github.com/search?q={query}`     |
+扩展点：`search-provider`。MVP 声明 Google（`g`）、Bing（`b`）、百度（`d`）、DuckDuckGo（`dd`）、GitHub（`gh`）五个搜索源；各 provider id、shortcut 和 URL template 以 provider manifest 为准。
 
 ### 8.3 交互示例
 
-用户设置默认搜索源：
-
-1. 用户进入搜索设置。
-2. 搜索设置读取所有 `search-provider` contribution。
-3. 用户把 `Bing` 设为默认。
-4. workspace 或插件配置保存默认 provider id。
-5. 下次打开时搜索栏默认选中 Bing。
-
-用户使用 `@token`：
-
-1. 用户输入 `@github solid router`。
-2. 搜索栏识别 `@github` 为 GitHub provider token。
-3. query 变成 `solid router`。
-4. 跳转到 GitHub 搜索。
-
-禁用搜索源：
-
-1. 用户进入搜索源管理。
-2. 关闭 `百度`。
-3. 搜索栏 provider 列表移除百度。
-4. 已保存为默认时，自动回退到第一个可用搜索源。
+- 设置默认搜索源：搜索设置读取所有 `search-provider` contribution，用户选中后保存默认 provider id，下次打开默认选中。
+- `@token`：输入 `@github solid router` 识别 GitHub provider，query 变为 `solid router` 后跳转。
+- 禁用搜索源：关闭某源后搜索栏 provider 列表移除它；若为已保存默认则回退到第一个可用源。
 
 ### 8.4 设计语言
 
-搜索源在 UI 中应轻量呈现：
+- 列表显示名称、shortcut 和 host，默认源用选中态表示，禁用态不删除用户配置。
+- provider 图标后续使用统一图标集或真实品牌图标，不用随意 emoji。
 
-- 列表中显示名称、shortcut 和 host。
-- 默认搜索源用选中态表示。
-- 禁用态不删除用户配置。
-- provider 图标后续应使用统一图标集或真实品牌图标，不用随意 emoji。
-
-### 8.5 参考对象
-
-| 参考对象               | 借鉴点                                |
-| ---------------------- | ------------------------------------- |
-| 浏览器默认搜索引擎设置 | 默认搜索源、搜索源启用和 URL template |
-| Raycast extensions     | shortcut 快速选择目标                 |
-| Alfred Web Search      | keyword + query 模式                  |
-| VS Code settings       | 设置项可搜索、可恢复默认              |
-
-### 8.6 MVP 与后续
-
-MVP：
-
-- 声明基础搜索源。
-- 搜索栏可使用 URL template。
-- provider 动态注册和读取。
-- 默认搜索源持久化。
-- 权限声明支持外部打开。
-
-V1.1：
-
-- 启用/禁用搜索源。
-
-V1.5：
-
-- 自定义搜索源。
-- 搜索建议 endpoint。
-- provider 图标。
-- provider 分组，例如 Web、代码、文档、购物。
-
-### 8.7 验收标准
+### 8.5 验收标准
 
 - 搜索源插件不渲染搜索 UI。
 - URL template 必须包含 `{query}`。
@@ -784,111 +225,22 @@ V1.5：
 
 ### 9.2 Contribution
 
-扩展点：
-
-- `background-provider`
-- `background-renderer`
-
-当前 provider：
-
-| Provider ID                  | 名称     | sourceType  | source                      |
-| ---------------------------- | -------- | ----------- | --------------------------- |
-| `background.solid-green`     | 纯色绿底 | `generated` | `{ type: "css", css }`      |
-| `background.solid-dark`      | 纯色暗底 | `generated` | `{ type: "css", css }`      |
-| `background.gradient-green`  | 渐变绿底 | `generated` | `{ type: "gradient", css }` |
-| `background.gradient-blue`   | 渐变蓝底 | `generated` | `{ type: "gradient", css }` |
-| `background.gradient-purple` | 渐变紫底 | `generated` | `{ type: "gradient", css }` |
-
-当前 renderer：
-
-| Renderer ID                        | 名称           | accepts           |
-| ---------------------------------- | -------------- | ----------------- |
-| `official.background.css-renderer` | CSS 背景渲染器 | `css`, `gradient` |
+扩展点：`background-provider` 与 `background-renderer`。MVP 提供纯色（绿/暗）和渐变（绿/蓝/紫）共 5 个 generated provider，以及一个接受 `css`/`gradient` 的 CSS renderer；provider id、sourceType 和 source 形状以 background manifest 为准。
 
 ### 9.3 交互示例
 
-切换背景：
-
-1. 用户打开背景选择控件。
-2. 宿主读取 `background-provider` contributions。
-3. 用户选择 `渐变蓝底`。
-4. 宿主保存 `activeBackgroundProviderId`。
-5. 宿主找到兼容的 background renderer。
-6. 背景层更新，不影响卡片实例。
-
-背景渲染失败：
-
-1. renderer view 抛错或不可用。
-2. 宿主移除背景层或使用 `color-page`。
-3. 工作台卡片继续渲染。
-4. 背景选择器显示失败状态。
-
-未来上传本地背景：
-
-1. 用户点击“添加背景”。
-2. 宿主发起本地文件授权流程。
-3. provider 保存用户选择的图片引用。
-4. renderer 使用 image 渲染。
-5. 若文件不可访问，回退到默认背景。
+- 切换背景：宿主读取 `background-provider` contributions，用户选中后保存 `activeBackgroundProviderId`，匹配兼容 renderer 更新背景层，不影响卡片实例。
+- 渲染失败：renderer view 抛错时宿主回退 `color-page`，卡片继续渲染，背景选择器显示失败状态。
 
 ### 9.4 状态设计
 
-| 状态            | UI 表达                        |
-| --------------- | ------------------------------ |
-| 当前背景        | 背景列表选中态                 |
-| 预览            | 小色块或缩略图                 |
-| 加载中          | 背景列表项 skeleton 或 spinner |
-| 渲染失败        | 使用页面底色，设置中显示错误   |
-| 不兼容 renderer | 禁用该背景源并显示原因         |
+产品级状态：当前背景在列表中选中、预览用小色块或缩略图、渲染失败时使用页面底色并在设置中显示错误、不兼容 renderer 时禁用该背景源并显示原因。
 
 ### 9.5 设计语言
 
-背景要服务可读性：
+背景服务可读性：默认低对比不干扰文字、渐变不过饱和、背景与卡片有足够层次、不用离散装饰光斑或大面积装饰作默认背景、切换不造成内容重排。
 
-- 默认背景低对比，不干扰文字。
-- 渐变不要太饱和。
-- 背景和卡片之间要有足够层次。
-- 不使用离散装饰光斑或大面积装饰元素作为默认背景。
-- 背景切换不应造成内容重排。
-
-### 9.6 参考对象
-
-| 参考对象             | 借鉴点                   |
-| -------------------- | ------------------------ |
-| macOS Wallpaper 设置 | 背景预览、选择和持久化   |
-| Arc Browser 主题     | 浏览器工作空间的背景氛围 |
-| Windows 个性化设置   | 背景源和渲染模式分离     |
-| VS Code 主题生态     | 视觉资源由贡献项声明     |
-
-### 9.7 MVP 与后续
-
-MVP：
-
-- 纯色和渐变背景源。
-- CSS renderer。
-- 背景选择持久化。
-- 渲染失败回退。
-
-V1.1：
-
-- 背景预览网格。
-- 图片背景 provider。
-- 背景亮度/模糊/遮罩配置。
-
-V1.5：
-
-- 本地图片集合。
-- 每日背景。
-- 收藏背景。
-- 远程背景源。
-
-V2：
-
-- 视频、Canvas、WebGL renderer。
-- 第三方背景插件。
-- 背景权限审计。
-
-### 9.8 验收标准
+### 9.6 验收标准
 
 - 背景源来自 `background-provider` contribution。
 - 背景渲染来自 `background-renderer` contribution。
@@ -904,85 +256,19 @@ V2：
 
 ### 10.2 Contribution
 
-扩展点：`theme`
+扩展点：`theme`。MVP 提供 `official.theme.light`（默认明亮）和 `official.theme.dark`（暗色）。token 角色（`color-page`/`color-surface`/`color-text`/`color-muted`/`color-accent`/`color-line`/`radius-card`）及其明暗取值以 theme manifest 和 `DESIGN.md` 为准。
 
-当前主题：
+### 10.3 交互示例
 
-| Theme ID               | 名称       | 用途         |
-| ---------------------- | ---------- | ------------ |
-| `official.theme.light` | 明亮工作台 | 默认明亮主题 |
-| `official.theme.dark`  | 暗色工作台 | 暗色环境     |
+- 切换主题：宿主读取 `theme` contribution，用户选中后把 token 应用到 workspace root 并保存 `activeThemeId`，官方插件经 CSS variables 自动更新。
+- 主题失败：token 缺失或非法时回退内置安全 token，提示“主题加载失败，已使用默认主题”，插件内容继续可用。
 
-### 10.3 Token 说明
+### 10.4 设计语言
 
-| Token           | 明亮主题      | 暗色主题      | 说明       |
-| --------------- | ------------- | ------------- | ---------- |
-| `color-page`    | `237 241 238` | `18 18 18`    | 页面底色   |
-| `color-surface` | `255 255 255` | `30 30 30`    | 卡片和弹窗 |
-| `color-text`    | `31 35 32`    | `230 230 230` | 主文本     |
-| `color-muted`   | `102 112 105` | `140 140 140` | 次级文本   |
-| `color-accent`  | `35 113 89`   | `80 200 160`  | 强调色     |
-| `color-line`    | `210 218 213` | `50 50 50`    | 边框线     |
-| `radius-card`   | `16px`        | `16px`        | 卡片半径   |
+- 明亮主题不过白刺眼、页面底色可略带灰绿；暗色主题不纯黑、用深灰降低疲劳。
+- accent 只用于链接、选中、主按钮和关键状态；卡片透明度受控，避免明亮主题下边界不可见。
 
-### 10.4 交互示例
-
-切换主题：
-
-1. 用户点击主题切换按钮。
-2. 宿主读取 `theme` contribution。
-3. 用户选择 `暗色工作台`。
-4. 宿主把 token 应用到 workspace root。
-5. 宿主保存 `activeThemeId`。
-6. 所有官方插件使用 CSS variables 自动更新。
-
-主题失败：
-
-1. 主题 token 缺失或非法。
-2. 宿主回退到内置安全 token。
-3. 显示“主题加载失败，已使用默认主题”。
-4. 插件内容继续可用。
-
-### 10.5 设计语言
-
-主题包应保证“安静专业”：
-
-- 明亮主题不能过白刺眼，页面底色可略带灰绿。
-- 暗色主题不能纯黑，使用深灰降低疲劳。
-- accent 只用于链接、选中、主按钮和关键状态。
-- 卡片透明度要控制，明亮主题下避免低透明导致边界不可见。
-
-### 10.6 参考对象
-
-| 参考对象              | 借鉴点                   |
-| --------------------- | ------------------------ |
-| VS Code themes        | token 化主题生态         |
-| Linear                | 高密度工作产品的克制视觉 |
-| Notion                | 中性表面和内容优先       |
-| macOS light/dark mode | 系统级明暗切换心智       |
-
-### 10.7 MVP 与后续
-
-MVP：
-
-- 明亮主题。
-- 暗色主题。
-- CSS variables 应用。
-- 主题选择持久化。
-
-V1.1：
-
-- 主题预览。
-- 跟随系统。
-- 高对比主题。
-
-V1.5：
-
-- 主题编辑器。
-- 导入/导出主题。
-- 第三方主题包。
-
-### 10.8 验收标准
+### 10.5 验收标准
 
 - 官方插件样式使用 token，不依赖硬编码大面积颜色。
 - 切换主题不刷新页面。
@@ -994,25 +280,7 @@ V1.5：
 
 ### 11.1 产品定位
 
-生产力插件包提供默认工作台的基础内容卡片。它不是一个单一 widget，而是一组同源生产力 widget 的官方集合。
-
-产品口径上，MVP 应把这些能力视为独立官方 widget：`quick-links`、`notes`、`todo` 和 `weather`。工程上可以暂时继续放在 `official.widgets.productivity` 包内，但 manifest、文档和验收需要按独立 widget 能力理解，避免把“生产力包”变成新的业务大杂烩。
-
-当前实现包含：
-
-- 快捷入口。
-- 便签。
-- 待办。
-- 天气。
-
-规划可扩展：
-
-- 日历。
-- 倒计时。
-- RSS。
-- 书签集合。
-- 最近访问。
-- 剪贴板片段。
+生产力插件包提供默认工作台的基础内容卡片。它不是单一 widget，而是一组同源生产力 widget 的官方集合。产品口径上 MVP 把 `quick-links`、`notes`、`todo`、`weather` 视为独立官方 widget（工程上可暂放同一包内，但 manifest、文档和验收按独立 widget 能力理解）。后续可扩展日历、倒计时、RSS、书签集合、最近访问、剪贴板片段等。
 
 ### 11.2 Contribution
 
@@ -1029,14 +297,7 @@ MVP widget 清单：
 
 ### 11.3 统一卡片规范
 
-每个 widget 卡片应遵循：
-
-- 宿主卡片外壳不渲染标题 header，标题仅作为可访问名称和展开视图标题来源。
-- 插件 card view 负责完整卡片内容区，包括内部留白、滚动和截断。
-- 支持尺寸必须由 manifest 声明。
-- 卡片内操作不影响宿主布局尺寸。
-- 多实例数据应按实例隔离，除非产品明确要求全局共享。
-- 内容过长时使用内部滚动或截断，不撑破卡片。
+每个 widget 卡片应遵循：宿主卡片外壳不渲染标题 header（标题仅作可访问名称和展开视图标题来源）、插件 card view 负责完整内容区（含留白/滚动/截断）、支持尺寸由 manifest 声明、卡片内操作不影响宿主布局尺寸、多实例数据按实例隔离（除非产品要求全局共享）、内容过长时内部滚动或截断不撑破卡片。
 
 ### 11.4 Widget 尺寸语义
 
@@ -1055,81 +316,14 @@ MVP widget 清单：
 
 #### 交互示例
 
-打开链接：
-
-1. 用户点击 `GitHub`。
-2. 插件通过 `WidgetViewProps.host.openExternal(url)` 请求宿主外部打开。
-3. 插件 manifest 显式声明 `permissions: [{ type: "external-open", hosts: ["*"] }]`。
-4. 宿主经 permission bridge 校验后再执行外部打开；不允许裸 `<a target="_blank">` 绕过权限模型。
-
-添加快捷入口：
-
-1. 用户点击卡片内添加按钮。
-2. 弹出编辑表单。
-3. 用户输入标题、URL、图标或颜色。
-4. 插件校验 URL。
-5. 保存到当前实例配置或 plugin data。
-6. 新入口出现在该卡片中。
-
-编辑入口：
-
-1. 用户悬停某个入口。
-2. 显示编辑和删除按钮。
-3. 点击编辑。
-4. 修改标题或 URL。
-5. 保存后卡片即时更新。
-
-空状态：
-
-1. 用户删除所有入口。
-2. 卡片显示“添加第一个入口”按钮。
-3. 不显示解释性大段文案。
-
-展开弹窗：
-
-1. 用户双击卡片或右键选择展开。
-2. 宿主打开统一 expand overlay，渲染 `official.widgets.quick-links.expand` 作为主体视图（常用入口列表 / 管理分组 / 添加入口三面板 + 右侧配置）。
-3. 操作按钮（管理分组 / 添加入口，随面板切换为完成 / 取消 / 保存入口）通过 `views.expandFooter` 注入外层弹窗统一 footer，不在 body 内部自绘 footer，避免双 footer。
-4. 主体视图与 footer 视图共享一个按 instanceId 建立的插件内部会话 store，保证面板切换、校验错误等瞬时状态同步。
-5. 关闭弹窗后卡片入口数量与列表同步更新。
+- 打开链接：通过 `WidgetViewProps.host.openExternal(url)` 经权限桥校验（manifest 声明 `external-open`）打开。
+- 添加/编辑入口：卡片内表单输入标题/URL/图标，校验后保存到实例配置或 plugin data，卡片即时更新；悬停显示编辑和删除按钮。
+- 空状态：删除所有入口后显示“添加第一个入口”按钮。
+- 展开弹窗：宿主打开统一 expand overlay 渲染 `expand` 主体（常用入口/管理分组/添加入口三面板 + 右侧配置），操作按钮经 `expandFooter` 注入外层统一 footer，主体与 footer 共享按 instanceId 的会话 store 同步瞬时状态。
 
 #### 设计语言
 
-- 入口可以使用图标 + 短标题。
-- S 尺寸最多显示 2-4 个入口。
-- M 尺寸建议 4-8 个入口。
-- L 尺寸可以分组。
-- 链接按钮大小稳定，hover 不改变布局。
-- 后续图标优先使用真实站点图标或统一 icon，不使用随意 emoji。
-
-#### 参考对象
-
-| 参考对象                | 借鉴点                   |
-| ----------------------- | ------------------------ |
-| Chrome 新标签页快捷方式 | 快速站点入口             |
-| Raindrop.io collections | 收藏分组和视觉入口       |
-| Arc Favorites           | 浏览器工作流中的常用入口 |
-| iOS Home Screen widgets | 小尺寸入口密度           |
-
-#### MVP 与后续
-
-MVP：
-
-- 展示默认链接。
-- 点击打开链接。
-
-V1.1：
-
-- 自定义链接。
-- 实例级链接列表。
-- 外部打开走权限桥。
-
-V1.5：
-
-- 分组。
-- favicon。
-- 导入浏览器书签。
-- 拖拽排序。
+入口用图标 + 短标题（S 显示 2-4 个、M 显示 4-8 个、L 可分组）；链接按钮大小稳定、hover 不改变布局。
 
 #### 验收标准
 
@@ -1142,93 +336,22 @@ V1.5：
 
 #### 产品定位
 
-便签用于快速记录临时想法、待复制文本或当天提示。它应比完整笔记应用更轻，不追求复杂文档编辑。
-
-#### 当前实现
-
-当前卡片和弹窗都通过宿主提供的实例级 `props.data` 读写便签内容；同一 widget 实例内共享，多个实例默认隔离。
+便签用于快速记录临时想法、待复制文本或当天提示，比完整笔记应用更轻，不追求复杂文档编辑。当前卡片和弹窗都通过宿主实例级 `props.data` 读写内容，同一实例内共享、多实例默认隔离。
 
 #### 交互示例
 
-快速记录：
-
-1. 用户点击便签卡片文本区域。
-2. 输入内容。
-3. 内容自动保存。
-4. 刷新页面后内容恢复。
-
-打开展开编辑：
-
-1. 用户双击卡片或从右键菜单选择展开。
-2. 宿主打开统一 expand overlay。
-3. 插件渲染 `official.widgets.notes.expand`。
-4. 用户在更大的编辑区输入。
-5. 自动保存。
-6. 关闭展开视图后卡片内容同步更新。
-
-清空内容：
-
-1. 用户选择更多菜单中的清空。
-2. 系统二次确认。
-3. 清空当前实例便签。
-4. 显示空 textarea。
-
-保存失败：
-
-1. 用户输入内容。
-2. IndexedDB 保存失败。
-3. 文本区域保留当前输入。
-4. 卡片底部显示“暂未保存”。
-5. 恢复后自动重试或用户手动重试。
+- 快速记录：点击卡片文本区输入，内容自动保存，刷新后恢复。
+- 展开编辑：双击或右键展开，宿主打开 expand overlay 渲染 `notes.expand`，更大编辑区输入并自动保存，关闭后卡片同步。
+- 清空：更多菜单选清空并二次确认后清空当前实例便签。
+- 保存失败：IndexedDB 保存失败时保留当前输入，卡片底部显示“暂未保存”，恢复后自动或手动重试。
 
 #### 状态设计
 
-| 状态     | UI 表达                   |
-| -------- | ------------------------- |
-| 空       | placeholder `写点什么...` |
-| 编辑中   | 文本区域聚焦边界          |
-| 已保存   | 默认不提示                |
-| 保存中   | 可显示细小 pending 状态   |
-| 保存失败 | 底部小号错误文本          |
-| 弹窗编辑 | 更大编辑区，保留同一内容  |
+产品级状态：空态显示 placeholder `写点什么...`；保存失败在底部显示小号错误文本并保留当前输入；弹窗编辑提供更大编辑区并保留同一内容。
 
 #### 设计语言
 
-- 卡片内 textarea 无边框或弱边框，像轻量纸张。
-- 行高舒适，适合中文短句。
-- 不使用富文本工具栏作为 MVP。
-- 弹窗编辑区可有边框，强化可编辑区域。
-- 长内容在卡片内滚动或截断，不能撑破布局。
-
-#### 参考对象
-
-| 参考对象               | 借鉴点               |
-| ---------------------- | -------------------- |
-| Apple Notes Quick Note | 随手记录             |
-| Google Keep            | 轻量便签和卡片心智   |
-| Notion text block      | 低干扰输入           |
-| Windows Sticky Notes   | 简单、持续存在的便签 |
-
-#### MVP 与后续
-
-MVP：
-
-- 卡片内编辑。
-- 弹窗编辑。
-- 自动保存。
-
-V1.1：
-
-- 标签、置顶和更丰富的编辑能力。
-- 保存状态反馈。
-- 清空操作。
-
-V1.5：
-
-- 多便签列表。
-- Markdown 预览。
-- 固定便签颜色。
-- 搜索便签。
+卡片内 textarea 无边框或弱边框、行高舒适适合中文短句、MVP 不用富文本工具栏、弹窗编辑区可有边框强化可编辑区域、长内容内部滚动或截断不撑破布局。
 
 #### 验收标准
 
@@ -1242,104 +365,23 @@ V1.5：
 
 #### 产品定位
 
-待办卡片用于管理短周期任务，不替代完整项目管理软件。它应支持快速添加、完成、删除和查看完成度。
-
-#### 当前实现
-
-当前待办通过宿主提供的实例级 `props.data` 保存 `v2_items` 和 `v2_groups`；多个待办实例默认使用独立列表。
+待办卡片用于管理短周期任务，不替代完整项目管理软件，支持快速添加、完成、删除和查看完成度。当前通过宿主实例级 `props.data` 保存 `v2_items` 和 `v2_groups`，多实例默认使用独立列表。
 
 #### 交互示例
 
-添加待办：
-
-1. 用户在输入框输入 `整理插件文档`。
-2. 按 Enter 或点击加号按钮。
-3. 插件创建 todo item。
-4. 输入框清空。
-5. 列表显示新项目。
-6. 数据保存到 plugin storage。
-
-完成待办：
-
-1. 用户点击 checkbox。
-2. item 状态切换为 done。
-3. 文本显示删除线和 muted 色。
-4. 底部完成数更新，例如 `1/3 完成`。
-5. 数据保存。
-
-删除待办：
-
-1. 用户悬停 todo item。
-2. 删除按钮显示。
-3. 用户点击删除。
-4. item 从列表移除。
-5. 数据保存。
-
-空状态：
-
-1. 列表为空。
-2. 只显示输入框。
-3. 可在下方显示轻量 placeholder，例如“今天先写一件事”。
-
-保存失败：
-
-1. 用户添加或切换状态。
-2. 保存失败。
-3. UI 可先保持乐观更新。
-4. 底部显示“同步失败，稍后重试”。
-5. 后续需要提供重试或回滚策略。
+- 添加待办：输入框输入后 Enter 或加号按钮创建 item，输入框清空、列表显示新项、数据保存。
+- 完成待办：点击 checkbox 切换 done，文本显示删除线和 muted 色，底部完成数（如 `1/3 完成`）更新并保存。
+- 删除待办：悬停显示删除按钮，点击后 item 移除并保存。
+- 空状态：列表为空时只显示输入框，可显示轻量 placeholder。
+- 保存失败：可先乐观更新，底部显示“同步失败，稍后重试”，后续提供重试或回滚。
 
 #### 状态设计
 
-| 状态     | UI 表达                      |
-| -------- | ---------------------------- |
-| 空列表   | 输入框 + 轻量空提示          |
-| 有列表   | checkbox + 文本 + hover 删除 |
-| 已完成   | 删除线 + muted 文本          |
-| 输入为空 | 加号按钮可禁用或点击无效     |
-| 保存失败 | footer 错误提示              |
-| 列表过长 | 内部滚动                     |
+产品级状态：空列表只显示输入框加轻量提示；已完成项用删除线加 muted 文本；输入为空时加号按钮禁用或点击无效；保存失败在 footer 显示错误提示；列表过长时内部滚动。
 
 #### 设计语言
 
-- 输入框和加号按钮尺寸一致。
-- checkbox 使用 accent 色。
-- 删除按钮默认弱化，hover 显示。
-- 列表行高紧凑但可点击区域足够。
-- footer 保持小号，不抢主内容。
-
-#### 参考对象
-
-| 参考对象               | 借鉴点                 |
-| ---------------------- | ---------------------- |
-| Todoist                | 快速添加和完成任务     |
-| Things                 | 安静、低噪音的任务列表 |
-| Microsoft To Do        | 简洁 checkbox 心智     |
-| Apple Reminders widget | 小尺寸展示完成状态     |
-
-#### MVP 与后续
-
-MVP：
-
-- 添加。
-- 完成/取消完成。
-- 删除。
-- 完成计数。
-- 持久化。
-
-V1.1：
-
-- 编辑 todo 文本。
-- 清空已完成。
-- 保存失败反馈。
-
-V1.5：
-
-- 分组。
-- 日期。
-- 优先级。
-- 拖拽排序。
-- 多列表。
+输入框与加号按钮尺寸一致、checkbox 用 accent 色、删除按钮默认弱化 hover 显示、列表行高紧凑但可点击区域足够、footer 保持小号不抢主内容。
 
 #### 验收标准
 
@@ -1357,79 +399,23 @@ V1.5：
 
 #### 当前实现
 
-- 数据源：Open-Meteo geocoding（城市名→经纬度）+ forecast（当前/逐小时/三日）+ air-quality（US AQI）。manifest 声明 `network` 权限。
-- 城市来自实例配置 `config.city`（默认「北京」），在展开弹窗中通过 `Select` 切换并写回 `host.updateConfig`。不请求地理定位权限。
-- 首次渲染先读实例缓存（`props.data`）即时展示，再请求刷新；网络失败回退缓存，无缓存才显示错误与重试。
-- 天气图标使用 `lucide-solid`，按 WMO weather code 映射；不再使用 emoji/符号。
-- 卡片 S 只显示当前天气块，M 显示指标与小时趋势；展开弹窗左右分区（主区趋势/建议 + 侧栏城市与关注指标）。
+- 数据源：Open-Meteo geocoding + forecast（当前/逐小时/三日）+ air-quality（US AQI），manifest 声明 `network` 权限，不请求地理定位。
+- 城市来自实例配置 `config.city`（默认「北京」），展开弹窗通过 `Select` 切换并写回 `host.updateConfig`；首次渲染先读实例缓存即时展示再请求刷新，网络失败回退缓存、无缓存才显示错误与重试。
+- 天气图标用 `lucide-solid` 按 WMO code 映射；卡片 S 显示当前天气块、M 显示指标与小时趋势，展开弹窗左右分区（主区趋势/建议 + 侧栏城市与关注指标）。
 
 #### 交互示例
 
-查看天气：
-
-1. 用户看到天气卡片。
-2. 卡片显示温度、城市、天气状况、湿度、风速。
-3. S 尺寸显示核心温度和城市。
-4. M 尺寸显示更多指标。
-
-切换城市：
-
-1. 用户在展开弹窗侧栏的城市 `Select` 中选择或切换城市。
-2. 插件请求 Open-Meteo 数据。
-3. 保存城市到实例配置（`host.updateConfig`）。
-4. 卡片与弹窗刷新展示所选城市天气。
-
-天气加载失败：
-
-1. 插件请求天气数据失败。
-2. 卡片保留上次成功数据。
-3. 显示“更新失败”小号提示。
-4. 后续自动重试。
+- 查看天气：卡片显示温度、城市、状况、湿度、风速；S 显示核心温度和城市，M 显示更多指标。
+- 切换城市：展开弹窗侧栏城市 `Select` 切换后请求 Open-Meteo 数据，保存到实例配置（`host.updateConfig`），卡片与弹窗刷新。
+- 加载失败：请求失败时卡片保留上次成功数据并显示“更新失败”提示，后续自动重试。
 
 #### 状态设计
 
-| 状态     | UI 表达                         |
-| -------- | ------------------------------- |
-| 加载中   | 温度位置 skeleton               |
-| 有数据   | 温度、城市、状况、湿度、风、AQI |
-| 网络失败 | 回退缓存；无缓存显示错误 + 重试 |
+产品级状态：加载中显示温度位置 skeleton；有数据显示温度/城市/状况/湿度/风/AQI；网络失败回退缓存，无缓存才显示错误 + 重试。
 
 #### 设计语言
 
-- 天气卡片要紧凑，避免大图标占满卡片。
-- S 尺寸显示温度优先。
-- M 尺寸增加湿度和风速。
-- 图标风格要和系统 icon 统一。
-- 不使用复杂背景图，避免和页面背景竞争。
-
-#### 参考对象
-
-| 参考对象                  | 借鉴点               |
-| ------------------------- | -------------------- |
-| iOS Weather widget        | 小尺寸核心天气信息   |
-| Windows Widgets weather   | 温度、城市、状态组合 |
-| Google Weather card       | 简洁指标排布         |
-| Apple Watch complications | 极小空间的天气摘要   |
-
-#### MVP 与后续
-
-MVP：
-
-- Open-Meteo 实时数据展示。
-- 基础 weather card。
-- 缓存回退、失败状态和手动重试。
-
-V1.1：
-
-- 多城市管理。
-- 更丰富天气指标。
-
-V1.5：
-
-- 多城市。
-- 逐小时预报。
-- 空气质量。
-- 定位授权。
+天气卡片紧凑、避免大图标占满卡片；S 优先显示温度、M 增加湿度和风速；图标与系统 icon 统一；不用复杂背景图与页面背景竞争。
 
 #### 验收标准
 
@@ -1446,135 +432,23 @@ V1.5：
 
 ### 12.2 Contribution
 
-扩展点：
+扩展点：`settings-panel`（panel id 以 manifest 为准）。列表项建议显示插件名称、ID、版本、来源（当前只有 `builtin`）、启用状态、贡献能力摘要、错误状态和操作入口；当前实现已展示名称、ID、贡献能力摘要和启用状态。
 
-- `settings-panel`
+### 12.3 交互示例
 
-当前声明：
+- 查看列表/详情：读取 official plugin registry 展示名称/ID/贡献能力/启用状态，点击项在右侧或弹窗打开 manifest/贡献点/权限/版本/状态详情，可复制 ID 或查看错误日志。
+- 禁用插件：关闭开关时宿主检查是否关键插件，影响当前工作区则显示影响范围并二次确认；禁用后已有实例进入禁用占位，数据保留。
+- 权限查看：详情权限区显示 `external-open: *` 等权限并对高风险权限给出说明（后续支持撤销授权）；实例渲染失败时该项显示错误标识，详情可查看失败实例 ID 和错误信息。
 
-| 字段              | 值                          |
-| ----------------- | --------------------------- |
-| settings panel id | `official.settings.plugins` |
+### 12.4 状态设计
 
-### 12.3 信息结构
+产品级状态用 badge/switch 表达：已启用、已禁用、有错误（warning）、权限敏感（permission）、关键插件（lock / “核心默认体验”标记）、更新可用（version，后续）。
 
-每个插件列表项建议显示：
+### 12.5 设计语言
 
-- 插件名称。
-- 插件 ID。
-- 版本。
-- 来源：当前只有 `builtin`。
-- 启用状态。
-- 贡献能力摘要。
-- 错误状态。
-- 操作入口。
+插件管理器是操作型工具：信息密度可高于普通 widget、用列表而非大卡片堆叠、badge 文案短且颜色克制、插件 ID 用等宽字体、操作按钮固定右侧或详情区、危险操作需确认。
 
-当前实现已展示：
-
-- 插件名称。
-- 插件 ID。
-- 贡献能力摘要。
-- 启用状态。
-
-### 12.4 交互示例
-
-查看插件列表：
-
-1. 用户打开插件管理卡片或设置面板。
-2. 插件管理器读取 official plugin registry。
-3. 列表显示插件名称、ID、贡献能力和启用状态。
-4. 用户可快速理解默认体验由哪些插件组成。
-
-查看插件详情：
-
-1. 用户点击某个插件项。
-2. 右侧或弹窗打开详情。
-3. 详情显示 manifest、贡献点、权限、版本和状态。
-4. 用户可以复制插件 ID 或查看错误日志。
-
-禁用插件：
-
-1. 用户关闭插件开关。
-2. 宿主检查是否为关键插件。
-3. 若禁用会影响当前工作区，显示影响范围。
-4. 用户确认。
-5. 插件记录变为 disabled。
-6. 已有实例进入禁用占位状态，数据保留。
-
-权限查看：
-
-1. 用户打开插件详情。
-2. 权限区域显示 `external-open: *` 等权限。
-3. 对高风险权限显示清晰说明。
-4. 后续可支持撤销授权。
-
-插件错误：
-
-1. 某插件实例渲染失败。
-2. 插件管理器在该插件项显示错误标识。
-3. 用户打开详情查看失败实例 ID 和错误信息。
-4. 用户可以移除实例或重新加载插件。
-
-### 12.5 状态设计
-
-| 状态     | UI 表达                         |
-| -------- | ------------------------------- |
-| 已启用   | 绿色或 accent badge / switch on |
-| 已禁用   | muted badge / switch off        |
-| 有错误   | warning badge                   |
-| 权限敏感 | permission badge                |
-| 关键插件 | lock 或“核心默认体验”标记       |
-| 更新可用 | version badge，后续             |
-
-### 12.6 设计语言
-
-插件管理器是操作型工具：
-
-- 信息密度可以高于普通 widget。
-- 使用列表而不是大卡片堆叠。
-- badge 文案短，颜色克制。
-- 插件 ID 用等宽字体。
-- 操作按钮固定在右侧或详情区。
-- 危险操作需要确认。
-
-### 12.7 参考对象
-
-| 参考对象           | 借鉴点                         |
-| ------------------ | ------------------------------ |
-| VS Code Extensions | 插件列表、详情、启用状态       |
-| Chrome Extensions  | 权限和启用/禁用管理            |
-| Figma Plugins      | 插件作为产品能力入口           |
-| Raycast Extensions | 插件能力、命令和权限的组合展示 |
-
-### 12.8 MVP 与后续
-
-MVP：
-
-- 展示官方插件列表。
-- 展示启用状态。
-- 展示贡献能力摘要。
-
-V1.1：
-
-- 插件详情。
-- 权限展示。
-- 插件错误展示。
-- 启用/禁用流程。
-
-V1.5：
-
-- 本地插件安装。
-- 插件更新。
-- 插件调试信息。
-- 插件数据清理。
-
-V2：
-
-- 第三方插件市场。
-- 评分、审核、权限审计。
-- 远程插件安装和升级。
-
-### 12.9 验收标准
+### 12.6 验收标准
 
 - 插件管理器从 registry / plugin records 读取数据，不维护重复真相。
 - 单实例，不允许重复添加多个插件管理器。
@@ -1594,121 +468,20 @@ V2：
 
 ### 13.2 建议 Contribution
 
-扩展点：`settings-panel`
-
-MVP settings panels：
-
-| Panel ID                                 | 标题 | 内容                                             | MVP 目标         |
-| ---------------------------------------- | ---- | ------------------------------------------------ | ---------------- |
-| `official.settings.plugins`              | 插件 | 插件名称、ID、版本、启用状态、贡献能力 | 只读展示         |
-| `official.settings.workspace.appearance` | 外观 | 当前主题、可用主题、当前背景、可用背景           | 可切换并持久化   |
-| `official.settings.workspace.search`     | 搜索 | 默认搜索源、已启用搜索源、搜索源 shortcut        | 可选择默认搜索源 |
-| `official.settings.account-sync.account` | 账号 | 注册、登录、退出和密码重置                       | 仅账号插件装配时显示 |
-| `official.settings.account-sync.sync`    | 数据同步 | 最近同步时间、同步范围和立即同步操作          | 仅账号插件装配时显示 |
-
-后续 settings panels：
-
-| Panel ID                                  | 标题   | 内容                     |
-| ----------------------------------------- | ------ | ------------------------ |
-| `official.settings.workspace.general`     | 工作区 | 名称、默认布局、导入导出 |
-| `official.settings.workspace.widgets`     | 卡片   | 默认卡片、未放置实例     |
-| `official.settings.workspace.permissions` | 权限   | 插件权限和授权记录       |
+扩展点：`settings-panel`。MVP 面板为插件（只读）、外观（主题/背景可切换持久化）、搜索（可选默认搜索源），账号与数据同步面板仅账号插件装配时显示；后续增加工作区、卡片、权限面板。各 panel id、`section/order`、`surfaces` 等字段以 manifest 为准。
 
 ### 13.3 交互示例
 
-打开设置：
-
-1. 用户点击工具栏设置按钮。
-2. 宿主导航到 `/settings/<section>` 并打开 settings host。
-3. settings host 读取已启用插件贡献的 `settings-panel`。
-4. orchestrator 按当前 `surface` 过滤 panel，再按 `section/order` 组织导航，没有 contribution 的业务分类不显示。
-5. 默认打开“插件”面板；用户切换分类时同步对应二级路由。
-6. `schema` panel 通过 provider registry + 官方 renderer 渲染；`custom-view` panel 通过 view registry 渲染。
-
-切换主题：
-
-1. 用户进入“外观”。
-2. 选择主题。
-3. 右侧即时预览。
-4. 点击应用或直接保存。
-5. 工作区 token 更新。
-6. workspace 保存 `activeThemeId`。
-
-切换背景：
-
-1. 用户进入“外观”。
-2. 选择背景 provider。
-3. settings host 调用工作区更新能力。
-4. 背景层即时变化。
-5. workspace 保存 `activeBackgroundProviderId` 和 renderer 信息。
-
-配置默认搜索源：
-
-1. 用户进入“搜索”。
-2. 面板读取 `search-provider` contributions。
-3. 用户选择默认搜索源。
-4. 搜索配置保存到 workspace 或 search 插件配置。
-5. 命令搜索栏默认 provider 更新。
-
-导出工作区：
-
-1. 用户进入“工作区”。
-2. 点击导出。
-3. 宿主生成 workspace JSON。
-4. 用户保存文件。
-5. 插件数据是否包含在内由用户选择。
+- 打开设置：宿主导航到 `/settings/<section>` 打开 settings host，读取已启用插件的 `settings-panel`，orchestrator 按当前 `surface` 过滤再按 `section/order` 组织导航（无 contribution 的分类不显示），默认打开“插件”面板；`schema` panel 走 provider registry + 官方 renderer，`custom-view` panel 走 view registry。
+- 切换主题/背景：在“外观”选中后即时生效，workspace 保存 `activeThemeId` / `activeBackgroundProviderId` 与 renderer 信息。
+- 配置默认搜索源：在“搜索”读取 `search-provider` contributions，选中后保存到 workspace 或 search 插件配置，命令搜索栏默认 provider 更新。
+- 导出工作区：在“工作区”导出 workspace JSON，插件数据是否包含由用户选择。
 
 ### 13.4 设计语言
 
-设置是工具型界面，MVP 要保持轻：
+设置是工具型界面，MVP 保持轻：宿主容器用 modal 或 drawer（桌面端左侧导航 + 右侧内容，移动端顶部 tabs 或单列导航）、表单项密度适中无营销式长文案、使用开关/select/segmented control/button、危险操作放独立区域。默认由官方 schema renderer 使用 `@tabora/ui` 保持视觉一致，插件只提供语义模型、状态机和 actions，不在 schema 中携带样式；设置行支持只读说明、状态 meta 和行内 action，供账号与同步等面板复用。schema 不足表达的复杂面板可显式使用 `custom-view`，但仍用统一宿主容器和错误边界。
 
-- 宿主容器建议使用 modal 或 drawer，桌面端可采用左侧导航 + 右侧内容。
-- 移动端可采用顶部 tabs 或单列导航。
-- 表单项密度适中，避免营销式说明。
-- 使用开关、select、segmented control、button。
-- 不使用介绍性长文案。
-- 危险操作放在独立区域。
-- 默认由官方 schema renderer 使用 `@tabora/ui` 保持视觉一致；插件只提供语义模型、状态机和 actions，不在 schema 中携带样式。设置行支持只读说明、状态 meta 和行内 action，供账号与同步等工具型面板复用。
-- schema 不足以表达的复杂面板可显式使用 `custom-view`，但仍使用统一宿主容器和错误边界。
-
-### 13.5 参考对象
-
-| 参考对象           | 借鉴点                    |
-| ------------------ | ------------------------- |
-| VS Code Settings   | 可搜索、分组清晰          |
-| Chrome Settings    | 浏览器级设置心智          |
-| Linear Preferences | 克制、清晰、高密度设置    |
-| Notion Settings    | workspace 和 account 分层 |
-
-### 13.6 MVP 与后续
-
-MVP：
-
-- settings host。
-- workspace settings 插件。
-- 插件面板只读展示。
-- 外观面板支持主题和背景切换。
-- 搜索面板支持默认搜索源选择。
-- 设置面板错误隔离。
-- 声明式 schema renderer 和 `custom-view` 逃生口。
-- 账号/同步插件按宿主装配，未装配时不显示对应分类；Playground 始终装配，未登录时由插件显示本地模式。
-
-V1.1：
-
-- 插件管理面板迁入设置。
-- 插件启用 / 禁用。
-- 更完整的权限说明。
-- 设置搜索。
-- 卡片和实例设置面板。
-
-V1.5：
-
-- 导入导出。
-- 多 workspace。
-- 权限授权记录。
-- 插件调试信息。
-
-### 13.7 验收标准
+### 13.5 验收标准
 
 - 设置入口由 `settings-panel` contribution 组成。
 - 设置面板不直接依赖某个 shell。
@@ -1720,204 +493,45 @@ V1.5：
 
 ## 14. 跨插件关键流程
 
-### 14.1 搜索流程
-
-```txt
-search command bar
-  -> read enabled search providers
-  -> build URL from provider urlTemplate
-  -> context.permissions.openExternal(url)
-  -> permission bridge validates host
-  -> event bus emits host.external.open
-  -> host opens URL
-```
-
-关键要求：
-
-- 搜索栏不应硬编码 provider 列表。
-- provider 不应自己打开 URL。
-- 外部打开必须由权限桥决定。
-
-### 14.2 添加卡片流程
-
-```txt
-add widget panel
-  -> list enabled widget contributions
-  -> user selects widget
-  -> host creates PluginInstance
-  -> host assigns region/grid/size
-  -> registry resolves card view
-  -> PluginViewBoundary renders plugin view
-  -> instance persisted
-```
-
-关键要求：
-
-- 同一 widget 可多实例，除非 contribution 禁止。
-- 尺寸只能来自 supportedSizes。
-- 添加后立即可见。
-- 刷新后恢复。
-
-### 14.3 调整尺寸流程
-
-```txt
-widget context menu size control
-  -> read contribution.supportedSizes
-  -> user selects size
-  -> host maps semantic size to grid span
-  -> instance.size/grid updated
-  -> persisted
-```
-
-关键要求：
-
-- 不展示插件未声明的尺寸。
-- 尺寸变化不破坏其他卡片。
-- 移动端尺寸可被布局折叠，但语义尺寸保留。
-
-### 14.4 打开展开流程
-
-```txt
-widget double-click or context menu expand
-  -> check contribution.views.expand
-  -> host expand overlay
-  -> PluginViewBoundary
-  -> plugin expand view
-```
-
-关键要求：
-
-- 插件只声明 view。
-- 宿主负责 overlay、关闭、焦点和层级。
-- modal 失败只影响 modal 内容。
-
-### 14.5 主题和背景流程
-
-```txt
-appearance control
-  -> read theme/background contributions
-  -> user selects option
-  -> workspace updates active IDs
-  -> host applies tokens/background
-  -> persist workspace
-```
-
-关键要求：
-
-- 主题和背景选择存 workspace。
-- token 应用和背景 source 解析是宿主职责；renderer 按 `source.type` 与 `accepts` 匹配。
-- 插件只贡献数据和 renderer view。
-
-### 14.6 插件错误流程
-
-```txt
-plugin view throws
-  -> PluginViewBoundary catches
-  -> fallback card/modal/fullscreen
-  -> record instanceId/viewId/error
-  -> other plugin instances continue
-```
-
-关键要求：
-
-- 错误信息对用户克制，对开发者可定位。
-- 插件管理器能看到错误摘要。
-- 不出现整页白屏。
+- 搜索：搜索栏读取已启用 provider、按 urlTemplate 构建 URL，经权限桥校验 host 后打开。搜索栏不硬编码 provider 列表，provider 不自行打开 URL。
+- 添加卡片：从已启用 widget contributions 选择后宿主创建 PluginInstance、分配 region/grid/size、经 PluginViewBoundary 渲染并持久化。同一 widget 可多实例（除非禁止），尺寸只能来自 supportedSizes，刷新后恢复。
+- 调整尺寸：从 `contribution.supportedSizes` 读取，宿主映射语义尺寸到 grid span 并持久化，不展示未声明尺寸，尺寸变化不破坏其他卡片。
+- 打开展开：检查 `contribution.views.expand`，宿主提供 expand overlay 经 PluginViewBoundary 渲染。插件只声明 view，宿主负责 overlay/关闭/焦点/层级。
+- 主题和背景：读取 theme/background contributions，用户选中后 workspace 更新 active IDs 并持久化。token 应用与 source 解析是宿主职责，插件只贡献数据和 renderer view。
+- 插件错误：plugin view 抛错时 PluginViewBoundary 捕获、fallback card/modal/fullscreen 并记录 instanceId/viewId/error，其他实例继续，不出现整页白屏。
 
 ## 15. 官方插件验收清单
 
 ### 15.1 产品验收
 
-- 默认工作台完全由官方插件装配。
-- 默认工作台使用左侧轻 rail + 顶部命令搜索 + 主网格。
-- 默认首屏出现快捷入口、便签和待办中的核心模块。
-- 用户无需配置即可搜索、打开快捷入口、记录便签、处理待办。
-- 用户可以添加、删除、调整 widget 实例。
-- 用户可以切换主题和背景。
-- 插件管理器能解释当前默认体验由哪些插件组成。
-- 插件失败时，页面其他区域继续可用。
+- 默认工作台完全由官方插件装配，使用左侧轻 rail + 顶部命令搜索 + 主网格，首屏出现快捷入口/便签/待办核心模块。
+- 用户无需配置即可搜索、打开快捷入口、记录便签、处理待办，并可添加/删除/调整 widget 实例、切换主题和背景。
+- 插件管理器能解释默认体验由哪些插件组成；插件失败时页面其他区域继续可用。
 
 ### 15.2 交互验收
 
-- 所有可点击元素有 hover 和 focus-visible。
-- 表单输入有 label 或 aria label。
-- 空状态不使用大段说明文案。
-- 删除、禁用、清空等危险操作有确认或可恢复策略。
-- 弹窗打开和关闭符合键盘焦点规则。
-- 移动端不出现横向滚动。
+- 所有可点击元素有 hover 和 focus-visible，表单输入有 label 或 aria label，空状态不使用大段说明文案。
+- 删除/禁用/清空等危险操作有确认或可恢复策略，弹窗打开关闭符合键盘焦点规则，移动端不出现横向滚动。
 
 ### 15.3 技术验收
 
-- 官方插件通过 manifest/contribution 声明能力。
-- 官方插件通过 registry 注册 view。
-- 外部打开通过 permission bridge。
-- 插件业务数据进入 plugin data 或明确的实例配置，不混入 workspace 装配数据。
-- widget 渲染包裹在错误边界中。
+- 官方插件通过 manifest/contribution 声明能力、通过 registry 注册 view，外部打开走 permission bridge。
+- 插件业务数据进入 plugin data 或明确的实例配置，不混入 workspace 装配数据；widget 渲染包裹在错误边界中。
 - `pnpm check`、`pnpm test`、`pnpm build` 通过。
 
 ### 15.4 设计验收
 
-- 明亮和暗色主题都可读。
-- 卡片尺寸稳定，状态变化不造成布局跳动。
-- 默认页面不是单色块堆叠，有层次但不喧宾夺主。
-- 控件符合场景：checkbox 用于待办，select/combobox 用于搜索源，switch 用于插件启用状态。
-- 图标体系统一，后续替换当前 demo 符号和文字按钮。
+- 明亮和暗色主题都可读，卡片尺寸稳定、状态变化不造成布局跳动，默认页面有层次但不喧宾夺主。
+- 控件符合场景（checkbox 用于待办、select/combobox 用于搜索源、switch 用于插件启用状态），图标体系统一。
 
-## 16. 实现差距清单
+## 16. 实现状态与推进优先级
 
-基于当前代码，建议后续补齐：
+各插件当前实现状态见 §4 官方插件矩阵的“当前状态”列。后续推进按下列优先级组织。
 
-| 领域          | 当前情况                                                                                                                          | 建议                                        |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 默认布局      | 宿主内建 dashboard layout 注入（不再是独立插件包）；rail 走 host actions，topbar/mainGrid 走 region slot，主网格由 layout view 包裹，移动端为同一 view 的响应式断点 | 继续补齐更完整响应式与视觉细节              |
-| UI 基础组件   | `@tabora/ui` 已提供按钮、输入、选择器、菜单、错误提示等基础组件，官方插件已按稳定 subpath 复用                                               | 继续补齐缺失组件并清理局部手搓控件          |
-| 搜索源读取    | 已从 `search-provider` contribution 动态读取                                                                                      | —                                           |
-| 快捷入口      | 入口、分组和最近访问记录通过实例级 plugin data 保存，展开主体和 footer 通过 instanceId 共享临时会话                        | 导入浏览器书签、favicon 等增强能力          |
-| 便签存储      | 卡片和展开视图通过实例级 plugin data 读写，不再使用全局 `localStorage`                                                         | 标签、置顶和更丰富编辑能力                 |
-| 待办存储      | 通过实例级 plugin data 保存 `v2_items` / `v2_groups`，不同 widget 实例默认隔离                                               | 编辑文本、清空已完成和保存失败反馈         |
-| 天气数据      | 已接入 Open-Meteo，支持实例城市配置、缓存回退和失败状态                                                                          | 多城市管理和更丰富天气信息                 |
-| 天气图标      | 按 WMO code 映射到 `lucide-solid` 图标，不再使用天气符号                                                                         | 继续补齐极端天气状态                       |
-| 插件管理器    | 只读官方插件列表                                                                                                                  | 接入 plugin records、权限、错误和启用/禁用  |
-| 设置插件      | 已实现 MVP 轻量 settings host；插件、外观、搜索面板显式声明 `section/scope` 并经 settings navigator 进入                          | 新增权限详情、设置搜索                      |
-| 权限反馈      | 搜索外部打开已有桥；插件管理器可展示 required capabilities / supported platforms / skipped reason                                 | 增加更完整权限详情                          |
-| 背景 renderer | 已建立 `BackgroundSourceValue` 和 source 优先解析；CSS renderer 覆盖 css/gradient，失败时回退安全背景                             | 后续补图片/视频/canvas renderer             |
-| 默认装配      | 官方默认 workspace 已迁为 `workspacePresets` contribution，创建新 workspace 时应用；已有 workspace 不做 backfill 或历史迁移       | 后续增加用户选择 preset 的 UI               |
-| 命令和快捷键  | 官方 shell 命令与快捷键已通过 command catalog / shortcut registry 消费，插件可声明 command/keybinding/context menu contribution   | 后续开放更完整用户自定义快捷键              |
-
-## 17. 推荐推进优先级
-
-### 已完成：默认体验闭环
-
-- 搜索栏读取真实 `search-provider` contributions。
-- 工作台仪表盘布局提供轻 rail、命令搜索和主网格。
-- `@tabora/ui` 基础组件已交付，官方插件通过稳定 subpath 复用。
-- 快捷入口、便签、待办和天气使用实例级 plugin data。
-- 默认工作台包含命令搜索、快捷入口、待办、便签和天气卡片。
-- 插件错误边界覆盖 card、modal、fullscreen。
-- 提供轻量设置中心，聚合插件、外观和搜索面板。
-
-### P1：管理和设置闭环
-
-- 插件管理器读取真实 plugin records。
-- 插件详情展示 manifest、contributions、permissions。
-- 启用/禁用插件。
-- 更完整的权限说明和设置搜索。
-- 卡片实例设置与全局设置边界。
-
-### P2：真实内容能力增强
-
-- 多城市天气和更丰富天气信息。
-- 导入浏览器书签与 favicon。
-- 标签、置顶和更丰富的便签编辑。
-- 待办编辑、排序、清空已完成。
-
-### P3：生态准备
-
-- 本地插件安装。
-- 插件 SDK。
-- 插件权限审计。
-- 插件调试面板。
-- 第三方插件市场前置协议。
+- 已完成（默认体验闭环）：搜索栏读取真实 `search-provider` contributions；仪表盘布局提供轻 rail、命令搜索和主网格；`@tabora/ui` 基础组件通过稳定 subpath 复用；快捷入口/便签/待办/天气使用实例级 plugin data；默认工作台包含命令搜索/快捷入口/待办/便签/天气卡片；插件错误边界覆盖 card/modal/fullscreen；提供聚合插件/外观/搜索的轻量设置中心。
+- P1（管理和设置闭环）：插件管理器读取真实 plugin records；插件详情展示 manifest/contributions/permissions；启用/禁用插件；更完整的权限说明和设置搜索；卡片实例设置与全局设置边界。
+- P2（真实内容能力增强）：多城市天气和更丰富天气信息；导入浏览器书签与 favicon；标签/置顶和更丰富的便签编辑；待办编辑/排序/清空已完成。
+- P3（生态准备）：本地插件安装；插件 SDK；插件权限审计；插件调试面板；第三方插件市场前置协议。
 
 ## 18. 参考对象总览
 
