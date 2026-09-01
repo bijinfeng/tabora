@@ -2,8 +2,6 @@
 
 本文件是当前架构与协议事实源，定义分层架构、扩展点协议、数据模型和测试策略。各领域的当前所有者和入口以源码、测试和 `docs/technical/tabora-regression-baseline.md` 为准，历史阶段变更查 git。Dashboard 是唯一 host builtin layout，mobile 是其响应式断点；layout 仍作为视图定义协议存在（`listLayouts` / `findLayoutContribution` 供 layoutEngine 取区域定义），但不支持运行时切换。
 
-关联文档：产品 PRD `docs/product/tabora-plugin-workbench-prd.md`、官方插件设计 `docs/product/tabora-official-plugins-design.md`、设计事实源 `DESIGN.md`、交互原型 `docs/design/workbench-prototype.html`、回归基准 `docs/technical/tabora-regression-baseline.md`、文档地图 `docs/README.md`。
-
 ## 1. 架构总体设计
 
 ### 1.1 分层架构
@@ -102,7 +100,7 @@ packages/
 
 ## 3. 布局架构
 
-> **Phase 2 变更**：早期设计支持"多布局插件 + 运行时切换"。当前架构已收敛为**单一 Dashboard host builtin layout**，mobile 作为其响应式断点。运行时布局切换（`switchLayout`、layout-switcher 编排层、instance region 迁移、workspace snapshot 回滚）已全部移除。以下 3.1/3.2 的 layout contribution 协议仍作为**视图定义契约**保留（Dashboard 通过它声明 region 结构和响应式能力），但不再存在多个 layout 之间的运行时切换路径。
+当前架构只有一个 Dashboard host builtin layout，mobile 是同一布局的响应式断点。layout contribution 仍作为视图定义契约保留，用于声明 region 结构和响应式能力；运行时不支持布局切换。
 
 ### 3.1 布局协议与壳体 Contract
 
@@ -154,7 +152,7 @@ MVP 快捷键：⌘K 命令面板、⌘T 切换主题、⌘N 添加卡片、⌘,
 
 ### 11.1 侧栏导航模型
 
-V2 原型采用左侧分类导航 + 右侧内容区的结构。当前 PRD 已明确：设置中心仍需通过 `settings-panel` contribution 验证插件化闭环，因此技术方案不能把 `settings-panel` 降级为后续能力。
+设置中心采用左侧分类导航 + 右侧内容区的结构，并通过 `settings-panel` contribution 组成插件化闭环。
 
 建议的分层方案：
 
@@ -292,31 +290,3 @@ Level 4: 存储级 → IndexedDB 读失败 → 安全默认 workspace（不覆�
 | Settings Panel | 仅该面板显示错误，其他面板正常                                      |
 | IndexedDB 读取 | 渲染默认工作台（manifest seed），不覆盖已有数据                     |
 | IndexedDB 写入 | 捕获 QuotaExceededError，Toast 通知用户                             |
-
-## 15. 测试策略
-
-### 15.1 新增测试类型
-
-| 类型                    | 覆盖目标                                                                             | 工具                  |
-| ----------------------- | ------------------------------------------------------------------------------------ | --------------------- |
-| Contract Tests          | 每个 contribution viewId 可解析、props 满足 contract                                 | Vitest                |
-| Orchestrator Tests      | 区域映射、搜索路由、拖拽算法、command/keybinding/context menu/preset model           | Vitest                |
-| Boundary Tests          | 插件源码和 package manifest 不依赖宿主/storage/app 内部                              | Vitest                |
-| Interaction Tests       | 搜索键盘导航、拖拽交换、Toast 堆叠、右键菜单                                         | Vitest Browser Mode   |
-| Storage Migration Tests | Schema 升级、quota 处理                                                              | fake-indexeddb        |
-| A11y Tests              | 键盘可达性、焦点管理、ARIA 角色                                                      | Vitest + jsdom        |
-
-### 15.2 关键测试场景
-
-必须覆盖的可观察行为：布局渲染 topbar/mainGrid region 与桌面/移动响应式切换、布局失败时的不可用状态；搜索的空态收藏命令、`@源` provider-pending、命令匹配、`@源 词` 路由、↑↓/Enter/Esc 键盘导航；设置侧栏分类切换、单面板渲染失败隔离、官方 panel 跨会话读写；拖拽交换、位移阈值内不触发排序、非卡片区域回原位、触屏不滚动；双击展开与 Esc 关闭；右键尺寸/展开/移除与当前尺寸高亮。
-
-## 16. 风险与应对
-
-| 风险                                       | 应对                                                                  |
-| ------------------------------------------ | --------------------------------------------------------------------- |
-| orchestrator 抽象过度增加复杂度            | 每个模块独立可测试、独立可替换；不强求所有 orchestrator 模块同时完成  |
-| 拖拽实时交换在大量卡片时性能下降           | 虚拟化 + requestAnimationFrame 节流；卡片数 > 50 时降级为简单排序     |
-| 搜索 @语法 和命令/卡片模糊搜索的优先级冲突 | 严格优先级：@语法 > 命令精确匹配 > 卡片模糊匹配 > 网页搜索            |
-| 严格 schema 拒绝导致导入可用性摩擦         | 保持协议严格，但宿主必须提供结构化诊断与可读错误，不做静默失败        |
-| 背景远端资源与网络权限语义混淆             | 现阶段仅视为受信任包资产声明；未来运行时拉取背景必须并入 network 权限 |
-| Dexie 细节经 `database?` 反向渗透到 shell  | 约束业务代码只依赖 repositories，把 `database` 视为调试/测试句柄      |

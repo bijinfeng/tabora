@@ -2,17 +2,9 @@
 
 本文档是官方内置插件的产品事实源：把 PRD 中的“官方内置插件”拆解成可设计、可实现、可验收的产品规格。字段级细节（manifest、contribution schema、token 取值、storage 数据形状）以 `@tabora/plugin-api`、各插件 manifest 和 `DESIGN.md` 为准。
 
-关联文档：
-
-- 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
-- 设计事实源：`DESIGN.md`
-- 工作台原型参考：`docs/design/workbench-prototype.html`
-- 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- 文档地图：`docs/README.md`
-
 ## 1. 文档目标
 
-本文档回答四类问题：每个官方插件承担什么产品职责、如何交互展示与处理状态、视觉与体验参考是什么、哪些能力属于 MVP 还是后续版本。
+本文档回答三类问题：每个官方插件承担什么产品职责、如何交互展示与处理状态，以及插件特有的体验约束。
 
 官方插件不是平台硬编码功能集合，而是 Tabora 插件体系的第一批标准样板：既组成默认工作台体验，也证明第三方插件能用同一套 manifest、contribution、runtime context、permissions、storage 和 host container 协议接入。
 
@@ -523,40 +515,3 @@ MVP widget 清单：
 
 - 明亮和暗色主题都可读，卡片尺寸稳定、状态变化不造成布局跳动，默认页面有层次但不喧宾夺主。
 - 控件符合场景（checkbox 用于待办、select/combobox 用于搜索源、switch 用于插件启用状态），图标体系统一。
-
-## 16. 实现状态与推进优先级
-
-各插件当前实现状态见 §4 官方插件矩阵的“当前状态”列。后续推进按下列优先级组织。
-
-- 已完成（默认体验闭环）：搜索栏读取真实 `search-provider` contributions；仪表盘布局提供轻 rail、命令搜索和主网格；`@tabora/ui` 基础组件通过稳定 subpath 复用；快捷入口/便签/待办/天气使用实例级 plugin data；默认工作台包含命令搜索/快捷入口/待办/便签/天气卡片；插件错误边界覆盖 card/modal/fullscreen；提供聚合插件/外观/搜索的轻量设置中心。
-- P1（管理和设置闭环）：插件管理器读取真实 plugin records；插件详情展示 manifest/contributions/permissions；启用/禁用插件；更完整的权限说明和设置搜索；卡片实例设置与全局设置边界。
-- P2（真实内容能力增强）：多城市天气和更丰富天气信息；导入浏览器书签与 favicon；标签/置顶和更丰富的便签编辑；待办编辑/排序/清空已完成。
-- P3（生态准备）：本地插件安装；插件 SDK；插件权限审计；插件调试面板；第三方插件市场前置协议。
-
-## 18. 参考对象总览
-
-参考对象只用于体验模式和交互心智，不代表 Tabora 需要复刻其视觉。
-
-| 能力         | 参考对象                                              | 核心借鉴                 |
-| ------------ | ----------------------------------------------------- | ------------------------ |
-| 工作台仪表盘 | Vivaldi Start Page Dashboard, Notion dashboard        | 模块区域、widget 排列    |
-| 新标签页入口 | Chrome / Edge 新标签页                                | 搜索优先、常用入口       |
-| 命令式搜索   | Raycast, Spotlight, Arc Command Bar                   | 键盘优先、快速提交       |
-| 插件生态     | VS Code Extensions, Chrome Extensions                 | 插件列表、权限、启用管理 |
-| 卡片工作台   | iOS widgets, Windows Widgets                          | 模块化、语义尺寸         |
-| 快捷入口     | Chrome shortcuts, Raindrop.io, Arc Favorites          | 站点入口、收藏分组       |
-| 便签         | Apple Notes Quick Note, Google Keep, Sticky Notes     | 轻量记录、自动保存       |
-| 待办         | Todoist, Things, Microsoft To Do                      | 添加、完成、删除、完成度 |
-| 天气         | iOS Weather widget, Windows weather widget            | 小尺寸天气摘要           |
-| 主题         | VS Code themes, macOS light/dark mode                 | token 化、明暗切换       |
-| 背景         | macOS Wallpaper, Windows Personalization, Arc themes  | 背景源、预览、持久化     |
-| 设置         | VS Code Settings, Chrome Settings, Linear Preferences | 高密度、分组、可搜索     |
-
-## 19. 开放问题
-
-- 天气是否首屏默认加入，还是只提供在添加面板中。
-- 快捷入口默认数据是官方推荐、用户空状态，还是导入浏览器书签。
-- 插件管理器是否同时作为卡片出现，还是 MVP 只在设置中心出现。
-- 插件禁用关键能力时，是否允许禁用布局、主题、搜索这类结构级插件。
-- 背景 renderer 的 props contract 如何标准化。
-- 权限提示采用安装时确认、使用时确认，还是两者结合。

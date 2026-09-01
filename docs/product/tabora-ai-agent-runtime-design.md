@@ -1,13 +1,5 @@
 # Tabora AI Agent Runtime 产品设计
 
-关联文档：
-
-- 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- 设计事实源：`DESIGN.md`
-- 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- 文档地图：`docs/README.md`
-
 ## 1. 设计目标
 
 Tabora 的 AI 能力不定义为平台内置的单一聊天机器人，而定义为插件化工作台的文本 AI 基础设施。平台提供统一、安全、可配置的 runtime，插件负责具体 AI 体验。
@@ -187,18 +179,3 @@ MVP 必须覆盖：
 - 便签可作为 AI consumer 调用平台能力并展示文本总结。
 - 未配置、未登录、请求失败、流式中断都有清晰降级。
 - AI 能力不破坏插件边界：业务能力仍在插件，平台只提供通用文本 runtime 与权限。
-
-## 13. 架构方向
-
-文本 AI Runtime 是当前基线：Tabora 自有协议（`context.ai.generate` / `context.ai.stream` 与 manifest `ai` 权限）、`@tabora/ai-runtime` 服务端 gateway、归一化错误码，以及云端内置 / 云端自定义 / FNOS 设备共享三种 provider 模式。
-
-后续架构方向是 Agent 最小协议：工作区上下文摘要、agent action 声明、工具调用草案与用户确认后执行。这些能力必须以服务端可序列化 contract 设计，经权限桥授权，不能把可执行函数传过当前 bridge。
-
-## 14. 开放问题
-
-- AI Gateway 的密钥保存位置和加密策略是否需要区分 web、extension 和未来 desktop。
-- AI provider 是否允许插件声明推荐模型，还是只由用户全局选择。
-- 工作区摘要的字段粒度如何标准化，避免泄露插件私有内容。
-- Agent 工具调用日志保留多久，是否支持用户清空。
-- 插件 AI 授权是按插件、按 agent、按工具，还是三者组合。
-- 视觉模型能力是否进入第一阶段，还是只保留默认视觉模型配置入口。

@@ -48,18 +48,15 @@
 | 回归/测试治理/Agent 评测 | `docs/technical/tabora-regression-baseline.md`            | 选择回归层级与验证命令、判断测试是否必要与清理、隔离 worktree 评测 agent   |
 | Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
 | FNOS 分发        | `apps/fnos/README.md`                                           | 修改飞牛 manifest、统一网关、生命周期脚本、FPK 构建和安装验证               |
-| 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围与设置入口（需求）及后端形态、路由、同步引擎（§13 实现）   |
+| 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围、设置入口与后端 HTTP 契约（§12 技术实现）                 |
 
 ## 按任务选择文档
 
 上表已把领域映射到事实源；下面只补充事实源之外要一起读的源码路径和易漏的点。
 
-- **产品判断**：读工作台 PRD + 官方插件设计；涉及 AI 时加读 AI runtime / AI chat / 模型管理 PRD 与技术方案的 AI Runtime P0 补充。
-- **技术实现 / 协议 / Kernel / Storage / Shell**：读技术方案 V2 + 回归基准，再看对应源码（`packages/plugin-api|platform-kernel|orchestrator|storage|workbench-app|host-adapters|workbench-shell/src/`、`apps/app/src/workbench/`、`apps/extension/entrypoints/newtab/`）。重点：平台包不引入具体业务；插件数据不混入 workspace 装配；插件不绕过权限桥外部打开；app 间共享逻辑进 package 而非互相 import 源码。
-- **官方插件**：读官方插件设计 + `DESIGN.md` + 技术方案，再看 `packages/official-plugins|builtin-plugin-registry/src/`、`plugins/official|community/`。重点：官方插件也走 manifest/contribution/registry/runtime context/permission/storage 协议；`@tabora/official-plugins` 是集合，`@tabora/builtin-plugin-registry` 才是 shell 默认 builtin 入口。
-- **UI / 交互**：读 `DESIGN.md` + 相关 Solid 组件/CSS/测试。原型预览 `docs/design/*.html`（workbench-prototype、component-spec、composite-spec、landing/download/docs）只是预览资产，不承载规范、不纳入 lint/测试，与 `DESIGN.md` 冲突以后者为准。
+- **UI / 交互**：读 `DESIGN.md` + 相关 Solid 组件/CSS/测试。`docs/design/` 下的 HTML 仅是预览资产，不承载规范、不纳入 lint/测试，与 `DESIGN.md` 冲突以后者为准。
 - **发布部署**：读 extension 分发文档 + 对应 `.github/workflows/`，按回归基准 L8 做发布前回归。
-- **Agent 协作交付**：读回归基准（含测试治理 §12、Agent 评测 §13）。实际约束来自目标路径的 `AGENTS.md` 链；完成前跑 `node scripts/regression-summary.mjs` 选验证命令、清理测试前跑 `pnpm test:inventory`；PR/final 说明复用证据、生产 diff、新增公开面、事实源同步、验证结果、未覆盖项和风险，`pr-governance` workflow 会校验交付字段。
+- **Agent 协作交付**：读回归基准（含测试治理 §11、Agent 评测 §12）。实际约束来自目标路径的 `AGENTS.md` 链；完成前跑 `node scripts/regression-summary.mjs` 选验证命令、清理测试前跑 `pnpm test:inventory`；PR/final 说明复用证据、生产 diff、新增公开面、事实源同步、验证结果、未覆盖项和风险，`pr-governance` workflow 会校验交付字段。
 
 ## 文档维护规则
 

@@ -115,18 +115,7 @@ docs/              # 产品、设计、技术和回归事实源
 
 ## 文档入口
 
-开始较大任务前先读：
-
-- `AGENTS.md`
-- `docs/README.md`
-
-按任务类型继续阅读事实源：
-
-- 产品范围：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件：`docs/product/tabora-official-plugins-design.md`
-- 视觉与交互：`DESIGN.md`
-- 技术架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- 回归治理：`docs/technical/tabora-regression-baseline.md`
+文档按任务分层维护，入口和事实源映射见 [`docs/README.md`](docs/README.md)。开始较大任务前先读 `AGENTS.md` 与该文档地图，再按目标路径选择必要的事实源。
 
 文档内容以中文为主。新增产品、技术、计划类文档也优先使用中文。
 
