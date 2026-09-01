@@ -1,16 +1,12 @@
-# Tabora 官方账号与数据同步 PRD
+# Tabora 官方账号与数据同步
 
-版本：V0.4
-
-日期：2026-08-04
-
-状态：需求结论稿
+本文件是账号与数据同步的单一事实源：§1–§12 为需求与产品决策，§13 起为架构边界、HTTP 契约和信任边界。字段、方法名和错误细节以代码为最终依据（客户端模块见 `packages/sync/src` 各文件头注释，服务端见 `apps/app/src/server` 的 auth / sync / attachment 路由）。
 
 关联文档：
 
 - 工作台产品范围：`docs/product/tabora-plugin-workbench-prd.md`
 - 官方插件与默认装配：`docs/product/tabora-official-plugins-design.md`
-- 同步实现事实源：`docs/technical/tabora-data-sync-technical-design.md`
+- 平台架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 工作台设计事实源：`DESIGN.md`
 
 ## 1. 产品定位
@@ -172,3 +168,32 @@
 - 服务端冲突持久化、冲突收件箱和手动合并 UI。
 - 完整 E2EE、共享工作区和多人协作。
 - 文件原件同步、容量管理和企业审计。
+
+## 13. 技术实现
+
+当前后端是仓库内的 `apps/app`（TanStack Start 全栈应用），基于 better-auth 和 Drizzle ORM，开发用 SQLite、生产可用 PostgreSQL。设备管理、快照、冲突收件箱和 E2EE 尚未交付。架构分层：宿主 app 通过 `host-adapters` 的 `AccountSyncService` 组装 `@tabora/auth`（better-auth client）与 `@tabora/sync`（队列/push/pull/LWW/tombstone），后端 `apps/app` 提供 `/api/auth/*`、`/api/sync/*`、`/api/attachments/*` 与管理员 server function。`official.account-sync` 按宿主装配：`apps/app` 根工作台始终创建服务并装配插件、默认同源 `/api/*`，未装配的宿主不创建认证存储、同步队列或调度。
+
+### 13.1 后端路由与认证
+
+| 路径 | 访问范围 | 职责 |
+| --- | --- | --- |
+| `GET /api/health` | 公开 | 健康检查 |
+| `GET/POST /api/auth/*` | better-auth | 注册、登录、会话、验证和密码重置 |
+| `POST /api/sync/records` | 登录用户 | 批量推送当前态记录 |
+| `GET /api/sync/records` | 登录用户 | 按 `since` 增量拉取记录 |
+| `/api/attachments/*` | 登录用户 | 文件上传、绑定和访问 |
+| 管理员操作（server function） | 管理员 | 用户、同步记录、附件、系统、设置和审计 |
+
+`/api/sync/*` 和 `/api/attachments/*` 从 cookie 或 bearer token 解析会话并写入 `userId`，未登录返回 401，所有用户记录查询都带 owner 条件。管理端 server function 统一经授权（未登录 401、非管理员 403）和审计中间件。服务端 `apps/app/src/server/auth.ts` 用 better-auth 的邮箱密码/admin/bearer 插件：首个用户可作管理员初始化、后续公开注册由系统设置控制；密码重置与邮箱验证走服务端邮件队列，不把邮件凭据或重置值写入工作台数据。客户端 `@tabora/auth` 的 `createBetterAuthClient` 只暴露 `AuthClient`（注册/登录/登出/会话/密码重置），token 只交给 host-owned 同步服务，网页宿主用 `localStorage`、扩展宿主用 `chrome.storage.local`，`401` 清本地 token。通用插件 API、settings host 和普通插件都不能读取 JWT、认证存储、同步 manager 或后端 URL。
+
+### 13.2 同步记录与 Push/Pull 契约
+
+state-based 当前态模型，服务端保存每用户最新记录和 tombstone，`type` 为 `workspace | pluginInstance | plugin | pluginData`。推送记录字段（`type`/`id` 稳定键、`data` payload、`version`、`client_timestamp`、`device_id`、`deleted`）以 `apps/app/src/server/syncRecords.ts` 的 `PushRecord` 为准；插件数据只有 manifest 声明 collection 后才由 `createChangeDetector` 按 record key/更新时间/排除字段入队。`POST /api/sync/records` 接受 1–100 条，逐条校验字段、用敏感字段过滤器拒绝 token/密钥/密码/私钥/本机路径，按 `(ownerId, type, id)` 定位后比对版本与时间（版本不匹配或客户端时间不晚于服务端时返回 conflict），返回 `accepted`/`conflicts`/`rejected`/`server_time`。`GET /api/sync/records?since=<ISO time>` 按 owner 增量返回单次最多 1000 条，tombstone 返回 `deleted: true`、`data: null`。冲突服务端优先，错误码映射见 `packages/sync/src/syncGatewayClient.ts`，同步失败不阻塞本地读写。
+
+### 13.3 信任边界与验证
+
+服务端认证和 owner 隔离是唯一可信边界，客户端过滤只是额外保护；普通插件只能经 runtime context 读写本地 plugin data，不能访问同步 API、认证存储或数据库句柄。修改认证或同步契约时，除 `pnpm --dir apps/app test` 与 `pnpm exec vitest run packages/auth packages/sync` 的定向测试外，还应验证有效会话、owner 隔离、敏感字段拒绝、push、pull、冲突和 tombstone 路径，再按回归基准跑 `pnpm test` / `pnpm check` / `pnpm build`。
+
+### 13.4 自托管镜像
+
+仓库根 `Dockerfile` 只构建 `apps/app`，运行时单 Node 进程：`/` 由工作台路由响应，`/admin/*` 由管理后台响应，`/api/*` 与 `/_serverFn/*` 保持服务端契约。镜像默认把 SQLite 数据库和本地附件存到 `/data`（用 SQLite 时必须挂持久化 volume 且单副本）；生产可改用 `DATABASE_CLIENT=postgres` 与外部 `DATABASE_URL`，但 `UPLOADS_DIR` 仍需持久化存储。运行前必须设置 `BETTER_AUTH_SECRET`、`BETTER_AUTH_URL` 和至少 32 位的 `TABORA_MODEL_CREDENTIAL_ENCRYPTION_KEY`；`HOST`、`PORT`、`DATABASE_FILE`、`UPLOADS_DIR` 已有容器默认值。

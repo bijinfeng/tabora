@@ -1,11 +1,5 @@
 # Tabora AI Agent Runtime 产品设计
 
-版本：V0.1
-
-日期：2026-07-13
-
-状态：产品设计草案
-
 关联文档：
 
 - 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
@@ -38,7 +32,7 @@ P0 阶段采用 **Tabora 自有协议 + 服务端 TanStack AI gateway**：
 
 云端内置模型由平台服务端统一配置和付费，必须通过 Tabora 登录态调用。Web 与 Extension 也可选择本机保存的自定义 OpenAI-compatible provider；其密钥只随单次请求临时转发到 gateway，不持久化到云端且不参与同步。FNOS 不提供内置模型，只使用设备管理员共享的自定义 provider，允许连接 localhost 或局域网模型。
 
-云端内置 provider 与模型目录由 `apps/app` 的「模型管理」数据库维护；Provider 保存 OpenAI-compatible `baseUrl` 与加密 API Key，模型保存 `providerId:modelId` 形式的稳定 ID（例如 `deepseek:deepseek-chat`），因此不同 provider 的同名模型不会发生路由冲突。仅 Provider 与模型均处于 active 状态时，目录和网关才会使用该模型。部署必须配置 `TABORA_MODEL_CREDENTIAL_ENCRYPTION_KEY` 用于凭据加密；旧 `TABORA_AI_API_KEY`、`TABORA_AI_BASE_URL` 与 `TABORA_AI_MODELS` 已移除，服务检测到它们会在启动时给出迁移错误。
+云端内置 provider 与模型目录由 `apps/app` 的「模型管理」数据库维护；Provider 保存 OpenAI-compatible `baseUrl` 与加密 API Key，模型保存 `providerId:modelId` 形式的稳定 ID（例如 `deepseek:deepseek-chat`），因此不同 provider 的同名模型不会发生路由冲突。仅 Provider 与模型均处于 active 状态时，目录和网关才会使用该模型。
 
 ## 2. 产品原则
 
@@ -138,15 +132,7 @@ AI Gateway 统一处理模型选择、服务端凭据、临时自定义凭据、
 
 ## 7. 插件协议方向
 
-建议后续在 manifest contribution 中增加或扩展以下能力：
-
-- `agentProviders`：声明插件提供哪些 agent。
-- `agentTools`：声明 agent 可请求哪些工具。
-- `agentContext`：声明插件愿意提供哪些上下文摘要。
-- `commands`：让 agent action 可以进入 `⌘K`。
-- `settingsPanels`：继续用于插件自己的 AI 配置页。
-
-P0 不引入这些协议；它只要求插件声明 `ai.generate` 并使用文本 bridge。
+当前只要求插件声明 `ai.generate` 并使用文本 bridge。未来方向：在 manifest contribution 中扩展 agent provider、tool、context、command 与 settings panel 等能力，具体协议在各自落地时另行设计。
 
 ## 8. 信息架构
 
@@ -202,41 +188,11 @@ MVP 必须覆盖：
 - 未配置、未登录、请求失败、流式中断都有清晰降级。
 - AI 能力不破坏插件边界：业务能力仍在插件，平台只提供通用文本 runtime 与权限。
 
-## 13. 分阶段路线图
+## 13. 架构方向
 
-### P0：AI 基础设施闭环
+文本 AI Runtime 是当前基线：Tabora 自有协议（`context.ai.generate` / `context.ai.stream` 与 manifest `ai` 权限）、`@tabora/ai-runtime` 服务端 gateway、归一化错误码，以及云端内置 / 云端自定义 / FNOS 设备共享三种 provider 模式。
 
-- AI 协议类型与 manifest `ai` 权限。
-- `@tabora/ai-runtime` TanStack AI 服务端 gateway。
-- `context.ai.generate` 和 `context.ai.stream`。
-- 未配置和 provider 失败的归一化错误。
-
-P0 模型策略：云端内置 OpenAI-compatible 模型由服务端环境配置，仅登录用户可调用；云端自定义 provider 免登录、密钥仅在每次请求内存中使用；FNOS 只支持设备共享的自定义 provider。
-
-P0 尚未完成的能力：Agent 工具、审批、工作区上下文、视觉模型和额度产品化。
-
-### P1：Agent 最小协议
-
-- 工作区上下文摘要。
-- Agent action 声明。
-- 工具调用草案。
-- 用户确认后执行。
-- 官方工作台助手插件。
-
-### P2：插件 AI 示例
-
-- 便签总结和提取待办。
-- 待办拆解和步骤生成。
-- `⌘K` 中展示 agent action。
-- 插件 AI 授权面板。
-
-### P3：增强能力
-
-- 视觉模型支持图片类插件。
-- 更细的上下文授权。
-- 本地 agent 调用日志。
-- 多 agent 插件共存。
-- 用量统计和请求限制。
+后续架构方向是 Agent 最小协议：工作区上下文摘要、agent action 声明、工具调用草案与用户确认后执行。这些能力必须以服务端可序列化 contract 设计，经权限桥授权，不能把可执行函数传过当前 bridge。
 
 ## 14. 开放问题
 

@@ -1,14 +1,10 @@
 # Tabora 管理后台模型管理 PRD
 
-版本：V0.1  
-日期：2026-08-31  
-状态：已实施（首期）
-
 关联文档：
 
 - AI Runtime 产品设计：`docs/product/tabora-ai-agent-runtime-design.md`
 - AI 对话插件 PRD：`docs/product/tabora-ai-chat-plugin-prd.md`
-- 后端实现事实源：`docs/technical/tabora-data-sync-technical-design.md`
+- 后端实现事实源：`docs/technical/tabora-data-sync-prd.md`（§13 技术实现）
 - 设计事实源：`DESIGN.md`
 - 后端约束：`apps/app/AGENTS.md`
 
@@ -239,18 +235,18 @@ Provider 编辑页提供显式「测试连接」：
 
 ## 10. 验收标准
 
-- [x] 管理员可创建和编辑 provider、添加和编辑多个模型、测试连接，并满足条件后显式发布。
-- [x] 未登录与非管理员不能调用任一模型管理 server function；所有写操作有脱敏审计记录。
-- [x] API Key 只在写入时出现，之后页面、管理响应、审计、日志和错误均不可见。
-- [x] `/api/ai/models` 只为已登录用户返回 provider/model 均为 `active` 的 `{ id, label }`；既有合约不变。
-- [x] 新增、修改、上线、下线、删除 provider 或模型均有独立受鉴权 API 与后台操作入口；删除 provider 会逻辑删除其模型并清除凭据。
-- [ ] 下线/删除 provider 或模型后，新请求立即不能路由到它并返回 `ai_model_unavailable`；其他模型与插件不受影响。
-- [ ] 变更 Base URL 或凭据后必须重新测试并发布，不能沿用旧发布状态。
-- [ ] 保存、测试与实际调用均拒绝不安全 URL 和重定向，没有请求可使服务端访问内网地址。
-- [ ] 测试请求不含用户数据，列表不触发 provider 请求。
-- [ ] 数据库是模型目录唯一的运行时真相源。
-- [ ] 自定义 provider、FNOS provider、AI 对话、便签 AI consumer 与五个错误码回归通过。
-- [ ] 页面亮/暗主题与窄屏可用、无横向滚动；输入和图标操作有可访问名称，危险动作有确认。
+- 管理员可创建和编辑 provider、添加和编辑多个模型、测试连接，并满足条件后显式发布。
+- 未登录与非管理员不能调用任一模型管理 server function；所有写操作有脱敏审计记录。
+- API Key 只在写入时出现，之后页面、管理响应、审计、日志和错误均不可见。
+- `/api/ai/models` 只为已登录用户返回 provider/model 均为 `active` 的 `{ id, label }`；既有合约不变。
+- 新增、修改、上线、下线、删除 provider 或模型均有独立受鉴权 API 与后台操作入口；删除 provider 会逻辑删除其模型并清除凭据。
+- 下线/删除 provider 或模型后，新请求立即不能路由到它并返回 `ai_model_unavailable`；其他模型与插件不受影响。
+- 变更 Base URL 或凭据后必须重新测试并发布，不能沿用旧发布状态。
+- 保存、测试与实际调用均拒绝不安全 URL 和重定向，没有请求可使服务端访问内网地址。
+- 测试请求不含用户数据，列表不触发 provider 请求。
+- 数据库是模型目录唯一的运行时真相源。
+- 自定义 provider、FNOS provider、AI 对话、便签 AI consumer 与五个错误码回归通过。
+- 页面亮/暗主题与窄屏可用、无横向滚动；输入和图标操作有可访问名称，危险动作有确认。
 
 ## 11. 实施边界与验证
 
@@ -260,26 +256,6 @@ Provider 编辑页提供显式「测试连接」：
 - 复用 admin middleware、审计脱敏、TanStack Query、`AdminShell`、Table/Drawer/Dialog/ConfirmDialog 和既有数据库 schema 派生机制。
 - 抽取 `validateCloudCustomProvider` 的通用 URL/SSRF 校验，同时供自定义和后台管理 provider 使用，不复制安全规则。
 
-预期新增生产文件不超过三个：`src/server/db/aiModels.ts`、`src/server/admin/models.ts`、模型管理页面（若现有页面模式需要，可额外拆一个 editor）。新增表、路由、导航、AI server 修改均扩展既有文件；不新增 workspace package、公共插件 export 或第三方依赖。
+新增表、路由、导航、AI server 修改均扩展既有文件；不新增 workspace package、公共插件 export 或第三方依赖。
 
-实现前补充技术设计，明确加密库和密钥轮换运行方式、双数据库 migration、跨进程缓存失效、URL 测试夹具与导入命令。代码变更至少运行：
-
-```bash
-pnpm --dir apps/app test
-pnpm --dir apps/app build
-pnpm test
-pnpm check
-pnpm build
-git diff --check
-```
-
-并在浏览器验证管理员完整流程、未登录/非管理员拒绝、密钥不回显、下线后模型目录刷新及 AI 请求失败路径。
-
-## 12. 后续候选
-
-- Provider/model 定时健康检查、告警与受控自动下线。
-- 加密主密钥轮换 UI 与密钥版本管理。
-- 视觉/工具/上下文窗口等能力元数据及宿主选择器过滤。
-- 用量、成本、预算阈值、速率限制与用户/组织配额。
-- 多实例部署的目录变更通知和细粒度缓存失效。
-- 供应商模型发现、批量导入、回退链路与流量分配。
+实现前补充技术设计，明确加密库和密钥轮换运行方式、双数据库 migration、跨进程缓存失效、URL 测试夹具与导入命令。并在浏览器验证管理员完整流程、未登录/非管理员拒绝、密钥不回显、下线后模型目录刷新及 AI 请求失败路径。

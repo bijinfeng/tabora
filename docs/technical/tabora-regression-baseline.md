@@ -1,10 +1,6 @@
 # Tabora 回归基准与 Agent 友好工程治理标准
 
-版本：V1.4
-
-日期：2026-08-07
-
-状态：作为每轮迭代后的回归检查基准；截至本版本无未解决实现债务，见 §10。
+本文件是每轮迭代后的回归检查基准。当前未解决实现债务以 git 历史与 issue 为准，登记方式见 §10。
 
 关联文档：
 
@@ -17,13 +13,7 @@
 
 ## 1. 文档目标
 
-本文件定义 Tabora 每轮迭代后的回归基准，目标是防止产品、设计、架构和代码在持续迭代中逐步漂移。
-
-它不是一次性 QA 清单，而是一套可重复执行的工程治理标准：
-
-- 人类开发者用它判断一轮迭代是否可以合入。
-- Codex / Claude Code / Copilot / Gemini 等 coding agent 用它判断应该读哪些事实源、跑哪些命令、检查哪些风险。
-- 后续新增 CI、E2E、视觉回归或发布流程时，以本文件为基准补齐自动化。
+本文件定义 Tabora 每轮迭代后的回归基准，防止产品、设计、架构和代码在持续迭代中逐步漂移。它不是一次性 QA 清单，而是可重复执行的工程治理标准：人类开发者用它判断迭代能否合入，coding agent 用它判断读哪些事实源、跑哪些命令、检查哪些风险，后续 CI / E2E / 视觉回归 / 发布流程以它为基准补齐自动化。
 
 核心原则：
 
@@ -31,95 +21,13 @@
 
 ## 2. Agent 友好设计原则
 
-本节结合 OpenAI Codex `AGENTS.md`、Anthropic Claude Code `CLAUDE.md` / best practices、GitHub Copilot repository instructions、Google Gemini CLI `GEMINI.md` 等公开最佳实践，抽象为适合 Tabora 的 agent 工作方式。
+通用原则以 `AGENTS.md` 为准：指令文件短而稳定、上下文分层按需读取、验证命令优先于口头承诺、小步提交、事实源随实现同步、输出可审计。本节只保留回归基准相关的落点。
 
-### 2.1 指令文件短而稳定
-
-仓库级指令应回答：
-
-- 这个项目是什么。
-- 哪些文档是事实源。
-- 哪些命令必须使用。
-- 哪些边界不能破坏。
-- 完成工作前必须留下什么验证证据。
-
-不要把所有历史设计、阶段计划和任务细节塞进 agent 指令文件。大文件会增加上下文噪声，也会让 agent 难以判断当前事实源。
-
-Tabora 当前做法：
-
-- `AGENTS.md` 保留仓库级硬规则。
-- 容易在局部目录误用的边界由就近 `AGENTS.md` 补充；agent 按目标文件从根到最近祖先解析完整指令链。
-- `.claude/CLAUDE.md`、`GEMINI.md`、`.github/copilot-instructions.md` 只作为不同 agent 的轻量入口，不复制规则正文。
-- `docs/README.md` 作为文档地图。
-- 产品、设计、技术和回归基准拆成独立事实源。
-- `docs/technical/agent-task-template.md` 提供任务拆解和交付摘要模板，但不承载新的产品或技术事实。
-
-新增永久规则只处理不容易从代码推断、曾重复造成问题且能转成具体行动或检查的陷阱；版本、目录树、阶段进度和一次性提醒不进入 agent 指令。
-
-### 2.2 上下文分层，按任务读取
-
-Agent 每轮不应无差别读取所有文档。正确路径是：
-
-1. 针对每个目标路径读取从根到最近祖先的 `AGENTS.md` 指令链。
-2. 读 `docs/README.md`。
-3. 根据任务类型读取 PRD、设计事实源、技术方案、官方插件设计或本回归基准。
-4. 再读相关源码和测试。
-
-这样可以减少“旧计划覆盖当前事实”的风险。
-
-### 2.3 验证命令比口头承诺可靠
-
-Agent 最终回复不能只说“应该没问题”。每轮必须报告实际运行过的命令和结果。
-
-Tabora 当前最低验证要求：
-
-- 文档或配置变更：`pnpm check`
-- package / app 代码变更：`pnpm test` + `pnpm check`
-- 跨包、协议、存储、发布相关变更：追加 `pnpm build`
-- 前端视觉 / 交互变更：启动 apps/app 根工作台，并用浏览器检查关键路径
-
-### 2.4 小步提交语义，小范围上下文
-
-Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
-
-- 改动类型。
-- 影响包或目录。
-- 不允许触碰的边界。
-- 必须通过的回归层级。
-- 搜索过的现有实现、调用点和公共导出，以及准备复用或扩展的所有者。
-- 预计生产 diff、新增生产文件、dependency、package 和 public export。
-
-如果一个任务同时涉及协议、storage、shell、UI 和发布，应该拆成多个可独立验证的阶段。
-
-边界清晰的小任务如果新增超过约 300 行生产代码、超过 3 个生产文件，或新增 dependency、workspace package、public export，应暂停并重新检查能否复用或收缩范围。它们是必须解释的审查信号，不是自动失败阈值；测试、文档、快照和生成文件不计入生产代码。
-
-### 2.5 事实源必须随实现同步
-
-如果实现改变了产品范围、技术边界、协议字段、设计规则或验证方式，必须同步对应事实源。不能只改代码，也不能只改计划文档。
-
-同步优先级：
-
-1. `docs/README.md`：新增事实源或入口时先登记。
-2. PRD / 官方插件设计：产品口径变化。
-3. `DESIGN.md`：视觉、交互、组件边界变化。
-4. 技术方案：包边界、运行机制、协议、存储、权限变化。
-5. 本文档：回归基准、检查项、已知债务、命令矩阵变化。
-
-历史过程不作为当前事实源；任务完成后，真实结论必须同步到 PRD、设计、技术方案或本文档。文档冲突时以当前事实源和当前代码为准。
-
-### 2.6 Agent 输出必须可审计
-
-每轮结束时，agent final 回复至少包含：
-
-- 改了什么。
-- 复用或扩展了哪些现有实现。
-- 新增了哪些 public export、dependency、package 或生产文件。
-- 删除或替换了哪些旧实现，以及生产 diff 的 additions / deletions。
-- 跑了什么验证命令。
-- 哪些检查未跑以及原因。
-- 是否有已知风险或剩余债务。
-
-如果发现文档与实现冲突，应说明冲突点和处理方式。
+- 读取顺序：目标路径的 `AGENTS.md` 链 → `docs/README.md` → 按任务读 PRD / `DESIGN.md` / 技术方案 / 官方插件设计 / 本文档 → 源码与测试，减少旧计划覆盖当前事实的风险。
+- 最低验证：文档或配置 `pnpm check`；package / app 代码 `pnpm test` + `pnpm check`；跨包、协议、存储、发布追加 `pnpm build`；前端视觉 / 交互变更启动 apps/app 并用浏览器检查关键路径（详见 §4 L3-L5、§5）。
+- 事实源同步优先级：`docs/README.md`（新增事实源入口）→ PRD / 官方插件设计（产品口径）→ `DESIGN.md`（视觉、交互、组件边界）→ 技术方案（包边界 / 协议 / 存储 / 权限）→ 本文档（回归基准 / 检查项 / 债务 / 命令矩阵）；冲突时以当前事实源与当前代码为准。
+- 审查信号：边界清晰的小任务新增超过约 300 行生产代码、超过 3 个生产文件，或新增 dependency / workspace package / public export 时暂停复核范围，它们是必须解释的信号而非自动失败阈值（测试、文档、快照、生成文件不计入）。
+- final 输出的可审计字段以 §8 报告模板为准；发现文档与实现冲突时说明冲突点和处理方式。
 
 ## 3. 改动分类
 
@@ -152,14 +60,7 @@ Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
 - 是否改变 UI、布局、交互或 token？
 - 是否影响 apps/app workbench、extension 或未来 shell 的复用边界？
 
-建议命令：
-
-```bash
-git status --short --untracked-files=all
-git diff --stat
-```
-
-如果工作区已有用户改动，不要回滚。只检查自己的改动范围，并在 final 中说明。
+运行 `node scripts/regression-summary.mjs`：它按当前 dirty 文件推导改动类型和必需回归层级。如果工作区已有用户改动，不要回滚，只检查自己的改动范围并在 final 中说明。
 
 ### L1：事实源一致性
 
@@ -215,36 +116,11 @@ git diff --stat
 - app 层不保留纯 pass-through `@tabora/workbench-app` 兼容模块；只有真实装配工厂或宿主入口文件可以继续存在。
 - apps/app workbench source 与 extension 生产代码只通过 `@tabora/builtin-plugin-registry`、`@tabora/workbench-app` 和 host adapters 装配工作台；官方插件、layout package 与 core runtime package 不直接进入 workbench composition。
 
-建议检查命令：
-
-```bash
-pnpm check:architecture
-```
-
-脚本当前覆盖插件禁用依赖、`@tabora/ui` 分层依赖、shell app 生产依赖收口、`@tabora/orchestrator` 禁用 UI / storage 依赖、core package 误引 app、插件裸外部打开、package `exports` / `publishConfig.exports` 与 `vp pack` entry 一致性、生产源码 type escape、搜索配置首项 provider 兜底、`enabledProviderIds ?? providers.map(...)` backfill、widget region `?? "mainGrid"` 推断、废弃 `official.layout.dashboard` 回流、app 层纯 `@tabora/workbench-app` pass-through wrapper、非宿主执行点 `window.open` 以及 focused/skipped tests。需要人工复核时，再补充定向 `rg`。
+运行 `pnpm check:architecture` 覆盖上述边界的静态扫描（具体守卫项见 §5）；需要人工复核时再补充定向 `rg`。
 
 ### L3：自动化基础门禁
 
-#### 文档或配置变更
-
-```bash
-pnpm check
-```
-
-#### package / app 代码变更
-
-```bash
-pnpm test
-pnpm check
-```
-
-#### 跨包、协议、storage、发布相关变更
-
-```bash
-pnpm test
-pnpm check
-pnpm build
-```
+按改动类型运行门禁命令，具体命令由 `node scripts/regression-summary.mjs` 的 `commands to run` 给出：文档或配置变更至少 `pnpm check`；package / app 代码变更为 `pnpm test` + `pnpm check`；跨包、协议、storage、发布相关变更追加 `pnpm build`。
 
 通过标准：
 
@@ -272,13 +148,7 @@ pnpm build
 - 导入 / 导出当前 schema 可用，旧 schema 明确拒绝。
 - 插件 view 抛错只显示局部错误，不白屏。
 
-当前仓库不维护 e2e 套件（2026-08 起移除 e2e 配置、依赖与 CI browser smoke job；对应行为由 `pnpm test` 单测与人工检查覆盖）。
-
-涉及浏览器行为的风险，手动启动 apps/app 检查：
-
-```bash
-pnpm --dir apps/app exec vp dev --host 127.0.0.1 --port 4000 --strictPort
-```
+当前仓库不维护 e2e 套件，关键路径由 `pnpm test` 单测与人工检查覆盖。涉及浏览器行为的风险，手动启动 apps/app 检查：`pnpm --dir apps/app exec vp dev --host 127.0.0.1 --port 4000 --strictPort`。
 
 ### L5：设计、视觉、交互和可访问性
 
@@ -298,13 +168,7 @@ UI / layout / shell / `@tabora/ui` / official plugin 改动必须做 L5。
 - 新 UI 图标优先 `lucide-solid`，不使用 emoji 作为功能图标。
 - 右键、展开、设置、命令面板、Toast 的浮层层级不冲突。
 
-建议浏览器检查视口：
-
-- Desktop：1280 x 900
-- Tablet：768 x 900
-- Mobile：390 x 844
-
-移动端和窄屏无横向滚动、视觉细节、hover/focus 样式和复杂层级冲突需人工在上述视口下复核。
+建议浏览器检查视口：Desktop 1280x900、Tablet 768x900、Mobile 390x844。移动端和窄屏无横向滚动、视觉细节、hover/focus 样式和复杂层级冲突需人工在上述视口下复核。
 
 ### L6：安全、权限和数据隔离
 
@@ -326,193 +190,89 @@ UI / layout / shell / `@tabora/ui` / official plugin 改动必须做 L5。
 - `WorkbenchSearchSettings` 必须显式包含 `defaultProviderId` 与 `enabledProviderIds`，且默认 provider 属于启用列表；旧数据缺字段时直接拒绝，不 silent backfill。
 - widget instance 缺失 `size` 或 size 不在 `supportedSizes` 内时显示局部无效占位，不读取时补默认值。
 
-建议检查命令：
-
-```bash
-rg -n "window\\.open|target=\"_blank|openExternal|external-open|apiVersion" apps packages plugins
-```
+建议检查：`pnpm check:architecture` 覆盖裸外部打开与权限桥绕过；必要时用 `rg` 定向扫描 `window.open`、`target="_blank"`、`openExternal`、`external-open`、`apiVersion`。
 
 ### L7：代码与工程质量
 
 所有 package / app / plugin 代码变更都必须做 L7。文档变更如果修改了工程规则、脚本、CI 或质量标准，也必须做 L7 的相关部分。
 
-本层目标不是追求抽象数量，而是保证代码可理解、可测试、可替换、可被 agent 稳定修改。
-
-标准入口：先运行 `pnpm quality`，再按子项需要补充 `pnpm check`、`pnpm test` 或定向 `rg`。
+本层目标是保证代码可理解、可测试、可替换、可被 agent 稳定修改。标准入口是 `pnpm quality`，再按子项补充 `pnpm check`、`pnpm test` 或定向 `rg`。
 
 #### L7.1 TypeScript 与类型契约
 
-检查标准：
-
 - 公共 API、manifest schema、view props、storage schema 使用显式类型或 Zod schema，不依赖隐式 `any`。
-- 不用 `as any`、双重断言或非空断言绕过协议；确有必要时必须局部化，并说明边界来源。
+- 不用 `as any`、双重断言或非空断言绕过协议；确有必要时局部化并说明边界来源。
 - discriminated union 优先于字符串散落判断。
 - package 导出面稳定，新增导出要有明确消费者；不暴露内部 helper 作为长期公共 API。
 - 类型和 runtime 校验保持一致：协议字段改动必须同步 `manifestSchema` / workspace schema / 测试。
-- 运行时安全恢复只能使用显式、固定的安全值，例如 `SAFE_THEME_TOKENS`；不允许以“第一个可用项”猜测 theme、provider 或 region。
-
-建议检查：
-
-```bash
-pnpm quality
-pnpm check
-rg -n "\\bas any\\b|@ts-expect-error|@ts-ignore|!\\." apps packages plugins
-```
-
-命中不一定都是错误，但新增命中必须逐项解释。
+- 运行时安全恢复只能使用显式、固定的安全值（如 `SAFE_THEME_TOKENS`），不允许以“第一个可用项”猜测 theme、provider 或 region。
+- 用 `rg` 扫描 `as any`、`@ts-expect-error`、`@ts-ignore`、非空断言；新增命中必须逐项解释。
 
 #### L7.2 模块职责与复杂度
 
-检查标准：
-
-- 一个模块只承担一个清晰责任：协议、编排、宿主容器、插件内容、存储、样式不要混写。
+- 一个模块只承担一个清晰责任：协议、编排、宿主容器、插件内容、存储、样式不混写。
 - 写代码前搜索现有组件、helper、model、schema、package subpath、调用点和公共导出。
-- 选择顺序是直接复用、扩展职责所有者、调用方私有 helper，最后才是公共抽象。
-- 公共抽象必须有多个真实消费者或稳定边界；不创建只改名、只转发或只包一层调用的 helper、component、adapter。
+- 选择顺序：直接复用 → 扩展职责所有者 → 调用方私有 helper → 有真实消费者或稳定边界的公共抽象；不创建只改名、只转发或只包一层的 helper / component / adapter。
 - 不为未来猜测增加配置、兼容、backfill、fallback、adapter 或扩展点。
 - 相似 JSX 优先收敛为数据、配置或同一渲染路径；新文件只对应新的独立职责。
 - 替换实现时同步迁移调用方并删除旧实现、死代码和过时导出。
-- 避免“上帝组件”：大型 Solid 组件新增逻辑时，应优先下沉为纯模型、hook/helper 或子组件。
-- 业务能力默认进入插件；平台层只保留通用机制。
-- 不做顺手重构；与本轮无关的重排、重命名、格式 churn 不进入同一轮。
-
-建议检查：
-
-```bash
-pnpm quality
-find apps packages plugins -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -nr | head -20
-```
-
-原则：
-
-- 新增 `TODO/FIXME/HACK` 需要有 owner、触发条件或后续计划；不能作为模糊欠账。
-- `console.warn` / `console.error` 只用于可诊断错误；不要用 console 替代用户可见 fallback 或测试。
+- 避免“上帝组件”：大型 Solid 组件新增逻辑优先下沉为纯模型、hook/helper 或子组件。
+- 业务能力默认进入插件，平台层只保留通用机制；不做顺手重构。
+- 新增 `TODO/FIXME/HACK` 需要 owner、触发条件或后续计划；`console.warn` / `console.error` 只用于可诊断错误，不替代用户可见 fallback 或测试。
 
 #### L7.3 Solid 前端实现质量
 
-检查标准：
-
-- 使用 Solid 细粒度响应式：派生状态优先 `createMemo`，副作用放 `createEffect`，不要用 effect 同步可直接计算的状态。
+- 派生状态优先 `createMemo`，副作用放 `createEffect`，不用 effect 同步可直接计算的状态。
 - 事件监听、timer、observer、storage subscription 必须有清理路径。
-- 组件 props 保持小而稳定；跨层回调命名表达业务语义，不传递宿主内部 store。
-- 列表渲染有稳定 key / identity；拖拽、排序、多实例不能依赖数组 index 作为业务身份。
-- UI 状态、持久化状态和插件业务数据分层清晰。
-- 错误 fallback 是局部 UI 状态，不把异常吞掉后静默失败。
-
-建议检查：
-
-```bash
-rg -n "addEventListener|setInterval|setTimeout|ResizeObserver|MutationObserver|createEffect|createMemo|For each" apps packages plugins
-```
-
-涉及监听或异步副作用时，必须确认有 `onCleanup`、取消标记或等价清理。
+- 组件 props 小而稳定；跨层回调命名表达业务语义，不传递宿主内部 store。
+- 列表渲染有稳定 key / identity；拖拽、排序、多实例不依赖数组 index 作为业务身份。
+- UI 状态、持久化状态和插件业务数据分层清晰；错误 fallback 是局部 UI 状态，不静默吞异常。
+- 用 `rg` 扫描 `addEventListener`、`setInterval`、`setTimeout`、`ResizeObserver`、`MutationObserver`、`createEffect`、`createMemo`，确认有 `onCleanup`、取消标记或等价清理。
 
 #### L7.4 测试质量
 
-检查标准：
-
-- 纯模型、协议解析、storage、permission、orchestrator 必须优先有单元测试。
+- 纯模型、协议解析、storage、permission、orchestrator 优先有单元测试。
 - UI 测试以用户行为和可访问查询为主，不测试实现细节。
-- 修 bug 时补能失败的回归测试；高风险修复需要确认测试能覆盖原始症状。
-- snapshot 不能替代行为断言；只用于稳定且有审查价值的结构。
-- 测试数据使用 builder / fixture，避免每个测试手写不完整 manifest 或 workspace。
-- 异步测试必须等待明确状态，不用固定 sleep 掩盖竞态。
-
-建议检查：
-
-```bash
-pnpm test
-pnpm check:architecture
-```
-
-如果本轮代码改动没有新增测试，final 必须说明原因，例如纯文案、死代码删除、已有测试覆盖的机械调整。
+- 修 bug 时补能失败的回归测试；高风险修复确认测试能覆盖原始症状。
+- snapshot 不替代行为断言，只用于稳定且有审查价值的结构。
+- 测试数据用 builder / fixture，避免手写不完整 manifest 或 workspace；异步测试等待明确状态，不用固定 sleep 掩盖竞态。
+- 本轮代码改动没有新增测试时，final 必须说明原因（如纯文案、死代码删除、已有测试覆盖的机械调整）。
 
 #### L7.5 依赖与包管理
 
-检查标准：
-
-- 只使用 `pnpm`，不引入 npm/yarn lockfile。
-- 新依赖必须说明用途、所属层级和替代方案；优先 workspace 现有能力。
-- app / shell 依赖可以比核心包更宽；核心包依赖必须保守。
-- 插件不得依赖宿主容器、storage 或 app 源码；`@tabora/ui` 不得依赖 kernel/storage/official plugins/apps。
-- package `exports` 和 `publishConfig.exports` 保持一致；凡是导出 `./*.css` subpath 的包，也必须显式声明对应 `publishConfig.exports`，未来可发布包不能只靠源码路径隐式消费。
-- catalog 依赖优先沿用 workspace catalog，不随意散落具体版本。
-
-建议检查：
-
-```bash
-git diff -- package.json pnpm-lock.yaml pnpm-workspace.yaml "**/package.json"
-pnpm check:architecture
-```
+- 只使用 `pnpm`，不引入 npm/yarn lockfile；新依赖说明用途、所属层级和替代方案，优先 workspace 现有能力。
+- app / shell 依赖可比核心包更宽，核心包依赖必须保守；插件不得依赖宿主容器、storage 或 app 源码，`@tabora/ui` 不得依赖 kernel/storage/official plugins/apps。
+- package `exports` 和 `publishConfig.exports` 保持一致；导出 `./*.css` subpath 的包必须显式声明对应 `publishConfig.exports`，不靠源码路径隐式消费。
+- catalog 依赖优先沿用 workspace catalog，不散落具体版本。检查 `git diff` 依赖清单（`package.json`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`）。
 
 #### L7.6 CSS、Token 与样式工程
-
-检查标准：
 
 - 大面积颜色、背景、边框、阴影优先使用 theme token / CSS variables。
 - 插件内容区控件优先使用 `@tabora/ui`，不重复造基础按钮、输入、选择器、错误状态。
 - 宿主容器样式留在 shell / workbench-shell / layout package，不塞进插件内容组件。
 - CSS class 命名有模块归属，避免全局通用词污染。
-- hover/focus/dragging 不改变布局尺寸；移动端不引入横向滚动。
-- 新 CSS 不使用 `!important` 作为常规覆盖手段。
-
-建议检查：
-
-```bash
-pnpm quality
-```
-
-命中颜色不一定错误，但新增大面积视觉必须能解释为什么不用 token。
+- hover/focus/dragging 不改变布局尺寸；移动端不引入横向滚动；新 CSS 不用 `!important` 作为常规覆盖手段。
+- `pnpm quality` 输出 raw color 报告，新增大面积视觉必须能解释为什么不用 token。
 
 #### L7.7 性能与资源
 
-检查标准：
-
 - 默认新标签页首屏路径避免重计算、大同步循环和不必要的大依赖加载。
-- 搜索输入、拖拽、滚动、resize 等高频路径不得执行昂贵全量扫描；必要时使用 memo、索引或节流。
-- IndexedDB 读写避免在渲染路径重复触发；批量更新要考虑事务和失败回退。
-- 图片、图标和样式资源按需进入对应 app/package，避免把官网或 demo 资源带进 extension 新标签页。
-- 新增第三方库要关注包体、运行时开销、浏览器兼容和 extension 限制。
-
-建议检查：
-
-```bash
-pnpm build
-rg -n "JSON\\.parse|JSON\\.stringify|localStorage|indexedDB|querySelectorAll|getBoundingClientRect" apps packages plugins
-```
-
-命中高频路径相关 API 时，必须确认调用频率和缓存策略。
+- 搜索输入、拖拽、滚动、resize 等高频路径不执行昂贵全量扫描；必要时用 memo、索引或节流。
+- IndexedDB 读写避免在渲染路径重复触发；批量更新考虑事务和失败回退。
+- 图片、图标和样式资源按需进入对应 app/package，不把官网或 demo 资源带进 extension 新标签页。
+- 新增第三方库关注包体、运行时开销、浏览器兼容和 extension 限制。
+- 用 `rg` 扫描 `JSON.parse`、`localStorage`、`indexedDB`、`querySelectorAll`、`getBoundingClientRect` 等高频路径 API，确认调用频率和缓存策略。
 
 #### L7.8 可维护性与 Agent 友好性
 
-检查标准：
-
 - 文件、函数、类型命名表达领域含义，不用 `utils.ts` 堆无归属逻辑。
-- 关键协议和复杂模型有邻近测试，比长注释更优先。
-- 注释解释“为什么”，不复述“做什么”。
-- 新增文档入口必须在 `docs/README.md` 登记；历史计划不得回到默认阅读路径。
-- final / PR 描述能说明风险、验证和未覆盖项，便于下一轮 agent 接续。
+- 关键协议和复杂模型有邻近测试，优先于长注释；注释解释“为什么”，不复述“做什么”。
+- 新增文档入口必须在 `docs/README.md` 登记，历史计划不回到默认阅读路径。
+- final / PR 描述说明风险、验证和未覆盖项，便于下一轮 agent 接续。
 
 ### L8：发布前回归
 
-发布 apps/app 单一镜像前：
-
-```bash
-pnpm check
-pnpm test
-pnpm build
-pnpm --filter @tabora/app build
-```
-
-发布 extension 前：
-
-```bash
-pnpm check
-pnpm test
-pnpm build
-pnpm --filter @tabora/extension zip
-pnpm --filter @tabora/extension zip:firefox
-```
+在 `pnpm check` + `pnpm test` + `pnpm build` 基础上，发布 apps/app 单一镜像追加 `pnpm --filter @tabora/app build`；发布 extension 追加 `pnpm --filter @tabora/extension zip` 与 `zip:firefox`。
 
 发布前还需确认：
 
@@ -523,99 +283,31 @@ pnpm --filter @tabora/extension zip:firefox
 
 ## 5. 最低自动化覆盖标准
 
-当前 CI 已覆盖：
+CI 与本地共用 `pnpm check:architecture`、`pnpm check`（先生成 backend 路由树）、`pnpm test`、`pnpm build`。Agent 本地优先运行 `node scripts/regression-summary.mjs` 推导改动类型、必需回归层级、验证命令和触碰的已知债务，并用它给出的 `focused tests` 做快速反馈；`commands to run` 才是交付必须满足的范围，两者不能互相替代。
 
-- `pnpm check:architecture`
-- `pnpm check`（会先通过 TanStack Start/Vite 配置生成 backend 路由树）
-- `pnpm test`
-- `pnpm build`
+守卫脚本承担的覆盖标准（不在本文档重复其命令输出）：
 
-本地脚本已覆盖：
-
-- `pnpm check:architecture`：L2 + L7 的高信号架构/边界静态扫描。
 - `pnpm quality`：L7 的类型逃逸、issue markers、大文件、raw color、external-open 信号报告；raw color 按 `workbench production / generated backgrounds / site styles / test fixtures` 分组，external-open 按 `host execution / manifest declaration / runtime method reference / test fixture / bypass risk` 分组，并按文件级信号去重计数。生产侧 raw color / `!important` 报告项应保持为 0。
-- `pnpm check:architecture` 将 `workbench production` raw color 基线锁定为 0，重新引入任何字面量颜色或 `!important` 都会直接失败；其余类别通过 `pnpm quality` 审计是否回归。
-- `pnpm check:architecture` 同时禁止 workbench 生产样式里的零透明度 `rgba(...)` 和宿主题色变量字面量 fallback；前者统一用 `transparent`，后者直接依赖宿主主题 token。
-- `pnpm check:architecture` 守卫：禁止搜索配置回退到首个 provider、禁止 `enabledProviderIds` 从 provider 全量列表做 backfill、禁止 widget region `?? "mainGrid"` 推断、禁止废弃 `official.layout.dashboard` 回流到生产源码、禁止 app 层纯 `@tabora/workbench-app` pass-through wrapper、禁止 shell app 生产依赖直接声明官方插件 / layout / core runtime package、禁止 `@tabora/orchestrator` 依赖 `@tabora/storage` 或 `solid-js`。
-- `node scripts/regression-summary.mjs`：按当前 dirty 文件推导改动类型、必需回归层级、建议验证命令和触碰的已知债务。Agent 本地优先使用这个 direct node 入口，避免包管理器 wrapper 在受限环境中生成本地 store 噪声。
-- 单元测试统一由根 `vitest.config.ts` 管理：project 按测试环境划分为 `node` / `dom` / `backend` 三个，不再按 package 维护 per-package 配置；`maxWorkers` 上限为 50% 逻辑核，避免全量测试打满 CPU。定向验证用 `pnpm exec vitest run <目录>`，或用 `pnpm test:changed`（vitest `--changed`，基于模块图只跑与 git 变更相关的测试；`vitest.config.ts` / `package.json` 自身变更会强制全量）。
-- 上述摘要中的 `focused tests before the full suite` 按受影响 package 目录推导为根配置下的定向 vitest 命令。它用于修改中的快速反馈；摘要中的 `commands to run` 仍是交付必须满足的范围，二者不能互相替代。
+- `pnpm check:architecture`：L2 + L7 高信号架构/边界静态扫描，将 `workbench production` raw color 基线锁定为 0（重新引入字面量颜色或 `!important` 直接失败），禁止零透明度 `rgba(...)` 与宿主题色变量字面量 fallback，并守卫搜索配置首项 provider 兜底、`enabledProviderIds` backfill、widget region `?? "mainGrid"` 推断、废弃 `official.layout.dashboard` 回流、app 层纯 `@tabora/workbench-app` pass-through wrapper、shell app 生产依赖直接声明官方插件 / layout / core runtime package、`@tabora/orchestrator` 依赖 `@tabora/storage` 或 `solid-js`。
+- 单元测试统一由根 `vitest.config.ts` 管理：project 按 `node` / `dom` / `backend` 三个环境划分，不按 package 维护 per-package 配置；`maxWorkers` 上限 50% 逻辑核。定向验证用 `pnpm exec vitest run <目录>` 或 `pnpm test:changed`（基于模块图只跑与 git 变更相关的测试；`vitest.config.ts` / `package.json` 自身变更强制全量）。
 
-建议后续逐步补齐：
-
-1. 为 permission bridge 增加专门回归测试。
-2. 按需重建 e2e browser smoke（当前仓库不含 e2e 套件），优先覆盖 dashboard 关键操作、external-open 权限路径和 settings 路由。
-3. 为 layout failure fallback 的更多变体和触屏拖拽策略补细粒度浏览器断言。
-4. 在 `check:architecture` / `quality` 之上继续扩展 mobile layout 和 layout failure fallback 的自动化守卫。
+待补齐的自动化方向见 §11。
 
 ## 6. Agent 每轮工作流
 
-### 6.1 开始前
-
-Agent 必须：
-
-1. 运行：
-
-   ```bash
-   git status --short --untracked-files=all
-   ```
-
-2. 针对每个目标路径读取从根到最近祖先的 `AGENTS.md` 指令链。
-3. 读取 `docs/README.md`，判断应该继续读哪些事实源。
-4. 运行：
-
-   ```bash
-   node scripts/regression-summary.mjs
-   ```
-
-5. 根据任务分类选择回归层级。
-6. 如果任务涉及 UI，优先读取 `DESIGN.md`。
-7. 如果任务涉及协议、runtime、storage、shell，优先读取技术方案和本文档。
-8. 写代码前搜索现有实现、调用点、公共导出和相邻测试，记录复用决策与预计改动规模。
-
-### 6.2 修改中
-
-Agent 应：
-
-- 优先使用 `rg` / `rg --files` 搜索。
-- 按“复用 → 扩展 → 私有 helper → 有真实消费者的公共抽象”实现，不发明平行抽象。
-- 命中生产代码、文件、dependency、package 或 public export 审查信号时，先重新确认范围并记录必要性。
-- 替换实现时同步清理旧调用方、死代码和过时导出。
-- 修改前判断是否触碰事实源。
-- 不回滚用户或其他 agent 的改动。
-- 小范围修改，不做无关重构。
-- 对风险较高的行为先写测试或补测试。
-
-### 6.3 完成前
-
-Agent 必须：
-
-- 再次运行 `node scripts/regression-summary.mjs`，确认实际 touched paths 对应的回归层级和命令。
-- 按本文件 L3-L8 运行对应命令。
-- 如果变更了事实源，同步 `docs/README.md`。
-- 用 §8 模板记录复用、生产 diff、新增公开面、被替代实现和回归摘要。
-- 在 final 回复中说明验证命令和未覆盖风险。
+- 开始前：`git status --short --untracked-files=all` → 目标路径 `AGENTS.md` 链 → `docs/README.md` → `node scripts/regression-summary.mjs` → 按 §3 分类选择层级；UI 任务读 `DESIGN.md`，协议 / runtime / storage / shell 任务读技术方案和本文档；写代码前搜索现有实现、调用点、公共导出和相邻测试并记录复用决策与预计规模。
+- 修改中：优先 `rg` 搜索；按“复用 → 扩展 → 私有 helper → 有真实消费者的公共抽象”实现；命中 §2 审查信号时重新确认范围；替换实现同步清理旧调用方、死代码和过时导出；不回滚他人改动，不做无关重构，风险行为先补测试。
+- 完成前：重跑 `node scripts/regression-summary.mjs` 确认 touched paths 对应层级与命令 → 按 L3-L8 运行 → 变更事实源时同步 `docs/README.md` → 用 §8 模板记录并在 final 说明验证命令与未覆盖风险。
 
 ## 7. 质量门禁判定
 
 ### 7.1 `pass`
 
-满足：
-
-- 本轮触发的所有自动化命令通过。
-- 必要的人工 / 浏览器冒烟完成。
-- 文档事实源已同步。
-- 没有新增未登记债务。
+本轮触发的自动化命令全部通过，必要的人工 / 浏览器冒烟完成，文档事实源已同步，且没有新增未登记债务。
 
 ### 7.2 `pass with known debt`
 
-允许条件：
-
-- 新债务不影响当前用户主路径或安全底线。
-- 债务已在本文档、计划文档或 issue 中登记。
-- final 回复明确说明。
-
-安全、权限、数据丢失、白屏、发布包不可用等问题不能用这个状态放行。
+新债务不影响当前用户主路径或安全底线，已在本文档、计划文档或 issue 登记，且 final 回复明确说明。安全、权限、数据丢失、白屏、发布包不可用等问题不能用这个状态放行。
 
 ### 7.3 `blocked`
 
@@ -699,57 +391,15 @@ Agent 必须：
 
 ## 9. 常见任务的回归选择
 
-### 修改官方 widget
+各任务必跑层级见下表，具体检查项以 §4 对应层级为准。
 
-必做：
-
-- L1：官方插件设计与 `DESIGN.md` 是否需要同步。
-- L2：插件不得依赖 shell/storage/app。
-- L3：`pnpm test` + `pnpm check`。
-- L4：添加、多实例、尺寸、展开、右键。
-- L5：明暗主题、移动端、控件语义。
-- L7：组件职责、测试质量、CSS token、性能高频路径。
-
-### 修改 layout（宿主内建 dashboard）
-
-必做：
-
-- L1：PRD / `DESIGN.md` / 技术方案是否需要同步。
-- L2：layout 只依赖公开 contract。
-- L3：`pnpm test` + `pnpm check` + `pnpm build`。
-- L4：Dashboard 桌面/移动端响应式断点渲染。
-- L5：横向滚动、卡片可读性、全局入口可达。
-- L7：layout 纯协议依赖、region 身份稳定、拖拽/resize 高频路径。
-
-### 修改 runtime context 或 permission bridge
-
-必做：
-
-- L1：技术方案和本文档同步。
-- L2：platform-kernel 不引入业务逻辑。
-- L3：`pnpm test` + `pnpm check` + `pnpm build`。
-- L6：权限拒绝、host callback、插件直接外部打开扫描。
-- L7：类型契约、runtime 校验、回归测试和公共导出面。
-
-### 修改 workspace / storage / import-export
-
-必做：
-
-- L1：技术方案同步数据模型。
-- L2：workspace 装配数据、instance 状态、plugin data 分层。
-- L3：`pnpm test` + `pnpm check` + `pnpm build`。
-- L4：跨会话恢复、导入导出数据保留。
-- L6：缺失当前 schema 字段拒绝，不 silent backfill。
-- L7：schema 类型一致性、事务边界、测试 fixture 完整性。
-
-### 修改 CI / 发布流程
-
-必做：
-
-- L1：部署 / 分发文档同步。
-- L3：`pnpm check`。
-- L7：脚本、依赖、缓存、workspace 命令语义。
-- L8：对应 app build / zip。
+| 任务                              | 必跑层级                | 该任务的重点               |
+| --------------------------------- | ----------------------- | -------------------------- |
+| 修改官方 widget                   | L1 L2 L3 L4 L5 L7       | 插件不依赖 shell/storage/app；添加、多实例、尺寸、展开、右键；组件职责、CSS token |
+| 修改 layout（内建 dashboard）     | L1 L2 L3 L4 L5 L7       | layout 只依赖公开 contract；桌面/移动断点、横向滚动、region 身份、拖拽 resize |
+| 修改 runtime context / permission | L1 L2 L3 L6 L7          | kernel 不引入业务；权限拒绝、host callback、外部打开扫描；类型契约与导出面 |
+| 修改 workspace / storage / import-export | L1 L2 L3 L4 L6 L7 | 装配/instance/plugin data 分层；跨会话恢复、导入导出保留；缺字段拒绝不 backfill；schema 一致性与事务边界 |
+| 修改 CI / 发布流程                | L1 L3 L7 L8             | 部署文档同步；脚本、依赖、缓存、workspace 命令语义；对应 app build / zip |
 
 ## 10. 已知债务登记
 
@@ -761,50 +411,26 @@ Agent 必须：
 
 登记格式：债务描述、影响、建议优先级。
 
-当前状态：截至 V1.4（2026-08-07）无未解决实现债务。此前债务已全部解决并由 `pnpm check:architecture` / `pnpm quality` 守卫防止回归。
-
 ## 11. 后续治理建议
 
-本节只登记尚未完成的治理方向，已落地项不在此保留。
+尚未落地的治理方向，已落地项不在此保留：为 product critical path 建立 browser-mode smoke tests；为 mobile no-horizontal-scroll、settings host、layout unavailable state 加可重复截图或 DOM 断言；继续扩大 L2 架构边界与 CSS token 自动化守卫覆盖面；CI 按路径触发分级测试矩阵；为插件生态引入 manifest contract test kit 与第三方 conformance suite。
 
-短期：
+## 12. 测试治理
 
-1. 让每个计划文档明确对应的回归层级。
+测试何时必要、批量删除禁令等基础规则见 `AGENTS.md` 的“测试与验证”，本节只补充无法从中推断的操作细节。
 
-中期：
+**可接受的 mock 和 snapshot**：mock 用于隔离不可控边界（网络、存储、时间、宿主权限或昂贵外部依赖），但测试仍须断言可观察结果、状态变化、输出或明确 side effect。snapshot 只适合稳定且人工审查有效的渲染 / 序列化 contract，不得用大 snapshot 代替对关键状态、错误提示、可访问性或交互的明确断言。
 
-1. 继续扩大 L2 架构边界检查覆盖面，减少人工判断。
-2. 给 product critical path 建立 browser-mode smoke tests。
-3. 为 mobile no-horizontal-scroll、settings host、layout unavailable state 加可重复截图或 DOM 断言。
-4. 继续收紧 CSS token 使用的自动化守卫。
+**存量盘点**：`pnpm test:inventory` 扫描测试文件并输出三类人工复核候选——三个或更多 module mock、仅断言协作者调用、三个或更多 snapshot 断言。输出只是风险信号，不代表测试无价值也不自动删除文件。每个候选必须结合所保护行为标记为「保留」（说明覆盖的边界/contract）、「重构」（把实现细节断言收敛为可观察行为）或「删除」（确认已有更高层测试或类型/架构门禁覆盖同一风险）。清理必须分批，并在每批后跑对应 package 测试和 `pnpm check`；涉及清理时 PR / final 需给出候选结论。
 
-长期：
+**自动化边界**：盘点脚本故意只告警，不因 mock/snapshot 数量在 CI 失败——是否必要取决于业务行为，静态规则无法可靠判断。`.github/workflows/pr-governance.yml` 校验 PR 是否填写测试决策字段但不硬阻断；它用 `pull_request_target`、只 checkout 基分支并读取 PR event body，因此 PR 无法通过改写自身分支的校验脚本放宽规则。
 
-1. CI 按路径触发不同强度的测试矩阵。
-2. 发布前自动生成 regression baseline 摘要。
-3. 为插件生态引入 manifest contract test kit。
-4. 为第三方可信插件建立独立 conformance suite。
+## 13. Agent 评测
 
-## 12. 外部实践参考
+本评测检查 coding agent 是否把架构、测试和交付规则落实到真实改动，不按新增测试数量、解释篇幅或代码量评分。
 
-本文件参考以下官方公开资料的通用原则，并转化为 Tabora 的本地工程规则。资料核对日期：2026-06-06。
+**评测包**：用例定义在 `tooling/agent-evals/cases.json`，`pnpm agent:eval:check` 检查结构。当前用例覆盖：仅文档的事实源同步（防无关代码和无价值测试）、插件协议 contract（防旧 manifest 隐式兼容和无失败用例的 schema 改动）、宿主 UI 交互（防绕过 `@tabora/ui`、只写 snapshot 或跳过浏览器验证）、测试清理（防按 mock 数量批量删除）、重复宿主图标实现收敛（检查是否先搜索真实调用点、选最小复用边界并清理被替代代码）。
 
-- OpenAI Codex：`AGENTS.md` 用于给 coding agent 提供仓库级说明，例如代码组织、测试命令、项目实践和 PR 约定；Codex 在清晰文档和可靠测试环境中表现更好。参考：[Introducing Codex](https://openai.com/index/introducing-codex/)。
-- Anthropic Claude Code：推荐给 agent 明确可运行的验证信号，先探索再计划再编码；`CLAUDE.md` 应短、人类可读，并只保留广泛适用的命令、风格、测试和工作流规则。参考：[Best practices for Claude Code](https://code.claude.com/docs/en/best-practices)。
-- GitHub Copilot：repository custom instructions 应短小、自包含，并提供对仓库有用、适用于大多数请求的上下文；大型仓库应避免把太多窄场景内容塞进全局指令。参考：[About customizing GitHub Copilot responses](https://docs.github.com/en/copilot/concepts/prompting/response-customization)。
-- Google Gemini CLI：`GEMINI.md` 用于提供持久项目上下文，支持全局、项目、父目录和子目录的分层上下文，也支持通过 import 拆分大文件。参考：[Provide Context with GEMINI.md Files](https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html)。
-- TypeScript：工程质量以类型契约和 TSConfig 严格检查为基础，协议边界不能靠 `any` 绕过。参考：[TSConfig Reference](https://www.typescriptlang.org/tsconfig/)。
-- ESLint：静态检查用于提前发现 JavaScript / TypeScript 代码问题，并应与 type check 一起作为基础门禁。参考：[Getting Started with ESLint](https://eslint.org/docs/latest/use/getting-started)。
-- Testing Library：组件测试应尽量接近用户使用方式，优先通过 DOM 和用户行为验证，而不是组件内部实例。参考：[Guiding Principles](https://testing-library.com/docs/guiding-principles/)。
-- SolidJS：副作用由 `createEffect` 跟踪响应式依赖，事件监听、timer、observer 等资源需要用 `onCleanup` 或等价方式清理。参考：[createEffect](https://docs.solidjs.com/reference/basic-reactivity/create-effect) 与 [onCleanup](https://docs.solidjs.com/reference/lifecycle/on-cleanup)。
-- web.dev：前端性能应关注加载、交互和视觉稳定性，Core Web Vitals 提供了可量化的用户体验指标。参考：[Web Vitals](https://web.dev/articles/vitals)。
-- W3C WCAG：可访问性检查以 WCAG 2.2 的可感知、可操作、可理解、健壮原则为基准。参考：[WCAG 2.2](https://www.w3.org/TR/WCAG22/)。
-- OWASP：前端安全需避免 XSS 和危险外部输入处理，URL、HTML、脚本上下文必须区分。参考：[Cross Site Scripting Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)。
+**执行流程**：从干净基线创建隔离 worktree，每次只跑一个 case；把 case 的 `prompt` 原样交给被测 agent，不额外提示实现策略；改动限制在 `allowedPaths`，超范围须在报告中说明必要理由；运行 `requiredEvidence` 命令保存输出/diff/final；按 `scoring` 逐项给分，命中 `forbiddenOutcomes` 直接不通过。每 case 满分 10，建议通过条件为 8 分及以上、无禁止行为、无遗漏验证证据；任何单项为 0 时复盘该项事实源/提示词/工具约束再重跑，不只提高阈值。
 
-这些实践的共同点是：
-
-- 指令要短、稳定、可版本化。
-- 长上下文要分层，通过文档地图按需读取。
-- 自动化验证比自然语言承诺可靠。
-- 每轮 agent 工作都要留下可审计证据。
-- 代码质量标准要能落到类型、测试、依赖、性能、可访问性和安全的具体检查上。
+**证据与边界**：结果至少记录 case id、指令链与事实源、搜索到的现有实现、复用/扩展决策、实际改动路径、生产 diff、新增公开面、删除的旧实现、自动化验证、浏览器检查（若适用）、得分、禁止行为检查和未覆盖风险。评测包只验证用例结构，不启动或模拟外部 agent；不同 agent 必须在独立 worktree 执行，避免样本互相污染或污染主工作区。

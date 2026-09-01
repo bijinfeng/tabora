@@ -45,127 +45,21 @@
 | AI 对话插件      | `docs/product/tabora-ai-chat-plugin-prd.md`                     | 新增或修改 AI 对话插件、多轮对话协议和聊天 UI 时                           |
 | 后台模型管理    | `docs/product/tabora-admin-model-management-prd.md`             | 管理云端内置 AI provider、模型目录、凭据与发布状态时                       |
 | 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md` | 修改协议、runtime、storage、shell、包边界                                  |
-| 回归治理         | `docs/technical/tabora-regression-baseline.md`                  | 每轮迭代后选择回归层级、验证命令、报告模板                                 |
-| 测试治理         | `docs/technical/tabora-test-governance.md`                      | 盘点冗余测试、决定测试是否必要、审查测试变更                               |
-| Agent 评测       | `docs/technical/tabora-agent-evaluation.md`                     | 在隔离 worktree 中评估 agent 是否遵守范围、测试与交付规范                  |
-| Agent 任务模板   | `docs/technical/agent-task-template.md`                         | 需要让 coding agent 按规范拆解任务、形成 PR / final 回归摘要时             |
+| 回归/测试治理/Agent 评测 | `docs/technical/tabora-regression-baseline.md`            | 选择回归层级与验证命令、判断测试是否必要与清理、隔离 worktree 评测 agent   |
 | Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
 | FNOS 分发        | `apps/fnos/README.md`                                           | 修改飞牛 manifest、统一网关、生命周期脚本、FPK 构建和安装验证               |
-| 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围与设置入口（需求与决策）                                 |
-| 数据同步实现     | `docs/technical/tabora-data-sync-technical-design.md`           | 后端形态（现为 apps/app）、DB schema、认证、sync 路由、同步引擎与包边界 |
+| 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围与设置入口（需求）及后端形态、路由、同步引擎（§13 实现）   |
 
 ## 按任务选择文档
 
-### 产品判断
+上表已把领域映射到事实源；下面只补充事实源之外要一起读的源码路径和易漏的点。
 
-读：
-
-- `docs/product/tabora-plugin-workbench-prd.md`
-- `docs/product/tabora-official-plugins-design.md`
-
-涉及 AI agent、AI runtime、模型配置、插件 AI 授权或 agent 工具协议时，额外读：
-
-- `docs/product/tabora-ai-agent-runtime-design.md`
-- `docs/product/tabora-ai-chat-plugin-prd.md`
-- `docs/product/tabora-admin-model-management-prd.md`（仅云端内置模型管理）
-- `docs/technical/tabora-plugin-workbench-technical-design-v2.md` 中的 AI Runtime P0 补充
-
-### 技术实现
-
-读：
-
-- `docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- `docs/technical/tabora-regression-baseline.md`
-- 相关 package / app 源码和测试。
-
-必要时再读：
-
-- PRD 中对应功能章节。
-- 官方插件设计中对应插件章节。
-
-### UI / 交互
-
-读：
-
-- `DESIGN.md`
-- 相关 Solid 组件、CSS 和测试。
-
-只在需要看原型效果时读：
-
-- `docs/design/workbench-prototype.html`：当前唯一保留的工作台交互原型，集中展示布局、卡片、弹窗、设置和命令面板等设计。
-- `docs/design/component-spec.html`：基础组件规范预览。
-- `docs/design/composite-spec.html`：官网/文档组合组件规范预览。
-- `docs/design/landing.html`、`docs/design/download.html`、`docs/design/docs.html`：官网三页预览。
-
-这些 HTML 是预览资产，不承载规范事实，也不纳入自动格式化、lint 或测试覆盖目标。与 `DESIGN.md` 冲突时以 `DESIGN.md` 为准。
-
-### 官方插件
-
-读：
-
-- `docs/product/tabora-official-plugins-design.md`
-- `DESIGN.md`
-- `docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- `packages/official-plugins/src/`
-- `packages/builtin-plugin-registry/src/`
-- `plugins/official/`、`plugins/community/`
-
-重点确认：
-
-- 官方插件也必须走 manifest、contribution、registry、runtime context、permission 和 storage 协议。
-- `@tabora/official-plugins` 是官方插件集合，不决定 shell 默认 builtin 装配。
-- `@tabora/builtin-plugin-registry` 才是当前 shell 默认 builtin 聚合入口。
-
-### 协议 / Kernel / Storage / Shell
-
-读：
-
-- `docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- `docs/technical/tabora-regression-baseline.md`
-- 对应源码：
-  - `packages/plugin-api/src/`
-  - `packages/platform-kernel/src/`
-  - `packages/orchestrator/src/`
-  - `packages/storage/src/`
-  - `packages/workbench-app/src/`
-  - `packages/host-adapters/src/`
-  - `packages/workbench-shell/src/`
-  - `apps/app/src/workbench/`
-  - `apps/extension/entrypoints/newtab/`
-
-重点确认：
-
-- 平台包不引入具体业务能力。
-- 插件业务数据不混入 workspace 装配数据。
-- 插件不能绕过权限桥直接外部打开。
-- apps/app workbench / extension 的共享逻辑优先进入 package，不长期互相 import app 源码。
-
-### 发布和部署
-
-读：
-
-- `docs/technical/extension-github-actions-publish.md`
-- 对应 `.github/workflows/` 文件。
-
-按 `docs/technical/tabora-regression-baseline.md` 的 L8 做发布前回归。
-
-### Agent 协作和交付
-
-读：
-
-- `docs/technical/tabora-regression-baseline.md`
-- `docs/technical/tabora-test-governance.md`
-- `docs/technical/agent-task-template.md`
-
-重点确认：
-
-- Agent 入口文件只做轻量指引；实际约束来自目标路径适用的 `AGENTS.md` 指令链。
-- 写代码前搜索现有实现、调用点和公共导出，按“复用 → 扩展 → 私有 helper → 有真实消费者的公共抽象”选择。
-- 完成前运行 `node scripts/regression-summary.mjs`，再按输出选择验证命令。
-- 新增、修改或清理测试前运行 `pnpm test:inventory`，候选项逐项确认后才删除。
-- 使用 `node scripts/regression-summary.mjs` 输出的 focused tests 先做定向反馈，再运行全量要求的命令。
-- PR 会由 `pr-governance` workflow 校验交付字段是否已填写。
-- PR 或 final 回复要说明复用证据、生产 diff、新增公开面、事实源同步、验证结果、未覆盖项和风险。
+- **产品判断**：读工作台 PRD + 官方插件设计；涉及 AI 时加读 AI runtime / AI chat / 模型管理 PRD 与技术方案的 AI Runtime P0 补充。
+- **技术实现 / 协议 / Kernel / Storage / Shell**：读技术方案 V2 + 回归基准，再看对应源码（`packages/plugin-api|platform-kernel|orchestrator|storage|workbench-app|host-adapters|workbench-shell/src/`、`apps/app/src/workbench/`、`apps/extension/entrypoints/newtab/`）。重点：平台包不引入具体业务；插件数据不混入 workspace 装配；插件不绕过权限桥外部打开；app 间共享逻辑进 package 而非互相 import 源码。
+- **官方插件**：读官方插件设计 + `DESIGN.md` + 技术方案，再看 `packages/official-plugins|builtin-plugin-registry/src/`、`plugins/official|community/`。重点：官方插件也走 manifest/contribution/registry/runtime context/permission/storage 协议；`@tabora/official-plugins` 是集合，`@tabora/builtin-plugin-registry` 才是 shell 默认 builtin 入口。
+- **UI / 交互**：读 `DESIGN.md` + 相关 Solid 组件/CSS/测试。原型预览 `docs/design/*.html`（workbench-prototype、component-spec、composite-spec、landing/download/docs）只是预览资产，不承载规范、不纳入 lint/测试，与 `DESIGN.md` 冲突以后者为准。
+- **发布部署**：读 extension 分发文档 + 对应 `.github/workflows/`，按回归基准 L8 做发布前回归。
+- **Agent 协作交付**：读回归基准（含测试治理 §12、Agent 评测 §13）。实际约束来自目标路径的 `AGENTS.md` 链；完成前跑 `node scripts/regression-summary.mjs` 选验证命令、清理测试前跑 `pnpm test:inventory`；PR/final 说明复用证据、生产 diff、新增公开面、事实源同步、验证结果、未覆盖项和风险，`pr-governance` workflow 会校验交付字段。
 
 ## 文档维护规则
 

@@ -1,39 +1,8 @@
 # Tabora 插件化个人工作台技术方案 V2
 
-版本：V2.6
+本文件是当前架构与协议事实源，定义分层架构、扩展点协议、数据模型和测试策略。各领域的当前所有者和入口以源码、测试和 `docs/technical/tabora-regression-baseline.md` 为准，历史阶段变更查 git。Dashboard 是唯一 host builtin layout，mobile 是其响应式断点；layout 仍作为视图定义协议存在（`listLayouts` / `findLayoutContribution` 供 layoutEngine 取区域定义），但不支持运行时切换。
 
-日期：2026-06-08
-
-状态：当前架构与协议事实源；当前实现地图见 §17。
-
-## 架构变更记录（V2.6）
-
-**Phase 2 完成（2026-06-08）**：单一 Dashboard 布局 + 响应式断点架构
-
-- **移除布局切换机制**：删除完整的 layout-switcher 编排层（`createLayoutSwitchPlan`、`reconcileWorkbenchLayoutInstances`、`switchWorkbenchLayout`），删除 `WorkbenchShellWorkspaceController.switchLayout` 及相关测试（净删除 ~5000 行）
-- **Mobile 作为响应式断点**：原独立 `layout-mobile` 插件包已删除，mobile 现在是 dashboard 的 `isMobile` 响应式变体，由同一 layout view 根据屏幕宽度切换 rail/bottom-bar
-- **统一内建布局注入**：原 `layout-dashboard` 插件包已删除，dashboard 现在作为 host builtin layout 注入（`BUILTIN_DASHBOARD_LAYOUT_PLUGIN_ID = "official.layout.workbench-dashboard"`），与 theme/background/search 对齐
-- **简化 workspace 导入**：workspace 导入流程不再调用 `reconcileInstancesForLayout`，直接使用导入的 instances
-- **设置面板简化**：移除"默认布局"选择器及相关 `workspace.layout.write` / `catalog.layouts.read` 权限
-- **保留的 layout 概念**：layout 作为视图定义协议仍然存在，`listLayouts` / `findLayoutContribution` 仍被 layoutEngine 使用以获取区域定义，但不再支持运行时切换
-
-关联文档：
-
-- 产品 PRD V2：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- V2 设计事实源：`DESIGN.md`
-- V2 交互原型参考：`docs/design/workbench-prototype.html`
-- 回归基准与 Agent 工程治理：`docs/technical/tabora-regression-baseline.md`
-- 文档地图：`docs/README.md`
-
-## 0. 评审起点
-
-本方案基于以下输入：
-
-- PRD V2 的核心需求：布局即插件、全局可达性约束、插件自由度/约束体系
-- 设计原型中验证的交互模式：实时搜索内联建议、拖拽实时换位、双击展开卡片、右键上下文菜单、设置侧栏导航、Toast 堆叠、@语法搜索源切换
-
-以下方案从架构师视角出发，定义分层架构、扩展点协议、数据模型和测试策略，不预设具体实现路径。
+关联文档：产品 PRD `docs/product/tabora-plugin-workbench-prd.md`、官方插件设计 `docs/product/tabora-official-plugins-design.md`、设计事实源 `DESIGN.md`、交互原型 `docs/design/workbench-prototype.html`、回归基准 `docs/technical/tabora-regression-baseline.md`、文档地图 `docs/README.md`。
 
 ## 1. 架构总体设计
 
@@ -115,685 +84,71 @@ packages/
   workbench-shell/      # Shell host 样式与通用宿主容器组件
 ```
 
-设计 catalog 与包边界的映射需要额外说明：
+包边界与装配约束（当前实现的具体文件划分以源码为准，此处只记不易从代码推断的边界规则）：
 
-- `DESIGN.md` 中的组件 catalog 是**设计 catalog**，不是 `@tabora/ui` 的 1:1 导出清单。
-- `@tabora/ui` 承接插件内容区基础组件和低层可访问 primitive，如 `Button`、`Input`、`Field`、`ListRow`、`CardSection`、`Kbd`、`Dialog`、`Drawer`、`Toast`、`ContextMenu`、通用 `CommandPalette` 等。
-- Tabora 宿主级容器由 shell / `@tabora/workbench-app` / `@tabora/workbench-shell` 提供，例如 `WidgetCardShell`、全局 `ModalHost`、`FullscreenHost`、`SettingsHost`、`ToastHost`、`WorkbenchRail`、`WorkbenchGrid`、shell 全局命令面板和快捷键面板。宿主可复用 design spec 或 primitive，但不能把宿主所有权下沉到 `@tabora/ui`。
-- 插件样式由 manifest 的 `styles` 声明归属：`scope: "plugin"` 的 CSS 由宿主读取后逐条前缀为该插件的 `data-tabora-plugin-id` 容器，并以受管理的 `<style data-tabora-plugin-style>` 插入；`:root`、`html`、`body`、`:host`、`:global()` 以及 `@keyframes`、`@font-face`、`@property`、`@page` 等无法安全收口的规则会被拒绝，不能静默退化为全局样式。layout 这类确实需要影响页面骨架的样式可显式声明 `scope: "global"`，但 loader 只允许 builtin 使用。builtin 装配层通过 `@tabora/builtin-plugin-registry` 把 manifest 中的相对 `href` 映射为 Vite 可加载的 CSS asset URL；可信本地插件可基于 `baseUrl` 解析相对样式。`@tabora/workbench-app` bootstrap 汇总 loader 输出的 `pluginStyles`，并按插件启用状态和声明顺序加载 / 移除。此策略隔离声明的样式资产，不把同一 JS realm 误述为安全沙箱；不可信远程代码仍必须走独立 sandbox runtime。apps/app workbench 与 extension 入口只导入 app / `@tabora/ui` / `@tabora/workbench-shell` 的宿主基础样式，不再手动 import 官方插件、layout 或第三方插件 CSS，也不提供 `@tabora/official-plugins/styles.css` 兼容聚合入口。
-- StyleX authoring 与构建统一由 `@tabora/stylex-config` 管理：Solid host / Kobalte slot 使用 `stylex.attrs()`；跨 package 语义变量由 `@tabora/theme/tokens.stylex` 的 `defineVars` 提供；variant 使用普通 object map。根 `vite.config.ts` 把共享 Rolldown/unplugin pipeline 注入 `vp pack`，对声明 `./styles.css` 的 StyleX package 合并 source global CSS 与抽取规则、验证非空并写入 manifest 声明的 `dist/styles.css`。各 package 不再调用 StyleX CLI 或创建 `.stylex-build`。UI、shell、layout、官方插件 pack 和每个可独立启停的插件仍保留独立 CSS asset，`@tabora/builtin-plugin-registry` 的 `?url` 映射与运行时 style lifecycle 不变。非 StyleX CSS export 继续按 package source/publish 声明复制，不按包名写特殊分支。
-- 默认工作区 preset 的归属也已与样式装配保持一致：`@tabora/workbench-app` 不再直接依赖 `@tabora/official-plugins` 或内置官方 preset 常量；shell 入口统一从 `@tabora/builtin-plugin-registry` 注入默认 builtin plugin 列表、默认 workspace preset 与 shell 装配配置，再由 runtime bootstrap / session seed / shell initial visual state / host command-layout bridge 显式消费。
-- Package 聚合入口只用于真实 shell、插件 pack 或完整公开 API 的装配。测试和业务代码只消费 preset、workspace/session、import-export、grid、background resolver、plugin manifest 或 UI primitive 等独立能力时，必须优先使用与构建入口一致的稳定 package subpath，避免加载无关插件、UI 或 shell 模块图；新增这类 subpath 时应同步 source/publish exports、构建 entry 和架构 contract。Builtin plugin 发现阶段只加载 manifest、启用状态和样式映射；包含 view 的实现通过 lazy descriptor 在激活前并行 preload，再按插件声明顺序执行 `activate`，单个 loader 失败继续由 kernel 记录为局部插件错误，不阻断后续插件。
-- `@tabora/ui/component-docs` 只同步导出组件文档 metadata 与类型；真实 demo 由 `@tabora/ui/component-docs/renderers` 的显式动态 import registry 按 ID 加载。官网单组件路由可立即挂载对应 demo，“全部组件”目录只在卡片接近可视区时挂载，并对加载中和失败提供局部状态。新增文档组件时必须同时维护 metadata 与 loader ID；catalog contract 测试校验二者一一对应，但不应重复渲染已有独立行为测试覆盖的全部组件。
-- 布局协议语义已收口：`HostActionId` 包含 `shortcuts`、`plugin-manager` 等稳定动作 ID；`RegionSlot` 为泛型渲染结果契约，`plugin-api` 不绑定 Solid JSX，workbench shell 的 `createLayoutEngine` 会按 `region.accepts` 过滤实例，避免 extension point 错配；apps/app workbench / extension 通过 `@tabora/workbench-app` responsive state 向 layout 传入真实 `isMobile`；默认 workspace seed 不再保存伪 `rail` region；布局错误会记录状态并显示明确的布局不可用提示。**Phase 2 后 Dashboard 为唯一 host builtin layout，mobile 作为其响应式断点；运行时布局切换（`layout-switch` host action、layout-switcher 编排层）已删除。**
-- 插件系统可扩展性已收口：drag sort model、command catalog、shortcut registry、context menu model、settings navigator、toast manager、workspace preset applier 均已进入 `@tabora/orchestrator`；JSX 布局渲染桥、layout view 解析和布局不可用状态属于 shell renderer 职责，已归入 `@tabora/workbench-app`；apps 只消费模型和 host callbacks，不再保留对应纯推断逻辑。**layout switcher 已随 Phase 2 移除，不再属于编排层职责。**
-- `@tabora/plugin-api` 已补齐 command、keybinding、widget context menu、settings section/scope/surfaces/content、workspace preset、host compatibility、background source 等协议类型和 schema。当前为上线前阶段，不保留历史 manifest 兼容包袱：`apiVersion`、settings panel `section/scope/surfaces/content`、workspace canonical contribution ref（含 `activeBackgroundProvider`）、widget instance `size` 等当前协议字段必须显式声明；缺失即视为无效 manifest / 无效实例 / 无效导入数据。`legacyMigration` 不再作为 host capability 暴露。
-- settings panel 的 `content` 必须显式选择 `{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`。Kernel 为 schema provider 提供受 manifest 声明限制的 registry，停用插件时与 view 一起注销；宿主不再通过 `SettingsPanelViewProps.host` 注入账号或同步业务 API。
-- AI Runtime P0：`@tabora/plugin-api` 定义文本生成/流式生成与 `ai.generate` 权限；`@tabora/platform-kernel` 仅按权限暴露可选 `context.ai`，自身不依赖第三方 agent 框架；`@tabora/workbench-app` bootstrap 接收宿主注入的 HTTP bridge 并传入 kernel；`@tabora/ai-runtime` 提供基于 TanStack AI 的服务端文本 gateway 和统一 JSON/SSE transport。云端内置模型只接受已登录用户，云端自定义 OpenAI-compatible provider 在单次请求中临时使用本机密钥，FNOS 只解析设备共享的 custom provider。插件只消费 Tabora 协议，不直接依赖 provider SDK。
-- AI Runtime 多轮对话扩展（AI 对话插件）：`AiGatewayRequest` 支持与 `prompt` 互斥的 `messages` 历史，AG-UI anchor 线格式由 `@tabora/ai-runtime` 的 `parseAiGatewayRequest` 归一化校验，provider/参数选择经 `forwardedProps` 注入；`context.ai.createChatConnection()` 返回宿主构建、与 TanStack `ConnectionAdapter` 结构兼容的连接对象（实现在 `@tabora/ai-runtime` 的 `createAiChatConnection`，基于 `fetchServerSentEvents` + 异步 options 注入 provider 与鉴权），`plugin-api` 仅保留不依赖 TanStack 的结构化协议 `AiChatConnection`；插件 UI 层允许引入 `@tanstack/ai-solid-ui` 与 `solid-markdown`：两者的 `solid` 导出条件为 raw TSX/JSX，dep optimizer 无法转换，已通过仓库级 pnpm patch（`patches/`）将两者的导出固定到编译 dist，对所有宿主 app 全局生效，无需各自配置。
-- 发布前兼容性边界：仓库内部 refactor 不再为旧调用方式保留兼容 wrapper。helper 签名、模块出口和调用方允许一并重构；app 层仅保留 `workbenchComposition` 这类真实装配工厂，纯 `export * from "@tabora/workbench-app"` 的兼容转导出模块全部删除，并由 `pnpm check:architecture` 守卫禁止回归；同一批守卫也禁止废弃 `official.layout.dashboard` 等旧 layout id 回流到生产源码。
-- `@tabora/plugin-api` 当前额外导出 `workbenchSearchSettingsSchema`、`pluginInstanceSchema`、`workspaceSchema`、`workspaceExportSchema` 作为当前工作台协议事实源。`WorkbenchSearchSettings` 当前协议为完整显式配置：`defaultProviderId: string`、`enabledProviderIds: string[]`，并要求默认 provider 必须属于启用列表。workspace hydration、import/export 和 preset 链路统一走 schema 校验；缺失字段、旧导出或不满足约束的数据直接拒绝，不再按“首个 provider”或“全量 providers”做 silent backfill。
-- `@tabora/platform-kernel` 已提供 plugin loader abstraction、插件 API major version 兼容检查、host platform/capability 检查、skipped reason 记录，以及 runtime toast bridge。内置插件和可信本地包都必须通过 manifest schema 与 API 兼容检查；远程不可信执行仍不在 MVP 范围内。
-- `@tabora/storage` 已引入 `StorageAdapter` port；Web 默认 adapter 包装当前 Dexie/IndexedDB repository，`workbench-app` bootstrap 可注入 fake/memory adapter 进行测试或未来跨平台替换。当前上线前 schema 采用单一 Dexie version，直接声明 MVP 所需表，不保留旧版本迁移/backfill 路径。
-- 插件依赖边界已由测试守卫：官方、community、example 插件源码和 package manifest 不得依赖 `@tabora/workbench-shell`、`@tabora/storage` 或 app 源码/package。
-- 架构边界：`@tabora/orchestrator` 不依赖 `@tabora/storage` 或 `solid-js`；apps/app workbench source / extension 生产代码不直接装配官方插件、layout package 或 core runtime package；`WidgetSize -> grid span` 映射统一由 `@tabora/plugin-api` 的 `widgetGeometry` 导出，避免 workbench grid、widget shell 和 drag sort model 三套映射漂移。
-- 运行时收口：search provider 在 runtime catalog 中带有 `pluginId/pluginName` owner descriptor，inline search 和 shell `CommandPalette` 的外部打开都使用 provider owner 进行 `external-open` 权限判断；插件禁用会执行 activation disposer 并注销已注册 view，active contribution list 只来自 enabled plugin，plugin summaries 仍保留全部插件用于管理面板；`LayoutHostAPI.getGlobalActions("menu")` 成为第一等全局动作 surface；布局 view 失败时由 layout error tracker 记录 layout id 和具体错误，并显示布局不可用状态；runtime context 的 `getConfig/setConfig` 临时 API 已删除，实例数据通过 widget props 的 `data` 与 scoped data host 显式传递；Dexie schema 仅保留当前有 repository/runtime path 的 MVP 表，搜索历史继续作为 plugin-owned workspace data 存于 `pluginData`。
-- 工程边界当前基线：`@tabora/workbench-app` 已承接 runtime bootstrap（database、repositories、plugin catalog、kernel 的集中创建），`@tabora/host-adapters` 已拆出 web / extension 平台工厂并提供稳定导出面。bootstrap 可接收不带 Dexie database 的 host storage adapter；此类宿主仍使用统一 repository port，但不提供基于 Dexie 的导入/导出。FNOS 以 HTTP adapter 把 repository 操作交给本地 Hono + SQLite。账号与同步则由 `official.account-sync` 可选插件装配，避免纯本地宿主初始化认证与同步 runtime。
-- 组合与治理：`@tabora/workbench-app` 的 `shellController` 纯 helper 统一承接 plugin owner `external-open` 权限判断；theme/background/grid/workspace session/import-export 等共享 shell helper 也由该包承接，extension 不再通过相对路径直接 import apps/app workbench 源码。（Phase 2 后 layout switch plan/snapshot 纯模型已删除。）
-- 搜索与主题治理：`@tabora/workbench-app` 的 search helper / state、`@tabora/orchestrator` 的搜索模型、以及官方 search/settings 插件已统一删除“首项 provider”隐式兜底。theme resolver 仅在精确命中 theme 时返回对应 token；未命中时应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不再回退到 `themes[0]`。`CommandPalette` 与 `SearchCommandBar` 的 provider token、`@` 路由和 suggestions 生成进一步收敛到 `@tabora/orchestrator` 的共享 model，官方插件不再维护独立的 search-model 转导出层；`SearchViewProps` 也已升级为宿主注入 `query / results / activeResultIndex / host actions` 的状态机 contract，搜索栏只负责渲染和事件转发。
-- 治理自动化：仓库已新增 `pnpm check:architecture`、`pnpm quality`、`pnpm regression:summary`；PR CI 覆盖 architecture / check / test / build；release/deploy workflow 在打包前输出 regression summary。e2e browser smoke 已于 2026-08 移除，需要时按回归基准重建。
-- apps/app 当前通过 `apps/app/src/workbench/workbenchComposition.ts` 组装 `@tabora/workbench-app`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`；apps/app workbench / extension 的 `App.tsx` 已收敛为薄 wrapper，共享宿主交互编排统一落在 `@tabora/workbench-app`。`workbench-app/src` 已按垂直切片重组，目录结构如下：
-  - `shell/`：组合根与跨切片装配——`WorkbenchShellApp.tsx`（薄 composition root，现含 `WorkbenchShellProvider` 上下文）、`WorkbenchShellContext.tsx`（shell bundle context）、`WorkbenchShellState.ts`（聚合 6 个 domain store）、`WorkbenchShellControllerRuntime.ts`（命令/拖拽/搜索/widget/view 聚合）、`WorkbenchShellViewRuntime.ts`、`WorkbenchShellInstanceRenderer.tsx`。
-  - `runtime/`：kernel bootstrap 与宿主运行时——`bootstrap.ts`、`WorkbenchRuntimeStore.ts`（kernelReady / pluginRecords / toasts）、`WorkbenchShellRuntimeState.ts`（discover/boot/kernel 事件接线）、`WorkbenchShellHostRuntime.ts`（host actions/dispose bridge）、`WorkbenchShellHostActions.ts`（rail action / grid 持久化 / 焦点定位）。
-  - `widget/`：`WorkbenchWidgetStore.ts`、`WorkbenchShellWidgetState.ts`、`WorkbenchShellWidgetController.ts`、`WorkbenchShellWidgets.ts`。
-  - `search/`：`WorkbenchSearchStore.ts`、`WorkbenchShellSearchState.ts`、`WorkbenchSearchSurfaceState.ts`、`WorkbenchShellSearchSurfaces.ts`、`WorkbenchInlineSearchViewProps.ts`。
-  - `workspace/`：`WorkbenchWorkspaceStore.ts`、`WorkbenchShellWorkspaceState.ts`、`WorkbenchShellWorkspaceController.ts`（layout/theme/background/search/workspace lifecycle 编排）、`WorkbenchShellSessionState.ts`、`workspaceSession.ts`、`workspacePortability.ts`、`workspaceTransfer.ts`、`defaultWorkspaceSeed.ts`。
-  - `layout/`：`WorkbenchShellLayoutState.ts`、`WorkbenchShellLayoutRuntime.ts`、`WorkbenchShellLayoutHost.ts`、`WorkbenchShellLayoutRenderer.tsx`、`layoutEngine.tsx`、`layoutError.ts`。
-  - `appearance/`：`WorkbenchAppearanceStore.ts`、`WorkbenchShellAppearanceState.ts`、`themeResolver.ts`、`backgroundResolver.ts`。
-  - `surface/`：`WorkbenchOverlayStore.ts`、`WorkbenchShellSurfaceHost.tsx`（context 消费，不再接收拍平 props）、`WorkbenchShellSurfaceProps.tsx`（直接读 shell bundle 产出 8 组 surface props）、`WorkbenchShellChrome.tsx`、`WorkbenchShellInteractions.ts`、`WorkbenchShellSettings.ts`。
-  - `command/`：`WorkbenchShellCommands.ts`。`drag/`：`WorkbenchDragController.ts`、`WorkbenchShellDragState.ts`。
-  - `shared/`：跨切片基础设施——`shellConfig.ts`、`shellHelpers.ts`、`WorkbenchShellUtils.ts`、`workbenchGrid.ts`、`responsive.ts`、`WorkbenchShellViewBridge.ts`、`WorkbenchShellIcons.tsx`、`pluginStyleManager.ts`、`shellController.ts`。
-  - 状态域分片：持久化数据域（workspace / instances / searchSettings / searchHistory）保留 `createSignal`（避免 store proxy 进入 IndexedDB 结构化克隆）；纯 UI 域用 `createStore`；`WorkbenchShellState.ts` 退化为组合根返回 `{ runtime, workspace, appearance, widgets, overlays, search }`；controller 工厂与测试零改动。`WorkbenchShellApp` 已实质收口为薄 composition root。
-- extension newtab 已拥有自己的 shell entry，不再直接 import apps/app workbench 源码；共享 shell helper 已统一由 `@tabora/workbench-app` 暴露，`pnpm check:architecture` 额外禁止 app 间直接 import 对方源码路径。
+- `DESIGN.md` 中的组件 catalog 是**设计 catalog**，不是 `@tabora/ui` 的 1:1 导出清单。`@tabora/ui` 承接插件内容区基础组件和低层可访问 primitive；宿主级容器（`WidgetCardShell`、`ModalHost`、`SettingsHost`、`ToastHost`、`WorkbenchRail`、`WorkbenchGrid`、全局命令面板等）由 shell / `@tabora/workbench-app` / `@tabora/workbench-shell` 提供，宿主可复用 design spec 或 primitive，但不能把宿主所有权下沉到 `@tabora/ui`。
+- 插件样式由 manifest `styles` 声明归属：`scope: "plugin"` 的 CSS 被宿主逐条前缀到该插件的 `data-tabora-plugin-id` 容器并以受管理的 `<style data-tabora-plugin-style>` 插入；`:root`/`html`/`body`/`:host`/`:global()` 及 `@keyframes`/`@font-face`/`@property`/`@page` 等无法安全收口的规则被拒绝，不静默退化为全局。`scope: "global"` 只允许 builtin 使用。此策略隔离样式资产，不把同一 JS realm 当作安全沙箱；不可信远程代码仍须走独立 sandbox runtime。宿主 app 入口只导入 app / `@tabora/ui` / `@tabora/workbench-shell` 的基础样式，不手动 import 插件 CSS。
+- 默认 builtin plugin 列表、默认 workspace preset 和 shell 装配配置统一从 `@tabora/builtin-plugin-registry` 注入；`@tabora/workbench-app` 不直接依赖 `@tabora/official-plugins`。Package 聚合入口只用于真实 shell / 插件 pack / 完整公开 API 装配；消费单一能力时优先用与构建入口一致的稳定 subpath，避免加载无关模块图。
+- 上线前不保留历史 manifest 兼容包袱：当前协议字段（`apiVersion`、settings panel `section/scope/surfaces/content`、workspace canonical contribution ref、widget instance `size` 等）必须显式声明，缺失即视为无效 manifest / 实例 / 导入数据，不做 silent backfill。`legacyMigration` 不作为 host capability 暴露。settings panel `content` 必须显式选 `{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`。
+- `WorkbenchSearchSettings` 为完整显式配置（`defaultProviderId`、`enabledProviderIds`，且默认 provider 必属启用列表）；workspace hydration / import-export / preset 统一走 schema 校验，不满足约束直接拒绝。theme resolver 仅在精确命中时返回 token，未命中应用显式 `SAFE_THEME_TOKENS` 并记录诊断，不回退 `themes[0]`。search provider 无隐式「首项 provider」兜底。
+- AI Runtime P0：`@tabora/plugin-api` 定义文本/流式生成与 `ai.generate` 权限；`@tabora/platform-kernel` 仅按权限暴露可选 `context.ai`，不依赖第三方 agent 框架；`@tabora/ai-runtime` 提供基于 TanStack AI 的服务端 gateway 与统一 JSON/SSE transport。云端内置模型只接受已登录用户，插件只消费 Tabora 协议、不直接依赖 provider SDK。多轮对话见 `AiGatewayRequest.messages` 与 `context.ai.createChatConnection()`（实现 `createAiChatConnection`，`plugin-api` 只保留不依赖 TanStack 的 `AiChatConnection`）。
+- 架构守卫（`pnpm check:architecture`）：`@tabora/orchestrator` 不依赖 `@tabora/storage` 或 `solid-js`；官方/community/example 插件不依赖 `@tabora/workbench-shell`、`@tabora/storage` 或 app 源码；app 间不直接 import 对方源码；生产源码不装配官方插件/layout package/core runtime，也不回流废弃 layout id；纯转导出兼容模块禁止回归。`WidgetSize -> grid span` 只由 `@tabora/plugin-api` 的 `widgetGeometry` 导出，避免三套映射漂移。
+- `@tabora/storage` 通过 `StorageAdapter` port 支持注入 fake/memory adapter 或跨平台替换；当前 Dexie schema 为单 version、只声明 MVP 表、不保留旧版本迁移。FNOS 以 HTTP adapter 把 repository 操作交给本地 Hono + SQLite；账号与同步由 `official.account-sync` 可选插件装配，纯本地宿主不初始化认证/同步 runtime。
+- 运行时收口规则：search provider 在 runtime catalog 带 `pluginId/pluginName` owner descriptor，外部打开按 provider owner 做 `external-open` 权限判断；插件禁用执行 activation disposer 并注销已注册 view，active contribution 只来自 enabled plugin，plugin summaries 保留全部插件供管理面板；布局 view 失败由 layout error tracker 记录 layout id 与错误并显示布局不可用状态；runtime context 无 `getConfig/setConfig`，实例数据通过 widget props 的 `data` 与 scoped data host 显式传递；搜索历史作为 plugin-owned workspace data 存于 `pluginData`。
+- kernel loader 对内置和可信本地包强制 manifest schema 与 API major version 兼容检查、记录 skipped reason；远程不可信执行不在 MVP 范围。`@tabora/workbench-app` 承接 runtime bootstrap（database/repositories/catalog/kernel 集中创建）与共享 shell helper（`external-open` 判断、theme/background/grid/workspace session/import-export）；`@tabora/host-adapters` 提供 web/extension/HTTP 平台工厂，bootstrap 可接收不带 Dexie 的 host storage adapter（此类宿主不提供基于 Dexie 的导入导出）。`SearchViewProps` 是宿主注入 `query/results/activeResultIndex/host actions` 的状态机 contract，搜索栏只渲染和转发事件。
+状态分层约束：持久化数据域（workspace / instances / searchSettings / searchHistory）用 `createSignal`（避免 store proxy 进入 IndexedDB 结构化克隆），纯 UI 域用 `createStore`。extension newtab 有自己的 shell entry，不直接 import apps/app workbench 源码；共享 shell helper 由 `@tabora/workbench-app` 暴露，`pnpm check:architecture` 禁止 app 间互相 import 源码。`workbench-app/src` 按垂直切片（shell/runtime/widget/search/workspace/layout/appearance/surface/command/drag/shared）组织，具体文件以源码为准。
 
-`@tabora/orchestrator` 的职责边界：
-
-```text
-// 插件贡献目录
-const catalog = createPluginCatalog(plugins)
-catalog.listWidgetContributions()
-catalog.findWidgetContribution(pluginId, contributionId)
-catalog.findSearchContribution(pluginId, contributionId)
-catalog.findLayoutContribution(layoutId)
-catalog.listSettingsPanels()
-catalog.pluginSummaries()
-
-// 布局区域映射（Phase 2 后无运行时切换，Dashboard 为唯一 builtin layout）
-getActiveRegions(): RegionState[]
-mapInstancesToRegions(): Map<string, PluginInstance[]>
-
-// 搜索子系统
-search(query: string): SearchResults
-getSearchSuggestions(query: string): Suggestion[]
-resolveSearchProvider(syntax: string): SearchProviderContribution | null
-
-// 拖拽排序
-initiateDrag(instanceId: string): void
-onDragOver(targetInstanceId: string): void
-commitDragOrder(): void
-
-// 卡片展开
-openExpandView(instance: PluginInstance): void
-resolveExpandRenderer(type: string): ExpandRenderer
-closeExpandView(): void
-
-// 上下文菜单
-showContextMenu(instanceId: string, position: Point): void
-getContextActions(instance: PluginInstance): ContextAction[]
-
-// 设置导航
-getSettingsTabs(): SettingsTab[]
-switchSettingsTab(tabId: string): void
-```
+`@tabora/orchestrator` 承载跨插件纯模型：插件贡献目录（catalog）、区域映射（Dashboard 唯一 builtin layout、无运行时切换）、搜索（模糊搜索 / 建议 / @语法 provider 解析）、拖拽排序计划、卡片展开、上下文菜单和设置导航。具体导出以 `packages/orchestrator/src` 为准，均为不依赖 storage 或 solid-js 的纯模型。
 
 ## 3. 布局架构
 
 > **Phase 2 变更**：早期设计支持"多布局插件 + 运行时切换"。当前架构已收敛为**单一 Dashboard host builtin layout**，mobile 作为其响应式断点。运行时布局切换（`switchLayout`、layout-switcher 编排层、instance region 迁移、workspace snapshot 回滚）已全部移除。以下 3.1/3.2 的 layout contribution 协议仍作为**视图定义契约**保留（Dashboard 通过它声明 region 结构和响应式能力），但不再存在多个 layout 之间的运行时切换路径。
 
-### 3.1 布局插件协议
+### 3.1 布局协议与壳体 Contract
 
-Dashboard layout 通过 layout contribution 声明自己的区域结构：
+Dashboard layout 通过 layout contribution 声明区域结构（`LayoutContribution` / `LayoutRegion` 类型见 `@tabora/plugin-api`：`regions` 带 `accepts` 扩展点、`required`、`maxInstances`、`defaultVisible` 等）。布局 view 接受泛化的 `{ regions, isMobile, host }` 而非硬编码 `{ rail, topbar, mainGrid }`；每个 `RegionSlot` 提供 `instances` 和 `render()/renderInstance()`。Solid 实现侧用 `LayoutViewProps<JSX.Element>`，协议层不绑定具体 renderer。
 
-```text
-type LayoutContribution = {
-  id: string
-  title: string
-  view: string // 布局壳体的 Solid 组件 view ID
-  regions: LayoutRegion[]
-  defaultRegions: Record<string, string[]> // regionId -> default instance IDs
-  supportsResponsive: boolean
-  layoutKind: "dashboard" | "stream" | "kanban" | "minimal" // 布局范式分类
-}
+### 3.2 响应式与不可用状态
 
-type LayoutRegion = {
-  id: string // 区域唯一 ID
-  title: string // 人类可读名称
-  accepts: ExtensionPoint[] // 该区域接受的扩展点类型
-  required: boolean // 是否必须至少有一个实例
-  maxInstances?: number // 最大实例数限制
-  defaultVisible: boolean // 默认是否可见
-}
-```
-
-### 3.2 布局壳体组件 Contract
-
-布局插件的 view 组件接受泛化的区域 props：
-
-```text
-// LayoutView 不再接受 { rail, topbar, mainGrid }
-// 改为接受 { regions } —— 任意区域结构的通用接口
-type LayoutViewProps<TRendered = unknown> = {
-  regions: Record<string, RegionSlot<TRendered>>
-  isMobile: boolean
-  host: LayoutHostAPI
-}
-
-type RegionSlot<TRendered = unknown> = {
-  regionId: string
-  accepts: ExtensionPoint[]
-  instances: PluginInstance[]
-  render: () => TRendered
-  renderInstance: (instance: PluginInstance) => TRendered
-  isEmpty: boolean
-}
-```
-
-Solid layout 插件在实现侧使用 `LayoutViewProps<JSX.Element>`；协议层本身不绑定具体 renderer。
-
-### 3.3 响应式渲染流程
-
-Dashboard 是唯一布局，不存在布局切换。屏幕宽度变化时通过响应式断点在同一 layout view 内切换呈现：
-
-```text
-宿主初始化
-  → 加载 Dashboard builtin layout contribution
-  → 按 region.accepts 将 instances 映射到 topbar / mainGrid
-  → 渲染 DashboardLayout(regions, isMobile, host)
-  → isMobile 由 @tabora/workbench-app responsive state 提供
-    → 桌面：渲染左侧 rail + 顶部搜索 + 主网格
-    → 移动：折叠 rail 为底部导航栏，同一网格按窄屏密度重排
-  → 视口跨越 768px 断点时，layout renderer 重挂载以应用对应变体
-```
-
-工作区导入/切换时直接使用持久化的 instances 和 region 映射，不再执行 instance region 迁移或 snapshot 回滚。
-
-### 3.4 布局不可用状态
-
-平台不再内置第二套工作台布局。当活跃布局插件未注册、view 不存在或渲染失败时，宿主记录 layout id 和错误信息，并直接显示布局不可用状态：
-
-```text
-没有可用的布局插件
-布局插件「<layout-id>」无法渲染
-<具体错误信息>
-```
+Dashboard 是唯一布局、无运行时切换：宿主加载 builtin layout contribution，按 `region.accepts` 把 instances 映射到 topbar/mainGrid，渲染 `DashboardLayout(regions, isMobile, host)`，`isMobile` 由 `@tabora/workbench-app` responsive state 提供（桌面 rail+顶部搜索+主网格，移动折叠为底部导航栏并按窄屏密度重排，跨 768px 断点时 layout renderer 重挂载）。工作区导入/切换直接用持久化的 instances 和 region 映射，不做 instance region 迁移或 snapshot 回滚。活跃布局未注册、view 不存在或渲染失败时，宿主记录 layout id 和错误并显示布局不可用状态。
 
 ## 4. 区域渲染引擎
 
-### 4.1 核心抽象
+shell renderer 提供通用区域渲染引擎，避免把 `rail`/`topbar`/`mainGrid` 的 JSX 生成硬编码进 App。该职责归 `@tabora/workbench-app` 的 `createLayoutEngine` / layout runtime：按 region 过滤 enabled instance、按 grid order 排序，逐个用 `PluginViewBoundary` 隔离渲染解析出的 view。`LayoutView` 只调用引擎填充区域，不知道内容类型；`@tabora/orchestrator` 只负责 region→instance 纯映射和编排模型，不绑定 JSX renderer。
 
-当前实现的问题：`App.tsx` 中硬编码了 `rail`、`topbar`、`mainGrid` 三个区域的 JSX 生成逻辑。每种新布局都需要修改 App.tsx。
-
-解决方案：由 shell renderer 提供通用区域渲染引擎 `RegionRenderer`。当前实现中，这部分职责已归入 `@tabora/workbench-app` 的 `createLayoutEngine` / layout runtime，而不是继续留在 `@tabora/orchestrator`：
-
-```text
-// workbench-app shell renderer 提供
-function renderRegionInstances(
-  regionId: string,
-  instances: PluginInstance[],
-  registry: ExtensionRegistry,
-  kernel: PluginKernel
-): JSXElement[] {
-  return instances
-    .filter(inst => inst.regionId === regionId && inst.enabled)
-    .sort(byGridOrder)
-    .map(inst => renderInstance(inst, registry, kernel))
-}
-
-function renderInstance(
-  instance: PluginInstance,
-  registry: ExtensionRegistry,
-  kernel: PluginKernel
-): JSXElement {
-  const contribution = findContribution(instance, kernel)
-  const viewId = resolveViewId(contribution, instance.extensionPoint)
-  const View = registry.views.get(viewId)
-  const props = buildViewProps(instance, contribution, kernel)
-  return (
-    <PluginViewBoundary instanceId={instance.id}>
-      <View {...props} />
-    </PluginViewBoundary>
-  )
-}
-```
-
-`LayoutView` 组件只需要调用 `renderRegionInstances` 来填充各个区域，不需要知道区域内容的具体类型。`@tabora/orchestrator` 继续只负责 region -> instance 的纯映射、切换计划和编排模型，不绑定 JSX renderer。
-
-### 4.2 宿主级全局入口注入
-
-Rail、顶部工具条和布局不可用状态中的错误信息不应伪装成 `layout` 插件实例，否则会污染扩展点语义。
-
-推荐做法：布局壳体只决定这些入口**出现在哪里、以什么容器呈现**；入口动作本身由 `LayoutHostAPI` 提供。
-
-```text
-type LayoutHostAPI = {
-  getGlobalActions(surface: "rail" | "toolbar" | "menu"): HostActionItem[]
-  openSettings(panelId?: string): void
-  openCommandPalette(): void
-  openAddWidget(context?: AddWidgetContext): void
-  readLayoutState<T = unknown>(key: string): T | undefined
-  writeLayoutState(key: string, value: unknown): void
-  showToast(message: string, opts?: ToastOptions): void
-  toggleTheme(): void
-  isDark(): boolean
-}
-
-type AddWidgetContext = {
-  activeGroupLabel?: string
-  onAdded?: (instance: PluginInstance) => void
-}
-
-type HostActionItem = {
-  id:
-    | "home"
-    | "add-widget"
-    | "plugins"
-    | "plugin-manager"
-    | "settings"
-    | "theme"
-    | "command"
-    | "shortcuts"
-  label: string
-  icon: string
-  shortcut?: string
-  isActive?: boolean
-  run: () => void
-}
-```
-
-这样：
-
-- Dashboard 布局可以把 `getGlobalActions("rail")` 渲染成 rail 按钮组。
-- `LayoutUnavailableState` 不伪装成 `layout` contribution；布局插件缺失或失败时直接显示错误状态。
-
-> **Phase 2 移除**：原设计提到的"Focus 布局"作为第二种官方布局已不存在，`layout-switch` host action 也已删除。
+Rail、工具条和错误状态入口不伪装成 `layout` 实例（否则污染扩展点语义）：布局壳体只决定入口出现在哪里、以什么容器呈现，动作由 `LayoutHostAPI` 提供（`getGlobalActions(surface)`、`openSettings/openCommandPalette/openAddWidget`、`readLayoutState/writeLayoutState`、`showToast`、`toggleTheme` 等，`HostActionItem` 的稳定 id 与类型见 `@tabora/plugin-api`）。Dashboard 把 `getGlobalActions("rail")` 渲染成 rail 按钮组；布局缺失或失败时显示错误状态而非伪装 contribution。
 
 ## 5. 搜索子系统
 
-### 5.1 搜索架构
+搜索分三层：UI 层（内联搜索栏 + ⌘K 命令面板浮层 + provider 提示），engine 层（`@tabora/orchestrator`：命令/卡片/网页模糊搜索、@语法解析路由、分组建议、键盘导航状态、内联与 ⌘K 状态同步），provider 协议层（`SearchProviderContribution` / `SearchViewProps` / `SearchResult`，见 `@tabora/plugin-api`）。
 
-V2 设计原型验证了两种搜索入口：
-
-- **Dashboard**：常驻搜索栏 + 内联实时建议下拉 + ⌘K 命令面板
-- **Focus**：不放常驻搜索栏，通过居中命令入口或 ⌘K 命令面板唤起搜索；页面突出一个主卡片和 satellite 切换区
-
-这需要搜索子系统分为三层：
-
-```text
-┌─────────────────────────────────────────┐
-│  Search UI Layer                        │
-│  - SearchBar (内联输入 + 建议下拉)       │
-│  - CommandPaletteHost (⌘K 浮层容器)      │
-│  - SearchSurface (搜索插件渲染内容)      │
-│  - SearchProviderIndicator / Hint        │
-└────────────────┬────────────────────────┘
-                 │
-┌────────────────┴────────────────────────┐
-│  Search Engine (orchestrator)           │
-│  - 模糊搜索命令 / 卡片 / 网页            │
-│  - @语法 解析和路由                      │
-│  - 分组建议生成                          │
-│  - 键盘导航状态管理 (↑↓ Enter Esc)       │
-│  - Dashboard 内联建议与 ⌘K 状态同步      │
-└────────────────┬────────────────────────┘
-                 │
-┌────────────────┴────────────────────────┐
-│  Search Provider Protocol (plugin-api)  │
-│  - SearchProviderContribution           │
-│  - SearchViewProps                      │
-│  - SearchResult 类型                     │
-└─────────────────────────────────────────┘
-```
-
-### 5.2 搜索路由
-
-搜索输入按优先级匹配：
-
-```text
-function routeSearch(query: string): SearchAction {
-  // 1. @语法切换搜索源
-  const providerOnlyMatch = query.match(/^@([\w-]+)$/)
-  if (providerOnlyMatch) {
-    return { type: "provider-pending", provider: providerOnlyMatch[1] }
-  }
-
-  const providerQueryMatch = query.match(/^@([\w-]+)\s+(.*)/)
-  if (providerQueryMatch) {
-    return { type: "provider", provider: providerQueryMatch[1], query: providerQueryMatch[2] }
-  }
-  // 2. 精确命令匹配
-  const cmd = commandRegistry.match(query)
-  if (cmd) return { type: "command", command: cmd }
-  // 3. 卡片名称模糊匹配
-  const card = fuzzyMatchCards(query)
-  if (card) return { type: "card", instance: card }
-  // 4. 默认网页搜索
-  return { type: "web", query, provider: defaultProviderId }
-}
-```
-
-### 5.3 键盘导航协议
-
-搜索建议列表的键盘导航是平台级交互协议：
-
-```text
-type SearchNavigationState = {
-  results: SearchResult[]
-  activeIndex: number
-  isOpen: boolean
-}
-
-// 平台统一处理键盘事件：
-// ArrowDown → activeIndex++
-// ArrowUp → activeIndex--
-// Enter → execute(activeResult)
-// Escape → close or clear
-```
-
-插件只负责搜索表面的渲染和结果项的视觉表达；结果计算、激活态、方向键导航和执行时机由平台统一处理。
+搜索输入按严格优先级路由：`@源` 单独输入进入 provider-pending，`@源 词` 路由到该 provider，否则依次尝试精确命令匹配、卡片名称模糊匹配，最后落到默认网页搜索。键盘导航（↑↓ 移动 activeIndex、Enter 执行、Esc 关闭/清空）是平台级协议由 engine 统一处理；插件只渲染搜索表面和结果项视觉，不负责结果计算、激活态、方向键导航和执行时机。
 
 ## 6. 拖拽排序子系统
 
-### 6.1 实时交换算法
-
-V2 原型采用实时交换而非占位符方案：拖拽悬停到目标卡片时，两张卡片立即交换数组位置并重新渲染。当前实现已落地为两层：
-
-- `@tabora/orchestrator/createDragSortPlan()` 负责纯数组交换计划。
-- `@tabora/workbench-app/WorkbenchDragController` 负责 5px 阈值、preview instances、重复悬停去抖，以及只在 pointer release 时提交持久化。
-
-```text
-type WorkbenchDragControllerState = {
-  pointerId: number
-  sourceId: string
-  phase: "pending" | "dragging"
-  startPoint: Point
-  currentPoint: Point
-  overId: string | null
-  initialInstances: PluginInstance[]
-  previewInstances: PluginInstance[]
-}
-
-const state = beginWorkbenchDragController({
-  pointerId,
-  sourceId: "widget-a",
-  point: { x: 10, y: 10 },
-  instances,
-})
-
-const next = updateWorkbenchDragController({
-  state,
-  point: { x: 20, y: 20 },
-  overId: "widget-b",
-})
-
-const completed = completeWorkbenchDragController(next)
-if (completed.instances) {
-  await persistGridOrder(completed.instances)
-}
-```
-
-### 6.2 拖拽交互约束
-
-- 5px 移动阈值：防止点击误触拖拽
-- 统一使用 Pointer Events；鼠标与触屏不再分两套拖拽实现
-- drag handle 限定为 `.card-header`，避免卡片内容区滚动被拖拽手势劫持
-- 不触发拖拽的元素：`button, input, textarea, select, a, [role="button"]`
-- `card-header` 使用 `touch-action: none`，并通过 pointer capture 持续接收 move/up/cancel
-- 命中目标实例通过 `document.elementFromPoint()` + `[data-widget-instance-id]` 解析
-- 拖拽中禁止文字选择：`body.drag-active { user-select: none }`
-- 只在 `pointerup` 时持久化排序；未发生 reorder 时直接取消，不写库不提示
+拖拽采用实时交换（悬停即交换数组位置），落地为两层：`@tabora/orchestrator` 的 `createDragSortPlan()` 负责纯数组交换计划，`@tabora/workbench-app` 的 `WorkbenchShellDragState.ts` 负责移动阈值、命中目标解析和只在指针释放时提交持久化。协议约束是「只有真正发生位移才落库排序」——单击不能被当成排序，否则卡片会从指针下方挪走、双击展开随之失效。阈值、命中解析和点击/拖拽区分的实现细节及其成因见 `WorkbenchShellDragState.ts` 的行内注释。
 
 ## 6.6 卡片网格系统
 
-### 设计原则
-
-**固定网格跨度是底线**：插件开发者必须知道语义尺寸对应的列/行跨度，才能为不同尺寸适配卡片内容。
-
-Dashboard 使用 **10 列逻辑网格系统**。网格行高由布局 view 根据单列实际宽度同步，保证 `S=1x1` 为正方形，其它尺寸由列/行跨度组合得到。
-
-### 网格定义
-
-| 尺寸 | colSpan | rowSpan | 用途                       |
-| ---- | ------- | ------- | -------------------------- |
-| S    | 1       | 1       | 纯展示：时钟、天气、小数据 |
-| M    | 2       | 1       | 轻交互：快捷链接、开关     |
-| L    | 2       | 2       | 中等交互：待办、便签       |
-| XL   | 4       | 2       | 丰富交互：复杂表单、图表   |
-
-### 实际尺寸（1200px 容器）
-
-| 尺寸 | 宽度约 | 高度约 | 说明     |
-| ---- | ------ | ------ | -------- |
-| S    | 109px  | 109px  | 小巧紧凑 |
-| M    | 230px  | 109px  | 标准横卡 |
-| L    | 230px  | 230px  | 方形详情 |
-| XL   | 472px  | 230px  | 横向展示 |
-
-### 响应式断点
-
-| 屏幕宽度 | 网格列数 |
-| -------- | -------- |
-| > 768px  | 10 列    |
-| <= 768px | 1 列     |
-
-### 技术实现
-
-**CSS Grid 布局：**
-
-```css
-.workbench-grid {
-  display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
-  grid-auto-rows: var(--dashboard-grid-cell, 96px);
-  gap: 12px;
-  align-items: stretch;
-}
-```
-
-**JavaScript 定义：**
-
-```typescript
-// packages/plugin-api/src/widgetGeometry.ts
-export const WIDGET_GRID_GEOMETRY: Record<WidgetSize, WidgetGridSpan> = {
-  S: { colSpan: 1, rowSpan: 1 },
-  M: { colSpan: 2, rowSpan: 1 },
-  L: { colSpan: 2, rowSpan: 2 },
-  XL: { colSpan: 4, rowSpan: 2 },
-}
-```
-
-### 关键设计决策
-
-1. **10 列逻辑网格**：让 `1x1 / 2x1 / 2x2 / 4x2` 四种尺寸直接映射到用户可理解的网格单位。
-2. **行高跟随列宽**：布局 view 用 `ResizeObserver` 同步单元格尺寸，`S` 始终是正方形。
-3. **尺寸只表达跨度**：卡片外壳不再通过 aspect-ratio 控制高度，插件只需按宿主给定内容区适配。
-4. **XL 占 4/10 宽**：可以并排多个宽卡片，同时避免单个卡片独占整行。
-
-### 插件开发指南
-
-插件开发者可以依赖固定的语义跨度进行布局设计。宿主卡片外壳只提供边框、grid span、错误边界和右上角移除按钮；插件 card view 负责内容区 padding、滚动和截断：
-
-```css
-/* 针对不同尺寸优化布局 */
-.widget[data-size="S"] {
-  font-size: 12px;
-  padding: 8px;
-}
-.widget[data-size="M"] {
-  font-size: 14px;
-  padding: 12px;
-}
-.widget[data-size="L"] {
-  font-size: 16px;
-  padding: 16px;
-}
-.widget[data-size="XL"] {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-```
+Dashboard 用 10 列逻辑网格，`S/M/L/XL` 映射到固定的列/行跨度，是插件可依赖的稳定语义。网格常量、尺寸用途和设计理由（尺寸只表达跨度、行高跟随列宽、XL 占 4/10 宽）见 `packages/plugin-api/src/widgetGeometry.ts` 的 `WIDGET_GRID_GEOMETRY`；列宽同步与响应式列数（>768px 用桌面列数、窄屏降级）见 `packages/workbench-app/src/surface/dashboard/dashboard-layout.tsx`。宿主卡片外壳只提供边框、grid span、错误边界和移除按钮，插件 card view 负责内容区 padding、滚动和截断。
 
 ## 7. 卡片展开子系统
 
-### 7.1 展开视图协议
-
-每种卡片类型有完全不同的展开视图内容。展开视图通过 widget contribution 的 `views` 注册，宿主用 registry 解析为组件后在统一容器中渲染。展开视图（含 footer 视图）与卡片视图共用同一套 `WidgetViewProps`（见 §12.1），不再有独立的 `ExpandViewProps`。
-
-```text
-// WidgetContribution.views（plugin-api/manifest.ts）
-views: {
-  card: string          // 必填：卡片视图
-  expand?: string       // 可选：展开弹窗主体视图；缺省时回退渲染 card 视图
-  expandFooter?: string // 可选：展开弹窗底部 footer 视图，注入宿主统一 footer 区域
-  settings?: string     // 可选：实例设置视图
-}
-```
-
-约束：
-
-- `expandFooter` 仅在声明了 `expand` 时有意义。只声明 `expandFooter` 不声明 `expand`，按「无自定义 footer」处理，宿主不渲染 footer，不报错。
-- footer 视图与主体视图同为 `WidgetViewProps`，共享 host 能力（`showToast`、`openExternal`、`data` 等）。
-- footer 视图与主体视图是两个独立组件。瞬时 UI 状态（如当前面板、表单校验错误）由插件自行在内部建立「按 instanceId 的会话 store」共享，不进协议层。
-- `mode: "settings"`（实例设置）不注入自定义 footer，也不渲染 footer。
-
-### 7.2 展开容器动画
-
-展开容器由宿主统一提供：
-
-```text
-打开：overlay fade in (250ms) + modal scale 0.95→1 + translateY 12px→0
-内容：插件提供的 ExpandView
-关闭：modal scale 1→0.95 + overlay fade out (250ms) → 移除
-```
-
-展开容器结构：
-
-```text
-ExpandModal
-  ExpandHeader (图标 + 标题 + 关闭按钮)
-  ExpandBody (插件 expand 视图)
-  ExpandFooter? (仅插件提供 expandFooter 操作视图时渲染)
-```
-
-footer 区域渲染规则：
-
-- widget 声明并注册了 `views.expandFooter` 时，宿主在 `expand-footer` 内用 `PluginViewBoundary` 隔离渲染该 footer 视图；footer 视图崩溃只局部兜底，不影响 body。
-- 未声明或未注册 `views.expandFooter` 时，宿主不渲染 footer；关闭能力仍由右上角关闭按钮、`Esc` 和点击遮罩提供。
+展开视图通过 widget contribution 的 `views`（card 必填，expand/expandFooter/settings 可选）注册，宿主用 registry 解析后在统一容器（ExpandHeader/ExpandBody/ExpandFooter?）中渲染，与卡片视图共用同一套 `WidgetViewProps`（见 §12.1），无独立 `ExpandViewProps`。约束：`expandFooter` 只在声明了 `expand` 时有意义，缺 `expand` 时按「无 footer」处理不报错；footer 与主体是两个独立组件，瞬时 UI 状态由插件自建「按 instanceId 的会话 store」共享、不进协议层；`mode: "settings"` 不渲染 footer。声明并注册 `expandFooter` 时宿主在 `expand-footer` 内用 `PluginViewBoundary` 隔离渲染，崩溃只局部兜底；未声明时不渲染 footer，关闭仍由关闭按钮、`Esc` 和点击遮罩提供。
 
 ## 8. 上下文菜单子系统
 
-### 8.1 右键菜单协议
-
-上下文菜单使用事件委托，不为每个卡片绑定独立处理器：
-
-```text
-// platform-kernel 中注册
-type ContextMenuRegistry = {
-  register(extensionPoint: string, builder: ContextMenuBuilder): void
-}
-
-type ContextMenuBuilder = (instance: PluginInstance) => ContextMenuItem[]
-
-type ContextMenuItem = {
-  id: string
-  label: string
-  shortcut?: string
-  danger?: boolean
-  action: () => void
-  separator?: "before" | "after"
-}
-```
-
-### 8.2 默认菜单项
-
-平台为 widget 扩展点提供默认菜单项（插件无需声明即可获得）：
-
-```text
-const DEFAULT_WIDGET_CONTEXT_MENU: ContextMenuItem[] = [
-  // 尺寸选择（根据 supportedSizes 动态生成）
-  ...getSizeMenuItems(instance),
-  { separator: "before" as const },
-  { id: "expand", label: "展开详情", shortcut: "双击", action: () => openExpand(instance) },
-  { separator: "before" as const },
-  {
-    id: "remove",
-    label: "移除实例",
-    shortcut: "⌫",
-    danger: true,
-    action: () => removeInstance(instance),
-  },
-]
-```
-
-插件可以通过 widget contribution 的 `contextMenus` 声明自定义菜单项：
-
-```text
-type WidgetContextMenuContribution = {
-  id: string
-  label: string
-  commandId?: string
-  order?: number
-  danger?: boolean
-  when?: string
-}
-```
-
-orchestrator 的 context menu model 负责合并默认 size / expand / remove 项与插件菜单项。插件菜单项优先绑定 command ID；缺失 command 或 command 不可用时不渲染，避免插件直接把 arbitrary function 注入宿主右键菜单。
+右键菜单用事件委托，不为每个卡片绑定独立处理器（`ContextMenuRegistry` / `ContextMenuItem` 类型见 `@tabora/plugin-api`）。平台为 widget 扩展点提供默认项（按 `supportedSizes` 动态生成的尺寸选择、展开详情、移除实例，插件无需声明即得）。插件通过 widget contribution 的 `contextMenus` 声明自定义项。orchestrator 的 context menu model 合并默认项与插件项；插件项必须绑定 command ID，缺失或不可用时不渲染，避免插件把任意函数注入宿主右键菜单。
 
 ## 9. 通知系统
 
-### 9.1 Toast 组件
-
-V2 原型验证了 Toast 堆叠模式。平台需要提供统一的 Toast 管理：
-
-```text
-// orchestrator 提供
-type ToastManager = {
-  show(message: string, options?: ToastOptions): string // 返回 toast ID
-  dismiss(id: string): void
-}
-
-type ToastOptions = {
-  type?: "success" | "error" | "warning" | "info"
-  duration?: number // 默认 2500ms
-  action?: { label: string; commandId: string }
-}
-```
-
-Toast 行为：
-
-- 新 Toast 从下方轻微上浮（`translateY(8px)→0`，200ms ease）
-- 堆叠不超过 3 条，超出时移除最早的
-- 每条独立计时 2.5s 后淡出移除
-- 带 action 的 Toast 不自动消失
-- 插件通过 `context.ui.showToast(message, options)` 触发 runtime toast bridge；layout 通过 `LayoutHostAPI.showToast(message, options)` 请求同一个宿主 Toast；shell 监听 `ui.toast.show`，由 `ToastHost` 渲染并通过 `commandId` 回调到 command executor，不允许插件直接注入任意函数到 Toast action。
-
-### 9.2 插件可访问性
-
-插件不直接操作 Toast 系统。通过 runtime context：
-
-```text
-context.ui.showToast("保存成功", { type: "success" })
-```
+Toast 统一由 `@tabora/orchestrator` 的 `createToastManager` 管理（`ToastManager` / `ToastOptions` 类型和默认时长见 `packages/orchestrator/src/toast-manager.ts`）：堆叠上限固定，超出移除最早一条；无 action 的 toast 自动消失，带 action 的常驻。协议约束是插件不直接操作 Toast，只通过 `context.ui.showToast(message, options)`；layout 通过 `LayoutHostAPI.showToast` 请求同一宿主 Toast；shell 由 `ToastHost` 渲染并用 `commandId` 回调 command executor，不允许插件把任意函数注入 Toast action。
 
 ## 10. 快捷键系统
 
-### 10.1 全局快捷键注册
+快捷键通过 `KeybindingContribution` 声明并绑定到 command ID，而不是直接绑定任意函数（`CommandContribution` / `KeybindingContribution` 类型见 `@tabora/plugin-api`）。orchestrator 的 command catalog 合并平台命令与插件命令并生成 CommandPalette view model；`packages/orchestrator/src/shortcut-registry.ts` 负责平台过滤、归一化、冲突检测和禁用冲突 binding，shell 只读取 registry 并执行 command。
 
-```text
-// platform-kernel 新增
-type ShortcutRegistry = {
-  register(shortcut: ShortcutBinding): void
-  unregister(id: string): void
-}
-
-type ShortcutBinding = {
-  id: string
-  keys: string // "mod+k", "mod+t", "mod+,", "?"
-  description: string
-  category: "global" | "layout" | "widget"
-  action: () => void
-  preventDefault?: boolean
-}
-```
-
-### 10.2 MVP 快捷键表
-
-| ID              | 快捷键 | 功能               | 类别   |
-| --------------- | ------ | ------------------ | ------ |
-| `cmd-palette`   | ⌘K     | 打开命令面板       | global |
-| `toggle-theme`  | ⌘T     | 切换主题           | global |
-| `add-widget`    | ⌘N     | 添加卡片           | global |
-| `settings`      | ⌘,     | 打开设置           | global |
-| `shortcuts`     | ?      | 快捷键参考         | global |
-| `escape`        | Esc    | 关闭弹窗/菜单/面板 | global |
-| `expand-card`   | 双击   | 展开卡片           | widget |
-| `context-menu`  | 右键   | 上下文菜单         | widget |
-
-快捷键通过 `KeybindingContribution` 声明，并绑定到 command ID，而不是直接绑定任意函数：
-
-```text
-type CommandContribution = {
-  id: string
-  title: string
-  description?: string
-  icon?: string
-  category: string
-  keywords?: string[]
-  defaultShortcut?: string
-  requiredCapabilities?: string[]
-}
-
-type KeybindingContribution = {
-  id: string
-  commandId: string
-  key: string
-  platform?: "mac" | "windows" | "linux" | string
-  when?: string
-  editable?: boolean
-}
-```
-
-orchestrator 的 command catalog 合并平台强制命令与插件命令，并生成 CommandPalette 所需 view model；shortcut registry 负责平台过滤、冲突检测和禁用后注册的冲突 binding。shell 快捷键处理只读取 registry 并执行 command。
+MVP 快捷键：⌘K 命令面板、⌘T 切换主题、⌘N 添加卡片、⌘, 设置、`?` 快捷键参考、Esc 关闭弹窗/菜单/面板；widget 层双击展开卡片、右键上下文菜单。
 
 ## 11. 设置架构
 
@@ -836,233 +191,47 @@ SettingsSurfaceHost (shell 提供，不可替换)
 
 ## 12. 扩展点 Props Contract V2
 
-基于 V2 原型验证的交互模式，扩展点 props contract 需要增强：
+扩展点的 props/contribution 类型是插件与平台的类型契约，显式定义在 `@tabora/plugin-api`（`manifest.ts` / schema）；本节只记类型签名之外、不易从代码推断的语义约束。
 
 ### 12.1 Widget
 
-Widget contribution 的展示元数据归插件所有，shell 不应按官方插件 ID 维护标题、图标或说明映射：
-
-```text
-type WidgetContribution = {
-  id: string
-  title: string
-  icon?: string
-  description?: string
-  supportedSizes: WidgetSize[]
-  defaultSize: WidgetSize
-  allowMultipleInstances: boolean
-  views: {
-    card: string
-    expand?: string
-    expandFooter?: string
-    settings?: string
-  }
-}
-```
-
-```text
-type WidgetViewProps = {
-  // 身份
-  pluginId: string
-  instanceId: string
-  contributionId: string
-
-  // 尺寸
-  size: WidgetSize
-  supportedSizes: WidgetSize[]
-
-  // 数据
-  config: Record<string, unknown>
-  data: WidgetViewData
-
-  // 宿主交互
-  host: {
-    updateConfig(value: Record<string, unknown>): Promise<void>
-    removeInstance(): Promise<void>
-    requestResize(size: WidgetSize): Promise<void>
-    openModal(viewId: string, props?: unknown): void
-    closeModal(): void
-    openExpand(): void
-    showToast(message: string, opts?: ToastOptions): void
-    openExternal(url: string): Promise<boolean>
-  }
-}
-```
-
-宿主渲染 widget 前必须解析当前 `WidgetContribution` 并校验实例显式声明的 `size` 是否包含在 `supportedSizes` 内。缺少 contribution、缺少 `size` 或 size 不受支持时，该实例进入局部无效实例占位，不按 `defaultSize` 或硬编码 `"M"` 做读取时补齐。`defaultSize` 只用于用户新增实例时从 contribution 取初始尺寸；workspace preset 中的 widget instance 也必须显式写入 `size`。
-
-`views.card` / `expand` / `expandFooter` / `settings` 都注册到 registry 并接收同一套 `WidgetViewProps`。展开弹窗的 footer 通过 `expandFooter` 视图注入宿主统一 footer 区域（详见 §7.1、§7.2）。
+Widget 展示元数据（title/icon/description/supportedSizes/defaultSize/views）归插件所有，shell 不按官方插件 ID 维护标题/图标映射。宿主渲染前必须校验实例显式声明的 `size` 属于 `supportedSizes`：缺 contribution、缺 `size` 或 size 不受支持时进入局部无效实例占位，不按 `defaultSize` 或硬编码 `"M"` 做读取时补齐；`defaultSize` 只用于新增实例取初值，preset 中的 widget instance 也必须显式写 `size`。`views` 的 card/expand/expandFooter/settings 都注册到 registry 并共用同一套 `WidgetViewProps`（host 能力含 `updateConfig`/`removeInstance`/`requestResize`/`openModal`/`openExpand`/`showToast`/`openExternal`），footer 注入见 §7。
 
 ### 12.2 Search
 
-```text
-type WorkbenchSearchSettings = {
-  defaultProviderId: string
-  enabledProviderIds: string[]
-}
-```
-
-当前实现以 `workbenchSearchSettingsSchema` 作为唯一协议入口：`enabledProviderIds` 必须显式存在且非空，`defaultProviderId` 必须包含在 `enabledProviderIds` 中。workspace session hydration、workspace import/export、preset 装配、settings 修改链路统一遵守这个不变量；遇到无效数据直接拒绝或显示错误状态，不再按首个 provider、首个 enabled provider 或全量 provider 列表猜测默认值。
-
-```text
-type SearchViewProps = {
-  entry: "inline" | "palette"
-  providers: SearchProviderContribution[]
-  defaultProviderId: string
-  activeProviderId: string
-  query: string
-  providerToken: string | null
-  recentSearches: string[]
-  results: SearchResultGroup[]
-  activeResultIndex: number
-  isOpen: boolean
-  host: {
-    setQuery(query: string): void
-    submit(query: string, providerId?: string): Promise<void>
-    setActiveProvider(providerId: string): void
-    resolveProvider(keyword: string): SearchProviderContribution | null
-    moveSelection(direction: "next" | "prev"): void
-    executeSelection(resultIndex?: number): Promise<void>
-    open(): void
-    close(): void
-    showToast(message: string): void
-  }
-}
-```
+`WorkbenchSearchSettings` 以 `workbenchSearchSettingsSchema` 为唯一协议入口：`enabledProviderIds` 显式非空，`defaultProviderId` 必属其中。workspace hydration、import/export、preset 装配、settings 修改统一遵守此不变量，无效数据直接拒绝或显示错误，不按首个/全量 provider 猜测默认值。`SearchViewProps` 是宿主注入 `query/results/activeResultIndex/providerToken/host actions` 的状态机契约，搜索栏只渲染和转发事件。
 
 ### 12.3 SettingsPanel
 
-```txt
-type SettingsPanelViewProps = {
-  panelId: string
-  pluginId: string
-  scope: "global" | "workspace" | "plugin" | "instance"
-  surface: "desktop" | "mobile"
-  instanceId?: string // 仅 instance scope 且宿主明确指定目标时存在
-  host: {
-    close(): void
-    setDirty(isDirty: boolean): void
-    // 仅出现 manifest hostActions 请求且宿主授予的 action
-  }
-  data: {
-    // 仅出现 manifest hostReads 请求且宿主授予的只读 DTO
-    workspace?: SettingsWorkspaceSummary
-    layouts?: OwnedContribution<LayoutContribution, "layout">[]
-    themes?: OwnedContribution<ThemeContribution, "theme">[]
-    searchProviders?: OwnedContribution<SearchProviderContribution, "search-provider">[]
-  }
-}
-```
-
-`SettingsPanelContribution` 必须显式声明 `section`、`scope` 和非空 `surfaces`：
-
-```txt
-type SettingsPanelContribution = {
-  id: string
-  title: string
-  section: "general" | "appearance" | "search" | "account" | "ai" | "sync" | "plugins" | "about"
-  scope: "global" | "workspace" | "plugin" | "instance"
-  surfaces: Array<"desktop" | "mobile">
-  order?: number
-  content:
-    | { kind: "schema"; provider: string; schemaVersion: 1 }
-    | { kind: "custom-view"; view: string }
-}
-```
-
-当前上线前阶段不再按旧 id 推断 section，也不为缺失 scope 或 surfaces 的旧 manifest 做默认补齐。SettingsHost 以 orchestrator navigator 作为主路径，先按当前 `surface` 过滤 panels，再组织导航和渲染；desktop 使用抽屉式双栏结构，mobile 使用全屏单列结构。设置页由 `@tabora/workbench-app` 的 `/settings/<section>` 路由承载，分类切换、关闭、移动端返回和浏览器历史都通过路由同步；SettingsHost 不直接管理 URL。provider context 和 custom-view props 都带入当前 surface；`scope: "instance"` 的 panel 在未传入明确 `instanceId` 时不得出现在导航或渲染树中，schema context 和 custom-view props 都只在显式目标存在时携带该 ID。
+`SettingsPanelContribution` 必须显式声明 `section`（general/appearance/search/account/ai/sync/plugins/about）、`scope`（global/workspace/plugin/instance）、非空 `surfaces` 和 `content`（`{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`）；`SettingsPanelViewProps.data` 只携带 manifest `hostReads` 请求且宿主授予的只读 DTO。上线前阶段不按旧 id 推断 section、不为缺 scope/surfaces 的旧 manifest 补齐。SettingsHost 以 orchestrator navigator 为主路径，先按当前 `surface` 过滤再组织导航：desktop 抽屉式双栏、mobile 全屏单列。设置页由 `@tabora/workbench-app` 的 `/settings/<section>` 路由承载，分类切换/关闭/返回/历史都经路由同步。`scope: "instance"` 的 panel 未传入明确 `instanceId` 时不得出现在导航或渲染树。
 
 ### 12.4 Workspace Preset
 
-默认工作台装配通过 `workspacePresets` contribution 表达：
+默认工作台装配通过 `workspacePresets` contribution 表达（字段见 `@tabora/plugin-api`）。preset applier 只在创建新 workspace 时生成 workspace 与实例，已有 workspace 不 backfill、不覆盖、不迁移旧 seed；widget instance 缺 `size` 被拒绝，非 widget 不写 `size`。官方默认 preset 由 contract test 锁定 `pluginId/contributionId/layoutId/themeId/backgroundProviderId/search provider` 全链路引用必须命中当前 builtin 贡献。
 
-```txt
-type WorkspacePresetContribution = {
-  id: string
-  title: string
-  description?: string
-  plugins: string[]
-  layoutId: string
-  themeId: string
-  backgroundProviderId: string
-  search: WorkbenchSearchSettings
-  instances: WorkspacePresetInstanceContribution[]
-  regions: WorkspacePresetRegionContribution[]
-}
-```
-
-preset applier 只在创建新 workspace 时生成 workspace 与 plugin instances；已有 workspace 不做 backfill、不覆盖数据，也不为旧 seed 做迁移。preset widget instance 缺少 `size` 会被 schema 与 applier 拒绝，非 widget instance 不写入 `size`。官方默认 preset 额外通过 contract test 锁定 `pluginId / contributionId / layoutId / themeId / backgroundProviderId / search provider` 全链路引用必须命中当前 builtin 贡献，避免旧 ID 残留再次混入事实源。
-
-Workspace 当前协议要求保存 `activeBackgroundProviderId`。导入 / 导出只接受当前 schema；缺失 `activeBackgroundProviderId` 的 workspace JSON 被拒绝，不按默认背景做补齐。搜索配置同样要求显式满足当前 `WorkbenchSearchSettings` 协议；缺失 `defaultProviderId`、缺失 `enabledProviderIds`、或二者不一致的旧 workspace / export 数据都会被拒绝。背景 provider 找不到时仍由背景 resolver 使用安全页面样式兜底，这是错误恢复机制，不是旧数据迁移。
-
-当前实现中的 `parseExport()` 仍保持“schema 不通过即拒绝”的策略。这里额外明确一条宿主诊断约束：严格拒绝不等于静默失败，import/export UI 应向用户暴露可读诊断信息，例如 `schemaVersion` 不兼容、缺失字段路径、约束不满足项，以及被跳过的未知插件实例/插件数据。这些诊断只用于解释失败原因，不改变“不 silent backfill”的协议立场。
-
-当前 export 会同时打包 workspace scope（`workspaceId`）与 instance scope（`instanceId`）的插件数据，避免只导出 workspace scope 而导致 widget 等实例数据丢失。import 遇到 workspace ID 冲突时会生成新 workspaceId，并为导入的实例生成新的 instanceId 映射，避免实例 ID 在全局表内冲突覆盖；同时会重建 `pluginDataRow.id` 以保持主键与 `workspaceId / instanceId` 一致。
+Workspace 协议要求显式 `activeBackgroundProviderId` 和满足 `WorkbenchSearchSettings` 的搜索配置；import/export 只接受当前 schema，缺字段或不一致的旧数据直接拒绝，不按默认值补齐（背景 provider 找不到时由 resolver 用安全页面样式兜底，属错误恢复而非迁移）。严格拒绝不等于静默失败：import/export UI 必须暴露可读诊断（`schemaVersion` 不兼容、缺失字段路径、约束不满足项、被跳过的未知实例/数据）。export 同时打包 workspace scope 与 instance scope 的插件数据；import 遇 workspace ID 冲突时重建 workspaceId、instanceId 映射和 `pluginDataRow.id`，避免全局表主键冲突覆盖。
 
 ### 12.5 Background Source
 
-背景 provider 通过 `BackgroundSourceValue` 声明具体 source：
-
-```txt
-type BackgroundSourceValue =
-  | { type: "css"; css: Record<string, string> }
-  | { type: "image"; url: string; fit?: "cover" | "contain" | "fill" }
-  | { type: "video"; url: string; poster?: string }
-  | { type: "gradient"; css: string }
-  | { type: "canvas"; view: string }
-```
-
-renderer contribution 的 `accepts` 与 source type 对齐，允许 `css`、`image`、`video`、`gradient`、`canvas`。宿主 resolver 优先读取 `source`，仅在缺失时使用 `defaultCss` 作为安全背景样式。
-
-当前 MVP 只执行 `builtin` 插件，因此 `image` / `video` URL 当前按“受信任包声明的背景资产”处理，而不是一条独立的 runtime network capability。也就是说：
-
-- 背景 source 的 URL 允许作为 manifest 静态声明存在，但不代表插件获得任意联网能力。
-- 背景渲染器不得把交互式网络请求伪装成背景协议能力；若未来允许运行时下载背景素材、远端背景集合或第三方远程插件，必须把这一路径并入显式 `network` permission / host policy，而不是继续挂在 `BackgroundSourceValue` 的宽松字符串 URL 上。
-- 当前阶段的远端背景资源是否可用，属于受信任包发布内容审核与宿主加载策略问题，不属于权限桥的已授权行为记录。
+`BackgroundSourceValue` 声明 source 类型（css/image/gradient/video/canvas，定义见 `@tabora/plugin-api`），renderer 的 `accepts` 与之对齐，resolver 优先读 `source`、缺失时用 `defaultCss` 兜底。关键约束：当前 MVP 只执行 builtin 插件，`image`/`video` URL 按「受信任包声明的背景资产」处理，不等于插件获得联网能力；背景渲染器不得把交互式网络请求伪装成背景协议，未来运行时拉取远端背景必须并入显式 `network` permission，而不是继续挂在宽松字符串 URL 上。
 
 ### 12.6 Loader 与兼容检查
 
-`PluginManifest.apiVersion` 必填。`PluginLoader` 当前只接受 `builtin` source 记录，不执行远程或本地第三方代码；引入其他来源时需要同时补上 sandbox 与来源准入策略，不能只放宽 source 取值。loader 按 Tabora plugin API major version 做兼容检查，future major 直接 skipped/rejected；缺失 `apiVersion` 的 manifest 无例外拒绝。
+`PluginManifest.apiVersion` 必填且缺失即拒绝。`PluginLoader` 当前只接受 `builtin` source，不执行远程或本地第三方代码；按 API major version 做兼容检查，future major 直接 skipped/rejected。引入其他 source 必须同时补 sandbox 与准入策略，不能只放宽 source 取值。
 
 ## 13. 持久化增强
 
 ### 13.1 Storage Adapter Port
 
-`@tabora/storage` 对外提供 `StorageAdapter` port，用于把 repository 创建与具体后端解耦：
-
-```txt
-type StorageAdapter = {
-  database?: TaboraDatabase
-  repositories: StorageRepositories
-}
-```
-
-Web 默认 adapter 使用当前 Dexie/IndexedDB repository；app bootstrap 优先接收 `StorageAdapter` 以支持测试和未来跨平台替换。插件业务数据必须通过 runtime context / repository port 访问，插件 package 不得直接依赖 `@tabora/storage`。
-
-这里额外约束 `database?` 的语义：它只是 Web/Dexie adapter 暴露给 bootstrap、测试或调试层的可选句柄，不是跨后端可移植 contract。跨平台调用方必须只依赖 `repositories`，不能把 `database` 是否存在写进业务路径判断，否则会把 Dexie 细节重新泄漏回 app / shell 层。
+`@tabora/storage` 的 `StorageAdapter` port 把 repository 创建与后端解耦（`{ database?, repositories }`，类型见包）。Web 默认 adapter 包装 Dexie/IndexedDB，bootstrap 优先接收 adapter 以支持测试与跨平台替换。插件业务数据只经 runtime context / repository port 访问，插件 package 不得直接依赖 `@tabora/storage`。`database?` 只是 Web/Dexie adapter 给 bootstrap/测试/调试的可选句柄，不是跨后端 contract：跨平台调用方只依赖 `repositories`，不得把 `database` 是否存在写进业务路径，否则会把 Dexie 细节泄漏回 app/shell。
 
 ### 13.2 当前 MVP 表
 
-```txt
-class TaboraDatabase extends Dexie {
-  plugins!: Table<PluginRecord, string>
-  workspaces!: Table<Workspace, string>
-  pluginInstances!: Table<PluginInstance, string>
-  pluginData!: Table<PluginDataRow, string>
-  meta!: Table<StorageMeta, string>
-  workspaceSnapshots!: Table<WorkspaceSnapshot, string>
-}
-```
+`TaboraDatabase` 当前表见 `@tabora/storage`（plugins/workspaces/pluginInstances/pluginData/meta/workspaceSnapshots）。`permissionGrants`、`eventLogs`、`searchHistory`、`shortcutBindings` 在对应 repository/runtime port 落地前不进 schema；搜索历史由官方 search command bar 作为 plugin-owned workspace data 写入 `pluginData`，避免平台 schema 与插件数据双写。
 
-`permissionGrants`、`eventLogs`、`searchHistory`、`shortcutBindings` 暂不进入 MVP schema，直到对应 repository 或 runtime port 落地。当前搜索历史由官方 search command bar 作为 plugin-owned workspace data 写入 `pluginData`，避免平台 schema 与插件数据路径双写。
+`external-open` 与 `network` 都走「manifest 请求 + host grant + runtime host 判断」最小闭环，按 hostname 求 request/grant 交集；`context.network.fetch()` 必须经宿主注入的 network bridge，插件不得直接调用全局 `fetch`，host 缺 capability/bridge 时声明 network 的插件在激活前跳过。当前无平台级持久授权记录或跨会话审计；后续 `clipboard`、`local-file` 等交互授权能力必须引入独立 permission repository / host grant store，不得把授权结果混入 workspace 表或 `pluginData`。
 
-`external-open` 与 `network` 都采用“manifest 请求 + host grant + runtime host 判断”的最小闭环：两者都按 hostname 求 request/grant 交集；`context.network.fetch()` 还必须经宿主注入的 network bridge 执行，插件业务不得直接调用全局 `fetch`。host 缺少 network capability 或 bridge 时，声明 network permission 的插件会在激活前跳过。当前不提供平台级持久授权记录或跨会话审计；后续 `clipboard`、`local-file` 等需要用户交互授权的能力也必须引入独立 permission repository / host grant store，而不是把授权结果混入 workspace 表或 `pluginData`。
-
-### 13.3 Workspace Snapshot
-
-> **Phase 2 移除**：原 Workspace Snapshot repository 和 `createLayoutSwitchPlan` 用于支持布局切换后的装配回滚，随布局切换机制一并删除。当前架构不存在”切换前备份 + 不兼容回滚”路径。
-
-### 13.4 Plugin SDK v1 边界
+### 13.3 Plugin SDK v1 边界
 
 插件协议分为四层，禁止把它们收进同一个 `BuiltinPlugin` 或 runtime context：
 
@@ -1135,100 +304,13 @@ Level 4: 存储级 → IndexedDB 读失败 → 安全默认 workspace（不覆�
 | Boundary Tests          | 插件源码和 package manifest 不依赖宿主/storage/app 内部                              | Vitest                |
 | Interaction Tests       | 搜索键盘导航、拖拽交换、Toast 堆叠、右键菜单                                         | Vitest Browser Mode   |
 | Storage Migration Tests | Schema 升级、quota 处理                                                              | fake-indexeddb        |
-| A11y Tests              | 键盘可达性、焦点管理、ARIA 角色                                                      | axe-core + Playwright |
-| Visual Regression       | 桌面/移动断点截图对比、主题切换、错误状态                                            | Playwright screenshot |
+| A11y Tests              | 键盘可达性、焦点管理、ARIA 角色                                                      | Vitest + jsdom        |
 
 ### 15.2 关键测试场景
 
-```txt
-布局：
-  - Dashboard builtin layout 渲染 topbar / mainGrid region
-  - 响应式断点：桌面 rail、移动 bottom-bar 在同一 layout view 内切换
-  - 布局插件失败时显示布局不可用状态和具体错误
+必须覆盖的可观察行为：布局渲染 topbar/mainGrid region 与桌面/移动响应式切换、布局失败时的不可用状态；搜索的空态收藏命令、`@源` provider-pending、命令匹配、`@源 词` 路由、↑↓/Enter/Esc 键盘导航；设置侧栏分类切换、单面板渲染失败隔离、官方 panel 跨会话读写；拖拽交换、位移阈值内不触发排序、非卡片区域回原位、触屏不滚动；双击展开与 Esc 关闭；右键尺寸/展开/移除与当前尺寸高亮。
 
-搜索：
-  - 空搜索：显示收藏快捷命令
-  - 输入 "@bing"：进入 provider-pending 状态并显示搜索源提示
-  - 输入 "主题"：匹配切换主题命令
-  - 输入 "@bing 天气"：路由到 Bing 搜索源
-  - ↑↓ 导航，Enter 执行，Escape 关闭
-
-设置：
-  - 固定左侧导航正常切换：通用 / 外观 / 搜索 / 插件 / 关于
-  - `settings-panel` 贡献渲染失败：仅对应面板报错，其他内容正常
-  - 官方 settings panels 可读写并跨会话恢复
-
-拖拽：
-  - 拖拽卡片 A 到卡片 C 位置：A 和 C 交换
-  - 拖拽 < 5px 不激活：不触发排序
-  - 拖拽到非卡片区域：松手回原位
-  - 触屏拖拽：passive: false 防止页面滚动
-
-展开：
-  - 双击便签：全高文本域
-  - 双击待办：可交互列表（勾选实时同步）
-  - Esc 关闭展开
-
-右键：
-  - 右键卡片：尺寸选择 + 展开 + 移除
-  - 点击其他区域：菜单关闭
-  - 当前尺寸高亮
-```
-
-## 16. 仓库结构调整
-
-```txt
-packages/
-  plugin-api/           # 增加 layout.ts（LayoutViewProps/RegionSlot/LayoutHostAPI）和最小强制 schema
-  platform-kernel/      # 增强：快捷键注册、上下文菜单注册
-  orchestrator/         # 编排层
-    src/
-      plugin-catalog.ts
-      search-model.ts           # provider token、@ 路由和搜索 URL
-      command-palette-model.ts  # 命令面板和 inline 搜索结果模型
-      drag-sort-model.ts
-      context-menu-model.ts
-      settings-navigator.ts
-      toast-manager.ts
-      shortcut-registry.ts
-      workspace-preset.ts
-      index.ts
-  workbench-app/        # Shell composition/runtime：createLayoutEngine、renderer、workspace/session helper
-  storage/              # StorageAdapter port + Web Dexie adapter + repository factory
-  theme/                # 不变
-  ui/                   # 仅扩展插件内容区组件，不承载宿主容器
-  builtin-plugin-registry/ # 当前 shell 默认 builtin 插件列表
-  official-plugins/     # 官方插件集合：引入官方 layout package + 其他官方 contribution
-  workbench-shell/      # Shell host 样式 + WidgetCardShell + LayoutBoundary
-
-plugins/
-  official/
-    widget-*/           # 官方业务卡片插件
-  community/
-  examples/
-```
-
-> **Phase 2 变更**：原独立 `layout-dashboard` 和 `layout-mobile` 插件包已删除，Dashboard 现作为 host builtin layout 注入。官方插件只包含 widget 和功能插件。
-
-## 17. 当前实现地图
-
-本节只记录当前职责和可验证入口，不维护已经完成的阶段计划。实现状态以源码、测试和
-`docs/technical/tabora-regression-baseline.md` 为准。
-
-| 领域 | 当前所有者 | 主要入口 |
-| --- | --- | --- |
-| 插件协议与校验 | `@tabora/plugin-api` | manifest、contribution、workspace、schema |
-| 生命周期与权限 | `@tabora/platform-kernel` | plugin kernel、registry、runtime context、permission bridge |
-| 跨插件纯模型 | `@tabora/orchestrator` | catalog、search、command、shortcut、context menu、workspace preset |
-| 工作台组合与状态 | `@tabora/workbench-app` | runtime bootstrap、workspace/session、layout renderer、surface、shell controller |
-| 宿主视图与错误隔离 | `@tabora/workbench-shell` | widget card shell、settings host、toast host、layout boundary |
-| 持久化与导入导出 | `@tabora/storage` | repository、storage adapter、workspace snapshot |
-| 默认装配 | `@tabora/builtin-plugin-registry` | builtin plugins、workspace preset、shell config |
-
-关键用户路径由 `pnpm test`、`pnpm check` 和回归基准中的分层检查保护；
-新增协议、storage、shell 或发布能力时，按回归基准同步扩展事实源和验证层级。
-
-## 18. 风险与应对
+## 16. 风险与应对
 
 | 风险                                       | 应对                                                                  |
 | ------------------------------------------ | --------------------------------------------------------------------- |

@@ -1,3 +1,5 @@
+// 监听本地数据库变化，按 manifest 声明的 collection（record key、更新时间、排除字段）
+// 生成同步队列记录；未声明的 plugin data 保持本机不入队。
 import type { TaboraDatabase } from "@tabora/storage"
 import type { LocalChange, LocalChangeQueue } from "./localChangeQueue"
 import { isChangeDetectionSuppressed } from "./changeDetectionGuard"

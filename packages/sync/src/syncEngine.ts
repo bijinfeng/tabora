@@ -1,3 +1,5 @@
+// 执行 push、pull、冲突应用和游标持久化。冲突服务端优先：应用服务端记录并移除已处理
+// 的本地队列项，应用失败则保留队列项待重试；tombstone 会删除本地实体避免旧内容回传。
 import type { TaboraDatabase, SyncMetaRepository, PluginDataRow } from "@tabora/storage"
 import type { Workspace, PluginInstance, PluginRecord } from "@tabora/plugin-api"
 import type { SyncGatewayClient } from "./syncGatewayClient"
