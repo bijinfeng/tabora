@@ -98,6 +98,7 @@ export function Table<T>(props: TableProps<T>) {
                           ...alignStyle(column.align),
                         }}
                         data-align={column.align ?? "start"}
+                        data-last-row={isLast() ? "" : undefined}
                       >
                         {column.cell(row)}
                       </td>

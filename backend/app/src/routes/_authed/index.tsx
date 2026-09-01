@@ -6,13 +6,13 @@ import { fetchSyncedRecordStats } from "../../server/admin/syncedRecords"
 
 export const Route = createFileRoute("/_authed/")({
   loader: async ({ context }) => {
-    await Promise.all([
+    await Promise.allSettled([
       context.queryClient.ensureQueryData({
-        queryKey: ["admin-system-info"],
+        queryKey: ["system", "info"],
         queryFn: () => fetchSystemInfo(),
       }),
       context.queryClient.ensureQueryData({
-        queryKey: ["synced-record-stats"],
+        queryKey: ["synced-records", "stats"],
         queryFn: () => fetchSyncedRecordStats(),
       }),
     ])

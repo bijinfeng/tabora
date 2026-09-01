@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex"
 import { describe, expect, it } from "vitest"
 import { render } from "solid-js/web"
 
@@ -64,6 +65,33 @@ describe("Pagination", () => {
     input.dispatchEvent(new Event("input", { bubbles: true }))
     input.closest("form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
     expect(changes.at(-1)).toEqual([4, 10])
+  })
+
+  it("keeps the total summary styled when a caller changes the root layout", () => {
+    const el = root()
+    const layout = stylex.create({
+      root: {
+        display: "flex",
+        justifyContent: "space-between",
+        width: "100%",
+      },
+    })
+
+    render(
+      () => (
+        <Pagination
+          total={10}
+          pageSize={10}
+          showTotal={(total) => `共 ${total} 条`}
+          xstyle={layout.root}
+        />
+      ),
+      el,
+    )
+
+    expect(
+      el.querySelector<HTMLElement>("[data-pagination-total]")?.className.length,
+    ).toBeGreaterThan(0)
   })
 
   it("keeps step controls on editable simple-mode page numbers", () => {

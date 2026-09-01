@@ -17,11 +17,11 @@ const styles = stylex.create({
     flexWrap: "wrap",
     gap: 8,
     maxWidth: "100%",
-    "[data-pagination-total]": {
-      color: color.textMuted,
-      fontSize: 12,
-      whiteSpace: "nowrap",
-    },
+  },
+  total: {
+    color: color.textMuted,
+    fontSize: 12,
+    whiteSpace: "nowrap",
   },
   alignCenter: {
     justifyContent: "center",
@@ -156,6 +156,7 @@ export function Pagination(props: StyledPaginationProps) {
           ? styles.largeButton
           : undefined,
     )
+  const totalCompiled = () => stylex.attrs(styles.total)
   const ellipsisCompiled = () =>
     stylex.attrs(
       styles.ellipsis,
@@ -173,6 +174,7 @@ export function Pagination(props: StyledPaginationProps) {
       class={joinClassNames(rootCompiled().class, props.class)}
       style={props.style}
       pageButtonClass={joinClassNames(buttonCompiled().class, props.pageButtonClass)}
+      totalClass={totalCompiled().class}
       pageButtonStyle={{ ...props.pageButtonStyle }}
       pageButtonActiveStyle={{ ...props.pageButtonActiveStyle }}
       ellipsisClass={joinClassNames(ellipsisCompiled().class, props.ellipsisClass)}
