@@ -45,6 +45,12 @@ export const space = stylex.defineVars({
   s8: "var(--tbr-space-8)",
 })
 
+export const control = stylex.defineVars({
+  sm: "var(--tbr-control-sm)",
+  md: "var(--tbr-control-md)",
+  lg: "var(--tbr-control-lg)",
+})
+
 export const motion = stylex.defineVars({
   fast: "var(--tbr-dur-fast)",
   normal: "var(--tbr-dur-normal)",

@@ -7,3 +7,13 @@
   margin: 0;
   padding: 0;
 }
+
+@media (max-width: 480px) {
+  [data-tbr-pagination][data-responsive] {
+    gap: 4px;
+  }
+
+  [data-tbr-pagination][data-responsive] [data-pagination-size] {
+    display: none;
+  }
+}

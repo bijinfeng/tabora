@@ -82,7 +82,15 @@ export function Pagination(props: PaginationProps) {
       <Show when={uiPagination()} fallback={prevNextButtons()}>
         {(UiPag) => {
           const Comp = UiPag()
-          return <Comp page={currentPage()} total={pageCount()} onChange={handleChange} />
+          return (
+            <Comp
+              current={currentPage()}
+              total={props.total}
+              pageSize={props.pageSize}
+              pageCount={pageCount()}
+              onChange={(nextPage) => handleChange(nextPage)}
+            />
+          )
         }}
       </Show>
     </div>

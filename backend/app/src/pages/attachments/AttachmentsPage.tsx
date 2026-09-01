@@ -3,15 +3,16 @@ import { Badge } from "@tabora/ui/badge"
 import { Button } from "@tabora/ui/button"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
-import { Table, type TableColumn } from "@tabora/ui/table"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
+import type { TableColumn } from "@tabora/ui/table"
+import { useMutation } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 
 import { ConfirmDialog } from "../../components/ConfirmDialog"
-import { Pagination } from "../../components/Pagination"
-import { QueryState } from "../../components/QueryState"
+import {
+  AdminDataTablePanel,
+  type AdminDataTableActions,
+} from "../../components/AdminDataTablePanel"
 import { useToast } from "../../contexts/ToastContext"
-import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { formatAdminTimestamp } from "../../utils/formatTimestamp"
 import { shared } from "../shared.styles"
 import { deleteFile, listFiles, type AttachmentFile } from "../../server/admin/attachments"
@@ -27,15 +28,9 @@ function formatSize(bytes: number): string {
 
 export function AttachmentsPage() {
   const [error, setError] = createSignal<string | null>(null)
-  const { offset, onPrev, onNext } = createOffsetPagination(PAGE_SIZE)
   const [deleteTarget, setDeleteTarget] = createSignal<AttachmentFile | null>(null)
-  const queryClient = useQueryClient()
   const { showToast } = useToast()
-
-  const data = useQuery(() => ({
-    queryKey: ["attachments", "files", offset()],
-    queryFn: () => listFiles({ data: { limit: PAGE_SIZE, offset: offset() } }),
-  }))
+  let tableActions: AdminDataTableActions | undefined
 
   const deleteMutation = useMutation(() => ({
     mutationFn: (id: number) => deleteFile({ data: { id } }),
@@ -43,7 +38,7 @@ export function AttachmentsPage() {
     onSuccess: () => {
       setDeleteTarget(null)
       showToast({ variant: "success", title: "附件已删除" })
-      return queryClient.invalidateQueries({ queryKey: ["attachments", "files"] })
+      tableActions?.reload()
     },
     onError: (err: Error) => {
       setError(err.message)
@@ -104,35 +99,24 @@ export function AttachmentsPage() {
       <Show when={error()}>
         <InlineError>{error()}</InlineError>
       </Show>
-      <QueryState
-        error={data.error as Error | null}
-        loading={data.isPending}
-        hasRows={(data.data?.files.length ?? 0) > 0}
+      <AdminDataTablePanel
+        queryKey={["attachments", "files"]}
+        request={async ({ current, pageSize }) => {
+          const result = await listFiles({
+            data: { limit: pageSize, offset: (current - 1) * pageSize },
+          })
+          return { data: result.files, total: result.total }
+        }}
+        pageSize={PAGE_SIZE}
+        columns={columns}
+        rowKey={(f) => String(f.id)}
+        errorMessage="加载附件失败"
         empty={
           <EmptyState compact title="暂无附件" description="用户通过插件上传附件后在此巡检。" />
         }
-      >
-        <Table
-          columns={columns}
-          rows={data.data?.files ?? []}
-          rowKey={(f) => String(f.id)}
-          aria-label="附件文件列表"
-        />
-      </QueryState>
-
-      <Show when={data.data}>
-        {(d) => (
-          <Show when={d().total > 0}>
-            <Pagination
-              offset={offset()}
-              pageSize={PAGE_SIZE}
-              total={d().total}
-              onPrev={onPrev}
-              onNext={onNext}
-            />
-          </Show>
-        )}
-      </Show>
+        actionRef={(actions) => (tableActions = actions)}
+        ariaLabel="附件文件列表"
+      />
 
       <ConfirmDialog
         open={deleteTarget() !== null}

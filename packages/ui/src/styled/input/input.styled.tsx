@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, motion, radius } from "@tabora/theme/tokens.stylex"
+import { color, control, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessInput } from "../../primitives/input/input"
 import type { HeadlessInputProps, InputAppearance } from "../../primitives/input/input"
 import type { XStyle } from "../../stylex"
@@ -43,22 +43,28 @@ const styles = stylex.create({
   },
   sm: {
     fontSize: 12,
-    height: 28,
+    height: control.sm,
     paddingBlock: 0,
     paddingInline: 10,
   },
   md: {
     fontSize: 13,
-    height: 32,
+    height: control.md,
     paddingBlock: 0,
     paddingInline: 12,
+  },
+  lg: {
+    fontSize: 14,
+    height: control.lg,
+    paddingBlock: 0,
+    paddingInline: 14,
   },
   embedded: {
     backgroundColor: "transparent",
     borderColor: "transparent",
     borderRadius: 0,
     boxShadow: "none",
-    height: 32,
+    height: control.md,
     paddingInline: 0,
     ":hover": {
       borderColor: "transparent",
@@ -188,6 +194,7 @@ export function Input(props: InputProps) {
       styles.control,
       props.size === "sm" && styles.sm,
       (!props.size || props.size === "md") && styles.md,
+      props.size === "lg" && styles.lg,
       props.appearance === "embedded" && styles.embedded,
       Boolean(props.leadingIcon) && props.size === "sm" && styles.hasLeadingSm,
       Boolean(props.leadingIcon) && props.size !== "sm" && styles.hasLeading,

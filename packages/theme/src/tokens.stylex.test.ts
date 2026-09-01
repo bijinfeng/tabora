@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { color, font, motion, radius, shadow, space, zIndex } from "./tokens.stylex"
+import { color, control, font, motion, radius, shadow, space, zIndex } from "./tokens.stylex"
 
 describe("StyleX semantic tokens", () => {
   it("defines the semantic token families through stylex.defineVars", () => {
     for (const value of [
       color.page,
+      control.md,
       color.textMuted,
       radius.card,
       space.s4,

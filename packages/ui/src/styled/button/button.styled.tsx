@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
+import { color, control, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessButton, HeadlessIconButton } from "../../primitives/button/button"
 import type {
   HeadlessButtonProps,
@@ -51,44 +51,44 @@ const styles = stylex.create({
   buttonSm: {
     borderRadius: radius.control,
     fontSize: 12,
-    height: 28,
+    height: control.sm,
     paddingBlock: 0,
     paddingInline: 8,
   },
   buttonMini: {
     borderRadius: radius.control,
     fontSize: 11,
-    height: 24,
+    height: control.sm,
     paddingBlock: 0,
     paddingInline: 6,
   },
   buttonMiniCircle: {
     paddingInline: 0,
-    width: 24,
+    width: control.sm,
   },
   buttonSmCircle: {
     paddingInline: 0,
-    width: 28,
+    width: control.sm,
   },
   buttonMd: {
     fontSize: 13,
-    height: 32,
+    height: control.md,
     paddingBlock: 0,
     paddingInline: 12,
   },
   buttonMdCircle: {
     paddingInline: 0,
-    width: 32,
+    width: control.md,
   },
   buttonLg: {
     fontSize: 14,
-    height: 44,
+    height: control.lg,
     paddingBlock: 0,
     paddingInline: 18,
   },
   buttonLgCircle: {
     paddingInline: 0,
-    width: 44,
+    width: control.lg,
   },
   buttonDisabled: {
     backgroundColor: color.surfaceSoft,
@@ -210,7 +210,7 @@ const styles = stylex.create({
   },
   linkLayout: {
     height: "auto",
-    minHeight: 28,
+    minHeight: control.sm,
     paddingInline: 0,
   },
   danger: {
@@ -238,20 +238,20 @@ const styles = stylex.create({
     },
   },
   iconSm: {
-    height: 28,
-    width: 28,
+    height: control.sm,
+    width: control.sm,
   },
   iconMini: {
-    height: 24,
-    width: 24,
+    height: control.sm,
+    width: control.sm,
   },
   iconMd: {
-    height: 32,
-    width: 32,
+    height: control.md,
+    width: control.md,
   },
   iconLg: {
-    height: 44,
-    width: 44,
+    height: control.lg,
+    width: control.lg,
   },
   iconRound: {
     borderRadius: radius.pill,
