@@ -202,6 +202,109 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
 
+  apps/app:
+    dependencies:
+      '@stylexjs/stylex':
+        specifier: catalog:style
+        version: 0.19.0
+      '@tabora/ai-runtime':
+        specifier: workspace:*
+        version: link:../../packages/ai-runtime
+      '@tabora/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
+      '@tabora/builtin-plugin-registry':
+        specifier: workspace:*
+        version: link:../../packages/builtin-plugin-registry
+      '@tabora/host-adapters':
+        specifier: workspace:*
+        version: link:../../packages/host-adapters
+      '@tabora/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
+      '@tabora/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@tabora/workbench-app':
+        specifier: workspace:*
+        version: link:../../packages/workbench-app
+      '@tabora/workbench-shell':
+        specifier: workspace:*
+        version: link:../../packages/workbench-shell
+      '@tanstack/charts':
+        specifier: catalog:ui
+        version: 0.8.0
+      '@tanstack/charts-scales':
+        specifier: catalog:ui
+        version: 0.8.0
+      '@tanstack/solid-charts':
+        specifier: catalog:ui
+        version: 0.8.0(solid-js@1.9.14)
+      '@tanstack/solid-query':
+        specifier: catalog:ui
+        version: 5.101.4(solid-js@1.9.14)
+      '@tanstack/solid-router':
+        specifier: catalog:ui
+        version: 1.170.30(solid-js@1.9.14)
+      '@tanstack/solid-start':
+        specifier: catalog:ui
+        version: 1.168.47(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(esbuild@0.28.1)(rolldown@1.2.0)(solid-js@1.9.14)(vite-plugin-solid@2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14))
+      better-auth:
+        specifier: ^1.6.26
+        version: 1.6.26(@prisma/client@5.22.0)(@tanstack/solid-start@1.168.47(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(esbuild@0.28.1)(rolldown@1.2.0)(solid-js@1.9.14)(vite-plugin-solid@2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14)))(better-sqlite3@13.0.3)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@prisma/client@5.22.0)(@types/better-sqlite3@9.6.0)(@types/pg@8.21.0)(better-sqlite3@13.0.3)(kysely@0.29.4)(pg@8.23.0))(next@16.2.12(@babel/core@7.29.7)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.14)(vitest@4.1.10)
+      better-sqlite3:
+        specifier: ^13.0.3
+        version: 13.0.3
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@prisma/client@5.22.0)(@types/better-sqlite3@9.6.0)(@types/pg@8.21.0)(better-sqlite3@13.0.3)(kysely@0.29.4)(pg@8.23.0)
+      lucide-solid:
+        specifier: catalog:ui
+        version: 1.31.0(solid-js@1.9.14)
+      nodemailer:
+        specifier: ^9.0.5
+        version: 9.0.5
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      solid-js:
+        specifier: catalog:ui
+        version: 1.9.14
+      zod:
+        specifier: catalog:data
+        version: 4.4.3
+    devDependencies:
+      '@tabora/stylex-config':
+        specifier: workspace:*
+        version: link:../../tooling/stylex
+      '@tabora/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@types/better-sqlite3':
+        specifier: ^9.6.0
+        version: 9.6.0
+      '@types/node':
+        specifier: catalog:node
+        version: 26.2.0
+      '@types/nodemailer':
+        specifier: ^8.0.1
+        version: 8.0.1
+      '@types/pg':
+        specifier: ^8.21.0
+        version: 8.21.0
+      fake-indexeddb:
+        specifier: catalog:test
+        version: 6.2.5
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
+        version: '@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2)'
+      vite-plugin-solid:
+        specifier: catalog:build
+        version: 2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14)
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
+
   apps/extension:
     dependencies:
       '@tabora/builtin-plugin-registry':
@@ -318,52 +421,6 @@ importers:
         specifier: catalog:build
         version: 2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14)
 
-  apps/playground:
-    dependencies:
-      '@tabora/builtin-plugin-registry':
-        specifier: workspace:*
-        version: link:../../packages/builtin-plugin-registry
-      '@tabora/host-adapters':
-        specifier: workspace:*
-        version: link:../../packages/host-adapters
-      '@tabora/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      '@tabora/workbench-app':
-        specifier: workspace:*
-        version: link:../../packages/workbench-app
-      '@tabora/workbench-shell':
-        specifier: workspace:*
-        version: link:../../packages/workbench-shell
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.14
-    devDependencies:
-      '@tabora/brand':
-        specifier: workspace:*
-        version: link:../../packages/brand
-      '@tabora/platform-kernel':
-        specifier: workspace:*
-        version: link:../../packages/platform-kernel
-      '@tabora/plugin-api':
-        specifier: workspace:*
-        version: link:../../packages/plugin-api
-      '@tabora/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage
-      '@tabora/stylex-config':
-        specifier: workspace:*
-        version: link:../../tooling/stylex
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      vite:
-        specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
-        version: '@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2)'
-      vite-plugin-solid:
-        specifier: catalog:build
-        version: 2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14)
-
   apps/site:
     dependencies:
       '@solid-primitives/i18n':
@@ -409,94 +466,6 @@ importers:
       vite-plugin-solid:
         specifier: catalog:build
         version: 2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14)
-
-  backend/app:
-    dependencies:
-      '@stylexjs/stylex':
-        specifier: catalog:style
-        version: 0.19.0
-      '@tabora/ai-runtime':
-        specifier: workspace:*
-        version: link:../../packages/ai-runtime
-      '@tabora/brand':
-        specifier: workspace:*
-        version: link:../../packages/brand
-      '@tabora/theme':
-        specifier: workspace:*
-        version: link:../../packages/theme
-      '@tabora/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      '@tanstack/charts':
-        specifier: catalog:ui
-        version: 0.8.0
-      '@tanstack/charts-scales':
-        specifier: catalog:ui
-        version: 0.8.0
-      '@tanstack/solid-charts':
-        specifier: catalog:ui
-        version: 0.8.0(solid-js@1.9.14)
-      '@tanstack/solid-query':
-        specifier: catalog:ui
-        version: 5.101.4(solid-js@1.9.14)
-      '@tanstack/solid-router':
-        specifier: catalog:ui
-        version: 1.170.30(solid-js@1.9.14)
-      '@tanstack/solid-start':
-        specifier: catalog:ui
-        version: 1.168.47(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(esbuild@0.28.1)(rolldown@1.2.0)(solid-js@1.9.14)(vite-plugin-solid@2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14))
-      better-auth:
-        specifier: ^1.6.26
-        version: 1.6.26(@prisma/client@5.22.0)(@tanstack/solid-start@1.168.47(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(esbuild@0.28.1)(rolldown@1.2.0)(solid-js@1.9.14)(vite-plugin-solid@2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14)))(better-sqlite3@13.0.3)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@prisma/client@5.22.0)(@types/better-sqlite3@9.6.0)(@types/pg@8.21.0)(better-sqlite3@13.0.3)(kysely@0.29.4)(pg@8.23.0))(next@16.2.12(@babel/core@7.29.7)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.14)(vitest@4.1.10)
-      better-sqlite3:
-        specifier: ^13.0.3
-        version: 13.0.3
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@prisma/client@5.22.0)(@types/better-sqlite3@9.6.0)(@types/pg@8.21.0)(better-sqlite3@13.0.3)(kysely@0.29.4)(pg@8.23.0)
-      lucide-solid:
-        specifier: catalog:ui
-        version: 1.31.0(solid-js@1.9.14)
-      nodemailer:
-        specifier: ^9.0.5
-        version: 9.0.5
-      pg:
-        specifier: ^8.23.0
-        version: 8.23.0
-      solid-js:
-        specifier: catalog:ui
-        version: 1.9.14
-      zod:
-        specifier: catalog:data
-        version: 4.4.3
-    devDependencies:
-      '@tabora/stylex-config':
-        specifier: workspace:*
-        version: link:../../tooling/stylex
-      '@tabora/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@types/better-sqlite3':
-        specifier: ^9.6.0
-        version: 9.6.0
-      '@types/node':
-        specifier: catalog:node
-        version: 26.2.0
-      '@types/nodemailer':
-        specifier: ^8.0.1
-        version: 8.0.1
-      '@types/pg':
-        specifier: ^8.21.0
-        version: 8.21.0
-      vite:
-        specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
-        version: '@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2)'
-      vite-plugin-solid:
-        specifier: catalog:build
-        version: 2.11.14(@testing-library/jest-dom@7.0.0(@testing-library/dom@10.4.1))(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(solid-js@1.9.14)
-      vitest:
-        specifier: 4.1.10
-        version: 4.1.10(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(typescript@7.0.2))(happy-dom@20.11.2)
 
   packages/ai-runtime:
     dependencies:
@@ -2135,17 +2104,8 @@ packages:
     resolution: {integrity: sha512-R8gLRTZeyp03ymzP/6Lil/28tGeGEzhx1q2k703KGWRAI1VdvPIXdG70VJc2pAMw3NA6JKL5hhFu1sJX0Mnn/A==}
     engines: {node: '>=6.0.0'}
 
-  '@jridgewell/sourcemap-codec@1.4.10':
-    resolution: {integrity: sha512-Ht8wIW5v165atIX1p+JvKR5ONzUyF4Ac8DZIQ5kZs9zrb6M8SJNXpx1zn04rn65VjBMygRoMXcyYwNK0fT7bEg==}
-
-  '@jridgewell/sourcemap-codec@1.4.14':
-    resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
-
-  '@jridgewell/sourcemap-codec@1.5.0':
-    resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
-
-  '@jridgewell/sourcemap-codec@1.5.5':
-    resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+  '@jridgewell/sourcemap-codec@1.6.0':
+    resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
@@ -5113,9 +5073,6 @@ packages:
     peerDependencies:
       pg: '>=8.0'
 
-  pg-protocol@1.15.0:
-    resolution: {integrity: sha512-cq9sECI5s0+uPUXjbz8ioyPJni6RzsRib0US67i5IoTZKw8fNeYlVE7u8F4dG7vEJJtc5wdD1K189lCCUwqWTQ==}
-
   pg-protocol@1.16.0:
     resolution: {integrity: sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==}
 
@@ -6644,19 +6601,19 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 26.1.1
+      '@types/node': 26.2.0
       '@types/yargs': 16.0.11
       chalk: 4.0.0
 
   '@jridgewell/gen-mapping@0.3.12':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.6.0
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/gen-mapping@0.3.5':
     dependencies:
       '@jridgewell/set-array': 1.2.1
-      '@jridgewell/sourcemap-codec': 1.4.10
+      '@jridgewell/sourcemap-codec': 1.6.0
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/remapping@2.3.5':
@@ -6668,18 +6625,12 @@ snapshots:
 
   '@jridgewell/set-array@1.2.1': {}
 
-  '@jridgewell/sourcemap-codec@1.4.10': {}
-
-  '@jridgewell/sourcemap-codec@1.4.14': {}
-
-  '@jridgewell/sourcemap-codec@1.5.0': {}
-
-  '@jridgewell/sourcemap-codec@1.5.5': {}
+  '@jridgewell/sourcemap-codec@1.6.0': {}
 
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.4.14
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   '@kobalte/core@0.13.12(solid-js@1.9.14)':
     dependencies:
@@ -7638,7 +7589,7 @@ snapshots:
 
   '@types/better-sqlite3@9.6.0':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 26.2.0
 
   '@types/chai@5.2.3':
     dependencies:
@@ -7713,12 +7664,12 @@ snapshots:
 
   '@types/nodemailer@8.0.1':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 26.2.0
 
   '@types/pg@8.21.0':
     dependencies:
-      '@types/node': 26.1.1
-      pg-protocol: 1.15.0
+      '@types/node': 26.2.0
+      pg-protocol: 1.16.0
       pg-types: 2.2.0
 
   '@types/unist@2.0.11': {}
@@ -7729,7 +7680,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 26.2.0
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -8313,7 +8264,7 @@ snapshots:
 
   buffer-image-size@0.6.4:
     dependencies:
-      '@types/node': 26.1.1
+      '@types/node': 26.2.0
 
   c12@3.3.4(magicast@0.5.3):
     dependencies:
@@ -9033,7 +8984,7 @@ snapshots:
 
   magic-string@0.30.21:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   magicast@0.5.3:
     dependencies:
@@ -9515,8 +9466,6 @@ snapshots:
   pg-pool@3.14.0(pg@8.23.0):
     dependencies:
       pg: 8.23.0
-
-  pg-protocol@1.15.0: {}
 
   pg-protocol@1.16.0: {}
 

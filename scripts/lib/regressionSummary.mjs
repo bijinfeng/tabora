@@ -38,9 +38,8 @@ const FOCUSED_TEST_RULES = [
   "packages/ui",
   "packages/workbench-app",
   "packages/workbench-shell",
-  "apps/playground",
   "apps/site",
-  "backend/app",
+  "apps/app",
   "tooling/stylex",
   "tooling/vitest",
   "plugins/community/layout-diy-masonry",
@@ -79,7 +78,7 @@ const CHANGE_TYPE_RULES = [
   },
   {
     type: "backend",
-    matches: (filePath) => filePath.startsWith("backend/app/"),
+    matches: (filePath) => filePath.startsWith("apps/app/"),
   },
   {
     type: "orchestrator",
@@ -88,7 +87,7 @@ const CHANGE_TYPE_RULES = [
   {
     type: "shell",
     matches: (filePath) =>
-      filePath.startsWith("apps/playground/") ||
+      filePath.startsWith("apps/app/src/workbench/") ||
       filePath.startsWith("apps/extension/") ||
       filePath.startsWith("packages/workbench-app/") ||
       filePath.startsWith("packages/workbench-shell/") ||
@@ -146,14 +145,14 @@ const KNOWN_DEBT_RULES = [
     label: "`WorkbenchShellApp.tsx` 仍是重型共享宿主编排",
     matches: (filePath) =>
       filePath === "packages/workbench-app/src/shell/WorkbenchShellApp.tsx" ||
-      filePath === "apps/playground/src/App.tsx" ||
+      filePath === "apps/app/src/workbench/App.tsx" ||
       filePath === "apps/extension/entrypoints/newtab/App.tsx",
   },
   {
     label: "`SearchViewProps` 尚未升级到技术方案描述的状态机 contract",
     matches: (filePath) =>
       filePath.startsWith("packages/official-plugins/src/search-command-bar") ||
-      filePath.startsWith("apps/playground/src/App.tsx") ||
+      filePath.startsWith("apps/app/src/workbench/App.tsx") ||
       filePath.startsWith("apps/extension/entrypoints/newtab/App.tsx"),
   },
   {

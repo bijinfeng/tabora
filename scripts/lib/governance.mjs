@@ -334,6 +334,23 @@ const WORKBENCH_RAW_COLOR_BASELINE = new Set([
   // tiptap editor 阴影叠加层，使用固定透明度的黑色阴影。
   "packages/tiptap-editor/src/tiptap-editor.styled.tsx::rgb(0 0 0 / 0.25)",
   "packages/tiptap-editor/src/tiptap-editor.styled.tsx::rgb(0 0 0 / 0.35)",
+  // 管理端邮件模板是跨客户端渲染的内联 HTML，不能使用运行时主题 token。
+  "apps/app/src/server/email-templates/renderer.ts::!important",
+  "apps/app/src/server/email-templates/renderer.ts::#0ea5e9",
+  "apps/app/src/server/email-templates/renderer.ts::#1f2937",
+  "apps/app/src/server/email-templates/renderer.ts::#4b5563",
+  "apps/app/src/server/email-templates/renderer.ts::#6b7280",
+  "apps/app/src/server/email-templates/renderer.ts::#92400e",
+  "apps/app/src/server/email-templates/renderer.ts::#991b1b",
+  "apps/app/src/server/email-templates/renderer.ts::#9ca3af",
+  "apps/app/src/server/email-templates/renderer.ts::#e5e7eb",
+  "apps/app/src/server/email-templates/renderer.ts::#ef4444",
+  "apps/app/src/server/email-templates/renderer.ts::#f59e0b",
+  "apps/app/src/server/email-templates/renderer.ts::#f5f5f5",
+  "apps/app/src/server/email-templates/renderer.ts::#fef2f2",
+  "apps/app/src/server/email-templates/renderer.ts::#fef3c7",
+  "apps/app/src/server/email-templates/renderer.ts::#ffffff",
+  "apps/app/src/server/email.ts::#0ea5e9",
 ])
 const TYPE_ESCAPE_BASELINE = new Set([
   // tiptap-editor 中 StyleX attrs() 与 Solid JSX.CSSProperties 的类型桥接。
@@ -352,6 +369,10 @@ const TYPE_ESCAPE_BASELINE = new Set([
   "packages/ui/src/primitives/dropdownMenu/dropdownMenu.tsx::as any",
   // @tabora/ui Popover triggerAsChild 包装器类型转换。
   "packages/ui/src/primitives/popover/popover.tsx::as any",
+  // TanStack Start RC 的 server function handler constraint 不接受 `unknown` 字段。
+  "apps/app/src/server/admin/syncedRecords.ts::as any",
+  // 设置 server function 的框架输入类型桥接。
+  "apps/app/src/pages/settings/SettingsPage.tsx::as any",
 ])
 const SOURCE_INVARIANT_FILES = [
   "packages/workbench-shell/src/CommandPalette.tsx",
@@ -673,7 +694,8 @@ export function findPassThroughWorkbenchAppExports(options) {
   return matches.map((match) => ({
     filePath: options.filePath,
     match,
-    reason: "apps must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
+    reason:
+      "workbench entrypoints must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
   }))
 }
 
@@ -1092,7 +1114,7 @@ export async function scanAppSourceBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles(
     [
-      path.join(repositoryRoot, "apps", "playground", "src"),
+      path.join(repositoryRoot, "apps", "app", "src", "workbench"),
       path.join(repositoryRoot, "apps", "extension", "entrypoints"),
     ],
     (filePath) => {
@@ -1130,6 +1152,10 @@ export async function scanTypeEscapeBoundaries(rootDir) {
       }
 
       if (isTestFile(filePath)) {
+        return false
+      }
+
+      if (path.basename(filePath) === "routeTree.gen.ts") {
         return false
       }
 
@@ -1192,7 +1218,7 @@ export async function scanAppWorkbenchPassThroughBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles(
     [
-      path.join(repositoryRoot, "apps", "playground", "src"),
+      path.join(repositoryRoot, "apps", "app", "src", "workbench"),
       path.join(repositoryRoot, "apps", "extension", "entrypoints"),
     ],
     (filePath) => {

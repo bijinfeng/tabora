@@ -551,6 +551,59 @@ describe("settings host composition", () => {
     expect(panelProps).not.toHaveBeenCalled()
   })
 
+  it("hydrates account navigation while another settings section is active", async () => {
+    const accountProvider = {
+      getModel: vi.fn().mockResolvedValue({
+        version: 1,
+        navigation: { title: "user@example.com", meta: "已登录", avatar: "U" },
+        nodes: [],
+      }),
+      dispatch: vi.fn(),
+    }
+    const root = mount(() =>
+      createComponent(SettingsHost, {
+        open: true,
+        surface: "desktop",
+        panels: [
+          {
+            id: "official.settings.workspace.account",
+            title: "账号",
+            content: {
+              kind: "schema",
+              provider: "official.account-sync.account.provider",
+              schemaVersion: 1,
+            },
+            section: "account",
+            pluginId: "official.settings.workspace",
+            scope: "workspace",
+            surfaces: ["desktop", "mobile"],
+          },
+          {
+            ...panel("official.settings.workspace.ai", 10, { section: "ai" }),
+            pluginId: "official.settings.workspace",
+          },
+        ],
+        activeSectionId: "ai",
+        onSectionChange: vi.fn(),
+        onClose: vi.fn(),
+        getView: () => undefined,
+        getSettingsProvider: (providerId) =>
+          providerId === "official.account-sync.account.provider" ? accountProvider : undefined,
+        panelProps: () => ({}) as never,
+      }),
+    )
+
+    await vi.waitFor(() =>
+      expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain(
+        "user@example.com",
+      ),
+    )
+    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain("已登录")
+    expect(accountProvider.getModel).toHaveBeenCalledWith(
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    )
+  })
+
   it("builds schema-provider context from the active panel identity", () => {
     const panels: SettingsPanelDescriptor[] = [
       {

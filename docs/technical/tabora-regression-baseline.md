@@ -76,7 +76,7 @@ Tabora 当前最低验证要求：
 - 文档或配置变更：`pnpm check`
 - package / app 代码变更：`pnpm test` + `pnpm check`
 - 跨包、协议、存储、发布相关变更：追加 `pnpm build`
-- 前端视觉 / 交互变更：启动 playground，并用浏览器检查关键路径
+- 前端视觉 / 交互变更：启动 apps/app 根工作台，并用浏览器检查关键路径
 
 ### 2.4 小步提交语义，小范围上下文
 
@@ -131,9 +131,9 @@ Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
 | `protocol`     | `plugin-api` 类型、schema、manifest 字段                     | L1 + L2 + L3 + L6 + L7           |
 | `kernel`       | plugin kernel、runtime context、event bus、permission bridge | L1 + L2 + L3 + L6 + L7           |
 | `storage`      | Dexie schema、repository、import/export、workspace preset    | L1 + L2 + L3 + L6 + L7           |
-| `backend`      | `backend/app` 后端服务与管理台                                | L1 + L2 + L3 + L7                |
+| `backend`      | `apps/app` 后端服务与管理台                                   | L1 + L2 + L3 + L7                |
 | `orchestrator` | layout switcher、drag sort、command、settings、toast model   | L1 + L2 + L3 + L4 + L7           |
-| `shell`        | playground / extension App、host adapters、workbench-shell   | L1 + L2 + L3 + L4 + L5 + L6 + L7 |
+| `shell`        | apps/app workbench / extension App、host adapters、workbench-shell | L1 + L2 + L3 + L4 + L5 + L6 + L7 |
 | `plugin`       | official/community widget、layout、search、settings panel    | L1 + L2 + L3 + L4 + L5 + L7      |
 | `ui`           | `@tabora/ui`、主题 token、CSS、视觉交互                      | L1 + L3 + L4 + L5 + L7           |
 | `quality`      | lint/test/build 配置、依赖、tsconfig、workspace 脚本         | L1 + L3 + L7                     |
@@ -150,7 +150,7 @@ Agent 更适合处理边界清晰的任务。每轮任务应尽量声明：
 - 是否改变协议或数据模型？
 - 是否改变 shell / host capability / 权限路径？
 - 是否改变 UI、布局、交互或 token？
-- 是否影响 playground、extension 或未来 shell 的复用边界？
+- 是否影响 apps/app workbench、extension 或未来 shell 的复用边界？
 
 建议命令：
 
@@ -209,11 +209,11 @@ git diff --stat
 
 - shell 负责 DOM 挂载、host capability、宿主容器、错误边界、全局生命周期。
 - shell 不应继续堆业务推断逻辑。
-- playground 与 extension 的共享逻辑应进入 `@tabora/workbench-app`、`@tabora/host-adapters` 或其他独立 package。
-- extension 不应长期通过相对路径 import playground helper。
+- apps/app workbench 与 extension 的共享逻辑应进入 `@tabora/workbench-app`、`@tabora/host-adapters` 或其他独立 package。
+- extension 不应长期通过相对路径 import apps/app workbench helper。
 - 仓库内部 refactor 不为旧调用方式保留兼容层；允许同步修改 helper 签名、模块出口和调用方。
 - app 层不保留纯 pass-through `@tabora/workbench-app` 兼容模块；只有真实装配工厂或宿主入口文件可以继续存在。
-- playground / extension 生产依赖只保留 host composition、宿主样式和 Solid；官方插件、layout package 与 core runtime package 通过 `@tabora/builtin-plugin-registry` 和 `@tabora/workbench-app` 间接进入。
+- apps/app workbench source 与 extension 生产代码只通过 `@tabora/builtin-plugin-registry`、`@tabora/workbench-app` 和 host adapters 装配工作台；官方插件、layout package 与 core runtime package 不直接进入 workbench composition。
 
 建议检查命令：
 
@@ -274,10 +274,10 @@ pnpm build
 
 当前仓库不维护 e2e 套件（2026-08 起移除 e2e 配置、依赖与 CI browser smoke job；对应行为由 `pnpm test` 单测与人工检查覆盖）。
 
-涉及浏览器行为的风险，手动启动 playground 检查：
+涉及浏览器行为的风险，手动启动 apps/app 检查：
 
 ```bash
-pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
+pnpm --dir apps/app exec vp dev --host 127.0.0.1 --port 4000 --strictPort
 ```
 
 ### L5：设计、视觉、交互和可访问性
@@ -495,13 +495,13 @@ rg -n "JSON\\.parse|JSON\\.stringify|localStorage|indexedDB|querySelectorAll|get
 
 ### L8：发布前回归
 
-发布 playground 前：
+发布 apps/app 单一镜像前：
 
 ```bash
 pnpm check
 pnpm test
 pnpm build
-pnpm --filter @tabora/playground build
+pnpm --filter @tabora/app build
 ```
 
 发布 extension 前：

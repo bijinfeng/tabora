@@ -35,7 +35,7 @@ Tabora 当前处于 MVP 实现阶段，目标是验证一套可扩展的新标�
 pnpm install
 ```
 
-启动 playground：
+启动单一应用（根路径为工作台，`/admin` 为管理后台）：
 
 ```bash
 pnpm dev
@@ -44,7 +44,7 @@ pnpm dev
 也可以固定本地地址启动：
 
 ```bash
-pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
+pnpm --dir apps/app exec vp dev --host 127.0.0.1 --port 4000 --strictPort
 ```
 
 常用命令：
@@ -54,7 +54,7 @@ pnpm check
 pnpm check:fix
 pnpm test
 pnpm build
-pnpm --filter @tabora/playground build
+pnpm --filter @tabora/app build
 pnpm --filter @tabora/extension build
 pnpm --filter @tabora/site build
 ```
@@ -63,7 +63,7 @@ pnpm --filter @tabora/site build
 
 ```txt
 apps/
-  playground/      # MVP shell 与本地调试入口
+  app/             # 根工作台、/admin 管理后台与 /api 服务
   extension/       # 浏览器扩展 newtab 入口
   site/            # 官网、下载页和文档站点
 
@@ -99,7 +99,7 @@ docs/              # 产品、设计、技术和回归事实源
 - `@tabora/ui` 只提供插件内容区基础组件和低层可访问 primitive，不承载宿主级容器。
 - `@tabora/official-plugins` 表达官方插件 pack，不决定 shell 最终默认加载哪些 builtin plugins。
 - `@tabora/builtin-plugin-registry` 是当前 shell 默认 builtin 装配入口。
-- `apps/playground`、`apps/extension` 和未来其他 shell 应优先复用 `@tabora/workbench-app`、`@tabora/workbench-shell` 与 `@tabora/host-adapters`。
+- `apps/app` 根工作台、`apps/extension` 和未来其他 shell 应优先复用 `@tabora/workbench-app`、`@tabora/workbench-shell` 与 `@tabora/host-adapters`。
 
 ## 插件规则摘要
 
@@ -157,4 +157,4 @@ pnpm test
 pnpm build
 ```
 
-前端视觉或交互变更还需要启动 playground，并用浏览器检查关键路径，例如默认工作台、添加 widget、调整尺寸、拖拽排序、主题和背景切换、settings host、modal / fullscreen、搜索外部打开权限路径和插件错误回退状态。
+前端视觉或交互变更还需要启动 apps/app，并用浏览器检查根工作台、`/admin` 与 `/api/health` 等关键路径，例如默认工作台、添加 widget、调整尺寸、拖拽排序、主题和背景切换、settings host、modal / fullscreen、搜索外部打开权限路径和插件错误回退状态。

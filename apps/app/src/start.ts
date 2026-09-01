@@ -22,7 +22,7 @@ function applyCors(request: Request, headers: Headers): void {
 
 /**
  * 对外 HTTP 契约的 CORS：在路由匹配（含 h3 自动 OPTIONS）之前统一处理 /api/* 跨域。
- * playground/extension 以 cookie 或 bearer token 跨域调用，预检必须带 credentials。
+ * 浏览器扩展可通过 cookie 或 bearer token 跨域调用，预检必须带 credentials；根工作台保持同源。
  */
 const corsMiddleware = createMiddleware({ type: "request" }).server(async ({ request, next }) => {
   const isApi = new URL(request.url).pathname.startsWith("/api/")

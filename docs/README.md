@@ -16,7 +16,7 @@
 
 | 适用路径                     | 额外约束重点                                      |
 | ---------------------------- | ------------------------------------------------- |
-| `backend/app/AGENTS.md`    | 管理台、API/auth、TanStack Query 和破坏性操作边界 |
+| `apps/app/AGENTS.md`       | 管理台、API/auth、TanStack Query 和破坏性操作边界 |
 | `apps/site/AGENTS.md`        | 官网/文档站、品牌复用、内容和路由边界             |
 | `plugins/AGENTS.md`          | manifest、runtime context、permission 和实例隔离  |
 | `packages/ui/AGENTS.md`      | primitive、Kobalte、public subpath 和宿主边界     |
@@ -52,7 +52,7 @@
 | Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
 | FNOS 分发        | `apps/fnos/README.md`                                           | 修改飞牛 manifest、统一网关、生命周期脚本、FPK 构建和安装验证               |
 | 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围与设置入口（需求与决策）                                 |
-| 数据同步实现     | `docs/technical/tabora-data-sync-technical-design.md`           | 后端形态（现为 backend/app）、DB schema、认证、sync 路由、同步引擎与包边界 |
+| 数据同步实现     | `docs/technical/tabora-data-sync-technical-design.md`           | 后端形态（现为 apps/app）、DB schema、认证、sync 路由、同步引擎与包边界 |
 
 ## 按任务选择文档
 
@@ -130,7 +130,7 @@
   - `packages/workbench-app/src/`
   - `packages/host-adapters/src/`
   - `packages/workbench-shell/src/`
-  - `apps/playground/src/`
+  - `apps/app/src/workbench/`
   - `apps/extension/entrypoints/newtab/`
 
 重点确认：
@@ -138,7 +138,7 @@
 - 平台包不引入具体业务能力。
 - 插件业务数据不混入 workspace 装配数据。
 - 插件不能绕过权限桥直接外部打开。
-- playground / extension 的共享逻辑优先进入 package，不长期互相 import app 源码。
+- apps/app workbench / extension 的共享逻辑优先进入 package，不长期互相 import app 源码。
 
 ### 发布和部署
 

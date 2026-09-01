@@ -745,7 +745,7 @@ describe("governance rules", () => {
         filePath: "apps/playground/src/themeResolver.ts",
         match: 'export * from "@tabora/workbench-app"',
         reason:
-          "apps must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
+          "workbench entrypoints must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
       },
     ])
 
@@ -1343,10 +1343,10 @@ describe("governance rules", () => {
   })
 
   it("keeps shell app entrypoints as thin wrappers", async () => {
-    const playgroundApp = await readRepositoryText(".", "apps/playground/src/App.tsx")
+    const backendWorkbenchApp = await readRepositoryText(".", "apps/app/src/workbench/App.tsx")
     const extensionApp = await readRepositoryText(".", "apps/extension/entrypoints/newtab/App.tsx")
 
-    expect(playgroundApp.split("\n").length).toBeLessThan(200)
+    expect(backendWorkbenchApp.split("\n").length).toBeLessThan(200)
     expect(extensionApp.split("\n").length).toBeLessThan(200)
   })
 

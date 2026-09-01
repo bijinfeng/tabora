@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "prepare": "vp config",
-    "dev": "vp dev apps/playground",
+    "dev": "pnpm --dir apps/app dev",
     "staged": "vp staged",
     "test": "pnpm run test:unit",
     "test:unit": "vitest run --config vitest.config.ts",

@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
-import { createComponent, createEffect, createSignal, For, Show } from "solid-js"
+import { createComponent, createEffect, createSignal, For, onCleanup, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import Settings from "lucide-solid/icons/settings"
 import X from "lucide-solid/icons/x"
@@ -8,9 +8,11 @@ import type {
   SettingsPanelProvider,
   SettingsPanelProviderContext,
   SettingsPanelNavigation,
+  SettingsPanelModel,
   SettingsPanelViewProps,
   SettingsSurface,
 } from "@tabora/plugin-api"
+import { settingsPanelModelSchema } from "@tabora/plugin-api"
 import {
   createSettingsNavigator,
   filterSettingsPanelsBySurface,
@@ -547,6 +549,56 @@ export function SettingsHost(props: SettingsHostProps) {
   const activeSectionTitle = () => sectionTitle(activeSection())
   const activeSectionDescription = () => sectionDescription(activeSection())
   const accountSectionAvailable = () => navigator().sections.account.panels.length > 0
+  const settingsProviderContext = (
+    panel: SettingsPanelDescriptor,
+    signal?: AbortSignal,
+  ): SettingsPanelProviderContext => ({
+    ...(props.providerContext?.(panel, props.surface) ?? {
+      panel: {
+        id: panel.id,
+        pluginId: panel.pluginId,
+        scope: panel.scope,
+      },
+    }),
+    surface: props.surface,
+    panel: {
+      id: panel.id,
+      pluginId: panel.pluginId,
+      scope: panel.scope,
+      ...(panel.scope === "instance" && props.instanceId ? { instanceId: props.instanceId } : {}),
+    },
+    ...(signal ? { signal } : {}),
+  })
+
+  createEffect(() => {
+    if (props.surface !== "desktop" || activeSection() === "account") return
+
+    const accountPanel = navigator().sections.account.panels.find(
+      (panel) => panel.content.kind === "schema",
+    )
+    setAccountNavigation(null)
+    if (!accountPanel || accountPanel.content.kind !== "schema") return
+
+    const provider = props.getSettingsProvider(accountPanel.content.provider)
+    if (!provider) return
+
+    const controller = new AbortController()
+    onCleanup(() => controller.abort())
+    void Promise.resolve(
+      provider.getModel(settingsProviderContext(accountPanel, controller.signal)),
+    )
+      .then((model) => {
+        if (controller.signal.aborted) return
+        const parsed = settingsPanelModelSchema.safeParse(model)
+        if (parsed.success) {
+          const settingsModel = parsed.data as SettingsPanelModel
+          setAccountNavigation(settingsModel.navigation ?? null)
+        }
+      })
+      .catch(() => {
+        // 账号插件加载失败时保持本地模式，不阻塞其他设置页面。
+      })
+  })
   const sectionNavMeta = (sectionId: SettingsSectionId) => {
     const panelCount = navigator().sections[sectionId].panels.length
     if (sectionId === "about") return props.copy?.sectionMeta?.(sectionId) ?? "V2"
@@ -791,24 +843,7 @@ export function SettingsHost(props: SettingsHostProps) {
                                 {...(panel.section === "account"
                                   ? { onNavigationChange: setAccountNavigation }
                                   : {})}
-                                context={{
-                                  ...(props.providerContext?.(panel, props.surface) ?? {
-                                    panel: {
-                                      id: panel.id,
-                                      pluginId: panel.pluginId,
-                                      scope: panel.scope,
-                                    },
-                                  }),
-                                  surface: props.surface,
-                                  panel: {
-                                    id: panel.id,
-                                    pluginId: panel.pluginId,
-                                    scope: panel.scope,
-                                    ...(panel.scope === "instance" && props.instanceId
-                                      ? { instanceId: props.instanceId }
-                                      : {}),
-                                  },
-                                }}
+                                context={settingsProviderContext(panel)}
                               />
                             </div>
                           </PluginViewBoundary>

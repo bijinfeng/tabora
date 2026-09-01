@@ -1,9 +1,9 @@
 import "fake-indexeddb/auto"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { createPlaygroundRuntimeBootstrap } from "./workbenchComposition"
+import { createWorkbenchRuntimeBootstrap } from "./workbenchComposition"
 
-function deletePlaygroundDatabase() {
+function deleteWorkbenchDatabase() {
   const request = indexedDB.deleteDatabase("tabora")
   return new Promise<void>((resolve, reject) => {
     request.onsuccess = () => resolve()
@@ -12,14 +12,14 @@ function deletePlaygroundDatabase() {
   })
 }
 
-describe("createPlaygroundRuntimeBootstrap", () => {
+describe("createWorkbenchRuntimeBootstrap", () => {
   afterEach(async () => {
     localStorage.removeItem("tabora.ai.custom-provider")
-    await deletePlaygroundDatabase()
+    await deleteWorkbenchDatabase()
   })
 
-  it("always assembles account and sync settings in Playground", () => {
-    const runtime = createPlaygroundRuntimeBootstrap()
+  it("assembles account and sync settings for the root workbench", () => {
+    const runtime = createWorkbenchRuntimeBootstrap()
     const accountSyncPlugin = runtime.plugins.find(
       (plugin) => plugin.module.manifest.id === "official.account-sync",
     )
@@ -31,7 +31,7 @@ describe("createPlaygroundRuntimeBootstrap", () => {
   })
 
   it("injects host-owned AI settings that keep custom secrets out of workspace storage", async () => {
-    const runtime = createPlaygroundRuntimeBootstrap()
+    const runtime = createWorkbenchRuntimeBootstrap()
     const aiSettings = runtime.aiSettings
     expect(aiSettings).toBeDefined()
     if (!aiSettings) throw new Error("AI settings service is missing")

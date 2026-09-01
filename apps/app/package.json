@@ -3,9 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node dev.mjs",
-    "build": "node build.mjs",
-    "build:backend": "vp build",
+    "dev": "vp dev",
+    "build": "vp build",
     "start": "node serve.mjs",
     "test": "vitest run --config vitest.config.ts"
   },
@@ -13,8 +12,12 @@
     "@stylexjs/stylex": "catalog:style",
     "@tabora/ai-runtime": "workspace:*",
     "@tabora/brand": "workspace:*",
+    "@tabora/builtin-plugin-registry": "workspace:*",
+    "@tabora/host-adapters": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
+    "@tabora/workbench-app": "workspace:*",
+    "@tabora/workbench-shell": "workspace:*",
     "@tanstack/charts": "catalog:ui",
     "@tanstack/charts-scales": "catalog:ui",
     "@tanstack/solid-charts": "catalog:ui",
@@ -37,6 +40,7 @@
     "@types/node": "catalog:node",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.21.0",
+    "fake-indexeddb": "catalog:test",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build",
     "vitest": "catalog:test"

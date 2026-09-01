@@ -28,7 +28,7 @@ const domUnitProject = defineProject(
       name: "dom",
       include: [
         "packages/{brand,builtin-plugin-registry,official-plugins,theme,tiptap-editor,ui,workbench-app,workbench-shell}/src/**/*.test.{ts,tsx}",
-        "apps/playground/src/**/*.test.{ts,tsx}",
+        "apps/app/src/workbench/**/*.test.{ts,tsx}",
         "apps/site/src/**/*.test.{ts,tsx}",
         "plugins/official/*/src/**/*.test.{ts,tsx}",
         "plugins/community/*/src/**/*.test.{ts,tsx}",
@@ -41,7 +41,8 @@ const backendProject = defineProject({
   test: {
     name: "backend",
     environment: "node",
-    include: ["backend/app/src/**/*.test.{ts,tsx}"],
+    include: ["apps/app/src/**/*.test.{ts,tsx}"],
+    exclude: ["apps/app/src/workbench/**/*.test.{ts,tsx}"],
     testTimeout: 20_000,
   },
 })
