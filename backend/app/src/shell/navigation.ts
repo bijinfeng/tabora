@@ -19,13 +19,13 @@ export type NavItem = {
 
 /** 运维后台的一级导航。 */
 export const navItems: NavItem[] = [
-  { path: "/", label: "概览", icon: LayoutDashboard },
-  { path: "/users", label: "用户", icon: Users },
-  { path: "/synced-records", label: "同步记录", icon: RefreshCw },
-  { path: "/attachments", label: "附件", icon: Paperclip },
-  { path: "/attachment-policies", label: "附件策略", icon: ShieldCheck },
-  { path: "/models", label: "模型管理", icon: Bot },
-  { path: "/system", label: "系统监控", icon: Activity },
-  { path: "/audit-log", label: "审计日志", icon: FileText },
-  { path: "/settings", label: "系统设置", icon: Settings },
+  { path: "/admin", label: "概览", icon: LayoutDashboard },
+  { path: "/admin/users", label: "用户", icon: Users },
+  { path: "/admin/synced-records", label: "同步记录", icon: RefreshCw },
+  { path: "/admin/attachments", label: "附件", icon: Paperclip },
+  { path: "/admin/attachment-policies", label: "附件策略", icon: ShieldCheck },
+  { path: "/admin/models", label: "模型管理", icon: Bot },
+  { path: "/admin/system", label: "系统监控", icon: Activity },
+  { path: "/admin/audit-log", label: "审计日志", icon: FileText },
+  { path: "/admin/settings", label: "系统设置", icon: Settings },
 ]

@@ -7,8 +7,10 @@ import { taboraBrandFavicon } from "@tabora/brand/vite"
 import { createTaboraStylexVitePlugin } from "@tabora/stylex-config"
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
+const basePath = process.env.VITE_BASE?.trim() || "/"
 
 export default defineConfig(({ command }) => ({
+  base: basePath,
   plugins: [
     createTaboraStylexVitePlugin({
       rootDir: workspaceRoot,

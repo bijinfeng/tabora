@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/solid-router"
 
-import { OverviewPage } from "../../pages/overview/OverviewPage"
-import { fetchSystemInfo } from "../../server/admin/system"
-import { fetchSyncedRecordStats } from "../../server/admin/syncedRecords"
+import { OverviewPage } from "../../../pages/overview/OverviewPage"
+import { fetchSystemInfo } from "../../../server/admin/system"
+import { fetchSyncedRecordStats } from "../../../server/admin/syncedRecords"
 
-export const Route = createFileRoute("/_authed/")({
+export const Route = createFileRoute("/admin/_authed/")({
   loader: async ({ context }) => {
     await Promise.allSettled([
       context.queryClient.ensureQueryData({

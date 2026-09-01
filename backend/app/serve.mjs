@@ -1,4 +1,8 @@
 import { createServer } from "node:http"
+import { createReadStream } from "node:fs"
+import { access, stat } from "node:fs/promises"
+import { dirname, extname, relative, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { Readable } from "node:stream"
 import { pipeline } from "node:stream/promises"
 
@@ -11,6 +15,110 @@ import handler from "./dist/server/server.js"
  */
 const host = process.env.HOST ?? "127.0.0.1"
 const port = Number(process.env.PORT ?? 4000)
+const appDirectory = dirname(fileURLToPath(import.meta.url))
+const backendClientDirectory = resolve(appDirectory, "dist/client")
+const playgroundDirectory = resolve(appDirectory, "dist/playground")
+const backendPathPrefixes = ["/admin", "/api", "/_serverFn"]
+const playgroundAssetPrefix = "/playground"
+const contentTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".png": "image/png",
+  ".woff2": "font/woff2",
+}
+
+function isBackendPath(pathname) {
+  return backendPathPrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
+function playgroundFile(pathname) {
+  const decodedPath = decodeURIComponent(
+    pathname === playgroundAssetPrefix || pathname === `${playgroundAssetPrefix}/`
+      ? "/"
+      : pathname.startsWith(`${playgroundAssetPrefix}/`)
+        ? pathname.slice(playgroundAssetPrefix.length)
+        : pathname,
+  )
+  if (decodedPath === "/") return resolve(playgroundDirectory, "index.html")
+  const candidate = resolve(playgroundDirectory, `.${decodedPath}`)
+  const relativePath = relative(playgroundDirectory, candidate)
+  if (relativePath.startsWith("..")) return null
+  return candidate
+}
+
+async function sendStaticFile(req, res, filePath, cacheControl) {
+  let file
+  try {
+    file = await stat(filePath)
+  } catch {
+    return false
+  }
+  if (!file.isFile()) return false
+
+  res.writeHead(200, {
+    "cache-control": cacheControl,
+    "content-length": file.size,
+    "content-type": contentTypes[extname(filePath)] ?? "application/octet-stream",
+  })
+  if (req.method === "HEAD") {
+    res.end()
+    return true
+  }
+  await pipeline(createReadStream(filePath), res)
+  return true
+}
+
+async function serveBackendClient(req, res) {
+  if ((req.method !== "GET" && req.method !== "HEAD") || !req.url) return false
+
+  const pathname = new URL(req.url, "http://localhost").pathname
+  if (pathname !== "/favicon.svg" && !pathname.startsWith("/assets/")) return false
+
+  let filePath
+  try {
+    filePath = resolve(backendClientDirectory, `.${decodeURIComponent(pathname)}`)
+  } catch {
+    return false
+  }
+  if (relative(backendClientDirectory, filePath).startsWith("..")) return false
+  return sendStaticFile(req, res, filePath, "public, max-age=31536000, immutable")
+}
+
+async function servePlayground(req, res) {
+  if ((req.method !== "GET" && req.method !== "HEAD") || !req.url) return false
+
+  const pathname = new URL(req.url, "http://localhost").pathname
+  if (isBackendPath(pathname)) return false
+
+  let filePath
+  try {
+    filePath = playgroundFile(pathname)
+  } catch {
+    return false
+  }
+  if (!filePath) return false
+
+  try {
+    await access(filePath)
+  } catch {
+    if (extname(pathname)) return false
+    filePath = resolve(playgroundDirectory, "index.html")
+  }
+
+  const isAsset = pathname.startsWith(`${playgroundAssetPrefix}/assets/`)
+  return sendStaticFile(
+    req,
+    res,
+    filePath,
+    isAsset ? "public, max-age=31536000, immutable" : "no-cache",
+  )
+}
 
 function toRequest(req, signal) {
   const protocol = req.headers["x-forwarded-proto"] ?? "http"
@@ -55,6 +163,8 @@ const server = createServer((req, res) => {
 
   void (async () => {
     try {
+      if (await serveBackendClient(req, res)) return
+      if (await servePlayground(req, res)) return
       await writeResponse(await handler.fetch(toRequest(req, controller.signal)), res)
     } catch (err) {
       console.error("请求处理失败", err)

@@ -15,7 +15,7 @@ type AdminSidebarProps = {
 }
 
 function isActive(currentPath: string, itemPath: string): boolean {
-  if (itemPath === "/") return currentPath === "/"
+  if (itemPath === "/admin") return currentPath === "/admin" || currentPath === "/admin/"
   return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`)
 }
 

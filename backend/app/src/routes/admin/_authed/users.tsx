@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/solid-router"
 
-import { UsersPage } from "../../pages/users/UsersPage"
-import { listUsers } from "../../server/admin/users"
+import { UsersPage } from "../../../pages/users/UsersPage"
+import { listUsers } from "../../../server/admin/users"
 
-export const Route = createFileRoute("/_authed/users")({
+export const Route = createFileRoute("/admin/_authed/users")({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData({
       queryKey: ["users", { search: "", offset: 0 }],
