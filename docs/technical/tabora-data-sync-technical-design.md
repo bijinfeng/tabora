@@ -165,3 +165,9 @@ workspace | pluginInstance | plugin | pluginData
 | 全仓构建 | `pnpm build` |
 
 修改认证或同步契约时，除定向测试外，还应验证有效会话、owner 隔离、敏感字段拒绝、push、pull、冲突和 tombstone 路径。
+
+## 11. 自托管镜像
+
+仓库根目录的 `Dockerfile` 将 `backend/app` 和 `apps/playground` 构建为一个镜像。运行时只有一个 Node 进程：`/` 由 playground 静态产物响应，`/admin/*` 由管理后台响应，`/api/*` 与 `/_serverFn/*` 保持后端服务端契约。
+
+镜像默认把 SQLite 数据库和本地附件保存到 `/data`；使用 SQLite 时必须为该目录挂载持久化 volume 且仅运行单副本。生产环境可改用 `DATABASE_CLIENT=postgres` 与外部 `DATABASE_URL`，但 `UPLOADS_DIR` 仍需持久化存储。运行镜像前必须设置 `BETTER_AUTH_SECRET`、`BETTER_AUTH_URL` 和至少 32 位的 `TABORA_MODEL_CREDENTIAL_ENCRYPTION_KEY`；`HOST`、`PORT`、`DATABASE_FILE` 和 `UPLOADS_DIR` 已提供容器默认值。

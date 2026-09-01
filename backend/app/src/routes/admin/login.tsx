@@ -3,10 +3,10 @@ import { color, font } from "@tabora/theme/tokens.stylex"
 import { createFileRoute, redirect } from "@tanstack/solid-router"
 import { Match, Switch } from "solid-js"
 
-import { authClient } from "../auth/authClient"
-import { fetchAdminSession, fetchHasAdmin } from "../auth/serverFns"
-import { LoginPage } from "../auth/LoginPage"
-import { RegisterPage } from "../auth/RegisterPage"
+import { authClient } from "../../auth/authClient"
+import { fetchAdminSession, fetchHasAdmin } from "../../auth/serverFns"
+import { LoginPage } from "../../auth/LoginPage"
+import { RegisterPage } from "../../auth/RegisterPage"
 
 const styles = stylex.create({
   status: {
@@ -22,12 +22,12 @@ const styles = stylex.create({
   },
 })
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/admin/login")({
   beforeLoad: async () => {
     // 已登录管理员直接跳首页，不再展示登录页
     const session = await fetchAdminSession()
     if (session?.isAdmin) {
-      throw redirect({ to: "/" })
+      throw redirect({ to: "/admin" })
     }
   },
   loader: async () => {
@@ -42,7 +42,7 @@ function LoginRoute() {
   const navigate = Route.useNavigate()
 
   const onSuccess = async () => {
-    await navigate({ to: "/" })
+    await navigate({ to: "/admin" })
   }
 
   return (

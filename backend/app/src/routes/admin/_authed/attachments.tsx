@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/solid-router"
 
-import { AttachmentsPage } from "../../pages/attachments/AttachmentsPage"
-import { listFiles } from "../../server/admin/attachments"
+import { AttachmentsPage } from "../../../pages/attachments/AttachmentsPage"
+import { listFiles } from "../../../server/admin/attachments"
 
-export const Route = createFileRoute("/_authed/attachments")({
+export const Route = createFileRoute("/admin/_authed/attachments")({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData({
       queryKey: ["admin-files", { offset: 0 }],

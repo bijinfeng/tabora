@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp dev",
-    "build": "vp build",
+    "dev": "node dev.mjs",
+    "build": "node build.mjs",
+    "build:backend": "vp build",
     "start": "node serve.mjs",
     "test": "vitest run --config vitest.config.ts"
   },

@@ -1,0 +1,14 @@
+.git
+.codegraph
+.env
+.env.*
+!.env.example
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+data
+**/data
+.DS_Store

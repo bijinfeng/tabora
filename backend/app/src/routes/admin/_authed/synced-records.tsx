@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/solid-router"
 
-import { SyncedRecordsPage } from "../../pages/synced-records/SyncedRecordsPage"
-import { fetchSyncedRecordStats, listSyncedRecords } from "../../server/admin/syncedRecords"
+import { SyncedRecordsPage } from "../../../pages/synced-records/SyncedRecordsPage"
+import { fetchSyncedRecordStats, listSyncedRecords } from "../../../server/admin/syncedRecords"
 
-export const Route = createFileRoute("/_authed/synced-records")({
+export const Route = createFileRoute("/admin/_authed/synced-records")({
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData({

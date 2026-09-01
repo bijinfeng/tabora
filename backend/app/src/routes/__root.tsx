@@ -23,8 +23,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     // TanStack Start 用根组件渲染 HTML，没有 index.html，StyleX 插件的
     // transformIndexHtml 注入不会触发。dev 下手动接入插件的虚拟 CSS 端点与运行时（供 HMR）；
     // 生产构建时 StyleX 规则已合入被 import 的样式产物，无需这些虚拟入口。
-    links: import.meta.env.DEV ? [{ rel: "stylesheet", href: "/virtual:stylex.css" }] : [],
-    scripts: import.meta.env.DEV ? [{ type: "module", src: "/@id/virtual:stylex:runtime" }] : [],
+    links: import.meta.env.DEV
+      ? [{ rel: "stylesheet", href: `${import.meta.env.BASE_URL}virtual:stylex.css` }]
+      : [],
+    scripts: import.meta.env.DEV
+      ? [{ type: "module", src: `${import.meta.env.BASE_URL}@id/virtual:stylex:runtime` }]
+      : [],
   }),
   shellComponent: RootDocument,
   component: RootComponent,

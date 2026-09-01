@@ -20,7 +20,9 @@ type AdminTopbarProps = {
 
 function currentTitle(pathname: string): string {
   const match = navItems.find((item) =>
-    item.path === "/" ? pathname === "/" : pathname.startsWith(item.path),
+    item.path === "/admin"
+      ? pathname === "/admin" || pathname === "/admin/"
+      : pathname.startsWith(item.path),
   )
   return match?.label ?? "概览"
 }
