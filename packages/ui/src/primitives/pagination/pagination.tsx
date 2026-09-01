@@ -80,6 +80,7 @@ export type PaginationProps = {
 }
 
 type PaginationPrimitiveProps = PaginationProps & {
+  totalClass?: string | undefined
   renderPageSizeControl?: (props: PaginationPageSizeControlProps) => JSX.Element
   renderQuickJumperControl?: (props: PaginationQuickJumperControlProps) => JSX.Element
   renderSimpleControl?: (props: PaginationSimpleControlProps) => JSX.Element
@@ -157,7 +158,11 @@ export function Pagination(props: PaginationPrimitiveProps) {
           {(showTotal) => {
             const from = props.total === 0 ? 0 : (currentPage() - 1) * currentPageSize() + 1
             const to = Math.min(currentPage() * currentPageSize(), props.total)
-            return <span data-pagination-total>{showTotal()(props.total, [from, to])}</span>
+            return (
+              <span class={props.totalClass} data-pagination-total>
+                {showTotal()(props.total, [from, to])}
+              </span>
+            )
           }}
         </Show>
         <Show when={props.showSizeChanger}>

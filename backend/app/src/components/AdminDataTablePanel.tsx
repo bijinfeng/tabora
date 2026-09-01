@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
+import { Pagination } from "@tabora/ui/pagination"
 import { Table, type TableColumn } from "@tabora/ui/table"
 import { useQuery } from "@tanstack/solid-query"
 import type { JSX } from "solid-js"
@@ -9,7 +10,6 @@ import {
   AdminDataTableToolbar,
   type AdminDataTableToolbar as AdminDataTableToolbarConfig,
 } from "./AdminDataTableToolbar"
-import { Pagination } from "./Pagination"
 import { QueryState } from "./QueryState"
 import { createDebounced } from "../utils/createDebounced"
 
@@ -42,6 +42,14 @@ const styles = stylex.create({
     borderTopWidth: 1,
     paddingBlock: space.s4,
     paddingInline: space.s5,
+  },
+  pagination: {
+    alignItems: "center",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: space.s4,
+    justifyContent: "space-between",
+    width: "100%",
   },
   table: {
     borderRadius: 0,
@@ -168,11 +176,12 @@ export function AdminDataTablePanel<T, TParams extends Record<string, string>>(
       <Show when={!data.error && total() > 0}>
         <div {...stylex.attrs(styles.footer)}>
           <Pagination
-            offset={offset()}
+            current={Math.floor(offset() / pageSize) + 1}
             pageSize={pageSize}
             total={total()}
-            onPrev={() => setOffset((value) => Math.max(0, value - pageSize))}
-            onNext={() => setOffset((value) => value + pageSize)}
+            showTotal={(count, [from, to]) => `${from}–${to} / 共 ${count} 条`}
+            xstyle={styles.pagination}
+            onChange={(page) => setOffset((page - 1) * pageSize)}
           />
         </div>
       </Show>
