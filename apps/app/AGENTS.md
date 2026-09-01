@@ -1,10 +1,11 @@
-# Backend App Agent Rules
+# App Agent Rules
 
-本文件适用于 `backend/app/`，并继承仓库根 `AGENTS.md`。
+本文件适用于 `apps/app/`，并继承仓库根 `AGENTS.md`。
 
 ## 边界
 
-- 这里是 Tabora 同步服务的后端与管理控制台（TanStack Start 全栈应用），不承载终端用户的 workbench、插件运行时或官方插件业务。
+- 这里是 Tabora 的单一 TanStack Start 应用：根路径承载终端用户 workbench，`/admin/*` 承载管理控制台，`/api/*` 承载服务端 API。
+- workbench 的组合根仅可位于 `src/workbench/`，复用 `@tabora/workbench-app`、`@tabora/workbench-shell`、`@tabora/host-adapters` 与 `@tabora/builtin-plugin-registry`；不要把插件业务、runtime 通用机制或宿主容器实现搬入本 app。
 - 服务端业务逻辑（db、auth、email、attachments、sync、guards、schema）在 `src/server/`；HTTP API（`/api/auth/*`、`/api/sync/*`、`/api/attachments/*`）在 `src/routes/api/`。
 - 管理端操作是 `src/server/admin/` 下的 admin server function：页面通过 server function 与服务端交互；不在浏览器端直连数据库、保存服务端密钥，或绕过认证与权限检查。
 - 每个 admin server function 必须挂 `adminAuthMiddleware`；写操作额外挂 `auditAdminAction`。授权与审计由中间件保证，路由 `beforeLoad` 只拦页面导航、拦不住 server function 调用。
@@ -25,8 +26,8 @@
 按根回归摘要执行；本目录代码变更至少运行：
 
 ```bash
-pnpm --dir backend/app test
-pnpm --dir backend/app build
+pnpm --dir apps/app test
+pnpm --dir apps/app build
 pnpm check
 ```
 

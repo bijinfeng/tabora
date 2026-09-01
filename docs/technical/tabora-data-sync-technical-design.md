@@ -11,31 +11,31 @@
 - 需求与产品决策：`docs/technical/tabora-data-sync-prd.md`
 - 平台架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
 - 回归治理：`docs/technical/tabora-regression-baseline.md`
-- 后端服务：`backend/app`
+- 后端服务：`apps/app`
 
 ## 1. 文档定位
 
 本文档描述当前账号与同步链路的实现边界、HTTP 契约和运行时接线。产品范围与验收以同步 PRD 为准，代码是字段和错误细节的最终依据。
 
-当前后端是仓库内的 `backend/app`（TanStack Start 全栈应用），服务端基于 better-auth 和 Drizzle ORM。开发使用 SQLite，生产可使用 PostgreSQL。本文档不把设备管理、快照、冲突收件箱或 E2EE 描述成已交付能力。
+当前后端是仓库内的 `apps/app`（TanStack Start 全栈应用），服务端基于 better-auth 和 Drizzle ORM。开发使用 SQLite，生产可使用 PostgreSQL。本文档不把设备管理、快照、冲突收件箱或 E2EE 描述成已交付能力。
 
 ## 2. 当前架构
 
 ```text
-playground / extension
+apps/app workbench / extension
   |
   | host-adapters: AccountSyncService
   | @tabora/auth: better-auth client
   | @tabora/sync: queue、push、pull、LWW、tombstone
   v
-backend/app
+apps/app
   |- /api/auth/*       better-auth 邮箱密码、会话和密码重置
   |- /api/sync/*       登录用户的同步记录 API
   |- /api/attachments  登录用户的附件 API
   `- admin server fn   管理员用户、记录、附件、设置和审计（同应用内 server function）
 ```
 
-`official.account-sync` 是按宿主选择的 builtin 插件。Playground 组合根始终创建 `AccountSyncService` 并装配该插件，未配置环境变量时使用本地开发后端地址；环境变量只覆盖 API 地址，不决定设置面板是否存在。服务内部持有认证客户端、同步 manager 和同步元数据仓库，插件只获得设置 provider 所需的最小操作面。未装配账号插件的宿主不创建认证存储、同步队列或同步调度。
+`official.account-sync` 是按宿主选择的 builtin 插件。`apps/app` 根工作台组合始终创建 `AccountSyncService` 并装配该插件，默认同源请求 `/api/*`；环境变量只覆盖 API 地址，不决定设置面板是否存在。服务内部持有认证客户端、同步 manager 和同步元数据仓库，插件只获得设置 provider 所需的最小操作面。未装配账号插件的宿主不创建认证存储、同步队列或同步调度。
 
 ## 3. 后端路由边界
 
@@ -54,7 +54,7 @@ backend/app
 
 ### 4.1 服务端
 
-`backend/app/src/server/auth.ts` 使用 better-auth 的邮箱密码、admin 和 bearer 插件：
+`apps/app/src/server/auth.ts` 使用 better-auth 的邮箱密码、admin 和 bearer 插件：
 
 - 首个用户可作为管理员完成初始化；后续公开注册由系统设置控制。
 - 密码重置和邮箱验证通过服务端邮件队列发送，不把邮件凭据或重置值写入工作台数据。
@@ -158,7 +158,7 @@ workspace | pluginInstance | plugin | pluginData
 
 | 验证项 | 命令 |
 | --- | --- |
-| 后端服务 | `pnpm --dir backend/app test` |
+| 后端服务 | `pnpm --dir apps/app test` |
 | 认证与同步客户端 | `pnpm exec vitest run packages/auth packages/sync` |
 | 全量单元测试 | `pnpm test` |
 | 格式、lint、类型和架构检查 | `pnpm check` |
@@ -168,6 +168,6 @@ workspace | pluginInstance | plugin | pluginData
 
 ## 11. 自托管镜像
 
-仓库根目录的 `Dockerfile` 将 `backend/app` 和 `apps/playground` 构建为一个镜像。运行时只有一个 Node 进程：`/` 由 playground 静态产物响应，`/admin/*` 由管理后台响应，`/api/*` 与 `/_serverFn/*` 保持后端服务端契约。
+仓库根目录的 `Dockerfile` 只构建 `apps/app`。运行时只有一个 Node 进程：`/` 由 app 内置的工作台路由响应，`/admin/*` 由管理后台响应，`/api/*` 与 `/_serverFn/*` 保持后端服务端契约。
 
 镜像默认把 SQLite 数据库和本地附件保存到 `/data`；使用 SQLite 时必须为该目录挂载持久化 volume 且仅运行单副本。生产环境可改用 `DATABASE_CLIENT=postgres` 与外部 `DATABASE_URL`，但 `UPLOADS_DIR` 仍需持久化存储。运行镜像前必须设置 `BETTER_AUTH_SECRET`、`BETTER_AUTH_URL` 和至少 32 位的 `TABORA_MODEL_CREDENTIAL_ENCRYPTION_KEY`；`HOST`、`PORT`、`DATABASE_FILE` 和 `UPLOADS_DIR` 已提供容器默认值。

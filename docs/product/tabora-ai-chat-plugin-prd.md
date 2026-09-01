@@ -169,7 +169,7 @@ AI 未配置或未登录时，卡片与展开视图显示 EmptyState：说明当
 - `AiGatewayRequest` 增加可选 `messages: AiChatMessage[]`（`role: "user" | "assistant"` + `text`），与既有 `prompt` 字段互斥：带 `messages` 的请求为多轮对话请求，服务端将完整历史交给 TanStack AI `chat()`；仅 `prompt` 的单轮请求语义完全不变（便签等既有 consumer 不受影响）。
 - `AiGatewayRequest` 另有可选运行参数 `modelId`、`temperature`、`maxOutputTokens` 与 `reasoningEffort`（`"low" | "medium" | "high"`）。多轮请求经 AG-UI `forwardedProps` 透传，服务端在 `createChatOptions` 合入 `modelOptions`：`reasoningEffort` 映射为 OpenAI chat-completions 的 `reasoning_effort`；未带这些字段时使用宿主默认设置。
 - 服务端校验：角色枚举、最后一条必须为 user、单条长度沿用 32k 上限、条数 ≤ 100、历史总字符 ≤ 96,000（最终数值以技术设计为准）；`reasoningEffort` 只接受三档枚举，非法值返回 `ai_request_rejected`；超限返回 `ai_request_rejected`。
-- 改动落点：`packages/plugin-api`（协议类型）、`packages/ai-runtime`（contracts + server 校验与转发）、`backend/app/src/server/ai.ts` 与 `/api/ai/*` 路由、`apps/fnos/backend`（设备后端透传）。错误码与鉴权逻辑不变。
+- 改动落点：`packages/plugin-api`（协议类型）、`packages/ai-runtime`（contracts + server 校验与转发）、`apps/app/src/server/ai.ts` 与 `/api/ai/*` 路由、`apps/fnos/backend`（设备后端透传）。错误码与鉴权逻辑不变。
 - 演进预留：多轮请求体是 MVP 子集形态。后续工具调用迭代在同一请求上以「新增可选字段」演进（工具声明、parts 历史、审批往返）；TanStack AI `chat()` 与其 AG-UI 事件流原生承载 thinking / tool 事件，网关侧无破坏性变更，单轮与多轮既有语义保持不变。
 - 历史裁剪：客户端发送前按「系统提示 + 最近 N 条消息」裁剪历史，确保请求保持在服务端校验上限内，并在会话内提示早期消息已省略；N 的具体数值随服务端上限在技术设计确定。
 

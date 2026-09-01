@@ -14,30 +14,26 @@ import {
   builtinWorkbenchShellConfig,
 } from "@tabora/builtin-plugin-registry"
 import {
-  createWorkbenchComposition,
-  createWorkbenchRuntimeBootstrap,
+  createWorkbenchComposition as createComposition,
+  createWorkbenchRuntimeBootstrap as createRuntimeBootstrap,
   type WorkbenchComposition,
   type WorkbenchRuntimeBootstrap,
 } from "@tabora/workbench-app"
 
-const DEFAULT_PLAYGROUND_API_BASE_URL = "http://localhost:4000"
-
-export function createPlaygroundWorkbenchComposition(): WorkbenchComposition {
-  return createWorkbenchComposition({
-    host: createWebHostAdapter({
-      id: "host.playground",
-    }),
+export function createWorkbenchComposition(): WorkbenchComposition {
+  return createComposition({
+    // 保持既有 identity，让 playground 迁入后仍可读取用户本地的工作台数据。
+    host: createWebHostAdapter({ id: "host.playground" }),
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,
   })
 }
 
-export function resolvePlaygroundApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_TABORA_API_BASE?.trim()
-  return configured || DEFAULT_PLAYGROUND_API_BASE_URL
+export function resolveWorkbenchApiBaseUrl(): string {
+  return import.meta.env.VITE_TABORA_API_BASE?.trim() || ""
 }
 
-export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
-  const apiBaseUrl = resolvePlaygroundApiBaseUrl()
+export function createWorkbenchRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
+  const apiBaseUrl = resolveWorkbenchApiBaseUrl()
   const storageAdapter = createWebStorageAdapter(undefined, { enableSync: true })
   const host = createWebHostAdapter({ id: "host.playground" })
   const authStorage = createLocalStorageAuthStorage()
@@ -59,7 +55,7 @@ export function createPlaygroundRuntimeBootstrap(): WorkbenchRuntimeBootstrap {
     authClient: accountService.authClient,
   })
 
-  return createWorkbenchRuntimeBootstrap({
+  return createRuntimeBootstrap({
     host,
     plugins: [...builtinPlugins, accountPlugin],
     defaultWorkspacePreset: builtinDefaultWorkspacePreset,

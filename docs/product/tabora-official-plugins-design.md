@@ -181,7 +181,7 @@ dashboard
 - `@tabora/ui` 可以依赖 `solid-js` 和 `@tabora/theme`。
 - `@tabora/ui` 不能依赖 `@tabora/platform-kernel`、`@tabora/storage` 或任何官方插件。
 - `@tabora/ui` 不提供 `WidgetCard`、`Modal`、`FullscreenHost`、`SettingsHost`、`WorkbenchRail` 等宿主级容器。
-- 宿主级容器仍由 playground / extension shell 统一提供，插件只渲染容器内部内容。
+- 宿主级容器仍由 apps/app workbench / extension shell 统一提供，插件只渲染容器内部内容。
 
 统一控件建议：
 

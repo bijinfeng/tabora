@@ -22,9 +22,9 @@ RUN groupadd --system tabora \
   && chown tabora:tabora /data
 
 COPY --from=build --chown=tabora:tabora /opt/tabora/node_modules ./node_modules
-COPY --from=build --chown=tabora:tabora /workspace/backend/app/package.json ./package.json
-COPY --from=build --chown=tabora:tabora /workspace/backend/app/serve.mjs ./serve.mjs
-COPY --from=build --chown=tabora:tabora /workspace/backend/app/dist ./dist
+COPY --from=build --chown=tabora:tabora /workspace/apps/app/package.json ./package.json
+COPY --from=build --chown=tabora:tabora /workspace/apps/app/serve.mjs ./serve.mjs
+COPY --from=build --chown=tabora:tabora /workspace/apps/app/dist ./dist
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0

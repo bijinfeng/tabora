@@ -10,19 +10,19 @@
 - AI 对话插件 PRD：`docs/product/tabora-ai-chat-plugin-prd.md`
 - 后端实现事实源：`docs/technical/tabora-data-sync-technical-design.md`
 - 设计事实源：`DESIGN.md`
-- 后端约束：`backend/app/AGENTS.md`
+- 后端约束：`apps/app/AGENTS.md`
 
 ## 1. 背景
 
 云端内置模型需要持续的后台运营能力：管理员应能查看可用模型、调整上线范围、验证新 provider，并留存可追溯的变更记录，而不是依赖部署配置与服务重启。
 
-本 PRD 定义 `backend/app` 的「模型管理」：把**平台付费的云端内置模型目录**变为后台可管理、可审计、可安全发布的资源。它不新增终端用户模型配置入口，也不是通用 AI 用量或计费控制台。
+本 PRD 定义 `apps/app` 的「模型管理」：把**平台付费的云端内置模型目录**变为后台可管理、可审计、可安全发布的资源。它不新增终端用户模型配置入口，也不是通用 AI 用量或计费控制台。
 
 现有架构边界保持不变：
 
 - 内置模型由平台服务端持有凭据并支付，仅登录用户可调用。
 - 用户本机自定义 provider 的 Base URL、模型和 API Key 只保存在当前设备，不进入后台。
-- FNOS 设备共享 provider 由设备管理员在 FNOS 管理面配置，不接入云端 `backend/app`。
+- FNOS 设备共享 provider 由设备管理员在 FNOS 管理面配置，不接入云端 `apps/app`。
 - 插件只通过 `context.ai` 调用网关，不能选择 provider、读取凭据或直连模型。
 
 ## 2. 目标与非目标
@@ -65,7 +65,7 @@
 | 主题 | 决策 |
 | --- | --- |
 | 管理对象 | 只管理云端内置、OpenAI-compatible 的文本模型。Provider 拥有连接与凭据；模型是可发布路由条目。 |
-| 目录真相源 | `backend/app` 数据库是唯一运行时真相源，不提供环境变量目录 fallback 或导入路径。 |
+| 目录真相源 | `apps/app` 数据库是唯一运行时真相源，不提供环境变量目录 fallback 或导入路径。 |
 | 职责分层 | Provider 仅管理可复用的端点、凭据与连接可用性；模型管理稳定 ID、上游部署映射及面向用户的发布状态。两者在数据与导航上分层，但“新增模型”可直接选择已有 Provider 并在无可用连接时引导新建。 |
 | 发布单位 | 模型独立上下线。一个 provider 可保留连接和其他模型，单模型异常不必下线整个 provider；Provider 的 `active` 表示“连接已启用”，不等同于将任何模型对用户发布。 |
 | 初始状态 | 新建 provider/model 默认为 `draft`；测试通过后仍必须显式上线，测试不是发布动作。 |
@@ -182,7 +182,7 @@ Provider 编辑页提供显式「测试连接」：
 
 ### 6.6 API 与服务端职责
 
-新增管理 server function 置于 `backend/app/src/server/admin/models.ts`；每个函数挂 `adminAuthMiddleware`，写操作另挂 `auditAdminAction`。页面不能直连数据库或保留密钥。
+新增管理 server function 置于 `apps/app/src/server/admin/models.ts`；每个函数挂 `adminAuthMiddleware`，写操作另挂 `auditAdminAction`。页面不能直连数据库或保留密钥。
 
 运行时调整：
 
@@ -265,8 +265,8 @@ Provider 编辑页提供显式「测试连接」：
 实现前补充技术设计，明确加密库和密钥轮换运行方式、双数据库 migration、跨进程缓存失效、URL 测试夹具与导入命令。代码变更至少运行：
 
 ```bash
-pnpm --dir backend/app test
-pnpm --dir backend/app build
+pnpm --dir apps/app test
+pnpm --dir apps/app build
 pnpm test
 pnpm check
 pnpm build

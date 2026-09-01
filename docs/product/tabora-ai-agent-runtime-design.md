@@ -38,7 +38,7 @@ P0 阶段采用 **Tabora 自有协议 + 服务端 TanStack AI gateway**：
 
 云端内置模型由平台服务端统一配置和付费，必须通过 Tabora 登录态调用。Web 与 Extension 也可选择本机保存的自定义 OpenAI-compatible provider；其密钥只随单次请求临时转发到 gateway，不持久化到云端且不参与同步。FNOS 不提供内置模型，只使用设备管理员共享的自定义 provider，允许连接 localhost 或局域网模型。
 
-云端内置 provider 与模型目录由 `backend/app` 的「模型管理」数据库维护；Provider 保存 OpenAI-compatible `baseUrl` 与加密 API Key，模型保存 `providerId:modelId` 形式的稳定 ID（例如 `deepseek:deepseek-chat`），因此不同 provider 的同名模型不会发生路由冲突。仅 Provider 与模型均处于 active 状态时，目录和网关才会使用该模型。部署必须配置 `TABORA_MODEL_CREDENTIAL_ENCRYPTION_KEY` 用于凭据加密；旧 `TABORA_AI_API_KEY`、`TABORA_AI_BASE_URL` 与 `TABORA_AI_MODELS` 已移除，服务检测到它们会在启动时给出迁移错误。
+云端内置 provider 与模型目录由 `apps/app` 的「模型管理」数据库维护；Provider 保存 OpenAI-compatible `baseUrl` 与加密 API Key，模型保存 `providerId:modelId` 形式的稳定 ID（例如 `deepseek:deepseek-chat`），因此不同 provider 的同名模型不会发生路由冲突。仅 Provider 与模型均处于 active 状态时，目录和网关才会使用该模型。部署必须配置 `TABORA_MODEL_CREDENTIAL_ENCRYPTION_KEY` 用于凭据加密；旧 `TABORA_AI_API_KEY`、`TABORA_AI_BASE_URL` 与 `TABORA_AI_MODELS` 已移除，服务检测到它们会在启动时给出迁移错误。
 
 ## 2. 产品原则
 
