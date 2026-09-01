@@ -5,8 +5,8 @@ import X from "lucide-solid/icons/x"
 
 import type { SolidAttrs } from "../../stylex"
 
-export type InputSize = "sm" | "md"
-export type InputType = "text" | "search" | "url" | "email" | "password"
+export type InputSize = "sm" | "md" | "lg"
+export type InputType = "text" | "search" | "url" | "email" | "password" | "number"
 export type InputAppearance = "default" | "embedded"
 
 export type HeadlessInputProps = {
@@ -45,6 +45,8 @@ export type HeadlessInputProps = {
   id?: string
   minLength?: number
   maxLength?: number
+  min?: number
+  max?: number
   required?: boolean
   autocomplete?: string
   autofocus?: boolean
@@ -108,6 +110,8 @@ export function HeadlessInput(props: HeadlessInputProps) {
         id={props.id}
         minLength={props.minLength}
         maxLength={props.maxLength}
+        min={props.min}
+        max={props.max}
         required={props.required}
         autocomplete={props.autocomplete}
         autofocus={props.autofocus}
@@ -144,6 +148,8 @@ export function HeadlessInput(props: HeadlessInputProps) {
         id={props.id}
         minLength={props.minLength}
         maxLength={props.maxLength}
+        min={props.min}
+        max={props.max}
         required={props.required}
         autocomplete={props.autocomplete}
         autofocus={props.autofocus}

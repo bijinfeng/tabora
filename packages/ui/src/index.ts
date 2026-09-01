@@ -18,6 +18,9 @@ export type { StepperProps } from "./styled/stepper"
 export { Input } from "./styled/input"
 export type { InputAppearance, InputProps, InputSize, InputType } from "./styled/input"
 
+export { InputNumber } from "./styled/inputNumber"
+export type { InputNumberProps, InputNumberSize } from "./styled/inputNumber"
+
 export { Textarea } from "./styled/textarea"
 export type { TextareaProps } from "./styled/textarea"
 

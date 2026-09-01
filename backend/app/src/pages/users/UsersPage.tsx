@@ -4,20 +4,19 @@ import { Button, IconButton } from "@tabora/ui/button"
 import { DropdownMenu } from "@tabora/ui/dropdown-menu"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
-import { Input } from "@tabora/ui/input"
-import { Table, type TableColumn } from "@tabora/ui/table"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
+import type { TableColumn } from "@tabora/ui/table"
+import { useMutation } from "@tanstack/solid-query"
 import { createSignal, Show } from "solid-js"
 import MoreHorizontal from "lucide-solid/icons/ellipsis"
 import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 
 import { ConfirmDialog } from "../../components/ConfirmDialog"
-import { Pagination } from "../../components/Pagination"
-import { QueryState } from "../../components/QueryState"
+import {
+  AdminDataTablePanel,
+  type AdminDataTableActions,
+} from "../../components/AdminDataTablePanel"
 import { useToast } from "../../contexts/ToastContext"
-import { createDebounced } from "../../utils/createDebounced"
-import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { shared } from "../shared.styles"
 import { CreateUserDialog } from "./CreateUserDialog"
 import { styles } from "./users.styles"
@@ -32,35 +31,24 @@ import {
 
 const PAGE_SIZE = 20
 
+type UsersTableParams = {
+  search: string
+}
+
 export function UsersPage() {
-  const [search, setSearch] = createSignal("")
-  const debouncedSearch = createDebounced(search, 300)
-  const { offset, onPrev, onNext, reset: resetOffset } = createOffsetPagination(PAGE_SIZE)
   const [createOpen, setCreateOpen] = createSignal(false)
   const [deleteTarget, setDeleteTarget] = createSignal<AdminUser | null>(null)
   const [actionError, setActionError] = createSignal<string | null>(null)
 
-  const queryClient = useQueryClient()
   const { showToast } = useToast()
-
-  const data = useQuery(() => ({
-    queryKey: ["users", { search: debouncedSearch(), offset: offset() }],
-    queryFn: () =>
-      listUsers({
-        data: {
-          limit: PAGE_SIZE,
-          offset: offset(),
-          ...(debouncedSearch() ? { searchValue: debouncedSearch() } : {}),
-        },
-      }),
-  }))
+  let tableActions: AdminDataTableActions | undefined
 
   const actionMutation = useMutation(() => ({
     mutationFn: (fn: () => Promise<void>) => fn(),
     onMutate: () => setActionError(null),
     onSuccess: () => {
       showToast({ variant: "success", title: "操作成功" })
-      return queryClient.invalidateQueries({ queryKey: ["users"] })
+      tableActions?.reload()
     },
     onError: (err: Error) => {
       setActionError(err.message)
@@ -73,7 +61,7 @@ export function UsersPage() {
     onSuccess: () => {
       setDeleteTarget(null)
       showToast({ variant: "success", title: "用户已删除" })
-      return queryClient.invalidateQueries({ queryKey: ["users"] })
+      tableActions?.reload()
     },
   }))
 
@@ -90,61 +78,57 @@ export function UsersPage() {
 
   return (
     <div {...stylex.attrs(shared.page)}>
-      <div {...stylex.attrs(styles.panel)}>
-        <div {...stylex.attrs(styles.toolbar)}>
-          <div {...stylex.attrs(styles.toolbarLeft)}>
-            <Input
-              value={search()}
-              onInput={(v) => {
-                setSearch(v)
-                resetOffset()
-              }}
-              placeholder="按邮箱搜索"
-              leadingIcon={<Search size={16} />}
-              clearable
-              aria-label="搜索用户"
-            />
-          </div>
-          <Button variant="primary" onClick={() => setCreateOpen(true)}>
-            <Plus size={16} />
-            新建用户
-          </Button>
-        </div>
-
-        <Show when={actionError()}>
-          <div {...stylex.attrs(styles.panelNotice)}>
-            <InlineError>{actionError()}</InlineError>
-          </div>
-        </Show>
-
-        <UsersTable
-          data={data.data}
-          loading={data.isPending}
-          error={data.error ?? undefined}
-          columns={columns}
-        />
-
-        <Show when={data.data}>
-          {(d) => (
-            <Show when={d().total > 0}>
-              <div {...stylex.attrs(styles.panelFooter)}>
-                <Pagination
-                  offset={offset()}
-                  pageSize={PAGE_SIZE}
-                  total={d().total}
-                  onPrev={onPrev}
-                  onNext={onNext}
-                />
-              </div>
+      <AdminDataTablePanel<AdminUser, UsersTableParams>
+        queryKey={["users"]}
+        request={async ({ current, pageSize, search }) => {
+          const result = await listUsers({
+            data: {
+              limit: pageSize,
+              offset: (current - 1) * pageSize,
+              ...(search ? { searchValue: search } : {}),
+            },
+          })
+          return { data: result.users, total: result.total }
+        }}
+        pageSize={PAGE_SIZE}
+        toolbar={{
+          filters: [
+            {
+              key: "search",
+              kind: "text",
+              ariaLabel: "搜索用户",
+              placeholder: "按邮箱搜索",
+              leadingIcon: <Search size={16} />,
+              clearable: true,
+              grow: true,
+            },
+          ],
+          actions: (
+            <Button variant="primary" onClick={() => setCreateOpen(true)}>
+              <Plus size={16} />
+              新建用户
+            </Button>
+          ),
+          notice: (
+            <Show when={actionError()}>
+              <InlineError>{actionError()}</InlineError>
             </Show>
-          )}
-        </Show>
-      </div>
+          ),
+        }}
+        columns={columns}
+        rowKey={(u) => u.id}
+        errorMessage="加载用户失败"
+        empty={
+          <EmptyState compact title="暂无用户" description="点击右上角新建用户，或调整搜索条件。" />
+        }
+        actionRef={(actions) => (tableActions = actions)}
+        ariaLabel="用户列表"
+      />
 
       <CreateUserDialog
         open={createOpen()}
         onClose={() => setCreateOpen(false)}
-        onCreated={() => void queryClient.invalidateQueries({ queryKey: ["users"] })}
+        onCreated={() => tableActions?.reload(true)}
       />
       <ConfirmDialog
         open={deleteTarget() !== null}
@@ -233,31 +217,4 @@ function buildColumns(handlers: ColumnHandlers): TableColumn<AdminUser>[] {
       cell: (u) => <RowActions user={u} handlers={handlers} />,
     },
   ]
-}
-
-function UsersTable(props: {
-  data: { users: AdminUser[]; total: number } | undefined
-  loading: boolean
-  error: Error | undefined
-  columns: TableColumn<AdminUser>[]
-}) {
-  return (
-    <QueryState
-      error={props.error}
-      errorMessage="加载用户失败"
-      loading={props.loading}
-      hasRows={(props.data?.users.length ?? 0) > 0}
-      empty={
-        <EmptyState compact title="暂无用户" description="点击右上角新建用户，或调整搜索条件。" />
-      }
-    >
-      <Table
-        columns={props.columns}
-        rows={props.data?.users ?? []}
-        rowKey={(u) => u.id}
-        aria-label="用户列表"
-        xstyle={styles.table}
-      />
-    </QueryState>
-  )
 }

@@ -85,6 +85,10 @@ export const componentDocDemoLoaders: Record<string, ComponentDocDemoLoader> = {
     })),
   input: () =>
     import("../styled/input/input.demo").then((module) => ({ default: module.InputDemo })),
+  inputnumber: () =>
+    import("../styled/inputNumber/inputNumber.demo").then((module) => ({
+      default: module.InputNumberDemo,
+    })),
   kbd: () => import("../styled/kbd/kbd.demo").then((module) => ({ default: module.KbdDemo })),
   link: () => import("../styled/link/link.demo").then((module) => ({ default: module.LinkDemo })),
   listrow: () =>

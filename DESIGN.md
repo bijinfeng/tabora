@@ -245,7 +245,7 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 - EmptyState：用于空数据或无匹配结果，提供下一步动作。
 - ListRow / CardSection / Table：用于密集、可扫描的信息组织。
 
-单行控件的默认高度为 `32px`：Button、IconButton、Input、Select、Combobox 和 TagInput 均遵循此密度；`sm` 为 `28px`，只有明确指定 `lg` 的 Button / IconButton 才为 `44px`。Textarea、CommandPalette 搜索框等多行或复合控件按照各自内容与交互需求定义高度，不套用该默认值。
+单行控件使用三级高度：`sm` 为 `24px`、默认 `md` 为 `32px`、`lg` 为 `40px`。Button、IconButton、Input、Select、Pagination 和 InputNumber 按需提供这三级；Textarea、CommandPalette 搜索框等多行或复合控件按照各自内容与交互需求定义高度，不套用该默认值。
 
 Select 下拉列表容器不保留上下内边距；默认选项行最小高度为 `30px`，以紧凑密度展示，同时保留不低于 `24px` 的可交互目标。选中指示器置于选项文字后方。
 

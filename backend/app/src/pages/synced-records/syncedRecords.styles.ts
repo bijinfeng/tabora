@@ -3,17 +3,6 @@ import * as stylex from "@stylexjs/stylex"
 import { color, font, radius, space } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
-  toolbar: {
-    alignItems: "center",
-    display: "flex",
-    flexWrap: "wrap",
-    gap: space.s3,
-  },
-  searchBox: {
-    flex: 1,
-    maxWidth: 320,
-    minWidth: 200,
-  },
   ownerText: {
     color: color.textMuted,
     fontSize: 12,

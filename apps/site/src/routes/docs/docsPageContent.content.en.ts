@@ -18,6 +18,7 @@ export const enDocsPageContent: DocsPageContent = {
       items: [
         { id: "button", label: "Button" },
         { id: "input", label: "Input" },
+        { id: "inputnumber", label: "InputNumber" },
         { id: "textarea", label: "Textarea" },
         { id: "richtext", label: "RichText Editor" },
         { id: "iconbutton", label: "IconButton" },
@@ -429,7 +430,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
         anatomyItems: [
           ".btn — base class required by every variant",
           ".btn-{variant} — primary / secondary / subtle / ghost / danger / danger-subtle",
-          ".btn-{size} — sm (28px) / md (36px) / lg (44px)",
+          ".btn-{size} — sm (24px) / md (32px) / lg (40px)",
           ".btn-full — stretches to parent width",
           ".btn-group — wraps and visually connects buttons",
         ],
@@ -503,7 +504,7 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
         table: {
           columns: ["Property", "Class / value", "Description"],
           rows: [
-            ["Size", ".ipt-sm / default / .ipt-lg", "28px / 36px / 44px height"],
+            ["Size", "sm / default / lg", "24px / 32px / 40px height"],
             ["Validation", ".ipt-success / .ipt-error", "Green or red border feedback"],
             ["Disabled", "disabled", "Reduces opacity and blocks interaction"],
             ["Wrapper", ".ipt-wrap", "Container for prefix and suffix positioning"],
@@ -518,6 +519,32 @@ touch tabora.plugin.json TodayFocusWidget.tsx`,
         dontTitle: "✗ Don't",
         dontBody:
           "Do not use title as a label replacement, and do not hide essential guidance only inside placeholders.",
+      },
+      {
+        id: "inputnumber",
+        title: "InputNumber",
+        description:
+          "Precise numeric input with range, step, precision, formatting, and keyboard stepping.",
+        metaTags: ["Numeric input", "Range", "Step", "Formatting"],
+        demos: [{ title: "Range, formatting, and compact mode", exampleId: "inputnumber" }],
+        table: {
+          columns: ["Property", "Description"],
+          rows: [
+            ["value / defaultValue", "Controlled / uncontrolled value; clearing reports null"],
+            ["size", "sm (24px), md (32px, default), or lg (40px)"],
+            ["min / max / step", "Bounds and the amount applied by each step"],
+            ["precision", "Decimal places retained for committed values"],
+            ["formatter / parser", "Convert between display text and the edited value"],
+            ["controls", "Show, hide, or customize the up/down controls"],
+            ["keyboard / changeOnWheel", "Enable arrow-key and wheel stepping"],
+          ],
+        },
+        doTitle: "✓ Do",
+        doBody:
+          "Use InputNumber for precise values such as page numbers, quantities, and prices; provide a label or aria-label.",
+        dontTitle: "✗ Don't",
+        dontBody:
+          "Do not use a general text input for numeric fields, or rely on Slider alone for precise input.",
       },
       {
         id: "textarea",
@@ -760,7 +787,7 @@ export function NotesEditor() {
         table: {
           columns: ["Property", "Class / value", "Description"],
           rows: [
-            ["Size", ".sel-sm / default / .sel-lg", "28px / 36px / 44px height"],
+            ["Size", "sm / default / lg", "24px / 32px / 40px height"],
             ["Error", ".sel-error", "Red border for required-but-missing state"],
             ["Disabled", "disabled", "Muted background and blocked interaction"],
             ["Grouping", "<optgroup>", "Native grouping with nested options"],
@@ -1526,22 +1553,31 @@ export function NotesEditor() {
       {
         id: "pagination",
         title: "Pagination",
-        description: "Page-based navigation for long lists, plugin catalogs, logs, and table data.",
-        metaTags: ["Page nav", "Page numbers", "Total display"],
-        demos: [{ title: "Example", exampleId: "pagination" }],
+        description:
+          "Page-based navigation for long lists, with totals, page-size selection, and quick jumping.",
+        metaTags: ["Page nav", "Page numbers", "Totals", "Quick jump"],
+        demos: [{ title: "Full and compact modes", exampleId: "pagination" }],
         table: {
           columns: ["Property", "Description"],
           rows: [
-            ["page", "Current page"],
-            ["total", "Total pages"],
-            ["onChange", "Page callback"],
+            ["current / defaultCurrent", "Controlled / uncontrolled current page (1-indexed)"],
+            ["total + pageSize", "Record total and page size; page count is derived"],
+            ["showSizeChanger", "Show a page-size selector, optionally with options"],
+            ["showQuickJumper", "Show a direct page input"],
+            ["showTotal", "Customize the total and current record-range summary"],
+            [
+              "simple / size",
+              "Compact mode and small (24px), default (32px), or large (40px) density",
+            ],
+            ["onChange", "Called as (page, pageSize) for page or size changes"],
           ],
         },
         doTitle: "✓ Do",
         doBody:
-          "Provide pagination when lists exceed one screen. Works well with Table and list views.",
+          "For lists beyond one screen, pass the record total and pageSize; pair long result sets with totals and quick jumping.",
         dontTitle: "✗ Don't",
-        dontBody: "Use infinite scroll for dynamic feeds. Do not hide total page count.",
+        dontBody:
+          "Do not treat total as a page count. Use infinite scroll for dynamic feeds and retain total-context information.",
       },
       {
         id: "treeview",

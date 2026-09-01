@@ -1,19 +1,17 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
 import { EmptyState } from "@tabora/ui/empty-state"
-import { Input } from "@tabora/ui/input"
-import { Select } from "@tabora/ui/select"
-import { Table, type TableColumn } from "@tabora/ui/table"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/solid-query"
-import { createSignal, Show } from "solid-js"
+import type { TableColumn } from "@tabora/ui/table"
+import { useMutation } from "@tanstack/solid-query"
+import { createSignal } from "solid-js"
 import Search from "lucide-solid/icons/search"
 
 import { ConfirmDialog } from "../../components/ConfirmDialog"
-import { Pagination } from "../../components/Pagination"
-import { QueryState } from "../../components/QueryState"
+import {
+  AdminDataTablePanel,
+  type AdminDataTableActions,
+} from "../../components/AdminDataTablePanel"
 import { useToast } from "../../contexts/ToastContext"
-import { createDebounced } from "../../utils/createDebounced"
-import { createOffsetPagination } from "../../utils/createOffsetPagination"
 import { formatAdminTimestamp } from "../../utils/formatTimestamp"
 import { shared } from "../shared.styles"
 import { RecordDetailDrawer } from "./RecordDetailDrawer"
@@ -40,33 +38,17 @@ const DELETED_OPTIONS = [
   { value: "true", label: "已删除" },
 ]
 
+type SyncedRecordsTableParams = {
+  search: string
+  type: string
+  deleted: string
+}
+
 export function SyncedRecordsPage() {
-  const [type, setType] = createSignal("")
-  const [deleted, setDeleted] = createSignal("")
-  const [search, setSearch] = createSignal("")
-  const debouncedSearch = createDebounced(search, 300)
-  const { offset, onPrev, onNext, reset: resetOffset } = createOffsetPagination(PAGE_SIZE)
   const [detail, setDetail] = createSignal<SyncedRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = createSignal<SyncedRecord | null>(null)
-  const queryClient = useQueryClient()
   const { showToast } = useToast()
-
-  const data = useQuery(() => ({
-    queryKey: [
-      "synced-records",
-      { type: type(), deleted: deleted(), search: debouncedSearch(), offset: offset() },
-    ],
-    queryFn: () =>
-      listSyncedRecords({
-        data: {
-          limit: PAGE_SIZE,
-          offset: offset(),
-          ...(type() ? { type: type() } : {}),
-          ...(deleted() ? { deleted: deleted() === "true" } : {}),
-          ...(debouncedSearch() ? { search: debouncedSearch() } : {}),
-        },
-      }),
-  }))
+  let tableActions: AdminDataTableActions | undefined
 
   const deleteMutation = useMutation(() => ({
     mutationFn: (id: string) => deleteSyncedRecord({ data: { id } }),
@@ -74,7 +56,7 @@ export function SyncedRecordsPage() {
       setDetail(null)
       setDeleteTarget(null)
       showToast({ variant: "success", title: "记录已删除" })
-      void queryClient.invalidateQueries({ queryKey: ["synced-records"] })
+      tableActions?.reload()
     },
     onError: (err: Error) => {
       showToast({ variant: "danger", title: "删除失败", description: err.message })
@@ -91,46 +73,49 @@ export function SyncedRecordsPage() {
 
   return (
     <div {...stylex.attrs(shared.page)}>
-      <div {...stylex.attrs(styles.toolbar)}>
-        <div {...stylex.attrs(styles.searchBox)}>
-          <Input
-            value={search()}
-            onInput={(v) => {
-              setSearch(v)
-              resetOffset()
-            }}
-            placeholder="按记录 ID 搜索"
-            leadingIcon={<Search size={16} />}
-            clearable
-            aria-label="搜索同步记录"
-          />
-        </div>
-        <Select
-          value={type()}
-          onChange={(v) => {
-            setType(v)
-            resetOffset()
-          }}
-          options={TYPE_OPTIONS}
-          placeholder="全部类型"
-          aria-label="按类型筛选"
-        />
-        <Select
-          value={deleted()}
-          onChange={(v) => {
-            setDeleted(v)
-            resetOffset()
-          }}
-          options={DELETED_OPTIONS}
-          placeholder="全部状态"
-          aria-label="按状态筛选"
-        />
-      </div>
-
-      <QueryState
-        error={data.error as Error | null}
-        loading={data.isPending}
-        hasRows={(data.data?.records.length ?? 0) > 0}
+      <AdminDataTablePanel<SyncedRecord, SyncedRecordsTableParams>
+        queryKey={["synced-records"]}
+        request={async ({ current, pageSize, type, deleted, search }) => {
+          const result = await listSyncedRecords({
+            data: {
+              limit: pageSize,
+              offset: (current - 1) * pageSize,
+              ...(type ? { type } : {}),
+              ...(deleted ? { deleted: deleted === "true" } : {}),
+              ...(search ? { search } : {}),
+            },
+          })
+          return { data: result.records, total: result.total }
+        }}
+        pageSize={PAGE_SIZE}
+        toolbar={{
+          filters: [
+            {
+              key: "search",
+              kind: "text",
+              ariaLabel: "搜索同步记录",
+              placeholder: "按记录 ID 搜索",
+              leadingIcon: <Search size={16} />,
+              clearable: true,
+              grow: true,
+            },
+            {
+              key: "type",
+              kind: "select",
+              ariaLabel: "按类型筛选",
+              options: TYPE_OPTIONS,
+            },
+            {
+              key: "deleted",
+              kind: "select",
+              ariaLabel: "按状态筛选",
+              options: DELETED_OPTIONS,
+            },
+          ],
+        }}
+        columns={columns}
+        rowKey={(r) => r.id}
+        errorMessage="加载同步记录失败"
         empty={
           <EmptyState
             compact
@@ -138,29 +123,10 @@ export function SyncedRecordsPage() {
             description="调整筛选条件，或等待客户端上传数据。"
           />
         }
-      >
-        <Table
-          columns={columns}
-          rows={data.data?.records ?? []}
-          rowKey={(r) => r.id}
-          onRowClick={(r) => setDetail(r)}
-          aria-label="同步记录列表"
-        />
-      </QueryState>
-
-      <Show when={data.data}>
-        {(d) => (
-          <Show when={d().total > 0}>
-            <Pagination
-              offset={offset()}
-              pageSize={PAGE_SIZE}
-              total={d().total}
-              onPrev={onPrev}
-              onNext={onNext}
-            />
-          </Show>
-        )}
-      </Show>
+        actionRef={(actions) => (tableActions = actions)}
+        onRowClick={(r) => setDetail(r)}
+        ariaLabel="同步记录列表"
+      />
 
       <RecordDetailDrawer
         record={detail()}

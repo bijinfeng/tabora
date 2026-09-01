@@ -71,13 +71,13 @@ export function ButtonDemo() {
         <h4 {...stylex.attrs(demoStyles.sectionTitle)}>尺寸 + 全宽 + 纯图标</h4>
         <div {...stylex.attrs(demoStyles.row)}>
           <Button variant="primary" size="sm">
-            小 28px
+            小 24px
           </Button>
           <Button variant="primary" size="md">
             中 32px
           </Button>
           <Button variant="primary" size="lg">
-            大 44px
+            大 40px
           </Button>
           <div style={{ width: "180px" }}>
             <Button variant="primary" fullWidth>
