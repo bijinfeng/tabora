@@ -1,14 +1,5 @@
 # Tabora AI 对话插件 PRD（AI Chat Plugin）
 
-关联文档：
-
-- 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- AI Agent Runtime 设计：`docs/product/tabora-ai-agent-runtime-design.md`
-- 设计事实源：`DESIGN.md`
-- 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- 文档地图：`docs/README.md`
-
 ## 1. 背景与目标
 
 平台 AI Runtime P0 已经闭环，当前实现包括：
@@ -52,7 +43,7 @@
 
 对话 UI 使用 `@tanstack/ai-solid`（`useChat` 等 Solid 绑定）与 `@tanstack/ai-solid-ui`（headless 聊天组件），作为插件包的 UI 层依赖。
 
-这与 AI Agent Runtime 设计中「插件不直接依赖 TanStack AI」的表述存在口径演进：该约束的本意是「插件不得绕过网关、不得持有 provider SDK 与密钥」。本插件在保持传输与凭据全部走平台网关的前提下，允许 TanStack AI 的客户端绑定与 headless UI 进入插件 UI 层。该口径变更需要在实现时同步回 `docs/product/tabora-ai-agent-runtime-design.md`（见 §11）。
+插件不得绕过网关、不得持有 provider SDK 与密钥；在保持传输与凭据全部走平台网关的前提下，允许 TanStack AI 的客户端绑定与 headless UI 进入插件 UI 层。
 
 版本事实（与现有 `pnpm-workspace.yaml` catalog `ai` 组完全兼容）：
 
@@ -118,10 +109,10 @@ AI 未配置或未登录时，卡片与展开视图显示 EmptyState：说明当
 - 内置系统提示词：简短工作台助手 persona（跟随用户语言、简洁、可说明自身是 Tabora 内 AI 助手），经连接请求的 `system` 字段传递；每会话可覆盖。
 - 每会话运行参数：在展开视图的输入栏内联提供「模型切换 / 思考强度 / 上下文容量 / 添加上下文」四个 chip 控件；每会话独立保存并随每次发送透传给网关，缺省时使用工作台默认设置。
 
-### 4.2 不包含（列为后续候选，见 §10）
+### 4.2 不包含（后续候选）
 
 - 消息编辑与分支（fork）重发。
-- 思考过程（thinking parts）展示与落盘——存储与渲染路径已按 parts 预留，仅 UI 接入延后（见 §6.3、§10）。
+- 思考过程（thinking parts）展示与落盘——存储与渲染路径已按 parts 预留，仅 UI 接入延后（见 §6.3）。
 - 命令面板入口与全局快捷键。
 - 系统提示词的自由文本编辑（每会话运行参数已包含，见 §4.1；仅 persona 文本自定义延后）。
 - 对话云同步、导出。
@@ -221,30 +212,3 @@ AI 未配置或未登录时，卡片与展开视图显示 EmptyState：说明当
 - Markdown 与代码块渲染正确且经 sanitize；外链不可点击；键盘可完成发送、停止、重试、复制、删除会话全部操作。
 - 便签总结等既有 AI consumer 回归通过；不带 `messages` 的单轮请求行为不变。
 - 插件错误可被宿主错误边界局部化，不产生白屏。
-
-## 10. 分阶段路线图
-
-### M1：协议 + 插件骨架
-
-- 多轮网关协议（plugin-api / ai-runtime / 云端与 FNOS 后端）与 connection 桥。
-- `@tabora/plugin-ai-chat` 包：manifest、卡片与展开视图、单会话流式对话（发送 / 停止 / 重试 / Markdown）。
-- 错误降级全套文案与状态。
-
-### M2：会话管理 + 设计与装配
-
-- 会话列表、持久化、多实例。
-- `DESIGN.md` 全面校准（明暗主题、移动端、可访问性）与 ai-solid-ui 样式定制收敛。
-- 注册进 `@tabora/official-plugins` 与 `@tabora/builtin-plugin-registry`；默认工作台 preset 预置一个 `M` 尺寸实例（用户可移除）。
-- 文档同步（§11）完成。
-
-## 11. 文档同步计划
-
-实现合入时需同步更新以下既有事实源，消除口径冲突：
-
-1. `docs/product/tabora-ai-agent-runtime-design.md`：
-   - 「P0 不新增通用助手」的口径演进为「多轮对话以官方插件 `official.widgets.ai-chat` 形态提供」。
-   - 「插件不直接依赖 TanStack AI」调整为「插件不得依赖 provider SDK、不得绕过网关；允许 TanStack AI 客户端绑定与 headless UI 作为插件 UI 层依赖」。
-   - §6.2 的最小协议补入 `createChatConnection` 与多轮 `messages`。
-2. `docs/product/tabora-official-plugins-design.md`：插件清单新增 AI 对话条目（manifest、contribution、验收）。
-3. `docs/technical/tabora-plugin-workbench-technical-design-v2.md`：AI Runtime 章节补多轮网关协议与 connection 桥细节。
-4. `docs/README.md`：本 PRD 已登记为产品事实源（随本 PRD 一并提交）。

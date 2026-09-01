@@ -1,13 +1,6 @@
 # Tabora 官方账号与数据同步
 
-本文件是账号与数据同步的单一事实源：§1–§12 为需求与产品决策，§13 起为架构边界、HTTP 契约和信任边界。字段、方法名和错误细节以代码为最终依据（客户端模块见 `packages/sync/src` 各文件头注释，服务端见 `apps/app/src/server` 的 auth / sync / attachment 路由）。
-
-关联文档：
-
-- 工作台产品范围：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件与默认装配：`docs/product/tabora-official-plugins-design.md`
-- 平台架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- 工作台设计事实源：`DESIGN.md`
+本文件是账号与数据同步的单一事实源：§1–§11 为需求与产品决策，§12 起为架构边界、HTTP 契约和信任边界。字段、方法名和错误细节以代码为最终依据（客户端模块见 `packages/sync/src` 各文件头注释，服务端见 `apps/app/src/server` 的 auth / sync / attachment 路由）。
 
 ## 1. 产品定位
 
@@ -158,16 +151,6 @@
 - 设置入口准确展示同步范围与非 E2EE 隐私语义。
 - 账号与同步页面的模型、校验和 actions 由账号插件提供，settings host 不注入认证/同步业务 API。
 - 账号插件未装配或被禁用时，不启动同步计时器、不注册账号/同步设置面板。
-
-## 12. 后续路线
-
-以下能力不属于当前已交付范围，需以独立需求推进：
-
-- 用户可见的设备管理和设备撤销。
-- 自动快照、恢复流程和历史版本浏览。
-- 服务端冲突持久化、冲突收件箱和手动合并 UI。
-- 完整 E2EE、共享工作区和多人协作。
-- 文件原件同步、容量管理和企业审计。
 
 ## 13. 技术实现
 

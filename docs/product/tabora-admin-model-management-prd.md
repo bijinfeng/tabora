@@ -1,13 +1,5 @@
 # Tabora 管理后台模型管理 PRD
 
-关联文档：
-
-- AI Runtime 产品设计：`docs/product/tabora-ai-agent-runtime-design.md`
-- AI 对话插件 PRD：`docs/product/tabora-ai-chat-plugin-prd.md`
-- 后端实现事实源：`docs/technical/tabora-data-sync-prd.md`（§13 技术实现）
-- 设计事实源：`DESIGN.md`
-- 后端约束：`apps/app/AGENTS.md`
-
 ## 1. 背景
 
 云端内置模型需要持续的后台运营能力：管理员应能查看可用模型、调整上线范围、验证新 provider，并留存可追溯的变更记录，而不是依赖部署配置与服务重启。

@@ -2,15 +2,6 @@
 
 本文件是每轮迭代后的回归检查基准。当前未解决实现债务以 git 历史与 issue 为准，登记方式见 §10。
 
-关联文档：
-
-- 文档地图：`docs/README.md`
-- Agent 约束：`AGENTS.md`
-- 产品 PRD：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件设计：`docs/product/tabora-official-plugins-design.md`
-- 设计事实源：`DESIGN.md`
-- 技术方案：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-
 ## 1. 文档目标
 
 本文件定义 Tabora 每轮迭代后的回归基准，防止产品、设计、架构和代码在持续迭代中逐步漂移。它不是一次性 QA 清单，而是可重复执行的工程治理标准：人类开发者用它判断迭代能否合入，coding agent 用它判断读哪些事实源、跑哪些命令、检查哪些风险，后续 CI / E2E / 视觉回归 / 发布流程以它为基准补齐自动化。
@@ -291,8 +282,6 @@ CI 与本地共用 `pnpm check:architecture`、`pnpm check`（先生成 backend 
 - `pnpm check:architecture`：L2 + L7 高信号架构/边界静态扫描，将 `workbench production` raw color 基线锁定为 0（重新引入字面量颜色或 `!important` 直接失败），禁止零透明度 `rgba(...)` 与宿主题色变量字面量 fallback，并守卫搜索配置首项 provider 兜底、`enabledProviderIds` backfill、widget region `?? "mainGrid"` 推断、废弃 `official.layout.dashboard` 回流、app 层纯 `@tabora/workbench-app` pass-through wrapper、shell app 生产依赖直接声明官方插件 / layout / core runtime package、`@tabora/orchestrator` 依赖 `@tabora/storage` 或 `solid-js`。
 - 单元测试统一由根 `vitest.config.ts` 管理：project 按 `node` / `dom` / `backend` 三个环境划分，不按 package 维护 per-package 配置；`maxWorkers` 上限 50% 逻辑核。定向验证用 `pnpm exec vitest run <目录>` 或 `pnpm test:changed`（基于模块图只跑与 git 变更相关的测试；`vitest.config.ts` / `package.json` 自身变更强制全量）。
 
-待补齐的自动化方向见 §11。
-
 ## 6. Agent 每轮工作流
 
 - 开始前：`git status --short --untracked-files=all` → 目标路径 `AGENTS.md` 链 → `docs/README.md` → `node scripts/regression-summary.mjs` → 按 §3 分类选择层级；UI 任务读 `DESIGN.md`，协议 / runtime / storage / shell 任务读技术方案和本文档；写代码前搜索现有实现、调用点、公共导出和相邻测试并记录复用决策与预计规模。
@@ -411,11 +400,7 @@ CI 与本地共用 `pnpm check:architecture`、`pnpm check`（先生成 backend 
 
 登记格式：债务描述、影响、建议优先级。
 
-## 11. 后续治理建议
-
-尚未落地的治理方向，已落地项不在此保留：为 product critical path 建立 browser-mode smoke tests；为 mobile no-horizontal-scroll、settings host、layout unavailable state 加可重复截图或 DOM 断言；继续扩大 L2 架构边界与 CSS token 自动化守卫覆盖面；CI 按路径触发分级测试矩阵；为插件生态引入 manifest contract test kit 与第三方 conformance suite。
-
-## 12. 测试治理
+## 11. 测试治理
 
 测试何时必要、批量删除禁令等基础规则见 `AGENTS.md` 的“测试与验证”，本节只补充无法从中推断的操作细节。
 
@@ -425,7 +410,7 @@ CI 与本地共用 `pnpm check:architecture`、`pnpm check`（先生成 backend 
 
 **自动化边界**：盘点脚本故意只告警，不因 mock/snapshot 数量在 CI 失败——是否必要取决于业务行为，静态规则无法可靠判断。`.github/workflows/pr-governance.yml` 校验 PR 是否填写测试决策字段但不硬阻断；它用 `pull_request_target`、只 checkout 基分支并读取 PR event body，因此 PR 无法通过改写自身分支的校验脚本放宽规则。
 
-## 13. Agent 评测
+## 12. Agent 评测
 
 本评测检查 coding agent 是否把架构、测试和交付规则落实到真实改动，不按新增测试数量、解释篇幅或代码量评分。
 
