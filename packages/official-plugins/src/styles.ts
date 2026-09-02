@@ -657,6 +657,24 @@ export const styles = stylex.create({
     },
     marginTop: 4,
   },
+  aiProviderSections: {
+    display: "grid",
+    gap: 16,
+  },
+  aiProviderSection: {
+    display: "grid",
+    gap: 8,
+  },
+  aiProviderSectionHeader: {
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "space-between",
+  },
+  aiProviderSectionTitle: {
+    color: "rgb(var(--tbr-color-text))",
+    fontSize: 12,
+    fontWeight: 650,
+  },
   modelCard: {
     ...interactiveSurface,
     alignItems: "center",
@@ -694,6 +712,40 @@ export const styles = stylex.create({
     ":hover": {
       borderColor:
         "color-mix(in srgb, rgb(var(--tbr-color-accent)) 38%, rgb(var(--tbr-color-line)))",
+    },
+  },
+  customProviderCard: {
+    ...interactiveSurface,
+    alignItems: "center",
+    display: "grid",
+    gap: 8,
+    gridTemplateColumns: "minmax(0, 1fr) auto",
+    minWidth: 0,
+    padding: 8,
+  },
+  customProviderSelect: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderStyle: "none",
+    borderWidth: 0,
+    color: "inherit",
+    cursor: "pointer",
+    display: "grid",
+    fontFamily: "inherit",
+    gap: 8,
+    gridTemplateColumns: "minmax(0, 1fr) auto",
+    minWidth: 0,
+    padding: 0,
+    textAlign: "left",
+    ":focus-visible": {
+      outlineColor: "rgb(var(--tbr-color-focus))",
+      outlineOffset: 2,
+      outlineStyle: "solid",
+      outlineWidth: 2,
+    },
+    ":disabled": {
+      cursor: "not-allowed",
+      opacity: 0.5,
     },
   },
   modelCardMain: {

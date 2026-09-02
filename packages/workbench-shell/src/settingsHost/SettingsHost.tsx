@@ -398,7 +398,7 @@ export function SettingsHost(props: SettingsHostProps) {
             {statusText() ?? props.copy?.statusReady ?? "设置已就绪"}
           </span>
           <div {...stylex.attrs(styles.footerActions)}>
-            <Button size="sm" variant="primary" onClick={handleClose}>
+            <Button variant="primary" onClick={handleClose}>
               {props.copy?.cancelLabel ?? "取消"}
             </Button>
           </div>
