@@ -454,7 +454,7 @@ MVP widget 清单：
 
 工作区设置插件用于提供外观、搜索和工作区等通用面板。宿主提供 settings host 与官方 schema renderer，orchestrator 按已启用插件的 contributions 组织导航；宿主内建 layout 不负责设置弹窗。
 
-当前官方设置面板均声明支持 `desktop` 和 `mobile`。第三方设置插件必须通过 manifest 的非空 `surfaces` 显式声明目标端；宿主按当前端过滤，不为未声明的端静默兜底。设置中心使用 `/settings/<section>` 路由，每个可用分类是一个二级路由；provider context 和 custom-view props 会收到当前 `surface`，移动端由宿主提供全屏单列设置容器。
+当前官方设置面板均声明支持 `desktop` 和 `mobile`。第三方设置插件必须通过 manifest 的非空 `surfaces` 显式声明目标端；宿主按当前端过滤，不为未声明的端静默兜底。设置中心使用宿主内存状态管理分类；桌面端打开设置和移动端首页/详情切换均不修改 URL 或浏览器历史。provider context 和 custom-view props 会收到当前 `surface`，移动端由宿主提供全屏单列设置容器。
 
 设置中心不是完整偏好设置产品。MVP 目标是验证 `settings-panel` 扩展点、统一设置入口、设置面板错误隔离和关键全局配置持久化，复杂能力延后。
 
@@ -464,7 +464,7 @@ MVP widget 清单：
 
 ### 13.3 交互示例
 
-- 打开设置：宿主导航到 `/settings/<section>` 打开 settings host，读取已启用插件的 `settings-panel`，orchestrator 按当前 `surface` 过滤再按 `section/order` 组织导航（无 contribution 的分类不显示），默认打开“插件”面板；`schema` panel 走 provider registry + 官方 renderer，`custom-view` panel 走 view registry。
+- 打开设置：宿主在内存中切换 settings host 和当前分类，读取已启用插件的 `settings-panel`，orchestrator 按当前 `surface` 过滤再按 `section/order` 组织导航（无 contribution 的分类不显示），默认打开“插件”面板；`schema` panel 走 provider registry + 官方 renderer，`custom-view` panel 走 view registry。该操作不修改 URL 或浏览器历史。
 - 切换主题/背景：在“外观”选中后即时生效，workspace 保存 `activeThemeId` / `activeBackgroundProviderId` 与 renderer 信息。
 - 配置默认搜索源：在“搜索”读取 `search-provider` contributions，选中后保存到 workspace 或 search 插件配置，命令搜索栏默认 provider 更新。
 - 导出工作区：在“工作区”导出 workspace JSON，插件数据是否包含由用户选择。

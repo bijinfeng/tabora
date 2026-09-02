@@ -1,33 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
-import { color, font, motion, radius, shadow, space, zIndex } from "@tabora/theme/tokens.stylex"
-
-const fadeIn = stylex.keyframes({
-  from: { opacity: 0 },
-  to: { opacity: 1 },
-})
-
-const scaleIn = stylex.keyframes({
-  from: { transform: "scale(0.97) translateY(10px)" },
-  to: { transform: "scale(1) translateY(0)" },
-})
+import { color, font, motion, radius, shadow, space } from "@tabora/theme/tokens.stylex"
 
 export const styles = stylex.create({
-  overlay: {
-    alignItems: "center",
-    animationDuration: motion.normal,
-    animationName: fadeIn,
-    animationTimingFunction: motion.ease,
-    backdropFilter: "blur(2px)",
-    backgroundColor: "rgb(var(--tbr-color-scrim) / 0.18)",
-    display: "flex",
-    inset: 0,
-    justifyContent: "center",
-    position: "fixed",
-    zIndex: zIndex.modal,
-    "@media (prefers-reduced-motion: reduce)": {
-      animationDuration: "1ms",
-    },
-  },
   mobilePage: {
     backgroundColor: color.page,
     color: color.text,
@@ -38,9 +12,6 @@ export const styles = stylex.create({
     width: "100%",
   },
   content: {
-    animationDuration: motion.normal,
-    animationName: scaleIn,
-    animationTimingFunction: motion.ease,
     backgroundColor: color.surface,
     borderColor: color.lineStrong,
     borderRadius: radius.panel,
@@ -58,9 +29,6 @@ export const styles = stylex.create({
     },
     "@media (max-width: 768px)": {
       width: "calc(100vw - 32px)",
-    },
-    "@media (prefers-reduced-motion: reduce)": {
-      animationDuration: "1ms",
     },
   },
   mobilePageWindow: {

@@ -431,19 +431,25 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
               pluginPackage.module.manifest.contributes.settingsPanels?.flatMap(
                 (panel) => panel.hostActions ?? [],
               ) ?? [],
-              previous?.installation.grantedSettingsHostActions ??
-                persisted?.grantedSettingsHostActions ??
-                options.settingsHostActionGrants?.[pluginPackage.module.manifest.id] ??
-                [],
+              // 内置预授予始终并入用户状态，避免陈旧 persisted 记录降级 builtin 声明。
+              [
+                ...(previous?.installation.grantedSettingsHostActions ??
+                  persisted?.grantedSettingsHostActions ??
+                  []),
+                ...(options.settingsHostActionGrants?.[pluginPackage.module.manifest.id] ?? []),
+              ],
             ),
             grantedSettingsHostReads: normalizeGrantedSettingsHostReads(
               pluginPackage.module.manifest.contributes.settingsPanels?.flatMap(
                 (panel) => panel.hostReads ?? [],
               ) ?? [],
-              previous?.installation.grantedSettingsHostReads ??
-                persisted?.grantedSettingsHostReads ??
-                options.settingsHostReadGrants?.[pluginPackage.module.manifest.id] ??
-                [],
+              // 内置预授予始终并入用户状态，避免陈旧 persisted 记录降级 builtin 声明。
+              [
+                ...(previous?.installation.grantedSettingsHostReads ??
+                  persisted?.grantedSettingsHostReads ??
+                  []),
+                ...(options.settingsHostReadGrants?.[pluginPackage.module.manifest.id] ?? []),
+              ],
             ),
           },
           state: previous?.state ?? { status: "inactive" },

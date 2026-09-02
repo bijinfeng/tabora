@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
 
 import { Dialog } from "./dialog"
@@ -33,5 +33,27 @@ describe("Dialog", () => {
 
     dispose()
     root.remove()
+  })
+
+  it("does not dismiss when focus moves outside", () => {
+    const root = document.createElement("div")
+    const outside = document.createElement("button")
+    document.body.append(root, outside)
+    const onCancel = vi.fn()
+    const dispose = render(
+      () => (
+        <Dialog open onCancel={onCancel} title="设置">
+          <input />
+        </Dialog>
+      ),
+      root,
+    )
+
+    outside.focus()
+
+    expect(onCancel).not.toHaveBeenCalled()
+    dispose()
+    root.remove()
+    outside.remove()
   })
 })
