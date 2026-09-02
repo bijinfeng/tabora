@@ -16,9 +16,9 @@ import {
 } from "@tabora/orchestrator"
 import type { SettingsSectionId } from "@tabora/orchestrator"
 import { Button, IconButton } from "@tabora/ui/button"
+import { Dialog } from "@tabora/ui/dialog"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
-import { Dialog as KDialog } from "@kobalte/core/dialog"
 import { AccountSettingsNavigation } from "../AccountSettingsNavigation"
 import { createPluginErrorFallback, PluginViewBoundary } from "../PluginViewBoundary"
 import { SettingsSchemaRenderer } from "../settingsSchema"
@@ -174,6 +174,8 @@ export function SettingsHost(props: SettingsHostProps) {
     <div
       {...stylex.attrs(props.surface === "mobile" ? styles.mobilePageWindow : styles.content)}
       data-settings-window
+      data-settings-surface={props.surface}
+      {...(props.surface === "desktop" ? { "data-workbench-overlay": "settings" } : {})}
     >
       <Show
         when={props.surface === "mobile"}
@@ -193,15 +195,15 @@ export function SettingsHost(props: SettingsHostProps) {
                 </span>
               </div>
             </div>
-            <KDialog.CloseButton
-              as={IconButton}
+            <IconButton
               size="sm"
               xstyle={styles.close}
               data-settings-close
+              onClick={handleClose}
               aria-label={props.copy?.closeAriaLabel ?? "关闭设置"}
             >
               <X size={16} />
-            </KDialog.CloseButton>
+            </IconButton>
           </header>
         }
       >
@@ -422,29 +424,26 @@ export function SettingsHost(props: SettingsHostProps) {
   )
 
   return (
-    <Show when={props.open}>
-      <Show
-        when={props.surface === "mobile"}
-        fallback={
-          <KDialog
-            open={props.open}
-            onOpenChange={(open: boolean) => {
-              if (!open) handleClose()
-            }}
-          >
-            <KDialog.Portal>
-              <KDialog.Overlay
-                {...stylex.attrs(styles.overlay)}
-                data-workbench-overlay="settings"
-                data-settings-surface="desktop"
-              />
-              <KDialog.Content aria-label={props.copy?.sidebarTitle ?? "设置"}>
-                {renderSettingsWindow()}
-              </KDialog.Content>
-            </KDialog.Portal>
-          </KDialog>
-        }
-      >
+    <Show
+      when={props.surface === "mobile"}
+      fallback={
+        // 桌面分支常驻组件树，open/close 生命周期与进出场动画交给 Dialog（kobalte
+        // presence）管理；关闭时 renderSettingsWindow 作为惰性 children 不会被挂载。
+        <Dialog
+          open={props.open}
+          onCancel={handleClose}
+          // Settings has an explicit close action; backdrop interaction must not tear down
+          // the host while a plugin opens a secondary dialog in a portal.
+          maskClosable={false}
+          chromeless
+          width={null}
+          ariaLabel={props.copy?.sidebarTitle ?? "设置"}
+        >
+          {renderSettingsWindow()}
+        </Dialog>
+      }
+    >
+      <Show when={props.open}>
         <Show
           when={props.showIndex}
           fallback={

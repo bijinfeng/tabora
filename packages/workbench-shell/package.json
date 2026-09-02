@@ -20,7 +20,6 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@kobalte/core": "catalog:ui",
     "@stylexjs/stylex": "catalog:style",
     "@tabora/orchestrator": "workspace:*",
     "@tabora/plugin-api": "workspace:*",

@@ -1,10 +1,11 @@
 import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
+import { Dialog } from "@tabora/ui/dialog"
 import { FieldRow } from "@tabora/ui/field-row"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
-import { Select } from "@tabora/ui/select"
-import { createSignal, onMount, Show } from "solid-js"
+import Plus from "lucide-solid/icons/plus"
+import { createSignal, For, onMount, Show } from "solid-js"
 import type { SettingsAiSettings, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
 
 import { SettingsGroup } from "./settings-workspace.shared"
@@ -21,52 +22,29 @@ function fallback(): SettingsAiSettings {
   }
 }
 
-function builtinStatusCopy(settings: SettingsAiSettings) {
-  if (settings.builtin.status === "available") return "可用"
-  if (settings.builtin.status === "auth-required") return "登录后可用"
-  return "暂不可用"
-}
-
 export function AiSettingsPanel(props: SettingsPanelViewProps) {
   const [settings, setSettings] = createSignal<SettingsAiSettings | undefined>(props.data.ai)
-  const [provider, setProvider] = createSignal<ProviderMode>("builtin")
-  const [builtinModelId, setBuiltinModelId] = createSignal("")
-  const [baseUrl, setBaseUrl] = createSignal("")
-  const [model, setModel] = createSignal("")
-  const [apiKey, setApiKey] = createSignal("")
-  const [loading, setLoading] = createSignal(!props.data.ai)
+  const [loading, setLoading] = createSignal(false)
   const [saving, setSaving] = createSignal(false)
-  const [error, setError] = createSignal<string>()
+  const [error, setError] = createSignal<string | undefined>(undefined)
+  const [dialogOpen, setDialogOpen] = createSignal(false)
+  const [formBaseUrl, setFormBaseUrl] = createSignal("")
+  const [formModel, setFormModel] = createSignal("")
+  const [formApiKey, setFormApiKey] = createSignal("")
 
-  const supportedProviders = () => settings()?.supportedProviders ?? ["builtin", "custom"]
+  const view = () => settings() ?? fallback()
+  const canCustom = () => (view().supportedProviders ?? []).includes("custom")
+  const hasCustom = () => Boolean(view().custom.model)
+  const builtinSelectable = () => view().builtin.status === "available"
+  const isBuiltinActive = (id: string) =>
+    view().activeProvider === "builtin" && view().builtin.modelId === id
+  const isCustomActive = () => view().activeProvider === "custom"
 
-  const defaultModelValue = () => (provider() === "custom" ? "custom" : builtinModelId())
-
-  const defaultModelOptions = () => [
-    ...(settings()?.builtin.models ?? []).map((item) => ({
-      value: item.id,
-      label: item.label,
-      disabled: settings()?.builtin.status !== "available",
-    })),
-    ...(supportedProviders().includes("custom") ? [{ value: "custom", label: "自定义模型" }] : []),
-  ]
-
-  function pickDefaultModel(value: string) {
-    if (value === "custom") {
-      setProvider("custom")
-      return
+  onMount(() => {
+    if (!props.data.ai) {
+      void load()
     }
-    setProvider("builtin")
-    setBuiltinModelId(value)
-  }
-
-  function applySettings(next: SettingsAiSettings) {
-    setSettings(next)
-    setProvider(next.activeProvider)
-    setBuiltinModelId(next.builtin.modelId)
-    setBaseUrl(next.custom.baseUrl)
-    setModel(next.custom.model)
-  }
+  })
 
   async function load() {
     if (!props.host.getAiSettings) {
@@ -77,7 +55,7 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
     setLoading(true)
     setError(undefined)
     try {
-      applySettings(await props.host.getAiSettings())
+      setSettings(await props.host.getAiSettings())
     } catch {
       setError("无法读取 AI 配置，请稍后重试")
     } finally {
@@ -85,134 +63,182 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
     }
   }
 
-  async function save() {
+  // 统一保存入口：省略 custom.apiKey 时宿主保留已存密钥。
+  async function persist(next: {
+    activeProvider: ProviderMode
+    builtinModelId: string
+    custom: { baseUrl: string; model: string; apiKey?: string }
+  }) {
     if (!props.host.saveAiSettings) {
       setError("当前宿主不允许修改 AI 配置")
-      return
+      return false
     }
     setSaving(true)
     setError(undefined)
     try {
-      const next = await props.host.saveAiSettings({
-        activeProvider: provider(),
-        builtinModelId: builtinModelId(),
-        custom: {
-          baseUrl: baseUrl(),
-          model: model(),
-          ...(apiKey().trim() ? { apiKey: apiKey().trim() } : {}),
-        },
-      })
-      applySettings(next)
-      setApiKey("")
+      setSettings(await props.host.saveAiSettings(next))
+      return true
     } catch {
-      setError("无法保存 AI 配置，请检查地址和模型后重试")
+      setError("保存失败，请稍后重试")
+      return false
     } finally {
       setSaving(false)
     }
   }
 
-  onMount(load)
+  function selectBuiltin(id: string) {
+    const current = view()
+    void persist({
+      activeProvider: "builtin",
+      builtinModelId: id,
+      custom: { baseUrl: current.custom.baseUrl, model: current.custom.model },
+    })
+  }
+
+  function selectCustom() {
+    const current = view()
+    void persist({
+      activeProvider: "custom",
+      builtinModelId: current.builtin.modelId,
+      custom: { baseUrl: current.custom.baseUrl, model: current.custom.model },
+    })
+  }
+
+  function openDialog() {
+    const current = view()
+    setFormBaseUrl(current.custom.baseUrl)
+    setFormModel(current.custom.model)
+    setFormApiKey("")
+    setError(undefined)
+    setDialogOpen(true)
+  }
+
+  async function saveCustom() {
+    const current = view()
+    const ok = await persist({
+      activeProvider: "custom",
+      builtinModelId: current.builtin.modelId,
+      custom: {
+        baseUrl: formBaseUrl().trim(),
+        model: formModel().trim(),
+        ...(formApiKey() ? { apiKey: formApiKey() } : {}),
+      },
+    })
+    if (ok) setDialogOpen(false)
+  }
 
   return (
-    <div {...stylex.attrs(styles.panelStack)} data-settings-panel="ai">
-      <SettingsGroup
-        title="AI 服务"
-        meta={loading() ? "加载中" : builtinStatusCopy(settings() ?? fallback())}
-      >
-        <Show
-          when={!loading()}
-          fallback={<span {...stylex.attrs(styles.fieldNote)}>正在读取当前设备的 AI 配置…</span>}
-        >
-          <Show when={supportedProviders().includes("builtin")}>
-            <FieldRow
-              label="默认模型"
-              description={
-                settings()?.builtin.status === "auth-required"
-                  ? "登录 Tabora 账号后可使用平台统一付费凭据。"
-                  : "内置模型使用 Tabora 平台凭据；自定义模型仅保存到当前设备。"
-              }
-              trailing={
-                <Select<string>
-                  size="sm"
-                  value={defaultModelValue()}
-                  options={defaultModelOptions()}
-                  onChange={pickDefaultModel}
-                  aria-label="默认模型"
-                />
-              }
-            />
-            <FieldRow
-              label="账号状态"
-              description="模型目录仅在已登录状态下从服务端加载。"
-              trailing={
-                <span {...stylex.attrs(styles.fieldNote)}>
-                  {builtinStatusCopy(settings() ?? fallback())}
-                </span>
-              }
-            />
-          </Show>
-          <Show when={supportedProviders().includes("custom")}>
-            <FieldRow
-              label="Base URL"
-              description={
-                supportedProviders().length === 1
-                  ? "设备管理员共享此配置；可使用 localhost 或局域网 OpenAI-compatible 服务。"
-                  : "仅支持 OpenAI-compatible API。云端转发会校验公网 HTTPS 地址。"
-              }
-              trailing={
-                <Input size="sm" value={baseUrl()} onInput={setBaseUrl} aria-label="AI Base URL" />
-              }
-            />
-            <FieldRow
-              label="模型名称"
-              description="使用你的提供商登记的模型标识。"
-              trailing={
-                <Input
-                  size="sm"
-                  value={model()}
-                  onInput={setModel}
-                  aria-label="AI 自定义模型名称"
-                />
-              }
-            />
-            <FieldRow
-              label="API Key"
-              description={
-                settings()?.custom.apiKeyConfigured
-                  ? settings()?.custom.preservesApiKeyOnSave === false
-                    ? "FNOS 不会回读密钥；保存设备共享配置时需要重新输入。"
-                    : "密钥已保存在当前设备；留空会保留现有密钥。"
-                  : "密钥仅保存在当前设备，每次请求临时转发且不会同步。"
-              }
-              trailing={
-                <Input
-                  size="sm"
-                  value={apiKey()}
-                  onInput={setApiKey}
-                  type="password"
-                  autocomplete="off"
-                  placeholder={
-                    settings()?.custom.apiKeyConfigured &&
-                    settings()?.custom.preservesApiKeyOnSave !== false
-                      ? "输入以替换"
-                      : "输入 API Key"
-                  }
-                  aria-label="AI API Key"
-                />
-              }
-            />
-          </Show>
-          <div {...stylex.attrs(styles.inlineActions)}>
-            <Button size="sm" variant="primary" disabled={saving()} onClick={save}>
-              {saving() ? "保存中" : "保存 AI 配置"}
-            </Button>
-            <Button size="sm" variant="secondary" disabled={loading()} onClick={load}>
-              刷新状态
-            </Button>
-          </div>
+    <SettingsGroup
+      title="模型"
+      meta={
+        <Show when={canCustom()}>
+          <Button size="sm" variant="secondary" onClick={openDialog}>
+            <Plus size={14} />
+            新增自定义模型
+          </Button>
         </Show>
-        <Show when={error()}>{(message) => <InlineError>{message()}</InlineError>}</Show>
-      </SettingsGroup>
-    </div>
+      }
+    >
+      <Show when={!loading()} fallback={<span {...stylex.attrs(styles.fieldNote)}>加载中…</span>}>
+        <div {...stylex.attrs(styles.modelGrid)} role="radiogroup" aria-label="模型列表">
+          <For each={view().builtin.models}>
+            {(item) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={isBuiltinActive(item.id)}
+                disabled={!builtinSelectable() || saving()}
+                onClick={() => selectBuiltin(item.id)}
+                {...stylex.attrs(
+                  styles.modelCard,
+                  isBuiltinActive(item.id) && styles.modelCardActive,
+                )}
+              >
+                <span {...stylex.attrs(styles.modelCardMain)}>
+                  <span {...stylex.attrs(styles.modelName)}>{item.label}</span>
+                  <span {...stylex.attrs(styles.modelId)}>{item.id}</span>
+                </span>
+                <Show when={isBuiltinActive(item.id)}>
+                  <span {...stylex.attrs(styles.pill)}>默认</span>
+                </Show>
+              </button>
+            )}
+          </For>
+          <Show when={hasCustom()}>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={isCustomActive()}
+              disabled={saving()}
+              onClick={selectCustom}
+              {...stylex.attrs(styles.modelCard, isCustomActive() && styles.modelCardActive)}
+            >
+              <span {...stylex.attrs(styles.modelCardMain)}>
+                <span {...stylex.attrs(styles.modelName)}>{view().custom.model}</span>
+                <span {...stylex.attrs(styles.modelId)}>
+                  {view().custom.baseUrl || "自定义模型"}
+                </span>
+              </span>
+              <Show when={isCustomActive()}>
+                <span {...stylex.attrs(styles.pill)}>默认</span>
+              </Show>
+            </button>
+          </Show>
+        </div>
+      </Show>
+      <Show when={error()}>{(message) => <InlineError>{message()}</InlineError>}</Show>
+
+      <Dialog
+        open={dialogOpen()}
+        onCancel={() => setDialogOpen(false)}
+        title="新增自定义模型"
+        okText="保存"
+        cancelText="取消"
+        onOk={saveCustom}
+        confirmLoading={saving()}
+        width={460}
+      >
+        <FieldRow
+          label="Base URL"
+          description="仅支持 OpenAI-compatible API。云端转发会校验公网 HTTPS 地址。"
+          trailing={
+            <Input
+              size="sm"
+              type="text"
+              value={formBaseUrl()}
+              onInput={setFormBaseUrl}
+              aria-label="AI Base URL"
+            />
+          }
+        />
+        <FieldRow
+          label="模型名称"
+          description="使用你的提供商登记的模型标识。"
+          trailing={
+            <Input
+              size="sm"
+              type="text"
+              value={formModel()}
+              onInput={setFormModel}
+              aria-label="AI 模型名称"
+            />
+          }
+        />
+        <FieldRow
+          label="API Key"
+          description="密钥仅保存在当前设备，每次请求临时转发且不会同步。"
+          trailing={
+            <Input
+              size="sm"
+              type="password"
+              value={formApiKey()}
+              onInput={setFormApiKey}
+              placeholder={view().custom.apiKeyConfigured ? "已保存，可留空" : ""}
+              aria-label="AI API Key"
+            />
+          }
+        />
+      </Dialog>
+    </SettingsGroup>
   )
 }

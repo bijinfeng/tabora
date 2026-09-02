@@ -74,13 +74,18 @@ export function createLocalAiSettingsService(options: {
     status: SettingsAiSettings["builtin"]["status"]
     models: SettingsAiModel[]
   }> {
-    if (!options.apiBaseUrl || !options.authClient) return { status: "unavailable", models: [] }
-    const session = await options.authClient.getSession().catch(() => null)
-    if (!session?.jwt) return { status: "auth-required", models: [] }
+    // An empty API base is valid for the web app, whose API lives on the current origin.
+    // `undefined` means this host has no cloud API at all (for example an offline extension).
+    if (options.apiBaseUrl === undefined) return { status: "unavailable", models: [] }
+    const session = options.authClient
+      ? await options.authClient.getSession().catch(() => null)
+      : null
+    if (options.apiBaseUrl !== "" && !session?.jwt) return { status: "auth-required", models: [] }
 
     try {
+      const headers = session?.jwt ? { authorization: `Bearer ${session.jwt}` } : undefined
       const response = await fetcher(`${options.apiBaseUrl.replace(/\/$/, "")}/api/ai/models`, {
-        headers: { authorization: `Bearer ${session.jwt}` },
+        ...(headers ? { headers } : {}),
       })
       if (response.status === 401) return { status: "auth-required", models: [] }
       if (!response.ok) return { status: "unavailable", models: [] }

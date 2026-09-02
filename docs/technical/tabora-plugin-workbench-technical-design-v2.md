@@ -201,7 +201,7 @@ Widget 展示元数据（title/icon/description/supportedSizes/defaultSize/views
 
 ### 12.3 SettingsPanel
 
-`SettingsPanelContribution` 必须显式声明 `section`（general/appearance/search/account/ai/sync/plugins/about）、`scope`（global/workspace/plugin/instance）、非空 `surfaces` 和 `content`（`{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`）；`SettingsPanelViewProps.data` 只携带 manifest `hostReads` 请求且宿主授予的只读 DTO。上线前阶段不按旧 id 推断 section、不为缺 scope/surfaces 的旧 manifest 补齐。SettingsHost 以 orchestrator navigator 为主路径，先按当前 `surface` 过滤再组织导航：desktop 抽屉式双栏、mobile 全屏单列。设置页由 `@tabora/workbench-app` 的 `/settings/<section>` 路由承载，分类切换/关闭/返回/历史都经路由同步。`scope: "instance"` 的 panel 未传入明确 `instanceId` 时不得出现在导航或渲染树。
+`SettingsPanelContribution` 必须显式声明 `section`（general/appearance/search/account/ai/sync/plugins/about）、`scope`（global/workspace/plugin/instance）、非空 `surfaces` 和 `content`（`{ kind: "schema", provider, schemaVersion: 1 }` 或 `{ kind: "custom-view", view }`）；`SettingsPanelViewProps.data` 只携带 manifest `hostReads` 请求且宿主授予的只读 DTO。上线前阶段不按旧 id 推断 section、不为缺 scope/surfaces 的旧 manifest 补齐。SettingsHost 以 orchestrator navigator 为主路径，先按当前 `surface` 过滤再组织导航：desktop 抽屉式双栏、mobile 全屏单列。设置页由 `@tabora/workbench-app` 的内存 surface 状态承载，分类切换/关闭/移动端返回只更新内存，不修改 URL 或浏览器历史。`scope: "instance"` 的 panel 未传入明确 `instanceId` 时不得出现在导航或渲染树。
 
 ### 12.4 Workspace Preset
 

@@ -70,6 +70,50 @@ describe("createLocalAiSettingsService", () => {
       headers: { authorization: "Bearer session-token" },
     })
   })
+
+  it("uses the current origin when the web host leaves the API base empty", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ models: [{ id: "gpt-5.6-terra", label: "GPT-5.6 Terra" }] })),
+      )
+    const service = createLocalAiSettingsService({
+      storage: memoryStorage(),
+      defaultBuiltinModelId: "gpt-5.6-terra",
+      apiBaseUrl: "",
+      authClient: { getSession: async () => ({ jwt: "session-token" }) },
+      fetcher,
+    })
+
+    await expect(service.getSettings()).resolves.toMatchObject({
+      builtin: {
+        status: "available",
+        models: [{ id: "gpt-5.6-terra", label: "GPT-5.6 Terra" }],
+      },
+    })
+    expect(fetcher).toHaveBeenCalledWith("/api/ai/models", {
+      headers: { authorization: "Bearer session-token" },
+    })
+  })
+
+  it("loads same-origin built-in models with the browser session cookie", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ models: [{ id: "gpt-5.6-terra", label: "GPT-5.6 Terra" }] })),
+      )
+    const service = createLocalAiSettingsService({
+      storage: memoryStorage(),
+      defaultBuiltinModelId: "gpt-5.6-terra",
+      apiBaseUrl: "",
+      fetcher,
+    })
+
+    await expect(service.getSettings()).resolves.toMatchObject({
+      builtin: { status: "available", models: [{ id: "gpt-5.6-terra" }] },
+    })
+    expect(fetcher).toHaveBeenCalledWith("/api/ai/models", {})
+  })
 })
 
 describe("createFnosAiSettingsService", () => {

@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex"
-import { Route, Router, useLocation, useNavigate } from "@solidjs/router"
+import { Route, Router } from "@solidjs/router"
 import type { HostAdapter } from "@tabora/host-adapters"
-import { createEffect, createMemo, onCleanup, Show, type JSX } from "solid-js"
+import { createEffect, createMemo, createSignal, onCleanup, Show, type JSX } from "solid-js"
 import type {
   BackgroundRendererViewProps,
   PluginInstance,
@@ -33,12 +33,7 @@ import { createWorkbenchWorkspaceController } from "../workspace/WorkbenchShellW
 import { assignGridOrder } from "../shared/workbenchGrid"
 import { createWorkbenchShellRuntimes } from "./createWorkbenchShellRuntimes"
 import { createWorkbenchShellPluginViewBoundaryCopy } from "../i18n"
-import {
-  isSettingsSectionId,
-  parseWorkbenchSettingsRoute,
-  settingsHomePath,
-  settingsRoutePath,
-} from "../routing/workbenchSettingsRoute"
+import { isSettingsSectionId } from "../routing/workbenchSettingsRoute"
 
 export type WorkbenchShellAppProps = {
   composition: {
@@ -79,8 +74,6 @@ export function WorkbenchShellApp(props: WorkbenchShellAppProps) {
 }
 
 function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
-  const location = useLocation()
-  const navigate = useNavigate()
   const composition = props.composition
   const runtime = props.runtime
   const state = createWorkbenchShellState({
@@ -144,21 +137,23 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
   const { database, catalog: pluginCatalog, kernel, repositories } = runtime
   const { workspaceRepo, instanceRepo, pluginDataRepo } = repositories
 
-  const currentRoute = createMemo(() => parseWorkbenchSettingsRoute(location.pathname))
+  // 设置导航是工作台内部的临时 surface 状态，不应改变宿主 URL（桌面 overlay 和
+  // 移动端首页/详情切换都只存在于内存中）。null 表示移动端设置首页。
+  const [settingsRouteSection, setSettingsRouteSection] = createSignal<SettingsSectionId | null>(
+    null,
+  )
   const navigateToSettings = (sectionId: SettingsSectionId) => {
     setActiveSettingsSectionId(sectionId)
     setSettingsOpen(true)
-    const nextPath = settingsRoutePath(sectionId)
-    if (location.pathname !== nextPath) navigate(nextPath)
+    setSettingsRouteSection(sectionId)
   }
   const navigateToSettingsHome = () => {
     setSettingsOpen(true)
-    const nextPath = settingsHomePath()
-    if (location.pathname !== nextPath) navigate(nextPath)
+    setSettingsRouteSection(null)
   }
   const closeSettings = () => {
     setSettingsOpen(false)
-    if (currentRoute().kind === "settings") navigate("/", { replace: true })
+    setSettingsRouteSection(null)
   }
   const disposeSettingsOpenEvent = kernel.events.on("ui.settings.open", (payload) => {
     const settingsPayload = (payload ?? {}) as { sectionId?: string }
@@ -167,16 +162,6 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     else navigateToSettingsHome()
   })
   onCleanup(disposeSettingsOpenEvent)
-  createEffect(() => {
-    const route = currentRoute()
-    if (route.kind !== "settings") {
-      if (state.overlays.settingsOpen()) setSettingsOpen(false)
-      return
-    }
-
-    if (route.section !== null) setActiveSettingsSectionId(route.section)
-    setSettingsOpen(true)
-  })
   const pluginStyleManager = createPluginStyleManager(document)
   const refreshPluginRecords = async () => {
     setPluginRecords(await repositories.pluginRecordRepo.getAll())
@@ -341,10 +326,7 @@ function WorkbenchShellAppRouteRoot(props: WorkbenchShellAppProps) {
     settingsRoute: {
       navigate: navigateToSettings,
       home: navigateToSettingsHome,
-      isHome: () => {
-        const route = currentRoute()
-        return route.kind === "settings" && route.section === null
-      },
+      isHome: () => settingsRouteSection() === null,
       close: closeSettings,
     },
     responsive,
