@@ -253,12 +253,12 @@ describe("styled component design contract", () => {
     expect(chipSource).toContain("width: 14")
   })
 
-  it("uses the component-spec Spinner cadence instead of control motion", () => {
+  it("uses the defined Spinner cadence instead of control motion", () => {
     expect(spinnerSource).toContain('animationDuration: "600ms"')
     expect(spinnerSource).toContain('animationTimingFunction: "linear"')
   })
 
-  it("uses the component-spec Skeleton pulse cadence instead of control motion", () => {
+  it("uses the defined Skeleton pulse cadence instead of control motion", () => {
     expect(skeletonSource).toContain('animationDuration: "1500ms"')
     expect(skeletonSource).toContain('animationTimingFunction: "ease-in-out"')
   })

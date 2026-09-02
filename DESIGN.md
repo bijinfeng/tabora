@@ -3,10 +3,6 @@ name: Tabora
 description: Plugin-first personal workbench for a browser new tab page.
 design_version: "2.0"
 style: refined-sage
-visual_references:
-  workbench_prototype: docs/design/workbench-prototype.html
-  site_preview: docs/design/landing.html
-  download_preview: docs/design/download.html
 colors:
   light:
     page: "#F6F7F4"
@@ -108,8 +104,6 @@ Tabora 是一个插件优先的个人工作台新标签页产品。界面应像�
 平台视觉基于 Refined Sage。绿色只是低频强调色，不是大面积主题色。默认气质是暖白页面、清晰边框、克制表面、紧凑排印和稳定卡片。
 
 `DESIGN.md` 是 Tabora 视觉语言、token、基础组件语义、宿主容器视觉、交互模式和可访问性规则的单一事实源。本文件按 `google-labs-code/design.md` 的格式生成，用于让 AI 和工程实现快速读取关键 token、布局规则、组件语义和禁忌。
-
-`docs/design/workbench-prototype.html`、`docs/design/landing.html` 和 `docs/design/download.html` 只作为可视原型或静态预览资产，不再承载规范事实。若预览与本文件冲突，以本文件为准，并同步更新预览或实现。
 
 ## Colors
 

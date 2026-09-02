@@ -1,76 +1,25 @@
-# Tabora 文档地图
+# Tabora 文档地图与产品边界
 
-这份文档只回答一个问题：当前任务应该读哪些文档。它不是规格正文，也不重复维护 PRD、设计规范或技术方案。
+开始较大任务时，按目标路径读取完整 `AGENTS.md` 链，然后读本文和相关源码、schema、测试；UI 任务再读 `DESIGN.md`。文档只保留产品范围、安全边界和跨模块不变量。字段、默认值、算法、流程和局部交互以相邻代码注释、schema 与测试为准。
 
-## Agent 快速路径
+## 产品
 
-开始较大任务时默认只读：
+Tabora 是插件优先的个人工作台新标签页。平台拥有插件运行、宿主容器、持久化、权限、事件与故障隔离；搜索、背景、主题、卡片、设置和 AI 对话等具体能力由插件贡献。MVP 是由 builtin preset 装配的响应式 dashboard：用户可管理工作区和实例、调整布局、切换主题背景，并在重开后恢复状态。
 
-1. 从根目录到目标路径读取完整的 `AGENTS.md` 指令链。
-2. `docs/README.md`：本文档，选择后续事实源。
-3. 与任务类型匹配的 1-3 个事实源。
+不做第三方远程插件市场或沙箱、在线安装升级、团队工作区和完整 SDK 工具链。账号与同步为可选宿主装配，未装配时插件数据保持 local-only。
 
-一次任务涉及多个目录时，分别解析每个目标路径；不要无差别读取所有目录级指令。
+## 不变量
 
-## 目录级 Agent 指令
+- 插件只能通过 manifest、contribution、runtime context、permission 与 storage contract 接入；平台不硬编码业务能力。
+- workspace 装配、实例状态与插件业务数据分开保存；删除实例不删除插件，多实例和数据 scope 必须隔离。
+- capability 与 manifest permission 的交集决定实际能力；外部打开、网络、文件和 AI 均经宿主 bridge，不能静默兜底或越过权限。
+- 无效 schema、拒绝权限、插件 view 和存储失败必须局部、可理解，不能白屏。
+- 官方插件与第三方插件遵守同一边界。builtin registry 聚合默认插件，组合根注入宿主，shell 不反向依赖官方插件。
+- 管理台中的 provider / 模型凭据只由服务端安全存储使用；外部请求受 allowlist、超时、SSRF 防护与审计保护。
+- 同步仅处理 manifest 显式声明且具备稳定记录键、更新时间、合并策略和 schema 版本的 collection；敏感字段不持久化或上传。
 
-| 适用路径                     | 额外约束重点                                      |
-| ---------------------------- | ------------------------------------------------- |
-| `apps/app/AGENTS.md`       | 管理台、API/auth、TanStack Query 和破坏性操作边界 |
-| `apps/site/AGENTS.md`        | 官网/文档站、品牌复用、内容和路由边界             |
-| `plugins/AGENTS.md`          | manifest、runtime context、permission 和实例隔离  |
-| `packages/ui/AGENTS.md`      | primitive、Kobalte、public subpath 和宿主边界     |
-| `packages/workbench-app/AGENTS.md` | 跨 shell 组合、状态分层和 builtin 注入边界 |
+## 代码事实源
 
-## 事实源优先级
+产品行为与协议：`@tabora/plugin-api` schema、`@tabora/platform-kernel`、`@tabora/storage`、`@tabora/workbench-app`、官方插件 manifest 和相邻 contract / integration tests。视觉与可访问性：`DESIGN.md`。扩展发布：`.github/workflows/release-extension.yml`、`apps/extension/package.json` 与 WXT 文档。FNOS：`apps/fnos/README.md`。
 
-当文档之间冲突时，按以下顺序判断：
-
-1. 用户当前明确指令。
-2. `AGENTS.md` 和本文档的读取规则。
-3. 当前事实源：PRD、官方插件设计、`DESIGN.md`、技术方案 V2、回归基准。
-4. 当前代码实现和测试。
-5. 设计预览（`docs/design/*.html`）。
-
-如果代码和事实源冲突，不要直接假设某一方正确。先查当前实现，再同步对应事实源，并在 final 中说明差异。
-
-## 当前事实源
-
-| 领域             | 当前事实源                                                      | 什么时候读                                                                 |
-| ---------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 产品范围         | `docs/product/tabora-plugin-workbench-prd.md`                   | 判断 MVP 范围、用户流程、验收标准、非目标                                  |
-| 官方插件         | `docs/product/tabora-official-plugins-design.md`                | 修改官方插件、默认装配、插件交互和插件验收                                 |
-| 视觉与交互       | `DESIGN.md`                                                     | 修改 UI、token、布局视觉、组件语义、可访问性                               |
-| AI Agent Runtime | `docs/product/tabora-ai-agent-runtime-design.md`                | 判断 AI 基础设施、agent 协议、插件 AI 授权和 MVP 路线                      |
-| AI 对话插件      | `docs/product/tabora-ai-chat-plugin-prd.md`                     | 新增或修改 AI 对话插件、多轮对话协议和聊天 UI 时                           |
-| 后台模型管理    | `docs/product/tabora-admin-model-management-prd.md`             | 管理云端内置 AI provider、模型目录、凭据与发布状态时                       |
-| 技术架构         | `docs/technical/tabora-plugin-workbench-technical-design-v2.md` | 修改协议、runtime、storage、shell、包边界                                  |
-| 回归/测试治理/Agent 评测 | `docs/technical/tabora-regression-baseline.md`            | 选择回归层级与验证命令、判断测试是否必要与清理、隔离 worktree 评测 agent   |
-| Extension 分发   | `docs/technical/extension-github-actions-publish.md`            | 修改扩展 zip、商店提交、发布 workflow                                      |
-| FNOS 分发        | `apps/fnos/README.md`                                           | 修改飞牛 manifest、统一网关、生命周期脚本、FPK 构建和安装验证               |
-| 账号与数据同步   | `docs/technical/tabora-data-sync-prd.md`                        | 官方账号、同步范围、设置入口与后端 HTTP 契约（§12 技术实现）                 |
-
-## 按任务选择文档
-
-上表已把领域映射到事实源；下面只补充事实源之外要一起读的源码路径和易漏的点。
-
-- **UI / 交互**：读 `DESIGN.md` + 相关 Solid 组件/CSS/测试。`docs/design/` 下的 HTML 仅是预览资产，不承载规范、不纳入 lint/测试，与 `DESIGN.md` 冲突以后者为准。
-- **发布部署**：读 extension 分发文档 + 对应 `.github/workflows/`，按回归基准 L8 做发布前回归。
-- **Agent 协作交付**：读回归基准（含测试治理 §11、Agent 评测 §12）。实际约束来自目标路径的 `AGENTS.md` 链；完成前跑 `node scripts/regression-summary.mjs` 选验证命令、清理测试前跑 `pnpm test:inventory`；PR/final 说明复用证据、生产 diff、新增公开面、事实源同步、验证结果、未覆盖项和风险，`pr-governance` workflow 会校验交付字段。
-
-## 文档维护规则
-
-- 只有未来迭代会反复使用、描述当前有效事实且后续会持续维护的长期事实源，才在本文档登记入口和读取条件。
-- 计划、设计过程稿、日期审计、阶段记录、实现进度、交付证据和 retrospective 不登记；通过相关 PR、final 或长期事实源按需引用。
-- 不在 `AGENTS.md`、本文档、PRD、技术方案之间复制大段同一规则；只保留摘要并链接事实源。
-- 修改验证标准、已知债务或 agent 工作流时，同步 `docs/technical/tabora-regression-baseline.md`。
-
-## 验证
-
-文档整理或文档内容变更后至少运行：
-
-```bash
-pnpm check
-```
-
-代码变更按 `AGENTS.md` 和 `docs/technical/tabora-regression-baseline.md` 追加 `pnpm test`、`pnpm build` 或浏览器检查。
+修改工程规则、验证命令、架构边界或测试治理时读 [`technical/tabora-regression-baseline.md`](technical/tabora-regression-baseline.md)。文档变更至少运行 `pnpm check`。
