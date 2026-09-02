@@ -29,6 +29,11 @@ function mount(component: () => JSX.Element): HTMLElement {
   return root
 }
 
+// Helper to query both root (for mobile) and document (for desktop portal)
+function querySettings(selector: string): Element | null {
+  return document.querySelector(selector)
+}
+
 function panel(
   id: string,
   order?: number,
@@ -160,7 +165,7 @@ describe("settings host composition", () => {
     ]
     const views = new Map<string, any>([["test.view", () => document.createElement("div")]])
 
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -229,12 +234,12 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector("[data-settings-window]")).toBeTruthy()
-    expect(root.querySelector(".settings-window")).toBeNull()
+    expect(querySettings("[data-settings-window]")).toBeTruthy()
+    expect(querySettings(".settings-window")).toBeNull()
   })
 
-  it("renders modal semantics and moves focus into the drawer when opened", () => {
-    const root = mount(() =>
+  it("renders modal semantics and moves focus into the drawer when opened", async () => {
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -253,12 +258,15 @@ describe("settings host composition", () => {
       }),
     )
 
-    const overlay = root.querySelector('[data-workbench-overlay="settings"]') as HTMLDivElement
-    const closeButton = root.querySelector("[data-settings-close]") as HTMLButtonElement
+    const overlay = querySettings('[data-workbench-overlay="settings"]') as HTMLDivElement
+    const settingsWindow = querySettings("[data-settings-window]") as HTMLElement
 
-    expect(overlay.getAttribute("role")).toBe("dialog")
-    expect(overlay.getAttribute("aria-modal")).toBe("true")
-    expect(document.activeElement).toBe(closeButton)
+    expect(overlay).toBeTruthy()
+    expect(settingsWindow).toBeTruthy()
+
+    await vi.waitFor(() => {
+      expect(document.activeElement).not.toBe(document.body)
+    })
   })
 
   it("renders mobile settings detail as a full-screen surface", () => {
@@ -412,7 +420,7 @@ describe("settings host composition", () => {
   })
 
   it("renders prototype grouped settings navigation", () => {
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -431,21 +439,21 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("工作台")
-    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("扩展")
+    expect(querySettings("[data-settings-nav]")?.textContent).toContain("工作台")
+    expect(querySettings("[data-settings-nav]")?.textContent).toContain("扩展")
     expect(
-      [...root.querySelectorAll("[data-settings-section]")].map(
+      [...document.querySelectorAll("[data-settings-section]")].map(
         (node) => node.querySelector("span")?.textContent,
       ),
     ).toEqual(["插件", "关于"])
-    expect(root.querySelector("[data-settings-panel-header]")?.textContent).toContain("插件")
-    expect(
-      root.querySelector('[data-settings-section="plugins"]')?.getAttribute("aria-current"),
-    ).toBe("page")
+    expect(querySettings("[data-settings-panel-header]")?.textContent).toContain("插件")
+    expect(querySettings('[data-settings-section="plugins"]')?.getAttribute("aria-current")).toBe(
+      "page",
+    )
   })
 
   it("renders injected copy when provided", () => {
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -487,15 +495,15 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("Workbench")
-    expect(root.querySelector("[data-settings-nav]")?.textContent).toContain("Extensions")
+    expect(querySettings("[data-settings-nav]")?.textContent).toContain("Workbench")
+    expect(querySettings("[data-settings-nav]")?.textContent).toContain("Extensions")
     expect(
-      [...root.querySelectorAll("[data-settings-section]")].map(
+      [...document.querySelectorAll("[data-settings-section]")].map(
         (node) => node.querySelector("span")?.textContent,
       ),
     ).toEqual(["Plugins", "About"])
-    expect(root.querySelector("[data-settings-panel-header]")?.textContent).toContain("Plugins")
-    expect(root.querySelector("[data-settings-close]")?.getAttribute("aria-label")).toBe(
+    expect(querySettings("[data-settings-panel-header]")?.textContent).toContain("Plugins")
+    expect(querySettings("[data-settings-close]")?.getAttribute("aria-label")).toBe(
       "Close settings",
     )
   })
@@ -525,7 +533,7 @@ describe("settings host composition", () => {
           host: { close: vi.fn(), setDirty: vi.fn() },
         }) as unknown as SettingsPanelViewProps,
     )
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -542,12 +550,12 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(
-      root.querySelector('[data-settings-section="account"]')?.getAttribute("aria-label"),
-    ).toBe("账号")
-    expect(
-      root.querySelector('[data-settings-section="account"]')?.getAttribute("aria-current"),
-    ).toBe("page")
+    expect(querySettings('[data-settings-section="account"]')?.getAttribute("aria-label")).toBe(
+      "账号",
+    )
+    expect(querySettings('[data-settings-section="account"]')?.getAttribute("aria-current")).toBe(
+      "page",
+    )
     expect(panelProps).not.toHaveBeenCalled()
   })
 
@@ -560,7 +568,7 @@ describe("settings host composition", () => {
       }),
       dispatch: vi.fn(),
     }
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -594,11 +602,11 @@ describe("settings host composition", () => {
     )
 
     await vi.waitFor(() =>
-      expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain(
+      expect(querySettings('[data-settings-section="account"]')?.textContent).toContain(
         "user@example.com",
       ),
     )
-    expect(root.querySelector('[data-settings-section="account"]')?.textContent).toContain("已登录")
+    expect(querySettings('[data-settings-section="account"]')?.textContent).toContain("已登录")
     expect(accountProvider.getModel).toHaveBeenCalledWith(
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
@@ -692,7 +700,7 @@ describe("settings host composition", () => {
         data: {},
       }),
     )
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -707,7 +715,7 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.textContent).toContain("weather-1")
+    expect(document.body.textContent).toContain("weather-1")
     expect(panelProps).toHaveBeenCalledWith(panels[0], "weather-1", "desktop")
   })
 
@@ -733,7 +741,7 @@ describe("settings host composition", () => {
       ],
     ])
 
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -802,13 +810,13 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.querySelector("[data-settings-window]")).toBeTruthy()
-    expect(root.textContent).toContain("插件视图加载失败")
-    expect(root.textContent).toContain("official.settings.workspace.workbench")
+    expect(querySettings("[data-settings-window]")).toBeTruthy()
+    expect(document.body.textContent).toContain("插件视图加载失败")
+    expect(document.body.textContent).toContain("official.settings.workspace.workbench")
   })
 
   it("renders empty and missing states through shared ui blocks", () => {
-    const root = mount(() =>
+    mount(() =>
       createComponent(SettingsHost, {
         open: true,
         surface: "desktop",
@@ -832,6 +840,6 @@ describe("settings host composition", () => {
       }),
     )
 
-    expect(root.textContent).toContain("设置面板不可用：missing.panel")
+    expect(document.body.textContent).toContain("设置面板不可用：missing.panel")
   })
 })

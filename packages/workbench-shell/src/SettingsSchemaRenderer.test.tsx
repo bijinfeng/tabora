@@ -2,7 +2,7 @@ import { render } from "solid-js/web"
 import type { SettingsPanelProvider, SettingsPanelProviderContext } from "@tabora/plugin-api"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { SettingsSchemaRenderer } from "./SettingsSchemaRenderer"
+import { SettingsSchemaRenderer } from "./settingsSchema"
 
 const mounts: Array<{ dispose: () => void; root: HTMLElement }> = []
 

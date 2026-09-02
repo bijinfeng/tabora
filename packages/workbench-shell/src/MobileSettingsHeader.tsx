@@ -7,7 +7,6 @@ export type MobileSettingsHeaderProps = {
   title: string
   onBack: () => void
   backAriaLabel: string
-  backButtonRef?: (element: HTMLButtonElement) => void
 }
 
 const styles = stylex.create({
@@ -57,7 +56,6 @@ export function MobileSettingsHeader(props: MobileSettingsHeaderProps) {
         xstyle={styles.backButton}
         data-settings-back
         onClick={props.onBack}
-        ref={props.backButtonRef}
         aria-label={props.backAriaLabel}
       >
         <ArrowLeft size={20} />
