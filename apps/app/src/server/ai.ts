@@ -157,3 +157,47 @@ export async function cloudAiModelsResponse(
   }
   return json({ models: await runtime.handle.aiModels.listActiveDirectory() })
 }
+
+function discoveredModelIds(payload: unknown): string[] {
+  if (!payload || typeof payload !== "object") return []
+  const raw = "data" in payload ? payload.data : "models" in payload ? payload.models : undefined
+  if (!Array.isArray(raw)) return []
+  return [
+    ...new Set(
+      raw.flatMap((item) => {
+        const id =
+          typeof item === "string"
+            ? item
+            : item && typeof item === "object" && "id" in item
+              ? item.id
+              : undefined
+        return typeof id === "string" && id.trim() ? [id.trim()] : []
+      }),
+    ),
+  ].sort((left, right) => left.localeCompare(right))
+}
+
+/** Fetches a user's custom provider model catalogue server-side to avoid third-party CORS. */
+export async function customAiModelsResponse(request: Request): Promise<Response> {
+  try {
+    const body = (await request.json().catch(() => null)) as {
+      baseUrl?: unknown
+      apiKey?: unknown
+    } | null
+    if (typeof body?.baseUrl !== "string" || typeof body.apiKey !== "string") {
+      return json({ error: { message: "Invalid provider configuration" } }, 400)
+    }
+    await validateCloudProviderUrl(body.baseUrl)
+    const response = await fetch(`${body.baseUrl.replace(/\/$/, "")}/models`, {
+      headers: { authorization: `Bearer ${body.apiKey}` },
+      redirect: "error",
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!response.ok) return json({ error: { message: "Provider rejected the request" } }, 502)
+    const models = discoveredModelIds(await response.json().catch(() => null)).slice(0, 200)
+    if (!models.length) return json({ error: { message: "Provider returned no models" } }, 502)
+    return json({ models })
+  } catch {
+    return json({ error: { message: "Unable to fetch provider models" } }, 502)
+  }
+}

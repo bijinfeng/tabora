@@ -4,6 +4,7 @@ import {
   cloudAiGenerateResponse,
   cloudAiModelsResponse,
   cloudAiStreamResponse,
+  customAiModelsResponse,
   createCloudAiGateway,
 } from "./ai"
 
@@ -200,6 +201,35 @@ describe("cloud AI HTTP contract", () => {
     expect(await response.json()).toEqual({
       models: [{ id: "platform:platform-model", label: "Platform model" }],
     })
+  })
+
+  it("proxies custom provider model discovery server-side", async () => {
+    const providerFetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ data: [{ id: "model-b" }, { id: "model-a" }, { id: "model-a" }] }),
+      )
+    vi.stubGlobal("fetch", providerFetch)
+    try {
+      const response = await customAiModelsResponse(
+        new Request("http://tabora.test/api/ai/custom-models", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            baseUrl: "https://198.51.100.20/v1",
+            apiKey: "provider-secret",
+          }),
+        }),
+      )
+      expect(response.status).toBe(200)
+      await expect(response.json()).resolves.toEqual({ models: ["model-a", "model-b"] })
+      expect(providerFetch).toHaveBeenCalledWith(
+        "https://198.51.100.20/v1/models",
+        expect.objectContaining({ redirect: "error" }),
+      )
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it("lists and routes each built-in model through its configured provider", async () => {
