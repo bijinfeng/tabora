@@ -121,7 +121,7 @@ function ConversationList(props: {
           size="sm"
           xstyle={styles.newChatButton}
           onClick={() => {
-            props.session.createConversation()
+            props.session.startNewConversation()
             props.onPick?.()
           }}
         >

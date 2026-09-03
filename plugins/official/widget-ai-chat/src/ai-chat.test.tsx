@@ -397,7 +397,7 @@ describe("getAiChatSession", () => {
     expect(stored[0]?.titleModelTried).toBe(true)
   })
 
-  it("registers the palette command for new conversations", async () => {
+  it("opens the blank composer without persisting a conversation from the palette command", async () => {
     setAiChatRuntime({
       generate: async () => ({ text: "" }),
       stream: async function* () {},
@@ -414,13 +414,17 @@ describe("getAiChatSession", () => {
       openExpand,
     })
 
+    session.createConversation()
+    const countBefore = session.conversations().length
+
     runNewConversationCommand("session-command")
-    expect(session.activeId()).not.toBeNull()
+    expect(session.activeId()).toBeNull()
+    expect(session.messages()).toEqual([])
+    expect(session.conversations()).toHaveLength(countBefore)
     expect(openExpand).toHaveBeenCalledOnce()
 
-    const countBefore = session.conversations().length
     runNewConversationCommand("session-command")
-    expect(session.conversations().length).toBe(countBefore + 1)
+    expect(session.conversations()).toHaveLength(countBefore)
 
     unregister()
     expect(() => runNewConversationCommand("session-command")).toThrow("请先添加 AI 对话卡片")
@@ -473,6 +477,48 @@ describe("AiChatCard", () => {
 })
 
 describe("AiChatExpand composer controls", () => {
+  it("returns to the blank composer without saving an empty conversation", async () => {
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => echoConnection(),
+    })
+    const { data } = makeDataStore()
+    const session = getAiChatSession({ instanceId: "expand-new-chat", data })
+    await waitForLoaded(session)
+    session.createConversation()
+
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <AiChatExpand
+          {...makeWidgetViewProps({
+            instanceId: "expand-new-chat",
+            pluginId: "official.widgets.ai-chat",
+            contributionId: "ai-chat",
+            size: "L",
+            data,
+          })}
+        />
+      ),
+      root,
+    )
+
+    const newChat = Array.from(root.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("新对话"),
+    )
+    expect(newChat).toBeDefined()
+    newChat?.click()
+
+    await vi.waitFor(() => expect(root.textContent).toContain("接下来，交给我吧"))
+    expect(session.activeId()).toBeNull()
+    expect(session.conversations()).toHaveLength(1)
+    await waitForPersistedSave()
+    expect(await data.get<AiChatStoredConversation[]>("ai-chat-conversations")).toHaveLength(1)
+    root.remove()
+  })
+
   it("renders the run-option chips reflecting the active conversation", async () => {
     setAiChatRuntime({
       generate: async () => ({ text: "" }),
