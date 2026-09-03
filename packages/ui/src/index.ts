@@ -64,7 +64,12 @@ export { Dialog } from "./styled/dialog"
 export type { DialogProps } from "./styled/dialog"
 
 export { DropdownMenu } from "./styled/dropdownMenu"
-export type { DropdownMenuProps, DropdownMenuItem } from "./styled/dropdownMenu"
+export type {
+  DropdownMenuProps,
+  DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuEntry,
+} from "./styled/dropdownMenu"
 
 export { ContextMenu } from "./styled/contextMenu"
 export type { ContextMenuItem, ContextMenuProps } from "./styled/contextMenu"

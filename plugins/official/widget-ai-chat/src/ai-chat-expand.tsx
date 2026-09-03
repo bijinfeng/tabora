@@ -17,9 +17,8 @@ import { Textarea } from "@tabora/ui/textarea"
 import Brain from "lucide-solid/icons/brain"
 import Cpu from "lucide-solid/icons/cpu"
 import Ellipsis from "lucide-solid/icons/ellipsis"
-import FileText from "lucide-solid/icons/file-text"
-import Gauge from "lucide-solid/icons/gauge"
 import MessageSquare from "lucide-solid/icons/message-square"
+import Paperclip from "lucide-solid/icons/paperclip"
 import Pencil from "lucide-solid/icons/pencil"
 import Plus from "lucide-solid/icons/plus"
 import Send from "lucide-solid/icons/send"
@@ -50,15 +49,6 @@ const REASONING_LABELS: Record<AiChatReasoningEffort, string> = {
   high: "深度",
 }
 
-const CONTEXT_CAPACITY_PRESETS: Array<{ value: number | undefined; label: string; hint: string }> =
-  [
-    { value: undefined, label: "自动", hint: "由模型默认上限决定" },
-    { value: 1024, label: "1K", hint: "简短问答" },
-    { value: 2048, label: "2K", hint: "常规对话" },
-    { value: 4096, label: "4K", hint: "较长回答" },
-    { value: 8192, label: "8K", hint: "长文分析" },
-  ]
-
 function newContextId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -77,16 +67,23 @@ function formatRelativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString()
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 function ComposerChip(props: {
   trigger: DropdownMenuTriggerRenderProps
   label: string
   icon?: JSX.Element
+  compact?: boolean
 }) {
   const trigger = () => props.trigger
   return (
     <button
       type="button"
-      {...stylex.attrs(styles.composerChip)}
+      {...stylex.attrs(styles.composerChip, props.compact && styles.composerContextButton)}
       ref={trigger().ref}
       disabled={trigger().disabled}
       aria-haspopup={trigger()["aria-haspopup"] ? "menu" : undefined}
@@ -103,7 +100,7 @@ function ComposerChip(props: {
       onFocus={trigger().onFocus}
     >
       {props.icon}
-      <span>{props.label}</span>
+      <span {...stylex.attrs(props.compact && styles.composerContextLabel)}>{props.label}</span>
     </button>
   )
 }
@@ -120,7 +117,7 @@ function ConversationList(props: {
     <>
       <div {...stylex.attrs(styles.sideHead)}>
         <Button
-          variant="secondary"
+          variant="ghost"
           size="sm"
           xstyle={styles.newChatButton}
           onClick={() => {
@@ -128,9 +125,11 @@ function ConversationList(props: {
             props.onPick?.()
           }}
         >
-          <Plus size={14} />
-          新对话
+          <MessageSquare size={14} />
+          <span>新对话</span>
+          <kbd {...stylex.attrs(styles.newChatShortcut)}>Ctrl+N</kbd>
         </Button>
+        <span {...stylex.attrs(styles.sideHeading)}>历史对话</span>
       </div>
       <Show
         when={props.session.conversations().length}
@@ -267,6 +266,8 @@ export function AiChatExpand(props: WidgetViewProps) {
   const [contextEditor, setContextEditor] = createSignal(false)
   const [contextLabel, setContextLabel] = createSignal("")
   const [contextText, setContextText] = createSignal("")
+  const [attachments, setAttachments] = createSignal<File[]>([])
+  let attachmentInput: HTMLInputElement | undefined
 
   const getAiSettings = props.host.getAiSettings?.bind(props.host)
   const [aiSettings] = createResource(
@@ -277,8 +278,38 @@ export function AiChatExpand(props: WidgetViewProps) {
   const activeConversation = () =>
     session.conversations().find((conversation) => conversation.id === session.activeId())
 
-  const defaultModelId = () => aiSettings()?.builtin.modelId ?? ""
-  const modelChoices = () => aiSettings()?.builtin.models ?? []
+  const defaultModelId = () => {
+    const settings = aiSettings()
+    return settings?.activeProvider === "custom"
+      ? settings.custom.model
+      : (settings?.builtin.modelId ?? "")
+  }
+  const modelGroups = () => {
+    const settings = aiSettings()
+    if (!settings) return []
+    const builtin = settings.builtin.models ?? []
+    const customIds = settings.custom.models?.filter(Boolean) ?? []
+    const custom = (
+      customIds.length > 0 ? customIds : settings.custom.model ? [settings.custom.model] : []
+    ).map((id) => ({ id, label: id }))
+    const uniqueBuiltin = [...new Map(builtin.map((model) => [model.id, model])).values()]
+    const uniqueCustom = [...new Map(custom.map((model) => [model.id, model])).values()]
+    return [
+      ...(uniqueBuiltin.length > 0
+        ? [{ id: "builtin-models", label: "内置模型", items: uniqueBuiltin }]
+        : []),
+      ...(uniqueCustom.length > 0
+        ? [
+            {
+              id: "custom-models",
+              label: settings.custom.name?.trim() || "自定义供应商",
+              items: uniqueCustom,
+            },
+          ]
+        : []),
+    ]
+  }
+  const modelChoices = () => modelGroups().flatMap((group) => group.items)
   const activeModelId = () => activeConversation()?.modelId || defaultModelId()
   const activeModelLabel = () => {
     const id = activeModelId()
@@ -286,11 +317,6 @@ export function AiChatExpand(props: WidgetViewProps) {
   }
   const activeReasoning = (): AiChatReasoningEffort | undefined =>
     activeConversation()?.reasoningEffort
-  const activeCapacity = () => activeConversation()?.maxOutputTokens
-  const activeCapacityLabel = () =>
-    CONTEXT_CAPACITY_PRESETS.find((preset) => preset.value === activeCapacity())?.label ?? "自动"
-  const activeContextCount = () => activeConversation()?.contextBlocks?.length ?? 0
-
   const updateActiveOptions = (
     partial: Parameters<AiChatSession["updateConversationOptions"]>[1],
   ) => {
@@ -305,10 +331,6 @@ export function AiChatExpand(props: WidgetViewProps) {
   const pickReasoning = (value: AiChatReasoningEffort | undefined) => {
     updateActiveOptions({ reasoningEffort: value })
   }
-  const pickCapacity = (value: number | undefined) => {
-    updateActiveOptions({ maxOutputTokens: value })
-  }
-
   const contextBlocks = (): AiChatContextBlock[] => activeConversation()?.contextBlocks ?? []
 
   const addContextBlock = () => {
@@ -324,6 +346,15 @@ export function AiChatExpand(props: WidgetViewProps) {
   const removeContextBlock = (id: string) => {
     const next = contextBlocks().filter((block) => block.id !== id)
     updateActiveOptions({ contextBlocks: next })
+  }
+  const handleAttachmentChange = (event: Event) => {
+    const input = event.currentTarget as HTMLInputElement
+    const selected = input.files ? Array.from(input.files) : []
+    if (selected.length > 0) setAttachments((current) => [...current, ...selected])
+    input.value = ""
+  }
+  const removeAttachment = (index: number) => {
+    setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))
   }
   let threadRef: HTMLDivElement | undefined
   let nearBottom = true
@@ -436,6 +467,32 @@ export function AiChatExpand(props: WidgetViewProps) {
         </div>
       </Show>
       <div {...stylex.attrs(styles.composerShell)}>
+        <Show when={attachments().length > 0}>
+          <div {...stylex.attrs(styles.composerAttachmentList)} aria-label="已选择的附件">
+            <For each={attachments()}>
+              {(file, index) => (
+                <div {...stylex.attrs(styles.composerAttachment)}>
+                  <Paperclip size={14} />
+                  <span {...stylex.attrs(styles.composerAttachmentName)} title={file.name}>
+                    {file.name}
+                  </span>
+                  <span {...stylex.attrs(styles.composerAttachmentSize)}>
+                    {formatFileSize(file.size)}
+                  </span>
+                  <button
+                    type="button"
+                    {...stylex.attrs(styles.composerAttachmentRemove)}
+                    onClick={() => removeAttachment(index())}
+                    aria-label={`移除附件 ${file.name}`}
+                    title="移除附件"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
         <Textarea
           xstyle={styles.composerTextarea}
           rows={3}
@@ -461,14 +518,49 @@ export function AiChatExpand(props: WidgetViewProps) {
           aria-label="向 AI 提问"
         />
         <div {...stylex.attrs(styles.composerToolbar)}>
+          <div {...stylex.attrs(styles.composerLeading)}>
+            <DropdownMenu
+              items={[
+                {
+                  id: "add-attachment",
+                  label: "添加附件",
+                  icon: <Paperclip size={14} />,
+                  onClick: () => attachmentInput?.click(),
+                },
+              ]}
+              side="top"
+              align="start"
+              triggerAsChild={true}
+              triggerTitle="添加附件"
+              triggerAriaLabel="添加附件"
+            >
+              {(trigger) => (
+                <ComposerChip
+                  trigger={trigger}
+                  label="添加附件"
+                  compact={true}
+                  icon={<Plus size={16} />}
+                />
+              )}
+            </DropdownMenu>
+            <input
+              ref={(element) => (attachmentInput = element)}
+              type="file"
+              {...stylex.attrs(styles.composerAttachmentInput)}
+              aria-label="选择附件"
+              onChange={handleAttachmentChange}
+            />
+          </div>
           <div {...stylex.attrs(styles.composerChips)}>
             <Show when={modelChoices().length > 0}>
               <DropdownMenu
-                items={modelChoices().map((model) => ({
-                  id: model.id,
-                  label: model.label,
-                  onClick: () => pickModel(model.id),
-                  ...(model.id === activeModelId() ? { checked: true } : {}),
+                items={modelGroups().map((group) => ({
+                  ...group,
+                  items: group.items.map((model) => ({
+                    ...model,
+                    onClick: () => pickModel(model.id),
+                    ...(model.id === activeModelId() ? { checked: true } : {}),
+                  })),
                 }))}
                 side="top"
                 align="start"
@@ -515,65 +607,30 @@ export function AiChatExpand(props: WidgetViewProps) {
                 />
               )}
             </DropdownMenu>
-            <DropdownMenu
-              items={CONTEXT_CAPACITY_PRESETS.map((preset) => ({
-                id: `capacity-${preset.label}`,
-                label: `${preset.label} · ${preset.hint}`,
-                onClick: () => pickCapacity(preset.value),
-                ...(preset.value === activeCapacity() ? { checked: true } : {}),
-              }))}
-              side="top"
-              align="start"
-              triggerAsChild={true}
-              triggerTitle="上下文容量"
-              triggerAriaLabel="上下文容量"
-            >
-              {(trigger) => (
-                <ComposerChip
-                  trigger={trigger}
-                  label={activeCapacityLabel()}
-                  icon={<Gauge size={12} />}
-                />
-              )}
-            </DropdownMenu>
-            <button
-              type="button"
-              {...stylex.attrs(styles.composerChip)}
-              onClick={() => setContextEditor(true)}
-              title="添加上下文"
-              aria-label="添加上下文"
-            >
-              <FileText size={12} />
-              <span>
-                添加上下文
-                <Show when={activeContextCount() > 0}> · {activeContextCount()}</Show>
-              </span>
-            </button>
           </div>
-          <span {...stylex.attrs(styles.composerHint)}>
-            {editing() ? "Enter 重新生成 · Esc 取消编辑" : "Enter 发送 · Shift+Enter 换行"}
-          </span>
           <Show
             when={session.isLoading()}
             fallback={
               <IconButton
-                size="sm"
+                size="md"
                 variant="primary"
+                xstyle={styles.composerSendButton}
                 aria-label="发送"
                 disabled={!draft().trim()}
                 onClick={send}
               >
-                <Send size={14} />
+                <Send size={16} />
               </IconButton>
             }
           >
             <IconButton
-              size="sm"
+              size="md"
               variant="secondary"
+              xstyle={styles.composerSendButton}
               aria-label="停止生成"
               onClick={() => session.stop()}
             >
-              <Square size={12} />
+              <Square size={14} />
             </IconButton>
           </Show>
         </div>
@@ -614,16 +671,15 @@ export function AiChatExpand(props: WidgetViewProps) {
           when={session.activeId()}
           fallback={
             <div {...stylex.attrs(styles.empty)}>
-              <EmptyState
-                title="开始新的对话"
-                description="在设置中心 AI 面板可查看和配置当前宿主可用的模型。"
-                action={
-                  <Button variant="primary" size="sm" onClick={() => session.createConversation()}>
-                    新对话
-                  </Button>
-                }
-              />
-              {composer()}
+              <div {...stylex.attrs(styles.emptyWelcome)}>
+                <div {...stylex.attrs(styles.emptyWelcomeContent)}>
+                  <EmptyState
+                    title="接下来，交给我吧"
+                    titleClass={stylex.attrs(styles.emptyTitle).class}
+                  />
+                  <div {...stylex.attrs(styles.emptyComposer)}>{composer()}</div>
+                </div>
+              </div>
             </div>
           }
         >

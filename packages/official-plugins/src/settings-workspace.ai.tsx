@@ -80,32 +80,37 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
   }
 
   // 统一保存入口：省略 custom.apiKey 时宿主保留已存密钥。
-  async function persist(next: {
-    activeProvider: ProviderMode
-    builtinModelId: string
-    custom: { name?: string; baseUrl: string; model: string; models?: string[]; apiKey?: string }
-  }) {
+  async function persist(
+    next: {
+      activeProvider: ProviderMode
+      builtinModelId: string
+      custom: { name?: string; baseUrl: string; model: string; models?: string[]; apiKey?: string }
+    },
+    refreshView = true,
+    indicateSaving = true,
+  ) {
     if (!props.host.saveAiSettings) {
       setError("当前宿主不允许修改 AI 配置")
       return false
     }
-    setSaving(true)
+    if (indicateSaving) setSaving(true)
     setError(undefined)
     try {
-      setSettings(await props.host.saveAiSettings(next))
+      const saved = await props.host.saveAiSettings(next)
+      if (refreshView) setSettings(saved)
       return true
     } catch {
       setError("保存失败，请稍后重试")
       return false
     } finally {
-      setSaving(false)
+      if (indicateSaving) setSaving(false)
     }
   }
 
-  function selectBuiltin(id: string) {
+  async function selectBuiltin(id: string) {
     const current = view()
-    void persist({
-      activeProvider: "builtin",
+    const next = {
+      activeProvider: "builtin" as const,
       builtinModelId: id,
       custom: {
         name: current.custom.name ?? "",
@@ -113,13 +118,19 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
         model: current.custom.model,
         models: customModels(),
       },
+    }
+    setSettings({
+      ...current,
+      activeProvider: "builtin",
+      builtin: { ...current.builtin, modelId: id },
     })
+    if (!(await persist(next, false, false))) setSettings(current)
   }
 
-  function selectCustomModel(model: string) {
+  async function selectCustomModel(model: string) {
     const current = view()
-    void persist({
-      activeProvider: "custom",
+    const next = {
+      activeProvider: "custom" as const,
       builtinModelId: current.builtin.modelId,
       custom: {
         name: current.custom.name ?? "",
@@ -127,7 +138,9 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
         model,
         models: customModels(),
       },
-    })
+    }
+    setSettings({ ...current, activeProvider: "custom", custom: { ...current.custom, model } })
+    if (!(await persist(next, false, false))) setSettings(current)
   }
 
   function openDialog(editing = false) {

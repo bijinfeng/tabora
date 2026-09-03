@@ -16,8 +16,8 @@ export const officialPluginAiChatManifest: PluginManifest = {
         title: "AI 对话",
         icon: "sparkles",
         description: "与平台 AI 模型多轮对话",
-        supportedSizes: ["S", "M", "L", "XL"],
-        defaultSize: "L",
+        supportedSizes: ["S", "M"],
+        defaultSize: "M",
         allowMultipleInstances: true,
         views: {
           card: "official.widgets.ai-chat.card",

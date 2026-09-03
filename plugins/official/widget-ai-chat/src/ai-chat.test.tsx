@@ -83,6 +83,8 @@ describe("officialPluginAiChatManifest", () => {
     const manifest: PluginManifest = officialPluginAiChatManifest
     expect(manifest.id).toBe("official.widgets.ai-chat")
     expect(manifest.permissions).toEqual([{ type: "ai", access: ["generate"] }])
+    expect(manifest.contributes.widgets?.[0]?.supportedSizes).toEqual(["S", "M"])
+    expect(manifest.contributes.widgets?.[0]?.defaultSize).toBe("M")
     expect(manifest.contributes.widgets?.[0]?.views).toEqual({
       card: "official.widgets.ai-chat.card",
       expand: "official.widgets.ai-chat.expand",
@@ -444,22 +446,28 @@ describe("getAiChatSession", () => {
 })
 
 describe("AiChatCard", () => {
-  it("renders the empty preview and composer on content sizes", () => {
+  it("renders a non-interactive brand mark on content sizes", () => {
     setAiChatRuntime(undefined)
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <AiChatCard {...makeProps()} />, root)
     expect(root.textContent).toContain("AI 对话")
-    expect(root.textContent).toContain("双击卡片可展开完整对话")
+    expect(root.textContent).toContain("Tabora / AI")
+    expect(root.textContent).not.toContain("AI CHAT")
+    expect(root.textContent).not.toContain("READY")
+    expect(root.textContent).not.toContain("发送")
+    expect(root.querySelector("textarea")).toBeNull()
     root.remove()
   })
 
-  it("renders the compact preview for the S size", () => {
+  it("renders the same brand mark at the compact S size", () => {
     setAiChatRuntime(undefined)
     const root = document.createElement("div")
     document.body.appendChild(root)
     render(() => <AiChatCard {...makeProps({ size: "S" })} />, root)
-    expect(root.textContent).toContain("点击展开完整对话")
+    expect(root.textContent).toContain("AI 对话")
+    expect(root.textContent).toContain("Tabora / AI")
+    expect(root.querySelector("textarea")).toBeNull()
     root.remove()
   })
 })
@@ -515,8 +523,8 @@ describe("AiChatExpand composer controls", () => {
 
     await vi.waitFor(() => expect(root.textContent).toContain("模型 B"))
     expect(root.textContent).toContain("深度")
-    expect(root.textContent).toContain("2K")
-    expect(root.textContent).toContain("添加上下文 · 1")
+    expect(root.textContent).toContain("添加附件")
+    expect(root.querySelector('input[type="file"]')).not.toBeNull()
     root.remove()
   })
 })
