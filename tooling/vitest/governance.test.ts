@@ -854,10 +854,6 @@ describe("governance rules", () => {
     const expectedBuilds = new Map([
       ["packages/workbench-shell/package.json", "vp pack src/index.ts"],
       ["packages/official-plugins/package.json", performanceSubpathPackages[0].build],
-      [
-        "plugins/community/layout-diy-masonry/package.json",
-        "echo 'Skipped: layout-diy-masonry is incompatible after region protocol removal'",
-      ],
       ["plugins/official/widget-notes/package.json", "vp pack src/index.ts src/manifest.ts"],
       ["plugins/official/widget-quick-links/package.json", "vp pack src/index.ts src/manifest.ts"],
       ["plugins/official/widget-todo/package.json", "vp pack src/index.ts src/manifest.ts"],
@@ -1106,7 +1102,7 @@ describe("governance rules", () => {
 
     expect(
       findWorkbenchAvoidableStyleViolations({
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         source: `
           .menu {
             background: var(--color-surface, #fff);
@@ -1118,17 +1114,17 @@ describe("governance rules", () => {
       }),
     ).toEqual([
       {
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         match: "rgba(0, 0, 0, 0)",
         reason: "use transparent instead of zero-alpha rgba",
       },
       {
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         match: "var(--color-surface, #fff)",
         reason: "workbench theme variables must not carry literal color fallbacks",
       },
       {
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         match: "var(--color-text, 28 30 28)",
         reason: "workbench theme variables must not carry literal color fallbacks",
       },

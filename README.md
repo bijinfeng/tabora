@@ -6,16 +6,16 @@ Tabora 是一个插件优先的个人工作台新标签页产品。它不是把�
 
 > 任何具体业务能力默认优先放进插件；平台只保留通用运行机制。
 
-平台负责插件运行内核、扩展点协议、宿主容器、存储、权限、事件和故障恢复。用户看到的布局、命令搜索、搜索源、背景、主题、卡片、弹窗、全屏视图和设置面板，都应来自官方或未来第三方插件。
+平台负责插件运行内核、扩展点协议、宿主容器、存储、权限、事件和故障恢复。用户看到的命令搜索、搜索源、背景、主题、卡片、弹窗、全屏视图和设置面板，都应来自官方或未来第三方插件；Dashboard 布局由宿主内建。
 
 ## 当前定位
 
 Tabora 当前处于 MVP 实现阶段，目标是验证一套可扩展的新标签页工作台架构：
 
 - 插件发现、manifest 校验、激活、registry 和 runtime context。
-- `layout`、`widget`、`search`、`search-provider`、`background-provider`、`background-renderer`、`theme`、`settings-panel` 等扩展点。
+- `widget`、`search`、`search-provider`、`background-provider`、`background-renderer`、`theme`、`settings-panel` 等扩展点。
 - 官方内置插件包和默认 builtin 装配。
-- Dashboard 与 Focus 等布局插件，验证“布局也是插件”的产品原则。
+- 单一内建 Dashboard，以及插件驱动的命令、搜索、背景、主题、卡片和设置能力。
 - Widget 多实例、多尺寸、拖拽排序、右键菜单、双击展开和持久化。
 - IndexedDB 本地持久化、主题 token、背景渲染、settings host、toast、modal、fullscreen 和插件错误边界。
 - `external-open` 最小权限桥。

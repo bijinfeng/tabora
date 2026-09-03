@@ -20,7 +20,6 @@ const STYLEX_GLOBAL_CSS_ALLOWLIST = new Set([
 const STYLEX_PACKAGE_PLACEHOLDER_ALLOWLIST = new Set([
   "packages/official-plugins/src/styles.css",
   "packages/workbench-shell/src/styles.css",
-  "plugins/community/layout-diy-masonry/src/styles.css",
   "plugins/official/layout-dashboard/src/styles.css",
   "plugins/official/widget-ai-chat/src/styles.css",
   "plugins/official/widget-notes/src/styles.css",

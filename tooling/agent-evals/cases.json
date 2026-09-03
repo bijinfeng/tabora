@@ -69,32 +69,6 @@
         { "criterion": "保留高价值边界与编排测试", "points": 3 },
         { "criterion": "盘点结论和验证可审计", "points": 2 }
       ]
-    },
-    {
-      "id": "reuse-minimal-change",
-      "title": "收敛重复宿主图标实现",
-      "prompt": "统一 workbench shell、官方 dashboard layout 和 community masonry layout 中 HostActionIcon 的图标映射。先检查三个现有实现、调用点和依赖方向，选择最小合法复用边界，迁移调用方并删除被替代实现；不要改变其他宿主交互或布局视觉。",
-      "allowedPaths": [
-        "packages/workbench-shell/**",
-        "plugins/official/layout-dashboard/**",
-        "plugins/community/layout-diy-masonry/**",
-        "packages/ui/**",
-        "docs/**"
-      ],
-      "requiredEvidence": ["pnpm test", "pnpm check", "pnpm build", "git diff --check"],
-      "forbiddenOutcomes": [
-        "新增第四份平行 HostActionIcon 或图标映射",
-        "用单调用方 pass-through wrapper 伪装复用",
-        "保留已替代实现、旧调用方或过时导出",
-        "新增 dependency、public export 或超过三个生产文件但不说明必要性",
-        "修改任务无关的宿主交互或布局视觉"
-      ],
-      "scoring": [
-        { "criterion": "识别三个现有实现、调用点和合法依赖方向", "points": 2 },
-        { "criterion": "选择最小复用边界并迁移全部调用方", "points": 4 },
-        { "criterion": "删除被替代代码且无投机性公开面", "points": 2 },
-        { "criterion": "报告生产 diff、验证和剩余风险", "points": 2 }
-      ]
     }
   ]
 }
