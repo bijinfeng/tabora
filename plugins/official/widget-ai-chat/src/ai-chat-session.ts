@@ -104,6 +104,7 @@ export type AiChatSession = {
   send(text: string): Promise<void>
   stop(): void
   retry(): Promise<void>
+  startNewConversation(): void
   createConversation(): string
   switchConversation(id: string): void
   renameConversation(id: string, title: string): void
@@ -142,7 +143,7 @@ export function runNewConversationCommand(instanceId?: string): void {
     // The palette layer turns handler errors into a visible toast.
     throw new Error("请先添加 AI 对话卡片")
   }
-  entry.session.createConversation()
+  entry.session.startNewConversation()
   entry.openExpand()
 }
 
@@ -444,6 +445,14 @@ export function getAiChatSession(options: {
       setError(undefined)
       const client = clients.get(activeId() ?? "")
       return client?.reload() ?? Promise.resolve()
+    },
+
+    startNewConversation() {
+      setActiveId(null)
+      setMessages([])
+      setLoading(false)
+      setError(undefined)
+      setHistoryTrimmed(false)
     },
 
     createConversation() {

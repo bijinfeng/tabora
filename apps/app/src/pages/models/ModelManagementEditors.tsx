@@ -14,6 +14,19 @@ import { styles } from "./model-management.styles"
 
 type Setter = (value: string) => void
 
+const BUILTIN_PROVIDER_PRESETS = [
+  { id: "openai", label: "OpenAI", baseUrl: "https://api.openai.com/v1" },
+  { id: "deepseek", label: "DeepSeek", baseUrl: "https://api.deepseek.com/v1" },
+  {
+    id: "qwen",
+    label: "通义千问（阿里云百炼）",
+    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  },
+  { id: "moonshot", label: "Moonshot（Kimi）", baseUrl: "https://api.moonshot.cn/v1" },
+  { id: "siliconflow", label: "SiliconFlow（硅基流动）", baseUrl: "https://api.siliconflow.cn/v1" },
+  { id: "openrouter", label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1" },
+] as const
+
 function SetupStep(props: { number: string; title: string; children: JSX.Element }) {
   return (
     <section {...stylex.attrs(styles.setupStep)}>
@@ -141,7 +154,6 @@ export function ModelEditorDrawer(props: {
                 xstyle={styles.modelIdSelect}
               />
               <Button
-                size="sm"
                 variant="secondary"
                 loading={props.discovering}
                 disabled={!props.providerId() || isSaved()}
@@ -212,6 +224,29 @@ export function ProviderEditorDrawer(props: {
     >
       <div {...stylex.attrs(styles.drawerBody)}>
         <SetupStep number="1" title="基本配置">
+          <Show when={!props.editing}>
+            <Field
+              label="快速选择内置 Provider"
+              helper="选择后会自动填充 ID、名称和地址；仍需填写对应 API Key。"
+            >
+              <Select
+                value={props.id()}
+                placeholder="选择一个服务商模板"
+                options={BUILTIN_PROVIDER_PRESETS.map((preset) => ({
+                  value: preset.id,
+                  label: preset.label,
+                }))}
+                aria-label="快速选择内置 Provider"
+                onChange={(value) => {
+                  const preset = BUILTIN_PROVIDER_PRESETS.find((item) => item.id === value)
+                  if (!preset) return
+                  props.setId(preset.id)
+                  props.setLabel(preset.label)
+                  props.setBaseUrl(preset.baseUrl)
+                }}
+              />
+            </Field>
+          </Show>
           <Field
             label="Provider ID"
             htmlFor="provider-id"
