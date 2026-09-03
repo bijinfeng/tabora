@@ -14,9 +14,7 @@
   "dependencies": {
     "@tabora/builtin-plugin-registry": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
-    "@tabora/ui": "workspace:*",
     "@tabora/workbench-app": "workspace:*",
-    "@tabora/workbench-shell": "workspace:*",
     "solid-js": "catalog:ui"
   },
   "devDependencies": {

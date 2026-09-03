@@ -42,7 +42,6 @@ const FOCUSED_TEST_RULES = [
   "apps/app",
   "tooling/stylex",
   "tooling/vitest",
-  "plugins/community/layout-diy-masonry",
   "plugins/official/layout-dashboard",
   "plugins/official/widget-notes",
   "plugins/official/widget-quick-links",

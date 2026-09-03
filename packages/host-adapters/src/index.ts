@@ -20,10 +20,6 @@ export type HostAdapter = {
   network?: PluginNetworkBridge
 }
 
-export function defineHostAdapter(adapter: HostAdapter): HostAdapter {
-  return adapter
-}
-
 export { createWebHostAdapter } from "./web"
 export { createExtensionHostAdapter } from "./extension"
 export type { AuthStorage } from "./authStorage"
