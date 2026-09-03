@@ -1,4 +1,5 @@
 @import "@tabora/theme/global.css";
+
 /* Kobalte Pagination owns its semantic list; this resets that structural wrapper. */
 [data-tbr-pagination] > nav > ul {
   display: flex;

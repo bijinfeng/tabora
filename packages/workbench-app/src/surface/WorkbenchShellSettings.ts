@@ -111,6 +111,10 @@ export function buildWorkbenchSettingsPanelProps(
   }
   if (grants.has("ai.settings.write") && options.aiSettings) {
     host.saveAiSettings = (update) => options.aiSettings!.saveSettings(update)
+    if (options.aiSettings.discoverCustomModels) {
+      host.discoverAiModels = (baseUrl, apiKey) =>
+        options.aiSettings!.discoverCustomModels!(baseUrl, apiKey)
+    }
   }
 
   const data: SettingsPanelData = {}

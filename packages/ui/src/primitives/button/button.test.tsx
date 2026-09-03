@@ -77,6 +77,7 @@ describe("Button", () => {
     expect(btn.className.length).toBeGreaterThan(0)
     expect(btn.getAttribute("data-variant")).toBe("primary")
     expect(btn.getAttribute("data-size")).toBe("sm")
+    expect(btn.hasAttribute("data-tbr-button")).toBe(false)
   })
 
   it("supports compact mini actions", () => {
@@ -141,7 +142,13 @@ describe("Button", () => {
     document.body.appendChild(root)
     render(
       () => (
-        <Button icon={<span data-testid="icon">+</span>}>
+        <Button
+          icon={({ size, strokeWidth }) => (
+            <span data-testid="icon" data-size={size} data-stroke-width={strokeWidth}>
+              +
+            </span>
+          )}
+        >
           <span data-testid="text">添加</span>
         </Button>
       ),
@@ -154,6 +161,24 @@ describe("Button", () => {
     expect(firstChild.getAttribute("data-testid")).toBe("icon")
     expect(lastChild.getAttribute("data-testid")).toBe("text")
     expect(btn.getAttribute("data-icon-placement")).toBe("start")
+    expect(firstChild.getAttribute("data-size")).toBe("16")
+    expect(firstChild.getAttribute("data-stroke-width")).toBe("2")
+  })
+
+  it("keeps accepting JSX icons for backwards compatibility", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button size="sm" icon={<span data-testid="icon">+</span>}>
+          添加
+        </Button>
+      ),
+      root,
+    )
+
+    expect(root.querySelector("[data-testid='icon']")).toBeTruthy()
+    root.remove()
   })
 
   it("renders icon at end position when specified", () => {
@@ -161,7 +186,14 @@ describe("Button", () => {
     document.body.appendChild(root)
     render(
       () => (
-        <Button icon={<span data-testid="icon">+</span>} iconPlacement="end">
+        <Button
+          icon={({ size }) => (
+            <span data-testid="icon" data-size={size}>
+              +
+            </span>
+          )}
+          iconPlacement="end"
+        >
           <span data-testid="text">下载</span>
         </Button>
       ),
@@ -174,6 +206,7 @@ describe("Button", () => {
     expect(firstChild.getAttribute("data-testid")).toBe("text")
     expect(lastChild.getAttribute("data-testid")).toBe("icon")
     expect(btn.getAttribute("data-icon-placement")).toBe("end")
+    expect(lastChild.getAttribute("data-size")).toBe("16")
   })
 
   it("supports shape=round with data attribute", () => {
@@ -206,7 +239,15 @@ describe("Button", () => {
     document.body.appendChild(root)
     render(
       () => (
-        <Button href="/download" icon={<span data-testid="icon">↓</span>}>
+        <Button
+          href="/download"
+          size="sm"
+          icon={({ size }) => (
+            <span data-testid="icon" data-size={size}>
+              ↓
+            </span>
+          )}
+        >
           <span data-testid="text">下载</span>
         </Button>
       ),
@@ -219,6 +260,7 @@ describe("Button", () => {
     const lastChild = link.lastElementChild as HTMLElement
     expect(firstChild.getAttribute("data-testid")).toBe("icon")
     expect(lastChild.getAttribute("data-testid")).toBe("text")
+    expect(firstChild.getAttribute("data-size")).toBe("12")
   })
 })
 

@@ -18,7 +18,7 @@ export type LocalAiProviderConfig = {
 type StoredAiSettings = {
   activeProvider?: "builtin" | "custom"
   builtinModelId?: string
-  custom?: Partial<LocalAiProviderConfig>
+  custom?: Partial<LocalAiProviderConfig> & { name?: string; models?: string[] }
 }
 
 export type LocalAiSettingsService = AiSettingsService & {
@@ -113,8 +113,16 @@ export function createLocalAiSettingsService(options: {
         modelId: stored.builtinModelId ?? options.defaultBuiltinModelId,
       },
       custom: {
+        name: typeof custom.name === "string" ? custom.name : "",
         baseUrl: typeof custom.baseUrl === "string" ? custom.baseUrl : "",
         model: typeof custom.model === "string" ? custom.model : "",
+        models: Array.isArray(custom.models)
+          ? custom.models.filter(
+              (model): model is string => typeof model === "string" && Boolean(model.trim()),
+            )
+          : typeof custom.model === "string" && custom.model
+            ? [custom.model]
+            : [],
         apiKeyConfigured: typeof custom.apiKey === "string" && custom.apiKey.length > 0,
         preservesApiKeyOnSave: true,
       },
@@ -123,6 +131,42 @@ export function createLocalAiSettingsService(options: {
 
   return {
     getSettings: snapshot,
+    async discoverCustomModels(baseUrl, apiKey) {
+      const stored = await read()
+      const effectiveApiKey = apiKey?.trim() || stored.custom?.apiKey?.trim() || ""
+      const normalizedBaseUrl = baseUrl.trim().replace(/\/$/, "")
+      const response = await fetcher(
+        options.apiBaseUrl === undefined
+          ? `${normalizedBaseUrl}/models`
+          : `${options.apiBaseUrl.replace(/\/$/, "")}/api/ai/custom-models`,
+        options.apiBaseUrl === undefined
+          ? effectiveApiKey
+            ? { headers: { authorization: `Bearer ${effectiveApiKey}` } }
+            : {}
+          : {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ baseUrl: normalizedBaseUrl, apiKey: effectiveApiKey }),
+            },
+      )
+      if (!response.ok) throw new Error("Unable to fetch provider models")
+      const payload = (await response.json()) as { models?: unknown; data?: unknown }
+      const rawModels = Array.isArray(payload.data) ? payload.data : payload.models
+      const models = Array.isArray(rawModels)
+        ? rawModels.flatMap((item) => {
+            const id =
+              typeof item === "string"
+                ? item
+                : item && typeof item === "object" && "id" in item && typeof item.id === "string"
+                  ? item.id
+                  : ""
+            return id.trim() ? [id.trim()] : []
+          })
+        : []
+      const uniqueModels = [...new Set(models)]
+      if (!uniqueModels.length) throw new Error("Provider returned no models")
+      return uniqueModels.slice(0, 200)
+    },
     async saveSettings(update) {
       const current = await read()
       const existingCustom = current.custom ?? {}
@@ -130,8 +174,12 @@ export function createLocalAiSettingsService(options: {
         activeProvider: update.activeProvider,
         builtinModelId: update.builtinModelId || options.defaultBuiltinModelId,
         custom: {
+          name: update.custom.name?.trim() ?? existingCustom.name ?? "",
           baseUrl: update.custom.baseUrl.trim(),
           model: update.custom.model.trim(),
+          models:
+            update.custom.models?.map((model) => model.trim()).filter(Boolean) ??
+            (update.custom.model.trim() ? [update.custom.model.trim()] : []),
           ...(update.custom.apiKey
             ? { apiKey: update.custom.apiKey }
             : existingCustom.apiKey

@@ -29,12 +29,18 @@ describe("createLocalAiSettingsService", () => {
     await service.saveSettings({
       activeProvider: "custom",
       builtinModelId: "gpt-4.1-mini",
-      custom: { baseUrl: "https://provider.example/v1", model: "custom-model", apiKey: "secret" },
+      custom: {
+        name: "Provider One",
+        baseUrl: "https://provider.example/v1",
+        model: "custom-model",
+        apiKey: "secret",
+      },
     })
 
     await expect(service.getSettings()).resolves.toMatchObject({
       activeProvider: "custom",
       custom: {
+        name: "Provider One",
         baseUrl: "https://provider.example/v1",
         model: "custom-model",
         apiKeyConfigured: true,
@@ -43,6 +49,30 @@ describe("createLocalAiSettingsService", () => {
     await expect(service.getRequest()).resolves.toEqual({
       provider: "custom",
       custom: { baseUrl: "https://provider.example/v1", model: "custom-model", apiKey: "secret" },
+    })
+  })
+
+  it("reuses the stored custom API key for model discovery", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ models: ["model-a"] }))
+    const storage = memoryStorage({
+      "tabora.ai.custom-provider": JSON.stringify({
+        custom: { baseUrl: "https://provider.example/v1", apiKey: "stored-secret" },
+      }),
+    })
+    const service = createLocalAiSettingsService({
+      storage,
+      defaultBuiltinModelId: "gpt-4.1-mini",
+      apiBaseUrl: "",
+      fetcher,
+    })
+
+    await expect(service.discoverCustomModels!("https://provider.example/v1")).resolves.toEqual([
+      "model-a",
+    ])
+    expect(fetcher).toHaveBeenCalledWith("/api/ai/custom-models", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ baseUrl: "https://provider.example/v1", apiKey: "stored-secret" }),
     })
   })
 

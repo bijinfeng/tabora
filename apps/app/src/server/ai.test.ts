@@ -232,6 +232,31 @@ describe("cloud AI HTTP contract", () => {
     }
   })
 
+  it("omits authorization when discovering models from a public provider", async () => {
+    const providerFetch = vi
+      .fn()
+      .mockResolvedValue(Response.json({ data: [{ id: "public-model" }] }))
+    vi.stubGlobal("fetch", providerFetch)
+    try {
+      const response = await customAiModelsResponse(
+        new Request("http://tabora.test/api/ai/custom-models", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ baseUrl: "https://198.51.100.20/v1", apiKey: "" }),
+        }),
+      )
+      expect(response.status).toBe(200)
+      expect(providerFetch).toHaveBeenCalledWith(
+        "https://198.51.100.20/v1/models",
+        expect.objectContaining({ redirect: "error" }),
+      )
+      const [, init] = providerFetch.mock.calls[0] ?? []
+      expect(new Headers(init?.headers).has("authorization")).toBe(false)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it("lists and routes each built-in model through its configured provider", async () => {
     const originalFetch = globalThis.fetch
     const requests: Array<{ url: string; authorization: string | null }> = []

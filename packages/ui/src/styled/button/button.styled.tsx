@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
+import type { Component, JSX } from "solid-js"
 
 import { color, control, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessButton, HeadlessIconButton } from "../../primitives/button/button"
@@ -261,7 +262,16 @@ const styles = stylex.create({
   },
 })
 
-export type ButtonProps = Omit<HeadlessButtonProps, "class" | "style"> & {
+type ButtonIconProps = {
+  size: number
+  strokeWidth: number
+}
+
+type ButtonIcon = Component<ButtonIconProps>
+
+export type ButtonProps = Omit<HeadlessButtonProps, "class" | "style" | "icon"> & {
+  /** Accept both the historical JSX element form and a component for size-aware icons. */
+  icon?: JSX.Element | ButtonIcon
   xstyle?: XStyle
 }
 
@@ -284,6 +294,13 @@ const buttonSizeStyles = {
   sm: styles.buttonSm,
   md: styles.buttonMd,
   lg: styles.buttonLg,
+} as const
+
+const buttonIconSizes = {
+  mini: 12,
+  sm: 12,
+  md: 16,
+  lg: 18,
 } as const
 
 const buttonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styles.buttonRound> = {
@@ -313,6 +330,11 @@ const iconButtonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styl
 export function Button(props: ButtonProps) {
   const shape: ButtonShape = props.shape ?? "default"
   const variant = props.variant ?? "secondary"
+  const size = props.size ?? "md"
+  const icon =
+    typeof props.icon === "function"
+      ? props.icon({ size: buttonIconSizes[size], strokeWidth: 2 })
+      : props.icon
   const disabledStyle = (() => {
     if (!props.disabled) return undefined
     switch (variant) {
@@ -331,16 +353,16 @@ export function Button(props: ButtonProps) {
     stylex.attrs(
       styles.buttonBase,
       buttonVariantStyles[variant],
-      buttonSizeStyles[props.size ?? "md"],
+      buttonSizeStyles[size],
       shape !== "default" && buttonShapeStyles[shape],
-      shape === "circle" && buttonSizeCircleStyles[props.size ?? "md"],
+      shape === "circle" && buttonSizeCircleStyles[size],
       disabledStyle,
       variant === "link" && styles.linkLayout,
       props.fullWidth && styles.buttonFullWidth,
       props.xstyle,
     )
 
-  return <HeadlessButton {...props} {...attrs()} />
+  return <HeadlessButton {...props} icon={icon} {...attrs()} />
 }
 
 export function IconButton(props: IconButtonProps) {

@@ -335,8 +335,11 @@ export type SettingsAiSettings = {
     modelId: string
   }
   custom: {
+    /** User-facing name for the configured provider. */
+    name?: string
     baseUrl: string
     model: string
+    models?: string[]
     apiKeyConfigured: boolean
     /** Whether an empty update keeps the existing secret on this host. */
     preservesApiKeyOnSave?: boolean
@@ -347,8 +350,11 @@ export type SettingsAiSettingsUpdate = {
   activeProvider: SettingsAiSettings["activeProvider"]
   builtinModelId: string
   custom: {
+    /** User-facing name for the configured provider. */
+    name?: string
     baseUrl: string
     model: string
+    models?: string[]
     /** A missing key preserves the current local secret; it is never read back. */
     apiKey?: string
   }
@@ -358,6 +364,8 @@ export type SettingsAiSettingsUpdate = {
 export type AiSettingsService = {
   getSettings(): Promise<SettingsAiSettings>
   saveSettings(update: SettingsAiSettingsUpdate): Promise<SettingsAiSettings>
+  /** Discover models without exposing a host-stored API key to the settings view. */
+  discoverCustomModels?(baseUrl: string, apiKey?: string): Promise<string[]>
 }
 
 /** Read-only projection; intentionally not the host's persisted Workspace entity. */
@@ -424,6 +432,7 @@ export type SettingsPanelViewProps = {
     deleteWorkspace?(id: string): Promise<void>
     getAiSettings?(): Promise<SettingsAiSettings>
     saveAiSettings?(update: SettingsAiSettingsUpdate): Promise<SettingsAiSettings>
+    discoverAiModels?(baseUrl: string, apiKey?: string): Promise<string[]>
   }
   /** Only properties explicitly requested by the panel and granted by the host are present. */
   data: Readonly<SettingsPanelData>
