@@ -17,6 +17,7 @@ export type WidgetContributionResolver = (
 
 export type WidgetRenderModel = {
   title: string
+  description?: string
   icon?: string
   currentSize: WidgetSize
   supportedSizes: WidgetSize[]
@@ -63,12 +64,13 @@ export function resolveWidgetIconLabel(icon?: string): string {
 
 export function resolveWidgetRenderModel(
   instance: Pick<PluginInstance, "size">,
-  widget: Pick<WidgetContribution, "title" | "icon" | "supportedSizes"> | undefined,
+  widget: Pick<WidgetContribution, "title" | "description" | "icon" | "supportedSizes"> | undefined,
 ): WidgetRenderModel | null {
   if (!widget || !instance.size || !widget.supportedSizes.includes(instance.size)) return null
 
   return {
     title: widget.title,
+    ...(widget.description ? { description: widget.description } : {}),
     ...(widget.icon ? { icon: widget.icon } : {}),
     currentSize: instance.size,
     supportedSizes: widget.supportedSizes,

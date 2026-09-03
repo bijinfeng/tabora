@@ -7,6 +7,8 @@ import { DropdownMenu as P } from "../../primitives/dropdownMenu/dropdownMenu"
 import type {
   DropdownMenuAlign,
   DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuEntry,
   DropdownMenuProps,
   DropdownMenuSide,
   DropdownMenuTriggerRenderProps,
@@ -122,6 +124,8 @@ export function DropdownMenu(props: StyledDropdownMenuProps) {
 export type {
   DropdownMenuAlign,
   DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuEntry,
   StyledDropdownMenuProps as DropdownMenuProps,
   DropdownMenuSide,
   DropdownMenuTriggerRenderProps,
