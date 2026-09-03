@@ -188,8 +188,9 @@ export async function customAiModelsResponse(request: Request): Promise<Response
       return json({ error: { message: "Invalid provider configuration" } }, 400)
     }
     await validateCloudProviderUrl(body.baseUrl)
+    const apiKey = body.apiKey.trim()
     const response = await fetch(`${body.baseUrl.replace(/\/$/, "")}/models`, {
-      headers: { authorization: `Bearer ${body.apiKey}` },
+      ...(apiKey ? { headers: { authorization: `Bearer ${apiKey}` } } : {}),
       redirect: "error",
       signal: AbortSignal.timeout(10_000),
     })

@@ -23,7 +23,7 @@ function fallback(): SettingsAiSettings {
     supportedProviders: ["builtin", "custom"],
     activeProvider: "builtin",
     builtin: { status: "unavailable", models: [], modelId: "" },
-    custom: { baseUrl: "", model: "", apiKeyConfigured: false },
+    custom: { name: "", baseUrl: "", model: "", apiKeyConfigured: false },
   }
 }
 
@@ -35,7 +35,7 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
   const [dialogOpen, setDialogOpen] = createSignal(false)
   const [editingProvider, setEditingProvider] = createSignal(false)
   const [formBaseUrl, setFormBaseUrl] = createSignal("")
-  const [formModel, setFormModel] = createSignal("")
+  const [formProviderName, setFormProviderName] = createSignal("")
   const [formApiKey, setFormApiKey] = createSignal("")
   const [formApiFormat, setFormApiFormat] = createSignal("openai")
   const [configuredModels, setConfiguredModels] = createSignal<string[]>([])
@@ -45,11 +45,16 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
 
   const view = () => settings() ?? fallback()
   const canCustom = () => (view().supportedProviders ?? []).includes("custom")
-  const hasCustom = () => Boolean(view().custom.model)
+  const customModels = () => {
+    const configured = view().custom.models?.filter(Boolean) ?? []
+    return configured.length ? configured : view().custom.model ? [view().custom.model] : []
+  }
+  const hasCustom = () => customModels().length > 0
   const builtinSelectable = () => view().builtin.status === "available"
   const isBuiltinActive = (id: string) =>
     view().activeProvider === "builtin" && view().builtin.modelId === id
   const isCustomActive = () => view().activeProvider === "custom"
+  const isCustomModelActive = (model: string) => isCustomActive() && view().custom.model === model
 
   onMount(() => {
     if (!props.data.ai) {
@@ -78,7 +83,7 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
   async function persist(next: {
     activeProvider: ProviderMode
     builtinModelId: string
-    custom: { baseUrl: string; model: string; apiKey?: string }
+    custom: { name?: string; baseUrl: string; model: string; models?: string[]; apiKey?: string }
   }) {
     if (!props.host.saveAiSettings) {
       setError("当前宿主不允许修改 AI 配置")
@@ -102,23 +107,33 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
     void persist({
       activeProvider: "builtin",
       builtinModelId: id,
-      custom: { baseUrl: current.custom.baseUrl, model: current.custom.model },
+      custom: {
+        name: current.custom.name ?? "",
+        baseUrl: current.custom.baseUrl,
+        model: current.custom.model,
+        models: customModels(),
+      },
     })
   }
 
-  function selectCustom() {
+  function selectCustomModel(model: string) {
     const current = view()
     void persist({
       activeProvider: "custom",
       builtinModelId: current.builtin.modelId,
-      custom: { baseUrl: current.custom.baseUrl, model: current.custom.model },
+      custom: {
+        name: current.custom.name ?? "",
+        baseUrl: current.custom.baseUrl,
+        model,
+        models: customModels(),
+      },
     })
   }
 
   function openDialog(editing = false) {
     const current = view()
     setEditingProvider(editing)
-    setFormModel("")
+    setFormProviderName(editing ? (current.custom.name ?? "") : "")
     setFormBaseUrl(editing ? current.custom.baseUrl : "")
     setFormApiKey("")
     setFormApiFormat("openai")
@@ -147,29 +162,35 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
       setModelFetchError("请先填写 Base URL")
       return
     }
+    const apiKey = formApiKey().trim()
 
     setFetchingModels(true)
     setModelFetchError(undefined)
     try {
-      const response = await fetch("/api/ai/custom-models", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ baseUrl, apiKey: formApiKey().trim() }),
-      })
-      if (!response.ok) throw new Error()
-      const payload = (await response.json()) as { data?: unknown; models?: unknown }
-      const rawModels = Array.isArray(payload.data) ? payload.data : payload.models
-      const models = Array.isArray(rawModels)
-        ? rawModels
-            .map((item) =>
-              typeof item === "string"
-                ? item
-                : item && typeof item === "object" && "id" in item && typeof item.id === "string"
-                  ? item.id
-                  : undefined,
-            )
-            .filter((item): item is string => Boolean(item))
-        : []
+      let models: string[]
+      if (props.host.discoverAiModels) {
+        models = await props.host.discoverAiModels(baseUrl, apiKey || undefined)
+      } else {
+        const response = await fetch("/api/ai/custom-models", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ baseUrl, apiKey }),
+        })
+        if (!response.ok) throw new Error()
+        const payload = (await response.json()) as { data?: unknown; models?: unknown }
+        const rawModels = Array.isArray(payload.data) ? payload.data : payload.models
+        models = Array.isArray(rawModels)
+          ? rawModels
+              .map((item) =>
+                typeof item === "string"
+                  ? item
+                  : item && typeof item === "object" && "id" in item && typeof item.id === "string"
+                    ? item.id
+                    : undefined,
+              )
+              .filter((item): item is string => Boolean(item))
+          : []
+      }
       setFetchedModels([...new Set(models)])
       if (!models.length) setModelFetchError("该端点没有返回可用模型")
     } catch {
@@ -182,16 +203,18 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
   async function saveCustom() {
     const current = view()
     const models = configuredModels()
-    if (!models.length || !formBaseUrl().trim()) {
-      setError("请填写 Base URL 并至少添加一个模型")
+    if (!formProviderName().trim() || !models.length || !formBaseUrl().trim()) {
+      setError("请填写名称、Base URL 并至少添加一个模型")
       return
     }
     const ok = await persist({
       activeProvider: "custom",
       builtinModelId: current.builtin.modelId,
       custom: {
+        name: formProviderName().trim(),
         baseUrl: formBaseUrl().trim(),
         model: models[0]!,
+        models,
         ...(formApiKey() ? { apiKey: formApiKey() } : {}),
       },
     })
@@ -232,55 +255,63 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
               </For>
             </div>
           </section>
+          <Show when={canCustom()}>
+            <div {...stylex.attrs(styles.customProvidersHeader)}>
+              <span {...stylex.attrs(styles.customProvidersTitle)}>自定义供应商</span>
+              <Button size="sm" variant="secondary" icon={Plus} onClick={() => openDialog()}>
+                添加提供商
+              </Button>
+            </div>
+          </Show>
           <Show when={hasCustom()}>
             <section {...stylex.attrs(styles.aiProviderSection)}>
               <div {...stylex.attrs(styles.aiProviderSectionHeader)}>
-                <span {...stylex.attrs(styles.aiProviderSectionTitle)}>自定义提供商</span>
-                <Show when={canCustom()}>
-                  <Button size="sm" variant="secondary" onClick={() => openDialog()}>
-                    <Plus size={14} />
-                    添加提供商
-                  </Button>
-                </Show>
-              </div>
-              <div
-                {...stylex.attrs(
-                  styles.customProviderCard,
-                  isCustomActive() && styles.modelCardActive,
-                )}
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={isCustomActive()}
-                  disabled={saving()}
-                  onClick={selectCustom}
-                  {...stylex.attrs(styles.customProviderSelect)}
-                >
-                  <span {...stylex.attrs(styles.modelCardMain)}>
-                    <span {...stylex.attrs(styles.modelName)}>{view().custom.model}</span>
-                    <span {...stylex.attrs(styles.modelId)}>{view().custom.baseUrl}</span>
+                <div {...stylex.attrs(styles.modelCardMain)}>
+                  <span {...stylex.attrs(styles.aiProviderSectionTitle)}>
+                    {view().custom.name || "自定义提供商"}
                   </span>
-                  <Show when={isCustomActive()}>
-                    <span {...stylex.attrs(styles.pill)}>默认</span>
-                  </Show>
-                </button>
-                <Button size="sm" variant="secondary" onClick={() => openDialog(true)}>
-                  <Pencil size={14} />
-                  编辑
-                </Button>
+                  <span {...stylex.attrs(styles.modelId)}>{view().custom.baseUrl}</span>
+                </div>
+                <div {...stylex.attrs(styles.aiProviderActions)}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={Pencil}
+                    onClick={() => openDialog(true)}
+                  >
+                    编辑
+                  </Button>
+                </div>
+              </div>
+              <div {...stylex.attrs(styles.modelGrid)} role="radiogroup" aria-label="自定义模型">
+                <For each={customModels()}>
+                  {(model) => (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={isCustomModelActive(model)}
+                      disabled={saving()}
+                      onClick={() => selectCustomModel(model)}
+                      {...stylex.attrs(
+                        styles.modelCard,
+                        isCustomModelActive(model) && styles.modelCardActive,
+                      )}
+                    >
+                      <span {...stylex.attrs(styles.modelCardMain)}>
+                        <span {...stylex.attrs(styles.modelName)}>{model}</span>
+                        <span {...stylex.attrs(styles.modelId)}>{model}</span>
+                      </span>
+                      <Show when={isCustomModelActive(model)}>
+                        <span {...stylex.attrs(styles.pill)}>默认</span>
+                      </Show>
+                    </button>
+                  )}
+                </For>
               </div>
             </section>
           </Show>
           <Show when={!hasCustom() && canCustom()}>
             <section {...stylex.attrs(styles.aiProviderSection)}>
-              <div {...stylex.attrs(styles.aiProviderSectionHeader)}>
-                <span {...stylex.attrs(styles.aiProviderSectionTitle)}>自定义提供商</span>
-                <Button size="sm" variant="secondary" onClick={() => openDialog()}>
-                  <Plus size={14} />
-                  添加提供商
-                </Button>
-              </div>
               <span {...stylex.attrs(styles.fieldNote)}>尚未配置自定义提供商。</span>
             </section>
           </Show>
@@ -319,8 +350,8 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
             <Field label="名称" htmlFor="custom-provider-name">
               <Input
                 id="custom-provider-name"
-                value={formModel()}
-                onInput={setFormModel}
+                value={formProviderName()}
+                onInput={setFormProviderName}
                 placeholder="如：智谱 GLM"
                 autocomplete="off"
               />
@@ -340,7 +371,7 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
                 type="password"
                 value={formApiKey()}
                 onInput={setFormApiKey}
-                placeholder={view().custom.apiKeyConfigured ? "已保存，可留空" : "输入 API Key"}
+                placeholder={view().custom.apiKeyConfigured ? "已保存，留空沿用" : "输入 API Key"}
                 autocomplete="new-password"
               />
             </Field>
@@ -386,8 +417,12 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
                       <Show
                         when={configuredModels().includes(model)}
                         fallback={
-                          <Button size="sm" variant="secondary" onClick={() => addModel(model)}>
-                            <Plus size={14} />
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            icon={Plus}
+                            onClick={() => addModel(model)}
+                          >
                             添加
                           </Button>
                         }
