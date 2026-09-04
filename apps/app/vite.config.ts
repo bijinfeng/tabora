@@ -11,6 +11,11 @@ const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 
 export default defineConfig(({ command }) => ({
   base: "/",
+  // @tanstack/ai-solid/ui exports TSX source through its `solid` condition.
+  // Let vite-plugin-solid transform it instead of dependency pre-bundling JSX as .js.
+  optimizeDeps: {
+    exclude: ["@tanstack/ai-solid"],
+  },
   plugins: [
     createTaboraStylexVitePlugin({
       rootDir: workspaceRoot,

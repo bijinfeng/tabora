@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { AiRuntimeError, createTanstackAiGateway, parseAiGatewayRequest } from "./server"
+import { createAiUsageTracker } from "./usage"
 
 function requestJson(init: RequestInit | undefined): Record<string, unknown> {
   if (typeof init?.body !== "string") throw new Error("Expected JSON request body")
@@ -318,6 +319,31 @@ describe("AI gateway request contract", () => {
         { role: "assistant", content: "hello" },
         { role: "user", content: "summarize this" },
       ])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it("enforces optional gateway budgets and records estimated usage", async () => {
+    const usageTracker = createAiUsageTracker(() => new Date("2026-01-01T00:00:00.000Z"))
+    const gateway = createTanstackAiGateway({
+      builtinModels: [
+        { id: "model-a", baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+      ],
+      usageTracker,
+      budget: { maxRequests: 1 },
+    })
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), {
+        headers: { "content-type": "application/json" },
+      })
+    try {
+      await gateway.generate({ provider: "builtin", modelId: "model-a", prompt: "hello" })
+      await expect(
+        gateway.generate({ provider: "builtin", modelId: "model-a", prompt: "again" }),
+      ).rejects.toMatchObject({ code: "ai_budget_exceeded" })
+      expect(usageTracker.getStats()).toMatchObject({ requestCount: 1, totalTokens: 2 })
     } finally {
       globalThis.fetch = originalFetch
     }

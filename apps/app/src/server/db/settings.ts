@@ -18,6 +18,9 @@ export const settingDefaults = {
   smtpFrom: "",
   smtpUser: "",
   smtpPassword: "",
+  // 平台内置 AI 模型的每用户月度预算；0 表示不限制。
+  aiMonthlyRequestLimit: 0,
+  aiMonthlyTokenLimit: 0,
 }
 
 export type Settings = typeof settingDefaults

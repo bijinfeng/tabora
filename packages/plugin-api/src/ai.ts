@@ -6,6 +6,33 @@ export type AiTokenUsage = {
   totalTokens?: number
 }
 
+export type AiUsageStats = {
+  requestCount: number
+  failureCount: number
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  estimatedCost?: number
+  periodStartedAt: string
+}
+
+export type AiBudget = {
+  maxRequests?: number
+  maxTotalTokens?: number
+}
+
+export type AiWorkspaceContextSummary = {
+  workspaceId: string
+  workspaceName: string
+  activeLayoutId: string
+  widgets: Array<{
+    instanceId: string
+    pluginId: string
+    contributionId: string
+    title?: string
+  }>
+}
+
 export type AiGenerateRequest = {
   prompt: string
   system?: string
@@ -82,6 +109,7 @@ export type AiChatConnection = {
 
 export type AiRuntimeErrorCode =
   | "ai_not_configured"
+  | "ai_budget_exceeded"
   | "ai_auth_required"
   | "ai_model_unavailable"
   | "ai_request_rejected"

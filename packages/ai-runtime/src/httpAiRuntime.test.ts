@@ -275,4 +275,21 @@ describe("createAiChatConnection", () => {
       cause: { code: "ai_not_configured", name: "AiRuntimeError" },
     })
   })
+
+  it("preserves the budget-exceeded error code returned by the gateway", async () => {
+    const runtime = createHttpAiRuntime(
+      makeConfig({
+        fetcher: async () =>
+          Response.json(
+            { error: { code: "ai_budget_exceeded", message: "monthly budget reached" } },
+            { status: 429 },
+          ),
+      }),
+    )
+
+    await expect(runtime.generate({ prompt: "hello" })).rejects.toMatchObject({
+      code: "ai_budget_exceeded",
+      message: "monthly budget reached",
+    })
+  })
 })

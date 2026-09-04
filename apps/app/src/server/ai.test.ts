@@ -18,7 +18,10 @@ const platformModels = [
   },
 ]
 
-function runtime(sessionUserId: string | null) {
+function runtime(
+  sessionUserId: string | null,
+  settings: { aiMonthlyRequestLimit?: number; aiMonthlyTokenLimit?: number } = {},
+) {
   const getSession = vi
     .fn()
     .mockResolvedValue(sessionUserId ? { user: { id: sessionUserId } } : null)
@@ -31,6 +34,15 @@ function runtime(sessionUserId: string | null) {
           listActiveDirectory: vi
             .fn()
             .mockResolvedValue(platformModels.map(({ id, label }) => ({ id, label }))),
+        },
+        settings: {
+          get: vi.fn((key: string) => {
+            if (key === "aiMonthlyRequestLimit")
+              return Promise.resolve(settings.aiMonthlyRequestLimit ?? 0)
+            if (key === "aiMonthlyTokenLimit")
+              return Promise.resolve(settings.aiMonthlyTokenLimit ?? 0)
+            return Promise.resolve(undefined)
+          }),
         },
       },
     } as unknown as Parameters<typeof cloudAiGenerateResponse>[0],
@@ -78,6 +90,26 @@ describe("cloud AI HTTP contract", () => {
     await expect(response.json()).resolves.toMatchObject({
       error: { code: "ai_model_unavailable" },
     })
+  })
+
+  it("enforces the configured monthly request limit for platform-paid models", async () => {
+    const { runtime: testRuntime } = runtime("budget-user", { aiMonthlyRequestLimit: 1 })
+    const providerFetch = vi
+      .fn()
+      .mockResolvedValue(Response.json({ choices: [{ message: { content: "summary" } }] }))
+    vi.stubGlobal("fetch", providerFetch)
+    try {
+      const body = { provider: "builtin", modelId: "platform:platform-model", prompt: "summarize" }
+      expect((await cloudAiGenerateResponse(testRuntime, request(body))).status).toBe(200)
+
+      const response = await cloudAiGenerateResponse(testRuntime, request(body))
+      expect(response.status).toBe(429)
+      await expect(response.json()).resolves.toMatchObject({
+        error: { code: "ai_budget_exceeded" },
+      })
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it("allows a custom provider without a Tabora session and never echoes its API key", async () => {
