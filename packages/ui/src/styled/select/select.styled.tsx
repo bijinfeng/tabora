@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
 import { splitProps } from "solid-js"
 
-import { color, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
+import { color, control, font, motion, radius, shadow, zIndex } from "@tabora/theme/tokens.stylex"
 import { Select as Primitive } from "../../primitives/select/select"
 import type { SelectProps, SelectOption } from "../../primitives/select/select"
 
@@ -21,7 +21,7 @@ const styles = stylex.create({
     fontFamily: "inherit",
     fontSize: 13,
     fontWeight: font.medium,
-    gap: 6,
+    gap: 4,
     justifyContent: "space-between",
     minWidth: 180,
     transitionDuration: motion.fast,
@@ -41,25 +41,42 @@ const styles = stylex.create({
   },
   triggerSm: {
     fontSize: 12,
-    height: 28,
+    height: control.sm,
     paddingBlock: 0,
-    paddingInline: 10,
+    paddingInlineEnd: 8,
+    paddingInlineStart: 10,
   },
   triggerMd: {
-    height: 32,
+    height: control.md,
     paddingBlock: 0,
-    paddingInline: 12,
+    paddingInlineEnd: 8,
+    paddingInlineStart: 12,
+  },
+  triggerLg: {
+    fontSize: 14,
+    height: control.lg,
+    paddingBlock: 0,
+    paddingInlineEnd: 10,
+    paddingInlineStart: 14,
   },
   triggerMultiple: {
     height: "auto",
-    minHeight: 32,
+    minHeight: control.md,
     paddingBlock: 4,
-    paddingInline: 8,
+    paddingInlineEnd: 8,
+    paddingInlineStart: 8,
   },
   triggerMultipleSm: {
-    minHeight: 28,
+    minHeight: control.sm,
     paddingBlock: 2,
-    paddingInline: 6,
+    paddingInlineEnd: 6,
+    paddingInlineStart: 6,
+  },
+  triggerMultipleLg: {
+    minHeight: control.lg,
+    paddingBlock: 6,
+    paddingInlineEnd: 10,
+    paddingInlineStart: 10,
   },
   triggerDisabled: {
     backgroundColor: color.surfaceSoft,
@@ -90,7 +107,7 @@ const styles = stylex.create({
     flex: "none",
     height: 16,
     justifyContent: "center",
-    width: 16,
+    width: 12,
   },
   tags: {
     display: "flex",
@@ -169,6 +186,7 @@ const styles = stylex.create({
     borderWidth: 0,
     boxSizing: "border-box",
     margin: 0,
+    maxHeight: 260,
     maxWidth: "100%",
     outline: "none",
     overflowX: "hidden",
@@ -284,8 +302,10 @@ export function Select<V extends string>(props: StyledSelectProps<V>) {
       styles.trigger,
       props.size === "sm" && styles.triggerSm,
       (!props.size || props.size === "md") && styles.triggerMd,
+      props.size === "lg" && styles.triggerLg,
       props.multiple === true && styles.triggerMultiple,
       props.multiple === true && props.size === "sm" && styles.triggerMultipleSm,
+      props.multiple === true && props.size === "lg" && styles.triggerMultipleLg,
       props.disabled && styles.triggerDisabled,
       props.invalid && styles.triggerInvalid,
       local.xstyle,

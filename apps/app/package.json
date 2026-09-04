@@ -1,0 +1,48 @@
+{
+  "name": "@tabora/app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "start": "node serve.mjs",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@stylexjs/stylex": "catalog:style",
+    "@tabora/ai-runtime": "workspace:*",
+    "@tabora/brand": "workspace:*",
+    "@tabora/builtin-plugin-registry": "workspace:*",
+    "@tabora/host-adapters": "workspace:*",
+    "@tabora/theme": "workspace:*",
+    "@tabora/ui": "workspace:*",
+    "@tabora/workbench-app": "workspace:*",
+    "@tabora/workbench-shell": "workspace:*",
+    "@tanstack/charts": "catalog:ui",
+    "@tanstack/charts-scales": "catalog:ui",
+    "@tanstack/solid-charts": "catalog:ui",
+    "@tanstack/solid-query": "catalog:ui",
+    "@tanstack/solid-router": "catalog:ui",
+    "@tanstack/solid-start": "catalog:ui",
+    "better-auth": "^1.6.26",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.45.2",
+    "lucide-solid": "catalog:ui",
+    "nodemailer": "^9.0.5",
+    "pg": "^8.23.0",
+    "solid-js": "catalog:ui",
+    "zod": "catalog:data"
+  },
+  "devDependencies": {
+    "@tabora/stylex-config": "workspace:*",
+    "@tabora/tsconfig": "workspace:*",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "catalog:node",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.21.0",
+    "fake-indexeddb": "catalog:test",
+    "vite": "catalog:build",
+    "vite-plugin-solid": "catalog:build",
+    "vitest": "catalog:test"
+  }
+}

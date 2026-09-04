@@ -46,6 +46,7 @@ export function createWorkbenchShellViewRuntime(
       openWidgetExpand: options.openWidgetExpand,
       showToast: options.showToast,
       openExternalForPlugin: options.openExternalForPlugin,
+      ...(options.getAiSettings ? { getAiSettings: options.getAiSettings } : {}),
     })
 
   const instanceRenderer = createWorkbenchInstanceRenderer({

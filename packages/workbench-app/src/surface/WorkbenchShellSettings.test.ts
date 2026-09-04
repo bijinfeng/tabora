@@ -248,4 +248,49 @@ describe("buildWorkbenchSettingsPanelProps", () => {
     expect("togglePluginEnabled" in result.host).toBe(false)
     expect(result.data).toEqual({})
   })
+
+  it("only exposes the host-owned AI settings service to a panel with explicit grants", async () => {
+    const getSettings = vi.fn(async () => ({
+      activeProvider: "custom" as const,
+      builtin: { status: "unavailable" as const, models: [], modelId: "" },
+      custom: { baseUrl: "http://localhost:11434/v1", model: "llama", apiKeyConfigured: true },
+    }))
+    const aiSettings = {
+      getSettings,
+      saveSettings: vi.fn(async () => ({
+        activeProvider: "custom" as const,
+        builtin: { status: "unavailable" as const, models: [], modelId: "" },
+        custom: { baseUrl: "http://localhost:11434/v1", model: "llama", apiKeyConfigured: true },
+      })),
+    }
+    const result = buildWorkbenchSettingsPanelProps(
+      panel({
+        hostActions: ["ai.settings.write"],
+        grantedHostActions: ["ai.settings.write"],
+        hostReads: ["ai.settings.read"],
+        grantedHostReads: ["ai.settings.read"],
+      }),
+      {
+        workspace: workspace(),
+        workspaces: [],
+        themes: [],
+        backgrounds: [],
+        searchProviders: [],
+        searchSettings: {
+          defaultProvider: refs.provider("official.search.google"),
+          enabledProviders: [],
+        },
+        plugins: [],
+        aiSettings,
+        locale: "zh-CN",
+        availableLocales: [],
+        host: settingsHost(),
+        surface: "desktop",
+      },
+    )
+
+    await result.host.getAiSettings?.()
+    expect(getSettings).toHaveBeenCalledOnce()
+    expect("saveAiSettings" in result.host).toBe(true)
+  })
 })

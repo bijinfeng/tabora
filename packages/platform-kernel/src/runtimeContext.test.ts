@@ -379,6 +379,62 @@ describe("createPluginRuntimeContext permissions", () => {
     })
   })
 
+  it("exposes createChatConnection behind the same AI generate grant", async () => {
+    const connect = async function* () {}
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate"] }],
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async () => ({ text: "reply" }),
+        stream: async function* () {},
+        createChatConnection: () => ({ connect }),
+      },
+    })
+
+    expect(context.ai?.createChatConnection?.()).toEqual({ connect })
+  })
+
+  it("omits createChatConnection from the bridge when the host does not provide it", () => {
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate"] }],
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async () => ({ text: "reply" }),
+        stream: async function* () {},
+      },
+    })
+
+    const aiBridge = context.ai
+    expect(aiBridge && "createChatConnection" in aiBridge).toBe(false)
+  })
+
+  it("keeps attachment preparation behind the AI tools grant", async () => {
+    const prepare = vi.fn(async () => [])
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate", "tools"] }],
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async () => ({ text: "reply" }),
+        stream: async function* () {},
+        prepareChatAttachments: prepare,
+      },
+    })
+
+    expect(() => context.ai?.prepareChatAttachments?.([], { conversationId: "thread-1" })).toThrow(
+      "attempted to use AI tools without permission",
+    )
+    expect(prepare).not.toHaveBeenCalled()
+  })
+
   it("collects view registration disposers for plugin-owned cleanup", () => {
     const registrationDisposers: Array<() => void> = []
     const registry = createExtensionRegistry()

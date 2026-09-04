@@ -38,12 +38,10 @@ const FOCUSED_TEST_RULES = [
   "packages/ui",
   "packages/workbench-app",
   "packages/workbench-shell",
-  "apps/playground",
   "apps/site",
-  "backend/app",
+  "apps/app",
   "tooling/stylex",
   "tooling/vitest",
-  "plugins/community/layout-diy-masonry",
   "plugins/official/layout-dashboard",
   "plugins/official/widget-notes",
   "plugins/official/widget-quick-links",
@@ -51,10 +49,7 @@ const FOCUSED_TEST_RULES = [
   "plugins/official/widget-weather",
 ].map((directory) => ({
   directory: `${directory}/`,
-  command:
-    directory === "tooling/vitest"
-      ? "pnpm exec vitest run --config tooling/vitest/vitest.config.ts"
-      : `pnpm --dir ${directory} exec vitest run --config vitest.config.ts`,
+  command: `pnpm exec vitest run --passWithNoTests ${directory}`,
 }))
 
 const CHANGE_TYPE_RULES = [
@@ -82,7 +77,7 @@ const CHANGE_TYPE_RULES = [
   },
   {
     type: "backend",
-    matches: (filePath) => filePath.startsWith("backend/app/"),
+    matches: (filePath) => filePath.startsWith("apps/app/"),
   },
   {
     type: "orchestrator",
@@ -91,7 +86,7 @@ const CHANGE_TYPE_RULES = [
   {
     type: "shell",
     matches: (filePath) =>
-      filePath.startsWith("apps/playground/") ||
+      filePath.startsWith("apps/app/src/workbench/") ||
       filePath.startsWith("apps/extension/") ||
       filePath.startsWith("packages/workbench-app/") ||
       filePath.startsWith("packages/workbench-shell/") ||
@@ -120,8 +115,7 @@ const CHANGE_TYPE_RULES = [
       filePath === "pnpm-lock.yaml" ||
       filePath === "pnpm-workspace.yaml" ||
       filePath === "vite.config.ts" ||
-      filePath === "vitest.config.ts" ||
-      filePath === "vitest.e2e.config.ts",
+      filePath === "vitest.config.ts",
   },
   {
     type: "release",
@@ -150,22 +144,19 @@ const KNOWN_DEBT_RULES = [
     label: "`WorkbenchShellApp.tsx` 仍是重型共享宿主编排",
     matches: (filePath) =>
       filePath === "packages/workbench-app/src/shell/WorkbenchShellApp.tsx" ||
-      filePath === "apps/playground/src/App.tsx" ||
+      filePath === "apps/app/src/workbench/App.tsx" ||
       filePath === "apps/extension/entrypoints/newtab/App.tsx",
   },
   {
     label: "`SearchViewProps` 尚未升级到技术方案描述的状态机 contract",
     matches: (filePath) =>
       filePath.startsWith("packages/official-plugins/src/search-command-bar") ||
-      filePath.startsWith("apps/playground/src/App.tsx") ||
+      filePath.startsWith("apps/app/src/workbench/App.tsx") ||
       filePath.startsWith("apps/extension/entrypoints/newtab/App.tsx"),
   },
   {
     label: "拖拽未实现 5px 阈值、实时交换、触屏策略",
-    matches: (filePath) =>
-      filePath.startsWith("packages/orchestrator/src/drag-sort-model") ||
-      filePath.startsWith("apps/playground/src/workbenchDashboard.e2e.test.tsx") ||
-      filePath.startsWith("apps/playground/src/workbenchGovernance.e2e.test.tsx"),
+    matches: (filePath) => filePath.startsWith("packages/orchestrator/src/drag-sort-model"),
   },
   {
     label: "workspace preset 的 `plugins` 字段未校验，且存在疑似旧 layout id",
@@ -216,9 +207,6 @@ export function collectSuggestedCommands(options) {
   const needsArchitecture = options.changeTypes.some((changeType) =>
     ["protocol", "kernel", "storage", "orchestrator", "shell", "plugin"].includes(changeType),
   )
-  const needsE2e = options.changeTypes.some((changeType) =>
-    ["orchestrator", "shell", "plugin", "ui"].includes(changeType),
-  )
   const needsBuild = options.changeTypes.some((changeType) =>
     [
       "protocol",
@@ -244,9 +232,6 @@ export function collectSuggestedCommands(options) {
   }
   if (needsBuild) {
     commands.push("pnpm build")
-  }
-  if (needsE2e) {
-    commands.push("pnpm test:e2e")
   }
 
   if (options.changedFiles.includes(".github/workflows/release-extension.yml")) {

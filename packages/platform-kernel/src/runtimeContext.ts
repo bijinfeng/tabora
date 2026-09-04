@@ -199,19 +199,27 @@ export function createPluginRuntimeContext(options: {
             requireAiAccess("generate")
             return options.ai!.stream(request)
           },
-          ...(options.ai.requestToolApproval
+          ...(options.ai.createChatClient
             ? {
-                requestToolApproval(request) {
-                  requireAiAccess("tools")
-                  return options.ai!.requestToolApproval!(request)
+                createChatClient(clientOptions) {
+                  requireAiAccess("generate")
+                  return options.ai!.createChatClient!(clientOptions)
                 },
               }
             : {}),
-          ...(options.ai.getWorkspaceContext
+          ...(options.ai.createChatConnection
             ? {
-                getWorkspaceContext() {
-                  requireAiAccess("context")
-                  return options.ai!.getWorkspaceContext!()
+                createChatConnection() {
+                  requireAiAccess("generate")
+                  return options.ai!.createChatConnection!()
+                },
+              }
+            : {}),
+          ...(options.ai.prepareChatAttachments
+            ? {
+                prepareChatAttachments(files, preparation) {
+                  requireAiAccess("tools")
+                  return options.ai!.prepareChatAttachments!(files, preparation)
                 },
               }
             : {}),
@@ -261,6 +269,12 @@ export function createPluginRuntimeContext(options: {
       },
       closeFullscreen() {
         options.events.emit("ui.fullscreen.close", { pluginId: options.pluginId })
+      },
+      openSettings(sectionId) {
+        options.events.emit("ui.settings.open", {
+          pluginId: options.pluginId,
+          ...(sectionId ? { sectionId } : {}),
+        })
       },
       showToast(message, toastOptions) {
         options.events.emit("ui.toast.show", { message, options: toastOptions })

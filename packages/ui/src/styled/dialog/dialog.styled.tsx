@@ -27,6 +27,24 @@ const scaleIn = stylex.keyframes({
   },
 })
 
+const fadeOut = stylex.keyframes({
+  from: {
+    opacity: 1,
+  },
+  to: {
+    opacity: 0,
+  },
+})
+
+const scaleOut = stylex.keyframes({
+  from: {
+    transform: "translate(-50%, -50%) scale(1)",
+  },
+  to: {
+    transform: "translate(-50%, calc(-50% + 8px)) scale(0.95)",
+  },
+})
+
 const styles = stylex.create({
   overlay: {
     alignItems: "center",
@@ -40,11 +58,28 @@ const styles = stylex.create({
     justifyContent: "center",
     position: "fixed",
     zIndex: zIndex.modal,
+    // kobalte 关闭时挂 data-closed，solid-presence 会等退场动画结束再卸载。
+    "[data-closed]": {
+      animationName: fadeOut,
+    },
   },
-  panel: {
+  // 结构层：居中定位 + 入场动画，chromeless 模式也保留（否则面板无法居中/动画）。
+  panelBase: {
     animationDuration: motion.normal,
     animationName: scaleIn,
     animationTimingFunction: motion.ease,
+    left: "50%",
+    position: "fixed",
+    top: "50%",
+    transform: "translate(-50%, -50%)",
+    zIndex: zIndex.modal,
+    // kobalte 关闭时挂 data-closed，solid-presence 会等退场动画结束再卸载。
+    "[data-closed]": {
+      animationName: scaleOut,
+    },
+  },
+  // 视觉层：默认面板外观，chromeless 模式下让位给调用方的 panelXstyle。
+  panelChrome: {
     backgroundColor: color.surface,
     borderColor: color.line,
     borderRadius: radius.panel,
@@ -54,14 +89,9 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: 9,
-    left: "50%",
     maxHeight: "80vh",
     overflowY: "auto",
     padding: 14,
-    position: "fixed",
-    top: "50%",
-    transform: "translate(-50%, -50%)",
-    zIndex: zIndex.modal,
   },
   panelDestructive: {
     borderColor: "rgb(var(--tbr-color-danger) / 0.3)",
@@ -129,7 +159,14 @@ export type StyledDialogProps = DialogProps & {
 export function Dialog(props: StyledDialogProps) {
   const overlayCompiled = () => stylex.attrs(styles.overlay, props.xstyle)
   const panelCompiled = () =>
-    stylex.attrs(styles.panel, props.destructive && styles.panelDestructive, props.panelXstyle)
+    props.chromeless
+      ? stylex.attrs(styles.panelBase, props.panelXstyle)
+      : stylex.attrs(
+          styles.panelBase,
+          styles.panelChrome,
+          props.destructive && styles.panelDestructive,
+          props.panelXstyle,
+        )
   const headerCompiled = () =>
     stylex.attrs(styles.header, props.destructive && styles.headerDestructive)
   const bodyCompiled = () => stylex.attrs(styles.body)

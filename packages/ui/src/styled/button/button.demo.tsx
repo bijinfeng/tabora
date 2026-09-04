@@ -71,13 +71,13 @@ export function ButtonDemo() {
         <h4 {...stylex.attrs(demoStyles.sectionTitle)}>尺寸 + 全宽 + 纯图标</h4>
         <div {...stylex.attrs(demoStyles.row)}>
           <Button variant="primary" size="sm">
-            小 28px
+            小 24px
           </Button>
           <Button variant="primary" size="md">
             中 32px
           </Button>
           <Button variant="primary" size="lg">
-            大 44px
+            大 40px
           </Button>
           <div style={{ width: "180px" }}>
             <Button variant="primary" fullWidth>
@@ -96,16 +96,16 @@ export function ButtonDemo() {
       <div {...stylex.attrs(demoStyles.section)}>
         <h4 {...stylex.attrs(demoStyles.sectionTitle)}>按钮图标</h4>
         <div {...stylex.attrs(demoStyles.row)}>
-          <Button variant="primary" icon={<Search size={16} strokeWidth={2} />}>
+          <Button variant="primary" icon={Search}>
             搜索
           </Button>
-          <Button variant="secondary" icon={<Download size={16} strokeWidth={2} />}>
+          <Button variant="secondary" icon={Download}>
             下载
           </Button>
-          <Button variant="subtle" icon={<Heart size={16} strokeWidth={2} />}>
+          <Button variant="subtle" icon={Heart}>
             收藏
           </Button>
-          <Button variant="ghost" icon={<Plus size={16} strokeWidth={2} />}>
+          <Button variant="ghost" icon={Plus}>
             添加
           </Button>
         </div>
@@ -114,18 +114,10 @@ export function ButtonDemo() {
       <div {...stylex.attrs(demoStyles.section)}>
         <h4 {...stylex.attrs(demoStyles.sectionTitle)}>图标位置</h4>
         <div {...stylex.attrs(demoStyles.row)}>
-          <Button
-            variant="primary"
-            icon={<Search size={16} strokeWidth={2} />}
-            iconPlacement="start"
-          >
+          <Button variant="primary" icon={Search} iconPlacement="start">
             图标在左
           </Button>
-          <Button
-            variant="primary"
-            icon={<Download size={16} strokeWidth={2} />}
-            iconPlacement="end"
-          >
+          <Button variant="primary" icon={Download} iconPlacement="end">
             图标在右
           </Button>
         </div>

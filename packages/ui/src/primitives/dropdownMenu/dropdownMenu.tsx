@@ -17,6 +17,14 @@ export type DropdownMenuItem = {
   onClick?: () => void
 }
 
+export type DropdownMenuGroup = {
+  id: string
+  label: JSX.Element
+  items: DropdownMenuItem[]
+}
+
+export type DropdownMenuEntry = DropdownMenuItem | DropdownMenuGroup
+
 export type DropdownMenuSide = "top" | "bottom" | "left" | "right"
 
 export type DropdownMenuAlign = "start" | "end"
@@ -52,7 +60,7 @@ export type DropdownMenuProps = {
   onClose?: () => void
   modal?: boolean
   title?: JSX.Element
-  items: DropdownMenuItem[]
+  items: DropdownMenuEntry[]
   side?: DropdownMenuSide
   align?: DropdownMenuAlign
   sideOffset?: number
@@ -156,6 +164,20 @@ export function DropdownMenu(props: DropdownMenuProps) {
     return placementMap[side][align]
   }
 
+  const sections = () => {
+    const result: Array<{ label?: JSX.Element; items: DropdownMenuItem[] }> = []
+    for (const entry of local.items) {
+      if ("items" in entry) {
+        if (entry.items.length > 0) result.push({ label: entry.label, items: entry.items })
+        continue
+      }
+      const previous = result.at(-1)
+      if (!previous || previous.label !== undefined) result.push({ items: [entry] })
+      else previous.items.push(entry)
+    }
+    return result
+  }
+
   const AsChildWrapper: Component<DropdownMenuTriggerRenderProps> = (wrapperProps) => {
     const content =
       typeof local.children === "function"
@@ -210,48 +232,65 @@ export function DropdownMenu(props: DropdownMenuProps) {
               {local.title}
             </div>
           </Show>
-          <For each={local.items}>
-            {(item) =>
-              item.separator ? (
-                <KDropdownMenu.Separator
-                  {...optionalPartProps(local.separatorClass, local.separatorStyle)}
-                />
-              ) : (
-                <KDropdownMenu.Item
-                  class={[local.itemClass, item.danger ? local.itemDangerClass : undefined]
-                    .filter(Boolean)
-                    .join(" ")}
-                  style={
-                    item.danger ? { ...local.itemStyle, ...local.itemDangerStyle } : local.itemStyle
+          <For each={sections()}>
+            {(section) => (
+              <>
+                <Show when={section.label !== undefined}>
+                  <div class={local.titleClass} style={local.titleStyle}>
+                    {section.label}
+                  </div>
+                </Show>
+                <For each={section.items}>
+                  {(item) =>
+                    item.separator ? (
+                      <KDropdownMenu.Separator
+                        {...optionalPartProps(local.separatorClass, local.separatorStyle)}
+                      />
+                    ) : (
+                      <KDropdownMenu.Item
+                        class={[local.itemClass, item.danger ? local.itemDangerClass : undefined]
+                          .filter(Boolean)
+                          .join(" ")}
+                        style={
+                          item.danger
+                            ? { ...local.itemStyle, ...local.itemDangerStyle }
+                            : local.itemStyle
+                        }
+                        {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
+                        data-danger={item.danger ? "" : undefined}
+                        data-checked={item.checked ? "" : undefined}
+                        onSelect={() => {
+                          item.onClick?.()
+                        }}
+                      >
+                        {item.icon && (
+                          <span class={local.iconClass} style={local.iconStyle}>
+                            {item.icon}
+                          </span>
+                        )}
+                        <span class={local.labelClass} style={local.labelStyle}>
+                          {item.label}
+                        </span>
+                        <Show when={item.checked}>
+                          <span
+                            class={local.checkClass}
+                            style={local.checkStyle}
+                            aria-hidden="true"
+                          >
+                            <Check size={14} strokeWidth={2} />
+                          </span>
+                        </Show>
+                        {item.shortcut && (
+                          <kbd class={local.kbdClass} style={local.kbdStyle}>
+                            {item.shortcut}
+                          </kbd>
+                        )}
+                      </KDropdownMenu.Item>
+                    )
                   }
-                  {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
-                  data-danger={item.danger ? "" : undefined}
-                  data-checked={item.checked ? "" : undefined}
-                  onSelect={() => {
-                    item.onClick?.()
-                  }}
-                >
-                  {item.icon && (
-                    <span class={local.iconClass} style={local.iconStyle}>
-                      {item.icon}
-                    </span>
-                  )}
-                  <span class={local.labelClass} style={local.labelStyle}>
-                    {item.label}
-                  </span>
-                  <Show when={item.checked}>
-                    <span class={local.checkClass} style={local.checkStyle} aria-hidden="true">
-                      <Check size={14} strokeWidth={2} />
-                    </span>
-                  </Show>
-                  {item.shortcut && (
-                    <kbd class={local.kbdClass} style={local.kbdStyle}>
-                      {item.shortcut}
-                    </kbd>
-                  )}
-                </KDropdownMenu.Item>
-              )
-            }
+                </For>
+              </>
+            )}
           </For>
         </KDropdownMenu.Content>
       </KDropdownMenu.Portal>

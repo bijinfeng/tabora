@@ -5,6 +5,7 @@ import type { SettingsPanelData, SettingsPanelViewProps } from "@tabora/plugin-a
 import type { Workspace } from "@tabora/plugin-api/host"
 
 import {
+  AiSettingsPanel as AiSettingsPanelView,
   AppearanceSettingsPanel as AppearanceSettingsPanelView,
   SearchSettingsPanel as SearchSettingsPanelView,
   WorkbenchSettingsPanel as WorkbenchSettingsPanelView,
@@ -473,6 +474,95 @@ describe("WorkbenchSettingsPanel", () => {
 
     expect(createWorkspace).toHaveBeenCalledWith("New Space")
     expect(input.value).toBe("")
+    root.remove()
+  })
+})
+
+describe("AiSettingsPanel", () => {
+  it("prefills the custom provider name when editing a provider", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <AiSettingsPanelView
+          panelId="official.settings.workspace.ai"
+          pluginId="official.settings"
+          scope="workspace"
+          surface="desktop"
+          host={host()}
+          data={{
+            ai: {
+              supportedProviders: ["builtin", "custom"],
+              activeProvider: "custom",
+              builtin: { status: "unavailable", models: [], modelId: "gpt-5.5" },
+              custom: {
+                name: "智谱 GLM",
+                baseUrl: "https://provider.example/v1",
+                model: "gpt-5.5",
+                models: ["gpt-5.5", "glm-4"],
+                apiKeyConfigured: true,
+              },
+            },
+          }}
+        />
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("glm-4")
+    expect(root.textContent).toContain("自定义供应商")
+    expect(root.querySelectorAll("[role='radio']")).toHaveLength(2)
+    buttonByText(root, "编辑").click()
+
+    expect(document.body.querySelector<HTMLInputElement>("#custom-provider-name")?.value).toBe(
+      "智谱 GLM",
+    )
+
+    document.body.querySelector<HTMLButtonElement>("[aria-label='关闭']")?.click()
+    root.remove()
+  })
+
+  it("uses the host-stored API key when fetching models during edit", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const discoverAiModels = vi.fn(async (_baseUrl: string, _apiKey?: string) => ["new-model"])
+    render(
+      () => (
+        <AiSettingsPanelView
+          panelId="official.settings.workspace.ai"
+          pluginId="official.settings"
+          scope="workspace"
+          surface="desktop"
+          host={{ ...host(), discoverAiModels }}
+          data={{
+            ai: {
+              supportedProviders: ["builtin", "custom"],
+              activeProvider: "custom",
+              builtin: { status: "unavailable", models: [], modelId: "gpt-5.5" },
+              custom: {
+                name: "智谱 GLM",
+                baseUrl: "https://provider.example/v1",
+                model: "gpt-5.5",
+                apiKeyConfigured: true,
+              },
+            },
+          }}
+        />
+      ),
+      root,
+    )
+
+    buttonByText(root, "编辑").click()
+    await Promise.resolve()
+    const fetchButtons = [...document.body.querySelectorAll("button")].filter(
+      (button) => button.textContent?.trim() === "获取模型",
+    )
+    fetchButtons.at(-1)?.click()
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(discoverAiModels).toHaveBeenCalledWith("https://provider.example/v1", undefined)
+    expect(document.body.textContent).toContain("new-model")
+    document.body.querySelector<HTMLButtonElement>("[aria-label='关闭']")?.click()
     root.remove()
   })
 })

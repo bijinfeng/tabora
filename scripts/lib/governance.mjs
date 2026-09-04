@@ -20,8 +20,8 @@ const STYLEX_GLOBAL_CSS_ALLOWLIST = new Set([
 const STYLEX_PACKAGE_PLACEHOLDER_ALLOWLIST = new Set([
   "packages/official-plugins/src/styles.css",
   "packages/workbench-shell/src/styles.css",
-  "plugins/community/layout-diy-masonry/src/styles.css",
   "plugins/official/layout-dashboard/src/styles.css",
+  "plugins/official/widget-ai-chat/src/styles.css",
   "plugins/official/widget-notes/src/styles.css",
   "plugins/official/widget-quick-links/src/styles.css",
   "plugins/official/widget-todo/src/styles.css",
@@ -250,19 +250,6 @@ const WORKBENCH_APP_EXPORT_PATTERN =
   /export\s+(?:type\s+)?(?:\*|\{[\s\S]*?\})\s+from\s+["']@tabora\/workbench-app["'];?/g
 const PLUGIN_EXTERNAL_OPEN_PATTERN = /window\.open|target="_blank"|target='_blank'/g
 const WINDOW_OPEN_PATTERN = /window\.open/g
-const REQUIRED_BROWSER_SMOKE_PATHS = [
-  "apps/playground/**",
-  "apps/extension/**",
-  "packages/**",
-  "plugins/**",
-  "scripts/**",
-  "tooling/**",
-  "package.json",
-  "pnpm-lock.yaml",
-  "pnpm-workspace.yaml",
-  "vitest.e2e.config.ts",
-  ".github/workflows/**",
-]
 const QUALITY_EXTERNAL_OPEN_PATTERN =
   /window\.open|target="_blank"|target='_blank'|openExternal|external-open/g
 const ALLOWED_WINDOW_OPEN_FILES = new Set([
@@ -346,6 +333,23 @@ const WORKBENCH_RAW_COLOR_BASELINE = new Set([
   // tiptap editor 阴影叠加层，使用固定透明度的黑色阴影。
   "packages/tiptap-editor/src/tiptap-editor.styled.tsx::rgb(0 0 0 / 0.25)",
   "packages/tiptap-editor/src/tiptap-editor.styled.tsx::rgb(0 0 0 / 0.35)",
+  // 管理端邮件模板是跨客户端渲染的内联 HTML，不能使用运行时主题 token。
+  "apps/app/src/server/email-templates/renderer.ts::!important",
+  "apps/app/src/server/email-templates/renderer.ts::#0ea5e9",
+  "apps/app/src/server/email-templates/renderer.ts::#1f2937",
+  "apps/app/src/server/email-templates/renderer.ts::#4b5563",
+  "apps/app/src/server/email-templates/renderer.ts::#6b7280",
+  "apps/app/src/server/email-templates/renderer.ts::#92400e",
+  "apps/app/src/server/email-templates/renderer.ts::#991b1b",
+  "apps/app/src/server/email-templates/renderer.ts::#9ca3af",
+  "apps/app/src/server/email-templates/renderer.ts::#e5e7eb",
+  "apps/app/src/server/email-templates/renderer.ts::#ef4444",
+  "apps/app/src/server/email-templates/renderer.ts::#f59e0b",
+  "apps/app/src/server/email-templates/renderer.ts::#f5f5f5",
+  "apps/app/src/server/email-templates/renderer.ts::#fef2f2",
+  "apps/app/src/server/email-templates/renderer.ts::#fef3c7",
+  "apps/app/src/server/email-templates/renderer.ts::#ffffff",
+  "apps/app/src/server/email.ts::#0ea5e9",
 ])
 const TYPE_ESCAPE_BASELINE = new Set([
   // tiptap-editor 中 StyleX attrs() 与 Solid JSX.CSSProperties 的类型桥接。
@@ -364,6 +368,10 @@ const TYPE_ESCAPE_BASELINE = new Set([
   "packages/ui/src/primitives/dropdownMenu/dropdownMenu.tsx::as any",
   // @tabora/ui Popover triggerAsChild 包装器类型转换。
   "packages/ui/src/primitives/popover/popover.tsx::as any",
+  // TanStack Start RC 的 server function handler constraint 不接受 `unknown` 字段。
+  "apps/app/src/server/admin/syncedRecords.ts::as any",
+  // 设置 server function 的框架输入类型桥接。
+  "apps/app/src/pages/settings/SettingsPage.tsx::as any",
 ])
 const SOURCE_INVARIANT_FILES = [
   "packages/workbench-shell/src/CommandPalette.tsx",
@@ -685,57 +693,9 @@ export function findPassThroughWorkbenchAppExports(options) {
   return matches.map((match) => ({
     filePath: options.filePath,
     match,
-    reason: "apps must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
+    reason:
+      "workbench entrypoints must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
   }))
-}
-
-export function findBrowserSmokeWorkflowViolations(options) {
-  if (options.filePath !== ".github/workflows/ci.yml") {
-    return []
-  }
-
-  const findings = []
-
-  for (const workflowPath of REQUIRED_BROWSER_SMOKE_PATHS) {
-    if (!options.source.includes(`- "${workflowPath}"`)) {
-      findings.push({
-        filePath: options.filePath,
-        match: "pull_request.paths",
-        reason: "CI pull_request workflow must gate browser smoke by the required Tabora path set",
-      })
-      break
-    }
-  }
-
-  if (
-    !/browser-smoke:\s*[\s\S]*?\bif:\s*github\.event_name\s*==\s*['"]pull_request['"]/.test(
-      options.source,
-    )
-  ) {
-    findings.push({
-      filePath: options.filePath,
-      match: "jobs.browser-smoke.if",
-      reason: "CI browser smoke job must run only for pull_request events",
-    })
-  }
-
-  if (!options.source.includes("pnpm exec playwright install --with-deps chromium")) {
-    findings.push({
-      filePath: options.filePath,
-      match: "pnpm exec playwright install --with-deps chromium",
-      reason: "CI browser smoke job must install Playwright Chromium before pnpm test:e2e",
-    })
-  }
-
-  if (!/browser-smoke:\s*[\s\S]*?- run: pnpm test:e2e/.test(options.source)) {
-    findings.push({
-      filePath: options.filePath,
-      match: "pnpm test:e2e",
-      reason: "CI browser smoke job must execute pnpm test:e2e",
-    })
-  }
-
-  return findings
 }
 
 export function findWorkbenchRawColorViolations(options) {
@@ -1153,7 +1113,7 @@ export async function scanAppSourceBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles(
     [
-      path.join(repositoryRoot, "apps", "playground", "src"),
+      path.join(repositoryRoot, "apps", "app", "src", "workbench"),
       path.join(repositoryRoot, "apps", "extension", "entrypoints"),
     ],
     (filePath) => {
@@ -1191,6 +1151,10 @@ export async function scanTypeEscapeBoundaries(rootDir) {
       }
 
       if (isTestFile(filePath)) {
+        return false
+      }
+
+      if (path.basename(filePath) === "routeTree.gen.ts") {
         return false
       }
 
@@ -1253,7 +1217,7 @@ export async function scanAppWorkbenchPassThroughBoundaries(rootDir) {
   const repositoryRoot = resolveRepositoryRoot(rootDir)
   const files = await collectFiles(
     [
-      path.join(repositoryRoot, "apps", "playground", "src"),
+      path.join(repositoryRoot, "apps", "app", "src", "workbench"),
       path.join(repositoryRoot, "apps", "extension", "entrypoints"),
     ],
     (filePath) => {
@@ -1314,17 +1278,6 @@ export async function scanWindowOpenBoundaries(rootDir) {
   )
 
   return scanFiles(repositoryRoot, files, findWindowOpenViolations)
-}
-
-export async function scanBrowserSmokeWorkflowBoundaries(rootDir) {
-  const repositoryRoot = resolveRepositoryRoot(rootDir)
-  const workflowPath = path.join(repositoryRoot, ".github", "workflows", "ci.yml")
-
-  if (!existsSync(workflowPath)) {
-    return []
-  }
-
-  return scanFiles(repositoryRoot, [workflowPath], findBrowserSmokeWorkflowViolations)
 }
 
 export async function scanWorkbenchRawColorBoundaries(rootDir) {
@@ -1394,7 +1347,6 @@ export async function scanArchitecture(rootDir) {
     ...(await scanDeprecatedLayoutIdBoundaries(rootDir)),
     ...(await scanAppWorkbenchPassThroughBoundaries(rootDir)),
     ...(await scanWindowOpenBoundaries(rootDir)),
-    ...(await scanBrowserSmokeWorkflowBoundaries(rootDir)),
     ...(await scanWorkbenchRawColorBoundaries(rootDir)),
     ...(await scanWorkbenchAvoidableStyleBoundaries(rootDir)),
     ...(await scanStylexCssBoundaries(rootDir)),

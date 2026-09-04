@@ -1,0 +1,46 @@
+diff --git a/package.json b/package.json
+index a9f1511756ad13ee9877d30d264026886a21d1e7..048931f98f8b12876c090c60d70324093b09a66b 100644
+--- a/package.json
++++ b/package.json
+@@ -52,17 +52,12 @@
+   },
+   "exports": {
+     "worker": {
+-      "solid": "./dist/server.jsx",
+       "import": {
+         "types": "./dist/index.d.ts",
+         "default": "./dist/server.js"
+       }
+     },
+     "browser": {
+-      "solid": {
+-        "development": "./dist/dev.jsx",
+-        "import": "./dist/index.jsx"
+-      },
+       "development": {
+         "import": {
+           "types": "./dist/index.d.ts",
+@@ -75,23 +70,17 @@
+       }
+     },
+     "deno": {
+-      "solid": "./dist/server.jsx",
+       "import": {
+         "types": "./dist/index.d.ts",
+         "default": "./dist/server.js"
+       }
+     },
+     "node": {
+-      "solid": "./dist/server.jsx",
+       "import": {
+         "types": "./dist/index.d.ts",
+         "default": "./dist/server.js"
+       }
+     },
+-    "solid": {
+-      "development": "./dist/dev.jsx",
+-      "import": "./dist/index.jsx"
+-    },
+     "development": {
+       "import": {
+         "types": "./dist/index.d.ts",

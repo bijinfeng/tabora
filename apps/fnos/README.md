@@ -1,6 +1,6 @@
 # Tabora for 飞牛 fnOS
 
-`apps/fnos` 是 Tabora 的飞牛 fnOS Native 宿主。生产包通过统一网关 `/app/tabora` 暴露工作台，Fastify 服务监听 `${TRIM_APPDEST}/app.sock`，工作区与插件数据写入 `${TRIM_PKGVAR}/tabora.db`。
+`apps/fnos` 是 Tabora 的飞牛 fnOS Native 宿主。生产包通过统一网关 `/app/tabora` 暴露工作台，Hono 服务监听 `${TRIM_APPDEST}/app.sock`，工作区、插件数据和设备共享 AI provider 配置写入 `${TRIM_PKGVAR}/tabora.db`。
 
 ## 本地开发
 
@@ -33,7 +33,7 @@ pnpm --filter @tabora/fnos pack:fnos
 
 1. 从 `@tabora/brand` 的 SVG 源生成 64/256 px 图标。
 2. 以 `/app/tabora/` 为 base 构建前端。
-3. 将 Fastify 后端打包为 Node.js 22 ESM bundle。
+3. 将 Hono 后端打包为 Node.js 22 ESM bundle。
 4. 把前端、后端以及 Linux x64/arm64 的 `better-sqlite3` 预构建产物放入 `tabora/app/dist/`。
 5. 执行 `fnpack build --directory tabora`，生成 `apps/fnos/tabora.fpk`。
 

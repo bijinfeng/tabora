@@ -336,10 +336,17 @@ describe("createWorkbenchShellControllerRuntime", () => {
     const commandOptions = mocks.createWorkbenchShellCommandModels.mock.calls[0]![0] as Parameters<
       typeof createWorkbenchShellCommandModels
     >[0]
-    expect(commandOptions.pluginCommands).toEqual([
-      expect.objectContaining({ id: "plugin.command" }),
-    ])
-    expect(commandOptions.pluginKeybindings).toEqual([
+    // Commands resolve lazily so post-discovery plugin manifests stay visible.
+    const resolvedPluginCommands =
+      typeof commandOptions.pluginCommands === "function"
+        ? commandOptions.pluginCommands()
+        : commandOptions.pluginCommands
+    const resolvedPluginKeybindings =
+      typeof commandOptions.pluginKeybindings === "function"
+        ? commandOptions.pluginKeybindings()
+        : commandOptions.pluginKeybindings
+    expect(resolvedPluginCommands).toEqual([expect.objectContaining({ id: "plugin.command" })])
+    expect(resolvedPluginKeybindings).toEqual([
       expect.objectContaining({ id: "plugin.keybinding" }),
     ])
 

@@ -54,13 +54,16 @@ const styles = stylex.create({
     boxShadow: shadow.floating,
     display: "flex",
     flexDirection: "column",
-    maxHeight: "calc(100vh - 64px)",
-    minHeight: "min(520px, calc(100vh - 64px))",
+    boxSizing: "border-box",
+    height: 640,
+    maxHeight: "calc(100vh - 48px)",
+    minHeight: "min(640px, calc(100vh - 48px))",
     overflow: "hidden",
     width: "min(920px, calc(100vw - 64px))",
     "@media (max-width: 480px)": {
+      height: 640,
       maxHeight: "calc(100vh - 24px)",
-      minHeight: "min(520px, calc(100vh - 24px))",
+      minHeight: "min(640px, calc(100vh - 24px))",
       width: "calc(100vw - 24px)",
     },
     "@media (prefers-reduced-motion: reduce)": {
@@ -101,7 +104,7 @@ const styles = stylex.create({
   titleTexts: {
     display: "flex",
     flexDirection: "column",
-    gap: 1,
+    gap: 4,
     minWidth: 0,
   },
   titleText: {
@@ -142,7 +145,21 @@ const styles = stylex.create({
     flex: 1,
     flexDirection: "column",
     minHeight: 0,
-    overflow: "auto",
+    overflow: "hidden",
+  },
+  bodyContent: {
+    display: "flex",
+    flex: 1,
+    flexDirection: "column",
+    minHeight: 0,
+    width: "100%",
+  },
+  bodyPlugin: {
+    display: "flex",
+    flex: 1,
+    flexDirection: "column",
+    minHeight: 0,
+    minWidth: 0,
   },
   missing: {
     color: color.danger,
@@ -215,11 +232,9 @@ export function WorkbenchExpandOverlay(props: {
                 </span>
                 <div {...stylex.attrs(styles.titleTexts)}>
                   <span {...stylex.attrs(styles.titleText)}>{expand().title}</span>
-                  <span {...stylex.attrs(styles.titleMeta)}>
-                    {expand().mode === "settings"
-                      ? (props.tShell?.("chrome.expand.meta.settings") ?? "实例设置")
-                      : (props.tShell?.("chrome.expand.meta.expand") ?? "插件展开视图")}
-                  </span>
+                  <Show when={expand().subtitle}>
+                    <span {...stylex.attrs(styles.titleMeta)}>{expand().subtitle}</span>
+                  </Show>
                 </div>
               </div>
               <IconButton
@@ -250,17 +265,22 @@ export function WorkbenchExpandOverlay(props: {
                 }
 
                 return (
-                  <PluginViewBoundary
-                    instanceId={expand().instanceId}
-                    title={expand().title}
-                    {...(props.pluginViewBoundaryCopy
-                      ? { copy: props.pluginViewBoundaryCopy }
-                      : {})}
-                  >
-                    <div data-tabora-plugin-id={expand().props.pluginId}>
-                      {View(expand().props)}
-                    </div>
-                  </PluginViewBoundary>
+                  <div {...stylex.attrs(styles.bodyContent)}>
+                    <PluginViewBoundary
+                      instanceId={expand().instanceId}
+                      title={expand().title}
+                      {...(props.pluginViewBoundaryCopy
+                        ? { copy: props.pluginViewBoundaryCopy }
+                        : {})}
+                    >
+                      <div
+                        {...stylex.attrs(styles.bodyPlugin)}
+                        data-tabora-plugin-id={expand().props.pluginId}
+                      >
+                        {View(expand().props)}
+                      </div>
+                    </PluginViewBoundary>
+                  </div>
                 )
               })()}
             </div>

@@ -1,4 +1,5 @@
 @import "@tabora/theme/global.css";
+
 /* Kobalte Pagination owns its semantic list; this resets that structural wrapper. */
 [data-tbr-pagination] > nav > ul {
   display: flex;
@@ -6,4 +7,14 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+@media (max-width: 480px) {
+  [data-tbr-pagination][data-responsive] {
+    gap: 4px;
+  }
+
+  [data-tbr-pagination][data-responsive] [data-pagination-size] {
+    display: none;
+  }
 }

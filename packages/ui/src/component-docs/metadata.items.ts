@@ -39,6 +39,15 @@ export const componentDocItems: ComponentDocItem[] = [
     code: `<Input value={value()} onInput={setValue} aria-label="工作区名称" />`,
   },
   {
+    id: "inputnumber",
+    name: "InputNumber",
+    title: "InputNumber 数字输入",
+    purpose: "输入精确数值，并提供范围、步长和键盘步进。",
+    usage:
+      "数量、价格、页码等需要精确输入的数值。设置 min/max 限制范围，使用 formatter/parser 展示货币、单位等格式。",
+    code: `<InputNumber value={count()} size="sm" min={1} max={10} onChange={setCount} aria-label="数量" />`,
+  },
+  {
     id: "textarea",
     name: "Textarea",
     title: "Textarea 文本域",
@@ -360,7 +369,18 @@ export const componentDocItems: ComponentDocItem[] = [
     title: "Pagination 分页",
     purpose: "分页浏览长列表。",
     usage: "插件列表、日志、数据表格。",
-    code: `<Pagination page={page()} total={5} onChange={setPage} />`,
+    code: `<Pagination
+  current={page()}
+  total={126}
+  pageSize={pageSize()}
+  showSizeChanger={{ options: [10, 20, 50] }}
+  showQuickJumper
+  showTotal={(total, [from, to]) => \`\${from}–\${to} / 共 \${total} 条\`}
+  onChange={(nextPage, nextPageSize) => {
+    setPage(nextPage)
+    setPageSize(nextPageSize)
+  }}
+/>`,
   },
   {
     id: "table",

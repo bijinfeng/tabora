@@ -50,9 +50,6 @@ describe("builtinPlugins", () => {
 
   it("exposes the official plugin pack as the default builtin list", () => {
     expect(builtinPlugins.length).toBe(officialPlugins.length)
-    expect(
-      builtinPlugins.some((plugin) => plugin.module.manifest.id === "community.layout.diy-masonry"),
-    ).toBe(false)
   })
 
   it("keeps view implementation loading out of plugin discovery", () => {

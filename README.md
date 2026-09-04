@@ -6,21 +6,21 @@ Tabora 是一个插件优先的个人工作台新标签页产品。它不是把�
 
 > 任何具体业务能力默认优先放进插件；平台只保留通用运行机制。
 
-平台负责插件运行内核、扩展点协议、宿主容器、存储、权限、事件和故障恢复。用户看到的布局、命令搜索、搜索源、背景、主题、卡片、弹窗、全屏视图和设置面板，都应来自官方或未来第三方插件。
+平台负责插件运行内核、扩展点协议、宿主容器、存储、权限、事件和故障恢复。用户看到的命令搜索、搜索源、背景、主题、卡片、弹窗、全屏视图和设置面板，都应来自官方或未来第三方插件；Dashboard 布局由宿主内建。
 
 ## 当前定位
 
 Tabora 当前处于 MVP 实现阶段，目标是验证一套可扩展的新标签页工作台架构：
 
 - 插件发现、manifest 校验、激活、registry 和 runtime context。
-- `layout`、`widget`、`search`、`search-provider`、`background-provider`、`background-renderer`、`theme`、`settings-panel` 等扩展点。
+- `widget`、`search`、`search-provider`、`background-provider`、`background-renderer`、`theme`、`settings-panel` 等扩展点。
 - 官方内置插件包和默认 builtin 装配。
-- Dashboard 与 Focus 等布局插件，验证“布局也是插件”的产品原则。
+- 单一内建 Dashboard，以及插件驱动的命令、搜索、背景、主题、卡片和设置能力。
 - Widget 多实例、多尺寸、拖拽排序、右键菜单、双击展开和持久化。
 - IndexedDB 本地持久化、主题 token、背景渲染、settings host、toast、modal、fullscreen 和插件错误边界。
 - `external-open` 最小权限桥。
 
-原 MVP 暂不包含远程插件市场、不可信远程插件沙箱、在线安装升级、团队工作区或完整插件开发者工具。官方账号与数据同步已作为独立工作线推进，需求与核心技术决策见 `docs/technical/tabora-data-sync-prd.md`。
+原 MVP 暂不包含远程插件市场、不可信远程插件沙箱、在线安装升级、团队工作区或完整插件开发者工具。官方账号与数据同步已作为独立工作线推进，边界与代码事实源见 `docs/README.md`。
 
 ## 快速开始
 
@@ -35,7 +35,7 @@ Tabora 当前处于 MVP 实现阶段，目标是验证一套可扩展的新标�
 pnpm install
 ```
 
-启动 playground：
+启动单一应用（根路径为工作台，`/admin` 为管理后台）：
 
 ```bash
 pnpm dev
@@ -44,7 +44,7 @@ pnpm dev
 也可以固定本地地址启动：
 
 ```bash
-pnpm --filter @tabora/playground exec vp dev --host 127.0.0.1 --port 5173 --strictPort
+pnpm --dir apps/app exec vp dev --host 127.0.0.1 --port 4000 --strictPort
 ```
 
 常用命令：
@@ -54,7 +54,7 @@ pnpm check
 pnpm check:fix
 pnpm test
 pnpm build
-pnpm --filter @tabora/playground build
+pnpm --filter @tabora/app build
 pnpm --filter @tabora/extension build
 pnpm --filter @tabora/site build
 ```
@@ -63,7 +63,7 @@ pnpm --filter @tabora/site build
 
 ```txt
 apps/
-  playground/      # MVP shell 与本地调试入口
+  app/             # 根工作台、/admin 管理后台与 /api 服务
   extension/       # 浏览器扩展 newtab 入口
   site/            # 官网、下载页和文档站点
 
@@ -99,7 +99,7 @@ docs/              # 产品、设计、技术和回归事实源
 - `@tabora/ui` 只提供插件内容区基础组件和低层可访问 primitive，不承载宿主级容器。
 - `@tabora/official-plugins` 表达官方插件 pack，不决定 shell 最终默认加载哪些 builtin plugins。
 - `@tabora/builtin-plugin-registry` 是当前 shell 默认 builtin 装配入口。
-- `apps/playground`、`apps/extension` 和未来其他 shell 应优先复用 `@tabora/workbench-app`、`@tabora/workbench-shell` 与 `@tabora/host-adapters`。
+- `apps/app` 根工作台、`apps/extension` 和未来其他 shell 应优先复用 `@tabora/workbench-app`、`@tabora/workbench-shell` 与 `@tabora/host-adapters`。
 
 ## 插件规则摘要
 
@@ -115,18 +115,7 @@ docs/              # 产品、设计、技术和回归事实源
 
 ## 文档入口
 
-开始较大任务前先读：
-
-- `AGENTS.md`
-- `docs/README.md`
-
-按任务类型继续阅读事实源：
-
-- 产品范围：`docs/product/tabora-plugin-workbench-prd.md`
-- 官方插件：`docs/product/tabora-official-plugins-design.md`
-- 视觉与交互：`DESIGN.md`
-- 技术架构：`docs/technical/tabora-plugin-workbench-technical-design-v2.md`
-- 回归治理：`docs/technical/tabora-regression-baseline.md`
+文档按任务分层维护，入口和事实源映射见 [`docs/README.md`](docs/README.md)。开始较大任务前先读 `AGENTS.md` 与该文档地图，再按目标路径选择必要的事实源。
 
 文档内容以中文为主。新增产品、技术、计划类文档也优先使用中文。
 
@@ -157,4 +146,4 @@ pnpm test
 pnpm build
 ```
 
-前端视觉或交互变更还需要启动 playground，并用浏览器检查关键路径，例如默认工作台、添加 widget、调整尺寸、拖拽排序、主题和背景切换、settings host、modal / fullscreen、搜索外部打开权限路径和插件错误回退状态。
+前端视觉或交互变更还需要启动 apps/app，并用浏览器检查根工作台、`/admin` 与 `/api/health` 等关键路径，例如默认工作台、添加 widget、调整尺寸、拖拽排序、主题和背景切换、settings host、modal / fullscreen、搜索外部打开权限路径和插件错误回退状态。

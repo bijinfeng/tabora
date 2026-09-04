@@ -4,7 +4,7 @@ packages:
   - plugins/*
   - plugins/*/*
   - tooling/*
-  - backend/app
+  - apps/app
 
 overrides:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.8
@@ -42,12 +42,14 @@ catalogs:
     dexie: ^4.4.4
     zod: ^4.4.3
   ai:
-    ai: ^7.0.58
+    "@tanstack/ai": ^0.53.0
+    "@tanstack/ai-client": ^0.31.0
+    "@tanstack/ai-openai": ^0.22.5
+    "@tanstack/ai-solid": ^0.21.0
+    solid-markdown: ^2.1.1
   test:
-    "@vitest/browser-playwright": ^4.1.10
     fake-indexeddb: ^6.2.5
     happy-dom: ^20.11.2
-    playwright: ^1.62.1
     vitest: ^4.1.10
   ui:
     "@kobalte/core": ^0.13.12
@@ -59,6 +61,8 @@ catalogs:
     "@tanstack/charts-scales": ^0.8.0
     "@tanstack/solid-charts": ^0.8.0
     "@tanstack/solid-query": ^5.101.4
+    "@tanstack/solid-router": ^1.170.30
+    "@tanstack/solid-start": ^1.168.47
     "@tiptap/core": 3.30.2
     "@tiptap/extension-audio": 3.30.2
     "@tiptap/extension-file-handler": 3.30.2
@@ -81,18 +85,31 @@ minimumReleaseAgeExclude:
   - fastify@5.11.2
   - "@tanstack/charts-scales@0.8.0"
   - "@tanstack/charts@0.8.0"
-  - "@tanstack/router-core@1.171.20"
-  - "@tanstack/router-generator@1.167.26"
-  - "@tanstack/router-plugin@1.168.28"
+  - "@tanstack/router-core@1.171.27"
+  - "@tanstack/router-generator@1.167.33"
+  - "@tanstack/router-plugin@1.168.35"
   - "@tanstack/solid-charts@0.8.0"
-  - "@tanstack/solid-router@1.170.23"
-  - "@tanstack/solid-start-client@1.168.22"
-  - "@tanstack/solid-start-server@1.167.29"
-  - "@tanstack/solid-start@1.168.40"
-  - "@tanstack/start-client-core@1.170.20"
-  - "@tanstack/start-plugin-core@1.171.32"
-  - "@tanstack/start-server-core@1.169.24"
-  - "@tanstack/start-storage-context@1.167.22"
+  - "@tanstack/solid-router@1.170.30"
+  - "@tanstack/solid-start-client@1.168.29"
+  - "@tanstack/solid-start-server@1.167.36"
+  - "@tanstack/solid-start@1.168.47"
+  - "@tanstack/start-client-core@1.170.27"
+  - "@tanstack/start-plugin-core@1.171.39"
+  - "@tanstack/start-server-core@1.169.31"
+  - "@tanstack/start-storage-context@1.167.29"
   - lucide-solid@1.31.0
   - pg-protocol@1.16.0
   - pg@8.23.0
+  - "@tanstack/ai-event-client@0.11.1"
+  - "@tanstack/ai-openai@0.22.2"
+  - "@tanstack/ai@0.51.0"
+  - "@tanstack/openai-base@0.10.7"
+  - "@tanstack/ai-client@0.29.1"
+  - "@tanstack/ai-client@0.31.0"
+  - "@tanstack/ai-openai@0.22.5"
+  - "@tanstack/ai-solid@0.21.0"
+  - "@tanstack/ai@0.53.0"
+  - "@tanstack/openai-base@0.10.10"
+
+patchedDependencies:
+  solid-markdown@2.1.1: patches/solid-markdown@2.1.1.patch

@@ -17,7 +17,6 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@kobalte/core": "catalog:ui",
     "@stylexjs/stylex": "catalog:style",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",

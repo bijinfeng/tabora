@@ -1,11 +1,14 @@
 import * as stylex from "@stylexjs/stylex"
 import type { StyleXStyles } from "@stylexjs/stylex"
+import { splitProps } from "solid-js"
 
 import { color, radius, zIndex } from "@tabora/theme/tokens.stylex"
 import { DropdownMenu as P } from "../../primitives/dropdownMenu/dropdownMenu"
 import type {
   DropdownMenuAlign,
   DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuEntry,
   DropdownMenuProps,
   DropdownMenuSide,
   DropdownMenuTriggerRenderProps,
@@ -15,6 +18,9 @@ import { sharedStyles } from "../sharedStyles.stylex"
 
 const styles = stylex.create({
   content: {
+    maxWidth: "calc(100vw - 16px)",
+    minWidth: 120,
+    width: "max-content",
     zIndex: zIndex.dropdown,
   },
   title: {
@@ -62,12 +68,14 @@ const styles = stylex.create({
 })
 
 export type StyledDropdownMenuProps = DropdownMenuProps & {
+  minWidth?: number | string
   xstyle?: StyleXStyles
 }
 
 export function DropdownMenu(props: StyledDropdownMenuProps) {
+  const [local, primitiveProps] = splitProps(props, ["minWidth", "xstyle"])
   const contentCompiled = () =>
-    stylex.attrs(sharedStyles.menuContent, sharedStyles.scaleIn, styles.content, props.xstyle)
+    stylex.attrs(sharedStyles.menuContent, sharedStyles.scaleIn, styles.content, local.xstyle)
   const titleCompiled = () => stylex.attrs(styles.title)
   const arrowCompiled = () => stylex.attrs(styles.arrow)
   const itemCompiled = () => stylex.attrs(sharedStyles.menuItem, styles.item)
@@ -80,9 +88,17 @@ export function DropdownMenu(props: StyledDropdownMenuProps) {
 
   return (
     <P
-      {...props}
+      {...primitiveProps}
       class={joinClassNames(contentCompiled().class, props.class)}
-      style={props.style}
+      style={
+        local.minWidth === undefined
+          ? props.style
+          : {
+              ...props.style,
+              "min-width":
+                typeof local.minWidth === "number" ? `${local.minWidth}px` : local.minWidth,
+            }
+      }
       titleClass={joinClassNames(titleCompiled().class, props.titleClass)}
       titleStyle={props.titleStyle}
       arrowClass={joinClassNames(arrowCompiled().class, props.arrowClass)}
@@ -108,6 +124,8 @@ export function DropdownMenu(props: StyledDropdownMenuProps) {
 export type {
   DropdownMenuAlign,
   DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuEntry,
   StyledDropdownMenuProps as DropdownMenuProps,
   DropdownMenuSide,
   DropdownMenuTriggerRenderProps,

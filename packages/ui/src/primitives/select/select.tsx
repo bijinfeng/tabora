@@ -37,7 +37,7 @@ export type SelectSingleProps<V extends string> = SelectPartStyleProps & {
   options: SelectOption<V>[]
   multiple?: false
   placeholder?: JSX.Element
-  size?: "sm" | "md"
+  size?: "sm" | "md" | "lg"
   disabled?: boolean
   invalid?: boolean
   "aria-label"?: string
@@ -52,7 +52,7 @@ export type SelectMultipleProps<V extends string> = SelectPartStyleProps & {
   multiple: true
   placeholder?: JSX.Element
   maxVisibleTags?: number
-  size?: "sm" | "md"
+  size?: "sm" | "md" | "lg"
   disabled?: boolean
   invalid?: boolean
   "aria-label"?: string
@@ -241,6 +241,7 @@ export function Select<V extends string>(props: SelectProps<V>) {
       optionValue="value"
       optionTextValue="label"
       optionDisabled="disabled"
+      placeholder={selectedOption()?.label ?? local.placeholder}
       disabled={local.disabled ?? false}
       itemComponent={itemComponent}
     >
