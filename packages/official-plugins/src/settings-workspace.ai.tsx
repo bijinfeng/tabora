@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
+import { Checkbox } from "@tabora/ui/checkbox"
 import { Dialog } from "@tabora/ui/dialog"
 import { Field } from "@tabora/ui/field"
 import { InlineError } from "@tabora/ui/inline-error"
@@ -10,13 +11,25 @@ import Pencil from "lucide-solid/icons/pencil"
 import Plus from "lucide-solid/icons/plus"
 import X from "lucide-solid/icons/x"
 import { createSignal, For, onMount, Show } from "solid-js"
-import type { SettingsAiSettings, SettingsPanelViewProps } from "@tabora/plugin-api/sdk"
+import type {
+  SettingsAiInputModality,
+  SettingsAiSettings,
+  SettingsPanelViewProps,
+} from "@tabora/plugin-api/sdk"
 
 import { SettingsGroup } from "./settings-workspace.shared"
 import { aiDialogStyles } from "./settings-workspace.ai.stylex"
 import { styles } from "./styles"
 
 type ProviderMode = SettingsAiSettings["activeProvider"]
+type ProviderApi = "chat-completions" | "responses"
+
+const CUSTOM_MODALITIES: Array<{ value: SettingsAiInputModality; label: string }> = [
+  { value: "text", label: "文本" },
+  { value: "image", label: "图片" },
+  { value: "audio", label: "音频" },
+  { value: "document", label: "PDF 文档" },
+]
 
 function fallback(): SettingsAiSettings {
   return {
@@ -37,7 +50,11 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
   const [formBaseUrl, setFormBaseUrl] = createSignal("")
   const [formProviderName, setFormProviderName] = createSignal("")
   const [formApiKey, setFormApiKey] = createSignal("")
-  const [formApiFormat, setFormApiFormat] = createSignal("openai")
+  const [formApi, setFormApi] = createSignal<ProviderApi>("chat-completions")
+  const [formInputModalities, setFormInputModalities] = createSignal<SettingsAiInputModality[]>([
+    "text",
+    "image",
+  ])
   const [configuredModels, setConfiguredModels] = createSignal<string[]>([])
   const [fetchedModels, setFetchedModels] = createSignal<string[]>([])
   const [fetchingModels, setFetchingModels] = createSignal(false)
@@ -84,7 +101,15 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
     next: {
       activeProvider: ProviderMode
       builtinModelId: string
-      custom: { name?: string; baseUrl: string; model: string; models?: string[]; apiKey?: string }
+      custom: {
+        name?: string
+        baseUrl: string
+        model: string
+        models?: string[]
+        api?: ProviderApi
+        inputModalities?: SettingsAiInputModality[]
+        apiKey?: string
+      }
     },
     refreshView = true,
     indicateSaving = true,
@@ -117,6 +142,10 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
         baseUrl: current.custom.baseUrl,
         model: current.custom.model,
         models: customModels(),
+        ...(current.custom.api ? { api: current.custom.api } : {}),
+        ...(current.custom.inputModalities
+          ? { inputModalities: current.custom.inputModalities }
+          : {}),
       },
     }
     setSettings({
@@ -137,6 +166,10 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
         baseUrl: current.custom.baseUrl,
         model,
         models: customModels(),
+        ...(current.custom.api ? { api: current.custom.api } : {}),
+        ...(current.custom.inputModalities
+          ? { inputModalities: current.custom.inputModalities }
+          : {}),
       },
     }
     setSettings({ ...current, activeProvider: "custom", custom: { ...current.custom, model } })
@@ -149,8 +182,11 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
     setFormProviderName(editing ? (current.custom.name ?? "") : "")
     setFormBaseUrl(editing ? current.custom.baseUrl : "")
     setFormApiKey("")
-    setFormApiFormat("openai")
-    setConfiguredModels(editing && current.custom.model ? [current.custom.model] : [])
+    setFormApi(editing ? (current.custom.api ?? "chat-completions") : "chat-completions")
+    setFormInputModalities(
+      editing ? (current.custom.inputModalities ?? ["text", "image"]) : ["text", "image"],
+    )
+    setConfiguredModels(editing ? customModels() : [])
     setFetchedModels([])
     setModelFetchError(undefined)
     setError(undefined)
@@ -167,6 +203,17 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
 
   function removeModel(model: string) {
     setConfiguredModels((models) => models.filter((item) => item !== model))
+  }
+
+  function setInputModality(modality: SettingsAiInputModality, checked: boolean) {
+    setFormInputModalities((current) =>
+      checked ? [...current, modality] : current.filter((candidate) => candidate !== modality),
+    )
+  }
+
+  function setProviderApi(api: ProviderApi) {
+    setFormApi(api)
+    if (api === "chat-completions") setFormInputModalities(["text", "image"])
   }
 
   async function fetchModels() {
@@ -220,6 +267,10 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
       setError("请填写名称、Base URL 并至少添加一个模型")
       return
     }
+    if (!formInputModalities().includes("text")) {
+      setError("模型必须支持文本输入")
+      return
+    }
     const ok = await persist({
       activeProvider: "custom",
       builtinModelId: current.builtin.modelId,
@@ -228,6 +279,8 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
         baseUrl: formBaseUrl().trim(),
         model: models[0]!,
         models,
+        api: formApi(),
+        inputModalities: formInputModalities(),
         ...(formApiKey() ? { apiKey: formApiKey() } : {}),
       },
     })
@@ -391,14 +444,39 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
             <Field label="API 格式" htmlFor="custom-provider-format">
               <Select
                 id="custom-provider-format"
-                value={formApiFormat()}
-                onChange={setFormApiFormat}
+                value={formApi()}
+                onChange={setProviderApi}
                 options={[
-                  { value: "openai", label: "OpenAI Chat Completions (/v1/chat/completions)" },
-                  { value: "anthropic", label: "Anthropic Messages (/v1/messages)" },
+                  { value: "chat-completions", label: "Chat Completions (/v1/chat/completions)" },
+                  { value: "responses", label: "Responses (/v1/responses)" },
                 ]}
                 aria-label="API 格式"
               />
+            </Field>
+            <Field
+              label="已验证的输入能力"
+              helper="仅开启已在该 Provider 和模型上验证过的能力；这些能力适用于本配置中的所有模型。"
+            >
+              <div {...stylex.attrs(styles.aiProviderActions)}>
+                <For
+                  each={
+                    formApi() === "responses"
+                      ? CUSTOM_MODALITIES
+                      : CUSTOM_MODALITIES.filter(
+                          (item) => item.value === "text" || item.value === "image",
+                        )
+                  }
+                >
+                  {(item) => (
+                    <Checkbox
+                      checked={formInputModalities().includes(item.value)}
+                      onChange={(checked) => setInputModality(item.value, checked)}
+                      disabled={item.value === "text"}
+                      label={item.label}
+                    />
+                  )}
+                </For>
+              </div>
             </Field>
           </div>
           <div {...stylex.attrs(aiDialogStyles.modelSection)}>

@@ -1,5 +1,7 @@
 import type {
   AiChatClient,
+  AiChatAttachmentPreparation,
+  AiChatAttachmentResource,
   AiChatClientOptions as PublicAiChatClientOptions,
   AiChatConnection,
   AiChatMessage,
@@ -42,6 +44,54 @@ async function headers(config: AiGatewayClientConfig): Promise<HeadersInit> {
     "content-type": "application/json",
     ...(authorization ? { authorization } : {}),
   }
+}
+
+async function attachmentHeaders(config: AiGatewayClientConfig): Promise<HeadersInit> {
+  const authorization = await config.getAuthorization?.()
+  return authorization ? { authorization } : {}
+}
+
+async function prepareChatAttachments(
+  config: AiGatewayClientConfig,
+  files: readonly File[],
+  preparation: AiChatAttachmentPreparation,
+): Promise<AiChatAttachmentResource[]> {
+  const fetcher = config.fetcher ?? fetch
+  const resources: AiChatAttachmentResource[] = []
+  for (const file of files) {
+    const form = new FormData()
+    form.set("file", file)
+    form.set("entity_type", "ai-chat")
+    const upload = await fetcher(apiUrl(config.baseUrl, "/api/attachments/upload"), {
+      method: "POST",
+      headers: await attachmentHeaders(config),
+      body: form,
+    })
+    if (!upload.ok) await throwResponseError(upload)
+    const body = (await upload.json()) as { data?: { file_id?: unknown } }
+    const fileId = body.data?.file_id
+    if (typeof fileId !== "number" || !Number.isSafeInteger(fileId) || fileId < 1) {
+      throw new AiRuntimeError(
+        "ai_provider_failed",
+        "Attachment upload returned an invalid resource",
+      )
+    }
+    const bindHeaders = new Headers(await attachmentHeaders(config))
+    bindHeaders.set("content-type", "application/json")
+    const bind = await fetcher(apiUrl(config.baseUrl, `/api/attachments/${fileId}/bind`), {
+      method: "POST",
+      headers: bindHeaders,
+      body: JSON.stringify({ entity_type: "ai-chat", entity_id: preparation.conversationId }),
+    })
+    if (!bind.ok) await throwResponseError(bind)
+    resources.push({
+      id: String(fileId),
+      filename: file.name,
+      mimeType: file.type,
+      size: file.size,
+    })
+  }
+  return resources
 }
 
 async function throwResponseError(response: Response): Promise<never> {
@@ -140,6 +190,10 @@ export function createHttpAiRuntime(config: AiGatewayClientConfig): AiRuntimeBri
       // bridge narrows it to the TanStack-free AiChatConnection protocol, and
       // consumers bridge it back with a single structural cast.
       return createAiChatConnection(config) as unknown as AiChatConnection
+    },
+
+    prepareChatAttachments(files, preparation) {
+      return prepareChatAttachments(config, files, preparation)
     },
   }
 }

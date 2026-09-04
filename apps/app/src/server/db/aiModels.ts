@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto"
 
 import { and, asc, eq, ne } from "drizzle-orm"
+import type { AiInputModality, AiProviderApi } from "@tabora/ai-runtime"
 
 export const AI_RESOURCE_STATUSES = ["draft", "active", "disabled", "deleted"] as const
 export type AiResourceStatus = (typeof AI_RESOURCE_STATUSES)[number]
@@ -8,10 +9,17 @@ export type AiResourceStatus = (typeof AI_RESOURCE_STATUSES)[number]
 export const AI_TEST_STATUSES = ["idle", "passed", "failed"] as const
 export type AiTestStatus = (typeof AI_TEST_STATUSES)[number]
 
+export const AI_PROVIDER_APIS = ["chat-completions", "responses"] as const
+export const AI_INPUT_MODALITIES = ["text", "image", "audio", "document"] as const
+
+const CHAT_COMPLETIONS_MODALITIES: AiInputModality[] = ["text", "image"]
+const RESPONSES_MODALITIES: AiInputModality[] = ["text", "image", "audio", "document"]
+
 type ProviderRecord = {
   id: string
   label: string
   baseUrl: string
+  api: AiProviderApi | null
   credentialCiphertext: string | null
   credentialNonce: string | null
   credentialKeyVersion: number | null
@@ -30,6 +38,7 @@ type ModelRecord = {
   providerId: string
   upstreamModelId: string
   label: string
+  inputModalities: AiInputModality[] | null
   status: AiResourceStatus
   lastTestStatus: AiTestStatus | null
   lastTestAt: Date | null
@@ -52,6 +61,8 @@ export type GatewayAiModel = {
   model: string
   apiKey: string
   baseUrl: string
+  api?: AiProviderApi
+  inputModalities?: AiInputModality[]
 }
 
 export type CreateProviderInput = {
@@ -59,6 +70,7 @@ export type CreateProviderInput = {
   label: string
   baseUrl: string
   apiKey: string
+  api?: AiProviderApi
 }
 
 export type UpdateProviderInput = {
@@ -66,20 +78,52 @@ export type UpdateProviderInput = {
   label: string
   baseUrl: string
   apiKey?: string
+  api?: AiProviderApi
 }
 
 export type CreateModelInput = {
   providerId: string
   upstreamModelId: string
   label: string
+  inputModalities?: AiInputModality[]
 }
 
 export type UpdateModelInput = {
   id: string
   label: string
+  inputModalities?: AiInputModality[]
 }
 
 const CREDENTIAL_KEY_VERSION = 1
+
+function providerApi(provider: Pick<ProviderRecord, "api">): AiProviderApi {
+  return provider.api ?? "chat-completions"
+}
+
+function adapterModalities(api: AiProviderApi): AiInputModality[] {
+  return api === "responses" ? RESPONSES_MODALITIES : CHAT_COMPLETIONS_MODALITIES
+}
+
+/** Legacy rows preserve the historical Chat Completions text/image contract. */
+function modelModalities(model: Pick<ModelRecord, "inputModalities">): AiInputModality[] {
+  return model.inputModalities ?? CHAT_COMPLETIONS_MODALITIES
+}
+
+function validateModelModalities(
+  api: AiProviderApi,
+  modalities: AiInputModality[],
+): AiInputModality[] {
+  const allowed = new Set(adapterModalities(api))
+  const unique = [...new Set(modalities)]
+  if (
+    !unique.length ||
+    !unique.includes("text") ||
+    unique.some((modality) => !allowed.has(modality))
+  ) {
+    throw new Error("模型输入能力与 Provider API 不兼容")
+  }
+  return unique
+}
 
 function credentialKey(value: string): Buffer {
   if (value.length < 32) throw new Error("模型凭据加密密钥无效")
@@ -198,6 +242,7 @@ export function createAiModelQueries(
       id: input.id,
       label: input.label,
       baseUrl: input.baseUrl,
+      api: input.api ?? "chat-completions",
       ...encrypted,
       credentialConfigured: true,
       status: "draft",
@@ -210,12 +255,15 @@ export function createAiModelQueries(
   async function updateProvider(input: UpdateProviderInput): Promise<void> {
     const existing = await providerById(input.id)
     if (!existing || existing.status === "deleted") throw new Error("Provider 不存在")
-    const connectionChanged = existing.baseUrl !== input.baseUrl || Boolean(input.apiKey)
+    const api = input.api ?? providerApi(existing)
+    const connectionChanged =
+      existing.baseUrl !== input.baseUrl || providerApi(existing) !== api || Boolean(input.apiKey)
     await db
       .update(aiProvider)
       .set({
         label: input.label,
         baseUrl: input.baseUrl,
+        api,
         ...(input.apiKey
           ? { ...encryptCredential(input.apiKey, encryptionKey), credentialConfigured: true }
           : {}),
@@ -242,6 +290,10 @@ export function createAiModelQueries(
   async function createModel(input: CreateModelInput): Promise<string> {
     const provider = await providerById(input.providerId)
     if (!provider || provider.status === "deleted") throw new Error("Provider 不存在")
+    const inputModalities = validateModelModalities(
+      providerApi(provider),
+      input.inputModalities ?? CHAT_COMPLETIONS_MODALITIES,
+    )
     const id = `${input.providerId}:${input.upstreamModelId}`
     if (await modelById(id)) throw new Error("该稳定模型 ID 已存在且不可复用")
     const duplicate = (await db
@@ -261,6 +313,7 @@ export function createAiModelQueries(
       providerId: input.providerId,
       upstreamModelId: input.upstreamModelId,
       label: input.label,
+      inputModalities,
       status: "draft",
       lastTestStatus: "idle",
       createdAt: now,
@@ -272,9 +325,29 @@ export function createAiModelQueries(
   async function updateModel(input: UpdateModelInput): Promise<void> {
     const model = await modelById(input.id)
     if (!model || model.status === "deleted") throw new Error("模型不存在")
+    const provider = await providerById(model.providerId)
+    if (!provider || provider.status === "deleted") throw new Error("Provider 不存在")
+    const inputModalities = input.inputModalities
+      ? validateModelModalities(providerApi(provider), input.inputModalities)
+      : modelModalities(model)
+    const capabilitiesChanged =
+      JSON.stringify(inputModalities) !== JSON.stringify(modelModalities(model))
     await db
       .update(aiModel)
-      .set({ label: input.label, updatedAt: new Date() })
+      .set({
+        label: input.label,
+        inputModalities,
+        ...(capabilitiesChanged
+          ? {
+              status: "disabled",
+              lastTestStatus: "idle",
+              lastTestAt: null,
+              lastTestLatencyMs: null,
+              lastTestError: null,
+            }
+          : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(aiModel.id, input.id))
   }
 
@@ -417,14 +490,25 @@ export function createAiModelQueries(
               model: model.upstreamModelId,
               apiKey,
               baseUrl: provider.baseUrl,
+              api: providerApi(provider),
+              inputModalities: validateModelModalities(
+                providerApi(provider),
+                modelModalities(model),
+              ),
             },
           ]
         : []
     })
   }
 
-  async function listActiveDirectory(): Promise<Array<{ id: string; label: string }>> {
-    return (await listActiveGatewayModels()).map(({ id, label }) => ({ id, label }))
+  async function listActiveDirectory(): Promise<
+    Array<{ id: string; label: string; inputModalities: AiInputModality[] }>
+  > {
+    return (await listActiveGatewayModels()).map(({ id, label, inputModalities }) => ({
+      id,
+      label,
+      inputModalities: inputModalities ?? CHAT_COMPLETIONS_MODALITIES,
+    }))
   }
 
   return {

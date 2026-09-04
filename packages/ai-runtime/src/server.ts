@@ -1,13 +1,22 @@
-import { chat, toServerSentEventsResponse } from "@tanstack/ai"
+import { chat, toServerSentEventsResponse, type AnyServerTool } from "@tanstack/ai"
 import type { StreamChunk } from "@tanstack/ai/client"
 import { openaiCompatibleText } from "@tanstack/ai-openai/compatible"
 import { AiRuntimeError } from "@tabora/plugin-api"
-import type { AiChatMessage, AiGenerateResult, AiStreamChunk } from "@tabora/plugin-api"
+import type { AiGenerateResult, AiStreamChunk } from "@tabora/plugin-api"
 
-import type { AiCustomProviderConfig, AiGatewayRequest } from "./contracts"
+import type {
+  AiCustomProviderConfig,
+  AiGatewayContentPart,
+  AiGatewayMessage,
+  AiGatewayRequest,
+  AiInputModality,
+  AiProviderApi,
+} from "./contracts"
 
 export { AiRuntimeError } from "@tabora/plugin-api"
 export type { AiCustomProviderConfig } from "./contracts"
+export { createAttachmentTools } from "./attachmentTools"
+export type { AiAttachmentToolResource } from "./attachmentTools"
 
 const MAX_CHAT_MESSAGES = 100
 const MAX_CHAT_MESSAGE_CHARS = 32_000
@@ -24,6 +33,8 @@ export type BuiltinAiModel = AiCustomProviderConfig & { id: string }
 export type AiGatewayOptions = {
   builtinModels?: BuiltinAiModel[]
   validateCustomProvider?(provider: AiCustomProviderConfig): Promise<void> | void
+  /** Resolves host-owned, server-executed tools for the current run. */
+  tools?(request: AiGatewayRequest): readonly AnyServerTool[]
 }
 
 function providerForRequest(
@@ -46,9 +57,16 @@ async function validateProvider(provider: AiCustomProviderConfig, options: AiGat
   await options.validateCustomProvider?.(provider)
 }
 
-function createChatOptions(request: AiGatewayRequest, provider: AiCustomProviderConfig) {
+function createChatOptions(
+  request: AiGatewayRequest,
+  provider: AiCustomProviderConfig,
+  tools: readonly AnyServerTool[] = [],
+) {
   const messages = request.messages?.length
-    ? request.messages.map((message) => ({ role: message.role, content: message.text }))
+    ? request.messages.map((message) => ({
+        role: message.role,
+        content: message.parts?.length ? message.parts : message.text,
+      }))
     : [{ role: "user" as const, content: request.prompt ?? "" }]
   const modelOptions: Record<string, unknown> = {}
   if (request.temperature !== undefined) modelOptions.temperature = request.temperature
@@ -59,13 +77,56 @@ function createChatOptions(request: AiGatewayRequest, provider: AiCustomProvider
     adapter: openaiCompatibleText(provider.model, {
       apiKey: provider.apiKey,
       baseURL: provider.baseUrl,
+      api: provider.api ?? "chat-completions",
       fetch(input, init) {
         return fetch(input, { ...init, redirect: "error" })
       },
     }),
     messages,
-    ...(request.system ? { systemPrompts: [request.system] } : {}),
+    ...(request.system || tools.length
+      ? {
+          systemPrompts: [
+            ...([request.system].filter(Boolean) as string[]),
+            ...(tools.length
+              ? [
+                  "The user attached private files. Use the attachment tools when you need their contents. Start with list_attachments, then read only the relevant bounded ranges. Never claim to have read an attachment unless a tool returned its content.",
+                ]
+              : []),
+          ],
+        }
+      : {}),
     ...(Object.keys(modelOptions).length > 0 ? { modelOptions } : {}),
+    ...(tools.length ? { tools: [...tools] } : {}),
+  }
+}
+
+const CHAT_COMPLETIONS_MODALITIES = new Set<AiInputModality>(["text", "image"])
+const RESPONSES_MODALITIES = new Set<AiInputModality>(["text", "image", "audio", "document"])
+
+function allowedModalities(provider: AiCustomProviderConfig): Set<AiInputModality> {
+  const adapterModalities =
+    (provider.api ?? "chat-completions") === "responses"
+      ? RESPONSES_MODALITIES
+      : CHAT_COMPLETIONS_MODALITIES
+  const configured = provider.inputModalities ?? ["text", "image"]
+  return new Set(configured.filter((modality) => adapterModalities.has(modality)))
+}
+
+/** Never let browser-provided parts bypass the selected model's declared input contract. */
+function assertMessageModalities(
+  request: AiGatewayRequest,
+  provider: AiCustomProviderConfig,
+): void {
+  const allowed = allowedModalities(provider)
+  for (const message of request.messages ?? []) {
+    for (const part of message.parts ?? []) {
+      if (!allowed.has(part.type)) {
+        throw new AiRuntimeError(
+          "ai_request_rejected",
+          `The selected AI model does not accept ${part.type} input`,
+        )
+      }
+    }
   }
 }
 
@@ -79,7 +140,10 @@ export function createTanstackAiGateway(options: AiGatewayOptions = {}) {
     try {
       const provider = providerForRequest(request, options)
       await validateProvider(provider, options)
-      const stream = chat(createChatOptions(request, provider)) as AsyncIterable<StreamChunk>
+      assertMessageModalities(request, provider)
+      const stream = chat(
+        createChatOptions(request, provider, options.tools?.(request)),
+      ) as AsyncIterable<StreamChunk>
       for await (const chunk of stream) yield chunk
     } catch (error) {
       throw wrapProviderError(error)
@@ -91,7 +155,11 @@ export function createTanstackAiGateway(options: AiGatewayOptions = {}) {
       try {
         const provider = providerForRequest(request, options)
         await validateProvider(provider, options)
-        const text = await chat({ ...createChatOptions(request, provider), stream: false })
+        assertMessageModalities(request, provider)
+        const text = await chat({
+          ...createChatOptions(request, provider, options.tools?.(request)),
+          stream: false,
+        })
         return { text }
       } catch (error) {
         throw wrapProviderError(error)
@@ -142,10 +210,26 @@ function parseProviderSelection(input: Record<string, unknown>): AiProviderSelec
     ) {
       throw new AiRuntimeError("ai_not_configured", "Custom AI provider is not configured")
     }
+    const api: AiProviderApi | undefined =
+      config.api === "chat-completions" || config.api === "responses" ? config.api : undefined
+    if (config.api !== undefined && !api) rejectRequest("Invalid AI provider API")
+    const inputModalities = config.inputModalities
+    if (
+      inputModalities !== undefined &&
+      (!Array.isArray(inputModalities) ||
+        inputModalities.some(
+          (value) =>
+            value !== "text" && value !== "image" && value !== "audio" && value !== "document",
+        ))
+    ) {
+      rejectRequest("Invalid AI model input modalities")
+    }
     customProvider = {
       baseUrl: config.baseUrl,
       apiKey: config.apiKey,
       model: config.model,
+      ...(api ? { api } : {}),
+      ...(inputModalities ? { inputModalities: [...inputModalities] as AiInputModality[] } : {}),
     }
   }
   return {
@@ -186,12 +270,100 @@ function parseGenerationOptions(input: Record<string, unknown>) {
   if (rawReasoning !== undefined && reasoningEffort === undefined) {
     rejectRequest("Invalid AI reasoning effort")
   }
+  const attachmentIds = input.attachmentIds
+  if (
+    attachmentIds !== undefined &&
+    (!Array.isArray(attachmentIds) ||
+      attachmentIds.length > 32 ||
+      attachmentIds.some((value) => typeof value !== "string" || !/^[1-9]\d{0,15}$/.test(value)))
+  ) {
+    rejectRequest("Invalid AI attachment references")
+  }
   return {
     ...(typeof input.system === "string" ? { system: input.system } : {}),
     ...(typeof input.temperature === "number" ? { temperature: input.temperature } : {}),
     ...(typeof maxOutputTokens === "number" ? { maxOutputTokens } : {}),
     ...(reasoningEffort ? { reasoningEffort } : {}),
+    ...(attachmentIds ? { attachmentIds: [...new Set(attachmentIds)] as string[] } : {}),
   }
+}
+
+const MAX_INLINE_MEDIA_CHARS = 8_000_000
+const MAX_INLINE_MEDIA_TOTAL_CHARS = 12_000_000
+
+function parseInlineDataSource(
+  value: unknown,
+  kind: "image" | "audio" | "document",
+): { type: "data"; value: string; mimeType: string } {
+  if (!value || typeof value !== "object") rejectRequest(`Invalid AI ${kind} source`)
+  const source = value as Record<string, unknown>
+  const mimeType = source.mimeType
+  const validMime =
+    typeof mimeType === "string" &&
+    (kind === "document"
+      ? mimeType.split(";", 1)[0]?.toLowerCase() === "application/pdf"
+      : mimeType.startsWith(`${kind}/`))
+  if (
+    source.type !== "data" ||
+    typeof source.value !== "string" ||
+    !validMime ||
+    source.value.length > MAX_INLINE_MEDIA_CHARS
+  ) {
+    rejectRequest(`Only bounded inline ${kind} data is supported`)
+  }
+  return { type: "data", value: source.value, mimeType }
+}
+
+function parseChatMessageContent(value: unknown): {
+  text: string
+  parts?: AiGatewayContentPart[]
+  mediaChars: number
+} {
+  if (typeof value === "string") return { text: value, mediaChars: 0 }
+  if (!Array.isArray(value) || value.length === 0) {
+    rejectRequest("Invalid AI chat message content")
+  }
+
+  const parts: AiGatewayContentPart[] = []
+  let text = ""
+  let mediaChars = 0
+  for (const rawPart of value) {
+    if (!rawPart || typeof rawPart !== "object") rejectRequest("Invalid AI content part")
+    const part = rawPart as Record<string, unknown>
+    if (part.type === "text") {
+      if (typeof part.text !== "string") rejectRequest("Invalid AI text content part")
+      text += part.text
+      parts.push({ type: "text", content: part.text })
+      continue
+    }
+    if (part.type !== "image" && part.type !== "audio" && part.type !== "document") {
+      rejectRequest("Unsupported AI content part")
+    }
+    const source = parseInlineDataSource(part.source, part.type)
+    mediaChars += source.value.length
+    if (part.type === "document") {
+      const metadata = part.metadata
+      if (
+        metadata !== undefined &&
+        (!metadata ||
+          typeof metadata !== "object" ||
+          ("filename" in metadata &&
+            typeof (metadata as Record<string, unknown>).filename !== "string"))
+      ) {
+        rejectRequest("Invalid AI document metadata")
+      }
+      parts.push({
+        type: "document",
+        source,
+        ...(metadata
+          ? { metadata: metadata as { filename?: string; detail?: "auto" | "low" | "high" } }
+          : {}),
+      })
+      continue
+    }
+    parts.push({ type: part.type, source })
+  }
+  return { text, parts, mediaChars }
 }
 
 /**
@@ -218,9 +390,10 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
   }
   const selection = parseProviderSelection(props)
   const options = parseGenerationOptions(props)
-  const messages: AiChatMessage[] = []
+  const messages: AiGatewayMessage[] = []
   const systemParts: string[] = []
   let totalChars = 0
+  let totalMediaChars = 0
   for (const entry of input.messages) {
     if (!entry || typeof entry !== "object") rejectRequest("Invalid AI chat message")
     const anchor = entry as Record<string, unknown>
@@ -228,21 +401,30 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
     if (role !== "user" && role !== "assistant" && role !== "system") {
       rejectRequest("Unsupported AI chat message role")
     }
-    if (typeof anchor.content !== "string" || !anchor.content.trim()) {
+    const normalized = parseChatMessageContent(anchor.content)
+    if (!normalized.text.trim() && (normalized.parts?.length ?? 0) === 0)
       rejectRequest("Invalid AI chat message content")
-    }
-    if (anchor.content.length > MAX_CHAT_MESSAGE_CHARS) {
+    if (normalized.text.length > MAX_CHAT_MESSAGE_CHARS) {
       rejectRequest("AI chat message is too long")
     }
-    totalChars += anchor.content.length
+    totalChars += normalized.text.length
     if (totalChars > MAX_CHAT_TOTAL_CHARS) {
       rejectRequest("AI chat history is too long")
     }
+    totalMediaChars += normalized.mediaChars
+    if (totalMediaChars > MAX_INLINE_MEDIA_TOTAL_CHARS) {
+      rejectRequest("AI chat attachments are too large")
+    }
     if (role === "system") {
-      systemParts.push(anchor.content)
+      if (normalized.parts) rejectRequest("System messages cannot contain media")
+      systemParts.push(normalized.text)
       continue
     }
-    messages.push({ role, text: anchor.content })
+    messages.push({
+      role,
+      text: normalized.text,
+      ...(normalized.parts ? { parts: normalized.parts } : {}),
+    })
   }
   if (messages.at(-1)?.role !== "user") {
     rejectRequest("AI chat must end with a user message")

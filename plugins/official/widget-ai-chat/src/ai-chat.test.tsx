@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
+import { strToU8, zipSync } from "fflate"
 import { makeWidgetViewProps } from "../../test-support/widgetViewProps"
 import type {
   AiChatConnection,
@@ -13,6 +14,8 @@ import { officialPluginAiChatManifest } from "./manifest"
 import { officialPluginAiChat } from "./index"
 import { AiChatCard } from "./ai-chat-card"
 import { AiChatExpand } from "./ai-chat-expand"
+import { AiChatUserMessage } from "./ai-chat-user-message"
+import { AI_CHAT_ATTACHMENT_METADATA, buildAttachmentContent } from "./ai-chat-attachments"
 import {
   aiChatErrorCopy,
   getAiChatSession,
@@ -66,6 +69,27 @@ function echoConnection(): AiChatConnection {
   }
 }
 
+function gatedConnection(gate: Promise<void>): AiChatConnection {
+  let generation = 0
+  return {
+    async *connect(messages) {
+      const current = ++generation
+      const list = messages as WireMessage[]
+      const last = [...list].reverse().find((message) => message.role === "user")
+      const text = (last?.parts ?? [])
+        .filter((part) => part.type === "text")
+        .map((part) => part.content)
+        .join("")
+      yield { type: "RUN_STARTED", threadId: "t", runId: `r-${current}` }
+      if (current === 1) await gate
+      yield { type: "TEXT_MESSAGE_START", messageId: `a-${current}`, role: "assistant" }
+      yield { type: "TEXT_MESSAGE_CONTENT", messageId: `a-${current}`, delta: `echo:${text}` }
+      yield { type: "TEXT_MESSAGE_END", messageId: `a-${current}` }
+      yield { type: "RUN_FINISHED", threadId: "t", runId: `r-${current}` }
+    },
+  }
+}
+
 function userMessage(id: string, content: string): UIMessage {
   return { id, role: "user", parts: [{ type: "text", content }] }
 }
@@ -79,10 +103,10 @@ async function waitForPersistedSave() {
 }
 
 describe("officialPluginAiChatManifest", () => {
-  it("declares the AI generate permission and matching views", () => {
+  it("declares the AI generation and tool permissions with matching views", () => {
     const manifest: PluginManifest = officialPluginAiChatManifest
     expect(manifest.id).toBe("official.widgets.ai-chat")
-    expect(manifest.permissions).toEqual([{ type: "ai", access: ["generate"] }])
+    expect(manifest.permissions).toEqual([{ type: "ai", access: ["generate", "tools"] }])
     expect(manifest.contributes.widgets?.[0]?.supportedSizes).toEqual(["S", "M"])
     expect(manifest.contributes.widgets?.[0]?.defaultSize).toBe("M")
     expect(manifest.contributes.widgets?.[0]?.views).toEqual({
@@ -123,6 +147,125 @@ describe("getAiChatSession", () => {
     expect(stored[0]?.title).toBe("你好")
   })
 
+  it("persists attachment presentation metadata with the model context", async () => {
+    const { data, map } = makeDataStore()
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => echoConnection(),
+    })
+    const session = getAiChatSession({ instanceId: "session-attachment-metadata", data })
+    await waitForLoaded(session)
+    session.createConversation()
+    const attachment = new File(["# 可读内容"], "说明.md", { type: "text/markdown" })
+    await session.send(
+      await buildAttachmentContent("检查附件", [attachment], undefined, [
+        { id: "101", filename: "说明.md", mimeType: "text/markdown", size: attachment.size },
+      ]),
+    )
+
+    await waitForPersistedSave()
+    const stored = map.get("ai-chat-conversations") as AiChatStoredConversation[]
+    expect(stored[0]?.messages[0]?.attachmentMetadata).toMatchObject({
+      displayText: "检查附件",
+      attachments: [{ name: "说明.md", status: "provided" }],
+    })
+    expect(stored[0]?.messages[0]?.parts[0]).toMatchObject({ text: "检查附件" })
+  })
+
+  it("queues a follow-up while TanStack AI is streaming and drains it afterward", async () => {
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const { data } = makeDataStore()
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => gatedConnection(gate),
+    })
+
+    const session = getAiChatSession({ instanceId: "session-queue", data })
+    await waitForLoaded(session)
+    session.createConversation()
+    const first = session.send("第一条")
+    await vi.waitFor(() => expect(session.isLoading()).toBe(true))
+    await session.send("第二条")
+    await vi.waitFor(() => expect(session.queuedCount()).toBe(1))
+
+    release()
+    await first
+    await vi.waitFor(() => expect(session.queuedCount()).toBe(0))
+    await vi.waitFor(() =>
+      expect(session.messages().map(messageText)).toEqual([
+        "第一条",
+        "echo:第一条",
+        "第二条",
+        "echo:第二条",
+      ]),
+    )
+  })
+
+  it("cancels an individual queued message before TanStack AI dispatches it", async () => {
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const { data } = makeDataStore()
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => gatedConnection(gate),
+    })
+
+    const session = getAiChatSession({ instanceId: "session-cancel-queued", data })
+    await waitForLoaded(session)
+    session.createConversation()
+    const first = session.send("第一条")
+    await vi.waitFor(() => expect(session.isLoading()).toBe(true))
+    await session.send("取消这一条")
+    await vi.waitFor(() => expect(session.queuedMessages()).toHaveLength(1))
+
+    session.cancelQueued(session.queuedMessages()[0]!.id)
+    expect(session.queuedCount()).toBe(0)
+    expect(session.queuedMessages()).toEqual([])
+
+    release()
+    await first
+    await vi.waitFor(() =>
+      expect(session.messages().map(messageText)).toEqual(["第一条", "echo:第一条"]),
+    )
+  })
+
+  it("interrupts generation instead of queueing when an immediate turn is requested", async () => {
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const { data } = makeDataStore()
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => gatedConnection(gate),
+    })
+
+    const session = getAiChatSession({ instanceId: "session-immediate", data })
+    await waitForLoaded(session)
+    session.createConversation()
+    const first = session.send("旧问题")
+    await vi.waitFor(() => expect(session.isLoading()).toBe(true))
+    const immediate = session.sendImmediately("新问题")
+    release()
+    await Promise.all([first, immediate])
+
+    await vi.waitFor(() =>
+      expect(session.messages().at(-1)).toSatisfy((message) =>
+        messageText(message!).includes("echo:新问题"),
+      ),
+    )
+    expect(session.queuedMessages()).toEqual([])
+  })
+
   it("manages multiple conversations with rename and delete", async () => {
     const { data, map } = makeDataStore()
     setAiChatRuntime({
@@ -156,6 +299,29 @@ describe("getAiChatSession", () => {
 
     await waitForPersistedSave()
     expect(map.get("ai-chat-conversations")).toEqual([])
+  })
+
+  it("clears messages while keeping the conversation and its options", async () => {
+    const { data } = makeDataStore()
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => echoConnection(),
+    })
+
+    const session = getAiChatSession({ instanceId: "session-clear-messages", data })
+    await waitForLoaded(session)
+    const id = session.createConversation()
+    session.updateConversationOptions(id, { modelId: "model-a", temperature: 0.4 })
+    await session.send("需要清空的问题")
+
+    session.clear()
+
+    expect(session.activeId()).toBe(id)
+    expect(session.messages()).toEqual([])
+    expect(session.conversations()).toMatchObject([
+      { id, title: "新对话", messageCount: 0, modelId: "model-a", temperature: 0.4 },
+    ])
   })
 
   it("keeps auto titles off manually renamed conversations", async () => {
@@ -446,6 +612,11 @@ describe("getAiChatSession", () => {
     ]
     const charTrimmed = trimHistory(oversized)
     expect(charTrimmed?.map((message) => message.id)).toEqual(["m2", "m3"])
+
+    const headroom = Array.from({ length: 4 }, (_, index) =>
+      userMessage(`h${index}`, "x".repeat(30_000)),
+    )
+    expect(trimHistory(headroom)?.map((message) => message.id)).toEqual(["h2", "h3"])
   })
 })
 
@@ -477,6 +648,218 @@ describe("AiChatCard", () => {
 })
 
 describe("AiChatExpand composer controls", () => {
+  it("shows attached inline images again in persisted user messages", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <AiChatUserMessage
+          message={{
+            id: "image-message",
+            role: "user",
+            parts: [
+              { type: "text", content: "请描述图片" },
+              {
+                type: "image",
+                source: { type: "data", mimeType: "image/png", value: "iVBORw==" },
+              },
+            ],
+          }}
+        />
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("请描述图片")
+    expect(root.querySelector("img")?.getAttribute("src")).toBe("data:image/png;base64,iVBORw==")
+    root.remove()
+  })
+
+  it("renders sent files as separate expandable attachments instead of prompt text", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <AiChatUserMessage
+          message={{
+            id: "text-attachment-message",
+            role: "user",
+            parts: [
+              {
+                type: "text",
+                content:
+                  '检查附件\n\n<attachment filename="说明.md">\n不应直接显示的文件内容\n</attachment>',
+              },
+            ],
+            metadata: {
+              [AI_CHAT_ATTACHMENT_METADATA]: {
+                displayText: "检查附件",
+                attachments: [
+                  {
+                    name: "说明.md",
+                    size: 12,
+                    mimeType: "text/markdown",
+                    kind: "text",
+                    status: "provided",
+                    detail: "已提供给模型",
+                    preview: "不应直接显示的文件内容",
+                  },
+                ],
+              },
+            },
+          }}
+        />
+      ),
+      root,
+    )
+
+    expect(root.textContent).toContain("检查附件")
+    expect(root.textContent).not.toContain('<attachment filename="说明.md">')
+    const attachment = root.querySelector('button[aria-expanded="false"]') as HTMLButtonElement
+    attachment.click()
+    expect(root.textContent).toContain("不应直接显示的文件内容")
+    root.remove()
+  })
+
+  it("does not offer text-only edit for a user message that includes an image", async () => {
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => echoConnection(),
+    })
+    const { data } = makeDataStore()
+    const session = getAiChatSession({ instanceId: "expand-image-edit", data })
+    await waitForLoaded(session)
+    session.createConversation()
+    await session.send({
+      content: [
+        { type: "text", content: "请描述图片" },
+        { type: "image", source: { type: "data", mimeType: "image/png", value: "iVBORw==" } },
+      ],
+    })
+
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <AiChatExpand
+          {...makeWidgetViewProps({
+            instanceId: "expand-image-edit",
+            pluginId: "official.widgets.ai-chat",
+            contributionId: "ai-chat",
+            size: "L",
+            data,
+          })}
+        />
+      ),
+      root,
+    )
+
+    expect(root.querySelector('[aria-label="编辑这条提问并重新生成"]')).toBeNull()
+    root.remove()
+  })
+
+  it("keeps text attachments out of the prompt and marks them for agent tools", async () => {
+    const text = new File(["# 项目说明\n你好"], "说明.md", { type: "text/markdown" })
+    const content = (await buildAttachmentContent("这里面都有什么问题", [text], undefined, [
+      { id: "102", filename: "说明.md", mimeType: "text/markdown", size: text.size },
+    ])) as {
+      content: Array<{ type: string; content?: string }>
+      metadata: Record<string, unknown>
+    }
+
+    expect(content.content[0]?.content).toBe("这里面都有什么问题")
+    expect(content.metadata[AI_CHAT_ATTACHMENT_METADATA]).toMatchObject({
+      displayText: "这里面都有什么问题",
+      attachments: [{ name: "说明.md", status: "provided", resourceId: "102" }],
+    })
+  })
+
+  it("keeps ZIP contents private until the agent asks its host tools", async () => {
+    const archive = new File(
+      [
+        zipSync({
+          "src/hello.ts": strToU8("export const hello = 'world'"),
+          "audio.mp3": new Uint8Array([1, 2]),
+        }),
+      ],
+      "项目.zip",
+      { type: "application/zip" },
+    )
+    const content = (await buildAttachmentContent("检查代码", [archive], undefined, [
+      { id: "103", filename: "项目.zip", mimeType: "application/zip", size: archive.size },
+    ])) as {
+      content: Array<{ type: string; content?: string }>
+      metadata: Record<string, unknown>
+    }
+
+    expect(content.content[0]?.content).toBe("检查代码")
+    expect(content.metadata[AI_CHAT_ATTACHMENT_METADATA]).toMatchObject({
+      attachments: [{ name: "项目.zip", kind: "archive", status: "provided", resourceId: "103" }],
+    })
+  })
+
+  it("converts bounded image attachments to TanStack multimodal parts", async () => {
+    const image = new File([new Uint8Array([137, 80, 78, 71])], "截图.png", {
+      type: "image/png",
+    })
+
+    const content = await buildAttachmentContent("请描述图片", [image])
+    expect(content).toMatchObject({
+      content: [
+        { type: "text", content: "请描述图片" },
+        { type: "image", source: { type: "data", mimeType: "image/png" } },
+      ],
+      metadata: {
+        [AI_CHAT_ATTACHMENT_METADATA]: {
+          displayText: "请描述图片",
+          attachments: [{ name: "截图.png", status: "provided" }],
+        },
+      },
+    })
+    expect(
+      (content as { content: Array<{ type: string; source?: { value?: string } }> }).content[1]
+        ?.source?.value,
+    ).toBe("iVBORw==")
+  })
+
+  it("starts a blank composer from the advertised Ctrl+N shortcut", async () => {
+    setAiChatRuntime({
+      generate: async () => ({ text: "" }),
+      stream: async function* () {},
+      createChatConnection: () => echoConnection(),
+    })
+    const { data } = makeDataStore()
+    const session = getAiChatSession({ instanceId: "expand-shortcut", data })
+    await waitForLoaded(session)
+    session.createConversation()
+
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <AiChatExpand
+          {...makeWidgetViewProps({
+            instanceId: "expand-shortcut",
+            pluginId: "official.widgets.ai-chat",
+            contributionId: "ai-chat",
+            size: "L",
+            data,
+          })}
+        />
+      ),
+      root,
+    )
+
+    const composer = root.querySelector("textarea")
+    composer?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "n", ctrlKey: true, bubbles: true }),
+    )
+    await vi.waitFor(() => expect(session.activeId()).toBeNull())
+    expect(root.textContent).toContain("接下来，交给我吧")
+    root.remove()
+  })
+
   it("returns to the blank composer without saving an empty conversation", async () => {
     setAiChatRuntime({
       generate: async () => ({ text: "" }),
@@ -509,9 +892,17 @@ describe("AiChatExpand composer controls", () => {
       button.textContent?.includes("新对话"),
     )
     expect(newChat).toBeDefined()
+    const attachmentInput = root.querySelector('input[type="file"]') as HTMLInputElement
+    Object.defineProperty(attachmentInput, "files", {
+      configurable: true,
+      value: [new File(["附件内容"], "待发送.txt", { type: "text/plain" })],
+    })
+    attachmentInput.dispatchEvent(new Event("change", { bubbles: true }))
+    await vi.waitFor(() => expect(root.textContent).toContain("待发送.txt"))
     newChat?.click()
 
     await vi.waitFor(() => expect(root.textContent).toContain("接下来，交给我吧"))
+    expect(root.textContent).not.toContain("待发送.txt")
     expect(session.activeId()).toBeNull()
     expect(session.conversations()).toHaveLength(1)
     await waitForPersistedSave()
@@ -570,7 +961,16 @@ describe("AiChatExpand composer controls", () => {
     await vi.waitFor(() => expect(root.textContent).toContain("模型 B"))
     expect(root.textContent).toContain("深度")
     expect(root.textContent).toContain("添加附件")
-    expect(root.querySelector('input[type="file"]')).not.toBeNull()
+    const attachmentInput = root.querySelector('input[type="file"]') as HTMLInputElement
+    expect(attachmentInput).not.toBeNull()
+    const sendButton = root.querySelector('button[aria-label="发送"]') as HTMLButtonElement
+    expect(sendButton.disabled).toBe(true)
+    Object.defineProperty(attachmentInput, "files", {
+      configurable: true,
+      value: [new File(["附件内容"], "说明.txt", { type: "text/plain" })],
+    })
+    attachmentInput.dispatchEvent(new Event("change", { bubbles: true }))
+    await vi.waitFor(() => expect(sendButton.disabled).toBe(false))
     root.remove()
   })
 })

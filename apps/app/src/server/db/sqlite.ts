@@ -19,6 +19,19 @@ export function createSqliteDb(
 
   const migrate = () => {
     sqlite.exec(buildDdl("sqlite"))
+    const providerColumns = new Set(
+      (sqlite.prepare("PRAGMA table_info(ai_provider)").all() as Array<{ name: string }>).map(
+        ({ name }) => name,
+      ),
+    )
+    if (!providerColumns.has("api")) sqlite.exec('ALTER TABLE "ai_provider" ADD COLUMN "api" TEXT')
+    const modelColumns = new Set(
+      (sqlite.prepare("PRAGMA table_info(ai_model)").all() as Array<{ name: string }>).map(
+        ({ name }) => name,
+      ),
+    )
+    if (!modelColumns.has("input_modalities"))
+      sqlite.exec('ALTER TABLE "ai_model" ADD COLUMN "input_modalities" TEXT')
   }
 
   const countUsers = () => {

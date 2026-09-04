@@ -317,9 +317,13 @@ export type SettingsHostReadId =
   | "plugins.read"
   | "ai.settings.read"
 
+export type SettingsAiInputModality = "text" | "image" | "audio" | "document"
+
 export type SettingsAiModel = {
   id: string
   label: string
+  /** Absent only for a legacy host; clients retain historic text/image behavior. */
+  inputModalities?: SettingsAiInputModality[]
 }
 
 /**
@@ -340,6 +344,9 @@ export type SettingsAiSettings = {
     baseUrl: string
     model: string
     models?: string[]
+    /** Legacy custom settings use the historic Chat Completions text/image contract. */
+    api?: "chat-completions" | "responses"
+    inputModalities?: SettingsAiInputModality[]
     apiKeyConfigured: boolean
     /** Whether an empty update keeps the existing secret on this host. */
     preservesApiKeyOnSave?: boolean
@@ -355,6 +362,8 @@ export type SettingsAiSettingsUpdate = {
     baseUrl: string
     model: string
     models?: string[]
+    api?: "chat-completions" | "responses"
+    inputModalities?: SettingsAiInputModality[]
     /** A missing key preserves the current local secret; it is never read back. */
     apiKey?: string
   }

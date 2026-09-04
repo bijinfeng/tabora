@@ -3,28 +3,23 @@ import { createEffect, createResource, createSignal, For, Show } from "solid-js"
 import { onMount } from "solid-js"
 import type { JSX } from "solid-js"
 import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
-import { ChatMessage } from "@tanstack/ai-solid-ui"
+import type { AiChatAttachmentResource } from "@tabora/plugin-api/sdk"
+import type { UIMessage } from "@tanstack/ai-client"
 import { Button, IconButton } from "@tabora/ui/button"
-import { Dialog } from "@tabora/ui/dialog"
 import { Drawer } from "@tabora/ui/drawer"
 import type { DropdownMenuTriggerRenderProps } from "@tabora/ui/dropdown-menu"
 import { DropdownMenu } from "@tabora/ui/dropdown-menu"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
-import { Input } from "@tabora/ui/input"
-import { Spinner } from "@tabora/ui/spinner"
 import { Textarea } from "@tabora/ui/textarea"
 import Brain from "lucide-solid/icons/brain"
 import Cpu from "lucide-solid/icons/cpu"
-import Ellipsis from "lucide-solid/icons/ellipsis"
 import MessageSquare from "lucide-solid/icons/message-square"
 import Paperclip from "lucide-solid/icons/paperclip"
-import Pencil from "lucide-solid/icons/pencil"
 import Plus from "lucide-solid/icons/plus"
 import Send from "lucide-solid/icons/send"
 import Settings2 from "lucide-solid/icons/settings-2"
 import Square from "lucide-solid/icons/square"
-import Trash2 from "lucide-solid/icons/trash-2"
 import X from "lucide-solid/icons/x"
 import { onCleanup } from "solid-js"
 import {
@@ -32,6 +27,7 @@ import {
   getAiChatSession,
   getAiChatSettingsOpener,
   messageText,
+  prepareAiChatAttachments,
   registerAiChatView,
 } from "./ai-chat-session"
 import type {
@@ -40,7 +36,14 @@ import type {
   AiChatReasoningEffort,
   AiChatSession,
 } from "./ai-chat-session"
-import { AssistantMarkdown } from "./ai-chat-markdown"
+import {
+  buildAttachmentContent,
+  formatFileSize,
+  type AiChatInputModality,
+} from "./ai-chat-attachments"
+import { ConversationList } from "./ai-chat-conversation-list"
+import { AiChatDialogs } from "./ai-chat-dialogs"
+import { AiChatMessageThread } from "./ai-chat-message-thread"
 import { styles } from "./styles"
 
 const REASONING_LABELS: Record<AiChatReasoningEffort, string> = {
@@ -53,24 +56,6 @@ function newContextId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `ctx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-function formatRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return "刚刚"
-  if (minutes < 60) return `${minutes}分钟前`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}小时前`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}天前`
-  return new Date(iso).toLocaleDateString()
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function ComposerChip(props: {
@@ -105,168 +90,27 @@ function ComposerChip(props: {
   )
 }
 
-function ConversationList(props: {
-  session: AiChatSession
-  onPick?: () => void
-  onRename: (conversation: AiChatConversationMeta) => void
-  onDelete: (conversation: AiChatConversationMeta) => void
-  onOptions: (conversation: AiChatConversationMeta) => void
-}) {
-  const [hoveredId, setHoveredId] = createSignal<string | null>(null)
-  return (
-    <>
-      <div {...stylex.attrs(styles.sideHead)}>
-        <Button
-          variant="ghost"
-          size="sm"
-          xstyle={styles.newChatButton}
-          onClick={() => {
-            props.session.startNewConversation()
-            props.onPick?.()
-          }}
-        >
-          <MessageSquare size={14} />
-          <span>新对话</span>
-          <kbd {...stylex.attrs(styles.newChatShortcut)}>Ctrl+N</kbd>
-        </Button>
-        <span {...stylex.attrs(styles.sideHeading)}>历史对话</span>
-      </div>
-      <Show
-        when={props.session.conversations().length}
-        fallback={<div {...stylex.attrs(styles.sideEmpty)}>还没有历史对话。</div>}
-      >
-        <div {...stylex.attrs(styles.sideList)}>
-          <For each={props.session.conversations()}>
-            {(conversation) => (
-              <div
-                {...stylex.attrs(
-                  styles.conversationRow,
-                  conversation.id === props.session.activeId() && styles.conversationRowActive,
-                )}
-                onMouseEnter={() => setHoveredId(conversation.id)}
-                onMouseLeave={() => setHoveredId(null)}
-              >
-                <button
-                  type="button"
-                  {...stylex.attrs(styles.conversationMain)}
-                  onClick={() => {
-                    props.session.switchConversation(conversation.id)
-                    props.onPick?.()
-                  }}
-                  aria-label={`切换到对话 ${conversation.title}`}
-                >
-                  <span {...stylex.attrs(styles.conversationTitle)}>{conversation.title}</span>
-                  <span {...stylex.attrs(styles.conversationMeta)}>
-                    {formatRelativeTime(conversation.updatedAt)}
-                  </span>
-                </button>
-                <span
-                  {...stylex.attrs(
-                    styles.conversationActions,
-                    hoveredId() === conversation.id && styles.conversationActionsVisible,
-                  )}
-                >
-                  <DropdownMenu
-                    items={[
-                      {
-                        id: `${conversation.id}-options`,
-                        label: "对话设置",
-                        icon: <Settings2 size={14} />,
-                        onClick: () => props.onOptions(conversation),
-                      },
-                      {
-                        id: `${conversation.id}-rename`,
-                        label: "重命名",
-                        icon: <Pencil size={14} />,
-                        onClick: () => props.onRename(conversation),
-                      },
-                      { id: `${conversation.id}-separator`, label: <></>, separator: true },
-                      {
-                        id: `${conversation.id}-delete`,
-                        label: "删除",
-                        icon: <Trash2 size={14} />,
-                        danger: true,
-                        onClick: () => props.onDelete(conversation),
-                      },
-                    ]}
-                    side="bottom"
-                    align="end"
-                    triggerAsChild={true}
-                    triggerAriaLabel={`对话操作 ${conversation.title}`}
-                    triggerTitle="对话操作"
-                  >
-                    {(trigger: DropdownMenuTriggerRenderProps) => {
-                      const triggerProps = {
-                        ...(trigger.ref !== undefined ? { ref: trigger.ref } : {}),
-                        ...(trigger.disabled !== undefined ? { disabled: trigger.disabled } : {}),
-                        ...(trigger["aria-haspopup"] !== undefined
-                          ? { "aria-haspopup": "menu" as const }
-                          : {}),
-                        ...(trigger["aria-expanded"] !== undefined
-                          ? { "aria-expanded": trigger["aria-expanded"] }
-                          : {}),
-                        ...(trigger["aria-controls"] !== undefined
-                          ? { "aria-controls": trigger["aria-controls"] }
-                          : {}),
-                        ...(trigger["data-open"] !== undefined
-                          ? { "data-open": trigger["data-open"] }
-                          : {}),
-                        ...(trigger["data-closed"] !== undefined
-                          ? { "data-closed": trigger["data-closed"] }
-                          : {}),
-                        ...(trigger["data-kb-menu-value-trigger"] !== undefined
-                          ? { "data-kb-menu-value-trigger": trigger["data-kb-menu-value-trigger"] }
-                          : {}),
-                        ...(trigger.onPointerDown !== undefined
-                          ? { onPointerDown: trigger.onPointerDown }
-                          : {}),
-                        ...(trigger.onKeyDown !== undefined
-                          ? { onKeyDown: trigger.onKeyDown }
-                          : {}),
-                        ...(trigger.onMouseOver !== undefined
-                          ? { onMouseOver: trigger.onMouseOver }
-                          : {}),
-                        ...(trigger.onFocus !== undefined ? { onFocus: trigger.onFocus } : {}),
-                      }
-                      return (
-                        <IconButton
-                          {...triggerProps}
-                          size="sm"
-                          variant="ghost"
-                          aria-label={`对话操作 ${conversation.title}`}
-                        >
-                          <Ellipsis size={14} />
-                        </IconButton>
-                      )
-                    }}
-                  </DropdownMenu>
-                </span>
-              </div>
-            )}
-          </For>
-        </div>
-      </Show>
-    </>
-  )
-}
-
 export function AiChatExpand(props: WidgetViewProps) {
   const session = getAiChatSession({ instanceId: props.instanceId, data: props.data })
   const [draft, setDraft] = createSignal("")
   const [drawerOpen, setDrawerOpen] = createSignal(false)
   const [renaming, setRenaming] = createSignal<AiChatConversationMeta | null>(null)
   const [renameDraft, setRenameDraft] = createSignal("")
+  const [clearing, setClearing] = createSignal<AiChatConversationMeta | null>(null)
   const [deleting, setDeleting] = createSignal<AiChatConversationMeta | null>(null)
   const [optionsFor, setOptionsFor] = createSignal<AiChatConversationMeta | null>(null)
   const [promptDraft, setPromptDraft] = createSignal("")
   const [temperatureDraft, setTemperatureDraft] = createSignal("")
   const [temperatureInvalid, setTemperatureInvalid] = createSignal(false)
+  const [maxOutputTokensDraft, setMaxOutputTokensDraft] = createSignal("")
+  const [maxOutputTokensInvalid, setMaxOutputTokensInvalid] = createSignal(false)
   const [editing, setEditing] = createSignal(false)
   const [elapsed, setElapsed] = createSignal(0)
   const [contextEditor, setContextEditor] = createSignal(false)
   const [contextLabel, setContextLabel] = createSignal("")
   const [contextText, setContextText] = createSignal("")
   const [attachments, setAttachments] = createSignal<File[]>([])
+  const [copiedMessageId, setCopiedMessageId] = createSignal<string | null>(null)
   let attachmentInput: HTMLInputElement | undefined
 
   const getAiSettings = props.host.getAiSettings?.bind(props.host)
@@ -291,7 +135,11 @@ export function AiChatExpand(props: WidgetViewProps) {
     const customIds = settings.custom.models?.filter(Boolean) ?? []
     const custom = (
       customIds.length > 0 ? customIds : settings.custom.model ? [settings.custom.model] : []
-    ).map((id) => ({ id, label: id }))
+    ).map((id) => ({
+      id,
+      label: id,
+      inputModalities: settings.custom.inputModalities ?? ["text", "image"],
+    }))
     const uniqueBuiltin = [...new Map(builtin.map((model) => [model.id, model])).values()]
     const uniqueCustom = [...new Map(custom.map((model) => [model.id, model])).values()]
     return [
@@ -315,6 +163,11 @@ export function AiChatExpand(props: WidgetViewProps) {
     const id = activeModelId()
     return modelChoices().find((model) => model.id === id)?.label ?? id ?? "默认模型"
   }
+  const activeModelInputModalities = (): AiChatInputModality[] =>
+    modelChoices().find((model) => model.id === activeModelId())?.inputModalities ?? [
+      "text",
+      "image",
+    ]
   const activeReasoning = (): AiChatReasoningEffort | undefined =>
     activeConversation()?.reasoningEffort
   const updateActiveOptions = (
@@ -395,19 +248,40 @@ export function AiChatExpand(props: WidgetViewProps) {
     threadRef = element
   }
 
-  const send = () => {
+  const send = async (immediately = false) => {
     const text = draft().trim()
-    if (!text || session.isLoading()) return
+    const selectedAttachments = attachments()
+    if (!text && selectedAttachments.length === 0) return
     if (editing()) {
+      if (!text) return
       setEditing(false)
       setDraft("")
       void session.editLastUserMessage(text)
       return
     }
     if (!session.activeId()) session.createConversation()
+    const conversationId = session.activeId()
+    if (!conversationId) return
     nearBottom = true
     setDraft("")
-    void session.send(text)
+    setAttachments([])
+    const prompt = text || "请分析我附上的文件。"
+    let resources: AiChatAttachmentResource[] = []
+    try {
+      resources = await prepareAiChatAttachments(selectedAttachments, conversationId)
+    } catch {
+      // The sent message renders each failed resource as unavailable; native
+      // image/audio/PDF parts can still use their normal model path.
+    }
+    const attachmentContent = await buildAttachmentContent(
+      prompt,
+      selectedAttachments,
+      activeModelInputModalities(),
+      resources,
+    )
+    void (immediately
+      ? session.sendImmediately(attachmentContent)
+      : session.send(attachmentContent))
   }
 
   const startEditingLastUserMessage = () => {
@@ -418,12 +292,30 @@ export function AiChatExpand(props: WidgetViewProps) {
     setEditing(true)
   }
 
+  const copyAssistantMessage = async (message: UIMessage) => {
+    const text = messageText(message).trim()
+    if (!text || typeof navigator === "undefined" || !navigator.clipboard?.writeText) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedMessageId(message.id)
+      window.setTimeout(() => {
+        setCopiedMessageId((current) => (current === message.id ? null : current))
+      }, 1600)
+    } catch {
+      // Clipboard access can be denied by the browser; leave the conversation intact.
+    }
+  }
+
   const openConversationOptions = (conversation: AiChatConversationMeta) => {
     setPromptDraft(conversation.systemPrompt ?? "")
     setTemperatureDraft(
       conversation.temperature === undefined ? "" : String(conversation.temperature),
     )
     setTemperatureInvalid(false)
+    setMaxOutputTokensDraft(
+      conversation.maxOutputTokens === undefined ? "" : String(conversation.maxOutputTokens),
+    )
+    setMaxOutputTokensInvalid(false)
     setOptionsFor(conversation)
   }
 
@@ -431,6 +323,7 @@ export function AiChatExpand(props: WidgetViewProps) {
     const conversation = optionsFor()
     if (!conversation) return
     let temperature: number | undefined
+    let maxOutputTokens: number | undefined
     const rawTemperature = temperatureDraft().trim()
     if (rawTemperature) {
       const parsed = Number(rawTemperature)
@@ -440,9 +333,19 @@ export function AiChatExpand(props: WidgetViewProps) {
       }
       temperature = parsed
     }
+    const rawMaxOutputTokens = maxOutputTokensDraft().trim()
+    if (rawMaxOutputTokens) {
+      const parsed = Number(rawMaxOutputTokens)
+      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 8_192) {
+        setMaxOutputTokensInvalid(true)
+        return
+      }
+      maxOutputTokens = parsed
+    }
     session.updateConversationOptions(conversation.id, {
       systemPrompt: promptDraft(),
       temperature,
+      maxOutputTokens,
     })
     setOptionsFor(null)
   }
@@ -502,7 +405,7 @@ export function AiChatExpand(props: WidgetViewProps) {
             if (event.isComposing) return
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault()
-              send()
+              void send(event.ctrlKey || event.metaKey)
             }
             if (event.key === "Escape" && editing()) {
               event.preventDefault()
@@ -513,7 +416,7 @@ export function AiChatExpand(props: WidgetViewProps) {
           placeholder={
             editing()
               ? "编辑提问内容…（Enter 重新生成）"
-              : "向 AI 提问…（Enter 发送，Shift+Enter 换行）"
+              : "向 AI 提问…（Enter 发送，Ctrl+Enter 立即发送）"
           }
           aria-label="向 AI 提问"
         />
@@ -526,6 +429,12 @@ export function AiChatExpand(props: WidgetViewProps) {
                   label: "添加附件",
                   icon: <Paperclip size={14} />,
                   onClick: () => attachmentInput?.click(),
+                },
+                {
+                  id: "edit-context",
+                  label: "管理上下文",
+                  icon: <Settings2 size={14} />,
+                  onClick: () => setContextEditor(true),
                 },
               ]}
               side="top"
@@ -608,31 +517,31 @@ export function AiChatExpand(props: WidgetViewProps) {
               )}
             </DropdownMenu>
           </div>
-          <Show
-            when={session.isLoading()}
-            fallback={
-              <IconButton
-                size="md"
-                variant="primary"
-                xstyle={styles.composerSendButton}
-                aria-label="发送"
-                disabled={!draft().trim()}
-                onClick={send}
-              >
-                <Send size={16} />
-              </IconButton>
-            }
-          >
+          <div {...stylex.attrs(styles.composerRunActions)}>
             <IconButton
               size="md"
-              variant="secondary"
+              variant="primary"
               xstyle={styles.composerSendButton}
-              aria-label="停止生成"
-              onClick={() => session.stop()}
+              aria-label="发送"
+              title={session.isLoading() ? "加入发送队列" : "发送"}
+              disabled={!draft().trim() && attachments().length === 0}
+              onClick={() => void send()}
             >
-              <Square size={14} />
+              <Send size={16} />
             </IconButton>
-          </Show>
+            <Show when={session.isLoading()}>
+              <IconButton
+                size="md"
+                variant="secondary"
+                xstyle={styles.composerSendButton}
+                aria-label="停止生成"
+                title="停止生成并取消已排队消息"
+                onClick={() => session.stop()}
+              >
+                <Square size={14} />
+              </IconButton>
+            </Show>
+          </div>
         </div>
       </div>
     </div>
@@ -641,9 +550,23 @@ export function AiChatExpand(props: WidgetViewProps) {
   const errorCopy = () => aiChatErrorCopy(session.error())
   const openSettings = getAiChatSettingsOpener()
   const activeTitle = () => activeConversation()?.title ?? "新对话"
+  const resetComposerForNewConversation = () => {
+    setDraft("")
+    setAttachments([])
+    setEditing(false)
+  }
 
   return (
-    <div {...stylex.attrs(styles.expandRoot)}>
+    <div
+      {...stylex.attrs(styles.expandRoot)}
+      onKeyDown={(event) => {
+        if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "n") return
+        if (event.isComposing) return
+        event.preventDefault()
+        session.startNewConversation()
+        resetComposerForNewConversation()
+      }}
+    >
       <div {...stylex.attrs(styles.expandHeader)}>
         <IconButton
           size="sm"
@@ -662,7 +585,9 @@ export function AiChatExpand(props: WidgetViewProps) {
         <aside {...stylex.attrs(styles.side)}>
           <ConversationList
             session={session}
+            onNew={resetComposerForNewConversation}
             onRename={setRenaming}
+            onClear={setClearing}
             onDelete={setDeleting}
             onOptions={openConversationOptions}
           />
@@ -684,75 +609,15 @@ export function AiChatExpand(props: WidgetViewProps) {
           }
         >
           <div {...stylex.attrs(styles.main)}>
-            <div
-              {...stylex.attrs(styles.thread)}
-              ref={attachThread}
+            <AiChatMessageThread
+              session={session}
+              elapsed={elapsed}
+              copiedMessageId={copiedMessageId}
+              onCopy={copyAssistantMessage}
+              onEditLastUserMessage={startEditingLastUserMessage}
+              onAttach={attachThread}
               onScroll={trackScroll}
-              role="log"
-              aria-live="polite"
-              aria-label="AI 对话消息"
-            >
-              <For each={session.messages()}>
-                {(message, index) => {
-                  const editable = () => {
-                    if (message.role !== "user" || session.isLoading()) return false
-                    const history = session.messages()
-                    let lastUserIndex = -1
-                    for (let i = history.length - 1; i >= 0; i -= 1) {
-                      if (history[i]?.role === "user") {
-                        lastUserIndex = i
-                        break
-                      }
-                    }
-                    return index() === lastUserIndex && lastUserIndex >= history.length - 2
-                  }
-                  return (
-                    <Show when={message.role === "user" || message.role === "assistant"}>
-                      <div
-                        {...stylex.attrs(
-                          styles.turn,
-                          message.role === "user" ? styles.turnUser : styles.turnAssistant,
-                        )}
-                      >
-                        <Show
-                          when={message.role === "user"}
-                          fallback={
-                            <div {...stylex.attrs(styles.assistantBubble)}>
-                              <ChatMessage
-                                message={message}
-                                textPartRenderer={(part) => (
-                                  <AssistantMarkdown content={part.content} />
-                                )}
-                              />
-                            </div>
-                          }
-                        >
-                          <div {...stylex.attrs(styles.userTurnRow)}>
-                            <div {...stylex.attrs(styles.userBubble)}>{messageText(message)}</div>
-                            <Show when={editable()}>
-                              <IconButton
-                                size="sm"
-                                variant="ghost"
-                                aria-label="编辑这条提问并重新生成"
-                                onClick={startEditingLastUserMessage}
-                              >
-                                <Pencil size={12} />
-                              </IconButton>
-                            </Show>
-                          </div>
-                        </Show>
-                      </div>
-                    </Show>
-                  )
-                }}
-              </For>
-              <Show when={session.isLoading()}>
-                <div {...stylex.attrs(styles.generatingRow)}>
-                  <Spinner size="sm" aria-label="生成中" />
-                  <span {...stylex.attrs(styles.generating)}>生成中 · {elapsed()} 秒</span>
-                </div>
-              </Show>
-            </div>
+            />
             <Show when={session.error()}>
               <div {...stylex.attrs(styles.statusBar)}>
                 <InlineError>
@@ -792,10 +657,18 @@ export function AiChatExpand(props: WidgetViewProps) {
       >
         <ConversationList
           session={session}
+          onNew={() => {
+            resetComposerForNewConversation()
+            setDrawerOpen(false)
+          }}
           onPick={() => setDrawerOpen(false)}
           onRename={(conversation) => {
             setDrawerOpen(false)
             setRenaming(conversation)
+          }}
+          onClear={(conversation) => {
+            setDrawerOpen(false)
+            setClearing(conversation)
           }}
           onDelete={(conversation) => {
             setDrawerOpen(false)
@@ -807,166 +680,39 @@ export function AiChatExpand(props: WidgetViewProps) {
           }}
         />
       </Drawer>
-      <Show when={renaming()}>
-        {(conversation) => (
-          <Dialog
-            open
-            title="重命名对话"
-            onCancel={() => setRenaming(null)}
-            onOk={() => {
-              session.renameConversation(conversation().id, renameDraft())
-              setRenaming(null)
-            }}
-            okText="保存"
-          >
-            <Input
-              value={renameDraft()}
-              onInput={setRenameDraft}
-              aria-label="对话名称"
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.isComposing) {
-                  session.renameConversation(conversation().id, renameDraft())
-                  setRenaming(null)
-                }
-              }}
-            />
-          </Dialog>
-        )}
-      </Show>
-      <Show when={deleting()}>
-        {(conversation) => (
-          <Dialog
-            open
-            destructive
-            title="删除对话"
-            description={`将删除「${conversation().title}」及其 ${conversation().messageCount} 条消息，此操作无法恢复。`}
-            onCancel={() => setDeleting(null)}
-            footer={
-              <>
-                <Button variant="secondary" size="sm" onClick={() => setDeleting(null)}>
-                  取消
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => {
-                    session.deleteConversation(conversation().id)
-                    setDeleting(null)
-                  }}
-                >
-                  删除
-                </Button>
-              </>
-            }
-          />
-        )}
-      </Show>
-      <Show when={contextEditor()}>
-        <Dialog
-          open
-          title="添加上下文"
-          description="上下文会以片段形式追加到系统提示词末尾，仅作用于当前对话。"
-          onCancel={() => {
-            setContextEditor(false)
-            setContextLabel("")
-            setContextText("")
-          }}
-          onOk={() => {
-            addContextBlock()
-            setContextEditor(false)
-          }}
-          okText="添加"
-        >
-          <div {...stylex.attrs(styles.optionsForm)}>
-            <label {...stylex.attrs(styles.optionsLabel)}>
-              <span {...stylex.attrs(styles.optionsLabelText)}>片段名称（可选）</span>
-              <Input
-                value={contextLabel()}
-                onInput={setContextLabel}
-                placeholder="例如：项目说明"
-                aria-label="片段名称"
-              />
-            </label>
-            <label {...stylex.attrs(styles.optionsLabel)}>
-              <span {...stylex.attrs(styles.optionsLabelText)}>片段内容</span>
-              <Textarea
-                rows={6}
-                value={contextText()}
-                onInput={setContextText}
-                placeholder="粘贴需要 AI 参考的资料、代码或说明"
-                aria-label="片段内容"
-              />
-            </label>
-            <Show when={contextBlocks().length > 0}>
-              <div {...stylex.attrs(styles.contextList)}>
-                <span {...stylex.attrs(styles.optionsLabelText)}>已添加的上下文</span>
-                <For each={contextBlocks()}>
-                  {(block) => (
-                    <div {...stylex.attrs(styles.contextItem)}>
-                      <div {...stylex.attrs(styles.contextItemMain)}>
-                        <span {...stylex.attrs(styles.contextItemLabel)}>{block.label}</span>
-                        <span {...stylex.attrs(styles.contextItemPreview)}>
-                          {block.text.slice(0, 60)}
-                          {block.text.length > 60 ? "…" : ""}
-                        </span>
-                      </div>
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        aria-label={`删除上下文 ${block.label}`}
-                        onClick={() => removeContextBlock(block.id)}
-                      >
-                        <X size={12} />
-                      </IconButton>
-                    </div>
-                  )}
-                </For>
-              </div>
-            </Show>
-          </div>
-        </Dialog>
-      </Show>
-      <Show when={optionsFor()}>
-        {(conversation) => (
-          <Dialog
-            open
-            title={`对话设置 · ${conversation().title}`}
-            description="仅作用于当前对话；留空时使用默认值。"
-            onCancel={() => setOptionsFor(null)}
-            onOk={saveConversationOptions}
-            okText="保存"
-          >
-            <div {...stylex.attrs(styles.optionsForm)}>
-              <label {...stylex.attrs(styles.optionsLabel)}>
-                <span {...stylex.attrs(styles.optionsLabelText)}>系统提示词</span>
-                <Textarea
-                  rows={4}
-                  value={promptDraft()}
-                  onInput={setPromptDraft}
-                  placeholder="留空使用默认的工作台助手提示词"
-                  aria-label="系统提示词"
-                />
-              </label>
-              <label {...stylex.attrs(styles.optionsLabel)}>
-                <span {...stylex.attrs(styles.optionsLabelText)}>温度（0–2，留空使用默认）</span>
-                <Input
-                  value={temperatureDraft()}
-                  onInput={(value) => {
-                    setTemperatureDraft(value)
-                    setTemperatureInvalid(false)
-                  }}
-                  invalid={temperatureInvalid()}
-                  aria-label="温度"
-                  placeholder="例如 0.7"
-                />
-                <Show when={temperatureInvalid()}>
-                  <span {...stylex.attrs(styles.optionsHint)}>温度需为 0 到 2 之间的数字</span>
-                </Show>
-              </label>
-            </div>
-          </Dialog>
-        )}
-      </Show>
+      <AiChatDialogs
+        session={session}
+        renaming={renaming}
+        setRenaming={setRenaming}
+        renameDraft={renameDraft}
+        setRenameDraft={setRenameDraft}
+        clearing={clearing}
+        setClearing={setClearing}
+        deleting={deleting}
+        setDeleting={setDeleting}
+        contextEditor={contextEditor}
+        setContextEditor={setContextEditor}
+        contextLabel={contextLabel}
+        setContextLabel={setContextLabel}
+        contextText={contextText}
+        setContextText={setContextText}
+        contextBlocks={contextBlocks}
+        onAddContext={addContextBlock}
+        onRemoveContext={removeContextBlock}
+        optionsFor={optionsFor}
+        setOptionsFor={setOptionsFor}
+        promptDraft={promptDraft}
+        setPromptDraft={setPromptDraft}
+        temperatureDraft={temperatureDraft}
+        setTemperatureDraft={setTemperatureDraft}
+        temperatureInvalid={temperatureInvalid}
+        setTemperatureInvalid={setTemperatureInvalid}
+        maxOutputTokensDraft={maxOutputTokensDraft}
+        setMaxOutputTokensDraft={setMaxOutputTokensDraft}
+        maxOutputTokensInvalid={maxOutputTokensInvalid}
+        setMaxOutputTokensInvalid={setMaxOutputTokensInvalid}
+        onSaveOptions={saveConversationOptions}
+      />
     </div>
   )
 }
