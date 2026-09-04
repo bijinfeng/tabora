@@ -15,6 +15,7 @@ import {
 } from "@tabora/ai-runtime/server"
 
 import type { ServerRuntime } from "./runtime"
+import { getAiUsageTracker } from "./aiUsage"
 import { getSessionUserId, json } from "./http"
 
 function isPrivateIpv4(value: string): boolean {
@@ -84,11 +85,16 @@ export function createCloudAiGateway(
     ReturnType<ServerRuntime["handle"]["aiModels"]["listActiveGatewayModels"]>
   >,
   attachmentResources: readonly AiAttachmentToolResource[] = [],
+  usage: Pick<
+    NonNullable<Parameters<typeof createTanstackAiGateway>[0]>,
+    "usageTracker" | "budget"
+  > = {},
 ) {
   return createTanstackAiGateway({
     builtinModels,
     validateCustomProvider: validateCloudCustomProvider,
     tools: () => createAttachmentTools(attachmentResources),
+    ...usage,
   })
 }
 
@@ -98,10 +104,22 @@ async function authorizeBuiltinAi(
   runtime: CloudAiRuntime,
   request: Request,
   provider: "builtin" | "custom",
-) {
-  if (provider !== "builtin") return
+): Promise<string | undefined> {
+  if (provider !== "builtin") return undefined
   const userId = await getSessionUserId(runtime.auth, request)
   if (!userId) throw new AiRuntimeError("ai_auth_required", "Sign in to use built-in AI models")
+  return userId
+}
+
+async function aiBudget(runtime: CloudAiRuntime) {
+  const [maxRequests, maxTotalTokens] = await Promise.all([
+    runtime.handle.settings.get("aiMonthlyRequestLimit"),
+    runtime.handle.settings.get("aiMonthlyTokenLimit"),
+  ])
+  return {
+    ...(maxRequests > 0 ? { maxRequests } : {}),
+    ...(maxTotalTokens > 0 ? { maxTotalTokens } : {}),
+  }
 }
 
 /** Resolve only current-user references, leaving every storage detail in the host process. */
@@ -145,16 +163,20 @@ async function cloudGatewayForRequest(
   runtime: CloudAiRuntime,
   request: Request,
   input: ReturnType<typeof parseAiGatewayRequest>,
+  authorizedUserId?: string,
 ) {
-  const userId = input.attachmentIds?.length
-    ? await getSessionUserId(runtime.auth, request)
-    : undefined
+  const userId =
+    authorizedUserId ??
+    (input.attachmentIds?.length ? await getSessionUserId(runtime.auth, request) : undefined)
   if (input.attachmentIds?.length && !userId) {
     throw new AiRuntimeError("ai_auth_required", "Sign in to use AI attachments")
   }
   return createCloudAiGateway(
     input.provider === "builtin" ? await runtime.handle.aiModels.listActiveGatewayModels() : [],
     userId ? await resolveAttachmentTools(runtime, userId, input.attachmentIds) : [],
+    input.provider === "builtin" && userId
+      ? { usageTracker: getAiUsageTracker(userId), budget: await aiBudget(runtime) }
+      : {},
   )
 }
 
@@ -170,8 +192,8 @@ export async function cloudAiGenerateResponse(
 ): Promise<Response> {
   try {
     const input = parseAiGatewayRequest(await request.json().catch(() => null))
-    await authorizeBuiltinAi(runtime, request, input.provider)
-    const activeGateway = gateway ?? (await cloudGatewayForRequest(runtime, request, input))
+    const userId = await authorizeBuiltinAi(runtime, request, input.provider)
+    const activeGateway = gateway ?? (await cloudGatewayForRequest(runtime, request, input, userId))
     return Response.json(await activeGateway.generate(input))
   } catch (error) {
     return aiErrorResponse(error)
@@ -186,8 +208,8 @@ export async function cloudAiStreamResponse(
 ): Promise<Response> {
   try {
     const input = parseAiGatewayRequest(await request.json().catch(() => null))
-    await authorizeBuiltinAi(runtime, request, input.provider)
-    const activeGateway = gateway ?? (await cloudGatewayForRequest(runtime, request, input))
+    const userId = await authorizeBuiltinAi(runtime, request, input.provider)
+    const activeGateway = gateway ?? (await cloudGatewayForRequest(runtime, request, input, userId))
     return aiStreamResponse(activeGateway, input)
   } catch (error) {
     return aiErrorResponse(error)

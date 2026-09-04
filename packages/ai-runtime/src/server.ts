@@ -2,7 +2,7 @@ import { chat, toServerSentEventsResponse, type AnyServerTool } from "@tanstack/
 import type { StreamChunk } from "@tanstack/ai/client"
 import { openaiCompatibleText } from "@tanstack/ai-openai/compatible"
 import { AiRuntimeError } from "@tabora/plugin-api"
-import type { AiGenerateResult, AiStreamChunk } from "@tabora/plugin-api"
+import type { AiBudget, AiGenerateResult, AiStreamChunk, AiTokenUsage } from "@tabora/plugin-api"
 
 import type {
   AiCustomProviderConfig,
@@ -13,6 +13,8 @@ import type {
   AiInputModality,
   AiProviderApi,
 } from "./contracts"
+import type { AiUsageTracker } from "./usage"
+import { estimateAiTokens } from "./usage"
 
 export { AiRuntimeError } from "@tabora/plugin-api"
 export type { AiCustomProviderConfig } from "./contracts"
@@ -36,6 +38,34 @@ export type AiGatewayOptions = {
   validateCustomProvider?(provider: AiCustomProviderConfig): Promise<void> | void
   /** Resolves host-owned, server-executed tools for the current run. */
   tools?(request: AiGatewayRequest): readonly AnyServerTool[]
+  /** Optional host-owned accounting and budget enforcement for gateway runs. */
+  usageTracker?: AiUsageTracker
+  budget?: AiBudget
+}
+
+function estimateGatewayRequestTokens(request: AiGatewayRequest): number {
+  const text = request.messages?.length
+    ? [request.system, ...request.messages.map((message) => message.text)]
+        .filter(Boolean)
+        .join("\n")
+    : [request.system, request.prompt].filter(Boolean).join("\n")
+  return estimateAiTokens(text)
+}
+
+function providerUsage(value: unknown): AiTokenUsage | undefined {
+  if (!value || typeof value !== "object" || !("usage" in value)) return undefined
+  const usage = (value as { usage?: unknown }).usage
+  if (!usage || typeof usage !== "object") return undefined
+  const record = usage as Record<string, unknown>
+  const inputTokens = Number(record.inputTokens ?? record.prompt_tokens)
+  const outputTokens = Number(record.outputTokens ?? record.completion_tokens)
+  const totalTokens = Number(record.totalTokens ?? record.total_tokens)
+  if (![inputTokens, outputTokens, totalTokens].some(Number.isFinite)) return undefined
+  return {
+    ...(Number.isFinite(inputTokens) ? { inputTokens } : {}),
+    ...(Number.isFinite(outputTokens) ? { outputTokens } : {}),
+    ...(Number.isFinite(totalTokens) ? { totalTokens } : {}),
+  }
 }
 
 function providerForRequest(
@@ -152,6 +182,9 @@ function wrapProviderError(error: unknown): AiRuntimeError {
 
 export function createTanstackAiGateway(options: AiGatewayOptions = {}) {
   async function* streamEvents(request: AiGatewayRequest): AsyncIterable<StreamChunk> {
+    const estimatedTokens = estimateGatewayRequestTokens(request)
+    options.usageTracker?.check(options.budget, estimatedTokens)
+    let completed = false
     try {
       const provider = providerForRequest(request, options)
       await validateProvider(provider, options)
@@ -160,23 +193,40 @@ export function createTanstackAiGateway(options: AiGatewayOptions = {}) {
         createChatOptions(request, provider, options.tools?.(request)),
       ) as AsyncIterable<StreamChunk>
       for await (const chunk of stream) yield chunk
+      completed = true
     } catch (error) {
+      options.usageTracker?.record(undefined, true)
       throw wrapProviderError(error)
+    } finally {
+      if (completed) options.usageTracker?.record({ totalTokens: estimatedTokens })
     }
   }
 
   return {
     async generate(request: AiGatewayRequest): Promise<AiGenerateResult> {
+      const estimatedTokens = estimateGatewayRequestTokens(request)
+      options.usageTracker?.check(options.budget, estimatedTokens)
       try {
         const provider = providerForRequest(request, options)
         await validateProvider(provider, options)
         assertMessageModalities(request, provider)
-        const text = await chat({
+        const result = await chat({
           ...createChatOptions(request, provider, options.tools?.(request)),
           stream: false,
         })
-        return { text }
+        const usage = providerUsage(result)
+        options.usageTracker?.record(usage ?? { totalTokens: estimatedTokens })
+        const text =
+          typeof result === "string"
+            ? result
+            : result && typeof result === "object" && "text" in result
+              ? typeof (result as { text?: unknown }).text === "string"
+                ? (result as { text: string }).text
+                : ""
+              : ""
+        return { text, ...(usage ? { usage } : {}) }
       } catch (error) {
+        options.usageTracker?.record(undefined, true)
         throw wrapProviderError(error)
       }
     },
@@ -530,7 +580,12 @@ export function aiErrorResponse(error: unknown): Response {
   return new Response(
     JSON.stringify({ error: { code: runtimeError.code, message: runtimeError.message } }),
     {
-      status: runtimeError.code === "ai_auth_required" ? 401 : 400,
+      status:
+        runtimeError.code === "ai_auth_required"
+          ? 401
+          : runtimeError.code === "ai_budget_exceeded"
+            ? 429
+            : 400,
       headers: { "content-type": "application/json" },
     },
   )

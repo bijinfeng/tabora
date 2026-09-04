@@ -102,6 +102,7 @@ async function throwResponseError(response: Response): Promise<never> {
   const message = body?.error?.message
   if (
     code === "ai_not_configured" ||
+    code === "ai_budget_exceeded" ||
     code === "ai_auth_required" ||
     code === "ai_model_unavailable" ||
     code === "ai_request_rejected" ||

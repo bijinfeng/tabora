@@ -211,6 +211,26 @@ function SettingsForm(props: {
           </Button>
         </div>
       </CardSection>
+
+      <CardSection
+        title="内置 AI 用量"
+        description="限制每位用户使用平台内置模型的月度额度；0 表示不限制。"
+      >
+        <Field label="每月请求上限" htmlFor="set-ai-request-limit">
+          <Input
+            id="set-ai-request-limit"
+            value={String(m.aiMonthlyRequestLimit)}
+            onInput={(v) => props.patch("aiMonthlyRequestLimit", Number(v) || 0)}
+          />
+        </Field>
+        <Field label="每月 Token 上限" htmlFor="set-ai-token-limit">
+          <Input
+            id="set-ai-token-limit"
+            value={String(m.aiMonthlyTokenLimit)}
+            onInput={(v) => props.patch("aiMonthlyTokenLimit", Number(v) || 0)}
+          />
+        </Field>
+      </CardSection>
     </>
   )
 }

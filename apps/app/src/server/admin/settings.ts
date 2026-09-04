@@ -18,6 +18,8 @@ export type SettingsView = {
   smtpFrom: string
   smtpUser: string
   smtpPassword: string
+  aiMonthlyRequestLimit: number
+  aiMonthlyTokenLimit: number
   smtpPasswordConfigured?: boolean
 }
 
@@ -39,6 +41,8 @@ const updateSettingsSchema = z
     smtpFrom: emailField,
     smtpUser: z.string(),
     smtpPassword: z.string(),
+    aiMonthlyRequestLimit: z.number().int().nonnegative(),
+    aiMonthlyTokenLimit: z.number().int().nonnegative(),
   })
   .partial()
 
