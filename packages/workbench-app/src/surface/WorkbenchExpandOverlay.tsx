@@ -54,11 +54,14 @@ const styles = stylex.create({
     boxShadow: shadow.floating,
     display: "flex",
     flexDirection: "column",
+    boxSizing: "border-box",
+    height: 640,
     maxHeight: "calc(100vh - 48px)",
     minHeight: "min(640px, calc(100vh - 48px))",
     overflow: "hidden",
     width: "min(920px, calc(100vw - 64px))",
     "@media (max-width: 480px)": {
+      height: 640,
       maxHeight: "calc(100vh - 24px)",
       minHeight: "min(640px, calc(100vh - 24px))",
       width: "calc(100vw - 24px)",
@@ -142,7 +145,7 @@ const styles = stylex.create({
     flex: 1,
     flexDirection: "column",
     minHeight: 0,
-    overflow: "auto",
+    overflow: "hidden",
   },
   bodyContent: {
     display: "flex",

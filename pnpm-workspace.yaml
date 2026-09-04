@@ -42,11 +42,10 @@ catalogs:
     dexie: ^4.4.4
     zod: ^4.4.3
   ai:
-    "@tanstack/ai": ^0.51.0
-    "@tanstack/ai-client": ^0.29.1
-    "@tanstack/ai-openai": ^0.22.2
-    "@tanstack/ai-solid": ^0.19.3
-    "@tanstack/ai-solid-ui": ^0.7.21
+    "@tanstack/ai": ^0.53.0
+    "@tanstack/ai-client": ^0.31.0
+    "@tanstack/ai-openai": ^0.22.5
+    "@tanstack/ai-solid": ^0.21.0
     solid-markdown: ^2.1.1
   test:
     fake-indexeddb: ^6.2.5
@@ -106,7 +105,11 @@ minimumReleaseAgeExclude:
   - "@tanstack/ai@0.51.0"
   - "@tanstack/openai-base@0.10.7"
   - "@tanstack/ai-client@0.29.1"
+  - "@tanstack/ai-client@0.31.0"
+  - "@tanstack/ai-openai@0.22.5"
+  - "@tanstack/ai-solid@0.21.0"
+  - "@tanstack/ai@0.53.0"
+  - "@tanstack/openai-base@0.10.10"
 
 patchedDependencies:
-  "@tanstack/ai-solid-ui@0.7.21": patches/@tanstack__ai-solid-ui@0.7.21.patch
   solid-markdown@2.1.1: patches/solid-markdown@2.1.1.patch

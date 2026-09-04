@@ -1,7 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
 import { For, Show } from "solid-js"
 import type { Accessor } from "solid-js"
-import { ChatMessage } from "@tanstack/ai-solid-ui"
+import { createChatUI } from "@tanstack/ai-solid/ui"
+import type { ChatUIHost } from "@tanstack/ai-solid/ui"
 import type { UIMessage } from "@tanstack/ai-client"
 import { IconButton } from "@tabora/ui/button"
 import { Spinner } from "@tabora/ui/spinner"
@@ -16,6 +17,29 @@ import type { AiChatSession } from "./ai-chat-session"
 import { AiChatUserMessage } from "./ai-chat-user-message"
 import { styles } from "./styles"
 
+const chatUi = createChatUI(
+  {},
+  {
+    components: {
+      // The host owns the outer message layout; this component only binds the
+      // official Part dispatcher to Tabora's message content container.
+      layout: (props) => <>{props.Messages}</>,
+      message: (props) => (
+        <div data-tabora-message-content>
+          <props.Parts />
+        </div>
+      ),
+    },
+    partsComponents: {
+      text: (props) => <AssistantMarkdown content={props.part.content} />,
+      thinking: (props) => <AiChatReasoning content={props.part.content} />,
+      // Unknown parts are intentionally ignored until a product renderer is
+      // defined; protocol selection remains owned by TanStack AI.
+      fallback: () => null,
+    },
+  },
+)
+
 export function AiChatMessageThread(props: {
   session: AiChatSession
   elapsed: Accessor<number>
@@ -25,6 +49,16 @@ export function AiChatMessageThread(props: {
   onAttach: (element: HTMLDivElement) => void
   onScroll: () => void
 }) {
+  // AiChatSession intentionally remains the source of truth for persistence,
+  // queueing and lifecycle. The facade supplies the small UseChatReturn shape
+  // consumed at runtime by createChatUI's Provider/Message components.
+  const chatFacade = {
+    messages: props.session.messages,
+    queue: props.session.queuedMessages,
+    cancelQueued: (id: string) => props.session.cancelQueued(id),
+    interrupts: () => [],
+  } as unknown as ChatUIHost<{}>
+
   const lastAssistantMessage = () =>
     [...props.session.messages()].reverse().find((message) => message.role === "assistant")
 
@@ -60,18 +94,9 @@ export function AiChatMessageThread(props: {
                   fallback={
                     <div {...stylex.attrs(styles.assistantMessageRow)}>
                       <div {...stylex.attrs(styles.assistantBubble)}>
-                        <ChatMessage
-                          message={message}
-                          textPartRenderer={(part) => <AssistantMarkdown content={part.content} />}
-                          thinkingPartRenderer={(part) => (
-                            <AiChatReasoning
-                              content={part.content}
-                              {...(part.isComplete === undefined
-                                ? {}
-                                : { isComplete: part.isComplete })}
-                            />
-                          )}
-                        />
+                        <chatUi.Provider chat={chatFacade}>
+                          <chatUi.Message message={message} />
+                        </chatUi.Provider>
                       </div>
                       <div {...stylex.attrs(styles.messageActions)}>
                         <IconButton
