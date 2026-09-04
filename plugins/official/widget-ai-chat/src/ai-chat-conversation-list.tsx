@@ -34,6 +34,7 @@ export function ConversationList(props: {
   onOptions: (conversation: AiChatConversationMeta) => void
 }) {
   const [hoveredId, setHoveredId] = createSignal<string | null>(null)
+  const [focusedId, setFocusedId] = createSignal<string | null>(null)
   return (
     <>
       <div {...stylex.attrs(styles.sideHead)}>
@@ -67,6 +68,8 @@ export function ConversationList(props: {
                 )}
                 onMouseEnter={() => setHoveredId(conversation.id)}
                 onMouseLeave={() => setHoveredId(null)}
+                onFocusIn={() => setFocusedId(conversation.id)}
+                onFocusOut={() => setFocusedId(null)}
               >
                 <button
                   type="button"
@@ -78,14 +81,21 @@ export function ConversationList(props: {
                   aria-label={`切换到对话 ${conversation.title}`}
                 >
                   <span {...stylex.attrs(styles.conversationTitle)}>{conversation.title}</span>
-                  <span {...stylex.attrs(styles.conversationMeta)}>
+                  <span
+                    {...stylex.attrs(
+                      styles.conversationMeta,
+                      (hoveredId() === conversation.id || focusedId() === conversation.id) &&
+                        styles.conversationMetaHidden,
+                    )}
+                  >
                     {formatRelativeTime(conversation.updatedAt)}
                   </span>
                 </button>
                 <span
                   {...stylex.attrs(
                     styles.conversationActions,
-                    hoveredId() === conversation.id && styles.conversationActionsVisible,
+                    (hoveredId() === conversation.id || focusedId() === conversation.id) &&
+                      styles.conversationActionsVisible,
                   )}
                 >
                   <DropdownMenu

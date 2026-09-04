@@ -4,6 +4,7 @@ import type {
   AiRuntimeBridge,
   AiSettingsService,
   SettingsAiModel,
+  SettingsAiReasoningCapabilities,
   SettingsAiSettings,
   SettingsAiInputModality,
 } from "@tabora/plugin-api"
@@ -16,6 +17,7 @@ export type LocalAiProviderConfig = {
   model: string
   api?: "chat-completions" | "responses"
   inputModalities?: SettingsAiInputModality[]
+  reasoning?: SettingsAiReasoningCapabilities
 }
 
 type StoredAiSettings = {
@@ -32,6 +34,25 @@ function inputModalities(value: unknown): SettingsAiInputModality[] | undefined 
   )
   return modalities.length === value.length && modalities.includes("text")
     ? [...new Set(modalities)]
+    : undefined
+}
+
+function reasoningCapabilities(value: unknown): SettingsAiReasoningCapabilities | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const reasoning = value as Record<string, unknown>
+  if (
+    (reasoning.effort !== undefined && typeof reasoning.effort !== "boolean") ||
+    (reasoning.summary !== undefined && typeof reasoning.summary !== "boolean") ||
+    (reasoning.continuation !== undefined && typeof reasoning.continuation !== "boolean")
+  ) {
+    return undefined
+  }
+  return reasoning.effort || reasoning.summary || reasoning.continuation
+    ? {
+        ...(reasoning.effort ? { effort: true } : {}),
+        ...(reasoning.summary ? { summary: true } : {}),
+        ...(reasoning.continuation ? { continuation: true } : {}),
+      }
     : undefined
 }
 
@@ -111,7 +132,8 @@ export function createLocalAiSettingsService(options: {
               typeof model.id === "string" &&
               typeof model.label === "string" &&
               (model.inputModalities === undefined ||
-                Boolean(inputModalities(model.inputModalities))),
+                Boolean(inputModalities(model.inputModalities))) &&
+              (model.reasoning === undefined || Boolean(reasoningCapabilities(model.reasoning))),
           )
         : []
       return { status: models.length ? "available" : "unavailable", models }
@@ -124,6 +146,7 @@ export function createLocalAiSettingsService(options: {
     const [stored, builtin] = await Promise.all([read(), builtinModels()])
     const custom = stored.custom ?? {}
     const customModalities = inputModalities(custom.inputModalities)
+    const customReasoning = reasoningCapabilities(custom.reasoning)
     return {
       supportedProviders: ["builtin", "custom"],
       activeProvider: stored.activeProvider ?? "builtin",
@@ -146,6 +169,7 @@ export function createLocalAiSettingsService(options: {
           ? { api: custom.api }
           : {}),
         ...(customModalities ? { inputModalities: customModalities } : {}),
+        ...(customReasoning ? { reasoning: customReasoning } : {}),
         apiKeyConfigured: typeof custom.apiKey === "string" && custom.apiKey.length > 0,
         preservesApiKeyOnSave: true,
       },
@@ -193,6 +217,7 @@ export function createLocalAiSettingsService(options: {
     async saveSettings(update) {
       const current = await read()
       const existingCustom = current.custom ?? {}
+      const updatedReasoning = reasoningCapabilities(update.custom.reasoning)
       await write({
         activeProvider: update.activeProvider,
         builtinModelId: update.builtinModelId || options.defaultBuiltinModelId,
@@ -207,6 +232,7 @@ export function createLocalAiSettingsService(options: {
           ...(update.custom.inputModalities
             ? { inputModalities: update.custom.inputModalities }
             : {}),
+          ...(updatedReasoning ? { reasoning: updatedReasoning } : {}),
           ...(update.custom.apiKey
             ? { apiKey: update.custom.apiKey }
             : existingCustom.apiKey
@@ -221,6 +247,7 @@ export function createLocalAiSettingsService(options: {
       const custom = stored.custom
       if (stored.activeProvider === "custom" && custom?.baseUrl && custom.apiKey && custom.model) {
         const customModalities = inputModalities(custom.inputModalities)
+        const customReasoning = reasoningCapabilities(custom.reasoning)
         return {
           provider: "custom" as const,
           custom: {
@@ -229,6 +256,7 @@ export function createLocalAiSettingsService(options: {
             model: custom.model,
             ...(custom.api ? { api: custom.api } : {}),
             ...(customModalities ? { inputModalities: customModalities } : {}),
+            ...(customReasoning ? { reasoning: customReasoning } : {}),
           },
         }
       }

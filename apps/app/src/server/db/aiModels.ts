@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto"
 
 import { and, asc, eq, ne } from "drizzle-orm"
-import type { AiInputModality, AiProviderApi } from "@tabora/ai-runtime"
+import type { AiInputModality, AiProviderApi, AiReasoningCapabilities } from "@tabora/ai-runtime"
 
 export const AI_RESOURCE_STATUSES = ["draft", "active", "disabled", "deleted"] as const
 export type AiResourceStatus = (typeof AI_RESOURCE_STATUSES)[number]
@@ -39,6 +39,7 @@ type ModelRecord = {
   upstreamModelId: string
   label: string
   inputModalities: AiInputModality[] | null
+  reasoning: AiReasoningCapabilities | null
   status: AiResourceStatus
   lastTestStatus: AiTestStatus | null
   lastTestAt: Date | null
@@ -63,6 +64,7 @@ export type GatewayAiModel = {
   baseUrl: string
   api?: AiProviderApi
   inputModalities?: AiInputModality[]
+  reasoning?: AiReasoningCapabilities
 }
 
 export type CreateProviderInput = {
@@ -86,12 +88,14 @@ export type CreateModelInput = {
   upstreamModelId: string
   label: string
   inputModalities?: AiInputModality[]
+  reasoning?: AiReasoningCapabilities | null
 }
 
 export type UpdateModelInput = {
   id: string
   label: string
   inputModalities?: AiInputModality[]
+  reasoning?: AiReasoningCapabilities | null
 }
 
 const CREDENTIAL_KEY_VERSION = 1
@@ -123,6 +127,19 @@ function validateModelModalities(
     throw new Error("模型输入能力与 Provider API 不兼容")
   }
   return unique
+}
+
+function reasoningCapabilities(
+  value: AiReasoningCapabilities | null | undefined,
+): AiReasoningCapabilities | undefined {
+  if (!value || typeof value !== "object") return undefined
+  return value.effort || value.summary || value.continuation
+    ? {
+        ...(value.effort ? { effort: true } : {}),
+        ...(value.summary ? { summary: true } : {}),
+        ...(value.continuation ? { continuation: true } : {}),
+      }
+    : undefined
 }
 
 function credentialKey(value: string): Buffer {
@@ -294,6 +311,7 @@ export function createAiModelQueries(
       providerApi(provider),
       input.inputModalities ?? CHAT_COMPLETIONS_MODALITIES,
     )
+    const reasoning = reasoningCapabilities(input.reasoning)
     const id = `${input.providerId}:${input.upstreamModelId}`
     if (await modelById(id)) throw new Error("该稳定模型 ID 已存在且不可复用")
     const duplicate = (await db
@@ -314,6 +332,7 @@ export function createAiModelQueries(
       upstreamModelId: input.upstreamModelId,
       label: input.label,
       inputModalities,
+      reasoning: reasoning ?? null,
       status: "draft",
       lastTestStatus: "idle",
       createdAt: now,
@@ -330,13 +349,19 @@ export function createAiModelQueries(
     const inputModalities = input.inputModalities
       ? validateModelModalities(providerApi(provider), input.inputModalities)
       : modelModalities(model)
+    const reasoning =
+      "reasoning" in input
+        ? reasoningCapabilities(input.reasoning)
+        : reasoningCapabilities(model.reasoning)
     const capabilitiesChanged =
-      JSON.stringify(inputModalities) !== JSON.stringify(modelModalities(model))
+      JSON.stringify(inputModalities) !== JSON.stringify(modelModalities(model)) ||
+      JSON.stringify(reasoning) !== JSON.stringify(reasoningCapabilities(model.reasoning))
     await db
       .update(aiModel)
       .set({
         label: input.label,
         inputModalities,
+        reasoning: reasoning ?? null,
         ...(capabilitiesChanged
           ? {
               status: "disabled",
@@ -482,6 +507,7 @@ export function createAiModelQueries(
     return (models as ModelRecord[]).flatMap((model) => {
       const provider = providerMap.get(model.providerId)
       const apiKey = provider ? decryptCredential(provider, encryptionKey) : null
+      const reasoning = reasoningCapabilities(model.reasoning)
       return provider && apiKey
         ? [
             {
@@ -495,6 +521,7 @@ export function createAiModelQueries(
                 providerApi(provider),
                 modelModalities(model),
               ),
+              ...(reasoning ? { reasoning } : {}),
             },
           ]
         : []
@@ -502,12 +529,18 @@ export function createAiModelQueries(
   }
 
   async function listActiveDirectory(): Promise<
-    Array<{ id: string; label: string; inputModalities: AiInputModality[] }>
+    Array<{
+      id: string
+      label: string
+      inputModalities: AiInputModality[]
+      reasoning?: AiReasoningCapabilities
+    }>
   > {
-    return (await listActiveGatewayModels()).map(({ id, label, inputModalities }) => ({
+    return (await listActiveGatewayModels()).map(({ id, label, inputModalities, reasoning }) => ({
       id,
       label,
       inputModalities: inputModalities ?? CHAT_COMPLETIONS_MODALITIES,
+      ...(reasoning ? { reasoning } : {}),
     }))
   }
 

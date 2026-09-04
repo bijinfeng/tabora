@@ -33,6 +33,14 @@ const styles = stylex.create({
     borderColor: color.accent,
     color: color.inverse,
   },
+  indicator: {
+    alignItems: "center",
+    display: "flex",
+    height: "100%",
+    justifyContent: "center",
+    lineHeight: 0,
+    width: "100%",
+  },
   label: {},
 })
 
@@ -43,6 +51,8 @@ type CheckboxStyleProp =
   | "inputStyle"
   | "controlClass"
   | "controlStyle"
+  | "indicatorClass"
+  | "indicatorStyle"
   | "labelClass"
   | "labelStyle"
 
@@ -64,6 +74,7 @@ export function Checkbox(props: StyledCheckboxProps) {
       styles.control,
       (props.checked === true || props.checked === "indeterminate") && styles.controlChecked,
     )
+  const indicatorCompiled = () => stylex.attrs(styles.indicator)
   const labelCompiled = () => stylex.attrs(sharedStyles.choiceLabel, styles.label)
 
   return (
@@ -75,6 +86,8 @@ export function Checkbox(props: StyledCheckboxProps) {
       inputStyle={undefined}
       controlClass={controlCompiled().class}
       controlStyle={undefined}
+      indicatorClass={indicatorCompiled().class}
+      indicatorStyle={undefined}
       labelClass={labelCompiled().class}
       labelStyle={undefined}
     />

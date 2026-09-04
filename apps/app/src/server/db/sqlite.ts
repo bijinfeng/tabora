@@ -32,6 +32,8 @@ export function createSqliteDb(
     )
     if (!modelColumns.has("input_modalities"))
       sqlite.exec('ALTER TABLE "ai_model" ADD COLUMN "input_modalities" TEXT')
+    if (!modelColumns.has("reasoning"))
+      sqlite.exec('ALTER TABLE "ai_model" ADD COLUMN "reasoning" TEXT')
   }
 
   const countUsers = () => {

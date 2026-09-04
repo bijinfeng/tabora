@@ -76,7 +76,7 @@ export const styles = stylex.create({
     justifyContent: "flex-end",
     "@media (max-width: 760px)": { gridColumn: "1 / -1", justifyContent: "flex-start" },
   },
-  drawerBody: { display: "flex", flexDirection: "column", gap: space.s5 },
+  editorBody: { display: "flex", flexDirection: "column", gap: space.s5 },
   setupStep: {
     borderBottomColor: color.line,
     borderBottomStyle: "solid",

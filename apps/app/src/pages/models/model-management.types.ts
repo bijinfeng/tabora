@@ -5,6 +5,11 @@ export type ResourceStatus = "draft" | "active" | "disabled"
 export type TestState = "idle" | "testing" | "passed" | "failed"
 export type ProviderApi = "chat-completions" | "responses"
 export type ModelInputModality = "text" | "image" | "audio" | "document"
+export type ModelReasoningCapabilities = {
+  effort?: boolean
+  summary?: boolean
+  continuation?: boolean
+}
 
 export type AdminAiProvider = {
   id: string
@@ -24,6 +29,7 @@ export type AdminAiModel = {
   upstreamModelId: string
   providerLabel: string
   inputModalities: ModelInputModality[] | null
+  reasoning: ModelReasoningCapabilities | null
   status: ResourceStatus | "deleted"
   lastTestStatus: TestState | null
 }

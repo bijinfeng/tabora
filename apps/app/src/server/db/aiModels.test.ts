@@ -114,6 +114,43 @@ describe("platform model catalogue", () => {
     ).resolves.toBeUndefined()
   })
 
+  it("publishes only explicit reasoning capabilities and resets verification after they change", async () => {
+    await handle.aiModels.createProvider({
+      id: "openai",
+      label: "OpenAI",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "provider-secret",
+      api: "responses",
+    })
+    const modelId = await handle.aiModels.createModel({
+      providerId: "openai",
+      upstreamModelId: "gpt-5-mini",
+      label: "GPT-5 mini",
+      reasoning: { effort: true, summary: true, continuation: true },
+    })
+    await handle.aiModels.recordTest(modelId, { passed: true })
+    await handle.aiModels.setProviderStatus("openai", "active")
+    await handle.aiModels.setModelStatus(modelId, "active")
+
+    expect(await handle.aiModels.listActiveDirectory()).toEqual([
+      {
+        id: modelId,
+        label: "GPT-5 mini",
+        inputModalities: ["text", "image"],
+        reasoning: { effort: true, summary: true, continuation: true },
+      },
+    ])
+
+    await handle.aiModels.updateModel({
+      id: modelId,
+      label: "GPT-5 mini",
+      reasoning: { effort: true },
+    })
+    expect((await handle.aiModels.list()).models).toMatchObject([
+      { id: modelId, status: "disabled", lastTestStatus: "idle", reasoning: { effort: true } },
+    ])
+  })
+
   it("rejects audio and PDF declarations for Chat Completions", async () => {
     await handle.aiModels.createProvider({
       id: "legacy",

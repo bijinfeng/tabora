@@ -946,7 +946,7 @@ describe("AiChatExpand composer controls", () => {
                   modelId: "model-a",
                   models: [
                     { id: "model-a", label: "模型 A" },
-                    { id: "model-b", label: "模型 B" },
+                    { id: "model-b", label: "模型 B", reasoning: { effort: true } },
                   ],
                 },
                 custom: { baseUrl: "", model: "", apiKeyConfigured: false },

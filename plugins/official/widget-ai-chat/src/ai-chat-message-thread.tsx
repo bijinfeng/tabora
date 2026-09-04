@@ -11,6 +11,7 @@ import Pencil from "lucide-solid/icons/pencil"
 import RefreshCw from "lucide-solid/icons/refresh-cw"
 import { AssistantMarkdown } from "./ai-chat-markdown"
 import { AiChatQueue } from "./ai-chat-queue"
+import { AiChatReasoning } from "./ai-chat-reasoning"
 import type { AiChatSession } from "./ai-chat-session"
 import { AiChatUserMessage } from "./ai-chat-user-message"
 import { styles } from "./styles"
@@ -62,6 +63,14 @@ export function AiChatMessageThread(props: {
                         <ChatMessage
                           message={message}
                           textPartRenderer={(part) => <AssistantMarkdown content={part.content} />}
+                          thinkingPartRenderer={(part) => (
+                            <AiChatReasoning
+                              content={part.content}
+                              {...(part.isComplete === undefined
+                                ? {}
+                                : { isComplete: part.isComplete })}
+                            />
+                          )}
                         />
                       </div>
                       <div {...stylex.attrs(styles.messageActions)}>
