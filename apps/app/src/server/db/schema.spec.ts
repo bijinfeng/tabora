@@ -181,6 +181,8 @@ export const schemaSpec: Record<string, TableSpec> = {
       label: { kind: "text", notNull: true },
       /** Null means legacy text/image capability; new models persist an explicit declaration. */
       inputModalities: { kind: "json" },
+      /** Null means reasoning is not declared for this model. */
+      reasoning: { kind: "json" },
       status: { kind: "text", notNull: true },
       lastTestStatus: { kind: "text" },
       lastTestAt: { kind: "timestamp" },

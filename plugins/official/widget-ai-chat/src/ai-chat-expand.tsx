@@ -168,6 +168,8 @@ export function AiChatExpand(props: WidgetViewProps) {
       "text",
       "image",
     ]
+  const activeModelReasoning = () =>
+    modelChoices().find((model) => model.id === activeModelId())?.reasoning
   const activeReasoning = (): AiChatReasoningEffort | undefined =>
     activeConversation()?.reasoningEffort
   const updateActiveOptions = (
@@ -486,36 +488,38 @@ export function AiChatExpand(props: WidgetViewProps) {
                 )}
               </DropdownMenu>
             </Show>
-            <DropdownMenu
-              items={[
-                {
-                  id: "reasoning-auto",
-                  label: "默认",
-                  onClick: () => pickReasoning(undefined),
-                  ...(activeReasoning() === undefined ? { checked: true } : {}),
-                },
-                { id: "reasoning-separator", label: <></>, separator: true },
-                ...(["low", "medium", "high"] as AiChatReasoningEffort[]).map((value) => ({
-                  id: `reasoning-${value}`,
-                  label: REASONING_LABELS[value],
-                  onClick: () => pickReasoning(value),
-                  ...(activeReasoning() === value ? { checked: true } : {}),
-                })),
-              ]}
-              side="top"
-              align="start"
-              triggerAsChild={true}
-              triggerTitle="思考强度"
-              triggerAriaLabel="思考强度"
-            >
-              {(trigger) => (
-                <ComposerChip
-                  trigger={trigger}
-                  label={activeReasoning() ? REASONING_LABELS[activeReasoning()!] : "思考默认"}
-                  icon={<Brain size={12} />}
-                />
-              )}
-            </DropdownMenu>
+            <Show when={activeModelReasoning()?.effort}>
+              <DropdownMenu
+                items={[
+                  {
+                    id: "reasoning-auto",
+                    label: "默认",
+                    onClick: () => pickReasoning(undefined),
+                    ...(activeReasoning() === undefined ? { checked: true } : {}),
+                  },
+                  { id: "reasoning-separator", label: <></>, separator: true },
+                  ...(["low", "medium", "high"] as AiChatReasoningEffort[]).map((value) => ({
+                    id: `reasoning-${value}`,
+                    label: REASONING_LABELS[value],
+                    onClick: () => pickReasoning(value),
+                    ...(activeReasoning() === value ? { checked: true } : {}),
+                  })),
+                ]}
+                side="top"
+                align="start"
+                triggerAsChild={true}
+                triggerTitle="思考强度"
+                triggerAriaLabel="思考强度"
+              >
+                {(trigger) => (
+                  <ComposerChip
+                    trigger={trigger}
+                    label={activeReasoning() ? REASONING_LABELS[activeReasoning()!] : "思考默认"}
+                    icon={<Brain size={12} />}
+                  />
+                )}
+              </DropdownMenu>
+            </Show>
           </div>
           <div {...stylex.attrs(styles.composerRunActions)}>
             <IconButton

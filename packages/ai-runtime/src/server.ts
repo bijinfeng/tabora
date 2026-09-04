@@ -8,6 +8,7 @@ import type {
   AiCustomProviderConfig,
   AiGatewayContentPart,
   AiGatewayMessage,
+  AiGatewayThinkingPart,
   AiGatewayRequest,
   AiInputModality,
   AiProviderApi,
@@ -66,13 +67,27 @@ function createChatOptions(
     ? request.messages.map((message) => ({
         role: message.role,
         content: message.parts?.length ? message.parts : message.text,
+        ...(message.thinking?.length ? { thinking: message.thinking } : {}),
       }))
     : [{ role: "user" as const, content: request.prompt ?? "" }]
   const modelOptions: Record<string, unknown> = {}
   if (request.temperature !== undefined) modelOptions.temperature = request.temperature
   if (request.maxOutputTokens !== undefined)
     modelOptions.max_output_tokens = request.maxOutputTokens
-  if (request.reasoningEffort !== undefined) modelOptions.reasoning_effort = request.reasoningEffort
+  if (provider.reasoning?.summary && (provider.api ?? "chat-completions") === "responses") {
+    modelOptions.reasoning = {
+      summary: "auto",
+      ...(provider.reasoning.effort && request.reasoningEffort
+        ? { effort: request.reasoningEffort }
+        : {}),
+    }
+    if (provider.reasoning.continuation) {
+      modelOptions.include = ["reasoning.encrypted_content"]
+    }
+  } else if (provider.reasoning?.effort && request.reasoningEffort !== undefined) {
+    // Chat Completions-compatible reasoning APIs commonly use this legacy key.
+    modelOptions.reasoning_effort = request.reasoningEffort
+  }
   return {
     adapter: openaiCompatibleText(provider.model, {
       apiKey: provider.apiKey,
@@ -224,12 +239,35 @@ function parseProviderSelection(input: Record<string, unknown>): AiProviderSelec
     ) {
       rejectRequest("Invalid AI model input modalities")
     }
+    const rawReasoning = config.reasoning
+    if (
+      rawReasoning !== undefined &&
+      (!rawReasoning ||
+        typeof rawReasoning !== "object" ||
+        ("effort" in rawReasoning && typeof rawReasoning.effort !== "boolean") ||
+        ("summary" in rawReasoning && typeof rawReasoning.summary !== "boolean") ||
+        ("continuation" in rawReasoning && typeof rawReasoning.continuation !== "boolean"))
+    ) {
+      rejectRequest("Invalid AI reasoning capabilities")
+    }
+    const reasoning = rawReasoning as
+      | { effort?: boolean; summary?: boolean; continuation?: boolean }
+      | undefined
     customProvider = {
       baseUrl: config.baseUrl,
       apiKey: config.apiKey,
       model: config.model,
       ...(api ? { api } : {}),
       ...(inputModalities ? { inputModalities: [...inputModalities] as AiInputModality[] } : {}),
+      ...(reasoning?.effort || reasoning?.summary || reasoning?.continuation
+        ? {
+            reasoning: {
+              ...(reasoning.effort ? { effort: true } : {}),
+              ...(reasoning.summary ? { summary: true } : {}),
+              ...(reasoning.continuation ? { continuation: true } : {}),
+            },
+          }
+        : {}),
     }
   }
   return {
@@ -314,9 +352,13 @@ function parseInlineDataSource(
   return { type: "data", value: source.value, mimeType }
 }
 
-function parseChatMessageContent(value: unknown): {
+function parseChatMessageContent(
+  value: unknown,
+  role: "user" | "assistant" | "system",
+): {
   text: string
   parts?: AiGatewayContentPart[]
+  thinking?: AiGatewayThinkingPart[]
   mediaChars: number
 } {
   if (typeof value === "string") return { text: value, mediaChars: 0 }
@@ -325,6 +367,7 @@ function parseChatMessageContent(value: unknown): {
   }
 
   const parts: AiGatewayContentPart[] = []
+  const thinking: AiGatewayThinkingPart[] = []
   let text = ""
   let mediaChars = 0
   for (const rawPart of value) {
@@ -334,6 +377,23 @@ function parseChatMessageContent(value: unknown): {
       if (typeof part.text !== "string") rejectRequest("Invalid AI text content part")
       text += part.text
       parts.push({ type: "text", content: part.text })
+      continue
+    }
+    if (part.type === "thinking") {
+      if (
+        role !== "assistant" ||
+        typeof part.content !== "string" ||
+        !part.content ||
+        part.content.length > 32_000 ||
+        (part.signature !== undefined &&
+          (typeof part.signature !== "string" || part.signature.length > 65_536))
+      ) {
+        rejectRequest("Invalid AI reasoning content")
+      }
+      thinking.push({
+        content: part.content,
+        ...(typeof part.signature === "string" ? { signature: part.signature } : {}),
+      })
       continue
     }
     if (part.type !== "image" && part.type !== "audio" && part.type !== "document") {
@@ -363,7 +423,12 @@ function parseChatMessageContent(value: unknown): {
     }
     parts.push({ type: part.type, source })
   }
-  return { text, parts, mediaChars }
+  return {
+    text,
+    ...(parts.length ? { parts } : {}),
+    ...(thinking.length ? { thinking } : {}),
+    mediaChars,
+  }
 }
 
 /**
@@ -401,8 +466,12 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
     if (role !== "user" && role !== "assistant" && role !== "system") {
       rejectRequest("Unsupported AI chat message role")
     }
-    const normalized = parseChatMessageContent(anchor.content)
-    if (!normalized.text.trim() && (normalized.parts?.length ?? 0) === 0)
+    const normalized = parseChatMessageContent(anchor.content, role)
+    if (
+      !normalized.text.trim() &&
+      (normalized.parts?.length ?? 0) === 0 &&
+      (normalized.thinking?.length ?? 0) === 0
+    )
       rejectRequest("Invalid AI chat message content")
     if (normalized.text.length > MAX_CHAT_MESSAGE_CHARS) {
       rejectRequest("AI chat message is too long")
@@ -424,6 +493,7 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
       role,
       text: normalized.text,
       ...(normalized.parts ? { parts: normalized.parts } : {}),
+      ...(normalized.thinking ? { thinking: normalized.thinking } : {}),
     })
   }
   if (messages.at(-1)?.role !== "user") {

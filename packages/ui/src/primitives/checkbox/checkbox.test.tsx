@@ -23,5 +23,6 @@ describe("Checkbox", () => {
     expect(checkbox.className).not.toContain("tbr-checkbox")
     expect(checkbox.className.length).toBeGreaterThan(0)
     expect(root.querySelector("[class*='tbr-checkbox']")).toBeNull()
+    expect(root.querySelector("svg")?.parentElement?.className.length).toBeGreaterThan(0)
   })
 })

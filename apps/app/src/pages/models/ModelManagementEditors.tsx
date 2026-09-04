@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
 import { Button } from "@tabora/ui/button"
 import { Checkbox } from "@tabora/ui/checkbox"
-import { Drawer } from "@tabora/ui/drawer"
+import { Dialog } from "@tabora/ui/dialog"
 import { Field } from "@tabora/ui/field"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
@@ -13,9 +13,14 @@ import CircleCheck from "lucide-solid/icons/circle-check"
 import type {
   AdminAiProvider,
   ModelInputModality,
+  ModelReasoningCapabilities,
   ProviderApi,
   TestState,
 } from "./model-management.types"
+import {
+  BUILTIN_PROVIDER_PRESETS,
+  builtinModelCapabilitiesFor,
+} from "./builtinProviderCapabilities"
 import { styles } from "./model-management.styles"
 
 type Setter<T = string> = (value: T) => void
@@ -26,19 +31,6 @@ const MODALITY_LABELS: Record<ModelInputModality, string> = {
   audio: "音频",
   document: "PDF 文档",
 }
-
-const BUILTIN_PROVIDER_PRESETS = [
-  { id: "openai", label: "OpenAI", baseUrl: "https://api.openai.com/v1" },
-  { id: "deepseek", label: "DeepSeek", baseUrl: "https://api.deepseek.com/v1" },
-  {
-    id: "qwen",
-    label: "通义千问（阿里云百炼）",
-    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-  },
-  { id: "moonshot", label: "Moonshot（Kimi）", baseUrl: "https://api.moonshot.cn/v1" },
-  { id: "siliconflow", label: "SiliconFlow（硅基流动）", baseUrl: "https://api.siliconflow.cn/v1" },
-  { id: "openrouter", label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1" },
-] as const
 
 function SetupStep(props: { number: string; title: string; children: JSX.Element }) {
   return (
@@ -52,7 +44,7 @@ function SetupStep(props: { number: string; title: string; children: JSX.Element
   )
 }
 
-function DrawerFooter(props: {
+function ModelEditorFooter(props: {
   onClose: () => void
   onDraft: () => void
   onPublish: () => void
@@ -103,6 +95,8 @@ export function ModelEditorDrawer(props: {
   setLabel: Setter
   inputModalities: Accessor<ModelInputModality[]>
   setInputModalities: Setter<ModelInputModality[]>
+  reasoning: Accessor<ModelReasoningCapabilities | undefined>
+  setReasoning: Setter<ModelReasoningCapabilities | undefined>
   savedModelId: Accessor<string | null>
   modelIdPreview: Accessor<string>
   testState: Accessor<TestState>
@@ -124,20 +118,38 @@ export function ModelEditorDrawer(props: {
     (selectedProvider()?.api ?? "chat-completions") === "responses"
       ? ["text", "image", "audio", "document"]
       : ["text", "image"]
+  const builtinCapabilities = () =>
+    builtinModelCapabilitiesFor(selectedProvider(), props.upstreamModelId())
   const setModality = (modality: ModelInputModality, checked: boolean) => {
     const selected = props.inputModalities()
     props.setInputModalities(
       checked ? [...selected, modality] : selected.filter((candidate) => candidate !== modality),
     )
   }
+  const supportsReasoning = () =>
+    selectedProvider()?.api === "responses" || Boolean(builtinCapabilities()?.reasoning?.effort)
+  const applyCapabilities = (id: string) => {
+    const capabilities = builtinModelCapabilitiesFor(selectedProvider(), id)
+    if (capabilities) {
+      props.setInputModalities(capabilities.inputModalities)
+      props.setReasoning(capabilities.reasoning)
+      return
+    }
+    props.setInputModalities(["text"])
+    props.setReasoning(undefined)
+  }
+  const selectDiscoveredModel = (id: string) => {
+    props.onSelectDiscoveredModel(id)
+    applyCapabilities(id)
+  }
   return (
-    <Drawer
+    <Dialog
       open={props.open}
-      onClose={props.onClose}
+      onCancel={props.onClose}
       title={props.editing ? "编辑模型" : "新增模型"}
-      description="模型是面向用户的发布单位；稳定 ID 由 Provider ID 与上游模型名生成。"
+      width="640px"
       footer={
-        <DrawerFooter
+        <ModelEditorFooter
           onClose={props.onClose}
           onDraft={props.onSaveDraft}
           onPublish={props.onPublish}
@@ -146,22 +158,23 @@ export function ModelEditorDrawer(props: {
         />
       }
     >
-      <div {...stylex.attrs(styles.drawerBody)}>
+      <div {...stylex.attrs(styles.editorBody)}>
         <SetupStep number="1" title="选择 Provider">
-          <Field label="Provider" helper="草稿连接可用于测试；只有已启用连接下的模型可上线。">
+          <Field label="Provider">
             <Select
               value={props.providerId()}
               onChange={(value) => {
                 if (isSaved()) return
                 props.setProviderId(value)
-                const allowed =
-                  (props.providers().find((provider) => provider.id === value)?.api ??
-                    "chat-completions") === "responses"
-                    ? ["text", "image", "audio", "document"]
-                    : ["text", "image"]
-                props.setInputModalities(
-                  props.inputModalities().filter((modality) => allowed.includes(modality)),
-                )
+                const provider = props.providers().find((candidate) => candidate.id === value)
+                const capabilities = builtinModelCapabilitiesFor(provider, props.upstreamModelId())
+                if (capabilities) {
+                  props.setInputModalities(capabilities.inputModalities)
+                  props.setReasoning(capabilities.reasoning)
+                } else {
+                  props.setInputModalities(["text"])
+                  props.setReasoning(undefined)
+                }
               }}
               options={props
                 .providers()
@@ -173,16 +186,12 @@ export function ModelEditorDrawer(props: {
           </Field>
         </SetupStep>
         <SetupStep number="2" title="定义模型">
-          <Field
-            label="上游模型名"
-            htmlFor="model-upstream"
-            helper="先获取模型列表，再从下拉项中选择。创建后不可修改。"
-          >
+          <Field label="上游模型名" htmlFor="model-upstream">
             <div {...stylex.attrs(styles.modelIdControl)}>
               <Select
                 id="model-upstream"
                 value={props.upstreamModelId()}
-                onChange={props.onSelectDiscoveredModel}
+                onChange={selectDiscoveredModel}
                 options={props.discoveredModels().map((id) => ({ value: id, label: id }))}
                 placeholder={
                   props.discoveredModels().length > 0 ? "请选择上游模型" : "请先获取模型列表"
@@ -201,7 +210,7 @@ export function ModelEditorDrawer(props: {
               </Button>
             </div>
           </Field>
-          <Field label="显示名称" htmlFor="model-label" helper="面向用户展示。">
+          <Field label="显示名称" htmlFor="model-label">
             <Input
               id="model-label"
               value={props.label()}
@@ -210,8 +219,12 @@ export function ModelEditorDrawer(props: {
             />
           </Field>
           <Field
-            label="已验证的输入能力"
-            helper="只勾选已通过该模型实际验证的能力；连接测试仅验证最小文本请求。"
+            label={builtinCapabilities() ? "内置输入能力" : "已验证的输入能力"}
+            helper={
+              builtinCapabilities()
+                ? "由内置模型目录维护；未知模型仍需按实际验证结果配置。"
+                : "未知模型需按实际验证结果配置。"
+            }
           >
             <div {...stylex.attrs(styles.testRow)}>
               <For each={availableModalities()}>
@@ -219,13 +232,34 @@ export function ModelEditorDrawer(props: {
                   <Checkbox
                     checked={props.inputModalities().includes(modality)}
                     onChange={(checked) => setModality(modality, checked)}
-                    disabled={isSaved() || modality === "text"}
+                    disabled={isSaved() || modality === "text" || Boolean(builtinCapabilities())}
                     label={MODALITY_LABELS[modality]}
                   />
                 )}
               </For>
             </div>
           </Field>
+          <Show when={supportsReasoning()}>
+            <Field
+              label={builtinCapabilities() ? "内置推理能力" : "已验证的推理能力"}
+              helper={
+                builtinCapabilities() ? "由内置模型目录维护。" : "仅在 Provider 已确认支持时启用。"
+              }
+            >
+              <Checkbox
+                checked={Boolean(props.reasoning()?.effort || props.reasoning()?.summary)}
+                onChange={(checked) =>
+                  props.setReasoning(
+                    checked ? { effort: true, summary: true, continuation: true } : undefined,
+                  )
+                }
+                disabled={props.loading || Boolean(builtinCapabilities())}
+                label={
+                  props.reasoning()?.summary ? "支持推理摘要、思考强度与会话续传" : "支持思考强度"
+                }
+              />
+            </Field>
+          </Show>
           <div {...stylex.attrs(styles.idPreview)}>
             <span {...stylex.attrs(styles.idLabel)}>稳定模型 ID</span>
             <span {...stylex.attrs(styles.idValue)}>
@@ -234,14 +268,12 @@ export function ModelEditorDrawer(props: {
           </div>
         </SetupStep>
         <SetupStep number="3" title="测试并发布">
-          <p {...stylex.attrs(styles.helper)}>
-            测试会先将模型保存为草稿，使用固定最小文本请求，不传输用户数据。
-          </p>
+          <p {...stylex.attrs(styles.helper)}>使用最小文本请求，不传输用户数据。</p>
           <TestAction state={props.testState()} onTest={props.onTest} />
         </SetupStep>
         <Show when={props.error()}>{(error) => <InlineError>{error()}</InlineError>}</Show>
       </div>
-    </Drawer>
+    </Dialog>
   )
 }
 
@@ -264,28 +296,26 @@ export function ProviderEditorDrawer(props: {
   onSave: () => void
 }) {
   return (
-    <Drawer
+    <Dialog
       open={props.open}
-      onClose={props.onClose}
+      onCancel={props.onClose}
       title={props.editing ? "配置 Provider" : "新增 Provider"}
-      description="Provider 只保存端点与写入型凭据。保存后添加模型并测试，才能启用连接。"
+      width="520px"
       footer={
-        <DrawerFooter
-          onClose={props.onClose}
-          onDraft={props.onSave}
-          onPublish={props.onSave}
-          publishDisabled={props.loading}
-          publishLabel="保存连接"
-        />
+        <div {...stylex.attrs(styles.footer)}>
+          <Button variant="secondary" onClick={props.onClose}>
+            取消
+          </Button>
+          <Button onClick={props.onSave} disabled={props.loading}>
+            保存连接
+          </Button>
+        </div>
       }
     >
-      <div {...stylex.attrs(styles.drawerBody)}>
+      <div {...stylex.attrs(styles.editorBody)}>
         <SetupStep number="1" title="基本配置">
           <Show when={!props.editing}>
-            <Field
-              label="快速选择内置 Provider"
-              helper="选择后会自动填充 ID、名称和地址；仍需填写对应 API Key。"
-            >
+            <Field label="快速选择内置 Provider">
               <Select
                 value={props.id()}
                 placeholder="选择一个服务商模板"
@@ -300,6 +330,7 @@ export function ProviderEditorDrawer(props: {
                   props.setId(preset.id)
                   props.setLabel(preset.label)
                   props.setBaseUrl(preset.baseUrl)
+                  props.setApi(preset.api)
                 }}
               />
             </Field>
@@ -307,9 +338,7 @@ export function ProviderEditorDrawer(props: {
           <Field
             label="Provider ID"
             htmlFor="provider-id"
-            helper={
-              props.editing ? "稳定 ID 创建后不可修改。" : "用于稳定路由，如 openai、deepseek。"
-            }
+            helper={props.editing ? "创建后不可修改。" : undefined}
           >
             <Input
               id="provider-id"
@@ -327,11 +356,7 @@ export function ProviderEditorDrawer(props: {
               placeholder="例如 OpenAI"
             />
           </Field>
-          <Field
-            label="Base URL"
-            htmlFor="provider-url"
-            helper="只接受 HTTPS 公网地址；保存与调用时均会执行 SSRF 防护。"
-          >
+          <Field label="Base URL" htmlFor="provider-url" helper="仅支持 HTTPS。">
             <Input
               id="provider-url"
               value={props.baseUrl()}
@@ -339,10 +364,7 @@ export function ProviderEditorDrawer(props: {
               placeholder="https://api.example.com/v1"
             />
           </Field>
-          <Field
-            label="请求 API"
-            helper="Chat Completions 支持文本/图片；Responses 还可传音频与 PDF。选择后需重新测试并配置各模型能力。"
-          >
+          <Field label="请求 API" helper="Responses 支持音频与 PDF。">
             <Select
               value={props.api()}
               onChange={props.setApi}
@@ -355,13 +377,7 @@ export function ProviderEditorDrawer(props: {
           </Field>
         </SetupStep>
         <SetupStep number="2" title="凭据">
-          <Field
-            label="API Key"
-            htmlFor="provider-key"
-            helper={
-              props.editing ? "已配置；留空不修改，页面不会回显旧密钥。" : "保存后只显示“已配置”。"
-            }
-          >
+          <Field label="API Key" htmlFor="provider-key">
             <Input
               id="provider-key"
               type="password"
@@ -373,6 +389,6 @@ export function ProviderEditorDrawer(props: {
         </SetupStep>
         <Show when={props.error()}>{(error) => <InlineError>{error()}</InlineError>}</Show>
       </div>
-    </Drawer>
+    </Dialog>
   )
 }

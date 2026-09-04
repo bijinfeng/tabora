@@ -35,6 +35,7 @@ export async function createModelAction(data: {
   upstreamModelId: string
   label: string
   inputModalities: Array<"text" | "image" | "audio" | "document">
+  reasoning?: { effort?: boolean; summary?: boolean; continuation?: boolean } | null
 }) {
   const { handle } = await getRuntime()
   return { id: await handle.aiModels.createModel(data) }
@@ -44,6 +45,7 @@ export async function updateModelAction(data: {
   id: string
   label: string
   inputModalities: Array<"text" | "image" | "audio" | "document">
+  reasoning?: { effort?: boolean; summary?: boolean; continuation?: boolean } | null
 }) {
   const { handle } = await getRuntime()
   await handle.aiModels.updateModel(data)

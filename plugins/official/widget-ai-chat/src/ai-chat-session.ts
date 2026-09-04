@@ -47,6 +47,12 @@ export function getAiChatSettingsOpener(): ((sectionId?: string) => void) | unde
 export type AiChatStoredPart =
   | { type: "text"; text: string }
   | {
+      /** Provider-visible reasoning summary. `signature` is opaque continuation state, never UI text. */
+      type: "thinking"
+      content: string
+      signature?: string
+    }
+  | {
       type: "image" | "audio"
       source: { type: "data"; value: string; mimeType: string } | { type: "url"; value: string }
     }
@@ -211,6 +217,18 @@ function toStoredMessage(
       parts.push({ type: "text", text: part.content })
       continue
     }
+    if (part.type === "thinking") {
+      const opaque = part as { content: string; signature?: unknown }
+      if (!opaque.content || opaque.content.length > 32_000) continue
+      if (opaque.signature !== undefined && typeof opaque.signature !== "string") continue
+      if (typeof opaque.signature === "string" && opaque.signature.length > 65_536) continue
+      parts.push({
+        type: "thinking",
+        content: opaque.content,
+        ...(typeof opaque.signature === "string" ? { signature: opaque.signature } : {}),
+      })
+      continue
+    }
     if (part.type !== "image" && part.type !== "audio" && part.type !== "document") continue
     const source = part.source
     const persistedSource =
@@ -246,6 +264,13 @@ function toUIMessage(stored: AiChatStoredMessage): UIMessage {
     role: stored.role,
     parts: stored.parts.map((part) => {
       if (part.type === "text") return { type: "text" as const, content: part.text }
+      if (part.type === "thinking") {
+        return {
+          type: "thinking" as const,
+          content: part.content,
+          ...(part.signature ? { signature: part.signature } : {}),
+        }
+      }
       if (part.type === "document") {
         return {
           type: "document" as const,

@@ -44,13 +44,23 @@ describe("AI gateway request contract", () => {
         context: [],
         forwardedProps: {
           provider: "custom",
-          custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+          custom: {
+            baseUrl: "https://provider.test/v1",
+            apiKey: "secret",
+            model: "model-a",
+            reasoning: { effort: true },
+          },
           system: "Be concise.",
         },
       }),
     ).toEqual({
       provider: "custom",
-      custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+      custom: {
+        baseUrl: "https://provider.test/v1",
+        apiKey: "secret",
+        model: "model-a",
+        reasoning: { effort: true },
+      },
       system: "Be concise.",
       messages: [
         { role: "user", text: "hi" },
@@ -181,6 +191,34 @@ describe("AI gateway request contract", () => {
       reasoningEffort: "high",
       messages: [{ role: "user", text: "summarize this" }],
     })
+  })
+
+  it("preserves assistant reasoning summaries and opaque continuation signatures", () => {
+    const parsed = parseAiGatewayRequest({
+      messages: [
+        { id: "m1", role: "user", content: "分析这个问题" },
+        {
+          id: "m2",
+          role: "assistant",
+          content: [{ type: "thinking", content: "先检查约束", signature: "opaque-state" }],
+        },
+        { id: "m3", role: "user", content: "继续" },
+      ],
+      forwardedProps: { provider: "builtin", modelId: "reasoning-model" },
+    })
+    expect(parsed.messages?.[1]).toMatchObject({
+      role: "assistant",
+      text: "",
+      thinking: [{ content: "先检查约束", signature: "opaque-state" }],
+    })
+    expect(() =>
+      parseAiGatewayRequest({
+        messages: [
+          { id: "m1", role: "user", content: [{ type: "thinking", content: "不能伪造" }] },
+        ],
+        forwardedProps: { provider: "builtin", modelId: "reasoning-model" },
+      }),
+    ).toThrow(AiRuntimeError)
   })
 
   it("accepts only bounded opaque attachment references from a chat run", () => {
@@ -432,7 +470,12 @@ describe("AI gateway request contract", () => {
       await expect(
         gateway.generate({
           provider: "custom",
-          custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "model-a" },
+          custom: {
+            baseUrl: "https://provider.test/v1",
+            apiKey: "secret",
+            model: "model-a",
+            reasoning: { effort: true },
+          },
           messages: [{ role: "user", text: "summarize this" }],
           temperature: 0.4,
           maxOutputTokens: 512,
@@ -443,6 +486,39 @@ describe("AI gateway request contract", () => {
         temperature: 0.4,
         max_output_tokens: 512,
         reasoning_effort: "high",
+      })
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it("requests a visible summary and opaque continuation state only for declared Responses models", async () => {
+    const originalFetch = globalThis.fetch
+    let requestBody: Record<string, unknown> | undefined
+    globalThis.fetch = async (_input, init) => {
+      requestBody = requestJson(init)
+      throw new Error("blocked provider request")
+    }
+    const gateway = createTanstackAiGateway()
+
+    try {
+      await expect(
+        gateway.generate({
+          provider: "custom",
+          custom: {
+            baseUrl: "https://provider.test/v1",
+            apiKey: "secret",
+            model: "reasoning-model",
+            api: "responses",
+            reasoning: { effort: true, summary: true, continuation: true },
+          },
+          prompt: "分析",
+          reasoningEffort: "high",
+        }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+      expect(requestBody).toMatchObject({
+        reasoning: { effort: "high", summary: "auto" },
+        include: ["reasoning.encrypted_content"],
       })
     } finally {
       globalThis.fetch = originalFetch

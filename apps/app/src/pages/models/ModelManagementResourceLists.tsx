@@ -86,6 +86,7 @@ function ModelRow(props: {
         <span {...stylex.attrs(styles.resourceMeta)}>
           {props.model.id} · {props.model.providerLabel} ·{" "}
           {props.model.lastTestStatus === "passed" ? "已测试" : "待测试"}
+          {props.model.reasoning?.summary ? " · 推理摘要" : ""}
         </span>
       </div>
       <Badge variant={badge.variant} size="sm">

@@ -15,6 +15,13 @@ const inputModalitiesSchema = z
   .max(4)
   .refine((value) => new Set(value).size === value.length, "输入能力不能重复")
   .refine((value) => value.includes("text"), "模型必须支持文本输入")
+const reasoningSchema = z
+  .object({
+    effort: z.boolean().optional(),
+    summary: z.boolean().optional(),
+    continuation: z.boolean().optional(),
+  })
+  .refine((value) => value.effort || value.summary, "请至少选择一项推理能力")
 const providerInputSchema = z.object({
   id: providerIdSchema,
   label: z.string().trim().min(1).max(80),
@@ -30,11 +37,13 @@ const modelInputSchema = z.object({
   upstreamModelId: z.string().trim().min(1).max(160),
   label: z.string().trim().min(1).max(120),
   inputModalities: inputModalitiesSchema,
+  reasoning: reasoningSchema.nullable().optional(),
 })
 const updateModelSchema = z.object({
   id: resourceIdSchema,
   label: z.string().trim().min(1).max(120),
   inputModalities: inputModalitiesSchema,
+  reasoning: reasoningSchema.nullable().optional(),
 })
 
 export const listModelManagement = createServerFn({ method: "GET" })
@@ -79,7 +88,25 @@ export const createModel = createServerFn({ method: "POST" })
     adminAuthMiddleware,
     auditAdminAction({ action: "POST /admin-api/ai-models", resourceType: "ai_model" }),
   ])
-  .handler(async ({ data }) => (await import("./modelActions")).createModelAction(data))
+  .handler(async ({ data }) =>
+    (await import("./modelActions")).createModelAction({
+      providerId: data.providerId,
+      upstreamModelId: data.upstreamModelId,
+      label: data.label,
+      inputModalities: data.inputModalities,
+      ...(data.reasoning === null
+        ? { reasoning: null }
+        : data.reasoning
+          ? {
+              reasoning: {
+                ...(data.reasoning.effort ? { effort: true } : {}),
+                ...(data.reasoning.summary ? { summary: true } : {}),
+                ...(data.reasoning.continuation ? { continuation: true } : {}),
+              },
+            }
+          : {}),
+    }),
+  )
 
 export const updateModel = createServerFn({ method: "POST" })
   .validator(updateModelSchema)
@@ -91,7 +118,24 @@ export const updateModel = createServerFn({ method: "POST" })
       resourceId: idFrom("id"),
     }),
   ])
-  .handler(async ({ data }) => (await import("./modelActions")).updateModelAction(data))
+  .handler(async ({ data }) =>
+    (await import("./modelActions")).updateModelAction({
+      id: data.id,
+      label: data.label,
+      inputModalities: data.inputModalities,
+      ...(data.reasoning === null
+        ? { reasoning: null }
+        : data.reasoning
+          ? {
+              reasoning: {
+                ...(data.reasoning.effort ? { effort: true } : {}),
+                ...(data.reasoning.summary ? { summary: true } : {}),
+                ...(data.reasoning.continuation ? { continuation: true } : {}),
+              },
+            }
+          : {}),
+    }),
+  )
 
 const statusSchema = z.object({ id: resourceIdSchema, status: z.enum(["active", "disabled"]) })
 

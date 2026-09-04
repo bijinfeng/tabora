@@ -27,6 +27,7 @@ import type {
   AdminAiProvider,
   ModelManagementView,
   ModelInputModality,
+  ModelReasoningCapabilities,
   ProviderApi,
   TestState,
 } from "./model-management.types"
@@ -51,6 +52,7 @@ export function ModelManagementPage() {
     "text",
     "image",
   ])
+  const [modelReasoning, setModelReasoning] = createSignal<ModelReasoningCapabilities | undefined>()
   const [savedModelId, setSavedModelId] = createSignal<string | null>(null)
   const [modelTest, setModelTest] = createSignal<TestState>("idle")
   const [discoveredModels, setDiscoveredModels] = createSignal<string[]>([])
@@ -100,6 +102,7 @@ export function ModelManagementPage() {
     setUpstreamModelId(model?.upstreamModelId ?? "")
     setModelLabel(model?.label ?? "")
     setModelInputModalities(model?.inputModalities ?? ["text", "image"])
+    setModelReasoning(model?.reasoning ?? undefined)
     setSavedModelId(model?.id ?? null)
     setModelTest(model?.lastTestStatus ?? "idle")
     setDiscoveredModels([])
@@ -164,7 +167,12 @@ export function ModelManagementPage() {
       return (await execute(
         () =>
           updateModel({
-            data: { id, label: modelLabel().trim(), inputModalities: modelInputModalities() },
+            data: {
+              id,
+              label: modelLabel().trim(),
+              inputModalities: modelInputModalities(),
+              reasoning: modelReasoning() ?? null,
+            },
           }),
         "模型显示名称已保存",
       ))
@@ -179,6 +187,7 @@ export function ModelManagementPage() {
             upstreamModelId: upstreamModelId().trim(),
             label: modelLabel().trim(),
             inputModalities: modelInputModalities(),
+            reasoning: modelReasoning() ?? null,
           },
         }),
       )) as { id: string }
@@ -306,6 +315,8 @@ export function ModelManagementPage() {
         setLabel={setModelLabel}
         inputModalities={modelInputModalities}
         setInputModalities={setModelInputModalities}
+        reasoning={modelReasoning}
+        setReasoning={setModelReasoning}
         savedModelId={savedModelId}
         modelIdPreview={modelIdPreview}
         testState={modelTest}
