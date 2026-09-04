@@ -27,7 +27,6 @@
     "@tabora/ui": "workspace:*",
     "@tanstack/ai-client": "catalog:ai",
     "@tanstack/ai-solid": "catalog:ai",
-    "@tanstack/ai-solid-ui": "catalog:ai",
     "lucide-solid": "catalog:ui",
     "solid-js": "catalog:ui",
     "solid-markdown": "catalog:ai"

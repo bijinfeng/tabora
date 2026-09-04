@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 import type { SolidMarkdownComponents } from "solid-markdown"
-import { TextPart } from "@tanstack/ai-solid-ui"
+import { TextPart } from "@tanstack/ai-solid/ui"
 
 export const markdownStyles = stylex.create({
   paragraph: {
