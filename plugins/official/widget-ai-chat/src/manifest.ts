@@ -8,7 +8,7 @@ export const officialPluginAiChatManifest: PluginManifest = {
   entry: "./index",
   styles: [{ href: "./styles.css", scope: "plugin", order: 40 }],
   engine: { platform: "^0.1.0" },
-  permissions: [{ type: "ai", access: ["generate"] }],
+  permissions: [{ type: "ai", access: ["generate", "tools"] }],
   contributes: {
     widgets: [
       {

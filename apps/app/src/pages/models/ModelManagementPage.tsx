@@ -26,6 +26,8 @@ import type {
   AdminAiModel,
   AdminAiProvider,
   ModelManagementView,
+  ModelInputModality,
+  ProviderApi,
   TestState,
 } from "./model-management.types"
 import { styles } from "./model-management.styles"
@@ -45,6 +47,10 @@ export function ModelManagementPage() {
   const [modelProvider, setModelProvider] = createSignal("")
   const [upstreamModelId, setUpstreamModelId] = createSignal("")
   const [modelLabel, setModelLabel] = createSignal("")
+  const [modelInputModalities, setModelInputModalities] = createSignal<ModelInputModality[]>([
+    "text",
+    "image",
+  ])
   const [savedModelId, setSavedModelId] = createSignal<string | null>(null)
   const [modelTest, setModelTest] = createSignal<TestState>("idle")
   const [discoveredModels, setDiscoveredModels] = createSignal<string[]>([])
@@ -54,6 +60,7 @@ export function ModelManagementPage() {
   const [providerLabel, setProviderLabel] = createSignal("")
   const [baseUrl, setBaseUrl] = createSignal("")
   const [apiKey, setApiKey] = createSignal("")
+  const [providerApi, setProviderApi] = createSignal<ProviderApi>("chat-completions")
   const [providerError, setProviderError] = createSignal<string | null>(null)
 
   const queryClient = useQueryClient()
@@ -92,6 +99,7 @@ export function ModelManagementPage() {
     )
     setUpstreamModelId(model?.upstreamModelId ?? "")
     setModelLabel(model?.label ?? "")
+    setModelInputModalities(model?.inputModalities ?? ["text", "image"])
     setSavedModelId(model?.id ?? null)
     setModelTest(model?.lastTestStatus ?? "idle")
     setDiscoveredModels([])
@@ -104,6 +112,7 @@ export function ModelManagementPage() {
     setProviderId(provider?.id ?? "")
     setProviderLabel(provider?.label ?? "")
     setBaseUrl(provider?.baseUrl ?? "")
+    setProviderApi(provider?.api ?? "chat-completions")
     setApiKey("")
     setProviderError(null)
     setProviderOpen(true)
@@ -127,6 +136,7 @@ export function ModelManagementPage() {
                 id: existing.id,
                 label: providerLabel().trim(),
                 baseUrl: baseUrl().trim(),
+                api: providerApi(),
                 ...(apiKey().trim() ? { apiKey: apiKey().trim() } : {}),
               },
             })
@@ -136,6 +146,7 @@ export function ModelManagementPage() {
                 label: providerLabel().trim(),
                 baseUrl: baseUrl().trim(),
                 apiKey: apiKey().trim(),
+                api: providerApi(),
               },
             }),
       existing ? "Provider 配置已保存" : "Provider 已保存为草稿",
@@ -151,7 +162,10 @@ export function ModelManagementPage() {
     const id = savedModelId()
     if (id) {
       return (await execute(
-        () => updateModel({ data: { id, label: modelLabel().trim() } }),
+        () =>
+          updateModel({
+            data: { id, label: modelLabel().trim(), inputModalities: modelInputModalities() },
+          }),
         "模型显示名称已保存",
       ))
         ? id
@@ -164,6 +178,7 @@ export function ModelManagementPage() {
             providerId: modelProvider(),
             upstreamModelId: upstreamModelId().trim(),
             label: modelLabel().trim(),
+            inputModalities: modelInputModalities(),
           },
         }),
       )) as { id: string }
@@ -289,6 +304,8 @@ export function ModelManagementPage() {
         upstreamModelId={upstreamModelId}
         label={modelLabel}
         setLabel={setModelLabel}
+        inputModalities={modelInputModalities}
+        setInputModalities={setModelInputModalities}
         savedModelId={savedModelId}
         modelIdPreview={modelIdPreview}
         testState={modelTest}
@@ -316,6 +333,8 @@ export function ModelManagementPage() {
         setLabel={setProviderLabel}
         baseUrl={baseUrl}
         setBaseUrl={setBaseUrl}
+        api={providerApi}
+        setApi={setProviderApi}
         apiKey={apiKey}
         setApiKey={setApiKey}
         error={providerError}

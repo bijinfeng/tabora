@@ -60,6 +60,107 @@ describe("AI gateway request contract", () => {
     })
   })
 
+  it("accepts bounded inline image parts from the TanStack AG-UI envelope", () => {
+    expect(
+      parseAiGatewayRequest({
+        messages: [
+          {
+            id: "m1",
+            role: "user",
+            content: [
+              { type: "text", text: "描述这张图" },
+              {
+                type: "image",
+                source: { type: "data", value: "iVBORw==", mimeType: "image/png" },
+              },
+            ],
+          },
+        ],
+        forwardedProps: { provider: "builtin", modelId: "vision-model" },
+      }),
+    ).toEqual({
+      provider: "builtin",
+      modelId: "vision-model",
+      messages: [
+        {
+          role: "user",
+          text: "描述这张图",
+          parts: [
+            { type: "text", content: "描述这张图" },
+            {
+              type: "image",
+              source: { type: "data", value: "iVBORw==", mimeType: "image/png" },
+            },
+          ],
+        },
+      ],
+    })
+  })
+
+  it("accepts bounded PDF and audio parts only as inline data", () => {
+    expect(
+      parseAiGatewayRequest({
+        messages: [
+          {
+            id: "m1",
+            role: "user",
+            content: [
+              { type: "text", text: "总结附件" },
+              {
+                type: "document",
+                source: { type: "data", value: "JVBERi0=", mimeType: "application/pdf" },
+                metadata: { filename: "report.pdf" },
+              },
+              {
+                type: "audio",
+                source: { type: "data", value: "SUQz", mimeType: "audio/mpeg" },
+              },
+            ],
+          },
+        ],
+        forwardedProps: {
+          provider: "custom",
+          custom: {
+            baseUrl: "https://provider.test/v1",
+            apiKey: "secret",
+            model: "multimodal",
+            api: "responses",
+            inputModalities: ["text", "audio", "document"],
+          },
+        },
+      }),
+    ).toMatchObject({
+      messages: [
+        {
+          text: "总结附件",
+          parts: [
+            { type: "text", content: "总结附件" },
+            { type: "document", metadata: { filename: "report.pdf" } },
+            { type: "audio" },
+          ],
+        },
+      ],
+    })
+    expect(() =>
+      parseAiGatewayRequest({
+        messages: [
+          {
+            id: "m1",
+            role: "user",
+            content: [
+              { type: "text", text: "bad" },
+              {
+                type: "document",
+                source: { type: "data", value: "not-a-pdf", mimeType: "text/plain" },
+              },
+            ],
+          },
+        ],
+        forwardedProps: { provider: "builtin", modelId: "test" },
+      }),
+    ).toThrow(AiRuntimeError)
+  })
+
   it("carries per-conversation run options from forwardedProps", () => {
     expect(
       parseAiGatewayRequest({
@@ -80,6 +181,25 @@ describe("AI gateway request contract", () => {
       reasoningEffort: "high",
       messages: [{ role: "user", text: "summarize this" }],
     })
+  })
+
+  it("accepts only bounded opaque attachment references from a chat run", () => {
+    expect(
+      parseAiGatewayRequest({
+        messages: [{ id: "m1", role: "user", content: "inspect this" }],
+        forwardedProps: {
+          provider: "builtin",
+          modelId: "platform-text",
+          attachmentIds: ["12", "12", "98"],
+        },
+      }),
+    ).toMatchObject({ attachmentIds: ["12", "98"] })
+    expect(() =>
+      parseAiGatewayRequest({
+        messages: [{ id: "m1", role: "user", content: "inspect this" }],
+        forwardedProps: { provider: "builtin", attachmentIds: ["../../etc/passwd"] },
+      }),
+    ).toThrow(AiRuntimeError)
   })
 
   it("rejects an invalid reasoning effort", () => {
@@ -163,6 +283,140 @@ describe("AI gateway request contract", () => {
     } finally {
       globalThis.fetch = originalFetch
     }
+  })
+
+  it("forwards inline image parts to OpenAI-compatible providers", async () => {
+    const originalFetch = globalThis.fetch
+    let requestBody: Record<string, unknown> | undefined
+    globalThis.fetch = async (_input, init) => {
+      requestBody = requestJson(init)
+      throw new Error("blocked provider request")
+    }
+    const gateway = createTanstackAiGateway()
+
+    try {
+      await expect(
+        gateway.generate({
+          provider: "custom",
+          custom: { baseUrl: "https://provider.test/v1", apiKey: "secret", model: "vision" },
+          messages: [
+            {
+              role: "user",
+              text: "看图",
+              parts: [
+                { type: "text", content: "看图" },
+                {
+                  type: "image",
+                  source: { type: "data", value: "iVBORw==", mimeType: "image/png" },
+                },
+              ],
+            },
+          ],
+        }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+      expect(requestBody?.messages).toEqual([
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "看图" },
+            {
+              type: "image_url",
+              image_url: { url: "data:image/png;base64,iVBORw==", detail: "auto" },
+            },
+          ],
+        },
+      ])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it("uses the Responses adapter for declared PDF/audio models", async () => {
+    const originalFetch = globalThis.fetch
+    let requestBody: Record<string, unknown> | undefined
+    globalThis.fetch = async (_input, init) => {
+      requestBody = requestJson(init)
+      throw new Error("blocked provider request")
+    }
+    const gateway = createTanstackAiGateway()
+
+    try {
+      await expect(
+        gateway.generate({
+          provider: "custom",
+          custom: {
+            baseUrl: "https://provider.test/v1",
+            apiKey: "secret",
+            model: "multimodal",
+            api: "responses",
+            inputModalities: ["text", "audio", "document"],
+          },
+          messages: [
+            {
+              role: "user",
+              text: "总结附件",
+              parts: [
+                { type: "text", content: "总结附件" },
+                {
+                  type: "document",
+                  source: { type: "data", value: "JVBERi0=", mimeType: "application/pdf" },
+                  metadata: { filename: "report.pdf" },
+                },
+                {
+                  type: "audio",
+                  source: { type: "data", value: "SUQz", mimeType: "audio/mpeg" },
+                },
+              ],
+            },
+          ],
+        }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+      expect(requestBody?.input).toEqual([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "总结附件" },
+            {
+              type: "input_file",
+              filename: "report.pdf",
+              file_data: "data:application/pdf;base64,JVBERi0=",
+            },
+            { type: "input_file", file_data: "data:audio/mpeg;base64,SUQz" },
+          ],
+        },
+      ])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it("rejects media that the selected model has not declared", async () => {
+    const gateway = createTanstackAiGateway()
+    await expect(
+      gateway.generate({
+        provider: "custom",
+        custom: {
+          baseUrl: "https://provider.test/v1",
+          apiKey: "secret",
+          model: "text-only",
+          inputModalities: ["text"],
+        },
+        messages: [
+          {
+            role: "user",
+            text: "看图",
+            parts: [
+              { type: "text", content: "看图" },
+              {
+                type: "image",
+                source: { type: "data", value: "iVBORw==", mimeType: "image/png" },
+              },
+            ],
+          },
+        ],
+      }),
+    ).rejects.toMatchObject({ code: "ai_request_rejected" })
   })
 
   it("forwards per-conversation run options into the provider request body", async () => {

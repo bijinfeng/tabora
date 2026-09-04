@@ -1,4 +1,5 @@
 import { lookup } from "node:dns/promises"
+import { open } from "node:fs/promises"
 import { isIP } from "node:net"
 
 import {
@@ -6,9 +7,11 @@ import {
   aiErrorResponse,
   aiStreamResponse,
   createTanstackAiGateway,
+  createAttachmentTools,
   parseAiGatewayRequest,
   type AiCustomProviderConfig,
   type AiTextGateway,
+  type AiAttachmentToolResource,
 } from "@tabora/ai-runtime/server"
 
 import type { ServerRuntime } from "./runtime"
@@ -80,14 +83,16 @@ export function createCloudAiGateway(
   builtinModels: Awaited<
     ReturnType<ServerRuntime["handle"]["aiModels"]["listActiveGatewayModels"]>
   >,
+  attachmentResources: readonly AiAttachmentToolResource[] = [],
 ) {
   return createTanstackAiGateway({
     builtinModels,
     validateCustomProvider: validateCloudCustomProvider,
+    tools: () => createAttachmentTools(attachmentResources),
   })
 }
 
-type CloudAiRuntime = Pick<ServerRuntime, "auth" | "handle">
+type CloudAiRuntime = Pick<ServerRuntime, "auth" | "handle" | "storage">
 
 async function authorizeBuiltinAi(
   runtime: CloudAiRuntime,
@@ -97,6 +102,60 @@ async function authorizeBuiltinAi(
   if (provider !== "builtin") return
   const userId = await getSessionUserId(runtime.auth, request)
   if (!userId) throw new AiRuntimeError("ai_auth_required", "Sign in to use built-in AI models")
+}
+
+/** Resolve only current-user references, leaving every storage detail in the host process. */
+async function resolveAttachmentTools(
+  runtime: CloudAiRuntime,
+  userId: string,
+  attachmentIds: readonly string[] | undefined,
+): Promise<AiAttachmentToolResource[]> {
+  const resources: AiAttachmentToolResource[] = []
+  for (const id of attachmentIds ?? []) {
+    const fileId = Number(id)
+    if (
+      !Number.isSafeInteger(fileId) ||
+      !(await runtime.handle.attachments.ownsRef(fileId, userId))
+    ) {
+      throw new AiRuntimeError("ai_request_rejected", "AI attachment is unavailable")
+    }
+    const file = await runtime.handle.attachments.getFile(fileId)
+    if (!file) throw new AiRuntimeError("ai_request_rejected", "AI attachment is unavailable")
+    resources.push({
+      id,
+      filename: file.filename,
+      mimeType: file.mime,
+      size: file.sizeBytes,
+      async read({ offset, length }) {
+        const descriptor = await open(runtime.storage.absolutePath(file.storageKey), "r")
+        try {
+          const bytes = Buffer.alloc(length)
+          const { bytesRead } = await descriptor.read(bytes, 0, length, offset)
+          return new Uint8Array(bytes.subarray(0, bytesRead))
+        } finally {
+          await descriptor.close()
+        }
+      },
+    })
+  }
+  return resources
+}
+
+async function cloudGatewayForRequest(
+  runtime: CloudAiRuntime,
+  request: Request,
+  input: ReturnType<typeof parseAiGatewayRequest>,
+) {
+  const userId = input.attachmentIds?.length
+    ? await getSessionUserId(runtime.auth, request)
+    : undefined
+  if (input.attachmentIds?.length && !userId) {
+    throw new AiRuntimeError("ai_auth_required", "Sign in to use AI attachments")
+  }
+  return createCloudAiGateway(
+    input.provider === "builtin" ? await runtime.handle.aiModels.listActiveGatewayModels() : [],
+    userId ? await resolveAttachmentTools(runtime, userId, input.attachmentIds) : [],
+  )
 }
 
 /**
@@ -112,11 +171,7 @@ export async function cloudAiGenerateResponse(
   try {
     const input = parseAiGatewayRequest(await request.json().catch(() => null))
     await authorizeBuiltinAi(runtime, request, input.provider)
-    const activeGateway =
-      gateway ??
-      createCloudAiGateway(
-        input.provider === "builtin" ? await runtime.handle.aiModels.listActiveGatewayModels() : [],
-      )
+    const activeGateway = gateway ?? (await cloudGatewayForRequest(runtime, request, input))
     return Response.json(await activeGateway.generate(input))
   } catch (error) {
     return aiErrorResponse(error)
@@ -132,11 +187,7 @@ export async function cloudAiStreamResponse(
   try {
     const input = parseAiGatewayRequest(await request.json().catch(() => null))
     await authorizeBuiltinAi(runtime, request, input.provider)
-    const activeGateway =
-      gateway ??
-      createCloudAiGateway(
-        input.provider === "builtin" ? await runtime.handle.aiModels.listActiveGatewayModels() : [],
-      )
+    const activeGateway = gateway ?? (await cloudGatewayForRequest(runtime, request, input))
     return aiStreamResponse(activeGateway, input)
   } catch (error) {
     return aiErrorResponse(error)

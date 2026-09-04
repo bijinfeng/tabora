@@ -153,6 +153,8 @@ export const schemaSpec: Record<string, TableSpec> = {
       id: { kind: "textPk" },
       label: { kind: "text", notNull: true },
       baseUrl: { kind: "text", notNull: true },
+      /** Null means a legacy Chat Completions connection until an admin confirms its transport. */
+      api: { kind: "text" },
       credentialCiphertext: { kind: "text" },
       credentialNonce: { kind: "text" },
       credentialKeyVersion: { kind: "int" },
@@ -177,6 +179,8 @@ export const schemaSpec: Record<string, TableSpec> = {
       },
       upstreamModelId: { kind: "text", notNull: true },
       label: { kind: "text", notNull: true },
+      /** Null means legacy text/image capability; new models persist an explicit declaration. */
+      inputModalities: { kind: "json" },
       status: { kind: "text", notNull: true },
       lastTestStatus: { kind: "text" },
       lastTestAt: { kind: "timestamp" },

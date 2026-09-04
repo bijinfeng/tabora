@@ -3,11 +3,14 @@ import type { BadgeVariant } from "@tabora/ui/badge"
 export type ModelManagementView = "models" | "providers"
 export type ResourceStatus = "draft" | "active" | "disabled"
 export type TestState = "idle" | "testing" | "passed" | "failed"
+export type ProviderApi = "chat-completions" | "responses"
+export type ModelInputModality = "text" | "image" | "audio" | "document"
 
 export type AdminAiProvider = {
   id: string
   label: string
   baseUrl: string
+  api: ProviderApi | null
   credentialConfigured: boolean
   status: ResourceStatus | "deleted"
   lastTestStatus: TestState | null
@@ -20,6 +23,7 @@ export type AdminAiModel = {
   providerId: string
   upstreamModelId: string
   providerLabel: string
+  inputModalities: ModelInputModality[] | null
   status: ResourceStatus | "deleted"
   lastTestStatus: TestState | null
 }

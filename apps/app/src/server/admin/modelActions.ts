@@ -11,6 +11,7 @@ export async function createProviderAction(data: {
   label: string
   baseUrl: string
   apiKey: string
+  api: "chat-completions" | "responses"
 }) {
   await validateCloudProviderUrl(data.baseUrl)
   const { handle } = await getRuntime()
@@ -22,6 +23,7 @@ export async function updateProviderAction(data: {
   label: string
   baseUrl: string
   apiKey?: string
+  api: "chat-completions" | "responses"
 }) {
   await validateCloudProviderUrl(data.baseUrl)
   const { handle } = await getRuntime()
@@ -32,12 +34,17 @@ export async function createModelAction(data: {
   providerId: string
   upstreamModelId: string
   label: string
+  inputModalities: Array<"text" | "image" | "audio" | "document">
 }) {
   const { handle } = await getRuntime()
   return { id: await handle.aiModels.createModel(data) }
 }
 
-export async function updateModelAction(data: { id: string; label: string }) {
+export async function updateModelAction(data: {
+  id: string
+  label: string
+  inputModalities: Array<"text" | "image" | "audio" | "document">
+}) {
   const { handle } = await getRuntime()
   await handle.aiModels.updateModel(data)
 }
@@ -68,15 +75,25 @@ async function runConnectionTest(modelId: string) {
   try {
     const { model, provider, apiKey } = await handle.aiModels.connectionForModel(modelId)
     await validateCloudProviderUrl(provider.baseUrl)
-    const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+    const endpoint =
+      (provider.api ?? "chat-completions") === "responses" ? "/responses" : "/chat/completions"
+    const body =
+      endpoint === "/responses"
+        ? {
+            model: model.upstreamModelId,
+            input: "Reply with OK",
+            max_output_tokens: 4,
+          }
+        : {
+            model: model.upstreamModelId,
+            messages: [{ role: "user", content: "Reply with OK" }],
+            max_tokens: 4,
+            temperature: 0,
+          }
+    const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}${endpoint}`, {
       method: "POST",
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-      body: JSON.stringify({
-        model: model.upstreamModelId,
-        messages: [{ role: "user", content: "Reply with OK" }],
-        max_tokens: 4,
-        temperature: 0,
-      }),
+      body: JSON.stringify(body),
       redirect: "error",
       signal: AbortSignal.timeout(10_000),
     })

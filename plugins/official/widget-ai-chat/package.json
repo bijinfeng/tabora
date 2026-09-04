@@ -33,6 +33,7 @@
     "solid-markdown": "catalog:ai"
   },
   "devDependencies": {
-    "@tabora/tsconfig": "workspace:*"
+    "@tabora/tsconfig": "workspace:*",
+    "fflate": "^0.8.3"
   }
 }

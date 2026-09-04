@@ -215,6 +215,14 @@ export function createPluginRuntimeContext(options: {
                 },
               }
             : {}),
+          ...(options.ai.prepareChatAttachments
+            ? {
+                prepareChatAttachments(files, preparation) {
+                  requireAiAccess("tools")
+                  return options.ai!.prepareChatAttachments!(files, preparation)
+                },
+              }
+            : {}),
         }
       : undefined
 

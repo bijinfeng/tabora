@@ -14,6 +14,8 @@ export function createPostgresDb(
 
   const migrate = async () => {
     await pool.query(buildDdl("pg"))
+    await pool.query('ALTER TABLE "ai_provider" ADD COLUMN IF NOT EXISTS "api" TEXT')
+    await pool.query('ALTER TABLE "ai_model" ADD COLUMN IF NOT EXISTS "input_modalities" JSONB')
   }
 
   const countUsers = async () => {

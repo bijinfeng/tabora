@@ -414,6 +414,27 @@ describe("createPluginRuntimeContext permissions", () => {
     expect(aiBridge && "createChatConnection" in aiBridge).toBe(false)
   })
 
+  it("keeps attachment preparation behind the AI tools grant", async () => {
+    const prepare = vi.fn(async () => [])
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate", "tools"] }],
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async () => ({ text: "reply" }),
+        stream: async function* () {},
+        prepareChatAttachments: prepare,
+      },
+    })
+
+    expect(() => context.ai?.prepareChatAttachments?.([], { conversationId: "thread-1" })).toThrow(
+      "attempted to use AI tools without permission",
+    )
+    expect(prepare).not.toHaveBeenCalled()
+  })
+
   it("collects view registration disposers for plugin-owned cleanup", () => {
     const registrationDisposers: Array<() => void> = []
     const registry = createExtensionRegistry()

@@ -5,6 +5,7 @@ import type {
   AiSettingsService,
   SettingsAiModel,
   SettingsAiSettings,
+  SettingsAiInputModality,
 } from "@tabora/plugin-api"
 
 import type { AuthStorage } from "./authStorage"
@@ -13,12 +14,25 @@ export type LocalAiProviderConfig = {
   baseUrl: string
   apiKey: string
   model: string
+  api?: "chat-completions" | "responses"
+  inputModalities?: SettingsAiInputModality[]
 }
 
 type StoredAiSettings = {
   activeProvider?: "builtin" | "custom"
   builtinModelId?: string
   custom?: Partial<LocalAiProviderConfig> & { name?: string; models?: string[] }
+}
+
+function inputModalities(value: unknown): SettingsAiInputModality[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const modalities = value.filter(
+    (item): item is SettingsAiInputModality =>
+      item === "text" || item === "image" || item === "audio" || item === "document",
+  )
+  return modalities.length === value.length && modalities.includes("text")
+    ? [...new Set(modalities)]
+    : undefined
 }
 
 export type LocalAiSettingsService = AiSettingsService & {
@@ -93,7 +107,11 @@ export function createLocalAiSettingsService(options: {
       const models = Array.isArray(payload.models)
         ? payload.models.filter(
             (model): model is SettingsAiModel =>
-              Boolean(model) && typeof model.id === "string" && typeof model.label === "string",
+              Boolean(model) &&
+              typeof model.id === "string" &&
+              typeof model.label === "string" &&
+              (model.inputModalities === undefined ||
+                Boolean(inputModalities(model.inputModalities))),
           )
         : []
       return { status: models.length ? "available" : "unavailable", models }
@@ -105,6 +123,7 @@ export function createLocalAiSettingsService(options: {
   async function snapshot(): Promise<SettingsAiSettings> {
     const [stored, builtin] = await Promise.all([read(), builtinModels()])
     const custom = stored.custom ?? {}
+    const customModalities = inputModalities(custom.inputModalities)
     return {
       supportedProviders: ["builtin", "custom"],
       activeProvider: stored.activeProvider ?? "builtin",
@@ -123,6 +142,10 @@ export function createLocalAiSettingsService(options: {
           : typeof custom.model === "string" && custom.model
             ? [custom.model]
             : [],
+        ...(custom.api === "chat-completions" || custom.api === "responses"
+          ? { api: custom.api }
+          : {}),
+        ...(customModalities ? { inputModalities: customModalities } : {}),
         apiKeyConfigured: typeof custom.apiKey === "string" && custom.apiKey.length > 0,
         preservesApiKeyOnSave: true,
       },
@@ -180,6 +203,10 @@ export function createLocalAiSettingsService(options: {
           models:
             update.custom.models?.map((model) => model.trim()).filter(Boolean) ??
             (update.custom.model.trim() ? [update.custom.model.trim()] : []),
+          ...(update.custom.api ? { api: update.custom.api } : {}),
+          ...(update.custom.inputModalities
+            ? { inputModalities: update.custom.inputModalities }
+            : {}),
           ...(update.custom.apiKey
             ? { apiKey: update.custom.apiKey }
             : existingCustom.apiKey
@@ -193,9 +220,16 @@ export function createLocalAiSettingsService(options: {
       const stored = await read()
       const custom = stored.custom
       if (stored.activeProvider === "custom" && custom?.baseUrl && custom.apiKey && custom.model) {
+        const customModalities = inputModalities(custom.inputModalities)
         return {
           provider: "custom" as const,
-          custom: { baseUrl: custom.baseUrl, apiKey: custom.apiKey, model: custom.model },
+          custom: {
+            baseUrl: custom.baseUrl,
+            apiKey: custom.apiKey,
+            model: custom.model,
+            ...(custom.api ? { api: custom.api } : {}),
+            ...(customModalities ? { inputModalities: customModalities } : {}),
+          },
         }
       }
       return {

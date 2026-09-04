@@ -60,7 +60,11 @@ describe("platform model catalogue", () => {
     await handle.aiModels.setProviderStatus("openai", "active")
     await handle.aiModels.setModelStatus(modelId, "active")
     expect(await handle.aiModels.listActiveDirectory()).toEqual([
-      { id: "openai:gpt-4.1-mini", label: "GPT-4.1 mini" },
+      {
+        id: "openai:gpt-4.1-mini",
+        label: "GPT-4.1 mini",
+        inputModalities: ["text", "image"],
+      },
     ])
 
     await handle.aiModels.deleteProvider("openai")
@@ -74,6 +78,59 @@ describe("platform model catalogue", () => {
         apiKey: "replacement-secret",
       }),
     ).rejects.toThrow("不可复用")
+  })
+
+  it("publishes only modalities compatible with the provider API", async () => {
+    await handle.aiModels.createProvider({
+      id: "openai",
+      label: "OpenAI",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "provider-secret",
+      api: "responses",
+    })
+    const modelId = await handle.aiModels.createModel({
+      providerId: "openai",
+      upstreamModelId: "gpt-4.1-mini",
+      label: "GPT-4.1 mini",
+      inputModalities: ["text", "image", "audio", "document"],
+    })
+    await handle.aiModels.recordTest(modelId, { passed: true })
+    await handle.aiModels.setProviderStatus("openai", "active")
+    await handle.aiModels.setModelStatus(modelId, "active")
+
+    expect(await handle.aiModels.listActiveDirectory()).toEqual([
+      {
+        id: modelId,
+        label: "GPT-4.1 mini",
+        inputModalities: ["text", "image", "audio", "document"],
+      },
+    ])
+    await expect(
+      handle.aiModels.updateModel({
+        id: modelId,
+        label: "GPT-4.1 mini",
+        inputModalities: ["text", "audio"],
+      }),
+    ).resolves.toBeUndefined()
+  })
+
+  it("rejects audio and PDF declarations for Chat Completions", async () => {
+    await handle.aiModels.createProvider({
+      id: "legacy",
+      label: "Legacy",
+      baseUrl: "https://api.example.com/v1",
+      apiKey: "provider-secret",
+      api: "chat-completions",
+    })
+
+    await expect(
+      handle.aiModels.createModel({
+        providerId: "legacy",
+        upstreamModelId: "chat-model",
+        label: "Chat model",
+        inputModalities: ["text", "document"],
+      }),
+    ).rejects.toThrow("不兼容")
   })
 
   it("allows changing only the user-visible label of an existing model", async () => {

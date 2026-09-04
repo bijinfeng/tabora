@@ -8,11 +8,19 @@ const providerIdSchema = z
   .trim()
   .regex(/^[a-z0-9-]{2,40}$/)
 const resourceIdSchema = z.string().min(1).max(201)
+const providerApiSchema = z.enum(["chat-completions", "responses"])
+const inputModalitiesSchema = z
+  .array(z.enum(["text", "image", "audio", "document"]))
+  .min(1)
+  .max(4)
+  .refine((value) => new Set(value).size === value.length, "输入能力不能重复")
+  .refine((value) => value.includes("text"), "模型必须支持文本输入")
 const providerInputSchema = z.object({
   id: providerIdSchema,
   label: z.string().trim().min(1).max(80),
   baseUrl: z.string().trim().url().max(500),
   apiKey: z.string().trim().min(1).max(4096),
+  api: providerApiSchema,
 })
 const updateProviderSchema = providerInputSchema.extend({
   apiKey: z.string().trim().max(4096).optional(),
@@ -21,10 +29,12 @@ const modelInputSchema = z.object({
   providerId: providerIdSchema,
   upstreamModelId: z.string().trim().min(1).max(160),
   label: z.string().trim().min(1).max(120),
+  inputModalities: inputModalitiesSchema,
 })
 const updateModelSchema = z.object({
   id: resourceIdSchema,
   label: z.string().trim().min(1).max(120),
+  inputModalities: inputModalitiesSchema,
 })
 
 export const listModelManagement = createServerFn({ method: "GET" })
@@ -59,6 +69,7 @@ export const updateProvider = createServerFn({ method: "POST" })
       label: data.label,
       baseUrl: data.baseUrl,
       ...(data.apiKey ? { apiKey: data.apiKey } : {}),
+      api: data.api,
     }),
   )
 

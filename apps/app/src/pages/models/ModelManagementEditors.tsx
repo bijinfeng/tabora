@@ -1,18 +1,31 @@
 import * as stylex from "@stylexjs/stylex"
 import { Badge } from "@tabora/ui/badge"
 import { Button } from "@tabora/ui/button"
+import { Checkbox } from "@tabora/ui/checkbox"
 import { Drawer } from "@tabora/ui/drawer"
 import { Field } from "@tabora/ui/field"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
-import { Show, type Accessor, type JSX } from "solid-js"
+import { For, Show, type Accessor, type JSX } from "solid-js"
 import CircleCheck from "lucide-solid/icons/circle-check"
 
-import type { AdminAiProvider, TestState } from "./model-management.types"
+import type {
+  AdminAiProvider,
+  ModelInputModality,
+  ProviderApi,
+  TestState,
+} from "./model-management.types"
 import { styles } from "./model-management.styles"
 
-type Setter = (value: string) => void
+type Setter<T = string> = (value: T) => void
+
+const MODALITY_LABELS: Record<ModelInputModality, string> = {
+  text: "文本",
+  image: "图片",
+  audio: "音频",
+  document: "PDF 文档",
+}
 
 const BUILTIN_PROVIDER_PRESETS = [
   { id: "openai", label: "OpenAI", baseUrl: "https://api.openai.com/v1" },
@@ -88,6 +101,8 @@ export function ModelEditorDrawer(props: {
   upstreamModelId: Accessor<string>
   label: Accessor<string>
   setLabel: Setter
+  inputModalities: Accessor<ModelInputModality[]>
+  setInputModalities: Setter<ModelInputModality[]>
   savedModelId: Accessor<string | null>
   modelIdPreview: Accessor<string>
   testState: Accessor<TestState>
@@ -103,6 +118,18 @@ export function ModelEditorDrawer(props: {
   onSelectDiscoveredModel: (id: string) => void
 }) {
   const isSaved = () => props.savedModelId() !== null
+  const selectedProvider = () =>
+    props.providers().find((provider) => provider.id === props.providerId())
+  const availableModalities = (): ModelInputModality[] =>
+    (selectedProvider()?.api ?? "chat-completions") === "responses"
+      ? ["text", "image", "audio", "document"]
+      : ["text", "image"]
+  const setModality = (modality: ModelInputModality, checked: boolean) => {
+    const selected = props.inputModalities()
+    props.setInputModalities(
+      checked ? [...selected, modality] : selected.filter((candidate) => candidate !== modality),
+    )
+  }
   return (
     <Drawer
       open={props.open}
@@ -124,7 +151,18 @@ export function ModelEditorDrawer(props: {
           <Field label="Provider" helper="草稿连接可用于测试；只有已启用连接下的模型可上线。">
             <Select
               value={props.providerId()}
-              onChange={(value) => !isSaved() && props.setProviderId(value)}
+              onChange={(value) => {
+                if (isSaved()) return
+                props.setProviderId(value)
+                const allowed =
+                  (props.providers().find((provider) => provider.id === value)?.api ??
+                    "chat-completions") === "responses"
+                    ? ["text", "image", "audio", "document"]
+                    : ["text", "image"]
+                props.setInputModalities(
+                  props.inputModalities().filter((modality) => allowed.includes(modality)),
+                )
+              }}
               options={props
                 .providers()
                 .filter((provider) => provider.status !== "disabled")
@@ -171,6 +209,23 @@ export function ModelEditorDrawer(props: {
               placeholder="例如 GPT-4.1 mini"
             />
           </Field>
+          <Field
+            label="已验证的输入能力"
+            helper="只勾选已通过该模型实际验证的能力；连接测试仅验证最小文本请求。"
+          >
+            <div {...stylex.attrs(styles.testRow)}>
+              <For each={availableModalities()}>
+                {(modality) => (
+                  <Checkbox
+                    checked={props.inputModalities().includes(modality)}
+                    onChange={(checked) => setModality(modality, checked)}
+                    disabled={isSaved() || modality === "text"}
+                    label={MODALITY_LABELS[modality]}
+                  />
+                )}
+              </For>
+            </div>
+          </Field>
           <div {...stylex.attrs(styles.idPreview)}>
             <span {...stylex.attrs(styles.idLabel)}>稳定模型 ID</span>
             <span {...stylex.attrs(styles.idValue)}>
@@ -199,6 +254,8 @@ export function ProviderEditorDrawer(props: {
   setLabel: Setter
   baseUrl: Accessor<string>
   setBaseUrl: Setter
+  api: Accessor<ProviderApi>
+  setApi: Setter<ProviderApi>
   apiKey: Accessor<string>
   setApiKey: Setter
   error: Accessor<string | null>
@@ -280,6 +337,20 @@ export function ProviderEditorDrawer(props: {
               value={props.baseUrl()}
               onInput={props.setBaseUrl}
               placeholder="https://api.example.com/v1"
+            />
+          </Field>
+          <Field
+            label="请求 API"
+            helper="Chat Completions 支持文本/图片；Responses 还可传音频与 PDF。选择后需重新测试并配置各模型能力。"
+          >
+            <Select
+              value={props.api()}
+              onChange={props.setApi}
+              options={[
+                { value: "chat-completions", label: "Chat Completions" },
+                { value: "responses", label: "Responses" },
+              ]}
+              aria-label="请求 API"
             />
           </Field>
         </SetupStep>

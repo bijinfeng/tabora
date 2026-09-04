@@ -51,6 +51,19 @@ export type AiChatConnectionRunContext = {
   forwardedProps?: Record<string, unknown>
 }
 
+/** A host-owned file made available to an AI run without exposing a storage path or URL. */
+export type AiChatAttachmentResource = {
+  id: string
+  filename: string
+  mimeType: string
+  size: number
+}
+
+/** Upload selected files into the host's private AI-attachment scope. */
+export type AiChatAttachmentPreparation = {
+  conversationId: string
+}
+
 /**
  * Host-owned chat transport for TanStack AI clients. `connect` receives the
  * full conversation and yields the AG-UI protocol events produced by the
@@ -89,4 +102,12 @@ export type AiRuntimeBridge = {
   stream(request: AiGenerateRequest): AsyncIterable<AiStreamChunk>
   createChatClient?(options?: AiChatClientOptions): AiChatClient
   createChatConnection?(): AiChatConnection
+  /**
+   * Makes files available to server-side agent tools. Returned IDs are opaque
+   * to plugins and can only be resolved in the owning user's AI run.
+   */
+  prepareChatAttachments?(
+    files: readonly File[],
+    preparation: AiChatAttachmentPreparation,
+  ): Promise<AiChatAttachmentResource[]>
 }
