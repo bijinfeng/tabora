@@ -324,6 +324,47 @@ describe("AI gateway request contract", () => {
     }
   })
 
+  it("passes large histories through for agent-managed context compression", () => {
+    const parsed = parseAiGatewayRequest({
+      messages: [
+        { id: "m1", role: "user", content: "x".repeat(31_000) },
+        { id: "m2", role: "assistant", content: "x".repeat(31_000) },
+        { id: "m3", role: "user", content: "x".repeat(31_000) },
+        { id: "m4", role: "assistant", content: "x".repeat(31_000) },
+        { id: "m5", role: "user", content: "continue" },
+      ],
+      forwardedProps: { provider: "builtin", modelId: "platform-text" },
+    })
+    expect(parsed.messages).toHaveLength(5)
+  })
+
+  it("accepts TanStack reasoning and tool wire messages in a follow-up turn", () => {
+    const parsed = parseAiGatewayRequest({
+      messages: [
+        { id: "r1", role: "reasoning", content: "先检查附件", encryptedValue: "opaque-state" },
+        { id: "a1", role: "assistant", content: "我先读取附件。", toolCalls: [] },
+        {
+          id: "t1",
+          role: "tool",
+          name: "read_attachment",
+          toolCallId: "call-1",
+          content: "附件内容",
+        },
+        { id: "u1", role: "user", content: "继续" },
+      ],
+      forwardedProps: { provider: "builtin", modelId: "platform-text" },
+    })
+    expect(parsed.messages).toMatchObject([
+      {
+        role: "assistant",
+        text: "我先读取附件。",
+        thinking: [{ content: "先检查附件", signature: "opaque-state" }],
+      },
+      { role: "tool", toolCallId: "call-1", text: "附件内容", name: "read_attachment" },
+      { role: "user", text: "继续" },
+    ])
+  })
+
   it("enforces optional gateway budgets and records estimated usage", async () => {
     const usageTracker = createAiUsageTracker(() => new Date("2026-01-01T00:00:00.000Z"))
     const gateway = createTanstackAiGateway({

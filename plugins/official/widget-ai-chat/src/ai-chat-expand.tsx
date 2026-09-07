@@ -24,6 +24,7 @@ import X from "lucide-solid/icons/x"
 import { onCleanup } from "solid-js"
 import {
   aiChatErrorCopy,
+  estimateContextUsage,
   getAiChatSession,
   getAiChatSettingsOpener,
   messageText,
@@ -44,6 +45,7 @@ import {
 import { ConversationList } from "./ai-chat-conversation-list"
 import { AiChatDialogs } from "./ai-chat-dialogs"
 import { AiChatMessageThread } from "./ai-chat-message-thread"
+import { contextUsageStyles } from "./ai-chat-context-usage.styles"
 import { styles } from "./styles"
 
 const REASONING_LABELS: Record<AiChatReasoningEffort, string> = {
@@ -51,6 +53,9 @@ const REASONING_LABELS: Record<AiChatReasoningEffort, string> = {
   medium: "中度",
   high: "深度",
 }
+
+const CONTEXT_RING_RADIUS = 8
+const CONTEXT_RING_CIRCUMFERENCE = 2 * Math.PI * CONTEXT_RING_RADIUS
 
 function newContextId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -111,7 +116,9 @@ export function AiChatExpand(props: WidgetViewProps) {
   const [contextText, setContextText] = createSignal("")
   const [attachments, setAttachments] = createSignal<File[]>([])
   const [copiedMessageId, setCopiedMessageId] = createSignal<string | null>(null)
+  const [contextDetailsOpen, setContextDetailsOpen] = createSignal(false)
   let attachmentInput: HTMLInputElement | undefined
+  let contextProgressRef: SVGCircleElement | undefined
 
   const getAiSettings = props.host.getAiSettings?.bind(props.host)
   const [aiSettings] = createResource(
@@ -187,6 +194,15 @@ export function AiChatExpand(props: WidgetViewProps) {
     updateActiveOptions({ reasoningEffort: value })
   }
   const contextBlocks = (): AiChatContextBlock[] => activeConversation()?.contextBlocks ?? []
+  const contextUsage = () => estimateContextUsage(activeConversation(), session.messages(), draft())
+  createEffect(() => {
+    const element = contextProgressRef
+    if (!element) return
+    element.setAttribute(
+      "stroke-dashoffset",
+      String(CONTEXT_RING_CIRCUMFERENCE * (1 - contextUsage().percent / 100)),
+    )
+  })
 
   const addContextBlock = () => {
     const text = contextText().trim()
@@ -463,6 +479,54 @@ export function AiChatExpand(props: WidgetViewProps) {
             />
           </div>
           <div {...stylex.attrs(styles.composerChips)}>
+            <div {...stylex.attrs(contextUsageStyles.meter)}>
+              <div
+                {...stylex.attrs(contextUsageStyles.indicator)}
+                tabIndex={0}
+                aria-label={`上下文窗口已使用 ${contextUsage().percent}%`}
+                onPointerEnter={() => setContextDetailsOpen(true)}
+                onPointerLeave={() => setContextDetailsOpen(false)}
+                onFocus={() => setContextDetailsOpen(true)}
+                onBlur={() => setContextDetailsOpen(false)}
+              >
+                <svg
+                  {...stylex.attrs(contextUsageStyles.ring)}
+                  viewBox="0 0 22 22"
+                  aria-hidden="true"
+                >
+                  <circle
+                    {...stylex.attrs(contextUsageStyles.ringTrack)}
+                    cx="11"
+                    cy="11"
+                    r={CONTEXT_RING_RADIUS}
+                  />
+                  <circle
+                    {...stylex.attrs(contextUsageStyles.ringProgress)}
+                    ref={(element) => {
+                      contextProgressRef = element
+                      element.setAttribute("stroke-dasharray", String(CONTEXT_RING_CIRCUMFERENCE))
+                    }}
+                    cx="11"
+                    cy="11"
+                    r={CONTEXT_RING_RADIUS}
+                    transform="rotate(-90 11 11)"
+                  />
+                </svg>
+                <span {...stylex.attrs(contextUsageStyles.percent)}>{contextUsage().percent}%</span>
+                <Show when={contextDetailsOpen()}>
+                  <div {...stylex.attrs(contextUsageStyles.tooltip)} role="status">
+                    <strong {...stylex.attrs(contextUsageStyles.tooltipTitle)}>上下文窗口</strong>
+                    <span {...stylex.attrs(contextUsageStyles.tooltipValue)}>
+                      约 {contextUsage().usedTokens.toLocaleString()} /{" "}
+                      {contextUsage().windowTokens.toLocaleString()} tokens
+                    </span>
+                    <span {...stylex.attrs(contextUsageStyles.tooltipHint)}>
+                      接近上限时将自动省略较早消息
+                    </span>
+                  </div>
+                </Show>
+              </div>
+            </div>
             <Show when={modelChoices().length > 0}>
               <DropdownMenu
                 items={modelGroups().map((group) => ({
@@ -639,13 +703,6 @@ export function AiChatExpand(props: WidgetViewProps) {
                     </Show>
                   </div>
                 </Show>
-              </div>
-            </Show>
-            <Show when={session.historyTrimmed() && !session.error()}>
-              <div {...stylex.attrs(styles.noticeStrip)}>
-                <span {...stylex.attrs(styles.notice)}>
-                  已省略较早的消息，发送时会带上最近的对话。
-                </span>
               </div>
             </Show>
             {composer()}

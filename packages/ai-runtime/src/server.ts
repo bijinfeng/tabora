@@ -23,7 +23,7 @@ export type { AiAttachmentToolResource } from "./attachmentTools"
 
 const MAX_CHAT_MESSAGES = 100
 const MAX_CHAT_MESSAGE_CHARS = 32_000
-const MAX_CHAT_TOTAL_CHARS = 96_000
+const MAX_REASONING_SIGNATURE_CHARS = 1_000_000
 
 export type AiTextGateway = {
   generate(request: AiGatewayRequest): Promise<AiGenerateResult>
@@ -404,7 +404,7 @@ function parseInlineDataSource(
 
 function parseChatMessageContent(
   value: unknown,
-  role: "user" | "assistant" | "system",
+  role: "user" | "assistant" | "tool" | "system",
 ): {
   text: string
   parts?: AiGatewayContentPart[]
@@ -436,7 +436,8 @@ function parseChatMessageContent(
         !part.content ||
         part.content.length > 32_000 ||
         (part.signature !== undefined &&
-          (typeof part.signature !== "string" || part.signature.length > 65_536))
+          (typeof part.signature !== "string" ||
+            part.signature.length > MAX_REASONING_SIGNATURE_CHARS))
       ) {
         rejectRequest("Invalid AI reasoning content")
       }
@@ -507,14 +508,37 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
   const options = parseGenerationOptions(props)
   const messages: AiGatewayMessage[] = []
   const systemParts: string[] = []
-  let totalChars = 0
   let totalMediaChars = 0
+  let pendingReasoning: AiGatewayThinkingPart[] = []
   for (const entry of input.messages) {
     if (!entry || typeof entry !== "object") rejectRequest("Invalid AI chat message")
     const anchor = entry as Record<string, unknown>
     const role = anchor.role
-    if (role !== "user" && role !== "assistant" && role !== "system") {
+    if (
+      role !== "user" &&
+      role !== "assistant" &&
+      role !== "tool" &&
+      role !== "system" &&
+      role !== "reasoning"
+    ) {
       rejectRequest("Unsupported AI chat message role")
+    }
+    if (role === "reasoning") {
+      if (typeof anchor.content !== "string" || !anchor.content || anchor.content.length > 32_000) {
+        rejectRequest("Invalid AI reasoning content")
+      }
+      const signature = anchor.encryptedValue
+      if (
+        signature !== undefined &&
+        (typeof signature !== "string" || signature.length > MAX_REASONING_SIGNATURE_CHARS)
+      ) {
+        rejectRequest("Invalid AI reasoning signature")
+      }
+      pendingReasoning.push({
+        content: anchor.content,
+        ...(typeof signature === "string" ? { signature } : {}),
+      })
+      continue
     }
     const normalized = parseChatMessageContent(anchor.content, role)
     if (
@@ -525,10 +549,6 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
       rejectRequest("Invalid AI chat message content")
     if (normalized.text.length > MAX_CHAT_MESSAGE_CHARS) {
       rejectRequest("AI chat message is too long")
-    }
-    totalChars += normalized.text.length
-    if (totalChars > MAX_CHAT_TOTAL_CHARS) {
-      rejectRequest("AI chat history is too long")
     }
     totalMediaChars += normalized.mediaChars
     if (totalMediaChars > MAX_INLINE_MEDIA_TOTAL_CHARS) {
@@ -543,8 +563,19 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
       role,
       text: normalized.text,
       ...(normalized.parts ? { parts: normalized.parts } : {}),
-      ...(normalized.thinking ? { thinking: normalized.thinking } : {}),
+      ...(pendingReasoning.length || normalized.thinking
+        ? { thinking: [...pendingReasoning, ...(normalized.thinking ?? [])] }
+        : {}),
+      ...(typeof anchor.toolCallId === "string" ? { toolCallId: anchor.toolCallId } : {}),
+      ...(typeof anchor.name === "string" ? { name: anchor.name } : {}),
+      ...(typeof anchor.error === "string" ? { error: anchor.error } : {}),
+      ...(Array.isArray(anchor.toolCalls)
+        ? {
+            toolCalls: anchor.toolCalls as Exclude<AiGatewayMessage["toolCalls"], undefined>,
+          }
+        : {}),
     })
+    pendingReasoning = []
   }
   if (messages.at(-1)?.role !== "user") {
     rejectRequest("AI chat must end with a user message")

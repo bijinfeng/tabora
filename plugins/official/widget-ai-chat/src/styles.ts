@@ -608,15 +608,6 @@ export const styles = stylex.create({
     display: "flex",
     gap: 8,
   },
-  noticeStrip: {
-    flexShrink: 0,
-    paddingBlock: 6,
-    paddingInline: 16,
-  },
-  notice: {
-    color: "rgb(var(--tbr-color-text-subtle))",
-    fontSize: 12,
-  },
   generating: {
     color: "rgb(var(--tbr-color-text-subtle))",
     fontSize: 12,
