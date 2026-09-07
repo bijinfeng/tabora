@@ -9,7 +9,6 @@ import type {
   WidgetViewProps,
 } from "@tabora/plugin-api/sdk"
 import { AiRuntimeError } from "@tabora/plugin-api/sdk"
-import type { UIMessage } from "@tanstack/ai-client"
 import { officialPluginAiChatManifest } from "./manifest"
 import { officialPluginAiChat } from "./index"
 import { AiChatCard } from "./ai-chat-card"
@@ -23,7 +22,6 @@ import {
   registerAiChatView,
   runNewConversationCommand,
   setAiChatRuntime,
-  trimHistory,
 } from "./ai-chat-session"
 import type { AiChatStoredConversation } from "./ai-chat-session"
 
@@ -90,10 +88,6 @@ function gatedConnection(gate: Promise<void>): AiChatConnection {
   }
 }
 
-function userMessage(id: string, content: string): UIMessage {
-  return { id, role: "user", parts: [{ type: "text", content }] }
-}
-
 async function waitForLoaded(session: { loaded(): boolean }) {
   await vi.waitFor(() => expect(session.loaded()).toBe(true))
 }
@@ -137,7 +131,6 @@ describe("getAiChatSession", () => {
     expect(messages).toHaveLength(2)
     expect(messages[0]?.role).toBe("user")
     expect(messageText(messages[1]!)).toBe("echo:你好")
-    expect(session.historyTrimmed()).toBe(false)
     expect(session.error()).toBeUndefined()
 
     await waitForPersistedSave()
@@ -594,29 +587,6 @@ describe("getAiChatSession", () => {
 
     unregister()
     expect(() => runNewConversationCommand("session-command")).toThrow("请先添加 AI 对话卡片")
-  })
-
-  it("trims long histories before they exceed the gateway caps", () => {
-    const short = [userMessage("m1", "hi"), userMessage("m2", "there")]
-    expect(trimHistory(short)).toBeUndefined()
-
-    const long = Array.from({ length: 105 }, (_, index) => userMessage(`m${index}`, "hi"))
-    const trimmed = trimHistory(long)
-    expect(trimmed).toHaveLength(99)
-    expect(trimmed?.at(-1)?.id).toBe("m104")
-
-    const oversized = [
-      userMessage("m1", "x".repeat(40_000)),
-      userMessage("m2", "x".repeat(40_000)),
-      userMessage("m3", "x".repeat(40_000)),
-    ]
-    const charTrimmed = trimHistory(oversized)
-    expect(charTrimmed?.map((message) => message.id)).toEqual(["m2", "m3"])
-
-    const headroom = Array.from({ length: 4 }, (_, index) =>
-      userMessage(`h${index}`, "x".repeat(30_000)),
-    )
-    expect(trimHistory(headroom)?.map((message) => message.id)).toEqual(["h2", "h3"])
   })
 })
 

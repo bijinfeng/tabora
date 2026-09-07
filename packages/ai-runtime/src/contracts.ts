@@ -27,11 +27,20 @@ export type AiGatewayThinkingPart = {
   signature?: string
 }
 
-export type AiGatewayMessage = AiChatMessage & {
+export type AiGatewayMessage = Omit<AiChatMessage, "role"> & {
+  role: "user" | "assistant" | "tool"
   /** Normalized TanStack multimodal parts; text remains for compatibility and titles. */
   parts?: AiGatewayContentPart[]
   /** Prior visible reasoning and its opaque provider continuation signature. */
   thinking?: AiGatewayThinkingPart[]
+  toolCallId?: string
+  name?: string
+  error?: string
+  toolCalls?: Array<{
+    id: string
+    type: "function"
+    function: { name: string; arguments: string }
+  }>
 }
 
 export type AiProviderMode = "builtin" | "custom"

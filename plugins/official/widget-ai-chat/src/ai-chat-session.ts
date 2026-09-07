@@ -15,10 +15,7 @@ import type { AiChatAttachmentMetadata } from "./ai-chat-attachments"
 const CHAT_SYSTEM_PROMPT =
   "你是 Tabora 工作台中的 AI 助手。用与用户相同的语言回答，保持简洁直接，可用 Markdown 组织内容。"
 
-/** Leave the gateway's 32k message budget available for the next user turn. */
-const HISTORY_MAX_MESSAGES = 99
-const HISTORY_MAX_CHARS = 64_000
-const HISTORY_MAX_MEDIA_CHARS = 8_000_000
+const CONTEXT_WINDOW_TOKENS = 32_000
 
 const STORAGE_KEY = "ai-chat-conversations"
 const MAX_TITLE_CHARS = 24
@@ -135,7 +132,6 @@ export type AiChatSession = {
   queuedCount: Accessor<number>
   queuedMessages: Accessor<QueuedMessage[]>
   error: Accessor<Error | undefined>
-  historyTrimmed: Accessor<boolean>
   send(content: string | MultimodalContent): Promise<void>
   /** Interrupt the active generation and dispatch this turn without queueing it. */
   sendImmediately(content: string | MultimodalContent): Promise<void>
@@ -286,43 +282,9 @@ function toUIMessage(stored: AiChatStoredMessage): UIMessage {
   }
 }
 
-export function trimHistory(history: UIMessage[]): UIMessage[] | undefined {
-  if (history.length <= 2) return undefined
-  let start = history.length > HISTORY_MAX_MESSAGES ? history.length - HISTORY_MAX_MESSAGES : 0
-  let total = 0
-  let totalMedia = 0
-  for (const message of history) {
-    total += messageText(message).length
-    totalMedia += message.parts.reduce(
-      (sum, part) =>
-        sum +
-        ((part.type === "image" || part.type === "audio" || part.type === "document") &&
-        part.source.type === "data"
-          ? part.source.value.length
-          : 0),
-      0,
-    )
-  }
-  while (
-    start < history.length - 2 &&
-    (total > HISTORY_MAX_CHARS || totalMedia > HISTORY_MAX_MEDIA_CHARS)
-  ) {
-    total -= messageText(history[start]!).length
-    totalMedia -= history[start]!.parts.reduce(
-      (sum, part) =>
-        sum +
-        ((part.type === "image" || part.type === "audio" || part.type === "document") &&
-        part.source.type === "data"
-          ? part.source.value.length
-          : 0),
-      0,
-    )
-    start += 1
-  }
-  return start === 0 ? undefined : history.slice(start)
-}
-
-function composeSystemPrompt(conversation: AiChatStoredConversation): string {
+function composeSystemPrompt(
+  conversation: Pick<AiChatStoredConversation, "systemPrompt" | "contextBlocks">,
+): string {
   const base = conversation.systemPrompt?.trim() || CHAT_SYSTEM_PROMPT
   const contextBlocks = conversation.contextBlocks ?? []
   if (contextBlocks.length === 0) return base
@@ -330,6 +292,48 @@ function composeSystemPrompt(conversation: AiChatStoredConversation): string {
     .map((block) => `# ${block.label.trim() || "上下文"}\n${block.text.trim()}`)
     .join("\n\n")
   return `${base}\n\n以下是本次对话的附加上下文：\n\n${rendered}`
+}
+
+export type AiChatContextUsage = {
+  usedTokens: number
+  windowTokens: number
+  percent: number
+}
+
+/** Estimate the visible context window, reserving a conservative budget for media. */
+export function estimateContextUsage(
+  conversation: Pick<AiChatStoredConversation, "systemPrompt" | "contextBlocks"> | undefined,
+  messages: UIMessage[],
+  pending?: string,
+): AiChatContextUsage {
+  const systemChars = conversation
+    ? composeSystemPrompt(conversation).length
+    : CHAT_SYSTEM_PROMPT.length
+  const messageChars = messages.reduce((total, message) => total + messageText(message).length, 0)
+  const mediaChars = messages.reduce(
+    (total, message) =>
+      total +
+      message.parts.reduce(
+        (sum, part) =>
+          sum +
+          ((part.type === "image" || part.type === "audio" || part.type === "document") &&
+          part.source.type === "data"
+            ? part.source.value.length
+            : 0),
+        0,
+      ),
+    0,
+  )
+  const usedTokens = Math.max(
+    1,
+    Math.ceil((systemChars + messageChars + (pending?.length ?? 0)) / 4) +
+      Math.ceil(mediaChars / 1_000),
+  )
+  return {
+    usedTokens,
+    windowTokens: CONTEXT_WINDOW_TOKENS,
+    percent: Math.min(100, Math.round((usedTokens / CONTEXT_WINDOW_TOKENS) * 100)),
+  }
 }
 
 export function buildSendOptions(
@@ -409,7 +413,6 @@ export function getAiChatSession(options: {
   const [queuedCount, setQueuedCount] = createSignal(0)
   const [queuedMessages, setQueuedMessages] = createSignal<QueuedMessage[]>([])
   const [error, setError] = createSignal<Error | undefined>(undefined)
-  const [historyTrimmed, setHistoryTrimmed] = createSignal(false)
 
   const clients = new Map<string, ChatClient>()
   let saveTimer: ReturnType<typeof setTimeout> | undefined
@@ -558,7 +561,6 @@ export function getAiChatSession(options: {
     if (!conversation) return
     setActiveId(conversationId)
     setError(undefined)
-    setHistoryTrimmed(false)
     const client = ensureClient(conversation)
     setMessages(client ? client.getMessages() : conversation.messages.map(toUIMessage))
     setLoading(client ? client.getIsLoading() : false)
@@ -576,7 +578,6 @@ export function getAiChatSession(options: {
     queuedCount,
     queuedMessages,
     error,
-    historyTrimmed,
 
     send(text) {
       setError(undefined)
@@ -590,9 +591,6 @@ export function getAiChatSession(options: {
         setError(new Error("当前宿主未提供 AI 对话连接"))
         return Promise.resolve()
       }
-      const trimmed = trimHistory(client.getMessages())
-      if (trimmed) client.setMessagesManually(trimmed)
-      setHistoryTrimmed(Boolean(trimmed))
       return client.sendMessage(
         text,
         buildSendOptions(conversation, attachmentIds(client.getMessages(), text)),
@@ -611,9 +609,6 @@ export function getAiChatSession(options: {
         setError(new Error("当前宿主未提供 AI 对话连接"))
         return Promise.resolve()
       }
-      const trimmed = trimHistory(client.getMessages())
-      if (trimmed) client.setMessagesManually(trimmed)
-      setHistoryTrimmed(Boolean(trimmed))
       return client.sendMessage(
         content,
         buildSendOptions(conversation, attachmentIds(client.getMessages(), content)),
@@ -651,7 +646,6 @@ export function getAiChatSession(options: {
       setQueuedCount(0)
       setQueuedMessages([])
       setError(undefined)
-      setHistoryTrimmed(false)
       persistNow()
     },
 
@@ -669,7 +663,6 @@ export function getAiChatSession(options: {
       setQueuedCount(0)
       setQueuedMessages([])
       setError(undefined)
-      setHistoryTrimmed(false)
     },
 
     createConversation() {
@@ -849,9 +842,10 @@ export function aiChatErrorCopy(error: Error | undefined): {
   const code = (error as { code?: string } | undefined)?.code
   const entry = code ? ERROR_COPY[code] : undefined
   if (entry) {
+    const detail = error?.message?.trim()
     return {
       title: entry.title,
-      hint: entry.hint,
+      hint: code === "ai_request_rejected" && detail && detail !== entry.hint ? detail : entry.hint,
       openSettings: code !== "ai_provider_failed" && code !== "ai_request_rejected",
     }
   }
