@@ -40,7 +40,11 @@
     "@types/node": "catalog:node",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.21.0",
+    "debug": "4.4.3",
+    "extend": "3.0.2",
     "fake-indexeddb": "catalog:test",
+    "highlight.js": "11.11.2",
+    "partial-json": "0.1.7",
     "vite": "catalog:build",
     "vite-plugin-solid": "catalog:build",
     "vitest": "catalog:test"
