@@ -15,6 +15,10 @@ export default defineConfig(({ command }) => ({
   // Let vite-plugin-solid transform it instead of dependency pre-bundling JSX as .js.
   optimizeDeps: {
     exclude: ["@tanstack/ai-solid"],
+    // TanStack AI's Solid UI reaches these CommonJS dependencies through
+    // deep imports. Pre-bundle them so Vite provides ESM/CJS interop wrappers
+    // instead of serving raw CommonJS files to the browser.
+    include: ["debug", "extend", "highlight.js", "highlight.js/lib/core", "partial-json"],
   },
   plugins: [
     createTaboraStylexVitePlugin({

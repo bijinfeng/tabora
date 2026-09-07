@@ -350,15 +350,6 @@ export const styles = stylex.create({
     paddingBlock: 12,
     paddingInline: 16,
   },
-  reasoning: {
-    borderLeftColor: "rgb(var(--tbr-color-line-strong))",
-    borderLeftStyle: "solid",
-    borderLeftWidth: 2,
-    color: "rgb(var(--tbr-color-text-muted))",
-    marginBottom: 8,
-    maxWidth: "min(680px, 100%)",
-    paddingInlineStart: 8,
-  },
   turn: {
     display: "flex",
     flexDirection: "column",
