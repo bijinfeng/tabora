@@ -203,13 +203,13 @@ export function IconButtonDemo() {
         <h4 {...stylex.attrs(demoStyles.sectionTitle)}>尺寸</h4>
         <div {...stylex.attrs(demoStyles.row)}>
           <IconButton aria-label="添加" size="sm">
-            <Plus size={14} strokeWidth={2} />
+            <Plus />
           </IconButton>
           <IconButton aria-label="添加">
-            <Plus size={16} strokeWidth={2} />
+            <Plus />
           </IconButton>
           <IconButton aria-label="添加" size="lg">
-            <Plus size={18} strokeWidth={2} />
+            <Plus />
           </IconButton>
         </div>
       </div>
