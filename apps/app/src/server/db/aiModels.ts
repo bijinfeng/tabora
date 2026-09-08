@@ -9,7 +9,7 @@ export type AiResourceStatus = (typeof AI_RESOURCE_STATUSES)[number]
 export const AI_TEST_STATUSES = ["idle", "passed", "failed"] as const
 export type AiTestStatus = (typeof AI_TEST_STATUSES)[number]
 
-export const AI_PROVIDER_APIS = ["chat-completions", "responses"] as const
+export const AI_PROVIDER_APIS = ["chat-completions", "responses", "anthropic-messages"] as const
 export const AI_INPUT_MODALITIES = ["text", "image", "audio", "document"] as const
 
 const CHAT_COMPLETIONS_MODALITIES: AiInputModality[] = ["text", "image"]
@@ -105,7 +105,11 @@ function providerApi(provider: Pick<ProviderRecord, "api">): AiProviderApi {
 }
 
 function adapterModalities(api: AiProviderApi): AiInputModality[] {
-  return api === "responses" ? RESPONSES_MODALITIES : CHAT_COMPLETIONS_MODALITIES
+  return api === "responses"
+    ? RESPONSES_MODALITIES
+    : api === "anthropic-messages"
+      ? CHAT_COMPLETIONS_MODALITIES
+      : CHAT_COMPLETIONS_MODALITIES
 }
 
 /** Legacy rows preserve the historical Chat Completions text/image contract. */

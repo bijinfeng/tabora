@@ -46,7 +46,7 @@ export type AiGatewayMessage = Omit<AiChatMessage, "role"> & {
 export type AiProviderMode = "builtin" | "custom"
 
 /** The OpenAI-compatible endpoint shape a configured provider actually implements. */
-export type AiProviderApi = "chat-completions" | "responses"
+export type AiProviderApi = "chat-completions" | "responses" | "anthropic-messages"
 
 /** Input modalities are declared per model; endpoint compatibility is enforced by the gateway. */
 export type AiInputModality = "text" | "image" | "audio" | "document"

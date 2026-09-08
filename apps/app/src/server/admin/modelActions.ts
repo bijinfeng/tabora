@@ -1,3 +1,4 @@
+import type { AiProviderApi } from "@tabora/ai-runtime"
 import { validateCloudProviderUrl } from "../ai"
 import { getRuntime } from "../runtime"
 
@@ -11,7 +12,7 @@ export async function createProviderAction(data: {
   label: string
   baseUrl: string
   apiKey: string
-  api: "chat-completions" | "responses"
+  api: AiProviderApi
 }) {
   await validateCloudProviderUrl(data.baseUrl)
   const { handle } = await getRuntime()
@@ -23,7 +24,7 @@ export async function updateProviderAction(data: {
   label: string
   baseUrl: string
   apiKey?: string
-  api: "chat-completions" | "responses"
+  api: AiProviderApi
 }) {
   await validateCloudProviderUrl(data.baseUrl)
   const { handle } = await getRuntime()
@@ -77,21 +78,32 @@ async function runConnectionTest(modelId: string) {
   try {
     const { model, provider, apiKey } = await handle.aiModels.connectionForModel(modelId)
     await validateCloudProviderUrl(provider.baseUrl)
+    const api = provider.api ?? "chat-completions"
     const endpoint =
-      (provider.api ?? "chat-completions") === "responses" ? "/responses" : "/chat/completions"
+      api === "responses"
+        ? "/responses"
+        : api === "anthropic-messages"
+          ? "/v1/messages"
+          : "/chat/completions"
     const body =
-      endpoint === "/responses"
+      api === "responses"
         ? {
             model: model.upstreamModelId,
             input: "Reply with OK",
             max_output_tokens: 4,
           }
-        : {
-            model: model.upstreamModelId,
-            messages: [{ role: "user", content: "Reply with OK" }],
-            max_tokens: 4,
-            temperature: 0,
-          }
+        : api === "anthropic-messages"
+          ? {
+              model: model.upstreamModelId,
+              messages: [{ role: "user", content: "Reply with OK" }],
+              max_tokens: 4,
+            }
+          : {
+              model: model.upstreamModelId,
+              messages: [{ role: "user", content: "Reply with OK" }],
+              max_tokens: 4,
+              temperature: 0,
+            }
     const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}${endpoint}`, {
       method: "POST",
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
@@ -164,6 +176,21 @@ export async function discoverProviderModelsAction(id: string) {
   const { provider, apiKey } = await handle.aiModels.connectionForProvider(id)
   try {
     await validateCloudProviderUrl(provider.baseUrl)
+    const api = provider.api ?? "chat-completions"
+
+    // Anthropic API doesn't provide a /models endpoint, return known models
+    if (api === "anthropic-messages") {
+      return {
+        models: [
+          "claude-3-5-sonnet-20241022",
+          "claude-3-5-haiku-20241022",
+          "claude-3-opus-20240229",
+          "claude-3-sonnet-20240229",
+          "claude-3-haiku-20240307",
+        ],
+      }
+    }
+
     const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}/models`, {
       headers: { authorization: `Bearer ${apiKey}` },
       redirect: "error",

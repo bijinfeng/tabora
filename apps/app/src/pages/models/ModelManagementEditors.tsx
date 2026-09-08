@@ -364,13 +364,17 @@ export function ProviderEditorDrawer(props: {
               placeholder="https://api.example.com/v1"
             />
           </Field>
-          <Field label="请求 API" helper="Responses 支持音频与 PDF。">
+          <Field
+            label="请求 API"
+            helper="Responses 支持音频与 PDF；Anthropic Messages 支持 Anthropic 原生格式。"
+          >
             <Select
               value={props.api()}
               onChange={props.setApi}
               options={[
                 { value: "chat-completions", label: "Chat Completions" },
                 { value: "responses", label: "Responses" },
+                { value: "anthropic-messages", label: "Anthropic Messages" },
               ]}
               aria-label="请求 API"
             />

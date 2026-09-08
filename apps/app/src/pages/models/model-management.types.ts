@@ -1,9 +1,10 @@
+import type { AiProviderApi } from "@tabora/ai-runtime"
 import type { BadgeVariant } from "@tabora/ui/badge"
 
 export type ModelManagementView = "models" | "providers"
 export type ResourceStatus = "draft" | "active" | "disabled"
 export type TestState = "idle" | "testing" | "passed" | "failed"
-export type ProviderApi = "chat-completions" | "responses"
+export type ProviderApi = AiProviderApi
 export type ModelInputModality = "text" | "image" | "audio" | "document"
 export type ModelReasoningCapabilities = {
   effort?: boolean
