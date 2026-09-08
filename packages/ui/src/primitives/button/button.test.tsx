@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import * as stylex from "@stylexjs/stylex"
+import Plus from "lucide-solid/icons/plus"
 import { render } from "solid-js/web"
 import { Button, IconButton } from "../../styled/button/button.styled"
 
@@ -279,6 +280,31 @@ describe("IconButton", () => {
     const btn = root.querySelector("button")!
     expect(btn.getAttribute("aria-label")).toBe("删除")
     expect(btn.querySelector("[data-testid='icon']")).toBeTruthy()
+  })
+
+  it("keeps the default Lucide icon size fixed across button sizes", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <>
+          <IconButton aria-label="小按钮" size="sm">
+            <Plus />
+          </IconButton>
+          <IconButton aria-label="大按钮" size="lg">
+            <Plus />
+          </IconButton>
+        </>
+      ),
+      root,
+    )
+
+    const icons = root.querySelectorAll("svg.lucide")
+    expect(icons).toHaveLength(2)
+    icons.forEach((icon) => {
+      expect(icon.getAttribute("width")).toBe("16")
+      expect(icon.getAttribute("height")).toBe("16")
+    })
   })
 
   it("supports all variants including primary, subtle and danger-subtle", () => {

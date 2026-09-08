@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex"
+import { LucideProvider } from "lucide-solid"
 import type { Component, JSX } from "solid-js"
 
 import { color, control, font, motion, radius } from "@tabora/theme/tokens.stylex"
@@ -240,18 +241,26 @@ const styles = stylex.create({
   },
   iconSm: {
     height: control.sm,
+    paddingBlock: 0,
+    paddingInline: 0,
     width: control.sm,
   },
   iconMini: {
     height: control.sm,
+    paddingBlock: 0,
+    paddingInline: 0,
     width: control.sm,
   },
   iconMd: {
     height: control.md,
+    paddingBlock: 0,
+    paddingInline: 0,
     width: control.md,
   },
   iconLg: {
     height: control.lg,
+    paddingBlock: 0,
+    paddingInline: 0,
     width: control.lg,
   },
   iconRound: {
@@ -393,7 +402,13 @@ export function IconButton(props: IconButtonProps) {
       props.xstyle,
     )
 
-  return <HeadlessIconButton {...props} class={attrs().class} style={props.style} />
+  return (
+    <HeadlessIconButton {...props} class={attrs().class} style={props.style}>
+      <LucideProvider size={16} strokeWidth={2}>
+        {props.children}
+      </LucideProvider>
+    </HeadlessIconButton>
+  )
 }
 
 export type ButtonVariant = HeadlessButtonProps["variant"]
