@@ -46,6 +46,8 @@ export function useFormContext<TFormData = any>() {
 export type FormLayout = "vertical" | "inline"
 
 export type FormProps<TFormData> = {
+  /** Associates the form with submit controls rendered outside the form element. */
+  id?: string | undefined
   defaultValues?: Partial<TFormData> | undefined
   onSubmit?:
     | ((values: TFormData, formApi: SimpleFormApi<TFormData>) => void | Promise<void>)
@@ -73,7 +75,13 @@ export function Form<TFormData extends Record<string, any>>(props: FormProps<TFo
 
   return (
     <FormContext.Provider value={form}>
-      <form onSubmit={handleSubmit} class={props.class} style={props.style} novalidate>
+      <form
+        id={props.id}
+        onSubmit={handleSubmit}
+        class={props.class}
+        style={props.style}
+        novalidate
+      >
         {typeof props.children === "function" ? props.children(form) : props.children}
       </form>
     </FormContext.Provider>

@@ -540,11 +540,16 @@ function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
       })
       continue
     }
-    const normalized = parseChatMessageContent(anchor.content, role)
+    const hasToolCalls = Array.isArray(anchor.toolCalls)
+    const normalized =
+      role === "assistant" && anchor.content === undefined && hasToolCalls
+        ? { text: "", mediaChars: 0 }
+        : parseChatMessageContent(anchor.content, role)
     if (
       !normalized.text.trim() &&
       (normalized.parts?.length ?? 0) === 0 &&
-      (normalized.thinking?.length ?? 0) === 0
+      (normalized.thinking?.length ?? 0) === 0 &&
+      !hasToolCalls
     )
       rejectRequest("Invalid AI chat message content")
     if (normalized.text.length > MAX_CHAT_MESSAGE_CHARS) {

@@ -54,6 +54,18 @@ describe("Form", () => {
     cleanup()
   })
 
+  it("forwards an id so submit controls outside the form can target it", () => {
+    const { root, cleanup } = mount(() => (
+      <Form<LoginFormData> id="external-submit-form" defaultValues={{ email: "", password: "" }}>
+        {() => <span>内容</span>}
+      </Form>
+    ))
+
+    expect(root.querySelector("form")?.id).toBe("external-submit-form")
+
+    cleanup()
+  })
+
   it("submits values when every field passes validation", async () => {
     const onSubmit = vi.fn()
     const { root, cleanup } = mount(() => (

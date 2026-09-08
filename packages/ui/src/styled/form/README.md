@@ -116,14 +116,15 @@ function LoginPage() {
 
 ### Form Props
 
-| 属性          | 类型                                                                           | 默认值       | 说明                 |
-| ------------- | ------------------------------------------------------------------------------ | ------------ | -------------------- |
-| defaultValues | `Partial<TFormData>`                                                           | -            | 表单默认值           |
-| onSubmit      | `(values: TFormData, form: SimpleFormApi<TFormData>) => void \| Promise<void>` | -            | 校验通过后的提交回调 |
-| layout        | `'vertical' \| 'inline'`                                                       | `'vertical'` | 表单布局             |
-| class         | `string`                                                                       | -            | 自定义类名           |
-| xstyle        | `StyleXStyles`                                                                 | -            | StyleX 样式          |
-| children      | `JSX.Element \| ((form: SimpleFormApi<TFormData>) => JSX.Element)`             | -            | 子元素或渲染函数     |
+| 属性          | 类型                                                                           | 默认值       | 说明                                                            |
+| ------------- | ------------------------------------------------------------------------------ | ------------ | --------------------------------------------------------------- |
+| id            | `string`                                                                       | -            | 原生 `<form>` 的 id，可供表单外部的提交按钮通过 `form` 属性关联 |
+| defaultValues | `Partial<TFormData>`                                                           | -            | 表单默认值                                                      |
+| onSubmit      | `(values: TFormData, form: SimpleFormApi<TFormData>) => void \| Promise<void>` | -            | 校验通过后的提交回调                                            |
+| layout        | `'vertical' \| 'inline'`                                                       | `'vertical'` | 表单布局                                                        |
+| class         | `string`                                                                       | -            | 自定义类名                                                      |
+| xstyle        | `StyleXStyles`                                                                 | -            | StyleX 样式                                                     |
+| children      | `JSX.Element \| ((form: SimpleFormApi<TFormData>) => JSX.Element)`             | -            | 子元素或渲染函数                                                |
 
 ### Form.Item Props
 
