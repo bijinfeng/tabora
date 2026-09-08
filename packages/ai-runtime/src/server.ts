@@ -118,11 +118,15 @@ function createChatOptions(
     // Chat Completions-compatible reasoning APIs commonly use this legacy key.
     modelOptions.reasoning_effort = request.reasoningEffort
   }
+  const api = provider.api ?? "chat-completions"
+  // TanStack adapter only supports "chat-completions" and "responses"
+  // Map anthropic-messages to chat-completions for the adapter layer
+  const adapterApi = api === "anthropic-messages" ? "chat-completions" : api
   return {
     adapter: openaiCompatibleText(provider.model, {
       apiKey: provider.apiKey,
       baseURL: provider.baseUrl,
-      api: provider.api ?? "chat-completions",
+      api: adapterApi,
       fetch(input, init) {
         return fetch(input, { ...init, redirect: "error" })
       },
@@ -147,12 +151,16 @@ function createChatOptions(
 
 const CHAT_COMPLETIONS_MODALITIES = new Set<AiInputModality>(["text", "image"])
 const RESPONSES_MODALITIES = new Set<AiInputModality>(["text", "image", "audio", "document"])
+const ANTHROPIC_MESSAGES_MODALITIES = new Set<AiInputModality>(["text", "image"])
 
 function allowedModalities(provider: AiCustomProviderConfig): Set<AiInputModality> {
+  const api = provider.api ?? "chat-completions"
   const adapterModalities =
-    (provider.api ?? "chat-completions") === "responses"
+    api === "responses"
       ? RESPONSES_MODALITIES
-      : CHAT_COMPLETIONS_MODALITIES
+      : api === "anthropic-messages"
+        ? ANTHROPIC_MESSAGES_MODALITIES
+        : CHAT_COMPLETIONS_MODALITIES
   const configured = provider.inputModalities ?? ["text", "image"]
   return new Set(configured.filter((modality) => adapterModalities.has(modality)))
 }
@@ -276,7 +284,11 @@ function parseProviderSelection(input: Record<string, unknown>): AiProviderSelec
       throw new AiRuntimeError("ai_not_configured", "Custom AI provider is not configured")
     }
     const api: AiProviderApi | undefined =
-      config.api === "chat-completions" || config.api === "responses" ? config.api : undefined
+      config.api === "chat-completions" ||
+      config.api === "responses" ||
+      config.api === "anthropic-messages"
+        ? config.api
+        : undefined
     if (config.api !== undefined && !api) rejectRequest("Invalid AI provider API")
     const inputModalities = config.inputModalities
     if (

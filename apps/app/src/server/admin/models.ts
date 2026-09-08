@@ -8,7 +8,7 @@ const providerIdSchema = z
   .trim()
   .regex(/^[a-z0-9-]{2,40}$/)
 const resourceIdSchema = z.string().min(1).max(201)
-const providerApiSchema = z.enum(["chat-completions", "responses"])
+const providerApiSchema = z.enum(["chat-completions", "responses", "anthropic-messages"])
 const inputModalitiesSchema = z
   .array(z.enum(["text", "image", "audio", "document"]))
   .min(1)

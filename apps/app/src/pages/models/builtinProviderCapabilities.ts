@@ -124,6 +124,21 @@ export const BUILTIN_PROVIDER_PRESETS: BuiltinProviderPreset[] = [
     api: "chat-completions",
     models: [],
   },
+  {
+    id: "anthropic",
+    label: "Anthropic",
+    baseUrl: "https://api.anthropic.com/v1",
+    api: "anthropic-messages",
+    models: [
+      {
+        id: "claude-3-5-sonnet-20241022",
+        inputModalities: ["text", "image"],
+        reasoning: { effort: true, summary: true },
+      },
+      { id: "claude-3-5-haiku-20241022", inputModalities: ["text", "image"] },
+      { id: "claude-3-opus-20240229", inputModalities: ["text", "image"] },
+    ],
+  },
 ]
 
 function builtinProviderPresetFor(provider: Pick<AdminAiProvider, "id" | "baseUrl" | "api">) {

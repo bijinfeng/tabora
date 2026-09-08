@@ -15,6 +15,7 @@ import type {
   SettingsAiInputModality,
   SettingsAiSettings,
   SettingsPanelViewProps,
+  SettingsAiProviderApi,
 } from "@tabora/plugin-api/sdk"
 
 import { SettingsGroup } from "./settings-workspace.shared"
@@ -22,7 +23,7 @@ import { aiDialogStyles } from "./settings-workspace.ai.stylex"
 import { styles } from "./styles"
 
 type ProviderMode = SettingsAiSettings["activeProvider"]
-type ProviderApi = "chat-completions" | "responses"
+type ProviderApi = SettingsAiProviderApi
 type ProviderFormValues = {
   name: string
   baseUrl: string
@@ -224,7 +225,9 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
 
   function setProviderApi(api: ProviderApi) {
     setFormApi(api)
-    if (api === "chat-completions") setFormInputModalities(["text", "image"])
+    if (api === "chat-completions" || api === "anthropic-messages") {
+      setFormInputModalities(["text", "image"])
+    }
   }
 
   async function fetchModels() {
@@ -534,6 +537,10 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
                             label: "Chat Completions (/v1/chat/completions)",
                           },
                           { value: "responses", label: "Responses (/v1/responses)" },
+                          {
+                            value: "anthropic-messages",
+                            label: "Anthropic Messages (/v1/messages)",
+                          },
                         ]}
                         aria-label="API 格式"
                       />

@@ -7,6 +7,7 @@ import type {
   SettingsAiReasoningCapabilities,
   SettingsAiSettings,
   SettingsAiInputModality,
+  SettingsAiProviderApi,
 } from "@tabora/plugin-api"
 
 import type { AuthStorage } from "./authStorage"
@@ -15,7 +16,7 @@ export type LocalAiProviderConfig = {
   baseUrl: string
   apiKey: string
   model: string
-  api?: "chat-completions" | "responses"
+  api?: SettingsAiProviderApi
   inputModalities?: SettingsAiInputModality[]
   reasoning?: SettingsAiReasoningCapabilities
 }
@@ -165,7 +166,9 @@ export function createLocalAiSettingsService(options: {
           : typeof custom.model === "string" && custom.model
             ? [custom.model]
             : [],
-        ...(custom.api === "chat-completions" || custom.api === "responses"
+        ...(custom.api === "chat-completions" ||
+        custom.api === "responses" ||
+        custom.api === "anthropic-messages"
           ? { api: custom.api }
           : {}),
         ...(customModalities ? { inputModalities: customModalities } : {}),

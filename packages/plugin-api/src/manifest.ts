@@ -318,6 +318,7 @@ export type SettingsHostReadId =
   | "ai.settings.read"
 
 export type SettingsAiInputModality = "text" | "image" | "audio" | "document"
+export type SettingsAiProviderApi = "chat-completions" | "responses" | "anthropic-messages"
 
 /** Explicit model capability; clients must not infer it from a model identifier. */
 export type SettingsAiReasoningCapabilities = {
@@ -353,7 +354,7 @@ export type SettingsAiSettings = {
     model: string
     models?: string[]
     /** Legacy custom settings use the historic Chat Completions text/image contract. */
-    api?: "chat-completions" | "responses"
+    api?: SettingsAiProviderApi
     inputModalities?: SettingsAiInputModality[]
     reasoning?: SettingsAiReasoningCapabilities
     apiKeyConfigured: boolean
@@ -371,7 +372,7 @@ export type SettingsAiSettingsUpdate = {
     baseUrl: string
     model: string
     models?: string[]
-    api?: "chat-completions" | "responses"
+    api?: SettingsAiProviderApi
     inputModalities?: SettingsAiInputModality[]
     reasoning?: SettingsAiReasoningCapabilities
     /** A missing key preserves the current local secret; it is never read back. */
