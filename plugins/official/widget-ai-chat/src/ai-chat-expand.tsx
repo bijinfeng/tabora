@@ -116,6 +116,7 @@ export function AiChatExpand(props: WidgetViewProps) {
   const [contextText, setContextText] = createSignal("")
   const [attachments, setAttachments] = createSignal<File[]>([])
   const [copiedMessageId, setCopiedMessageId] = createSignal<string | null>(null)
+  const [pendingModelId, setPendingModelId] = createSignal<string | null>(null)
   const [contextDetailsOpen, setContextDetailsOpen] = createSignal(false)
   let attachmentInput: HTMLInputElement | undefined
   let contextProgressRef: SVGCircleElement | undefined
@@ -165,7 +166,7 @@ export function AiChatExpand(props: WidgetViewProps) {
     ]
   }
   const modelChoices = () => modelGroups().flatMap((group) => group.items)
-  const activeModelId = () => activeConversation()?.modelId || defaultModelId()
+  const activeModelId = () => activeConversation()?.modelId || pendingModelId() || defaultModelId()
   const activeModelLabel = () => {
     const id = activeModelId()
     return modelChoices().find((model) => model.id === id)?.label ?? id ?? "默认模型"
@@ -188,7 +189,12 @@ export function AiChatExpand(props: WidgetViewProps) {
   }
 
   const pickModel = (id: string) => {
-    updateActiveOptions({ modelId: id === defaultModelId() ? undefined : id })
+    const modelId = id === defaultModelId() ? "" : id
+    setPendingModelId(modelId)
+    if (session.activeId()) {
+      updateActiveOptions({ modelId: modelId || undefined })
+      setPendingModelId(null)
+    }
   }
   const pickReasoning = (value: AiChatReasoningEffort | undefined) => {
     updateActiveOptions({ reasoningEffort: value })
@@ -278,6 +284,11 @@ export function AiChatExpand(props: WidgetViewProps) {
       return
     }
     if (!session.activeId()) session.createConversation()
+    const selectedModelId = pendingModelId()
+    if (selectedModelId !== null) {
+      updateActiveOptions({ modelId: selectedModelId || undefined })
+      setPendingModelId(null)
+    }
     const conversationId = session.activeId()
     if (!conversationId) return
     nearBottom = true

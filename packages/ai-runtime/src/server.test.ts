@@ -365,6 +365,31 @@ describe("AI gateway request contract", () => {
     ])
   })
 
+  it("accepts assistant tool-call anchors without text content", () => {
+    const parsed = parseAiGatewayRequest({
+      messages: [
+        {
+          id: "a1",
+          role: "assistant",
+          toolCalls: [
+            {
+              id: "call-1",
+              type: "function",
+              function: { name: "read_attachment", arguments: "{}" },
+            },
+          ],
+        },
+        { id: "u1", role: "user", content: "继续" },
+      ],
+      forwardedProps: { provider: "builtin", modelId: "platform-text" },
+    })
+    expect(parsed.messages?.[0]).toMatchObject({
+      role: "assistant",
+      text: "",
+      toolCalls: [{ id: "call-1" }],
+    })
+  })
+
   it("enforces optional gateway budgets and records estimated usage", async () => {
     const usageTracker = createAiUsageTracker(() => new Date("2026-01-01T00:00:00.000Z"))
     const gateway = createTanstackAiGateway({

@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import { Button } from "@tabora/ui/button"
 import { Checkbox } from "@tabora/ui/checkbox"
 import { Dialog } from "@tabora/ui/dialog"
-import { Field } from "@tabora/ui/field"
+import { Form } from "@tabora/ui/form"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
@@ -23,6 +23,12 @@ import { styles } from "./styles"
 
 type ProviderMode = SettingsAiSettings["activeProvider"]
 type ProviderApi = "chat-completions" | "responses"
+type ProviderFormValues = {
+  name: string
+  baseUrl: string
+  apiKey: string
+  api: ProviderApi
+}
 
 const CUSTOM_MODALITIES: Array<{ value: SettingsAiInputModality; label: string }> = [
   { value: "text", label: "文本" },
@@ -59,6 +65,7 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
   const [fetchedModels, setFetchedModels] = createSignal<string[]>([])
   const [fetchingModels, setFetchingModels] = createSignal(false)
   const [modelFetchError, setModelFetchError] = createSignal<string | undefined>(undefined)
+  const [formError, setFormError] = createSignal<string | undefined>(undefined)
 
   const view = () => settings() ?? fallback()
   const canCustom = () => (view().supportedProviders ?? []).includes("custom")
@@ -189,6 +196,7 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
     setConfiguredModels(editing ? customModels() : [])
     setFetchedModels([])
     setModelFetchError(undefined)
+    setFormError(undefined)
     setError(undefined)
     setDialogOpen(true)
   }
@@ -196,16 +204,19 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
   function addModel(model: string) {
     const normalized = model.trim()
     if (!normalized) return
+    setFormError(undefined)
     setConfiguredModels((models) =>
       models.includes(normalized) ? models : [...models, normalized],
     )
   }
 
   function removeModel(model: string) {
+    setFormError(undefined)
     setConfiguredModels((models) => models.filter((item) => item !== model))
   }
 
   function setInputModality(modality: SettingsAiInputModality, checked: boolean) {
+    setFormError(undefined)
     setFormInputModalities((current) =>
       checked ? [...current, modality] : current.filter((candidate) => candidate !== modality),
     )
@@ -260,28 +271,43 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
     }
   }
 
-  async function saveCustom() {
+  function validateBaseUrl(value: string) {
+    const normalized = value.trim()
+    if (!normalized) return "请输入 Base URL"
+    try {
+      const url = new URL(normalized)
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return "Base URL 必须使用 http 或 https"
+      }
+    } catch {
+      return "请输入有效的 Base URL"
+    }
+    return undefined
+  }
+
+  async function saveCustom(values: ProviderFormValues) {
     const current = view()
     const models = configuredModels()
-    if (!formProviderName().trim() || !models.length || !formBaseUrl().trim()) {
-      setError("请填写名称、Base URL 并至少添加一个模型")
+    setFormError(undefined)
+    if (!models.length) {
+      setFormError("请至少添加一个模型")
       return
     }
     if (!formInputModalities().includes("text")) {
-      setError("模型必须支持文本输入")
+      setFormError("模型必须支持文本输入")
       return
     }
     const ok = await persist({
       activeProvider: "custom",
       builtinModelId: current.builtin.modelId,
       custom: {
-        name: formProviderName().trim(),
-        baseUrl: formBaseUrl().trim(),
+        name: values.name.trim(),
+        baseUrl: values.baseUrl.trim(),
         model: models[0]!,
         models,
-        api: formApi(),
+        api: values.api,
         inputModalities: formInputModalities(),
-        ...(formApiKey() ? { apiKey: formApiKey() } : {}),
+        ...(values.apiKey.trim() ? { apiKey: values.apiKey.trim() } : {}),
       },
     })
     if (ok) setDialogOpen(false)
@@ -402,156 +428,228 @@ export function AiSettingsPanel(props: SettingsPanelViewProps) {
               <Info size={14} />
               添加供应商前，请至少添加一个模型。
             </span>
-            <Button variant="primary" loading={saving()} onClick={saveCustom}>
+            <Button type="submit" form="custom-provider-form" variant="primary" loading={saving()}>
               {editingProvider() ? "保存修改" : "添加供应商"}
             </Button>
           </div>
         }
       >
-        <div {...stylex.attrs(aiDialogStyles.body)}>
-          <p {...stylex.attrs(aiDialogStyles.description)}>
-            配置一个完全自定义的 API 端点和初始模型。
-          </p>
-          <div {...stylex.attrs(aiDialogStyles.fields)}>
-            <Field label="名称" htmlFor="custom-provider-name">
-              <Input
-                id="custom-provider-name"
-                value={formProviderName()}
-                onInput={setFormProviderName}
-                placeholder="如：智谱 GLM"
-                autocomplete="off"
-              />
-            </Field>
-            <Field label="Base URL" htmlFor="custom-provider-url">
-              <Input
-                id="custom-provider-url"
-                value={formBaseUrl()}
-                onInput={setFormBaseUrl}
-                placeholder="https://api.example.com/v1"
-                autocomplete="url"
-              />
-            </Field>
-            <Field label="API Key" htmlFor="custom-provider-key">
-              <Input
-                id="custom-provider-key"
-                type="password"
-                value={formApiKey()}
-                onInput={setFormApiKey}
-                placeholder={view().custom.apiKeyConfigured ? "已保存，留空沿用" : "输入 API Key"}
-                autocomplete="new-password"
-              />
-            </Field>
-            <Field label="API 格式" htmlFor="custom-provider-format">
-              <Select
-                id="custom-provider-format"
-                value={formApi()}
-                onChange={setProviderApi}
-                options={[
-                  { value: "chat-completions", label: "Chat Completions (/v1/chat/completions)" },
-                  { value: "responses", label: "Responses (/v1/responses)" },
-                ]}
-                aria-label="API 格式"
-              />
-            </Field>
-            <Field
-              label="已验证的输入能力"
-              helper="仅开启已在该 Provider 和模型上验证过的能力；这些能力适用于本配置中的所有模型。"
-            >
-              <div {...stylex.attrs(styles.aiProviderActions)}>
-                <For
-                  each={
-                    formApi() === "responses"
-                      ? CUSTOM_MODALITIES
-                      : CUSTOM_MODALITIES.filter(
-                          (item) => item.value === "text" || item.value === "image",
-                        )
-                  }
-                >
-                  {(item) => (
-                    <Checkbox
-                      checked={formInputModalities().includes(item.value)}
-                      onChange={(checked) => setInputModality(item.value, checked)}
-                      disabled={item.value === "text"}
-                      label={item.label}
-                    />
-                  )}
-                </For>
-              </div>
-            </Field>
-          </div>
-          <div {...stylex.attrs(aiDialogStyles.modelSection)}>
-            <div {...stylex.attrs(aiDialogStyles.sectionHeader)}>
-              <span {...stylex.attrs(aiDialogStyles.sectionLabel)}>模型列表</span>
-              <Button
-                size="sm"
-                variant="secondary"
-                loading={fetchingModels()}
-                onClick={fetchModels}
-              >
-                获取模型
-              </Button>
-            </div>
-            <Show
-              when={configuredModels().length > 0 || fetchedModels().length > 0}
-              fallback={
-                <div {...stylex.attrs(aiDialogStyles.empty)}>
-                  <Info size={15} />
-                  <span>当前没有配置模型，获取后选择要在聊天中使用的模型。</span>
-                </div>
-              }
-            >
-              <div {...stylex.attrs(aiDialogStyles.modelList)}>
-                <For each={fetchedModels()}>
-                  {(model) => (
-                    <div {...stylex.attrs(aiDialogStyles.modelItem)}>
-                      <span>{model}</span>
-                      <Show
-                        when={configuredModels().includes(model)}
-                        fallback={
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            icon={Plus}
-                            onClick={() => addModel(model)}
-                          >
-                            添加
-                          </Button>
+        <Show when={dialogOpen()}>
+          <Form<ProviderFormValues>
+            id="custom-provider-form"
+            defaultValues={{
+              name: formProviderName(),
+              baseUrl: formBaseUrl(),
+              apiKey: formApiKey(),
+              api: formApi(),
+            }}
+            onSubmit={saveCustom}
+          >
+            {() => (
+              <div {...stylex.attrs(aiDialogStyles.body)}>
+                <p {...stylex.attrs(aiDialogStyles.description)}>
+                  配置一个完全自定义的 API 端点和初始模型。
+                </p>
+                <div {...stylex.attrs(aiDialogStyles.fields)}>
+                  <Form.Item
+                    name="name"
+                    label="名称"
+                    htmlFor="custom-provider-name"
+                    required
+                    validators={{
+                      onBlur: ({ value }) => (value.trim() ? undefined : "请输入供应商名称"),
+                      onSubmit: ({ value }) => (value.trim() ? undefined : "请输入供应商名称"),
+                    }}
+                  >
+                    {(field) => (
+                      <Input
+                        id="custom-provider-name"
+                        value={field().state.value}
+                        onInput={(value) => {
+                          field().handleChange(value)
+                          setFormProviderName(value)
+                        }}
+                        onBlur={field().handleBlur}
+                        invalid={field().state.meta.errors.length > 0}
+                        placeholder="如：智谱 GLM"
+                        autocomplete="off"
+                      />
+                    )}
+                  </Form.Item>
+                  <Form.Item
+                    name="baseUrl"
+                    label="Base URL"
+                    htmlFor="custom-provider-url"
+                    required
+                    validators={{
+                      onBlur: ({ value }) => validateBaseUrl(value),
+                      onSubmit: ({ value }) => validateBaseUrl(value),
+                    }}
+                  >
+                    {(field) => (
+                      <Input
+                        id="custom-provider-url"
+                        value={field().state.value}
+                        onInput={(value) => {
+                          field().handleChange(value)
+                          setFormBaseUrl(value)
+                        }}
+                        onBlur={field().handleBlur}
+                        invalid={field().state.meta.errors.length > 0}
+                        placeholder="https://api.example.com/v1"
+                        autocomplete="url"
+                      />
+                    )}
+                  </Form.Item>
+                  <Form.Item name="apiKey" label="API Key" htmlFor="custom-provider-key">
+                    {(field) => (
+                      <Input
+                        id="custom-provider-key"
+                        type="password"
+                        value={field().state.value}
+                        onInput={(value) => {
+                          field().handleChange(value)
+                          setFormApiKey(value)
+                        }}
+                        onBlur={field().handleBlur}
+                        placeholder={
+                          view().custom.apiKeyConfigured ? "已保存，留空沿用" : "输入 API Key"
                         }
-                      >
-                        <button
-                          type="button"
-                          aria-label={`删除模型 ${model}`}
-                          onClick={() => removeModel(model)}
-                          {...stylex.attrs(aiDialogStyles.remove)}
+                        autocomplete="new-password"
+                      />
+                    )}
+                  </Form.Item>
+                  <Form.Item name="api" label="API 格式" htmlFor="custom-provider-format">
+                    {(field) => (
+                      <Select
+                        id="custom-provider-format"
+                        value={field().state.value}
+                        onChange={(value) => {
+                          field().handleChange(value)
+                          setProviderApi(value)
+                        }}
+                        options={[
+                          {
+                            value: "chat-completions",
+                            label: "Chat Completions (/v1/chat/completions)",
+                          },
+                          { value: "responses", label: "Responses (/v1/responses)" },
+                        ]}
+                        aria-label="API 格式"
+                      />
+                    )}
+                  </Form.Item>
+                  <Form.Item
+                    label="已验证的输入能力"
+                    help="仅开启已在该 Provider 和模型上验证过的能力；这些能力适用于本配置中的所有模型。"
+                  >
+                    {() => (
+                      <div {...stylex.attrs(styles.aiProviderActions)}>
+                        <For
+                          each={
+                            formApi() === "responses"
+                              ? CUSTOM_MODALITIES
+                              : CUSTOM_MODALITIES.filter(
+                                  (item) => item.value === "text" || item.value === "image",
+                                )
+                          }
                         >
-                          <X size={14} />
-                        </button>
-                      </Show>
-                    </div>
-                  )}
-                </For>
-                <For each={configuredModels().filter((model) => !fetchedModels().includes(model))}>
-                  {(model) => (
-                    <div {...stylex.attrs(aiDialogStyles.modelItem)}>
-                      <span>{model}</span>
-                      <button
-                        type="button"
-                        aria-label={`删除模型 ${model}`}
-                        onClick={() => removeModel(model)}
-                        {...stylex.attrs(aiDialogStyles.remove)}
+                          {(item) => (
+                            <Checkbox
+                              checked={formInputModalities().includes(item.value)}
+                              onChange={(checked) => setInputModality(item.value, checked)}
+                              disabled={item.value === "text"}
+                              label={item.label}
+                            />
+                          )}
+                        </For>
+                      </div>
+                    )}
+                  </Form.Item>
+                </div>
+                <Show when={formError()}>
+                  {(message) => <InlineError>{message()}</InlineError>}
+                </Show>
+                <div {...stylex.attrs(aiDialogStyles.modelSection)}>
+                  <div {...stylex.attrs(aiDialogStyles.sectionHeader)}>
+                    <span {...stylex.attrs(aiDialogStyles.sectionLabel)}>模型列表</span>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      loading={fetchingModels()}
+                      onClick={fetchModels}
+                    >
+                      获取模型
+                    </Button>
+                  </div>
+                  <Show
+                    when={configuredModels().length > 0 || fetchedModels().length > 0}
+                    fallback={
+                      <div {...stylex.attrs(aiDialogStyles.empty)}>
+                        <Info size={15} />
+                        <span>当前没有配置模型，获取后选择要在聊天中使用的模型。</span>
+                      </div>
+                    }
+                  >
+                    <div {...stylex.attrs(aiDialogStyles.modelList)}>
+                      <For each={fetchedModels()}>
+                        {(model) => (
+                          <div {...stylex.attrs(aiDialogStyles.modelItem)}>
+                            <span>{model}</span>
+                            <Show
+                              when={configuredModels().includes(model)}
+                              fallback={
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  icon={Plus}
+                                  onClick={() => addModel(model)}
+                                >
+                                  添加
+                                </Button>
+                              }
+                            >
+                              <button
+                                type="button"
+                                aria-label={`删除模型 ${model}`}
+                                onClick={() => removeModel(model)}
+                                {...stylex.attrs(aiDialogStyles.remove)}
+                              >
+                                <X size={14} />
+                              </button>
+                            </Show>
+                          </div>
+                        )}
+                      </For>
+                      <For
+                        each={configuredModels().filter(
+                          (model) => !fetchedModels().includes(model),
+                        )}
                       >
-                        <X size={14} />
-                      </button>
+                        {(model) => (
+                          <div {...stylex.attrs(aiDialogStyles.modelItem)}>
+                            <span>{model}</span>
+                            <button
+                              type="button"
+                              aria-label={`删除模型 ${model}`}
+                              onClick={() => removeModel(model)}
+                              {...stylex.attrs(aiDialogStyles.remove)}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </For>
                     </div>
-                  )}
-                </For>
+                  </Show>
+                  <Show when={modelFetchError()}>
+                    {(message) => <InlineError>{message()}</InlineError>}
+                  </Show>
+                </div>
               </div>
-            </Show>
-            <Show when={modelFetchError()}>
-              {(message) => <InlineError>{message()}</InlineError>}
-            </Show>
-          </div>
-        </div>
+            )}
+          </Form>
+        </Show>
       </Dialog>
     </SettingsGroup>
   )
