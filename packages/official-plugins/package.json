@@ -32,6 +32,7 @@
     "@tabora/platform-kernel": "workspace:*",
     "@tabora/plugin-ai-chat": "workspace:*",
     "@tabora/plugin-api": "workspace:*",
+    "@tabora/plugin-docs": "workspace:*",
     "@tabora/plugin-notes": "workspace:*",
     "@tabora/plugin-quick-links": "workspace:*",
     "@tabora/plugin-todo": "workspace:*",
