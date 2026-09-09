@@ -203,6 +203,22 @@ export const testModel = createServerFn({ method: "POST" })
   ])
   .handler(async ({ data }) => (await import("./modelActions")).testModelAction(data.id))
 
+export const testModelDraft = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      providerId: providerIdSchema,
+      upstreamModelId: z.string().trim().min(1).max(160),
+    }),
+  )
+  .middleware([
+    adminAuthMiddleware,
+    auditAdminAction({
+      action: "POST /admin-api/ai-models/test-draft",
+      resourceType: "ai_model",
+    }),
+  ])
+  .handler(async ({ data }) => (await import("./modelActions")).testModelDraftAction(data))
+
 export const testProvider = createServerFn({ method: "POST" })
   .validator(z.object({ id: providerIdSchema }))
   .middleware([

@@ -60,6 +60,23 @@ const styles = stylex.create({
     width: 14,
   },
   label: {},
+  trailing: {
+    color: color.textMuted,
+    flex: "none",
+    fontSize: 12,
+    marginInlineStart: "auto",
+    maxWidth: 150,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  submenuIndicator: {
+    alignItems: "center",
+    color: color.textMuted,
+    display: "flex",
+    flex: "none",
+    marginInlineStart: "auto",
+  },
   kbd: {
     color: color.textSubtle,
     fontFamily: '"SFMono-Regular", Consolas, monospace',
@@ -84,6 +101,8 @@ export function DropdownMenu(props: StyledDropdownMenuProps) {
   const iconCompiled = () => stylex.attrs(styles.icon)
   const checkCompiled = () => stylex.attrs(styles.check)
   const labelCompiled = () => stylex.attrs(sharedStyles.menuLabel, styles.label)
+  const trailingCompiled = () => stylex.attrs(styles.trailing)
+  const submenuIndicatorCompiled = () => stylex.attrs(styles.submenuIndicator)
   const kbdCompiled = () => stylex.attrs(styles.kbd)
 
   return (
@@ -115,6 +134,13 @@ export function DropdownMenu(props: StyledDropdownMenuProps) {
       checkStyle={props.checkStyle}
       labelClass={joinClassNames(labelCompiled().class, props.labelClass)}
       labelStyle={props.labelStyle}
+      trailingClass={joinClassNames(trailingCompiled().class, props.trailingClass)}
+      trailingStyle={props.trailingStyle}
+      submenuIndicatorClass={joinClassNames(
+        submenuIndicatorCompiled().class,
+        props.submenuIndicatorClass,
+      )}
+      submenuIndicatorStyle={props.submenuIndicatorStyle}
       kbdClass={joinClassNames(kbdCompiled().class, props.kbdClass)}
       kbdStyle={props.kbdStyle}
     />

@@ -7,12 +7,15 @@ import type { AiChatAttachmentResource } from "@tabora/plugin-api/sdk"
 import type { UIMessage } from "@tanstack/ai-client"
 import { Button, IconButton } from "@tabora/ui/button"
 import { Drawer } from "@tabora/ui/drawer"
-import type { DropdownMenuTriggerRenderProps } from "@tabora/ui/dropdown-menu"
+import type {
+  DropdownMenuEntry,
+  DropdownMenuItem,
+  DropdownMenuTriggerRenderProps,
+} from "@tabora/ui/dropdown-menu"
 import { DropdownMenu } from "@tabora/ui/dropdown-menu"
 import { EmptyState } from "@tabora/ui/empty-state"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Textarea } from "@tabora/ui/textarea"
-import Brain from "lucide-solid/icons/brain"
 import Cpu from "lucide-solid/icons/cpu"
 import MessageSquare from "lucide-solid/icons/message-square"
 import Paperclip from "lucide-solid/icons/paperclip"
@@ -199,6 +202,60 @@ export function AiChatExpand(props: WidgetViewProps) {
   const pickReasoning = (value: AiChatReasoningEffort | undefined) => {
     updateActiveOptions({ reasoningEffort: value })
   }
+  const modelSubmenu = (): DropdownMenuEntry[] =>
+    modelGroups().map((group) => ({
+      id: group.id,
+      label: group.label,
+      items: group.items.map(
+        (model) =>
+          ({
+            id: model.id,
+            label: model.label,
+            onClick: () => pickModel(model.id),
+            ...(model.id === activeModelId() ? { checked: true } : {}),
+          }) satisfies DropdownMenuItem,
+      ),
+    }))
+  const reasoningSubmenu = (): DropdownMenuEntry[] => [
+    {
+      id: "reasoning-auto",
+      label: "默认",
+      onClick: () => pickReasoning(undefined),
+      ...(activeReasoning() === undefined ? { checked: true } : {}),
+    },
+    { id: "reasoning-separator", label: <></>, separator: true },
+    ...(["low", "medium", "high"] as AiChatReasoningEffort[]).map(
+      (value) =>
+        ({
+          id: `reasoning-${value}`,
+          label: REASONING_LABELS[value],
+          onClick: () => pickReasoning(value),
+          ...(activeReasoning() === value ? { checked: true } : {}),
+        }) satisfies DropdownMenuItem,
+    ),
+  ]
+  const modelAndReasoningMenu = (): DropdownMenuItem[] => [
+    ...(modelChoices().length > 0
+      ? [
+          {
+            id: "model-selector",
+            label: "模型",
+            trailing: activeModelLabel(),
+            submenu: modelSubmenu(),
+          } satisfies DropdownMenuItem,
+        ]
+      : []),
+    ...(activeModelReasoning()?.effort
+      ? [
+          {
+            id: "reasoning-selector",
+            label: "推理等级",
+            trailing: activeReasoning() ? REASONING_LABELS[activeReasoning()!] : "默认",
+            submenu: reasoningSubmenu(),
+          } satisfies DropdownMenuItem,
+        ]
+      : []),
+  ]
   const contextBlocks = (): AiChatContextBlock[] => activeConversation()?.contextBlocks ?? []
   const contextUsage = () => estimateContextUsage(activeConversation(), session.messages(), draft())
   createEffect(() => {
@@ -538,86 +595,55 @@ export function AiChatExpand(props: WidgetViewProps) {
                 </Show>
               </div>
             </div>
-            <Show when={modelChoices().length > 0}>
+            <Show when={modelChoices().length > 0 || activeModelReasoning()?.effort}>
               <DropdownMenu
-                items={modelGroups().map((group) => ({
-                  ...group,
-                  items: group.items.map((model) => ({
-                    ...model,
-                    onClick: () => pickModel(model.id),
-                    ...(model.id === activeModelId() ? { checked: true } : {}),
-                  })),
-                }))}
+                items={modelAndReasoningMenu()}
                 side="top"
                 align="start"
                 triggerAsChild={true}
-                triggerTitle="切换模型"
-                triggerAriaLabel="切换模型"
+                triggerTitle="选择模型和推理等级"
+                triggerAriaLabel="选择模型和推理等级"
               >
                 {(trigger) => (
                   <ComposerChip
                     trigger={trigger}
-                    label={activeModelLabel()}
+                    label={`${activeModelLabel()}${
+                      activeModelReasoning()?.effort
+                        ? ` · ${activeReasoning() ? REASONING_LABELS[activeReasoning()!] : "默认"}`
+                        : ""
+                    }`}
                     icon={<Cpu size={12} />}
-                  />
-                )}
-              </DropdownMenu>
-            </Show>
-            <Show when={activeModelReasoning()?.effort}>
-              <DropdownMenu
-                items={[
-                  {
-                    id: "reasoning-auto",
-                    label: "默认",
-                    onClick: () => pickReasoning(undefined),
-                    ...(activeReasoning() === undefined ? { checked: true } : {}),
-                  },
-                  { id: "reasoning-separator", label: <></>, separator: true },
-                  ...(["low", "medium", "high"] as AiChatReasoningEffort[]).map((value) => ({
-                    id: `reasoning-${value}`,
-                    label: REASONING_LABELS[value],
-                    onClick: () => pickReasoning(value),
-                    ...(activeReasoning() === value ? { checked: true } : {}),
-                  })),
-                ]}
-                side="top"
-                align="start"
-                triggerAsChild={true}
-                triggerTitle="思考强度"
-                triggerAriaLabel="思考强度"
-              >
-                {(trigger) => (
-                  <ComposerChip
-                    trigger={trigger}
-                    label={activeReasoning() ? REASONING_LABELS[activeReasoning()!] : "思考默认"}
-                    icon={<Brain size={12} />}
                   />
                 )}
               </DropdownMenu>
             </Show>
           </div>
           <div {...stylex.attrs(styles.composerRunActions)}>
-            <IconButton
-              size="md"
-              variant="primary"
-              xstyle={styles.composerSendButton}
-              aria-label="发送"
-              title={session.isLoading() ? "加入发送队列" : "发送"}
-              disabled={!draft().trim() && attachments().length === 0}
-              onClick={() => void send()}
+            <Show
+              when={!session.isLoading()}
+              fallback={
+                <IconButton
+                  size="md"
+                  variant="secondary"
+                  xstyle={styles.composerStopButton}
+                  aria-label="停止生成"
+                  title="停止生成并取消已排队消息"
+                  onClick={() => session.stop()}
+                >
+                  <Square size={14} />
+                </IconButton>
+              }
             >
-              <Send size={16} />
-            </IconButton>
-            <Show when={session.isLoading()}>
               <IconButton
                 size="md"
-                variant="secondary"
+                variant="primary"
                 xstyle={styles.composerSendButton}
-                aria-label="停止生成"
-                title="停止生成并取消已排队消息"
-                onClick={() => session.stop()}
+                aria-label="发送"
+                title="发送"
+                disabled={!draft().trim() && attachments().length === 0}
+                onClick={() => void send()}
               >
-                <Square size={14} />
+                <Send size={16} />
               </IconButton>
             </Show>
           </div>

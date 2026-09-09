@@ -16,6 +16,7 @@ import {
   setModelStatus,
   setProviderStatus,
   testModel,
+  testModelDraft,
   testProvider,
   updateModel,
   updateProvider,
@@ -193,11 +194,30 @@ export function ModelManagementPage() {
   }
 
   async function testNewModel() {
-    const id = await saveModel()
-    if (!id) return
     setModelTest("testing")
+    if (savedModelId()) {
+      setModelTest(
+        (await execute(() => testModel({ data: { id: savedModelId()! } }), "模型测试通过"))
+          ? "passed"
+          : "idle",
+      )
+      return
+    }
+    if (!modelProvider() || !upstreamModelId().trim()) {
+      setModelTest("idle")
+      setModelError("请选择 Provider 并填写上游模型名")
+      return
+    }
     setModelTest(
-      (await execute(() => testModel({ data: { id } }), "模型测试通过")) ? "passed" : "idle",
+      (await execute(
+        () =>
+          testModelDraft({
+            data: { providerId: modelProvider(), upstreamModelId: upstreamModelId().trim() },
+          }),
+        "模型测试通过",
+      ))
+        ? "passed"
+        : "idle",
     )
   }
 
@@ -222,11 +242,20 @@ export function ModelManagementPage() {
   }
 
   async function publishNewModel() {
+    const wasUnsaved = savedModelId() === null
     const id = await saveModel()
     if (!id) return
     if (modelTest() !== "passed") {
       setModelError("请先完成连接测试，再上线模型")
       return
+    }
+    if (wasUnsaved) {
+      setModelTest("testing")
+      if (!(await execute(() => testModel({ data: { id } }), "模型测试通过"))) {
+        setModelTest("idle")
+        return
+      }
+      setModelTest("passed")
     }
     if (await execute(() => setModelStatus({ data: { id, status: "active" } }), "模型已上线")) {
       setModelOpen(false)

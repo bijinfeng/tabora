@@ -86,17 +86,7 @@ async function runConnectionTest(modelId: string) {
   try {
     const { model, provider, apiKey } = await handle.aiModels.connectionForModel(modelId)
     await validateCloudProviderUrl(provider.baseUrl)
-    await createTanstackAiGateway().generate({
-      provider: "custom",
-      custom: {
-        baseUrl: provider.baseUrl,
-        apiKey,
-        model: model.upstreamModelId,
-        api: provider.api ?? "chat-completions",
-      },
-      prompt: "Reply with OK",
-      maxOutputTokens: 4,
-    })
+    await testProviderModelConnection(provider, apiKey, model.upstreamModelId)
     await handle.aiModels.recordTest(modelId, { passed: true, latencyMs: Date.now() - startedAt })
   } catch (error) {
     const failure = connectionFailureMessage(error)
@@ -104,6 +94,35 @@ async function runConnectionTest(modelId: string) {
       .recordTest(modelId, { passed: false, error: failure })
       .catch(() => undefined)
     throw new Error(failure)
+  }
+}
+
+async function testProviderModelConnection(
+  provider: { baseUrl: string; api?: AiProviderApi | null },
+  apiKey: string,
+  model: string,
+) {
+  await createTanstackAiGateway().generate({
+    provider: "custom",
+    custom: {
+      baseUrl: provider.baseUrl,
+      apiKey,
+      model,
+      api: provider.api ?? "chat-completions",
+    },
+    prompt: "Reply with OK",
+    maxOutputTokens: 4,
+  })
+}
+
+export async function testModelDraftAction(data: { providerId: string; upstreamModelId: string }) {
+  const { handle } = await getRuntime()
+  try {
+    const { provider, apiKey } = await handle.aiModels.connectionForProvider(data.providerId)
+    await validateCloudProviderUrl(provider.baseUrl)
+    await testProviderModelConnection(provider, apiKey, data.upstreamModelId)
+  } catch (error) {
+    throw new Error(connectionFailureMessage(error))
   }
 }
 
@@ -117,22 +136,11 @@ export async function testProviderAction(id: string) {
   try {
     const { provider, apiKey } = await handle.aiModels.connectionForProvider(id)
     await validateCloudProviderUrl(provider.baseUrl)
-    const api = provider.api ?? "chat-completions"
     const configuredModel = (await handle.aiModels.list()).models.find(
       (model) => model.providerId === id && model.status !== "deleted",
     )
     if (!configuredModel) throw new Error("请先配置至少一个模型后再测试 Provider")
-    await createTanstackAiGateway().generate({
-      provider: "custom",
-      custom: {
-        baseUrl: provider.baseUrl,
-        apiKey,
-        model: configuredModel.upstreamModelId,
-        api,
-      },
-      prompt: "Reply with OK",
-      maxOutputTokens: 4,
-    })
+    await testProviderModelConnection(provider, apiKey, configuredModel.upstreamModelId)
     await handle.aiModels.recordProviderTest(id, {
       passed: true,
       latencyMs: Date.now() - startedAt,

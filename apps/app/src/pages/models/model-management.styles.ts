@@ -108,6 +108,10 @@ export const styles = stylex.create({
     gridTemplateColumns: "minmax(0, 1fr) auto",
   },
   modelIdSelect: { minWidth: 0, width: "100%" },
+  editorPanelNoScroll: {
+    maxHeight: "calc(100vh - 32px)",
+    overflowY: "visible",
+  },
   idPreview: {
     alignItems: "center",
     backgroundColor: color.surfaceSoft,

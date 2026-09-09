@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import * as stylex from "@stylexjs/stylex"
 import Plus from "lucide-solid/icons/plus"
+import { createSignal } from "solid-js"
 import { render } from "solid-js/web"
 import { Button, IconButton } from "../../styled/button/button.styled"
 
@@ -368,5 +369,25 @@ describe("IconButton", () => {
     expect(root.querySelector('button[data-shape="default"]')).not.toBeNull()
     expect(root.querySelector('button[data-shape="round"]')).not.toBeNull()
     expect(root.querySelector('button[data-shape="circle"]')).not.toBeNull()
+  })
+
+  it("updates disabled styling when the disabled prop changes", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const [disabled, setDisabled] = createSignal(true)
+    render(
+      () => (
+        <IconButton aria-label="动态按钮" variant="primary" disabled={disabled()}>
+          <span>发送</span>
+        </IconButton>
+      ),
+      root,
+    )
+
+    const button = root.querySelector("button")!
+    const disabledClass = button.className
+    setDisabled(false)
+    await vi.waitFor(() => expect(button.disabled).toBe(false))
+    expect(button.className).not.toBe(disabledClass)
   })
 })

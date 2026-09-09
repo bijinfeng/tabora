@@ -170,6 +170,7 @@ export function ModelEditorDrawer(props: {
       onCancel={props.onClose}
       title={props.editing ? "编辑模型" : "新增模型"}
       width="640px"
+      panelXstyle={styles.editorPanelNoScroll}
       footer={
         <ModelEditorFooter
           onClose={props.onClose}
@@ -262,10 +263,10 @@ export function ModelEditorDrawer(props: {
             />
           </Field>
           <Field
-            label={builtinCapabilities() ? "内置输入能力" : "已验证的输入能力"}
+            label={builtinCapabilities() ? "输入能力（内置默认）" : "已验证的输入能力"}
             helper={
               builtinCapabilities()
-                ? "由内置模型目录维护；未知模型仍需按实际验证结果配置。"
+                ? "内置目录提供默认值，可按实际情况修改；文本输入始终必选。"
                 : "未知模型需按实际验证结果配置。"
             }
           >
@@ -275,7 +276,7 @@ export function ModelEditorDrawer(props: {
                   <Checkbox
                     checked={props.inputModalities().includes(modality)}
                     onChange={(checked) => setModality(modality, checked)}
-                    disabled={isSaved() || modality === "text" || Boolean(builtinCapabilities())}
+                    disabled={modality === "text"}
                     label={MODALITY_LABELS[modality]}
                   />
                 )}
@@ -284,9 +285,11 @@ export function ModelEditorDrawer(props: {
           </Field>
           <Show when={supportsReasoning()}>
             <Field
-              label={builtinCapabilities() ? "内置推理能力" : "已验证的推理能力"}
+              label={builtinCapabilities() ? "推理能力（内置默认）" : "已验证的推理能力"}
               helper={
-                builtinCapabilities() ? "由内置模型目录维护。" : "仅在 Provider 已确认支持时启用。"
+                builtinCapabilities()
+                  ? "内置目录提供默认值，可按实际情况修改。"
+                  : "仅在 Provider 已确认支持时启用。"
               }
             >
               <Checkbox
@@ -296,7 +299,7 @@ export function ModelEditorDrawer(props: {
                     checked ? { effort: true, summary: true, continuation: true } : undefined,
                   )
                 }
-                disabled={props.loading || Boolean(builtinCapabilities())}
+                disabled={props.loading}
                 label={
                   props.reasoning()?.summary ? "支持推理摘要、思考强度与会话续传" : "支持思考强度"
                 }
@@ -345,6 +348,7 @@ export function ProviderEditorDrawer(props: {
         onCancel={props.onClose}
         title={props.editing ? "配置 Provider" : "新增 Provider"}
         width="520px"
+        panelXstyle={styles.editorPanelNoScroll}
         footer={
           <div {...stylex.attrs(styles.footer)}>
             <Button variant="secondary" onClick={props.onClose}>
