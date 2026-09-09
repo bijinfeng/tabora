@@ -53,6 +53,15 @@ function isUnsafeAddress(value: string): boolean {
   return false
 }
 
+function isTrustedPrivateHost(hostname: string): boolean {
+  const trustedHosts = (process.env.TABORA_AI_TRUSTED_PRIVATE_HOSTS ?? "")
+    .split(",")
+    .map((host) => host.trim().toLowerCase())
+    .filter(Boolean)
+  const normalized = hostname.toLowerCase()
+  return trustedHosts.some((host) => normalized === host)
+}
+
 /** Custom cloud providers are user-supplied but must never turn the gateway into an SSRF proxy. */
 export async function validateCloudProviderUrl(baseUrl: string): Promise<void> {
   let url: URL
@@ -61,12 +70,21 @@ export async function validateCloudProviderUrl(baseUrl: string): Promise<void> {
   } catch {
     throw new AiRuntimeError("ai_request_rejected", "Invalid custom AI base URL")
   }
-  if (url.protocol !== "https:" || url.username || url.password || isUnsafeAddress(url.hostname)) {
+  const trustedPrivateHost = isTrustedPrivateHost(url.hostname)
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    (isUnsafeAddress(url.hostname) && !trustedPrivateHost)
+  ) {
     throw new AiRuntimeError("ai_request_rejected", "Custom AI base URL is not allowed")
   }
   try {
     const addresses = await lookup(url.hostname, { all: true })
-    if (!addresses.length || addresses.some((address) => isUnsafeAddress(address.address))) {
+    if (
+      !addresses.length ||
+      (!trustedPrivateHost && addresses.some((address) => isUnsafeAddress(address.address)))
+    ) {
       throw new AiRuntimeError("ai_request_rejected", "Custom AI base URL is not allowed")
     }
   } catch (error) {

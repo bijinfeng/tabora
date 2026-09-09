@@ -6,6 +6,7 @@ import {
   cloudAiStreamResponse,
   customAiModelsResponse,
   createCloudAiGateway,
+  validateCloudProviderUrl,
 } from "./ai"
 
 const platformModels = [
@@ -185,6 +186,15 @@ describe("cloud AI HTTP contract", () => {
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toMatchObject({ error: { code: "ai_request_rejected" } })
     expect(getSession).not.toHaveBeenCalled()
+  })
+
+  it("allows a private provider host only when explicitly trusted", async () => {
+    vi.stubEnv("TABORA_AI_TRUSTED_PRIVATE_HOSTS", "127.0.0.1")
+    try {
+      await expect(validateCloudProviderUrl("https://127.0.0.1/v1")).resolves.toBeUndefined()
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   it("prevents a public custom provider from following a redirect to a private target", async () => {

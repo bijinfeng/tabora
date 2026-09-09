@@ -22,6 +22,7 @@
   "dependencies": {
     "@tabora/plugin-api": "workspace:*",
     "@tanstack/ai": "catalog:ai",
+    "@tanstack/ai-anthropic": "catalog:ai",
     "@tanstack/ai-client": "catalog:ai",
     "@tanstack/ai-openai": "catalog:ai",
     "fflate": "^0.8.3"

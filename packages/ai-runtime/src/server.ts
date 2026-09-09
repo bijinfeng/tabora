@@ -1,4 +1,10 @@
-import { chat, toServerSentEventsResponse, type AnyServerTool } from "@tanstack/ai"
+import {
+  chat,
+  toServerSentEventsResponse,
+  type AnyServerTool,
+  type AnyTextAdapter,
+} from "@tanstack/ai"
+import { createAnthropicChat } from "@tanstack/ai-anthropic"
 import type { StreamChunk } from "@tanstack/ai/client"
 import { openaiCompatibleText } from "@tanstack/ai-openai/compatible"
 import { AiRuntimeError } from "@tabora/plugin-api"
@@ -93,6 +99,7 @@ function createChatOptions(
   provider: AiCustomProviderConfig,
   tools: readonly AnyServerTool[] = [],
 ) {
+  const api = provider.api ?? "chat-completions"
   const messages = request.messages?.length
     ? request.messages.map((message) => ({
         role: message.role,
@@ -103,7 +110,8 @@ function createChatOptions(
   const modelOptions: Record<string, unknown> = {}
   if (request.temperature !== undefined) modelOptions.temperature = request.temperature
   if (request.maxOutputTokens !== undefined)
-    modelOptions.max_output_tokens = request.maxOutputTokens
+    modelOptions[api === "anthropic-messages" ? "max_tokens" : "max_output_tokens"] =
+      request.maxOutputTokens
   if (provider.reasoning?.summary && (provider.api ?? "chat-completions") === "responses") {
     modelOptions.reasoning = {
       summary: "auto",
@@ -115,22 +123,30 @@ function createChatOptions(
       modelOptions.include = ["reasoning.encrypted_content"]
     }
   } else if (provider.reasoning?.effort && request.reasoningEffort !== undefined) {
-    // Chat Completions-compatible reasoning APIs commonly use this legacy key.
-    modelOptions.reasoning_effort = request.reasoningEffort
+    modelOptions[api === "anthropic-messages" ? "effort" : "reasoning_effort"] =
+      request.reasoningEffort
   }
-  const api = provider.api ?? "chat-completions"
-  // TanStack adapter only supports "chat-completions" and "responses"
-  // Map anthropic-messages to chat-completions for the adapter layer
-  const adapterApi = api === "anthropic-messages" ? "chat-completions" : api
+  const adapter = (api === "anthropic-messages"
+    ? createAnthropicChat(provider.model as never, provider.apiKey, {
+        baseURL: provider.baseUrl.replace(/\/?$/, "").replace(/\/v1$/, ""),
+        fetch(input, init) {
+          const headers = new Headers(init?.headers)
+          if (!headers.has("authorization")) {
+            headers.set("authorization", `Bearer ${provider.apiKey}`)
+          }
+          return fetch(input, { ...init, headers, redirect: "error" })
+        },
+      })
+    : openaiCompatibleText(provider.model, {
+        apiKey: provider.apiKey,
+        baseURL: provider.baseUrl,
+        api,
+        fetch(input, init) {
+          return fetch(input, { ...init, redirect: "error" })
+        },
+      })) as unknown as AnyTextAdapter
   return {
-    adapter: openaiCompatibleText(provider.model, {
-      apiKey: provider.apiKey,
-      baseURL: provider.baseUrl,
-      api: adapterApi,
-      fetch(input, init) {
-        return fetch(input, { ...init, redirect: "error" })
-      },
-    }),
+    adapter,
     messages,
     ...(request.system || tools.length
       ? {

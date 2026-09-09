@@ -324,6 +324,49 @@ describe("AI gateway request contract", () => {
     }
   })
 
+  it("uses TanStack's native Anthropic adapter for Messages providers", async () => {
+    const originalFetch = globalThis.fetch
+    let requestUrl = ""
+    let requestHeaders: Headers | undefined
+    let requestBody: Record<string, unknown> | undefined
+    globalThis.fetch = async (input, init) => {
+      requestUrl =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url
+      requestHeaders = new Headers(init?.headers)
+      requestBody = requestJson(init)
+      throw new Error("blocked provider request")
+    }
+    const gateway = createTanstackAiGateway()
+
+    try {
+      await expect(
+        gateway.generate({
+          provider: "custom",
+          custom: {
+            baseUrl: "https://api.anthropic.com/v1",
+            apiKey: "anthropic-secret",
+            model: "claude-test",
+            api: "anthropic-messages",
+          },
+          maxOutputTokens: 12,
+          messages: [{ role: "user", text: "hello" }],
+        }),
+      ).rejects.toMatchObject({ code: "ai_provider_failed" })
+      expect(requestUrl).toContain("https://api.anthropic.com/v1/messages")
+      expect(requestHeaders?.get("x-api-key")).toBe("anthropic-secret")
+      expect(requestHeaders?.get("anthropic-version")).toBe("2023-06-01")
+      expect(requestHeaders?.get("authorization")).toBe("Bearer anthropic-secret")
+      expect(requestBody).toMatchObject({
+        model: "claude-test",
+        max_tokens: 12,
+        messages: [{ role: "user", content: "hello" }],
+      })
+      expect(requestBody).not.toHaveProperty("max_output_tokens")
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
   it("passes large histories through for agent-managed context compression", () => {
     const parsed = parseAiGatewayRequest({
       messages: [
