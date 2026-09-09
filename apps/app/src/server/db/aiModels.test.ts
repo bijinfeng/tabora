@@ -80,6 +80,33 @@ describe("platform model catalogue", () => {
     ).rejects.toThrow("不可复用")
   })
 
+  it("allows recreating a model after it was soft-deleted", async () => {
+    await handle.aiModels.createProvider({
+      id: "openai",
+      label: "OpenAI",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "provider-secret",
+    })
+    const modelId = await handle.aiModels.createModel({
+      providerId: "openai",
+      upstreamModelId: "claude-opus-5",
+      label: "旧模型",
+    })
+    await handle.aiModels.deleteModel(modelId)
+
+    await expect(
+      handle.aiModels.createModel({
+        providerId: "openai",
+        upstreamModelId: "claude-opus-5",
+        label: "新模型",
+      }),
+    ).resolves.toBe(modelId)
+
+    expect(await handle.aiModels.list()).toMatchObject({
+      models: [{ id: modelId, label: "新模型", status: "draft", lastTestStatus: "idle" }],
+    })
+  })
+
   it("publishes only modalities compatible with the provider API", async () => {
     await handle.aiModels.createProvider({
       id: "openai",

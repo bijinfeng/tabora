@@ -344,7 +344,7 @@ export function Button(props: ButtonProps) {
     typeof props.icon === "function"
       ? props.icon({ size: buttonIconSizes[size], strokeWidth: 2 })
       : props.icon
-  const disabledStyle = (() => {
+  const disabledStyle = () => {
     if (!props.disabled) return undefined
     switch (variant) {
       case "ghost":
@@ -357,7 +357,7 @@ export function Button(props: ButtonProps) {
       default:
         return styles.buttonDisabled
     }
-  })()
+  }
   const attrs = () =>
     stylex.attrs(
       styles.buttonBase,
@@ -365,7 +365,7 @@ export function Button(props: ButtonProps) {
       buttonSizeStyles[size],
       shape !== "default" && buttonShapeStyles[shape],
       shape === "circle" && buttonSizeCircleStyles[size],
-      disabledStyle,
+      disabledStyle(),
       variant === "link" && styles.linkLayout,
       props.fullWidth && styles.buttonFullWidth,
       props.xstyle,
@@ -377,7 +377,7 @@ export function Button(props: ButtonProps) {
 export function IconButton(props: IconButtonProps) {
   const variant = props.variant ?? "ghost"
   const shape: ButtonShape = props.shape ?? "default"
-  const disabledStyle = (() => {
+  const disabledStyle = () => {
     if (!props.disabled) return undefined
     switch (variant) {
       case "ghost":
@@ -390,7 +390,7 @@ export function IconButton(props: IconButtonProps) {
       default:
         return styles.buttonDisabled
     }
-  })()
+  }
   const attrs = () =>
     stylex.attrs(
       styles.buttonBase,
@@ -398,7 +398,7 @@ export function IconButton(props: IconButtonProps) {
       variant === "link" && styles.linkLayout,
       iconButtonSizeStyles[props.size ?? "md"],
       shape !== "default" && iconButtonShapeStyles[shape],
-      disabledStyle,
+      disabledStyle(),
       props.xstyle,
     )
 

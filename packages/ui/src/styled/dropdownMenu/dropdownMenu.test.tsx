@@ -55,4 +55,37 @@ describe("DropdownMenu", () => {
     dispose()
     root.remove()
   })
+
+  it("renders submenu entries with an accessible submenu trigger", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const dispose = render(
+      () => (
+        <DropdownMenu
+          defaultOpen
+          items={[
+            {
+              id: "model",
+              label: "模型",
+              trailing: "GPT",
+              submenu: [{ id: "gpt", label: "GPT", onClick: () => undefined }],
+            },
+          ]}
+          triggerAriaLabel="打开菜单"
+        >
+          操作
+        </DropdownMenu>
+      ),
+      root,
+    )
+
+    const submenuTrigger = Array.from(
+      document.querySelectorAll<HTMLElement>("[role='menuitem']"),
+    ).find((element) => element.textContent?.includes("模型"))
+    expect(submenuTrigger?.getAttribute("aria-haspopup")).toBe("true")
+    expect(submenuTrigger?.textContent).toContain("GPT")
+
+    dispose()
+    root.remove()
+  })
 })

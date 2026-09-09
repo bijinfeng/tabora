@@ -829,12 +829,23 @@ export const styles = stylex.create({
   composerSendButton: {
     height: 28,
     width: 28,
-    ":disabled": {
-      backgroundColor: "rgb(var(--tbr-color-surface))",
-      borderColor: "rgb(var(--tbr-color-line-strong))",
-      color: "rgb(var(--tbr-color-text-muted))",
-      opacity: 1,
+    ":hover": {
+      backgroundColor: "rgb(var(--tbr-color-accent))",
+      borderColor: "rgb(var(--tbr-color-accent))",
     },
+    ":active": {
+      backgroundColor: "rgb(var(--tbr-color-accent))",
+      borderColor: "rgb(var(--tbr-color-accent))",
+    },
+    ":disabled:hover": {
+      backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+      borderColor: "rgb(var(--tbr-color-line))",
+      color: "rgb(var(--tbr-color-text-subtle))",
+    },
+  },
+  composerStopButton: {
+    height: 28,
+    width: 28,
   },
   composerRunActions: {
     alignItems: "center",

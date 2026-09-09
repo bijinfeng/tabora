@@ -317,7 +317,27 @@ export function createAiModelQueries(
     )
     const reasoning = reasoningCapabilities(input.reasoning)
     const id = `${input.providerId}:${input.upstreamModelId}`
-    if (await modelById(id)) throw new Error("该稳定模型 ID 已存在且不可复用")
+    const existing = await modelById(id)
+    if (existing && existing.status !== "deleted") throw new Error("该稳定模型 ID 已存在且不可复用")
+    if (existing?.status === "deleted") {
+      await db
+        .update(aiModel)
+        .set({
+          providerId: input.providerId,
+          upstreamModelId: input.upstreamModelId,
+          label: input.label,
+          inputModalities,
+          reasoning: reasoning ?? null,
+          status: "draft",
+          lastTestStatus: "idle",
+          lastTestAt: null,
+          lastTestLatencyMs: null,
+          lastTestError: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(aiModel.id, id))
+      return id
+    }
     const duplicate = (await db
       .select({ id: aiModel.id })
       .from(aiModel)
@@ -325,6 +345,7 @@ export function createAiModelQueries(
         and(
           eq(aiModel.providerId, input.providerId),
           eq(aiModel.upstreamModelId, input.upstreamModelId),
+          ne(aiModel.status, "deleted"),
         ),
       )
       .limit(1)) as Array<{ id: string }>

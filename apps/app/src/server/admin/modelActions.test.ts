@@ -37,7 +37,7 @@ vi.mock("../runtime", () => ({
   })),
 }))
 
-import { testModelAction, testProviderAction } from "./modelActions"
+import { testModelAction, testModelDraftAction, testProviderAction } from "./modelActions"
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -72,6 +72,33 @@ describe("Provider configuration saves", () => {
 })
 
 describe("Anthropic provider connection checks", () => {
+  it("tests a new model without creating a database record", async () => {
+    connectionForProvider.mockResolvedValue({
+      provider: { api: "anthropic-messages", baseUrl: "https://api.anthropic.com/v1" },
+      apiKey: "anthropic-secret",
+    })
+    const providerFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: "msg_test",
+          type: "message",
+          role: "assistant",
+          model: "claude-test",
+          content: [{ type: "text", text: "OK" }],
+          stop_reason: "end_turn",
+          usage: { input_tokens: 1, output_tokens: 1 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    )
+    vi.stubGlobal("fetch", providerFetch)
+
+    await expect(
+      testModelDraftAction({ providerId: "anthropic", upstreamModelId: "claude-test" }),
+    ).resolves.toBeUndefined()
+    expect(createProvider).not.toHaveBeenCalled()
+  })
+
   it("validates a provider through TanStack AI with Anthropic authentication", async () => {
     connectionForProvider.mockResolvedValue({
       provider: { api: "anthropic-messages", baseUrl: "https://api.anthropic.com/v1" },
