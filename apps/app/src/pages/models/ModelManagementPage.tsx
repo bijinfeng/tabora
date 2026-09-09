@@ -123,14 +123,6 @@ export function ModelManagementPage() {
 
   async function saveProvider() {
     const existing = editingProvider()
-    if (!providerId().trim() || !providerLabel().trim() || !baseUrl().trim()) {
-      setProviderError("请填写 Provider ID、显示名称和 Base URL")
-      return
-    }
-    if (!existing && !apiKey().trim()) {
-      setProviderError("新增 Provider 必须写入 API Key；保存后不会回显")
-      return
-    }
     const saved = await execute(
       () =>
         existing

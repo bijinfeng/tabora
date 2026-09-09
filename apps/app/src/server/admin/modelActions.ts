@@ -1,6 +1,16 @@
 import type { AiProviderApi } from "@tabora/ai-runtime"
+import { createTanstackAiGateway } from "@tabora/ai-runtime/server"
 import { validateCloudProviderUrl } from "../ai"
 import { getRuntime } from "../runtime"
+
+function connectionFailureMessage(error: unknown): string {
+  const cause =
+    error instanceof Error && error.cause instanceof Error ? error.cause.message : undefined
+  const message = cause || (error instanceof Error ? error.message : "")
+  if (message === "请先配置至少一个模型后再测试 Provider") return message
+  if (!message || message === "AI provider request failed") return "连接测试失败"
+  return `连接测试失败：${message.replace(/\s+/g, " ").slice(0, 240)}`
+}
 
 export async function listModelManagementAction() {
   const { handle } = await getRuntime()
@@ -14,7 +24,6 @@ export async function createProviderAction(data: {
   apiKey: string
   api: AiProviderApi
 }) {
-  await validateCloudProviderUrl(data.baseUrl)
   const { handle } = await getRuntime()
   await handle.aiModels.createProvider(data)
 }
@@ -26,7 +35,6 @@ export async function updateProviderAction(data: {
   apiKey?: string
   api: AiProviderApi
 }) {
-  await validateCloudProviderUrl(data.baseUrl)
   const { handle } = await getRuntime()
   await handle.aiModels.updateProvider(data)
 }
@@ -78,50 +86,24 @@ async function runConnectionTest(modelId: string) {
   try {
     const { model, provider, apiKey } = await handle.aiModels.connectionForModel(modelId)
     await validateCloudProviderUrl(provider.baseUrl)
-    const api = provider.api ?? "chat-completions"
-    const endpoint =
-      api === "responses"
-        ? "/responses"
-        : api === "anthropic-messages"
-          ? "/v1/messages"
-          : "/chat/completions"
-    const body =
-      api === "responses"
-        ? {
-            model: model.upstreamModelId,
-            input: "Reply with OK",
-            max_output_tokens: 4,
-          }
-        : api === "anthropic-messages"
-          ? {
-              model: model.upstreamModelId,
-              messages: [{ role: "user", content: "Reply with OK" }],
-              max_tokens: 4,
-            }
-          : {
-              model: model.upstreamModelId,
-              messages: [{ role: "user", content: "Reply with OK" }],
-              max_tokens: 4,
-              temperature: 0,
-            }
-    const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}${endpoint}`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-      body: JSON.stringify(body),
-      redirect: "error",
-      signal: AbortSignal.timeout(10_000),
+    await createTanstackAiGateway().generate({
+      provider: "custom",
+      custom: {
+        baseUrl: provider.baseUrl,
+        apiKey,
+        model: model.upstreamModelId,
+        api: provider.api ?? "chat-completions",
+      },
+      prompt: "Reply with OK",
+      maxOutputTokens: 4,
     })
-    if (!response.ok) throw new Error("Provider 返回了失败状态")
     await handle.aiModels.recordTest(modelId, { passed: true, latencyMs: Date.now() - startedAt })
   } catch (error) {
+    const failure = connectionFailureMessage(error)
     await handle.aiModels
-      .recordTest(modelId, { passed: false, error: "连接测试失败" })
+      .recordTest(modelId, { passed: false, error: failure })
       .catch(() => undefined)
-    throw new Error(
-      error instanceof Error && error.message === "Provider 返回了失败状态"
-        ? error.message
-        : "连接测试失败",
-    )
+    throw new Error(failure)
   }
 }
 
@@ -135,25 +117,32 @@ export async function testProviderAction(id: string) {
   try {
     const { provider, apiKey } = await handle.aiModels.connectionForProvider(id)
     await validateCloudProviderUrl(provider.baseUrl)
-    const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}/models`, {
-      headers: { authorization: `Bearer ${apiKey}` },
-      redirect: "error",
-      signal: AbortSignal.timeout(10_000),
+    const api = provider.api ?? "chat-completions"
+    const configuredModel = (await handle.aiModels.list()).models.find(
+      (model) => model.providerId === id && model.status !== "deleted",
+    )
+    if (!configuredModel) throw new Error("请先配置至少一个模型后再测试 Provider")
+    await createTanstackAiGateway().generate({
+      provider: "custom",
+      custom: {
+        baseUrl: provider.baseUrl,
+        apiKey,
+        model: configuredModel.upstreamModelId,
+        api,
+      },
+      prompt: "Reply with OK",
+      maxOutputTokens: 4,
     })
-    if (!response.ok) throw new Error("Provider 返回了失败状态")
     await handle.aiModels.recordProviderTest(id, {
       passed: true,
       latencyMs: Date.now() - startedAt,
     })
   } catch (error) {
+    const failure = connectionFailureMessage(error)
     await handle.aiModels
-      .recordProviderTest(id, { passed: false, error: "连接测试失败" })
+      .recordProviderTest(id, { passed: false, error: failure })
       .catch(() => undefined)
-    throw new Error(
-      error instanceof Error && error.message === "Provider 返回了失败状态"
-        ? error.message
-        : "连接测试失败",
-    )
+    throw new Error(failure)
   }
 }
 

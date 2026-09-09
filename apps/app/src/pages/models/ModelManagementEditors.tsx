@@ -4,6 +4,7 @@ import { Button } from "@tabora/ui/button"
 import { Checkbox } from "@tabora/ui/checkbox"
 import { Dialog } from "@tabora/ui/dialog"
 import { Field } from "@tabora/ui/field"
+import { Form } from "@tabora/ui/form"
 import { InlineError } from "@tabora/ui/inline-error"
 import { Input } from "@tabora/ui/input"
 import { Select } from "@tabora/ui/select"
@@ -25,6 +26,14 @@ import { styles } from "./model-management.styles"
 
 type Setter<T = string> = (value: T) => void
 
+type ProviderFormValues = {
+  id: string
+  label: string
+  baseUrl: string
+  api: ProviderApi
+  apiKey: string
+}
+
 const MODALITY_LABELS: Record<ModelInputModality, string> = {
   text: "文本",
   image: "图片",
@@ -42,6 +51,19 @@ function SetupStep(props: { number: string; title: string; children: JSX.Element
       {props.children}
     </section>
   )
+}
+
+function requiredProviderField(label: string) {
+  return ({ value }: { value: string }) => (value.trim() ? undefined : `请填写${label}`)
+}
+
+function httpsProviderUrl({ value }: { value: string }) {
+  if (!value.trim()) return "请填写 Base URL"
+  try {
+    return new URL(value.trim()).protocol === "https:" ? undefined : "Base URL 仅支持 HTTPS"
+  } catch {
+    return "请输入有效的 Base URL"
+  }
 }
 
 function ModelEditorFooter(props: {
@@ -186,20 +208,41 @@ export function ModelEditorDrawer(props: {
           </Field>
         </SetupStep>
         <SetupStep number="2" title="定义模型">
-          <Field label="上游模型名" htmlFor="model-upstream">
+          <Field
+            label="上游模型名"
+            htmlFor="model-upstream"
+            helper={
+              props.discoveredModels().length === 0
+                ? "可直接输入上游模型名；也可尝试获取模型列表。"
+                : undefined
+            }
+          >
             <div {...stylex.attrs(styles.modelIdControl)}>
-              <Select
-                id="model-upstream"
-                value={props.upstreamModelId()}
-                onChange={selectDiscoveredModel}
-                options={props.discoveredModels().map((id) => ({ value: id, label: id }))}
-                placeholder={
-                  props.discoveredModels().length > 0 ? "请选择上游模型" : "请先获取模型列表"
+              <Show
+                when={props.discoveredModels().length > 0}
+                fallback={
+                  <Input
+                    id="model-upstream"
+                    value={props.upstreamModelId()}
+                    onInput={selectDiscoveredModel}
+                    placeholder="例如 claude-3-5-sonnet"
+                    aria-label="上游模型名"
+                    disabled={isSaved()}
+                    xstyle={styles.modelIdSelect}
+                  />
                 }
-                aria-label="上游模型名"
-                disabled={isSaved() || props.discoveredModels().length === 0}
-                xstyle={styles.modelIdSelect}
-              />
+              >
+                <Select
+                  id="model-upstream"
+                  value={props.upstreamModelId()}
+                  onChange={selectDiscoveredModel}
+                  options={props.discoveredModels().map((id) => ({ value: id, label: id }))}
+                  placeholder="请选择上游模型"
+                  aria-label="上游模型名"
+                  disabled={isSaved()}
+                  xstyle={styles.modelIdSelect}
+                />
+              </Show>
               <Button
                 variant="secondary"
                 loading={props.discovering}
@@ -296,103 +339,196 @@ export function ProviderEditorDrawer(props: {
   onSave: () => void
 }) {
   return (
-    <Dialog
-      open={props.open}
-      onCancel={props.onClose}
-      title={props.editing ? "配置 Provider" : "新增 Provider"}
-      width="520px"
-      footer={
-        <div {...stylex.attrs(styles.footer)}>
-          <Button variant="secondary" onClick={props.onClose}>
-            取消
-          </Button>
-          <Button onClick={props.onSave} disabled={props.loading}>
-            保存连接
-          </Button>
-        </div>
-      }
-    >
-      <div {...stylex.attrs(styles.editorBody)}>
-        <SetupStep number="1" title="基本配置">
-          <Show when={!props.editing}>
-            <Field label="快速选择内置 Provider">
-              <Select
-                value={props.id()}
-                placeholder="选择一个服务商模板"
-                options={BUILTIN_PROVIDER_PRESETS.map((preset) => ({
-                  value: preset.id,
-                  label: preset.label,
-                }))}
-                aria-label="快速选择内置 Provider"
-                onChange={(value) => {
-                  const preset = BUILTIN_PROVIDER_PRESETS.find((item) => item.id === value)
-                  if (!preset) return
-                  props.setId(preset.id)
-                  props.setLabel(preset.label)
-                  props.setBaseUrl(preset.baseUrl)
-                  props.setApi(preset.api)
-                }}
-              />
-            </Field>
-          </Show>
-          <Field
-            label="Provider ID"
-            htmlFor="provider-id"
-            helper={props.editing ? "创建后不可修改。" : undefined}
-          >
-            <Input
-              id="provider-id"
-              value={props.id()}
-              onInput={props.setId}
-              disabled={props.editing}
-              placeholder="例如 openai"
-            />
-          </Field>
-          <Field label="显示名称" htmlFor="provider-label">
-            <Input
-              id="provider-label"
-              value={props.label()}
-              onInput={props.setLabel}
-              placeholder="例如 OpenAI"
-            />
-          </Field>
-          <Field label="Base URL" htmlFor="provider-url" helper="仅支持 HTTPS。">
-            <Input
-              id="provider-url"
-              value={props.baseUrl()}
-              onInput={props.setBaseUrl}
-              placeholder="https://api.example.com/v1"
-            />
-          </Field>
-          <Field
-            label="请求 API"
-            helper="Responses 支持音频与 PDF；Anthropic Messages 支持 Anthropic 原生格式。"
-          >
-            <Select
-              value={props.api()}
-              onChange={props.setApi}
-              options={[
-                { value: "chat-completions", label: "Chat Completions" },
-                { value: "responses", label: "Responses" },
-                { value: "anthropic-messages", label: "Anthropic Messages" },
-              ]}
-              aria-label="请求 API"
-            />
-          </Field>
-        </SetupStep>
-        <SetupStep number="2" title="凭据">
-          <Field label="API Key" htmlFor="provider-key">
-            <Input
-              id="provider-key"
-              type="password"
-              value={props.apiKey()}
-              onInput={props.setApiKey}
-              placeholder={props.editing ? "留空不修改" : "输入 API Key"}
-            />
-          </Field>
-        </SetupStep>
-        <Show when={props.error()}>{(error) => <InlineError>{error()}</InlineError>}</Show>
-      </div>
-    </Dialog>
+    <Show when={props.open}>
+      <Dialog
+        open
+        onCancel={props.onClose}
+        title={props.editing ? "配置 Provider" : "新增 Provider"}
+        width="520px"
+        footer={
+          <div {...stylex.attrs(styles.footer)}>
+            <Button variant="secondary" onClick={props.onClose}>
+              取消
+            </Button>
+            <Button type="submit" form="provider-editor-form" loading={props.loading}>
+              保存连接
+            </Button>
+          </div>
+        }
+      >
+        <Form<ProviderFormValues>
+          id="provider-editor-form"
+          defaultValues={{
+            id: props.id(),
+            label: props.label(),
+            baseUrl: props.baseUrl(),
+            api: props.api(),
+            apiKey: props.apiKey(),
+          }}
+          onSubmit={() => props.onSave()}
+        >
+          {(form) => (
+            <div {...stylex.attrs(styles.editorBody)}>
+              <SetupStep number="1" title="基本配置">
+                <Show when={!props.editing}>
+                  <Form.Item label="快速选择内置 Provider">
+                    {() => (
+                      <Select
+                        value={props.id()}
+                        placeholder="选择一个服务商模板"
+                        options={BUILTIN_PROVIDER_PRESETS.map((preset) => ({
+                          value: preset.id,
+                          label: preset.label,
+                        }))}
+                        aria-label="快速选择内置 Provider"
+                        onChange={(value) => {
+                          const preset = BUILTIN_PROVIDER_PRESETS.find((item) => item.id === value)
+                          if (!preset) return
+                          form.setFieldValue("id", preset.id)
+                          form.setFieldValue("label", preset.label)
+                          form.setFieldValue("baseUrl", preset.baseUrl)
+                          form.setFieldValue("api", preset.api)
+                          props.setId(preset.id)
+                          props.setLabel(preset.label)
+                          props.setBaseUrl(preset.baseUrl)
+                          props.setApi(preset.api)
+                        }}
+                      />
+                    )}
+                  </Form.Item>
+                </Show>
+                <Form.Item
+                  name="id"
+                  label="Provider ID"
+                  htmlFor="provider-id"
+                  required
+                  help={props.editing ? "创建后不可修改。" : undefined}
+                  validators={{
+                    onMount: requiredProviderField("Provider ID"),
+                    onChange: requiredProviderField("Provider ID"),
+                    onSubmit: requiredProviderField("Provider ID"),
+                  }}
+                >
+                  {(field) => (
+                    <Input
+                      id="provider-id"
+                      value={field().state.value}
+                      onInput={(value) => {
+                        field().handleChange(value)
+                        props.setId(value)
+                      }}
+                      onBlur={field().handleBlur}
+                      invalid={field().state.meta.errors.length > 0}
+                      disabled={props.editing}
+                      placeholder="例如 openai"
+                    />
+                  )}
+                </Form.Item>
+                <Form.Item
+                  name="label"
+                  label="显示名称"
+                  htmlFor="provider-label"
+                  required
+                  validators={{
+                    onMount: requiredProviderField("显示名称"),
+                    onChange: requiredProviderField("显示名称"),
+                    onSubmit: requiredProviderField("显示名称"),
+                  }}
+                >
+                  {(field) => (
+                    <Input
+                      id="provider-label"
+                      value={field().state.value}
+                      onInput={(value) => {
+                        field().handleChange(value)
+                        props.setLabel(value)
+                      }}
+                      onBlur={field().handleBlur}
+                      invalid={field().state.meta.errors.length > 0}
+                      placeholder="例如 OpenAI"
+                    />
+                  )}
+                </Form.Item>
+                <Form.Item
+                  name="baseUrl"
+                  label="Base URL"
+                  htmlFor="provider-url"
+                  required
+                  help="仅支持 HTTPS。"
+                  validators={{
+                    onMount: httpsProviderUrl,
+                    onChange: httpsProviderUrl,
+                    onSubmit: httpsProviderUrl,
+                  }}
+                >
+                  {(field) => (
+                    <Input
+                      id="provider-url"
+                      value={field().state.value}
+                      onInput={(value) => {
+                        field().handleChange(value)
+                        props.setBaseUrl(value)
+                      }}
+                      onBlur={field().handleBlur}
+                      invalid={field().state.meta.errors.length > 0}
+                      placeholder="https://api.example.com/v1"
+                    />
+                  )}
+                </Form.Item>
+                <Form.Item name="api" label="请求 API">
+                  {(field) => (
+                    <Select
+                      value={field().state.value}
+                      onChange={(value) => {
+                        field().handleChange(value as ProviderApi)
+                        props.setApi(value as ProviderApi)
+                      }}
+                      options={[
+                        { value: "chat-completions", label: "Chat Completions" },
+                        { value: "responses", label: "Responses" },
+                        { value: "anthropic-messages", label: "Anthropic Messages" },
+                      ]}
+                      aria-label="请求 API"
+                    />
+                  )}
+                </Form.Item>
+              </SetupStep>
+              <SetupStep number="2" title="凭据">
+                <Form.Item
+                  name="apiKey"
+                  label="API Key"
+                  htmlFor="provider-key"
+                  required={!props.editing}
+                  validators={{
+                    onMount: ({ value }) =>
+                      props.editing || value.trim() ? undefined : "请输入 API Key",
+                    onChange: ({ value }) =>
+                      props.editing || value.trim() ? undefined : "请输入 API Key",
+                    onSubmit: ({ value }) =>
+                      props.editing || value.trim() ? undefined : "请输入 API Key",
+                  }}
+                >
+                  {(field) => (
+                    <Input
+                      id="provider-key"
+                      type="password"
+                      value={field().state.value}
+                      onInput={(value) => {
+                        field().handleChange(value)
+                        props.setApiKey(value)
+                      }}
+                      onBlur={field().handleBlur}
+                      invalid={field().state.meta.errors.length > 0}
+                      placeholder={props.editing ? "留空不修改" : "输入 API Key"}
+                    />
+                  )}
+                </Form.Item>
+              </SetupStep>
+              <Show when={props.error()}>{(error) => <InlineError>{error()}</InlineError>}</Show>
+            </div>
+          )}
+        </Form>
+      </Dialog>
+    </Show>
   )
 }

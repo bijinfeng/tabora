@@ -43,6 +43,7 @@ catalogs:
     zod: ^4.4.3
   ai:
     "@tanstack/ai": ^0.53.0
+    "@tanstack/ai-anthropic": ^0.18.5
     "@tanstack/ai-client": ^0.31.0
     "@tanstack/ai-openai": ^0.22.5
     "@tanstack/ai-solid": ^0.21.0
@@ -101,6 +102,7 @@ minimumReleaseAgeExclude:
   - pg-protocol@1.16.0
   - pg@8.23.0
   - "@tanstack/ai-event-client@0.11.1"
+  - "@tanstack/ai-anthropic@0.18.5"
   - "@tanstack/ai-openai@0.22.2"
   - "@tanstack/ai@0.51.0"
   - "@tanstack/openai-base@0.10.7"
