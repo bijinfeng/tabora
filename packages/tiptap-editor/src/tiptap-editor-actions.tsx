@@ -95,7 +95,7 @@ export function TiptapEditorActions(props: TiptapEditorActionsProps) {
     return local.insertItems.map((item) => ({
       id: item.id,
       label: item.label,
-      icon: item.icon ?? <span />,
+      icon: item.icon,
       checked: item.checked ?? false,
       onClick: () => item.onClick?.(),
     }))

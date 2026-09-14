@@ -127,7 +127,7 @@ export function buildInsertMenuItems(ctxOptions: TiptapEditorInsertMenuOptions =
     return {
       id: raw.id,
       label: raw.label,
-      icon: raw.icon ?? <span />,
+      icon: raw.icon,
       checked,
       onClick: () => handleClick(raw),
     }

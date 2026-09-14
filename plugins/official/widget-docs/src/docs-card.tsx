@@ -80,7 +80,11 @@ export function DocsCard(props: WidgetViewProps) {
 
       <Show
         when={!isEmpty()}
-        fallback={<div {...stylex.attrs(styles.cardEmpty)}>还没有文档，点击新建第一篇。</div>}
+        fallback={
+          <div {...stylex.attrs(styles.cardEmpty)}>
+            {cardSize() === "S" ? "暂无文档" : "还没有文档，点击新建第一篇。"}
+          </div>
+        }
       >
         <div {...stylex.attrs(styles.cardList)}>
           {previewDocs().map((doc) => (
@@ -98,9 +102,11 @@ export function DocsCard(props: WidgetViewProps) {
         <span {...stylex.attrs(styles.cardTime)}>
           {latest() ? formatRelativeTime(latest()!.updatedAt) : "仅本机保存"}
         </span>
-        <button {...stylex.attrs(styles.viewAll)} type="button" onClick={open}>
-          查看全部 <ArrowRight size={7} />
-        </button>
+        <Show when={cardSize() !== "S"}>
+          <button {...stylex.attrs(styles.viewAll)} type="button" onClick={open}>
+            查看全部 <ArrowRight size={7} />
+          </button>
+        </Show>
       </div>
     </div>
   )

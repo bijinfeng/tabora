@@ -71,6 +71,28 @@ describe("DocsCard", () => {
     expect(opened).toBeGreaterThan(0)
     root.remove()
   })
+
+  it("keeps the small card concise while preserving its expand action", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    let opened = 0
+    const get = async <T = unknown,>(key: string) =>
+      (key === DOCS_STORAGE_KEY ? [sampleDoc] : undefined) as T | undefined
+    const props = makeWidgetViewProps({
+      size: "S",
+      data: { get },
+      host: { openExpand: () => opened++ },
+    })
+
+    render(() => <DocsCard {...props} />, root)
+    await flushMount()
+
+    expect(root.textContent).toContain("会议纪要")
+    expect(root.textContent).not.toContain("查看全部")
+    root.querySelector<HTMLElement>('[role="button"]')?.click()
+    expect(opened).toBe(1)
+    root.remove()
+  })
 })
 
 describe("DocsExpand", () => {
