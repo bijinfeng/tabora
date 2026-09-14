@@ -58,7 +58,7 @@ const styles = stylex.create({
   toolbarGroup: {
     alignItems: "center",
     display: "flex",
-    gap: space.s1,
+    gap: space.s2,
   },
   toolbarEnd: {
     alignItems: "center",
@@ -99,6 +99,10 @@ const styles = stylex.create({
   headingDropdownIcon: {
     height: 16,
     width: 16,
+  },
+  compactDropdownTrigger: {
+    gap: space.s1,
+    paddingInline: space.s2,
   },
   dangerText: {
     color: color.danger,
@@ -188,23 +192,37 @@ export const defaultToolbar: ToolbarGroupConfig[] = [
 
 export const compactToolbar: ToolbarGroupConfig[] = [
   {
+    items: [
+      { type: "command", command: "undo" },
+      { type: "command", command: "redo" },
+    ],
+  },
+  {
     items: [{ type: "command", command: "headings-dropdown" }],
   },
   {
     items: [
       { type: "command", command: "bold" },
       { type: "command", command: "italic" },
+      { type: "command", command: "underline" },
       { type: "command", command: "strike" },
+      { type: "command", command: "code" },
     ],
   },
   {
     items: [{ type: "command", command: "lists-dropdown" }],
   },
   {
+    items: [
+      { type: "command", command: "blockquote" },
+      { type: "command", command: "code-block" },
+    ],
+  },
+  {
     items: [{ type: "command", command: "align-dropdown" }],
   },
   {
-    items: [{ type: "command", command: "code-block" }],
+    items: [{ type: "command", command: "link" }],
   },
 ]
 
@@ -508,7 +526,6 @@ function HeadingsDropdown(props: { editor: Accessor<Editor | null> }) {
       {
         id: "paragraph",
         label: "正文",
-        icon: <span />,
         checked: props.editor()?.isActive("paragraph") ?? false,
         onClick: () => executeCommand(props.editor(), "paragraph"),
       },
@@ -518,7 +535,6 @@ function HeadingsDropdown(props: { editor: Accessor<Editor | null> }) {
       list.push({
         id: `h-${level}`,
         label: `标题 ${level}`,
-        icon: <span />,
         checked: props.editor()?.isActive("heading", { level }) ?? false,
         onClick: () => executeCommand(props.editor(), `heading-${level}` as ToolbarCommand),
       })
@@ -547,12 +563,13 @@ function HeadingsDropdown(props: { editor: Accessor<Editor | null> }) {
             {...rest}
             variant={active ? "subtle" : "ghost"}
             size="sm"
+            xstyle={styles.compactDropdownTrigger}
             disabled={disabled || !!t.disabled}
             aria-label={t["aria-label"] ?? "标题"}
             title={t.title ?? "标题"}
           >
             <Heading1 {...sx(styles.headingDropdownIcon)} />
-            <ChevronDown height={14} width={14} />
+            <ChevronDown height={12} width={12} />
           </Button>
         )
       }}
@@ -565,21 +582,18 @@ function ListsDropdown(props: { editor: Accessor<Editor | null> }) {
     {
       id: "bullet",
       label: "无序列表",
-      icon: <span />,
       checked: props.editor()?.isActive("bulletList") ?? false,
       onClick: () => executeCommand(props.editor(), "bullet-list"),
     },
     {
       id: "ordered",
       label: "有序列表",
-      icon: <span />,
       checked: props.editor()?.isActive("orderedList") ?? false,
       onClick: () => executeCommand(props.editor(), "ordered-list"),
     },
     {
       id: "task",
       label: "待办列表",
-      icon: <span />,
       checked: props.editor()?.isActive("taskList") ?? false,
       onClick: () => executeCommand(props.editor(), "task-list"),
     },
@@ -609,12 +623,13 @@ function ListsDropdown(props: { editor: Accessor<Editor | null> }) {
             {...rest}
             variant={active ? "subtle" : "ghost"}
             size="sm"
+            xstyle={styles.compactDropdownTrigger}
             disabled={disabled || !!t.disabled}
             aria-label={t["aria-label"] ?? "列表"}
             title={t.title ?? "列表"}
           >
             <List {...sx(styles.headingDropdownIcon)} />
-            <ChevronDown height={14} width={14} />
+            <ChevronDown height={12} width={12} />
           </Button>
         )
       }}
@@ -627,28 +642,24 @@ function AlignDropdown(props: { editor: Accessor<Editor | null> }) {
     {
       id: "left",
       label: "左对齐",
-      icon: <span />,
       checked: props.editor()?.isActive({ textAlign: "left" }) ?? false,
       onClick: () => executeCommand(props.editor(), "align-left"),
     },
     {
       id: "center",
       label: "居中",
-      icon: <span />,
       checked: props.editor()?.isActive({ textAlign: "center" }) ?? false,
       onClick: () => executeCommand(props.editor(), "align-center"),
     },
     {
       id: "right",
       label: "右对齐",
-      icon: <span />,
       checked: props.editor()?.isActive({ textAlign: "right" }) ?? false,
       onClick: () => executeCommand(props.editor(), "align-right"),
     },
     {
       id: "justify",
       label: "两端对齐",
-      icon: <span />,
       checked: props.editor()?.isActive({ textAlign: "justify" }) ?? false,
       onClick: () => executeCommand(props.editor(), "align-justify"),
     },
@@ -688,12 +699,13 @@ function AlignDropdown(props: { editor: Accessor<Editor | null> }) {
             {...rest}
             variant={active ? "subtle" : "ghost"}
             size="sm"
+            xstyle={styles.compactDropdownTrigger}
             disabled={disabled || !!t.disabled}
             aria-label={t["aria-label"] ?? "对齐"}
             title={t.title ?? "对齐"}
           >
             {currentAlign()}
-            <ChevronDown height={14} width={14} />
+            <ChevronDown height={12} width={12} />
           </Button>
         )
       }}
