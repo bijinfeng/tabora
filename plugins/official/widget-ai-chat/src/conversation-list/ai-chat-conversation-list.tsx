@@ -9,8 +9,8 @@ import MessageSquare from "lucide-solid/icons/message-square"
 import Pencil from "lucide-solid/icons/pencil"
 import Settings2 from "lucide-solid/icons/settings-2"
 import Trash2 from "lucide-solid/icons/trash-2"
-import type { AiChatConversationMeta, AiChatSession } from "./ai-chat-session"
-import { styles } from "./styles"
+import type { AiChatConversationMeta, AiChatSession } from "../conversation/ai-chat-session"
+import { conversationListStyles } from "./ai-chat-conversation-list.styles"
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -37,11 +37,11 @@ export function ConversationList(props: {
   const [focusedId, setFocusedId] = createSignal<string | null>(null)
   return (
     <>
-      <div {...stylex.attrs(styles.sideHead)}>
+      <div {...stylex.attrs(conversationListStyles.sideHead)}>
         <Button
           variant="ghost"
           size="sm"
-          xstyle={styles.newChatButton}
+          xstyle={conversationListStyles.newChatButton}
           onClick={() => {
             props.session.startNewConversation()
             props.onNew?.()
@@ -50,21 +50,22 @@ export function ConversationList(props: {
         >
           <MessageSquare size={14} />
           <span>新对话</span>
-          <kbd {...stylex.attrs(styles.newChatShortcut)}>Ctrl+N</kbd>
+          <kbd {...stylex.attrs(conversationListStyles.newChatShortcut)}>Ctrl+N</kbd>
         </Button>
-        <span {...stylex.attrs(styles.sideHeading)}>历史对话</span>
+        <span {...stylex.attrs(conversationListStyles.sideHeading)}>历史对话</span>
       </div>
       <Show
         when={props.session.conversations().length}
-        fallback={<div {...stylex.attrs(styles.sideEmpty)}>还没有历史对话。</div>}
+        fallback={<div {...stylex.attrs(conversationListStyles.sideEmpty)}>还没有历史对话。</div>}
       >
-        <div {...stylex.attrs(styles.sideList)}>
+        <div {...stylex.attrs(conversationListStyles.sideList)}>
           <For each={props.session.conversations()}>
             {(conversation) => (
               <div
                 {...stylex.attrs(
-                  styles.conversationRow,
-                  conversation.id === props.session.activeId() && styles.conversationRowActive,
+                  conversationListStyles.conversationRow,
+                  conversation.id === props.session.activeId() &&
+                    conversationListStyles.conversationRowActive,
                 )}
                 onMouseEnter={() => setHoveredId(conversation.id)}
                 onMouseLeave={() => setHoveredId(null)}
@@ -73,19 +74,21 @@ export function ConversationList(props: {
               >
                 <button
                   type="button"
-                  {...stylex.attrs(styles.conversationMain)}
+                  {...stylex.attrs(conversationListStyles.conversationMain)}
                   onClick={() => {
                     props.session.switchConversation(conversation.id)
                     props.onPick?.()
                   }}
                   aria-label={`切换到对话 ${conversation.title}`}
                 >
-                  <span {...stylex.attrs(styles.conversationTitle)}>{conversation.title}</span>
+                  <span {...stylex.attrs(conversationListStyles.conversationTitle)}>
+                    {conversation.title}
+                  </span>
                   <span
                     {...stylex.attrs(
-                      styles.conversationMeta,
+                      conversationListStyles.conversationMeta,
                       (hoveredId() === conversation.id || focusedId() === conversation.id) &&
-                        styles.conversationMetaHidden,
+                        conversationListStyles.conversationMetaHidden,
                     )}
                   >
                     {formatRelativeTime(conversation.updatedAt)}
@@ -93,9 +96,9 @@ export function ConversationList(props: {
                 </button>
                 <span
                   {...stylex.attrs(
-                    styles.conversationActions,
+                    conversationListStyles.conversationActions,
                     (hoveredId() === conversation.id || focusedId() === conversation.id) &&
-                      styles.conversationActionsVisible,
+                      conversationListStyles.conversationActionsVisible,
                   )}
                 >
                   <DropdownMenu

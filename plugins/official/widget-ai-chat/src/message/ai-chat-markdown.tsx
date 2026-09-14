@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex"
 import type { SolidMarkdownComponents } from "solid-markdown"
 import { TextPart } from "@tanstack/ai-solid/ui"
 
+/** Message-body Markdown primitives. */
 export const markdownStyles = stylex.create({
   paragraph: {
     marginBlock: 6,

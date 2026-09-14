@@ -13,9 +13,9 @@ import RefreshCw from "lucide-solid/icons/refresh-cw"
 import { AssistantMarkdown } from "./ai-chat-markdown"
 import { AiChatQueue } from "./ai-chat-queue"
 import { AiChatReasoning } from "./ai-chat-reasoning"
-import type { AiChatSession } from "./ai-chat-session"
+import type { AiChatSession } from "../conversation/ai-chat-session"
 import { AiChatUserMessage } from "./ai-chat-user-message"
-import { styles } from "./styles"
+import { messageStyles } from "./ai-chat-message.styles"
 
 const chatUi = createChatUI(
   {},
@@ -64,7 +64,7 @@ export function AiChatMessageThread(props: {
 
   return (
     <div
-      {...stylex.attrs(styles.thread)}
+      {...stylex.attrs(messageStyles.thread)}
       ref={props.onAttach}
       onScroll={props.onScroll}
       role="log"
@@ -85,20 +85,20 @@ export function AiChatMessageThread(props: {
             <Show when={message.role === "user" || message.role === "assistant"}>
               <div
                 {...stylex.attrs(
-                  styles.turn,
-                  message.role === "user" ? styles.turnUser : styles.turnAssistant,
+                  messageStyles.turn,
+                  message.role === "user" ? messageStyles.turnUser : messageStyles.turnAssistant,
                 )}
               >
                 <Show
                   when={message.role === "user"}
                   fallback={
-                    <div {...stylex.attrs(styles.assistantMessageRow)}>
-                      <div {...stylex.attrs(styles.assistantBubble)}>
+                    <div {...stylex.attrs(messageStyles.assistantMessageRow)}>
+                      <div {...stylex.attrs(messageStyles.assistantBubble)}>
                         <chatUi.Provider chat={chatFacade}>
                           <chatUi.Message message={message} />
                         </chatUi.Provider>
                       </div>
-                      <div {...stylex.attrs(styles.messageActions)}>
+                      <div {...stylex.attrs(messageStyles.messageActions)}>
                         <IconButton
                           size="sm"
                           variant="ghost"
@@ -133,8 +133,8 @@ export function AiChatMessageThread(props: {
                     </div>
                   }
                 >
-                  <div {...stylex.attrs(styles.userTurnRow)}>
-                    <div {...stylex.attrs(styles.userBubble)}>
+                  <div {...stylex.attrs(messageStyles.userTurnRow)}>
+                    <div {...stylex.attrs(messageStyles.userBubble)}>
                       <AiChatUserMessage message={message} />
                     </div>
                     <Show when={editable()}>
@@ -155,9 +155,9 @@ export function AiChatMessageThread(props: {
         }}
       </For>
       <Show when={props.session.isLoading()}>
-        <div {...stylex.attrs(styles.generatingRow)}>
+        <div {...stylex.attrs(messageStyles.generatingRow)}>
           <Spinner size="sm" aria-label="生成中" />
-          <span {...stylex.attrs(styles.generating)}>
+          <span {...stylex.attrs(messageStyles.generating)}>
             生成中 · {props.elapsed()} 秒
             <Show
               when={props.session.queuedCount() > 0}

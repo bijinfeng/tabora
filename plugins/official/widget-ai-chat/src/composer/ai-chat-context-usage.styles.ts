@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
-/** Compact context-window indicator styles kept separate from the main chat sheet. */
+/** Compact context-window indicator used only by the composer. */
 export const contextUsageStyles = stylex.create({
   meter: {
     alignItems: "center",

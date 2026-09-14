@@ -3,7 +3,7 @@ import { For, Show } from "solid-js"
 import type { QueuedMessage } from "@tanstack/ai-client"
 import { IconButton } from "@tabora/ui/button"
 import X from "lucide-solid/icons/x"
-import { styles } from "./styles"
+import { messageStyles } from "./ai-chat-message.styles"
 
 function queuedMessageText(message: QueuedMessage): string {
   if (typeof message.content === "string") return message.content
@@ -19,13 +19,13 @@ function queuedMessageText(message: QueuedMessage): string {
 export function AiChatQueue(props: { messages: QueuedMessage[]; onCancel: (id: string) => void }) {
   return (
     <Show when={props.messages.length > 0}>
-      <div {...stylex.attrs(styles.queueList)} aria-label="待发送消息">
+      <div {...stylex.attrs(messageStyles.queueList)} aria-label="待发送消息">
         <For each={props.messages}>
           {(message) => {
             const text = () => queuedMessageText(message).trim() || "附件消息"
             return (
-              <div {...stylex.attrs(styles.queueItem)}>
-                <span {...stylex.attrs(styles.queueItemText)} title={text()}>
+              <div {...stylex.attrs(messageStyles.queueItem)}>
+                <span {...stylex.attrs(messageStyles.queueItemText)} title={text()}>
                   已排队：{text()}
                 </span>
                 <IconButton

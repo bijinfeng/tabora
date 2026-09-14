@@ -9,17 +9,42 @@ import { createSignal } from "solid-js"
 import type { Accessor } from "solid-js"
 import { AiRuntimeError } from "@tabora/plugin-api/sdk"
 import type { AiRuntimeBridge, WidgetViewData } from "@tabora/plugin-api/sdk"
-import { AI_CHAT_ATTACHMENT_METADATA, attachmentMetadata } from "./ai-chat-attachments"
-import type { AiChatAttachmentMetadata } from "./ai-chat-attachments"
-
-const CHAT_SYSTEM_PROMPT =
-  "你是 Tabora 工作台中的 AI 助手。用与用户相同的语言回答，保持简洁直接，可用 Markdown 组织内容。"
-
-const CONTEXT_WINDOW_TOKENS = 32_000
+import { attachmentMetadata } from "../ai-chat-attachments"
+export { aiChatErrorCopy } from "./ai-chat-error"
+import {
+  buildSendOptions,
+  CHAT_SYSTEM_PROMPT,
+  deriveConversationTitle,
+  MAX_CONVERSATION_TITLE_CHARS,
+  messageText,
+  newConversationId,
+  toStoredMessage,
+  toUIMessage,
+} from "./ai-chat-model"
+import type {
+  AiChatContextBlock,
+  AiChatConversationMeta,
+  AiChatConversationOptions,
+  AiChatStoredConversation,
+} from "./ai-chat-model"
+export { buildSendOptions, estimateContextUsage, messageText } from "./ai-chat-model"
+export type {
+  AiChatContextBlock,
+  AiChatContextUsage,
+  AiChatConversationMeta,
+  AiChatConversationOptions,
+  AiChatReasoningEffort,
+  AiChatStoredConversation,
+  AiChatStoredMessage,
+  AiChatStoredPart,
+} from "./ai-chat-model"
 
 const STORAGE_KEY = "ai-chat-conversations"
-const MAX_TITLE_CHARS = 24
 const SAVE_DEBOUNCE_MS = 250
+const COMPACTION_KEEP_RECENT_MESSAGES = 4
+const COMPACTION_CONTEXT_LABEL = "已压缩的对话上下文"
+const COMPACTION_SYSTEM_PROMPT =
+  "你负责压缩 AI 对话历史。保留用户目标、已确认的事实、关键决定、约束、未完成事项和必要的技术细节。不要虚构信息，不要提及压缩过程；用与原对话相同的语言，输出可直接作为后续对话上下文的简洁摘要。"
 
 let aiRuntime: AiRuntimeBridge | undefined
 let openAiSettings: ((sectionId?: string) => void) | undefined
@@ -41,88 +66,6 @@ export function getAiChatSettingsOpener(): ((sectionId?: string) => void) | unde
   return openAiSettings
 }
 
-export type AiChatStoredPart =
-  | { type: "text"; text: string }
-  | {
-      /** Provider-visible reasoning summary. `signature` is opaque continuation state, never UI text. */
-      type: "thinking"
-      content: string
-      signature?: string
-    }
-  | {
-      type: "image" | "audio"
-      source: { type: "data"; value: string; mimeType: string } | { type: "url"; value: string }
-    }
-  | {
-      type: "document"
-      source: { type: "data"; value: string; mimeType: string } | { type: "url"; value: string }
-      metadata?: { filename?: string }
-    }
-
-export type AiChatStoredMessage = {
-  id: string
-  role: "user" | "assistant"
-  createdAt: string
-  status: "complete" | "error"
-  errorCode?: string
-  parts: AiChatStoredPart[]
-  /** UI-only attachment information; model context remains in the text part. */
-  attachmentMetadata?: AiChatAttachmentMetadata
-}
-
-export type AiChatContextBlock = {
-  id: string
-  label: string
-  text: string
-}
-
-export type AiChatReasoningEffort = "low" | "medium" | "high"
-
-export type AiChatStoredConversation = {
-  id: string
-  title: string
-  titleExplicit?: boolean
-  /** Set once the model-generated title attempt ran (success or failure). */
-  titleModelTried?: boolean
-  /** Per-conversation system prompt override; empty when unset. */
-  systemPrompt?: string
-  /** Per-conversation sampling temperature override. */
-  temperature?: number
-  /** Per-conversation builtin model id; empty falls back to the workspace default. */
-  modelId?: string
-  /** Per-conversation reasoning strength for capable models. */
-  reasoningEffort?: AiChatReasoningEffort
-  /** Per-conversation output cap; also drives the context-capacity control. */
-  maxOutputTokens?: number
-  /** Extra context blocks appended to the system prompt for this conversation. */
-  contextBlocks?: AiChatContextBlock[]
-  createdAt: string
-  updatedAt: string
-  messages: AiChatStoredMessage[]
-}
-
-export type AiChatConversationOptions = {
-  systemPrompt?: string
-  temperature?: number | undefined
-  modelId?: string | undefined
-  reasoningEffort?: AiChatReasoningEffort | undefined
-  maxOutputTokens?: number | undefined
-  contextBlocks?: AiChatContextBlock[]
-}
-
-export type AiChatConversationMeta = {
-  id: string
-  title: string
-  messageCount: number
-  updatedAt: string
-  systemPrompt?: string
-  temperature?: number
-  modelId?: string
-  reasoningEffort?: AiChatReasoningEffort
-  maxOutputTokens?: number
-  contextBlocks?: AiChatContextBlock[]
-}
-
 export type AiChatSession = {
   loaded: Accessor<boolean>
   conversations: Accessor<AiChatConversationMeta[]>
@@ -132,12 +75,15 @@ export type AiChatSession = {
   queuedCount: Accessor<number>
   queuedMessages: Accessor<QueuedMessage[]>
   error: Accessor<Error | undefined>
+  isCompressing: Accessor<boolean>
   send(content: string | MultimodalContent): Promise<void>
   /** Interrupt the active generation and dispatch this turn without queueing it. */
   sendImmediately(content: string | MultimodalContent): Promise<void>
   stop(): void
   cancelQueued(id: string): void
   clear(): void
+  /** Replace older turns with an AI-generated summary while retaining recent context. */
+  compressContext(): Promise<void>
   retry(): Promise<void>
   startNewConversation(): void
   createConversation(): string
@@ -182,183 +128,6 @@ export function runNewConversationCommand(instanceId?: string): void {
   entry.openExpand()
 }
 
-export function messageText(message: UIMessage): string {
-  return message.parts
-    .filter((part): part is { type: "text"; content: string } => part.type === "text")
-    .map((part) => part.content)
-    .join("")
-}
-
-function newId(): string {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `chat-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
-
-function deriveTitle(text: string): string {
-  const normalized = text.replace(/\s+/g, " ").trim()
-  return normalized.length > MAX_TITLE_CHARS
-    ? `${normalized.slice(0, MAX_TITLE_CHARS)}…`
-    : normalized || "新对话"
-}
-
-function toStoredMessage(
-  message: UIMessage,
-  status: "complete" | "error" = "complete",
-): AiChatStoredMessage {
-  const metadata = attachmentMetadata(message)
-  const parts: AiChatStoredPart[] = []
-  for (const part of message.parts) {
-    if (part.type === "text") {
-      parts.push({ type: "text", text: part.content })
-      continue
-    }
-    if (part.type === "thinking") {
-      const opaque = part as { content: string; signature?: unknown }
-      if (!opaque.content || opaque.content.length > 32_000) continue
-      if (opaque.signature !== undefined && typeof opaque.signature !== "string") continue
-      if (typeof opaque.signature === "string" && opaque.signature.length > 65_536) continue
-      parts.push({
-        type: "thinking",
-        content: opaque.content,
-        ...(typeof opaque.signature === "string" ? { signature: opaque.signature } : {}),
-      })
-      continue
-    }
-    if (part.type !== "image" && part.type !== "audio" && part.type !== "document") continue
-    const source = part.source
-    const persistedSource =
-      source.type === "data"
-        ? { type: "data" as const, value: source.value, mimeType: source.mimeType }
-        : { type: "url" as const, value: source.value }
-    if (part.type === "document") {
-      const metadata =
-        part.metadata &&
-        typeof part.metadata === "object" &&
-        "filename" in part.metadata &&
-        typeof part.metadata.filename === "string"
-          ? { filename: part.metadata.filename }
-          : undefined
-      parts.push({ type: "document", source: persistedSource, ...(metadata ? { metadata } : {}) })
-    } else {
-      parts.push({ type: part.type, source: persistedSource })
-    }
-  }
-  return {
-    id: message.id,
-    role: message.role === "assistant" ? "assistant" : "user",
-    createdAt: message.createdAt?.toISOString() ?? new Date().toISOString(),
-    status,
-    parts: parts.length > 0 ? parts : [{ type: "text", text: messageText(message) }],
-    ...(metadata ? { attachmentMetadata: metadata } : {}),
-  }
-}
-
-function toUIMessage(stored: AiChatStoredMessage): UIMessage {
-  return {
-    id: stored.id,
-    role: stored.role,
-    parts: stored.parts.map((part) => {
-      if (part.type === "text") return { type: "text" as const, content: part.text }
-      if (part.type === "thinking") {
-        return {
-          type: "thinking" as const,
-          content: part.content,
-          ...(part.signature ? { signature: part.signature } : {}),
-        }
-      }
-      if (part.type === "document") {
-        return {
-          type: "document" as const,
-          source: part.source,
-          ...(part.metadata ? { metadata: part.metadata } : {}),
-        }
-      }
-      return { type: part.type, source: part.source }
-    }),
-    ...(stored.attachmentMetadata
-      ? { metadata: { [AI_CHAT_ATTACHMENT_METADATA]: stored.attachmentMetadata } }
-      : {}),
-  }
-}
-
-function composeSystemPrompt(
-  conversation: Pick<AiChatStoredConversation, "systemPrompt" | "contextBlocks">,
-): string {
-  const base = conversation.systemPrompt?.trim() || CHAT_SYSTEM_PROMPT
-  const contextBlocks = conversation.contextBlocks ?? []
-  if (contextBlocks.length === 0) return base
-  const rendered = contextBlocks
-    .map((block) => `# ${block.label.trim() || "上下文"}\n${block.text.trim()}`)
-    .join("\n\n")
-  return `${base}\n\n以下是本次对话的附加上下文：\n\n${rendered}`
-}
-
-export type AiChatContextUsage = {
-  usedTokens: number
-  windowTokens: number
-  percent: number
-}
-
-/** Estimate the visible context window, reserving a conservative budget for media. */
-export function estimateContextUsage(
-  conversation: Pick<AiChatStoredConversation, "systemPrompt" | "contextBlocks"> | undefined,
-  messages: UIMessage[],
-  pending?: string,
-): AiChatContextUsage {
-  const systemChars = conversation
-    ? composeSystemPrompt(conversation).length
-    : CHAT_SYSTEM_PROMPT.length
-  const messageChars = messages.reduce((total, message) => total + messageText(message).length, 0)
-  const mediaChars = messages.reduce(
-    (total, message) =>
-      total +
-      message.parts.reduce(
-        (sum, part) =>
-          sum +
-          ((part.type === "image" || part.type === "audio" || part.type === "document") &&
-          part.source.type === "data"
-            ? part.source.value.length
-            : 0),
-        0,
-      ),
-    0,
-  )
-  const usedTokens = Math.max(
-    1,
-    Math.ceil((systemChars + messageChars + (pending?.length ?? 0)) / 4) +
-      Math.ceil(mediaChars / 1_000),
-  )
-  return {
-    usedTokens,
-    windowTokens: CONTEXT_WINDOW_TOKENS,
-    percent: Math.min(100, Math.round((usedTokens / CONTEXT_WINDOW_TOKENS) * 100)),
-  }
-}
-
-export function buildSendOptions(
-  conversation: AiChatStoredConversation,
-  attachmentIds: string[] = [],
-): {
-  system: string
-  temperature?: number
-  maxOutputTokens?: number
-  modelId?: string
-  reasoningEffort?: AiChatReasoningEffort
-  attachmentIds?: string[]
-} {
-  return {
-    system: composeSystemPrompt(conversation),
-    ...(conversation.temperature === undefined ? {} : { temperature: conversation.temperature }),
-    ...(conversation.maxOutputTokens === undefined
-      ? {}
-      : { maxOutputTokens: conversation.maxOutputTokens }),
-    ...(conversation.modelId ? { modelId: conversation.modelId } : {}),
-    ...(conversation.reasoningEffort ? { reasoningEffort: conversation.reasoningEffort } : {}),
-    ...(attachmentIds.length ? { attachmentIds } : {}),
-  }
-}
-
 function attachmentIds(messages: UIMessage[], content?: string | MultimodalContent): string[] {
   const ids = new Set<string>()
   for (const message of messages) {
@@ -373,6 +142,15 @@ function attachmentIds(messages: UIMessage[], content?: string | MultimodalConte
     }
   }
   return [...ids]
+}
+
+function renderHistoryForCompaction(messages: UIMessage[]): string {
+  return messages
+    .map((message) => {
+      const text = messageText(message).trim()
+      return `${message.role === "assistant" ? "助手" : "用户"}：${text || "（无文本内容）"}`
+    })
+    .join("\n\n")
 }
 
 /**
@@ -413,6 +191,7 @@ export function getAiChatSession(options: {
   const [queuedCount, setQueuedCount] = createSignal(0)
   const [queuedMessages, setQueuedMessages] = createSignal<QueuedMessage[]>([])
   const [error, setError] = createSignal<Error | undefined>(undefined)
+  const [isCompressing, setCompressing] = createSignal(false)
 
   const clients = new Map<string, ChatClient>()
   let saveTimer: ReturnType<typeof setTimeout> | undefined
@@ -438,7 +217,7 @@ export function getAiChatSession(options: {
     if (conversation.titleExplicit || conversation.titleModelTried) return conversation.title
     const firstUser = conversation.messages.find((message) => message.role === "user")
     const firstText = firstUser?.parts.find((part) => part.type === "text")
-    return deriveTitle(firstText?.text ?? "")
+    return deriveConversationTitle(firstText?.text ?? "")
   }
 
   function syncMessages(conversationId: string, next: UIMessage[]) {
@@ -492,7 +271,7 @@ export function getAiChatSession(options: {
         system: CHAT_SYSTEM_PROMPT,
         maxOutputTokens: 40,
       })
-      const title = deriveTitle(result?.text ?? "")
+      const title = deriveConversationTitle(result?.text ?? "")
       if (!title || title === "新对话") return
       setStore((list) =>
         list.map((candidate) =>
@@ -578,6 +357,7 @@ export function getAiChatSession(options: {
     queuedCount,
     queuedMessages,
     error,
+    isCompressing,
 
     send(text) {
       setError(undefined)
@@ -649,6 +429,74 @@ export function getAiChatSession(options: {
       persistNow()
     },
 
+    async compressContext() {
+      const conversation = activeConversation()
+      const history = messages()
+      if (!conversation || history.length <= COMPACTION_KEEP_RECENT_MESSAGES) {
+        setError(new Error("至少需要 5 条消息才能压缩上下文"))
+        return
+      }
+      if (session.isLoading() || isCompressing()) return
+      if (!aiRuntime) {
+        setError(new Error("当前宿主未提供 AI 压缩能力"))
+        return
+      }
+
+      const olderMessages = history.slice(0, -COMPACTION_KEEP_RECENT_MESSAGES)
+      const recentMessages = history.slice(-COMPACTION_KEEP_RECENT_MESSAGES)
+      const existingSummary = (conversation.contextBlocks ?? []).find(
+        (block) => block.source === "compaction",
+      )
+      const retainedBlocks = (conversation.contextBlocks ?? []).filter(
+        (block) => block.source !== "compaction",
+      )
+      const prompt = [
+        existingSummary ? `此前摘要：\n${existingSummary.text.trim()}` : "",
+        `需要压缩的较早对话：\n${renderHistoryForCompaction(olderMessages)}`,
+      ]
+        .filter(Boolean)
+        .join("\n\n")
+
+      setError(undefined)
+      setCompressing(true)
+      try {
+        const result = await aiRuntime.generate({
+          system: COMPACTION_SYSTEM_PROMPT,
+          prompt,
+          maxOutputTokens: 1_800,
+        })
+        const summary = result.text.trim()
+        if (!summary) throw new Error("未能生成可用的上下文摘要")
+
+        const nextMessages = recentMessages.map((message) => toStoredMessage(message))
+        const compactedBlock: AiChatContextBlock = {
+          id: existingSummary?.id ?? newConversationId(),
+          label: COMPACTION_CONTEXT_LABEL,
+          text: summary,
+          source: "compaction",
+        }
+        clients.get(conversation.id)?.setMessagesManually(recentMessages)
+        setStore((list) =>
+          list.map((candidate) =>
+            candidate.id === conversation.id
+              ? {
+                  ...candidate,
+                  contextBlocks: [...retainedBlocks, compactedBlock],
+                  messages: nextMessages,
+                  updatedAt: new Date().toISOString(),
+                }
+              : candidate,
+          ),
+        )
+        setMessages(recentMessages)
+        persistNow()
+      } catch (next) {
+        setError(unwrapAiError(next instanceof Error ? next : new Error("压缩上下文失败")))
+      } finally {
+        setCompressing(false)
+      }
+    },
+
     retry() {
       setError(undefined)
       const client = clients.get(activeId() ?? "")
@@ -666,7 +514,7 @@ export function getAiChatSession(options: {
     },
 
     createConversation() {
-      const id = newId()
+      const id = newConversationId()
       const now = new Date().toISOString()
       setStore((list) => [
         { id, title: "新对话", createdAt: now, updatedAt: now, messages: [] },
@@ -690,7 +538,7 @@ export function getAiChatSession(options: {
           conversation.id === id
             ? {
                 ...conversation,
-                title: normalized.slice(0, MAX_TITLE_CHARS * 4),
+                title: normalized.slice(0, MAX_CONVERSATION_TITLE_CHARS * 4),
                 titleExplicit: true,
                 updatedAt: new Date().toISOString(),
               }
@@ -809,45 +657,4 @@ export function getAiChatSession(options: {
 /** Restore helper shared by views: reads persisted conversations for an instance. */
 export function aiChatStorageKey(): string {
   return STORAGE_KEY
-}
-
-const ERROR_COPY: Record<string, { title: string; hint: string }> = {
-  ai_not_configured: {
-    title: "AI 还未配置",
-    hint: "在设置中心 AI 面板配置模型后即可对话。",
-  },
-  ai_auth_required: {
-    title: "登录后可使用内置模型",
-    hint: "登录 Tabora 账号，或改用自定义提供商。",
-  },
-  ai_model_unavailable: {
-    title: "模型暂不可用",
-    hint: "请检查 AI 设置中的模型配置。",
-  },
-  ai_request_rejected: {
-    title: "请求被拒绝",
-    hint: "输入或对话历史超出限制，请缩短内容后重试。",
-  },
-  ai_provider_failed: {
-    title: "请求失败",
-    hint: "AI 服务暂时不可用，请稍后重试。",
-  },
-}
-
-export function aiChatErrorCopy(error: Error | undefined): {
-  title: string
-  hint: string
-  openSettings: boolean
-} {
-  const code = (error as { code?: string } | undefined)?.code
-  const entry = code ? ERROR_COPY[code] : undefined
-  if (entry) {
-    const detail = error?.message?.trim()
-    return {
-      title: entry.title,
-      hint: code === "ai_request_rejected" && detail && detail !== entry.hint ? detail : entry.hint,
-      openSettings: code !== "ai_provider_failed" && code !== "ai_request_rejected",
-    }
-  }
-  return { title: "请求失败", hint: error?.message ?? "请稍后重试。", openSettings: false }
 }

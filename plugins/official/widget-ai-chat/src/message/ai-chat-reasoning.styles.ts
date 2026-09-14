@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex"
 
+/** Provider-supplied reasoning summary presentation. */
 export const reasoningStyles = stylex.create({
   root: {
     display: "grid",
