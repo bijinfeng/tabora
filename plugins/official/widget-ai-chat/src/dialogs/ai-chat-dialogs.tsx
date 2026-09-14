@@ -6,8 +6,12 @@ import { Dialog } from "@tabora/ui/dialog"
 import { Input } from "@tabora/ui/input"
 import { Textarea } from "@tabora/ui/textarea"
 import X from "lucide-solid/icons/x"
-import type { AiChatContextBlock, AiChatConversationMeta, AiChatSession } from "./ai-chat-session"
-import { styles } from "./styles"
+import type {
+  AiChatContextBlock,
+  AiChatConversationMeta,
+  AiChatSession,
+} from "../conversation/ai-chat-session"
+import { dialogStyles } from "./ai-chat-dialogs.styles"
 
 /** Conversation mutations and option dialogs, kept outside the chat surface composition. */
 export function AiChatDialogs(props: {
@@ -146,9 +150,9 @@ export function AiChatDialogs(props: {
           }}
           okText="添加"
         >
-          <div {...stylex.attrs(styles.optionsForm)}>
-            <label {...stylex.attrs(styles.optionsLabel)}>
-              <span {...stylex.attrs(styles.optionsLabelText)}>片段名称（可选）</span>
+          <div {...stylex.attrs(dialogStyles.optionsForm)}>
+            <label {...stylex.attrs(dialogStyles.optionsLabel)}>
+              <span {...stylex.attrs(dialogStyles.optionsLabelText)}>片段名称（可选）</span>
               <Input
                 value={props.contextLabel()}
                 onInput={props.setContextLabel}
@@ -156,8 +160,8 @@ export function AiChatDialogs(props: {
                 aria-label="片段名称"
               />
             </label>
-            <label {...stylex.attrs(styles.optionsLabel)}>
-              <span {...stylex.attrs(styles.optionsLabelText)}>片段内容</span>
+            <label {...stylex.attrs(dialogStyles.optionsLabel)}>
+              <span {...stylex.attrs(dialogStyles.optionsLabelText)}>片段内容</span>
               <Textarea
                 rows={6}
                 value={props.contextText()}
@@ -167,14 +171,14 @@ export function AiChatDialogs(props: {
               />
             </label>
             <Show when={props.contextBlocks().length > 0}>
-              <div {...stylex.attrs(styles.contextList)}>
-                <span {...stylex.attrs(styles.optionsLabelText)}>已添加的上下文</span>
+              <div {...stylex.attrs(dialogStyles.contextList)}>
+                <span {...stylex.attrs(dialogStyles.optionsLabelText)}>已添加的上下文</span>
                 <For each={props.contextBlocks()}>
                   {(block) => (
-                    <div {...stylex.attrs(styles.contextItem)}>
-                      <div {...stylex.attrs(styles.contextItemMain)}>
-                        <span {...stylex.attrs(styles.contextItemLabel)}>{block.label}</span>
-                        <span {...stylex.attrs(styles.contextItemPreview)}>
+                    <div {...stylex.attrs(dialogStyles.contextItem)}>
+                      <div {...stylex.attrs(dialogStyles.contextItemMain)}>
+                        <span {...stylex.attrs(dialogStyles.contextItemLabel)}>{block.label}</span>
+                        <span {...stylex.attrs(dialogStyles.contextItemPreview)}>
                           {block.text.slice(0, 60)}
                           {block.text.length > 60 ? "…" : ""}
                         </span>
@@ -205,9 +209,9 @@ export function AiChatDialogs(props: {
             onOk={props.onSaveOptions}
             okText="保存"
           >
-            <div {...stylex.attrs(styles.optionsForm)}>
-              <label {...stylex.attrs(styles.optionsLabel)}>
-                <span {...stylex.attrs(styles.optionsLabelText)}>系统提示词</span>
+            <div {...stylex.attrs(dialogStyles.optionsForm)}>
+              <label {...stylex.attrs(dialogStyles.optionsLabel)}>
+                <span {...stylex.attrs(dialogStyles.optionsLabelText)}>系统提示词</span>
                 <Textarea
                   rows={4}
                   value={props.promptDraft()}
@@ -216,8 +220,10 @@ export function AiChatDialogs(props: {
                   aria-label="系统提示词"
                 />
               </label>
-              <label {...stylex.attrs(styles.optionsLabel)}>
-                <span {...stylex.attrs(styles.optionsLabelText)}>温度（0–2，留空使用默认）</span>
+              <label {...stylex.attrs(dialogStyles.optionsLabel)}>
+                <span {...stylex.attrs(dialogStyles.optionsLabelText)}>
+                  温度（0–2，留空使用默认）
+                </span>
                 <Input
                   value={props.temperatureDraft()}
                   onInput={(value) => {
@@ -229,11 +235,13 @@ export function AiChatDialogs(props: {
                   placeholder="例如 0.7"
                 />
                 <Show when={props.temperatureInvalid()}>
-                  <span {...stylex.attrs(styles.optionsHint)}>温度需为 0 到 2 之间的数字</span>
+                  <span {...stylex.attrs(dialogStyles.optionsHint)}>
+                    温度需为 0 到 2 之间的数字
+                  </span>
                 </Show>
               </label>
-              <label {...stylex.attrs(styles.optionsLabel)}>
-                <span {...stylex.attrs(styles.optionsLabelText)}>
+              <label {...stylex.attrs(dialogStyles.optionsLabel)}>
+                <span {...stylex.attrs(dialogStyles.optionsLabelText)}>
                   最大输出 Token（1–8192，留空使用默认）
                 </span>
                 <Input
@@ -247,7 +255,7 @@ export function AiChatDialogs(props: {
                   placeholder="例如 2048"
                 />
                 <Show when={props.maxOutputTokensInvalid()}>
-                  <span {...stylex.attrs(styles.optionsHint)}>
+                  <span {...stylex.attrs(dialogStyles.optionsHint)}>
                     最大输出 Token 需为 1 到 8192 之间的整数
                   </span>
                 </Show>

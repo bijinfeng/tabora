@@ -1,12 +1,12 @@
 import type { PluginModule } from "@tabora/plugin-api/sdk"
 import { officialPluginAiChatManifest } from "./manifest"
-import { AiChatCard } from "./ai-chat-card"
-import { AiChatExpand } from "./ai-chat-expand"
+import { AiChatCard } from "./card/ai-chat-card"
+import { AiChatExpand } from "./layout/ai-chat-expand"
 import {
   runNewConversationCommand,
   setAiChatRuntime,
   setAiChatSettingsOpener,
-} from "./ai-chat-session"
+} from "./conversation/ai-chat-session"
 
 export const officialPluginAiChat: PluginModule = {
   manifest: officialPluginAiChatManifest,

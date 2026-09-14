@@ -6,9 +6,9 @@ import FileText from "lucide-solid/icons/file-text"
 import File from "lucide-solid/icons/file"
 import Image from "lucide-solid/icons/image"
 import Paperclip from "lucide-solid/icons/paperclip"
-import type { AiChatAttachment } from "./ai-chat-attachments"
-import { attachmentMetadata, formatFileSize } from "./ai-chat-attachments"
-import { styles } from "./styles"
+import type { AiChatAttachment } from "../ai-chat-attachments"
+import { attachmentMetadata, formatFileSize } from "../ai-chat-attachments"
+import { messageStyles } from "./ai-chat-message.styles"
 
 function imageDataUrl(part: unknown): string | undefined {
   if (!part || typeof part !== "object") return undefined
@@ -51,10 +51,10 @@ function AiChatAttachmentItem(props: {
   const hasDetail = () => Boolean(props.image || props.attachment.preview)
   const id = () => `attachment-${props.imageIndex}-${props.attachment.name}`
   return (
-    <div {...stylex.attrs(styles.userAttachment)}>
+    <div {...stylex.attrs(messageStyles.userAttachment)}>
       <button
         type="button"
-        {...stylex.attrs(styles.userAttachmentButton)}
+        {...stylex.attrs(messageStyles.userAttachmentButton)}
         aria-expanded={hasDetail() ? expanded() : undefined}
         aria-controls={hasDetail() ? id() : undefined}
         disabled={!hasDetail()}
@@ -64,42 +64,44 @@ function AiChatAttachmentItem(props: {
         <Show
           when={props.image}
           fallback={
-            <span {...stylex.attrs(styles.userAttachmentIcon)}>
+            <span {...stylex.attrs(messageStyles.userAttachmentIcon)}>
               <AttachmentIcon kind={props.attachment.kind} />
             </span>
           }
         >
           {(source) => (
             <img
-              {...stylex.attrs(styles.userAttachmentThumbnail)}
+              {...stylex.attrs(messageStyles.userAttachmentThumbnail)}
               src={source()}
               alt={`附件预览：${props.attachment.name}`}
             />
           )}
         </Show>
-        <span {...stylex.attrs(styles.userAttachmentInfo)}>
-          <span {...stylex.attrs(styles.userAttachmentName)}>{props.attachment.name}</span>
-          <span {...stylex.attrs(styles.userAttachmentMeta)}>
+        <span {...stylex.attrs(messageStyles.userAttachmentInfo)}>
+          <span {...stylex.attrs(messageStyles.userAttachmentName)}>{props.attachment.name}</span>
+          <span {...stylex.attrs(messageStyles.userAttachmentMeta)}>
             {formatFileSize(props.attachment.size)} · {props.attachment.detail}
           </span>
         </span>
         <Show when={hasDetail()}>
-          <Paperclip {...stylex.attrs(styles.userAttachmentAffordance)} size={14} />
+          <Paperclip {...stylex.attrs(messageStyles.userAttachmentAffordance)} size={14} />
         </Show>
       </button>
       <Show when={expanded() && hasDetail()}>
-        <div id={id()} {...stylex.attrs(styles.userAttachmentDetail)}>
+        <div id={id()} {...stylex.attrs(messageStyles.userAttachmentDetail)}>
           <Show when={props.image}>
             {(source) => (
               <img
-                {...stylex.attrs(styles.userAttachmentImage)}
+                {...stylex.attrs(messageStyles.userAttachmentImage)}
                 src={source()}
                 alt={`附件：${props.attachment.name}`}
               />
             )}
           </Show>
           <Show when={props.attachment.preview}>
-            <pre {...stylex.attrs(styles.userAttachmentPreview)}>{props.attachment.preview}</pre>
+            <pre {...stylex.attrs(messageStyles.userAttachmentPreview)}>
+              {props.attachment.preview}
+            </pre>
           </Show>
         </div>
       </Show>
@@ -113,9 +115,9 @@ export function AiChatUserMessage(props: { message: UIMessage }) {
   const images = () => props.message.parts.map(imageDataUrl).filter(Boolean) as string[]
   const displayText = () => metadata()?.displayText ?? textContent(props.message)
   return (
-    <div {...stylex.attrs(styles.userMessageContent)}>
+    <div {...stylex.attrs(messageStyles.userMessageContent)}>
       <Show when={metadata()?.attachments.length}>
-        <div {...stylex.attrs(styles.userAttachmentList)} aria-label="消息附件">
+        <div {...stylex.attrs(messageStyles.userAttachmentList)} aria-label="消息附件">
           <For each={metadata()?.attachments}>
             {(attachment, index) => {
               const currentImageIndex = () =>
@@ -138,12 +140,12 @@ export function AiChatUserMessage(props: { message: UIMessage }) {
         </div>
       </Show>
       <Show when={displayText()}>
-        <span {...stylex.attrs(styles.userMessageText)}>{displayText()}</span>
+        <span {...stylex.attrs(messageStyles.userMessageText)}>{displayText()}</span>
       </Show>
       <Show when={!metadata()}>
         <For each={images()}>
           {(source) => (
-            <img {...stylex.attrs(styles.userMessageImage)} src={source} alt="已附图片" />
+            <img {...stylex.attrs(messageStyles.userMessageImage)} src={source} alt="已附图片" />
           )}
         </For>
       </Show>

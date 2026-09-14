@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 import type { AiChatConnection, WidgetViewData } from "@tabora/plugin-api/sdk"
 
-import { getAiChatSession, setAiChatRuntime } from "./ai-chat-session"
-import type { AiChatStoredConversation } from "./ai-chat-session"
+import { getAiChatSession, setAiChatRuntime } from "./conversation/ai-chat-session"
+import type { AiChatStoredConversation } from "./conversation/ai-chat-session"
 
 function makeDataStore() {
   const map = new Map<string, unknown>()
