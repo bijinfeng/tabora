@@ -8,10 +8,12 @@ import {
   aiStreamResponse,
   createTanstackAiGateway,
   createAttachmentTools,
+  convertPluginToolsToTanstackTools,
   parseAiGatewayRequest,
   type AiCustomProviderConfig,
   type AiTextGateway,
   type AiAttachmentToolResource,
+  type PluginToolEntryLike,
 } from "@tabora/ai-runtime/server"
 
 import type { ServerRuntime } from "./runtime"
@@ -107,11 +109,15 @@ export function createCloudAiGateway(
     NonNullable<Parameters<typeof createTanstackAiGateway>[0]>,
     "usageTracker" | "budget"
   > = {},
+  pluginToolEntries: readonly PluginToolEntryLike[] = [],
 ) {
   return createTanstackAiGateway({
     builtinModels,
     validateCustomProvider: validateCloudCustomProvider,
-    tools: () => createAttachmentTools(attachmentResources),
+    tools: () => [
+      ...createAttachmentTools(attachmentResources),
+      ...convertPluginToolsToTanstackTools(pluginToolEntries),
+    ],
     ...usage,
   })
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { createExtensionRegistry } from "./extensionRegistry"
+import type { AiToolContribution } from "@tabora/plugin-api"
+import { createExtensionRegistry, type AiToolContributionRef } from "./extensionRegistry"
 
 describe("createExtensionRegistry", () => {
   it("registers and retrieves views by id", () => {
@@ -84,5 +85,101 @@ describe("createExtensionRegistry", () => {
     expect(() => registry.commands.get("missing.command")).toThrow(
       "Command handler not registered: missing.command",
     )
+  })
+})
+
+describe("aiTool registry", () => {
+  const exampleContribution: AiToolContribution = {
+    id: "official.ai.example.greet",
+    name: "greet",
+    description: "Greet someone by name",
+    inputSchema: {
+      type: "object",
+      properties: { name: { type: "string" } },
+      required: ["name"],
+      additionalProperties: false,
+    },
+  }
+  const exampleRef: AiToolContributionRef = {
+    pluginId: "official.ai.example",
+    kind: "ai-tool",
+    id: "official.ai.example.greet",
+    contribution: exampleContribution,
+  }
+  const exampleHandler = async (input: { args: Record<string, unknown> }) =>
+    `hello ${input.args.name as string}`
+
+  it("register returns disposer, entries() returns registry snapshot, listRegistered() filters refs", () => {
+    const registry = createExtensionRegistry()
+    const dispose = registry.aiTools.register("official.ai.example", exampleRef, exampleHandler)
+
+    const entries = Array.from(registry.aiTools.entries())
+    expect(entries).toHaveLength(1)
+    const [entry] = entries
+    expect(entry?.ref).toBe(exampleRef)
+    expect(entry?.handler).toBe(exampleHandler)
+
+    const registered = registry.aiTools.listRegistered()
+    expect(registered).toHaveLength(1)
+    expect(registered.at(0)).toBe(exampleRef)
+
+    const filtered = registry.aiTools.listRegistered("official.ai.example")
+    expect(filtered).toHaveLength(1)
+
+    const empty = registry.aiTools.listRegistered("other.plugin")
+    expect(empty).toHaveLength(0)
+
+    dispose()
+    expect(Array.from(registry.aiTools.entries())).toHaveLength(0)
+    expect(registry.aiTools.listRegistered()).toHaveLength(0)
+  })
+
+  it("clearPluginEntries removes all tools belonging to the plugin", () => {
+    const registry = createExtensionRegistry()
+    const anotherContribution: AiToolContribution = {
+      ...exampleContribution,
+      id: "official.ai.example.bye",
+      name: "bye",
+    }
+    const anotherRef: AiToolContributionRef = {
+      pluginId: "official.ai.example",
+      kind: "ai-tool",
+      id: "official.ai.example.bye",
+      contribution: anotherContribution,
+    }
+    const otherRef: AiToolContributionRef = {
+      pluginId: "official.other",
+      kind: "ai-tool",
+      id: "official.other.tick",
+      contribution: {
+        id: "official.other.tick",
+        name: "tick",
+        description: "tick",
+        inputSchema: { type: "object" },
+      },
+    }
+    registry.aiTools.register("official.ai.example", exampleRef, exampleHandler)
+    registry.aiTools.register("official.ai.example", anotherRef, exampleHandler)
+    registry.aiTools.register("official.other", otherRef, exampleHandler)
+
+    registry.aiTools.clearPluginEntries("official.ai.example")
+
+    const remaining = registry.aiTools.listRegistered()
+    expect(remaining.map((ref) => ref.pluginId)).toEqual(["official.other"])
+  })
+
+  it("rejects mismatched plugin id, and rejects duplicate registration preserving original", () => {
+    const registry = createExtensionRegistry()
+    expect(() => registry.aiTools.register("official.other", exampleRef, exampleHandler)).toThrow(
+      "aiTool plugin id mismatch",
+    )
+
+    registry.aiTools.register("official.ai.example", exampleRef, exampleHandler)
+    const replacement = async () => "replaced"
+    expect(() => registry.aiTools.register("official.ai.example", exampleRef, replacement)).toThrow(
+      "aiTool already registered",
+    )
+    const found = Array.from(registry.aiTools.entries())[0]
+    expect(found?.handler).toBe(exampleHandler)
   })
 })

@@ -1,13 +1,21 @@
 import {
   chat,
   toServerSentEventsResponse,
+  toolDefinition,
   type AnyServerTool,
   type AnyTextAdapter,
 } from "@tanstack/ai"
 import { createAnthropicChat } from "@tanstack/ai-anthropic"
 import type { StreamChunk } from "@tanstack/ai/client"
 import { openaiCompatibleText } from "@tanstack/ai-openai/compatible"
-import { AiRuntimeError } from "@tabora/plugin-api"
+import { z, type ZodType } from "zod"
+import {
+  AiRuntimeError,
+  PluginAiToolError,
+  type PluginAiToolContext,
+  type PluginAiToolHandler,
+  type PluginNetworkAccess,
+} from "@tabora/plugin-api"
 import type { AiBudget, AiGenerateResult, AiStreamChunk, AiTokenUsage } from "@tabora/plugin-api"
 
 import type {
@@ -30,6 +38,135 @@ export type { AiAttachmentToolResource } from "./attachmentTools"
 const MAX_CHAT_MESSAGES = 100
 const MAX_CHAT_MESSAGE_CHARS = 32_000
 const MAX_REASONING_SIGNATURE_CHARS = 1_000_000
+
+export type PluginToolEntryLike = {
+  ref: {
+    pluginId: string
+    id: string
+    kind: "ai-tool"
+    contribution: {
+      name: string
+      description: string
+      inputSchema: Record<string, unknown>
+      resultViewId?: string
+      requiresNetwork?: boolean
+    }
+  }
+  handler: PluginAiToolHandler
+}
+
+type PluginToolContextRuntime = {
+  network?: PluginNetworkAccess | undefined
+  logger?: PluginAiToolContext["logger"]
+  instanceId?: string
+}
+
+/**
+ * Converts a JSON Schema Draft-07 object schema subset to a Zod schema.
+ * Covers the contract declared by manifests: object, properties, required,
+ * scalar per-property type, and additionalProperties: false strict mode.
+ */
+export function jsonSchemaToZodSchema(schema: Record<string, unknown>): ZodType {
+  if (schema.type !== "object") {
+    return z.unknown()
+  }
+  const properties = (schema.properties as Record<string, Record<string, unknown>>) ?? {}
+  const required = new Set<string>((schema.required as readonly string[]) ?? [])
+  const additionalProperties = schema.additionalProperties
+  const shape: Record<string, ZodType> = {}
+  for (const [key, prop] of Object.entries(properties)) {
+    const scalar = scalarPropertyToZod(prop)
+    shape[key] = required.has(key) ? scalar : scalar.optional()
+  }
+  let obj = z.object(shape)
+  if (additionalProperties === false) {
+    obj = obj.strict()
+  }
+  return obj as ZodType
+}
+
+function scalarPropertyToZod(prop: Record<string, unknown>): ZodType {
+  const type = prop.type as string | undefined
+  switch (type) {
+    case "string":
+      return z.string()
+    case "number":
+      return z.number()
+    case "integer":
+      return z.number().int()
+    case "boolean":
+      return z.boolean()
+    case "array":
+      return z.array(z.unknown())
+    case "object":
+      return z.record(z.string(), z.unknown())
+    case "null":
+      return z.null()
+    default:
+      return z.unknown()
+  }
+}
+
+/**
+ * Invokes a plugin-registered tool handler. Always wraps unexpected rejections
+ * into PluginAiToolError(plugin_tool_execution_failed) so the chat stream
+ * keeps running instead of aborting a full turn on one failing plugin.
+ */
+export async function invokePluginTool(
+  entry: PluginToolEntryLike,
+  args: Record<string, unknown>,
+  runtime: PluginToolContextRuntime,
+): Promise<unknown> {
+  const defaultLogger: PluginAiToolContext["logger"] = { warn: () => {}, error: () => {} }
+  const context: PluginAiToolContext = {
+    pluginId: entry.ref.pluginId,
+    ...(runtime.instanceId !== undefined ? { instanceId: runtime.instanceId } : {}),
+    network: runtime.network ?? {
+      canFetch: () => false,
+      fetch: async () => {
+        throw new PluginAiToolError(
+          "plugin_tool_execution_failed",
+          "Plugin tool network bridge not available",
+        )
+      },
+    },
+    logger: { ...defaultLogger, ...runtime.logger },
+  }
+  try {
+    return await entry.handler({ args, context })
+  } catch (cause) {
+    if (cause instanceof PluginAiToolError) throw cause
+    const message = cause instanceof Error ? cause.message : String(cause)
+    throw new PluginAiToolError(
+      "plugin_tool_execution_failed",
+      `Plugin tool ${entry.ref.id} failed: ${message}`,
+      { cause: cause as Error },
+    )
+  }
+}
+
+/**
+ * Converts each plugin-declared and plugin-registered tool entry into a
+ * TanStack AnyServerTool so the chat gateway can hand them to the model.
+ * Each returned tool uses `toolDefinition({name, description, parameters})
+ * .server(args => invokePluginTool(...))` matching the builtin attachment
+ * tool pattern shipped in attachmentTools.ts.
+ */
+export function convertPluginToolsToTanstackTools(
+  entries: readonly PluginToolEntryLike[],
+  network?: PluginNetworkAccess,
+  logger: PluginAiToolContext["logger"] = { warn: () => {}, error: () => {} },
+): AnyServerTool[] {
+  return entries.map((entry) =>
+    toolDefinition({
+      name: entry.ref.contribution.name,
+      description: entry.ref.contribution.description,
+      inputSchema: entry.ref.contribution.inputSchema,
+    }).server(async (args: unknown) =>
+      invokePluginTool(entry, args as Record<string, unknown>, { network, logger }),
+    ),
+  )
+}
 
 export type AiTextGateway = {
   generate(request: AiGatewayRequest): Promise<AiGenerateResult>

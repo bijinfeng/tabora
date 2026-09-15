@@ -192,6 +192,7 @@ describe("officialDefaultWorkspacePreset", () => {
           }>
         ).map(({ contribution }) => contribution.id),
       ),
+      "ai-tool": new Set(),
     }
 
     const pluginContributions = new Map(
