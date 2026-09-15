@@ -2,6 +2,7 @@ import {
   chat,
   toServerSentEventsResponse,
   toolDefinition,
+  type AnyClientTool,
   type AnyServerTool,
   type AnyTextAdapter,
 } from "@tanstack/ai"
@@ -163,6 +164,27 @@ export function convertPluginToolsToTanstackTools(
       description: entry.ref.contribution.description,
       inputSchema: entry.ref.contribution.inputSchema,
     }).server(async (args: unknown) =>
+      invokePluginTool(entry, args as Record<string, unknown>, { network, logger }),
+    ),
+  )
+}
+
+/**
+ * Client-side variant of convertPluginToolsToTanstackTools. Use when the
+ * handler lives in the same JS thread as the ChatClient and function calls
+ * should be dispatched locally, not by the server gateway.
+ */
+export function convertPluginToolsToTanstackClientTools(
+  entries: readonly PluginToolEntryLike[],
+  network?: PluginNetworkAccess,
+  logger: PluginAiToolContext["logger"] = { warn: () => {}, error: () => {} },
+): AnyClientTool[] {
+  return entries.map((entry) =>
+    toolDefinition({
+      name: entry.ref.contribution.name,
+      description: entry.ref.contribution.description,
+      inputSchema: entry.ref.contribution.inputSchema,
+    }).client(async (args: unknown) =>
       invokePluginTool(entry, args as Record<string, unknown>, { network, logger }),
     ),
   )

@@ -1,5 +1,6 @@
 /** Public author-facing plugin SDK. Host persistence and repository models are intentionally absent. */
 export * from "./ai"
+export * from "./aiTools"
 export * from "./manifest"
 export * from "./runtime"
 export * from "./settings"

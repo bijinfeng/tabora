@@ -5,10 +5,18 @@ import type {
   QueuedMessage,
   UIMessage,
 } from "@tanstack/ai-client"
+import { toolDefinition, type AnyClientTool } from "@tanstack/ai"
 import { createSignal } from "solid-js"
 import type { Accessor } from "solid-js"
 import { AiRuntimeError } from "@tabora/plugin-api/sdk"
-import type { AiRuntimeBridge, WidgetViewData } from "@tabora/plugin-api/sdk"
+import type {
+  AiRuntimeBridge,
+  PluginAiToolContext,
+  PluginNetworkAccess,
+  RegisteredAiTool,
+  RegisteredPluginAiToolEntry,
+  WidgetViewData,
+} from "@tabora/plugin-api/sdk"
 import { attachmentMetadata } from "../ai-chat-attachments"
 export { aiChatErrorCopy } from "./ai-chat-error"
 import {
@@ -46,6 +54,8 @@ const COMPACTION_CONTEXT_LABEL = "已压缩的对话上下文"
 const COMPACTION_SYSTEM_PROMPT =
   "你负责压缩 AI 对话历史。保留用户目标、已确认的事实、关键决定、约束、未完成事项和必要的技术细节。不要虚构信息，不要提及压缩过程；用与原对话相同的语言，输出可直接作为后续对话上下文的简洁摘要。"
 
+export type RegisteredAiChatPluginTool = RegisteredAiTool
+
 let aiRuntime: AiRuntimeBridge | undefined
 let openAiSettings: ((sectionId?: string) => void) | undefined
 
@@ -64,6 +74,29 @@ export function setAiChatSettingsOpener(opener: ((sectionId?: string) => void) |
 
 export function getAiChatSettingsOpener(): ((sectionId?: string) => void) | undefined {
   return openAiSettings
+}
+
+/**
+ * Extracts the latest user-visible plain-text messages from a specific AI chat
+ * instance (falling back to the most recent widget). Returns empty if the
+ * instance has never rendered or has no stored user messages. Tool handlers
+ * should treat this as best-effort and never require a specific length.
+ */
+export function getLatestConversationUserMessages(instanceId?: string): string[] {
+  const entry =
+    (instanceId
+      ? viewEntries.find((candidate) => candidate.instanceId === instanceId)
+      : undefined) ?? viewEntries.at(-1)
+  const session = entry?.session
+  if (!session) return []
+  const messageList = session.messages()
+  const result: string[] = []
+  for (const message of messageList) {
+    if (message.role !== "user") continue
+    const text = messageText(message).trim()
+    if (text) result.push(text)
+  }
+  return result
 }
 
 export type AiChatSession = {
@@ -93,6 +126,10 @@ export type AiChatSession = {
   updateConversationOptions(id: string, options: AiChatConversationOptions): void
   /** Replace the last user message and regenerate the reply from it. */
   editLastUserMessage(text: string): Promise<void>
+  /**
+   * Tools registered by other plugins for function-calling。
+   */
+  listPluginAiTools: () => RegisteredAiChatPluginTool[]
 }
 
 const sessions = new Map<string, AiChatSession>()
@@ -286,13 +323,60 @@ export function getAiChatSession(options: {
     }
   }
 
+  function collectClientToolEntries(): readonly RegisteredPluginAiToolEntry[] {
+    return aiRuntime?.listRegisteredPluginToolEntries?.() ?? []
+  }
+
+  function buildClientTools(): AnyClientTool[] {
+    const entries = collectClientToolEntries()
+    if (!entries.length) return []
+    const network: PluginNetworkAccess = {
+      canFetch() {
+        return false
+      },
+      fetch: async () => {
+        throw new AiRuntimeError(
+          "ai_provider_failed",
+          "AI chat plugin tool network bridge not available from client",
+        )
+      },
+    }
+    const logger: PluginAiToolContext["logger"] = {
+      warn(message: string) {
+        console.warn(`[ai-chat plugin-tool warn] ${message}`)
+      },
+      error(message: string) {
+        console.error(`[ai-chat plugin-tool error] ${message}`)
+      },
+    }
+    return entries.map((entry) =>
+      toolDefinition({
+        name: entry.ref.contribution.name,
+        description: entry.ref.contribution.description,
+        inputSchema: entry.ref.contribution.inputSchema,
+      }).client(async (args) =>
+        entry.handler({
+          args: args as Record<string, unknown>,
+          context: {
+            pluginId: entry.ref.pluginId,
+            instanceId: options.instanceId,
+            network,
+            logger,
+          },
+        }),
+      ),
+    )
+  }
+
   function ensureClient(conversation: AiChatStoredConversation): ChatClient | undefined {
     const existingClient = clients.get(conversation.id)
     if (existingClient) return existingClient
     if (!adapter) return undefined
+    const tools = buildClientTools()
     const client = new ChatClient({
       connection: adapter,
       initialMessages: conversation.messages.map(toUIMessage),
+      ...(tools.length ? { tools } : {}),
       onMessagesChange: (next) => {
         syncMessages(conversation.id, next)
         if (activeId() === conversation.id) setMessages(next)
@@ -633,6 +717,10 @@ export function getAiChatSession(options: {
       client.setMessagesManually(edited)
       setError(undefined)
       await client.reload()
+    },
+
+    listPluginAiTools() {
+      return aiRuntime?.listRegisteredAiTools?.() ?? []
     },
   }
 

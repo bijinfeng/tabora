@@ -19,7 +19,7 @@ import Plus from "lucide-solid/icons/plus"
 import Search from "lucide-solid/icons/search"
 import Star from "lucide-solid/icons/star"
 import Trash from "lucide-solid/icons/trash"
-import { NOTES_STORAGE_KEY, type Note } from "./notes-data"
+import { NOTES_STORAGE_KEY, setInstanceNotes, type Note } from "./notes-data"
 import { getNotesAiRuntime } from "./index"
 import { styles } from "./styles"
 
@@ -128,10 +128,12 @@ export function NotesExpand(props: WidgetViewProps) {
     if (typeof document !== "undefined") ensureTiptapContentStyles(document)
     const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
     if (saved) setNotes(saved)
+    setInstanceNotes(props.instanceId, saved ?? [])
   })
 
   async function persist(updated: Note[]) {
     setNotes(updated)
+    setInstanceNotes(props.instanceId, updated)
     await props.data.save(NOTES_STORAGE_KEY, updated)
   }
 

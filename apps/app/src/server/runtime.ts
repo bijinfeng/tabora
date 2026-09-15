@@ -4,6 +4,7 @@ import { createDb, type DbHandle } from "./db"
 import { createEmailService, type EmailService } from "./email"
 import { createEmailQueueProcessor, type EmailQueueProcessor } from "./emailQueueProcessor"
 import { getEnv, type AppEnv } from "./env"
+import { createExtensionRegistry, type ExtensionRegistry } from "@tabora/platform-kernel"
 
 export type ServerRuntime = {
   env: AppEnv
@@ -13,6 +14,7 @@ export type ServerRuntime = {
   emailProcessor: EmailQueueProcessor
   storage: ReturnType<typeof createLocalAttachmentStorage>
   startedAt: Date
+  pluginRegistry: ExtensionRegistry
 }
 
 let runtimePromise: Promise<ServerRuntime> | null = null
@@ -40,5 +42,14 @@ async function initRuntime(): Promise<ServerRuntime> {
   const emailProcessor = createEmailQueueProcessor(handle, emailService)
   emailProcessor.start(5000)
 
-  return { env, handle, auth, emailService, emailProcessor, storage, startedAt: new Date() }
+  return {
+    env,
+    handle,
+    auth,
+    emailService,
+    emailProcessor,
+    storage,
+    startedAt: new Date(),
+    pluginRegistry: createExtensionRegistry(),
+  }
 }

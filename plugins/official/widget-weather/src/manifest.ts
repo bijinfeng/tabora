@@ -18,6 +18,7 @@ export const officialPluginWeatherManifest: PluginManifest = {
         "air-quality-api.open-meteo.com",
       ],
     },
+    { type: "ai", access: ["tools"] },
   ],
   contributes: {
     widgets: [
@@ -34,6 +35,27 @@ export const officialPluginWeatherManifest: PluginManifest = {
           card: "official.widgets.weather.card",
           expand: "official.widgets.weather.expand",
         },
+      },
+    ],
+    aiTools: [
+      {
+        id: "official.widgets.weather.query-weather",
+        name: "查询天气",
+        description: "按城市名和单位查询当前温度、体感、湿度、风速与天气描述",
+        inputSchema: {
+          type: "object",
+          properties: {
+            city: { type: "string", description: "城市名称，支持中英文" },
+            unit: {
+              type: "string",
+              description: "温度单位：celsius（摄氏度）或 fahrenheit（华氏度）",
+              enum: ["celsius", "fahrenheit"],
+            },
+          },
+          required: ["city"],
+          additionalProperties: false,
+        },
+        requiresNetwork: true,
       },
     ],
   },

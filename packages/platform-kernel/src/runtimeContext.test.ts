@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
 import type { AiToolContribution, PluginManifest, PluginPermission } from "@tabora/plugin-api"
-import { PluginAiToolErrorCode } from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry } from "./extensionRegistry"
 import { collectPluginManifestViewIds, createPluginRuntimeContext } from "./runtimeContext"

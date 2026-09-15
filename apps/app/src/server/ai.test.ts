@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import type { AiTextGateway } from "@tabora/ai-runtime/server"
+import { createExtensionRegistry } from "@tabora/platform-kernel"
 import {
   cloudAiGenerateResponse,
   cloudAiModelsResponse,
@@ -46,6 +47,7 @@ function runtime(
           }),
         },
       },
+      pluginRegistry: createExtensionRegistry(),
     } as unknown as Parameters<typeof cloudAiGenerateResponse>[0],
     getSession,
   }

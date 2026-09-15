@@ -14,6 +14,7 @@
     "@tabora/brand": "workspace:*",
     "@tabora/builtin-plugin-registry": "workspace:*",
     "@tabora/host-adapters": "workspace:*",
+    "@tabora/platform-kernel": "workspace:*",
     "@tabora/theme": "workspace:*",
     "@tabora/ui": "workspace:*",
     "@tabora/workbench-app": "workspace:*",
