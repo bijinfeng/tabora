@@ -14,6 +14,8 @@ export type CheckboxProps = {
   inputStyle?: JSX.CSSProperties | undefined
   controlClass?: string | undefined
   controlStyle?: JSX.CSSProperties | undefined
+  indicatorClass?: string | undefined
+  indicatorStyle?: JSX.CSSProperties | undefined
   labelClass?: string | undefined
   labelStyle?: JSX.CSSProperties | undefined
   "aria-label"?: string
@@ -42,7 +44,7 @@ export function Checkbox(props: CheckboxProps) {
         {...(props["aria-label"] !== undefined ? { "aria-label": props["aria-label"] } : {})}
       />
       <KCheckbox.Control class={props.controlClass} style={props.controlStyle}>
-        <KCheckbox.Indicator>
+        <KCheckbox.Indicator {...optionalPartProps(props.indicatorClass, props.indicatorStyle)}>
           <Show
             when={props.checked === "indeterminate"}
             fallback={<Check size={10} strokeWidth={1.5} />}

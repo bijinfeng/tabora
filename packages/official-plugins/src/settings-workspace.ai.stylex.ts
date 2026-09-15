@@ -1,0 +1,92 @@
+import * as stylex from "@stylexjs/stylex"
+
+export const aiDialogStyles = stylex.create({
+  body: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 16,
+  },
+  description: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 13,
+    margin: 0,
+  },
+  fields: {
+    display: "grid",
+    gap: 12,
+  },
+  modelSection: {
+    display: "grid",
+    gap: 8,
+  },
+  sectionHeader: {
+    alignItems: "center",
+    display: "flex",
+    justifyContent: "space-between",
+  },
+  sectionLabel: {
+    color: "rgb(var(--tbr-color-text-muted))",
+    fontSize: 12,
+  },
+  empty: {
+    alignItems: "center",
+    borderColor: "rgb(var(--tbr-color-line))",
+    borderRadius: 6,
+    borderStyle: "dashed",
+    borderWidth: 1,
+    color: "rgb(var(--tbr-color-text-muted))",
+    display: "flex",
+    fontSize: 12,
+    gap: 8,
+    minHeight: 46,
+    paddingInline: 12,
+  },
+  modelList: {
+    display: "grid",
+    gap: 6,
+  },
+  modelItem: {
+    alignItems: "center",
+    backgroundColor: "rgb(var(--tbr-color-surface-soft))",
+    borderColor: "rgb(var(--tbr-color-line))",
+    borderRadius: 6,
+    borderStyle: "solid",
+    borderWidth: 1,
+    display: "flex",
+    fontSize: 13,
+    justifyContent: "space-between",
+    minHeight: 38,
+    paddingInline: 10,
+  },
+  remove: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderStyle: "none",
+    borderWidth: 0,
+    color: "rgb(var(--tbr-color-text-muted))",
+    cursor: "pointer",
+    display: "inline-flex",
+    height: 24,
+    justifyContent: "center",
+    padding: 0,
+    width: 24,
+    ":hover": {
+      color: "rgb(var(--tbr-color-danger))",
+    },
+  },
+  footer: {
+    alignItems: "center",
+    display: "flex",
+    gap: 10,
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  hint: {
+    alignItems: "center",
+    color: "rgb(var(--tbr-color-text-muted))",
+    display: "inline-flex",
+    flex: 1,
+    fontSize: 12,
+    gap: 6,
+  },
+})

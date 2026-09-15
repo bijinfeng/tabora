@@ -413,6 +413,11 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         const requestedPermissions = pluginPackage.module.manifest.permissions ?? []
         const persistedOrPreviousGrant =
           previous?.installation.grantedPermissions ?? persisted?.grantedPermissions
+        const trustedGrant = options.permissionGrants?.[pluginPackage.module.manifest.id] ?? []
+        const mergedGrant: PluginPermissionGrant[] = [
+          ...(persistedOrPreviousGrant ?? []),
+          ...trustedGrant,
+        ]
         const runtimePlugin: PluginRuntimePlugin = {
           package: pluginPackage,
           module: pluginPackage.module,
@@ -421,29 +426,30 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
             pluginId: pluginPackage.module.manifest.id,
             source: pluginPackage.source,
             desiredEnabled: previous?.installation.desiredEnabled ?? persisted?.enabled ?? true,
-            grantedPermissions: normalizeGrantedPermissions(
-              requestedPermissions,
-              persistedOrPreviousGrant ??
-                options.permissionGrants?.[pluginPackage.module.manifest.id] ??
-                [],
-            ),
+            grantedPermissions: normalizeGrantedPermissions(requestedPermissions, mergedGrant),
             grantedSettingsHostActions: normalizeGrantedSettingsHostActions(
               pluginPackage.module.manifest.contributes.settingsPanels?.flatMap(
                 (panel) => panel.hostActions ?? [],
               ) ?? [],
-              previous?.installation.grantedSettingsHostActions ??
-                persisted?.grantedSettingsHostActions ??
-                options.settingsHostActionGrants?.[pluginPackage.module.manifest.id] ??
-                [],
+              // 内置预授予始终并入用户状态，避免陈旧 persisted 记录降级 builtin 声明。
+              [
+                ...(previous?.installation.grantedSettingsHostActions ??
+                  persisted?.grantedSettingsHostActions ??
+                  []),
+                ...(options.settingsHostActionGrants?.[pluginPackage.module.manifest.id] ?? []),
+              ],
             ),
             grantedSettingsHostReads: normalizeGrantedSettingsHostReads(
               pluginPackage.module.manifest.contributes.settingsPanels?.flatMap(
                 (panel) => panel.hostReads ?? [],
               ) ?? [],
-              previous?.installation.grantedSettingsHostReads ??
-                persisted?.grantedSettingsHostReads ??
-                options.settingsHostReadGrants?.[pluginPackage.module.manifest.id] ??
-                [],
+              // 内置预授予始终并入用户状态，避免陈旧 persisted 记录降级 builtin 声明。
+              [
+                ...(previous?.installation.grantedSettingsHostReads ??
+                  persisted?.grantedSettingsHostReads ??
+                  []),
+                ...(options.settingsHostReadGrants?.[pluginPackage.module.manifest.id] ?? []),
+              ],
             ),
           },
           state: previous?.state ?? { status: "inactive" },

@@ -160,6 +160,7 @@ export function createWorkbenchShellRuntimes(options: {
       hostRuntime,
     },
     isMobile: responsive.isMobile,
+    ...(runtime.aiSettings ? { getAiSettings: () => runtime.aiSettings!.getSettings() } : {}),
   })
 
   const layoutRuntime = createWorkbenchShellLayoutRuntime({

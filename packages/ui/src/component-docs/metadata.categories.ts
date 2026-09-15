@@ -8,6 +8,7 @@ export const componentDocsCategories: ComponentDocsCategory[] = [
       { id: "iconbutton", name: "IconButton" },
       { id: "stepper", name: "Stepper" },
       { id: "input", name: "Input" },
+      { id: "inputnumber", name: "InputNumber" },
       { id: "textarea", name: "Textarea" },
       { id: "select", name: "Select" },
       { id: "combobox", name: "Combobox" },

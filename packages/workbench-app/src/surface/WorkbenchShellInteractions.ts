@@ -6,6 +6,7 @@ import type { WidgetRenderModel } from "../shared/shellHelpers"
 export type WorkbenchExpandState = {
   instanceId: string
   title: string
+  subtitle?: string
   viewId: string
   footerViewId?: string
   mode: "expand" | "settings"
@@ -122,6 +123,7 @@ export function buildWorkbenchWidgetExpandState(
       const footerViewId = resolveWorkbenchExpandFooterView(options.widget, options.hasView)
       return {
         title: model.title,
+        ...(model.description ? { subtitle: model.description } : {}),
         viewId: target.viewId,
         ...(footerViewId ? { footerViewId } : {}),
         mode: target.mode,

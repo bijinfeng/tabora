@@ -56,7 +56,9 @@ const styles = stylex.create({
     color: color.accent,
   },
   cellLastRow: {
-    borderBottomWidth: 0,
+    "[data-last-row]": {
+      borderBottomWidth: 0,
+    },
   },
   alignCenter: {
     textAlign: "center",

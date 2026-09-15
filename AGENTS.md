@@ -104,6 +104,7 @@ node scripts/regression-summary.mjs
 - 文档或配置变更至少运行 `pnpm check`。
 - package / app / plugin 代码变更至少运行 `pnpm test` 和 `pnpm check`。
 - 跨包、协议、storage 或发布相关变更追加 `pnpm build`。
+- 涉及架构边界或测试清理时追加 `pnpm check:architecture`、`pnpm test:inventory`；需要一次跑全部质量门禁时用 `pnpm quality`。
 - 前端视觉或交互变更启动对应 app，并用浏览器检查关键路径。
 - 所有改动运行 `git diff --check`。
 
@@ -134,7 +135,7 @@ PR 或 final 必须说明：
 - 生产 diff 的 `+/-` 规模；命中审查信号时说明为什么仍有必要。
 - 实际运行的验证、结果、未运行项和剩余风险。
 
-PR 描述使用 `.github/pull_request_template.md`；交付前可用 `docs/technical/agent-task-template.md` 自检。
+PR 描述使用 `.github/pull_request_template.md`。
 
 <!-- CODEGRAPH_START -->
 

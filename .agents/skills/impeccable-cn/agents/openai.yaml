@@ -1,0 +1,4 @@
+interface:
+  display_name: "界面精修"
+  short_description: "用系统化审计和收敛方法打磨 Tabora 界面与交互体验"
+  default_prompt: "请用界面精修 skill 审计并优化这个界面，保持现有设计系统一致。"

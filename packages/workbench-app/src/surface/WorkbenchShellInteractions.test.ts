@@ -23,12 +23,13 @@ function instance(): PluginInstance {
   }
 }
 
-function model(): WidgetRenderModel {
+function model(overrides: Partial<WidgetRenderModel> = {}): WidgetRenderModel {
   return {
     title: "便签",
     icon: "pencil",
     currentSize: "M",
     supportedSizes: ["S", "M"],
+    ...overrides,
   }
 }
 
@@ -123,6 +124,19 @@ describe("buildWorkbenchWidgetExpandState", () => {
       },
       errorMessage: null,
     })
+  })
+
+  it("carries an optional plugin description as the expand subtitle", () => {
+    const result = buildWorkbenchWidgetExpandState({
+      instance: instance(),
+      model: model({ description: "快速记录和整理想法" }),
+      widget: widget({ card: "widget.notes.card", expand: "widget.notes.expand" }),
+      hasView: () => true,
+      buildWidgetViewProps: () => props(),
+    })
+
+    expect(result.expandState?.title).toBe("便签")
+    expect(result.expandState?.subtitle).toBe("快速记录和整理想法")
   })
 
   it("falls back to the card view when the widget does not declare an expand view", () => {

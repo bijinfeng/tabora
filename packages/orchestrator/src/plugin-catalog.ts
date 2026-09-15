@@ -323,6 +323,7 @@ export function createPluginCatalog(plugins: CatalogPlugin[], options: PluginCat
               commands: "command",
               keybindings: "keybinding",
               workspacePresets: "workspace-preset",
+              aiTools: "ai-tool",
             } as const
             return contributionKinds[kind]
           }),

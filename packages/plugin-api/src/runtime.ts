@@ -1,4 +1,5 @@
 import type { AiRuntimeBridge } from "./ai"
+import type { PluginAiToolRegistration } from "./aiTools"
 import type { PluginManifest, PluginPermission } from "./manifest"
 import type { SettingsPanelProvider } from "./settings"
 
@@ -36,6 +37,8 @@ export type PluginUiBridge = {
   closeModal(): void
   openFullscreen(viewId: string, props?: Record<string, unknown>): void
   closeFullscreen(): void
+  /** Ask the host to open its settings center, optionally on a section id. */
+  openSettings(sectionId?: string): void
   showToast(
     message: string,
     options?: {
@@ -84,6 +87,7 @@ export type PluginContext = {
   permissions: PluginPermissionBridge
   network: PluginNetworkAccess
   ai?: AiRuntimeBridge
+  aiTools?: PluginAiToolRegistration
   i18n?: PluginI18nBridge
   logger: {
     warn(message: string): void

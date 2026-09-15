@@ -91,7 +91,7 @@ export const sharedStyles = stylex.create({
     display: "inline-flex",
     fontSize: 13,
     gap: 8,
-    ":focus-within": {
+    ":has(input:focus-visible)": {
       outline: `2px solid ${color.focus}`,
       outlineOffset: 2,
     },

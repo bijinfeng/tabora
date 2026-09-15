@@ -5,7 +5,7 @@ import { IconButton } from "@tabora/ui/button"
 import { ensureTiptapContentStyles } from "@tabora/tiptap-editor"
 import ArrowRight from "lucide-solid/icons/arrow-right"
 import Plus from "lucide-solid/icons/plus"
-import { NOTES_STORAGE_KEY, type Note } from "./notes-data"
+import { NOTES_STORAGE_KEY, setInstanceNotes, type Note } from "./notes-data"
 import { styles } from "./styles"
 
 function formatTime(iso: string): string {
@@ -43,6 +43,7 @@ export function NotesCard(props: WidgetViewProps) {
     if (typeof document !== "undefined") ensureTiptapContentStyles(document)
     const saved = await props.data.get<Note[]>(NOTES_STORAGE_KEY)
     if (saved && saved.length > 0) setNotes(saved)
+    setInstanceNotes(props.instanceId, notes())
     setLoading(false)
   })
 

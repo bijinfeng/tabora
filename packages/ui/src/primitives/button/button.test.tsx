@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import * as stylex from "@stylexjs/stylex"
+import Plus from "lucide-solid/icons/plus"
+import { createSignal } from "solid-js"
 import { render } from "solid-js/web"
 import { Button, IconButton } from "../../styled/button/button.styled"
 
@@ -77,6 +79,24 @@ describe("Button", () => {
     expect(btn.className.length).toBeGreaterThan(0)
     expect(btn.getAttribute("data-variant")).toBe("primary")
     expect(btn.getAttribute("data-size")).toBe("sm")
+    expect(btn.hasAttribute("data-tbr-button")).toBe(false)
+  })
+
+  it("supports compact mini actions", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button size="mini" aria-label="删除">
+          删除
+        </Button>
+      ),
+      root,
+    )
+
+    const btn = root.querySelector("button")!
+    expect(btn.getAttribute("data-size")).toBe("mini")
+    expect(btn.className.length).toBeGreaterThan(0)
   })
 
   it("supports link actions without changing button semantics", () => {
@@ -124,7 +144,13 @@ describe("Button", () => {
     document.body.appendChild(root)
     render(
       () => (
-        <Button icon={<span data-testid="icon">+</span>}>
+        <Button
+          icon={({ size, strokeWidth }) => (
+            <span data-testid="icon" data-size={size} data-stroke-width={strokeWidth}>
+              +
+            </span>
+          )}
+        >
           <span data-testid="text">添加</span>
         </Button>
       ),
@@ -137,6 +163,24 @@ describe("Button", () => {
     expect(firstChild.getAttribute("data-testid")).toBe("icon")
     expect(lastChild.getAttribute("data-testid")).toBe("text")
     expect(btn.getAttribute("data-icon-placement")).toBe("start")
+    expect(firstChild.getAttribute("data-size")).toBe("16")
+    expect(firstChild.getAttribute("data-stroke-width")).toBe("2")
+  })
+
+  it("keeps accepting JSX icons for backwards compatibility", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <Button size="sm" icon={<span data-testid="icon">+</span>}>
+          添加
+        </Button>
+      ),
+      root,
+    )
+
+    expect(root.querySelector("[data-testid='icon']")).toBeTruthy()
+    root.remove()
   })
 
   it("renders icon at end position when specified", () => {
@@ -144,7 +188,14 @@ describe("Button", () => {
     document.body.appendChild(root)
     render(
       () => (
-        <Button icon={<span data-testid="icon">+</span>} iconPlacement="end">
+        <Button
+          icon={({ size }) => (
+            <span data-testid="icon" data-size={size}>
+              +
+            </span>
+          )}
+          iconPlacement="end"
+        >
           <span data-testid="text">下载</span>
         </Button>
       ),
@@ -157,6 +208,7 @@ describe("Button", () => {
     expect(firstChild.getAttribute("data-testid")).toBe("text")
     expect(lastChild.getAttribute("data-testid")).toBe("icon")
     expect(btn.getAttribute("data-icon-placement")).toBe("end")
+    expect(lastChild.getAttribute("data-size")).toBe("16")
   })
 
   it("supports shape=round with data attribute", () => {
@@ -189,7 +241,15 @@ describe("Button", () => {
     document.body.appendChild(root)
     render(
       () => (
-        <Button href="/download" icon={<span data-testid="icon">↓</span>}>
+        <Button
+          href="/download"
+          size="sm"
+          icon={({ size }) => (
+            <span data-testid="icon" data-size={size}>
+              ↓
+            </span>
+          )}
+        >
           <span data-testid="text">下载</span>
         </Button>
       ),
@@ -202,6 +262,7 @@ describe("Button", () => {
     const lastChild = link.lastElementChild as HTMLElement
     expect(firstChild.getAttribute("data-testid")).toBe("icon")
     expect(lastChild.getAttribute("data-testid")).toBe("text")
+    expect(firstChild.getAttribute("data-size")).toBe("12")
   })
 })
 
@@ -220,6 +281,31 @@ describe("IconButton", () => {
     const btn = root.querySelector("button")!
     expect(btn.getAttribute("aria-label")).toBe("删除")
     expect(btn.querySelector("[data-testid='icon']")).toBeTruthy()
+  })
+
+  it("keeps the default Lucide icon size fixed across button sizes", () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(
+      () => (
+        <>
+          <IconButton aria-label="小按钮" size="sm">
+            <Plus />
+          </IconButton>
+          <IconButton aria-label="大按钮" size="lg">
+            <Plus />
+          </IconButton>
+        </>
+      ),
+      root,
+    )
+
+    const icons = root.querySelectorAll("svg.lucide")
+    expect(icons).toHaveLength(2)
+    icons.forEach((icon) => {
+      expect(icon.getAttribute("width")).toBe("16")
+      expect(icon.getAttribute("height")).toBe("16")
+    })
   })
 
   it("supports all variants including primary, subtle and danger-subtle", () => {
@@ -283,5 +369,25 @@ describe("IconButton", () => {
     expect(root.querySelector('button[data-shape="default"]')).not.toBeNull()
     expect(root.querySelector('button[data-shape="round"]')).not.toBeNull()
     expect(root.querySelector('button[data-shape="circle"]')).not.toBeNull()
+  })
+
+  it("updates disabled styling when the disabled prop changes", async () => {
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    const [disabled, setDisabled] = createSignal(true)
+    render(
+      () => (
+        <IconButton aria-label="动态按钮" variant="primary" disabled={disabled()}>
+          <span>发送</span>
+        </IconButton>
+      ),
+      root,
+    )
+
+    const button = root.querySelector("button")!
+    const disabledClass = button.className
+    setDisabled(false)
+    await vi.waitFor(() => expect(button.disabled).toBe(false))
+    expect(button.className).not.toBe(disabledClass)
   })
 })

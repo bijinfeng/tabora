@@ -6,15 +6,20 @@ import { Show } from "solid-js"
 export type DialogProps = {
   open: boolean
   onCancel: () => void
-  title: JSX.Element
+  title?: JSX.Element
   description?: JSX.Element
   children?: JSX.Element
   footer?: JSX.Element | null
   closable?: boolean
   keyboard?: boolean
   maskClosable?: boolean
-  width?: number | string
+  /** Number/string sets an inline panel width; `null` leaves width to panelClass/panelStyle. */
+  width?: number | string | null
   destructive?: boolean
+  /** Renders children as the entire panel, replacing the built-in header/body/footer chrome. */
+  chromeless?: boolean
+  /** Accessible label for the dialog when no visible title is rendered (e.g. chromeless). */
+  ariaLabel?: string
   class?: string | undefined
   style?: JSX.CSSProperties | undefined
   overlayClass?: string | undefined
@@ -39,8 +44,11 @@ function optionalPartProps(className: string | undefined, style: JSX.CSSProperti
 }
 
 export function Dialog(props: DialogProps) {
-  const width = () =>
-    typeof props.width === "number" ? `${props.width}px` : (props.width ?? "420px")
+  const width = (): string | undefined => {
+    if (props.width === null) return undefined
+    if (typeof props.width === "number") return `${props.width}px`
+    return props.width ?? "420px"
+  }
   return (
     <KDialog
       open={props.open}
@@ -57,48 +65,59 @@ export function Dialog(props: DialogProps) {
         />
         <KDialog.Content
           class={props.panelClass}
+          aria-label={props.ariaLabel}
           data-destructive={props.destructive ? "" : undefined}
-          style={{ ...props.panelStyle, width: width(), "max-width": "90vw" }}
+          style={{
+            ...props.panelStyle,
+            ...(width() !== undefined ? { width: width(), "max-width": "90vw" } : {}),
+          }}
           onEscapeKeyDown={(event) => {
             if (props.keyboard === false) event.preventDefault()
           }}
           onPointerDownOutside={(event) => {
             if (props.maskClosable === false) event.preventDefault()
           }}
+          onFocusOutside={(event) => {
+            // Losing focus is not a dismissal gesture. Keep the dialog open until the
+            // user explicitly closes it, presses Escape, or clicks the mask when enabled.
+            event.preventDefault()
+          }}
         >
-          <header class={props.headerClass} style={props.headerStyle}>
-            <KDialog.Title
-              style={{
-                margin: 0,
-                "font-family": "inherit",
-                "font-size": "inherit",
-                "font-weight": "inherit",
-                "line-height": "inherit",
-              }}
-            >
-              {props.title}
-            </KDialog.Title>
-            <Show when={props.closable !== false}>
-              <KDialog.CloseButton
-                class={props.closeClass}
-                style={props.closeStyle}
-                type="button"
-                aria-label="关闭"
+          <Show when={!props.chromeless} fallback={props.children}>
+            <header class={props.headerClass} style={props.headerStyle}>
+              <KDialog.Title
+                style={{
+                  margin: 0,
+                  "font-family": "inherit",
+                  "font-size": "inherit",
+                  "font-weight": "inherit",
+                  "line-height": "inherit",
+                }}
               >
-                <X size={16} strokeWidth={2} />
-              </KDialog.CloseButton>
+                {props.title}
+              </KDialog.Title>
+              <Show when={props.closable !== false}>
+                <KDialog.CloseButton
+                  class={props.closeClass}
+                  style={props.closeStyle}
+                  type="button"
+                  aria-label="关闭"
+                >
+                  <X size={16} strokeWidth={2} />
+                </KDialog.CloseButton>
+              </Show>
+            </header>
+            <div class={props.bodyClass} style={props.bodyStyle}>
+              <Show when={props.description}>
+                <KDialog.Description style={{ margin: 0 }}>{props.description}</KDialog.Description>
+              </Show>
+              {props.children}
+            </div>
+            <Show when={props.footer}>
+              <footer class={props.footerClass} style={props.footerStyle}>
+                {props.footer}
+              </footer>
             </Show>
-          </header>
-          <div class={props.bodyClass} style={props.bodyStyle}>
-            <Show when={props.description}>
-              <KDialog.Description style={{ margin: 0 }}>{props.description}</KDialog.Description>
-            </Show>
-            {props.children}
-          </div>
-          <Show when={props.footer}>
-            <footer class={props.footerClass} style={props.footerStyle}>
-              {props.footer}
-            </footer>
           </Show>
         </KDialog.Content>
       </KDialog.Portal>

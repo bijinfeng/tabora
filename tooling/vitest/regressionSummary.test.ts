@@ -31,7 +31,7 @@ describe("regression summary helpers", () => {
         ".github/copilot-instructions.md",
         ".github/pull_request_template.md",
         "apps/site/AGENTS.md",
-        "backend/app/AGENTS.md",
+        "apps/app/AGENTS.md",
         "GEMINI.md",
         "packages/ui/AGENTS.md",
         "plugins/AGENTS.md",
@@ -64,7 +64,6 @@ describe("regression summary helpers", () => {
       "pnpm test",
       "pnpm check",
       "pnpm build",
-      "pnpm test:e2e",
       "pnpm --filter @tabora/extension zip",
       "pnpm --filter @tabora/extension zip:firefox",
     ])
@@ -77,27 +76,27 @@ describe("regression summary helpers", () => {
         "packages/plugin-api/src/manifestSchema.ts",
         "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
         "tooling/vitest/prGovernance.test.ts",
-        "backend/app/src/auth/errors.ts",
-        "backend/app/src/server/app.ts",
+        "apps/app/src/auth/errors.ts",
+        "apps/app/src/server/app.ts",
         "plugins/official/widget-notes/src/notes-card.tsx",
       ]),
     ).toEqual([
-      "pnpm --dir packages/plugin-api exec vitest run --config vitest.config.ts",
-      "pnpm --dir packages/workbench-app exec vitest run --config vitest.config.ts",
-      "pnpm --dir backend/app exec vitest run --config vitest.config.ts",
-      "pnpm exec vitest run --config tooling/vitest/vitest.config.ts",
-      "pnpm --dir plugins/official/widget-notes exec vitest run --config vitest.config.ts",
+      "pnpm exec vitest run --passWithNoTests packages/plugin-api",
+      "pnpm exec vitest run --passWithNoTests packages/workbench-app",
+      "pnpm exec vitest run --passWithNoTests apps/app",
+      "pnpm exec vitest run --passWithNoTests tooling/vitest",
+      "pnpm exec vitest run --passWithNoTests plugins/official/widget-notes",
     ])
   })
 
   it("classifies backend changes and requires test/check/build evidence", () => {
     expect(
-      collectChangeTypes(["backend/app/src/auth/errors.ts", "backend/app/src/server/app.ts"]),
+      collectChangeTypes(["apps/app/src/auth/errors.ts", "apps/app/src/server/app.ts"]),
     ).toEqual(["backend"])
     expect(collectRequiredLevels(["backend"])).toEqual(["L1", "L2", "L3", "L7"])
     expect(
       collectSuggestedCommands({
-        changedFiles: ["backend/app/src/auth/errors.ts"],
+        changedFiles: ["apps/app/src/auth/errors.ts"],
         changeTypes: ["backend"],
       }),
     ).toEqual(["pnpm quality", "pnpm test", "pnpm check", "pnpm build"])

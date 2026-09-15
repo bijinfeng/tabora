@@ -40,6 +40,22 @@ describe("StyleX package build helper", () => {
         2,
       )
       await writeFile(join(fixtureDir, "package.json"), fixtureManifest)
+      await writeFile(
+        join(fixtureDir, "tsconfig.json"),
+        JSON.stringify(
+          {
+            compilerOptions: {
+              target: "ES2022",
+              module: "ESNext",
+              moduleResolution: "bundler",
+              jsx: "preserve",
+              strict: true,
+            },
+          },
+          null,
+          2,
+        ),
+      )
       await mkdir(join(fixtureDir, "src"))
       await writeFile(
         join(fixtureDir, "src/index.tsx"),

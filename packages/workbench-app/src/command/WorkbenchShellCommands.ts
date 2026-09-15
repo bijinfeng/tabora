@@ -15,8 +15,9 @@ export type WorkbenchShellCommandModelsOptions = {
   isDark: () => boolean
   tShell?: ShellTranslation
   shellConfig: WorkbenchShellConfig
-  pluginCommands: CommandContribution[]
-  pluginKeybindings: KeybindingContribution[]
+  /** Resolved lazily so commands contributed after kernel discovery stay visible. */
+  pluginCommands: CommandContribution[] | (() => CommandContribution[])
+  pluginKeybindings: KeybindingContribution[] | (() => KeybindingContribution[])
   setCommandPaletteOpen: (open: boolean) => void
   setAddWidgetOpen: (open: boolean) => void
   openSettings: (sectionId?: string) => void
@@ -101,6 +102,13 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
   shortcutRegistry: () => ShortcutRegistry
   runCommand: (commandId: string, context: CommandExecutionContext) => Promise<boolean>
 } {
+  const pluginCommands = (): CommandContribution[] =>
+    Array.isArray(options.pluginCommands) ? options.pluginCommands : options.pluginCommands()
+  const pluginKeybindings = (): KeybindingContribution[] =>
+    Array.isArray(options.pluginKeybindings)
+      ? options.pluginKeybindings
+      : options.pluginKeybindings()
+
   const actions = (): CommandActionMap => ({
     "open-command-palette": () => options.setCommandPaletteOpen(true),
     "toggle-theme": () =>
@@ -131,7 +139,7 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
     createShortcutRegistry({
       platform: currentShortcutPlatform(),
       platformKeybindings: platformKeybindings(),
-      pluginKeybindings: options.pluginKeybindings,
+      pluginKeybindings: pluginKeybindings(),
       commands: actions(),
       executeCommand: async (commandId) => {
         const action = actions()[commandId]
@@ -150,7 +158,7 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
     commandItems: () =>
       createCommandPaletteCommands({
         platformCommands: platformCommands(options),
-        pluginCommands: options.pluginCommands,
+        pluginCommands: pluginCommands(),
         actions: actions(),
         ...(options.hasPluginCommandHandler
           ? { hasPluginCommandHandler: options.hasPluginCommandHandler }
@@ -167,13 +175,13 @@ export function createWorkbenchShellCommandModels(options: WorkbenchShellCommand
       }),
     availableCommandIds: () => [
       ...platformCommands(options).map((command) => command.id),
-      ...options.pluginCommands.map((command) => command.id),
+      ...pluginCommands().map((command) => command.id),
     ],
     shortcutRegistry,
     runCommand: (commandId, context) =>
       createCommandExecutor({
         actions: actions(),
-        pluginCommandIds: options.pluginCommands.map((command) => command.id),
+        pluginCommandIds: pluginCommands().map((command) => command.id),
         ...(options.runPluginCommand ? { runPluginCommand: options.runPluginCommand } : {}),
       })(commandId, { ...context, source: context.source ?? "programmatic" }),
   }

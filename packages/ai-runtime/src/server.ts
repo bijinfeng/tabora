@@ -1,0 +1,819 @@
+import {
+  chat,
+  toServerSentEventsResponse,
+  toolDefinition,
+  type AnyClientTool,
+  type AnyServerTool,
+  type AnyTextAdapter,
+} from "@tanstack/ai"
+import { createAnthropicChat } from "@tanstack/ai-anthropic"
+import type { StreamChunk } from "@tanstack/ai/client"
+import { openaiCompatibleText } from "@tanstack/ai-openai/compatible"
+import { z, type ZodType } from "zod"
+import {
+  AiRuntimeError,
+  PluginAiToolError,
+  type PluginAiToolContext,
+  type PluginAiToolHandler,
+  type PluginNetworkAccess,
+} from "@tabora/plugin-api"
+import type { AiBudget, AiGenerateResult, AiStreamChunk, AiTokenUsage } from "@tabora/plugin-api"
+
+import type {
+  AiCustomProviderConfig,
+  AiGatewayContentPart,
+  AiGatewayMessage,
+  AiGatewayThinkingPart,
+  AiGatewayRequest,
+  AiInputModality,
+  AiProviderApi,
+} from "./contracts"
+import type { AiUsageTracker } from "./usage"
+import { estimateAiTokens } from "./usage"
+
+export { AiRuntimeError } from "@tabora/plugin-api"
+export type { AiCustomProviderConfig } from "./contracts"
+export { createAttachmentTools } from "./attachmentTools"
+export type { AiAttachmentToolResource } from "./attachmentTools"
+
+const MAX_CHAT_MESSAGES = 100
+const MAX_CHAT_MESSAGE_CHARS = 32_000
+const MAX_REASONING_SIGNATURE_CHARS = 1_000_000
+
+export type PluginToolEntryLike = {
+  ref: {
+    pluginId: string
+    id: string
+    kind: "ai-tool"
+    contribution: {
+      name: string
+      description: string
+      inputSchema: Record<string, unknown>
+      resultViewId?: string
+      requiresNetwork?: boolean
+    }
+  }
+  handler: PluginAiToolHandler
+}
+
+type PluginToolContextRuntime = {
+  network?: PluginNetworkAccess | undefined
+  logger?: PluginAiToolContext["logger"]
+  instanceId?: string
+}
+
+/**
+ * Converts a JSON Schema Draft-07 object schema subset to a Zod schema.
+ * Covers the contract declared by manifests: object, properties, required,
+ * scalar per-property type, and additionalProperties: false strict mode.
+ */
+export function jsonSchemaToZodSchema(schema: Record<string, unknown>): ZodType {
+  if (schema.type !== "object") {
+    return z.unknown()
+  }
+  const properties = (schema.properties as Record<string, Record<string, unknown>>) ?? {}
+  const required = new Set<string>((schema.required as readonly string[]) ?? [])
+  const additionalProperties = schema.additionalProperties
+  const shape: Record<string, ZodType> = {}
+  for (const [key, prop] of Object.entries(properties)) {
+    const scalar = scalarPropertyToZod(prop)
+    shape[key] = required.has(key) ? scalar : scalar.optional()
+  }
+  let obj = z.object(shape)
+  if (additionalProperties === false) {
+    obj = obj.strict()
+  }
+  return obj as ZodType
+}
+
+function scalarPropertyToZod(prop: Record<string, unknown>): ZodType {
+  const type = prop.type as string | undefined
+  switch (type) {
+    case "string":
+      return z.string()
+    case "number":
+      return z.number()
+    case "integer":
+      return z.number().int()
+    case "boolean":
+      return z.boolean()
+    case "array":
+      return z.array(z.unknown())
+    case "object":
+      return z.record(z.string(), z.unknown())
+    case "null":
+      return z.null()
+    default:
+      return z.unknown()
+  }
+}
+
+/**
+ * Invokes a plugin-registered tool handler. Always wraps unexpected rejections
+ * into PluginAiToolError(plugin_tool_execution_failed) so the chat stream
+ * keeps running instead of aborting a full turn on one failing plugin.
+ */
+export async function invokePluginTool(
+  entry: PluginToolEntryLike,
+  args: Record<string, unknown>,
+  runtime: PluginToolContextRuntime,
+): Promise<unknown> {
+  const defaultLogger: PluginAiToolContext["logger"] = { warn: () => {}, error: () => {} }
+  const context: PluginAiToolContext = {
+    pluginId: entry.ref.pluginId,
+    ...(runtime.instanceId !== undefined ? { instanceId: runtime.instanceId } : {}),
+    network: runtime.network ?? {
+      canFetch: () => false,
+      fetch: async () => {
+        throw new PluginAiToolError(
+          "plugin_tool_execution_failed",
+          "Plugin tool network bridge not available",
+        )
+      },
+    },
+    logger: { ...defaultLogger, ...runtime.logger },
+  }
+  try {
+    return await entry.handler({ args, context })
+  } catch (cause) {
+    if (cause instanceof PluginAiToolError) throw cause
+    const message = cause instanceof Error ? cause.message : String(cause)
+    throw new PluginAiToolError(
+      "plugin_tool_execution_failed",
+      `Plugin tool ${entry.ref.id} failed: ${message}`,
+      { cause: cause as Error },
+    )
+  }
+}
+
+/**
+ * Converts each plugin-declared and plugin-registered tool entry into a
+ * TanStack AnyServerTool so the chat gateway can hand them to the model.
+ * Each returned tool uses `toolDefinition({name, description, parameters})
+ * .server(args => invokePluginTool(...))` matching the builtin attachment
+ * tool pattern shipped in attachmentTools.ts.
+ */
+export function convertPluginToolsToTanstackTools(
+  entries: readonly PluginToolEntryLike[],
+  network?: PluginNetworkAccess,
+  logger: PluginAiToolContext["logger"] = { warn: () => {}, error: () => {} },
+): AnyServerTool[] {
+  return entries.map((entry) =>
+    toolDefinition({
+      name: entry.ref.contribution.name,
+      description: entry.ref.contribution.description,
+      inputSchema: entry.ref.contribution.inputSchema,
+    }).server(async (args: unknown) =>
+      invokePluginTool(entry, args as Record<string, unknown>, { network, logger }),
+    ),
+  )
+}
+
+/**
+ * Client-side variant of convertPluginToolsToTanstackTools. Use when the
+ * handler lives in the same JS thread as the ChatClient and function calls
+ * should be dispatched locally, not by the server gateway.
+ */
+export function convertPluginToolsToTanstackClientTools(
+  entries: readonly PluginToolEntryLike[],
+  network?: PluginNetworkAccess,
+  logger: PluginAiToolContext["logger"] = { warn: () => {}, error: () => {} },
+): AnyClientTool[] {
+  return entries.map((entry) =>
+    toolDefinition({
+      name: entry.ref.contribution.name,
+      description: entry.ref.contribution.description,
+      inputSchema: entry.ref.contribution.inputSchema,
+    }).client(async (args: unknown) =>
+      invokePluginTool(entry, args as Record<string, unknown>, { network, logger }),
+    ),
+  )
+}
+
+export type AiTextGateway = {
+  generate(request: AiGatewayRequest): Promise<AiGenerateResult>
+  stream(request: AiGatewayRequest): AsyncIterable<AiStreamChunk>
+  streamEvents(request: AiGatewayRequest): AsyncIterable<StreamChunk>
+}
+
+export type BuiltinAiModel = AiCustomProviderConfig & { id: string }
+
+export type AiGatewayOptions = {
+  builtinModels?: BuiltinAiModel[]
+  validateCustomProvider?(provider: AiCustomProviderConfig): Promise<void> | void
+  /** Resolves host-owned, server-executed tools for the current run. */
+  tools?(request: AiGatewayRequest): readonly AnyServerTool[]
+  /** Optional host-owned accounting and budget enforcement for gateway runs. */
+  usageTracker?: AiUsageTracker
+  budget?: AiBudget
+}
+
+function estimateGatewayRequestTokens(request: AiGatewayRequest): number {
+  const text = request.messages?.length
+    ? [request.system, ...request.messages.map((message) => message.text)]
+        .filter(Boolean)
+        .join("\n")
+    : [request.system, request.prompt].filter(Boolean).join("\n")
+  return estimateAiTokens(text)
+}
+
+function providerUsage(value: unknown): AiTokenUsage | undefined {
+  if (!value || typeof value !== "object" || !("usage" in value)) return undefined
+  const usage = (value as { usage?: unknown }).usage
+  if (!usage || typeof usage !== "object") return undefined
+  const record = usage as Record<string, unknown>
+  const inputTokens = Number(record.inputTokens ?? record.prompt_tokens)
+  const outputTokens = Number(record.outputTokens ?? record.completion_tokens)
+  const totalTokens = Number(record.totalTokens ?? record.total_tokens)
+  if (![inputTokens, outputTokens, totalTokens].some(Number.isFinite)) return undefined
+  return {
+    ...(Number.isFinite(inputTokens) ? { inputTokens } : {}),
+    ...(Number.isFinite(outputTokens) ? { outputTokens } : {}),
+    ...(Number.isFinite(totalTokens) ? { totalTokens } : {}),
+  }
+}
+
+function providerForRequest(
+  request: AiGatewayRequest,
+  options: AiGatewayOptions,
+): AiCustomProviderConfig {
+  if (request.provider === "custom") {
+    if (!request.custom?.baseUrl || !request.custom.apiKey || !request.custom.model) {
+      throw new AiRuntimeError("ai_not_configured", "Custom AI provider is not configured")
+    }
+    return request.custom
+  }
+
+  const model = options.builtinModels?.find((candidate) => candidate.id === request.modelId)
+  if (!model) throw new AiRuntimeError("ai_model_unavailable", "AI model is unavailable")
+  return model
+}
+
+async function validateProvider(provider: AiCustomProviderConfig, options: AiGatewayOptions) {
+  await options.validateCustomProvider?.(provider)
+}
+
+function createChatOptions(
+  request: AiGatewayRequest,
+  provider: AiCustomProviderConfig,
+  tools: readonly AnyServerTool[] = [],
+) {
+  const api = provider.api ?? "chat-completions"
+  const messages = request.messages?.length
+    ? request.messages.map((message) => ({
+        role: message.role,
+        content: message.parts?.length ? message.parts : message.text,
+        ...(message.thinking?.length ? { thinking: message.thinking } : {}),
+      }))
+    : [{ role: "user" as const, content: request.prompt ?? "" }]
+  const modelOptions: Record<string, unknown> = {}
+  if (request.temperature !== undefined) modelOptions.temperature = request.temperature
+  if (request.maxOutputTokens !== undefined)
+    modelOptions[api === "anthropic-messages" ? "max_tokens" : "max_output_tokens"] =
+      request.maxOutputTokens
+  if (provider.reasoning?.summary && (provider.api ?? "chat-completions") === "responses") {
+    modelOptions.reasoning = {
+      summary: "auto",
+      ...(provider.reasoning.effort && request.reasoningEffort
+        ? { effort: request.reasoningEffort }
+        : {}),
+    }
+    if (provider.reasoning.continuation) {
+      modelOptions.include = ["reasoning.encrypted_content"]
+    }
+  } else if (provider.reasoning?.effort && request.reasoningEffort !== undefined) {
+    modelOptions[api === "anthropic-messages" ? "effort" : "reasoning_effort"] =
+      request.reasoningEffort
+  }
+  const adapter = (api === "anthropic-messages"
+    ? createAnthropicChat(provider.model as never, provider.apiKey, {
+        baseURL: provider.baseUrl.replace(/\/?$/, "").replace(/\/v1$/, ""),
+        fetch(input, init) {
+          const headers = new Headers(init?.headers)
+          if (!headers.has("authorization")) {
+            headers.set("authorization", `Bearer ${provider.apiKey}`)
+          }
+          return fetch(input, { ...init, headers, redirect: "error" })
+        },
+      })
+    : openaiCompatibleText(provider.model, {
+        apiKey: provider.apiKey,
+        baseURL: provider.baseUrl,
+        api,
+        fetch(input, init) {
+          return fetch(input, { ...init, redirect: "error" })
+        },
+      })) as unknown as AnyTextAdapter
+  return {
+    adapter,
+    messages,
+    ...(request.system || tools.length
+      ? {
+          systemPrompts: [
+            ...([request.system].filter(Boolean) as string[]),
+            ...(tools.length
+              ? [
+                  "The user attached private files. Use the attachment tools when you need their contents. Start with list_attachments, then read only the relevant bounded ranges. Never claim to have read an attachment unless a tool returned its content.",
+                ]
+              : []),
+          ],
+        }
+      : {}),
+    ...(Object.keys(modelOptions).length > 0 ? { modelOptions } : {}),
+    ...(tools.length ? { tools: [...tools] } : {}),
+  }
+}
+
+const CHAT_COMPLETIONS_MODALITIES = new Set<AiInputModality>(["text", "image"])
+const RESPONSES_MODALITIES = new Set<AiInputModality>(["text", "image", "audio", "document"])
+const ANTHROPIC_MESSAGES_MODALITIES = new Set<AiInputModality>(["text", "image"])
+
+function allowedModalities(provider: AiCustomProviderConfig): Set<AiInputModality> {
+  const api = provider.api ?? "chat-completions"
+  const adapterModalities =
+    api === "responses"
+      ? RESPONSES_MODALITIES
+      : api === "anthropic-messages"
+        ? ANTHROPIC_MESSAGES_MODALITIES
+        : CHAT_COMPLETIONS_MODALITIES
+  const configured = provider.inputModalities ?? ["text", "image"]
+  return new Set(configured.filter((modality) => adapterModalities.has(modality)))
+}
+
+/** Never let browser-provided parts bypass the selected model's declared input contract. */
+function assertMessageModalities(
+  request: AiGatewayRequest,
+  provider: AiCustomProviderConfig,
+): void {
+  const allowed = allowedModalities(provider)
+  for (const message of request.messages ?? []) {
+    for (const part of message.parts ?? []) {
+      if (!allowed.has(part.type)) {
+        throw new AiRuntimeError(
+          "ai_request_rejected",
+          `The selected AI model does not accept ${part.type} input`,
+        )
+      }
+    }
+  }
+}
+
+function wrapProviderError(error: unknown): AiRuntimeError {
+  if (error instanceof AiRuntimeError) return error
+  return new AiRuntimeError("ai_provider_failed", "AI provider request failed", { cause: error })
+}
+
+export function createTanstackAiGateway(options: AiGatewayOptions = {}) {
+  async function* streamEvents(request: AiGatewayRequest): AsyncIterable<StreamChunk> {
+    const estimatedTokens = estimateGatewayRequestTokens(request)
+    options.usageTracker?.check(options.budget, estimatedTokens)
+    let completed = false
+    try {
+      const provider = providerForRequest(request, options)
+      await validateProvider(provider, options)
+      assertMessageModalities(request, provider)
+      const stream = chat(
+        createChatOptions(request, provider, options.tools?.(request)),
+      ) as AsyncIterable<StreamChunk>
+      for await (const chunk of stream) yield chunk
+      completed = true
+    } catch (error) {
+      options.usageTracker?.record(undefined, true)
+      throw wrapProviderError(error)
+    } finally {
+      if (completed) options.usageTracker?.record({ totalTokens: estimatedTokens })
+    }
+  }
+
+  return {
+    async generate(request: AiGatewayRequest): Promise<AiGenerateResult> {
+      const estimatedTokens = estimateGatewayRequestTokens(request)
+      options.usageTracker?.check(options.budget, estimatedTokens)
+      try {
+        const provider = providerForRequest(request, options)
+        await validateProvider(provider, options)
+        assertMessageModalities(request, provider)
+        const result = await chat({
+          ...createChatOptions(request, provider, options.tools?.(request)),
+          stream: false,
+        })
+        const usage = providerUsage(result)
+        options.usageTracker?.record(usage ?? { totalTokens: estimatedTokens })
+        const text =
+          typeof result === "string"
+            ? result
+            : result && typeof result === "object" && "text" in result
+              ? typeof (result as { text?: unknown }).text === "string"
+                ? (result as { text: string }).text
+                : ""
+              : ""
+        return { text, ...(usage ? { usage } : {}) }
+      } catch (error) {
+        options.usageTracker?.record(undefined, true)
+        throw wrapProviderError(error)
+      }
+    },
+
+    async *stream(request: AiGatewayRequest): AsyncIterable<AiStreamChunk> {
+      for await (const chunk of streamEvents(request)) {
+        if (chunk.type === "TEXT_MESSAGE_CONTENT" && chunk.delta) {
+          yield { type: "text-delta", text: chunk.delta }
+        }
+      }
+      yield { type: "finish" }
+    },
+
+    streamEvents,
+  }
+}
+
+function rejectRequest(message: string): never {
+  throw new AiRuntimeError("ai_request_rejected", message)
+}
+
+type AiProviderSelection = {
+  provider: "builtin" | "custom"
+  modelId?: string
+  custom?: AiCustomProviderConfig
+}
+
+function parseProviderSelection(input: Record<string, unknown>): AiProviderSelection {
+  if (input.provider !== "builtin" && input.provider !== "custom") {
+    rejectRequest("Invalid AI provider")
+  }
+  let customProvider: AiCustomProviderConfig | undefined
+  if (input.provider === "custom") {
+    const custom = input.custom
+    if (!custom || typeof custom !== "object") {
+      throw new AiRuntimeError("ai_not_configured", "Custom AI provider is not configured")
+    }
+    const config = custom as Record<string, unknown>
+    if (
+      typeof config.baseUrl !== "string" ||
+      typeof config.apiKey !== "string" ||
+      typeof config.model !== "string" ||
+      !config.baseUrl.trim() ||
+      !config.apiKey.trim() ||
+      !config.model.trim()
+    ) {
+      throw new AiRuntimeError("ai_not_configured", "Custom AI provider is not configured")
+    }
+    const api: AiProviderApi | undefined =
+      config.api === "chat-completions" ||
+      config.api === "responses" ||
+      config.api === "anthropic-messages"
+        ? config.api
+        : undefined
+    if (config.api !== undefined && !api) rejectRequest("Invalid AI provider API")
+    const inputModalities = config.inputModalities
+    if (
+      inputModalities !== undefined &&
+      (!Array.isArray(inputModalities) ||
+        inputModalities.some(
+          (value) =>
+            value !== "text" && value !== "image" && value !== "audio" && value !== "document",
+        ))
+    ) {
+      rejectRequest("Invalid AI model input modalities")
+    }
+    const rawReasoning = config.reasoning
+    if (
+      rawReasoning !== undefined &&
+      (!rawReasoning ||
+        typeof rawReasoning !== "object" ||
+        ("effort" in rawReasoning && typeof rawReasoning.effort !== "boolean") ||
+        ("summary" in rawReasoning && typeof rawReasoning.summary !== "boolean") ||
+        ("continuation" in rawReasoning && typeof rawReasoning.continuation !== "boolean"))
+    ) {
+      rejectRequest("Invalid AI reasoning capabilities")
+    }
+    const reasoning = rawReasoning as
+      | { effort?: boolean; summary?: boolean; continuation?: boolean }
+      | undefined
+    customProvider = {
+      baseUrl: config.baseUrl,
+      apiKey: config.apiKey,
+      model: config.model,
+      ...(api ? { api } : {}),
+      ...(inputModalities ? { inputModalities: [...inputModalities] as AiInputModality[] } : {}),
+      ...(reasoning?.effort || reasoning?.summary || reasoning?.continuation
+        ? {
+            reasoning: {
+              ...(reasoning.effort ? { effort: true } : {}),
+              ...(reasoning.summary ? { summary: true } : {}),
+              ...(reasoning.continuation ? { continuation: true } : {}),
+            },
+          }
+        : {}),
+    }
+  }
+  return {
+    provider: input.provider,
+    ...(typeof input.modelId === "string" ? { modelId: input.modelId } : {}),
+    ...(customProvider ? { custom: customProvider } : {}),
+  }
+}
+
+function parseGenerationOptions(input: Record<string, unknown>) {
+  if (
+    input.system !== undefined &&
+    (typeof input.system !== "string" || input.system.length > 16_000)
+  ) {
+    rejectRequest("Invalid AI system prompt")
+  }
+  if (
+    input.temperature !== undefined &&
+    (typeof input.temperature !== "number" || input.temperature < 0 || input.temperature > 2)
+  ) {
+    rejectRequest("Invalid AI temperature")
+  }
+  const maxOutputTokens = input.maxOutputTokens
+  if (
+    maxOutputTokens !== undefined &&
+    (typeof maxOutputTokens !== "number" ||
+      !Number.isInteger(maxOutputTokens) ||
+      maxOutputTokens < 1 ||
+      maxOutputTokens > 8_192)
+  ) {
+    rejectRequest("Invalid AI output limit")
+  }
+  const rawReasoning = input.reasoningEffort
+  const reasoningEffort: AiGatewayRequest["reasoningEffort"] =
+    rawReasoning === "low" || rawReasoning === "medium" || rawReasoning === "high"
+      ? rawReasoning
+      : undefined
+  if (rawReasoning !== undefined && reasoningEffort === undefined) {
+    rejectRequest("Invalid AI reasoning effort")
+  }
+  const attachmentIds = input.attachmentIds
+  if (
+    attachmentIds !== undefined &&
+    (!Array.isArray(attachmentIds) ||
+      attachmentIds.length > 32 ||
+      attachmentIds.some((value) => typeof value !== "string" || !/^[1-9]\d{0,15}$/.test(value)))
+  ) {
+    rejectRequest("Invalid AI attachment references")
+  }
+  return {
+    ...(typeof input.system === "string" ? { system: input.system } : {}),
+    ...(typeof input.temperature === "number" ? { temperature: input.temperature } : {}),
+    ...(typeof maxOutputTokens === "number" ? { maxOutputTokens } : {}),
+    ...(reasoningEffort ? { reasoningEffort } : {}),
+    ...(attachmentIds ? { attachmentIds: [...new Set(attachmentIds)] as string[] } : {}),
+  }
+}
+
+const MAX_INLINE_MEDIA_CHARS = 8_000_000
+const MAX_INLINE_MEDIA_TOTAL_CHARS = 12_000_000
+
+function parseInlineDataSource(
+  value: unknown,
+  kind: "image" | "audio" | "document",
+): { type: "data"; value: string; mimeType: string } {
+  if (!value || typeof value !== "object") rejectRequest(`Invalid AI ${kind} source`)
+  const source = value as Record<string, unknown>
+  const mimeType = source.mimeType
+  const validMime =
+    typeof mimeType === "string" &&
+    (kind === "document"
+      ? mimeType.split(";", 1)[0]?.toLowerCase() === "application/pdf"
+      : mimeType.startsWith(`${kind}/`))
+  if (
+    source.type !== "data" ||
+    typeof source.value !== "string" ||
+    !validMime ||
+    source.value.length > MAX_INLINE_MEDIA_CHARS
+  ) {
+    rejectRequest(`Only bounded inline ${kind} data is supported`)
+  }
+  return { type: "data", value: source.value, mimeType }
+}
+
+function parseChatMessageContent(
+  value: unknown,
+  role: "user" | "assistant" | "tool" | "system",
+): {
+  text: string
+  parts?: AiGatewayContentPart[]
+  thinking?: AiGatewayThinkingPart[]
+  mediaChars: number
+} {
+  if (typeof value === "string") return { text: value, mediaChars: 0 }
+  if (!Array.isArray(value) || value.length === 0) {
+    rejectRequest("Invalid AI chat message content")
+  }
+
+  const parts: AiGatewayContentPart[] = []
+  const thinking: AiGatewayThinkingPart[] = []
+  let text = ""
+  let mediaChars = 0
+  for (const rawPart of value) {
+    if (!rawPart || typeof rawPart !== "object") rejectRequest("Invalid AI content part")
+    const part = rawPart as Record<string, unknown>
+    if (part.type === "text") {
+      if (typeof part.text !== "string") rejectRequest("Invalid AI text content part")
+      text += part.text
+      parts.push({ type: "text", content: part.text })
+      continue
+    }
+    if (part.type === "thinking") {
+      if (
+        role !== "assistant" ||
+        typeof part.content !== "string" ||
+        !part.content ||
+        part.content.length > 32_000 ||
+        (part.signature !== undefined &&
+          (typeof part.signature !== "string" ||
+            part.signature.length > MAX_REASONING_SIGNATURE_CHARS))
+      ) {
+        rejectRequest("Invalid AI reasoning content")
+      }
+      thinking.push({
+        content: part.content,
+        ...(typeof part.signature === "string" ? { signature: part.signature } : {}),
+      })
+      continue
+    }
+    if (part.type !== "image" && part.type !== "audio" && part.type !== "document") {
+      rejectRequest("Unsupported AI content part")
+    }
+    const source = parseInlineDataSource(part.source, part.type)
+    mediaChars += source.value.length
+    if (part.type === "document") {
+      const metadata = part.metadata
+      if (
+        metadata !== undefined &&
+        (!metadata ||
+          typeof metadata !== "object" ||
+          ("filename" in metadata &&
+            typeof (metadata as Record<string, unknown>).filename !== "string"))
+      ) {
+        rejectRequest("Invalid AI document metadata")
+      }
+      parts.push({
+        type: "document",
+        source,
+        ...(metadata
+          ? { metadata: metadata as { filename?: string; detail?: "auto" | "low" | "high" } }
+          : {}),
+      })
+      continue
+    }
+    parts.push({ type: part.type, source })
+  }
+  return {
+    text,
+    ...(parts.length ? { parts } : {}),
+    ...(thinking.length ? { thinking } : {}),
+    mediaChars,
+  }
+}
+
+/**
+ * Chat requests arrive as the AG-UI `RunAgentInput` envelope produced by
+ * TanStack AI connection adapters: `messages` at the top level in anchor
+ * shape and the host provider selection merged into `forwardedProps`.
+ */
+function parseAiChatRequest(input: Record<string, unknown>): AiGatewayRequest {
+  if (typeof input.prompt === "string") {
+    rejectRequest("AI requests cannot combine prompt and messages")
+  }
+  const forwarded = input.forwardedProps
+  const props: Record<string, unknown> = {
+    ...(forwarded && typeof forwarded === "object" ? (forwarded as Record<string, unknown>) : {}),
+    ...(typeof input.provider === "string" ? { provider: input.provider } : {}),
+    ...(typeof input.modelId === "string" ? { modelId: input.modelId } : {}),
+    ...(input.custom !== undefined ? { custom: input.custom } : {}),
+  }
+  if (!Array.isArray(input.messages) || input.messages.length === 0) {
+    rejectRequest("Invalid AI chat messages")
+  }
+  if (input.messages.length > MAX_CHAT_MESSAGES) {
+    rejectRequest("Too many AI chat messages")
+  }
+  const selection = parseProviderSelection(props)
+  const options = parseGenerationOptions(props)
+  const messages: AiGatewayMessage[] = []
+  const systemParts: string[] = []
+  let totalMediaChars = 0
+  let pendingReasoning: AiGatewayThinkingPart[] = []
+  for (const entry of input.messages) {
+    if (!entry || typeof entry !== "object") rejectRequest("Invalid AI chat message")
+    const anchor = entry as Record<string, unknown>
+    const role = anchor.role
+    if (
+      role !== "user" &&
+      role !== "assistant" &&
+      role !== "tool" &&
+      role !== "system" &&
+      role !== "reasoning"
+    ) {
+      rejectRequest("Unsupported AI chat message role")
+    }
+    if (role === "reasoning") {
+      if (typeof anchor.content !== "string" || !anchor.content || anchor.content.length > 32_000) {
+        rejectRequest("Invalid AI reasoning content")
+      }
+      const signature = anchor.encryptedValue
+      if (
+        signature !== undefined &&
+        (typeof signature !== "string" || signature.length > MAX_REASONING_SIGNATURE_CHARS)
+      ) {
+        rejectRequest("Invalid AI reasoning signature")
+      }
+      pendingReasoning.push({
+        content: anchor.content,
+        ...(typeof signature === "string" ? { signature } : {}),
+      })
+      continue
+    }
+    const hasToolCalls = Array.isArray(anchor.toolCalls)
+    const normalized =
+      role === "assistant" && anchor.content === undefined && hasToolCalls
+        ? { text: "", mediaChars: 0 }
+        : parseChatMessageContent(anchor.content, role)
+    if (
+      !normalized.text.trim() &&
+      (normalized.parts?.length ?? 0) === 0 &&
+      (normalized.thinking?.length ?? 0) === 0 &&
+      !hasToolCalls
+    )
+      rejectRequest("Invalid AI chat message content")
+    if (normalized.text.length > MAX_CHAT_MESSAGE_CHARS) {
+      rejectRequest("AI chat message is too long")
+    }
+    totalMediaChars += normalized.mediaChars
+    if (totalMediaChars > MAX_INLINE_MEDIA_TOTAL_CHARS) {
+      rejectRequest("AI chat attachments are too large")
+    }
+    if (role === "system") {
+      if (normalized.parts) rejectRequest("System messages cannot contain media")
+      systemParts.push(normalized.text)
+      continue
+    }
+    messages.push({
+      role,
+      text: normalized.text,
+      ...(normalized.parts ? { parts: normalized.parts } : {}),
+      ...(pendingReasoning.length || normalized.thinking
+        ? { thinking: [...pendingReasoning, ...(normalized.thinking ?? [])] }
+        : {}),
+      ...(typeof anchor.toolCallId === "string" ? { toolCallId: anchor.toolCallId } : {}),
+      ...(typeof anchor.name === "string" ? { name: anchor.name } : {}),
+      ...(typeof anchor.error === "string" ? { error: anchor.error } : {}),
+      ...(Array.isArray(anchor.toolCalls)
+        ? {
+            toolCalls: anchor.toolCalls as Exclude<AiGatewayMessage["toolCalls"], undefined>,
+          }
+        : {}),
+    })
+    pendingReasoning = []
+  }
+  if (messages.at(-1)?.role !== "user") {
+    rejectRequest("AI chat must end with a user message")
+  }
+  const system = [options.system, ...systemParts].filter(Boolean).join("\n\n")
+  return {
+    ...selection,
+    ...options,
+    ...(system ? { system } : {}),
+    messages,
+  }
+}
+
+export function parseAiGatewayRequest(value: unknown): AiGatewayRequest {
+  if (!value || typeof value !== "object") {
+    throw new AiRuntimeError("ai_request_rejected", "Invalid AI request")
+  }
+  const input = value as Record<string, unknown>
+  if (Array.isArray(input.messages)) return parseAiChatRequest(input)
+  if (typeof input.prompt !== "string" || !input.prompt.trim() || input.prompt.length > 32_000) {
+    throw new AiRuntimeError("ai_request_rejected", "Invalid AI prompt")
+  }
+  const selection = parseProviderSelection(input)
+  return {
+    prompt: input.prompt,
+    ...selection,
+    ...parseGenerationOptions(input),
+  }
+}
+
+export function aiErrorResponse(error: unknown): Response {
+  const runtimeError = wrapProviderError(error)
+  return new Response(
+    JSON.stringify({ error: { code: runtimeError.code, message: runtimeError.message } }),
+    {
+      status:
+        runtimeError.code === "ai_auth_required"
+          ? 401
+          : runtimeError.code === "ai_budget_exceeded"
+            ? 429
+            : 400,
+      headers: { "content-type": "application/json" },
+    },
+  )
+}
+
+export function aiStreamResponse(gateway: AiTextGateway, request: AiGatewayRequest): Response {
+  return toServerSentEventsResponse(gateway.streamEvents(request))
+}

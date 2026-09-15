@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from "vitest"
 import { render } from "solid-js/web"
-import type { WidgetViewProps } from "@tabora/plugin-api/sdk"
+import type {
+  AiChatClient,
+  AiChatClientOptions,
+  PluginContext,
+  WidgetViewProps,
+} from "@tabora/plugin-api/sdk"
 import { makeWidgetViewProps } from "../../test-support/widgetViewProps"
+import { officialPluginNotes } from "./index"
 import { NotesCard } from "./notes-card"
 import { NotesExpand } from "./notes-expand"
 function makeProps(overrides: Partial<WidgetViewProps> = {}): WidgetViewProps {
@@ -295,6 +301,62 @@ describe("NotesExpand", () => {
     const moreButton = root.querySelector<HTMLButtonElement>('[aria-label="更多操作"]')
     expect(moreButton).toBeTruthy()
     expect(moreButton?.getAttribute("aria-haspopup")).toBe("menu")
+    root.remove()
+  })
+
+  it("renders a streamed AI summary from the host-owned chat client", async () => {
+    let chatOptions: AiChatClientOptions | undefined
+    const client: AiChatClient = {
+      async send() {
+        chatOptions?.onLoadingChange?.(true)
+        chatOptions?.onMessagesChange?.([
+          { role: "user", text: "summary request" },
+          { role: "assistant", text: "这是总结" },
+        ])
+        chatOptions?.onLoadingChange?.(false)
+      },
+      stop: vi.fn(),
+      dispose: vi.fn(),
+      getMessages: () => [],
+    }
+    void officialPluginNotes.activate({
+      ai: {
+        generate: async () => ({ text: "" }),
+        stream: async function* () {},
+        createChatClient(options: AiChatClientOptions | undefined) {
+          chatOptions = options
+          return client
+        },
+      },
+      views: { register: () => () => {} },
+    } as unknown as PluginContext)
+
+    const props = makeProps()
+    ;(props.data.get as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "summary",
+        content: "需要总结的便签",
+        starred: false,
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-02",
+      },
+    ])
+    const root = document.createElement("div")
+    document.body.appendChild(root)
+    render(() => <NotesExpand {...props} />, root)
+    await flushMount()
+
+    const moreButton = root.querySelector<HTMLButtonElement>("[aria-label='更多操作']")
+    moreButton?.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }))
+    await flushMount()
+    const summarize = [...document.querySelectorAll<HTMLElement>("[role='menuitem']")].find(
+      (item) => item.textContent?.includes("AI 总结"),
+    )
+    expect(summarize).toBeTruthy()
+    summarize?.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, button: 0 }))
+    await flushMount()
+
+    expect(root.textContent).toContain("这是总结")
     root.remove()
   })
 

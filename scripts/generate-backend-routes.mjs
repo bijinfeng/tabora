@@ -3,11 +3,11 @@ import { fileURLToPath } from "node:url"
 import { createServer } from "vite"
 
 const scriptsDirectory = dirname(fileURLToPath(import.meta.url))
-const backendRoot = resolve(scriptsDirectory, "../backend/app")
+const appRoot = resolve(scriptsDirectory, "../apps/app")
 
 const server = await createServer({
-  root: backendRoot,
-  configFile: resolve(backendRoot, "vite.config.ts"),
+  root: appRoot,
+  configFile: resolve(appRoot, "vite.config.ts"),
   server: { middlewareMode: true },
 })
 

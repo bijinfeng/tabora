@@ -1,3 +1,6 @@
+// 负责 bearer header、push/pull HTTP 调用和响应到错误码的映射：
+// 未登录 / 401 / 403 -> AUTH_FAILED，400 -> INVALID_PAYLOAD，网络异常 -> NETWORK_ERROR，
+// 其他非 2xx -> SERVER_ERROR。同步失败不能阻塞本地读写。
 export type SyncGatewayError = {
   code: "AUTH_FAILED" | "NETWORK_ERROR" | "INVALID_PAYLOAD" | "SERVER_ERROR"
   message: string

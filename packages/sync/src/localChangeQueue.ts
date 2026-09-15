@@ -1,3 +1,4 @@
+// 合并、持久化和重试本地同步队列：同一记录的多次改动折叠为当前态，push 失败的队列项保留待重试。
 import type { SyncQueueRepository, SyncQueueRow } from "@tabora/storage"
 
 export type LocalChange = {

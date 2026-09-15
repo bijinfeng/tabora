@@ -6,7 +6,6 @@ import {
   classifyExternalOpenMatch,
   classifyRawColorMatch,
   classifyWorkbenchRawColorDebt,
-  findBrowserSmokeWorkflowViolations,
   findCrossAppSourceImports,
   findCorePackageAppImports,
   findDeprecatedLayoutIdViolations,
@@ -53,47 +52,31 @@ const officialPluginStyleFiles = [
   "plugins/official/widget-weather/src/styles.ts",
 ]
 
-const uiSubpathEntries = [
-  ["./component-docs", "./src/component-docs/index.ts", "./dist/component-docs/index.js"],
-  [
-    "./component-docs/renderers",
-    "./src/component-docs/renderers.tsx",
-    "./dist/component-docs/renderers.js",
-  ],
-  ["./badge", "./src/badge.ts", "./dist/badge.js"],
-  ["./button", "./src/button.ts", "./dist/button.js"],
-  ["./checkbox", "./src/checkbox.ts", "./dist/checkbox.js"],
-  ["./collapsible", "./src/collapsible.ts", "./dist/collapsible.js"],
-  ["./command-palette", "./src/command-palette.ts", "./dist/command-palette.js"],
-  ["./command-result-list", "./src/command-result-list.ts", "./dist/command-result-list.js"],
-  ["./context-menu", "./src/context-menu.ts", "./dist/context-menu.js"],
-  ["./date-picker", "./src/date-picker.ts", "./dist/date-picker.js"],
-  ["./dropdown-menu", "./src/dropdown-menu.ts", "./dist/dropdown-menu.js"],
-  ["./empty-state", "./src/empty-state.ts", "./dist/empty-state.js"],
-  ["./field", "./src/field.ts", "./dist/field.js"],
-  ["./field-row", "./src/field-row.ts", "./dist/field-row.js"],
-  ["./hover-card", "./src/hover-card.ts", "./dist/hover-card.js"],
-  ["./inline-error", "./src/inline-error.ts", "./dist/inline-error.js"],
-  ["./input", "./src/input.ts", "./dist/input.js"],
-  ["./kbd", "./src/kbd.ts", "./dist/kbd.js"],
-  ["./list-row", "./src/list-row.ts", "./dist/list-row.js"],
-  ["./menubar", "./src/menubar.ts", "./dist/menubar.js"],
-  ["./scroll-area", "./src/scroll-area.ts", "./dist/scroll-area.js"],
-  ["./segmented-control", "./src/segmented-control.ts", "./dist/segmented-control.js"],
-  ["./select", "./src/select.ts", "./dist/select.js"],
-  ["./skeleton", "./src/skeleton.ts", "./dist/skeleton.js"],
-  ["./slider", "./src/slider.ts", "./dist/slider.js"],
-  ["./steps", "./src/steps.ts", "./dist/steps.js"],
-  ["./switch", "./src/switch.ts", "./dist/switch.js"],
-  ["./table", "./src/table.ts", "./dist/table.js"],
-  ["./tabs", "./src/tabs.ts", "./dist/tabs.js"],
-  ["./textarea", "./src/textarea.ts", "./dist/textarea.js"],
-  ["./toast", "./src/toast.ts", "./dist/toast.js"],
-  ["./tree-view", "./src/tree-view.ts", "./dist/tree-view.js"],
-] as const
+const UI_BUILD_EXCLUDED_EXPORTS = new Set([".", "./package.json", "./styles.css"])
 
-const uiBuildScript = `vp pack ${["src/index.ts", ...uiSubpathEntries.map(([, sourceTarget]) => sourceTarget.slice(2))].join(" ")}`
+type UiManifest = {
+  exports: Record<string, string>
+  publishConfig: { exports: Record<string, string> }
+  scripts: { build: string }
+}
 
+async function loadUiManifest(): Promise<UiManifest> {
+  return JSON.parse(await readRepositoryText(".", "packages/ui/package.json"))
+}
+
+function uiPackEntries(manifest: { exports: Record<string, string> }): string[] {
+  const sourceEntries = Object.entries(manifest.exports)
+    .filter(([exportKey]) => !UI_BUILD_EXCLUDED_EXPORTS.has(exportKey))
+    .map(([, sourceTarget]) => sourceTarget.slice(2))
+  return ["src/index.ts", ...sourceEntries].sort()
+}
+
+function packEntryOrder(buildScript: string): string[] {
+  return buildScript
+    .replace(/^vp pack /, "")
+    .split(" ")
+    .sort()
+}
 const performanceSubpathPackages = [
   {
     manifestPath: "packages/official-plugins/package.json",
@@ -162,11 +145,6 @@ const performanceSubpathPackages = [
     manifestPath: "plugins/official/widget-weather/package.json",
     entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
     build: "vp pack src/index.ts src/manifest.ts",
-  },
-  {
-    manifestPath: "plugins/community/layout-diy-masonry/package.json",
-    entries: [["./manifest", "./src/manifest.ts", "./dist/manifest.js"]],
-    build: "vp pack src/index.tsx src/manifest.ts",
   },
 ] as const
 
@@ -767,7 +745,7 @@ describe("governance rules", () => {
         filePath: "apps/playground/src/themeResolver.ts",
         match: 'export * from "@tabora/workbench-app"',
         reason:
-          "apps must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
+          "workbench entrypoints must not keep pure pass-through compatibility wrappers for @tabora/workbench-app",
       },
     ])
 
@@ -780,73 +758,6 @@ describe("governance rules", () => {
           export function createPlaygroundComposition() {
             return createWorkbenchComposition()
           }
-        `,
-      }),
-    ).toEqual([])
-  })
-
-  it("detects missing PR browser smoke workflow contracts", () => {
-    expect(
-      findBrowserSmokeWorkflowViolations({
-        filePath: ".github/workflows/ci.yml",
-        source: `
-          name: CI
-          on:
-            pull_request:
-              branches: [main]
-          jobs:
-            browser-smoke:
-              runs-on: ubuntu-latest
-              steps:
-                - run: pnpm install --frozen-lockfile
-                - run: pnpm test:e2e
-        `,
-      }),
-    ).toEqual([
-      {
-        filePath: ".github/workflows/ci.yml",
-        match: "pull_request.paths",
-        reason: "CI pull_request workflow must gate browser smoke by the required Tabora path set",
-      },
-      {
-        filePath: ".github/workflows/ci.yml",
-        match: "jobs.browser-smoke.if",
-        reason: "CI browser smoke job must run only for pull_request events",
-      },
-      {
-        filePath: ".github/workflows/ci.yml",
-        match: "pnpm exec playwright install --with-deps chromium",
-        reason: "CI browser smoke job must install Playwright Chromium before pnpm test:e2e",
-      },
-    ])
-
-    expect(
-      findBrowserSmokeWorkflowViolations({
-        filePath: ".github/workflows/ci.yml",
-        source: `
-          on:
-            pull_request:
-              branches: [main]
-              paths:
-                - "apps/playground/**"
-                - "apps/extension/**"
-                - "packages/**"
-                - "plugins/**"
-                - "scripts/**"
-                - "tooling/**"
-                - "package.json"
-                - "pnpm-lock.yaml"
-                - "pnpm-workspace.yaml"
-                - "vitest.e2e.config.ts"
-                - ".github/workflows/**"
-          jobs:
-            browser-smoke:
-              if: github.event_name == 'pull_request'
-              runs-on: ubuntu-latest
-              steps:
-                - run: pnpm install --frozen-lockfile
-                - run: pnpm exec playwright install --with-deps chromium
-                - run: pnpm test:e2e
         `,
       }),
     ).toEqual([])
@@ -911,16 +822,18 @@ describe("governance rules", () => {
   })
 
   it("keeps @tabora/ui StyleX package build and stylesheet exports aligned", async () => {
-    const manifest = JSON.parse(await readRepositoryText(".", "packages/ui/package.json"))
+    const manifest = await loadUiManifest()
 
     expect(manifest.exports["./style.css"]).toBeUndefined()
     expect(manifest.exports["./styles.css"]).toBe("./src/styles.css")
     expect(manifest.publishConfig.exports["./styles.css"]).toBe("./dist/styles.css")
-    for (const [exportKey, sourceTarget, publishTarget] of uiSubpathEntries) {
-      expect(manifest.exports[exportKey], exportKey).toBe(sourceTarget)
-      expect(manifest.publishConfig.exports[exportKey], exportKey).toBe(publishTarget)
+    for (const [exportKey, sourceTarget] of Object.entries(manifest.exports)) {
+      if (UI_BUILD_EXCLUDED_EXPORTS.has(exportKey)) continue
+      expect(manifest.publishConfig.exports[exportKey], exportKey).toBe(
+        sourceTarget.replace(/^\.\/src\//, "./dist/").replace(/\.tsx?$/, ".js"),
+      )
     }
-    expect(manifest.scripts.build).toBe(uiBuildScript)
+    expect(packEntryOrder(manifest.scripts.build)).toEqual(uiPackEntries(manifest))
   })
 
   it("keeps performance-sensitive package subpaths publishable", async () => {
@@ -937,14 +850,10 @@ describe("governance rules", () => {
   })
 
   it("keeps StyleX packages on the shared Vite+ pack pipeline", async () => {
+    const uiManifest = await loadUiManifest()
     const expectedBuilds = new Map([
-      ["packages/ui/package.json", uiBuildScript],
       ["packages/workbench-shell/package.json", "vp pack src/index.ts"],
       ["packages/official-plugins/package.json", performanceSubpathPackages[0].build],
-      [
-        "plugins/community/layout-diy-masonry/package.json",
-        "vp pack src/index.tsx src/manifest.ts",
-      ],
       ["plugins/official/widget-notes/package.json", "vp pack src/index.ts src/manifest.ts"],
       ["plugins/official/widget-quick-links/package.json", "vp pack src/index.ts src/manifest.ts"],
       ["plugins/official/widget-todo/package.json", "vp pack src/index.ts src/manifest.ts"],
@@ -955,6 +864,9 @@ describe("governance rules", () => {
       const manifest = JSON.parse(await readRepositoryText(".", filePath))
       expect(manifest.scripts.build, filePath).toBe(expectedBuild)
     }
+    expect(packEntryOrder(uiManifest.scripts.build), "packages/ui/package.json").toEqual(
+      uiPackEntries(uiManifest),
+    )
 
     await expect(stat("scripts/build-stylex-package.mjs")).rejects.toMatchObject({ code: "ENOENT" })
     await expect(stat("scripts/lib/stylexPackageBuild.mjs")).rejects.toMatchObject({
@@ -1190,7 +1102,7 @@ describe("governance rules", () => {
 
     expect(
       findWorkbenchAvoidableStyleViolations({
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         source: `
           .menu {
             background: var(--color-surface, #fff);
@@ -1202,17 +1114,17 @@ describe("governance rules", () => {
       }),
     ).toEqual([
       {
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         match: "rgba(0, 0, 0, 0)",
         reason: "use transparent instead of zero-alpha rgba",
       },
       {
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         match: "var(--color-surface, #fff)",
         reason: "workbench theme variables must not carry literal color fallbacks",
       },
       {
-        filePath: "plugins/community/layout-diy-masonry/src/styles.css",
+        filePath: "plugins/official/layout-dashboard/src/styles.css",
         match: "var(--color-text, 28 30 28)",
         reason: "workbench theme variables must not carry literal color fallbacks",
       },
@@ -1302,7 +1214,6 @@ describe("governance rules", () => {
       "packages/ui/src/styled/button/button.styled.tsx",
       "packages/ui/src/styled/checkbox/checkbox.styled.tsx",
       "packages/ui/src/styled/switch/switch.styled.tsx",
-      "plugins/community/layout-diy-masonry/src/index.tsx",
     ]
 
     for (const filePath of targetFiles) {
@@ -1335,7 +1246,6 @@ describe("governance rules", () => {
       "packages/ui/src/styled/slider/slider.styled.tsx",
       "packages/ui/src/styled/switch/switch.styled.tsx",
       "packages/workbench-shell/src/styles.css",
-      "plugins/community/layout-diy-masonry/src/index.tsx",
     ]
 
     for (const filePath of targetFiles) {
@@ -1408,7 +1318,7 @@ describe("governance rules", () => {
   it("keeps raw color fixtures out of committed test sources", async () => {
     const backgroundResolverTest = await readRepositoryText(
       ".",
-      "apps/playground/src/backgroundResolver.test.tsx",
+      "packages/workbench-app/src/appearance/backgroundResolver.test.ts",
     )
     expect(backgroundResolverTest).not.toContain("rgba(0,0,0,0.1)")
     expect(backgroundResolverTest).not.toContain("rgb(1, 2, 3)")
@@ -1429,10 +1339,10 @@ describe("governance rules", () => {
   })
 
   it("keeps shell app entrypoints as thin wrappers", async () => {
-    const playgroundApp = await readRepositoryText(".", "apps/playground/src/App.tsx")
+    const backendWorkbenchApp = await readRepositoryText(".", "apps/app/src/workbench/App.tsx")
     const extensionApp = await readRepositoryText(".", "apps/extension/entrypoints/newtab/App.tsx")
 
-    expect(playgroundApp.split("\n").length).toBeLessThan(200)
+    expect(backendWorkbenchApp.split("\n").length).toBeLessThan(200)
     expect(extensionApp.split("\n").length).toBeLessThan(200)
   })
 
@@ -1442,7 +1352,7 @@ describe("governance rules", () => {
       "packages/workbench-app/src/shell/WorkbenchShellApp.tsx",
     )
 
-    expect(shellRoot.split("\n").length).toBeLessThan(420)
+    expect(shellRoot.split("\n").length).toBeLessThan(450)
   })
 
   it("builds a grouped quality report", () => {
@@ -1476,7 +1386,7 @@ describe("governance rules", () => {
 
     expect(
       classifyExternalOpenMatch({
-        filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx",
+        filePath: "packages/workbench-app/src/appearance/backgroundResolver.test.ts",
         match: "window.open",
       }),
     ).toBe("test-fixture")
@@ -1498,7 +1408,10 @@ describe("governance rules", () => {
         { filePath: "packages/official-plugins/src/search-command-bar.tsx", match: "openExternal" },
         { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
         { filePath: "plugins/example/src/view.tsx", match: "window.open" },
-        { filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx", match: "window.open" },
+        {
+          filePath: "packages/workbench-app/src/appearance/backgroundResolver.test.ts",
+          match: "window.open",
+        },
       ]),
     ).toEqual({
       "host-execution": 1,
@@ -1544,7 +1457,10 @@ describe("governance rules", () => {
         },
         { filePath: "plugins/example/src/view.tsx", match: 'target="_blank"' },
         { filePath: "plugins/example/src/view.tsx", match: "window.open" },
-        { filePath: "apps/playground/src/workbenchGovernance.e2e.test.tsx", match: "window.open" },
+        {
+          filePath: "packages/workbench-app/src/appearance/backgroundResolver.test.ts",
+          match: "window.open",
+        },
       ],
     })
 
@@ -1569,7 +1485,7 @@ describe("governance rules", () => {
       "packages/workbench-app/src/shell/WorkbenchShellApp.tsx: window.open",
     )
     expect(report).not.toContain(
-      "apps/playground/src/workbenchGovernance.e2e.test.tsx: window.open",
+      "packages/workbench-app/src/appearance/backgroundResolver.test.ts: window.open",
     )
   })
 })

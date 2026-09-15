@@ -3,10 +3,6 @@ name: Tabora
 description: Plugin-first personal workbench for a browser new tab page.
 design_version: "2.0"
 style: refined-sage
-visual_references:
-  workbench_prototype: docs/design/workbench-prototype.html
-  site_preview: docs/design/landing.html
-  download_preview: docs/design/download.html
 colors:
   light:
     page: "#F6F7F4"
@@ -108,8 +104,6 @@ Tabora 是一个插件优先的个人工作台新标签页产品。界面应像�
 平台视觉基于 Refined Sage。绿色只是低频强调色，不是大面积主题色。默认气质是暖白页面、清晰边框、克制表面、紧凑排印和稳定卡片。
 
 `DESIGN.md` 是 Tabora 视觉语言、token、基础组件语义、宿主容器视觉、交互模式和可访问性规则的单一事实源。本文件按 `google-labs-code/design.md` 的格式生成，用于让 AI 和工程实现快速读取关键 token、布局规则、组件语义和禁忌。
-
-`docs/design/workbench-prototype.html`、`docs/design/landing.html` 和 `docs/design/download.html` 只作为可视原型或静态预览资产，不再承载规范事实。若预览与本文件冲突，以本文件为准，并同步更新预览或实现。
 
 ## Colors
 
@@ -235,7 +229,7 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 - Switch：表示二元启用/禁用设置，不用于执行一次性动作。
 - RadioGroup：3-5 个互斥选项。
 - Tabs：切换同一容器内的内容视图。
-- DropdownMenu / ContextMenu：承载尺寸、展开、移除等动作。危险动作要有明确样式。
+- DropdownMenu / ContextMenu：承载尺寸、展开、移除等动作。危险动作要有明确样式。DropdownMenu 宽度默认跟随内容并受视口限制，默认最小宽度为 `120px`，调用方可按场景覆盖，不统一写死固定宽度。
 - Dialog：模态确认或通知。危险确认使用 destructive 变体。
 - Drawer：设置、详情查看等需要保持上下文但需要更多空间的场景。
 - CommandPalette：`@tabora/ui` 可提供通用 primitive；Tabora 全局命令、搜索、卡片和 provider 切换入口由 shell 组合并持有状态。
@@ -245,7 +239,7 @@ Tabora 的默认层级靠边框、表面色和空间关系表达，不靠重阴�
 - EmptyState：用于空数据或无匹配结果，提供下一步动作。
 - ListRow / CardSection / Table：用于密集、可扫描的信息组织。
 
-单行控件的默认高度为 `32px`：Button、IconButton、Input、Select、Combobox 和 TagInput 均遵循此密度；`sm` 为 `28px`，只有明确指定 `lg` 的 Button / IconButton 才为 `44px`。Textarea、CommandPalette 搜索框等多行或复合控件按照各自内容与交互需求定义高度，不套用该默认值。
+单行控件使用三级高度：`sm` 为 `24px`、默认 `md` 为 `32px`、`lg` 为 `40px`。Button、IconButton、Input、Select、Pagination 和 InputNumber 按需提供这三级；Textarea、CommandPalette 搜索框等多行或复合控件按照各自内容与交互需求定义高度，不套用该默认值。
 
 Select 下拉列表容器不保留上下内边距；默认选项行最小高度为 `30px`，以紧凑密度展示，同时保留不低于 `24px` 的可交互目标。选中指示器置于选项文字后方。
 
@@ -261,7 +255,7 @@ Widget 支持多实例、多尺寸、拖拽排序、右键尺寸菜单、双击�
 
 设置中心是轻量 settings host：桌面端使用左侧分类导航 + 右侧内容区；移动端使用独立的全屏单列容器，设置首页采用大标题、搜索框和分组列表，点击设置项进入带顶部返回的二级详情页。MVP 面板包含插件只读信息、外观主题与背景、默认搜索源和搜索源启用状态。
 
-设置中心由 `@tabora/workbench-app` 的路由承载：`/settings/<section>` 是设置页，`general`、`appearance`、`search`、`plugins`、`about` 等分类是二级路由。打开、分类切换、关闭、移动端返回以及浏览器前进/后退都必须与 URL 同步；`SettingsHost` 只负责容器、导航渲染和错误边界。
+设置中心由 `@tabora/workbench-app` 的内存 surface 状态承载。桌面端打开设置时保持当前 URL 不变；移动端设置首页与详情页之间的切换也只更新内存状态，不写入 URL 或浏览器历史；`SettingsHost` 只负责容器、导航渲染和错误边界。
 
 设置页面采用“安全容器 + 声明式模型 + 统一 renderer”的默认路径：
 

@@ -24,6 +24,7 @@ import fieldDemoSource from "../../../../../packages/ui/src/styled/field/field.d
 import hoverCardDemoSource from "../../../../../packages/ui/src/styled/hoverCard/hoverCard.demo.tsx?raw"
 import inlineErrorDemoSource from "../../../../../packages/ui/src/styled/inlineError/inlineError.demo.tsx?raw"
 import inputDemoSource from "../../../../../packages/ui/src/styled/input/input.demo.tsx?raw"
+import inputNumberDemoSource from "../../../../../packages/ui/src/styled/inputNumber/inputNumber.demo.tsx?raw"
 import kbdDemoSource from "../../../../../packages/ui/src/styled/kbd/kbd.demo.tsx?raw"
 import linkDemoSource from "../../../../../packages/ui/src/styled/link/link.demo.tsx?raw"
 import listRowDemoSource from "../../../../../packages/ui/src/styled/listRow/listRow.demo.tsx?raw"
@@ -202,6 +203,12 @@ const InlineErrorDemo = lazy(() =>
 const InputDemo = lazy(() =>
   import("../../../../../packages/ui/src/styled/input/input.demo").then((module) => ({
     default: module.InputDemo,
+  })),
+)
+
+const InputNumberDemo = lazy(() =>
+  import("../../../../../packages/ui/src/styled/inputNumber/inputNumber.demo").then((module) => ({
+    default: module.InputNumberDemo,
   })),
 )
 
@@ -403,6 +410,7 @@ export type DocsExampleId =
   | "iconbutton"
   | "inlineerror"
   | "input"
+  | "inputnumber"
   | "kbd"
   | "link"
   | "listrow"
@@ -537,6 +545,7 @@ const docsExamples: Record<DocsExampleId, DocsExample> = {
   iconbutton: registerExample(buttonDemoSource, IconButtonDemo),
   inlineerror: registerExample(inlineErrorDemoSource, InlineErrorDemo),
   input: registerExample(inputDemoSource, InputDemo),
+  inputnumber: registerExample(inputNumberDemoSource, InputNumberDemo),
   kbd: registerExample(kbdDemoSource, KbdDemo),
   link: registerExample(linkDemoSource, LinkDemo),
   listrow: registerExample(listRowDemoSource, ListRowDemo),

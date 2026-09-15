@@ -120,6 +120,8 @@ export const officialSettingsWorkspaceManifest: PluginManifest = {
         scope: "workspace",
         surfaces: ["desktop", "mobile"],
         order: 50,
+        hostActions: ["ai.settings.write"],
+        hostReads: ["ai.settings.read"],
       },
       {
         id: "official.settings.workspace.plugins",

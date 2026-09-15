@@ -11,6 +11,7 @@ export type ContributionKind =
   | "background-renderer"
   | "theme"
   | "settings-panel"
+  | "ai-tool"
 
 /** Legacy alias retained while region contracts migrate to RegionContentKind. */
 export type ExtensionPoint = ContributionKind
@@ -241,6 +242,8 @@ export type WidgetViewProps = {
       },
     ): void
     openExternal(url: string): Promise<boolean>
+    /** Read-only snapshot of the workspace AI settings; present only when the host wired it. */
+    getAiSettings?(): Promise<SettingsAiSettings>
   }
 }
 
@@ -313,6 +316,78 @@ export type SettingsHostReadId =
   | "catalog.search-providers.read"
   | "workspace.search.read"
   | "plugins.read"
+  | "ai.settings.read"
+
+export type SettingsAiInputModality = "text" | "image" | "audio" | "document"
+export type SettingsAiProviderApi = "chat-completions" | "responses" | "anthropic-messages"
+
+/** Explicit model capability; clients must not infer it from a model identifier. */
+export type SettingsAiReasoningCapabilities = {
+  effort?: boolean
+  summary?: boolean
+  continuation?: boolean
+}
+
+export type SettingsAiModel = {
+  id: string
+  label: string
+  /** Absent only for a legacy host; clients retain historic text/image behavior. */
+  inputModalities?: SettingsAiInputModality[]
+  reasoning?: SettingsAiReasoningCapabilities
+}
+
+/**
+ * Safe AI configuration projection for settings views. API keys are deliberately
+ * represented only as an availability flag and are never part of this contract.
+ */
+export type SettingsAiSettings = {
+  supportedProviders?: Array<"builtin" | "custom">
+  activeProvider: "builtin" | "custom"
+  builtin: {
+    status: "available" | "auth-required" | "unavailable"
+    models: SettingsAiModel[]
+    modelId: string
+  }
+  custom: {
+    /** User-facing name for the configured provider. */
+    name?: string
+    baseUrl: string
+    model: string
+    models?: string[]
+    /** Legacy custom settings use the historic Chat Completions text/image contract. */
+    api?: SettingsAiProviderApi
+    inputModalities?: SettingsAiInputModality[]
+    reasoning?: SettingsAiReasoningCapabilities
+    apiKeyConfigured: boolean
+    /** Whether an empty update keeps the existing secret on this host. */
+    preservesApiKeyOnSave?: boolean
+  }
+}
+
+export type SettingsAiSettingsUpdate = {
+  activeProvider: SettingsAiSettings["activeProvider"]
+  builtinModelId: string
+  custom: {
+    /** User-facing name for the configured provider. */
+    name?: string
+    baseUrl: string
+    model: string
+    models?: string[]
+    api?: SettingsAiProviderApi
+    inputModalities?: SettingsAiInputModality[]
+    reasoning?: SettingsAiReasoningCapabilities
+    /** A missing key preserves the current local secret; it is never read back. */
+    apiKey?: string
+  }
+}
+
+/** Host-owned persistence boundary for an AI settings surface. */
+export type AiSettingsService = {
+  getSettings(): Promise<SettingsAiSettings>
+  saveSettings(update: SettingsAiSettingsUpdate): Promise<SettingsAiSettings>
+  /** Discover models without exposing a host-stored API key to the settings view. */
+  discoverCustomModels?(baseUrl: string, apiKey?: string): Promise<string[]>
+}
 
 /** Read-only projection; intentionally not the host's persisted Workspace entity. */
 export type SettingsWorkspaceSummary = {
@@ -347,6 +422,7 @@ export type SettingsPanelData = {
   searchProviders?: Array<OwnedContribution<SearchProviderContribution, "search-provider">>
   searchSettings?: WorkbenchSearchSettings
   plugins?: SettingsPluginSummary[]
+  ai?: SettingsAiSettings
 }
 
 export type SettingsPanelViewProps = {
@@ -375,6 +451,9 @@ export type SettingsPanelViewProps = {
     createWorkspace?(name: string): Promise<void>
     switchWorkspace?(id: string): Promise<void>
     deleteWorkspace?(id: string): Promise<void>
+    getAiSettings?(): Promise<SettingsAiSettings>
+    saveAiSettings?(update: SettingsAiSettingsUpdate): Promise<SettingsAiSettings>
+    discoverAiModels?(baseUrl: string, apiKey?: string): Promise<string[]>
   }
   /** Only properties explicitly requested by the panel and granted by the host are present. */
   data: Readonly<SettingsPanelData>
@@ -389,6 +468,7 @@ export type SettingsHostActionId =
   | "workspace.transfer"
   | "workspace.manage"
   | "plugins.manage"
+  | "ai.settings.write"
 
 export type SettingsPanelContribution = {
   id: string
@@ -435,6 +515,15 @@ export type KeybindingContribution = {
   editable?: boolean
 }
 
+export type AiToolContribution = {
+  id: string
+  name: string
+  description: string
+  inputSchema: Record<string, unknown>
+  resultViewId?: string
+  requiresNetwork?: boolean
+}
+
 export type PluginManifest = {
   id: string
   name: string
@@ -465,5 +554,6 @@ export type PluginManifest = {
     commands?: CommandContribution[]
     keybindings?: KeybindingContribution[]
     workspacePresets?: WorkspacePresetContribution[]
+    aiTools?: AiToolContribution[]
   }
 }

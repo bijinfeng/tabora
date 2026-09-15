@@ -1,3 +1,6 @@
+// 对外统一入口：管理 device ID、监听器和同步调度。触发点为启动、延迟合并后的本地修改、
+// 页面回到前台、网络恢复和手动“立即同步”；每次先检查会话，未登录跳过网络请求，
+// 账号插件停用时停止监听器和计时器。
 import type { AuthClient } from "@tabora/auth"
 import type { SyncMetaRepository, SyncQueueRepository, TaboraDatabase } from "@tabora/storage"
 

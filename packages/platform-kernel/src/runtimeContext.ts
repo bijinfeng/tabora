@@ -1,6 +1,9 @@
 import type {
   AiPermissionAccess,
   AiRuntimeBridge,
+  PluginAiToolErrorCode,
+  PluginAiToolHandler,
+  PluginAiToolRegistration,
   PluginCommandHandler,
   PluginContext,
   PluginI18nBridge,
@@ -10,9 +13,16 @@ import type {
   PluginPermission,
   PluginSettingsRegistration,
   PluginViewRegistration,
+  RegisteredPluginAiToolEntry,
 } from "@tabora/plugin-api"
+import { PluginAiToolError } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
-import type { ExtensionRegistrationDisposer, ExtensionRegistry } from "./extensionRegistry"
+import type {
+  AiToolContributionRef,
+  AiToolRegistryEntry,
+  ExtensionRegistrationDisposer,
+  ExtensionRegistry,
+} from "./extensionRegistry"
 
 export type I18nMessageBundle = PluginI18nMessageBundle
 
@@ -61,6 +71,21 @@ export function collectPluginManifestCommandIds(manifest: PluginManifest): Set<s
   return new Set((manifest.contributes.commands ?? []).map((command) => command.id))
 }
 
+export function collectPluginManifestAiToolRefs(
+  manifest: PluginManifest,
+): Map<string, AiToolContributionRef> {
+  const map = new Map<string, AiToolContributionRef>()
+  for (const contrib of manifest.contributes.aiTools ?? []) {
+    map.set(contrib.id, {
+      pluginId: manifest.id,
+      kind: "ai-tool",
+      id: contrib.id,
+      contribution: contrib,
+    })
+  }
+  return map
+}
+
 export function createPluginRuntimeContext(options: {
   pluginId: string
   events: EventBus
@@ -88,6 +113,9 @@ export function createPluginRuntimeContext(options: {
   const declaredCommands = options.manifest
     ? collectPluginManifestCommandIds(options.manifest)
     : new Set<string>()
+  const declaredAiToolRefs = options.manifest
+    ? collectPluginManifestAiToolRefs(options.manifest)
+    : new Map<string, AiToolContributionRef>()
 
   function canAccessView(viewId: string): boolean {
     return viewId.startsWith(`${options.pluginId}.`) && (declaredViews?.has(viewId) ?? false)
@@ -139,6 +167,33 @@ export function createPluginRuntimeContext(options: {
       return dispose
     },
   }
+
+  const aiTools: PluginAiToolRegistration | undefined = (() => {
+    if (!hasAnyAiAccess()) return undefined
+    return {
+      register(toolId: string, handler: PluginAiToolHandler) {
+        try {
+          requireAiAccess("tools")
+        } catch (cause) {
+          throw new PluginAiToolError(
+            "plugin_tool_permission_denied" as PluginAiToolErrorCode,
+            `Plugin "${options.pluginId}" attempted to register aiTool without AI tools permission: ${toolId}`,
+            { cause },
+          )
+        }
+        const ref = declaredAiToolRefs.get(toolId)
+        if (!ref || !ownsRegistration(toolId)) {
+          throw new PluginAiToolError(
+            "plugin_tool_not_found" as PluginAiToolErrorCode,
+            `Plugin "${options.pluginId}" attempted to register undeclared aiTool: ${toolId}`,
+          )
+        }
+        const dispose = options.registry.aiTools.register(options.pluginId, ref, handler)
+        options.registrationDisposers?.push(dispose)
+        return dispose
+      },
+    }
+  })()
 
   function hasGrantedHostPermission(type: "external-open" | "network", url: string): boolean {
     let hostname: string
@@ -199,22 +254,95 @@ export function createPluginRuntimeContext(options: {
             requireAiAccess("generate")
             return options.ai!.stream(request)
           },
-          ...(options.ai.requestToolApproval
+          ...(options.ai.createChatClient
             ? {
-                requestToolApproval(request) {
+                createChatClient(clientOptions) {
+                  requireAiAccess("generate")
+                  return options.ai!.createChatClient!(clientOptions)
+                },
+              }
+            : {}),
+          ...(options.ai.createChatConnection
+            ? {
+                createChatConnection() {
+                  requireAiAccess("generate")
+                  return options.ai!.createChatConnection!()
+                },
+              }
+            : {}),
+          ...(options.ai.prepareChatAttachments
+            ? {
+                prepareChatAttachments(files, preparation) {
                   requireAiAccess("tools")
-                  return options.ai!.requestToolApproval!(request)
+                  return options.ai!.prepareChatAttachments!(files, preparation)
                 },
               }
             : {}),
-          ...(options.ai.getWorkspaceContext
-            ? {
-                getWorkspaceContext() {
-                  requireAiAccess("context")
-                  return options.ai!.getWorkspaceContext!()
-                },
+          listRegisteredAiTools() {
+            requireAiAccess("tools")
+            const base =
+              typeof options.ai!.listRegisteredAiTools === "function"
+                ? options.ai!.listRegisteredAiTools()
+                : []
+            const extras = Array.from(options.registry.aiTools.entries(), (entry) => ({
+              pluginId: entry.ref.pluginId,
+              id: entry.ref.id,
+              name: entry.ref.contribution.name,
+              description: entry.ref.contribution.description,
+            }))
+            if (base.length === 0) return extras
+            const seen = new Set(base.map((t) => `${t.pluginId}.${t.id}`))
+            for (const extra of extras) {
+              const key = `${extra.pluginId}.${extra.id}`
+              if (!seen.has(key)) {
+                seen.add(key)
+                base.push(extra)
               }
-            : {}),
+            }
+            return base
+          },
+          listRegisteredPluginToolEntries(): RegisteredPluginAiToolEntry[] {
+            requireAiAccess("tools")
+            const base: RegisteredPluginAiToolEntry[] =
+              typeof options.ai!.listRegisteredPluginToolEntries === "function"
+                ? options.ai!.listRegisteredPluginToolEntries!()
+                : []
+            const extras = Array.from(
+              options.registry.aiTools.entries() as Iterable<AiToolRegistryEntry>,
+              (entry): RegisteredPluginAiToolEntry => {
+                const contribution: RegisteredPluginAiToolEntry["ref"]["contribution"] = {
+                  name: entry.ref.contribution.name,
+                  description: entry.ref.contribution.description,
+                  inputSchema: entry.ref.contribution.inputSchema,
+                  ...(entry.ref.contribution.resultViewId !== undefined
+                    ? { resultViewId: entry.ref.contribution.resultViewId }
+                    : {}),
+                  ...(entry.ref.contribution.requiresNetwork !== undefined
+                    ? { requiresNetwork: entry.ref.contribution.requiresNetwork }
+                    : {}),
+                }
+                return {
+                  ref: {
+                    pluginId: entry.ref.pluginId,
+                    id: entry.ref.id,
+                    kind: "ai-tool",
+                    contribution,
+                  },
+                  handler: entry.handler,
+                }
+              },
+            )
+            if (base.length === 0) return extras
+            const seen = new Set(base.map((t) => `${t.ref.pluginId}.${t.ref.id}`))
+            for (const extra of extras) {
+              const key = `${extra.ref.pluginId}.${extra.ref.id}`
+              if (!seen.has(key)) {
+                seen.add(key)
+                base.push(extra)
+              }
+            }
+            return base
+          },
         }
       : undefined
 
@@ -233,6 +361,7 @@ export function createPluginRuntimeContext(options: {
     views,
     settings,
     commands,
+    ...(aiTools ? { aiTools } : {}),
     ui: {
       openModal(viewId, props) {
         if (!canOpenView(viewId)) {
@@ -261,6 +390,12 @@ export function createPluginRuntimeContext(options: {
       },
       closeFullscreen() {
         options.events.emit("ui.fullscreen.close", { pluginId: options.pluginId })
+      },
+      openSettings(sectionId) {
+        options.events.emit("ui.settings.open", {
+          pluginId: options.pluginId,
+          ...(sectionId ? { sectionId } : {}),
+        })
       },
       showToast(message, toastOptions) {
         options.events.emit("ui.toast.show", { message, options: toastOptions })

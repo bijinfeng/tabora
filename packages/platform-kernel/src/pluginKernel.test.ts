@@ -832,4 +832,78 @@ describe("createPluginKernel", () => {
       disabledReason: 'Unsupported platform "web"',
     })
   })
+
+  it("merges stale persisted settingsHostReads with bootstrap pre-grants for builtin plugins", async () => {
+    const manifest: PluginManifest = {
+      id: "official.test-stale-grant",
+      name: "Test Stale Grant",
+      version: "2.0.0",
+      apiVersion: "1.0.0",
+      entry: "./entry",
+      engine: { platform: "^1.0.0" },
+      contributes: {
+        settingsPanels: [
+          {
+            id: "test.panel",
+            title: "Test",
+            content: { kind: "custom-view", view: "official.test-stale-grant.test.view" },
+            section: "ai",
+            scope: "workspace",
+            surfaces: ["desktop"],
+            order: 1,
+            hostReads: ["ai.settings.read", "workspace.current.read"],
+            hostActions: ["ai.settings.write"],
+          },
+        ],
+      },
+    }
+
+    const kernel = createPluginKernel({
+      settingsHostReadGrants: {
+        "official.test-stale-grant": ["ai.settings.read", "workspace.current.read"],
+      },
+      settingsHostActionGrants: {
+        "official.test-stale-grant": ["ai.settings.write"],
+      },
+      lifecycleStore: {
+        async get(id) {
+          if (id === "official.test-stale-grant") {
+            // 模拟陈旧 persisted 记录：缺 ai.settings.read（在 v1.0 时还未声明）
+            return {
+              id,
+              version: "1.0.0",
+              source: "builtin",
+              enabled: true,
+              status: "active",
+              installedAt: "2024-01-01T00:00:00.000Z",
+              updatedAt: "2024-01-01T00:00:00.000Z",
+              manifest,
+              grantedPermissions: [],
+              grantedSettingsHostActions: [],
+              grantedSettingsHostReads: ["workspace.current.read"], // 陈旧：缺 ai.settings.read
+            }
+          }
+          return undefined
+        },
+        async save() {},
+      },
+    })
+
+    await kernel.discover([
+      builtin({
+        manifest,
+        async activate() {},
+      }),
+    ])
+
+    const plugin = kernel.plugins.find((p) => p.manifest.id === "official.test-stale-grant")
+    expect(plugin).toBeDefined()
+    expect(plugin!.installation.grantedSettingsHostReads).toEqual(
+      expect.arrayContaining(["ai.settings.read", "workspace.current.read"]),
+    )
+    expect(plugin!.installation.grantedSettingsHostReads).toHaveLength(2)
+    expect(plugin!.installation.grantedSettingsHostActions).toEqual(
+      expect.arrayContaining(["ai.settings.write"]),
+    )
+  })
 })

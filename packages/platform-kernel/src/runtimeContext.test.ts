@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import type { PluginManifest, PluginPermission } from "@tabora/plugin-api"
+import type { AiToolContribution, PluginManifest, PluginPermission } from "@tabora/plugin-api"
 import { createEventBus } from "./eventBus"
 import { createExtensionRegistry } from "./extensionRegistry"
 import { collectPluginManifestViewIds, createPluginRuntimeContext } from "./runtimeContext"
@@ -379,6 +379,62 @@ describe("createPluginRuntimeContext permissions", () => {
     })
   })
 
+  it("exposes createChatConnection behind the same AI generate grant", async () => {
+    const connect = async function* () {}
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate"] }],
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async () => ({ text: "reply" }),
+        stream: async function* () {},
+        createChatConnection: () => ({ connect }),
+      },
+    })
+
+    expect(context.ai?.createChatConnection?.()).toEqual({ connect })
+  })
+
+  it("omits createChatConnection from the bridge when the host does not provide it", () => {
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate"] }],
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async () => ({ text: "reply" }),
+        stream: async function* () {},
+      },
+    })
+
+    const aiBridge = context.ai
+    expect(aiBridge && "createChatConnection" in aiBridge).toBe(false)
+  })
+
+  it("keeps attachment preparation behind the AI tools grant", async () => {
+    const prepare = vi.fn(async () => [])
+    const context = createPluginRuntimeContext({
+      pluginId: "plugin.example",
+      events: createEventBus(),
+      registry: createExtensionRegistry(),
+      requestedPermissions: [{ type: "ai", access: ["generate", "tools"] }],
+      grantedPermissions: [{ type: "ai", access: ["generate"] }],
+      ai: {
+        generate: async () => ({ text: "reply" }),
+        stream: async function* () {},
+        prepareChatAttachments: prepare,
+      },
+    })
+
+    expect(() => context.ai?.prepareChatAttachments?.([], { conversationId: "thread-1" })).toThrow(
+      "attempted to use AI tools without permission",
+    )
+    expect(prepare).not.toHaveBeenCalled()
+  })
+
   it("collects view registration disposers for plugin-owned cleanup", () => {
     const registrationDisposers: Array<() => void> = []
     const registry = createExtensionRegistry()
@@ -460,5 +516,92 @@ describe("createPluginRuntimeContext permissions", () => {
 
     registrationDisposers[0]!()
     expect(registry.settings.has("plugin.example.settings.provider")).toBe(false)
+  })
+})
+
+describe("aiTools registration facade", () => {
+  const aiToolsManifest = (...contribs: AiToolContribution[]): PluginManifest => ({
+    id: "official.ai.example",
+    name: "AI Example",
+    version: "1.0.0",
+    apiVersion: "1.0.0",
+    entry: "./entry",
+    engine: { platform: "^1.0.0" },
+    contributes: { aiTools: contribs },
+  })
+  const aiToolsGranted: PluginPermission[] = [{ type: "ai", access: ["generate", "tools"] }]
+  const greetContrib: AiToolContribution = {
+    id: "official.ai.example.greet",
+    name: "greet",
+    description: "Greet someone",
+    inputSchema: {
+      type: "object",
+      properties: { name: { type: "string" } },
+      required: ["name"],
+      additionalProperties: false,
+    },
+  }
+  const handler = async (input: { args: Record<string, unknown> }) => input.args
+
+  it("registers an aiTool with declared id and ai permission, disposer cleans up", () => {
+    const manifest = aiToolsManifest(greetContrib)
+    const registry = createExtensionRegistry()
+    const disposers: Array<() => void> = []
+    const context = createPluginRuntimeContext({
+      pluginId: manifest.id,
+      events: createEventBus(),
+      registry,
+      manifest,
+      requestedPermissions: aiToolsGranted,
+      grantedPermissions: aiToolsGranted,
+      registrationDisposers: disposers,
+    })
+
+    const dispose = context.aiTools!.register("official.ai.example.greet", handler)
+
+    expect(Array.from(registry.aiTools.entries())).toHaveLength(1)
+    const [registered] = Array.from(registry.aiTools.entries())
+    expect(registered?.handler).toBe(handler)
+    expect(disposers).toHaveLength(1)
+
+    dispose()
+    expect(Array.from(registry.aiTools.entries())).toHaveLength(0)
+  })
+
+  it("throws UNDECLARED_TOOL when registering a tool id not in manifest contributions", () => {
+    const manifest = aiToolsManifest(greetContrib)
+    const registry = createExtensionRegistry()
+    const context = createPluginRuntimeContext({
+      pluginId: manifest.id,
+      events: createEventBus(),
+      registry,
+      manifest,
+      requestedPermissions: aiToolsGranted,
+      grantedPermissions: aiToolsGranted,
+    })
+
+    expect(() => context.aiTools!.register("official.ai.example.missing", handler)).toThrow(
+      /undeclared aiTool|plugin_tool_not_found/,
+    )
+    expect(Array.from(registry.aiTools.entries())).toHaveLength(0)
+  })
+
+  it("denies tool registration when ai tools permission is not granted", () => {
+    const manifest = aiToolsManifest(greetContrib)
+    const registry = createExtensionRegistry()
+    const noToolsGranted: PluginPermission[] = [{ type: "ai", access: ["generate"] }]
+    const context = createPluginRuntimeContext({
+      pluginId: manifest.id,
+      events: createEventBus(),
+      registry,
+      manifest,
+      requestedPermissions: noToolsGranted,
+      grantedPermissions: noToolsGranted,
+    })
+
+    expect(() => context.aiTools!.register("official.ai.example.greet", handler)).toThrow(
+      /permission|plugin_tool_permission_denied/,
+    )
+    expect(Array.from(registry.aiTools.entries())).toHaveLength(0)
   })
 })

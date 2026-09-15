@@ -18,6 +18,9 @@ export type { StepperProps } from "./styled/stepper"
 export { Input } from "./styled/input"
 export type { InputAppearance, InputProps, InputSize, InputType } from "./styled/input"
 
+export { InputNumber } from "./styled/inputNumber"
+export type { InputNumberProps, InputNumberSize } from "./styled/inputNumber"
+
 export { Textarea } from "./styled/textarea"
 export type { TextareaProps } from "./styled/textarea"
 
@@ -61,7 +64,12 @@ export { Dialog } from "./styled/dialog"
 export type { DialogProps } from "./styled/dialog"
 
 export { DropdownMenu } from "./styled/dropdownMenu"
-export type { DropdownMenuProps, DropdownMenuItem } from "./styled/dropdownMenu"
+export type {
+  DropdownMenuProps,
+  DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuEntry,
+} from "./styled/dropdownMenu"
 
 export { ContextMenu } from "./styled/contextMenu"
 export type { ContextMenuItem, ContextMenuProps } from "./styled/contextMenu"

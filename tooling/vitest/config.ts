@@ -1,5 +1,5 @@
 import type { UserConfig } from "vite"
-import { mergeConfig, defineConfig, defineProject } from "vitest/config"
+import { mergeConfig, defineConfig } from "vitest/config"
 import solid from "vite-plugin-solid"
 import { createTaboraStylexVitePlugin, taboraStylexWorkspaceRoot } from "@tabora/stylex-config"
 import fs from "node:fs"
@@ -12,11 +12,10 @@ const sharedUnitInlineDeps = [
   /@dnd-kit\//,
   /solid-presence/,
   /solid-/,
+  "lucide-solid",
 ]
 
-const sharedUnitExclude = ["**/*.e2e.test.ts", "**/*.e2e.test.tsx"]
-
-export { sharedUnitExclude, sharedUnitInlineDeps }
+export { sharedUnitInlineDeps }
 
 type AliasEntry = { find: RegExp; replacement: string }
 
@@ -116,7 +115,6 @@ export function defineUnitTestConfig(config: UserConfig = {}) {
       ],
       test: {
         environment: "happy-dom",
-        exclude: sharedUnitExclude,
         experimental: {
           importDurations: resolveImportDurationsConfig(),
         },
@@ -131,19 +129,6 @@ export function defineUnitTestConfig(config: UserConfig = {}) {
   )
 }
 
-export function definePackageUnitTestConfig(config: UserConfig = {}) {
-  return defineUnitTestConfig({
-    test: {
-      include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-    },
-    ...config,
-  })
-}
-
-export function definePackageUnitTestProject(config: UserConfig = {}) {
-  return defineProject(definePackageUnitTestConfig(config))
-}
-
 export function defineNodeUnitTestConfig(config: UserConfig = {}) {
   return mergeConfig(
     defineConfig({
@@ -153,23 +138,11 @@ export function defineNodeUnitTestConfig(config: UserConfig = {}) {
       },
       test: {
         environment: "node",
-        exclude: sharedUnitExclude,
         experimental: {
           importDurations: resolveImportDurationsConfig(),
         },
       },
     }),
     config,
-  )
-}
-
-export function defineNodePackageUnitTestProject(config: UserConfig = {}) {
-  return defineProject(
-    defineNodeUnitTestConfig({
-      test: {
-        include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-      },
-      ...config,
-    }),
   )
 }

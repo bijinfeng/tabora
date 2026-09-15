@@ -1,6 +1,8 @@
 import * as stylex from "@stylexjs/stylex"
+import { LucideProvider } from "lucide-solid"
+import type { Component, JSX } from "solid-js"
 
-import { color, font, motion, radius } from "@tabora/theme/tokens.stylex"
+import { color, control, font, motion, radius } from "@tabora/theme/tokens.stylex"
 import { HeadlessButton, HeadlessIconButton } from "../../primitives/button/button"
 import type {
   HeadlessButtonProps,
@@ -51,33 +53,44 @@ const styles = stylex.create({
   buttonSm: {
     borderRadius: radius.control,
     fontSize: 12,
-    height: 28,
+    height: control.sm,
     paddingBlock: 0,
     paddingInline: 8,
   },
+  buttonMini: {
+    borderRadius: radius.control,
+    fontSize: 11,
+    height: control.sm,
+    paddingBlock: 0,
+    paddingInline: 6,
+  },
+  buttonMiniCircle: {
+    paddingInline: 0,
+    width: control.sm,
+  },
   buttonSmCircle: {
     paddingInline: 0,
-    width: 28,
+    width: control.sm,
   },
   buttonMd: {
     fontSize: 13,
-    height: 32,
+    height: control.md,
     paddingBlock: 0,
     paddingInline: 12,
   },
   buttonMdCircle: {
     paddingInline: 0,
-    width: 32,
+    width: control.md,
   },
   buttonLg: {
     fontSize: 14,
-    height: 44,
+    height: control.lg,
     paddingBlock: 0,
     paddingInline: 18,
   },
   buttonLgCircle: {
     paddingInline: 0,
-    width: 44,
+    width: control.lg,
   },
   buttonDisabled: {
     backgroundColor: color.surfaceSoft,
@@ -199,7 +212,7 @@ const styles = stylex.create({
   },
   linkLayout: {
     height: "auto",
-    minHeight: 28,
+    minHeight: control.sm,
     paddingInline: 0,
   },
   danger: {
@@ -227,16 +240,28 @@ const styles = stylex.create({
     },
   },
   iconSm: {
-    height: 28,
-    width: 28,
+    height: control.sm,
+    paddingBlock: 0,
+    paddingInline: 0,
+    width: control.sm,
+  },
+  iconMini: {
+    height: control.sm,
+    paddingBlock: 0,
+    paddingInline: 0,
+    width: control.sm,
   },
   iconMd: {
-    height: 32,
-    width: 32,
+    height: control.md,
+    paddingBlock: 0,
+    paddingInline: 0,
+    width: control.md,
   },
   iconLg: {
-    height: 44,
-    width: 44,
+    height: control.lg,
+    paddingBlock: 0,
+    paddingInline: 0,
+    width: control.lg,
   },
   iconRound: {
     borderRadius: radius.pill,
@@ -246,7 +271,16 @@ const styles = stylex.create({
   },
 })
 
-export type ButtonProps = Omit<HeadlessButtonProps, "class" | "style"> & {
+type ButtonIconProps = {
+  size: number
+  strokeWidth: number
+}
+
+type ButtonIcon = Component<ButtonIconProps>
+
+export type ButtonProps = Omit<HeadlessButtonProps, "class" | "style" | "icon"> & {
+  /** Accept both the historical JSX element form and a component for size-aware icons. */
+  icon?: JSX.Element | ButtonIcon
   xstyle?: XStyle
 }
 
@@ -265,9 +299,17 @@ const buttonVariantStyles = {
 } as const
 
 const buttonSizeStyles = {
+  mini: styles.buttonMini,
   sm: styles.buttonSm,
   md: styles.buttonMd,
   lg: styles.buttonLg,
+} as const
+
+const buttonIconSizes = {
+  mini: 12,
+  sm: 12,
+  md: 16,
+  lg: 18,
 } as const
 
 const buttonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styles.buttonRound> = {
@@ -276,12 +318,14 @@ const buttonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styles.b
 }
 
 const buttonSizeCircleStyles = {
+  mini: styles.buttonMiniCircle,
   sm: styles.buttonSmCircle,
   md: styles.buttonMdCircle,
   lg: styles.buttonLgCircle,
 } as const
 
 const iconButtonSizeStyles = {
+  mini: styles.iconMini,
   sm: styles.iconSm,
   md: styles.iconMd,
   lg: styles.iconLg,
@@ -295,7 +339,12 @@ const iconButtonShapeStyles: Record<Exclude<ButtonShape, "default">, typeof styl
 export function Button(props: ButtonProps) {
   const shape: ButtonShape = props.shape ?? "default"
   const variant = props.variant ?? "secondary"
-  const disabledStyle = (() => {
+  const size = props.size ?? "md"
+  const icon =
+    typeof props.icon === "function"
+      ? props.icon({ size: buttonIconSizes[size], strokeWidth: 2 })
+      : props.icon
+  const disabledStyle = () => {
     if (!props.disabled) return undefined
     switch (variant) {
       case "ghost":
@@ -308,27 +357,27 @@ export function Button(props: ButtonProps) {
       default:
         return styles.buttonDisabled
     }
-  })()
+  }
   const attrs = () =>
     stylex.attrs(
       styles.buttonBase,
       buttonVariantStyles[variant],
-      buttonSizeStyles[props.size ?? "md"],
+      buttonSizeStyles[size],
       shape !== "default" && buttonShapeStyles[shape],
-      shape === "circle" && buttonSizeCircleStyles[props.size ?? "md"],
-      disabledStyle,
+      shape === "circle" && buttonSizeCircleStyles[size],
+      disabledStyle(),
       variant === "link" && styles.linkLayout,
       props.fullWidth && styles.buttonFullWidth,
       props.xstyle,
     )
 
-  return <HeadlessButton {...props} {...attrs()} />
+  return <HeadlessButton {...props} icon={icon} {...attrs()} />
 }
 
 export function IconButton(props: IconButtonProps) {
   const variant = props.variant ?? "ghost"
   const shape: ButtonShape = props.shape ?? "default"
-  const disabledStyle = (() => {
+  const disabledStyle = () => {
     if (!props.disabled) return undefined
     switch (variant) {
       case "ghost":
@@ -341,7 +390,7 @@ export function IconButton(props: IconButtonProps) {
       default:
         return styles.buttonDisabled
     }
-  })()
+  }
   const attrs = () =>
     stylex.attrs(
       styles.buttonBase,
@@ -349,11 +398,17 @@ export function IconButton(props: IconButtonProps) {
       variant === "link" && styles.linkLayout,
       iconButtonSizeStyles[props.size ?? "md"],
       shape !== "default" && iconButtonShapeStyles[shape],
-      disabledStyle,
+      disabledStyle(),
       props.xstyle,
     )
 
-  return <HeadlessIconButton {...props} class={attrs().class} style={props.style} />
+  return (
+    <HeadlessIconButton {...props} class={attrs().class} style={props.style}>
+      <LucideProvider size={16} strokeWidth={2}>
+        {props.children}
+      </LucideProvider>
+    </HeadlessIconButton>
+  )
 }
 
 export type ButtonVariant = HeadlessButtonProps["variant"]

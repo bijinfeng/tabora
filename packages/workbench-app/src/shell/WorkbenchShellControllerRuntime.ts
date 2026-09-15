@@ -120,13 +120,13 @@ export function createWorkbenchShellControllerRuntime(options: {
     }
   }
   isMobile?: () => boolean
+  getAiSettings?: () => Promise<import("@tabora/plugin-api").SettingsAiSettings>
 }) {
-  const pluginCommands = options.services.plugins.flatMap(
-    (plugin) => plugin.manifest.contributes.commands ?? [],
-  )
-  const pluginKeybindings = options.services.plugins.flatMap(
-    (plugin) => plugin.manifest.contributes.keybindings ?? [],
-  )
+  // Read lazily: kernel.plugins fills in during discovery after this runtime exists.
+  const pluginCommands = () =>
+    options.services.plugins.flatMap((plugin) => plugin.manifest.contributes.commands ?? [])
+  const pluginKeybindings = () =>
+    options.services.plugins.flatMap((plugin) => plugin.manifest.contributes.keybindings ?? [])
 
   const runPluginCommand = (commandId: string, context: CommandExecutionContext) =>
     options.services.registryCommands.execute(commandId, {
@@ -249,6 +249,7 @@ export function createWorkbenchShellControllerRuntime(options: {
     setModalProps: options.setters.setModalProps,
     showToast: options.actions.showToast,
     openExternalForPlugin: options.controllers.hostRuntime.openExternalForPlugin,
+    ...(options.getAiSettings ? { getAiSettings: options.getAiSettings } : {}),
     ...(options.copy?.widgetShellCopy ? { widgetShellCopy: options.copy.widgetShellCopy } : {}),
     ...(options.copy?.pluginViewBoundaryCopy
       ? { pluginViewBoundaryCopy: options.copy.pluginViewBoundaryCopy }

@@ -14,7 +14,6 @@ import cardSectionSource from "./cardSection/cardSection.styled.tsx?raw"
 import checkboxSource from "./checkbox/checkbox.styled.tsx?raw"
 import chipSource from "./chip/chip.styled.tsx?raw"
 import collapsibleSource from "./collapsible/collapsible.styled.tsx?raw"
-import comboboxSource from "./combobox/combobox.styled.tsx?raw"
 import commandPaletteSource from "./commandPalette/commandPalette.styled.tsx?raw"
 import contextMenuSource from "./contextMenu/contextMenu.styled.tsx?raw"
 import copyButtonSource from "./copyButton/copyButton.styled.tsx?raw"
@@ -136,9 +135,9 @@ describe("styled component design contract", () => {
     expect(source).not.toMatch(/":active":\s*\{[^}]*transform\s*:/)
     expect(source).not.toMatch(/transitionProperty:\s*"[^"]*\btransform\b[^"]*"/)
     expect(source).not.toContain('transform: "translateY(1px)"')
-    expect(source).toContain("height: 28")
-    expect(source).toContain("height: 32")
-    expect(source).toContain("height: 44")
+    expect(source).toContain("height: control.sm")
+    expect(source).toContain("height: control.md")
+    expect(source).toContain("height: control.lg")
   })
 
   it("uses typed theme tokens across action and navigation styles", () => {
@@ -171,6 +170,9 @@ describe("styled component design contract", () => {
     expect(sharedStylesSource).toContain("color.line")
     expect(sharedStylesSource).toContain("color.danger")
     expect(dropdownMenuSource).toContain("sharedStyles.menuDanger")
+    expect(dropdownMenuSource).toMatch(
+      /content:\s*\{[^}]*maxWidth:\s*"calc\(100vw - 16px\)"[^}]*minWidth:\s*120[^}]*width:\s*"max-content"/,
+    )
     expect(contextMenuSource).toContain("sharedStyles.menuDanger")
 
     for (const source of [dialogSource, drawerSource, commandPaletteSource]) {
@@ -210,9 +212,12 @@ describe("styled component design contract", () => {
     expect(tagInputSource).toContain("padding: 0")
     expect(tagInputSource).toContain("color: color.accent")
     expect(tagInputSource).toContain("opacity: 0.7")
-    expect(selectSource).toContain("gap: 6")
+    expect(selectSource).toMatch(/trigger:\s*\{[^}]*gap:\s*4/)
     expect(selectSource).toContain("minWidth: 180")
-    expect(selectSource).toContain("paddingInline: 8")
+    expect(selectSource).toMatch(
+      /triggerMd:\s*\{[^}]*paddingInlineEnd:\s*8[^}]*paddingInlineStart:\s*12/,
+    )
+    expect(selectSource).toMatch(/icon:\s*\{[^}]*width:\s*12/)
     expect(selectSource).toMatch(
       /content:\s*\{[^}]*paddingBlock:\s*0[\s\S]*listbox:\s*\{[^}]*margin:\s*0/,
     )
@@ -248,12 +253,12 @@ describe("styled component design contract", () => {
     expect(chipSource).toContain("width: 14")
   })
 
-  it("uses the component-spec Spinner cadence instead of control motion", () => {
+  it("uses the defined Spinner cadence instead of control motion", () => {
     expect(spinnerSource).toContain('animationDuration: "600ms"')
     expect(spinnerSource).toContain('animationTimingFunction: "linear"')
   })
 
-  it("uses the component-spec Skeleton pulse cadence instead of control motion", () => {
+  it("uses the defined Skeleton pulse cadence instead of control motion", () => {
     expect(skeletonSource).toContain('animationDuration: "1500ms"')
     expect(skeletonSource).toContain('animationTimingFunction: "ease-in-out"')
   })
@@ -274,6 +279,9 @@ describe("styled component design contract", () => {
     expect(listRowSource).toContain("backgroundColor: color.surfaceHover")
     expect(tableSource).toContain("backgroundColor: color.accentSoft")
     expect(treeViewSource).toContain("backgroundColor: color.accentSoft")
+    expect(tableSource).toMatch(
+      /cellLastRow:\s*\{\s*"\[data-last-row\]":\s*\{\s*borderBottomWidth:\s*0/,
+    )
   })
 
   it("passes selected and disabled select item styles through the styled wrapper", () => {
@@ -285,15 +293,12 @@ describe("styled component design contract", () => {
     expect(source).toContain("itemDisabledClass={itemDisabledCompiled().class}")
   })
 
-  it("uses a 32px default height for normal form controls", () => {
-    expect(inputSource).toContain("height: 28")
-    expect(inputSource).toContain("height: 32")
-    expect(inputSource).not.toContain("var(--tbr-control-")
-    expect(selectSource).toContain("height: 32")
-    expect(selectSource).toContain("minHeight: 32")
-    expect(comboboxSource).toContain("height: 32")
-    expect(comboboxSource).not.toContain("var(--tbr-control-")
-    expect(tagInputSource).toContain("minHeight: 32")
-    expect(tagInputSource).not.toContain("var(--tbr-control-")
+  it("uses shared control tokens for standardized form controls", () => {
+    for (const source of [inputSource, selectSource, paginationSource]) {
+      expect(source).toContain("height: control.sm")
+      expect(source).toContain("height: control.md")
+      expect(source).toContain("height: control.lg")
+      expect(source).not.toContain("var(--tbr-control-")
+    }
   })
 })
