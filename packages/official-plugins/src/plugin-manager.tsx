@@ -24,6 +24,7 @@ function contributionLabels(kinds: PluginSummary["contributionKinds"]): string[]
     command: "命令",
     keybinding: "快捷键",
     "workspace-preset": "工作区预设",
+    "ai-tool": "AI 工具",
   } as const
   return kinds.map((kind) => labels[kind])
 }

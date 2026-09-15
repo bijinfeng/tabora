@@ -1,6 +1,9 @@
 import type {
   AiPermissionAccess,
   AiRuntimeBridge,
+  PluginAiToolErrorCode,
+  PluginAiToolHandler,
+  PluginAiToolRegistration,
   PluginCommandHandler,
   PluginContext,
   PluginI18nBridge,
@@ -11,8 +14,13 @@ import type {
   PluginSettingsRegistration,
   PluginViewRegistration,
 } from "@tabora/plugin-api"
+import { PluginAiToolError } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
-import type { ExtensionRegistrationDisposer, ExtensionRegistry } from "./extensionRegistry"
+import type {
+  AiToolContributionRef,
+  ExtensionRegistrationDisposer,
+  ExtensionRegistry,
+} from "./extensionRegistry"
 
 export type I18nMessageBundle = PluginI18nMessageBundle
 
@@ -61,6 +69,21 @@ export function collectPluginManifestCommandIds(manifest: PluginManifest): Set<s
   return new Set((manifest.contributes.commands ?? []).map((command) => command.id))
 }
 
+export function collectPluginManifestAiToolRefs(
+  manifest: PluginManifest,
+): Map<string, AiToolContributionRef> {
+  const map = new Map<string, AiToolContributionRef>()
+  for (const contrib of manifest.contributes.aiTools ?? []) {
+    map.set(contrib.id, {
+      pluginId: manifest.id,
+      kind: "ai-tool",
+      id: contrib.id,
+      contribution: contrib,
+    })
+  }
+  return map
+}
+
 export function createPluginRuntimeContext(options: {
   pluginId: string
   events: EventBus
@@ -88,6 +111,9 @@ export function createPluginRuntimeContext(options: {
   const declaredCommands = options.manifest
     ? collectPluginManifestCommandIds(options.manifest)
     : new Set<string>()
+  const declaredAiToolRefs = options.manifest
+    ? collectPluginManifestAiToolRefs(options.manifest)
+    : new Map<string, AiToolContributionRef>()
 
   function canAccessView(viewId: string): boolean {
     return viewId.startsWith(`${options.pluginId}.`) && (declaredViews?.has(viewId) ?? false)
@@ -139,6 +165,33 @@ export function createPluginRuntimeContext(options: {
       return dispose
     },
   }
+
+  const aiTools: PluginAiToolRegistration | undefined = (() => {
+    if (!hasAnyAiAccess()) return undefined
+    return {
+      register(toolId: string, handler: PluginAiToolHandler) {
+        try {
+          requireAiAccess("tools")
+        } catch (cause) {
+          throw new PluginAiToolError(
+            "plugin_tool_permission_denied" as PluginAiToolErrorCode,
+            `Plugin "${options.pluginId}" attempted to register aiTool without AI tools permission: ${toolId}`,
+            { cause },
+          )
+        }
+        const ref = declaredAiToolRefs.get(toolId)
+        if (!ref || !ownsRegistration(toolId)) {
+          throw new PluginAiToolError(
+            "plugin_tool_not_found" as PluginAiToolErrorCode,
+            `Plugin "${options.pluginId}" attempted to register undeclared aiTool: ${toolId}`,
+          )
+        }
+        const dispose = options.registry.aiTools.register(options.pluginId, ref, handler)
+        options.registrationDisposers?.push(dispose)
+        return dispose
+      },
+    }
+  })()
 
   function hasGrantedHostPermission(type: "external-open" | "network", url: string): boolean {
     let hostname: string
@@ -241,6 +294,7 @@ export function createPluginRuntimeContext(options: {
     views,
     settings,
     commands,
+    ...(aiTools ? { aiTools } : {}),
     ui: {
       openModal(viewId, props) {
         if (!canOpenView(viewId)) {

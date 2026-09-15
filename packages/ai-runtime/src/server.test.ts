@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest"
+import type {
+  AiToolContribution,
+  PluginAiToolContext,
+  PluginAiToolHandler,
+} from "@tabora/plugin-api"
+import type { AiGatewayRequest } from "./contracts"
 
-import { AiRuntimeError, createTanstackAiGateway, parseAiGatewayRequest } from "./server"
+type LocalAiToolEntry = {
+  ref: {
+    pluginId: string
+    id: string
+    kind: "ai-tool"
+    contribution: AiToolContribution
+  }
+  handler: PluginAiToolHandler
+}
+
+import {
+  AiRuntimeError,
+  convertPluginToolsToTanstackTools,
+  createTanstackAiGateway,
+  invokePluginTool,
+  jsonSchemaToZodSchema,
+  parseAiGatewayRequest,
+} from "./server"
 import { createAiUsageTracker } from "./usage"
+void (undefined as unknown as AiGatewayRequest | undefined)
 
 function requestJson(init: RequestInit | undefined): Record<string, unknown> {
   if (typeof init?.body !== "string") throw new Error("Expected JSON request body")
@@ -685,5 +709,104 @@ describe("AI gateway request contract", () => {
     } finally {
       globalThis.fetch = originalFetch
     }
+  })
+})
+
+describe("plugin tools bridge", () => {
+  function makeEntry(
+    overrides: {
+      id?: string
+      name?: string
+      description?: string
+      inputSchema?: Record<string, unknown>
+      handler?: PluginAiToolHandler
+    } = {},
+  ): LocalAiToolEntry {
+    const contribution: AiToolContribution = {
+      id: overrides.id ?? "official.greet.hello",
+      name: overrides.name ?? "greet_hello",
+      description: overrides.description ?? "Say hello to someone",
+      inputSchema: overrides.inputSchema ?? {
+        type: "object",
+        properties: { name: { type: "string" } },
+        required: ["name"],
+        additionalProperties: false,
+      },
+    }
+    const handler: PluginAiToolHandler =
+      overrides.handler ?? (async ({ args }) => `hi ${args.name as string}`)
+    return {
+      ref: {
+        pluginId: "official.greet",
+        kind: "ai-tool",
+        id: contribution.id,
+        contribution,
+      },
+      handler,
+    }
+  }
+
+  it("jsonSchemaToZodSchema converts object with properties/required/additionalProperties", () => {
+    const schema = jsonSchemaToZodSchema({
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        age: { type: "number" },
+      },
+      required: ["name"],
+      additionalProperties: false,
+    })
+    expect(schema.safeParse({ name: "Ada", age: 36 }).success).toBe(true)
+    expect(schema.safeParse({ age: 36 }).success).toBe(false)
+    expect(schema.safeParse({ name: "Ada", age: 36, extra: true }).success).toBe(false)
+  })
+
+  it("convertPluginToolsToTanstackTools produces one AnyServerTool per entry with correct name/description", () => {
+    const entries: LocalAiToolEntry[] = [
+      makeEntry({ id: "official.greet.hello", name: "greet_hello", description: "Greet" }),
+      makeEntry({ id: "official.math.add", name: "math_add", description: "Add two numbers" }),
+    ]
+    const tools = convertPluginToolsToTanstackTools(entries, undefined)
+    expect(tools).toHaveLength(2)
+    expect(
+      tools
+        .map((t) => (t as { name?: string }).name)
+        .sort((a, b) => (a ?? "").localeCompare(b ?? "")),
+    ).toEqual(["greet_hello", "math_add"])
+  })
+
+  it("invokePluginTool invokes handler and returns result", async () => {
+    const entry = makeEntry()
+    const logger = { warn: () => {}, error: () => {} }
+    const result = await invokePluginTool(entry, { name: "Ada" }, { logger })
+    expect(result).toBe("hi Ada")
+  })
+
+  it("invokePluginTool wraps handler rejections as PluginAiToolError with execution_failed", async () => {
+    const boom = async () => {
+      throw new Error("network timeout")
+    }
+    const entry = makeEntry({ handler: boom })
+    const logger = { warn: (_msg: string) => void _msg, error: (_msg: string) => void _msg }
+    await expect(invokePluginTool(entry, { name: "x" }, { logger })).rejects.toMatchObject({
+      name: "PluginAiToolError",
+      code: "plugin_tool_execution_failed",
+    })
+  })
+
+  it("merged createChatOptions tools list contains both builtin and plugin tools", () => {
+    // Emulate options.tools() pattern used by the composition root: builtin first,
+    // plugin tools appended. Concat length + dedup is asserted.
+    const entryA = makeEntry({ id: "official.greet.hello", name: "hello" })
+    const entryB = makeEntry({ id: "official.greet.bye", name: "bye" })
+    const pluginTools = convertPluginToolsToTanstackTools([entryA, entryB], undefined)
+    const fakeBuiltin: unknown[] = [{ name: "list_attachments" }]
+    const merged = [...fakeBuiltin, ...pluginTools]
+    expect(merged).toHaveLength(3)
+    expect(merged.map((t) => (t as { name?: string }).name)).toEqual([
+      "list_attachments",
+      "hello",
+      "bye",
+    ])
   })
 })

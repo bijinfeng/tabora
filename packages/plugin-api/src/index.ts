@@ -1,4 +1,5 @@
 export * from "./ai"
+export * from "./aiTools"
 export * from "./manifest"
 export * from "./runtime"
 export * from "./manifestSchema"

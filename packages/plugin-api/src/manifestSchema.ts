@@ -149,6 +149,17 @@ const commandContributionSchema = z.object({
   requiredCapabilities: z.array(z.string().min(1)).optional(),
 })
 
+const aiToolContributionSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    inputSchema: z.record(z.string(), z.unknown()),
+    resultViewId: z.string().min(1).optional(),
+    requiresNetwork: z.boolean().optional(),
+  })
+  .strict()
+
 const keybindingContributionSchema = z.object({
   id: z.string().min(1),
   commandId: z.string().min(1),
@@ -342,6 +353,7 @@ export const pluginManifestSchema = z
       commands: z.array(commandContributionSchema).optional(),
       keybindings: z.array(keybindingContributionSchema).optional(),
       workspacePresets: z.array(workspacePresetSchema).optional(),
+      aiTools: z.array(aiToolContributionSchema).optional(),
     }),
   })
   .superRefine((manifest, ctx) => {
@@ -433,6 +445,16 @@ export const pluginManifestSchema = z
     )
     for (const viewId of declaredViewIds) {
       requireOwnedRegistration(viewId, ["contributes"], "view id")
+    }
+    for (const [index, tool] of (manifest.contributes.aiTools ?? []).entries()) {
+      requireOwnedRegistration(tool.id, ["contributes", "aiTools", index, "id"], "aiTool id")
+      if (tool.resultViewId && !declaredViewIds.has(tool.resultViewId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `aiTool resultViewId must reference a view declared by this plugin: ${tool.resultViewId}`,
+          path: ["contributes", "aiTools", index, "resultViewId"],
+        })
+      }
     }
     for (const [panelIndex, panel] of (manifest.contributes.settingsPanels ?? []).entries()) {
       if (panel.content.kind === "schema") {
@@ -547,6 +569,11 @@ function contributionSymbols(manifest: PluginManifest): ManifestSymbol[] {
     ...(contributes.settingsPanels ?? []).map((item) => ({
       pluginId: manifest.id,
       kind: "settings-panel" as const,
+      id: item.id,
+    })),
+    ...(contributes.aiTools ?? []).map((item) => ({
+      pluginId: manifest.id,
+      kind: "ai-tool" as const,
       id: item.id,
     })),
   ]

@@ -599,19 +599,22 @@ importers:
         version: link:../plugin-api
       '@tanstack/ai':
         specifier: catalog:ai
-        version: 0.53.0(zod@4.4.3)
+        version: 0.53.0(zod@4.6.5)
       '@tanstack/ai-anthropic':
         specifier: catalog:ai
-        version: 0.18.5(@tanstack/ai@0.53.0(zod@4.4.3))(zod@4.4.3)
+        version: 0.18.5(@tanstack/ai@0.53.0(zod@4.6.5))(zod@4.6.5)
       '@tanstack/ai-client':
         specifier: catalog:ai
-        version: 0.31.0(zod@4.4.3)
+        version: 0.31.0(zod@4.6.5)
       '@tanstack/ai-openai':
         specifier: catalog:ai
-        version: 0.22.5(@tanstack/ai@0.53.0(zod@4.4.3))(ws@8.21.1)(zod@4.4.3)
+        version: 0.22.5(@tanstack/ai@0.53.0(zod@4.6.5))(ws@8.21.1)(zod@4.6.5)
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@tabora/tsconfig':
         specifier: workspace:*
@@ -1452,7 +1455,7 @@ packages:
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild-kit/esm-loader@2.6.5':
     resolution: {integrity: sha512-FxEMIkJKnodyA1OaCUoEvbYRkoZlLZ4d/eXFu9Fh8CbBBgP5EmZxrfTRyN0qpXZ4vOvqnE5YdRdcrmUUXuU+dA==}
@@ -6033,6 +6036,9 @@ packages:
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -6049,6 +6055,10 @@ snapshots:
     optionalDependencies:
       zod: 4.4.3
 
+  '@ag-ui/core@0.1.1-canary.beta.0(zod@4.6.5)':
+    optionalDependencies:
+      zod: 4.6.5
+
   '@aklinker1/rollup-plugin-visualizer@5.12.0':
     dependencies:
       open: 8.4.2
@@ -6058,12 +6068,12 @@ snapshots:
 
   '@aklinker1/zero-zip@1.0.1': {}
 
-  '@anthropic-ai/sdk@0.97.1(zod@4.4.3)':
+  '@anthropic-ai/sdk@0.97.1(zod@4.6.5)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
     optionalDependencies:
-      zod: 4.4.3
+      zod: 4.6.5
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -7213,10 +7223,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@tanstack/ai-anthropic@0.18.5(@tanstack/ai@0.53.0(zod@4.4.3))(zod@4.4.3)':
+  '@tanstack/ai-anthropic@0.18.5(@tanstack/ai@0.53.0(zod@4.6.5))(zod@4.6.5)':
     dependencies:
-      '@anthropic-ai/sdk': 0.97.1(zod@4.4.3)
-      '@tanstack/ai': 0.53.0(zod@4.4.3)
+      '@anthropic-ai/sdk': 0.97.1(zod@4.6.5)
+      '@tanstack/ai': 0.53.0(zod@4.6.5)
       '@tanstack/ai-utils': 0.4.0
     transitivePeerDependencies:
       - zod
@@ -7230,16 +7240,25 @@ snapshots:
       - '@opentelemetry/api'
       - zod
 
+  '@tanstack/ai-client@0.31.0(zod@4.6.5)':
+    dependencies:
+      '@tanstack/ai': 0.53.0(zod@4.6.5)
+      '@tanstack/ai-event-client': 0.11.2
+      '@tanstack/ai-utils': 0.4.0
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - zod
+
   '@tanstack/ai-event-client@0.11.2':
     dependencies:
       '@tanstack/devtools-event-client': 0.4.4
 
-  '@tanstack/ai-openai@0.22.5(@tanstack/ai@0.53.0(zod@4.4.3))(ws@8.21.1)(zod@4.4.3)':
+  '@tanstack/ai-openai@0.22.5(@tanstack/ai@0.53.0(zod@4.6.5))(ws@8.21.1)(zod@4.6.5)':
     dependencies:
-      '@tanstack/ai': 0.53.0(zod@4.4.3)
+      '@tanstack/ai': 0.53.0(zod@4.6.5)
       '@tanstack/ai-utils': 0.4.0
-      '@tanstack/openai-base': 0.10.10(@tanstack/ai@0.53.0(zod@4.4.3))(ws@8.21.1)(zod@4.4.3)
-      openai: 6.49.0(ws@8.21.1)(zod@4.4.3)
+      '@tanstack/openai-base': 0.10.10(@tanstack/ai@0.53.0(zod@4.6.5))(ws@8.21.1)(zod@4.6.5)
+      openai: 6.49.0(ws@8.21.1)(zod@4.6.5)
     transitivePeerDependencies:
       - '@aws-sdk/credential-provider-node'
       - '@smithy/hash-node'
@@ -7267,6 +7286,16 @@ snapshots:
   '@tanstack/ai@0.53.0(zod@4.4.3)':
     dependencies:
       '@ag-ui/core': 0.1.1-canary.beta.0(zod@4.4.3)
+      '@standard-schema/spec': 1.1.0
+      '@tanstack/ai-event-client': 0.11.2
+      '@tanstack/ai-utils': 0.4.0
+      partial-json: 0.1.7
+    transitivePeerDependencies:
+      - zod
+
+  '@tanstack/ai@0.53.0(zod@4.6.5)':
+    dependencies:
+      '@ag-ui/core': 0.1.1-canary.beta.0(zod@4.6.5)
       '@standard-schema/spec': 1.1.0
       '@tanstack/ai-event-client': 0.11.2
       '@tanstack/ai-utils': 0.4.0
@@ -7309,11 +7338,11 @@ snapshots:
 
   '@tanstack/history@1.162.1': {}
 
-  '@tanstack/openai-base@0.10.10(@tanstack/ai@0.53.0(zod@4.4.3))(ws@8.21.1)(zod@4.4.3)':
+  '@tanstack/openai-base@0.10.10(@tanstack/ai@0.53.0(zod@4.6.5))(ws@8.21.1)(zod@4.6.5)':
     dependencies:
-      '@tanstack/ai': 0.53.0(zod@4.4.3)
+      '@tanstack/ai': 0.53.0(zod@4.6.5)
       '@tanstack/ai-utils': 0.4.0
-      openai: 6.49.0(ws@8.21.1)(zod@4.4.3)
+      openai: 6.49.0(ws@8.21.1)(zod@4.6.5)
     transitivePeerDependencies:
       - '@aws-sdk/credential-provider-node'
       - '@smithy/hash-node'
@@ -9491,10 +9520,10 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openai@6.49.0(ws@8.21.1)(zod@4.4.3):
+  openai@6.49.0(ws@8.21.1)(zod@4.6.5):
     optionalDependencies:
       ws: 8.21.1
-      zod: 4.4.3
+      zod: 4.6.5
 
   orderedmap@2.1.1: {}
 
@@ -10616,5 +10645,7 @@ snapshots:
       '@yuku-parser/binding-win32-x64': 0.8.0
 
   zod@4.4.3: {}
+
+  zod@4.6.5: {}
 
   zwitch@2.0.4: {}

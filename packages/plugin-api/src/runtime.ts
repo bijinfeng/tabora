@@ -1,4 +1,5 @@
 import type { AiRuntimeBridge } from "./ai"
+import type { PluginAiToolRegistration } from "./aiTools"
 import type { PluginManifest, PluginPermission } from "./manifest"
 import type { SettingsPanelProvider } from "./settings"
 
@@ -86,6 +87,7 @@ export type PluginContext = {
   permissions: PluginPermissionBridge
   network: PluginNetworkAccess
   ai?: AiRuntimeBridge
+  aiTools?: PluginAiToolRegistration
   i18n?: PluginI18nBridge
   logger: {
     warn(message: string): void

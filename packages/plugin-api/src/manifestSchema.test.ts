@@ -823,3 +823,116 @@ describe("validatePluginManifestComposition", () => {
     ).toThrow("Invalid plugin manifest composition")
   })
 })
+
+describe("aiTool contribution schema", () => {
+  const baseManifest = {
+    id: "official.example",
+    name: "Example",
+    version: "0.1.0",
+    apiVersion: "1.0.0",
+    entry: "src/index.tsx",
+    engine: { platform: "tabora" },
+    contributes: {
+      widgets: [
+        {
+          id: "official.example.card",
+          title: "Example",
+          supportedSizes: ["M"],
+          defaultSize: "M",
+          allowMultipleInstances: false,
+          views: {
+            card: "official.example.card_view",
+          },
+        },
+      ],
+    },
+  }
+
+  it("valid aiTool contribution passes schema", () => {
+    const manifest = {
+      ...baseManifest,
+      contributes: {
+        ...baseManifest.contributes,
+        aiTools: [
+          {
+            id: "official.example.greet",
+            name: "official__example__greet",
+            description: "Return a greeting string showing the input name.",
+            inputSchema: {
+              type: "object",
+              properties: { name: { type: "string" } },
+              required: ["name"],
+              additionalProperties: false,
+            },
+          },
+        ],
+      },
+    }
+    const result = pluginManifestSchema.safeParse(manifest)
+    expect(result.success).toBe(true)
+  })
+
+  it("aiTool id outside plugin namespace is rejected", () => {
+    const manifest = {
+      ...baseManifest,
+      contributes: {
+        ...baseManifest.contributes,
+        aiTools: [
+          {
+            id: "other-plugin.steal",
+            name: "official__example__bad",
+            description: "bad",
+            inputSchema: { type: "object" },
+          },
+        ],
+      },
+    }
+    const result = pluginManifestSchema.safeParse(manifest)
+    expect(result.success).toBe(false)
+  })
+
+  it("duplicate aiTool id is rejected", () => {
+    const manifest = {
+      ...baseManifest,
+      contributes: {
+        ...baseManifest.contributes,
+        aiTools: [
+          {
+            id: "official.example.dup",
+            name: "official__example__dup1",
+            description: "a",
+            inputSchema: { type: "object" },
+          },
+          {
+            id: "official.example.dup",
+            name: "official__example__dup2",
+            description: "b",
+            inputSchema: { type: "object" },
+          },
+        ],
+      },
+    }
+    const result = pluginManifestSchema.safeParse(manifest)
+    expect(result.success).toBe(false)
+  })
+
+  it("aiTool resultViewId must reference a declared view", () => {
+    const manifest = {
+      ...baseManifest,
+      contributes: {
+        ...baseManifest.contributes,
+        aiTools: [
+          {
+            id: "official.example.rv",
+            name: "official__example__rv",
+            description: "c",
+            inputSchema: { type: "object" },
+            resultViewId: "official.example.undeclared_view",
+          },
+        ],
+      },
+    }
+    const result = pluginManifestSchema.safeParse(manifest)
+    expect(result.success).toBe(false)
+  })
+})

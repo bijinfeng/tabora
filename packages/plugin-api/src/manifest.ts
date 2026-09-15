@@ -11,6 +11,7 @@ export type ContributionKind =
   | "background-renderer"
   | "theme"
   | "settings-panel"
+  | "ai-tool"
 
 /** Legacy alias retained while region contracts migrate to RegionContentKind. */
 export type ExtensionPoint = ContributionKind
@@ -514,6 +515,15 @@ export type KeybindingContribution = {
   editable?: boolean
 }
 
+export type AiToolContribution = {
+  id: string
+  name: string
+  description: string
+  inputSchema: Record<string, unknown>
+  resultViewId?: string
+  requiresNetwork?: boolean
+}
+
 export type PluginManifest = {
   id: string
   name: string
@@ -544,5 +554,6 @@ export type PluginManifest = {
     commands?: CommandContribution[]
     keybindings?: KeybindingContribution[]
     workspacePresets?: WorkspacePresetContribution[]
+    aiTools?: AiToolContribution[]
   }
 }
