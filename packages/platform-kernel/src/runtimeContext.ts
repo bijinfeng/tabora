@@ -13,11 +13,13 @@ import type {
   PluginPermission,
   PluginSettingsRegistration,
   PluginViewRegistration,
+  RegisteredPluginAiToolEntry,
 } from "@tabora/plugin-api"
 import { PluginAiToolError } from "@tabora/plugin-api"
 import type { EventBus } from "./eventBus"
 import type {
   AiToolContributionRef,
+  AiToolRegistryEntry,
   ExtensionRegistrationDisposer,
   ExtensionRegistry,
 } from "./extensionRegistry"
@@ -276,6 +278,71 @@ export function createPluginRuntimeContext(options: {
                 },
               }
             : {}),
+          listRegisteredAiTools() {
+            requireAiAccess("tools")
+            const base =
+              typeof options.ai!.listRegisteredAiTools === "function"
+                ? options.ai!.listRegisteredAiTools()
+                : []
+            const extras = Array.from(options.registry.aiTools.entries(), (entry) => ({
+              pluginId: entry.ref.pluginId,
+              id: entry.ref.id,
+              name: entry.ref.contribution.name,
+              description: entry.ref.contribution.description,
+            }))
+            if (base.length === 0) return extras
+            const seen = new Set(base.map((t) => `${t.pluginId}.${t.id}`))
+            for (const extra of extras) {
+              const key = `${extra.pluginId}.${extra.id}`
+              if (!seen.has(key)) {
+                seen.add(key)
+                base.push(extra)
+              }
+            }
+            return base
+          },
+          listRegisteredPluginToolEntries(): RegisteredPluginAiToolEntry[] {
+            requireAiAccess("tools")
+            const base: RegisteredPluginAiToolEntry[] =
+              typeof options.ai!.listRegisteredPluginToolEntries === "function"
+                ? options.ai!.listRegisteredPluginToolEntries!()
+                : []
+            const extras = Array.from(
+              options.registry.aiTools.entries() as Iterable<AiToolRegistryEntry>,
+              (entry): RegisteredPluginAiToolEntry => {
+                const contribution: RegisteredPluginAiToolEntry["ref"]["contribution"] = {
+                  name: entry.ref.contribution.name,
+                  description: entry.ref.contribution.description,
+                  inputSchema: entry.ref.contribution.inputSchema,
+                  ...(entry.ref.contribution.resultViewId !== undefined
+                    ? { resultViewId: entry.ref.contribution.resultViewId }
+                    : {}),
+                  ...(entry.ref.contribution.requiresNetwork !== undefined
+                    ? { requiresNetwork: entry.ref.contribution.requiresNetwork }
+                    : {}),
+                }
+                return {
+                  ref: {
+                    pluginId: entry.ref.pluginId,
+                    id: entry.ref.id,
+                    kind: "ai-tool",
+                    contribution,
+                  },
+                  handler: entry.handler,
+                }
+              },
+            )
+            if (base.length === 0) return extras
+            const seen = new Set(base.map((t) => `${t.ref.pluginId}.${t.ref.id}`))
+            for (const extra of extras) {
+              const key = `${extra.ref.pluginId}.${extra.ref.id}`
+              if (!seen.has(key)) {
+                seen.add(key)
+                base.push(extra)
+              }
+            }
+            return base
+          },
         }
       : undefined
 

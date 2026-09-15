@@ -15,6 +15,7 @@ import {
   type AiAttachmentToolResource,
   type PluginToolEntryLike,
 } from "@tabora/ai-runtime/server"
+import type { AiToolRegistryEntry } from "@tabora/platform-kernel"
 
 import type { ServerRuntime } from "./runtime"
 import { getAiUsageTracker } from "./aiUsage"
@@ -122,7 +123,7 @@ export function createCloudAiGateway(
   })
 }
 
-type CloudAiRuntime = Pick<ServerRuntime, "auth" | "handle" | "storage">
+type CloudAiRuntime = Pick<ServerRuntime, "auth" | "handle" | "storage" | "pluginRegistry">
 
 async function authorizeBuiltinAi(
   runtime: CloudAiRuntime,
@@ -195,12 +196,36 @@ async function cloudGatewayForRequest(
   if (input.attachmentIds?.length && !userId) {
     throw new AiRuntimeError("ai_auth_required", "Sign in to use AI attachments")
   }
+  const pluginToolEntries = Array.from(
+    runtime.pluginRegistry.aiTools.entries() as Iterable<AiToolRegistryEntry>,
+    (entry) =>
+      ({
+        ref: {
+          pluginId: entry.ref.pluginId,
+          id: entry.ref.id,
+          kind: "ai-tool",
+          contribution: {
+            name: entry.ref.contribution.name,
+            description: entry.ref.contribution.description,
+            inputSchema: entry.ref.contribution.inputSchema,
+            ...(entry.ref.contribution.resultViewId !== undefined
+              ? { resultViewId: entry.ref.contribution.resultViewId }
+              : {}),
+            ...(entry.ref.contribution.requiresNetwork !== undefined
+              ? { requiresNetwork: entry.ref.contribution.requiresNetwork }
+              : {}),
+          },
+        },
+        handler: entry.handler,
+      }) as PluginToolEntryLike,
+  )
   return createCloudAiGateway(
     input.provider === "builtin" ? await runtime.handle.aiModels.listActiveGatewayModels() : [],
     userId ? await resolveAttachmentTools(runtime, userId, input.attachmentIds) : [],
     input.provider === "builtin" && userId
       ? { usageTracker: getAiUsageTracker(userId), budget: await aiBudget(runtime) }
       : {},
+    pluginToolEntries,
   )
 }
 

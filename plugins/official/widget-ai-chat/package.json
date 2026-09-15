@@ -25,6 +25,7 @@
     "@stylexjs/stylex": "catalog:style",
     "@tabora/plugin-api": "workspace:*",
     "@tabora/ui": "workspace:*",
+    "@tanstack/ai": "catalog:ai",
     "@tanstack/ai-client": "catalog:ai",
     "@tanstack/ai-solid": "catalog:ai",
     "lucide-solid": "catalog:ui",

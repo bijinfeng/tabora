@@ -43,5 +43,24 @@ export const officialPluginAiChatManifest: PluginManifest = {
         key: "mod+i",
       },
     ],
+    aiTools: [
+      {
+        id: "official.widgets.ai-chat.summarize-chat",
+        name: "总结对话",
+        description: "生成当前 AI 对话内容的简短要点总结",
+        inputSchema: {
+          type: "object",
+          properties: {
+            style: {
+              type: "string",
+              description: "总结风格：bullet（要点）、paragraph（段落）、tldr（极简）",
+              enum: ["bullet", "paragraph", "tldr"],
+            },
+          },
+          required: ["style"],
+          additionalProperties: false,
+        },
+      },
+    ],
   },
 }

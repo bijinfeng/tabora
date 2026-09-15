@@ -1,5 +1,8 @@
 export type AiPermissionAccess = "generate" | "context" | "tools"
 
+import type { PluginAiToolHandler } from "./aiTools"
+import type { AiToolContribution } from "./manifest"
+
 export type AiTokenUsage = {
   inputTokens?: number
   outputTokens?: number
@@ -125,6 +128,30 @@ export class AiRuntimeError extends Error {
   }
 }
 
+/** A summary of an aiTool registered by a plugin, surfaced to consumer plugins. */
+export type RegisteredAiTool = {
+  pluginId: string
+  id: string
+  name: string
+  description: string
+}
+
+/**
+ * A plugin-registered aiTool with its handler, returned only when the caller
+ * shares the same JS thread as the plugin registry (host shell / extension
+ * service worker). Shape duck-matches `@tabora/ai-runtime/server`'s
+ * `PluginToolEntryLike` so consumers can cast directly.
+ */
+export type RegisteredPluginAiToolEntry = {
+  ref: {
+    pluginId: string
+    id: string
+    kind: "ai-tool"
+    contribution: Omit<AiToolContribution, "id">
+  }
+  handler: PluginAiToolHandler
+}
+
 export type AiRuntimeBridge = {
   generate(request: AiGenerateRequest): Promise<AiGenerateResult>
   stream(request: AiGenerateRequest): AsyncIterable<AiStreamChunk>
@@ -138,4 +165,17 @@ export type AiRuntimeBridge = {
     files: readonly File[],
     preparation: AiChatAttachmentPreparation,
   ): Promise<AiChatAttachmentResource[]>
+  /**
+   * Lists aiTools registered by any enabled plugin in the current workspace.
+   * Returns a fresh array on each call so consumers can safely mutate it.
+   */
+  listRegisteredAiTools?(): RegisteredAiTool[]
+  /**
+   * Returns the full aiTool entries (including handlers) for tools that can
+   * be dispatched in the current JavaScript thread. Only callers inside the
+   * host shell / runtime should rely on handlers being non-stub. Cross-thread
+   * runtimes (e.g. a pure HTTP client) should return `undefined` and use the
+   * server gateway's tool injection path instead.
+   */
+  listRegisteredPluginToolEntries?(): RegisteredPluginAiToolEntry[]
 }

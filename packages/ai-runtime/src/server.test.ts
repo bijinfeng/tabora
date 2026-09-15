@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type {
-  AiToolContribution,
-  PluginAiToolContext,
-  PluginAiToolHandler,
-} from "@tabora/plugin-api"
+import type { AiToolContribution, PluginAiToolHandler } from "@tabora/plugin-api"
 import type { AiGatewayRequest } from "./contracts"
 
 type LocalAiToolEntry = {

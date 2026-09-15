@@ -91,4 +91,15 @@ export const slashMenuStyles = stylex.create({
     fontWeight: 650,
     padding: "4px 8px 2px",
   },
+  commandGroupLabel: {
+    color: "rgb(var(--tbr-color-text-subtle))",
+    display: "block",
+    fontSize: 10.5,
+    fontWeight: 650,
+    letterSpacing: 0.2,
+    padding: "6px 8px 1px",
+    textAlign: "left",
+    textTransform: "uppercase",
+    width: "100%",
+  },
 })

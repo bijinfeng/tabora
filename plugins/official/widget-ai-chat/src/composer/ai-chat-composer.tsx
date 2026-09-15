@@ -14,8 +14,10 @@ import Cpu from "lucide-solid/icons/cpu"
 import Eraser from "lucide-solid/icons/eraser"
 import MessageSquarePlus from "lucide-solid/icons/message-square-plus"
 import Minimize2 from "lucide-solid/icons/minimize-2"
+import Package from "lucide-solid/icons/package"
 import Paperclip from "lucide-solid/icons/paperclip"
 import Plus from "lucide-solid/icons/plus"
+import Puzzle from "lucide-solid/icons/puzzle"
 import Send from "lucide-solid/icons/send"
 import Settings2 from "lucide-solid/icons/settings-2"
 import Square from "lucide-solid/icons/square"
@@ -30,7 +32,7 @@ import type {
 } from "../conversation/ai-chat-session"
 import { contextUsageStyles } from "./ai-chat-context-usage.styles"
 import { composerStyles } from "./ai-chat-composer.styles"
-import { AiChatSlashMenu } from "./ai-chat-slash-menu"
+import { AiChatSlashMenu, type SlashItem } from "./ai-chat-slash-menu"
 
 const REASONING_LABELS: Record<AiChatReasoningEffort, string> = {
   low: "轻度",
@@ -261,7 +263,7 @@ export function AiChatComposer(props: {
   }
   const slashQuery = () => draft().slice(1).trim().toLocaleLowerCase()
   const slashCommands = () => {
-    const commands = [
+    const commands: SlashItem[] = [
       {
         id: "compact",
         label: props.session.isCompressing() ? "正在压缩上下文" : "压缩上下文",
@@ -316,13 +318,57 @@ export function AiChatComposer(props: {
         },
       },
     ]
+    const tools = props.session.listPluginAiTools()
+    commands.push({ kind: "group", id: "tool-group", label: "工具" })
+    if (tools.length === 0) {
+      commands.push({
+        id: "tool-empty",
+        label: "暂无可用工具",
+        description: "启用带有 AI 工具贡献的插件后会出现在这里",
+        icon: <Package size={16} />,
+        disabled: true,
+        onSelect: () => {},
+      })
+    } else {
+      for (const tool of tools) {
+        commands.push({
+          id: `tool:${tool.pluginId}.${tool.id}`,
+          label: tool.name,
+          description: tool.description || `由 ${tool.pluginId} 提供`,
+          icon: <Puzzle size={16} />,
+          disabled: props.session.isLoading() || props.session.isCompressing(),
+          onSelect: () => {
+            setDraft(`请使用 ${tool.name} 工具：`)
+            closeSlashMenu()
+          },
+        })
+      }
+    }
     const query = slashQuery()
-    return query
-      ? commands.filter((command) => command.label.toLocaleLowerCase().includes(query))
-      : commands
+    if (!query) return commands
+    const result: SlashItem[] = []
+    for (const item of commands) {
+      if (item.kind === "group") {
+        result.push(item)
+        continue
+      }
+      if (
+        item.label.toLocaleLowerCase().includes(query) ||
+        item.description.toLocaleLowerCase().includes(query)
+      ) {
+        result.push(item)
+      }
+    }
+    return result.filter((item, i, arr) => {
+      if (item.kind !== "group") return true
+      const next = arr[i + 1]
+      return next && next.kind !== "group"
+    })
   }
   const moveSlashSelection = (direction: 1 | -1) => {
-    const count = slashModelPicker() ? modelChoices().length : slashCommands().length
+    const count = slashModelPicker()
+      ? modelChoices().length
+      : slashCommands().filter((item) => item.kind !== "group").length
     if (count === 0) return
     setSlashActiveIndex((index) => (index + direction + count) % count)
   }
@@ -335,7 +381,8 @@ export function AiChatComposer(props: {
       closeSlashMenu()
       return
     }
-    const command = slashCommands()[slashActiveIndex()]
+    const commands = slashCommands().filter((item) => item.kind !== "group")
+    const command = commands[slashActiveIndex()]
     if (!command?.disabled) command?.onSelect()
   }
   const handleAttachmentChange = (event: Event) => {

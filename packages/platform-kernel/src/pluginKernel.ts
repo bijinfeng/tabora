@@ -413,6 +413,11 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
         const requestedPermissions = pluginPackage.module.manifest.permissions ?? []
         const persistedOrPreviousGrant =
           previous?.installation.grantedPermissions ?? persisted?.grantedPermissions
+        const trustedGrant = options.permissionGrants?.[pluginPackage.module.manifest.id] ?? []
+        const mergedGrant: PluginPermissionGrant[] = [
+          ...(persistedOrPreviousGrant ?? []),
+          ...trustedGrant,
+        ]
         const runtimePlugin: PluginRuntimePlugin = {
           package: pluginPackage,
           module: pluginPackage.module,
@@ -421,12 +426,7 @@ export function createPluginKernel(options: PluginKernelOptions = {}): PluginKer
             pluginId: pluginPackage.module.manifest.id,
             source: pluginPackage.source,
             desiredEnabled: previous?.installation.desiredEnabled ?? persisted?.enabled ?? true,
-            grantedPermissions: normalizeGrantedPermissions(
-              requestedPermissions,
-              persistedOrPreviousGrant ??
-                options.permissionGrants?.[pluginPackage.module.manifest.id] ??
-                [],
-            ),
+            grantedPermissions: normalizeGrantedPermissions(requestedPermissions, mergedGrant),
             grantedSettingsHostActions: normalizeGrantedSettingsHostActions(
               pluginPackage.module.manifest.contributes.settingsPanels?.flatMap(
                 (panel) => panel.hostActions ?? [],
